@@ -27,6 +27,20 @@ There is still no shared triplestore and the isolation is unchanged: one agent, 
 a file inside that agent's container and not a service on a network. See
 knowledge/decisions/where-the-belief-base-lives.md and
 knowledge/decisions/an-agent-is-four-things.md.
+
+**IT IS NOT A REDIRECT, AND THE THIN ONES ARE THE POINT.** `update` is
+`store.update(text, prefixes=NAMESPACES)` — which is why no query text in this project carries
+a prefix header, and why a name the store never loaded is caught rather than 400ing in
+production. `construct` is that plus building the default graph out of a list of IRI STRINGS
+and rendering substitutions as terms. `quads` and `clear_graph` wrap a string in a
+`NamedNode`. A caller hands strings and prefix-less SPARQL, and gets terms and a dictionary
+built for it; that is the whole contract, and it is worth a line each.
+
+What is NOT thin, and is what the module is actually for: `graphs_of` answers which graphs are
+of a kind AT an instant, by asking the catalogue — 28 callers and the most-used function here;
+`bind` fills `$tokens` and REFUSES a leftover; `classify` says what a graph is, guarding the
+period against a blank node minted twice; `close_catalogue` materialises every kind a row is
+beneath; `rdflib_view` crosses to the other engine. None of those is pyoxigraph's.
 """
 
 from __future__ import annotations
@@ -35,11 +49,10 @@ import io
 import re
 import json
 from datetime import datetime
-from . import clock
 from pathlib import Path
 import pyoxigraph as ox
 
-from .ontology import OREXIS, PUBLIC
+from .ontology import OREXIS
 
 # Which graphs are public — ASKED, not listed. A graph IRI is an instance, and code that named
 # five of them was doing what rule 1 forbids everywhere else; `orexis:PublicGraph` is the term, the
@@ -162,22 +175,6 @@ PREFIXES = "\n" + "\n".join(
 
 DECLARED = frozenset(NAMESPACES)
 
-#  THE SAME DICTIONARY AS SHACL SPELLS IT (#508). A `sh:select` inside a shape may use a
-#  prefixed name only if the constraint says `sh:prefixes <node>` and that node carries one
-#  `sh:declare` per prefix — so every shape in the tree points at ONE node, `orexis:` itself,
-#  and this is what stands there. ASSEMBLED, like `NAMESPACES`, never authored: a kernel
-#  ontology listing every package's prefix would be the kernel knowing the packages. The judge
-#  appends it to every shapes text it crosses to rudof, and the assembled shapes graph carries
-#  it for pySHACL; neither engine is handed a shape whose dictionary is missing.
-DECLARATION = "\n".join(
-    [f"<{NAMESPACES['orexis']}> <{NAMESPACES['sh']}declare> ["
-     f" <{NAMESPACES['sh']}prefix> \"{label}\" ;"
-     f" <{NAMESPACES['sh']}namespace> \"{iri}\"^^<{_XSD_ANY_URI}> ] ."
-     for label, iri in sorted(NAMESPACES.items())]
-) + "\n"
-
-
-
 def _terms(values: dict | None) -> dict | None:
     """A caller's substitutions as the engine's: name -> term. A Python string is an IRI —
     every parameter the kernel binds this way is one — a number or a bool a typed literal,
@@ -232,33 +229,6 @@ class Unbound(ValueError):
 
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
-#  A class defined as an INTERSECTION (#576), read flat: per class, the named classes it
-#  intersects, the values it pins by `owl:hasValue`, and the facets of a datatype restriction
-#  it holds a property's value to. One row per part; `entail` assembles them. Read once per
-#  store, because a definition changes only when genesis or an amendment writes one.
-#  THE PREAMBLE REPEATED IN EVERY BRANCH, which is the engine's rule and not tidiness: a
-#  FILTER or a BIND inside a UNION branch does not see a variable the surrounding pattern
-#  bound (AGENTS.md's trap). Stated once with `{ FILTER(isIRI(?part)) BIND(?part AS ?base) }`
-#  as the first branch, `?base` came back unbound for every class — so every definition
-#  intersected NO named class, and a node of any type satisfied that vacuously.
-_DEFINITIONS_Q = """
-SELECT ?cls ?base ?pinP ?pinV ?pinVt ?rangeP ?facet ?bound WHERE {
-  { ?cls owl:equivalentClass/owl:intersectionOf ?list .
-    ?list rdf:rest*/rdf:first ?base . FILTER(isIRI(?base)) }
-  UNION
-  { ?cls owl:equivalentClass/owl:intersectionOf ?list .
-    ?list rdf:rest*/rdf:first ?part .
-    ?part owl:onProperty ?pinP ; owl:hasValue ?pin .
-    BIND(IF(isIRI(?pin), STR(?pin), "") AS ?pinV)
-    BIND(IF(isIRI(?pin), "", STR(?pin)) AS ?pinVt) }
-  UNION
-  { ?cls owl:equivalentClass/owl:intersectionOf ?list .
-    ?list rdf:rest*/rdf:first ?part .
-    ?part owl:onProperty ?rangeP ; owl:someValuesFrom/owl:withRestrictions ?facets .
-    ?facets rdf:rest*/rdf:first ?f . ?f ?facet ?bound . FILTER(?facet != rdf:type) }
-}"""
-
-
 def _named(text: str) -> ox.NamedNode:
     """One node as a term, from what a caller writes: `<iri>`, a bare IRI, or a PREFIXED name
     in the store's own dictionary — which sensing's writer hands over, and which the engine
@@ -282,29 +252,6 @@ def _instant(text: str | None) -> datetime | None:
         return datetime.fromisoformat(text)
     except ValueError:
         return None
-
-
-def _term_of(row: dict, iri_key: str, text_key: str):
-    """A pinned value as the engine's term: an IRI where the definition names one, else the
-    literal it wrote — read back as the lexical form the row carries."""
-    if row.get(iri_key):
-        return ox.NamedNode(row[iri_key])
-    return ox.Literal(row.get(text_key, ""))
-
-
-def _within(values, facets) -> bool:
-    """Does some value satisfy every facet of a datatype restriction? Numeric, as XSD reads
-    them; a value that is not a number satisfies nothing, and no value at all is not within."""
-    for v in values:
-        try:
-            n = float(v.value)
-        except (AttributeError, TypeError, ValueError):
-            continue
-        if all((n < b if f == "maxExclusive" else n <= b if f == "maxInclusive" else
-                n > b if f == "minExclusive" else n >= b if f == "minInclusive" else True)
-               for f, b in facets):
-            return True
-    return False
 
 
 def render(value) -> str:
@@ -362,11 +309,6 @@ def bind(text: str, **values) -> str:
 # the row. So a rule silently produced a solution binding nothing instead of an error, which is
 # the most expensive shape a bug can take. Round on the way in and the whole class is gone.
 PLACES = 6
-
-
-def decimal(value: float) -> str:
-    """A derived number as a SPARQL literal the store can actually do arithmetic on."""
-    return f'"{value:.{PLACES}f}"^^xsd:decimal'
 
 
 #  --- reading the catalogue over the ENGINE ------------------------------------------------
@@ -553,59 +495,6 @@ def close_catalogue(store) -> None:
         update(store, f"INSERT DATA {{ GRAPH <{catalogue}> {{\n{rows_} }} }}")
 
 
-_PERIODS_Q = """
-SELECT ?g ?start ?end WHERE {
-  GRAPH ?cat {
-    ?cat a orexis:CatalogueGraph .
-    ?g dcterms:temporal ?period . FILTER(isIRI(?g))
-    OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } } }"""
-
-
-def periods(store) -> dict:
-    """The period each graph holds during: IRI -> (start, end), either end None for open.
-    A bound nobody can parse reads as open, for the reason `_instant` gives — a graph whose
-    period cannot be read is not one to drop silently."""
-    return {row["g"]: (_instant(row.get("start")), _instant(row.get("end")))
-            for row in rows(store, _PERIODS_Q)}
-
-
-_OUTDATED_Q = """
-SELECT DISTINCT ?g WHERE {
-  GRAPH ?cat {
-    ?cat a orexis:CatalogueGraph .
-    ?g dcterms:temporal/orexis:end ?end . FILTER(isIRI(?g)) FILTER(?end <= $when)
-    FILTER NOT EXISTS { ?g a orexis:PublicGraph }
-    $owned } }
-ORDER BY ?g"""
-
-
-def outdated(store, *, holder: str | None = None, at: datetime | None = None) -> list[str]:
-    """Every graph whose period has ENDED by `at` — what a reader is already handed none of,
-    and what one sweep drops (#645, a-root-holds-always-and-an-outdated-graph-is-dropped).
-    Never a public graph: a period the world states is the world's to end. `holder` keeps it
-    to that holder's and to what nobody owns, as every other read does."""
-    return [row["g"] for row in rows(
-        store, bind(_OUTDATED_Q, when=instant(at or clock.now()),
-                    owned=Raw(bind(_OWNED, holder=holder) if holder is not None else "")))]
-
-
-def drop_graph(store, graph: str) -> None:
-    """Drop one graph whole — its triples and everything the catalogue says of it. One update,
-    so a graph goes entire or not at all."""
-    catalogue = catalogue_of(store)
-    about = "" if catalogue is None else f"""
-  GRAPH <{catalogue}> {{ <{graph}> ?cp ?co . }}
-  GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }}"""
-    union = "" if catalogue is None else f"""
-  UNION {{ GRAPH <{catalogue}> {{ <{graph}> ?cp ?co }} }}
-  UNION {{ GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal ?period . ?period ?pp ?po }} }}"""
-    update(store, f"""
-DELETE {{
-  GRAPH <{graph}> {{ ?s ?p ?o }}{about} }}
-WHERE  {{
-  {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}{union} }}""")
-
-
 def graphs_of(store, *kinds: str, at: datetime | None = None,
               holder: str | None = None, now: datetime | None = None) -> list[str]:
     """Every graph the catalogue types under any of `kinds` — subclasses included, the rows
@@ -659,19 +548,6 @@ def query_over(store, sparql: str, *graphs: str, substitutions: dict | None = No
     return query(store, sparql, graphs, substitutions)
 
 
-def query_union(store, sparql: str, substitutions: dict | None = None) -> dict:
-    """Read with the default graph as the union of EVERYTHING this store holds.
-
-    For the sovereign's question channel and for a test reading a store back whole. Nothing in
-    the kernel reads through it: a reader there says which kinds it means, and the union reads
-    every sibling world and next hour's readings as the present."""
-    out = io.BytesIO()
-    store.query(sparql, prefixes=NAMESPACES, use_default_graph_as_union=True,
-                substitutions=_terms(substitutions)).serialize(
-        output=out, format=ox.QueryResultsFormat.JSON)
-    return json.loads(out.getvalue())
-
-
 def construct(store, sparql: str, graphs, substitutions: dict | None = None):
     """Run a CONSTRUCT over `graphs` as the default graph and hand back the triples, which are
     not written anywhere — the one thing `query` cannot do, since a CONSTRUCT has a graph and
@@ -715,34 +591,6 @@ def add_quads(store, quads_) -> None:
         store.add(quad)
 
 
-def remove_quads(store, quads_) -> None:
-    """Take quads out, by term. The mirror of `add_quads`."""
-    for quad in quads_:
-        store.remove(quad)
-
-
-def copy_graphs(store, source, *graph_iris: str) -> None:
-    """Copy whole graphs in from ANOTHER store, under their own names — the reader's half and
-    the writer's half of one act, which every caller was otherwise pairing by hand."""
-    add_quads(store, (quad for iri in graph_iris for quad in quads(source, iri)))
-
-
-def nodes_of(store, graph_iri: str) -> dict:
-    """Everything one graph holds, as triples grouped by subject — the graph's NODES."""
-    out: dict = {}
-    for q in quads(store, graph_iri):
-        out.setdefault(q.subject, []).append(ox.Triple(q.subject, q.predicate, q.object))
-    return out
-
-
-def get_graph(store, graph_iri: str) -> str:
-    """A graph's contents as Turtle, or empty if it does not exist yet. A graph nobody has
-    written to is not an error."""
-    out = io.BytesIO()
-    store.dump(output=out, format=ox.RdfFormat.TURTLE, from_graph=ox.NamedNode(graph_iri))
-    return out.getvalue().decode()
-
-
 def rdflib_view(store, *graph_iris: str):
     """These graphs as ONE rdflib graph — the crossing out of the store, for a reader that
     walks RDF STRUCTURE rather than answers a query.
@@ -780,16 +628,6 @@ def dump_nt(store, *graph_iris: str) -> str:
     for iri in graph_iris:
         store.dump(output=out, format=ox.RdfFormat.N_TRIPLES, from_graph=ox.NamedNode(iri))
     return out.getvalue().decode()
-
-
-def contains_graph(store, graph_iri: str) -> bool:
-    """Whether the named graph EXISTS — a graph forked and then emptied still does."""
-    return store.contains_named_graph(ox.NamedNode(graph_iri))
-
-
-def has_graph(store, graph_iri: str) -> bool:
-    """Whether anything has been written here — how birth knows it already happened."""
-    return any(store.quads_for_pattern(None, None, None, ox.NamedNode(graph_iri)))
 
 
 def graph_names(store) -> list[str]:
@@ -876,44 +714,6 @@ def put_graph(store, graph_iri: str, ttl: str, dataset: bool = False) -> None:
         store.load(ttl, format=ox.RdfFormat.TURTLE, to_graph=graph)
 
 
-def endow_graph(store, graph_iri: str, ttl: str) -> list[str]:
-    """Add whatever the Turtle authors that the graph has NEVER held. Touch nothing held.
-
-    The amendment half of birth (#202): a belief the agent holds is the agent's, revisions
-    included, so the unit of novelty is the TERM — a predicate the graph holds is skipped
-    whole, whatever its value, and one it has never held arrives with its blank-node closure,
-    since an aim is a structure and not a triple. Returns the terms added.
-    """
-    graph = ox.NamedNode(graph_iri)
-    held = {q.predicate for q in store.quads_for_pattern(None, None, None, graph)}
-    authored = list(ox.parse(ttl, format=ox.RdfFormat.TURTLE))
-    by_subject: dict = {}
-    for t in authored:
-        by_subject.setdefault(t.subject, []).append(t)
-    added: list[str] = []
-    queue: list = []
-    for t in authored:
-        if isinstance(t.subject, ox.BlankNode) or t.predicate in held:
-            continue            # a blank node is reached only through the pair that owns it
-        queue.append(t)
-        added.append(t.predicate.value)
-    seen: set = set()
-    i = 0
-    while i < len(queue):
-        t = queue[i]
-        i += 1
-        store.add(ox.Quad(t.subject, t.predicate, t.object, graph))
-        if isinstance(t.object, ox.BlankNode) and t.object not in seen:
-            seen.add(t.object)
-            queue.extend(by_subject.get(t.object, []))
-    return sorted(set(added))
-
-
-def load_file(store, path: str | Path, graph_iri: str) -> None:
-    """Read a ratified file straight into a graph, without going through a string."""
-    store.load(path=str(path), format=ox.RdfFormat.TURTLE, to_graph=ox.NamedNode(graph_iri))
-
-
 def optimize(store) -> None:
     """Compact the store. Blocking, and worth it only when something says it is needed: the
     belief base is an LSM tree and every reading is a DELETE plus an INSERT, so the file grows
@@ -962,98 +762,3 @@ def remember(memo: "Memo | None", key, compute):
     return compute() if memo is None else memo.get(key, compute)
 
 
-def definitions(store, memo: Memo | None = None):
-    """The domain's class definitions: class -> (the named classes it intersects, the values
-    it pins, the ranges it holds a value to); the subclass closure; and which classes some
-    package declared `orexis:keyedBy`.
-
-    Read off public knowledge, and worth a memo: as one SPARQL question it cost 300 ms a call
-    however narrowed, and a pass forks tens of worlds.
-    """
-    return remember(memo, ("definitions",), lambda: _read_definitions(store))
-
-
-def _read_definitions(store):
-    public = graphs_of(store, PUBLIC)
-    defs: dict = {}
-    for r in rows(store, _DEFINITIONS_Q, public):
-        cls = ox.NamedNode(r["cls"])
-        bases, pinned, ranges = defs.setdefault(cls, (set(), set(), {}))
-        if r.get("base"):
-            bases.add(ox.NamedNode(r["base"]))
-        if r.get("pinP"):
-            pinned.add((ox.NamedNode(r["pinP"]), _term_of(r, "pinV", "pinVt")))
-        if r.get("rangeP") and r.get("facet"):
-            ranges.setdefault(ox.NamedNode(r["rangeP"]), []).append(
-                (r["facet"].rsplit("#", 1)[-1], float(r["bound"])))
-    defs = {c: (b, p, tuple(r.items())) for c, (b, p, r) in defs.items()}
-    supers: dict = {}
-    for r in rows(store, "SELECT ?c ?s WHERE { ?c rdfs:subClassOf+ ?s . FILTER(isIRI(?s) && isIRI(?c)) }", public):
-        supers.setdefault(ox.NamedNode(r["c"]), set()).add(ox.NamedNode(r["s"]))
-    keyed = {ox.NamedNode(r["c"]) for r in rows(
-        store, "SELECT DISTINCT ?c WHERE { ?c <http://example.org/orexis#keyedBy> ?p }", public)}
-    return defs, supers, keyed
-
-
-def _nodes_in(store, graph_iri: str, of, among: str) -> list:
-    """The nodes to ask about: those named, those a pattern picks out, or all of them."""
-    if of and not among:
-        return [_named(x) if isinstance(x, str) else x for x in of]
-    if among:
-        text = f"SELECT DISTINCT ?x WHERE {{ GRAPH <{graph_iri}> {{ {among} }} }}"
-        return [r["x"] for r in store.query(text, prefixes=NAMESPACES,
-                                            named_graphs=[ox.NamedNode(graph_iri)])]
-    seen, graph = [], ox.NamedNode(graph_iri)
-    for q in store.quads_for_pattern(None, _RDF_TYPE, None, graph):
-        if q.subject not in seen:
-            seen.append(q.subject)
-    return seen
-
-
-def entail(store, graph_iri: str, of=(), among: str = "", memo: Memo | None = None) -> list:
-    """Assert in `graph_iri` what the vocabulary entails of the nodes there: membership under
-    every class defined as an `owl:intersectionOf` a named class, `owl:hasValue` restrictions
-    and a datatype restriction's facets — the second OWL construct materialised rather than
-    reasoned about at read time. Deliberation is on triples and a number is not special: what
-    a reading IS is decided inside the domain as classes and asserted here, where a step's
-    precondition can then say it as a triple (#576).
-
-    THE DEFINITIONS ARE READ AS DATA AND EVALUATED HERE, which is the same bargain the shape
-    compiler strikes: the domain owns the declaration, the kernel owns how it is answered.
-    `of` narrows to some NAMED nodes as rendered terms; `among` to the nodes a pattern picks
-    out inside the graph, which is how a fork's observation is named, being a blank node no
-    `VALUES` can reach. Returns the memberships asserted, as `(node, class)` term pairs, and
-    asserts through the term API — a blank node written back as text is a new blank node.
-    """
-    graph = ox.NamedNode(graph_iri)
-    nodes = _nodes_in(store, graph_iri, of, among)
-    defs, supers, keyed = definitions(store, memo)
-    out = []
-    for node in nodes:
-        values, types = {}, set()
-        for q in store.quads_for_pattern(node, None, None, graph):
-            if q.predicate == _RDF_TYPE:
-                types.add(q.object)
-            values.setdefault(q.predicate, set()).add(q.object)
-        for cls, (bases, pinned, ranges) in defs.items():
-            if cls in types or not bases <= types:
-                continue
-            if any(v not in values.get(p, ()) for p, v in pinned):
-                continue
-            if all(_within(values.get(p, ()), facets) for p, facets in ranges):
-                out.append((node, cls))
-                types.add(cls)
-        #  AND THE FAMILIES (#579): every class the node is now typed with, closed upward, so
-        #  a shape's `sh:class` reads what a reading IS without walking a subclass path.
-        #  STOPPING AT A KEYED CLASS: a reading gains its bands' families and never what sits
-        #  above `sosa:Observation`, which every reading has alike and which the signature
-        #  would read as a fact.
-        stop = {s for k in types & keyed for s in supers.get(k, ())} | (types & keyed)
-        for cls in list(types):
-            for sup in supers.get(cls, ()):
-                if sup not in types and sup not in stop:
-                    out.append((node, sup))
-                    types.add(sup)
-    for node, cls in out:
-        store.add(ox.Quad(node, _RDF_TYPE, cls, graph))
-    return out
