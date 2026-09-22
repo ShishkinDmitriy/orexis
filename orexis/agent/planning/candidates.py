@@ -79,7 +79,7 @@ class Candidate:
 
 #  WHAT THE VOCABULARY DECLARES, and the only reason to ask: an action carries the SELECT that
 #  says when it is possible, and running it is the only way to learn what a world affords.
-#  There is nothing to traverse from — a step and a candidate are what this is about to make.
+#  There is nothing to traverse from — a candidate is what this is about to make.
 #
 #  `STR(?takes)` because GROUP_CONCAT over an IRI binds NOTHING in this engine — no column at
 #  all, measured — where the string form binds; the same trap `find_wants` reads a want's abouts
@@ -91,17 +91,16 @@ _ACTIONS = """SELECT ?action ?available (GROUP_CONCAT(DISTINCT STR(?takes); sepa
 } GROUP BY ?action ?available"""
 
 #  The memo's key on the store. A constant, because two spellings would be two memos.
-_MEMO = ("steps", "actions")
+_MEMO = ("candidates", "actions")
 
 
-def find_candidates(store, me: str,
-               *, graphs=None, memo=None) -> list[Candidate]:
+def find_candidates(store, me: str, *, graphs=None, memo=None) -> list[Candidate]:
     """Every candidate this agent could take in one world, name-ordered.
 
-    A FUNCTION OVER THE STORE. It was a collection holding one — `Steps(store).find_all(…)` —
-    and the store was the only thing the instance held, so constructing one said nothing a
-    parameter could not. Which store is the question's: a search asks its imaginarium what an
-    imagined world affords and the present asks the belief base.
+    A FUNCTION OVER THE STORE. It was a collection holding one, and the store was the only
+    thing the instance held, so constructing one said nothing a parameter could not. Which
+    store is the question's: a search asks its imaginarium what an imagined world admits, and
+    an actuator standing in the present asks the belief base.
 
     IT ASKS THE STORE FOR ITS OWN TEMPLATES. They were a parameter — every caller handed
     `find_actions(…)` straight in and nothing else ever consumed the list — and the parameter
@@ -154,7 +153,7 @@ def candidates_of_action(store, action: dict, me: str, *, graphs=None) -> list[C
     ZERO IS ORDINARY and is the commonest answer: nine of the eleven actions a simulation
     agent loads are admitted by nothing, because their preconditions do not bind. MANY is
     ordinary too — a supplier with three valves admits `Serving` three times, one per
-    valve, and choosing between them is the whole of what a plan does at that step.
+    valve, and choosing between them is the whole of what the search does there.
 
     """
     #  A precondition carrying a token nobody binds REFUSES rather than reaching the engine as

@@ -12,9 +12,12 @@ replaces rather than extends. One pipeline, and the package is what it is made o
    own (`scope_actions.py`, `scopes.py`, `touches.py`);
 3. **the imaginarium** — a store per scope, filled from the beliefs by `prepare_ground`,
    holding one graph per world the search reaches (`prepare_ground.py`);
-4. **the search** — best-first over those worlds: what a world admits (`candidates.py`), what a
-   step would change (`effects.py`), and whether the want is met there (`planner.py`, which
-   also holds the read that hands it the wants, being the only thing that asks).
+4. **the search** — best-first over those worlds, and a LOOP rather than a stage: pop a world,
+   ask what it ADMITS (`candidates.py`), fork on one of those and run its effect into the fork
+   (`apply_effects.py`), ask whether the want is met there, and if not put it back on the
+   frontier. `effects.py` answers what a candidate costs and how long it takes to land, and
+   `planner.py` holds the frontier, the budget and the met-test — and the read that hands it
+   the wants, being the only thing that asks.
 
 NOTHING COMES BACK. What a pass finds it READS OUT of the worlds it walked
 (`extract_plan.py`): each possible world says which it was forked from and which CANDIDATE
