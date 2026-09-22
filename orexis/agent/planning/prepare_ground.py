@@ -100,6 +100,7 @@ from orexis.agent.hash_named_graph import hash_named_graph
 from orexis.agent.store import (Raw, add_quads, bind, catalogue_of, classify, copy_graph,
                                           forget_graph, graphs_of, quads, rows, update)
 
+from .apply_effects import apply_diff
 from .ontology import GROUND_GRAPH
 
 _PROV = "http://www.w3.org/ns/prov#"
@@ -265,29 +266,18 @@ def _fork(store: ox.Store, parent: str, name: str, added, retracts: list[str]) -
     """The ground one boundary past `parent`: its facts, less what each prediction there
     retracts, plus what they all add.
 
-    EVERY DELETE BEFORE ANY ADD, and that is what keeps a boundary ONE world change. The
-    predictions beginning at an instant supersede in parallel: run as delete-add, delete-add,
-    the second retraction would match what the first had just added. Deletion is idempotent,
-    so running them one after another against the fork reaches the same world as running them
-    all against the ground before it — which is what the CONSTRUCT-and-remove-by-term scheme
-    did explicitly, and the only part of it worth keeping.
-
-    A RETRACTION THAT WILL NOT RUN RETRACTS NOTHING, loudly. A prediction whose text the
-    engine refuses would otherwise add its value beside the one it meant to replace, and a
-    shape holding over every value would still see the old one — which is the exact failure
-    the retraction exists to close, arriving by another door.
+    EVERY DELETE BEFORE ANY ADD, which is `apply_diff`'s whole job and said there: a boundary
+    is ONE world change, and the predictions beginning at an instant supersede in parallel.
     """
     node = ox.NamedNode(name)
     #  THE SAME COPY A SEARCH MAKES, and the store's because it says nothing about why: a
     #  boundary forks the ground before it exactly as a step forks the world it is taken in.
     copy_graph(store, parent, name)
-    for text in retracts:
-        try:
-            update(store, bind(text, state=Raw(f"<{name}>")))
-        except Exception as exc:                                    # noqa: BLE001
-            log.error("a prediction's retraction would not run, so it supersedes nothing: %s",
-                      exc)
-    add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
+    #  AND THE SAME DIFF, for the same reason: every delete before any add. A prediction's
+    #  retraction is bound HERE, to the ground this boundary makes, because what `$state`
+    #  means is the caller's — an action's is bound to the world its step makes.
+    apply_diff(store, name, added,
+               [bind(text, state=Raw(f"<{name}>")) for text in retracts])
     #  AND WHICH GROUND IT CAME FROM, in the store rather than in its name. What MADE it is
     #  not said: a ground is made by predictions nobody takes, and its own period says when —
     #  which is the one thing a possible world has no answer for and a ground does.

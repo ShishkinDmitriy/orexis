@@ -62,18 +62,44 @@ def apply_effects(store, action: str, into: str, graphs=None, *, memo=None, **bi
     #  node's where a search means "there" — and the rule names neither.
     added = _run(store, rule.get("construct"), bind, graphs)
     retract = _retraction(rule.get("retracts"), into, bind)
-    if not added and retract is None:
+    return apply_diff(store, into, added, [retract] if retract is not None else [])
+
+
+def apply_diff(store, into: str, added, retracts: list[str]) -> bool:
+    """Every DELETE before any ADD, into `into`. True where there was anything to do.
+
+    **THE ORDER IS THE WHOLE OF THIS FUNCTION, and it is why there is one.** Two callers make
+    a world out of the world before it — a step being taken, and the predictions that begin at
+    a boundary — and both must delete before they add, for the same reason said two ways:
+
+    - a construct reuses the very node its retraction names, so an addition made first would
+      be deleted by the retraction meant to precede it, and the world would come back holding
+      NEITHER reading;
+    - the predictions beginning at one instant supersede in PARALLEL, and run as delete-add,
+      delete-add the second retraction would match what the first had just added. Deletion is
+      idempotent, so all of them against the fork reaches the world all of them against the
+      ground before it reached.
+
+    Written twice, the two would be one commit apart from disagreeing.
+
+    A RETRACTION THAT WILL NOT RUN RETRACTS NOTHING, LOUDLY. A text the engine refuses would
+    otherwise leave the old value standing beside the new one, and a shape holding over every
+    value would still see the old — the exact failure a retraction exists to close, arriving
+    by another door. It is a package's bug and must not take an agent down.
+
+    `retracts` are UPDATE texts already bound, because what `$state` means is the caller's:
+    an action's retraction is bound to the world the step MAKES, a prediction's to the ground
+    the boundary makes.
+    """
+    if not added and not retracts:
         return False
-    if retract is not None:
+    for text in retracts:
         try:
-            update(store, retract)
+            update(store, text)
         except Exception as exc:                                    # noqa: BLE001
-            #  A rule that will not run is a package's bug and must not take an agent down:
-            #  the lever still works, and what is lost is a world holding two readings where
-            #  it should hold one — which is the exact failure the retraction exists to close.
-            log.error("an effect's retraction would not run, so it retracts nothing: %s", exc)
+            log.error("a retraction would not run, so it retracts nothing: %s", exc)
     node = ox.NamedNode(into)
-    add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
+    add_quads(store, (ox.Quad(q.subject, q.predicate, q.object, node) for q in added))
     return True
 
 
