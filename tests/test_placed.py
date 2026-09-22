@@ -30,8 +30,7 @@ def _fern(monkeypatch, moisture=FALLING):
 
 
 def _region_want(agent):
-    return next(d for d in agent.considering()
-                if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
+    return next(d for d in agent.wants() if MOISTURE in d.about)
 
 
 def test_a_pass_that_finds_nothing_at_the_latest_start_stands_at_the_present(monkeypatch):

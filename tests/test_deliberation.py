@@ -90,13 +90,13 @@ def test_not_seeing_means_look(make):
     """
     fern = make("fern")
     decider = decider_of(fern)
-    never_read = next(d for d in fern.considering()
+    never_read = next(d for d in fern.wants()
                       if d.is_epistemic and d.observed_property == MOISTURE)
     assert never_read.state == "unmeasured"
     assert decider.propose_for(never_read) == OBSERVING
 
     _read(fern, 0.30, age_s=10_000)
-    too_old = next(d for d in fern.considering()
+    too_old = next(d for d in fern.wants()
                    if d.is_epistemic and d.observed_property == MOISTURE)
     assert too_old.state == "stale", "read once, and the answer has gone cold"
     assert decider.propose_for(too_old) == OBSERVING, \
@@ -440,7 +440,7 @@ def test_the_search_finds_the_dealers_two_step_from_two_nodes_that_never_meet(ma
     #  THE WANT ABOUT THE CALL, not the call itself: a call is an instance under the host's
     #  standing desire now, and the want the derivation mints is named after the desire.
     called = calls.uri_for(next(m.uri for m in supplier.hosting().markets))
-    want = next(d for d in supplier.considering() if called in d.about)
+    want = next(d for d in supplier.wants() if called in d.about)
     plan = supplier.deliberator.decide(want)
     assert plan is not None
     assert [(s.action.rsplit("#", 1)[-1], (s.value_of(VENUE) or s.value_of(VALVE) or "").rsplit(".", 1)[-1])

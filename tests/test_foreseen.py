@@ -35,8 +35,7 @@ def _gardener(monkeypatch, moisture):
 
 
 def _region_want(agent):
-    return next(d for d in agent.considering()
-                if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
+    return next(d for d in agent.wants() if MOISTURE in d.about)
 
 
 def _crossing_of(agent):

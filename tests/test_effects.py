@@ -315,8 +315,7 @@ def test_a_predicted_reading_is_stamped_when_its_step_lands(monkeypatch):
                         "SELECT ({seconds} AS ?seconds) WHERE {{ }}" }} }}
                 WHERE {{ GRAPH <{ACTIONS_GRAPH}> {{
                     <{DOSING}> <http://example.org/orexis#landsAfter> ?text }} }}""")
-        desire = next(g for g in agent.considering()
-                      if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+        desire = next(g for g in agent.wants() if MOISTURE in g.about)
         planner = Planner(agent, agent.me)
         plan = planner.plan(desire)
         assert plan.outcome == "satisfied", plan.outcome

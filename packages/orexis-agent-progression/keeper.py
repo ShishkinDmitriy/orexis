@@ -1499,7 +1499,7 @@ WHERE  {{ GRAPH <{self.graph}> {{ <{expectation.uri}> <{PROGRESSION + "by"}> ?wa
             return False
         self.log.info("advanced %s to %s", _short(expectation.uri), standing.action.rsplit("#", 1)[-1])
         self._tell("advanced", standing.action, expectation.want, "the previous step was answered")
-        judgment = next((d for d in self.agent.considering() if d.uri == expectation.want), None)
+        judgment = self.agent.want(expectation.want)
         carry_out(self.agent, standing.step, judgment, expectation.uri)
         return True
 
@@ -1567,11 +1567,11 @@ GROUP BY ?s ?next ?action ?quantity ?predicts ?precondition""", self.graph, *sel
 
     def _want_met(self, want: str) -> bool:
         """Whether the want this intention pursues reads MET now, by whoever holds it — the
-        same question `considering()` answers the deliberator, asked of the container and never
-        of a store: what met means is the want's own (a shape, a measure, a pattern), and the
-        ledger knows none of it."""
-        return any(d.state == "met" for d in self.agent.considering()
-                   if d.uri == want or d.desire == want)
+        ABSENCE IS THE ANSWER. A want exists because its desire read unmet, so a want that is
+        not there is one nothing is owed about — and that is the derivation's verdict, reached
+        once, rather than a label this layer asks a collection to compute for it. It read
+        `d.state == "met"` off a row the container judged at read time."""
+        return self.agent.want(want) is None
 
     def _next_of(self, intention_uri: str) -> str | None:
         rows = bindings(self.agent.intentions.query_over(f"""

@@ -36,6 +36,9 @@ import rdflib
 from orexis_agent_progression import clock
 from orexis_agent_progression.keeper import PATIENCE_S
 from orexis_agent_progression.ontology import FORESEEN, OREXIS
+
+#  SHACL's own namespace, for reaching a desire's avoided state in the shapes graph.
+SH = "http://www.w3.org/ns/shacl#"
 from orexis_agent_progression.store import (NAMESPACES, answer, bind, bindings, graphs_holding,
                                             instant, rows)
 
@@ -627,7 +630,7 @@ def read_now(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
              shape: str | None, now: datetime) -> list[Witness] | None:
     """What this desire's met-test reads at the PRESENT: its witnesses, empty where it is met,
     None where there is no compilable met-test to ask."""
-    select = compiled(shapes, shape, desire)
+    select = compiled(shapes, shape, desire, holder)
     if select is None:
         return None
     return _witnesses_at(store, select, holder, now, now)
@@ -643,7 +646,7 @@ def read_ahead(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
     leave what the desire wants. The present is excluded — a desire unmet now is pursued as
     itself, and a crossing is a thing in the future.
     """
-    select = compiled(shapes, shape, desire)
+    select = compiled(shapes, shape, desire, holder)
     if select is None:
         return []
     seen: dict[tuple[str, str], Witness] = {}
@@ -725,22 +728,58 @@ def shapes_in(store: ox.Store) -> rdflib.Graph:
     return shapes
 
 
-def compiled(shapes: rdflib.Graph, shape: str | None, of: str) -> str | None:
-    """`shape` compiled to the select whose rows are its VIOLATIONS — `?this`, which
-    constraint, `?_about` and `?_side` where the constraint's block says them — or None, with
-    a word in the log, where there is no shape or the compiler refuses it.
+def compiled(shapes: rdflib.Graph, shape: str | None, of: str,
+             holder: str | None = None) -> str | None:
+    """A desire's met-test compiled to the select whose rows are its VIOLATIONS — `?this`,
+    which constraint, `?_about` and `?_side` where the constraint's block says them — or None,
+    with a word in the log, where there is nothing to compile or the compiler refuses it.
 
     THE REPORT AND NOT THE FOCUS NODES (one-function-mints-every-want): a desire universal over
     several properties fails per property, and the rows are what say which. The planner
-    compiles the same shape the same way for the law it holds candidates to."""
-    from orexis_agent_progression.violation import Unsupported, report_select
+    compiles the same shape the same way for the law it holds candidates to.
+
+    **BOTH POLARITIES**, because a desire may state either and the derivation is the only thing
+    that judges (`orexis:metWhen`, what should hold; `orexis:unmetWhen`, the state to avoid).
+    An avoided state was judged in the container instead, at read time, by the collection that
+    assembled what an agent was considering — so deleting the collection took the only reader
+    an aversion had. It is one judging pass or it is none.
+    """
+    from orexis_agent_progression.violation import Unsupported, entered_select, report_select
 
     if shape is None:
-        return None
+        return _avoided(shapes, of, holder)
     try:
         return report_select(shapes.cbd(rdflib.URIRef(shape)), rdflib.URIRef(shape))
     except Unsupported as exc:
         log.warning("%s: its met-test cannot be compiled, so it is not judged: %s",
+                    of.rsplit("#", 1)[-1], exc)
+        return None
+
+
+def _avoided(shapes: rdflib.Graph, of: str, holder: str | None) -> str | None:
+    """The select whose rows say this desire's AVOIDED state has been entered, or None.
+
+    TWO FORMS, as a world may write either. A SHAPE is compiled to its negative twin — the
+    focus nodes that CONFORM are the violations (`entered_select`, #499) — and the rows are
+    witnesses like any other. A SELECT written inline beside the desire is a sentence about
+    the world with no focus node of its own, so the row is about the HOLDER: it is wrapped,
+    not rewritten, and `$this` is bound as the pattern's author expects.
+    """
+    from orexis_agent_progression.violation import Unsupported, entered_select
+
+    avoided = next(shapes.objects(rdflib.URIRef(of), rdflib.URIRef(OREXIS + "unmetWhen")), None)
+    if avoided is None:
+        return None
+    text = next(shapes.objects(avoided, rdflib.URIRef(SH + "select")), None)
+    if text is not None:
+        if holder is None:
+            return None
+        return (f"SELECT ?this WHERE {{ {{ {bind(str(text), this=holder)} }} "
+                f"BIND(<{holder}> AS ?this) }}")
+    try:
+        return entered_select(shapes.cbd(avoided), avoided)
+    except Unsupported as exc:
+        log.warning("%s: its avoided state cannot be compiled, so it is not judged: %s",
                     of.rsplit("#", 1)[-1], exc)
         return None
 

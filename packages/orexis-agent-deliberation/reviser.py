@@ -83,6 +83,9 @@ class Reviser:
         self._drain_lock = threading.Lock()     # one pass at a time, whoever asked for it
         self._worker: threading.Thread | None = None
         self._stopped = False
+        #  A PASS HAS BEEN ASKED FOR. The mind's clock sets this and returns; the pass itself
+        #  runs on the thread below. See `due()`.
+        self._due = False
 
     # --- the door -----------------------------------------------------------------------
 
@@ -95,6 +98,24 @@ class Reviser:
             had_desire, had_surprise = self._pending.get(want, (None, None))
             self._pending[want] = (judgment if judgment is not None else had_desire,
                                    surprise if surprise is not None else had_surprise)
+            self._lock.notify_all()
+
+    def due(self) -> None:
+        """A PASS IS DUE — ask for one and return. The mind's clock calls this and nothing else.
+
+        A timer's landing is an enqueue onto the REACTIVE loop, and the loop must never be
+        held: it is milliseconds, atomic, no search (AGENTS.md, the three layers). The pass is
+        neither — `derive_wants` alone measured 44 ms on the loner world, before the collector
+        and before a single want is marked — so what the clock does here is set a flag and
+        notify, which is what the loop is for, and the pass runs on the mind's own thread.
+
+        It used to be `Timer(interval, lambda: pursuit.consider(self))`, so every pass ran on
+        the loop. Nothing failed: the loop simply stopped answering for as long as the pass
+        took, on the agent's own cadence, which is the kind of thing that shows up as a
+        message handled late and never as an error.
+        """
+        with self._lock:
+            self._due = True
             self._lock.notify_all()
 
     # --- the drain ----------------------------------------------------------------------
@@ -129,9 +150,21 @@ class Reviser:
     def _serve(self) -> None:
         while True:
             with self._lock:
-                self._lock.wait_for(lambda: self._pending or self._stopped)
+                self._lock.wait_for(lambda: self._pending or self._due or self._stopped)
                 if self._stopped:
                     return
+                due, self._due = self._due, False
+            #  THE PASS FIRST, THEN WHAT IT MARKED. `consider` derives what is wanted, collects
+            #  what is finished and marks what may be acted on; the drain below searches for
+            #  each mark. Both on this thread, which is the one deliberation is allowed to
+            #  take its time on.
+            if due:
+                try:
+                    pursuit.consider(self.agent)
+                except Exception as exc:
+                    #  A pass that failed is a reason to say so, not to stop being a mind —
+                    #  the same rule the drain lives by, and the loop above must keep serving.
+                    log.error("%s: the pass failed: %s", self.agent.id, exc)
             self._drain()
 
     def _drain(self) -> None:
@@ -145,10 +178,13 @@ class Reviser:
                     want, (judgment, surprise) = next(iter(self._pending.items()))
                     del self._pending[want]
                 try:
+                    #  THE MIND DOES NOT WAIT FOR THE EXECUTOR. What this thread is for is
+                    #  finding plans; committing one and taking its head is progression's, on
+                    #  the executing thread, and this drain has no use for the answer.
                     if judgment is not None:
-                        pursuit.pursue(self.agent, judgment, surprise=surprise)
+                        pursuit.pursue(self.agent, judgment, surprise=surprise, wait=False)
                     else:
-                        pursuit.pursue_for(self.agent, want, surprise=surprise)
+                        pursuit.pursue_for(self.agent, want, surprise=surprise, wait=False)
                 except Exception as exc:
                     log.error("%s: could not reconsider %s: %s", self.agent.id,
                               want.rsplit("#", 1)[-1], exc)

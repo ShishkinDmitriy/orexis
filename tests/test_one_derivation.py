@@ -76,7 +76,7 @@ def test_a_claim_arriving_writes_a_debt_and_a_prediction_and_the_derivation_mint
     [judged] = ledger.obligations()
     assert judged.uri == want.uri and judged.claim == "jti-1"
     assert judged.state == "standing" and not judged.pursuable
-    presented = next(j for j in agent.considering() if j.uri == want.uri)
+    presented = next(j for j in agent.wants() if j.uri == want.uri)
     assert presented.claim == "jti-1" and presented.desire == desire, \
         "the choir's judgment, under the derivation's provenance"
 
@@ -109,7 +109,7 @@ def test_a_second_claim_is_a_second_want_and_the_first_stands(monkeypatch):
     assert second.holds_at > first.holds_at, \
         "each at its own deadline"
 
-    presented = next(j for j in agent.considering() if j.uri == first.uri)
+    presented = next(j for j in agent.wants() if j.uri == first.uri)
     assert pursuit.handed(agent, presented).uri == first.uri
     derive_wants(agent.beliefs.engine)
     assert derive_wants(agent.beliefs.engine) == [], "nothing new to mint"
@@ -139,7 +139,7 @@ def test_what_was_foreseen_has_arrived_when_the_holder_asks_before_the_lapse(mon
     derive_wants(agent.beliefs.engine)
     assert derive_wants(agent.beliefs.engine) == [], "and the derivation is idle again"
 
-    presented = next(j for j in agent.considering() if j.uri == now.uri)
+    presented = next(j for j in agent.wants() if j.uri == now.uri)
     assert presented.holds_at is None and presented.pursuable
     plan = agent.deliberator.decide(presented)
     assert plan is not None and [s.action.rsplit("#", 1)[-1] for s in plan.steps] == ["Serving"]

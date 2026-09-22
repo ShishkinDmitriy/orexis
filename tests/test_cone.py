@@ -292,7 +292,7 @@ def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survive
     monkeypatch.setenv("OREXIS_WORLD", "loner")
     st = genesis_store({("zz", MOISTURE): 0.05, ("water_butt", STORED): 3.0}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
-    desire = next(g for g in agent.considering() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    desire = next(w for w in agent.wants() if MOISTURE in w.about)
     planner = Planner(agent, agent.me)
     plan = planner.plan(desire)
     assert plan.steps, "a dry gardener doses"
@@ -302,12 +302,14 @@ def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survive
     assert lo is not None and hi is not None, "the band the dose reaches has both bounds"
     write_reading(agent, (lo + hi) / 2, MOISTURE)     # lands inside the band the dose predicted
     write_reading(agent, 2.5, STORED)                 # the butt's level moves meanwhile
-    desire = next(g for g in agent.considering() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    #  THE SAME WANT, not looked up again. A reading landing in the band the dose predicted is
+    #  one IN REGION, so the derivation withdraws the want it answered — no want, no action —
+    #  and this is a test of the planner's cone, whose subject is the want the plan was found
+    #  for. It re-read the agent's wants and got whatever the container was presenting.
     again = planner.plan(desire)
     assert _kept_worlds(agent) > 0, "the butt drifted and the pot landed a hundredth off: the moisture cone stands"
     assert [s.action for s in again.steps] == [s.action for s in plan.steps[1:]], "the tail is what is left"
     write_reading(agent, hi + 0.01, MOISTURE)         # into another band: another world
-    desire = next(g for g in agent.considering() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
     planner.plan(desire)
     assert _kept_worlds(agent) == 0, "a reading in another band is not the kept world"
 
@@ -389,7 +391,7 @@ toy:Exit a orexis:Action ;
     #  tempting lever dearer than it is dropped before it is simulated, and a world never
     #  forked is never refused. Free, it is forked, refused and kept.
     agent, st = _lawful_gardener(tmp_path, monkeypatch, _toy_pair(0.0, 0.0) + exit_toy)
-    moisture = next(g for g in agent.considering() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    moisture = next(w for w in agent.wants() if MOISTURE in w.about)
     planner = Planner(agent, agent.me)
     first = planner.plan(moisture)
     refused = [n for n in planner._nodes if n.verdict == search.trace.FORBIDDEN]
@@ -399,7 +401,11 @@ toy:Exit a orexis:Action ;
     landed = next(f[4] for f in adds if f[0] == "keyed" and f[3] == RESULT)
     write_reading(agent, landed, MOISTURE)
     st.update(f"INSERT DATA {{ GRAPH <{STATE_GRAPH}> {{ {MARKER} }} }}")
-    moisture = next(g for g in agent.considering() if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    #  AND THE WANT IS GONE WITH IT: the reading the refused dose landed is in region, so the
+    #  derivation withdraws what it answered. The cone's subject is the want the plan was
+    #  found for, which is what re-roots the planner in the world the agent actually entered.
+    assert not [w for w in agent.wants() if MOISTURE in w.about], \
+        "the refused dose landed the reading in region, so nothing is wanted about moisture"
     planner.plan(moisture)
     assert _kept_worlds(agent) >= 1 and _surprise(agent) is None, "the present was the refused world, kept"
     plan = Planner(agent, agent.me).plan(_avoidance_row(agent))

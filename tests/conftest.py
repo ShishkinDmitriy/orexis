@@ -21,7 +21,8 @@ from agent import genesis
 
 from assembly import loader
 from agent.genesis import agent_id_of
-from orexis_agent_progression import clock   # the agent's timeline, which a test helper speaks in
+from orexis_agent_progression import clock
+from orexis_agent_reactive.loop import loop   # the agent's timeline, which a test helper speaks in
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_capability_sensing.sensed_writer import observation_uri
 from orexis_agent_progression.store import Store
@@ -248,9 +249,16 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None, *,
     #  pass runs on a thread of the mind's own (#392). A test wants the consequences before it
     #  asserts, so this waits for that thread — which is not this one, which is what
     #  `tests/test_hooks.py` holds the reactive row to.
+    #
+    #  AND THEN THE LOOP, which is a second wait because they are two layers. The mind finds a
+    #  plan and hands it down; committing it to the ledger and taking its head run on the
+    #  EXECUTING thread, and the mind no longer waits for that — a search that blocked on the
+    #  executor had made the two one. So "the pass is done" stopped meaning "the act is taken",
+    #  and a test wanting the consequences has to ask both layers.
     def deliver(topic, payload):
         link._on_message(topic, Msg(topic, payload).payload)
         agent.reviser.settle()
+        loop().submit(lambda: None).result()      # everything the pass handed down, taken
 
     agent.deliver = deliver
     agent.hosting = lambda: agent.module("hosting")

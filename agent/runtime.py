@@ -52,7 +52,6 @@ from orexis_agent_deliberation import pursuit
 from orexis_agent_progression.timer import Timer
 from orexis_agent_progression.intentions import Intentions
 
-from orexis_agent_deliberation.considering import Considering
 from orexis_agent_progression.keeper import Keeper
 from .metrics import Metrics
 from orexis_agent_progression.upkeep import BeliefBaseUpkeep
@@ -116,10 +115,19 @@ class Agent:
         # decides its own store and its own writability — this one exposes no writer — and
         # the agent holds the modalities, never the stores, by the sovereign's ruling.
         self.desires = Desires(self.beliefs)
-        #  Everything this agent is considering, as a collection. Handed the WHOLE agent, and
-        #  that is the point rather than an omission: what a want reads as is contributed by
-        #  whichever capability holds the region want, so the collection has to reach the choir.
-        self._considering = Considering(self)
+        #  AND WHAT IT WANTS, derived once. A want exists because its desire read unmet, so an
+        #  agent whose pot is already dry wants something from the moment it exists — and
+        #  nothing derived at construction, so a freshly built agent wanted NOTHING whatever
+        #  its readings said. The collection that used to stand here hid that by presenting
+        #  each DESIRE wherever no want stood under it.
+        #
+        #  HERE AND NOT ONLY IN `run()`, although `run()` is where an agent STARTS: every test
+        #  that builds an agent without running it, and every module that reads what the agent
+        #  wants, would otherwise each have to remember. Measured at 44 ms on the loner world
+        #  — about eleven seconds over a suite that builds some 250 agents, against a
+        #  thirteen-minute run — which is the price of the question having one answer.
+        from orexis_agent_deliberation import pursuit
+        pursuit.derived(self)
         #  THE TWO COLLECTIONS, and the world is a parameter of the ask rather than of either.
         #  A SERVICE stood between them once — an `Afforder` holding the templates and what the
         #  agent holds, looping one into the other — and the sovereign asked how many there
@@ -332,16 +340,28 @@ class Agent:
         members = {r["capability"] for r in bindings(self.beliefs.query(_family_q(family), self.beliefs.graphs_of(PUBLIC)))}
         return [m for m in self.modules if m.CAPABILITY in members]
 
-    def considering(self, now: datetime | None = None) -> list[Want]:
-        """Everything this agent is considering, hottest first, whoever sourced it — the
-        collection's own answer, presented by the container that holds it.
+    def wants(self, now: datetime | None = None) -> list[Want]:
+        """Every want this agent holds at `now`, read from the belief base.
 
-        The word stays here because it is the domain's: what an agent PURSUES is what it is
-        for, and seventy-nine callers ask it of the agent. What was here was the assembling —
-        three selects, a compile cache and the reading of an avoided state — which is the
-        collection's work and is `Considering`'s now.
+        A READ, and no longer a collection. `considering()` stood here and merged four
+        sources — the derivation's wants, what every module contributed through the choir, and
+        two kinds of authored want it compiled and JUDGED at read time — which was a second
+        judging pass beside `derive_wants`, reached by a class holding a compile cache. A want
+        is in the store because the derivation put it there, and its being there is the
+        judgment; so this is `find_wants` and nothing else.
+
+        THE SEAM STAYS ON THE CONTAINER because progression is the lower layer and may not
+        import deliberation: the keeper asks the agent, as it always did, and the agent knows
+        where wants live.
         """
-        return self._considering.find_all(now)
+        from orexis_agent_deliberation.wants import find_wants
+        return find_wants(self.beliefs, now)
+
+    def want(self, uri: str) -> "Want | None":
+        """One want by name, or None where the agent holds none — which is the whole of what
+        the lower layer ever needed to ask: no want, nothing owed, nothing to act on."""
+        from orexis_agent_deliberation.wants import find_want
+        return find_want(self.beliefs, uri=uri)
 
     def ask(self, point: str, *args, **kwargs) -> list:
         """Every module's answer to one question, in module order, None left out.
@@ -408,6 +428,10 @@ class Agent:
         #  WHAT THE PROCESS WENT DOWN ON (#645): every graph whose period ended while it was
         #  down is dropped before the first pass, the verdicts it leaves written.
         self.upkeep.sweep()
+        #  AND WHAT THE WORLD BECAME WHILE IT WAS DOWN IS WANTED, before anything asks: the
+        #  sweep above drops what ended, and this mints what is owed. Construction derives
+        #  too; this is the pass for the time the process was not running.
+        pursuit.derived(self)
         self.reviser.start()
         self.upkeep.start()
         #  THE MIND'S CLOCK, and the container is what holds it (#208). Deliberation kept a
@@ -426,7 +450,12 @@ class Agent:
             log.debug("%s: no patience stated and no region want to spend it on — no mind's clock",
                       self.id)
         else:
-            self._clock = Timer(interval, lambda: pursuit.consider(self))
+            #  THE CLOCK ASKS AND THE MIND'S THREAD ANSWERS. A timer's landing is an
+            #  enqueue on the reactive loop, so what lands here must be milliseconds: `due()`
+            #  sets a flag and notifies. It ran `pursuit.consider` itself, which is a
+            #  derivation, a collection and a mark per want — 44 ms measured, on the one
+            #  thread that must never block.
+            self._clock = Timer(interval, self.reviser.due)
             self._clock.start()
         # The watchdog last, after the connect above has had its chance: its disconnection
         # clock started at construction, so an agent that never gets its CONNACK is already

@@ -39,7 +39,7 @@ def _ower(agent):
 def _stock(agent, derived: bool = False):
     """The stock ROOT, or with `derived` the want standing under it — since every desire is
     derived the moment a claim arrives, both may be pursued at once."""
-    return next(d for d in agent.considering()
+    return next(d for d in agent.wants()
                 if getattr(d, "observed_property", None) == STORED and not d.is_epistemic
                 and (d.desire is not None) == derived)
 

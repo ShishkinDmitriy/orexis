@@ -19,6 +19,7 @@ from orexis_capability_market import rounds
 from orexis_capability_market.bidding import claim_graph
 from orexis_capability_market.ower import obligation_graph
 from orexis_capability_sensing import predictions, readings
+from orexis_agent_progression.store import bindings
 from conftest import (MOISTURE, build_agent, genesis_store, region_want_of, wired_markets, write_reading)
 from orexis_agent_progression.ontology import PUBLIC
 from orexis_agent_progression.ontology import PREDICTION
@@ -55,10 +56,20 @@ def test_a_pursued_child_and_a_prediction_past_their_ends_are_swept(monkeypatch)
     """The mind's own timed graphs: a child derived for an instant that has passed, and a
     ladder predicted from a reading two days old."""
     agent = build_agent("gardener", genesis_store({("zz", MOISTURE): 0.12}, world="loner"), monkeypatch)
-    desire = region_want_of(agent).uri
+    #  THE DESIRE, asked of the store: `mint` derives a want UNDER one, so what this needs is
+    #  the standing node and not a want. It read the container's collection, which presented
+    #  the desire wherever no want stood — and at 0.12 the loner's reading is inside its
+    #  region, so nothing is wanted and there was nothing to present.
+    desire = next(r["d"] for r in bindings(agent.desires.query(
+        "SELECT ?d WHERE { ?me orexis:holds ?d . ?d a orexis:Desire }"))
+        if r["d"].endswith("SoilMoisture"))
+    #  THE READING FIRST, THEN THE CHILD MINTED BY HAND. A reading arriving asks for the
+    #  derivation (sensing's `_rederive`), and the derivation mints this desire's want for the
+    #  world as it IS — replacing the graph, period and all. Minting a child for an instant a
+    #  day past and then writing a reading handed it a fresh period and nothing was outdated.
+    write_reading(agent, 0.12, MOISTURE, age_s=2 * 86400)
     child = mint(agent.beliefs.engine, agent.me.uri, desire, holds_at=clock.now() - timedelta(days=1))
     assert child is not None
-    write_reading(agent, 0.12, MOISTURE, age_s=2 * 86400)
     reading = readings.current_reading(agent.beliefs.reader(PUBLIC), agent.me.acts_for, MOISTURE)
     ladder = predictions.write(agent, agent.me.uri, agent.me.acts_for, MOISTURE, reading, 600.0, 45.0)
     assert ladder
@@ -82,7 +93,8 @@ def test_a_debt_lapsing_unserved_leaves_its_verdict_and_no_want(monkeypatch):
     ledger.owe("tomato", "j-paid", expires_at=(now - timedelta(seconds=30)).timestamp(), amount_l=0.5)
     ledger.discharge("j-paid")
     assert ledger.owed() == [], "past their windows: the door hands neither to anybody"
-    assert not any(getattr(d, "claim", None) in ("j-lapse", "j-paid") for d in supplier.considering()), \
+    assert not any(a.rsplit("#", 1)[-1].rsplit(".", 1)[-1] in ("j-lapse", "j-paid")
+               for d in supplier.wants() for a in d.about), \
         "and neither is a want in the modality"
     assert {obligation_graph(supplier.id, "j-lapse"), obligation_graph(supplier.id, "j-paid")} \
         <= set(supplier.beliefs.outdated())

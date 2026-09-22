@@ -68,7 +68,7 @@ def test_every_shipped_want_falls_inside_one_scope(world, monkeypatch):
         genesis.classify_kernel_graphs(st, agent_id)
         agent = runtime.Agent(agent_id, st=st)
         planner = Planner(agent, agent.me)
-        for want in agent.considering():
+        for want in agent.wants():
             planner._begin(want)
             view = planner._view_of(want)
             seen += 1

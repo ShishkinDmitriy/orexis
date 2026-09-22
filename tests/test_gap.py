@@ -326,7 +326,7 @@ def test_a_content_agent_reports_nothing_wanted_and_nothing_stuck(monkeypatch):
     """
     fern = build_agent("fern", genesis_store({("fern", MOISTURE): 0.52,
                                               ("fern", TEMPERATURE): 21.0}), monkeypatch)
-    desires = fern.considering()
+    desires = fern.wants()
     assert all(g.is_met for g in desires), "0.52 in 0.45-0.65 and 21 in 18-24 are both met"
     assert all(g.state == "met" for g in desires), \
         "and the STATE is the region's verdict, which is what the old definition confused"

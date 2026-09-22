@@ -185,7 +185,7 @@ def test_a_horizon_the_agent_cannot_state_leaves_the_want_unmet_not_met(monkeypa
     """
     agent, st = _fern(monkeypatch, value=0.55)          # horizons published by `start()`
     sensing = next(m for m in agent.modules if hasattr(m, "watch_staleness"))
-    fresh = lambda: next(d for d in agent.considering()
+    fresh = lambda: next(d for d in agent.wants()
                          if d.is_epistemic and d.observed_property == MOISTURE)
     assert fresh().state == "met", "a reading just taken is evidence"
 
@@ -218,7 +218,7 @@ def test_a_want_about_knowing_fires_on_a_world_that_has_read_nothing(monkeypatch
     assert _fires(data), \
         "nothing of mine has read this, so nothing is known to be current — a want that " \
         "reads MET here is a want that can never be short"
-    assert next(d for d in agent.considering()
+    assert next(d for d in agent.wants()
                 if d.is_epistemic and d.observed_property == MOISTURE).state == "unmeasured", \
         "and the state fails the same way round, or the search would read it as content"
 
@@ -271,7 +271,7 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_cur
     """
     gardener = build_agent("gardener", genesis_store(world="loner"), monkeypatch)
     keeper = next(m for m in gardener.modules if m.name == "intention")
-    butt = next(d for d in gardener.considering()
+    butt = next(d for d in gardener.wants()
                 if d.is_epistemic and d.observed_property.endswith("StoredLitres"))
     assert butt.state != "met", "the butt is polled, so its level is wanted current"
 
@@ -279,7 +279,7 @@ def test_an_instrument_pointed_at_something_i_do_not_act_for_is_still_wanted_cur
 
     #  The ledger names the want the search was handed — the one derived under the desire
     #  (#618) — and the container presents that one, with the property sensing gave it.
-    about = {w.uri: getattr(w, "observed_property", None) for w in gardener.considering()}
+    about = {w.uri: getattr(w, "observed_property", None) for w in gardener.wants()}
     watched = {about[s.want].rsplit("#", 1)[-1] for s in keeper.standing()
                if s.action.endswith("Observing")}
     assert "SoilMoisture" in watched, "the probe can be asked, so the look is committed to"
@@ -319,7 +319,7 @@ def test_a_listener_reports_the_want_it_cannot_repair_as_unequipped(monkeypatch)
 
     supplier = build_agent("supplier", genesis_store(), monkeypatch)
     open_round_for(supplier, "supplier")   # the upstream lever exists only while a round is open
-    want = next(d for d in supplier.considering()
+    want = next(d for d in supplier.wants()
                 if d.is_epistemic and d.observed_property.endswith("StoredLitres"))
 
     assert supplier.deliberator.propose_for(want) is None

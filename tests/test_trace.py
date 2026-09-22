@@ -39,7 +39,7 @@ def _gardener(monkeypatch, moisture):
     #  it, because what an agent pursued came back hottest first. Nothing orders them now, so
     #  a test that means the region says the region: taking the freshness want here planned
     #  nothing, and read as "dry, with a pump, and no plan".
-    desire = next(g for g in agent.considering()
+    desire = next(g for g in agent.wants()
                   if getattr(g, "observed_property", None) == MOISTURE
                   and not g.is_epistemic)
     return agent, Planner(agent, agent.me), desire

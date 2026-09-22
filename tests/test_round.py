@@ -13,11 +13,28 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from orexis_capability_market.ower import OwedWant
 from orexis_capability_market.terms import TENDERING
 
 from conftest import sensing_of, HUMIDITY, MOISTURE, build_agent, genesis_store, open_round_for, wired_actuator_for, wired_hosted_markets, wired_markets, wired_sensors
+
+def _is_debt(want) -> bool:
+    """Is this want one of my debts? Asked of the WANT, not of its Python class.
+
+    It was `isinstance(w, OwedWant)`, a subclass the ledger built per debt and handed to the
+    choir — a second lift of rows the derivation had already minted a want from. A debt's want
+    is derived under the market's standing desire, so the desire it came under is what says so,
+    and the claim it is about is on `orexis:about`.
+    """
+    return (want.desire or "").endswith("no_overdue_debts")
+
+
+def _claim_of(want) -> str | None:
+    """The claim a debt's want is about — `orexis:about`, where the ledger used to carry a
+    `claim` field of its own on a want the kernel would then have had to know about."""
+    return next((a.rsplit("#", 1)[-1].rsplit(".", 1)[-1] for a in want.about), None)
+
 from orexis_agent_progression.ontology import FORESEEN
+from orexis_agent_progression.store import bindings
 from orexis_agent_progression import clock
 
 
@@ -670,6 +687,12 @@ def _stamp_readings(agent, at):
         INSERT {{ ?o <http://www.w3.org/ns/sosa/resultTime>
                   "{at.isoformat()}"^^<http://www.w3.org/2001/XMLSchema#dateTime> }}
         WHERE  {{ ?o <http://www.w3.org/ns/sosa/resultTime> ?was }}""")
+    #  AND THE DERIVATION, because moving a reading is writing something a desire reads. This
+    #  goes round sensing to reach the graph directly, so nothing asks on its behalf — the
+    #  rule every production writer follows (a-capability-that-asks-for-a-derivation-is-not-
+    #  minting), and a want is in the store or it is not wanted.
+    from orexis_agent_deliberation.derive_wants import derive_wants
+    derive_wants(agent.beliefs.engine)
 
 
 def test_a_round_is_sized_by_the_vessel_not_the_belief(host):
@@ -739,7 +762,7 @@ def test_a_call_stands_as_a_want_and_is_answered_by_the_round(host):
     #  PURSUED AS A WANT DERIVED UNDER THE HOST'S STANDING DESIRE, and about the call. The
     #  call used to BE the want — lifted per call by `hosting.desires()`, the one want here no
     #  derivation minted — and it is the instance now, like a debt under "no overdue debts".
-    assert [d for d in host.considering() if held[0].uri in d.about], \
+    assert [d for d in host.wants() if held[0].uri in d.about], \
         "and a want is derived about it"
     assert not [s for s in keeper_of(host).standing() if s.action.endswith("Offering")], \
         "no plan reaches a round from a dry vessel with nothing to buy — nothing stands"
@@ -902,7 +925,14 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
 
     Written as an ORDER and not as two numbers, because that is what a deliberator consumes —
     and asked at a moment chosen so the answer could go either way: the barrel sits inside its
-    region (a mild region want) while the debt is most of the way through its window.
+    region while the debt is most of the way through its window.
+
+    WHICH IS NOW THE WHOLE ANSWER. It asserted that both were on one list — the debt and a
+    "mild" region want beside it — and a barrel inside its region wants NOTHING: its desire
+    reads met, so the derivation mints no want and there is nothing to plan. What made a met
+    region look like a want was the collection presenting the desire in its place, with an
+    urgency to say how mildly it meant it; the urgency went first (nothing ranked by it) and
+    the row has gone with it. One currency, and the currency is existence.
     """
     from datetime import datetime, timedelta
 
@@ -917,10 +947,11 @@ def test_a_duty_and_a_thirst_rank_in_one_currency(host):
     #  real float switch reports every thirty seconds, so this is what the agent would hold.
     _stamp_readings(host, asked_at)
 
-    desires = host.considering(now=asked_at)
-    assert desires, "an agent with a region want and a debt wants something"
-    assert any(isinstance(g, OwedWant) for g in desires), "the debt is on the list"
-    assert any(not isinstance(g, OwedWant) for g in desires), "and the region want is still on the list, not replaced"
+    wants = host.wants(now=asked_at)
+    assert wants, "an agent owed a debt wants something"
+    assert any(_is_debt(g) for g in wants), "the debt is a want like any other"
+    assert not any(not _is_debt(g) for g in wants), \
+        "and the barrel is inside its region, so there is nothing else wanted"
     #  NO ORDER TO ASSERT. These came back hottest first and nothing chose by it: every want
     #  handed up is planned for, so what would rank a debt against a barrel is what their
     #  plans cost — the search's answer, not a contributor's.
@@ -1011,9 +1042,9 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     #  is waiting until then — so the debt stands in the record with nothing pursued for it,
     #  and presenting it derives the want, about that debt, under the city's one desire
     #  (one-function-mints-every-want).
-    assert not any(isinstance(g, OwedWant) for g in city.considering()), "recorded, and nobody waiting"
+    assert not any(_is_debt(g) for g in city.wants()), "recorded, and nobody waiting"
     ledger.demanded("j-city-1")
-    assert any(isinstance(g, OwedWant) and g.desire == desire for g in city.considering()), \
+    assert any(_is_debt(g) and g.desire == desire for g in city.wants()), \
         "presented: its debt is a want like anyone else's, derived under its desire"
 
     ledger.discharge("j-city-1")
@@ -1024,19 +1055,17 @@ def test_a_host_with_no_stake_of_its_own_still_keeps_what_it_owes(make, tmp_path
     #  longer, and the next pass withdraws it with nothing standing for it (#618); what is
     #  left is the rule, met. What the city pursues is its debts and nothing else, which is
     #  what this sentence has always said.
-    paid = city.considering()
-    assert paid and all(g.is_met and not isinstance(g, OwedWant) for g in paid), \
-        "paid: nothing under its rule is in trouble"
-    for judged in paid:
-        city.deliberator.decide(judged)
-    standing = city.considering()
-    #  BOTH ITS STANDING RULES, and both met: a host holds "no overdue debts" over its ledger
-    #  and "no unanswered calls" over its venues, and with nothing outstanding on either it
-    #  wants nothing. The second arrived when a call became an instance under a desire rather
-    #  than a want this package lifted.
-    assert {g.uri for g in standing} == {desire, f"{city.me.uri}.no_unanswered_calls"}
-    assert all(g.is_met for g in standing), \
-        "a pure seller with nothing outstanding holds its rules and wants nothing"
+    #  NOTHING AT ALL, which is the strongest form this sentence has had. It asked for the
+    #  list to be non-empty and to hold no debt, because the collection presented the city's
+    #  two standing DESIRES — "no overdue debts" and "no unanswered calls" — in the place of
+    #  the wants that were not there, each carrying `is_met`. A desire is never pursued and a
+    #  met one derives nothing, so with the debt paid the city wants nothing and the list is
+    #  empty. What it HOLDS is unchanged, and is asked of the store below.
+    assert city.wants() == [], "paid: nothing under either rule is in trouble"
+    assert {r["d"] for r in bindings(city.desires.query(
+        "SELECT ?d WHERE { ?me orexis:holds ?d . ?d a orexis:Desire }"))} >= {
+            desire, f"{city.me.uri}.no_unanswered_calls"}, \
+        "and it still holds both its standing rules — a pure seller with nothing outstanding"
 
 
 def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
@@ -1056,7 +1085,7 @@ def test_a_host_owing_water_it_does_not_hold_plans_the_refill(host):
         "a pour from a vessel known too low discharges nothing — the claim is held, not spent"
 
     open_round_for(host, "supplier")   # the city has a round open — the refill is buyable
-    obligation = next(g for g in host.considering() if isinstance(g, OwedWant))
+    obligation = next(g for g in host.wants() if _is_debt(g))
     move = host.deliberator.propose_for(obligation)
     assert move == "http://example.org/orexis/market#Acquiring", \
         f"the plan's first step is the refill — the search found the chain the reflex never could; got {move}"
@@ -1074,7 +1103,7 @@ def test_a_host_holding_enough_serves_the_presented_claim_by_the_same_search(hos
 
     assert host.sent.to(valve.command_topic), "holding enough, the presentation pours"
 
-    obligation = [g for g in host.considering() if isinstance(g, OwedWant) and g.claim == claim["jti"]]
+    obligation = [g for g in host.wants() if _is_debt(g) and _claim_of(g) == claim["jti"]]
     assert obligation == [], "and the discharged debt is history, not a desire"
 
 

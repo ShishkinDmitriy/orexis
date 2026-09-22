@@ -15,7 +15,6 @@ import pyoxigraph as ox
 
 
 from orexis_capability_sensing.regions import ObservedWant
-from orexis_capability_market.ower import OwedWant
 from conftest import sensing_of, MOISTURE, TEMPERATURE, build_agent, desires_build, genesis_store
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -114,8 +113,9 @@ def test_a_duty_carries_its_timestamps_and_what_the_window_decides(monkeypatch):
     ledger = supplier.hosting().ledger
     ledger.endow()
     def duty_at(offset_s):
-        return next(g for g in ledger.desires(now=owed + timedelta(seconds=offset_s))
-                    if isinstance(g, OwedWant))
+        #  THE LEDGER'S OWN READ, which hands back its debts and nothing else — no filter,
+        #  where the container's merged list needed one to tell a debt from a region want.
+        return ledger.desires(now=owed + timedelta(seconds=offset_s))[0]
     assert duty_at(0).state == "demanded" and duty_at(450).state == "demanded"
     assert duty_at(900).state == "lapsed" and duty_at(5000).state == "lapsed"
     assert duty_at(0).pursuable and not duty_at(5000).pursuable, \
@@ -284,7 +284,8 @@ def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
     #  (one-function-mints-every-want): a `sh:sparql` in the ledger's own words, whose
     #  violation is a debt presented or lapsing and not discharged — so a world where a
     #  serve wrote the discharge reads met. AND IT NAMES NO WORLD (#666).
-    want = next(d for d in supplier.considering() if getattr(d, "claim", None) == "m1")
+    want = next(d for d in supplier.wants()
+            if any(a.rsplit("#", 1)[-1].rsplit(".", 1)[-1] == "m1" for a in d.about))
     assert want.uri != debt, "the want is the derivation's, not the debt"
     rows = bindings(supplier.beliefs.query_union(f"""SELECT ?t WHERE {{
         <{want.uri}> orexis:metWhen ?shape . ?shape sh:sparql ?c . ?c sh:select ?t }}"""))
@@ -297,5 +298,5 @@ def test_an_obligation_is_judged_by_the_met_test_the_ledger_wrote(monkeypatch):
         "judged by the select compiled from the ledger's shape, not by a kernel branch"
     assert "dischargedAt" not in inspect.getsource(planner_module), "the kernel names no ledger word"
     ledger.discharge("m1")
-    assert not any(getattr(d, "claim", None) == "m1" for d in supplier.considering()), \
+    assert not any(getattr(d, "claim", None) == "m1" for d in supplier.wants()), \
         "paid: no longer pursued"

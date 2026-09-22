@@ -36,7 +36,7 @@ def keeper_of(agent):
 
 
 def region_want_of(agent, prop=MOISTURE):
-    return next(d for d in agent.considering()
+    return next(d for d in agent.wants()
                 if not d.is_epistemic and getattr(d, "observed_property", None) == prop)
 
 

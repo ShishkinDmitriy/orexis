@@ -63,7 +63,7 @@ def _grower(monkeypatch, dries=False, moisture=0.20, air=12.0, outside=8.0, heat
 
 
 def _comfort(agent):
-    return next(g for g in agent.considering() if g.uri == COMFORT)
+    return next(g for g in agent.wants() if g.uri == COMFORT or g.desire == COMFORT)
 
 
 def test_the_bed_holds_one_want_about_two_properties(monkeypatch):
@@ -125,9 +125,11 @@ def test_a_comfortable_bed_plans_nothing(monkeypatch):
     A want about two properties is met when BOTH are, which its shape says as two constraints
     and the kernel compiles into one select whose rows are its violations."""
     agent, _ = _grower(monkeypatch, moisture=0.45, air=21.0)
-    want = _comfort(agent)
-    assert want.state == "met"
-    assert Planner(agent, agent.me).plan(want).steps == ()
+    #  AND NOTHING TO DO IS NOTHING WANTED. It asked for the want and read `state == "met"` off
+    #  it — a label the container computed at read time — where a met desire mints no want at
+    #  all, so the absence IS the answer and there is nothing left to plan for.
+    assert not [w for w in agent.wants() if w.desire == COMFORT or w.uri == COMFORT], \
+        "both readings in their ranges: the desire is met and nothing is wanted"
 
 
 def test_the_warm_half_alone_is_planned_when_only_the_air_is_cold(monkeypatch):

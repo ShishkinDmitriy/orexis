@@ -43,8 +43,7 @@ def _gardener(monkeypatch, moisture=0.30):
 
 
 def _region_want(agent):
-    return next(g for g in agent.considering()
-                if getattr(g, "observed_property", None) == MOISTURE and not g.is_epistemic)
+    return next(g for g in agent.wants() if MOISTURE in g.about)
 
 
 def _look_takes(agent, seconds: int) -> None:

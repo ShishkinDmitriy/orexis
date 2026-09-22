@@ -33,9 +33,24 @@ def _gardener(monkeypatch, moisture):
 
 
 def _region_want(agent):
-    """The want about moisture the container presents — the desire, or what is derived under it."""
-    return next(d for d in agent.considering()
-                if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
+    """The want derived under the moisture desire, or None where nothing is wanted.
+
+    BY WHAT IT IS ABOUT. It filtered the container's merged list on `observed_property` — a
+    field the kernel carried so sensing could read it back — and on `is_epistemic`; a region
+    want is about its PROPERTY and a freshness want about its instrument, so one test does
+    both. None is a real answer now: a reading in region leaves the desire met, the derivation
+    mints nothing, and there is no want.
+    """
+    return next((w for w in agent.wants() if MOISTURE in w.about), None)
+
+
+def _desire(agent) -> str:
+    """The standing moisture desire — the node wants are derived UNDER, which is what these
+    tests are about. The collection used to present it wherever no want stood, so a test could
+    reach it through the same call; a desire is not a want and `wants()` holds none."""
+    return next(r["d"] for r in bindings(agent.desires.query(
+        "SELECT ?d WHERE { ?me orexis:holds ?d . ?d a orexis:Desire }"))
+        if r["d"].endswith("SoilMoisture"))
 
 
 def _said_of(agent, want):
@@ -49,23 +64,25 @@ def test_a_root_is_never_handed_to_the_search_and_what_is_pursued_is_derived_und
     desire's own met-test — and from then on the container presents the derived want in the
     desire's place, carrying the desire's measure and naming the desire."""
     agent = _gardener(monkeypatch, DRY)
-    desire = _region_want(agent)
-    assert desire.desire is None and not desire.is_met
+    desire = _desire(agent)
+    #  THE WANT IS THERE ALREADY, because a started agent derives (`pursuit.derived`, at boot
+    #  and in the fixture). It used to appear at the first DECISION, and until then the
+    #  collection presented the desire in its place — which is what made a desire look like
+    #  something a search could be handed.
+    child = _region_want(agent)
+    assert child is not None and child.uri == desire + ".pursued" and child.desire == desire
 
-    plan = agent.deliberator.decide(desire)
+    plan = agent.deliberator.decide(child)
     assert [s.action for s in plan.steps] == [DOSING], "the derived want plans what the desire would have"
 
-    child = _region_want(agent)
-    assert child.uri == desire.uri + ".pursued" and child.desire == desire.uri
-    assert child.observed_property == MOISTURE, \
-        "the derived want is presented with the desire's own row"
-    assert all(d.uri != desire.uri for d in agent.considering()), \
-        "while a derived want stands, the desire is presented as it and never beside it"
+    assert MOISTURE in child.about, "the want says what it is about, and the kernel names no property"
+    assert all(w.uri != desire for w in agent.wants()), \
+        "a desire is not a want, and `wants()` holds none"
     assert set(agent.deliberator._planners) == {child.uri}, \
         "the search was handed the derived want and never the desire"
 
     said = _said_of(agent, child.uri)
-    assert (DERIVED_FROM, desire.uri) in said
+    assert (DERIVED_FROM, desire) in said
     #  THE MET-TEST IS CARRIED, INSTANTIATED — the desire's shape at this want's witness, under
     #  the want's own name: the same node targeted (the desire names its one node), the block
     #  about its property, so the want is judged on its own instance. It was pointed at
@@ -74,7 +91,7 @@ def test_a_root_is_never_handed_to_the_search_and_what_is_pursued_is_derived_und
     from orexis_agent_progression.store import bindings
     [own] = [o for p, o in said if p == MET_WHEN]
     assert own == child.uri + ".met", "its own shape, named for the want"
-    root_met = next(o for p, o in _said_of(agent, desire.uri) if p == MET_WHEN)
+    root_met = next(o for p, o in _said_of(agent, desire) if p == MET_WHEN)
     rows = bindings(agent.beliefs.query_union(f"""SELECT ?target ?about WHERE {{
         <{own}> sh:targetNode ?target ; sh:property ?b . ?b orexis:about ?about }}"""))
     [same] = bindings(agent.beliefs.query_union(
@@ -88,12 +105,13 @@ def test_a_met_root_derives_nothing_and_no_pass_runs(monkeypatch):
     """A desire inside its region is nothing to pursue: no want is derived, no planner is built,
     and the container keeps presenting the desire itself."""
     agent = _gardener(monkeypatch, CONTENT)
-    desire = _region_want(agent)
-    assert desire.is_met
-    assert agent.deliberator.decide(desire) is None
-    assert pursuit.child_of(agent, desire.uri) is None
+    desire = _desire(agent)
+    #  NO WANT AT ALL, which is what "met" looks like now. It asserted `desire.is_met` on a row
+    #  the collection judged at read time and presented in the want's place; a met desire
+    #  derives nothing, so there is nothing to read a verdict off and nothing to pursue.
+    assert _region_want(agent) is None, "in region: nothing is wanted"
+    assert pursuit.child_of(agent, desire) is None
     assert not agent.deliberator._planners, "no pass ran for a met desire"
-    assert _region_want(agent).uri == desire.uri
 
 
 def _state_of(agent, uri: str) -> str | None:
@@ -113,9 +131,8 @@ def test_the_derived_want_is_withdrawn_when_its_plan_finishes_and_derived_again_
     still unmet derives it again on the next decision — under the same name, so everything keyed
     by it finds what it kept."""
     agent = _gardener(monkeypatch, DRY)
-    desire = _region_want(agent)
-    agent.deliberator.decide(desire)
-    child = pursuit.child_of(agent, desire.uri)
+    desire = _desire(agent)
+    child = pursuit.child_of(agent, desire)
     assert child is not None
 
     agent.deliberator.on_plan_finished("urn:orexis:test:intention", DOSING, child)
@@ -123,28 +140,34 @@ def test_the_derived_want_is_withdrawn_when_its_plan_finishes_and_derived_again_
     #  AND THE COLLECTOR TAKES IT. Not where it was finished: deciding that something is done
     #  and clearing it away are two acts (`forget_wants`, garbage collection on the pass).
     assert forget_wants(agent.beliefs.engine) == [child]
-    assert pursuit.child_of(agent, desire.uri) is None
-    assert _region_want(agent).uri == desire.uri, "with nothing derived under it, the desire is presented again"
+    assert pursuit.child_of(agent, desire) is None and _region_want(agent) is None, \
+        "collected: nothing stands under the desire and nothing is in the store"
 
-    agent.deliberator.decide(desire)
-    assert pursuit.child_of(agent, desire.uri) == child, "still dry: derived again, same node"
+    pursuit.derived(agent)
+    assert pursuit.child_of(agent, desire) == child, "still dry: derived again, same node"
 
 
-def test_a_derived_want_that_reads_met_with_nothing_standing_is_withdrawn(monkeypatch):
-    """The world moved on its own — rain, a neighbour's hose — and the desire reads met with no
-    plan standing for the derived want: deciding about it withdraws it and plans nothing."""
+def test_withdrawal_is_the_derivations_and_never_a_decisions(monkeypatch):
+    """Who takes a want away: the derivation, from the same rows that minted it.
+
+    A READING IN REGION IS NOT ENOUGH ON ITS OWN, which is the half worth pinning: the
+    derivation reads the present AND every foreseen instant, so a plant watered into its range
+    that a drift predicts drying again still wants something. `test_a_met_root_derives_nothing`
+    has the case where nothing is foreseen either.
+    """
     agent = _gardener(monkeypatch, DRY)
-    desire = _region_want(agent)
-    agent.deliberator.decide(desire)
+    desire = _desire(agent)
     child = _region_want(agent)
-    assert child.desire == desire.uri
+    assert child is not None and child.desire == desire
 
-    write_reading(agent, CONTENT)
-    now = _region_want(agent)
-    assert now.uri == child.uri and now.is_met, "still presented until withdrawn, and measured met"
-    assert agent.deliberator.decide(now) is None
-    assert pursuit.child_of(agent, desire.uri) is None
-    assert _region_want(agent).uri == desire.uri
+    write_reading(agent, CONTENT, MOISTURE)
+    kept = _region_want(agent)
+    assert kept is not None and kept.uri == child.uri, \
+        "in region now, and a drift foresees the crossing: still wanted, same node"
+
+    #  AND WHEN IT IS TAKEN, IT IS TAKEN BY THE DERIVATION. Not by a reader asking about it:
+    #  the same rows that minted it withdraw it, and `forget_wants` collects what is finished.
+    assert pursuit.child_of(agent, desire) == child.uri
 
 
 def test_the_derived_want_borrows_the_roots_verdict(monkeypatch):
@@ -152,10 +175,12 @@ def test_the_derived_want_borrows_the_roots_verdict(monkeypatch):
     Both were asked of the MEASURE, which is gone — what they must still agree about is the
     verdict, which is the thing anything ever branched on."""
     agent = _gardener(monkeypatch, DRY)
-    desire = _region_want(agent)
-    agent.deliberator.decide(desire)
-    child = _region_want(agent)
-    assert child.state == desire.state == "unmet"
+    #  ONE VERDICT, AND IT IS EXISTENCE. Both rows carried a `state` the container computed at
+    #  read time and the test held them to each other; a want is in the store because its
+    #  desire read unmet, so there is one answer and no second reader to disagree with it.
+    assert _region_want(agent) is not None, "dry: the derivation minted the want"
+    agent.deliberator.decide(_region_want(agent))
+    assert _region_want(agent) is not None, "and deciding about it does not settle it"
 
 
 def test_a_mark_by_either_name_pursues_the_same_want(monkeypatch):
@@ -163,14 +188,14 @@ def test_a_mark_by_either_name_pursues_the_same_want(monkeypatch):
     the derived want stood: the derivation meets the same want by either name, and the
     intention it adopts names the derived want."""
     agent = _gardener(monkeypatch, DRY)
-    desire = _region_want(agent)
-    uri = pursuit.pursue_for(agent, desire.uri)
+    desire = _desire(agent)
+    uri = pursuit.pursue_for(agent, desire)
     assert uri is not None, "the search proposed nothing"
-    child = pursuit.child_of(agent, desire.uri)
+    child = pursuit.child_of(agent, desire)
     assert child is not None
     assert {s.want for s in agent.keeper.standing(want=child)} == {child}, \
         "the intention pursues the derived want, never the desire"
-    assert [s.uri for s in agent.keeper.standing(want=desire.uri)] == \
+    assert [s.uri for s in agent.keeper.standing(want=desire)] == \
         [s.uri for s in agent.keeper.standing(want=child)], \
         "the ledger answers by either name: the desire's, and the derived want's"
     assert pursuit.pursue_for(agent, child) == uri, "in progress: absorbed, not re-decided"

@@ -40,8 +40,7 @@ def _supplier(monkeypatch, level=3.0):
 
 
 def _region_want(agent):
-    return next(d for d in agent.considering()
-                if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
+    return next(d for d in agent.wants() if MOISTURE in d.about)
 
 
 def _foresee(agent):

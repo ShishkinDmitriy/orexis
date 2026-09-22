@@ -111,10 +111,11 @@ class Deliberator:
         """Every desire this agent holds, with the move I propose for it — or None.
 
         Here because deciding what can be done is exactly what a deliberator is, and because
-        the kernel may not name a capability's family: `agent.considering()` merges what the modules
+        the kernel may not name a capability's family: `agent.wants()` merges what the modules
         want, and this is the only place that can say whether anything answers.
         """
-        return [(judgment, self.propose_for(judgment)) for judgment in self.agent.considering()]
+        from .wants import find_wants
+        return [(want, self.propose_for(want)) for want in find_wants(self.agent.beliefs)]
 
     def start(self) -> None:
         """Drop whatever the last process was thinking.
@@ -126,7 +127,7 @@ class Deliberator:
         """
         self.agent.beliefs.clear_graph(DELIBERATION_GRAPH)
         #  THE CLOCK IS THE CONTAINER'S. This module kept a `Timer` on the agent's patience
-        #  and its landing read `agent.considering()` back — a module keeping its own timer and
+        #  and its landing read `agent.wants()` back — a module keeping its own timer and
         #  checking its own trigger, which AGENTS.md names as the middle layer rebuilt inside
         #  a capability. The agent waits now and calls `pursuit.consider`, which is this
         #  package's one way in; what that pass does is unchanged, and it derives first.
@@ -332,12 +333,12 @@ class Deliberator:
             return None
         judgment = handed
         keeper = getattr(self.agent, "keeper", None)
-        #  MET WITH NOTHING STANDING FOR IT: gone, whoever wrote it. The same guard as above
-        #  and the same reason it is gone — an authored want that read met sat there forever.
-        if (judgment.is_met
-                and (keeper is None or not keeper.standing(want=judgment.uri))):
-            mark(self.agent.beliefs.engine, judgment.uri, DONE)
-            return None
+        #  THERE IS NO "MET WITH NOTHING STANDING" BRANCH ANY MORE. It read `judgment.is_met`
+        #  — a label the container computed at read time — and retired the want. A want is in
+        #  the store because its desire read unmet and the derivation withdraws it when that
+        #  stops being so, so a want reaching here is wanted. What still retires one the
+        #  search finds already reached is `pursuit.pursue`, off the PLAN: satisfied in no
+        #  steps is the met-test asked where it decides something.
         #  NOTHING IS ANSWERED BY HARDCODE HERE ANY MORE, and the line that was is the whole
         #  of what this change existed to remove.
         #
@@ -442,12 +443,17 @@ class Deliberator:
                           "unmet" if plan.unmet_now else "met",
                           "unmet" if plan.unmet_after else "met")
             return plan
+        #  ALREADY DONE IS A FINDING, and it used to fall through here as None. A search that
+        #  reaches the want in NO steps has run the met-test where it decides something, and
+        #  that answer is what retires the want (`pursuit.pursue`, which marks it done). While
+        #  the container judged wants at read time somebody else said so first; with one
+        #  judging pass this is the only place it is said, so it has to come back.
+        if plan.outcome == SATISFIED:
+            return plan
         #  A world reachable and not worth reaching, or no lever pointing at this want at all.
         #  THIS is the decision the reflex could not make, and returning None here is the whole
-        #  point rather than a failure to answer — a met judgment quietly holding near its pick
-        #  included, which is most passes and not worth a log line; the unmet ones still say
-        #  why nothing was done.
-        if plan.outcome != SATISFIED:
+        #  point rather than a failure to answer; the unmet ones still say why nothing was done.
+        if True:
             self.log.info("%s: %s — no move improves on doing nothing",
                           _short(judgment.uri), plan.outcome)
         return None

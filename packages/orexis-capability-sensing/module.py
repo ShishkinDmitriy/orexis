@@ -41,7 +41,7 @@ Derivation: capabilities/sensing/rules.ru. See knowledge/domain/sensing.md.
 from __future__ import annotations
 
 import uuid
-from dataclasses import replace as _replace
+from dataclasses import replace, replace as _replace
 from datetime import timedelta, datetime, timezone
 from pathlib import Path
 
@@ -58,7 +58,32 @@ from orexis_agent_progression.ontology import OREXIS
 
 #  What a look is ABOUT — one of the parameters sensing:Observing declares it takes.
 ABOUT = OREXIS + "about"
-from orexis_agent_progression.store import bindings
+from orexis_agent_progression.store import bind, bindings
+from orexis_agent_progression.ontology import DESIRE, RECORD, WANT
+
+#  SENSING'S OWN WANTS, by the property they are about — the join the kernel used to carry a
+#  field for. A STAKE is about the property; a FRESHNESS want is about the instrument and its
+#  DESIRE names the property (`ssn:forProperty`), so `?fresh` binds only for the second and is
+#  what tells the two apart.
+#
+#  `$me` AND `$property` THROUGH THE BINDER, not the engine's substitutions: those reach only a
+#  variable the query projects at its TOP level, and both of these are wanted inside UNION
+#  branches, where nothing was bound and every row came back (AGENTS.md, the traps).
+_WANTS_ABOUT_Q = """
+SELECT ?w ?fresh WHERE {
+  $me orexis:holds ?w . ?w a orexis:Want .
+  { ?w orexis:about $property }
+  UNION
+  { ?w prov:wasDerivedFrom ?d . ?d a sensing:Freshness ; ssn:forProperty $property .
+    ?w orexis:about ?fresh } }"""
+
+#  EVERY PROPERTY A FRESHNESS WANT STANDS FOR — the ones whose reading is NOT current. One is
+#  minted while the reading is stale and withdrawn when it comes back, so this is the complement
+#  of "the eyes that are open".
+_FRESHNESS_WANTS_Q = """
+SELECT ?property WHERE {
+  $me orexis:holds ?w . ?w a orexis:Want ; prov:wasDerivedFrom ?d .
+  ?d a sensing:Freshness ; ssn:forProperty ?property }"""
 
 
 from . import pointer
@@ -280,6 +305,24 @@ class SensingModule(Module):
 
     # --- a reading is stale, or it is not (#598) ---------------------------------------
 
+    def _rederive(self) -> None:
+        """What this package just wrote is what a desire reads, so ask for the derivation.
+
+        A capability that asks for a derivation is not minting (AGENTS.md): the ledger calls
+        it when a claim arrives so that a claim arriving is a want arriving, and sensing calls
+        it when a reading arrives or goes cold, so that a reading arriving is a want
+        WITHDRAWN. What stands afterwards is deliberation's, about every desire and not only
+        this package's.
+
+        IT IS WHAT MAKES ONE JUDGING PASS SAFE. A freshness want exists exactly while the
+        reading is not current, so every reader takes its absence as "the eyes are open" —
+        and without this the want the reading just answered would stand until the next tick,
+        and `want_about` would answer "look" to an actuator holding a fresh reading. The
+        read-time judging that used to paper over that is what was removed.
+        """
+        from orexis_agent_deliberation.derive_wants import derive_wants
+        derive_wants(self.agent.beliefs.engine)
+
     def watch_staleness(self, subject_uri: str, observed_property: str) -> None:
         """Arm the deadline that says this reading has stopped being evidence about now.
 
@@ -349,6 +392,10 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
         #  remains predicts from a reading that is now stale — a missed expected event is what
         #  staleness is, said once.
         predictions.drop_first(self.agent, subject_uri, observed_property)
+        #  AND THE READING GOING COLD IS A WANT ARRIVING. The reading's arrival withdrew the
+        #  freshness want; its horizon running out is what mints it again, and a reader asking
+        #  between the two would otherwise see a current reading that nothing has read since.
+        self._rederive()
         for want in self.wants_about(observed_property, subject_uri):
             if want.is_epistemic:
                 reviser.wake(self.agent, want.uri)
@@ -527,8 +574,26 @@ WHERE {{ GRAPH <{STATE_GRAPH}> {{
         """
         if (keeper := self.agent.keeper) is None:
             return
+        #  A READING ARRIVING IS A WANT WITHDRAWN, not a want withdrawn on the next tick. This
+        #  package has just written a reading and what it predicts of it, so it asks for the
+        #  derivation the way the ledger does when a claim arrives (a-capability-that-asks-for-
+        #  a-derivation-is-not-minting): what stands afterwards is deliberation's, about every
+        #  desire and not only this package's.
+        #
+        #  IT IS WHAT MAKES ONE JUDGING PASS SAFE HERE. A freshness want exists exactly while
+        #  the reading is not current, so everything below reads its absence as "the eyes are
+        #  open" — and without this the want the reading just answered would still be standing,
+        #  and `want_about` would answer "look" to an actuator holding a fresh reading. The
+        #  read-time judging that used to hide this is what was removed.
+        #  THE COMMITMENT FIRST, THEN THE DERIVATION, and the order is the whole of it. The
+        #  standing Observe was adopted for the want that stood when somebody decided to look
+        #  — usually the freshness want — and satisfying it is bookkeeping about a look that
+        #  HAS happened. The derivation is about the new present, and it withdraws that very
+        #  want, because the reading it was about has arrived. Deriving first left the
+        #  commitment keyed on a want no read could find, standing for ever.
         for want in self.wants_about(observed_property, subject_uri):
             keeper.satisfy(OBSERVING, want.uri, "a reading arrived — the look happened")
+        self._rederive()
         types = {r["t"] for r in bindings(self.agent.beliefs.query(f"""
 SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
   ?o sosa:hasFeatureOfInterest <{subject_uri}> ; sosa:observedProperty <{observed_property}> ; a ?t }} }}""", self.agent.beliefs.graphs_of(PUBLIC)))}
@@ -553,12 +618,35 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
         """Every want this agent holds about a property — its region_want, if it acts for the
         subject, and the freshness want of each instrument that reads it.
 
-        AS THE CONTAINER PRESENTS THEM (#618): while a want derived under a root stands, the
-        agent is considering THAT, under its own name, and an actor holding a reading must key
-        its commitment, its expectation and its mark on the name the ledger holds."""
-        return [w for w in self.agent.considering()
-                if getattr(w, "observed_property", None) == observed_property
-                and (w.is_epistemic or subject_uri in (None, self.me.acts_for))]
+        ASKED OF THE STORE, IN THIS PACKAGE'S OWN WORDS. It filtered the container's merged
+        list on `observed_property`, a field the KERNEL carried on a want so that this package
+        could read it back — which is `orexis:about` under a second name for a region want, and
+        the `ssn:forProperty` of the want's desire for a freshness want. The property was only
+        ever meaningful here (the-region-want-is-sensings-want), so the join is here, and the
+        kernel's want carries nothing of sensing's.
+
+        TWO SHAPES, ONE PROPERTY. A region want is ABOUT the property; a freshness want is about the
+        INSTRUMENT and its desire names the property — one want, one premise, one row, which
+        is what `desires.ru` settled when carrying both made every freshness want arrive twice.
+        """
+        #  HANDED ITS GRAPHS, which the reader states: the desires, the wants and the records
+        #  — a want's own graph, and the desire it was derived from, which is where the
+        #  freshness property is. Handed none, an ordinary pattern reads the unnamed default
+        #  graph and binds NOTHING, silently (AGENTS.md).
+        #  DEFERRED (#455), like this package's row types: a sensing-only assembly must load
+        #  no deliberation Python at import, and a world that grants only sensing never
+        #  reaches this — nothing pursues, so nothing asks which want is about a property.
+        from orexis_agent_deliberation.wants import find_wants
+
+        wanted = {r["w"]: r.get("fresh") for r in bindings(self.agent.beliefs.query(
+            bind(_WANTS_ABOUT_Q, me=self.me.uri, property=observed_property),
+            self.agent.beliefs.graphs_of(DESIRE, WANT, RECORD)))}
+        if not wanted:
+            return []
+        return [replace(w, instrument=wanted[w.uri] or None)
+                for w in find_wants(self.agent.beliefs)
+                if w.uri in wanted
+                and (wanted[w.uri] or subject_uri in (None, self.me.acts_for))]
 
     def want_about(self, observed_property: str):
         """WHICH of a property's wants is the one to act on — the rule, stated once: an unmet
@@ -573,7 +661,10 @@ SELECT ?t WHERE {{ GRAPH <{STATE_GRAPH}> {{
         the deliberator's `desire_about`; the actors' door is `execution.pursue_for(want)`.
         """
         mine = self.wants_about(observed_property)
-        return (next((d for d in mine if d.is_epistemic and not d.is_met), None)
+        #  A WANT THAT IS THERE IS WANTED. It asked for an epistemic want that was not MET —
+        #  a label computed at read time by a second judging pass — and a freshness want that
+        #  is met does not exist: the derivation withdrew it when the reading came current.
+        return (next((d for d in mine if d.is_epistemic), None)
                 or next((d for d in mine if not d.is_epistemic), None)
                 or next(iter(mine), None))
 
@@ -821,9 +912,14 @@ SELECT ?t WHERE {{ GRAPH <{graphs[0]}> {{ ?o sosa:observedProperty <{observed_pr
         property has a MET freshness want. Issue #124's case holds by the same path: a dead
         probe's last observation is upserted and never expires, but its freshness want goes
         cold, and the gap stops counting as seen."""
-        fresh = {getattr(d, "observed_property", None) for d in self.agent.considering()
-                 if d.is_epistemic and d.is_met}
-        return {prop: gap for prop, gap in self.gaps().items() if prop in fresh}
+        #  FRESH IS THE ABSENCE OF A FRESHNESS WANT. One is minted exactly while the reading
+        #  is not current and withdrawn when it is, so a property with none standing is one
+        #  whose eyes are open — which the derivation has already decided, where this used to
+        #  ask for a want carrying `is_met` and get a label computed at read time.
+        stale = {r["property"] for r in bindings(self.agent.beliefs.query(
+            bind(_FRESHNESS_WANTS_Q, me=self.me.uri),
+            self.agent.beliefs.graphs_of(DESIRE, WANT, RECORD)))}
+        return {prop: gap for prop, gap in self.gaps().items() if prop not in stale}
 
     def desires(self, now: datetime | None = None) -> list[Want]:
         """My contribution to what the agent is considering: its region wants and its freshness wants,

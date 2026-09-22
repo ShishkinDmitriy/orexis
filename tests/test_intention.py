@@ -215,9 +215,13 @@ def test_every_transition_is_told_to_the_metrics_with_its_reason(make):
     uri = keeper.adopt(TENDERING, region_want, "bid 0.4L to close my deficit")
     keeper.satisfy(TENDERING, region_want, "claim for 0.4L at a debit of 0.29")
     events = fern.metrics.take_events()
+    #  THE WANT, under its own name. The tag used to read `desire.fern.SoilMoisture` — the
+    #  DESIRE — because the collection presented the desire wherever no want stood; a desire
+    #  is never pursued (#618) and what the ledger holds is the want derived under it, so the
+    #  dashboard names what was actually adopted.
     assert [(kind, tags) for _, kind, _, tags in events] == [
-        ("adopted", {"means": "Tendering", "want": "desire.fern.SoilMoisture"}),
-        ("satisfied", {"means": "Tendering", "want": "desire.fern.SoilMoisture"})]
+        ("adopted", {"means": "Tendering", "want": "desire.fern.SoilMoisture.pursued"}),
+        ("satisfied", {"means": "Tendering", "want": "desire.fern.SoilMoisture.pursued"})]
     assert [text for _, _, text, _ in events] == [
         "bid 0.4L to close my deficit", "claim for 0.4L at a debit of 0.29"]
 
@@ -248,7 +252,7 @@ def test_the_tick_puts_marketless_watching_in_the_ledger(make):
     keeper = next(m for m in fern.modules if m.name == "intention")
     pursuit.consider_now(keeper.agent)
     #  The ledger names the WANT; which property a want is about is sensing's to say.
-    about = {w.uri: getattr(w, "observed_property", None) for w in fern.considering()}
+    about = {w.uri: getattr(w, "observed_property", None) for w in fern.wants()}
     standing = {(s.action.rsplit("#", 1)[-1], about.get(s.want)) for s in keeper.standing()}
     assert ("Observing", TEMP) in standing, "the marketless property is watched ON THE RECORD"
     assert ("Observing", MOIST) in standing

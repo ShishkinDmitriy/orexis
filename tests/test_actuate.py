@@ -119,10 +119,12 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
         ObservedWant(uri=region_want_of(gardener, MOIST).uri, observed_property=MOIST,
                      value=0.05)) == DOSING
     write_reading(gardener, 0.30, MOIST, age_s=10_000)
-    assert deliberator.propose_for(
-        ObservedWant(uri=region_want_of(gardener, MOIST).uri, observed_property=MOIST,
-                     value=0.25)) is None, \
-        "above the aim, nothing — as ever"
+    #  ABOVE THE AIM, NOTHING — and the shape of "nothing" got stronger. It used to propose
+    #  for the region want and assert the search offered no act; a reading in region leaves
+    #  the desire met, so the derivation mints no want and there is nothing to propose FOR.
+    #  No want, no action.
+    assert region_want_of(gardener, MOIST) is None, \
+        "in region: nothing is wanted, so there is no want"
     #  NOT SEEING is answered by the search like everything else, and it is a different WANT
     #  rather than a state this one is in. It used to be asserted of a made-up desire carrying
     #  `state="unmeasured"`, which the deliberator read before any search ran; there is no such
@@ -130,7 +132,7 @@ def test_a_dose_is_proposed_below_the_aim_and_nothing_above_it(gardener):
     #  agent's own freshness want for the probe, which no reading has yet answered. A made-up
     #  region want with no reading correctly gets NOTHING: looking does not put a number
     #  inside a region, and nothing else the gardener holds moves a number it cannot see.
-    epistemic = next(d for d in gardener.considering()
+    epistemic = next(d for d in gardener.wants()
                      if d.is_epistemic and d.observed_property == MOIST)
     assert deliberator.propose_for(epistemic) == OBSERVING
     assert deliberator.propose_for(sensing_of(gardener).want_about(MOIST)) == OBSERVING, \

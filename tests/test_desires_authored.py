@@ -71,8 +71,13 @@ def test_the_rebuild_runs_no_rule(monkeypatch):
         raise AssertionError("a rebuild asked for the desire rules")
     monkeypatch.setattr(loader, "desires_rule_files", refused)
     agent.desires.rebuild()
-    region_want = next(d for d in agent.considering() if getattr(d, "observed_property", None) == MOISTURE and not d.is_epistemic)
-    assert region_want.uri == "http://example.org/orexis#desire.gardener.SoilMoisture"
+    #  THE DESIRE, asked of the store. It read the container's collection, which presented the
+    #  DESIRE wherever no want stood under it — so a test about what a rebuild keeps was
+    #  written against what the collection showed. A desire is not a want and `wants()` holds
+    #  none; what this is about is that the rebuild kept the desires it was given at genesis.
+    assert "http://example.org/orexis#desire.gardener.SoilMoisture" in {
+        r["r"] for r in bindings(agent.desires.query(
+            "SELECT ?r WHERE { ?me orexis:holds ?r . ?r a orexis:Desire }"))}
 
 
 def test_a_root_the_volume_never_held_is_endowed_at_boot_and_a_held_one_stays(monkeypatch):

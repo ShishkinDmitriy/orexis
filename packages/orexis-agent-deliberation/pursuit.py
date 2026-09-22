@@ -38,7 +38,7 @@ from .forget_wants import (DONE, FAILED, PLANNING, PURSUED, READY, UNREACHABLE,
                            forget_want, forget_wants, mark)
 from .plan import SATISFIED
 from .desires import holds_desire
-from .wants import find_want
+from .wants import find_want, find_wants
 
 from orexis_agent_progression.execution import carry_out
 from orexis_agent_progression.store import bindings
@@ -75,7 +75,7 @@ def handed(agent, judgment):
         #  carries the old instant, so it is presented again.
         if judgment.desire is not None:
             if judgment.uri in derived(agent):
-                return next((d for d in agent.considering() if d.uri == judgment.uri), judgment)
+                return find_want(agent.beliefs, uri=judgment.uri) or judgment
         return judgment
     #  THE PASS STANDS ON THE ROOT: every desire is judged into the store and the wants derived
     #  from what the store says — a desire whose met-test the compiler refused is judged by the
@@ -87,7 +87,9 @@ def handed(agent, judgment):
     #  AS THE CONTAINER PRESENTS IT: a want met at an instant carries its instant, its
     #  time room and the state the newest prediction gives it (`Agent.considering`), none of
     #  which the desire's row knows; an at-end want is the desire's row under the derived name.
-    presented = next((d for d in agent.considering() if d.uri == child and d.holds_at is not None), None)
+    presented = find_want(agent.beliefs, uri=child)
+    if presented is not None and presented.holds_at is None:
+        presented = None
     return presented if presented is not None else replace(judgment, uri=child, desire=judgment.uri)
 
 
@@ -97,7 +99,7 @@ def consider(agent, now: datetime | None = None) -> None:
 
     THE SEAM THAT WAS MISSING. The container held `Considering` and the deliberation module held
     a `Timer`, and each reached into the other — `packages/orexis-agent-deliberation/considering.py` imported this package,
-    and `Deliberator.tick` read `agent.considering()` back — so there was no single place a pass
+    and `Deliberator.tick` read `agent.wants()` back — so there was no single place a pass
     began. The agent calls this on its patience and knows nothing else about wants; what a
     want IS stays here, which is the package that has the word.
 
@@ -126,7 +128,7 @@ def consider_now(agent, now: datetime | None = None) -> None:
     asserts on what a pass did, and nothing in production, where the clock marks and the
     reviser's own thread searches. That is the ONLY difference between the two, and it is the
     reason they share `_to_consider`: this was `Deliberator.deliberate_on_gaps`, which read
-    `agent.considering()` directly and so ran a pass WITHOUT the derivation — the staleness the
+    `agent.wants()` directly and so ran a pass WITHOUT the derivation — the staleness the
     seam was built to remove, left in the path every test went down.
     """
     for want in _to_consider(agent, now):
@@ -144,9 +146,10 @@ def _to_consider(agent, now: datetime | None):
     #  derivation, running next, mints afresh whatever is still unmet.
     forget_wants(agent.beliefs.engine)
     derived(agent)
-    for want in agent.considering(now):
-        if want.pursuable:
-            yield want
+    #  READ FROM THE STORE, not assembled. It was `agent.wants()`, a collection that
+    #  merged four sources and judged three of them at read time; a want is in the store
+    #  because the derivation just put it there, and that is the only judgment there is.
+    yield from find_wants(agent.beliefs, now)
 
 
 def derived(agent) -> list[str]:
@@ -212,7 +215,7 @@ def withdraw(agent, child: str) -> None:
     log.info("%s withdrawn", child.rsplit("#", 1)[-1])
 
 
-def pursue(agent, judgment, surprise: tuple | None = None) -> str | None:
+def pursue(agent, judgment, surprise: tuple | None = None, wait: bool = True) -> str | None:
     """Plan, commit, take. The intention that stands for the plan's head — adopted now, or
     already standing and absorbed — or None where the search proposed nothing.
 
@@ -293,19 +296,29 @@ def pursue(agent, judgment, surprise: tuple | None = None) -> str | None:
         carry_out(agent, keeper.current(uri) or act, judgment, uri)
         return uri
 
-    #  ONLY THE RESULT CROSSES ONTO THE LOOP. The search ran on whoever called — the
-    #  deliberation worker, or a test — and what it found is one act; committing it to the
-    #  ledger and handing it to its actor is progression's, and runs as ONE item on the
-    #  executing thread, so the ledger write and the take are atomic against every other
-    #  handler and tick. A caller that IS the loop does it now; any other waits for its
-    #  answer, which is the one wait a search is allowed.
+    #  ONLY THE RESULT CROSSES ONTO THE LOOP. The search ran on whoever called — the mind's
+    #  thread, or a test — and what it found is a PLAN, already written to its own graph by
+    #  the search; committing it to the ledger and handing its head to an actor is
+    #  progression's, and runs as ONE item on the executing thread, so the ledger write and
+    #  the take are atomic against every other handler and tick.
     on = loop()
     if on.is_current():
         return commit_and_take()
-    return on.submit(commit_and_take).result()
+    taking = on.submit(commit_and_take)
+    #  AND THE MIND DOES NOT WAIT FOR IT. Deliberation's thread is for finding plans; what
+    #  happens to one afterwards is the layer below's, and a search that blocks on the
+    #  executing thread has made the two one. The pass called `.result()` here, so the mind
+    #  sat through every ledger write and every actor take on its own cadence — and the
+    #  deeper the plan, the longer it sat.
+    #
+    #  A CALLER THAT ASKED FOR THE ANSWER STILL GETS IT. Every explicit caller — a module on
+    #  the loop, a test wanting the consequences before it asserts — waits; the reviser, which
+    #  is the mind and ignores the answer, does not.
+    return taking.result() if wait else None
 
 
-def pursue_for(agent, want: str, surprise: tuple | None = None) -> str | None:
+def pursue_for(agent, want: str, surprise: tuple | None = None,
+               wait: bool = True) -> str | None:
     """The actors' door: something changed about this want — what now, about it?
 
     An actor holding a fresh reading finds the want it means by its own query — sensing's
@@ -313,8 +326,9 @@ def pursue_for(agent, want: str, surprise: tuple | None = None) -> str | None:
     and hands the NODE here. None where the agent is not considering that want at all.
     """
     #  BY EITHER NAME (#618): a mark may name the desire while the want derived under it stands.
-    judgment = next((d for d in agent.considering() if d.uri == want or d.desire == want), None)
-    return pursue(agent, judgment, surprise=surprise) if judgment is not None else None
+    judgment = (find_want(agent.beliefs, uri=want)
+                or find_want(agent.beliefs, desire=want))
+    return pursue(agent, judgment, surprise=surprise, wait=wait) if judgment is not None else None
 
 
 def _because(plan, judgment) -> str:

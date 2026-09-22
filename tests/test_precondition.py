@@ -66,7 +66,7 @@ def test_a_move_reads_what_put_it_on_the_menu(monkeypatch):
     the target being a peg. The absences (nothing on the disk, no smaller disk on the peg)
     are the regression's, and are not here."""
     agent = _agent(monkeypatch, *CASES["hanoi, one disk astray"])
-    want = next(d for d in agent.considering())
+    want = next(d for d in agent.wants())
     plan = Planner(agent, agent.me).plan(want)
     move = next(s for s in plan.steps if s.action == HANOI + "Move")
     assert move.precondition, "a planned move carries what put it on the menu"

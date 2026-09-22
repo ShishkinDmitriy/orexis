@@ -41,7 +41,7 @@ def _mover(monkeypatch, disks):
 
 
 def _goal(agent):
-    return next(g for g in agent.considering() if g.uri == WANT)
+    return next(g for g in agent.wants() if g.uri == WANT or g.desire == WANT)
 
 
 def _finished(agent) -> bool:
