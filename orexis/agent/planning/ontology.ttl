@@ -41,6 +41,17 @@ The second reason is the crossing. A plan goes to the execution layer to be carr
 
 A WORKING graph, and memory: the imaginarium is not on disk. A plan is a pass's result and not yet a commitment; what survives is the intention the execution layer mints when it copies one in (`plans.copy_plan`).""" .
 
+planning:PossibleGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Possible graph" ;
+    rdfs:comment """ONE NODE OF A SEARCH — what the world comes to if the steps reaching it were taken — in the imaginarium, beside the ground it was forked from and the other worlds the pass imagined. Never mutated: siblings are alive at the same time, so branching rather than backtracking is the hard case, and a world is a VALUE written once when the node is created.
+
+WHERE IT CAME FROM IS IN THE STORE. It says which world it was forked from (`prov:wasDerivedFrom`) and what made the fork (`planning:by`), so the tree a pass walked can be read by asking. It was in the graph's NAME — a path of action segments — which is a reader depending on a spelling, and a graph's name is for eyes.
+
+A WORKING graph, and memory: an imaginarium is not on disk, and a possible world is what a pass considered rather than anything the agent believes.""" .
+
+planning:by a owl:ObjectProperty ; rdfs:domain planning:PossibleGraph ; rdfs:range orexis:Action ;
+    rdfs:label "by" ;
+    rdfs:comment "The action whose effect made this world out of the one it was forked from. A ground says nothing here: what makes a ground is a prediction nobody takes, and its own period says when." .
+
 planning:GroundGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Ground graph" ;
     rdfs:comment """WHAT THE AGENT'S OWN KNOWLEDGE COMES TO OVER ONE PERIOD — the present, or what a prediction made of the period before it — materialised in an imaginarium as one graph, classified with the stretch it holds over. Which ground holds at an instant is then the door's question and no reader is handed a list.
 

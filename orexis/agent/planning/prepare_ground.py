@@ -78,10 +78,12 @@ import pyoxigraph as ox
 from orexis.agent.ontology import (BELIEF, DESIRE, OREXIS, PREDICTION, PUBLIC, RECORD,
                                              STATE, WANT)
 from orexis.agent.hash_named_graph import hash_named_graph
-from orexis.agent.store import (Raw, add_quads, bind, catalogue_of, classify, forget_graph,
-                                          graphs_of, quads, rows, update)
+from orexis.agent.store import (Raw, add_quads, bind, catalogue_of, classify, copy_graph,
+                                          forget_graph, graphs_of, quads, rows, update)
 
 from .ontology import GROUND_GRAPH
+
+_PROV = "http://www.w3.org/ns/prov#"
 
 log = logging.getLogger("prepare_ground")
 
@@ -257,8 +259,9 @@ def _fork(store: ox.Store, parent: str, name: str, added, retracts: list[str]) -
     the retraction exists to close, arriving by another door.
     """
     node = ox.NamedNode(name)
-    update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
-                  f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
+    #  THE SAME COPY A SEARCH MAKES, and the store's because it says nothing about why: a
+    #  boundary forks the ground before it exactly as a step forks the world it is taken in.
+    copy_graph(store, parent, name)
     for text in retracts:
         try:
             update(store, bind(text, state=Raw(f"<{name}>")))
@@ -266,6 +269,11 @@ def _fork(store: ox.Store, parent: str, name: str, added, retracts: list[str]) -
             log.error("a prediction's retraction would not run, so it supersedes nothing: %s",
                       exc)
     add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
+    #  AND WHICH GROUND IT CAME FROM, in the store rather than in its name. What MADE it is
+    #  not said: a ground is made by predictions nobody takes, and its own period says when —
+    #  which is the one thing a possible world has no answer for and a ground does.
+    add_quads(store, [ox.Quad(node, ox.NamedNode(_PROV + "wasDerivedFrom"),
+                              ox.NamedNode(parent), ox.NamedNode(catalogue_of(store)))])
     return name
 
 

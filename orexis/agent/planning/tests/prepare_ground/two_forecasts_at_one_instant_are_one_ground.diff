@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -8,8 +8,8 @@
+@@ -9,8 +9,8 @@
  @prefix ground: <http://example.org/orexis/graph/ground/1/> .
  
  GRAPH :ontology {
@@ -10,7 +10,7 @@
  }
  
  GRAPH :world {
-@@ -33,26 +33,45 @@
+@@ -34,26 +34,46 @@
  GRAPH :catalogue {
    :catalogue a orexis:CatalogueGraph .
    :catalogue a orexis:Graph .
@@ -54,6 +54,7 @@
 +  ground:2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T130000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T130000p0000 orexis:hash "sha256:5e545b2e87bf55b56fcea433960d66a323297e22f98a238e412d46a00a088951" .
++  ground:2026-01-01T130000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
  }
 +
 +

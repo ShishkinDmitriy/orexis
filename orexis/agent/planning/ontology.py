@@ -43,6 +43,13 @@ WRITES = PLANNING + "writes"
 ANYTHING = PLANNING + "Anything"
 DERIVATION_GRAPH = PLANNING + "DerivationGraph"
 
+#  A POSSIBLE WORLD: one node of a search, in an imaginarium — what the world comes to if the
+#  steps reaching it were taken. It says which world it was forked FROM (`prov:wasDerivedFrom`)
+#  and what made the fork (`planning:by`), so the tree a pass walked is in the store rather
+#  than spelled into graph names nothing may read.
+POSSIBLE_GRAPH = PLANNING + "PossibleGraph"
+BY = PLANNING + "by"
+
 #  A GROUND WORLD: what the agent's own knowledge comes to over ONE PERIOD, materialised in an
 #  imaginarium — the present, and what each prediction makes of it. Classified with a period,
 #  so which ground holds at an instant is a question the door answers and no reader is handed a

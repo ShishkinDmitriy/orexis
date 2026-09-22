@@ -60,15 +60,16 @@ from orexis.agent.ontology import (DESIRE, FORESEEN, GRAPH_PREFIX, OREXIS, PREDI
                                              PUBLIC, RECORD, STATE, STATE_GRAPH, WANT,
                                              local_of, picks_graph)
 from orexis.agent.hash_named_graph import hash_named_graph
-from orexis.agent.store import (Memo, add_quads, bindings, classify, clear_graph,
+from orexis.agent.store import (Memo, add_quads, bindings, catalogue_of, classify,
+                                           clear_graph, copy_graph,
                                            forget_graph, graphs_of, query,
                                            rdflib_view, update)
 
 from . import effects, touches
 from .prepare_ground import prepare_ground
 from .derive_wants import derive_wants
-from .ontology import (COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
-                       OUTCOME, PLAN_GRAPH, SATISFIED)
+from .ontology import (BY, COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
+                       OUTCOME, PLAN_GRAPH, POSSIBLE_GRAPH, SATISFIED)
 from .scopes import find_scopes
 from .steps import find_steps
 
@@ -304,16 +305,10 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
               want: str) -> "_Node | None":
         """The world one step past this one, or None where the step's effect says nothing.
 
-        FORK, THEN APPLY. The world is copied first and the effect is run INTO it, so the
-        order retraction-before-addition and the graph each half is bound to are `effects`'
-        business rather than three lines every caller has to get right. A fork the effect
-        says nothing in is dropped and costs no budget, which is what the emptiness test
-        bought when the diff was a pair of lists.
-
-        What a step costs is the action's own `orexis:costs` select and what it takes to land
-        is its `orexis:landsAt`, both run against the world the step is taken IN — before
-        anything is applied, since a cost read off the state it is about to change would
-        answer about the change.
+        THREE QUESTIONS AND ONE ACT. What the step costs and how long it takes to land are
+        asked of the world it is taken IN, before anything is applied — a cost read off the
+        state it is about to change would answer about the change. Then `apply_action` makes
+        the world.
         """
         graphs = self._dataset(node)
         binding = self._bind(step, node, want)
@@ -322,14 +317,9 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         lands = effects.lands_after(self._store, step.action, graphs,
                                     memo=self._memo, **binding) or 0.0
         taken = node.taken + (step,)
-        world = fork(self._store, node.world, world_of(taken))
-        if not effects.apply_effects(self._store, step.action, world, graphs,
-                                     memo=self._memo, **binding):
-            #  AN ACTION THAT CHANGES NOTHING IS NOT A MOVE: a legal filling whose effect rule
-            #  produced no diff in this world. The hash would reach the same answer, having
-            #  kept the copy — measured, the suite is green either way — and this way the
-            #  fork is not counted against the budget.
-            drop_world(self._store, world)
+        world = apply_action(self._store, node.world, world_of(taken), step.action, graphs,
+                             memo=self._memo, **binding)
+        if world is None:
             return None
         return _Node(world=world, taken=taken, cost=node.cost + spent,
                      at=node.at + timedelta(seconds=lands))
@@ -650,6 +640,7 @@ class _Node:
 _MET_WHEN = rdflib.URIRef("http://example.org/orexis#metWhen")
 _EXECUTION = "http://example.org/orexis/execution#"
 _PLANNING = "http://example.org/orexis/planning#"
+_PROV = "http://www.w3.org/ns/prov#"
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 _XSD_DATETIME = ox.NamedNode("http://www.w3.org/2001/XMLSchema#dateTime")
 
@@ -721,27 +712,48 @@ def plan_graph(want: str) -> str:
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
-def fork(store: ox.Store, parent: str, name: str) -> str:
-    """A world of its own holding what `parent` holds, and nothing else done to it yet.
 
-    **Fork, do not replay.** A node's facts are made by copying its parent's and applying the
-    step to the copy. Recomputing a world by replaying from the root would sound cheaper and
-    is the shape of the bug this exists to close: replay re-runs each step's rule, and a rule
-    re-run has to be re-run against *something* — which was the store. Materialising per node
-    is what makes a step's baseline the previous step's conclusion.
+def apply_action(store: ox.Store, parent: str, name: str, action: str, graphs,
+                 *, memo=None, **bind) -> str | None:
+    """The world one action past `parent`: forked, marked with where it came from, and the
+    action's effect applied to it. The new world's name, or None where the action changes
+    nothing and the fork is dropped.
 
-    WHAT HAPPENS TO IT IS `effects.apply_effects`, which deletes what the step replaces and
-    adds what it makes true, in that order and into this graph. The copy is a separate act
-    because a prediction forks a ground the same way and has no action to run.
+    THE FOUR ACTS IN ORDER, and each is somebody's: `fork` copies (this module's, since a
+    world is what a search makes), `effects.apply_effects` deletes what the action replaces
+    and adds what it makes true (the action's, since the order and the binding are facts about
+    what an effect IS), `mark_world` says where the world came from, and `drop_world` takes
+    back a fork that turned out to be no move at all.
+
+    AN ACTION THAT CHANGES NOTHING IS NOT A MOVE — a legal filling whose effect rule produced
+    no diff in this world. The world's own hash would reach the same answer, having kept the
+    copy; measured, the suite is green either way. Saying it here is what keeps the fork off
+    the budget.
     """
-    #  THE COPY IS THE ENGINE'S, not a Python loop over quads. The loop cost 4.75 ms per fork
-    #  on a 1,000-triple world against 3.29 ms this way, and 59 ms against 44 at 10,000 — a
-    #  quarter, all of it the interpreter's overhead per quad rather than the store's. Blank
-    #  node identity survives it, measured: a bnode matched in the WHERE is the same term when
-    #  inserted, which matters because a held shape IS a blank node.
-    update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
-                  f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
+    copy_graph(store, parent, name)
+    if not effects.apply_effects(store, action, name, graphs, memo=memo, **bind):
+        drop_world(store, name)
+        return None
+    mark_world(store, name, parent, action)
     return name
+
+
+def mark_world(store: ox.Store, name: str, parent: str, by: str | None = None) -> None:
+    """Say of a world what it is, which world it was forked FROM, and what made the fork.
+
+    IN THE STORE AND NOT IN THE NAME. A possible world was called after the path of actions
+    reaching it, so the only record of the tree a pass walked was a spelling — and a graph's
+    name is for eyes, which no reader may depend on. A ground marks itself the same way and
+    says no `planning:by`: what makes a ground is a prediction nobody takes, and its own
+    period says when.
+    """
+    classify(store, name, POSSIBLE_GRAPH if by else GROUND_GRAPH, OREXIS + "Derived")
+    quads = [ox.Quad(ox.NamedNode(name), ox.NamedNode(_PROV + "wasDerivedFrom"),
+                     ox.NamedNode(parent), ox.NamedNode(catalogue_of(store)))]
+    if by:
+        quads.append(ox.Quad(ox.NamedNode(name), ox.NamedNode(BY), ox.NamedNode(by),
+                             ox.NamedNode(catalogue_of(store))))
+    add_quads(store, quads)
 
 
 def drop_world(store: ox.Store, name: str) -> None:

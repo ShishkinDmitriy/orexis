@@ -813,6 +813,25 @@ def clear_graph(store, graph_iri: str) -> None:
     store.remove_graph(ox.NamedNode(graph_iri))
 
 
+def copy_graph(store, parent: str, name: str) -> str:
+    """Everything `parent` holds, under `name` as well. The name, for chaining.
+
+    THE COPY IS THE ENGINE'S, not a Python loop over quads. The loop cost 4.75 ms per fork on
+    a 1,000-triple world against 3.29 ms this way, and 59 ms against 44 at 10,000 — a quarter,
+    all of it the interpreter's overhead per quad rather than the store's. Blank node identity
+    survives it, measured: a bnode matched in the WHERE is the same term when inserted, which
+    matters because a held shape IS a blank node.
+
+    Two callers fork a world this way — a search taking a step, and a boundary applying the
+    predictions that begin at an instant — and what they do to the copy afterwards is their
+    own. Here because it is the store's: copying a graph under another name says nothing
+    about why.
+    """
+    update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
+                  f"WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}")
+    return name
+
+
 def forget_graph(store, graph_iri: str) -> None:
     """Empty one graph AND take back everything the catalogue said of it.
 
