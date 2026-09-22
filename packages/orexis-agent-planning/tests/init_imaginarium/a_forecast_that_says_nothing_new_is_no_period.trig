@@ -61,12 +61,14 @@ GRAPH :catalogue {
   :dip a orexis:PredictionGraph .
   :dip orexis:beliefsOf :keeper .
   :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
-  :dip orexis:retracts """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#level> ?l }
-      WHERE { GRAPH $state { <http://example.org/test#tank1> <http://example.org/test#level> ?l } }""" .
+  :dip orexis:retracts """PREFIX : <http://example.org/test#>
+      CONSTRUCT { :tank1 :level ?l }
+      WHERE { GRAPH $state { :tank1 :level ?l } }""" .
   :refill a orexis:Graph .
   :refill a orexis:PredictionGraph .
   :refill orexis:beliefsOf :keeper .
   :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
-  :refill orexis:retracts """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#level> ?l }
-      WHERE { GRAPH $state { <http://example.org/test#tank1> <http://example.org/test#level> ?l } }""" .
+  :refill orexis:retracts """PREFIX : <http://example.org/test#>
+      CONSTRUCT { :tank1 :level ?l }
+      WHERE { GRAPH $state { :tank1 :level ?l } }""" .
 }

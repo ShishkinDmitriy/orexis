@@ -4,8 +4,12 @@
 # The search should chain two Fills — which is the whole claim: a met-test the first dose does
 # not satisfy is reached by repeating the step, and nothing declares the chain.
 #
-# THE TEXTS SPELL THEIR IRIS IN FULL. A query may use only what `store.NAMESPACES` declares,
-# and `:` here is the case's own prefix, which the store has never heard of.
+# THE TEXTS DECLARE THEIR OWN PREFIX. A query may use only what `store.NAMESPACES` declares,
+# and `:` here is the case's own word, which the store has never heard of — so each text says
+# `PREFIX : <…>` above itself, as SPARQL says a query declares one, and the engine takes it
+# beside the store's dictionary. A test case speaking its own words is exactly the case
+# AGENTS.md allows this for; spelling every IRI in full is the alternative, and it made a
+# three-line CONSTRUCT unreadable.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -32,15 +36,19 @@ GRAPH :world {
 GRAPH :actions {
   :fill a orexis:Action ;
     orexis:takes :tank ;
-    orexis:available """SELECT ?tank WHERE {
-      ?tank a <http://example.org/test#Tank> ; <http://example.org/test#level> ?l .
+    orexis:available """PREFIX : <http://example.org/test#>
+      SELECT ?tank WHERE {
+      ?tank a :Tank ; :level ?l .
       FILTER(?l < 10) }""" ;
-    sh:construct """CONSTRUCT { ?tank <http://example.org/test#level> ?next } WHERE {
-      $tank <http://example.org/test#level> ?l .
+    sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?tank :level ?next } WHERE {
+      $tank :level ?l .
       BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ;
-    orexis:retracts """CONSTRUCT { ?tank <http://example.org/test#level> ?l } WHERE {
-      $tank <http://example.org/test#level> ?l . BIND($tank AS ?tank) }""" ;
-    orexis:costs """SELECT (1 AS ?cost) WHERE { }""" .
+    orexis:retracts """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?tank :level ?l } WHERE {
+      $tank :level ?l . BIND($tank AS ?tank) }""" ;
+    orexis:costs """PREFIX : <http://example.org/test#>
+      SELECT (1 AS ?cost) WHERE { }""" .
   :tank a orexis:Parameter .
 }
 
