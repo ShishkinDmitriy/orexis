@@ -35,8 +35,7 @@ import pyoxigraph as ox
 import rdflib
 
 from orexis_agent_execution.ontology import FORESEEN, OREXIS
-from orexis_agent_execution.store import (NAMESPACES, answer, bind, bindings, graphs_holding,
-                                            instant, rows)
+from orexis_agent_execution.store import NAMESPACES, bind, graphs_of, instant, rows
 
 
 log = logging.getLogger("derive_wants")
@@ -786,7 +785,7 @@ def _one(store: ox.Store, node: str, want: bool = False) -> tuple[str, str | Non
     """Who holds one desire — or one want — and what its met-test is, or None where no graph
     of that kind holds it."""
     if want:
-        rows_ = bindings(answer(store, bind(_WANTS_SHAPE_Q, want=node)))
+        rows_ = rows(store, _WANTS_SHAPE_Q, (), want=node)
         return (rows_[0]["holder"], rows_[0]["shape"]) if rows_ else None
     rows_ = list(store.query(bind(_ONE_Q, desire=node), prefixes=NAMESPACES))
     if not rows_:
@@ -812,7 +811,7 @@ def _witnesses_at(store: ox.Store, select: str, holder: str, at: datetime,
     ONE SELECT PER DESIRE PER INSTANT, and not one union of them: the compiler measured a
     single UNION of every shape at thirteen times the cost of the selects asked one by one.
     """
-    graphs = [ox.NamedNode(g) for g in graphs_holding(store, FORESEEN, holder=holder, at=at, now=now)]
+    graphs = [ox.NamedNode(g) for g in graphs_of(store, *FORESEEN, holder=holder, at=at, now=now)]
     try:
         found = store.query(select, prefixes=NAMESPACES, default_graph=graphs)
         names = [v.value for v in found.variables]

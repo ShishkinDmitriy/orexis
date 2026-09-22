@@ -366,24 +366,6 @@ def instant(at: datetime) -> ox.Literal:
     return ox.Literal(at.isoformat(), datatype=_XSD_DATETIME)
 
 
-def graphs_holding(engine, kinds, *, holder: str | None = None,
-                   at: datetime | None = None, now: datetime | None = None) -> list[str]:
-    """Every graph of `kinds` the engine's catalogue describes — `Store.graphs_of` as a
-    function over the engine, and the same answer.
-
-    `holder` keeps the list to what that holder owns and what nobody does, which is what the
-    class does from `agent_uri`; omitted, every graph of the kinds answers. `at` keeps it to
-    what holds then, a record excepted, and `now` is the present a record is read at —
-    defaulting to `at`, since a reader standing at one instant means that one. No clock is
-    read here: the instant is the reader's, as it is everywhere else.
-    """
-    text = bind(_GRAPHS_Q, kinds=Raw(" ".join(f"<{k}>" for k in kinds)),
-                owned=Raw(bind(_OWNED, holder=holder) if holder is not None else ""),
-                holding=Raw(bind(_HOLDING, at=instant(at), now=instant(now or at))
-                            if at is not None else ""))
-    return [str(row["g"].value) for row in engine.query(text, prefixes=NAMESPACES)]
-
-
 def catalogue_of(engine) -> str | None:
     """The graph that describes every graph and itself — `Store.catalogue` as a function over
     the engine, and the same answer, asked rather than kept.
@@ -569,16 +551,24 @@ def graphs_of(engine, *kinds: str, at: datetime | None = None,
     """Every graph the catalogue types under any of `kinds` — subclasses included, the rows
     having been closed when they were written — holding at `at` where an instant is given.
 
-    THE ONE LOOKUP A READER TAKES (a-reader-states-the-kinds-it-reads). The reader says which
-    kinds it means and, if it stands at an instant, which; this answers with graphs and
-    decides nothing else. No clock is read: a reader meaning *now* says so.
+    THE ONE LOOKUP A READER TAKES, and it is ONE (a-reader-states-the-kinds-it-reads). The
+    reader says which kinds it means and, if it stands at an instant, which; this answers with
+    graphs and decides nothing else. No clock is read: a reader meaning *now* says so.
 
-    `holder` is the one thing the class used to know and a function cannot: which agent's
-    store this is. Passed, the answer is that holder's graphs and those nobody owns; omitted,
-    every graph of the kinds — which is right for a store holding one agent's world, and is
-    what makes rule 4 (one agent, one volume) structural rather than remembered.
+    It was two doors for a while — this and a `graphs_holding` taking its kinds as a sequence
+    rather than varargs, which this delegated to — and a calling convention is not a reason
+    for a second public name: half the readers took one and half the other, for one question.
+
+    `holder` is the one thing the predecessor's wrapper knew and a function cannot: which
+    agent's store this is. Passed, the answer is that holder's graphs and those nobody owns;
+    omitted, every graph of the kinds — which is right for a store holding one agent's world,
+    and is what makes rule 4 (one agent, one volume) structural rather than remembered.
     """
-    return graphs_holding(engine, kinds, holder=holder, at=at, now=now)
+    text = bind(_GRAPHS_Q, kinds=Raw(" ".join(f"<{k}>" for k in kinds)),
+                owned=Raw(bind(_OWNED, holder=holder) if holder is not None else ""),
+                holding=Raw(bind(_HOLDING, at=instant(at), now=instant(now or at))
+                            if at is not None else ""))
+    return [str(row["g"].value) for row in engine.query(text, prefixes=NAMESPACES)]
 
 
 #  ── reading ────────────────────────────────────────────────────────────────────────────────

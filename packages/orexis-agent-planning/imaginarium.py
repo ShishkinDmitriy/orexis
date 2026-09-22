@@ -44,7 +44,7 @@ from orexis_agent_execution.ontology import GRAPH_PREFIX, OREXIS, PUBLIC, STATE_
 from .ontology import PLANNING
 from orexis_agent_execution.store import (Memo, add_quads, catalogue_of, classify,
                                            clear_graph, construct, contains_graph, copy_graphs,
-                                           dump_nt, entail, get_graph, graphs_holding, graphs_of,
+                                           dump_nt, entail, get_graph, graphs_of,
                                            quads, quads_for_pattern, query, query_over, reader,
                                            remove_quads, render, update)
 
@@ -85,7 +85,7 @@ def init_imaginarium(beliefs: ox.Store, into: ox.Store, *private: str) -> ox.Sto
     is also why a world is not narrowed per scope**: fewer graphs is the same move under
     another name, and it fails the same silent way.
 
-    It is also the rule the rest of the repo follows. `graphs_holding(beliefs, (PUBLIC,))`
+    It is also the rule the rest of the repo follows. `graphs_of(beliefs, PUBLIC)`
     ASKS the vocabulary which graphs are public; naming four of them here would be the
     enumeration rule 1 forbids, and adding a fifth public graph would silently stop reaching
     this.
@@ -104,7 +104,7 @@ def init_imaginarium(beliefs: ox.Store, into: ox.Store, *private: str) -> ox.Sto
     relabels blank nodes, so an observation node would come out the far side unequal to the
     one a retraction names — the same trap `effects._triple` exists for, one layer up.
     """
-    for iri in dict.fromkeys([*graphs_holding(beliefs, (PUBLIC,)), catalogue_of(beliefs), *private]):
+    for iri in dict.fromkeys([*graphs_of(beliefs, PUBLIC), catalogue_of(beliefs), *private]):
         if iri is None:
             continue                          # a store nobody has told anything to has no catalogue
         into.extend(beliefs.quads_for_pattern(None, None, None, ox.NamedNode(iri)))

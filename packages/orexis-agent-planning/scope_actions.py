@@ -21,7 +21,7 @@ import pyoxigraph as ox
 
 from orexis_agent_execution import clock
 from orexis_agent_execution.ontology import PUBLIC
-from orexis_agent_execution.store import answer, graphs_holding
+from orexis_agent_execution.store import answer, graphs_of
 
 from . import relevance
 from .ontology import DERIVATION_GRAPH
@@ -46,9 +46,9 @@ def scope_actions(store: ox.Store) -> None:
     the same one from the same rows, so there is nobody to name it after (`scopes.py`).
     """
     now = clock.now()
-    publics = graphs_holding(store, (PUBLIC,), at=now)
+    publics = graphs_of(store, PUBLIC, at=now)
     actions = relevance.actions_of(lambda text: answer(store, text, publics))
-    edges = relevance.stored_edges(store, graphs_holding(store, (DERIVATION_GRAPH,)))
+    edges = relevance.stored_edges(store, graphs_of(store, DERIVATION_GRAPH))
     parts = scopes(actions, edges)
     written = []
     for n, part in enumerate(parts, 1):
