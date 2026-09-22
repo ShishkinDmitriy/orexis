@@ -28,6 +28,8 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix ground: <http://example.org/orexis/graph/ground/1/> .
 
 GRAPH :ontology {
   orexis:StateGraph rdfs:subClassOf orexis:Graph .

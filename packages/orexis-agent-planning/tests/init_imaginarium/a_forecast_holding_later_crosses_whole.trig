@@ -19,6 +19,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ground: <http://example.org/orexis/graph/ground/1/> .
 
 GRAPH :world {
   :tank1 a :Tank .
