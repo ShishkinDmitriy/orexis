@@ -460,9 +460,28 @@ def entry(engine, graph: str, graph_class: str, arrival: str, owner: str | None 
 def classify(engine, graph: str, graph_class: str, arrival: str, owner: str | None = None,
              start: datetime | str | None = None, end: datetime | str | None = None) -> None:
     """Say what a graph IS, how it arrived, WHOSE it is and WHEN it holds — by its owner, when
-    it creates the graph. A name is for eyes; every reader asks the catalogue. Idempotent, so
-    an owner may say it without asking whether the graph is new."""
-    update(engine, f"INSERT DATA {{ {entry(engine, graph, graph_class, arrival, owner, start, end)} }}")
+    it creates the graph. A name is for eyes; every reader asks the catalogue.
+
+    IDEMPOTENT, INCLUDING THE PERIOD, which it was not. A period is a blank node
+    (`dcterms:temporal [ a dcterms:PeriodOfTime … ]`) and a blank node in an `INSERT DATA` is a
+    NEW node every time, so saying this twice of one graph gave it two periods — and a reader
+    joining through `dcterms:temporal` then saw every row twice. It did not show while every
+    graph had one writer and one subject; it showed the day a graph came to be shared by
+    everything in trouble over one stretch, as three wants in one graph read as nine.
+
+    So the period is written only where the graph has none. Saying a DIFFERENT period of a
+    graph that already has one is not an update and is not silently applied: a graph's stretch
+    is fixed when it is created, and a writer that means another stretch means another graph.
+    """
+    block = entry(engine, graph, graph_class, arrival, owner, start, end)
+    if start is None and end is None:
+        update(engine, f"INSERT DATA {{ {block} }}")
+        return
+    catalogue = catalogue_of(engine)
+    update(engine, f"""
+INSERT {{ {block} }}
+WHERE  {{ GRAPH <{catalogue}> {{ }}
+          FILTER NOT EXISTS {{ GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal ?period }} }} }}""")
 
 
 _ROWS_Q = """

@@ -11,24 +11,25 @@
    :scopes orexis:arrivedBy orexis:Derived .
    :scopes orexis:beliefsOf :keeper .
    :sensed a orexis:BeliefGraph .
-@@ -84,4 +84,24 @@
+@@ -84,4 +84,25 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
-+  pursued:keeper.warm_enough.pursued.fern a orexis:Graph .
-+  pursued:keeper.warm_enough.pursued.fern a orexis:WantGraph .
-+  pursued:keeper.warm_enough.pursued.fern dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-+  pursued:keeper.warm_enough.pursued.fern orexis:arrivedBy orexis:Derived .
-+  pursued:keeper.warm_enough.pursued.fern orexis:beliefsOf :keeper .
++  pursued:2026-01-01T120000p0000--open a orexis:Graph .
++  pursued:2026-01-01T120000p0000--open a orexis:WantGraph .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
  }
 +
 +
-+GRAPH pursued:keeper.warm_enough.pursued.fern {
++GRAPH pursued:2026-01-01T120000p0000--open {
 +  :keeper orexis:holds :keeper.warm_enough.pursued.fern .
 +  :keeper.warm_enough.pursued.fern a orexis:Want .
 +  :keeper.warm_enough.pursued.fern orexis:metWhen :keeper.warm_enough.pursued.fern.met .
 +  :keeper.warm_enough.pursued.fern orexis:state orexis:Recognized .
 +  :keeper.warm_enough.pursued.fern orexis:violationIs orexis:Below .
++  :keeper.warm_enough.pursued.fern prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  :keeper.warm_enough.pursued.fern prov:wasDerivedFrom :keeper.warm_enough .
 +  :keeper.warm_enough.pursued.fern rdfs:label "pursued: every plant stands where the air is inside the range it wants" .
 +  :keeper.warm_enough.pursued.fern.met a sh:NodeShape .

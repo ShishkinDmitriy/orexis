@@ -58,10 +58,10 @@ def store():
     return st
 
 
-def _derived(store, uri="urn:test:want", desire=A_DESIRE, *, holds_at=None,
-             derived_at=None, ends=None, side=None):
-    """A want, written the way the DERIVATION writes one — its own graph, classified a graph
-    of wants that arrived derived, with a period starting now.
+def _derived(store, uri="urn:test:want", desire=A_DESIRE, *, at=NOW, until=None, side=None):
+    """A want, written the way the DERIVATION writes one — a graph of wants that arrived
+    derived, whose PERIOD IS THE STRETCH the trouble occupies, and provenance saying when the
+    agent found it.
 
     WRITTEN HERE AND NOT THROUGH THE WRITER. `derive_wants` has a private `_write`, and these
     cases are about the READ: seeding them through the writer would test the two against each
@@ -69,22 +69,29 @@ def _derived(store, uri="urn:test:want", desire=A_DESIRE, *, holds_at=None,
     claims to be able to read, said plainly, and if the writer stops producing them the
     snapshot cases in `tests/derive_wants/` are what say so.
     """
-    graph = graph_of(AGENT, uri)
-    timed = (f' ; orexis:holdsAt "{holds_at}"^^xsd:dateTime'
-             f' ; prov:generatedAtTime "{derived_at}"^^xsd:dateTime' if holds_at else "")
+    graph = graph_of(AGENT, at, until)
     broke = f" ; orexis:violationIs <{side}>" if side else ""
-    period = f' ; orexis:start "{NOW.isoformat()}"^^xsd:dateTime' + (
-        f' ; orexis:end "{ends}"^^xsd:dateTime' if ends else "")
+    period = f' ; orexis:start "{at.isoformat()}"^^xsd:dateTime' + (
+        f' ; orexis:end "{until.isoformat()}"^^xsd:dateTime' if until else "")
     update(store, f"""INSERT DATA {{
   GRAPH <{graph}> {{
     <{HOLDER}> orexis:holds <{uri}> .
-    <{uri}> a orexis:Want{timed}{broke} ;
+    <{uri}> a orexis:Want{broke} ;
+        prov:generatedAtTime "{NOW.isoformat()}"^^xsd:dateTime ;
         prov:wasDerivedFrom <{desire}> ;
         rdfs:label "a want under test" . }}
   GRAPH <{catalogue_of(store)}> {{
     <{graph}> a orexis:WantGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
-        orexis:beliefsOf <{HOLDER}> ;
-        dcterms:temporal [ a dcterms:PeriodOfTime{period} ] . }} }}""")
+        orexis:beliefsOf <{HOLDER}> . }} }}""")
+    #  THE PERIOD ONCE PER GRAPH, and this guard is the writer's own. A period is a BLANK NODE
+    #  and a blank node in an `INSERT` is a new node every time it runs; several wants share a
+    #  stretch's graph now, so asserting it per want gave the graph a period per want and every
+    #  read joining through `dcterms:temporal` returned each want once per period.
+    update(store, f"""
+INSERT {{ GRAPH <{catalogue_of(store)}> {{ <{graph}> dcterms:temporal
+      [ a dcterms:PeriodOfTime{period} ] . }} }}
+WHERE  {{ GRAPH <{catalogue_of(store)}> {{ }}
+          FILTER NOT EXISTS {{ GRAPH <{catalogue_of(store)}> {{ <{graph}> dcterms:temporal ?h }} }} }}""")
 
 
 def _owe(store, uri):
@@ -114,11 +121,11 @@ def test_a_saved_want_is_found_and_a_deleted_one_is_not(store):
 def test_forgetting_a_want_leaves_what_replacing_one_leaves(store):
     """The two ways a want goes, held to leaving the same nothing.
 
-    The derivation replaces a want whole — it drops the graph and the catalogue's account of
-    it before inserting — and `forget_want` does the first half and does not put it back. They
-    share the text for that reason: a want IS its graph, but what the catalogue says OF that
-    graph is not in it, and a row left pointing at an empty graph is litter every reader
-    asking by class would still be handed.
+    The derivation takes a want out and puts it back; `forget_want` does the first half and
+    does not put it back. They share the text for that reason. What the catalogue says OF the
+    graph is not in the graph, so a row left pointing at an empty one is litter every reader
+    asking by class would still be handed — and a graph is taken away only when the want was
+    the LAST in it, since a stretch is shared by whatever is in trouble over it.
 
     Announcing is nobody's here any more. These write the store and tell no one; whoever
     called says what changed, so a caller holding a projection can refresh it.
@@ -128,7 +135,7 @@ def test_forgetting_a_want_leaves_what_replacing_one_leaves(store):
 
     forget_want(store, "urn:test:want")
     assert find_want(store, uri="urn:test:want") is None, "the want is gone"
-    graph = graph_of(AGENT, "urn:test:want")
+    graph = graph_of(AGENT, NOW, None)
     assert not bindings(query_over(store, 
         f"SELECT ?p WHERE {{ <{graph}> ?p ?o }}", "urn:test:catalogue")), \
         "and the catalogue says nothing of its graph"
@@ -175,9 +182,9 @@ def test_saving_writes_the_graph_the_classification_and_the_period(store):
     graph since #645: the classification says which family it belongs to and the period says how
     long it holds, which is what lets the door hide an ended one and one sweep drop it. Written
     without them, a want is invisible to the sweep and outlives its own window."""
-    _derived(store, holds_at="2026-09-17T12:00:00+00:00",
-             derived_at="2026-09-17T11:00:00+00:00", ends="2026-09-17T12:10:00+00:00")
-    graph = graph_of(AGENT, "urn:test:want")
+    lifts = datetime(2026, 9, 17, 12, 10, tzinfo=timezone.utc)
+    _derived(store, until=lifts)
+    graph = graph_of(AGENT, NOW, lifts)
 
     kinds = bindings(query_union(store, 
         f"SELECT ?t ?a WHERE {{ GRAPH <{catalogue_of(store)}> {{ <{graph}> a ?t . "
@@ -193,7 +200,7 @@ def test_saving_writes_the_graph_the_classification_and_the_period(store):
         f"SELECT ?s ?e WHERE {{ GRAPH <{catalogue_of(store)}> {{ <{graph}> dcterms:temporal ?p . "
         f"?p orexis:start ?s . OPTIONAL {{ ?p orexis:end ?e }} }} }}"))
     assert period and period[0].get("e", "").startswith("2026-09-17T12:10"), \
-        "and it stops holding when its plan's room runs out"
+        "and it stops holding when the world says its trouble lifts"
 
 
 def test_a_want_whose_period_has_closed_is_not_handed_out(store):
@@ -201,8 +208,8 @@ def test_a_want_whose_period_has_closed_is_not_handed_out(store):
     period is the want's; one that has ended is gone to every reader from the instant it ends,
     and not merely from whenever the sweep next runs (#645). The read binds the graph to ask
     this, which is the one thing it knows that its callers do not."""
-    _derived(store, uri="urn:test:stale", holds_at="2020-01-01T00:00:00+00:00",
-             derived_at="2020-01-01T00:00:00+00:00", ends="2020-01-01T00:10:00+00:00")
+    _derived(store, uri="urn:test:stale", at=datetime(2020, 1, 1, tzinfo=timezone.utc),
+             until=datetime(2020, 1, 1, 0, 10, tzinfo=timezone.utc))
     assert find_wants(store) == [], "its window closed years ago"
     assert find_want(store, desire=A_DESIRE, derived=True) is None
 

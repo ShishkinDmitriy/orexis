@@ -92,18 +92,20 @@ SELECT ?w WHERE {
   GRAPH ?g { ?i orexis:pursues ?w . FILTER NOT EXISTS { ?i orexis:resolvedAt ?done } }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:IntentionGraph } }"""
 
-#  EVERY WANT THE DERIVATION MINTED that still holds at the instant asked about. Narrowed to
-#  what ARRIVED derived, because a want a world ratified and a debt the ledger wrote are not
-#  this sweep's to judge: no decomposition here implies them, so measured against one they
-#  would all read stale.
+#  EVERY WANT THE DERIVATION MINTED, ACROSS ALL TIME. Narrowed to what ARRIVED derived,
+#  because a want a world ratified and a debt the ledger wrote are not this sweep's to judge:
+#  no decomposition here implies them, so measured against one they would all read stale.
+#
+#  NOT AT AN INSTANT, and that is the same rule the derivation reads by. A want's period is the
+#  stretch its TROUBLE occupies — a want foreseen from three is not handed to a reader standing
+#  at two — and whether a want should still EXIST is not a question about an instant. Asked at
+#  one, this would leave every foreseen want standing for ever, since it is invisible on every
+#  pass until its trouble arrives and invisible again once it has lifted.
 _DERIVED_Q = """
 SELECT ?w WHERE {
   GRAPH ?g { ?w a orexis:Want }
-  GRAPH ?cat {
-    ?cat a orexis:CatalogueGraph . ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived .
-    OPTIONAL { ?g dcterms:temporal ?period .
-               OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } } }
-  FILTER(!BOUND(?start) || ?start <= $now) FILTER(!BOUND(?end) || ?end > $now) }"""
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+               ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived } }"""
 
 
 def withdraw(engine, wanted, now: datetime) -> list[str]:
@@ -125,7 +127,7 @@ def withdraw(engine, wanted, now: datetime) -> list[str]:
     A WANT A PLAN IS WALKING IS KEPT whatever its desire reads. A want IS its graph (#645), so
     withdrawing is `forget_want` and there is nothing left behind.
     """
-    standing = {r["w"] for r in rows(engine, bind(_DERIVED_Q, now=instant(now)), ())}
+    standing = {r["w"] for r in rows(engine, _DERIVED_Q, ())}
     stale = standing - set(wanted)
     if not stale:
         return []

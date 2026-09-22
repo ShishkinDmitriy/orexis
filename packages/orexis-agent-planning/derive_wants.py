@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 import pyoxigraph as ox
@@ -73,15 +73,17 @@ SELECT ?w WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:IntentionGraph } }"""
 
 
+#  WHAT THIS DERIVATION HAS MINTED UNDER ONE DESIRE, ACROSS ALL TIME and not at an instant.
+#  A want's period is the stretch its TROUBLE occupies, so a want foreseen from three is not
+#  handed to a reader standing at two — which is right for a reader asking what is wanted NOW,
+#  and wrong for this, whose question is whether it has already minted this. Asked at an
+#  instant it would mint a second copy of every foreseen want on every pass until the trouble
+#  arrived. Existence is not an instant question.
 _STANDING_Q = """
-SELECT ?w ?holdsAt WHERE {
-  GRAPH ?g { ?w a orexis:Want ; prov:wasDerivedFrom $desire .
-             OPTIONAL { ?w orexis:holdsAt ?holdsAt } }
-  GRAPH ?cat {
-    ?cat a orexis:CatalogueGraph . ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived .
-    OPTIONAL { ?g dcterms:temporal ?period .
-               OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } } }
-  FILTER(!BOUND(?start) || ?start <= $now) FILTER(!BOUND(?end) || ?end > $now) }
+SELECT ?w WHERE {
+  GRAPH ?g { ?w a orexis:Want ; prov:wasDerivedFrom $desire }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+               ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived } }
 ORDER BY ?w"""
 
 
@@ -124,46 +126,31 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
     shapes = shapes_in(store)
     wanted: set[str] = set()
     for holder, desire, shape in desires_in(store, now):
-        #  WHAT IT READS NOW, and what it reads ahead only where now is met: a desire in
-        #  trouble already is pursued as it stands, and a crossing is a thing in the future.
-        present = read_now(store, shapes, holder, desire, shape, now)
-        standing = _standing_under(store, desire, now)
-        if present is None:
+        #  ONE READ, OVER EVERY BOUNDARY. What comes back is each way this desire is failing
+        #  with the stretch it fails over — the present among the instants and not above them.
+        found = read_over_time(store, shapes, holder, desire, shape, now)
+        if found is None:
             #  NOT JUDGED IS NOT MET. A desire whose met-test could not be run says nothing
             #  about its wants — so what stands under it is what it implies, and a dropper
             #  handed this answer cannot read silence as "no longer wanted" and take a want
             #  on a bad shape.
-            wanted |= standing
+            wanted |= _standing_under(store, desire, now)
             continue
-        unmet_now = bool(present)
-        found = present if unmet_now else read_ahead(store, shapes, holder, desire, shape, now)
-        _derive_under(store, shapes, holder, desire, found, unmet_now, now)
-        said = _said(store, desire)
-        names = _named(store, desire, said, found)
-        #  AND THE FORESEEN HALF, where anything would otherwise be dropped: `found` is the
-        #  present alone when the desire is unmet now — a crossing is not minted for while
-        #  there is trouble already — so a want minted at a foreseen instant is absent from it,
-        #  and a dropper reading this answer would take it the moment any OTHER instance went
-        #  unmet now. A presented debt did exactly that to an unpresented one. Read only when
-        #  something stands that these names do not cover, so a pass with nothing stale pays
-        #  nothing for it.
-        if unmet_now and standing - names:
-            names |= _named(store, desire, said,
-                            read_ahead(store, shapes, holder, desire, shape, now))
-        wanted |= names
+        _derive_under(store, shapes, holder, desire, found, now)
+        wanted |= _named(store, desire, _said(store, desire), found)
     return wanted
 
 
 def _standing_under(store: ox.Store, desire: str, now: datetime) -> set[str]:
-    """Every want this derivation minted under `desire` and that still holds at `now`."""
-    return {r["w"] for r in rows(store, _STANDING_Q, (), desire=desire, now=instant(now))}
+    """Every want this derivation has minted under `desire`, whatever stretch it is over."""
+    return {r["w"] for r in rows(store, _STANDING_Q, (), desire=desire)}
 
 
 def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
-                  found: list[Witness], unmet_now: bool, now: datetime) -> list[str]:
+                  found: list[Witness], now: datetime) -> list[str]:
     """The wants one desire's witnesses imply, minted where none stands. `found` is what its
-    met-test read: at the present where it is unmet now, and otherwise each witness at the
-    earliest foreseen instant it reads unmet."""
+    met-test read over time: one witness per way of failing, each carrying the boundary it
+    first reads unmet at and the one it lifts at."""
     #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE, and per INSTANCE: the results clustered by
     #  which of them some action can move together, and a want minted per cluster about
     #  exactly those, holding at the earliest instant among them. Every shipped world is one
@@ -181,32 +168,38 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: st
     #  where the desire ranges over several (`name_of`). Two tanks low about their level are
     #  two clusters and two names; keyed by what they were about alone, the second read the
     #  first as standing, and by construction the second mint had overwritten the first.
-    standing = {r["w"]: r.get("holdsAt") for r in rows(store, _STANDING_Q, (), desire=desire,
-                                                      now=instant(now))}
+    standing = _standing_under(store, desire, now)
     said = _said(store, desire)
     #  THE FALLBACK IS FOR A DESIRE UNMET NOW AND NOTHING ELSE: one want about everything the
-    #  desire is about, for a desire whose select yields no rows. A desire that reads MET now
-    #  and foresees nothing must reach the same loop with NO clusters, so that what stands
-    #  under it is withdrawn — which is why this is a condition and no longer `or [[]]`.
-    clusters = _clusters(store, found)
-    if not clusters and unmet_now:
-        clusters = [[]]
+    #  desire is about, for a desire whose select yields rows naming no property. A desire that
+    #  reads MET at every boundary reaches this loop with NO clusters, so what stands under it
+    #  is withdrawn.
+    clusters = _clusters(store, found) or ([[]] if found else [])
     minted = []
     for cluster in clusters:
         about = tuple(sorted({w.about for w in cluster if w.about}))
         instances = {w.instance for w in cluster}
         instance = next(iter(instances)) if len(instances) == 1 else None
         child = name_of(store, desire, said, about, instance)
-        if child in standing and not (unmet_now and standing[child]):
-            continue
+        #  THE STRETCH THIS CLUSTER IS IN TROUBLE OVER: from the earliest boundary any of its
+        #  ways of failing reads unmet at, to the earliest one they have ALL lifted by. A
+        #  cluster where one way never lifts is open-ended, because the cluster is not repaired
+        #  while any of it stands.
+        at = min((w.at for w in cluster), default=now)
+        lifts = [w.until for w in cluster] or [None]
+        until = None if any(u is None for u in lifts) else max(lifts)
+        #  A WANT ALREADY STANDING FOR THIS CLUSTER IS LEFT ALONE, whatever stretch it was
+        #  minted over. It used to be re-minted when what was foreseen arrived, because the
+        #  want carried the instant it must hold at and the present outranked it; the stretch
+        #  is on the graph now and a want in trouble from three is in trouble from three
+        #  whether it is two o'clock or four.
         if child in standing:
-            log.info("%s: what was foreseen at %s has arrived", child.rsplit("#", 1)[-1],
-                     standing[child])
-        at = None if unmet_now else min((w.at for w in cluster), default=None)
+            continue
         #  ONE SIDE OR NONE: the witnesses of a cluster agree where the same block found them
         #  all, and two sides in one cluster is a want about two troubles, which says neither.
         sides = {w.side for w in cluster if w.side}
-        child = mint(store, shapes, holder, desire, now, said, holds_at=at, about=about, instance=instance,
+        child = mint(store, shapes, holder, desire, now, at, until, said,
+                     about=about, instance=instance,
                      side=next(iter(sides)) if len(sides) == 1 else None)
         if child is not None:
             minted.append(child)
@@ -312,25 +305,35 @@ def _targets_one_node(store: ox.Store, desire: str) -> bool:
 #  decided where the want is decided; `wants.py` reads them back and names none of it.
 
 
-def _moment(value) -> str:
-    """One instant as the store keeps it. A string is passed through: a caller that already
-    has the literal has nothing to convert."""
-    return value if isinstance(value, str) else value.isoformat()
 
 
-def graph_of(agent_id: str, uri: str) -> str:
-    """The graph one DERIVED want lives in. Named for the want so a second episode of the same
-    desire reuses it, and everything keyed by the want finds what it kept.
 
-    THE NAME LIVES WITH THE WRITER. It was two functions in two modules — a `pursued_graph`
-    in the layer's vocabulary holding the prefix, and this holding the prefix plus the want's
-    local part — and the first had no caller but the second. A vocabulary module holds TERMS,
-    which are public and which code is written against; a graph's name is for eyes, owned by
-    whoever writes the graph and depended on by nothing, which is why `test_layout.py` refuses
-    a READER that imports one. This module writes these graphs, classifies them and drops
-    them, so it names them.
+def graph_of(agent_id: str, at: datetime, until: datetime | None) -> str:
+    """The graph the wants in trouble over ONE STRETCH live in, named for that stretch.
+
+    A WANT'S TEMPORAL EXTENT IS ITS GRAPH'S PERIOD, and it is said once. A want used to carry
+    `orexis:holdsAt` — the instant it must hold at — beside a graph whose period ran from when
+    it was derived, so the same fact was in two places and neither said the whole of it. The
+    period IS the trouble now: from the boundary it begins at to the one it lifts by. `at what
+    instant is this wanted` is then a question the DOOR answers — `find_wants(store, at=T)`
+    hands back what is in trouble at T, for any T, with no reader special-casing the present.
+
+    ONE GRAPH PER STRETCH, not one per want. Wants that are in trouble over the same stretch
+    share it; wants over different stretches get one each. That is what lets the period be
+    stated once per graph rather than once per want, and `forget_want` already knew how to
+    take one want out of a graph that holds others.
+
+    WHEN THE AGENT FOUND IT is a different axis and stays on the want, in PROV's words
+    (`prov:generatedAtTime`): the period says when the trouble is, provenance says when we
+    learned of it, and a graph whose period began at derivation could say neither.
     """
-    return f"http://example.org/orexis/graph/pursued/{agent_id}/{uri.rsplit('#', 1)[-1]}"
+    tail = f"{_stamp(at)}--{_stamp(until) if until else 'open'}"
+    return f"http://example.org/orexis/graph/pursued/{agent_id}/{tail}"
+
+
+def _stamp(at: datetime) -> str:
+    """An instant as a name-safe segment. For eyes: a reader asks the catalogue."""
+    return at.isoformat().replace(":", "").replace("+", "p")
 
 
 #  WITHDRAWAL IS ITS OWN MODULE (`forget_wants.py`). This file decides what is WANTED; taking
@@ -338,11 +341,11 @@ def graph_of(agent_id: str, uri: str) -> str:
 #  is in, whether that graph holds others, what the catalogue still says of it. `_write`
 #  below imports the one text they share, since replacing a want whole is removing it and
 #  putting it back.
-from .forget_wants import RECOGNIZED, forget_graph   # noqa: E402  (see the note above)
+from .forget_wants import RECOGNIZED, _forget_one   # noqa: E402  (see the note above)
 
 
 def _write(engine, agent_id: str, uri: str, holder: str, desire: str, label: str,
-           now: datetime, *, holds_at: str | None = None, derived_at: str | None = None,
+           now: datetime, at: datetime, until: datetime | None = None, *,
            points: tuple = (), shape: tuple = (), side: str | None = None) -> None:
     """Write one derived want over the ENGINE: its graph, replaced whole, and the catalogue's
     account of that graph — its family, how it arrived, whose it is and the period it holds
@@ -366,8 +369,16 @@ def _write(engine, agent_id: str, uri: str, holder: str, desire: str, label: str
     beneath is written from one `rdfs:subClassOf` step, the closure being materialised at
     genesis (one-graph-both-engines-read).
 
-    NO PERIOD END. A derived want ends when the decomposition stops producing it, never by the
-    clock — see `mint` below for the argument.
+    THE GRAPH IS SHARED BY STRETCH, so this takes the want OUT and puts it back rather than
+    replacing the graph whole: a second want in trouble over the same stretch lives there too,
+    and dropping the graph to re-write one of them would take the other with it. `_forget_one`
+    is the text for that and existed already, for a debt sharing the ledger's record.
+
+    AND THE PERIOD IS WRITTEN ONCE, guarded, for the reason that sharing exposed: a period is a
+    BLANK NODE, and a blank node in an `INSERT` is a new node every time it runs. Asserted per
+    want, three wants in one graph gave that graph three periods and every read joining through
+    `dcterms:temporal` returned each want three times. The classification itself is plain
+    triples and idempotent by RDF; only the period needed guarding.
 
     AND NO `orexis:about`. A want used to state the one domain property it was in trouble
     over, and actions joined themselves to it to find the want they served. That is filtering
@@ -379,32 +390,44 @@ def _write(engine, agent_id: str, uri: str, holder: str, desire: str, label: str
     about a SHAPE BLOCK — which property one constraint concerns — because that is the shape's
     own structure, and `narrowed` carves by it.
     """
-    graph = graph_of(agent_id, uri)
+    graph = graph_of(agent_id, at, until)
     said_points = " ".join(f"<{uri}> <{p}> <{o}> ." for p, o in points)
     shape_lines = "\n  ".join(shape)
-    #  INSTANTS CROSS HERE AND NOWHERE ELSE. A want carries them as instants, because what
-    #  reads them — the keeper placing a step, a reader measuring the room left — works in
-    #  instants; the store keeps them as `xsd:dateTime` literals. This is the boundary, so it
-    #  is where the two forms meet, one line each way (`_moment` here, `_instant` on read).
-    timed = (f' ; orexis:holdsAt "{_moment(holds_at)}"^^xsd:dateTime'
-             f' ; prov:generatedAtTime "{_moment(derived_at)}"^^xsd:dateTime'
-             if holds_at is not None else "")
+    #  INSTANTS CROSS HERE AND NOWHERE ELSE. The store keeps them as `xsd:dateTime` literals
+    #  and everything above works in instants, so this is where the two forms meet.
+    #
+    #  WHEN THE AGENT FOUND IT, always and not only for a foreseen one: the period says when
+    #  the trouble IS and this says when we learned of it, which is the arrival axis and PROV's
+    #  to state. A want used to carry `orexis:holdsAt` beside it — the instant it must hold at
+    #  — which the period now says, and said it only for foreseen wants, so a want in trouble
+    #  now recorded neither instant.
+    found_at = f' ; prov:generatedAtTime "{now.isoformat()}"^^xsd:dateTime'
     #  WHICH WAY IT BROKE, where the met-test's block said so (`orexis:violationIs`).
     broke = f" ; orexis:violationIs <{side}>" if side else ""
-    engine.update(forget_graph(graph) + f""" ;
+    #  THE STRETCH, on the graph: from the boundary this trouble begins at to the one it lifts
+    #  by, open where nothing the agent can see ahead to repairs it. A fact the predictions
+    #  state, which is the only honest source for one — the predecessor took the closing
+    #  instant from the KEEPER'S PATIENCE, a figure about how long a commitment blocks
+    #  re-adoption of itself, which is a different question wearing the same unit.
+    period = (f' ; orexis:start "{at.isoformat()}"^^xsd:dateTime'
+              + (f' ; orexis:end "{until.isoformat()}"^^xsd:dateTime' if until else ""))
+    engine.update(_forget_one(graph, uri) + f""" ;
 INSERT {{
   GRAPH <{graph}> {{
   <{holder}> orexis:holds <{uri}> .
-  <{uri}> a orexis:Want{timed}{broke} ;
+  <{uri}> a orexis:Want{found_at}{broke} ;
       orexis:state <{RECOGNIZED}> ;
       prov:wasDerivedFrom <{desire}> ;
       rdfs:label {json.dumps(label)} .
   {said_points}
   {shape_lines} }}
   GRAPH ?cat {{ <{graph}> a orexis:WantGraph ; orexis:arrivedBy orexis:Derived ;
-      orexis:beliefsOf <{holder}> ;
-      dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "{now.isoformat()}"^^xsd:dateTime ] . }} }}
+      orexis:beliefsOf <{holder}> . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
+INSERT {{ GRAPH ?cat {{ <{graph}> dcterms:temporal
+      [ a dcterms:PeriodOfTime{period} ] . }} }}
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }}
+         FILTER NOT EXISTS {{ GRAPH ?cat {{ <{graph}> dcterms:temporal ?held }} }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
         GRAPH ?vocabulary {{ orexis:WantGraph rdfs:subClassOf ?kind }} }}""",
@@ -412,8 +435,8 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
 
 
 def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: datetime,
-         said=None, holds_at: datetime | None = None, about: tuple = (),
-         instance: str | None = None, side: str | None = None) -> str | None:
+         at: datetime, until: datetime | None = None, said=None,
+         about: tuple = (), instance: str | None = None, side: str | None = None) -> str | None:
     """Derive the want pursued under `desire` and write it to the pursued graph, named by
     `name_of`. None, and the desire stays the goal, where the desire states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
@@ -453,9 +476,10 @@ def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: d
 
     labels = [str(o.value) for p, o in said if p.endswith("#label")]
     label = "pursued: " + (labels[0] if labels else desire.rsplit("#", 1)[-1])
-    #  AT AN INSTANT (#619): bound `orexis:At`, holding at the crossing, its room opening now.
-    if holds_at is not None:
-        label = f"foreseen: {label[len('pursued: '):]} at {holds_at.isoformat(timespec='minutes')}"
+    #  FORESEEN, where the trouble has not begun: for eyes, since the stretch itself is on
+    #  the graph and every reader asks the period.
+    if at > now:
+        label = f"foreseen: {label[len('pursued: '):]} at {at.isoformat(timespec='minutes')}"
     #  IT HOLDS FROM ITS DERIVATION AND IT DOES NOT END BY THE CLOCK. A want minted here
     #  ends when the decomposition stops producing it — `_withdraw_under`, on the same rows
     #  that minted it — and that is the whole of what ends one. It used to carry a period end
@@ -477,9 +501,7 @@ def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: d
     #  binding, the label, what it points at — and where a want is kept, how its graph is
     #  classified and what period it holds during are `wants.py`'s, whether a collection or
     #  this derivation asks for the write.
-    _write(store, _local(holder), child, holder, desire, label, now,
-           holds_at=holds_at.isoformat() if holds_at is not None else None,
-           derived_at=now.isoformat() if holds_at is not None else None,
+    _write(store, _local(holder), child, holder, desire, label, now, at, until,
            points=tuple(points), shape=shape_lines, side=side)
     log.info("%s reads unmet: pursuing %s", desire.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
@@ -580,23 +602,27 @@ ORDER BY ?holder ?desire"""
 #  ONE desire, its holder and its met-test — for a reader asking about one.
 #  WHEN THE HOLDER FORESEES: the start of every prediction of theirs, whatever its window —
 #  the future states a desire is judged at, given to this and never computed here (#643).
-#  EVERY INSTANT THIS AGENT CAN SEE AHEAD TO, and the kind of graph is not the question.
-#  A graph whose period STARTS in the future is a graph about the future: that is what a period
-#  says, and a class saying it again is the same fact written twice. It asked for
-#  `orexis:PredictionGraph` and so saw only what sensing's drifts wrote — the market had to
-#  type its debt-lapse graph as a prediction to be looked at, which it is not; it is a graph
-#  holding from a deadline. A round that opens later and a claim whose window starts later are
-#  now instants too, and nobody has to remember a class to be foreseen.
+#  EVERY INSTANT THE WORLD THIS AGENT READS CAN CHANGE AT, and the kind of graph is not the
+#  question. A graph holds during a stretch: at its START it begins to be handed out and at its
+#  END it stops, so those are the only instants at which a judgment can differ from the one
+#  before. Everything between two boundaries is one world.
 #
-#  PAST THE PRESENT, which the kind used to imply loosely and a period says exactly: a graph
-#  whose start has been reached is holding NOW, and the present is read by the present's own
-#  pass, not as a foreseen instant.
-_STARTS_Q = """
-SELECT DISTINCT ?start WHERE {
+#  BOTH ENDS, and the end is the half that was missing. A start alone says when trouble may
+#  ARRIVE; an end says when it may LIFT — the pot dries at three and the forecast refills it at
+#  six — and without it a want could say when it began and never that it stops.
+#
+#  NO KIND. It asked for `orexis:PredictionGraph` and so saw only what sensing's drifts wrote:
+#  the market had to type its debt-lapse graph as a prediction to be looked at, which it is not
+#  — it is a graph holding from a deadline. A round that opens later and a claim whose window
+#  closes later are boundaries too, and nobody has to remember a class to be foreseen.
+_BOUNDS_Q = """
+SELECT DISTINCT ?at WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?g dcterms:temporal/orexis:start ?start . FILTER(?start > $now)
+               ?g dcterms:temporal ?period .
+               { ?period orexis:start ?at } UNION { ?period orexis:end ?at }
+               FILTER(?at > $now)
                OPTIONAL { ?g orexis:beliefsOf ?owner } FILTER(!BOUND(?owner) || ?owner = $holder) } }
-ORDER BY ?start"""
+ORDER BY ?at"""
 
 #  WHERE THE SHAPES LIVE: every graph of desires and of wants, whatever its period — a
 #  desire's shape and its blank-node closure sit in a desire graph whole, a derived want's own
@@ -627,6 +653,12 @@ class Witness:
     about: str | None
     at: datetime
     side: str | None = None
+    #  WHEN IT LIFTS: the earliest boundary after `at` at which this same way of failing reads
+    #  MET again, or None where nothing the agent can see ahead to repairs it. A prediction is
+    #  what usually says so — the pot dries at three and the forecast refills it at six — and
+    #  it is the want's period end, which is the only honest one: what ENDS a want's trouble is
+    #  a fact about the world, not a figure borrowed from the ledger.
+    until: datetime | None = None
 
 
 def desires_in(store: ox.Store, now: datetime) -> list[tuple[str, str, str | None]]:
@@ -638,34 +670,54 @@ def desires_in(store: ox.Store, now: datetime) -> list[tuple[str, str, str | Non
             for r in store.query(bind(_DESIRES_Q, now=instant(now)), prefixes=NAMESPACES)]
 
 
-def read_now(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
-             shape: str | None, now: datetime) -> list[Witness] | None:
-    """What this desire's met-test reads at the PRESENT: its witnesses, empty where it is met,
-    None where there is no compilable met-test to ask."""
-    select = compiled(shapes, shape, desire)
-    if select is None:
-        return None
-    return _witnesses_at(store, select, holder, now, now)
+def read_over_time(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
+                   shape: str | None, now: datetime) -> list[Witness] | None:
+    """Every way this desire is failing, each with the stretch it fails over — or None where
+    there is no compilable met-test to ask, which is not the same as met.
 
+    ONE LOOP OVER EVERY BOUNDARY, `now` first. The met-test is run at each; what comes back per
+    instant is which `(instance, constraint)` pairs read unmet there. A pair is one WAY the
+    desire is failing, and the instants it is unmet at give it an interval:
 
-def read_ahead(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
-               shape: str | None, now: datetime) -> list[Witness]:
-    """Every (instance, constraint) this desire's met-test reads unmet at a FORESEEN instant,
-    each at the EARLIEST instant it does — the instants being every prediction's start, where
-    the dataset holds the prediction beside the present (#643).
+        at      = the earliest boundary it reads unmet
+        until   = the earliest boundary AFTER that at which it reads met again, or None
 
-    A CROSSING is the earliest of these: the instant the world a desire is about is judged to
-    leave what the desire wants. The present is excluded — a desire unmet now is pursued as
-    itself, and a crossing is a thing in the future.
+    IT WAS TWO FUNCTIONS AND A BRANCH. `read_now` judged the present over one set of graph
+    kinds, `read_ahead` judged the future over another and only where the present read met, and
+    each recorded the earliest unmet instant and stopped. Three things fall out of joining
+    them. The present stops being privileged — it is the first boundary, and "unmet now" is
+    `at == now`. The two kind lists become one, since a prediction's own period already keeps
+    it out of the present. And a want can say when its trouble LIFTS, which neither half could
+    see: `read_ahead` stopped at the first unmet instant and never asked what came after, so a
+    pot that dries at three and is refilled by the forecast at six was a want with a beginning
+    and no end.
+
+    A BOUNDARY IS WHERE A JUDGMENT CAN DIFFER and nowhere else: everything between two of them
+    is one world (`boundaries`).
     """
     select = compiled(shapes, shape, desire)
     if select is None:
-        return []
+        return None
+    #  What each way of failing reads at each instant — unmet where the select bound a row.
     seen: dict[tuple[str, str], Witness] = {}
-    for at in _starts(store, holder, now):
-        for w in _witnesses_at(store, select, holder, at, now) or []:
-            seen.setdefault((w.instance, w.constraint), w)
-    return sorted(seen.values(), key=lambda w: (w.at, w.instance, w.constraint))
+    lifted: dict[tuple[str, str], datetime] = {}
+    for at in boundaries(store, holder, now):
+        rows_ = _witnesses_at(store, select, holder, at, now)
+        if rows_ is None:
+            return None                 # the engine refused the text at some instant
+        unmet = set()
+        for w in rows_:
+            key = (w.instance, w.constraint)
+            unmet.add(key)
+            seen.setdefault(key, w)
+        #  AND WHAT READS MET HERE, for a way of failing that was unmet earlier: the first such
+        #  instant is when the trouble lifts. Only the first — a way that fails, lifts and fails
+        #  again is one want over the first stretch, and the second is a boundary away.
+        for key in seen.keys() - unmet:
+            lifted.setdefault(key, at)
+    return sorted((replace(w, until=lifted.get((w.instance, w.constraint)))
+                   for w in seen.values()),
+                  key=lambda w: (w.at, w.instance, w.constraint))
 
 
 def shapes_in(store: ox.Store) -> rdflib.Graph:
@@ -707,12 +759,18 @@ def compiled(shapes: rdflib.Graph, shape: str | None, of: str) -> str | None:
         return None
 
 
-def _starts(store: ox.Store, holder: str, now: datetime) -> list[datetime]:
-    """Every instant ahead of `now` at which some graph this holder can read begins to hold —
-    what foresight judges at, in order."""
-    return [datetime.fromisoformat(row["start"].value)
-            for row in store.query(bind(_STARTS_Q, holder=holder, now=instant(now)),
-                                   prefixes=NAMESPACES)]
+def boundaries(store: ox.Store, holder: str, now: datetime) -> list[datetime]:
+    """THE PRESENT AND EVERY INSTANT AFTER IT AT WHICH THE WORLD THIS HOLDER READS CHANGES,
+    in order — a period starting, a period ending, and nothing else.
+
+    `now` is the first of them and is not otherwise special. It used to be: the present was
+    judged over one set of graph kinds and the future over another, the future only where the
+    present read met, and "the present outranks the instant" was a branch. It is arithmetic
+    now — the earliest boundary a witness is unmet at is either `now` or it is not.
+    """
+    return [now] + [datetime.fromisoformat(row["at"].value)
+                    for row in store.query(bind(_BOUNDS_Q, holder=holder, now=instant(now)),
+                                           prefixes=NAMESPACES)]
 
 
 def _witnesses_at(store: ox.Store, select: str, holder: str, at: datetime,

@@ -1,9 +1,14 @@
 --- case
 +++ expected
-@@ -63,9 +63,9 @@
+@@ -66,13 +66,13 @@
+   :ontology a orexis:PublicGraph .
    :predicted-0 a orexis:Graph .
    :predicted-0 a orexis:PredictionGraph .
-   :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+-  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
++  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+   :predicted-1 a orexis:Graph .
+   :predicted-1 a orexis:PredictionGraph .
+   :predicted-1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
 -  :scopes a planning:ScopeGraph .
    :scopes a orexis:Graph .
    :scopes a orexis:WorkingGraph .
@@ -11,19 +16,19 @@
    :scopes orexis:arrivedBy orexis:Derived .
    :scopes orexis:beliefsOf :keeper .
    :sensed a orexis:BeliefGraph .
-@@ -73,4 +73,23 @@
+@@ -80,4 +80,23 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
-+  pursued:2026-01-01T123000p0000--open a orexis:Graph .
-+  pursued:2026-01-01T123000p0000--open a orexis:WantGraph .
-+  pursued:2026-01-01T123000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
-+  pursued:2026-01-01T123000p0000--open orexis:arrivedBy orexis:Derived .
-+  pursued:2026-01-01T123000p0000--open orexis:beliefsOf :keeper .
++  pursued:2026-01-01T123000p0000--2026-01-01T130000p0000 a orexis:Graph .
++  pursued:2026-01-01T123000p0000--2026-01-01T130000p0000 a orexis:WantGraph .
++  pursued:2026-01-01T123000p0000--2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T123000p0000--2026-01-01T130000p0000 orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T123000p0000--2026-01-01T130000p0000 orexis:beliefsOf :keeper .
  }
 +
 +
-+GRAPH pursued:2026-01-01T123000p0000--open {
++GRAPH pursued:2026-01-01T123000p0000--2026-01-01T130000p0000 {
 +  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
 +  :keeper.in_range.pursued.tank1.level a orexis:Want .
 +  :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
