@@ -1,16 +1,22 @@
 """Hashing what a named graph holds — the question a search asks at every fork.
 
 Two worlds are the same place when they state the same facts, and a pass that cannot see a
-world it has already reached spends its whole budget going nowhere. These hold the hash to
-what it claims: same content, same digest, whatever the graph is called and whatever order
-the triples arrived in; different content, different digest; and STABLE ACROSS PROCESSES,
-which Python's own `hash` is not.
+world it has already reached spends its whole budget going nowhere.
+
+**THE CASES SAY WHAT A GRAPH HASHES TO, AND ONE TEST SAYS WHICH ARE ALIKE.** A case is a
+store; every graph it names is hashed bar the catalogue, and the diff beside it records a
+digest per graph — so two graphs that are the same place say so in the same hex, where an eye
+can see it. What a diff cannot do is REFUSE: regenerating one is a flag away, and two digests
+that became equal by mistake would be written down as calmly as two that differ. So the
+partition each case is about is declared below and asserted, and no regeneration silences it.
+The two together are the claim: the diff says what, the partition says which.
+
+What is left beside them is what a case cannot reach — a graph hashed twice, and a graph the
+store has never heard of.
 """
 
 from __future__ import annotations
 
-import subprocess
-import sys
 from pathlib import Path
 
 import pyoxigraph as ox
@@ -23,28 +29,62 @@ from orexis.agent.store import catalogue_of, graph_names, update
 CASES_DIR = Path(__file__).parent / "hash_named_graph"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 
+#  WHICH GRAPHS OF A CASE ARE THE SAME PLACE — one set per equivalence class. Every graph a
+#  case names has to stand in exactly one of them, so a case that grows a graph nobody
+#  classified fails rather than going unasserted.
+SAME: dict[str, list[set[str]]] = {
+    "a_graph_is_its_content_and_not_its_name": [{"here", "there"}, {"elsewhere"}],
+    "a_term_is_its_kind_and_not_only_its_text": [
+        {"iri"}, {"text"}, {"one"}, {"number"}, {"en"}, {"de"}],
+    "a_number_is_its_value_rounded": [{"integer", "decimal", "near"}, {"apart"}],
+    "a_blank_node_is_its_content": [{"minted", "again"}, {"deeper"}, {"cyclic"}],
+}
 
-#  --- the cases: a store in, its catalogue rows out ------------------------------------------
-#
-#  EVERY GRAPH THE CASE NAMES IS HASHED, bar the catalogue itself, so a case says what it is
-#  about by what it PUTS IN each graph and the diff answers with a digest per graph. Two that
-#  are the same place then say so in the file, in the same hex, where an eye can see it — which
-#  is the thing an `==` between two return values cannot show a reader.
+
+def _hashed(store) -> dict[str, str]:
+    """Every graph of a store hashed, bar the catalogue, by the local part of its name."""
+    return {g.rsplit("#", 1)[-1]: hash_named_graph(store, g)
+            for g in sorted(graph_names(store)) if g != catalogue_of(store)}
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
 def test_hashing_leaves_the_catalogue_the_diff_says(case, request, snapshots):
     store = snapshots.stand_in(case)
-    for graph in sorted(graph_names(store)):
-        if graph != catalogue_of(store):
-            hash_named_graph(store, graph)
+    _hashed(store)
     snapshots.held_to_diff(case, request, "hash_named_graph", snapshots.snapshot_of(store))
+
+
+@pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
+def test_the_graphs_a_case_calls_one_place_hash_alike_and_the_rest_do_not(case, snapshots):
+    """The claim each case is ABOUT, asserted rather than recorded.
+
+    Both directions, because only one of them fails loudly. A hash that stopped telling two
+    worlds apart makes a search discard the step that was making progress — no error, no empty
+    result, a plan that is simply never found.
+    """
+    groups = SAME[case.stem]
+    digests = _hashed(snapshots.stand_in(case))
+    named = {g for group in groups for g in group}
+    assert named <= set(digests), f"{case.stem}: {sorted(named - set(digests))} is in no graph"
+    assert set(digests) - named <= {"ontology"}, \
+        f"{case.stem}: {sorted(set(digests) - named - {'ontology'})} is in no group"
+
+    for group in groups:
+        one = {digests[g] for g in group}
+        assert len(one) == 1, f"{case.stem}: {sorted(group)} is one place, and hashed {one}"
+    apart = {sorted(group)[0]: digests[sorted(group)[0]] for group in groups}
+    assert len(set(apart.values())) == len(groups), \
+        f"{case.stem}: two groups hash alike — {apart}"
 
 
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     """A glob that stopped matching would pass every case by running none."""
     assert len(CASES) >= 4, [c.name for c in CASES]
+    assert {c.stem for c in CASES} == set(SAME), "every case declares what it calls one place"
     assert not snapshots.orphans_in(CASES_DIR)
+
+
+# --- what a case cannot reach ----------------------------------------------------------------
 
 
 @pytest.fixture
@@ -62,8 +102,9 @@ def _row(store, graph: str) -> list[str]:
 
 
 def test_one_graph_hashes_to_one_row_however_often_it_is_asked(store):
-    """The hash lands on the graph's own catalogue row, and REPLACES rather than adds: a
-    graph has one content, so a second hashing leaves one row and not two."""
+    """The hash lands on the graph's own catalogue row and REPLACES rather than adds: a graph
+    has one content, so a second hashing leaves one row and not two. A case hashes each of its
+    graphs once, so this is what a diff beside one cannot show."""
     update(store, "INSERT DATA { GRAPH <urn:test:a> { <urn:s> <urn:p> 1 } }")
 
     first = hash_named_graph(store, "urn:test:a")
@@ -74,95 +115,9 @@ def test_one_graph_hashes_to_one_row_however_often_it_is_asked(store):
     assert _row(store, "urn:test:a") == [first], "one row, not two"
 
 
-def test_two_graphs_holding_the_same_facts_hash_the_same(store):
-    """What the search leans on. The graphs are differently NAMED and their triples went in
-    in a different order, and neither is part of where a plan stands."""
-    update(store, """INSERT DATA {
-      GRAPH <urn:test:a> { <urn:s> <urn:p> 1 . <urn:s> <urn:q> "two" }
-      GRAPH <urn:test:b> { <urn:s> <urn:q> "two" . <urn:s> <urn:p> 1 } }""")
-
-    assert hash_named_graph(store, "urn:test:a") == hash_named_graph(store, "urn:test:b")
-
-
-def test_a_graph_that_moved_hashes_differently(store):
-    """The other half, and the one that fails silently if it breaks: a search whose hash
-    cannot tell two worlds apart discards the step that was making progress."""
-    update(store, "INSERT DATA { GRAPH <urn:test:a> { <urn:s> <urn:p> 1 } }")
-    before = hash_named_graph(store, "urn:test:a")
-
-    update(store, "INSERT DATA { GRAPH <urn:test:a> { <urn:s> <urn:p> 2 } }")
-    assert hash_named_graph(store, "urn:test:a") != before
-
-
-def test_an_empty_graph_hashes_and_says_so(store):
+def test_a_graph_the_store_never_heard_of_hashes_like_an_empty_one(store):
     """A graph holding nothing is a state like any other — the ground before anything is
-    predicted — so it has a digest rather than an error or a None."""
+    predicted — so it has a digest rather than an error or a None. No case can put one in,
+    since a case's graphs are the ones it writes."""
     assert hash_named_graph(store, "urn:test:nothing")
     assert hash_named_graph(store, "urn:test:nothing") == hash_named_graph(store, "urn:test:else")
-
-
-def test_a_term_is_its_kind_and_not_only_its_text(store):
-    """THE ONE TOLERANCE IS THE ROUNDING, and these three were not tolerances at all.
-
-    Every term used to canonicalise to a bare Python value — `x.value` for an IRI, and
-    `float(x.value)` attempted on every literal whatever its datatype — so three pairs no
-    domain would call equal hashed alike: an IRI and a string that spells it, a string and
-    the number it parses to, and one text under two language tags. A search comparing worlds
-    by that called two places one, silently, which is the whole failure a hash exists to
-    prevent arriving through the canonical form instead of through the graph.
-    """
-    update(store, """INSERT DATA {
-      GRAPH <urn:test:iri>  { <urn:s> <urn:p> <urn:x> }
-      GRAPH <urn:test:text> { <urn:s> <urn:p> "urn:x" }
-      GRAPH <urn:test:one>  { <urn:s> <urn:p> "1" }
-      GRAPH <urn:test:1>    { <urn:s> <urn:p> 1 }
-      GRAPH <urn:test:en>   { <urn:s> <urn:p> "hi"@en }
-      GRAPH <urn:test:de>   { <urn:s> <urn:p> "hi"@de } }""")
-    h = {g: hash_named_graph(store, f"urn:test:{g}")
-         for g in ("iri", "text", "one", "1", "en", "de")}
-
-    assert h["iri"] != h["text"], "an IRI is not a string that spells it"
-    assert h["one"] != h["1"], "a string is not the number it parses to"
-    assert h["en"] != h["de"], "a language tag is part of what a literal says"
-
-
-def test_a_number_is_its_value_and_not_its_datatype(store):
-    """The other side of the same rule: what a number IS is its value, so an integer and the
-    decimal holding the same quantity are one fact. Rounding is about the same question."""
-    update(store, """INSERT DATA {
-      GRAPH <urn:test:int> { <urn:s> <urn:p> 1 }
-      GRAPH <urn:test:dec> { <urn:s> <urn:p> 1.0 } }""")
-
-    assert hash_named_graph(store, "urn:test:int") == hash_named_graph(store, "urn:test:dec")
-
-
-def test_two_numbers_agreeing_to_six_decimals_are_one_place(store):
-    """The old canonical form rounded, and this is that clause surviving: two worlds whose
-    readings agree to six decimals were the same place before and still are."""
-    update(store, "INSERT DATA { GRAPH <urn:test:a> { <urn:s> <urn:p> 1.0000001 } }")
-    update(store, "INSERT DATA { GRAPH <urn:test:b> { <urn:s> <urn:p> 1.0000002 } }")
-    update(store, "INSERT DATA { GRAPH <urn:test:c> { <urn:s> <urn:p> 1.1 } }")
-
-    assert hash_named_graph(store, "urn:test:a") == hash_named_graph(store, "urn:test:b")
-    assert hash_named_graph(store, "urn:test:c") != hash_named_graph(store, "urn:test:a")
-
-
-def test_the_digest_is_the_same_in_another_process():
-    """WHY IT IS SHA-256 AND NOT `hash()`. Python salts `hash` per interpreter for strings, so
-    a digest built on it differs between two runs of one agent — invisible inside a pass, and
-    wrong the moment a hash is written down, which is what this one is. Run in a real second
-    process rather than asserted about, because that is the thing that differs."""
-    script = (
-        "import pyoxigraph as ox;"
-        "from orexis.agent.hash_named_graph import hash_named_graph;"
-        "from orexis.agent.store import update;"
-        "st = ox.Store();"
-        "update(st, 'INSERT DATA { GRAPH <urn:test:catalogue> {"
-        " <urn:test:catalogue> a orexis:CatalogueGraph } }');"
-        "update(st, 'INSERT DATA { GRAPH <urn:test:a> { <urn:s> <urn:p> \"x\" } }');"
-        "print(hash_named_graph(st, 'urn:test:a'))")
-    runs = {subprocess.run([sys.executable, "-c", script], capture_output=True, text=True,
-                           check=True, env={"PYTHONHASHSEED": seed, "PATH": "/usr/bin:/bin"}
-                           ).stdout.strip()
-            for seed in ("1", "2")}
-    assert len(runs) == 1, f"the digest moved with PYTHONHASHSEED: {runs}"
