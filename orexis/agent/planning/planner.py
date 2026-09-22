@@ -68,6 +68,7 @@ from orexis.agent.store import (Memo, add_quads, bindings, catalogue_of, classif
 from . import effects, touches
 from .apply_effects import apply_effects
 from .prepare_ground import prepare_ground
+from .publish_plan import publish_plan
 from .derive_wants import derive_wants
 from .ontology import (BY, COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
                        OUTCOME, PLAN_GRAPH, POSSIBLE_GRAPH, SATISFIED)
@@ -87,13 +88,19 @@ BUDGET = 32
 class Planner:
     """One agent's search. Holds the beliefs store, the pass's memo, and who it is."""
 
-    def __init__(self, beliefs: ox.Store, agent_id: str):
-        """The beliefs store and the one identifier a process is told. Everything else is
-        discovered from the graph, which is rule 1: the world says
+    def __init__(self, beliefs: ox.Store, agent_id: str, intentions: ox.Store | None = None):
+        """The beliefs store, the one identifier a process is told, and where a plan goes.
+
+        Everything else is discovered from the graph, which is rule 1: the world says
         `?a orexis:localId "<id>"`, and who I am and what I act for are the answer rather
         than arguments.
+
+        `intentions` is the LEDGER, and a pass hands its plans down to it as its last act. A
+        planner given none searches and writes its findings into the imaginarium and no
+        further — which is what a case wants, and what the search itself is.
         """
         self.beliefs = beliefs
+        self.intentions = intentions
         self.id = agent_id
         self.uri, self.acts_for = self._identity(agent_id)
         #  The readings graph of the pass in hand — set at `plan`, since which graph that is
@@ -158,6 +165,10 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         own words and why the pass ended. A reader asks the imaginaria this pass left
         (`self.imaginaria`) for their graphs of that class, exactly as every other read here
         asks by kind.
+
+        AND THE LAST ACT IS `publish_plan`, where a planner was given a ledger: the
+        imaginarium is memory and dies with the pass, so an intention is the only thing a pass
+        leaves behind. A plan with no steps does not cross — an answer is not a commitment.
         """
         at = now or clock.now()
         scopes = find_scopes(self.beliefs)
@@ -191,6 +202,11 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
             self._state = next(iter(graphs_of(self._store, GROUND_GRAPH, at=at)), None)
             for want in self._of_scope(scope, scopes, at):
                 self._search(want, at)
+            #  AND THE LAST ACT OF THE PASS: what was found crosses to the ledger. Per scope,
+            #  because the imaginarium dies with the pass and this is the only thing that
+            #  outlives it.
+            if self.intentions is not None:
+                publish_plan(self._store, self.intentions, self.id)
 
     def _of_scope(self, scope: str, scopes: dict,
                   at: datetime) -> list[str]:

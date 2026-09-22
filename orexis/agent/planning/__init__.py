@@ -18,7 +18,8 @@ replaces rather than extends. One pipeline, and the package is what it is made o
 
 NOTHING COMES BACK. What a pass finds it writes: a `planning:Plan` graph per want, in the
 imaginarium that want was searched in, holding the steps in the LEDGER's own words and why
-the pass ended. There was a Python record beside it saying the same thing, so the finding
+the pass ended — and then hands them down, which is `publish_plan.py` and the last act of a
+pass, since the imaginarium is memory and an intention is all that outlives it. There was a Python record beside it saying the same thing, so the finding
 existed twice and only one of the two could cross a layer — and the half a want most needs,
 that no lever this agent holds points at it, was the half that could not. What happens to a
 plan is the execution layer's: `plans.copy_plan` copies the graph into the intentions store.
@@ -26,7 +27,7 @@ Nothing here commits, because deciding a thing and remembering that it was decid
 different acts.
 
 **WHAT THE PREDECESSOR HELD AND THIS DOES NOT.** It was twenty-nine modules and seven and a
-half thousand lines; this is eleven and about three thousand. Every absence is a thing that
+half thousand lines; this is twelve and about three thousand. Every absence is a thing that
 returns attached to whatever needs it, never a thing quietly lost
 (an-agent-is-four-things):
 
