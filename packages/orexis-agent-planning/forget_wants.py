@@ -128,7 +128,7 @@ def forget_graph(graph: str) -> str:
     """The update that removes a want's whole graph, and everything the catalogue says of it.
 
     Shared, because there are two ways a want goes and they must leave the same nothing:
-    `save_want` replaces one whole and puts it back, and `forget_want` does not. A want IS its
+    The derivation replaces one whole and puts it back; `forget_want` does not. A want IS its
     graph (#645), so there is no second place to tidy — but the catalogue's account of that
     graph is not in it, and a row left pointing at an empty graph is litter every reader asking
     by class would still be handed.

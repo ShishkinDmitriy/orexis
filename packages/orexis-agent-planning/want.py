@@ -48,21 +48,19 @@ class Want:
     #  a want minted for the soil alone is about the soil alone. It was one string, which the
     #  greenhouse already contradicted (#566); the tuple is the properties in trouble.
     about: tuple = ()
-    #  What it POINTS AT rather than restates: the desire's avoided state and estimate, one
-    #  owner each — as `(predicate, object)` IRIs — and its OWN met-test, below.
-    points: tuple = ()
-    #  ITS MET-TEST, which is the desire's instantiated at the witness: the same shape, its
-    #  target the one instance in trouble and its blocks the ones about what this want is
-    #  about — a plant's moisture inside its range, where the desire said every property of
-    #  everything. Carried as the triples of that shape, written into the want's own graph,
-    #  so a want is judged on its own instance and a plan for one tank is not refused for
-    #  another's. It pointed at the desire's whole shape for a while, and read unmet for
-    #  every instance the desire was about.
-    shape: tuple = ()
-    #  WHO HOLDS IT — `<holder> orexis:holds <want>`, written into the want's own graph, so it
-    #  is a stored fact of this want and not identity the collection carries. The agent is
-    #  another aggregate root; what a want records ABOUT it is the want's.
-    holder: str = ""
+    #  FOUR FIELDS ARE NOT HERE, and their absence is the point: `points`, `shape`, `holder`
+    #  and `ends`. Every one was populated by the writer and left EMPTY by every read, so a
+    #  want read back off the store silently carried `shape=()` — and the search's met-test,
+    #  asking this model for its shape, got nothing and reported every want exhausted. No
+    #  error, no exception, a plausible wrong answer: the empty-result trap wearing a
+    #  dataclass. What each of them was is now what it always was — an argument to the one
+    #  function that writes a want (`derive_wants._write`), except the met-test, which a
+    #  reader takes from the want's own graph by `orexis:metWhen`, where it is stored.
+    #
+    #  WHAT IS LEFT IS WHAT ROUND-TRIPS. Every field below is written by the derivation and
+    #  read back by `find_wants`, so a want that went into the store and one that came out are
+    #  the same shape by construction (`test_wants.py` holds that).
+    #
     #  WHAT IT WAS DERIVED FROM — `prov:wasDerivedFrom`, and None where nothing derived it:
     #  a want a world ratifies directly, or one a package speaks for. `None` and not `""`,
     #  because whether a want stands under a desire is the question `pursuit.handed` asks to
@@ -70,9 +68,6 @@ class Want:
     desire: str | None = None
     holds_at: datetime | None = None    # the instant it must hold at, where it binds At
     derived_at: datetime | None = None
-    #  When it stops holding — the instant it must hold at plus the patience its plan is given
-    #  after it, for a want bound `orexis:At`; open for one met at its plan's end.
-    ends: datetime | None = None
 
     #  WHICH WAY IT BROKE when it was minted — `orexis:violationIs`, the side the met-test's
     #  own block declared: below, above, unmeasured, stale. A stored judgment carried it once

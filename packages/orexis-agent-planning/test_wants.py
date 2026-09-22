@@ -6,10 +6,12 @@ because a read that needed a whole agent to stand up would be a part of one.
 `a-package-may-test-itself` draws the line exactly there: eleven tests calling themselves units
 took a fixture that built a real agent, and did not qualify.
 
-What is tested is the READ: that saving a want makes it findable, that finding one by its
-desire answers the derivation's question, that deleting it leaves nothing behind, that the
-three things `save_want` writes are all written, and that an ended one is handed to nobody.
-The derivation that uses it is covered end to end by `tests/test_derive_wants.py`.
+What is tested is the READ, and only the read: that a want written the way the derivation
+writes one is findable, that finding one by its desire answers the derivation's question, that
+deleting it leaves nothing behind, and that an ended one is handed to nobody. The rows are
+written HERE (`_derived` below) rather than through the derivation's own writer, so the read is
+not being tested against the writer — a matching pair of mistakes would pass. That the writer
+still produces these rows is what `tests/derive_wants/` says, case by case.
 
 This was `Wants`, a class holding one attribute. What it bought — the graph names and the
 query text stop being things a caller knows — the module buys, and the five finders it
@@ -27,8 +29,7 @@ import pyoxigraph as ox
 from orexis_agent_execution.store import (bindings, catalogue_of, query_over,
                                           query_union, update)
 
-from orexis_agent_planning.want import Want
-from orexis_agent_planning.derive_wants import graph_of, save_want
+from orexis_agent_planning.derive_wants import graph_of
 from orexis_agent_planning.forget_wants import forget_want
 from orexis_agent_planning.wants import find_want, find_wants
 
@@ -57,8 +58,34 @@ def store():
     return st
 
 
-def _want(uri="urn:test:want", desire=A_DESIRE, **kw):
-    return Want(uri=uri, holder=HOLDER, desire=desire, label="a want under test", **kw)
+def _derived(store, uri="urn:test:want", desire=A_DESIRE, *, about=(), holds_at=None,
+             derived_at=None, ends=None, side=None):
+    """A want, written the way the DERIVATION writes one — its own graph, classified a graph
+    of wants that arrived derived, with a period starting now.
+
+    WRITTEN HERE AND NOT THROUGH THE WRITER. `derive_wants` has a private `_write`, and these
+    cases are about the READ: seeding them through the writer would test the two against each
+    other, so a matching pair of mistakes would pass. The rows below are what `find_wants`
+    claims to be able to read, said plainly, and if the writer stops producing them the
+    snapshot cases in `tests/derive_wants/` are what say so.
+    """
+    graph = graph_of(AGENT, uri)
+    timed = (f' ; orexis:holdsAt "{holds_at}"^^xsd:dateTime'
+             f' ; prov:generatedAtTime "{derived_at}"^^xsd:dateTime' if holds_at else "")
+    abouts = "".join(f" ; orexis:about <{a}>" for a in about)
+    broke = f" ; orexis:violationIs <{side}>" if side else ""
+    period = f' ; orexis:start "{NOW.isoformat()}"^^xsd:dateTime' + (
+        f' ; orexis:end "{ends}"^^xsd:dateTime' if ends else "")
+    update(store, f"""INSERT DATA {{
+  GRAPH <{graph}> {{
+    <{HOLDER}> orexis:holds <{uri}> .
+    <{uri}> a orexis:Want{timed}{abouts}{broke} ;
+        prov:wasDerivedFrom <{desire}> ;
+        rdfs:label "a want under test" . }}
+  GRAPH <{catalogue_of(store)}> {{
+    <{graph}> a orexis:WantGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
+        orexis:beliefsOf <{HOLDER}> ;
+        dcterms:temporal [ a dcterms:PeriodOfTime{period} ] . }} }}""")
 
 
 def _owe(store, uri):
@@ -76,7 +103,7 @@ def test_a_saved_want_is_found_and_a_deleted_one_is_not(store):
     """Create, read and delete, through the functions that do each."""
     assert find_wants(store) == [], "nothing has been derived"
 
-    save_want(store, AGENT, _want(), NOW)
+    _derived(store)
     found = find_wants(store)
     assert [w.uri for w in found] == ["urn:test:want"]
     assert found[0].desire == A_DESIRE and found[0].label == "a want under test"
@@ -88,8 +115,8 @@ def test_a_saved_want_is_found_and_a_deleted_one_is_not(store):
 def test_forgetting_a_want_leaves_what_replacing_one_leaves(store):
     """The two ways a want goes, held to leaving the same nothing.
 
-    `save_want` replaces a want whole — it drops the graph and the catalogue's account of it
-    before inserting — and `forget_want` does the first half and does not put it back. They
+    The derivation replaces a want whole — it drops the graph and the catalogue's account of
+    it before inserting — and `forget_want` does the first half and does not put it back. They
     share the text for that reason: a want IS its graph, but what the catalogue says OF that
     graph is not in it, and a row left pointing at an empty graph is litter every reader
     asking by class would still be handed.
@@ -97,7 +124,7 @@ def test_forgetting_a_want_leaves_what_replacing_one_leaves(store):
     Announcing is nobody's here any more. These write the store and tell no one; whoever
     called says what changed, so a caller holding a projection can refresh it.
     """
-    save_want(store, AGENT, _want(), NOW)
+    _derived(store)
     assert find_want(store, uri="urn:test:want") is not None
 
     forget_want(store, "urn:test:want")
@@ -113,7 +140,7 @@ def test_a_want_about_several_things_reads_back_about_all_of_them(store):
     back grouped, and this engine's GROUP_CONCAT over an IRI binds NOTHING — no error, no
     column, every want reading as about nothing. Over `STR(?about)` it binds. Pinned here so
     the day the engine changes its mind, this says so (the engine-lacks-it trap, AGENTS.md)."""
-    save_want(store, AGENT, _want(about=("urn:test:air", "urn:test:soil")), NOW)
+    _derived(store, about=("urn:test:air", "urn:test:soil"))
     found = find_want(store, uri="urn:test:want")
     assert found.about == ("urn:test:air", "urn:test:soil"), found.about
     assert find_wants(store)[0].about == found.about, "and the page groups the same way"
@@ -121,7 +148,7 @@ def test_a_want_about_several_things_reads_back_about_all_of_them(store):
 
 def test_a_want_is_found_by_the_desire_it_was_derived_from(store):
     """The derivation's question, asked as a criterion rather than written as a query."""
-    save_want(store, AGENT, _want(), NOW)
+    _derived(store)
 
     assert [w.uri for w in find_wants(store, desire=A_DESIRE)] == \
         ["urn:test:want"]
@@ -137,9 +164,8 @@ def test_saving_writes_the_graph_the_classification_and_the_period(store):
     graph since #645: the classification says which family it belongs to and the period says how
     long it holds, which is what lets the door hide an ended one and one sweep drop it. Written
     without them, a want is invisible to the sweep and outlives its own window."""
-    save_want(store, AGENT, _want(holds_at="2026-09-17T12:00:00+00:00",
-                     derived_at="2026-09-17T11:00:00+00:00",
-                     ends="2026-09-17T12:10:00+00:00"), NOW)
+    _derived(store, holds_at="2026-09-17T12:00:00+00:00",
+             derived_at="2026-09-17T11:00:00+00:00", ends="2026-09-17T12:10:00+00:00")
     graph = graph_of(AGENT, "urn:test:want")
 
     kinds = bindings(query_union(store, 
@@ -164,10 +190,8 @@ def test_a_want_whose_period_has_closed_is_not_handed_out(store):
     period is the want's; one that has ended is gone to every reader from the instant it ends,
     and not merely from whenever the sweep next runs (#645). The read binds the graph to ask
     this, which is the one thing it knows that its callers do not."""
-    save_want(store, AGENT, _want(uri="urn:test:stale",
-                     holds_at="2020-01-01T00:00:00+00:00",
-                     derived_at="2020-01-01T00:00:00+00:00",
-                     ends="2020-01-01T00:10:00+00:00"), NOW)
+    _derived(store, uri="urn:test:stale", holds_at="2020-01-01T00:00:00+00:00",
+             derived_at="2020-01-01T00:00:00+00:00", ends="2020-01-01T00:10:00+00:00")
     assert find_wants(store) == [], "its window closed years ago"
     assert find_want(store, desire=A_DESIRE, derived=True) is None
 
@@ -180,7 +204,7 @@ def test_a_debt_is_a_want_but_not_one_a_search_is_handed(store):
     WHOSE it is, and the graph's classification is where that is written. It was a
     binding, `orexis:Within` against `orexis:AtEnd`, which said the difference as a temporal
     fact when what it meant was a family (#681)."""
-    save_want(store, AGENT, _want(uri="urn:test:derived"), NOW)
+    _derived(store, uri="urn:test:derived")
     _owe(store, "urn:test:owed")
 
     assert {w.uri for w in find_wants(store)} == \
@@ -199,7 +223,7 @@ def test_a_read_is_bounded_and_a_page_is_stable(store, caplog):
     every pick until a load order changed. Ordered, a page walks the wants: the two halves
     of a paged read join back into the whole and share nothing."""
     for n in range(5):
-        save_want(store, AGENT, _want(uri=f"urn:test:want{n}"), NOW)
+        _derived(store, uri=f"urn:test:want{n}")
 
     assert len(find_wants(store, limit=2)) == 2, "capped"
     first, second = find_wants(store, limit=3), find_wants(store, limit=3, offset=3)
@@ -212,7 +236,7 @@ def test_a_full_page_is_said_out_loud(store, caplog):
     """Truncating in silence is the empty-result trap wearing a cap: the caller gets a plausible
     answer and no way to know it was cut. Whoever meets the bound either pages or has a leak."""
     for n in range(3):
-        save_want(store, AGENT, _want(uri=f"urn:test:want{n}"), NOW)
+        _derived(store, uri=f"urn:test:want{n}")
 
     with caplog.at_level("WARNING"):
         assert len(find_wants(store, limit=3)) == 3

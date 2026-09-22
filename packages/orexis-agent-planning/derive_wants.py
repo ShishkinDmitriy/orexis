@@ -39,7 +39,6 @@ from orexis_agent_execution.store import (NAMESPACES, answer, bind, bindings, gr
                                             instant, rows)
 
 from .ontology import pursued_graph
-from .want import Want
 
 log = logging.getLogger("derive_wants")
 
@@ -347,52 +346,67 @@ def graph_of(agent_id: str, uri: str) -> str:
 
 #  WITHDRAWAL IS ITS OWN MODULE (`forget_wants.py`). This file decides what is WANTED; taking
 #  a want away is the other half of the want's life and has its own reasons — which graph it
-#  is in, whether that graph holds others, what the catalogue still says of it. `save_want`
+#  is in, whether that graph holds others, what the catalogue still says of it. `_write`
 #  below imports the one text they share, since replacing a want whole is removing it and
 #  putting it back.
 from .forget_wants import RECOGNIZED, forget_graph, forget_want   # noqa: E402  (re-exported: see module)
 
 
-def save_want(engine, agent_id: str, want: Want, now: datetime) -> None:
+def _write(engine, agent_id: str, uri: str, holder: str, desire: str, label: str,
+           now: datetime, *, holds_at: str | None = None, derived_at: str | None = None,
+           about: tuple = (), points: tuple = (), shape: tuple = (),
+           side: str | None = None) -> None:
     """Write one derived want over the ENGINE: its graph, replaced whole, and the catalogue's
     account of that graph — its family, how it arrived, whose it is and the period it holds
     during — in one update, so a want and what is said about it land together or not at all.
 
-    THE KNOWLEDGE STAYS IN THIS FILE, which is the point of it being here (#677): the derivation
-    decides what a want IS — its name, its label, what it points at, when it must hold — and
-    where a want is kept is this module's, whether the collection below or the derivation asks. The
-    catalogue is found by its own row and every kind the vocabulary puts a pursued graph
+    PRIVATE, AND `mint` IS THE ONLY CALLER. It was `save_want`, public, with one production
+    caller and eight in a test that used it to seed stores for `find_wants` — so the read was
+    being tested THROUGH the writer, and a matching pair of bugs would have passed. The test
+    writes its rows itself now, and this is what the derivation does when it has decided.
+
+    IT TAKES NO `Want`. The type was built here and taken apart on the next line, which is the
+    store duplicated in Python for the length of one expression; worse, four of its eleven
+    fields — `points`, `shape`, `holder`, `ends` — were populated on this path and left empty
+    by every read, so `want.shape` on a want read back was silently `()`. That cost a session:
+    the search's met-test asked the model for its shape, got nothing, and reported every want
+    exhausted. `Want` is the READ model now and these are arguments, which is what they are.
+
+    THE KNOWLEDGE STAYS IN THIS FILE (#677): the derivation decides what a want IS — its name,
+    its label, what it points at, when it must hold — and where a want is kept is this module's.
+    The catalogue is found by its own row and every kind the vocabulary puts a want graph
     beneath is written from one `rdfs:subClassOf` step, the closure being materialised at
     genesis (one-graph-both-engines-read).
+
+    NO PERIOD END. A derived want ends when the decomposition stops producing it, never by the
+    clock — see `mint` below for the argument.
     """
-    graph = graph_of(agent_id, want.uri)
-    points = " ".join(f"<{want.uri}> <{p}> <{o}> ." for p, o in want.points)
-    shape = "\n  ".join(want.shape)
+    graph = graph_of(agent_id, uri)
+    said_points = " ".join(f"<{uri}> <{p}> <{o}> ." for p, o in points)
+    shape_lines = "\n  ".join(shape)
     #  INSTANTS CROSS HERE AND NOWHERE ELSE. A want carries them as instants, because what
-    #  reads them — the keeper placing a step, the container measuring the room left — works in
+    #  reads them — the keeper placing a step, a reader measuring the room left — works in
     #  instants; the store keeps them as `xsd:dateTime` literals. This is the boundary, so it
-    #  is where the two forms meet, one line each way (`_moment` below, and `_instant` on read).
-    timed = (f' ; orexis:holdsAt "{_moment(want.holds_at)}"^^xsd:dateTime'
-             f' ; prov:generatedAtTime "{_moment(want.derived_at)}"^^xsd:dateTime'
-             if want.holds_at is not None else "")
-    about = "".join(f" ; orexis:about <{a}>" for a in want.about)
+    #  is where the two forms meet, one line each way (`_moment` here, `_instant` on read).
+    timed = (f' ; orexis:holdsAt "{_moment(holds_at)}"^^xsd:dateTime'
+             f' ; prov:generatedAtTime "{_moment(derived_at)}"^^xsd:dateTime'
+             if holds_at is not None else "")
+    abouts = "".join(f" ; orexis:about <{a}>" for a in about)
     #  WHICH WAY IT BROKE, where the met-test's block said so (`orexis:violationIs`).
-    side = f" ; orexis:violationIs <{want.side}>" if want.side else ""
-    period = f' ; orexis:start "{now.isoformat()}"^^xsd:dateTime' + (
-        f' ; orexis:end "{_moment(want.ends)}"^^xsd:dateTime' if want.ends else "")
+    broke = f" ; orexis:violationIs <{side}>" if side else ""
     engine.update(forget_graph(graph) + f""" ;
 INSERT {{
   GRAPH <{graph}> {{
-  <{want.holder}> orexis:holds <{want.uri}> .
-  <{want.uri}> a orexis:Want{timed}{about}{side} ;
+  <{holder}> orexis:holds <{uri}> .
+  <{uri}> a orexis:Want{timed}{abouts}{broke} ;
       orexis:state <{RECOGNIZED}> ;
-      prov:wasDerivedFrom <{want.desire}> ;
-      rdfs:label {json.dumps(want.label)} .
-  {points}
-  {shape} }}
+      prov:wasDerivedFrom <{desire}> ;
+      rdfs:label {json.dumps(label)} .
+  {said_points}
+  {shape_lines} }}
   GRAPH ?cat {{ <{graph}> a orexis:WantGraph ; orexis:arrivedBy orexis:Derived ;
-      orexis:beliefsOf <{want.holder}> ;
-      dcterms:temporal [ a dcterms:PeriodOfTime{period} ] . }} }}
+      orexis:beliefsOf <{holder}> ;
+      dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "{now.isoformat()}"^^xsd:dateTime ] . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
@@ -455,18 +469,19 @@ def mint(store: ox.Store, holder: str, desire: str, now: datetime, said=None,
     #
     #  WHAT ENDS BY THE CLOCK (#645) is a graph whose ending is a FACT — a round closing, a
     #  claim expiring — where nobody is left to conclude it. A want's ending is a CONCLUSION,
-    #  and the derivation that draws it runs every pass. `Want.ends` stays on the model for a
-    #  want whose window genuinely is a fact, which a debt's is; nothing derived here has one.
+    #  and the derivation that draws it runs every pass. `Want` carries no `ends` at all now:
+    #  a field only the writer filled and no read returned is the empty-result trap wearing a
+    #  dataclass, and a want whose window genuinely IS a fact — a debt's — is written by
+    #  whoever knows that, not by this.
     #
     #  THE WANT, AND THE REPOSITORY WRITES IT (#677). What is derived is decided here — the
     #  binding, the label, what it points at — and where a want is kept, how its graph is
     #  classified and what period it holds during are `wants.py`'s, whether a collection or
     #  this derivation asks for the write.
-    save_want(store, _local(holder), Want(
-        uri=child, holder=holder, desire=desire, label=label,
-        holds_at=holds_at.isoformat() if holds_at is not None else None,
-        derived_at=now.isoformat() if holds_at is not None else None,
-        about=abouts, points=tuple(points), shape=shape_lines, side=side), now)
+    _write(store, _local(holder), child, holder, desire, label, now,
+           holds_at=holds_at.isoformat() if holds_at is not None else None,
+           derived_at=now.isoformat() if holds_at is not None else None,
+           about=abouts, points=tuple(points), shape=shape_lines, side=side)
     log.info("%s reads unmet: pursuing %s", desire.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
 
