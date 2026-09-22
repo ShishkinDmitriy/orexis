@@ -1,0 +1,16 @@
+--- case
++++ expected
+@@ -28,9 +28,13 @@
+   :catalogue a orexis:CatalogueGraph .
+   :catalogue a orexis:Graph .
+   :elsewhere a orexis:Graph .
++  :elsewhere orexis:hash "sha256:54ce2e31ca0a15e843d7d25e6de56132ec1d2267b191b67f5aeb9ba4f0326a5f" .
+   :here a orexis:Graph .
++  :here orexis:hash "sha256:515fa5d175cb78090bea950a1079ef2d26d021dad4c2042b93fd683d75bf4528" .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
++  :ontology orexis:hash "sha256:da6a67b23d29f938392d8a6a3169f3fc88dc84e3ae323d95311b61e03b48ed19" .
+   :there a orexis:Graph .
++  :there orexis:hash "sha256:515fa5d175cb78090bea950a1079ef2d26d021dad4c2042b93fd683d75bf4528" .
+ }

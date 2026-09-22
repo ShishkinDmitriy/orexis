@@ -1,0 +1,57 @@
+# a_term_is_its_kind_and_not_only_its_text
+#
+# THE ONE TOLERANCE IS THE ROUNDING, and these were not tolerances at all. Every term used to
+# canonicalise to a bare Python value — an IRI to its string, and every literal to whatever
+# `float()` made of it — so three pairs no domain would call equal hashed alike. All six
+# digests below differ, and that is the whole case.
+#
+#   :iri    <urn:x>      against  :text   "urn:x"
+#   :one    "1"          against  :number 1
+#   :en     "hi"@en      against  :de     "hi"@de
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+
+GRAPH :ontology {
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :number {
+  :s :p 1 .
+}
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :de a orexis:Graph .
+  :en a orexis:Graph .
+  :iri a orexis:Graph .
+  :number a orexis:Graph .
+  :one a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :text a orexis:Graph .
+}
+
+
+GRAPH :de {
+  :s :p "hi"@de .
+}
+
+GRAPH :en {
+  :s :p "hi"@en .
+}
+
+GRAPH :iri {
+  :s :p <urn:x> .
+}
+
+GRAPH :one {
+  :s :p "1" .
+}
+
+GRAPH :text {
+  :s :p "urn:x" .
+}

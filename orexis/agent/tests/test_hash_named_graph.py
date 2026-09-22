@@ -11,13 +11,40 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from pathlib import Path
 
 import pyoxigraph as ox
 import pytest
 
 from orexis.agent.hash_named_graph import hash_named_graph
 from orexis.agent.ontology import HASH
-from orexis.agent.store import catalogue_of, close_catalogue, update
+from orexis.agent.store import catalogue_of, graph_names, update
+
+CASES_DIR = Path(__file__).parent / "hash_named_graph"
+CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
+
+
+#  --- the cases: a store in, its catalogue rows out ------------------------------------------
+#
+#  EVERY GRAPH THE CASE NAMES IS HASHED, bar the catalogue itself, so a case says what it is
+#  about by what it PUTS IN each graph and the diff answers with a digest per graph. Two that
+#  are the same place then say so in the file, in the same hex, where an eye can see it — which
+#  is the thing an `==` between two return values cannot show a reader.
+
+
+@pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
+def test_hashing_leaves_the_catalogue_the_diff_says(case, request, snapshots):
+    store = snapshots.stand_in(case)
+    for graph in sorted(graph_names(store)):
+        if graph != catalogue_of(store):
+            hash_named_graph(store, graph)
+    snapshots.held_to_diff(case, request, "hash_named_graph", snapshots.snapshot_of(store))
+
+
+def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
+    """A glob that stopped matching would pass every case by running none."""
+    assert len(CASES) >= 4, [c.name for c in CASES]
+    assert not snapshots.orphans_in(CASES_DIR)
 
 
 @pytest.fixture
@@ -72,6 +99,41 @@ def test_an_empty_graph_hashes_and_says_so(store):
     predicted — so it has a digest rather than an error or a None."""
     assert hash_named_graph(store, "urn:test:nothing")
     assert hash_named_graph(store, "urn:test:nothing") == hash_named_graph(store, "urn:test:else")
+
+
+def test_a_term_is_its_kind_and_not_only_its_text(store):
+    """THE ONE TOLERANCE IS THE ROUNDING, and these three were not tolerances at all.
+
+    Every term used to canonicalise to a bare Python value — `x.value` for an IRI, and
+    `float(x.value)` attempted on every literal whatever its datatype — so three pairs no
+    domain would call equal hashed alike: an IRI and a string that spells it, a string and
+    the number it parses to, and one text under two language tags. A search comparing worlds
+    by that called two places one, silently, which is the whole failure a hash exists to
+    prevent arriving through the canonical form instead of through the graph.
+    """
+    update(store, """INSERT DATA {
+      GRAPH <urn:test:iri>  { <urn:s> <urn:p> <urn:x> }
+      GRAPH <urn:test:text> { <urn:s> <urn:p> "urn:x" }
+      GRAPH <urn:test:one>  { <urn:s> <urn:p> "1" }
+      GRAPH <urn:test:1>    { <urn:s> <urn:p> 1 }
+      GRAPH <urn:test:en>   { <urn:s> <urn:p> "hi"@en }
+      GRAPH <urn:test:de>   { <urn:s> <urn:p> "hi"@de } }""")
+    h = {g: hash_named_graph(store, f"urn:test:{g}")
+         for g in ("iri", "text", "one", "1", "en", "de")}
+
+    assert h["iri"] != h["text"], "an IRI is not a string that spells it"
+    assert h["one"] != h["1"], "a string is not the number it parses to"
+    assert h["en"] != h["de"], "a language tag is part of what a literal says"
+
+
+def test_a_number_is_its_value_and_not_its_datatype(store):
+    """The other side of the same rule: what a number IS is its value, so an integer and the
+    decimal holding the same quantity are one fact. Rounding is about the same question."""
+    update(store, """INSERT DATA {
+      GRAPH <urn:test:int> { <urn:s> <urn:p> 1 }
+      GRAPH <urn:test:dec> { <urn:s> <urn:p> 1.0 } }""")
+
+    assert hash_named_graph(store, "urn:test:int") == hash_named_graph(store, "urn:test:dec")
 
 
 def test_two_numbers_agreeing_to_six_decimals_are_one_place(store):

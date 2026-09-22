@@ -18,7 +18,13 @@ starts minting:
   the direction that matters, since conflating two worlds prunes a branch the frontier would
   have rejected as no better.
 - **A number is its ROUNDED value**, to six decimals. Two worlds whose readings agree that far
-  were the same place before this was a hash and still are.
+  were the same place before this was a hash and still are. Only a NUMBER is rounded, and
+  that is the one tolerance anybody chose here: every other term canonicalises to its kind
+  and its text, so an IRI is not its own spelling as a string, a string is not the number it
+  parses to, and a language tag is part of what a literal says. All three of those collided
+  while every term collapsed to a bare Python value — `<urn:x>` with `"urn:x"`, `"1"` with
+  `1`, and `"hi"@en` with `"hi"@de` — which made a search call two worlds one place that no
+  domain would.
 
 **NO CANONICALISATION BY CLASS, and that is a deliberate absence.** A package used to declare
 which predicates IDENTIFY a node of a class (`orexis:keyedBy`) and which it CARRIES
@@ -123,15 +129,16 @@ class _World:
         self.memo = {}
 
     def term(self, x):
-        """One term's canonical form: an IRI is itself, a number is its rounded value, and a
-        blank node is its content."""
+        """One term's canonical form: a blank node is its content, and everything else is its
+        KIND and its value — because a form that is a bare string cannot tell an IRI from a
+        literal that spells it."""
         if isinstance(x, ox.BlankNode):
             if x not in self.memo:
                 self.memo[x] = self._content(x, frozenset())
             return self.memo[x]
         if isinstance(x, ox.Literal):
             return _literal(x)
-        return x.value
+        return ("iri", x.value)
 
     def _content(self, node, seen) -> tuple:
         """A blank node as what is said about it, so identity minted per run cannot differ.
@@ -153,13 +160,29 @@ class _World:
             return self._content(x, seen)
         if isinstance(x, ox.Literal):
             return _literal(x)
-        return x.value
+        return ("iri", x.value)
 
 
-def _literal(o):
-    if isinstance(o, ox.Literal):
+#  WHAT COUNTS AS A NUMBER, and so what gets rounded. Named rather than discovered by trying
+#  `float()` on every literal: that is what made `"1"` and `1` one fact, and a string that
+#  happens to parse is still a string.
+_XSD = "http://www.w3.org/2001/XMLSchema#"
+_NUMERIC = frozenset(_XSD + name for name in (
+    "decimal", "double", "float", "integer", "long", "int", "short", "byte",
+    "nonNegativeInteger", "positiveInteger", "nonPositiveInteger", "negativeInteger",
+    "unsignedLong", "unsignedInt", "unsignedShort", "unsignedByte"))
+
+
+def _literal(o: "ox.Literal"):
+    """A literal as its KIND and its value: a number rounded, anything else its text beside
+    the language it is in or the datatype it carries.
+
+    A number whose lexical form the engine will not parse falls through to the text, which is
+    the safe direction — two literals that are not the same text are then not the same fact.
+    """
+    if o.datatype.value in _NUMERIC:
         try:
-            return round(float(o.value), _ROUND)
+            return ("num", round(float(o.value), _ROUND))
         except (TypeError, ValueError):
-            return o.value
-    return o.value
+            pass
+    return ("lit", o.value, o.language or o.datatype.value)

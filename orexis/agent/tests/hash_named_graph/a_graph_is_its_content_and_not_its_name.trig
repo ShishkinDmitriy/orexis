@@ -1,0 +1,42 @@
+# a_graph_is_its_content_and_not_its_name
+#
+# The claim the search leans on. :here and :there are differently NAMED, their triples went
+# in in a different ORDER, and neither is part of where a plan stands — so they hash alike,
+# and the two rows below say so in the same digest. :elsewhere holds one thing more and does
+# not.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+
+GRAPH :ontology {
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :here {
+  :tank :holds :water .
+  :tank :level 5 .
+}
+
+GRAPH :there {
+  :tank :holds :water .
+  :tank :level 5 .
+}
+
+GRAPH :elsewhere {
+  :tank :feeds :fern .
+  :tank :holds :water .
+  :tank :level 5 .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :elsewhere a orexis:Graph .
+  :here a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :there a orexis:Graph .
+}
