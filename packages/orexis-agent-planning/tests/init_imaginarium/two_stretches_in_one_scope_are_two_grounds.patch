@@ -1,0 +1,72 @@
+--- case
++++ expected
+@@ -6,8 +6,8 @@
+ @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+ 
+ GRAPH :ontology {
++  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+   orexis:StateGraph rdfs:subClassOf orexis:Graph .
+-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+ }
+ 
+ GRAPH :world {
+@@ -31,24 +31,49 @@
+ GRAPH :catalogue {
+   :catalogue a orexis:CatalogueGraph .
+   :catalogue a orexis:Graph .
+-  :ontology a orexis:Graph .
+-  :ontology a orexis:OntologyGraph .
+-  :ontology a orexis:PublicGraph .
+-  :world a orexis:Graph .
+-  :world a orexis:PublicGraph .
+-  :sensed a orexis:Graph .
+-  :sensed a orexis:StateGraph .
+-  :sensed orexis:beliefsOf :keeper .
+   :dip a orexis:Graph .
+   :dip a orexis:PredictionGraph .
++  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+   :dip orexis:beliefsOf :keeper .
+-  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+   :dip orexis:retracts """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#level> ?l }
+       WHERE { GRAPH $state { <http://example.org/test#tank1> <http://example.org/test#level> ?l } }""" .
+   :heat a orexis:Graph .
+   :heat a orexis:PredictionGraph .
++  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :heat orexis:beliefsOf :keeper .
+-  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :heat orexis:retracts """CONSTRUCT { <http://example.org/test#tank1> <http://example.org/test#temperature> ?t }
+       WHERE { GRAPH $state { <http://example.org/test#tank1> <http://example.org/test#temperature> ?t } }""" .
++  :ontology a orexis:Graph .
++  :ontology a orexis:OntologyGraph .
++  :ontology a orexis:PublicGraph .
++  :sensed a orexis:Graph .
++  :sensed a orexis:StateGraph .
++  :sensed orexis:beliefsOf :keeper .
++  :world a orexis:Graph .
++  :world a orexis:PublicGraph .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T120000p0000> a <http://example.org/orexis/planning#GroundGraph> .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T120000p0000> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T120000p0000> orexis:arrivedBy orexis:Derived .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T123000p0000> a <http://example.org/orexis/planning#GroundGraph> .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T123000p0000> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T123000p0000> orexis:arrivedBy orexis:Derived .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T130000p0000> a <http://example.org/orexis/planning#GroundGraph> .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T130000p0000> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
++  <http://example.org/orexis/graph/ground/1/2026-01-01T130000p0000> orexis:arrivedBy orexis:Derived .
+ }
++
++
++GRAPH <http://example.org/orexis/graph/ground/1/2026-01-01T120000p0000> {
++  :tank1 :level 20 .
++  :tank1 :temperature 20 .
++}
++
++GRAPH <http://example.org/orexis/graph/ground/1/2026-01-01T123000p0000> {
++  :tank1 :level 5 .
++  :tank1 :temperature 20 .
++}
++
++GRAPH <http://example.org/orexis/graph/ground/1/2026-01-01T130000p0000> {
++  :tank1 :level 5 .
++  :tank1 :temperature 40 .
++}
