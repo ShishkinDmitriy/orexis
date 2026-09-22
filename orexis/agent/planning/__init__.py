@@ -26,7 +26,7 @@ Nothing here commits, because deciding a thing and remembering that it was decid
 different acts.
 
 **WHAT THE PREDECESSOR HELD AND THIS DOES NOT.** It was twenty-nine modules and seven and a
-half thousand lines; this is ten and about three and a third thousand. Every absence is a thing that
+half thousand lines; this is eleven and about three thousand. Every absence is a thing that
 returns attached to whatever needs it, never a thing quietly lost
 (an-agent-is-four-things):
 

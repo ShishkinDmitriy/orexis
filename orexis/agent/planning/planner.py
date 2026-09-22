@@ -63,9 +63,10 @@ from orexis.agent.hash_named_graph import hash_named_graph
 from orexis.agent.store import (Memo, add_quads, bindings, catalogue_of, classify,
                                            clear_graph, copy_graph,
                                            forget_graph, graphs_of, query,
-                                           rdflib_view, update)
+                                           rdflib_view)
 
 from . import effects, touches
+from .apply_effects import apply_effects
 from .prepare_ground import prepare_ground
 from .derive_wants import derive_wants
 from .ontology import (BY, COSTS, EXHAUSTED, FOR_WANT, GROUND_GRAPH, NO_CANDIDATE,
@@ -731,7 +732,7 @@ def apply_action(store: ox.Store, parent: str, name: str, action: str, graphs,
     the budget.
     """
     copy_graph(store, parent, name)
-    if not effects.apply_effects(store, action, name, graphs, memo=memo, **bind):
+    if not apply_effects(store, action, name, graphs, memo=memo, **bind):
         drop_world(store, name)
         return None
     mark_world(store, name, parent, action)

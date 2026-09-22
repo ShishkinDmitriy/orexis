@@ -25,33 +25,28 @@ fighting it. A stored `sh:construct` is just a query, and this project already h
 that runs queries. See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md, "take the
 vocabulary and not necessarily the engine".
 
-WHAT IS NOT HERE is the SEARCH — that is `planner.py`, beside this file. This reads a rule
-and runs it against a dataset it is handed, and the two callers ask about different worlds: the
-actuator asks about the one it is standing in, so that the number it predicts and the number it
-later verifies against cannot be two numbers, and the planner asks about one nobody is in yet.
-Which of them a rule is answering about is `store`, and nothing else here.
+**WHAT IS HERE IS WHAT CAN BE ASKED, AND NOTHING THAT WRITES.** Three questions over
+`(store, action)`: `rule_for` is the action's row, memoised because a template costs more to
+re-read than a pass can afford and can change only by a write a pass does not make;
+`cost_of` is what taking it would spend; `lands_after` is how long until it lands. The ACT —
+running the effect into a world — is `apply_effects.py` beside this, because the order its two
+halves go in and the graph each is bound to are facts about what an effect IS rather than
+about what can be read off an action.
+
+The two callers ask about different worlds: an actuator asks about the one it is standing in,
+so that the number it predicts and the number it later verifies against cannot be two numbers,
+and a planner asks about one nobody is in yet. Which of them a rule is answering about is
+`store`, and nothing else here.
 """
 
 from __future__ import annotations
 
-import functools
 import logging
-import re
 
-import pyoxigraph as ox
-import rdflib
-from rdflib import URIRef, Variable
-from rdflib.plugins.sparql.algebra import translateQuery
-from rdflib.plugins.sparql.parser import parseQuery
-from rdflib.plugins.sparql.parserutils import CompValue
-
-from orexis.agent.store import (_TOKEN, PREFIXES, Raw, add_quads, bindings,
-                                           bind as bind_text, construct, graphs_of,
-                                           query, remember, update)
-from .touches import parseable
-from orexis.agent.ontology import PUBLIC
-from orexis.agent.ontology import KNOWN
 from orexis.agent import clock
+from orexis.agent.ontology import KNOWN, PUBLIC
+from orexis.agent.store import (bindings, bind as bind_text, construct, graphs_of, query,
+                                           remember)
 
 log = logging.getLogger("effects")
 
@@ -88,123 +83,6 @@ def rule_for(store, action: str, memo=None) -> dict | None:
         rows = bindings(query(store, _RULE_Q, graphs_of(store, PUBLIC), {"rule": action}))
         return rows[0] if rows else None
     return remember(memo, ("rule", action), fetch)
-
-
-def apply_effects(store, action: str, into: str, graphs=None, *, memo=None, **bind) -> bool:
-    """Run one action's effect INTO the graph `into`: what it makes true added there, what it
-    replaces deleted from it. Answers whether anything happened at all.
-
-    **ONE ACT AND NOT TWO QUESTIONS.** It was `adds` and `retraction`, a list of triples and a
-    bound update, which the caller then applied to a graph it had forked — three steps in which
-    the caller had to know that retraction precedes addition and that `$state` means a
-    different graph in each. The order and the binding are this module's business, because
-    they are facts about what an effect IS.
-
-    `graphs` and `bind` describe the world the step is taken IN: the construct is asked of it,
-    and `$state` in `bind` names it. **The retraction is re-bound to `into`**, because that is
-    what it deletes from — the one place the two halves differ, and the reason this is one
-    function rather than a caller's three lines. Since `into` is a fork of that world the
-    construct sees the same facts either way; what it must not see is the deletion, because a
-    construct reuses the very node its retraction names and asking afterwards finds it gone.
-
-    **`store` is whichever dataset the question is being asked ABOUT.** An actuator asks about
-    the world it is standing in and passes its own belief base; a search passes the
-    imaginarium, where `$state` names the world a node's path reached. Nothing here
-    distinguishes them, and nothing should.
-
-    `bind` fills the rule's placeholders the way every other shipped query here is filled:
-    `$me`, `$subject`, `$property`, `$litres`. Substitution rather than SPARQL's own binding
-    because the text is a literal in the graph and the engine takes a string.
-    """
-    rule = rule_for(store, action, memo)
-    if rule is None:
-        return False
-    #  WHICH WORLD, IN THE LIST THE CALLER BUILT AND NOT IN THE TEXT (#666). `graphs` carries
-    #  the readings a rule's patterns read — this agent's own where a caller means "here", a
-    #  node's where a search means "there" — and the rule names neither.
-    added = _run(store, rule.get("construct"), bind, graphs)
-    retract = _retraction(rule.get("retracts"), into, bind)
-    if not added and retract is None:
-        return False
-    if retract is not None:
-        try:
-            update(store, retract)
-        except Exception as exc:                                    # noqa: BLE001
-            #  A rule that will not run is a package's bug and must not take an agent down:
-            #  the lever still works, and what is lost is a world holding two readings where
-            #  it should hold one — which is the exact failure the retraction exists to close.
-            log.error("an effect's retraction would not run, so it retracts nothing: %s", exc)
-    node = ox.NamedNode(into)
-    add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
-    return True
-
-
-def _retraction(text: str | None, into: str, bind: dict) -> str | None:
-    """One action's `orexis:retracts`, bound to the graph it deletes from — or None.
-
-    **IT IS AN UPDATE AND NOT A QUESTION.** `orexis:retracts` holds a `DELETE … WHERE` naming
-    `GRAPH $state`. It was a CONSTRUCT whose triples the caller removed by term; what that
-    bought — a materialised diff — is wanted by `execution:predicts`, which this tree does not
-    write, and by an emptiness test the world's own hash already answers.
-
-    IT READS THE WORLD AND NOT THE DATASET, which is what the change cost. A CONSTRUCT was
-    handed the whole graph list the runner built; an UPDATE's WHERE reads the unnamed default
-    graph unless `USING` says otherwise, and `Store.update` takes no dataset — so a retraction
-    names `GRAPH $state` in both halves and sees only the world it deletes from. Public
-    knowledge holds no readings, so nothing shipped here wanted more; a retraction that needs
-    to join the vocabulary is the case that would bring `USING` back.
-
-    `orexis:retracts` exists because SHACL-AF has no deletion, and it is not optional: the
-    sensed graph upserts one observation node per (subject, property), so an effect predicting
-    a reading that did not retract the node it replaces would leave two results on one node.
-    """
-    if not text:
-        return None
-    try:
-        return bind_text(text, **{**bind, "state": Raw(f"<{into}>")})
-    except Exception as exc:                                        # noqa: BLE001
-        log.error("an effect's retraction would not bind, so it retracts nothing: %s", exc)
-        return None
-
-
-def _triple(t):
-    """One of the store's triples as the three terms rdflib wants.
-
-    Term by term, and NOT through `str()`. A pyoxigraph term stringifies to its N-Triples form
-    — `<http://…>` with the angle brackets, a literal with its quotes and datatype — so a
-    conversion that went through text would hand rdflib a URIRef whose value included the
-    brackets. It would compare unequal to the same IRI everywhere else, silently: no exception,
-    no empty result, just a possible world whose triples never match the ones they replace.
-    The same trap caught the effect reader itself in #238, from the other direction.
-    """
-    return tuple(_term(x) for x in (t[0], t[1], t[2]))
-
-
-def _term(x):
-    """A pyoxigraph term as an rdflib one, keeping what makes it that term.
-
-    A literal's datatype and language are not decoration: a predicted reading compared against
-    a shape's `sh:minExclusive` is a decimal against a decimal, and the same digits typed as a
-    string would simply fail to match — which reads exactly like a plan that does not work.
-    """
-    if isinstance(x, ox.NamedNode):
-        return rdflib.URIRef(x.value)
-    if isinstance(x, ox.BlankNode):
-        return rdflib.BNode(x.value)
-    if isinstance(x, ox.Literal):
-        #  A plain string stays PLAIN (found by #257's world): pyoxigraph reports xsd:string
-        #  on every simple literal, and rdflib holds a plain Literal and an explicitly
-        #  string-typed one as DISTINCT terms - so a triple arriving once through a
-        #  serialisation parse and once through this constructor landed twice, and every
-        #  asserted string in the world gate's two-path join was silently doubled. Invisible
-        #  until a shape counted one: hanoi's avoided-pattern node was the first focus any
-        #  maxCount here ever had.
-        dt = x.datatype.value if x.datatype else None
-        if dt == "http://www.w3.org/2001/XMLSchema#string" and not x.language:
-            dt = None
-        return rdflib.Literal(x.value, lang=x.language,
-                              datatype=rdflib.URIRef(dt) if dt else None)
-    return x
 
 
 def lands_after(store, action: str, graphs=None, *, memo=None, **bind) -> float | None:
@@ -248,121 +126,6 @@ def cost_of(store, action: str, graphs=None, *, memo=None, **bind) -> float | No
     return float(rows[0]["cost"].value)
 
 
-@functools.lru_cache(maxsize=256)
-def _precondition_template(text: str, keyed: tuple, restrict: tuple) -> str | None:
-    """A rule text — a CONSTRUCT or a SELECT, its `$tokens` still in it — rewritten as the
-    CONSTRUCT that answers the facts its WHERE read, tokens kept so the caller binds it as
-    it binds the rule; None where it states no positive pattern.
-
-    PARSED ONCE PER TEXT. rdflib's SPARQL parser is what the precondition costs — 216 ms of 276
-    for a two-step plan, measured — and a rule's text is the same for every step that takes
-    the action, so the parse is cached on the text and only the binding is per step. The
-    parse reads the text made parseable the way `touches` reads it, every token a
-    variable; a variable that was a token goes back into the template AS the token.
-    `restrict` names the projected variables held to the step's terms, as `$` tokens too.
-    """
-    tokens = set(_TOKEN.findall(text))
-    try:
-        alg = translateQuery(parseQuery(PREFIXES + parseable(text))).algebra
-    except Exception as exc:                            # noqa: BLE001 — a rule that will not parse
-        log.error("a rule's premises could not be read: %s", exc)
-        return None
-    patterns = _positive_patterns(alg.get("p", alg))
-    body = _where_body(text)
-    if not patterns or body is None:
-        return None
-
-    def term(t) -> str:
-        return f"${t}" if isinstance(t, Variable) and str(t) in tokens else t.n3()
-
-    projected = {str(v) for v in (alg.get("PV") or [])}
-    filters = " ".join(f"FILTER(?{name} = ${name})" for name in restrict if name in projected)
-    template = [f"{term(s)} {term(p)} {term(o)} ." for s, p, o in patterns]
-    types = []
-    if keyed:
-        classes = " ".join(f"<{c}>" for c in keyed)
-        nodes = {t for s, _, o in patterns for t in (s, o)
-                 if isinstance(t, Variable) and str(t) not in tokens}
-        for n, v in enumerate(sorted(nodes, key=str)):
-            template.append(f"{v.n3()} a ?_t{n} .")
-            #  AND WHAT ELSE IT IS (#576): every class the world's own graph types a keyed
-            #  node with — the bands the domain asserted — so a premise can state the
-            #  reading by what it is rather than by its number.
-            template.append(f"{v.n3()} a ?_u{n} .")
-            #  WHERE THE RULE COULD HAVE READ THE NODE'S TYPE: the default graph, which is
-            #  public knowledge, this agent's records and the world being asked about, all
-            #  three (#666). It was two patterns joined by UNION, because the world stood
-            #  apart under `$state` and a type could be in either; the door merges them now,
-            #  so there is one pattern and nothing to keep in step.
-            #  ONLY FOR A NODE THE RULE BOUND. A variable an OPTIONAL left unbound — no
-            #  standing reading, no pick — is FREE in a pattern that follows, and an
-            #  `OPTIONAL { ?v a ?t }` then binds it to any node of the class; the template
-            #  read that back as the rule having read it, and a missing reading came back
-            #  as some other observation, typed. So the lookup asks about a stand-in that is
-            #  the node where bound and nothing where not.
-            types.append(f"BIND(COALESCE({v.n3()}, <urn:orexis:unbound>) AS ?_v{n}) "
-                         f"OPTIONAL {{ VALUES ?_t{n} {{ {classes} }} ?_v{n} a ?_t{n} }} "
-                         f"OPTIONAL {{ ?_v{n} a ?_u{n} FILTER(BOUND(?_t{n})) }}")
-    return (f"CONSTRUCT {{ {' '.join(template)} }} "
-            f"WHERE {{ {{ {body} }} {' '.join(types)} {filters} }}")
-
-
-def _positive_patterns(node) -> list:
-    """Every triple pattern of a WHERE that is READ — the BGPs, less what a MINUS subtracts
-    and less any pattern whose predicate is a path."""
-    out: list = []
-
-    def walk(n):
-        if isinstance(n, CompValue):
-            if n.name == "BGP":
-                out.extend((s, p, o) for s, p, o in n["triples"]
-                           if isinstance(p, (URIRef, Variable)))
-                return
-            for key, value in n.items():
-                if n.name == "Minus" and key == "p2":
-                    continue
-                walk(value)
-        elif isinstance(n, (list, tuple)):
-            for item in n:
-                walk(item)
-    walk(node)
-    return out
-
-
-def _where_body(text: str) -> str | None:
-    """The inside of the query's WHERE group, as written — braces matched, strings skipped,
-    and a `#` comment skipped to its line's end as the grammar skips it: a rule's comments
-    are prose, and an apostrophe in one is not a string's opening quote. Read as one until
-    a third apostrophe in the dosing rule's comments made every premise of a dose silently
-    vanish."""
-    m = re.search(r"\bWHERE\s*\{", text, re.IGNORECASE)
-    if not m:
-        return None
-    start = m.end() - 1
-    depth, quote, i = 0, None, start
-    while i < len(text):
-        c = text[i]
-        if quote:
-            if c == "\\":
-                i += 1
-            elif c == quote:
-                quote = None
-        elif c == "#":
-            i = text.find("\n", i)
-            if i < 0:
-                return None
-        elif c in "\"'":
-            quote = c
-        elif c == "{":
-            depth += 1
-        elif c == "}":
-            depth -= 1
-            if depth == 0:
-                return text[start + 1:i]
-        i += 1
-    return None
-
-
 def _select(store, text: str, bind: dict, graphs=None) -> list:
     """A rule's query that answers with BINDINGS rather than a graph. Same substitution, same
     swallowing of a rule that will not run: a package's broken query must not take an agent
@@ -375,13 +138,13 @@ def _select(store, text: str, bind: dict, graphs=None) -> list:
     serve landed "immediately", silently. The rows come back as engine solutions rather
     than JSON bindings; the one consumer reads its column accordingly."""
     try:
-        return construct(store, bind_text(text, **bind), _graphs(store, graphs))
+        return construct(store, bind_text(text, **bind), over(store, graphs))
     except Exception as exc:
         log.error("timing query for this means would not run: %s", exc)
         return []
 
 
-def _graphs(store, graphs) -> list[str]:
+def over(store, graphs) -> list[str]:
     """What a rule is answered over: the list the caller built — the search, for an imagined
     world at an instant — or, where none is handed in, the kinds a rule reads as they hold
     now: an actuator standing in the present, a test. Stated here, once, for the rules this
@@ -389,13 +152,3 @@ def _graphs(store, graphs) -> list[str]:
     return graphs if graphs is not None else graphs_of(store, *KNOWN, at=clock.now())
 
 
-def _run(store, text: str | None, bind: dict, graphs=None) -> list:
-    if not text:
-        return []
-    try:
-        return list(construct(store, bind_text(text, **bind), _graphs(store, graphs)))
-    except Exception as exc:
-        #  A rule that will not run is a package's bug and must not take an agent down: the
-        #  lever still works, and what is lost is the ability to reason about it in advance.
-        log.error("effect rule for this means would not run: %s", exc)
-        return []
