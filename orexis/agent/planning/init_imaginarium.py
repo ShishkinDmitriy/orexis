@@ -54,6 +54,8 @@ from orexis.agent.store import (Raw, add_quads, bind, catalogue_of, classify,
 from . import signature
 from .ontology import GROUND_GRAPH
 
+log = logging.getLogger("init_imaginarium")
+
 
 def init_imaginarium(beliefs: ox.Store, into: ox.Store, scope: str,
                      now: datetime) -> ox.Store:
@@ -98,34 +100,25 @@ def init_imaginarium(beliefs: ox.Store, into: ox.Store, scope: str,
         if iri is None:
             continue                          # a store nobody has told anything to has no catalogue
         into.extend(beliefs.quads_for_pattern(None, None, None, ox.NamedNode(iri)))
-    lay_ground(into, scope, now)
+    _lay_ground(into, scope, now)
     return into
 
 
-log = logging.getLogger("ground")
-
-#  EVERY PREDICTION, WHEN IT APPLIES, AND WHAT IT SUPERSEDES. All three are said of the GRAPH
-#  and none inside it: a prediction's contents are what it ADDS, which is what a prediction
-#  naturally is — `GRAPH :next_temp { :air :hasTemp 30 }` — and a triple saying how to retract
-#  would be one of the facts it asserts. The catalogue already says what a graph is, whose it
-#  is and when it holds; how it supersedes is the same kind of statement about it.
-#
-#  THE RETRACT IS A PATTERN AND THE ADDS ARE NOT, which is the whole shape of this. What a
-#  forecast says is concrete — a value at an instant; what it TAKES AWAY is whatever is
-#  standing in that place, which nobody can name in advance. So one is data and the other is a
-#  CONSTRUCT over `$state`, and a keyed reading falls out of it for free: the pattern matches
-#  the old observation node by its key and takes it whole.
-_WHEN_Q = """
-SELECT ?prediction ?at ?retracts WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?prediction a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?at .
-               OPTIONAL { ?prediction orexis:retracts ?retracts } } }
-ORDER BY ?at ?prediction"""
-
-
-def foreseen(engine: ox.Store) -> list[tuple[datetime, str, str | None]]:
+def _foreseen(engine: ox.Store) -> list[tuple[datetime, str, str | None]]:
     """Every prediction this store holds — its graph, the instant it applies, and the pattern
     it supersedes — earliest first.
+
+    ALL THREE ARE SAID OF THE GRAPH AND NONE INSIDE IT: a prediction's contents are what it
+    ADDS, which is what a prediction naturally is — `GRAPH :next_temp { :air :hasTemp 30 }` —
+    and a triple saying how to retract would be one of the facts it asserts. The catalogue
+    already says what a graph is, whose it is and when it holds; how it supersedes is the same
+    kind of statement about it.
+
+    THE RETRACT IS A PATTERN AND THE ADDS ARE NOT, which is the whole shape of this. What a
+    forecast says is concrete — a value at an instant; what it TAKES AWAY is whatever is
+    standing in that place, which nobody can name in advance. So one is data and the other is a
+    CONSTRUCT over `$state`, and a keyed reading falls out of it for free: the pattern matches
+    the old observation node by its key and takes it whole.
 
     NO HOLDER. One agent, one volume (rule 4), so the store IS the scope and a prediction in it
     is this agent's by construction.
@@ -133,27 +126,34 @@ def foreseen(engine: ox.Store) -> list[tuple[datetime, str, str | None]]:
     A PREDICTION THAT RETRACTS NOTHING is legal and means it: a forecast of something the world
     does not yet say at all — a round opening, a claim arriving — adds without superseding.
     """
+    said = """
+SELECT ?prediction ?at ?retracts WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+               ?prediction a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?at .
+               OPTIONAL { ?prediction orexis:retracts ?retracts } } }
+ORDER BY ?at ?prediction"""
     return sorted((datetime.fromisoformat(r["at"]), r["prediction"], r.get("retracts"))
-                  for r in rows(engine, _WHEN_Q, ()))
+                  for r in rows(engine, said, ()))
 
 
-def lay_ground(engine: ox.Store, scope: str, now: datetime) -> list[str]:
+def _lay_ground(engine: ox.Store, scope: str, now: datetime) -> list[str]:
     """Build one ground world per period the agent can see, classified with its stretch.
 
     The present is the first, and is the agent's readings as they stand. Each prediction that
     applies later is run against the ground standing before it and the diff applied; a ground
     that hashes the same as the one before it is not a period, and is dropped.
 
-    Answers with the graphs it made, earliest first — for a caller that wants to say how many
-    there were. What a READER takes is `graphs_of(engine, GROUND_GRAPH, at=T)`.
+    Answers with the graphs it made, earliest first. What a READER takes is
+    `graphs_of(engine, GROUND_GRAPH, at=T)`.
     """
     keys = signature.keys_of(lambda text: query(engine, text, graphs_of(engine, PUBLIC)))
     public = graphs_of(engine, PUBLIC)
 
+    ahead = _foreseen(engine)
     here = _present(engine, scope, now)
     made, marks = [here], signature.facts(_triples(engine, here), keys)
     opened = [now]
-    for at, group in _by_instant(foreseen(engine)):
+    for at, group in _by_instant(ahead):
         if at <= now:
             continue                    # a forecast already reached is the present's, not ahead
         #  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE. A boundary is an instant,
@@ -184,8 +184,7 @@ def lay_ground(engine: ox.Store, scope: str, now: datetime) -> list[str]:
         opened.append(at)
         here, marks = there, mark
     classify(engine, here, GROUND_GRAPH, OREXIS + "Derived", start=opened[-1])
-    log.debug("%s: %d ground world(s) over %d prediction(s)", scope, len(made),
-              len(foreseen(engine)))
+    log.debug("%s: %d ground world(s) over %d prediction(s)", scope, len(made), len(ahead))
     return made
 
 
