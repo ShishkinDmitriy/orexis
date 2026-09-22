@@ -1,0 +1,42 @@
+# a_heater_and_a_trolley
+#
+# TWO LEVERS THAT SHARE NO PREDICATE ARE TWO SCOPES. A heater writes what a reading says; a
+# trolley writes where a plant stands. Nothing either writes is read by the other, so the
+# partition separates them — which is what a scope says and the only thing it says: these
+# cannot interact.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix scopes: <http://example.org/orexis/graph/scopes/> .
+
+
+GRAPH :ontology {
+  planning:ScopeGraph rdfs:subClassOf orexis:Graph .
+  planning:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :actions {
+  :heat a orexis:Action .
+  :heat sh:construct """PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        CONSTRUCT { ?o sosa:hasSimpleResult ?x . } WHERE { ?o a sosa:Observation }""" .
+  :move a orexis:Action .
+  :move sh:construct """PREFIX : <http://example.org/test#>
+        PREFIX water: <http://example.org/orexis/water#>
+        CONSTRUCT { ?p :standsIn ?room . } WHERE { ?p a water:Plant }""" .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+}

@@ -1,0 +1,44 @@
+--- case
++++ expected
+@@ -66,4 +66,41 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
++  pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
++  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
++  pursued:keeper.in_range.pursued.tank1.level orexis:beliefsOf :keeper .
++  pursued:keeper.in_range.pursued.tank1.temperature a orexis:Graph .
++  pursued:keeper.in_range.pursued.tank1.temperature a orexis:WantGraph .
++  pursued:keeper.in_range.pursued.tank1.temperature dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:keeper.in_range.pursued.tank1.temperature orexis:arrivedBy orexis:Derived .
++  pursued:keeper.in_range.pursued.tank1.temperature orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH pursued:keeper.in_range.pursued.tank1.level {
++  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
++  :keeper.in_range.pursued.tank1.level a orexis:Want .
++  :keeper.in_range.pursued.tank1.level orexis:about :level .
++  :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
++  :keeper.in_range.pursued.tank1.level orexis:state orexis:Recognized .
++  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
++  :keeper.in_range.pursued.tank1.level rdfs:label "pursued: every tank in range" .
++  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
++  :keeper.in_range.pursued.tank1.level.met sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
++  :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
++}
++
++GRAPH pursued:keeper.in_range.pursued.tank1.temperature {
++  :keeper orexis:holds :keeper.in_range.pursued.tank1.temperature .
++  :keeper.in_range.pursued.tank1.temperature a orexis:Want .
++  :keeper.in_range.pursued.tank1.temperature orexis:about :temperature .
++  :keeper.in_range.pursued.tank1.temperature orexis:metWhen :keeper.in_range.pursued.tank1.temperature.met .
++  :keeper.in_range.pursued.tank1.temperature orexis:state orexis:Recognized .
++  :keeper.in_range.pursued.tank1.temperature prov:wasDerivedFrom :keeper.in_range .
++  :keeper.in_range.pursued.tank1.temperature rdfs:label "pursued: every tank in range" .
++  :keeper.in_range.pursued.tank1.temperature.met a sh:NodeShape .
++  :keeper.in_range.pursued.tank1.temperature.met sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
++  :keeper.in_range.pursued.tank1.temperature.met sh:targetNode :tank1 .
++}

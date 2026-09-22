@@ -1,0 +1,88 @@
+# a_low_tank_is_filled
+#
+# One tank below its floor, one lever that raises a level by five, and a floor two doses away.
+# The search should chain two Fills — which is the whole claim: a met-test the first dose does
+# not satisfy is reached by repeating the step, and nothing declares the chain.
+#
+# THE TEXTS SPELL THEIR IRIS IN FULL. A query may use only what `store.NAMESPACES` declares,
+# and `:` here is the case's own prefix, which the store has never heard of.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+GRAPH :ontology {
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  :level a rdf:Property .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent ; orexis:localId "keeper" .
+  :tank1 a :Tank .
+}
+
+# ONE LEVER: fill a tank that is below its floor, raising the level by five. The precondition
+# names the world it reads through no GRAPH clause at all — the runner hands it its graphs.
+GRAPH :actions {
+  :fill a orexis:Action ;
+    orexis:takes :tank ;
+    orexis:available """SELECT ?tank WHERE {
+      ?tank a <http://example.org/test#Tank> ; <http://example.org/test#level> ?l .
+      FILTER(?l < 10) }""" ;
+    sh:construct """CONSTRUCT { ?tank <http://example.org/test#level> ?next } WHERE {
+      $tank <http://example.org/test#level> ?l .
+      BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ;
+    orexis:retracts """CONSTRUCT { ?tank <http://example.org/test#level> ?l } WHERE {
+      $tank <http://example.org/test#level> ?l . BIND($tank AS ?tank) }""" ;
+    orexis:costs """SELECT (1 AS ?cost) WHERE { }""" .
+  :tank a orexis:Parameter .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:targetClass :Tank .
+  :keeper orexis:holds :keeper.in_range .
+  :keeper.in_range a orexis:Desire .
+  :keeper.in_range orexis:about :level .
+  :keeper.in_range orexis:metWhen :in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+}
+
+GRAPH :sensed {
+  :tank1 :level 0 .
+}
+
+GRAPH :scopes {
+  :fill planning:inScope :keeper.scope.1 .
+  :keeper.scope.1 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

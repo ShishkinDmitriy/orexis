@@ -1,0 +1,139 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix assembly: <http://example.org/orexis/assembly#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix : <http://example.org/orexis/execution#> .
+
+<http://example.org/orexis/execution> a owl:Ontology ;
+    rdfs:label "Orexis execution" ;
+    rdfs:comment """The execution layer's own words (#529): the ledger — an intention, its steps and acts, and the window each is good in. What every layer and every package writes in stays `orexis:`; a term one layer reads and writes is that layer's, and its prefix says so.
+
+THE SUCCESSOR OF `execution:`, and shorter than it by the whole expectation watch. What a step was predicted to make true is here, because the ledger records it; what VERIFIES that — a baseline, an observed value, a verdict, a lapse, a suspicion count, a patience and its bounds — was the 1.0 keeper's watch, and Agent 2.0's keeper does not yet have one. Those terms return with the thing that reads them and not before, which is what keeps a vocabulary to what is actually said (a-term-nobody-reads-is-annotation).""" .
+
+execution:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
+    rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
+
+execution:Intention a owl:Class ; rdfs:label "Intention" ;
+    rdfs:comment """One commitment: one want pursued by one action, adopted at a moment, resolved at another or still standing. `ssn:forProperty` names the property — the same term a region, a condition and an aim already use, so the gap an intention is about is joinable to the desire it serves by the vocabulary everything else speaks.
+
+
+
+The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` — the same shape review:Revision has, for the same reason.""" .
+
+execution:through a owl:ObjectProperty ;
+    rdfs:label "through" ;
+    rdfs:comment "The lever a step goes through. On a candidate, the lever it WOULD act through; on an act, the lever the plan's head chose — the same `via` column of the same affordance row, so the ledger says which valve or venue and not merely what kind of move. No domain, because it is stated of both and the closure would otherwise type one as the other. On a candidate: the lever the candidate would act through — the affordance row's own `via`, which is the PROV the record asks for: a trace says which thing in the world would have done this, not merely what kind of move it was." .
+
+execution:pursues a owl:ObjectProperty ; rdfs:domain execution:Intention ;
+    rdfs:label "pursues" ;
+    rdfs:comment """WHICH goal this commitment serves — the bounds an agent is held to, or the obligation a claim raised. A commitment keyed by (means, property) alone cannot tell two obligations about one property apart: a dealer owing water to fern and to tomato holds two Apply commitments that look identical, so satisfying one satisfies both and the patience absorbs the second impulse as if it were the first. That is the shape of the observation-keyed-by-subject bug (#one-agent-many-sensors), found before it went live rather than after — obligations do not yet drive acts, and this lands first so they never can while it is open.
+
+Optional, because the first three means predate goals having names: an intention with no goal is keyed as it always was, and every old row in a ledger stays readable.""" .
+
+execution:by a owl:ObjectProperty ; rdfs:domain execution:Intention ; rdfs:range execution:Step ;
+    rdfs:label "by" ;
+    rdfs:comment "The ACT committed to — the filled action: which action (execution:fills), through which lever (execution:through), how much (execution:quantity), for whom, and when. It named the action node itself from the-action-is-the-kind until an-act-is-a-filled-action gave the filled one a node of its own. Not a plan: the how stays with whichever capability takes it." .
+
+execution:Step a owl:Class ; rdfs:label "Step" ;
+    rdfs:comment "One orexis:Action filled in and PLANNED — not yet done (the sovereign's ruling, 2026-09-02: a plan is not executed, so its elements are not acts). The lever it goes through (execution:through), the want it serves (execution:pursues), how much (execution:quantity), for whom where it is an obligation's (execution:forAgent), its window (execution:notBefore, execution:notAfter), what the search predicted taking it would reach (execution:predicts) and what its rules read to plan it (execution:precondition), what follows (execution:then). A plan is steps; an intention commits to them (execution:step) and stands at one (execution:by); a claim promises one. Minted per adoption, so it is also the place it fills." .
+
+execution:Act a owl:Class ; rdfs:label "Act" ;
+    rdfs:comment "The RECORD that a step was taken: which step (execution:of), when (execution:takenAt), whether anyone took it (execution:taken) — history, and only history. Written by execution the moment the actors have been asked; one step may be attempted more than once, and each attempt is an act. What the world made of it — the verdict — is the intention's today and lands here as the ledger grows." .
+
+execution:of a owl:ObjectProperty ; rdfs:domain execution:Act ; rdfs:range execution:Step ;
+    rdfs:label "of" .
+
+execution:takenAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:range xsd:dateTime ;
+    rdfs:label "taken at" .
+
+execution:taken a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:range xsd:boolean ;
+    rdfs:label "taken" ;
+    rdfs:comment "Whether an actor took it; false is an attempt no actor could carry out now, the step standing for the next." .
+
+execution:fills a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range orexis:Action ;
+    rdfs:label "fills" ;
+    rdfs:comment "Which action this act is an instance of — the template it fills. The one hop from a commitment to the precondition, the effect and the taker." .
+
+execution:forAgent a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range orexis:Agent ;
+    rdfs:label "for agent" ;
+    rdfs:comment "Whom the act serves, where it is an obligation's — the counterparty a Serving act is owed to. Absent on an act of the agent's own." .
+
+execution:quantity a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:decimal ;
+    rdfs:label "quantity" ;
+    rdfs:comment "How much the act moves, in the good's unit — sized by whoever would take it (Module.size), never by the planner. Absent on an act that moves nothing: a look." .
+
+execution:notBefore a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:dateTime ;
+    rdfs:label "not before" ;
+    rdfs:comment "The window's opening. Declared and unwritten: a held claim spent later — futures — is the first thing that would write it, and that is the market's decision." .
+
+execution:notAfter a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:dateTime ;
+    rdfs:label "not after" ;
+    rdfs:comment "The window's close — what every hand-kept timer was saying: a bid not after the round closes, a serve not after the claim's expiry, a look not after the round that wanted it closes." .
+
+execution:adoptedAt a owl:DatatypeProperty ; rdfs:domain execution:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "adopted at" .
+
+execution:resolvedAt a owl:DatatypeProperty ; rdfs:domain execution:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "resolved at" ;
+    rdfs:comment "Absent while the intention stands. Its absence IS the standing state — no flag to keep in step." .
+
+execution:outcome a owl:DatatypeProperty ; rdfs:domain execution:Intention ; rdfs:range xsd:string ;
+    rdfs:label "outcome" ;
+    rdfs:comment "How it ended: satisfied or dropped. A string rather than a class per outcome, exactly as review:outcome is." .
+
+#  A STEP HELD UNTIL A CONDITION (#512, #514, #516): progression's primitive. ON THE STEP — a
+#  planned thing is what waits; the intention is the commitment (which want, why, when
+#  adopted, when resolved); the act is the record of a taking, written when one happens. A
+#  plan committing to a sequence (#510) links its steps (`execution:step`, `execution:then`) and
+#  gives each its own condition. The keeper adopts a step with a SHAPE over the agent's
+#  beliefs and a deadline; it re-asks the shape whenever a belief lands and keeps the deadline
+#  on its scheduler; when the shape conforms the step is handed to whoever takes it, and when
+#  the deadline passes first it is taken as lapsed or dropped, as the adopter said. The
+#  market's held claim was this path, written inside the bidder with a private timer and a
+#  per-reading check; a plan's next step is this path with the previous step's prediction as
+#  the condition (#510). The condition is DATA, so a sovereign asking the ledger sees what a
+#  step waits for.
+
+execution:step a owl:ObjectProperty ; rdfs:domain execution:Intention ; rdfs:range execution:Step ;
+    rdfs:label "step" ;
+    rdfs:comment "Every step of the plan this intention commits to. `execution:by` names the one it stands at now; `execution:then` orders the rest." .
+
+execution:then a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range execution:Step ;
+    rdfs:label "then" ;
+    rdfs:comment "The step that follows this one in the plan committed to (#510). Written when the plan is handed down whole; the keeper moves `execution:by` along it when a step's expectation is met, taking the next with no search, and stops when one is unmet — the tail is then abandoned with the intention." .
+
+execution:landsAt a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:dateTime ;
+    rdfs:label "lands at" ;
+    rdfs:comment "When the step's change is complete (#639): the taking plus the landing the actor states, or the deadline where the actor cannot say. What holds the world to the step reads this instant; before it, the world says nothing of the step." .
+
+execution:partOf a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range execution:Step ; rdfs:label "part of" ;
+    rdfs:comment "The step this one is a filling of: a member of a method expanded from it. The parent stays in the ledger, off the `execution:then` chain, so a reader can recover the tree the flat walk came from." .
+
+execution:refusedBelow a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:dateTime ; rdfs:label "refused below" ;
+    rdfs:comment "When the level beneath found NO way to keep this step's promise — the promise lapsed with no plan ever adopted for it (#533). What teaches the level above: a candidate of the same action, lever and subject is passed over while a refusal is younger than the patience, so two levels cannot loop on a move the courier cannot carry out; when the patience has passed the move is tried again, since the world may have changed. The same shape as suspicion, one level down." .
+
+execution:predicts a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:string ;
+    rdfs:label "predicts" ;
+    rdfs:comment "The change the search predicted this step makes: what its world holds that the one before did not, and what it lost — the same canonical facts the plan's signature is made of, as one JSON literal of two lists (`adds`, `retracts`). One declaration (#510): the effect the search planned on is the effect the world is held to, and the answering shape is generated from this rather than sized by the actor. A step the search did not make — adopted by an event, a look — predicts nothing, and nothing is expected of it." .
+
+execution:precondition a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:string ;
+    rdfs:label "precondition" ;
+    rdfs:comment "What the step's rules READ in the world it was planned from — the positive patterns of its effect's WHERE and of its availability select, instantiated for this step and stated as the same canonical facts `predicts` is made of, one JSON literal of one list (#550). The step's precondition there: the facts whose presence made the diff what it is. Derived from the rule texts and never authored beside them; an absence a rule requires (FILTER NOT EXISTS) is not here, being the regression's to state (#551). A step the search did not make carries none." .
+#  THE WORD IS THE BUNDLE'S. `knowledge/domain/precondition.md` grounds it and the term spells
+#  it, which is what #580 settled for the predecessor's vocabulary after a page and its term had
+#  disagreed. A ledger written under the old namespace is not migrated into this one: there is
+#  no migration between a layer and its successor, because there was never a volume holding
+#  both (an-agent-is-four-things).
+
+execution:deadlineAt a owl:DatatypeProperty ; rdfs:domain execution:Intention ; rdfs:range xsd:dateTime ;
+    rdfs:label "deadline at" ;
+    rdfs:comment "By when the movement should have shown. The patience serves as the horizon until something derives a better one from the dose and the physics — a recorded seam of #131, not an oversight." .
+
+execution:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
+    rdfs:label "patience seconds" ;
+    rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second impulse to do the same thing is ABSORBED — that is the amortisation, and with a consulted deliberator it is the cost model. Past it, a new adoption supersedes the old, which is recorded as dropped with the reason. An OPINION, so it is each agent's own belief. Read outside the ledger by exactly one thing, which is why it is here and the rest of the watch is not: a want foreseen at an instant holds until that instant plus this." .

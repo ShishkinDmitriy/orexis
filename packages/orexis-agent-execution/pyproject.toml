@@ -1,0 +1,34 @@
+# orexis-agent-execution
+#
+# The execution layer of Agent 2.0, and the successor of `orexis-agent-progression`. What it
+# holds is what an agent DOES with a plan once one has been found: the keeper, the ledger of
+# intentions it writes, and the store, vocabulary and act machinery the layer above reads
+# through. The bottom of the 2.0 stack — nothing of ours is beneath it.
+#
+# The difference from its predecessor is not the contents but the SURFACE. Progression handed
+# every caller a `Store` class that wrapped the engine, cached a view of the catalogue and
+# could not see a write it had not made; here a store is a `pyoxigraph.Store` and everything
+# over it is a function handed that engine. See knowledge/decisions/an-agent-is-four-things.md.
+[project]
+name = "orexis-agent-execution"
+version = "0.1.0"
+description = "The execution layer — the intention ledger and its keeper, over a bare pyoxigraph store"
+requires-python = ">=3.10"
+dependencies = [
+    # `assembly` — the store reads every package's namespaces off the loader, and this
+    # package's manifest contributes its vocabulary by term. The root ships it.
+    "orexis",
+    # The store engine. This is the lowest layer that persists anything.
+    "pyoxigraph>=0.4",
+    # The shape compiler (`violation.py`) walks a shape's RDF with rdflib to write the select
+    # the store runs — a pure function, and the only reason rdflib is here.
+    "rdflib>=7",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["orexis_agent_execution"]
+package-dir = {"orexis_agent_execution" = "."}

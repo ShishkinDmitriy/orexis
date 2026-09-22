@@ -1,0 +1,21 @@
+--- case
++++ expected
+@@ -34,4 +34,18 @@
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
++  graph:scopes a planning:ScopeGraph .
++  graph:scopes a orexis:Graph .
++  graph:scopes a orexis:WorkingGraph .
++  graph:scopes orexis:arrivedBy orexis:Derived .
+ }
++
++
++GRAPH graph:scopes {
++  :fill planning:inScope scopes:1 .
++  :heat planning:inScope scopes:1 .
++  :level planning:inScope scopes:1 .
++  :temperature planning:inScope scopes:1 .
++  :tweak planning:inScope scopes:1 .
++  scopes:1 a planning:Scope .
++}

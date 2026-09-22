@@ -1,0 +1,42 @@
+# a_forecast_holding_later_crosses_whole
+#
+# EVERY PUBLIC GRAPH WHATEVER ITS PERIOD (#619). A pass asks its rules at instants of its own —
+# a step's landing, a want's instant — so a forecast holding hours from now is a graph the
+# PRESENT has not reached and the search still must be able to see.
+#
+# Copied whole, the imagined world's own door filters by the instant it is asked at, exactly as
+# the belief base's does. Copied at now, a search could not see past the present's weather, and
+# would find nothing there rather than an error — which is this function's whole failure mode.
+#
+# So the forecast crosses even though its period starts in three hours, and the diff shows it
+# unchanged. A version of this that filtered by the clock would show it DROPPED.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+GRAPH :world {
+  :tank1 a :Tank .
+}
+
+GRAPH :forecast {
+  :outside :warmth 28 .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :forecast a orexis:Graph .
+  :forecast a orexis:PublicGraph .
+  :forecast dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T18:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T15:00:00+00:00"^^xsd:dateTime ] .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}
