@@ -42,6 +42,13 @@ log = logging.getLogger("derive_wants")
 
 WANT_GRAPH = OREXIS + "WantGraph"
 OREXIS_MET_WHEN = OREXIS + "metWhen"
+#  THE TWO OF A DESIRE'S OWN WORDS THIS FILE SORTS BY. They were matched as string SUFFIXES —
+#  `p.endswith("#about")` at three sites — which is safe only because `_SAID_Q` four hundred
+#  lines away filters to five named predicates, so nothing else can end in those letters. That
+#  coupling was invisible at every site, and a sixth predicate whose local name ended in
+#  `about` or `label` would have been read as one of these, silently.
+OREXIS_ABOUT = OREXIS + "about"
+RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
 
 #  WHAT A DESIRE SAYS, from the graphs of desires and wants asked by class: what it is about,
 #  what it points at, its label and its met-test. The OBJECT'S TYPE matters — a blank node
@@ -263,10 +270,6 @@ def _said(store: ox.Store, desire: str) -> list[tuple[str, object]]:
     return sorted(((str(s["p"].value), s["o"]) for s in solutions), key=lambda pair: (pair[0], str(pair[1])))
 
 
-def _abouts(said) -> tuple:
-    return tuple(sorted(str(o.value) for p, o in said if p.endswith("#about")))
-
-
 def _tail(iri: str) -> str:
     return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
@@ -286,7 +289,14 @@ def name_of(store: ox.Store, desire: str, said, about: tuple, instance: str | No
     its one node (`sh:targetNode`, sensing's and the greenhouse's) keeps its names, and an
     instance the want is already about (a debt, `orexis:about sh:this`) is not said twice.
     """
-    tails = [_tail(a) for a in about] if about and set(about) != set(_abouts(said)) else []
+    #  NARROWER THAN THE DESIRE, or the desire's own name. A want carries what it is about in
+    #  its NAME only where the cluster covers less than the desire does: a desire about one
+    #  property mints `<desire>.pursued` exactly as it always did, and one about soil and air
+    #  broken on soil alone mints a second node. Inlined because this is the one place that
+    #  asks it — it was a helper while `mint` also needed the desire's own abouts, to default a
+    #  want's stored ones, and a want states none now.
+    declared = {str(o.value) for p, o in said if p == OREXIS_ABOUT}
+    tails = [_tail(a) for a in about] if about and set(about) != declared else []
     if instance is not None and instance not in about and not _targets_one_node(store, desire):
         tails.insert(0, _tail(instance))
     return desire + ".pursued" + "".join(f".{t}" for t in tails)
@@ -458,7 +468,7 @@ def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: d
         #  desire's whole where it did not; the avoided state and the estimate are pointed at
         #  as ever, and the met-test is carried, instantiated, below. The label is read here
         #  too and is not a point: a want's is made from it.
-        if p.endswith("#about") or p.endswith("#label"):
+        if p in (OREXIS_ABOUT, RDFS_LABEL):
             continue
         if p == OREXIS_MET_WHEN:
             met_test = str(o.value)
@@ -474,7 +484,7 @@ def mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: d
         shape_lines = narrowed(shapes, met_test, own, instance, about)
         points.append((OREXIS_MET_WHEN, own))
 
-    labels = [str(o.value) for p, o in said if p.endswith("#label")]
+    labels = [str(o.value) for p, o in said if p == RDFS_LABEL]
     label = "pursued: " + (labels[0] if labels else desire.rsplit("#", 1)[-1])
     #  FORESEEN, where the trouble has not begun: for eyes, since the stretch itself is on
     #  the graph and every reader asks the period.
