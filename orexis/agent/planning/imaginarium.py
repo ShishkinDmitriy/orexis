@@ -40,15 +40,13 @@ from urllib.parse import quote
 
 import pyoxigraph as ox
 
-from orexis.agent.ontology import (BELIEF, DESIRE, GRAPH_PREFIX, OREXIS, PREDICTION,
-                                             PUBLIC, RECORD, STATE, STATE_GRAPH, WANT, local_of)
+from orexis.agent.ontology import GRAPH_PREFIX, OREXIS, STATE_GRAPH, local_of
 from .init_imaginarium import init_imaginarium
 from .ontology import PLANNING
-from orexis.agent.store import (Memo, add_quads, catalogue_of, classify,
-                                           clear_graph, construct, contains_graph, copy_graphs,
-                                           dump_nt, entail, get_graph, graphs_of,
-                                           quads, quads_for_pattern, query, query_over, reader,
-                                           remove_quads, render, update)
+from orexis.agent.store import (Memo, add_quads, classify, clear_graph, construct,
+                                           contains_graph, copy_graphs, dump_nt, forget_graph,
+                                           get_graph, graphs_of, quads, quads_for_pattern,
+                                           query, query_over, remove_quads, update)
 
 #  Where a node's readings sit. Under the same root as every other graph, because a graph IRI is
 #  a graph IRI — but in a store nothing else can open, which is what keeps `orexis:PossibleGraph`'s
@@ -101,28 +99,6 @@ class Imaginarium:
         #  the store's (an-agent-is-four-things).
         self.memo = Memo()
         init_imaginarium(beliefs, self.store, scope, now)
-
-    @property
-    def _carried(self) -> frozenset:
-        """WHICH PREDICATES A KEYED NODE CARRIES (#553): a retraction of one of these matches
-        by KEY — every value the node carries under that predicate — never by the exact value
-        the rule named. Within one pass the two agree, since the value the rule read is the
-        value the world holds; across a re-root they do not, because the present is observed
-        and the prediction was not, and an exact retract that misses leaves two readings on one
-        node, which is the failure `orexis:retracts` exists to prevent. One rule, everywhere,
-        is easier to keep true than two.
-
-        ASKED ON FIRST USE and kept, rather than computed while filling the store: it is a
-        function of the public graphs, which nothing writes after `init_imaginarium` has run, and
-        leaving it out of the filling is what let the filling become a function over two
-        stores with nothing of this class in it.
-        """
-        if (found := self.__dict__.get("_carried_memo")) is None:
-            from . import signature
-            found = frozenset(pred for _, carried in
-                              signature.keys_of(reader(self.store, PUBLIC)).values() for pred in carried)
-            self.__dict__["_carried_memo"] = found
-        return found
 
     # --- the doors a rule is asked through ------------------------------------------------
     #
@@ -313,48 +289,18 @@ class Imaginarium:
         written into the step's own fork after the step's effect. Retraction before addition,
         by term, for the reasons `reached` gives."""
         node = ox.NamedNode(name)
-        gone = []
-        for triple in retracted:
-            if triple.predicate.value in self._carried:
-                gone += list(quads_for_pattern(self.store, triple.subject, triple.predicate,
-                                                        None, node))
-            else:
-                gone.append(ox.Quad(triple.subject, triple.predicate, triple.object, node))
-        remove_quads(self.store, gone)
+        remove_quads(self.store, (ox.Quad(t.subject, t.predicate, t.object, node)
+                                  for t in retracted))
         add_quads(self.store, (ox.Quad(t.subject, t.predicate, t.object, node) for t in added))
-
-    def entailed(self, name: str, added, keys) -> list:
-        """The class memberships the vocabulary entails of the KEYED nodes `added` put in
-        world `name` — a predicted reading's bands (#576) — asserted there and handed back
-        as triples for the diff. Asked only about the nodes the step typed with a keyed
-        class, so a fork costs one narrow question."""
-        subjects = {t.subject: t.object.value for t in added
-                    if t.predicate == _RDF_TYPE and isinstance(t.object, ox.NamedNode)
-                    and t.object.value in keys}
-        if not subjects:
-            return []
-        #  BY KEY, not by name: a rule mints its observation as a blank node, and a blank node
-        #  cannot be named to a query — but a keyed node is its key, and the key is on the
-        #  triples the step added. Asked about the whole forked world instead, the question
-        #  cost a second and a half per fork, measured.
-        out = []
-        for node, cls in subjects.items():
-            key_preds = keys[cls][0]
-            key = [(t.predicate, t.object) for t in added
-                   if t.subject == node and t.predicate.value in key_preds]
-            if len(key) != len(key_preds):
-                continue
-            among = " ".join(f"?x <{p.value}> {render(o)} ." for p, o in key)
-            out += [ox.Triple(n, _RDF_TYPE, c) for n, c in entail(self.store, name, among=among)
-                    if n == node]
-        return out
 
     def drop(self, name: str) -> None:
         """Forget one imagined world's graph (#553, #487). The node that named it keeps its
         two lists, and `Planner._graph` re-makes the graph from the nearest kept ancestor when
         a rule next has to run against it. The root's readings are never dropped here."""
         if name != STATE_GRAPH:
-            clear_graph(self.store, name)
+            #  AND WHAT THE CATALOGUE SAID OF IT — its hash, written when the search
+            #  hashed it. A row pointing at a graph that is gone is litter.
+            forget_graph(self.store, name)
 
     def holds(self, name: str) -> bool:
         """Whether this world's graph is materialised now."""

@@ -10,7 +10,7 @@
  }
  
  GRAPH :world {
-@@ -33,26 +33,43 @@
+@@ -33,26 +33,45 @@
  GRAPH :catalogue {
    :catalogue a orexis:CatalogueGraph .
    :catalogue a orexis:Graph .
@@ -49,9 +49,11 @@
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:99b040d90576d1e0e4ce6c1bcba5ebe17d4cc2f6cea93028ae8f4170ff30c64c" .
 +  ground:2026-01-01T130000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T130000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T130000p0000 orexis:hash "sha256:6752637119d81aba95baca304bb8165df075e7217c12e128ca23bac766575174" .
  }
 +
 +

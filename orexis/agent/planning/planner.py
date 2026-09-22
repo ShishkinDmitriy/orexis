@@ -36,7 +36,7 @@ oversight (an-agent-is-four-things):
   worlds visited to reach it.
 
 What is NOT missing is the part any of those could be wrong about: the budget in worlds, the
-cycle detection by signature, and the met-test. A want is judged by the select its own shape
+cycle detection by hash, and the met-test. A want is judged by the select its own shape
 compiles to, which is the one judgment path (a-want-is-judged-by-its-met-test-and-nothing-else).
 
 See knowledge/domain/planner.md.
@@ -57,9 +57,10 @@ from orexis.agent import violation
 from orexis.agent.execution.act import Step
 from orexis.agent.ontology import (DESIRE, FORESEEN, OREXIS, PREDICTION, PUBLIC, RECORD,
                                              STATE, WANT, local_of, picks_graph)
+from orexis.agent.hash_named_graph import hash_named_graph
 from orexis.agent.store import Memo, bindings, graphs_of, query, rdflib_view
 
-from . import effects, relevance, signature
+from . import effects, relevance
 from .derive_wants import derive_wants
 from .forget_wants import withdraw
 from .imaginarium import Imaginarium, plan_graph
@@ -217,17 +218,16 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         reached for some cost, nothing costing more can win, so the frontier is cut there —
         which is what makes the budget a ceiling on a search rather than on an enumeration.
 
-        A CYCLE IS A WORLD ALREADY SEEN, by signature: +3 then −3 returns to the world you
+        A CYCLE IS A WORLD ALREADY SEEN, by hash: +3 then −3 returns to the world you
         started in, and a search that does not notice spends its whole budget going nowhere.
         """
         select = self._met_select(imaginarium, want)
-        keys = self._keys(imaginarium)
         root = _Node(world=self._state, taken=(), cost=0.0, at=at)
         if self._met(imaginarium, select, root, want):
             self._write(imaginarium, want, SATISFIED, (), 0.0)
             return
 
-        seen = {self._signature(imaginarium, root, keys)}
+        seen = {self._hash_of(imaginarium, root)}
         tick = itertools.count()
         frontier: list = [(0.0, next(tick), root)]
         best: "_Node | None" = None
@@ -246,7 +246,7 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
                 if child is None:
                     continue
                 forked += 1
-                fingerprint = self._signature(imaginarium, child, keys)
+                fingerprint = self._hash_of(imaginarium, child)
                 if fingerprint in seen:
                     imaginarium.drop(child.world)
                     continue
@@ -296,21 +296,8 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
                                     memo=imaginarium.memo, **binding) or 0.0
         taken = node.taken + (step,)
         world = imaginarium.reached(node.world, taken, added, retracted)
-        #  AND WHAT THE VOCABULARY ENTAILS OF WHAT THE STEP WROTE (#576): a predicted reading's
-        #  bands, asserted in the forked world so the met-test can read what the reading IS
-        #  rather than walk a subclass path to work it out.
-        imaginarium.entailed(world, added, self._keys(imaginarium))
         return _Node(world=world, taken=taken, cost=node.cost + spent,
                      at=node.at + timedelta(seconds=lands))
-
-    def _keys(self, imaginarium: Imaginarium) -> dict:
-        """WHICH PREDICATES IDENTIFY A NODE, per class a package declared `orexis:keyedBy` —
-        what makes a re-stamped reading the same fact and a new value a different one. Read
-        off public knowledge, which nothing writes once the imaginarium is filled, so it is
-        the pass's to keep."""
-        return imaginarium.memo.get(("keys",), lambda: signature.keys_of(
-            lambda text: query(imaginarium.store, text,
-                               graphs_of(imaginarium.store, PUBLIC))))
 
     def _bind(self, step: Step, node: "_Node", want: str) -> dict:
         """The `$tokens` a rule text of this step's takes: what it is filled with, who is
@@ -398,13 +385,10 @@ SELECT ?a ?for WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" .
         return not bindings(query(imaginarium.store, select,
                                   self._dataset(imaginarium, node)))
 
-    def _signature(self, imaginarium: Imaginarium, node: "_Node", keys: dict) -> frozenset:
-        """This world's canonical facts — what tells two worlds apart, and so what makes a
-        cycle visible. Keyed nodes compare by their key rather than by their blank node's
-        name, which is why a re-stamped reading is the same fact and a new value is not."""
-        return signature.facts(
-            (ox.Triple(q.subject, q.predicate, q.object)
-             for q in imaginarium.quads_for_pattern(graph=node.world)), keys)
+    def _hash_of(self, imaginarium: Imaginarium, node: "_Node") -> str:
+        """This world's hash — what tells two worlds apart, and so what makes a cycle visible.
+        Written onto the world's own catalogue row by the same call that computes it."""
+        return hash_named_graph(imaginarium.store, node.world)
 
     # --- what was found ----------------------------------------------------------------------
 

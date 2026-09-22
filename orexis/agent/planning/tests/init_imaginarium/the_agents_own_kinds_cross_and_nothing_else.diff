@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -15,22 +15,28 @@
+@@ -15,22 +15,29 @@
    :tank1 :level 5 .
  }
  
@@ -28,6 +28,7 @@
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:da8ba91c9d19650e40cb96fca0c102fbbdce44ad33adb0145832d98d0408f7da" .
  }
 +
 +

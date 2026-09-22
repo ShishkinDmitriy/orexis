@@ -47,11 +47,11 @@ import pyoxigraph as ox
 
 from orexis.agent.ontology import (BELIEF, DESIRE, OREXIS, PREDICTION, PUBLIC, RECORD,
                                              STATE, WANT)
-from orexis.agent.store import (Raw, add_quads, bind, catalogue_of, classify,
-                                          construct, graphs_of, quads, query, remove_quads,
-                                          rows, update)
+from orexis.agent.hash_named_graph import hash_named_graph
+from orexis.agent.store import (Raw, add_quads, bind, catalogue_of, classify, construct,
+                                          forget_graph, graphs_of, quads, remove_quads, rows,
+                                          update)
 
-from . import signature
 from .ontology import GROUND_GRAPH
 
 log = logging.getLogger("init_imaginarium")
@@ -146,12 +146,11 @@ def _lay_ground(store: ox.Store, scope: str, now: datetime) -> list[str]:
     Answers with the graphs it made, earliest first. What a READER takes is
     `graphs_of(store, GROUND_GRAPH, at=T)`.
     """
-    keys = signature.keys_of(lambda text: query(store, text, graphs_of(store, PUBLIC)))
     public = graphs_of(store, PUBLIC)
 
     ahead = _foreseen(store)
     here = _present(store, scope, now)
-    made, marks = [here], signature.facts(_triples(store, here), keys)
+    made, marks = [here], hash_named_graph(store, here)
     opened = [now]
     for at, group in _by_instant(ahead):
         if at <= now:
@@ -170,11 +169,11 @@ def _lay_ground(store: ox.Store, scope: str, now: datetime) -> list[str]:
         if not added and not retracted:
             continue                    # a forecast that changes nothing is not a period
         there = _fork(store, here, _name(scope, at), added, retracted)
-        mark = signature.facts(_triples(store, there), keys)
+        mark = hash_named_graph(store, there)
         if mark == marks:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
             #  instant answers what the one before it answered and is not a period of its own.
-            update(store, f"DROP SILENT GRAPH <{there}>")
+            forget_graph(store, there)
             continue
         #  THE ONE BEFORE IT ENDS HERE. A ground holds until the next one begins, which is not
         #  known until it does — so each is classified when its successor arrives, and the last

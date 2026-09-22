@@ -65,6 +65,21 @@ def local_of(iri: str) -> str:
 _GRAPH = "http://example.org/orexis/graph/"
 #  Where every graph lives in the IRI space. Exported because a package that owns graphs of its
 #  own builds their names from here — where a graph SITS is the kernel's, what it HOLDS is not.
+
+#  WHAT A GRAPH HOLDS, as a hash — written on the graph's own catalogue row beside its class
+#  and its period, because it is a fact OF the graph and not one IN it. `hash_named_graph`
+#  computes it; two graphs carrying one value hold the same facts, which is what tells a
+#  search that a world has been seen before.
+#
+#  NOT `signature`, which this project already uses for the other thing: an actuator
+#  co-signs a command, and onboarding mints the keys that make that possible. A digest of
+#  content is a HASH, and a word doing two jobs is how one concept becomes two.
+#
+#  THE VALUE SAYS ITS ALGORITHM — `sha256:<hex>` — so a row is readable without knowing
+#  what wrote it, and so the day the algorithm changes an old row cannot be compared with a
+#  new one by accident.
+HASH = OREXIS + "hash"
+
 GRAPH_PREFIX = _GRAPH
 
 ONTOLOGY_GRAPH = _GRAPH + "ontology"                    # the T-Box as the packages assert it
