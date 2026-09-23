@@ -89,7 +89,7 @@ wrong is the likeliest way to misuse this as a template:
 | sub-sensor | this unit's thermistor is **not** that unit's | `owl:someValuesFrom` | nothing is materialised |
 
 An existential would have to invent an individual per unit — skolemisation, which
-`agent/inference.py` deliberately does not do. So the class says every DHT11 has *some*
+`agent_old/inference.py` deliberately does not do. So the class says every DHT11 has *some*
 temperature sensor, the world names which one it is, and **`shapes.ttl` is what refuses a
 unit that lacks one**. Without the shape the `someValuesFrom` would be a claim no gate tests:
 exactly the entails-nothing-fails-nothing shape this repository keeps finding.
@@ -140,7 +140,7 @@ by entailment, and `dcterms:hasPart` reaches what that conversation produced.
 
 # Do the restriction and the shape work together?
 
-In one direction only, and it is worth knowing which. `agent/validate.py` calls pyshacl with
+In one direction only, and it is worth knowing which. `agent_old/validate.py` calls pyshacl with
 `inference="none"` on the flattened public graphs — so **SHACL understands no OWL whatever**. What
 reaches it is whatever the closure already materialised, as ordinary triples it cannot tell from
 asserted ones.

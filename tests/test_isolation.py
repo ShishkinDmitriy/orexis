@@ -16,7 +16,7 @@ import hashlib
 
 import pytest
 
-from agent import ratified
+from agent_old import ratified
 from onboarding import influx as influx_admin, mqtt as mqtt_admin
 from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
 from onboarding.namespaces import MARKET, MQTT, SENSING

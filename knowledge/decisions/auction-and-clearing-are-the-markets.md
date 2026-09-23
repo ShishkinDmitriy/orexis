@@ -45,7 +45,7 @@ neither imports the other. See [commitment](/domain/commitment.md).
 
 # What did not change
 
-The signing keys are still named `host` and `clearing` (`agent/signing.py`), because the
+The signing keys are still named `host` and `clearing` (`agent_old/signing.py`), because the
 *roles* are the constitution's — [trust-boundary](/decisions/trust-boundary.md) — and a key
 name is not an import. [a-role-needs-something-to-be-a-role-in](/decisions/a-role-needs-something-to-be-a-role-in.md)'s
 line that the clearing validator is "a function; no agent holds it" stays true one directory

@@ -53,7 +53,7 @@ def test_every_shipped_want_falls_inside_one_scope(world, monkeypatch):
     #  WHOEVER THE WORLD AUTHORED, asked of the files rather than listed: a roll-call that
     #  stops matching measures nothing and says nothing, which is the failure this repo's own
     #  conftest exists to catch.
-    from agent import genesis
+    from agent_old import genesis
     monkeypatch.setenv("INFLUX_BUCKET", "test-scopes")
     monkeypatch.setenv("INFLUX_TOKEN", "test-token-scopes")
     agents = sorted(p.stem for p in (genesis.world_dir(world) / "beliefs").glob("*.ttl"))
@@ -63,7 +63,7 @@ def test_every_shipped_want_falls_inside_one_scope(world, monkeypatch):
         #  A PLAIN AGENT, not the wired builder: a world whose agent holds no bus has no
         #  transport module for the builder's conveniences to find, and nothing here speaks
         #  to a wire — only to `considering` and the planner's view.
-        from agent import runtime
+        from agent_old import runtime
         st = genesis_store(world=world)
         genesis.classify_kernel_graphs(st, agent_id)
         agent = runtime.Agent(agent_id, st=st)

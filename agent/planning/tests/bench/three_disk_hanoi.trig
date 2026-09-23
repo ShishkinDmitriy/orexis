@@ -1,0 +1,125 @@
+# three_disk_hanoi
+#
+# Three disks on peg A, every disk wanted home on peg C. Seven moves solve it, and a uniform-
+# cost search with no heuristic visits most of the puzzle's twenty-seven states to prove
+# nothing shorter exists: around eighty candidates weighed, past the default budget, so the
+# bench sizes the Planner itself.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
+
+GRAPH :ontology {
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :disk_1 a hanoi:Disk .
+  :disk_1 hanoi:size 1 .
+  :disk_2 a hanoi:Disk .
+  :disk_2 hanoi:size 2 .
+  :disk_3 a hanoi:Disk .
+  :disk_3 hanoi:size 3 .
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  hanoi:PegA a hanoi:Peg .
+  hanoi:PegB a hanoi:Peg .
+  hanoi:PegC a hanoi:Peg .
+}
+
+# ONE LEVER: move a disk that has nothing on it onto a peg holding no smaller disk. The texts
+# declare `hanoi:` themselves — this tree loads no hanoi ontology, so the store's dictionary
+# has never heard the word.
+GRAPH :actions {
+  hanoi:Move a orexis:Action .
+  hanoi:Move orexis:available """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      SELECT ?disk ?onto WHERE {
+          ?disk hanoi:on ?below .
+          FILTER NOT EXISTS { ?x hanoi:on ?disk }
+          ?disk hanoi:size ?ds .
+          ?onto a hanoi:Peg .
+          FILTER NOT EXISTS { ?disk (hanoi:on)+ ?onto . }
+          FILTER NOT EXISTS {
+              ?s (hanoi:on)+ ?onto .
+              ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+      }""" .
+  hanoi:Move orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" .
+  hanoi:Move orexis:retracts """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      DELETE { GRAPH $state { $disk hanoi:on ?old } }
+      WHERE  { GRAPH $state { $disk hanoi:on ?old } }""" .
+  hanoi:Move orexis:takes hanoi:disk .
+  hanoi:Move orexis:takes hanoi:onto .
+  hanoi:Move sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      CONSTRUCT { $disk hanoi:on ?dest } WHERE {
+          OPTIONAL { ?t (hanoi:on)+ $onto . FILTER NOT EXISTS { ?z hanoi:on ?t } }
+          BIND(COALESCE(?t, $onto) AS ?dest)
+      }""" .
+  hanoi:disk a orexis:Parameter .
+  hanoi:onto a orexis:Parameter .
+}
+
+GRAPH :desires {
+  :keeper orexis:holds :keeper.every_disk_home .
+  :keeper.every_disk_home a orexis:Desire .
+  :keeper.every_disk_home orexis:metWhen hanoi:solved .
+  :keeper.every_disk_home rdfs:label "every disk home on peg C" .
+  :keeper.every_disk_home orexis:estimates hanoi:disksAstray .
+  hanoi:disksAstray rdfs:label "disks not yet home" .
+  hanoi:disksAstray sh:select """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
+          ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p .
+          ?p a hanoi:Peg .
+          FILTER(?p != hanoi:PegC)
+      }""" .
+  hanoi:solved a sh:NodeShape .
+  hanoi:solved sh:property [ sh:hasValue hanoi:PegC ; sh:path [ sh:oneOrMorePath hanoi:on ] ] .
+  hanoi:solved sh:targetSubjectsOf hanoi:on .
+}
+
+GRAPH :sensed {
+  :disk_1 hanoi:on :disk_2 .
+  :disk_2 hanoi:on :disk_3 .
+  :disk_3 hanoi:on hanoi:PegA .
+}
+
+GRAPH :scopes {
+  :keeper.scope.1 a planning:Scope .
+  hanoi:Move planning:inScope :keeper.scope.1 .
+  hanoi:on planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

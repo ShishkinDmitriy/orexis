@@ -80,7 +80,7 @@ to.
 # Why the package is the one that can say
 
 This argument already won once, one step in. `Sensor`, `Actuator` and `Market` used to be loaded
-by `agent/world.py`, and moved out to each package's own `wiring.py` for a reason that file still
+by `agent_old/world.py`, and moved out to each package's own `wiring.py` for a reason that file still
 records — the kernel had come to know what a probe, a valve and a venue are, expressed in SPARQL
 where the import contracts could not see it
 ([self-is-bdi-and-wiring-is-the-packages](/decisions/self-is-bdi-and-wiring-is-the-packages.md)).

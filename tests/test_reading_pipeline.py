@@ -15,7 +15,7 @@ See knowledge/decisions/bytes-become-a-quantity-in-stages.md and issue #26.
 
 import pytest
 
-from agent import genesis
+from agent_old import genesis
 
 from assembly import loader
 from orexis_capability_sensing.scaling import scaling_for

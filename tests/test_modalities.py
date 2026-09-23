@@ -8,7 +8,7 @@ honest so the next one is found by a gate rather than by a design sitting.
 
 import pytest
 
-from agent import genesis
+from agent_old import genesis
 
 from assembly import loader
 from orexis_agent_progression.ontology import OREXIS, picks_graph

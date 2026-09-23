@@ -159,7 +159,7 @@ QUDT as one of the vocabularies to reach for, so it is the standard companion to
 use here.
 
 **Borrowed, not imported**, exactly as [settlement-speaks-rea](settlement-speaks-rea.md) decided for
-ValueFlows: the IRIs are referenced, nothing of QUDT is loaded, and `agent/inference.py`'s
+ValueFlows: the IRIs are referenced, nothing of QUDT is loaded, and `agent_old/inference.py`'s
 hand-materialised closure gains no axioms to cover. `unit:` reaches a query from whichever ontology declares it, and the loader refuses a second
 ontology binding the label to another IRI — one that could rebind `unit:` could quietly redirect
 every unit in the society. (It sat in a kernel prefix list in `agent/store.py` when this was
@@ -260,7 +260,7 @@ premise-then-conclusion discipline, and the pointer staying a function.
   property and not its unit, so the series store still cannot say what `21.4` is. Deliberate: #51
   changed the shape of that data once already, and doing it twice in consecutive changes would be
   two migrations where one would do.
-- **The codec is only on the READ path.** `agent/runtime.py` serialises every outbound message
+- **The codec is only on the READ path.** `agent_old/runtime.py` serialises every outbound message
   with `json.dumps` — a cadence, an offer, a claim — so `encode()` is implemented, tested and
   unreached. A society whose boards spoke CBOR would need that path routed through a codec too,
   and it is a wider change than this one because the same publish serves the market. The

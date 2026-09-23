@@ -19,7 +19,7 @@ three worlds conforming, grants byte-identical, compose and firmware unchanged.
 
 **It would have silenced every deployed agent on its next restart.**
 
-`agent/genesis.py` writes an agent's beliefs once and never again, and
+`agent_old/genesis.py` writes an agent's beliefs once and never again, and
 [where-the-belief-base-lives](where-the-belief-base-lives.md) made that deliberate — *"write an
 agent's beliefs only if it has none, and require an explicit act to reset an agent that already
 exists."* That is what makes a belief the agent's rather than the sovereign's. It also means a

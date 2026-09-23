@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from orexis_agent_deliberation.want import Want
-from agent.module import Module
+from agent_old.module import Module
 from orexis_agent_progression.ontology import OREXIS, REPREDICT, obligations_graph
 from orexis_agent_progression.store import bind, bindings
 from .terms import (AMOUNT_L, DISCHARGED_AT, FOR_CLAIM, LAPSED_AT, LAPSES_AT, NS, OWED_AT, OWED_FROM,

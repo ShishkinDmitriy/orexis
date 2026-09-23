@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from agent.genesis import world_dir
+from agent_old.genesis import world_dir
 from onboarding.wokwi import render
 
 
@@ -62,14 +62,14 @@ def test_the_led_polarity_is_derived_from_the_wire(doc, tmp_path, monkeypatch):
     # And it must actually FLIP, or it is a constant wearing a derivation's clothes.
     import shutil
 
-    from agent import genesis
+    from agent_old import genesis
     src = genesis.world_dir("sensing")
     dst = tmp_path / "anode"
     shutil.copytree(src, dst)
     hw = dst / "hardware.ttl"
     hw.write_text(hw.read_text().replace("mc:joins :led_common , :pin_gnd",
                                          "mc:joins :led_common , :pin_3v3"))
-    monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst)
+    monkeypatch.setattr("agent_old.ratified.world_dir", lambda w: dst)
     monkeypatch.setattr("onboarding.wokwi.world_dir", lambda w: dst)
 
     from onboarding.wokwi import render as render_again
@@ -117,14 +117,14 @@ def test_a_leg_with_no_wokwi_name_is_reported_rather_than_guessed(tmp_path, monk
     import re
     import shutil
 
-    from agent import genesis
+    from agent_old import genesis
     from onboarding.wokwi import render as render_again
 
     dst = tmp_path / "unnamed"
     shutil.copytree(genesis.world_dir("sensing"), dst)
     hw = dst / "hardware.ttl"
     hw.write_text(re.sub(r' ;\s*wokwi:name "34"', "", hw.read_text()))
-    monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst)
+    monkeypatch.setattr("agent_old.ratified.world_dir", lambda w: dst)
     monkeypatch.setattr("onboarding.wokwi.world_dir", lambda w: dst)
 
     with caplog.at_level(logging.WARNING):
@@ -168,7 +168,7 @@ def test_an_uncoloured_wire_falls_back_to_what_it_carries(tmp_path, monkeypatch)
     import re
     import shutil
 
-    from agent import genesis
+    from agent_old import genesis
     from onboarding.wokwi import render as render_again
 
     dst = tmp_path / "uncoloured"
@@ -176,7 +176,7 @@ def test_an_uncoloured_wire_falls_back_to_what_it_carries(tmp_path, monkeypatch)
     hw = dst / "hardware.ttl"
     hw.write_text(re.sub(r' ; mc:colour "\w+"', "", hw.read_text()))
     # Both modules imported world_dir BY NAME, so patching it on genesis reaches neither.
-    monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst)
+    monkeypatch.setattr("agent_old.ratified.world_dir", lambda w: dst)
     monkeypatch.setattr("onboarding.wokwi.world_dir", lambda w: dst)
 
     wires = {frozenset((a, b)): c for a, b, c, _ in render_again("x")["connections"]}
@@ -210,12 +210,12 @@ def test_a_dragged_part_keeps_where_you_put_it(tmp_path, monkeypatch):
     import json
     import shutil
 
-    from agent import genesis
+    from agent_old import genesis
     from onboarding.wokwi import generate, render as render_again
 
     dst = tmp_path / "dragged"
     shutil.copytree(genesis.world_dir("sensing"), dst)
-    monkeypatch.setattr("agent.ratified.world_dir", lambda w: dst)
+    monkeypatch.setattr("agent_old.ratified.world_dir", lambda w: dst)
     monkeypatch.setattr("onboarding.wokwi.world_dir", lambda w: dst)
 
     generate("x")
@@ -241,7 +241,7 @@ def drafted():
     """Our own diagram, read back. A round trip is the sharpest test of an inverse mapping."""
     from pathlib import Path
 
-    from agent.genesis import world_dir
+    from agent_old.genesis import world_dir
     from onboarding.wokwi import draft
 
     return draft("sensing", world_dir("sensing") / "wokwi" / "diagram.json")
@@ -291,7 +291,7 @@ def test_an_import_refuses_to_overwrite_a_world(tmp_path, monkeypatch):
     and a world, and inventing one silently is how the world stops being the source."""
     import shutil
 
-    from agent import genesis
+    from agent_old import genesis
     from onboarding.wokwi import import_diagram
 
     dst = tmp_path / "already"

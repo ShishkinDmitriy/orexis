@@ -595,9 +595,9 @@ def test_a_host_that_states_uniform_price_runs_it_and_says_so(make, tmp_path, mo
 
     from onboarding.keygen import create_keypair
 
-    from agent import genesis
+    from agent_old import genesis
     from orexis_capability_market import UNIFORM_PRICE
-    from agent.genesis import agent_id_of
+    from agent_old.genesis import agent_id_of
     from orexis_agent_progression.store import Store
 
     world = tmp_path / "world"

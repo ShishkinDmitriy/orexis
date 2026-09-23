@@ -41,7 +41,7 @@ def vocabulary():
     g = rdflib.Graph()
     files = sorted(glob.glob("packages/*/actions.ttl") + glob.glob("packages/*/ontology.ttl"))
     assert files, "the glob stopped matching — no package vocabulary was read"
-    for f in files + ["agent/ontology.ttl"]:
+    for f in files + ["agent_old/ontology.ttl"]:
         g.parse(f, format="turtle")
     return g
 

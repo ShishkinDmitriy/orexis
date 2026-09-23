@@ -10,15 +10,15 @@ import pathlib
 import pytest
 import rdflib
 
-from agent import genesis, inference
+from agent_old import genesis, inference
 
 from assembly import loader
 from orexis_agent_progression.ontology import (ONTOLOGY_GRAPH, WORLD_DERIVED_GRAPH, WORLD_GRAPH,
                             picks_graph)
-from agent.validate import conforms as validate_conforms
+from agent_old.validate import conforms as validate_conforms
 from orexis_agent_progression.store import Store
 
-from agent.genesis import agent_id_of
+from agent_old.genesis import agent_id_of
 
 from conftest import GENESIS_DIR, WORLDS_ROOT, genesis_store
 from orexis_agent_progression.ontology import PUBLIC

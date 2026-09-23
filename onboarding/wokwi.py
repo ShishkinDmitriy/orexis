@@ -32,11 +32,11 @@ import json
 import logging
 import re
 
-from agent import ratified
-from agent.config import REPO_ROOT
+from agent_old import ratified
+from agent_old.config import REPO_ROOT
 from pathlib import Path
 
-from agent.genesis import world_dir, worlds
+from agent_old.genesis import world_dir, worlds
 from orexis_agent_progression.ontology import OREXIS, ONTOLOGY_GRAPH, WORLD_GRAPH
 from .namespaces import DHT11, ESP32, I2C, MC, ONEWIRE, PROBE, RGBLED
 

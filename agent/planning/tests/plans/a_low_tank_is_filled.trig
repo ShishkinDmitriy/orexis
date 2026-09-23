@@ -1,0 +1,111 @@
+# a_low_tank_is_filled
+#
+# One tank below its floor, one lever that raises a level by five, and a floor two doses away.
+# The search should chain two Fills — which is the whole claim: a met-test the first dose does
+# not satisfy is reached by repeating the step, and nothing declares the chain.
+#
+# WHAT THE DIFF SHOWS is the imaginarium the pass leaves, which is the search's whole state:
+# the ground it stood in, weighed for the want and expanded; each world it forked, with what
+# the path spent, when it is, where it came in the order the pass made worlds, and what it
+# holds by hash; the candidate that reached each world, as the edge from the world it was
+# taken in; the weighing of each world for the want — met there or not, expanded or not;
+# and the plan, one step per candidate on the ancestry of the world that met the want.
+#
+# THE TEXTS DECLARE THEIR OWN PREFIX. A query may use only what `store.NAMESPACES` declares,
+# and `:` here is the case's own word, which the store has never heard of — so each text says
+# `PREFIX : <…>` above itself, as SPARQL says a query declares one, and the engine takes it
+# beside the store's dictionary. A test case speaking its own words is exactly the case
+# AGENTS.md allows this for; spelling every IRI in full is the alternative, and it made a
+# three-line CONSTRUCT unreadable.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
+
+GRAPH :ontology {
+  :level a rdf:Property .
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :tank1 a :Tank .
+}
+
+# ONE LEVER: fill a tank that is below its floor, raising the level by five. The precondition
+# names the world it reads through no GRAPH clause at all — the runner hands it its graphs.
+GRAPH :actions {
+  :fill a orexis:Action .
+  :fill orexis:available """PREFIX : <http://example.org/test#>
+      SELECT ?tank WHERE {
+      ?tank a :Tank ; :level ?l .
+      FILTER(?l < 10) }""" .
+  :fill orexis:costs """PREFIX : <http://example.org/test#>
+      SELECT (1 AS ?cost) WHERE { }""" .
+  :fill orexis:retracts """PREFIX : <http://example.org/test#>
+      DELETE { GRAPH $state { $tank :level ?l } }
+      WHERE  { GRAPH $state { $tank :level ?l } }""" .
+  :fill orexis:takes :tank .
+  :fill sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?tank :level ?next } WHERE {
+      $tank :level ?l .
+      BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" .
+  :tank a orexis:Parameter .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:targetClass :Tank .
+  :keeper orexis:holds :keeper.in_range .
+  :keeper.in_range a orexis:Desire .
+  :keeper.in_range orexis:about :level .
+  :keeper.in_range orexis:metWhen :in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+}
+
+GRAPH :sensed {
+  :tank1 :level 0 .
+}
+
+GRAPH :scopes {
+  :fill planning:inScope :keeper.scope.1 .
+  :keeper.scope.1 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

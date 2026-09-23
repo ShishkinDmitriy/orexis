@@ -25,9 +25,9 @@ from __future__ import annotations
 import logging
 import sys
 
-from agent import genesis
+from agent_old import genesis
 from orexis_agent_progression.store import Store, bindings
-from agent.validate import conforms, graph_from
+from agent_old.validate import conforms, graph_from
 from orexis_agent_progression.ontology import PUBLIC
 
 log = logging.getLogger("validate")
@@ -162,7 +162,7 @@ def deliberable(st, desires: dict) -> bool:
     See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md.
     """
     from assembly import loader
-    from agent.world import load_self
+    from agent_old.world import load_self
 
     from orexis_agent_progression.ontology import picks_graph
     from orexis_agent_progression.store import bindings

@@ -59,7 +59,7 @@ So the split went, and the intent became two things that fail when violated:
   `onboarding`, and no capability or transport may import `onboarding` at all.
 
 **Both were verified by breaking them**, which is the only way to know a guard works: adding
-`import onboarding.mqtt` to `agent/runtime.py` turns the contract BROKEN, and adding
+`import onboarding.mqtt` to `agent_old/runtime.py` turns the contract BROKEN, and adding
 `COPY onboarding/` fails two tests. A guard never seen to fail is a guard nobody has tested.
 
 The image is two directories and neither is onboarding. Measured on the built image at the time:

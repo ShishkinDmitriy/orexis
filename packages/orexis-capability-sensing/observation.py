@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from agent import config
+from agent_old import config
 from orexis_agent_progression.ontology import SEND
 
 #  Reporting's hook, spelled as every cross-package reference is: a reading for the record is

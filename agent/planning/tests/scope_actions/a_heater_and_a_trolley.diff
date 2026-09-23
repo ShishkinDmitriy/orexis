@@ -1,0 +1,21 @@
+--- case
++++ expected
+@@ -33,4 +33,18 @@
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
++  graph:scopes a orexis:Graph .
++  graph:scopes a orexis:WorkingGraph .
++  graph:scopes a planning:ScopeGraph .
++  graph:scopes orexis:arrivedBy orexis:Derived .
+ }
++
++
++GRAPH graph:scopes {
++  :heat planning:inScope scopes:2 .
++  :move planning:inScope scopes:1 .
++  :standsIn planning:inScope scopes:1 .
++  scopes:1 a planning:Scope .
++  scopes:2 a planning:Scope .
++  sosa:hasSimpleResult planning:inScope scopes:2 .
++}

@@ -1,0 +1,86 @@
+# two_stretches_in_one_scope_are_two_grounds
+#
+# The same world `one_scope_two_stretches_is_two_wants` derives from, seen from the other end:
+# tank1 in range now, its level dropping at 12:30 and its temperature rising at 13:00, both
+# predicates in ONE scope. That case asserts the two troubles are two WANTS; this one asserts
+# they are three GROUNDS, and that the third holds both changes.
+#
+# THE DIFFS ACCUMULATE, which is the claim worth a case. Each ground is forked from the one
+# BEFORE it, not from the present, so the 13:00 ground carries the dip that began at 12:30 as
+# well as the heat that begins now. Forked from the present each time, the last ground would
+# hold a risen temperature beside a level that had never dropped — a world that is neither
+# what the agent believes nor what it foresees.
+#
+# THREE PERIODS, NOT TWO, because each prediction changes something: neither hashes the same
+# as the ground before it. `a_forecast_that_says_nothing_new_is_no_period` is the other half —
+# a forecast restating the present is no period at all.
+#
+# NOTHING IS IN ONE SCOPE HERE AS FAR AS THE FILL IS CONCERNED, and that is the point of
+# saying it: a scope names WHICH imaginarium this is and does not cut what crosses into it.
+# Narrowing the fill per scope was built, measured at 10.4 ms against 0.6 on a pass costing
+# over a second, and refused — the lean set fails by returning an EMPTY RESULT rather than an
+# error, and fewer graphs is the same move under another name.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+GRAPH :ontology {
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :tank1 a :Tank .
+}
+
+GRAPH :sensed {
+  :tank1 :level 20 .
+  :tank1 :temperature 20 .
+}
+
+#  THE LEVEL DROPS AT HALF PAST — and takes the standing reading with it.
+GRAPH :dip {
+  :tank1 :level 5 .
+}
+
+#  THE TEMPERATURE RISES AN HOUR IN. It says nothing about the level, so the level the dip
+#  left must survive into this ground: that is what forking from the one before does.
+GRAPH :heat {
+  :tank1 :temperature 40 .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :dip a orexis:Graph .
+  :dip a orexis:PredictionGraph .
+  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+  :dip orexis:beliefsOf :keeper .
+  :dip orexis:retracts """PREFIX : <http://example.org/test#>
+      DELETE { GRAPH $state { :tank1 :level ?l } }
+      WHERE  { GRAPH $state { :tank1 :level ?l } }""" .
+  :heat a orexis:Graph .
+  :heat a orexis:PredictionGraph .
+  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+  :heat orexis:beliefsOf :keeper .
+  :heat orexis:retracts """PREFIX : <http://example.org/test#>
+      DELETE { GRAPH $state { :tank1 :temperature ?t } }
+      WHERE  { GRAPH $state { :tank1 :temperature ?t } }""" .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

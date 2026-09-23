@@ -42,7 +42,7 @@ hangs off the role instead, which is
 
 **`mc:carries` → `sosa:hosts`.** [#79](a-board-is-a-platform.md) declared it a subproperty, which
 was honest at the time. Its `rdfs:domain mc:Microcontroller` and `rdfs:range mc:Peripheral` were
-never enforced — neither is in `agent/inference.py`'s closure and no shape read them — so
+never enforced — neither is in `agent_old/inference.py`'s closure and no shape read them — so
 board-to-part was a comment. **The narrowing survives as `orexis:ABoardCarriesPartsShape` and is
 checked for the first time**: a board hosting a non-peripheral is refused now and was accepted
 before. A term was given up and a rule was gained.

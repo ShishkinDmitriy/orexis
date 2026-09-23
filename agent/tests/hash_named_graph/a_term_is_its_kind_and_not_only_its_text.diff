@@ -1,0 +1,24 @@
+--- case
++++ expected
+@@ -15,14 +15,21 @@
+   :catalogue a orexis:CatalogueGraph .
+   :catalogue a orexis:Graph .
+   :de a orexis:Graph .
++  :de orexis:hash "sha256:31c3b831e705936b2f4fb21e8afcddce90d02f66f03575926b25551bbe54a38a" .
+   :en a orexis:Graph .
++  :en orexis:hash "sha256:ab174135861e49c0ed07bc07218da0703e51316bdd24bce998a2352dec6ba33f" .
+   :iri a orexis:Graph .
++  :iri orexis:hash "sha256:08231008e244fe0e489aa8951b3ba7302d91519997c51fc3efb2df7b9aacb622" .
+   :number a orexis:Graph .
++  :number orexis:hash "sha256:23acf0186ea44c1b7de80353cc16d66a98484edd1deaf9d610fa92db660c4e86" .
+   :one a orexis:Graph .
++  :one orexis:hash "sha256:20fce1d445b751095bcdab463c301c2647602e5ddfc1fc0967e734d76e9bd526" .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
++  :ontology orexis:hash "sha256:da6a67b23d29f938392d8a6a3169f3fc88dc84e3ae323d95311b61e03b48ed19" .
+   :text a orexis:Graph .
++  :text orexis:hash "sha256:cab4f6b86a4c2b3faf3b0809a4391ca502f841f992724730d620b186b8f6231d" .
+ }
+ 
+ 

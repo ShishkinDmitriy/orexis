@@ -35,9 +35,9 @@ import argparse
 import logging
 from pathlib import Path
 
-from agent import ratified
-from agent.config import REPO_ROOT
-from agent.genesis import world_dir, worlds
+from agent_old import ratified
+from agent_old.config import REPO_ROOT
+from agent_old.genesis import world_dir, worlds
 from orexis_agent_progression.ontology import OREXIS, ONTOLOGY_GRAPH, WORLD_GRAPH
 from .namespaces import BME280, DHT11, ESP32, I2C, MC, MQTT, ONEWIRE, PROBE, RGBLED, SENSING, SOSA
 

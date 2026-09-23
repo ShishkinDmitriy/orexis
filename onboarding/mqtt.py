@@ -51,12 +51,12 @@ import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from agent import ratified
+from agent_old import ratified
 from orexis_capability_reporting import sovereign
 
 from . import certs
-from agent.config import REPO_ROOT
-from agent.genesis import world_dir, worlds
+from agent_old.config import REPO_ROOT
+from agent_old.genesis import world_dir, worlds
 from orexis_capability_market.terms import NS as MARKET
 from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
 from .namespaces import ACTUATION, MQTT, SENSING, SIM

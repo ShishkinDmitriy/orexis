@@ -1,0 +1,29 @@
+--- case
++++ expected
+@@ -65,11 +65,26 @@
+   ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+   ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
+   ground:2026-01-01T120000p0000 orexis:hash "sha256:6049dbc777f47880d902c748f455b6e2f0c0df6ee3e7cd098544d26edb928bc8" .
++  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:open true .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
+   ground:2026-01-01T130000p0000 a planning:GroundGraph .
+   ground:2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   ground:2026-01-01T130000p0000 orexis:arrivedBy orexis:Derived .
+   ground:2026-01-01T130000p0000 orexis:hash "sha256:668afcf475ee2319100f725c49c2b6daf3ec7f5131fb575c8a3765daaea6bcb0" .
+   ground:2026-01-01T130000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T130000p0000.for.keeper.in_range a planning:Weighing .
++  ground:2026-01-01T130000p0000.for.keeper.in_range planning:for :keeper.in_range .
++  ground:2026-01-01T130000p0000.for.keeper.in_range planning:met true .
++  ground:2026-01-01T130000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T130000p0000 .
+   pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 a orexis:Graph .
+   pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 a orexis:WantGraph .
+   pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .

@@ -30,7 +30,7 @@ import uuid
 import pytest
 
 from onboarding import influx as influx_admin
-from agent.config import env
+from agent_old.config import env
 
 influxdb_client = pytest.importorskip("influxdb_client")
 

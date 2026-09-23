@@ -1,0 +1,77 @@
+# a_want_no_lever_points_at
+#
+# One tank below its floor and NO lever. The pass must still write the want's plan — an empty
+# one, saying NO CANDIDATE: no lever this agent holds points at this want. EQUIP ME, and not the
+# same finding as EXHAUSTED, where levers exist and no bounded sequence of them lands inside the
+# region; a planner reporting the two alike would send somebody to buy a pump when the problem
+# is the dose.
+#
+# THE SCOPE GRAPH STANDS AND IS EMPTY, and so is the actions graph: `scope_actions` writes the
+# scope graph whatever it finds, so a store with nothing to do is scoped and empty — and the
+# desire in it still has to be judged. Neither graph holds a quad, so neither is a block here;
+# their catalogue rows are what a reader asks. The one imaginarium is the unscoped one.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
+
+GRAPH :ontology {
+  :level a rdf:Property .
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :tank1 a :Tank .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:targetClass :Tank .
+  :keeper orexis:holds :keeper.in_range .
+  :keeper.in_range a orexis:Desire .
+  :keeper.in_range orexis:about :level .
+  :keeper.in_range orexis:metWhen :in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+}
+
+GRAPH :sensed {
+  :tank1 :level 0 .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

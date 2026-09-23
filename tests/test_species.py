@@ -17,11 +17,11 @@ import tempfile
 import pytest
 import rdflib
 
-from agent import genesis, inference
+from agent_old import genesis, inference
 from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import Store, bindings
 from orexis_agent_progression.store import PREFIXES
-from agent.validate import conforms
+from agent_old.validate import conforms
 from orexis_agent_progression.ontology import PUBLIC
 
 ZZ = "http://example.org/orexis/zamioculcas#ZamioculcasZamiifolia"

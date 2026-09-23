@@ -1,0 +1,50 @@
+--- case
++++ expected
+@@ -85,4 +85,47 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:18e27f3261ea397629f6f46a1095250f10a75875fa02ae4acef95673f8cc46c6" .
++  ground:2026-01-01T120000p0000.for.keeper.warm_enough a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:for :keeper.warm_enough .
++  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:violation [ orexis:about water:AirTemperature ; orexis:violationIs orexis:Below ; planning:constraint 1 ; planning:instance :fern ] .
++  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:weighs ground:2026-01-01T120000p0000 .
++  pursued:2026-01-01T120000p0000--open a orexis:Graph .
++  pursued:2026-01-01T120000p0000--open a orexis:WantGraph .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :cold_reading a sensing:BelowRegion .
++  :cold_reading a sosa:Observation .
++  :cold_reading sosa:hasFeatureOfInterest :air_of_cold_room .
++  :cold_reading sosa:hasSimpleResult 11 .
++  :cold_reading sosa:observedProperty water:AirTemperature .
++  :warm_reading a sensing:InRegion .
++  :warm_reading a sosa:Observation .
++  :warm_reading sosa:hasFeatureOfInterest :air_of_warm_room .
++  :warm_reading sosa:hasSimpleResult 21 .
++  :warm_reading sosa:observedProperty water:AirTemperature .
++}
++
++GRAPH pursued:2026-01-01T120000p0000--open {
++  :keeper orexis:holds :keeper.warm_enough.pursued.fern .
++  :keeper.warm_enough.pursued.fern a orexis:Want .
++  :keeper.warm_enough.pursued.fern orexis:metWhen :keeper.warm_enough.pursued.fern.met .
++  :keeper.warm_enough.pursued.fern orexis:state orexis:Recognized .
++  :keeper.warm_enough.pursued.fern orexis:violationIs orexis:Below .
++  :keeper.warm_enough.pursued.fern prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.warm_enough.pursued.fern prov:wasDerivedFrom :keeper.warm_enough .
++  :keeper.warm_enough.pursued.fern rdfs:label "pursued: every plant stands where the air is inside the range it wants" .
++  :keeper.warm_enough.pursued.fern.met a sh:NodeShape .
++  :keeper.warm_enough.pursued.fern.met sh:property [ orexis:about water:AirTemperature ; orexis:violationIs orexis:Above ; sh:message "the air where this plant stands reads above the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
++  :keeper.warm_enough.pursued.fern.met sh:property [ orexis:about water:AirTemperature ; orexis:violationIs orexis:Below ; sh:message "the air where this plant stands reads below the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
++  :keeper.warm_enough.pursued.fern.met sh:targetNode :fern .
++}

@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     #  Annotation-only (#455): named in hook signatures, constructed nowhere at import.
     from orexis_agent_deliberation.want import Want
 from .driver import driver_for
-from agent.module import Module, contributes
+from agent_old.module import Module, contributes
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS, PREDICTED, REPREDICT, WITNESS
 from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
 from orexis_agent_progression.ontology import OREXIS

@@ -101,7 +101,7 @@ agent, visible in one assertion.
 
 The split is the same test applied twice. **Counting could not be done differently**: every agent
 counts the same figures, and `Observations` counts into them before any module exists. So
-`agent/metrics.py` keeps the mind's own account — `uptime_s`, `belief_triples` — and every package its own, merged by reporting ([metrics-are-an-aspect](/decisions/metrics-are-an-aspect.md)); this said `mqtt_connected`,
+`agent_old/metrics.py` keeps the mind's own account — `uptime_s`, `belief_triples` — and every package its own, merged by reporting ([metrics-are-an-aspect](/decisions/metrics-are-an-aspect.md)); this said `mqtt_connected`,
 `mqtt_reconnects`, the write failures, `world_version`, reading-age per sensor.
 
 **Where the account goes could differ**, and that is the module: a credential, a writer, a clock,

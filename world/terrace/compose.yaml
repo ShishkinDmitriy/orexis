@@ -106,7 +106,7 @@ services:
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
       - ../../assembly:/app/assembly:ro
-      - ../../agent:/app/agent:ro
+      - ../../agent_old:/app/agent_old:ro
       - ../../packages:/app/packages:ro
 
 volumes:

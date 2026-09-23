@@ -1,0 +1,47 @@
+# a_blank_node_is_its_content
+#
+# WHY THE CANONICAL FORM EXISTS AT ALL. A rule that mints with `BNODE()` mints a different
+# label every run, so two paths reaching one place would hash differently and every world
+# would look novel — cycle detection would be decorative, which is #258.
+#
+# :minted and :again say the same thing through blank nodes written under different labels,
+# and hash alike. :deeper nests one inside another to hold the recursive walk; :cyclic points
+# a blank node back at itself, which the walk closes rather than following for ever.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+
+GRAPH :ontology {
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :minted {
+  :tank :reading [ :at :probe ; :says 5 ] .
+}
+GRAPH :deeper {
+  :tank :reading [ :at :probe ; :within [ :from 1 ; :to 9 ] ] .
+}
+GRAPH :cyclic {
+  :tank :reading _:b1 .
+  _:b1 :at :probe .
+  _:b1 :beside _:b1 .
+}
+
+GRAPH :catalogue {
+  :again a orexis:Graph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :cyclic a orexis:Graph .
+  :deeper a orexis:Graph .
+  :minted a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+}
+
+
+GRAPH :again {
+  :tank :reading [ :at :probe ; :says 5 ] .
+}

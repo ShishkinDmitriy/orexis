@@ -19,7 +19,7 @@ from orexis_agent_progression.ontology import term
 from orexis_agent_deliberation.beliefs import BeliefError, Picks
 from orexis_capability_reporting.beliefs import REPORTING_PICKS, ReportingBeliefs
 from orexis_capability_reporting.terms import term as reporting_term
-from agent.metrics import Metrics
+from agent_old.metrics import Metrics
 from orexis_agent_progression.upkeep import tree_bytes
 from conftest import sensing_of
 

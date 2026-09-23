@@ -34,7 +34,7 @@ from datetime import datetime, timezone
 import signal
 
 
-from agent import config, genesis
+from agent_old import config, genesis
 
 from assembly import loader
 from orexis_agent_deliberation.beliefs import BeliefError, Beliefs

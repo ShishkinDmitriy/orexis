@@ -86,7 +86,7 @@ test, which now reads the entailment instead.
 
 # The closure gained a fifth rule, and only this one
 
-`agent/inference.py` materialises what both engines must agree on, because pyoxigraph infers
+`agent_old/inference.py` materialises what both engines must agree on, because pyoxigraph infers
 nothing. Rule 5 is the first OWL construct in it:
 
 ```sparql
@@ -176,7 +176,7 @@ arriving from a different direction. A renamed term empties a scan exactly as a 
 # Consequences
 
 - **A datasheet fact is stated once.** The society's copy is a projection of an entailment rather
-  than a parallel assertion, and `agent/inference.py` is where the class-to-instance step lives
+  than a parallel assertion, and `agent_old/inference.py` is where the class-to-instance step lives
   instead of in a test's hand-walk.
 - **The guard reads both sides with one query**, because the wiring side no longer needs a hop the
   society side does not.

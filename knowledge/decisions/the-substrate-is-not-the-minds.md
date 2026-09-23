@@ -15,11 +15,11 @@ timestamp: 2026-08-26T23:00:00Z
 
 # What was true before
 
-`agent/ontology.ttl` declared `orexis:Device` ("a physical edge node"), `orexis:simulatedBy` ("no such
+`agent_old/ontology.ttl` declared `orexis:Device` ("a physical edge node"), `orexis:simulatedBy` ("no such
 device exists; a process stands in for it"), `orexis:DeviceModel` and eight `ag:model*` properties —
 initial value, dose effect, loses-per-day, daily swing, tick seconds, floor and ceiling — plus
 three world-level scenario knobs (`ag:timeScale`, `ag:strayDoseMeanDays`, `ag:rainTopic`); and
-`agent/shapes.ttl` held the three shapes that check them. Everything else non-BDI had already
+`agent_old/shapes.ttl` held the three shapes that check them. Everything else non-BDI had already
 left the kernel; this was the last of it, and the ratchet's last non-migration entry lived in
 one of those shapes.
 

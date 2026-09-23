@@ -31,7 +31,7 @@ import logging
 import re
 from pathlib import Path
 
-from agent import config, inference, provenance, vocabulary
+from agent_old import config, inference, provenance, vocabulary
 
 from assembly import loader
 from .config import REPO_ROOT

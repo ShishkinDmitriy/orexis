@@ -1,0 +1,18 @@
+--- case
++++ expected
+@@ -29,4 +29,15 @@
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
++  graph:scopes a orexis:Graph .
++  graph:scopes a orexis:WorkingGraph .
++  graph:scopes a planning:ScopeGraph .
++  graph:scopes orexis:arrivedBy orexis:Derived .
+ }
++
++
++GRAPH graph:scopes {
++  :fill planning:inScope scopes:1 .
++  :level planning:inScope scopes:1 .
++  scopes:1 a planning:Scope .
++}

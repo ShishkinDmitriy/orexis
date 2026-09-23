@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from agent import genesis
+from agent_old import genesis
 from orexis_agent_deliberation.beliefs import Beliefs
 from orexis_agent_deliberation.desires import Desires
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, ONTOLOGY_GRAPH
@@ -91,7 +91,7 @@ def test_an_action_states_both_texts_or_neither(monkeypatch, caplog):
     dropped it. With the gate holding the rule, the runtime has nothing left to flag —
     `Plan.partial`, the trace's `blind` and the planner's skip are gone."""
     from orexis_agent_deliberation.steps import find_steps
-    from agent.world import load_self
+    from agent_old.world import load_self
     from orexis_agent_progression.ontology import picks_graph
 
     st = build("simulation", monkeypatch)
@@ -160,7 +160,7 @@ def test_load_self_refuses_rather_than_picking_one(monkeypatch):
     Rows arrive one per (agent x capability), so the failure this replaces was silent: the
     first node's uri and subject, holding BOTH agents' capabilities.
     """
-    from agent.world import WorldError, load_self
+    from agent_old.world import WorldError, load_self
 
     st = genesis_store(world="simulation")
     me = load_self(st.reader(PUBLIC), "fern")

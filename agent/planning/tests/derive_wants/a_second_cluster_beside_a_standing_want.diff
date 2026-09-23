@@ -1,0 +1,54 @@
+--- case
++++ expected
+@@ -79,9 +79,51 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:877fc25bf3e9cae4ad82af4d09f4cc2a9d00f928847c07e58923bcede08524c8" .
++  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :temperature ; planning:constraint 1 ; planning:instance :tank1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:for :keeper.in_range.pursued.tank1.level .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:open true .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:violation [ planning:constraint 0 ; planning:instance :tank1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:weighs ground:2026-01-01T120000p0000 .
++  pursued:2026-01-01T120000p0000--open a orexis:Graph .
++  pursued:2026-01-01T120000p0000--open a orexis:WantGraph .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
+   pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
+   pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
+   pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
+   pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
+   pursued:keeper.in_range.pursued.tank1.level orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :tank1 :level 5 .
++  :tank1 :temperature 40 .
++  :tank2 :level 20 .
++  :tank2 :temperature 20 .
++}
++
++GRAPH pursued:2026-01-01T120000p0000--open {
++  :keeper orexis:holds :keeper.in_range.pursued.tank1.temperature .
++  :keeper.in_range.pursued.tank1.temperature a orexis:Want .
++  :keeper.in_range.pursued.tank1.temperature orexis:metWhen :keeper.in_range.pursued.tank1.temperature.met .
++  :keeper.in_range.pursued.tank1.temperature orexis:state orexis:Recognized .
++  :keeper.in_range.pursued.tank1.temperature prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.in_range.pursued.tank1.temperature prov:wasDerivedFrom :keeper.in_range .
++  :keeper.in_range.pursued.tank1.temperature rdfs:label "pursued: every tank in range" .
++  :keeper.in_range.pursued.tank1.temperature.met a sh:NodeShape .
++  :keeper.in_range.pursued.tank1.temperature.met sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
++  :keeper.in_range.pursued.tank1.temperature.met sh:targetNode :tank1 .
++}

@@ -21,8 +21,8 @@ import pytest
 
 from assembly import loader
 
-from agent import ratified
-from agent.config import REPO_ROOT
+from agent_old import ratified
+from agent_old.config import REPO_ROOT
 from orexis_agent_progression.ontology import ONTOLOGY_GRAPH
 from onboarding.namespaces import MC
 # Found by looking, like everything else: a part that has a Wokwi drawing keeps it beside its

@@ -1,0 +1,171 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix : <http://example.org/orexis/planning#> .
+
+<http://example.org/orexis/planning> a owl:Ontology ;
+    rdfs:label "Orexis planning" ;
+    rdfs:comment """The top layer's own words (#529): what a pass FINDS — a plan, and the want it was found for — what the derivations read and write, and the scopes that partition follows. What every layer and every package writes in stays `orexis:`; a term one layer reads and writes is that layer's, and its prefix says so.
+
+FEWER WORDS THAN THE PREDECESSOR'S FIFTY-FOUR, and never counted here. What is gone is everything a pass RECORDED about itself for a reader — the candidates it weighed, what each world would reach, how long it took, what it chose and why — and the remembered plan hung on a want. Both were read by code this layer no longer has, and a term nobody reads is annotation: they come back with their readers and not before.""" .
+
+
+
+
+planning:DerivationGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph , orexis:BeliefGraph ; rdfs:label "Derivation graph" ;
+    rdfs:comment "What every loaded package's derivation rules READ and WRITE, one `planning:Derivation` per INSERT, written whole at every refresh of public knowledge. The scope partition joins predicates wherever one action OR one derivation touches both, and the actions are in the store while the rules are texts on disk — so the edges the rules make are put in the store beside them, and `scope_actions` is a function of the store alone. PUBLIC, because the loaded rule set is the same for everyone reading this store, exactly as the actions graph is; computed, so it is cleared and rewritten rather than added to. A BELIEF graph, as the vocabulary graph is and for the same reason: what a loaded rule reads and writes is a fact about this build, believed, and a public graph that named no modality would leave a reader guessing at its content." .
+planning:Derivation a owl:Class ; rdfs:label "Derivation" ;
+    rdfs:comment "One INSERT of one loaded derivation rule, as the edge it makes: the predicates its WHERE reads and the predicates its template writes. Named for the rule file it came from and its place in it, so the same rules write the same text. A side whose predicates cannot be read — a variable predicate, a text the parser refuses — says `planning:Anything` and joins every predicate there is, since a rule that might touch anything cannot be proven not to." .
+planning:reads a owl:ObjectProperty ; rdfs:domain planning:Derivation ; rdfs:label "reads" ;
+    rdfs:comment "A predicate this derivation's WHERE reads, or `planning:Anything` where the text does not say." .
+planning:writes a owl:ObjectProperty ; rdfs:domain planning:Derivation ; rdfs:label "writes" ;
+    rdfs:comment "A predicate this derivation's template writes, or `planning:Anything` where the text does not say." .
+planning:Anything a owl:Thing ; rdfs:label "Anything" ;
+    rdfs:comment "Said where a side's predicates cannot be read off the text: the derivation might read or write any predicate, so it joins them all. `touches`' own ANYTHING, in the store." .
+
+##  What the loaded derivations read and write — computed at every refresh of public knowledge
+##  from the rule files, and read by `scope_actions`, which names no file.
+<http://example.org/orexis/graph/derivations> a planning:DerivationGraph ;
+    orexis:arrivedBy orexis:Derived .
+
+planning:PlanGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Plan graph" ;
+    rdfs:comment """ONE WANT'S PLAN — what a pass decided, as a graph of its own, in the imaginarium beside the worlds it decided among. One per want and replaced whole, which is the first reason it is a graph rather than a corner of the pass graph: replacing a plan is clearing this, where before it was enumerating the names a plan's steps MIGHT have taken and removing those, a step count the writer had to guess at.
+
+The second reason is the crossing. A plan goes to the execution layer to be carried out, and a graph is what `prepare_ground` showed the shape of: one function over two stores, copying what the other side needs. Copying a plan is then copying a graph, rather than walking `execution:then` and hoping the walk reaches everything a step carries.
+
+A WORKING graph, and memory: the imaginarium is not on disk. A plan is a pass's result and not yet a commitment; what survives is the intention the execution layer mints when it copies one in (`the executor's adoption`).""" .
+
+planning:PossibleGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Possible graph" ;
+    rdfs:comment """ONE NODE OF A SEARCH — what the world comes to if the steps reaching it were taken — in the imaginarium, beside the ground it was forked from and the other worlds the pass imagined. Never mutated: siblings are alive at the same time, so branching rather than backtracking is the hard case, and a world is a VALUE written once when the node is created.
+
+WHERE IT CAME FROM IS IN THE STORE, AS AN EDGE. It says which candidate reached it (`planning:by`), and the candidate says which world it was taken in (`planning:from`) — so a candidate CONNECTS two possible worlds, and the tree a pass walked is read by walking `planning:by/planning:from`. It was in the graph's NAME — a path of action segments — which is a reader depending on a spelling, and a graph's name is for eyes.
+
+WHAT IS TRUE OF IT WHOEVER ASKS is written on its row: what the path to it spent (`planning:spent`), when it is (`planning:atInstant`), where it came in the order the pass made worlds (`planning:minted`) and what it holds (`orexis:hash`). What a want's search worked out about it — met here, on the frontier, opened — is a WEIGHING's, one per want, because one imaginarium holds the worlds of every want in a scope and a world has as many askers as there are wants.
+
+A WORKING graph, and memory: an imaginarium is not on disk, and a possible world is what a pass considered rather than anything the agent believes.""" .
+
+planning:by a owl:ObjectProperty ; rdfs:domain planning:PossibleGraph ; rdfs:range planning:Candidate ;
+    rdfs:label "by" ;
+    rdfs:comment "The candidate whose effect made this world out of the one it was taken in — the other half of the edge whose first half is the candidate's `planning:from`, so it is followable from either end. A ground says nothing here: what makes a ground is a prediction nobody takes, and its own period says when." .
+
+planning:from a owl:ObjectProperty ; rdfs:domain planning:Candidate ; rdfs:range orexis:Graph ;
+    rdfs:label "from" ;
+    rdfs:comment "The world this candidate would be taken IN — a possible world, or the ground a search stands in. THE CANDIDATE'S, not the world's: a candidate the search weighed and passed over reaches no world at all, so it is named for the world it leaves, and an edge between two worlds is the candidate that joins them." .
+
+planning:spent a owl:DatatypeProperty ; rdfs:domain planning:PossibleGraph ; rdfs:range xsd:decimal ;
+    rdfs:label "spent" ;
+    rdfs:comment "What the path to this world cost — each step's `orexis:costs` summed, in the unit the search spends. Its own word rather than the action's, which is a SPARQL text to evaluate where this is a number the path accumulated. The ground spent nothing and says nothing; a reader reads its absence as nought. THE FRONTIER IS ORDERED BY IT, which is what lets the open list be a query rather than a heap." .
+
+planning:atInstant a owl:DatatypeProperty ; rdfs:domain planning:PossibleGraph ; rdfs:range xsd:dateTime ;
+    rdfs:label "at instant" ;
+    rdfs:comment "WHEN this world is: the instant the search stood at plus every landing on the path to it. WRITTEN AND NOT DERIVED, which is forced — this engine binds nothing for duration arithmetic, so no query can add a path's seconds to a clock. A ground says when it holds by its period instead, and a reader takes whichever the row has." .
+
+planning:minted a owl:DatatypeProperty ; rdfs:domain planning:PossibleGraph ; rdfs:range xsd:integer ;
+    rdfs:label "minted" ;
+    rdfs:comment "Where this world came in the order the pass made them. THE TIE-BREAK, and not decoration: two worlds of equal cost are opened in the order they were made, which is what makes a uniform-cost search go layer by layer rather than dive alphabetically into whichever action sorts first. It was the heap's counter." .
+
+planning:Weighing a owl:Class ; rdfs:label "Weighing" ;
+    rdfs:comment "WHAT A PASS WORKED OUT ABOUT ONE WORLD FOR ONE WANT — OR FOR ONE DESIRE IN ONE GROUND, which is the same judgment at the other grain: a ground is a world, a desire is what a want is an instance of, and the met-test's report in that world is what both read. The search reads whether the report has any row; the derivation reads the rows, since a desire is universal and its violations are the instances in trouble, and reads them across the grounds, since a ground holds over a period and successive grounds give a violation its stretch. One node for both, written by one function, because two would be the same shape twice — the relationship between the two, reified because it is true of neither alone: a world's own facts hold whoever asks, but whether a want is met there, whether the search may still open it and whether it has, are true of the world AND the want together. One imaginarium holds the worlds of every want in a scope, so a world has as many of these as there are wants asking about it, and writing them on the world would have been a world pretending to have one asker. A CANDIDATE the search passed over is weighed the same way, so a want whose search was offered nothing can be told apart from one whose levers all led somewhere already seen. THE FRONTIER IS THESE ROWS: the search state a pass needs is here and nowhere in Python, which is what lets a pass be continued." .
+
+planning:weighs a owl:ObjectProperty ; rdfs:domain planning:Weighing ;
+    rdfs:label "weighs" ;
+    rdfs:comment "What this weighing is about — a possible WORLD, the GROUND the search stands in, or a CANDIDATE the search passed over. Said in one direction, from the weighing, exactly as `planning:for` is." .
+
+planning:violation a owl:ObjectProperty ; rdfs:domain planning:Weighing ;
+    rdfs:label "violation" ;
+    rdfs:comment "One row of the met-test's report in the world weighed: which instance (`planning:instance`), which constraint of the shape (`planning:constraint`, the constraint's index within it), what that constraint is about (`orexis:about`) and which way it broke (`orexis:violationIs`), where the shape's block says either. A weighing with none, and `planning:met true`, is a world the want or desire is met in; one with none and NO `planning:met` is a question never put — the met-test could not be compiled or run — which is not the same as met." .
+planning:instance a owl:ObjectProperty ; rdfs:label "instance" ;
+    rdfs:comment "The focus node a violation is about — the instance in trouble, which is the grain a want is minted at." .
+planning:constraint a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "constraint" ;
+    rdfs:comment "Which constraint of the met-test a violation is of, as the compiler numbers them within the shape — with the instance, one WAY of failing, which is what a want's stretch is read for across the grounds." .
+
+planning:remaining a owl:DatatypeProperty ; rdfs:domain planning:Weighing ; rdfs:range xsd:decimal ;
+    rdfs:label "remaining" ;
+    rdfs:comment "What the want's `orexis:estimates` reads IN this world — how far it still is, in the unit the search spends, never overstated. With the world's `planning:spent` it is the A* key the frontier is ordered by, and the sum is what the cheapest achiever bounds: a world whose spent and remaining reach what the achiever spent is not opened. A want declaring no estimate reads nought, and the search is uniform-cost. The predecessor's `deliberation:remaining`, the word kept." .
+
+planning:met a owl:DatatypeProperty ; rdfs:domain planning:Weighing ; rdfs:range xsd:boolean ;
+    rdfs:label "met" ;
+    rdfs:comment "Whether the want's met-test passes in the world weighed. The verdict of one judgment, written where it was decided so that nobody judges the same world for the same want twice — a pass resumed here, or a pass for another want sharing the world. ABSENT MEANS THE QUESTION WAS NEVER PUT, which is not the same as no: a candidate passed over has no world to judge." .
+
+planning:open a owl:DatatypeProperty ; rdfs:domain planning:Weighing ; rdfs:range xsd:boolean ;
+    rdfs:label "open" ;
+    rdfs:comment "Whether the world weighed is on the frontier — somewhere this want's search may still open. THE OPEN LIST IS THESE ROWS, ordered by what the world spent and then by the order it was minted; an iteration needs nothing carried over from the last one but the name the query hands back. TAKEN BACK when the world is opened, and never written for a world that met the want or a candidate that reached nothing: a settled world is not on the frontier, so its absence is said rather than deduced from `planning:expanded`." .
+
+planning:expanded a owl:DatatypeProperty ; rdfs:domain planning:Weighing ; rdfs:range xsd:boolean ;
+    rdfs:label "expanded" ;
+    rdfs:comment "Whether this want's search has opened the world weighed — its candidates asked for and every one of them weighed. Written when the last is, so a world the budget cut short stays open and a resumed pass takes up the candidates it had not reached, which it tells by the weighings that stand." .
+
+planning:repeats a owl:ObjectProperty ; rdfs:domain planning:Weighing ; rdfs:range orexis:Graph ;
+    rdfs:label "repeats" ;
+    rdfs:comment "Said of a weighing of a CANDIDATE that reached no new world: the world its fork came to holds exactly what this one already held, by hash — its parent's, where the effect changed nothing, or an earlier world's, where the path went round. A cycle is a world already seen, and this is where the search says it saw one." .
+
+planning:Candidate a owl:Class ; rdfs:label "Candidate" ;
+    rdfs:comment """A MOVE A WORLD ADMITS — one action and one filling of it, off the action's own `orexis:available`, whose rows ARE the fillings. A search walks possible worlds and forks on a candidate at a time; the ones it PICKS become the plan's steps, and that is the whole difference between the two words. They were one Python class until the fields that would have told them apart turned out to be set by nothing.
+
+ONE PER POSSIBLE WORLD, written beside the world's row when the fork is made, so the chain a search walked is in the store rather than in a tuple a node happened to carry. `extract_plan` reads it back.""" .
+
+planning:fills a owl:ObjectProperty ; rdfs:range orexis:Action ;
+    rdfs:label "fills" ;
+    rdfs:comment """The action template a candidate — or the step it became — is a filling of. NO DOMAIN, because it is said of both: a step IS a candidate that was picked, and what it fills does not change in the picking.
+
+IT IS PLANNING'S WORD, on a node the intentions also hold. Execution reads a step's membership (`execution:partOf`) and its order (`execution:then`) and nothing else of it, so what it FILLS is the search's fact about it and carries the search's prefix. It was `execution:fills` beside this one, two spellings of one relationship separated only by whether the search had picked yet — which is the synonym the dictionary refuses, and it was written by planning and read by no line of execution.""" .
+
+planning:of a owl:ObjectProperty ; rdfs:range planning:Candidate ;
+    rdfs:label "of" ;
+    rdfs:comment "The candidate a step was minted from — the one link between what the search walked and what the plan holds. Execution does not read it: a commitment is what an agent is doing, not how it was found. It crosses with the rest because what a lower layer does not read it also does not drop." .
+
+planning:GroundGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Ground graph" ;
+    rdfs:comment """WHAT THE AGENT'S OWN KNOWLEDGE COMES TO OVER ONE PERIOD — the present, or what a prediction made of the period before it — materialised in an imaginarium as one graph, classified with the stretch it holds over. Which ground holds at an instant is then the door's question and no reader is handed a list.
+
+IT EXISTS BECAUSE A PREDICTION SUPERSEDES. A prediction is a graph holding the reading it foretells, and a door handed a reader every graph holding at an instant — so a met-test asked at a foreseen instant saw the reading AND the prediction of it, and a shape holds over every value, so the stale one still violated. A tank low now with a forecast refilling it read as unmet for ever. Nothing was wrong with the forecast; there was no place in the pass where it REPLACED anything. A prediction's graph is what it ADDS, its catalogue row says when it applies and carries `orexis:retracts` — a `DELETE … WHERE` naming `GRAPH $state`, run against a fork of the period before, and what the prediction holds is added after it. The adds are concrete because a forecast is; only the retraction is a pattern, because what is standing in that place is not something a forecast can name in advance.
+
+NEIGHBOURS THAT HASH THE SAME ARE ONE. Each ground carries the same hash a possible world does, and where two periods reach the same facts the second is not a period: nothing a met-test can read moved, so nothing it could answer differs. That is what bounds the judging — a desire is asked once per distinct ground rather than once per boundary.
+
+A WORKING graph, and memory: an imaginarium is not on disk, and a ground is what a pass stands on rather than anything the agent believes.""" .
+
+planning:ScopeGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Scope graph" ;
+    rdfs:comment "THE STORE's scopes — nobody's, and one graph rather than one per agent, since every agent reading one store would compute the same partition from the same rows — written whole by `scope_actions` from the actions the store holds and the derivations loaded: which predicates some one action or derivation reads or writes together, as `planning:Scope` nodes, and which scope each predicate and each action is in. The partition is a function of the actions loaded, which do not change while the agent runs; it was recomputed in Python on every derivation and is data now, so `derive_wants` reads it and clusters the results by it. A working graph: a conclusion, replaced whole per run, carried into no possible world and read beside no state, since none of it is a fact about the world a shape is written against." .
+##  The store's scopes — written whole by `scope_actions` from the actions the store holds and
+##  the derivations loaded, and read by `derive_wants`. Declared here because it is named: one
+##  graph for the store, belonging to no agent, so there is no id to build it from.
+<http://example.org/orexis/graph/scopes> a planning:ScopeGraph ;
+    orexis:arrivedBy orexis:Derived .
+
+planning:Scope a owl:Class ; rdfs:label "Scope" ;
+    rdfs:comment "A set of predicates joined wherever one action or one derivation reads or writes both, and separate where nothing does — a bulkhead in the vocabulary (knowledge/domain/scope.md). Two wants in different scopes cannot contradict, because no action of one writes a fact the other reads. Named for the graph it is written in and its place in the partition, largest first." .
+planning:inScope a owl:ObjectProperty ; rdfs:range planning:Scope ; rdfs:label "in scope" ;
+    rdfs:comment "The scope a predicate is in, and the scope an action's reads and writes lie in — by construction one, since an action touching two would have joined them. No domain: said of a property and of an action alike. An action stating no effect is in no scope, as no world admits it; one whose effect cannot be read is in the one scope that joins everything." .
+
+planning:Plan a owl:Class ; rdfs:label "Plan" ;
+    rdfs:comment "WHAT ONE PASS FOUND, written down: the steps it would take, in order, and how long they come to. It lived only as a Python object handed to the keeper and was then discarded, so nothing outside the process could see what had been decided. One per want, named for it and replaced whole, in the imaginarium, which dies with the pass because a plan about a world that has moved is stale. ITS STEPS ARE HELD IN THE WORDS OF WHOEVER READS THEM: `execution:Step`, chained by `execution:then` and held together by `execution:partOf`, because execution reads membership and order — the same shape an intention's steps have, so committing to a plan is copying what is already there rather than being handed a Python object across a layer. What each step FILLS and which candidate it came from are the SEARCH's facts about it and carry the search's prefix, and execution reads neither." .
+
+planning:outcome a owl:ObjectProperty ; rdfs:domain planning:Plan ; rdfs:range planning:Outcome ;
+    rdfs:label "outcome" ;
+    rdfs:comment "Why the pass ended, which is the whole reason a plan with no steps is written down at all: an empty plan is an ANSWER and this says which of the three it is. It was a field on a Python object the pass returned and then dropped, so the finding a want most needed — that nothing this agent holds points at it — was the one thing nothing outside the process could read." .
+
+planning:Outcome a owl:Class ; rdfs:label "Outcome" ;
+    rdfs:comment "How one pass over one want ended. Three, and the predecessor had seven: `improved` and `not better` were a GRADED answer, which nothing measures since a want is judged by its met-test and nothing scores a world by degree; `refused` was the legality check, which is the gates'; `remembered` was a plan adopted without a search. Each comes back with the thing that could return it." .
+
+planning:Satisfied a planning:Outcome ; rdfs:label "satisfied" ;
+    rdfs:comment "A world was reached where the want's met-test passes. The steps are the way there, and there are none where the want was already met at the root." .
+
+planning:NoCandidate a planning:Outcome ; rdfs:label "no candidate" ;
+    rdfs:comment "No lever this agent holds points at this want: the search was offered no step at all. EQUIP ME, and it is not the same finding as Exhausted — a planner reporting the two alike would send somebody to buy a pump when the problem is the dose." .
+
+planning:Exhausted a planning:Outcome ; rdfs:label "exhausted" ;
+    rdfs:comment "Levers exist and no bounded sequence of them lands inside the region: the budget in worlds ran out, or the frontier emptied. MY DOSES ARE TOO COARSE, or my region is too tight for them." .
+
+planning:costs a owl:DatatypeProperty ; rdfs:domain planning:Plan ; rdfs:range xsd:decimal ;
+    rdfs:label "costs" ;
+    rdfs:comment "What the pass SCORED this plan to spend, summed from each step's own `orexis:costs` in the world that step is taken in. A finding of the search and not a promise: what a step actually costs is the world's to say when it is taken. The unit is the domain's and the kernel interprets no literal." .
+
+planning:for a owl:ObjectProperty ;
+    rdfs:label "for" ;
+    rdfs:comment "What this was worked out FOR: the want a plan was found for, or the want or DESIRE a weighing was made for. NO RANGE, because a desire is not a want and both are weighed — a desire in every ground, a want in every world its search reaches — and NO DOMAIN, because a PLAN and a WEIGHING both say it. It was `forWant`, and the name lied the moment a desire was weighed. A plan's is the one thing about a plan execution has no word for, because the intentions keep commitments and not the reasoning that produced them; and it was declared twice with a domain each in the predecessor, which in RDFS is the intersection of the two: a property nothing could legally carry. A plan is named for its want and replaced whole, so a second pass over the same want leaves one plan and not two — and a reader that holds a want asks for its plan by this rather than by the name, which is a convention." .
+

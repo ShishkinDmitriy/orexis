@@ -193,7 +193,7 @@ def test_a_generated_stand_in_knows_what_a_litre_is_worth():
     import json
 
     from onboarding.compose import _SIMULATED_Q, _values
-    from agent import ratified
+    from agent_old import ratified
 
     rows = ratified.rows(ratified.dataset("simulation"), _SIMULATED_Q)
     fern_rows = [r for r in rows if r["id"] == "moisture_sensor_fern"]
@@ -212,7 +212,7 @@ def test_a_generated_stand_in_runs_at_the_worlds_pace():
     simulated day — the per-tick drift is gone from the spec entirely."""
     import json
 
-    from agent import ratified
+    from agent_old import ratified
     from onboarding.compose import _SIMULATED_Q, _values
 
     rows = ratified.rows(ratified.dataset("simulation"), _SIMULATED_Q)
@@ -233,7 +233,7 @@ def test_the_pot_is_the_only_statement_of_its_own_drying():
     the property that dries), so the thermometer on the same wire gains no drying."""
     import json
 
-    from agent import ratified
+    from agent_old import ratified
     from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
     from onboarding.compose import _SIMULATED_Q, _values
 
@@ -259,7 +259,7 @@ def test_a_model_stating_its_own_drying_overrides_the_pot():
     deliberate second opinion and wins over the subject's physics."""
     import json
 
-    from agent import ratified
+    from agent_old import ratified
     from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
     from onboarding.compose import _SIMULATED_Q, _values
 
@@ -358,7 +358,7 @@ def test_the_barrel_stands_in_on_both_sides_of_the_wire():
     while no subject was ever on both sides at once, and the barrel is."""
     import json
 
-    from agent import ratified
+    from agent_old import ratified
     from onboarding.compose import _SIMULATED_Q, _values, _simulator
 
     rows = [r for r in ratified.rows(ratified.dataset("simulation"), _SIMULATED_Q)

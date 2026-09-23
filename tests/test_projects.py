@@ -34,7 +34,7 @@ PACKAGES_ROOT = REPO_ROOT / "packages"
 
 #  The trees this repository's own distribution ships. An import of one is a dependency on
 #  `orexis` and not on anything third-party.
-OWN_TREES = {"assembly", "agent", "onboarding"}
+OWN_TREES = {"assembly", "agent", "agent_old", "onboarding"}
 ROOT_DIST = "orexis"
 
 #  THE LAYERS, IN ORDER, spelled ONCE. The kernel is three packages in the one tree — the
@@ -117,7 +117,7 @@ def sources(root: Path) -> list[Path]:
     #  pytest, above all — is the test runner's and not the distribution's to declare.
     return sorted(p for p in root.rglob("*.py")
                   if "__pycache__" not in p.parts and "tests" not in p.parts
-                  and not p.name.startswith("test_"))
+                  and not p.name.startswith("test_") and p.name != "conftest.py")
 
 
 def needed(root: Path, own_import_root: str | None) -> set[str]:

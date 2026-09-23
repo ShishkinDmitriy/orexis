@@ -28,10 +28,10 @@ from pathlib import Path
 import rdflib
 from pyshacl import validate as shacl_validate
 
-from agent import genesis
+from agent_old import genesis
 from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import Store
-from agent.validate import _shapes_and_vocabulary, conforms, graph_from
+from agent_old.validate import _shapes_and_vocabulary, conforms, graph_from
 
 from conftest import WORLDS_ROOT
 from orexis_agent_progression.ontology import PUBLIC

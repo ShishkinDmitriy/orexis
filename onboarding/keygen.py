@@ -32,7 +32,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
-from agent import genesis, ratified, signing
+from agent_old import genesis, ratified, signing
 
 
 def create_keypair(name: str) -> None:

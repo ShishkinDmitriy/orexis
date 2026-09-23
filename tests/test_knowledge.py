@@ -193,7 +193,7 @@ def test_an_index_entry_is_a_claim_not_an_abstract():
 # Prose names paths constantly, and a rename sees none of them. Only backticked things that look
 # like a repo path are checked: a leading known top-level directory, or a `packages/...` segment.
 # A trailing `/` is a directory, `<name>` is a placeholder and matches any single segment.
-_TOP = ("agent/", "packages/", "onboarding/", "tests/", "infra/", "tools/", "firmware/", "world/")
+_TOP = ("agent/", "agent_old/", "packages/", "onboarding/", "tests/", "infra/", "tools/", "firmware/", "world/")
 _PATH = re.compile(r"`((?:" + "|".join(re.escape(t) for t in _TOP) + r")[A-Za-z0-9_./<>*-]*)`")
 
 
@@ -866,7 +866,7 @@ def test_every_declared_hook_has_an_asker():
     """
     import re
 
-    sources = [REPO_ROOT / "agent" / "ontology.ttl"]
+    sources = [REPO_ROOT / "agent_old" / "ontology.ttl"]
     sources += sorted((REPO_ROOT / "packages").glob("*/ontology.ttl"))
     declared = []
     for f in sources:

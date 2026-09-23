@@ -81,7 +81,7 @@ def test_queries_use_only_declared_prefixes(path):
         )
 
 
-_SHAPES = sorted(loader.REPO_ROOT.glob("agent/shapes.ttl")) + \
+_SHAPES = sorted(loader.REPO_ROOT.glob("agent_old/shapes.ttl")) + \
     sorted(loader.REPO_ROOT.glob("packages/*/shapes.ttl"))
 _FULL_IRI = re.compile(r"<(http://[^>\s]+)>")
 

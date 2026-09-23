@@ -234,7 +234,7 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
     """
     import shutil
 
-    from agent import genesis
+    from agent_old import genesis
 
     src = genesis.world_dir("sensing")
     dst = tmp_path / "two-clocks"
@@ -290,7 +290,7 @@ def _two_sensor_world(tmp_path, observes="water:SoilMoisture"):
 
 def _agent_on(world_path, monkeypatch):
     """Built the way an agent builds itself, from a world that is not one of the ratified three."""
-    from agent import genesis
+    from agent_old import genesis
     from orexis_agent_progression.store import Store
 
     st = Store()

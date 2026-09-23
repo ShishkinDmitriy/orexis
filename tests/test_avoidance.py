@@ -28,7 +28,7 @@ def _avoiding_world(tmp_path, both=False, shaped=False):
     both: a select whose rows mean entered, or a SHAPE describing the state — targeted on
     the marker node, conforming exactly when the marker stands — which the kernel compiles
     into that select. The want, and its polarity, are the same either way."""
-    from agent import genesis
+    from agent_old import genesis
 
     dst = tmp_path / "avoiding"
     shutil.copytree(genesis.world_dir("loner"), dst)
@@ -55,7 +55,7 @@ def _avoiding_world(tmp_path, both=False, shaped=False):
 
 
 def _gardener(tmp_path, monkeypatch, world=None, shaped=False):
-    from agent import genesis
+    from agent_old import genesis
     from orexis_agent_progression.store import Store
 
     dst = world or _avoiding_world(tmp_path, shaped=shaped)
@@ -185,7 +185,7 @@ def test_a_want_saying_met_and_unmet_at_once_is_refused(tmp_path, monkeypatch):
     surface at 3am as a planner and a row answering differently."""
     import rdflib
 
-    from agent.validate import conforms
+    from agent_old.validate import conforms
 
     data = rdflib.Graph()
     data.parse(data=f'''
@@ -245,7 +245,7 @@ toy:{name} a orexis:Action ;
 
 def _lawful_gardener(tmp_path, monkeypatch, toys_text):
     from assembly import loader
-    from agent import genesis
+    from agent_old import genesis
     from orexis_agent_progression.store import Store
 
     toys = tmp_path / "actions.ttl"

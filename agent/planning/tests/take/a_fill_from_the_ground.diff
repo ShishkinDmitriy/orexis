@@ -1,0 +1,25 @@
+--- case
++++ expected
+@@ -94,6 +94,13 @@
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
++  possible:fill-tank1 a planning:PossibleGraph .
++  possible:fill-tank1 orexis:arrivedBy orexis:Derived .
++  possible:fill-tank1 orexis:hash "sha256:5fc000937f8262b502a2b8f48b0d1f90bac44c72d656db033cb7a98eaf7e9e49" .
++  possible:fill-tank1 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  possible:fill-tank1 planning:by possible:fill-tank1.by .
++  possible:fill-tank1 planning:minted 1 .
++  possible:fill-tank1 planning:spent 1.0 .
+   possible:fill-tank1.by :tank :tank1 .
+   possible:fill-tank1.by a planning:Candidate .
+   possible:fill-tank1.by planning:fills :fill .
+@@ -121,3 +128,8 @@
+   :keeper.in_range.pursued.tank1.met sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+   :keeper.in_range.pursued.tank1.met sh:targetNode :tank1 .
+ }
++
++
++GRAPH possible:fill-tank1 {
++  :tank1 :level 5 .
++}

@@ -10,7 +10,7 @@ value, and `rebirth` remains the explicit act of discarding.
 
 from pathlib import Path
 
-from agent import genesis
+from agent_old import genesis
 from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import Store, bindings
 from orexis_agent_progression.ontology import PUBLIC

@@ -1,0 +1,3 @@
+date	commit	machine	case	budget	runs	median_ms	min_ms	queries	updates	steps
+2026-09-23	3163346d-dirty	raspberry	two_disk_hanoi	32	5	48	39	137	59	3
+2026-09-23	3163346d-dirty	raspberry	three_disk_hanoi	128	5	178	162	383	213	7

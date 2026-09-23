@@ -38,7 +38,7 @@ CONTAINERFILE = REPO_ROOT / "Containerfile"
 #  .containerignore exception narrows the COPY to them; the test below holds both halves.
 #  `assembly` is what FINDS packages, so an agent that loads any needs it — the kernel is
 #  one of the things it assembles (the-assembly-is-not-the-mind).
-ALLOWED_TREES = {"assembly", "agent", "packages", "firmware"}
+ALLOWED_TREES = {"assembly", "agent_old", "packages", "firmware"}
 
 # Never in an agent image. `orexis-influx` reads the admin token, which opens every bucket in the
 # store and which no agent may ever hold; the surest guarantee is that the code using it is
@@ -267,7 +267,7 @@ def test_an_agent_is_given_the_society_and_not_the_hardware():
     """
     import rdflib
 
-    from agent import genesis
+    from agent_old import genesis
 
     HARDWARE_NAMESPACES = (
         "http://example.org/orexis/microcontroller#",
@@ -326,7 +326,7 @@ def test_the_society_hosting_agrees_with_the_wiring():
     """
     import rdflib
 
-    from agent import genesis
+    from agent_old import genesis
 
     SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
 
@@ -411,7 +411,7 @@ def test_the_society_repeats_every_limit_the_wiring_states():
     that knows its board wakes slowly on battery is stating something true that no class
     declares. Extra is allowed; missing and contradicting are not.
     """
-    from agent import genesis, inference
+    from agent_old import genesis, inference
     from assembly import loader
     from orexis_agent_progression.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
     from orexis_agent_progression.store import Store, bindings
@@ -491,8 +491,8 @@ def test_the_compose_file_does_not_mount_hardware_at_an_agent():
     """The other half, and the one that actually enforces it: a rule the agent is trusted to
     follow is not a boundary. What keeps the wiring out of an agent is that the file is not in
     its filesystem."""
-    from agent.config import REPO_ROOT
-    from agent import genesis
+    from agent_old.config import REPO_ROOT
+    from agent_old import genesis
 
     for world in genesis.worlds():
         compose = REPO_ROOT / "world" / world / "compose.yaml"
@@ -680,7 +680,7 @@ def test_no_reader_names_a_per_agent_graph():
                "packages/orexis-agent-deliberation/derive_wants.py", "packages/orexis-agent-deliberation/derive_wants.py",
                "packages/orexis-agent-deliberation/scope_actions.py",
                "packages/orexis-agent-deliberation/steps.py",
-               "packages/orexis-agent-deliberation/reviser.py", "packages/orexis-agent-deliberation/considering.py", "agent/validate.py"]
+               "packages/orexis-agent-deliberation/reviser.py", "packages/orexis-agent-deliberation/considering.py", "agent_old/validate.py"]
     #  A WRITER MAY SPELL THE FAMILY IT WRITES, and nothing else. `derive_wants` is on the list
     #  because it reads the mind's graphs and must ask by class for all of them — and it is the
     #  one that WRITES a want, so `pursued_graph` is its own convention to spell. Held to that
@@ -860,7 +860,7 @@ def test_what_the_kernel_offers_is_reachable_by_its_class(monkeypatch):
     """
     from orexis_agent_deliberation.beliefs import Beliefs
     from orexis_agent_deliberation.desires import Desires
-    from agent.metrics import Metrics
+    from agent_old.metrics import Metrics
     from conftest import build_agent
 
     agent = build_agent("fern", monkeypatch=monkeypatch)
@@ -885,7 +885,7 @@ def test_every_hard_requirement_is_offered_by_something():
     """
     from assembly import loader
     from assembly.inject import injections_of
-    from agent.runtime import KERNEL_SERVICES
+    from agent_old.runtime import KERNEL_SERVICES
 
     offered = set(loader.offers()) | set(KERNEL_SERVICES)
     assert offered, "nothing is offered at all — the scan stopped matching"
@@ -1116,7 +1116,7 @@ def test_a_soft_annotation_never_causes_a_load(synthetic_tree, monkeypatch):
     runs — a soft need takes what is already there, and nothing about fern's grants puts
     delta there.
     """
-    from agent.module import Module
+    from agent_old.module import Module
     from conftest import build_agent
 
     (delta,) = synthetic_tree({"orexis_pulled_delta": _PULL_DELTA})

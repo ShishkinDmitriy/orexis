@@ -2,7 +2,7 @@
 type: Decision
 title: The kernel names no package's word, and the ratchet is how it gets there
 description: >-
-  `agent/shapes.ttl` argued that scoping a shape by a lever would make the kernel depend on three
+  `agent_old/shapes.ttl` argued that scoping a shape by a lever would make the kernel depend on three
   packages, and the same file already targets one package predicate and joins through two more.
   The first ruling here permitted the borrowings whose absence fails LOUDLY, and the sovereign
   overruled it: packages are optional and the core depends on none of them, in RDF as in Python,
@@ -103,7 +103,7 @@ degrades gracefully" and "it degrades silently" are the same sentence about diff
 
 # What was measured
 
-pySHACL 0.40.1, kernel `agent/shapes.ttl` alone against a five-triple fixture, run twice: once
+pySHACL 0.40.1, kernel `agent_old/shapes.ttl` alone against a five-triple fixture, run twice: once
 with the sensing predicates, once with them renamed into a namespace nothing declares — which is
 what a removed or renamed package looks like to a shape.
 
@@ -151,13 +151,13 @@ to add the check that keeps it that way while the debt is worked off.
 
 > **Rows 1 and 2 are paid, and row 3 is not.** #331 moved the freshness want into sensing, which
 > took `desires.ru`'s four occurrences — the judge and two of the three spellings — with it.
-> `agent/ontology.ttl`'s `sensing:` prefix is untouched and still #343's. Five occurrences remain
+> `agent_old/ontology.ttl`'s `sensing:` prefix is untouched and still #343's. Five occurrences remain
 > and the order below is unchanged for them; the table is left whole because the ORDERING is this
 > record's argument and a row struck out still teaches what its position means.
 
 All nine are debt. Eight allowlist keys, nine occurrences, as `tests/test_kernel_namespaces.py`
 counted them on the day this was written. Note what the count is actually seeing in three of these: the ratchet scans
-**spelled-out** IRIs, so for `agent/shapes.ttl` it sees the `@prefix actuation:` declaration and
+**spelled-out** IRIs, so for `agent_old/shapes.ttl` it sees the `@prefix actuation:` declaration and
 not the `actuation:actuates` on line 78 that is the real reference. The count and the dependency
 are different objects, which is one reason the count alone could never have ordered this list.
 
@@ -250,7 +250,7 @@ written to support.
   [the-region-want-is-sensings-want](the-region-want-is-sensings-want.md)'s third step. The ratchet reads the
   prefixed form where it means something — a query string, a rule or a shape with its prose
   stripped — scans for every namespace the loader reports rather than five families by hand, and
-  resolves every term it finds against what the ontologies declare (#344). `agent/world.py`'s
+  resolves every term it finds against what the ontologies declare (#344). `agent_old/world.py`'s
   market vocabulary had already left with the wiring; what the widening found was the bus.
 - **The rule says nothing about a package borrowing another package's word.** Packages already do —
   `market/effects.ttl` names `actuation:hasActuator` — and that is a different question, since
@@ -280,7 +280,7 @@ wrong way round, which
 settles by asking what a deletion leaves behind. THIS record's own ruling stands: the kernel may
 name no package word at either end.) What
 remains on the list is the two sensing terms in the desire warning shape, the namespace
-constants onboarding interpolates, and the migration destinations — and `agent/world.py`, which
+constants onboarding interpolates, and the migration destinations — and `agent_old/world.py`, which
 the scan cannot see and the next change is about.
 
 # Paid since — the region want, the widened scan, and what it found
@@ -289,7 +289,7 @@ The desire warning shape went to sensing with the region (`sensing:UnwatchedRegi
 kernel's `sosa:` went with it: `store.PREFIXES` no longer declares a vocabulary the kernel does
 not speak, and the `SOSA` constant is `onboarding/namespaces.py`'s. The scan then widened — every
 namespace, both forms, resolved — and what it found in the kernel was not the market vocabulary
-this record feared but the BUS: four `mqtt:` terms in `agent/world.py`'s one query, and the
+this record feared but the BUS: four `mqtt:` terms in `agent_old/world.py`'s one query, and the
 reachability check in `orexis:SimulatedDeviceShape`. Both are on the list as a fifth kind, with the
 transport package answering "where is the bus" itself as what removes them. The
 namespace constants — the ratchet's third kind, twelve once every namespace was scanned for —

@@ -55,7 +55,7 @@ mc:Peripheral      rdfs:subClassOf device:Device , sosa:Platform .
 Declaring rather than renaming keeps the hardware layer reading in its own words — a wiring
 document should say *carries* — while making the fact legible to anything that speaks SOSA.
 
-**It is the first `rdfs:subPropertyOf` axiom in the project**, and `agent/inference.py` rule 4 was
+**It is the first `rdfs:subPropertyOf` axiom in the project**, and `agent_old/inference.py` rule 4 was
 written for exactly this case and had nothing to exercise: its own comment says *"there are no
 `rdfs:subPropertyOf` axioms today… this is here so that reintroducing one is a vocabulary edit and
 not a debugging session."* It was. Stating `mc:carries` now entails `sosa:hosts` with no widening,
@@ -67,7 +67,7 @@ general relation and the wiring keeps the specific one.
 
 ## The society states its own hosting, and that is not duplication for its own sake
 
-An agent is **never given `hardware.ttl`** — `agent/genesis.py` excludes it and
+An agent is **never given `hardware.ttl`** — `agent_old/genesis.py` excludes it and
 `tests/test_layout.py` asserts an agent's world graph contains no hardware vocabulary at all. The
 enforcement is that the file is not in the container. So the entailed `sosa:hosts` exists for the
 sovereign, who loads both, and does not exist for the agent, who loads one.

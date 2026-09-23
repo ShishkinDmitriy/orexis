@@ -1,0 +1,41 @@
+# a_number_is_its_value_rounded
+#
+# What a number IS is its value, so :integer and :decimal are one fact whatever datatype
+# carries them — and :near agrees with both to six decimals, which is the one tolerance
+# anybody chose here. :apart does not, and hashes alone.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+
+GRAPH :ontology {
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :integer {
+  :tank :level 1 .
+}
+GRAPH :decimal {
+  :tank :level 1.0 .
+}
+GRAPH :catalogue {
+  :apart a orexis:Graph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :decimal a orexis:Graph .
+  :integer a orexis:Graph .
+  :near a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+}
+
+
+GRAPH :apart {
+  :tank :level 1.1 .
+}
+
+GRAPH :near {
+  :tank :level 1.0000001 .
+}

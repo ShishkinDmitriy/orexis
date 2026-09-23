@@ -359,7 +359,7 @@ services:
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
       - ../../assembly:/app/assembly:ro
-      - ../../agent:/app/agent:ro
+      - ../../agent_old:/app/agent_old:ro
       - ../../packages:/app/packages:ro
 
   agent-fern:
@@ -421,7 +421,7 @@ services:
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
       - ../../assembly:/app/assembly:ro
-      - ../../agent:/app/agent:ro
+      - ../../agent_old:/app/agent_old:ro
       - ../../packages:/app/packages:ro
 
   agent-succulent:
@@ -483,7 +483,7 @@ services:
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
       - ../../assembly:/app/assembly:ro
-      - ../../agent:/app/agent:ro
+      - ../../agent_old:/app/agent_old:ro
       - ../../packages:/app/packages:ro
 
   agent-supplier:
@@ -548,7 +548,7 @@ services:
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
       - ../../assembly:/app/assembly:ro
-      - ../../agent:/app/agent:ro
+      - ../../agent_old:/app/agent_old:ro
       - ../../packages:/app/packages:ro
 
   agent-tomato:
@@ -610,7 +610,7 @@ services:
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
       - ../../assembly:/app/assembly:ro
-      - ../../agent:/app/agent:ro
+      - ../../agent_old:/app/agent_old:ro
       - ../../packages:/app/packages:ro
 
 volumes:

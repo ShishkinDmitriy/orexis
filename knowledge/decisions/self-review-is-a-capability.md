@@ -152,7 +152,7 @@ whether to reclaim its own disk, nothing could be done differently, and by rule 
 function rather than a capability. The ratio it fires on (`orexis:maxBytesPerTriple`) stayed in the
 kernel ontology with it.
 
-`agent/metrics.py` reflects the split. `belief_compactions` comes off the kernel and every agent
+`agent_old/metrics.py` reflects the split. `belief_compactions` comes off the kernel and every agent
 reports it; the revision counts come off a module an agent may not have, through a new generic
 `Module.reports()` hook — so the kernel does not import a capability's terms to describe it, and
 the *absence* of those lines in the series is itself the reading: this agent was never granted any

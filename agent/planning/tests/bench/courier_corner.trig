@@ -1,0 +1,218 @@
+# courier_corner
+#
+# A four-by-four grid, a van at the origin, one parcel two cells away owed at the far corner,
+# and three levers: drive to a neighbouring cell, pick up a parcel standing where the van
+# stands, set a carried parcel down where the van stands. Eight steps deliver it — three
+# drives, the pick, three drives, the drop — and the want's estimate, the drives still owed,
+# is what tells this bench from hanoi's: a uniform-cost search forks the grid in every
+# direction, and an estimate that never overstates refuses most of it. The predecessor's
+# figures for the same delivery were 198 forks against 78.
+#
+# Assembled from `world/courier/` and `packages/orexis-tool-courier/`: the texts declare
+# `courier:` themselves, since this tree loads no courier ontology. The clock stands at
+# 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
+
+GRAPH :ontology {
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :van a courier:Van .
+  :van rdfs:label "the van" .
+  :parcel a courier:Parcel .
+  :parcel courier:destination :c3_3 .
+  :parcel rdfs:label "the parcel owed at the far corner" .
+  :c0_0 a courier:Cell .
+  :c0_0 courier:x 0 .
+  :c0_0 courier:y 0 .
+  :c0_1 a courier:Cell .
+  :c0_1 courier:x 0 .
+  :c0_1 courier:y 1 .
+  :c0_2 a courier:Cell .
+  :c0_2 courier:x 0 .
+  :c0_2 courier:y 2 .
+  :c0_3 a courier:Cell .
+  :c0_3 courier:x 0 .
+  :c0_3 courier:y 3 .
+  :c1_0 a courier:Cell .
+  :c1_0 courier:x 1 .
+  :c1_0 courier:y 0 .
+  :c1_1 a courier:Cell .
+  :c1_1 courier:x 1 .
+  :c1_1 courier:y 1 .
+  :c1_2 a courier:Cell .
+  :c1_2 courier:x 1 .
+  :c1_2 courier:y 2 .
+  :c1_3 a courier:Cell .
+  :c1_3 courier:x 1 .
+  :c1_3 courier:y 3 .
+  :c2_0 a courier:Cell .
+  :c2_0 courier:x 2 .
+  :c2_0 courier:y 0 .
+  :c2_1 a courier:Cell .
+  :c2_1 courier:x 2 .
+  :c2_1 courier:y 1 .
+  :c2_2 a courier:Cell .
+  :c2_2 courier:x 2 .
+  :c2_2 courier:y 2 .
+  :c2_3 a courier:Cell .
+  :c2_3 courier:x 2 .
+  :c2_3 courier:y 3 .
+  :c3_0 a courier:Cell .
+  :c3_0 courier:x 3 .
+  :c3_0 courier:y 0 .
+  :c3_1 a courier:Cell .
+  :c3_1 courier:x 3 .
+  :c3_1 courier:y 1 .
+  :c3_2 a courier:Cell .
+  :c3_2 courier:x 3 .
+  :c3_2 courier:y 2 .
+  :c3_3 a courier:Cell .
+  :c3_3 courier:x 3 .
+  :c3_3 courier:y 3 .
+}
+
+# THREE LEVERS, as `packages/orexis-tool-courier/actions.ttl` states them. Neighbouring is worked
+# out, not declared: |dx| + |dy| = 1 over the cells' own coordinates.
+GRAPH :actions {
+  courier:Drive a orexis:Action .
+  courier:Drive orexis:takes courier:van .
+  courier:Drive orexis:takes courier:to .
+  courier:Drive orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT ?van ?to WHERE {
+          ?van courier:at ?here .
+          ?van a courier:Van .
+          ?here courier:x ?hx ; courier:y ?hy .
+          ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
+          FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
+      }""" .
+  courier:Drive orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" .
+  courier:Drive orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { GRAPH $state { $van courier:at ?old } }
+      WHERE  { GRAPH $state { $van courier:at ?old } }""" .
+  courier:Drive sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+      CONSTRUCT { $van courier:at $to } WHERE { }""" .
+  courier:Pick a orexis:Action .
+  courier:Pick orexis:takes courier:parcel .
+  courier:Pick orexis:takes courier:van .
+  courier:Pick orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT ?parcel ?van WHERE {
+          ?van courier:at ?cell . ?parcel courier:at ?cell .
+          ?parcel a courier:Parcel .
+          ?van a courier:Van .
+      }""" .
+  courier:Pick orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" .
+  courier:Pick orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { GRAPH $state { $parcel courier:at ?cell } }
+      WHERE  { GRAPH $state { $parcel courier:at ?cell } }""" .
+  courier:Pick sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+      CONSTRUCT { $parcel courier:carriedBy $van } WHERE { }""" .
+  courier:Drop a orexis:Action .
+  courier:Drop orexis:takes courier:parcel .
+  courier:Drop orexis:takes courier:to .
+  courier:Drop orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT ?parcel ?to WHERE {
+          ?parcel courier:carriedBy ?van . ?van courier:at ?to .
+          ?parcel a courier:Parcel .
+      }""" .
+  courier:Drop orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" .
+  courier:Drop orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { GRAPH $state { $parcel courier:carriedBy ?van } }
+      WHERE  { GRAPH $state { $parcel courier:carriedBy ?van } }""" .
+  courier:Drop sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+      CONSTRUCT { $parcel courier:at $to } WHERE { }""" .
+  courier:van a orexis:Parameter .
+  courier:to a orexis:Parameter .
+  courier:parcel a orexis:Parameter .
+}
+
+# THE DESIRE, AND THE PACKAGE'S MEASURE OF IT: every parcel where it is owed, and how far
+# that still is in drives — the van to the parcel and the parcel to its door, which never
+# overstates since every drive moves one cell.
+GRAPH :desires {
+  :keeper orexis:holds :keeper.every_parcel_delivered .
+  :keeper.every_parcel_delivered a orexis:Desire .
+  :keeper.every_parcel_delivered orexis:metWhen courier:delivered .
+  :keeper.every_parcel_delivered orexis:estimates courier:drivesOwed .
+  :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
+  courier:delivered a sh:NodeShape .
+  courier:delivered sh:targetClass courier:Parcel .
+  courier:delivered sh:property [ sh:path courier:at ; sh:equals courier:destination ] .
+  courier:drivesOwed rdfs:label "drives still owed" .
+  courier:drivesOwed sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT (SUM(?d) AS ?estimate) WHERE {
+          SELECT ?p (MIN(?dist) AS ?d) WHERE {
+              {
+                  ?p a courier:Parcel ; courier:destination ?owed .
+                  ?owed courier:x ?ox ; courier:y ?oy .
+                  ?p courier:carriedBy ?van . ?van courier:at ?vc .
+                  ?vc courier:x ?vx ; courier:y ?vy .
+                  BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
+              } UNION {
+                  ?p a courier:Parcel ; courier:destination ?owed .
+                  ?owed courier:x ?ox ; courier:y ?oy .
+                  ?p courier:at ?pc . ?v courier:at ?vc .
+                  ?v a courier:Van .
+                  ?pc courier:x ?px ; courier:y ?py .
+                  ?vc courier:x ?vx ; courier:y ?vy .
+                  FILTER(?px != ?ox || ?py != ?oy)
+                  BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
+                       + ABS(?px - ?ox) + ABS(?py - ?oy) AS ?dist)
+              }
+          } GROUP BY ?p
+      }""" .
+}
+
+GRAPH :sensed {
+  :van courier:at :c0_0 .
+  :parcel courier:at :c1_2 .
+}
+
+GRAPH :scopes {
+  :keeper.scope.1 a planning:Scope .
+  courier:Drive planning:inScope :keeper.scope.1 .
+  courier:Pick planning:inScope :keeper.scope.1 .
+  courier:Drop planning:inScope :keeper.scope.1 .
+  courier:at planning:inScope :keeper.scope.1 .
+  courier:carriedBy planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

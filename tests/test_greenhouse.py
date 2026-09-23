@@ -16,7 +16,7 @@ import pytest
 
 from conftest import genesis_store
 from conftest import ABOUT
-from agent import genesis, runtime
+from agent_old import genesis, runtime
 from orexis_agent_deliberation import relevance as R
 from orexis_agent_deliberation.scope_actions import scopes
 from orexis_agent_deliberation.planner import Planner

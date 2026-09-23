@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 
 
-from agent import genesis
+from agent_old import genesis
 
 from orexis_agent_progression.ontology import OREXIS, STATE_GRAPH
 from orexis_agent_progression.store import Store

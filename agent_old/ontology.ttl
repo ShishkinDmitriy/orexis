@@ -310,6 +310,10 @@ orexis:end a owl:DatatypeProperty ; rdfs:domain dcterms:PeriodOfTime ; rdfs:rang
 orexis:arrivedBy a owl:ObjectProperty ; rdfs:domain orexis:Graph ; rdfs:range orexis:Arrival ;
     rdfs:label "arrived by" .
 
+orexis:hash a owl:DatatypeProperty ; rdfs:domain orexis:Graph ; rdfs:range xsd:string ;
+    rdfs:label "hash" ;
+    rdfs:comment "The canonical digest of what a graph holds, on its catalogue row beside what it is — written by whoever lays or forks the graph (a ground, a possible world) and replaced when the graph is re-hashed, since a graph has one content. Two graphs with one hash hold the same facts whatever their names, which is how a search knows a fork repeated a world it had seen, and how the pass after identifies the present among the worlds the last one imagined: the ground just laid is the world whose hash it repeats, never the one it is named like (the-future-is-a-cone-and-the-present-is-identified-in-it)." .
+
 orexis:PredictionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Prediction graph" ;
     rdfs:comment "A PREDICTION: a graph holding during the window it predicts for, carrying what a package expects a reading to be by then — the predicted reading keyed exactly as the present's is, typed with every band it may be in, a centre where the package has one — written by sensing from the drifts after every reading, one graph per horizon (the-drift-is-sensings-and-its-result-is-predictions, #642). A KIND OF ITS OWN to the doors: `query_at` hands a reader the predictions holding at the instant asked about beside public knowledge and the records holding then; the agent's own records never list them, no validation reads them, and no plan carries them into its imaginarium until the search reads predictions (#643). The first is the one the next reading is held to, its window the next reading's; the window closing with no reading is staleness. Typed in the classification when written, with a period in the periods table, as a round is." .
 orexis:RecordGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Record graph" ;

@@ -33,7 +33,7 @@ import uuid
 
 import pytest
 
-from agent import ratified
+from agent_old import ratified
 from onboarding import mqtt as mqtt_admin
 from orexis_agent_progression.ontology import AG, WORLD_GRAPH
 

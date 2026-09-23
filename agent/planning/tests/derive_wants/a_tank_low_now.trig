@@ -1,0 +1,77 @@
+# a_tank_low_now
+#
+# A tank low NOW is wanted now — no instant — about its level alone, and named for the tank, since
+# the desire ranges over every tank.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+
+GRAPH :ontology {
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
+  :in_range sh:targetClass :Tank .
+  :keeper orexis:holds :keeper.in_range .
+  :keeper.in_range a orexis:Desire .
+  :keeper.in_range orexis:about :level .
+  :keeper.in_range orexis:about :temperature .
+  :keeper.in_range orexis:metWhen :in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+}
+
+GRAPH :sensed {
+  :tank1 :level 5 .
+  :tank1 :temperature 20 .
+  :tank2 :level 20 .
+  :tank2 :temperature 20 .
+}
+
+GRAPH :scopes {
+  :fill planning:inScope :keeper.scope.1 .
+  :heat planning:inScope :keeper.scope.2 .
+  :keeper.scope.1 a planning:Scope .
+  :keeper.scope.2 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+  :temperature planning:inScope :keeper.scope.2 .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

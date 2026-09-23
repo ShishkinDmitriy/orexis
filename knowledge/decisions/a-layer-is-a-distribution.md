@@ -110,7 +110,7 @@ this section exists to refuse.
   every agent gets all four; a dumb device shipping only the stores and the executor is a
   `Containerfile` variant nobody has asked for yet. The day a world wants to declare it, that
   is a grant question, and the record to reread is the mind's.
-- **Where the `Agent` object and the choir live** — `agent/runtime.py`, `agent/module.py` — is
+- **Where the `Agent` object and the choir live** — `agent_old/runtime.py`, `agent_old/module.py` — is
   #452's to settle: the assembling shell above the layers, or absorbed into `assembly/`.
 - **An interchangeable deliberator is now a swap above a tested boundary.**
   [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) argued for one and

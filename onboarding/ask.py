@@ -24,9 +24,9 @@ import threading
 
 import paho.mqtt.client as mqtt
 
-from agent import ratified
+from agent_old import ratified
 from orexis_capability_reporting import sovereign
-from agent.genesis import world_dir, worlds
+from agent_old.genesis import world_dir, worlds
 from onboarding.mqtt import _PORTS_Q, device_credential_file
 
 log = logging.getLogger("ask")

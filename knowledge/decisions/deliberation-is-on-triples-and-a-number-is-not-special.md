@@ -53,7 +53,7 @@ sensed writer classifies a reading in the belief base, where the modality's grap
 band keyed to a pick, when one is wanted, would be the rebuild's. The shape says what must hold
 and the class says what a reading is, both from one range, so there is one owner. A reading is
 classified by ENTAILMENT (`Store.entail`, #576), the way the closure already turns
-`owl:hasValue` into ground triples (`agent/inference.py`, rule 5): a datatype restriction over a
+`owl:hasValue` into ground triples (`agent_old/inference.py`, rule 5): a datatype restriction over a
 number is the second OWL construct materialised here, asserted on the reading's node when it is
 written, when a possible world forks, and when a volume boots, and gone with the node. This is
 the plant domain's decision, and another domain may decide otherwise without the core noticing.

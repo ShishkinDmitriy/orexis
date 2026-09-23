@@ -2,7 +2,7 @@
 type: Decision
 title: Self is what an agent is, and what it is wired to is each package's to load
 description: >-
-  `agent/world.py` loaded every package's wiring into one `Self` — sensors, actuators, venues,
+  `agent_old/world.py` loaded every package's wiring into one `Self` — sensors, actuators, venues,
   each by that package's words, in SPARQL the #334 ratchet could not see. A kernel that loads
   packages should know no probe, no valve and no venue. `Self` keeps what an agent IS — its
   id, its capabilities, whom it acts for — and each package loads what it is wired to from its

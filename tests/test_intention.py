@@ -21,7 +21,7 @@ from dataclasses import replace
 
 import pytest
 
-from agent.world import load_self
+from agent_old.world import load_self
 from orexis_agent_progression.graphs import intentions_graph
 from orexis_capability_market.terms import ACQUIRING, TENDERING
 from orexis_capability_sensing.terms import OBSERVING
@@ -62,7 +62,7 @@ def test_every_agent_keeps_a_ledger_and_the_stake_is_what_needs_a_patience(make)
     so the shape names the want and not the premise.
 
     So: everyone keeps, and the region_want is what obliges you to say how patiently."""
-    from agent.validate import validate_agent
+    from agent_old.validate import validate_agent
 
     fern = make("fern")
     assert fern.keeper is not None

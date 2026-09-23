@@ -21,14 +21,14 @@ from pathlib import Path
 
 import pytest
 
-from agent import genesis, ratified
+from agent_old import genesis, ratified
 
 from assembly import loader
 from orexis_agent_progression.ontology import (OREXIS, ONTOLOGY_ENTAILED_GRAPH, ONTOLOGY_GRAPH,
                             WORLD_DERIVED_GRAPH, WORLD_ENTAILED_GRAPH,
                             WORLD_GRAPH)
 from orexis_agent_progression.store import Store, bindings
-from agent.validate import conforms, graph_from
+from agent_old.validate import conforms, graph_from
 from conftest import shipped_worlds
 from orexis_agent_progression.ontology import PUBLIC
 
@@ -369,7 +369,7 @@ def test_the_world_states_the_capacity_and_the_loader_does_not_assume_it():
     one user OPERATES what another RATIFIED, and adding a second role would have meant editing
     code rather than a world.
     """
-    from agent import provenance
+    from agent_old import provenance
 
     st = _public("simulation")
     user, role = provenance.attribution_of(st)
@@ -382,7 +382,7 @@ def test_the_world_states_the_capacity_and_the_loader_does_not_assume_it():
 def test_a_user_named_without_a_capacity_gets_no_association():
     """A bare `prov:wasAttributedTo` says who was involved and not in what capacity, and the
     capacity is the whole distinction. Silence is a better answer than a guess."""
-    from agent import provenance
+    from agent_old import provenance
 
     st = _public("simulation")
     st.update(f"""

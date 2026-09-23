@@ -53,7 +53,7 @@ instance* has it, which is what a datasheet means. The capability is one individ
 shares — the datasheet's number is the same number — so it can be named, and `owl:hasValue`
 requires a named individual.
 
-`agent/inference.py` materialises exactly this, into the world's entailed graph, and it is the
+`agent_old/inference.py` materialises exactly this, into the world's entailed graph, and it is the
 only OWL construct the closure carries.
 
 ## `owl:someValuesFrom` plus a shape — for what each unit has its OWN of
@@ -73,13 +73,13 @@ about each unit, and the two need different tools.
 
 # What the closure does and does not do
 
-`agent/inference.py` materialises entailments into the store at genesis, once, and validation runs
+`agent_old/inference.py` materialises entailments into the store at genesis, once, and validation runs
 with inference **off** against that same graph. So:
 
 - **Ask what a thing IS. Do not walk a subclass path.** `?d a orexis:DesireGraph` reads the closure.
   Six queries once carried `rdfs:subClassOf*` by hand for twenty-five declared axioms;
   `tests/test_inference.py` refuses a seventh.
-- If the closure does not cover your case, **widen `agent/inference.py`** rather than working
+- If the closure does not cover your case, **widen `agent_old/inference.py`** rather than working
   around it. The same test fails if pyshacl ever entails something the closure does not.
 - Only `owl:hasValue` is carried. `owl:someValuesFrom` is deliberately not — see above — and
   cardinality is a shape's job, which pyshacl already does.
