@@ -366,3 +366,5 @@ def snapshots():
 def pytest_addoption(parser):
     parser.addoption("--update-snapshots", action="store_true", default=False,
                      help="rewrite the cases' snapshots from what each function left, then review the diff")
+    parser.addoption("--bench-record", action="store_true", default=False,
+                     help="append the bench's rows to tests/bench/results.tsv — commit, machine, median of the runs")

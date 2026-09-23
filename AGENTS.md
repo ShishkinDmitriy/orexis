@@ -1127,8 +1127,9 @@ it is a record wearing a bullet.
   evaluated per named graph** — `GRAPH ?cat { ?cat a orexis:CatalogueGraph . OPTIONAL … }` cost
   0.5 to 1.0 ms a read on a store of sixteen possible worlds where the same read over the one
   bound graph cost 0.1 to 0.2; a pass asks the store for the catalogue's name once
-  (`catalogue_of`, remembered) and splices it, which is asking and not spelling. And a read
-  asked per iteration is sized by what the iteration opens: `unweighed` narrowed to one want
+  (`catalogue_of`, remembered) and splices it, which is asking and not spelling — and spelling would buy nothing more, since every
+  `?cat` replaced by the constant at the engine's door ran the three-disk bench at 163 ms
+  against 168, inside one session's noise. And a read asked per iteration is sized by what the iteration opens: `unweighed` narrowed to one want
   and one world took the three-disk bench from 496 ms to 158.
 - **A prologue goes at the head of a joined update, and the engine refuses one after `;`** —
   every retraction carries its package's `PREFIX`, so joining the copy and the retraction into

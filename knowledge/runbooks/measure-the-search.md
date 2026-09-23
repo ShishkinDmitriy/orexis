@@ -72,6 +72,57 @@ row — a number without its machine is an impression.
 | 2026-09-06 | `leave-the-fork-loop-free-of-rdflib` | — | — | the fork loop touches no rdflib graph (#547): the held shapes carved once per pass, a shape's target resolved in the imaginarium (the wants copied in beside the beliefs — a desire shape TARGETS a want), rudof's report read as N-Triples by pyoxigraph, and the data read into rudof once per verdict pair; `conforms_at` 380–430 ms became 230–240 ms on `world/simulation`, `_begin` 126 to 142 ms median (the carve moved in, once). Per verdict the floor is now rudof's own: `read_data` ~90 ms, `read_shacl` ~50 ms, validate ~60 ms |
 | 2026-09-05 | `the-legality-check-reads-the-border-text` | — | — | the winner's legality is judged on the border text the law already reads (#485): parse 150 ms + `conforms` 510–970 ms became `conforms_at` 380–430 ms on `world/simulation`, the rdflib round trip gone; what is left is two rudof verdicts over 3,855 triples |
 
+# The planning package's bench, and its ledger
+
+The Agent 2.0 planning package (`orexis/agent/planning/`) has a bench of its own, because it
+runs a different search over a different store and the figures above are not its figures:
+`orexis/agent/planning/tests/test_bench.py`, over two- and three-disk hanoi cases beside it,
+asserting the plans — three moves and seven — and timing the pass as the median of five.
+
+```bash
+pytest orexis/agent/planning/tests/test_bench.py -s -n0                 # print the figures
+pytest orexis/agent/planning/tests/test_bench.py -s -n0 --bench-record  # and append them
+```
+
+**The ledger is `orexis/agent/planning/tests/bench/results.tsv`**, one row per case per
+recorded run: the date, the commit (`-dirty` where the tree had uncommitted changes), the
+machine, the case, the budget, the runs, the median and minimum milliseconds, the queries and
+updates of one pass, and the steps of the plan. It is appended, never rewritten, so the series
+is the history; a row is a measurement because it names its commit and its machine. Two
+trees are compared the way the row above says — alternated in one session — and the ledger
+holds each tree's own rows rather than a difference somebody computed once.
+
+The first rows: at `3163346d` on the bench Pi, two disks in about 45 ms over 137 queries and
+three disks in about 170 ms over 383 queries, the three-disk pass having come down from 645 ms
+in the same day by binding the catalogue once and narrowing what an iteration reads. The
+tree before it, `463e27c5`, ran two disks in about 30 ms and could not reach three within its
+fixed budget.
+
+**Against the predecessor, alternated in one session (2026-09-23, the bench Pi):** the pass
+of `packages/orexis-agent-deliberation/` over `world/hanoi` — `considering` and then the
+search — against the whole pass here, a fresh store per run, medians of five:
+
+| disks | predecessor, considering + search | planning package, whole pass |
+|---|---|---|
+| 3 | 144 + 415 ms | 194 ms |
+| 2 | 143 + 244 ms | 50 ms |
+
+The predecessor's row above says 0.31 s for three disks and its search took 0.42 s on the day
+this was taken, which is the drift the table warns about and why the two sides are timed
+together here. Inside the package the star cost something too: the tree before it,
+`463e27c5`, ran two disks in about 30 ms against 45 alternated the same day, and could not
+reach three disks within its fixed budget of 32.
+
+**Refused on measuring, the same day: spelling the catalogue's name.** Every `?cat` in every
+statement replaced by the constant at the engine's door — the shape a hardcoded singleton
+graph would give a reader — ran three disks at 163 ms against 168 as it is, inside one
+session's noise, with 885 statements rewritten. The profile says why: of a 194 ms pass under
+cProfile, 86 ms is the engine evaluating 381 queries and 25 ms its 213 updates, about 0.23 ms
+a query, and finding one row by its class inside a bound graph is no measurable part of a
+query; what a pass pays for is the COUNT of statements, which is the star's price — each act
+reads its inputs back off the rows the last act wrote, and what would move the figure is
+fewer reads, not shorter ones.
+
 # Where the time goes (profiled at `13876fc`)
 
 That reading is now history, and it is kept because the shape of it recurs: **~70% of the
