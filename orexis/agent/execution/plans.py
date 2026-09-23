@@ -8,7 +8,7 @@ standing at its first step, pursuing the want it was found for.
 **IT IS A COPY AND NOT A REWRITE**, and that is why the search writes the steps in this
 layer's vocabulary rather than its own: a translation on the way would be a second place the
 two shapes could disagree, and the shape a step is written in is the shape a step is read in.
-What the search adds of its own — that this is a `planning:Plan` and which want it is for —
+What the search adds of its own — that the graph is a plan, and which want it is for —
 crosses with the rest and is simply not read here. A lower layer does not have to understand
 every word it is handed; it has to understand its own.
 
