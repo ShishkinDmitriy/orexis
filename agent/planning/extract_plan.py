@@ -31,10 +31,12 @@ produced them. So the root is `planning:Plan` and execution reads past it to the
 
 from __future__ import annotations
 
+import json
 from urllib.parse import quote
 
 import pyoxigraph as ox
 
+from agent.hash_named_graph import facts_of
 from agent.ontology import GRAPH_PREFIX, local_of
 from agent.store import Raw, bind, clear_graph, rows, update
 
@@ -62,6 +64,15 @@ from .ontology import EXHAUSTED, NO_CANDIDATE, SATISFIED
 #  5. EVERY KIND THE VOCABULARY PUTS A PLAN GRAPH BENEATH, from one `rdfs:subClassOf` step —
 #     the closure is materialised at genesis, so one step is every step. Its own operation,
 #     because a vocabulary that says nothing of plan graphs must not take the row with it.
+#  A STEP SAYS WHETHER ITS ACTION IS FICTIVE, `execution:fictive` copied off the action's own
+#  row, because the executor reads a step and not an action: what taking a step is depends on
+#  the action, and the action's word for it is the one the step carries.
+#  A STEP SAYS WHAT IT PREDICTS: the diff of the world it reaches against the one it leaves, the
+#  canonical facts a world's digest is made of, as one JSON literal of two lists (`adds`,
+#  `retracts`) under `execution:predicts` — one declaration, the effect the search planned on,
+#  which is what the world is held to after the step lands (an-effect-is-one-declaration). Read
+#  off the two graphs in Python, since a diff of two graphs is not a pattern, and spliced in as a
+#  VALUES row per world.
 #  A STEP SAYS WHEN IT MAY BE TAKEN AND WHEN IT LANDS, in execution's words: `execution:notBefore` is
 #  the instant of the world the step is taken in and `execution:landsAt` the instant of the world it
 #  reaches, so a plan placed at the instant of its root carries that placing across, and the executor
@@ -76,13 +87,16 @@ INSERT { GRAPH $plan { $plan a planning:Plan ; planning:for $want ; planning:out
 WHERE  {} ;
 INSERT { GRAPH $plan { ?step a execution:Step ; execution:partOf $plan ;
                        planning:fills ?action ; planning:of ?by ;
-                       execution:notBefore ?since ; execution:landsAt ?lands . ?step ?p ?v } }
-WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                       execution:notBefore ?since ; execution:landsAt ?lands ;
+                       execution:predicts ?predicts ; execution:fictive ?fictive . ?step ?p ?v } }
+WHERE  { VALUES (?w ?predicts) { $predicted }
+         GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
                       ?by planning:fills ?action ; planning:from ?in .
                       OPTIONAL { ?in planning:atInstant ?a0 } OPTIONAL { ?in dcterms:temporal/orexis:start ?s0 }
                       OPTIONAL { ?w planning:atInstant ?lands }
                       OPTIONAL { ?by ?p ?v . FILTER(?p NOT IN (planning:fills, planning:from, rdf:type)) } }
+         OPTIONAL { GRAPH ?declared { ?action execution:fictive ?fictive } }
          BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step)
          BIND(COALESCE(?a0, ?s0) AS ?since) } ;
 INSERT { GRAPH $plan { ?prev execution:then ?step } }
@@ -99,6 +113,13 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontolo
 
 
 #  THE CHEAPEST WORLD WHERE THE WANT IS MET — the plan, where there is one.
+#  THE ANCESTRY, world by world with the world each was taken in — what a step's prediction
+#  is the diff of.
+_ANCESTRY_Q = """
+SELECT ?w ?in WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+    $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in } }"""
+
 _BEST_Q = """
 SELECT ?w ?spent WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
@@ -148,11 +169,21 @@ def extract_plan(store: ox.Store, want: str) -> str:
         outcome = EXHAUSTED if int(root["spent"]) else NO_CANDIDATE
     graph = _plan_graph(want)
     clear_graph(store, graph)
+    predicted = " ".join(f'(<{r["w"]}> {json.dumps(_predicts(store, r["w"], r["in"]))})'
+                         for r in rows(store, _ANCESTRY_Q, (), world=world))
     update(store, bind(_PLAN_U, plan=Raw(f"<{graph}>"), want=Raw(f"<{want}>"),
                        outcome=Raw(f"<{outcome}>"), world=Raw(f"<{world}>"),
+                       predicted=Raw(predicted),
                        costs=Raw(f' ; planning:costs "{cost}"^^xsd:decimal'
                                  if cost is not None else "")))
     return graph
+
+
+def _predicts(store: ox.Store, world: str, parent: str) -> str:
+    """What reaching `world` from `parent` changes, as the JSON literal a step carries."""
+    after, before = facts_of(store, world), facts_of(store, parent)
+    return json.dumps({"adds": sorted(after - before), "retracts": sorted(before - after)},
+                      separators=(",", ":"))
 
 
 def _plan_graph(want: str) -> str:

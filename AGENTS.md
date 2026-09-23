@@ -1181,6 +1181,15 @@ it is a record wearing a bullet.
   debts shared one word with no page for either, and a reader of "the ledger's debts" beside
   "the ledger is walking a want" met two things; `agent/` says intentions, intentions store
   and execution's own words now, and leaves the word to the package that has no other.
+- **The world moves an intention, and the executor only says what happened** — a step carries
+  the diff the search planned on (`execution:predicts`, the canonical facts of the world it
+  reaches less the one it leaves) and a taken head waits at its `landsAt` for the present to
+  hold every addition and none of the retractions, over the readings; then `execution:by`
+  moves, and past the landing by the patience with no answer the intention is `failed` and
+  the want is the search's again. A pure simulation has nothing to answer with, so an action may
+  be FICTIVE (`execution:fictive` on its row, carried onto its steps) and the executor writes
+  its prediction into the readings itself — hanoi's physics is its own effect — and that is
+  the feedback a plan promoted to a method would be judged by.
 - **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes
   first** — `?x a planning:Weighing ; … ; planning:weighs ?about` scanned every weighing per
   candidate and cost 74 ms on a kept three-disk cone, answering nothing; `?x planning:weighs

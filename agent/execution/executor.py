@@ -26,8 +26,15 @@ the filling, in the layer above's and the package's words, which this layer repe
 not read — go to the log, an `execution:Act` row records that the step was taken, when the
 taker was handed it and when it returned (the step's `notBefore` and `landsAt` are the plan's
 requirement and prediction, and the act is what actually happened),
-`execution:by` moves to the next step, and the last step resolves the intention `done`. The
-one seam is `take`, a callable handed the step's rows: it is where a step will reach real
+and then the WORLD moves the intention: a step that predicts something waits at its
+`landsAt` for the present to hold what it predicted, every addition present and every
+retraction gone over the agent's readings, and `execution:by` moves to the next step when it
+does, the last step resolving the intention `done`; past the landing by the patience with no
+answer, the intention resolves `failed`. A step that predicts nothing moves as soon as it is
+taken. A FICTIVE ACTION — its row says `execution:fictive`, and the plan's extraction carries
+that onto its steps — is taken by writing the step's own prediction into the readings, so the
+present answers because nothing else could have; an executor built `fictive` takes every
+step so, the shorthand for a pure simulation. The one seam is `take`, a callable handed the step's rows: it is where a step will reach real
 code — an actuator, a message on the bus — and how an action names its taker is not
 decided here. A `take` that raises records the act as not taken and resolves the intention
 `failed`, and the executing thread outlives it.
@@ -41,16 +48,18 @@ asks here.
 
 from __future__ import annotations
 
+import json
 import logging
 import queue
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
 from agent import clock
-from agent.ontology import local_of
-from agent.store import Raw, bind, instant, rows, update
+from agent.hash_named_graph import facts_of
+from agent.ontology import STATE, local_of
+from agent.store import Raw, add_quads, bind, graphs_of, instant, rows, update
 
 from .ontology import intentions_graph
 from .plans import OUTCOME, RESOLVED_AT, copy_plan
@@ -73,15 +82,23 @@ SELECT ?intention ?want ?at ?adopted WHERE {
     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done } } }
 ORDER BY ?adopted"""
 
-#  THE HEAD OF EVERY STANDING INTENTION and when it may be taken — `execution:notBefore` where
-#  the plan says, at once where it says nothing.
+#  THE HEAD OF EVERY STANDING INTENTION: when it may be taken — `execution:notBefore` where the
+#  plan says, at once where it says nothing — whether it has been taken (an act saying so), and
+#  where it has, what it predicted and when that should show.
 _HEADS_Q = """
-SELECT ?intention ?step ?due WHERE {
+SELECT ?intention ?step ?due ?act ?lands ?predicts WHERE {
   GRAPH $intentions {
     ?intention a execution:Intention ; execution:by ?step .
     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
-    OPTIONAL { ?step execution:notBefore ?due } } }
+    OPTIONAL { ?step execution:notBefore ?due }
+    OPTIONAL { ?act execution:of ?step ; execution:taken true }
+    OPTIONAL { ?step execution:landsAt ?lands }
+    OPTIONAL { ?step execution:predicts ?predicts } } }
 ORDER BY ?due ?intention"""
+
+_PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH $intentions { $step execution:predicts ?predicts } }"""
+
+_FICTIVE_Q = """SELECT ?f WHERE { GRAPH $intentions { $step execution:fictive ?f } }"""
 
 #  WHAT A STEP SAYS OF ITSELF IN WORDS OTHER THAN THIS LAYER'S: the action and the filling are
 #  the layer above's and the package's to spell, and this layer repeats them without reading.
@@ -102,6 +119,28 @@ _ADVANCE_U = """
 DELETE { GRAPH $intentions { $intention execution:by $step } }
 INSERT { GRAPH $intentions { $intention execution:by $next } }
 WHERE  { GRAPH $intentions { $intention execution:by $step } }"""
+
+
+_XSD = "http://www.w3.org/2001/XMLSchema#"
+
+
+def _term(fact) -> ox.NamedNode | ox.Literal:
+    """A canonical term back as the engine's: an IRI, a text with its language or datatype, a
+    number as a decimal. A blank node's content is not a term and is refused."""
+    kind = fact[0]
+    if kind == "iri":
+        return ox.NamedNode(fact[1])
+    if kind == "num":
+        return ox.Literal(repr(fact[1]), datatype=ox.NamedNode(_XSD + "decimal"))
+    if kind == "lit":
+        tag = fact[2]
+        return ox.Literal(fact[1], language=tag) if "://" not in tag else ox.Literal(fact[1], datatype=ox.NamedNode(tag))
+    raise ValueError(f"a fictive world cannot write a fact hanging off a blank node: {fact!r}")
+
+
+def _quad(fact, graph: str) -> ox.Quad:
+    s, p, o = fact
+    return ox.Quad(_term(s), ox.NamedNode(p), _term(o), ox.NamedNode(graph))
 
 
 class Standing:
@@ -132,13 +171,15 @@ class Executor:
     """
 
     def __init__(self, beliefs: ox.Store, agent_id: str, intentions: ox.Store | None = None,
-                 holder: str | None = None, *, take=None, poll_s: float = POLL_S):
+                 holder: str | None = None, *, take=None, fictive: bool = False,
+                 poll_s: float = POLL_S):
         self.intentions = intentions if intentions is not None else ox.Store()
         self.beliefs = beliefs
         self.id = agent_id
         self.holder = holder
         self.graph = intentions_graph(agent_id)
         self.take = take if take is not None else self.say
+        self.all_fictive = fictive
         self.poll_s = poll_s
         self._work: queue.SimpleQueue = queue.SimpleQueue()
         self._inflight: set[str] = set()
@@ -204,23 +245,71 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
     # --- keeping time: one pass -----------------------------------------------------------------
 
     def tick(self, now: datetime | None = None) -> list[str]:
-        """One pass of the timekeeper: hand every head step due at `now` to the queue. The
-        steps handed over. A head not yet due is remembered as the instant to wake at."""
+        """One pass of the timekeeper: hand every head step due at `now` to the queue, and
+        hold every head already taken to what it predicted. The steps handed over. Whatever
+        is not yet due — a step's opening, a landing, a deadline — is remembered as the
+        instant to wake at.
+
+        THE WORLD ANSWERS OR IT DOES NOT. A taken head that predicts something waits at its
+        `landsAt`; from then on, every pass asks the present whether what the step predicted
+        holds, and moves the intention along when it does. Past the landing by the patience
+        with no answer, the step is unmet, the tail is dropped with it and the intention
+        resolves `failed` — the search will see the want again on its next pass, standing in
+        a present that surprised it. The executor never replans; it says what happened.
+        """
         now = now or clock.now()
         due, soonest = [], None
+        def wake_at(when):
+            nonlocal soonest
+            if soonest is None or when < soonest:
+                soonest = when
         for r in rows(self.intentions, bind(_HEADS_Q, intentions=Raw(f"<{self.graph}>"))):
-            step = r["step"]
+            intention, step = r["intention"], r["step"]
             if step in self._inflight:
                 continue
-            when = datetime.fromisoformat(r["due"]) if r.get("due") else None
-            if when is None or when <= now:
-                self._inflight.add(step)
-                self._work.put((r["intention"], step))
-                due.append(step)
-            elif soonest is None or when < soonest:
-                soonest = when
+            if r.get("act") is None:
+                when = datetime.fromisoformat(r["due"]) if r.get("due") else None
+                if when is None or when <= now:
+                    self._inflight.add(step)
+                    self._work.put((intention, step))
+                    due.append(step)
+                else:
+                    wake_at(when)
+                continue
+            if not r.get("predicts"):
+                continue                        # advanced when it was taken; nothing to hold it to
+            lands = datetime.fromisoformat(r["lands"]) if r.get("lands") else now
+            if now < lands:
+                wake_at(lands)
+            elif self._answered(r["predicts"]):
+                self._advance(intention, step)
+            elif now >= lands + timedelta(seconds=self.patience_s):
+                log.warning("%s: the world did not answer %s by %s — %s fails",
+                            self.id, local_of(step), lands.isoformat(), intention.rsplit("#", 1)[-1])
+                self.resolve(intention, "failed")
+            else:
+                wake_at(lands + timedelta(seconds=self.patience_s))
         self._next_due = soonest
         return due
+
+    def _answered(self, predicts: str) -> bool:
+        """Does the present hold what a step predicted — every addition present, every
+        retraction gone — over the agent's readings as they stand?"""
+        said = json.loads(predicts)
+        present = {json.dumps(f) for f in facts_of(self.beliefs, *graphs_of(self.beliefs, STATE))}
+        return all(json.dumps(f) in present for f in said.get("adds", ())) \
+            and not any(json.dumps(f) in present for f in said.get("retracts", ()))
+
+    def _advance(self, intention: str, step: str) -> None:
+        """Move the intention to the step after `step`, or resolve it `done` at the last. The
+        timekeeper is woken either way: a new head may be due at once."""
+        following = next(iter(rows(self.intentions, bind(_NEXT_Q, intentions=Raw(f"<{self.graph}>"), step=step))), None)
+        if following is None:
+            self.resolve(intention, "done")
+        else:
+            update(self.intentions, bind(_ADVANCE_U, intentions=Raw(f"<{self.graph}>"),
+                                         intention=intention, step=step, next=following["next"]))
+        self.wake()
 
     # --- executing: one pass ----------------------------------------------------------------------
 
@@ -246,7 +335,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         #  requirement (`notBefore`) and prediction (`landsAt`), and stay what they were.
         taken_at = clock.now()
         try:
-            self.take(said, intention)
+            self._taker_for(step)(said, intention)
             taken = True
         except Exception as exc:                                        # noqa: BLE001
             log.error("%s: step %s could not be taken: %s", self.id, local_of(step), exc)
@@ -257,18 +346,23 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                                      taken_at=instant(taken_at), done_at=instant(done_at),
                                      taken=Raw("true" if taken else "false")))
         #  THE INTENTION MOVES BEFORE THE STEP LEAVES FLIGHT: a tick between the two would
-        #  find the old head and hand it over twice.
+        #  find the old head and hand it over twice. A step that predicts something does not
+        #  move here at all — the act on record is what the next tick reads, and the world's
+        #  answer is what moves it.
         if not taken:
             self.resolve(intention, "failed")
-        else:
-            following = next(iter(rows(self.intentions, bind(_NEXT_Q, intentions=Raw(f"<{self.graph}>"), step=step))), None)
-            if following is None:
-                self.resolve(intention, "done")
-            else:
-                update(self.intentions, bind(_ADVANCE_U, intentions=Raw(f"<{self.graph}>"),
-                                             intention=intention, step=step, next=following["next"]))
+        elif not rows(self.intentions, bind(_PREDICTS_Q, intentions=Raw(f"<{self.graph}>"), step=step)):
+            self._advance(intention, step)
         self._inflight.discard(step)
         self.wake()
+
+    def _taker_for(self, step: str):
+        """Who takes this step: the fictive taker where the step's action is fictive, or the
+        executor is fictive throughout; otherwise `take`, the seam to real code."""
+        if self.all_fictive:
+            return self.fictive
+        said = rows(self.intentions, bind(_FICTIVE_Q, intentions=Raw(f"<{self.graph}>"), step=step))
+        return self.fictive if said and said[0]["f"] == "true" else self.take
 
     def step_of(self, step: str) -> dict:
         """A step's rows in words other than this layer's, keyed by the local part of each
@@ -284,6 +378,32 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                            for k, v in sorted(said.items()) if k != "step")
         log.info("%s: taking %s of %s — %s", self.id, local_of(said["step"]),
                  intention.rsplit("#", 1)[-1], filling or "nothing filled")
+
+    def fictive(self, said: dict, intention: str) -> None:
+        """The taking of a step whose action is FICTIVE: say the step's name, then write what
+        it predicted into the agent's readings, so the present answers because the executor
+        was the world.
+
+        AN ACTION IS FICTIVE, and its row says so (`execution:fictive`), carried onto every
+        step that fills it: a hanoi move and a courier's drive have no instrument to report
+        what taking them did, so a step held to the world would wait out the patience and
+        fail for ever. Its world is the belief base, and the step's own prediction is the
+        physics. An executor built `fictive` takes every step so, the shorthand for a world
+        that exists only in the store. The fact is rebuilt from its canonical form, which
+        keeps an IRI and a text and rounds a number, and a fact hanging off a blank node is
+        refused rather than guessed at.
+        """
+        self.say(said, intention)
+        (predicts,) = rows(self.intentions, bind(_PREDICTS_Q, intentions=Raw(f"<{self.graph}>"), step=said["step"])) or [{}]
+        if not predicts:
+            return
+        (state, *_) = graphs_of(self.beliefs, STATE) or [None]
+        if state is None:
+            raise RuntimeError(f"{self.id}: a fictive step has no state graph to write into")
+        change = json.loads(predicts["predicts"])
+        for fact in change.get("retracts", ()):
+            self.beliefs.remove(_quad(fact, state))
+        add_quads(self.beliefs, (_quad(fact, state) for fact in change.get("adds", ())))
 
     # --- the threads -------------------------------------------------------------------------------
 

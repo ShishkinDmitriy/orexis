@@ -8,6 +8,7 @@ what it promises without a world, a search or a capability.
 
 from __future__ import annotations
 
+import json
 import logging
 import time
 from datetime import datetime, timedelta, timezone
@@ -19,7 +20,8 @@ from agent import clock
 from agent.execution.executor import DEFAULT_PATIENCE_S, Executor
 from agent.execution.plans import copy_plan
 from agent.execution.ontology import EXECUTION, intentions_graph
-from agent.store import bindings, query_over, update
+from agent.hash_named_graph import facts_of
+from agent.store import bindings, put_graph, query_over, update
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT, ME = "keeper", "http://example.org/test#keeper"
@@ -207,3 +209,114 @@ def test_the_two_threads_carry_a_plan_out():
         x.stop()
     assert _resolved(x, intention) == [{"o": "done"}]
     assert len(_acts(x)) == 3
+
+
+# --- the world answers, or it does not --------------------------------------------------------
+
+STATE = "http://example.org/test#sensed"
+DISK, ON, PEG_A, PEG_B = ("http://example.org/test#disk_1", "http://example.org/test#on",
+                          "http://example.org/test#PegA", "http://example.org/test#PegB")
+
+
+def _beliefs(on: str) -> ox.Store:
+    """A belief base whose one reading says where the disk is, with the catalogue that says
+    the graph is the state."""
+    st = ox.Store()
+    put_graph(st, "http://example.org/test#world", f"""
+@prefix orexis: <http://example.org/orexis#> .
+GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{on}> }}
+GRAPH <http://example.org/test#catalogue> {{
+  <http://example.org/test#catalogue> a orexis:CatalogueGraph .
+  <{STATE}> a orexis:StateGraph }}""", dataset=True)
+    return st
+
+
+def _predicting(steps: int = 1) -> ox.Store:
+    """A plan whose first step predicts the disk moving from A to B, in the canonical facts a
+    world's digest is made of, and lands at NOW."""
+    source = a_plan(steps)
+    (before,) = facts_of(_beliefs(PEG_A), STATE)
+    (after,) = facts_of(_beliefs(PEG_B), STATE)
+    predicts = json.dumps({"adds": [after], "retracts": [before]})
+    update(source, f"""INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:predicts {json.dumps(predicts)} ;
+                                                       execution:landsAt "{NOW.isoformat()}"^^xsd:dateTime }} }}""")
+    return source
+
+
+def test_a_step_that_predicts_something_waits_for_the_world_to_answer():
+    """Taken, the step stays the head until the present holds what it predicted; when the
+    reading says the disk is on B, the intention moves on."""
+    beliefs = _beliefs(PEG_A)
+    x = Executor(beliefs, AGENT, ox.Store())
+    intention = x.commit(_predicting(2), PLAN, WANT)
+    x.tick(NOW)
+    assert x.drain() == 1
+    (standing,) = x.standing()
+    assert standing.at == f"{PLAN}.0", "taken, and still the head: the world has not answered"
+    assert x.tick(NOW) == [] and x.standing()[0].at == f"{PLAN}.0"
+    update(beliefs, f"DELETE DATA {{ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{PEG_A}> }} }} ; "
+                    f"INSERT DATA {{ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{PEG_B}> }} }}")
+    assert x.tick(NOW) == [] and x.standing()[0].at == f"{PLAN}.1", "the world answered: the intention moved"
+    assert x.tick(NOW) == [f"{PLAN}.1"], "and the next head is due on the pass after"
+    assert _resolved(x, intention) == []
+
+
+def test_a_step_of_a_fictive_action_is_taken_by_the_executor_itself():
+    """The action's row says fictive and the step carries it; a plain executor writes the
+    prediction into the readings for that step and holds every other step to the world."""
+    beliefs = _beliefs(PEG_A)
+    x = Executor(beliefs, AGENT, ox.Store())
+    source = _predicting(1)
+    update(source, f"INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:fictive true }} }}")
+    intention = x.commit(source, PLAN, WANT)
+    x.tick(NOW)
+    x.drain()
+    (where,) = bindings(query_over(beliefs, f"SELECT ?on WHERE {{ <{DISK}> <{ON}> ?on }}", STATE))
+    assert where["on"] == PEG_B
+    x.tick(NOW)
+    assert _resolved(x, intention) == [{"o": "done"}]
+
+
+def test_a_fictive_executor_is_the_world_of_its_own_steps():
+    """Taking a step writes what it predicted into the readings, so the very next pass finds
+    the world answered: hanoi has no instrument, and the step's prediction is its physics."""
+    beliefs = _beliefs(PEG_A)
+    x = Executor(beliefs, AGENT, ox.Store(), fictive=True)
+    intention = x.commit(_predicting(1), PLAN, WANT)
+    x.tick(NOW)
+    x.drain()
+    (where,) = bindings(query_over(beliefs, f"SELECT ?on WHERE {{ <{DISK}> <{ON}> ?on }}", STATE))
+    assert where["on"] == PEG_B, "the executor moved the disk, since nothing else could"
+    x.tick(NOW)
+    assert _resolved(x, intention) == [{"o": "done"}]
+
+
+def test_a_world_that_does_not_answer_by_the_patience_fails_the_intention():
+    """Past the landing by the patience with the reading unchanged, the step is unmet and the
+    intention resolves `failed`; before that it merely waits."""
+    x = Executor(_beliefs(PEG_A), AGENT, ox.Store())
+    intention = x.commit(_predicting(1), PLAN, WANT)
+    x.tick(NOW)
+    x.drain()
+    x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S - 1))
+    assert _resolved(x, intention) == [] and len(x.standing()) == 1
+    x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S))
+    assert _resolved(x, intention) == [{"o": "failed"}]
+
+
+def test_a_step_is_not_held_to_the_world_before_it_lands():
+    """The landing is when the prediction is first asked of the present: a reading that
+    already says B before the landing is not read as the step having landed."""
+    x = Executor(_beliefs(PEG_B), AGENT, ox.Store())
+    source = _predicting(1)
+    later = NOW + timedelta(hours=1)
+    update(source, f'DELETE {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt ?t }} }} '
+                   f'INSERT {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt "{later.isoformat()}"^^xsd:dateTime }} }} '
+                   f'WHERE {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt ?t }} }}')
+    intention = x.commit(source, PLAN, WANT)
+    x.tick(NOW)
+    x.drain()
+    x.tick(NOW)
+    assert _resolved(x, intention) == [], "not yet landed, so not yet asked"
+    x.tick(later)
+    assert _resolved(x, intention) == [{"o": "done"}]

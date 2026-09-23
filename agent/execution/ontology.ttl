@@ -51,6 +51,10 @@ execution:takenAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:rang
     rdfs:label "taken at" ;
     rdfs:comment "When the executor handed the step to its taker — the record, against the step's `execution:notBefore`, which is the requirement." .
 
+execution:fictive a owl:DatatypeProperty ; rdfs:range xsd:boolean ;
+    rdfs:label "fictive" ;
+    rdfs:comment "Said of an ACTION whose effect is its own physics: no instrument reports what taking it did, so the executor applies the step's prediction to the readings itself and the present answers because nothing else could have — a hanoi move, a courier's drive. The plan's extraction carries it onto every step that fills such an action, which is where the executor reads it; an executor built `fictive` treats every step so, which is the shorthand for a world that exists only in the store." .
+
 execution:doneAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:range xsd:dateTime ;
     rdfs:label "done at" ;
     rdfs:comment "When the taker returned, taken or not. With `execution:takenAt` it is how long the taking took, in the one timeline; it is NOT when the step's change landed in the world, which is the world's to say through a reading and is held against the step's `execution:landsAt`, the prediction, by whoever holds the world to the step." .

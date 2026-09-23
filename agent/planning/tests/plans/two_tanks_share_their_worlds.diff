@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -87,4 +87,268 @@
+@@ -87,4 +87,272 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -184,6 +184,7 @@
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:landsAt "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:partOf plan:keeper.in_range.pursued.tank1 .
++  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:predicts "{\"adds\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",5.0]]],\"retracts\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",0.0]]]}" .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:then plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 planning:fills :fill .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 planning:of possible:fill-tank1.by .
@@ -192,6 +193,7 @@
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:landsAt "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:partOf plan:keeper.in_range.pursued.tank1 .
++  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:predicts "{\"adds\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",10.0]]],\"retracts\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",5.0]]]}" .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 planning:fills :fill .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 planning:of possible:fill-tank1.fill-tank1.by .
 +}
@@ -206,6 +208,7 @@
 +  plan:keeper.in_range.pursued.tank2.fill-tank2 execution:landsAt "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank2.fill-tank2 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank2.fill-tank2 execution:partOf plan:keeper.in_range.pursued.tank2 .
++  plan:keeper.in_range.pursued.tank2.fill-tank2 execution:predicts "{\"adds\":[[[\"iri\",\"http://example.org/test#tank2\"],\"http://example.org/test#level\",[\"num\",5.0]]],\"retracts\":[[[\"iri\",\"http://example.org/test#tank2\"],\"http://example.org/test#level\",[\"num\",0.0]]]}" .
 +  plan:keeper.in_range.pursued.tank2.fill-tank2 execution:then plan:keeper.in_range.pursued.tank2.fill-tank2.fill-tank2 .
 +  plan:keeper.in_range.pursued.tank2.fill-tank2 planning:fills :fill .
 +  plan:keeper.in_range.pursued.tank2.fill-tank2 planning:of possible:fill-tank2.by .
@@ -214,6 +217,7 @@
 +  plan:keeper.in_range.pursued.tank2.fill-tank2.fill-tank2 execution:landsAt "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank2.fill-tank2.fill-tank2 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank2.fill-tank2.fill-tank2 execution:partOf plan:keeper.in_range.pursued.tank2 .
++  plan:keeper.in_range.pursued.tank2.fill-tank2.fill-tank2 execution:predicts "{\"adds\":[[[\"iri\",\"http://example.org/test#tank2\"],\"http://example.org/test#level\",[\"num\",10.0]]],\"retracts\":[[[\"iri\",\"http://example.org/test#tank2\"],\"http://example.org/test#level\",[\"num\",5.0]]]}" .
 +  plan:keeper.in_range.pursued.tank2.fill-tank2.fill-tank2 planning:fills :fill .
 +  plan:keeper.in_range.pursued.tank2.fill-tank2.fill-tank2 planning:of possible:fill-tank2.fill-tank2.by .
 +}

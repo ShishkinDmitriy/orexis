@@ -89,6 +89,14 @@ WHERE  {{ GRAPH <{catalogue}> {{ <{graph}> <{HASH}> ?old }} }}""")
     return digest
 
 
+def facts_of(store, *graphs: str) -> frozenset:
+    """The canonical facts the named graphs state, together — the same form a digest is made
+    of, answered rather than hashed, for a reader that compares two sets fact by fact: what a
+    step predicts against what the present holds. Each fact is a nested tuple of plain
+    values, so it survives a round trip through JSON."""
+    return _facts(q for graph in graphs for q in quads(store, graph))
+
+
 def digest_of(store, graph: str) -> str:
     """The canonical hash of what `graph` holds, answered and written NOWHERE — for a writer
     that puts it on the graph's row itself, in the same update as the row's class and period,
