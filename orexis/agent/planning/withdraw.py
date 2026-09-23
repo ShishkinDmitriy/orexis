@@ -1,43 +1,26 @@
-"""Taking a want away — the other half of a want's life, and its own module.
+"""Withdrawing what the derivation no longer implies — the pass-level sweep, and the second
+of the two things that ever happen to a want.
 
 **A WANT IS ONE-SHOT.** It exists because something is wanted and it is gone when that is
 settled: its plan finished, the search found it already reached, or the decomposition it came
 from stopped producing it. A DESIRE lives forever and mints wants; a want is the occasion. So
-this is not a tidy-up beside the derivation — it is the second of the two things that ever
-happen to a want, and `derive_wants.py` holds the first.
-
-**WHERE A WANT IS, ASKED RATHER THAN SPELLED.** This was `_forget(graph_of(agent_id, uri))`
-inside the derivation, and the name it built was the derivation's own convention — so it
-removed exactly the wants the derivation had named, and silently nothing else. A want a WORLD
-ratified is in a graph the world named, so the update dropped a graph that does not exist and
-reported success. Nothing ever withdrew an authored want, and that is why one had to be judged
-a second time at read time to look met. A graph's name is for eyes and a reader asks its class
-(AGENTS.md); this is a reader, and asking the catalogue is also what let the `agent_id`
-parameter go.
+this is not a tidy-up beside the derivation — it is the other half of a want's life, and
+`derive_wants.py` holds the first. Taking ONE want away is the private act beneath, wherever
+the want lives: a graph of wants holds wants and nothing else, so one want in one is the whole
+of it and the graph goes; a record is somebody else's house and only the want goes.
 """
 
 from __future__ import annotations
 
 import logging
-
-from orexis.agent.ontology import OREXIS
 from datetime import datetime
 
-from orexis.agent.store import NAMESPACES, forget_graph, rows
+from orexis.agent.ontology import OREXIS
+from orexis.agent.store import NAMESPACES, Raw, bind, forget_graph, rows
 
-#  THE STAGES A WANT PASSES THROUGH (agent/ontology.ttl, "a want's life"). Spelled here as
-#  terms, which rule 1 allows; what may never be spelled is an instance.
-log = logging.getLogger("wants")
+log = logging.getLogger("withdraw")
 
 WANT_GRAPH = OREXIS + "WantGraph"
-RECOGNIZED = OREXIS + "Recognized"
-PLANNING = OREXIS + "Planning"
-DONE = OREXIS + "Done"
-#  TWO STATES, AND THE PREDECESSOR HAD SEVEN. A want is written RECOGNIZED when it is minted
-#  and DONE when whoever decided it is finished says so, and `forget_wants` is garbage
-#  collection over whatever is Done. The five between them — planning, ready, pursued, failed,
-#  unreachable — were each written by a different decider, and this layer has none of those
-#  deciders yet. A state nobody writes is a state no reader can trust.
 
 #  WHERE A WANT IS: the graph of wants — or the record, for a debt — that holds this one, and
 #  how many wants are in it, since that is what decides whether taking this one takes the graph.
@@ -49,12 +32,22 @@ SELECT ?g ?kind (COUNT(DISTINCT ?w) AS ?wants) WHERE {
 GROUP BY ?g ?kind"""
 
 
-#  EVERY WANT THAT IS FINISHED, for the collector below.
-_DONE_Q = f"""
-SELECT ?w WHERE {{
-  GRAPH ?g {{ ?w a orexis:Want ; orexis:state <{DONE}> }}
-  GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?g a ?kind .
-                VALUES ?kind {{ orexis:WantGraph orexis:RecordGraph }} }} }}"""
+#  TAKE ONE WANT OUT OF A GRAPH THAT HOLDS OTHERS, leaving them untouched — the text
+#  `forget_want` runs, and the one the derivation runs before it puts a want back, since
+#  replacing a want whole is removing it and putting it back.
+#
+#  EVERYTHING REACHABLE FROM IT, by a path of any predicate — `(<x>|!<x>)*`, the idiom for
+#  "any step, zero or more" — because a met-test is not one step away: a want points at its
+#  shape, the shape at a blank property node, the property node at the band. A pattern that
+#  took the want's own rows left the shape standing, which the snapshot caught.
+#
+#  And the rows that point AT it, which is the holder's `orexis:holds`. Nothing else in this
+#  repo points at a want from inside its own graph.
+FORGET_ONE_U = """DELETE { GRAPH $graph { ?s ?p ?o } }
+WHERE  { GRAPH $graph { $want (<urn:x>|!<urn:x>)* ?s . ?s ?p ?o } } ;
+DELETE { GRAPH $graph { ?s ?p $want } }
+WHERE  { GRAPH $graph { ?s ?p $want } }"""
+
 
 
 #  WHAT A PLAN IS WALKING. An intention that has been adopted and not resolved pursues a want,
@@ -107,13 +100,13 @@ def withdraw(store, wanted, now: datetime) -> list[str]:
     pursued = {r["w"] for r in rows(store, _PURSUED_Q, ())}
     gone = []
     for uri in sorted(stale - pursued):
-        forget_want(store, uri)
+        _forget_want(store, uri)
         log.info("%s withdrawn: its desire no longer reads it unmet", uri.rsplit("#", 1)[-1])
         gone.append(uri)
     return gone
 
 
-def forget_want(store, uri: str) -> None:
+def _forget_want(store, uri: str) -> None:
     """Remove one want over the ENGINE, wherever it lives.
 
     `Wants.delete_by_uri` was a collection's door and announced itself; this announces nothing
@@ -136,22 +129,5 @@ def forget_want(store, uri: str) -> None:
         return
     #  OTHERWISE THE GRAPH STAYS and only the want goes: a world may ratify several into the
     #  graph it names, and a record is somebody else's house.
-    store.update(_forget_one(graph, uri), prefixes=NAMESPACES)
-
-
-def _forget_one(graph: str, uri: str) -> str:
-    """Take one want out of a graph that holds others, leaving them untouched.
-
-    EVERYTHING REACHABLE FROM IT, by a path of any predicate — `(<x>|!<x>)*`, the idiom for
-    "any step, zero or more" — because a met-test is not one step away: a want points at its
-    shape, the shape at a blank property node, the property node at the band. A pattern that
-    took the want's own rows left the shape standing, which the snapshot caught.
-
-    And the rows that point AT it, which is the holder's `orexis:holds`. Nothing else in this
-    repo points at a want from inside its own graph.
-    """
-    any_step = "(<urn:x>|!<urn:x>)*"
-    return f"""DELETE {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}
-WHERE  {{ GRAPH <{graph}> {{ <{uri}> {any_step} ?s . ?s ?p ?o }} }} ;
-DELETE {{ GRAPH <{graph}> {{ ?s ?p <{uri}> }} }}
-WHERE  {{ GRAPH <{graph}> {{ ?s ?p <{uri}> }} }}"""
+    store.update(bind(FORGET_ONE_U, graph=Raw(f"<{graph}>"), want=Raw(f"<{uri}>")),
+                 prefixes=NAMESPACES)

@@ -1,0 +1,42 @@
+--- case
++++ expected
+@@ -97,10 +97,24 @@
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank2 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
++  possible:fill-tank1 a planning:PossibleGraph .
++  possible:fill-tank1 orexis:arrivedBy orexis:Derived .
++  possible:fill-tank1 orexis:hash "sha256:c80ff1f6e0ffce1c8575ebd35a6183b376384efef6139df68098f31e3b94921e" .
++  possible:fill-tank1 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  possible:fill-tank1 planning:by possible:fill-tank1.by .
++  possible:fill-tank1 planning:minted 1 .
++  possible:fill-tank1 planning:spent 1.0 .
+   possible:fill-tank1.by :tank :tank1 .
+   possible:fill-tank1.by a planning:Candidate .
+   possible:fill-tank1.by planning:fills :fill .
+   possible:fill-tank1.by planning:from ground:2026-01-01T120000p0000 .
++  possible:fill-tank2 a planning:PossibleGraph .
++  possible:fill-tank2 orexis:arrivedBy orexis:Derived .
++  possible:fill-tank2 orexis:hash "sha256:b925a49cc433542befaf03149f9d7f1e92e07473431966218677da6fae49dc78" .
++  possible:fill-tank2 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  possible:fill-tank2 planning:by possible:fill-tank2.by .
++  possible:fill-tank2 planning:minted 2 .
++  possible:fill-tank2 planning:spent 1.0 .
+   possible:fill-tank2.by :tank :tank2 .
+   possible:fill-tank2.by a planning:Candidate .
+   possible:fill-tank2.by planning:fills :fill .
+@@ -139,3 +153,14 @@
+   :keeper.in_range.pursued.tank2.met sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+   :keeper.in_range.pursued.tank2.met sh:targetNode :tank2 .
+ }
++
++
++GRAPH possible:fill-tank1 {
++  :tank1 :level 5 .
++  :tank2 :level 0 .
++}
++
++GRAPH possible:fill-tank2 {
++  :tank1 :level 0 .
++  :tank2 :level 5 .
++}

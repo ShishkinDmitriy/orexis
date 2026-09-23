@@ -1,16 +1,5 @@
 --- case
 +++ expected
-@@ -10,9 +10,9 @@
- 
- 
- GRAPH :ontology {
-+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
-   planning:ScopeGraph rdfs:subClassOf orexis:Graph .
-   planning:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
--  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
- }
- 
- GRAPH :actions {
 @@ -33,4 +33,18 @@
    :ontology a orexis:Graph .
    :ontology a orexis:OntologyGraph .

@@ -17,7 +17,7 @@ import pytest
 from orexis.agent import clock
 from orexis.agent.execution.ontology import EXECUTION
 from orexis.agent.planning.extract_plan import extract_plan
-from orexis.agent.planning.ontology import BY, FILLS, OF, PLAN_GRAPH, PLANNING, SATISFIED
+from orexis.agent.planning.ontology import BY, FILLS, FROM, OF, PLAN_GRAPH, PLANNING, SATISFIED
 from orexis.agent.planning.planner import Planner
 from orexis.agent.store import (Raw, bind, catalogue_of, close_catalogue, graphs_of,
                                           put_graph, rows)
@@ -68,34 +68,36 @@ def test_every_step_names_the_candidate_it_was_minted_from(walked):
 
 def test_the_chain_is_the_worlds_ancestry_and_not_a_tuple(walked):
     """What makes this a function over a store: the plan's order is the order the worlds were
-    forked in, read back out of `prov:wasDerivedFrom`, by a caller holding no search node."""
+    forked in, read back out of the candidate edges, by a caller holding no search node."""
     (graph,) = graphs_of(walked, PLAN_GRAPH)
     by_chain = [s["of"] for s in _steps(walked, graph)]
 
-    #  the same walk, done by hand from the world the plan was found in
-    #  the world the plan was found in: the deepest fork, whose name carries the longest path
+    #  the same walk, done by hand from the world the plan was found in — the deepest fork,
+    #  whose name carries the longest path — one candidate edge at a time: the world says
+    #  which candidate reached it, the candidate says which world it was taken in
     deepest = max((g for g in graph_names_of(walked) if "/possible/" in g), key=len)
     ancestry, world = [], deepest
     while True:
         found = rows(walked, bind(f"""
-            SELECT ?parent ?by WHERE {{ GRAPH $cat {{ $w prov:wasDerivedFrom ?parent .
-                                        OPTIONAL {{ $w <{BY}> ?by }} }} }}""",
+            SELECT ?parent ?by WHERE {{ GRAPH $cat {{ $w <{BY}> ?by . ?by <{FROM}> ?parent }} }}""",
             cat=Raw(f"<{catalogue_of(walked)}>"), w=Raw(f"<{world}>")))
-        if not found or not found[0].get("by"):
+        if not found:
             break
         ancestry.append(found[0]["by"])
         world = found[0]["parent"]
     assert list(reversed(ancestry)) == by_chain, "root first, and the same candidates"
 
 
-def test_an_answer_is_written_with_no_steps(walked):
-    """A plan with no steps is an ANSWER. Extracting one from the ground the pass started in
-    walks no ancestry — a ground says no `planning:by` — so the graph holds the outcome and
-    nothing else."""
-    (ground,) = [g for g in graph_names_of(walked) if "/ground/" in g][:1]
-    graph = extract_plan(walked, ground, "urn:test:nothing", SATISFIED, None)
-
-    assert _steps(walked, graph) == []
+def test_extracting_again_leaves_the_same_plan(walked):
+    """The plan is read off the weighings, so extracting it a second time writes the same
+    graph whole — one plan per want, replaced rather than added to. The empty answer, a plan
+    with no steps and an outcome that says which silence, is the no-lever plans case."""
+    (graph,) = graphs_of(walked, PLAN_GRAPH)
+    before = _steps(walked, graph)
+    (want,) = rows(walked, bind(f"SELECT ?w WHERE {{ GRAPH $g {{ $g <{PLANNING}for> ?w }} }}",
+                                g=Raw(f"<{graph}>")))
+    assert extract_plan(walked, want["w"]) == graph
+    assert _steps(walked, graph) == before
     assert rows(walked, bind(f"SELECT ?o WHERE {{ GRAPH $g {{ $g <{PLANNING}outcome> ?o }} }}",
                              g=Raw(f"<{graph}>")))[0]["o"] == SATISFIED
 

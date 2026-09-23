@@ -1,0 +1,101 @@
+# two_tanks_share_their_worlds
+#
+# Two tanks below their floor, one lever that fills either, and one scope — so two WANTS, one
+# per tank, searched in one imaginarium. The claim is the WEIGHING: a world is forked once and
+# weighed twice, once for each want. The first want's search makes every world; the second's
+# finds them standing and weighs them without forking, so the worlds carry one `planning:minted`
+# order and two `.for.` weighings each. A fork that lands on facts another path already reached
+# — fill tank2 then tank1, against tank1 then tank2 — is passed over for both, and its
+# weighing says which world it repeats.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
+
+GRAPH :ontology {
+  :level a rdf:Property .
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+}
+
+GRAPH :actions {
+  :fill a orexis:Action .
+  :fill orexis:available """PREFIX : <http://example.org/test#>
+      SELECT ?tank WHERE {
+      ?tank a :Tank ; :level ?l .
+      FILTER(?l < 10) }""" .
+  :fill orexis:costs """PREFIX : <http://example.org/test#>
+      SELECT (1 AS ?cost) WHERE { }""" .
+  :fill orexis:retracts """PREFIX : <http://example.org/test#>
+      DELETE { GRAPH $state { $tank :level ?l } }
+      WHERE  { GRAPH $state { $tank :level ?l } }""" .
+  :fill orexis:takes :tank .
+  :fill sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?tank :level ?next } WHERE {
+      $tank :level ?l .
+      BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" .
+  :tank a orexis:Parameter .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:targetClass :Tank .
+  :keeper orexis:holds :keeper.in_range .
+  :keeper.in_range a orexis:Desire .
+  :keeper.in_range orexis:about :level .
+  :keeper.in_range orexis:metWhen :in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+}
+
+GRAPH :sensed {
+  :tank1 :level 0 .
+  :tank2 :level 0 .
+}
+
+GRAPH :scopes {
+  :fill planning:inScope :keeper.scope.1 .
+  :keeper.scope.1 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

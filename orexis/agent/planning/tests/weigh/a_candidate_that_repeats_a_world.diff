@@ -1,0 +1,39 @@
+--- case
++++ expected
+@@ -103,6 +103,12 @@
+   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:met false .
+   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:for :keeper.in_range.pursued.tank2 .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:open true .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank2 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:weighs ground:2026-01-01T120000p0000 .
+   possible:fill-tank1 a planning:PossibleGraph .
+   possible:fill-tank1 orexis:arrivedBy orexis:Derived .
+   possible:fill-tank1 orexis:hash "sha256:c80ff1f6e0ffce1c8575ebd35a6183b376384efef6139df68098f31e3b94921e" .
+@@ -174,6 +180,10 @@
+   possible:fill-tank2.fill-tank1.by a planning:Candidate .
+   possible:fill-tank2.fill-tank1.by planning:fills :fill .
+   possible:fill-tank2.fill-tank1.by planning:from possible:fill-tank2 .
++  possible:fill-tank2.fill-tank1.by.for.keeper.in_range.pursued.tank1 a planning:Weighing .
++  possible:fill-tank2.fill-tank1.by.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
++  possible:fill-tank2.fill-tank1.by.for.keeper.in_range.pursued.tank1 planning:repeats possible:fill-tank1.fill-tank2 .
++  possible:fill-tank2.fill-tank1.by.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank2.fill-tank1.by .
+   possible:fill-tank2.fill-tank2 a planning:PossibleGraph .
+   possible:fill-tank2.fill-tank2 orexis:arrivedBy orexis:Derived .
+   possible:fill-tank2.fill-tank2 orexis:hash "sha256:71af2c683666133f094033222ad82f45676a17913532f4ca8f587ecc30cc9993" .
+@@ -185,6 +195,12 @@
+   possible:fill-tank2.fill-tank2.by a planning:Candidate .
+   possible:fill-tank2.fill-tank2.by planning:fills :fill .
+   possible:fill-tank2.fill-tank2.by planning:from possible:fill-tank2 .
++  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 a planning:Weighing .
++  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
++  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:met false .
++  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:open true .
++  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank2.fill-tank2 .
+   possible:fill-tank2.for.keeper.in_range.pursued.tank1 a planning:Weighing .
+   possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
+   possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:met false .

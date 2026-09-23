@@ -19,7 +19,7 @@ PLANNING = "http://example.org/orexis/planning#"
 #  the ledger's own words. Named by `imaginarium.plan_graph` and copied out by the execution
 #  layer; nothing here is written to the belief base.
 PLAN_GRAPH = PLANNING + "PlanGraph"
-FOR_WANT = PLANNING + "forWant"
+FOR = PLANNING + "for"
 
 #  WHY THE PASS ENDED, and the three are not interchangeable. The two silences in particular:
 #  NOTHING PROPOSED ANYTHING (equip me), against EXHAUSTED, where levers exist and no bounded
@@ -61,6 +61,29 @@ BY = PLANNING + "by"
 CANDIDATE = PLANNING + "Candidate"
 FILLS = PLANNING + "fills"
 OF = PLANNING + "of"
+FROM = PLANNING + "from"
+
+#  WHAT IS TRUE OF A POSSIBLE WORLD WHOEVER ASKS: what the path to it spent, when it is, and
+#  where it came in the order the pass made worlds — the tie-break between two of equal cost.
+SPENT = PLANNING + "spent"
+AT_INSTANT = PLANNING + "atInstant"
+MINTED = PLANNING + "minted"
+
+#  A WEIGHING: what a pass worked out about one world FOR ONE WANT, or about one ground for
+#  one DESIRE — the met-test's report there, as violation rows and a verdict; for a want also
+#  on the frontier or not, opened or not — reified because a world has as many askers as the
+#  scope has wants. The frontier is these rows, ordered by the world's `spent`, so the search state
+#  is in the store and a pass can be continued from it. A candidate the search passed over is
+#  weighed too, and says which world its fork repeated.
+WEIGHING = PLANNING + "Weighing"
+WEIGHS = PLANNING + "weighs"
+VIOLATION = PLANNING + "violation"
+INSTANCE = PLANNING + "instance"
+CONSTRAINT = PLANNING + "constraint"
+MET = PLANNING + "met"
+OPEN = PLANNING + "open"
+EXPANDED = PLANNING + "expanded"
+REPEATS = PLANNING + "repeats"
 
 #  A GROUND WORLD: what the agent's own knowledge comes to over ONE PERIOD, materialised in an
 #  imaginarium — the present, and what each prediction makes of it. Classified with a period,
@@ -68,7 +91,10 @@ OF = PLANNING + "of"
 #  list (a-reader-states-the-kinds-it-reads).
 GROUND_GRAPH = PLANNING + "GroundGraph"
 
-#  A SCOPE (scope-actions): which predicates some one action or derivation moves together.
+#  A SCOPE (scope-actions): which predicates some one action or derivation moves together,
+#  and the graph the store's partition is written in — nobody's, and copied into every
+#  imaginarium because the derivation clusters by it there.
 SCOPE = PLANNING + "Scope"
+SCOPE_GRAPH = PLANNING + "ScopeGraph"
 
 

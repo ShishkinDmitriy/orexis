@@ -20,12 +20,13 @@ import logging
 import pyoxigraph as ox
 
 from orexis.agent import clock
-from orexis.agent.store import graphs_of
+from orexis.agent.ontology import OREXIS
+from orexis.agent.store import NAMESPACES, graphs_of, rows
 
 from . import touches
 from .ontology import DERIVATION_GRAPH
 from .touches import ANYTHING
-from .scopes import save_scopes, scope_name
+from .find_scopes import STANDING_Q
 
 log = logging.getLogger("scope_actions")
 
@@ -47,19 +48,81 @@ def scope_actions(store: ox.Store) -> None:
     now = clock.now()
     actions = touches.actions_of(store, now)
     edges = touches.stored_edges(store, graphs_of(store, DERIVATION_GRAPH))
-    parts = scopes(actions, edges)
+    parts = _partition(actions, edges)
     written = []
     for n, part in enumerate(parts, 1):
-        scope = scope_name(n)
+        scope = _scope_name(n)
         members = {action for action, (reads, writes) in actions.items()
                    if reads is ANYTHING or writes is ANYTHING
                    or any(str(p) in part for p in set(reads) | set(writes))}
         written.append((scope, set(part), members))
-    save_scopes(store, written)
+    _save_scopes(store, written)
     log.info("%d action(s) in %d scope(s)", len(actions), len(parts))
 
 
-def scopes(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozenset, ...]:
+#  THE STORE'S SCOPES, and the name is this module's because this module replaces the graph
+#  whole on every run. Nobody's and taking no id: the partition is a function of the actions
+#  the store holds and the derivations loaded, which are the same rows for everyone reading
+#  one store, so there is nobody to name it after. Spelled in `ontology.ttl` too, beside the
+#  class, because the vocabulary declares this instance publicly as it declares the world's
+#  and the actions'; a READER asks the class and never this.
+SCOPES_GRAPH = "http://example.org/orexis/graph/scopes"
+
+SCOPES_Q = """
+SELECT ?member ?scope WHERE { ?member planning:inScope ?scope }"""
+
+#  EVERY STANDING SCOPE GRAPH, asked of the catalogue by class — what a run replaces, whatever
+#  each is called, including a per-agent one a volume was left with before the partition
+#  became the store's.
+STANDING_Q = """
+SELECT ?g WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } }
+ORDER BY ?g"""
+
+
+def _scope_name(n: int) -> str:
+    """The name of the nth scope in the partition, largest first — the graph's own, suffixed,
+    so the same actions write the same text. This module names both the graph and what is in
+    it; `scope_actions` decides the partition and asks for the names."""
+    return f"{SCOPES_GRAPH}/{n}"
+
+
+def _save_scopes(store: ox.Store, scopes: list[tuple[str, set[str], set[str]]]) -> None:
+    """Replace the store's scopes with these — `(scope, predicates, actions)` each — and say
+    what the graph is. Written whole, and classified even when empty: a store with no scope
+    graph has never been scoped, which `derive_wants` refuses to guess about.
+
+    ONE UPDATE OVER THE ENGINE: every standing scope graph asked of the catalogue by class and
+    dropped, then the graph and its catalogue row together, the catalogue found by its own row
+    and every kind the vocabulary puts a scope graph beneath written from one
+    `rdfs:subClassOf` step — the closure is materialised at genesis, so one step is every step.
+    """
+    standing = [row["g"] for row in rows(store, STANDING_Q)]
+    graph = SCOPES_GRAPH
+    blocks = []
+    for scope, predicates, actions in scopes:
+        members = " ".join(f"<{m}> planning:inScope <{scope}> ." for m in sorted(predicates | actions))
+        blocks.append(f"  <{scope}> a planning:Scope .\n  {members}")
+    dropped = "".join(
+        f"DROP SILENT GRAPH <{g}> ;\n"
+        f"DELETE {{ GRAPH ?cat {{ <{g}> ?p ?o }} }} WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{g}> ?p ?o }} }} ;\n"
+        for g in standing)
+    store.update(dropped + f"""
+INSERT {{
+  GRAPH <{graph}> {{
+{chr(10).join(blocks)}
+  }}
+  GRAPH ?cat {{ <{graph}> a planning:ScopeGraph ; orexis:arrivedBy <{OREXIS + "Derived"}> . }} }}
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
+INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
+        GRAPH ?vocabulary {{ planning:ScopeGraph rdfs:subClassOf ?kind }} }}""",
+                 prefixes=NAMESPACES)
+
+
+
+
+def _partition(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozenset, ...]:
     """The SCOPES of a vocabulary: predicates joined wherever one action or one derivation
     reads or writes both, and separate where nothing does (#565).
 

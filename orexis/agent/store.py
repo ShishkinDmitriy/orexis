@@ -52,6 +52,7 @@ beneath; `rdflib_view` crosses to the other engine. None of those is pyoxigraph'
 from __future__ import annotations
 
 import io
+import logging
 import re
 import json
 from datetime import datetime
@@ -676,6 +677,75 @@ def copy_graph(store, parent: str, name: str) -> str:
     return name
 
 
+#  ── forking a graph ────────────────────────────────────────────────────────────────────────
+#
+#  Everything a parent holds under a new name, less what each retraction takes, plus what was
+#  added — the world one change past another. THE ORDER IS THE WHOLE OF IT: copy, every
+#  delete, then the adds, because a construct reuses the very node its retraction names, and
+#  because the predictions beginning at one instant supersede in parallel. Two acts of the
+#  planning package make a world out of the world before it — a candidate being taken, and the
+#  boundary a prediction makes — and a primitive two acts share is the store's, not either's.
+#  What is added goes in by TERM, never as text: a serialise-and-reparse relabels blank nodes.
+
+#  `PREFIX name: <iri>` as SPARQL writes it, the empty name included.
+_PREFIX_LINE = re.compile(r"^\s*PREFIX\s+([A-Za-z][\w.\-]*)?\s*:\s*<([^>]*)>[ \t]*\n?", re.I | re.M)
+
+
+def fork(store, parent: str, name: str, added, retracts: list[str]) -> str:
+    """`parent`'s facts under `name`, less what each retraction takes, plus `added`. The name.
+
+    A RETRACTION THAT WILL NOT RUN RETRACTS NOTHING, LOUDLY. A text the engine refuses would
+    otherwise leave the old value standing beside the new one, and a shape holding over every
+    value would still see the old — the exact failure a retraction exists to close, arriving
+    by another door. It is a package's bug and must not take an agent down; the copy is made
+    on its own so that the fork exists either way.
+
+    `retracts` are UPDATE texts already bound, because what `$state` means is the caller's:
+    an action's retraction is bound to the world the step MAKES, a prediction's to the ground
+    the boundary makes.
+    """
+    copy = f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} WHERE {{ GRAPH <{parent}> {{ ?s ?p ?o }} }}"
+    try:
+        for text in _joined(copy, *retracts):
+            update(store, text)
+    except Exception as exc:                                        # noqa: BLE001
+        #  A JOINED TEXT FAILS WHOLE, so a retraction the engine refuses would take the copy
+        #  with it and the fork would hold only the adds — a world missing everything it
+        #  stood on, measured by `test_fork` the day the fallback was dropped. The copy is made
+        #  on its own, then each retraction on its own, so the one that will not run is the
+        #  only one that retracts nothing.
+        logging.getLogger("store").error("a retraction would not run, so it retracts nothing: %s", exc)
+        update(store, copy)
+        for text in retracts:
+            try:
+                update(store, text)
+            except Exception:                                       # noqa: BLE001
+                pass
+    add_quads(store, (ox.Quad(q.subject, q.predicate, q.object, ox.NamedNode(name))
+                      for q in added))
+    return name
+
+
+def _joined(*texts: str) -> list[str]:
+    """The update texts as ONE text where they can be, in order — their `PREFIX` lines hoisted
+    to the head, since the engine takes a prologue only there and refuses one after a `;`,
+    which is where a package's retraction carries its own. Measured: every retraction in a
+    joined text was skipped with "expected one of CREATE, DELETE, INSERT", and every fork kept
+    the reading it was meant to replace.
+
+    Two texts spelling one name two ways cannot share a head, so they run apart — each with
+    its own — which is the correct answer at the cost of the batch."""
+    declared: dict[str, str] = {}
+    bodies = []
+    for text in texts:
+        for label, iri in _PREFIX_LINE.findall(text):
+            if declared.setdefault(label, iri) != iri:
+                return [t for one in texts for t in _joined(one)] if len(texts) > 1 else [text]
+        bodies.append(_PREFIX_LINE.sub("", text))
+    head = "".join(f"PREFIX {label}: <{iri}>\n" for label, iri in declared.items())
+    return [head + " ;\n".join(bodies)]
+
+
 def forget_graph(store, graph_iri: str) -> None:
     """Empty one graph AND take back everything the catalogue said of it.
 
@@ -771,9 +841,25 @@ class Memo:
             self._kept[key] = compute()
         return self._kept[key]
 
-    def forget(self) -> None:
-        """Drop everything — for an owner that has just written what its answers were read off."""
-        self._kept.clear()
+    def put(self, key, value) -> None:
+        """Keep `value` under `key` — for an owner that has just computed what it would
+        otherwise read back: the pass's mint counter, read once from the store and advanced
+        per world made, where reading MAX over the catalogue per world cost a tenth of a
+        search on the two-disk bench."""
+        self._kept[key] = value
+
+    def forget(self, *heads) -> None:
+        """Drop everything — or, given the first elements of keys, only what is kept under
+        them — for an owner that has just written what those answers were read off. The
+        planning pass keeps its memo across the derivation and forgets the shapes and the
+        selects compiled from them, since the derivation writes wants and nothing else the
+        memo holds: the rule texts, the action templates and the graph lists per instant are
+        as good after it as before."""
+        if not heads:
+            self._kept.clear()
+            return
+        for key in [k for k in self._kept if isinstance(k, tuple) and k and k[0] in heads]:
+            del self._kept[key]
 
     def __len__(self) -> int:
         return len(self._kept)

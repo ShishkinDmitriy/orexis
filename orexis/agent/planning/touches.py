@@ -128,9 +128,6 @@ def _predicates_in(node, out: set) -> bool:
 
 
 @functools.lru_cache(maxsize=512)
-
-
-@functools.lru_cache(maxsize=512)
 def reads_of_select(text: str) -> frozenset | None:
     """The predicates a SELECT's or a CONSTRUCT's WHERE reads, or ANYTHING if unparseable."""
     try:
@@ -143,9 +140,15 @@ def reads_of_select(text: str) -> frozenset | None:
     return frozenset(out) if _predicates_in(where, out) else ANYTHING
 
 
-@functools.lru_cache(maxsize=512)
 def reads_of_shape(shapes: rdflib.Graph, shape) -> frozenset | None:
-    """Every predicate a shape's paths and SPARQL constraints read, or ANYTHING."""
+    """Every predicate a shape's paths and SPARQL constraints read, or ANYTHING.
+
+    NOT MEMOISED ON THE GRAPH. It carried an `lru_cache` keyed on `shapes`, and an rdflib
+    graph hashes by its identifier — a fresh blank node per `Graph()` — so a view crossed per
+    pass never hit and the cache held up to 512 whole graphs alive in a long-running agent,
+    measured: two fresh graphs neither compare nor hash equal. The walk is cheap; the crossing
+    is what costs, and the caller keeps that.
+    """
     out: set = set()
     for prop in shapes.objects(shape, SH.property):
         iris = _shacl_path_iris(shapes, shapes.value(prop, SH.path))

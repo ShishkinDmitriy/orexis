@@ -15,6 +15,7 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
 @prefix execution: <http://example.org/orexis/execution#> .
 @prefix intentions: <http://example.org/orexis/graph/intentions/> .
 
@@ -83,9 +84,9 @@ GRAPH :catalogue {
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .
-  :scopes a planning:ScopeGraph .
   :scopes a orexis:Graph .
   :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:beliefsOf :keeper .
   :sensed a orexis:BeliefGraph .
@@ -93,8 +94,8 @@ GRAPH :catalogue {
   :sensed a orexis:StateGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  intentions:keeper a orexis:Graph .
   intentions:keeper a execution:IntentionGraph .
+  intentions:keeper a orexis:Graph .
   intentions:keeper orexis:beliefsOf :keeper .
   pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
   pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .

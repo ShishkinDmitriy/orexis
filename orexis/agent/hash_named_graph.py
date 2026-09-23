@@ -79,7 +79,7 @@ def hash_named_graph(store, graph: str) -> str:
     A graph the store has never heard of hashes like an empty one, which is a state like any
     other — the ground before anything is predicted — rather than an error or a None.
     """
-    digest = _digest(_facts(quads(store, graph)))
+    digest = digest_of(store, graph)
     catalogue = catalogue_of(store)
     update(store, f"""
 DELETE {{ GRAPH <{catalogue}> {{ <{graph}> <{HASH}> ?old }} }}
@@ -87,6 +87,14 @@ WHERE  {{ GRAPH <{catalogue}> {{ <{graph}> <{HASH}> ?old }} }}""")
     store.add(ox.Quad(ox.NamedNode(graph), ox.NamedNode(HASH), ox.Literal(digest),
                       ox.NamedNode(catalogue)))
     return digest
+
+
+def digest_of(store, graph: str) -> str:
+    """The canonical hash of what `graph` holds, answered and written NOWHERE — for a writer
+    that puts it on the graph's row itself, in the same update as the row's class and period,
+    rather than paying a second round trip to have it written here. `hash_named_graph` above
+    is this plus the write, for a graph whose row already stands."""
+    return _digest(_facts(quads(store, graph)))
 
 
 def _digest(facts: frozenset) -> str:

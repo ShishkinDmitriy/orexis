@@ -1,0 +1,17 @@
+--- case
++++ expected
+@@ -97,6 +97,14 @@
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank2 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
++  possible:fill-tank1.by :tank :tank1 .
++  possible:fill-tank1.by a planning:Candidate .
++  possible:fill-tank1.by planning:fills :fill .
++  possible:fill-tank1.by planning:from ground:2026-01-01T120000p0000 .
++  possible:fill-tank2.by :tank :tank2 .
++  possible:fill-tank2.by a planning:Candidate .
++  possible:fill-tank2.by planning:fills :fill .
++  possible:fill-tank2.by planning:from ground:2026-01-01T120000p0000 .
+   pursued:2026-01-01T120000p0000--open a orexis:Graph .
+   pursued:2026-01-01T120000p0000--open a orexis:WantGraph .
+   pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .

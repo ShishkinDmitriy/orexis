@@ -14,9 +14,9 @@
 
 
 GRAPH :ontology {
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
   planning:ScopeGraph rdfs:subClassOf orexis:Graph .
   planning:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
-  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :actions {

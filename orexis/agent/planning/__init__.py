@@ -5,26 +5,41 @@ replaces rather than extends. One pipeline, and the package is what it is made o
 
 1. **the derivation** — `derive_wants` judges every desire at the present and at every instant
    a prediction reaches, and mints a want per cluster of what the met-tests read unmet;
-   `forget_wants` is its other half, withdrawing what the same rows no longer imply
-   (`derive_wants.py`, `forget_wants.py`);
+   `withdraw` is its other half, taking away what the same rows no longer imply, one want at
+   a time by `forget_want`; both read the ground standing at each instant, `world_at`;
 2. **the scopes** — which predicates move together, read off what each action and each
-   derivation touches. A want is minted per scope of witnesses and searched in a world of its
-   own (`scope_actions.py`, `scopes.py`, `touches.py`);
-3. **the imaginarium** — a store per scope, filled from the beliefs by `prepare_ground`,
-   holding one graph per world the search reaches (`prepare_ground.py`);
-4. **the search** — best-first over those worlds, and a LOOP rather than a stage: pop a world,
-   ask what it ADMITS (`candidates.py`), fork on one of those and run its effect into the fork
-   (`apply_effects.py`), ask whether the want is met there, and if not put it back on the
-   frontier. `effects.py` answers what a candidate costs and how long it takes to land, and
-   `planner.py` holds the frontier, the budget and the met-test — and the read that hands it
-   the wants, being the only thing that asks.
+   derivation touches (`touches.py`). A want is minted per scope of witnesses and searched
+   in a world of its own (`scope_actions`, `scopes.py`);
+3. **the imaginarium** — a store per scope, filled from the beliefs by `prepare_ground` and
+   given its timeline by `lay_ground`, one ground per period a prediction makes;
+4. **the search** — the Planner's own methods, `search` per want and `expand` per
+   iteration, sequencing the acts: `admit` writes what the cheapest open world admits, `take`
+   forks each candidate and writes the world's row, `weigh` judges what was reached and
+   writes what it found, and `extract_plan` writes what the want's weighings come to. THE
+   FRONTIER IS A QUERY: what is true of a world whoever asks is on its row, what a want's
+   search worked out about it is a `planning:Weighing` — met there, on the frontier, opened —
+   and a candidate passed over is weighed too, so a search called again on the same
+   imaginarium takes up where it stopped. THE DERIVATION READS WEIGHINGS TOO: the Planner
+   weighs every desire in every ground by the same `weigh`, and `derive_wants` reads the
+   violation rows back to mint its wants — one judgment, one node, at two grains.
+
+**A STAR, NOT A CHAIN.** `planner.py` sequences the acts and is the one module the rest of the
+tree imports; an act calls no other act, and what it needs of another's work it reads off the
+rows the other wrote — `unweighed` says what a pass weighs next, `world_at` what a rule reads
+in a world. `tests/test_layout.py` holds that as imports.
+
+**A FUNCTION STARTS IN THE STORE AND ENDS IN IT**, and takes the names of what it is about:
+`weigh(store, want, world)`, `take(store, candidate, me)`, `admit(store, world, me)`. What one
+act needs from another it reads off the rows the other wrote, so nothing is a Python value in
+flight and the two classes that were (a candidate, a witness) are rows.
 
 NOTHING COMES BACK. What a pass finds it READS OUT of the worlds it walked
-(`extract_plan.py`): each possible world says which it was forked from and which CANDIDATE
-made the fork, so a plan is one world's ancestry — a `planning:Plan` graph per want, a step
-per picked candidate in the LEDGER's own words, and why the pass ended — and then hands them
-down, which is `publish_plan.py` and the last act of a
-pass, since the imaginarium is memory and an intention is all that outlives it. There was a Python record beside it saying the same thing, so the finding
+(`extract_plan.py`): each possible world says which CANDIDATE reached it and the candidate
+says which world it was taken in — candidates connect possible worlds — so a plan is one
+world's ancestry: a `planning:Plan` graph per want, a step per candidate on it in the
+LEDGER's own words, and why the pass ended. Then it hands them down, which is
+`publish_plan.py` and the last act of a pass, since the imaginarium is memory and an
+intention is all that outlives it. There was a Python record beside it saying the same thing, so the finding
 existed twice and only one of the two could cross a layer — and the half a want most needs,
 that no lever this agent holds points at it, was the half that could not. What happens to a
 plan is the execution layer's: `plans.copy_plan` copies the graph into the intentions store.
@@ -32,7 +47,7 @@ Nothing here commits, because deciding a thing and remembering that it was decid
 different acts.
 
 **WHAT THE PREDECESSOR HELD AND THIS DOES NOT.** It was twenty-nine modules and seven and a
-half thousand lines; this is thirteen and about three thousand. Every absence is a thing that
+half thousand lines; this is about three thousand, in modules named for what they do. Every absence is a thing that
 returns attached to whatever needs it, never a thing quietly lost
 (an-agent-is-four-things):
 
@@ -60,3 +75,9 @@ reads the ontologies of its OWN tree, so a subtree arriving as its own distribut
 words with it and no registry learns its name.
 """
 
+from .planner import Planner
+
+#  THE ONE NAME THE REST OF THE TREE MAY USE. Every other function here is public to the
+#  PACKAGE — tested by name, called by its siblings — and nothing outside it; a container
+#  builds a `Planner` and calls `plan`, and `tests/test_layout.py` holds the tree to that.
+__all__ = ["Planner"]

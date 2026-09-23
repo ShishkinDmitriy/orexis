@@ -40,7 +40,7 @@ log = logging.getLogger("publish_plan")
 
 #  WHICH WANT A PLAN IS FOR, off the plan's own root. A plan graph is named for its want and
 #  the row says so; the read asks the row, because a name is for eyes.
-_FOR_Q = """SELECT ?want WHERE { GRAPH $plan { $plan planning:forWant ?want } }"""
+_FOR_Q = """SELECT ?want WHERE { GRAPH $plan { $plan planning:for ?want } }"""
 
 
 def publish_plan(imaginarium: ox.Store, intentions: ox.Store, agent_id: str) -> list[str]:

@@ -1,20 +1,19 @@
 --- case
 +++ expected
-@@ -56,9 +56,9 @@
-   :ontology a orexis:Graph .
-   :ontology a orexis:OntologyGraph .
-   :ontology a orexis:PublicGraph .
--  :scopes a planning:ScopeGraph .
-   :scopes a orexis:Graph .
-   :scopes a orexis:WorkingGraph .
-+  :scopes a planning:ScopeGraph .
-   :scopes orexis:arrivedBy orexis:Derived .
-   :scopes orexis:beliefsOf :keeper .
-   :sensed a orexis:BeliefGraph .
-@@ -66,4 +66,33 @@
+@@ -67,4 +67,50 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:877fc25bf3e9cae4ad82af4d09f4cc2a9d00f928847c07e58923bcede08524c8" .
++  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :temperature ; planning:constraint 1 ; planning:instance :tank1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a orexis:WantGraph .
 +  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
@@ -22,6 +21,13 @@
 +  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
  }
 +
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :tank1 :level 5 .
++  :tank1 :temperature 40 .
++  :tank2 :level 20 .
++  :tank2 :temperature 20 .
++}
 +
 +GRAPH pursued:2026-01-01T120000p0000--open {
 +  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .

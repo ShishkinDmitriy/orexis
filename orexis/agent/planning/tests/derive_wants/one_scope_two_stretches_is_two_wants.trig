@@ -28,6 +28,7 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
 
 GRAPH :ontology {
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
@@ -78,20 +79,22 @@ GRAPH :catalogue {
   :catalogue a orexis:Graph .
   :desires a orexis:DesireGraph .
   :desires a orexis:Graph .
+  :dip a orexis:Graph .
+  :dip a orexis:PredictionGraph .
+  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+  :dip orexis:beliefsOf :keeper .
+  :dip orexis:retracts "PREFIX : <http://example.org/test#> DELETE { GRAPH $state { :tank1 :level ?was } } WHERE { GRAPH $state { :tank1 :level ?was } }" .
+  :heat a orexis:Graph .
+  :heat a orexis:PredictionGraph .
+  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+  :heat orexis:beliefsOf :keeper .
+  :heat orexis:retracts "PREFIX : <http://example.org/test#> DELETE { GRAPH $state { :tank1 :temperature ?was } } WHERE { GRAPH $state { :tank1 :temperature ?was } }" .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .
-  :dip a orexis:Graph .
-  :dip a orexis:PredictionGraph .
-  :dip orexis:beliefsOf :keeper .
-  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
-  :heat a orexis:Graph .
-  :heat a orexis:PredictionGraph .
-  :heat orexis:beliefsOf :keeper .
-  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
-  :scopes a planning:ScopeGraph .
   :scopes a orexis:Graph .
   :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:beliefsOf :keeper .
   :sensed a orexis:BeliefGraph .

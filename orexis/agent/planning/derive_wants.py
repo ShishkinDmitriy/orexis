@@ -27,20 +27,21 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, replace
 from datetime import datetime
 
 import pyoxigraph as ox
 import rdflib
 
-from orexis.agent.ontology import FORESEEN, OREXIS
-from orexis.agent.store import (NAMESPACES, bind, graphs_of, instant,
-                                           rdflib_view, rows)
+from orexis.agent.ontology import DESIRE, OREXIS, RECORD, WANT
+from orexis.agent.store import NAMESPACES, Memo, Raw, bind, graphs_of, rdflib_view, remember, rows
 
+from .withdraw import FORGET_ONE_U
+from .find_scopes import find_scopes
+
+RECOGNIZED = OREXIS + "Recognized"
 
 log = logging.getLogger("derive_wants")
 
-WANT_GRAPH = OREXIS + "WantGraph"
 OREXIS_MET_WHEN = OREXIS + "metWhen"
 #  THE TWO OF A DESIRE'S OWN WORDS THIS FILE SORTS BY. They were matched as string SUFFIXES —
 #  `p.endswith("#about")` at three sites — which is safe only because `_SAID_Q` four hundred
@@ -59,26 +60,6 @@ SELECT ?p ?o WHERE {
     FILTER(?p IN (orexis:metWhen, orexis:unmetWhen, orexis:estimates, orexis:about, rdfs:label)) }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
                VALUES ?kind { orexis:DesireGraph orexis:WantGraph } } }"""
-
-#  DOES THE MET-TEST NAME ITS ONE NODE (`sh:targetNode`)?
-_TARGETS_ONE_Q = """
-ASK { GRAPH ?g { $desire orexis:metWhen ?s . ?s sh:targetNode ?n }
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:DesireGraph } }"""
-
-#  HOW LONG A PLAN IS GIVEN after the instant its want must hold at — the keeper's pick, from
-#  the record where review writes it. Progression's word, which this layer reads downward.
-#  WHAT ALREADY STANDS under one desire: every want derived from it that the derivation minted and
-#  whose graph still holds. A want IS its graph (#645), so which family it is in and whether it
-#  holds are the graph's questions, asked of the catalogue in the text as `find_wants` asks them.
-#  A WANT A PLAN STANDS FOR is not withdrawn, however its desire now reads: the keeper is
-#  walking it, and dropping the want under a running plan would leave the plan pursuing
-#  nothing. `orexis:pursues` is the ledger's link and `orexis:resolvedAt` is how it ends —
-#  progression's words, read downward, which is the direction a layer may read.
-_PURSUED_Q = """
-SELECT ?w WHERE {
-  GRAPH ?g { ?i orexis:pursues ?w . FILTER NOT EXISTS { ?i orexis:resolvedAt ?done } }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:IntentionGraph } }"""
-
 
 #  WHAT THIS DERIVATION HAS MINTED UNDER ONE DESIRE, ACROSS ALL TIME and not at an instant.
 #  A want's period is the stretch its TROUBLE occupies, so a want foreseen from three is not
@@ -99,43 +80,36 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
     answer with EVERY want those desires imply — the ones minted here and the ones already
     standing under the same name.
 
-    Run whenever a pass stands on a desire or on any want under it, and by a package that has
-    just written an instance, since a claim arriving should be a want arriving and not a want
-    on the next tick. A package that calls this mints nothing; it says an instance is there and
-    this does the rest (one-function-mints-every-want).
+    IT READS THE WEIGHINGS THE PLANNER WROTE. A desire is judged where the search judges a
+    want, by `weigh`, which the Planner calls for every desire in every ground before this —
+    an act calls no other act — writing the met-test's report in each ground as a weighing
+    with its violation rows: the instances in trouble, which constraint, what it is about,
+    which way it broke. Read across the grounds in order, a violation has a stretch: the
+    first ground it holds in is when the trouble begins, the first later ground it does not is
+    when it lifts. A want is minted per cluster of them. Nothing stands between a desire and
+    a want but the weighings, which are in the store where a reader can see what the
+    derivation saw — and a desire with no weighing in some ground is not judged, which is
+    not the same as met.
 
-    IT IS THE DECOMPOSITION OF WHAT THE MET-TESTS READ. A desire is judged at the present and,
-    where it reads met there, at every instant a prediction reaches; what comes back is
-    witnesses, and a want is minted per cluster of them. Nothing is written between the two.
-
-    **IT WITHDRAWS NOTHING.** Deriving what is wanted and taking away what is not are two acts,
-    and this is the first. It used to be both — the same rows that minted also dropped, on the
-    argument that the pass had just concluded what a second met-test would ask again — and the
-    argument was right about the READING and wrong about the place: what it takes to avoid
-    asking twice is that the conclusion be HANDED ON, not that one function do both. So the
-    answer is the whole decomposition, and `forget_wants.withdraw` is given it. A caller that
-    derives and does not withdraw has a store with wants nothing implies any more; a caller
-    that withdraws against a set it did not derive has a bug this signature makes visible.
-
-    The instant is EACH CLUSTER'S OWN. A desire unmet at the present derives wants with none.
-    One met at the present derives them at the instants it reads unmet — and two debts cross
-    at two deadlines, so the second is not filtered away by the first's; each cluster holds at
-    its earliest witness. A desire met at every instant read derives NOTHING.
+    **IT WITHDRAWS NOTHING.** Deriving what is wanted and taking away what is not are two
+    acts, and this is the first: the answer is the whole decomposition, and `withdraw` is
+    given it. A caller that derives and does not withdraw has a store with wants nothing
+    implies any more; a caller that withdraws against a set it did not derive has a bug this
+    signature makes visible.
 
     WHOSE, FROM THE DESIRE: the graph a desire lives in says who holds it, so the wants it
-    implies are written to graphs that holder owns. One agent, one volume, so the holder is
-    the agent; a store holding several agents' desires derives for each.
-
-    THE PRESENT IS THE CALLER'S, and it is the only thing besides the store this takes. It was
-    read from the clock in five places in here, so "the present" was five reads that could
-    disagree inside one pass and a test had to patch the clock to say when it stood.
+    implies are written to graphs that holder owns. THE PRESENT IS THE CALLER'S, the one
+    thing besides the store this takes, for when the agent found what it minted.
     """
-    shapes = _shapes_in(store)
+    memo = Memo()
+    shapes = remember(memo, ("shapes",),
+                      lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD)))
+    scopes = find_scopes(store)
+    if not rows(store, _GROUNDS_Q, ()):
+        raise RuntimeError("the store holds no ground — lay_ground has not run")
     wanted: set[str] = set()
-    for holder, desire, shape in _desires_in(store):
-        #  ONE READ, OVER EVERY BOUNDARY. What comes back is each way this desire is failing
-        #  with the stretch it fails over — the present among the instants and not above them.
-        found = _read_over_time(store, shapes, holder, desire, shape, now)
+    for holder, desire in _desires_in(store):
+        found = _troubles(store, desire)
         if found is None:
             #  NOT JUDGED IS NOT MET. A desire whose met-test could not be run says nothing
             #  about its wants — so what stands under it is what it implies, and a dropper
@@ -143,8 +117,8 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
             #  on a bad shape.
             wanted |= _standing_under(store, desire, now)
             continue
-        _derive_under(store, shapes, holder, desire, found, now)
-        wanted |= _named(store, desire, _said(store, desire), found)
+        _derive_under(store, shapes, scopes, holder, desire, found, now)
+        wanted |= _named(shapes, scopes, desire, _said(store, desire), found)
     return wanted
 
 
@@ -153,8 +127,8 @@ def _standing_under(store: ox.Store, desire: str, now: datetime) -> set[str]:
     return {r["w"] for r in rows(store, _STANDING_Q, (), desire=desire)}
 
 
-def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
-                  found: list[_Witness], now: datetime) -> list[str]:
+def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, holder: str,
+                  desire: str, found: list[dict], now: datetime) -> list[str]:
     """The wants one desire's witnesses imply, minted where none stands. `found` is what its
     met-test read over time: one witness per way of failing, each carrying the boundary it
     first reads unmet at and the one it lifts at."""
@@ -181,19 +155,19 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: st
     #  desire is about, for a desire whose select yields rows naming no property. A desire that
     #  reads MET at every boundary reaches this loop with NO clusters, so what stands under it
     #  is withdrawn.
-    clusters = _clusters(store, found) or ([[]] if found else [])
+    clusters = _clusters(scopes, found) or ([[]] if found else [])
     minted = []
     for cluster in clusters:
-        about = tuple(sorted({w.about for w in cluster if w.about}))
-        instances = {w.instance for w in cluster}
+        about = tuple(sorted({w["about"] for w in cluster if w["about"]}))
+        instances = {w["instance"] for w in cluster}
         instance = next(iter(instances)) if len(instances) == 1 else None
-        child = _name_of(store, desire, said, about, instance)
+        child = _name_of(shapes, desire, said, about, instance)
         #  THE STRETCH THIS CLUSTER IS IN TROUBLE OVER: from the earliest boundary any of its
         #  ways of failing reads unmet at, to the earliest one they have ALL lifted by. A
         #  cluster where one way never lifts is open-ended, because the cluster is not repaired
         #  while any of it stands.
-        at = min((w.at for w in cluster), default=now)
-        lifts = [w.until for w in cluster] or [None]
+        at = min((w["at"] for w in cluster), default=now)
+        lifts = [w["until"] for w in cluster] or [None]
         until = None if any(u is None for u in lifts) else max(lifts)
         #  A WANT ALREADY STANDING FOR THIS CLUSTER IS LEFT ALONE, whatever stretch it was
         #  minted over. It used to be re-minted when what was foreseen arrived, because the
@@ -204,7 +178,7 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: st
             continue
         #  ONE SIDE OR NONE: the witnesses of a cluster agree where the same block found them
         #  all, and two sides in one cluster is a want about two troubles, which says neither.
-        sides = {w.side for w in cluster if w.side}
+        sides = {w["side"] for w in cluster if w["side"]}
         child = _mint(store, shapes, holder, desire, now, at, until, said,
                      about=about, instance=instance,
                      side=next(iter(sides)) if len(sides) == 1 else None)
@@ -213,30 +187,32 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: st
     return minted
 
 
-def _named(store: ox.Store, desire: str, said, found: list[_Witness]) -> set[str]:
+def _named(shapes: rdflib.Graph, scopes: dict | None, desire: str, said,
+           found: list[dict]) -> set[str]:
     """The names the clusters of `found` come to — what minting would call them.
 
     One namer for both halves: `_derive_under` mints under these names and `_withdraw_under`
     keeps what is under them, so the two can never disagree about which want a cluster is.
     """
     out = set()
-    for cluster in _clusters(store, found):
-        about = tuple(sorted({w.about for w in cluster if w.about}))
-        instances = {w.instance for w in cluster}
-        out.add(_name_of(store, desire, said, about,
+    for cluster in _clusters(scopes, found):
+        about = tuple(sorted({w["about"] for w in cluster if w["about"]}))
+        instances = {w["instance"] for w in cluster}
+        out.add(_name_of(shapes, desire, said, about,
                         next(iter(instances)) if len(instances) == 1 else None))
     return out
 
 
-def _clusters(store: ox.Store, witnesses: list) -> list[list]:
+def _clusters(scopes: dict | None, witnesses: list) -> list[list]:
     """The witnesses grouped by SCOPE — which of them some action can move together — so a
     want is minted per group. Two in one scope are one want and one cone; two in different
     scopes are two, planned apart and concatenated, which is the mechanism `scope.md` says the
     concept exists for. A witness naming no property, or one no scope holds, joins every group
     it could belong to, which with one scope is the one group.
 
-    THE SCOPES ARE READ, NEVER COMPUTED: `scope_actions` wrote them (scope-actions),
-    and a store holding no scope graph is refused rather than clustered as one scope — the
+    THE SCOPES ARE READ, NEVER COMPUTED: `scope_actions` wrote them (scope-actions), read
+    once per call and handed in, and a store holding no scope graph is refused rather than
+    clustered as one scope — the
     loud direction, since one want about everything is what a missing partition would have
     quietly minted.
 
@@ -245,14 +221,12 @@ def _clusters(store: ox.Store, witnesses: list) -> list[list]:
     correctly, since they may draw from one vessel."""
     if not witnesses:
         return []
-    from .scopes import find_scopes
-    scopes = find_scopes(store)
     if scopes is None:
         raise RuntimeError("the store holds no scope graph — scope_actions has not run")
     groups: dict = {}
     loose = []
     for w in witnesses:
-        scope = scopes.get(w.about) if w.about else None
+        scope = scopes.get(w["about"]) if w["about"] else None
         #  AND BY THE STRETCH. Two ways of failing that one action could move together are one
         #  want only where they are in trouble over the SAME stretch: a want's period is its
         #  trouble's, and a plan for one is placed to land where that trouble begins, so one
@@ -261,8 +235,8 @@ def _clusters(store: ox.Store, witnesses: list) -> list[list]:
         #  at the EARLIER — which says the temperature is in trouble from half past, and it is
         #  not. Worse where one lifts: a cluster is open-ended where any of its ways never
         #  lifts, so a transient dip joined to a standing trouble lost its own end.
-        key = ((scope, w.instance, w.at, w.until)
-               if scope is not None or w.about == w.instance else None)
+        key = ((scope, w["instance"], w["at"], w["until"])
+               if scope is not None or w["about"] == w["instance"] else None)
         (groups.setdefault(key, []) if key is not None else loose).append(w)
     if not groups:
         return [loose]
@@ -270,7 +244,7 @@ def _clusters(store: ox.Store, witnesses: list) -> list[list]:
     #  only those in trouble over its own stretch, since joining one at another instant would
     #  widen that group's period to cover a trouble it is not about.
     for w in loose:
-        shared = [g for k, g in groups.items() if (k[2], k[3]) == (w.at, w.until)]
+        shared = [g for k, g in groups.items() if (k[2], k[3]) == (w["at"], w["until"])]
         for group in shared or groups.values():
             group.append(w)
     return list(groups.values())
@@ -287,7 +261,7 @@ def _tail(iri: str) -> str:
     return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 
-def _name_of(store: ox.Store, desire: str, said, about: tuple, instance: str | None) -> str:
+def _name_of(shapes: rdflib.Graph, desire: str, said, about: tuple, instance: str | None) -> str:
     """The name of the want minted under `desire` for one cluster of its witnesses: the desire's,
     suffixed, so a second episode of the same cluster pursues the same node and everything
     keyed by it — the planner, a remembered plan, the trace, the keeper — finds what it kept.
@@ -310,14 +284,19 @@ def _name_of(store: ox.Store, desire: str, said, about: tuple, instance: str | N
     #  want's stored ones, and a want states none now.
     declared = {str(o.value) for p, o in said if p == OREXIS_ABOUT}
     tails = [_tail(a) for a in about] if about and set(about) != declared else []
-    if instance is not None and instance not in about and not _targets_one_node(store, desire):
+    if instance is not None and instance not in about and not _targets_one_node(shapes, said):
         tails.insert(0, _tail(instance))
     return desire + ".pursued" + "".join(f".{t}" for t in tails)
 
 
-def _targets_one_node(store: ox.Store, desire: str) -> bool:
-    """Does the desire's met-test name the one node it is about (`sh:targetNode`)?"""
-    return store.query(bind(_TARGETS_ONE_Q, desire=desire), prefixes=NAMESPACES)
+def _targets_one_node(shapes: rdflib.Graph, said) -> bool:
+    """Does the desire's met-test name the one node it is about (`sh:targetNode`)? Read off
+    the shapes already crossed for the pass — it was an ASK per cluster, three queries on the
+    plans case for a fact the crossing already held."""
+    from rdflib import URIRef
+    from rdflib.namespace import SH
+    return any((URIRef(str(o.value)), SH.targetNode, None) in shapes
+               for p, o in said if p == OREXIS_MET_WHEN)
 
 
 # --- what a want IS on disk, and how one goes -------------------------------------------
@@ -331,7 +310,7 @@ def _targets_one_node(store: ox.Store, desire: str) -> bool:
 
 
 
-def graph_of(agent_id: str, at: datetime, until: datetime | None) -> str:
+def _graph_of(agent_id: str, at: datetime, until: datetime | None) -> str:
     """The graph the wants in trouble over ONE STRETCH live in, named for that stretch.
 
     A WANT'S TEMPORAL EXTENT IS ITS GRAPH'S PERIOD, and it is said once. A want used to carry
@@ -359,13 +338,10 @@ def _stamp(at: datetime) -> str:
     return at.isoformat().replace(":", "").replace("+", "p")
 
 
-#  WITHDRAWAL IS ITS OWN MODULE (`forget_wants.py`). This file decides what is WANTED; taking
-#  a want away is the other half of the want's life and has its own reasons — which graph it
-#  is in, whether that graph holds others, what the catalogue still says of it. `_write`
-#  below imports the one text they share, since replacing a want whole is removing it and
-#  putting it back.
-from .forget_wants import RECOGNIZED, _forget_one   # noqa: E402  (see the note above)
-
+#  WITHDRAWAL IS ITS OWN MODULE (`withdraw.py`, and `forget_want.py` for one want). This
+#  file decides what is WANTED; taking a want away is the other half of the want's life and
+#  has its own reasons. `_write` below runs the one text they share, since replacing a want
+#  whole is removing it and putting it back.
 
 def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
            now: datetime, at: datetime, until: datetime | None = None, *,
@@ -414,7 +390,7 @@ def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
     about a SHAPE BLOCK — which property one constraint concerns — because that is the shape's
     own structure, and `_narrowed` carves by it.
     """
-    graph = graph_of(agent_id, at, until)
+    graph = _graph_of(agent_id, at, until)
     said_points = " ".join(f"<{uri}> <{p}> <{o}> ." for p, o in points)
     shape_lines = "\n  ".join(shape)
     #  INSTANTS CROSS HERE AND NOWHERE ELSE. The store keeps them as `xsd:dateTime` literals
@@ -435,7 +411,7 @@ def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
     #  re-adoption of itself, which is a different question wearing the same unit.
     period = (f' ; orexis:start "{at.isoformat()}"^^xsd:dateTime'
               + (f' ; orexis:end "{until.isoformat()}"^^xsd:dateTime' if until else ""))
-    store.update(_forget_one(graph, uri) + f""" ;
+    store.update(bind(FORGET_ONE_U, graph=Raw(f"<{graph}>"), want=Raw(f"<{uri}>")) + f""" ;
 INSERT {{
   GRAPH <{graph}> {{
   <{holder}> orexis:holds <{uri}> .
@@ -470,7 +446,7 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
     #  under one desire — soil now, air later, two nodes — and that is an IDENTITY. It is not
     #  written onto the want, because a stated property is the planning problem answered in
     #  advance (see `_write`).
-    child = _name_of(store, desire, said, about, instance)
+    child = _name_of(shapes, desire, said, about, instance)
     points = []
     met_test = None
     for p, o in said:
@@ -578,257 +554,77 @@ def _narrowed(shapes: rdflib.Graph, shape: str, own: str, instance: str | None, 
             out.add((s, p, o))
     return tuple(line for line in out.serialize(format="nt").splitlines() if line.strip())
 
-# --- JUDGING A DESIRE ---------------------------------------------------------------
+# --- WHAT THE WEIGHINGS SAY --------------------------------------------------------------
 #
-#  JUDGING A DESIRE: running its met-test over the world as it stands and as it is predicted
-#  to stand, and saying what it read — as WITNESSES, computed and never stored.
-#
-#  A desire is universal and a want is existential: the met-test's violation rows are the
-#  instances in trouble, each one a witness, and `derive_wants` mints a want per cluster of them.
-#  There is no third thing between the two. A stored judgment used to stand there — the
-#  met-test's answer per desire per instant, written to a working graph and read back — and it
-#  is gone: everything it carried a WANT carries now, and what it was for, telling the next
-#  step what the met-test read, is what a witness is.
-#
-#  THIS IS THE ONLY PLACE THAT READS A PREDICTION. What a desire reads at a foreseen instant is
-#  a question about the world, asked here and nowhere else: `derive_wants` asks it to _mint and
-#  `crossing_of` asks it for an instant, and both get the same answer from the same code rather
-#  than from two paths that could disagree.
-#
-#  WHAT A CALLER TAKES IS THE ANSWER TO ITS OWN QUESTION. A `_Witness` is the grain a want is
-#  minted at and `derive_wants` clusters on it, so it lives here beside `read_ahead`, which
-#  dedups on two of its fields. Every other caller wants an INSTANT — the crossing, or whether
-#  a want is still unmet by one — and is handed that, rather than rows to reduce itself.
-#
-#  A FUNCTION OVER THE STORE: handed the engine, a `pyoxigraph.Store`, and nothing else. Which
-#  graphs hold desires, which are predictions and which hold at an instant, the catalogue says;
-#  who holds a desire, the desire's own graph says; what a met-test means, its shape says. The
-#  present is the caller's, handed in.
-
-
-log = logging.getLogger("judging")
-
-#  EVERY DESIRE THE STORE HOLDS, who holds it and its met-test, from the graphs of desires
-#  holding at the present — the desires graph states no period, the world's asserted graph
-#  none, and a graph of desires with one is read while it holds. A desire, its holder and its
-#  met-test are written together — one rule derives them, one file ratifies them — so the
-#  pattern matches within one graph.
-#  NO PERIOD, AND NO FILTER FOR ONE. A desire is authored once at genesis into a graph with no
-#  period, which holds at every instant as the T-Box does; everything sourced AT A TIME — a
-#  want, an obligation, a round, a prediction — is the graph that holds during one
-#  (a-root-holds-always-and-an-outdated-graph-is-dropped). This carried the same period filter
-#  every timed read carries, unbound on every row of every store there has ever been, and what
-#  it cost was not a cycle: it told a reader that a desire can be timed, which is the one
-#  thing that would make it a want.
+#  EVERY DESIRE THE STORE HOLDS and who holds it, from the graphs of desires — a desire, its
+#  holder and its met-test are written together, so the pattern matches within one graph. NO
+#  PERIOD, AND NO FILTER FOR ONE: a desire is authored once into a graph with no period,
+#  which holds at every instant as the T-Box does.
 _DESIRES_Q = """
-SELECT DISTINCT ?holder ?desire ?shape WHERE {
-  GRAPH ?g { ?holder orexis:holds ?desire . ?desire a orexis:Desire .
-             OPTIONAL { ?desire orexis:metWhen ?shape } }
+SELECT DISTINCT ?holder ?desire WHERE {
+  GRAPH ?g { ?holder orexis:holds ?desire . ?desire a orexis:Desire }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:DesireGraph } }
 ORDER BY ?holder ?desire"""
 
-#  ONE desire, its holder and its met-test — for a reader asking about one.
-#  WHEN THE HOLDER FORESEES: the start of every prediction of theirs, whatever its window —
-#  the future states a desire is judged at, given to this and never computed here (#643).
-#  EVERY INSTANT THE WORLD THIS AGENT READS CAN CHANGE AT, and the kind of graph is not the
-#  question. A graph holds during a stretch: at its START it begins to be handed out and at its
-#  END it stops, so those are the only instants at which a judgment can differ from the one
-#  before. Everything between two _boundaries is one world.
-#
-#  BOTH ENDS, and the end is the half that was missing. A start alone says when trouble may
-#  ARRIVE; an end says when it may LIFT — the pot dries at three and the forecast refills it at
-#  six — and without it a want could say when it began and never that it stops.
-#
-#  NO KIND. It asked for `orexis:PredictionGraph` and so saw only what sensing's drifts wrote:
-#  the market had to type its debt-lapse graph as a prediction to be looked at, which it is not
-#  — it is a graph holding from a deadline. A round that opens later and a claim whose window
-#  closes later are _boundaries too, and nobody has to remember a class to be foreseen.
-_BOUNDS_Q = """
-SELECT DISTINCT ?at WHERE {
+#  THE TIMELINE: every ground, earliest first — the present, and what each prediction makes
+#  of it. Each is a world a desire is judged in, and their order is what gives a violation
+#  its stretch.
+_GROUNDS_Q = """
+SELECT ?g WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
+ORDER BY ?start"""
+
+#  WHAT ONE DESIRE'S WEIGHINGS SAY, ground by ground: the verdict, and every violation with
+#  its instance, its constraint, what it is about and which way it broke.
+_TROUBLES_Q = """
+SELECT ?start ?met ?instance ?constraint ?about ?side WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?g dcterms:temporal ?period .
-               { ?period orexis:start ?at } UNION { ?period orexis:end ?at }
-               FILTER(?at > $now)
-               OPTIONAL { ?g orexis:beliefsOf ?owner } FILTER(!BOUND(?owner) || ?owner = $holder) } }
-ORDER BY ?at"""
+    ?x a planning:Weighing ; planning:for $desire ; planning:weighs ?g .
+    ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start .
+    OPTIONAL { ?x planning:met ?met }
+    OPTIONAL { ?x planning:violation ?v . ?v planning:instance ?instance .
+               OPTIONAL { ?v planning:constraint ?constraint }
+               OPTIONAL { ?v orexis:about ?about }
+               OPTIONAL { ?v orexis:violationIs ?side } } } }
+ORDER BY ?start ?instance ?constraint"""
 
-#  WHERE THE SHAPES LIVE: every graph of desires and of wants, whatever its period — a
-#  desire's shape and its blank-node closure sit in a desire graph whole, a derived want's own
-#  in its want graph, and the whole belief base parsed into rdflib cost half a second per
-#  shape for a closure of forty triples (#711).
-_SHAPE_GRAPHS_Q = """
-SELECT DISTINCT ?g WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind . FILTER(isIRI(?g))
-               VALUES ?kind { orexis:DesireGraph orexis:WantGraph } } }
-ORDER BY ?g"""
 
-#  WHAT A WANT NARROWS ITS DESIRE TO: its own met-test, which is the desire's carved to the
-#  cluster the want was minted from and targeted at its instance.
-@dataclass(frozen=True)
-class _Witness:
-    """One way a desire is failing, and when it first does: the instance that failed, the
-    constraint it failed, what that constraint is about where its block says, WHICH WAY it
-    broke where the block says that, and the instant.
+def _desires_in(store: ox.Store) -> list[tuple[str, str]]:
+    """Every desire the store holds, as `(holder, desire)`. One agent, one volume, so the
+    holder is the agent; a store holding several agents' desires answers for each."""
+    return [(r["holder"], r["desire"]) for r in rows(store, _DESIRES_Q, ())]
 
-    A universal is refuted by a witness, and the want minted under it is the universal
-    instantiated at that witness (one-function-mints-every-want). This is what a stored
-    judgment's result was, and it is computed rather than stored: a want is where any of it
-    is kept.
+
+def _troubles(store: ox.Store, desire: str) -> list[dict] | None:
+    """Every way `desire` is failing, each with the stretch it fails over — or None where any
+    ground was not judged, which is not the same as met.
+
+    A WAY OF FAILING is one `(instance, constraint)` pair, and the grounds it is violated in
+    give it an interval: `at`, the start of the earliest ground it reads unmet in; `until`,
+    the start of the first later ground it reads met in, or None where nothing the agent can
+    see ahead repairs it. The present is the first ground and is not otherwise special —
+    "unmet now" is `at == the present`. A way that fails, lifts and fails again is one want
+    over the first stretch, and the second is a ground away.
     """
-
-    instance: str
-    constraint: str
-    about: str | None
-    at: datetime
-    side: str | None = None
-    #  WHEN IT LIFTS: the earliest boundary after `at` at which this same way of failing reads
-    #  MET again, or None where nothing the agent can see ahead to repairs it. A prediction is
-    #  what usually says so — the pot dries at three and the forecast refills it at six — and
-    #  it is the want's period end, which is the only honest one: what ENDS a want's trouble is
-    #  a fact about the world, not a figure borrowed from the ledger.
-    until: datetime | None = None
-
-
-def _desires_in(store: ox.Store) -> list[tuple[str, str, str | None]]:
-    """Every desire the store holds, as `(holder, desire, met-test or None)`.
-
-    NO INSTANT, because there is nothing to ask one about: a desire holds always. One agent,
-    one volume, so the holder is the agent; a store holding several agents' desires answers
-    for each.
-    """
-    return [(r["holder"].value, r["desire"].value,
-             r["shape"].value if r["shape"] is not None else None)
-            for r in store.query(_DESIRES_Q, prefixes=NAMESPACES)]
-
-
-def _read_over_time(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str,
-                   shape: str | None, now: datetime) -> list[_Witness] | None:
-    """Every way this desire is failing, each with the stretch it fails over — or None where
-    there is no compilable met-test to ask, which is not the same as met.
-
-    ONE LOOP OVER EVERY BOUNDARY, `now` first. The met-test is run at each; what comes back per
-    instant is which `(instance, constraint)` pairs read unmet there. A pair is one WAY the
-    desire is failing, and the instants it is unmet at give it an interval:
-
-        at      = the earliest boundary it reads unmet
-        until   = the earliest boundary AFTER that at which it reads met again, or None
-
-    IT WAS TWO FUNCTIONS AND A BRANCH. `read_now` judged the present over one set of graph
-    kinds, `read_ahead` judged the future over another and only where the present read met, and
-    each recorded the earliest unmet instant and stopped. Three things fall out of joining
-    them. The present stops being privileged — it is the first boundary, and "unmet now" is
-    `at == now`. The two kind lists become one, since a prediction's own period already keeps
-    it out of the present. And a want can say when its trouble LIFTS, which neither half could
-    see: `read_ahead` stopped at the first unmet instant and never asked what came after, so a
-    pot that dries at three and is refilled by the forecast at six was a want with a beginning
-    and no end.
-
-    A BOUNDARY IS WHERE A JUDGMENT CAN DIFFER and nowhere else: everything between two of them
-    is one world (`_boundaries`).
-    """
-    select = _compiled(shapes, shape, desire)
-    if select is None:
+    found = rows(store, _TROUBLES_Q, (), desire=desire)
+    if not found or any(r.get("met") is None for r in found):
         return None
-    #  What each way of failing reads at each instant — unmet where the select bound a row.
-    seen: dict[tuple[str, str], _Witness] = {}
-    lifted: dict[tuple[str, str], datetime] = {}
-    for at in _boundaries(store, holder, now):
-        rows_ = _witnesses_at(store, select, holder, at, now)
-        if rows_ is None:
-            return None                 # the engine refused the text at some instant
+    seen: dict[tuple, dict] = {}
+    lifted: dict[tuple, datetime] = {}
+    by_ground: dict[str, list] = {}
+    for r in found:
+        by_ground.setdefault(r["start"], []).append(r)
+    for start, group in sorted(by_ground.items()):
+        at = datetime.fromisoformat(start)
         unmet = set()
-        for w in rows_:
-            key = (w.instance, w.constraint)
+        for r in group:
+            if not r.get("instance"):
+                continue
+            key = (r["instance"], r.get("constraint", ""))
             unmet.add(key)
-            seen.setdefault(key, w)
-        #  AND WHAT READS MET HERE, for a way of failing that was unmet earlier: the first such
-        #  instant is when the trouble lifts. Only the first — a way that fails, lifts and fails
-        #  again is one want over the first stretch, and the second is a boundary away.
+            seen.setdefault(key, {"instance": r["instance"], "constraint": r.get("constraint", ""),
+                                  "about": r.get("about"), "side": r.get("side"), "at": at})
         for key in seen.keys() - unmet:
             lifted.setdefault(key, at)
-    return sorted((replace(w, until=lifted.get((w.instance, w.constraint)))
-                   for w in seen.values()),
-                  key=lambda w: (w.at, w.instance, w.constraint))
-
-
-def _shapes_in(store: ox.Store) -> rdflib.Graph:
-    """Every graph of desires and of wants, as one rdflib graph — where a desire's shape lives
-    with its blank-node closure, and a derived want's own.
-
-    WHICH graphs is this module's question; the crossing itself is the store's
-    (`store.rdflib_view`), and so is the reason it is N-Triples. The engine's blank-node labels
-    are its own, so two graphs' nodes never collide in one text.
-
-    **ONCE PER PASS, AND THE CALLER HOLDS IT.** It is handed down to `_narrowed` rather than
-    re-fetched there, which it used to be: `_narrowed` runs once per want minted, so a pass that
-    minted two wants crossed every desire and want graph THREE times — measured — while this
-    function's own docstring said "parsed once" and cited the #711 measurement that makes that
-    expensive. Crossing is what costs; the answer cannot change inside a pass that has not
-    written a shape.
-    """
-    return rdflib_view(store, *[row["g"].value for row
-                                in store.query(_SHAPE_GRAPHS_Q, prefixes=NAMESPACES)])
-
-
-def _compiled(shapes: rdflib.Graph, shape: str | None, of: str) -> str | None:
-    """`shape` _compiled to the select whose rows are its VIOLATIONS — `?this`, which
-    constraint, `?_about` and `?_side` where the constraint's block says them — or None, with
-    a word in the log, where there is no shape or the compiler refuses it.
-
-    THE REPORT AND NOT THE FOCUS NODES (one-function-mints-every-want): a desire universal over
-    several properties fails per property, and the rows are what say which. The planner
-    compiles the same shape the same way for the law it holds candidates to."""
-    from orexis.agent.violation import Unsupported, report_select
-
-    if shape is None:
-        return None
-    try:
-        return report_select(shapes.cbd(rdflib.URIRef(shape)), rdflib.URIRef(shape))
-    except Unsupported as exc:
-        log.warning("%s: its met-test cannot be _compiled, so it is not judged: %s",
-                    of.rsplit("#", 1)[-1], exc)
-        return None
-
-
-def _boundaries(store: ox.Store, holder: str, now: datetime) -> list[datetime]:
-    """THE PRESENT AND EVERY INSTANT AFTER IT AT WHICH THE WORLD THIS HOLDER READS CHANGES,
-    in order — a period starting, a period ending, and nothing else.
-
-    `now` is the first of them and is not otherwise special. It used to be: the present was
-    judged over one set of graph kinds and the future over another, the future only where the
-    present read met, and "the present outranks the instant" was a branch. It is arithmetic
-    now — the earliest boundary a witness is unmet at is either `now` or it is not.
-    """
-    return [now] + [datetime.fromisoformat(row["at"].value)
-                    for row in store.query(bind(_BOUNDS_Q, holder=holder, now=instant(now)),
-                                           prefixes=NAMESPACES)]
-
-
-def _witnesses_at(store: ox.Store, select: str, holder: str, at: datetime,
-                  now: datetime) -> list[_Witness] | None:
-    """The met-test's rows over the graphs `holder`'s desire is judged over at `at`, as
-    witnesses — one per distinct row, since two predictions holding at one instant give one
-    instance two offending values and both are told. None where the engine refuses the text.
-
-    ONE SELECT PER DESIRE PER INSTANT, and not one union of them: the compiler measured a
-    single UNION of every shape at thirteen times the cost of the selects asked one by one.
-    """
-    graphs = [ox.NamedNode(g) for g in graphs_of(store, *FORESEEN, holder=holder, at=at, now=now)]
-    try:
-        found = store.query(select, prefixes=NAMESPACES, default_graph=graphs)
-        names = [v.value for v in found.variables]
-        seen: dict[tuple, _Witness] = {}
-        for solution in found:
-            row = {name: solution[name] for name in names if solution[name] is not None}
-            seen.setdefault(tuple(sorted((k, str(v)) for k, v in row.items())), _Witness(
-                instance=row["this"].value,
-                constraint=row["_constraint"].value if "_constraint" in row else "",
-                about=row["_about"].value if "_about" in row else None,
-                side=row["_side"].value if "_side" in row else None,
-                at=at))
-    except Exception as exc:                                        # noqa: BLE001
-        log.error("a met-test could not be read at %s: %s", at, exc)
-        return None
-    return [seen[key] for key in sorted(seen)]
-
-
+    return sorted(({**w, "until": lifted.get(k)} for k, w in seen.items()),
+                  key=lambda w: (w["at"], w["instance"], w["constraint"]))

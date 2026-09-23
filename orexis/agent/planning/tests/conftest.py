@@ -14,7 +14,6 @@ import pyoxigraph as ox
 
 from orexis.agent.store import catalogue_of, update
 
-from orexis.agent.planning.derive_wants import graph_of
 
 
 # --- want rows, for the cases that read one and unmake one ---
@@ -53,6 +52,14 @@ def _bare_store():
     return st
 
 
+def _graph_of(at, until) -> str:
+    """The graph a want in trouble over one stretch is written to HERE — the case's own name,
+    since a name is for eyes and every read asks the class. It was the derivation's own
+    builder, imported, which made the read's cases depend on a writer's spelling."""
+    stamp = lambda t: t.isoformat().replace(":", "").replace("+", "p")
+    return f"urn:test:wants/{stamp(at)}--{stamp(until) if until else 'open'}"
+
+
 def _derived(store, uri="urn:test:want", desire=_W_DESIRE, *, at=_W_NOW, until=None, side=None):
     """A want, written the way the DERIVATION writes one — a graph of wants that arrived
     derived, whose PERIOD IS THE STRETCH the trouble occupies, and provenance saying when the
@@ -64,7 +71,7 @@ def _derived(store, uri="urn:test:want", desire=_W_DESIRE, *, at=_W_NOW, until=N
     claims to be able to read, said plainly, and if the writer stops producing them the
     snapshot cases in `tests/derive_wants/` are what say so.
     """
-    graph = graph_of(_W_AGENT, at, until)
+    graph = _graph_of(at, until)
     broke = f" ; orexis:violationIs <{side}>" if side else ""
     period = f' ; orexis:start "{at.isoformat()}"^^xsd:dateTime' + (
         f' ; orexis:end "{until.isoformat()}"^^xsd:dateTime' if until else "")
@@ -131,8 +138,8 @@ class _Wants:
         _owe(self.store, uri)
 
     def graph_of(self, at=_W_NOW, until=None) -> str:
-        """The graph the derivation would write a want of that stretch into."""
-        return graph_of(_W_AGENT, at, until)
+        """The graph this fixture wrote a want of that stretch into."""
+        return _graph_of(at, until)
 
 
 @pytest.fixture

@@ -1,0 +1,16 @@
+--- case
++++ expected
+@@ -34,4 +34,13 @@
+   :sensed orexis:beliefsOf :keeper .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:5fc000937f8262b502a2b8f48b0d1f90bac44c72d656db033cb7a98eaf7e9e49" .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :tank1 :level 5 .
++}

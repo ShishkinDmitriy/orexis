@@ -8,11 +8,22 @@ a want for each cluster of what the met-tests read unmet; `<case>.diff` beside t
 case is the whole store afterwards, in the case's own order, so `diff` of case against snapshot
 is exactly what it did.
 
-WHAT A CASE IS HELD TO IS A PASS — `derive_wants` and then `forget_wants.withdraw` against
+THE GROUNDS ARE LAID FIRST, IN THE CASE'S OWN STORE, AND EVERY DESIRE WEIGHED IN EVERY GROUND,
+as the Planner sequences them: an act calls no other act, so the derivation reads the weighings
+and this harness writes them, with `unweighed` saying which — the same read the Planner asks.
+A case is held to a pass as a pass stands: `lay_ground`, `weigh`, the derivation, `withdraw`.
+Laid in place rather than into a second store, because a case that declares a ledger declares
+it where the withdrawal reads it. The grounds show in the diff, under `ground:`, and so do the
+WEIGHINGS of every desire in every ground — the met-test's rows, which are what the wants are
+minted from — and every prediction's retraction: a prediction is a diff, and a forecast of a reading that did
+not retract the reading it supersedes would leave both standing in the ground.
+
+WHAT A CASE IS HELD TO IS A PASS — `derive_wants` and then `withdraw` against
 its answer — because that is the unit a store is left by. The two are separate functions on
 purpose (deriving what is wanted and taking away what is not are different decisions), and
 `a_filled_tank_withdraws_its_want` is the case that tells them apart: it is the one that fails
-if the withdrawal is left out.
+if the withdrawal is left out. `a_tank_low_now_refilled_later` is the one that fails if the
+derivation reads the state beside the prediction instead of the ground.
 
 NOTHING STANDS BETWEEN A DESIRE AND A WANT, so there is one contract and one set of cases. It
 was two of each, with a judgment written between them and a case set per half;
@@ -31,7 +42,10 @@ import pytest
 from orexis.agent import clock
 
 from orexis.agent.planning.derive_wants import derive_wants
-from orexis.agent.planning.forget_wants import withdraw
+from orexis.agent.planning.lay_ground import lay_ground
+from orexis.agent.planning.unweighed import unweighed
+from orexis.agent.planning.weigh import weigh
+from orexis.agent.planning.withdraw import withdraw
 
 CASES_DIR = Path(__file__).parent / "derive_wants"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -41,11 +55,14 @@ CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 def test_derive_wants_leaves_the_store_as_the_snapshot_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
+    lay_ground(store, snapshots.NOW)
+    for pair in unweighed(store):
+        weigh(store, pair["for"], pair["about"])
     withdraw(store, derive_wants(store, snapshots.NOW), snapshots.NOW)
     snapshots.held_to_diff(case, request, "derive_wants", snapshots.snapshot_of(store))
 
 
 def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):
     """A glob that stopped matching would pass every case by running none."""
-    assert len(CASES) >= 13, [c.name for c in CASES]
+    assert len(CASES) >= 14, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)

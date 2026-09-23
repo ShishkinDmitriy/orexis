@@ -1,20 +1,20 @@
 --- case
 +++ expected
-@@ -103,9 +103,9 @@
-   :ontology a orexis:Graph .
-   :ontology a orexis:OntologyGraph .
-   :ontology a orexis:PublicGraph .
--  :scopes a planning:ScopeGraph .
-   :scopes a orexis:Graph .
-   :scopes a orexis:WorkingGraph .
-+  :scopes a planning:ScopeGraph .
-   :scopes orexis:arrivedBy orexis:Derived .
-   :scopes orexis:beliefsOf :keeper .
-   :sensed a orexis:BeliefGraph .
-@@ -113,4 +113,52 @@
+@@ -114,4 +114,81 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:874747ce579a266d59f9b0a46d5dc1562969cc2b84bd7a7f5f4c99d4f8f09838" .
++  ground:2026-01-01T120000p0000.for.keeper.ideal a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.ideal planning:for :keeper.ideal .
++  ground:2026-01-01T120000p0000.for.keeper.ideal planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.ideal planning:violation [ orexis:about :air_warmth_of_fern ; orexis:violationIs orexis:Above ; planning:constraint 0 ; planning:instance :air_warmth_of_fern ] .
++  ground:2026-01-01T120000p0000.for.keeper.ideal planning:violation [ orexis:about :soil_moisture_of_fern ; orexis:violationIs orexis:Below ; planning:constraint 1 ; planning:instance :soil_moisture_of_fern ] .
++  ground:2026-01-01T120000p0000.for.keeper.ideal planning:violation [ orexis:about :soil_warmth_of_fern ; orexis:violationIs orexis:Unmeasured ; planning:constraint 2 ; planning:instance :soil_warmth_of_fern ] .
++  ground:2026-01-01T120000p0000.for.keeper.ideal planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a orexis:WantGraph .
 +  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
@@ -22,6 +22,24 @@
 +  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
  }
 +
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :humidity_reading a sensing:InRegion .
++  :humidity_reading a sosa:Observation .
++  :humidity_reading sosa:hasFeatureOfInterest :air_of_fern .
++  :humidity_reading sosa:hasSimpleResult 55 .
++  :humidity_reading sosa:observedProperty :air_humidity_of_fern .
++  :soil_reading a sensing:BelowRegion .
++  :soil_reading a sosa:Observation .
++  :soil_reading sosa:hasFeatureOfInterest :soil_of_fern .
++  :soil_reading sosa:hasSimpleResult 22 .
++  :soil_reading sosa:observedProperty :soil_moisture_of_fern .
++  :warmth_reading a sensing:AboveRegion .
++  :warmth_reading a sosa:Observation .
++  :warmth_reading sosa:hasFeatureOfInterest :air_of_fern .
++  :warmth_reading sosa:hasSimpleResult 26 .
++  :warmth_reading sosa:observedProperty :air_warmth_of_fern .
++}
 +
 +GRAPH pursued:2026-01-01T120000p0000--open {
 +  :keeper orexis:holds :keeper.ideal.pursued.air_warmth_of_fern .
