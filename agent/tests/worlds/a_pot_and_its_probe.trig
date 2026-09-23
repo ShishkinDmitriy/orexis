@@ -1,0 +1,220 @@
+# a_pot_and_its_probe
+#
+# THE WORLD THE THREE LAYERS MEET IN: one agent acting for one pot, a probe it may ask, a pump
+# on the pot, the pot's own physics — four fractions a day, a fast dryer, so a reading inside
+# the region crosses below it within the hour — the bands genesis mints for the pot's
+# moisture, the drift that predicts it, the two levers and the region desire. No reading:
+# `revise` writes those, and `predict` the ladder, and the Planner and the Executor do the
+# rest. Prefixed `planning:` so the scopes can be said; nothing else here speaks the mind's
+# words.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sensed: <http://example.org/orexis/graph/sensed/keeper/> .
+@prefix result: <http://example.org/orexis/graph/result/keeper/> .
+@prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
+
+@prefix planning: <http://example.org/orexis/planning#> .
+
+# THE VOCABULARY THE CASE IS LOADED WITH: what the graph kinds are beneath, the three band
+# families, and the member bands genesis would mint for the pot's moisture from the range it
+# states — 0.10 to 0.30 of saturation, the loner's zamioculcas.
+GRAPH :ontology {
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  orexis:band.zz.moisture.above a owl:Class .
+  orexis:band.zz.moisture.above owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation [ a owl:Restriction ; owl:hasValue :zz ; owl:onProperty sosa:hasFeatureOfInterest ] [ a owl:Restriction ; owl:hasValue :moisture ; owl:onProperty sosa:observedProperty ] [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ; owl:withRestrictions ( [ xsd:minExclusive 0.3 ] ) ] ] ) ] .
+  orexis:band.zz.moisture.above rdfs:label "moisture above 0.30" .
+  orexis:band.zz.moisture.above rdfs:subClassOf sensing:AboveRegion .
+  orexis:band.zz.moisture.above sensing:ofProperty :moisture .
+  orexis:band.zz.moisture.above sensing:ofSubject :zz .
+  orexis:band.zz.moisture.below a owl:Class .
+  orexis:band.zz.moisture.below owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation [ a owl:Restriction ; owl:hasValue :zz ; owl:onProperty sosa:hasFeatureOfInterest ] [ a owl:Restriction ; owl:hasValue :moisture ; owl:onProperty sosa:observedProperty ] [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ; owl:withRestrictions ( [ xsd:maxExclusive 0.1 ] ) ] ] ) ] .
+  orexis:band.zz.moisture.below rdfs:label "moisture below 0.10" .
+  orexis:band.zz.moisture.below rdfs:subClassOf sensing:BelowRegion .
+  orexis:band.zz.moisture.below sensing:ofProperty :moisture .
+  orexis:band.zz.moisture.below sensing:ofSubject :zz .
+  orexis:band.zz.moisture.inside a owl:Class .
+  orexis:band.zz.moisture.inside owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation [ a owl:Restriction ; owl:hasValue :zz ; owl:onProperty sosa:hasFeatureOfInterest ] [ a owl:Restriction ; owl:hasValue :moisture ; owl:onProperty sosa:observedProperty ] [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ; owl:withRestrictions ( [ xsd:minInclusive 0.1 ] [ xsd:maxInclusive 0.3 ] ) ] ] ) ] .
+  orexis:band.zz.moisture.inside rdfs:label "moisture inside 0.10-0.30" .
+  orexis:band.zz.moisture.inside rdfs:subClassOf sensing:InRegion .
+  orexis:band.zz.moisture.inside sensing:ofProperty :moisture .
+  orexis:band.zz.moisture.inside sensing:ofSubject :zz .
+  sensing:AboveRegion rdfs:subClassOf sosa:Observation .
+  sensing:BelowRegion rdfs:subClassOf sosa:Observation .
+  sensing:InRegion rdfs:subClassOf sosa:Observation .
+  sensing:ResultGraph rdfs:subClassOf orexis:BeliefGraph .
+}
+
+GRAPH :world {
+  :keeper :hasValve :pump .
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :zz .
+  :keeper orexis:localId "keeper" .
+  :keeper sensing:mayAsk :probe .
+  :keeper sensing:polls :probe .
+  :probe a sosa:Sensor .
+  :probe sensing:monitors :zz .
+  :probe sosa:observes :moisture .
+  :pump :waters :zz .
+  :pump a :Valve .
+  :zz :driesPerDay 4.0 .
+  :zz a :Pot .
+}
+
+# THE DRIFT: what the pot loses while nobody waters it — the water package's Drying, in the
+# case's own words, typing its prediction with every band the rate, its spread and the probe's
+# noise reach. Declared as a rule the layer runs, never a lever the search takes.
+GRAPH :actions {
+  :Drying a sensing:Drift .
+  :Drying rdfs:label "what a pot loses while nobody waters it" .
+  :Drying sensing:atHorizon 18000 .
+  :Drying sensing:atHorizon 3600 .
+  :Drying sensing:atHorizon 86400 .
+  :Drying sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT {
+          ?obs a sosa:Observation , ?band ;
+               sosa:hasFeatureOfInterest ?pot ;
+               sosa:observedProperty :moisture ;
+               sosa:hasSimpleResult ?now ;
+               sosa:resultTime ?at ;
+               sosa:madeBySensor ?sensor .
+      } WHERE {
+          ?obs sosa:hasFeatureOfInterest ?pot ;
+               sosa:observedProperty :moisture ;
+               sosa:hasSimpleResult ?was .
+          OPTIONAL { ?obs sosa:madeBySensor ?sensor }
+          ?pot :driesPerDay ?rate .
+          FILTER(?rate > 0 && $elapsed > 0)
+          BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
+          BIND(?was - (?rate * ?days) AS ?fell)
+          BIND(IF(?fell < 0.0, 0.0, ?fell) AS ?now)
+          BIND($lands AS ?at)
+          OPTIONAL { ?pot :driesPerDaySpread ?spread }
+          OPTIONAL { ?sensor sensing:noise ?noise }
+          BIND(((xsd:double(COALESCE(?spread, 0)) * xsd:double(?days)) + xsd:double(COALESCE(?noise, 0))) AS ?width)
+          BIND(xsd:double(?now) - ?width AS ?lo)
+          BIND(xsd:double(?now) + ?width AS ?hi)
+          ?band sensing:ofSubject ?pot ; sensing:ofProperty :moisture ;
+                owl:equivalentClass/owl:intersectionOf/rdf:rest*/rdf:first ?r .
+          ?r owl:onProperty sosa:hasSimpleResult ;
+             owl:someValuesFrom/owl:withRestrictions ?facets .
+          OPTIONAL { ?facets rdf:rest*/rdf:first/xsd:maxExclusive ?below }
+          OPTIONAL { ?facets rdf:rest*/rdf:first/xsd:minInclusive ?inLo .
+                     ?facets rdf:rest*/rdf:first/xsd:maxInclusive ?inHi }
+          OPTIONAL { ?facets rdf:rest*/rdf:first/xsd:minExclusive ?above }
+          FILTER((BOUND(?below) && ?lo < ?below)
+                 || (BOUND(?inLo) && ?hi >= ?inLo && ?lo <= ?inHi)
+                 || (BOUND(?above) && ?hi > ?above))
+      }""" .
+}
+
+# TWO LEVERS, in the case's own words. DOSING is available where the pot's moisture reads
+# below its region and predicts the reading inside it — the band, never a number — and it
+# retracts the node it replaces, which is the one invariant every effect leans on (#669).
+# OBSERVING is available where no reading of the pot stands at all and predicts only that one
+# will: the key facts, no band, so the desire judges what the reading IS on the pass after it
+# arrives. The node it predicts is spelled as the sensing layer's writer spells it, which is
+# the writer's convention in a second place and the seam #783 leaves open.
+GRAPH :levers {
+  :Dosing a orexis:Action .
+  :Dosing orexis:available """PREFIX : <http://example.org/test#>
+      SELECT ?valve ?pot WHERE {
+          $me :hasValve ?valve . ?valve :waters ?pot .
+          ?obs sosa:hasFeatureOfInterest ?pot ; sosa:observedProperty :moisture ; a sensing:BelowRegion .
+      }""" .
+  :Dosing orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  :Dosing orexis:landsAfter "SELECT (60 AS ?seconds) WHERE { }" .
+  :Dosing orexis:retracts """PREFIX : <http://example.org/test#>
+      DELETE { GRAPH $state { ?obs ?p ?o } }
+      WHERE  { GRAPH $state { ?obs sosa:hasFeatureOfInterest $pot ; sosa:observedProperty :moisture ; ?p ?o } }""" .
+  :Dosing orexis:takes :pot .
+  :Dosing orexis:takes :valve .
+  :Dosing sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT {
+          ?obs a sosa:Observation , ?band , sensing:InRegion ;
+               sosa:hasFeatureOfInterest $pot ;
+               sosa:observedProperty :moisture .
+      } WHERE {
+          ?obs sosa:hasFeatureOfInterest $pot ; sosa:observedProperty :moisture .
+          ?band rdfs:subClassOf sensing:InRegion ; sensing:ofSubject $pot ; sensing:ofProperty :moisture .
+      }""" .
+  :Observing a orexis:Action .
+  :Observing orexis:available """PREFIX : <http://example.org/test#>
+      SELECT ?sensor WHERE {
+          $me sensing:mayAsk ?sensor . ?sensor sensing:monitors ?pot ; sosa:observes :moisture .
+          FILTER NOT EXISTS { ?obs sosa:hasFeatureOfInterest ?pot ; sosa:observedProperty :moisture }
+      }""" .
+  :Observing orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  :Observing orexis:takes :sensor .
+  :Observing sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT {
+          ?obs a sosa:Observation ; sosa:hasFeatureOfInterest ?pot ; sosa:observedProperty :moisture .
+      } WHERE {
+          $sensor sensing:monitors ?pot .
+          BIND(IRI(CONCAT("http://example.org/orexis#obs_", STRAFTER(STR(?pot), "#"), "_moisture")) AS ?obs)
+      }""" .
+  :pot a orexis:Parameter .
+  :sensor a orexis:Parameter .
+  :valve a orexis:Parameter .
+}
+
+# THE REGION DESIRE, as sensing's derivation would author it for this agent, in the 0.2.0
+# form: one block per way of failing, each saying which way (`orexis:violationIs`). UNMEASURED
+# asks that a reading of the property EXIST — a look repairs that and nothing else — and
+# BELOW and ABOVE ask that none be the band on that side, which a look cannot launder since it
+# replaces no node that stands.
+GRAPH :desires {
+  :bounds a sh:NodeShape .
+  :bounds sh:property [ orexis:about :moisture ; orexis:violationIs orexis:Above ; sh:message "the moisture of zz is above its region" ; sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue :moisture ; sh:path sosa:observedProperty ] ] ] .
+  :bounds sh:property [ orexis:about :moisture ; orexis:violationIs orexis:Below ; sh:message "the moisture of zz is below its region" ; sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue :moisture ; sh:path sosa:observedProperty ] ] ] .
+  :bounds sh:property [ orexis:about :moisture ; orexis:violationIs orexis:Unmeasured ; sh:message "nothing has read the moisture of zz" ; sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:class sosa:Observation ; sh:property [ sh:hasValue :moisture ; sh:path sosa:observedProperty ] ] ] .
+  :bounds sh:targetNode :keeper .
+  :keeper orexis:holds :keeper.moisture .
+  :keeper.moisture a orexis:Desire .
+  :keeper.moisture orexis:about :moisture .
+  :keeper.moisture orexis:metWhen :bounds .
+  :keeper.moisture rdfs:label "moisture of zz inside its region" .
+}
+
+GRAPH :scopes {
+  :Dosing planning:inScope :keeper.scope.1 .
+  :Observing planning:inScope :keeper.scope.1 .
+  :keeper.scope.1 a planning:Scope .
+  sosa:hasFeatureOfInterest planning:inScope :keeper.scope.1 .
+  sosa:observedProperty planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :levers a orexis:Graph .
+  :levers a orexis:PublicGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

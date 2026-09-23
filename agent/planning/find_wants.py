@@ -59,7 +59,7 @@ DERIVED = OREXIS + "Derived"
 
 def find_wants(store, at: datetime | None = None, *, uri: str = "", desire: str = "",
                derived: bool = False, holder: str = "", limit: int = PAGE,
-               offset: int = 0) -> list[str]:
+               offset: int = 0, whenever: bool = False) -> list[str]:
     """The uris of the wants `store` holds that stand at `at`, narrowed by whichever criteria
     are named, ordered by name.
 
@@ -82,7 +82,7 @@ def find_wants(store, at: datetime | None = None, *, uri: str = "", desire: str 
     if desire:
         patterns += f" ; prov:wasDerivedFrom <{desire}>"
     where = f"BIND(<{uri}> AS ?w) {patterns} ." if uri else f"{patterns} ."
-    found = _select(store, where, at, limit, offset, DERIVED if derived else "", holder)
+    found = _select(store, where, at, limit, offset, DERIVED if derived else "", holder, whenever)
     #  A PAGE OF ONE IS ALWAYS FULL: `find_want` asks for one, and one standing is the
     #  ordinary answer, not a leak.
     if limit > 1 and len(found) == limit:
@@ -92,7 +92,7 @@ def find_wants(store, at: datetime | None = None, *, uri: str = "", desire: str 
 
 
 def _select(store, where: str, at: datetime | None, limit: int, offset: int,
-            arrival: str, holder: str = "") -> list[str]:
+            arrival: str, holder: str = "", whenever: bool = False) -> list[str]:
     """Read the graphs of wants holding at `at` — of one arrival where a caller names it — and
     hand back one ordered page.
 
@@ -122,6 +122,12 @@ def _select(store, where: str, at: datetime | None, limit: int, offset: int,
     #  every holder's desires and this read would otherwise hand back another agent's wants.
     #  A graph saying no owner is anyone's, and a read told nothing keeps every graph.
     now = (at or clock.now()).isoformat()
+    #  WHENEVER: every want standing over ANY stretch — what a pass searches, since a want
+    #  foreseen at a crossing is rooted at the crossing's ground and planned from the present
+    #  pass, not from the instant its trouble begins (#783). Asked at an instant otherwise.
+    holding = "" if whenever else (
+        f'  FILTER(!BOUND(?start) || ?start <= "{now}"^^xsd:dateTime)\n'
+        f'  FILTER(!BOUND(?end) || ?end > "{now}"^^xsd:dateTime)')
     kinds = " ".join(f"<{k}>" for k in (WANT, RECORD))
     #  AND HOW IT ARRIVED, where the caller said: the derivation's wants are the graphs of
     #  wants it wrote, and a world's ratified want is a graph of wants the sovereign wrote.
@@ -151,8 +157,7 @@ SELECT DISTINCT ?w WHERE {{
     ?g a ?kind . VALUES ?kind {{ {kinds} }}
 {came}{mine}
     OPTIONAL {{ ?g dcterms:temporal ?period . OPTIONAL {{ ?period orexis:start ?start }} OPTIONAL {{ ?period orexis:end ?end }} }} }}
-  FILTER(!BOUND(?start) || ?start <= "{now}"^^xsd:dateTime)
-  FILTER(!BOUND(?end) || ?end > "{now}"^^xsd:dateTime)
+{holding}
 }} ORDER BY ?w LIMIT {int(limit)} OFFSET {int(offset)}""", ()))
     return [r["w"] for r in rows_]
 

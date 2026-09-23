@@ -358,7 +358,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             lands = datetime.fromisoformat(r["lands"]) if r.get("lands") else now
             if now < lands:
                 wake_at(lands)
-            elif self._answered(r["predicts"]):
+            elif self._answered(r["predicts"], now):
                 self._advance(intention, step)
             elif now >= lands + timedelta(seconds=self.patience_s):
                 log.warning("%s: the world did not answer %s by %s — %s fails",
@@ -369,11 +369,17 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         self._next_due = soonest
         return due
 
-    def _answered(self, predicts: str) -> bool:
+    def _answered(self, predicts: str, now: datetime) -> bool:
         """Does the present hold what a step predicted — every addition present, every
-        retraction gone — over the agent's readings as they stand?"""
+        retraction gone — over the agent's readings as they stand at `now`?
+
+        AT `now`, because a reading is a graph with a period: one whose standing as the
+        present has run out is not the present, and a step it would have answered waits for
+        the reading that is (#783). A prediction is never an answer — the world's word is what
+        the sensing layer wrote from an instrument, and the drift's is what the search
+        planned on."""
         said = json.loads(predicts)
-        present = {json.dumps(f) for f in facts_of(self.beliefs, *graphs_of(self.beliefs, STATE))}
+        present = {json.dumps(f) for f in facts_of(self.beliefs, *graphs_of(self.beliefs, STATE, at=now))}
         return all(json.dumps(f) in present for f in said.get("adds", ())) \
             and not any(json.dumps(f) in present for f in said.get("retracts", ()))
 

@@ -22,8 +22,8 @@ process is told:
 2. every desire is weighed in every ground (`weigh`, over what `unweighed` lists),
    `derive_wants` reads the weighings and mints a want per cluster of what they read unmet,
    and `withdraw` takes away what no desire implies and no intention is walking;
-3. per want that no intention is walking, `search`: the want is weighed in the present
-   ground, and `expand` opens the cheapest open world until nothing is open, the cheapest
+3. per want that no intention is walking, `search`: the want is weighed in the ground its
+   trouble begins at — the present, or the world a foreseen crossing makes — and `expand` opens the cheapest open world until nothing is open, the cheapest
    achiever refuses the top, or the budget is spent — an iteration admits the world's
    candidates, takes each and weighs what it reached; then `extract_plan` writes what the
    want's weighings come to;
@@ -357,7 +357,7 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
     """
     first = (sorted(set(scopes.values())) or [UNSCOPED])[0]
     mine = []
-    for want in find_wants(store, at, holder=holder):
+    for want in find_wants(store, holder=holder, whenever=True):
         reads = footprint.reads_of_shape(shapes, rdflib.URIRef(want))
         if reads is footprint.ANYTHING:
             #  A WANT WHOSE SHAPE THE WALKER CANNOT READ joins everything, which is the

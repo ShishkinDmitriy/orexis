@@ -1,0 +1,54 @@
+--- case
++++ expected
+@@ -96,6 +96,20 @@
+   :ontology a orexis:PublicGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> a <http://example.org/orexis/planning#GroundGraph> .
++  <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> orexis:arrivedBy orexis:Derived .
++  <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> orexis:hash "sha256:cbed4defc605dc72abebccd2e9ee207ab076873cbb0556ae85419dfe80ec3149" .
++  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> a <http://example.org/orexis/planning#GroundGraph> .
++  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T16:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> orexis:arrivedBy orexis:Derived .
++  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> orexis:hash "sha256:0cad1d8e7428ca91fb946a5a606b5686ffa2914da8ad5d35cfacb211c941ae58" .
++  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> prov:wasDerivedFrom <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> .
++  <http://example.org/orexis/graph/ground/2026-01-01T160000p0000> a <http://example.org/orexis/planning#GroundGraph> .
++  <http://example.org/orexis/graph/ground/2026-01-01T160000p0000> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T16:00:00+00:00"^^xsd:dateTime ] .
++  <http://example.org/orexis/graph/ground/2026-01-01T160000p0000> orexis:arrivedBy orexis:Derived .
++  <http://example.org/orexis/graph/ground/2026-01-01T160000p0000> orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
++  <http://example.org/orexis/graph/ground/2026-01-01T160000p0000> prov:wasDerivedFrom <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> .
+   <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> a orexis:Graph .
+   <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> a orexis:PredictionGraph .
+   <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:15:00+00:00"^^xsd:dateTime ] .
+@@ -111,6 +125,7 @@
+   <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zz> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
+   <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> prov:wasDerivedFrom sensed:zz_moisture .
+   result:zz_moisture a orexis:BeliefGraph .
++  result:zz_moisture a orexis:Graph .
+   result:zz_moisture a sensing:ResultGraph .
+   result:zz_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T11:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
+   result:zz_moisture orexis:arrivedBy orexis:Received .
+@@ -122,3 +137,22 @@
+   sensed:zz_moisture orexis:arrivedBy orexis:Received .
+   sensed:zz_moisture orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> {
++  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
++  orexis:obs_zz_moisture a sensing:InRegion .
++  orexis:obs_zz_moisture a sosa:Observation .
++  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
++  orexis:obs_zz_moisture sosa:observedProperty :moisture .
++}
++
++GRAPH <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> {
++  orexis:obs_zz_moisture a orexis:band.zz.moisture.below .
++  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
++  orexis:obs_zz_moisture a sensing:BelowRegion .
++  orexis:obs_zz_moisture a sensing:InRegion .
++  orexis:obs_zz_moisture a sosa:Observation .
++  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
++  orexis:obs_zz_moisture sosa:observedProperty :moisture .
++}
