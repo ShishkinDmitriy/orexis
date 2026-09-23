@@ -81,6 +81,9 @@ VIOLATION = PLANNING + "violation"
 INSTANCE = PLANNING + "instance"
 CONSTRAINT = PLANNING + "constraint"
 MET = PLANNING + "met"
+#  WHAT THE WANT'S ESTIMATE READS IN THE WORLD: how far it still is, in the unit the search
+#  spends, never overstated — with `planning:spent` the A* key the frontier is ordered by.
+REMAINING = PLANNING + "remaining"
 OPEN = PLANNING + "open"
 EXPANDED = PLANNING + "expanded"
 REPEATS = PLANNING + "repeats"

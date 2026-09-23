@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from orexis.agent.store import bindings, query_over, update
 from orexis.agent.planning.find_wants import find_wants
+from orexis.agent.execution.plans import pursued
 from orexis.agent.planning.withdraw import withdraw
 
 
@@ -30,9 +31,9 @@ def test_a_want_a_plan_is_walking_is_kept(wants):
     with nothing it was for."""
     wants.derived("urn:test:walking")
     update(wants.store, """INSERT DATA {
-  GRAPH <urn:test:intentions> { <urn:test:i> orexis:pursues <urn:test:walking> }
+  GRAPH <urn:test:intentions> { <urn:test:i> a execution:Intention ; execution:pursues <urn:test:walking> }
   GRAPH <urn:test:catalogue> { <urn:test:intentions> a execution:IntentionGraph } }""")
-    assert withdraw(wants.store, set(), wants.at) == []
+    assert withdraw(wants.store, set(pursued(wants.store)), wants.at) == []
     assert find_wants(wants.store) == ["urn:test:walking"]
 
 

@@ -36,7 +36,7 @@ def walked(monkeypatch):
     close_catalogue(st)
     planner = Planner(st, "keeper")
     planner.plan(NOW)
-    return planner.imaginaria[0]
+    return next(iter(planner.imaginaria.values()))
 
 
 def _steps(store, graph: str) -> list[dict]:

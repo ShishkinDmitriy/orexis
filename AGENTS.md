@@ -1131,6 +1131,44 @@ it is a record wearing a bullet.
   `?cat` replaced by the constant at the engine's door ran the three-disk bench at 163 ms
   against 168, inside one session's noise. And a read asked per iteration is sized by what the iteration opens: `unweighed` narrowed to one want
   and one world took the three-disk bench from 496 ms to 158.
+- **The imaginarium outlives the pass, and the present is identified in it by hash** — a
+  planner called every minute imagined the same cone afresh each time and handed the ledger an
+  intention per pass for one want; the Planner keeps an imaginarium per scope now, `reroot`
+  finds the world of the last pass whose `orexis:hash` the new ground repeats — the old
+  present when nothing happened, a child when a step landed as predicted — hands its
+  candidates to the ground, re-stamps the cone's instants and rebases its spent, and drops the
+  rest; three disks re-planned after the first move in 34 ms against 132 fresh, and a minute
+  later with nothing happened in 42 against 156. A surprise matches nothing and everything
+  goes; a name is never trusted, so a re-laid ground's old cone goes too.
+- **A want the ledger is walking is neither searched nor handed down again** — the world has
+  not answered yet, so re-deciding is the executor's verdict on a step and not the clock's;
+  `execution.plans.pursued` is the one read, the Planner skips those wants and keeps them from
+  `withdraw`, and `publish_plan` crosses no plan for one, since the plan graph of an earlier
+  pass is still in the kept imaginarium.
+- **What crosses into the imaginarium is taken back before it crosses again, and what the
+  store made for itself stays** — a refresh forgets every graph of a crossing kind the store
+  did not make (grounds, worlds, plans and the derivation's own wants are its), so a reading
+  replaced is replaced and a forecast swept is gone; laid on top, the old facts stood beside
+  the new.
+- **The estimate rides on the weighing, and the frontier is A\* by reading it** — a want's
+  `orexis:estimates` select, the package's promise of what is left in the unit the search
+  spends, is run where the world is weighed and written as `planning:remaining`, so ordering
+  by spent plus remaining costs the frontier nothing per iteration and the first achiever
+  bounds the sum; the courier's corner delivery went from exhausting a budget of 128 to
+  arriving after 45 candidates, hanoi from 56 to 50, and a want with no estimate is
+  uniform-cost, because an absent figure reads nought and a broken select writes none.
+- **A search the budget cuts short is finished by the passes after, and the passes together
+  are the one-shot search** — the budget is each call's and the frontier is rows, so three
+  disks at twenty a pass read EXHAUSTED twice, hand nothing down, and reach their seven moves
+  on the third pass having weighed the fifty one pass with room weighs, not one more; a
+  ceiling on compute per pass is then a ceiling on latency, and what is spent in all is the
+  problem's.
+- **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes
+  first** — `?x a planning:Weighing ; … ; planning:weighs ?about` scanned every weighing per
+  candidate and cost 74 ms on a kept three-disk cone, answering nothing; `?x planning:weighs
+  ?about ; …` costs 4, and an act that means to admit a world it already admits is idempotent
+  by FILLING, not by name, since a candidate handed on by a re-root keeps the name it was
+  made with.
 - **A prologue goes at the head of a joined update, and the engine refuses one after `;`** —
   every retraction carries its package's `PREFIX`, so joining the copy and the retraction into
   one text skipped every retraction, at the log level and green; hoist the declarations, and

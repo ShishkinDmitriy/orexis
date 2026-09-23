@@ -143,6 +143,7 @@ def _present(store: ox.Store, now: datetime) -> str:
     what a pass stands on, and a pass must be able to fork one without the belief base moving.
     """
     name = _name(now)
+    _relaid(store, name)
     for source in graphs_of(store, STATE):
         update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                        f"WHERE {{ GRAPH <{source}> {{ ?s ?p ?o }} }}")
@@ -168,6 +169,7 @@ def _fork(store: ox.Store, parent: str, name: str, added, retracts: list[str]) -
     to the ground this boundary makes, because what `$state` means is the caller's — an
     action's is bound to the world its step makes.
     """
+    _relaid(store, name)
     fork(store, parent, name, added, [bind(text, state=Raw(f"<{name}>")) for text in retracts])
     #  AND WHICH GROUND IT CAME FROM, in the store rather than in its name. What MADE it is
     #  not said: a ground is made by predictions nobody takes, and its own period says when —
@@ -175,6 +177,29 @@ def _fork(store: ox.Store, parent: str, name: str, added, retracts: list[str]) -
     add_quads(store, [ox.Quad(ox.NamedNode(name), ox.NamedNode(_PROV + "wasDerivedFrom"),
                               ox.NamedNode(parent), ox.NamedNode(catalogue_of(store)))])
     return name
+
+
+#  THE VERDICTS ABOUT A GROUND, with the violation rows hanging off each.
+_UNWEIGH_U = """
+DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
+WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                      ?x a planning:Weighing ; planning:weighs $world ; ?p ?o .
+                      OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"""
+
+
+def _relaid(store: ox.Store, name: str) -> None:
+    """Take back a ground standing under the name this pass is about to lay under — its
+    facts, its row and every weighing of it.
+
+    THE IMAGINARIUM OUTLIVES THE PASS, and a ground is named for its instant, so a boundary the
+    last pass's predictions reached too — a forecast at one o'clock, seen from noon and again
+    from a minute past — is laid under the name it had. Laid on top, the old facts would stand
+    beside the new; kept, its weighings would be verdicts about what it used to hold, and
+    `unweighed` would not ask again. The ground of the last PRESENT keeps its name and its
+    rows: `reroot` is what decides whether the present is the world it was.
+    """
+    forget_graph(store, name)
+    update(store, bind(_UNWEIGH_U, world=name))
 
 
 def _triples(store: ox.Store, world: str):

@@ -1,7 +1,7 @@
 # a_want_a_plan_is_walking_is_not_withdrawn
 #
 # The same filled tank, and the same want the decomposition no longer implies — but an
-# intention is WALKING it: `orexis:pursues`, unresolved. The want stands. Dropping it here
+# intention is WALKING it: `execution:pursues`, unresolved. The want stands. Dropping it here
 # would leave the keeper's plan pursuing nothing, and the plan's own end is what ends it.
 #
 # The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
@@ -63,7 +63,7 @@ GRAPH pursued:keeper.in_range.pursued.tank1.level {
 
 GRAPH intentions:keeper {
   :intention.1 a execution:Intention .
-  :intention.1 orexis:pursues :keeper.in_range.pursued.tank1.level .
+  :intention.1 execution:pursues :keeper.in_range.pursued.tank1.level .
 }
 
 GRAPH :scopes {

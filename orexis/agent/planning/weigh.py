@@ -42,6 +42,9 @@ from .world_at import world_at
 log = logging.getLogger("weigh")
 
 _MET_WHEN = rdflib.URIRef(OREXIS + "metWhen")
+_ESTIMATES = rdflib.URIRef(OREXIS + "estimates")
+_DERIVED_FROM = rdflib.URIRef("http://www.w3.org/ns/prov#wasDerivedFrom")
+_SELECT = rdflib.URIRef("http://www.w3.org/ns/shacl#select")
 
 #  WHAT `about` IS, AND WHETHER IT IS A REPEAT, in one read: a candidate says the world it was
 #  taken in, and the world it reached if it reached one; a world says neither. Where the
@@ -115,6 +118,10 @@ def weigh(store, for_, about: str, *, memo=None) -> str:
             violations = "".join(_violation(node, row) for row in report)
         if held.get("want") and (report is None or report):
             verdict += " ; planning:open true"
+        if held.get("want"):
+            left = _remaining(store, for_, world, held, memo)
+            if left is not None:
+                verdict += f" ; planning:remaining {left}"
     update(store, bind(_WEIGH_U, weighing=Raw(f"<{node}>"), about=about,
                        verdict=Raw(verdict), violations=Raw(violations), **{"for": for_}))
     return node
@@ -126,10 +133,7 @@ def _report(store, for_, world: str, held: dict, memo) -> list[dict] | None:
     select = remember(memo, ("select", for_), lambda: _select(store, for_, memo))
     if select is None:
         return None
-    now = remember(memo, ("present",), lambda: next(iter(rows(store, _PRESENT_Q, (), cat=Raw(
-        f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>"))), {}).get("now"))
-    graphs = world_at(store, world, holder=held.get("holder"),
-                      now=datetime.fromisoformat(now) if now else None, memo=memo)
+    graphs = _graphs(store, world, held, memo)
     try:
         found = store.query(select, prefixes=NAMESPACES,
                             default_graph=[ox.NamedNode(g) for g in graphs])
@@ -142,6 +146,57 @@ def _report(store, for_, world: str, held: dict, memo) -> list[dict] | None:
     except Exception as exc:                                        # noqa: BLE001
         log.error("a met-test could not be read in %s: %s", world.rsplit("/", 1)[-1], exc)
         return None
+
+
+def _graphs(store, world: str, held: dict, memo) -> list[str]:
+    """What a text about `world` is answered over: the world at its own instant, with the
+    holder's records as they stand at the present."""
+    now = remember(memo, ("present",), lambda: next(iter(rows(store, _PRESENT_Q, (), cat=Raw(
+        f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>"))), {}).get("now"))
+    return world_at(store, world, holder=held.get("holder"),
+                    now=datetime.fromisoformat(now) if now else None, memo=memo)
+
+
+def _remaining(store, for_, world: str, held: dict, memo) -> str | None:
+    """What the want's estimate reads in `world` — how far it still is, in the unit the search
+    spends — or None where the want declares none or the select refuses to run.
+
+    THE DESIRE OWNS THE TERM AND THE PACKAGE OWNS THE MEASURE: `orexis:estimates` on the want,
+    or on the desire it was derived from, points at a node carrying one `sh:select` that
+    binds `?estimate`; the package that declares the actions declares the node, because
+    *never overstates* is a promise about the package's own costs and no world can keep it.
+    Run over the same graphs as the met-test, the world at its instant, and written on the
+    weighing as `planning:remaining` for the frontier to order by.
+
+    NONE IS NOT NOUGHT. A want with no estimate is not a want that is nought away, and a
+    broken declaration read as arrived would crown a plan that achieved nothing; the frontier
+    reads an absent figure as nought, which is uniform-cost, the safe direction.
+    """
+    text = remember(memo, ("estimate", for_), lambda: _estimate(store, for_, memo))
+    if text is None:
+        return None
+    try:
+        found = store.query(text, prefixes=NAMESPACES,
+                            default_graph=[ox.NamedNode(g) for g in _graphs(store, world, held, memo)])
+        row = next(iter(found), None)
+        return None if row is None or row["estimate"] is None else str(row["estimate"].value)
+    except Exception as exc:                                        # noqa: BLE001
+        log.error("the estimate of %s could not be read in %s: %s", local_of(for_),
+                  world.rsplit("/", 1)[-1], exc)
+        return None
+
+
+def _estimate(store, for_, memo) -> str | None:
+    """The `sh:select` the want's `orexis:estimates` points at — the want's own, or its
+    desire's — off the shapes crossed once for the pass. None where neither declares one."""
+    shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD)))
+    want = rdflib.URIRef(for_)
+    node = shapes.value(want, _ESTIMATES)
+    if node is None:
+        desire = shapes.value(want, _DERIVED_FROM)
+        node = shapes.value(desire, _ESTIMATES) if desire is not None else None
+    text = shapes.value(node, _SELECT) if node is not None else None
+    return str(text) if text is not None else None
 
 
 def _select(store, for_, memo) -> str | None:

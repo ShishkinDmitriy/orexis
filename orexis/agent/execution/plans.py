@@ -58,6 +58,26 @@ SELECT ?step WHERE {
 _STEPS_Q = """
 SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step ; execution:partOf $root } }"""
 
+#  WHAT THIS AGENT IS DOING: every want an intention adopted and not resolved pursues. Asked
+#  of the ledger store by pattern and not by graph, because the ledger is the one graph in
+#  that store and a name is for eyes.
+_PURSUED_Q = """
+SELECT DISTINCT ?want WHERE {
+  GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
+             FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
+ORDER BY ?want"""
+
+
+def pursued(intentions: ox.Store) -> list[str]:
+    """Every want a standing commitment pursues — one this agent is WALKING, in the ledger's
+    own words. A search does not plan again for one of these, and the derivation does not
+    withdraw one whatever its desire now reads: the world has not answered yet, and a plan in
+    flight with nothing it was for is worse than a want nothing implies. Both the planner and
+    the crossing ask this, of the store the keeper writes.
+    """
+    return [r["want"] for r in rows(intentions, _PURSUED_Q)]
+
+
 
 def copy_plan(source: ox.Store, graph: str, intentions: ox.Store, agent_id: str,
               want: str) -> str | None:

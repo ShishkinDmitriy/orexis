@@ -2,9 +2,9 @@
 another layer's store.
 
 A pass writes what it found into the imaginarium it searched in: one `planning:PlanGraph` per
-want, holding the steps in the LEDGER's own words. That store is memory and dies with the
-pass. This is the crossing — every plan the pass wrote, copied into the intentions store, one
-`execution:Intention` each.
+want, holding the steps in the LEDGER's own words. That store outlives the pass and dies with
+the Planner. This is the crossing — every plan found for a want the ledger is not already
+walking, copied into the intentions store, one `execution:Intention` each.
 
 **IT IS A COPY AND NOT A REWRITE**, which is why the search writes a step as `execution:Step`
 in the first place: a translation on the way would be a second place the two shapes could
@@ -18,11 +18,13 @@ points at it, or none reached it inside the budget — and an answer is not a co
 plan graph still holds it, and `planning:outcome` still says which; nothing stands in the
 ledger for a want nobody is doing anything about.
 
-**AND NOTHING HERE ABSORBS.** `Keeper.commit` is the other door into the same copy, and it
-refuses a second plan for a want it is already walking while that one is younger than the
-agent's patience. This door does not: it is the pass handing down what it found, and a caller
-that wants the amortisation asks the keeper instead. Both end in `plans.copy_plan`, so what a
-committed plan LOOKS like is settled in one place either way.
+**AND NOTHING HERE ABSORBS BY PATIENCE.** `Keeper.commit` is the other door into the same copy,
+and it refuses a second plan for a want it is already walking while that one is younger than
+the agent's patience, superseding it after. This door refuses a second plan for a want being
+walked at all: the plan graph of a want an intention pursues is still in the imaginarium, since
+that outlives the pass, and it is not the pass's to hand down twice. A caller that wants the
+amortisation asks the keeper instead. Both end in `plans.copy_plan`, so what a committed plan
+LOOKS like is settled in one place either way.
 """
 
 from __future__ import annotations
@@ -31,7 +33,7 @@ import logging
 
 import pyoxigraph as ox
 
-from orexis.agent.execution.plans import copy_plan
+from orexis.agent.execution.plans import copy_plan, pursued
 from orexis.agent.store import Raw, bind, graphs_of, rows
 
 from .ontology import PLAN_GRAPH
@@ -51,6 +53,7 @@ def publish_plan(imaginarium: ox.Store, intentions: ox.Store, agent_id: str) -> 
     it writes.
     """
     minted = []
+    walking = set(pursued(intentions))
     for graph in sorted(graphs_of(imaginarium, PLAN_GRAPH)):
         found = rows(imaginarium, bind(_FOR_Q, plan=Raw(f"<{graph}>")))
         if not found:
@@ -58,6 +61,11 @@ def publish_plan(imaginarium: ox.Store, intentions: ox.Store, agent_id: str) -> 
             #  and the ledger keeps what an agent is doing and for what.
             log.error("%s: a plan graph names no want, so it cannot be committed: %s",
                       agent_id, graph)
+            continue
+        if found[0]["want"] in walking:
+            #  THE IMAGINARIUM OUTLIVES THE PASS, so a plan an earlier pass found is still
+            #  here while the ledger walks it; handed down again it minted a second intention
+            #  for one want every pass — measured, three passes, three intentions.
             continue
         intention = copy_plan(imaginarium, graph, intentions, agent_id, found[0]["want"])
         if intention is not None:

@@ -113,6 +113,48 @@ together here. Inside the package the star cost something too: the tree before i
 `463e27c5`, ran two disks in about 30 ms against 45 alternated the same day, and could not
 reach three disks within its fixed budget of 32.
 
+**A second pass, with the imaginarium kept (2026-09-23, the bench Pi, alternated in one
+session):** the same three-disk case planned once, then planned again a minute later on the
+same Planner against a fresh one, medians of five:
+
+| pass 2 | imaginarium kept | fresh Planner |
+|---|---|---|
+| nothing happened | 42 ms | 156 ms |
+| after the plan's first move | 34 ms | 132 ms |
+
+What the kept pass does is refresh the copy, lay the new present, identify it by hash among the
+worlds of the last pass (`reroot`), and read its way to the plan without forking; the first
+pass pays for that machinery in statements — two disks 152 queries and 61 updates against 137
+and 59 before, three disks 412 and 215 against 383 and 213 — and not measurably in time. The
+same day, the read that lists the candidates still to weigh cost 74 ms on the kept cone and
+answered nothing, because its `NOT EXISTS` scanned every weighing per candidate; with the bound
+variable first it costs 4, which is the difference between the kept pass at 178 ms, slower than
+fresh, and at 42.
+
+**The estimate returned (2026-09-23), and a third bench case with it.** `orexis:estimates`
+on a want, or on the desire it was derived from, points at the package's select; `weigh`
+writes what it reads as `planning:remaining` on the weighing, and the frontier orders by
+spent plus remaining with the bound on the sum. `courier_corner` is the corner delivery from
+`world/courier/`, eight steps, assembled as the hanoi cases were. Alternated in one session,
+budget 128, candidates weighed and the median of five:
+
+| case | with the estimate | without |
+|---|---|---|
+| three disks | 50 candidates, 131 ms | 56 candidates, 139 ms |
+| courier corner | 45 candidates, 128 ms | 128 candidates, 392 ms, EXHAUSTED |
+
+Without the estimate the corner delivery spends the whole budget and answers with no plan;
+given 512 it arrives after 198 candidates in 846 ms, which is the predecessor's 198 exactly,
+against 45 here where the predecessor had 78. Hanoi's estimate is weak, disks astray, and
+buys a tenth; the courier's is the drives owed and buys the plan.
+
+**A search cut by the budget is finished by the passes after (2026-09-23).** Three disks at a
+budget of twenty a pass, one pass a minute on one Planner: 20, 40 and 50 candidates weighed
+after each pass, EXHAUSTED twice with nothing handed down, the seven-move plan and its
+intention on the third, at 65, 77 and 69 ms a pass against 131 for the search in one. The sum
+is the one-shot search's 50 exactly, and a fourth pass, the want being walked, weighs nothing
+in 24 ms. `orexis/agent/planning/tests/test_planner.py` holds the equality.
+
 **Refused on measuring, the same day: spelling the catalogue's name.** Every `?cat` in every
 statement replaced by the constant at the engine's door — the shape a hardcoded singleton
 graph would give a reader — ran three disks at 163 ms against 168 as it is, inside one

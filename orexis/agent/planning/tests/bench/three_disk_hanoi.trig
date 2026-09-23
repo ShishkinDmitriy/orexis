@@ -77,6 +77,14 @@ GRAPH :desires {
   :keeper.every_disk_home a orexis:Desire .
   :keeper.every_disk_home orexis:metWhen hanoi:solved .
   :keeper.every_disk_home rdfs:label "every disk home on peg C" .
+  :keeper.every_disk_home orexis:estimates hanoi:disksAstray .
+  hanoi:disksAstray rdfs:label "disks not yet home" .
+  hanoi:disksAstray sh:select """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
+          ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p .
+          ?p a hanoi:Peg .
+          FILTER(?p != hanoi:PegC)
+      }""" .
   hanoi:solved a sh:NodeShape .
   hanoi:solved sh:property [ sh:hasValue hanoi:PegC ; sh:path [ sh:oneOrMorePath hanoi:on ] ] .
   hanoi:solved sh:targetSubjectsOf hanoi:on .

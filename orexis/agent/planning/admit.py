@@ -27,7 +27,7 @@ from __future__ import annotations
 from urllib.parse import quote
 
 from orexis.agent.ontology import GRAPH_PREFIX, PUBLIC, local_of
-from orexis.agent.store import Raw, bind, bindings, graphs_of, query, remember, render, update
+from orexis.agent.store import Raw, bind, bindings, catalogue_of, graphs_of, query, remember, render, rows, update
 
 from .world_at import world_at
 
@@ -49,12 +49,23 @@ _ACTIONS_Q = """SELECT ?action ?available (GROUP_CONCAT(DISTINCT STR(?takes); se
 _ADMIT_U = """
 INSERT { GRAPH ?cat { $edges } } WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"""
 
+#  WHAT THE WORLD ALREADY ADMITS: each candidate leaving it, the action it fills and every
+#  parameter it is filled with — so a world admitted again, or a re-rooted world whose
+#  candidates were handed to it by `reroot`, gains only the candidates it did not have.
+_ADMITTED_Q = """
+SELECT ?c ?action ?p ?v WHERE {
+  GRAPH $cat { ?c a planning:Candidate ; planning:from $world ; planning:fills ?action .
+               OPTIONAL { ?c ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, rdf:type)) } } }"""
+
 
 def admit(store, world: str, me: str, *, memo=None) -> None:
     """Write every candidate `world` admits for the agent `me`: one per action per row its
     precondition binds there, each saying which world it leaves (`planning:from`), which
     action it fills and, one triple per parameter under the parameter's own IRI, what it is
-    filled with. Idempotent: a world admitted twice says the same rows.
+    filled with. Idempotent by FILLING and not by name: a world admitted twice says the same
+    rows, and a world that already admits a candidate for an action with a filling — under
+    whatever name, since a candidate handed to a re-rooted ground by `reroot` was named for the
+    world it used to leave — is not given a second one for it.
 
     THE ROW IS WHAT THE PRECONDITION BOUND, held to what the action says it TAKES: a projected
     variable the action does not declare is ignored, and a declared parameter the row left
@@ -64,6 +75,13 @@ def admit(store, world: str, me: str, *, memo=None) -> None:
     three times, and choosing between them is the whole of what the search does there.
     """
     graphs = world_at(store, world, memo=memo)
+    cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
+    admitted: dict[tuple, set] = {}
+    for r in rows(store, _ADMITTED_Q, (), world=world, cat=cat):
+        held = admitted.setdefault((r["c"], r["action"]), set())
+        if r.get("p"):
+            held.add((r["p"], r["v"]))
+    already = {(action, frozenset(filling)) for (_, action), filling in admitted.items()}
     edges = []
     for action in remember(memo, ("actions",), lambda: sorted(
             bindings(query(store, _ACTIONS_Q, graphs_of(store, PUBLIC))), key=lambda r: r["action"])):
@@ -72,6 +90,8 @@ def admit(store, world: str, me: str, *, memo=None) -> None:
         params = {local_of(p): p for p in (action.get("takes_") or "").split()}
         for row in bindings(query(store, bind(action["available"], me=me), graphs)):
             filling = sorted((iri, row[local]) for local, iri in params.items() if row.get(local))
+            if (action["action"], frozenset(filling)) in already:
+                continue
             segment = "-".join(quote(local_of(part), safe="")
                                for part in (action["action"], *(v for _, v in filling)))
             child = f"{world}.{segment}" if world.startswith(POSSIBLE) else POSSIBLE + segment

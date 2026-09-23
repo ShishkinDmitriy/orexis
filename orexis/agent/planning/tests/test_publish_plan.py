@@ -65,7 +65,7 @@ def test_a_planner_given_no_ledger_writes_to_none(beliefs):
 
     from orexis.agent.planning.ontology import PLAN_GRAPH
     from orexis.agent.store import graphs_of
-    assert any(graphs_of(im, PLAN_GRAPH) for im in planner.imaginaria), "a plan was found"
+    assert any(graphs_of(im, PLAN_GRAPH) for im in planner.imaginaria.values()), "a plan was found"
 
 
 def test_an_answer_is_not_a_commitment(beliefs):
@@ -80,6 +80,6 @@ def test_an_answer_is_not_a_commitment(beliefs):
 
     from orexis.agent.planning.ontology import PLAN_GRAPH
     from orexis.agent.store import graphs_of
-    assert any(graphs_of(im, PLAN_GRAPH) for im in planner.imaginaria), \
+    assert any(graphs_of(im, PLAN_GRAPH) for im in planner.imaginaria.values()), \
         "the pass still wrote down what it concluded"
     assert _ledger(intentions, "pursues") == [], "and committed to nothing"

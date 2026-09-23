@@ -46,17 +46,22 @@ SELECT ?for ?about WHERE {
   FILTER NOT EXISTS { GRAPH $cat { ?x a planning:Weighing ; planning:for ?for ; planning:weighs ?about } } }
 ORDER BY ?for ?about"""
 
+#  THE BOUND VARIABLE FIRST IN A `NOT EXISTS`. The engine evaluates one per row, from its first
+#  pattern: `?x a planning:Weighing ; … ; planning:weighs ?about` scanned every weighing per
+#  candidate, and on a store keeping a three-disk cone across the pass — 56 worlds, some 180
+#  weighings — the read cost 74 ms and answered nothing; `?x planning:weighs ?about ; …` costs
+#  4. Only a weighing says `planning:weighs`, so the type it no longer asks is not a check
+#  given up.
 _CANDIDATES_Q = """
 SELECT ?for ?about ?from ?child WHERE {
   GRAPH $cat { ?d a orexis:WantGraph }
   GRAPH ?d { ?holder orexis:holds ?for . ?for a orexis:Want $narrow }
   GRAPH $cat {
     ?about a planning:Candidate ; planning:from ?from $leaving .
-    ?y a planning:Weighing ; planning:for ?for ; planning:weighs ?from .
+    ?y planning:weighs ?from ; planning:for ?for ; a planning:Weighing .
     OPTIONAL { ?child planning:by ?about } }
-  FILTER NOT EXISTS { GRAPH $cat { ?x a planning:Weighing ; planning:for ?for ; planning:weighs ?about } }
-  FILTER NOT EXISTS { GRAPH $cat { ?c planning:by ?about .
-                                   ?z a planning:Weighing ; planning:for ?for ; planning:weighs ?c } } }
+  FILTER NOT EXISTS { GRAPH $cat { ?x planning:weighs ?about ; planning:for ?for } }
+  FILTER NOT EXISTS { GRAPH $cat { ?c planning:by ?about . ?z planning:weighs ?c ; planning:for ?for } } }
 ORDER BY ?for ?about"""
 
 

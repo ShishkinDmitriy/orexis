@@ -9,6 +9,8 @@ frontier, and for a candidate passed over, which world it repeats.
 
 from __future__ import annotations
 
+import json
+
 from pathlib import Path
 
 import pytest
@@ -16,6 +18,7 @@ import pytest
 from orexis.agent import clock
 from orexis.agent.planning.unweighed import unweighed
 from orexis.agent.planning.weigh import weigh
+from orexis.agent.store import rows
 
 CASES_DIR = Path(__file__).parent / "weigh"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -36,3 +39,56 @@ def test_weigh_writes_the_weighings_the_patch_says(case, monkeypatch, request, s
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     assert len(CASES) >= 3, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)
+
+
+# --- the estimate --------------------------------------------------------------------------
+
+BENCH = Path(__file__).parent / "bench"
+
+_REMAINING_Q = """
+SELECT ?left WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+               ?x a planning:Weighing ; planning:for $want ; planning:weighs ?g ; planning:remaining ?left .
+               ?g a planning:GroundGraph } }"""
+
+
+def _weighed_in_the_ground(snapshots, text: str | None = None):
+    """Two-disk hanoi with its want weighed in the present ground; `text` replaces the
+    estimate's select where given. The want, and the store."""
+    from orexis.agent.planning.derive_wants import derive_wants
+    from orexis.agent.planning.find_wants import find_wants
+    from orexis.agent.planning.lay_ground import lay_ground
+    from orexis.agent.planning.prepare_ground import prepare_ground
+    import pyoxigraph as ox
+    beliefs = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
+    if text is not None:
+        beliefs.update(f"""DELETE {{ GRAPH ?g {{ ?n <http://www.w3.org/ns/shacl#select> ?old }} }}
+                           INSERT {{ GRAPH ?g {{ ?n <http://www.w3.org/ns/shacl#select> {json.dumps(text)} }} }}
+                           WHERE  {{ GRAPH ?g {{ ?d <http://example.org/orexis#estimates> ?n . ?n <http://www.w3.org/ns/shacl#select> ?old }} }}""")
+    store = prepare_ground(beliefs, ox.Store())
+    lay_ground(store, snapshots.NOW)
+    for pair in unweighed(store):
+        weigh(store, pair["for"], pair["about"])
+    derive_wants(store, snapshots.NOW)
+    (want,) = find_wants(store, snapshots.NOW)
+    for pair in unweighed(store, for_=want):
+        weigh(store, want, pair["about"])
+    return want, store
+
+
+def test_a_wants_weighing_carries_what_its_desires_estimate_reads_there(monkeypatch, snapshots):
+    """The desire owns the term: `orexis:estimates` on the desire the want was derived from
+    points at the package's select, and the weighing of the want in the ground says what it
+    read — two disks astray, two moves at least."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    want, store = _weighed_in_the_ground(snapshots)
+    (found,) = rows(store, _REMAINING_Q, (), want=want)
+    assert float(found["left"]) == 2.0
+
+
+def test_an_estimate_that_will_not_run_writes_no_remaining(monkeypatch, snapshots):
+    """None is not nought: a broken declaration read as arrived would crown a plan that
+    achieved nothing, so the weighing carries no figure and the frontier reads uniform-cost."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    want, store = _weighed_in_the_ground(snapshots, text="SELECT ?estimate WHERE { ?x }")
+    assert rows(store, _REMAINING_Q, (), want=want) == []

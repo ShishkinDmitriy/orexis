@@ -59,6 +59,15 @@ fill used to be three lines inside a constructor.
 
 THE GROUND WORLDS are the second half of filling one, and `lay_ground` lays them — called by the
 Planner after this, since an act calls no other act: this copies, that builds.
+
+**AND A SECOND FILLING IS A REFRESH.** The imaginarium outlives the pass — it is the Planner's,
+and what the last pass imagined is what `reroot` identifies the present in — so this is called
+on a store that already holds a copy, and what it does then is take back everything the
+previous filling brought across and bring it across again: a reading replaced, a forecast
+swept, a claim lapsed, a round closed since are not left standing beside their successors,
+and a graph the beliefs no longer hold is not left standing at all. What the store MADE for
+itself — its grounds, its possible worlds, its plans, and the wants its derivation minted, which
+are kept and withdrawn by their own rule — is not the copy's and stays.
 """
 
 from __future__ import annotations
@@ -68,7 +77,7 @@ import logging
 import pyoxigraph as ox
 
 from orexis.agent.ontology import BELIEF, DESIRE, PREDICTION, PUBLIC, RECORD, STATE, WANT
-from orexis.agent.store import catalogue_of, graphs_of
+from orexis.agent.store import catalogue_of, forget_graph, graphs_of, rows
 
 from .ontology import SCOPE_GRAPH
 
@@ -117,10 +126,27 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store) -> ox.Store:
     #  with the graphs of ANY of them, so asking kind by kind was four extra round trips to the
     #  catalogue for a set that is unioned anyway. Measured at 107 µs a call on the plans case,
     #  which is why the list is spelled out here rather than built in pieces.
-    for iri in dict.fromkeys([*graphs_of(beliefs, PUBLIC, STATE, PREDICTION,
-                                         DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH),
-                              catalogue_of(beliefs)]):
+    made = {r["g"] for r in rows(into, _MADE_Q, ())}
+    for iri in graphs_of(into, *CROSSING):
+        if iri not in made:
+            forget_graph(into, iri)           # what the last filling brought across
+    for iri in dict.fromkeys([*graphs_of(beliefs, *CROSSING), catalogue_of(beliefs)]):
         if iri is None:
             continue                          # a store nobody has told anything to has no catalogue
         into.extend(beliefs.quads_for_pattern(None, None, None, ox.NamedNode(iri)))
     return into
+
+
+#  THE KINDS THAT CROSS, spelled once for the filling and the refresh.
+CROSSING = (PUBLIC, STATE, PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH)
+
+#  WHAT THE STORE MADE FOR ITSELF, which a refresh keeps: the grounds, the possible worlds and
+#  the plans, which are planning's kinds, and the wants the derivation minted, which are a
+#  kind that also crosses and are told apart by how they arrived — the derivation writes
+#  `orexis:Derived`, and no want crosses from the beliefs that way, since the derivation runs
+#  here and nowhere else.
+_MADE_Q = """
+SELECT ?g WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+    { ?g a ?kind . VALUES ?kind { planning:GroundGraph planning:PossibleGraph planning:PlanGraph } }
+    UNION { ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived } } }"""

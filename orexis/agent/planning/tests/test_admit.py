@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from orexis.agent import clock
-from orexis.agent.store import rows
+from orexis.agent.store import rows, update
 from orexis.agent.planning.admit import admit
 
 CASES_DIR = Path(__file__).parent / "admit"
@@ -36,3 +36,24 @@ def test_admit_writes_the_candidates_the_patch_says(case, monkeypatch, request, 
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     assert len(CASES) >= 3, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)
+
+
+_CANDIDATES_Q = """SELECT ?c WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate } }"""
+
+
+def test_a_filling_the_world_admits_under_another_name_is_not_admitted_twice(monkeypatch, snapshots):
+    """`reroot` hands a matched world's candidates to the new ground under the names they were
+    made with, and the ground is then admitted as any opened world is. Idempotency by name
+    would write every one of them again beside the handed ones; by filling, nothing new."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(CASES_DIR / "one_lever_two_tanks.trig")
+    (present,) = rows(store, _PRESENT_Q, ())
+    admit(store, present["g"], snapshots.ME)
+    written = {r["c"] for r in rows(store, _CANDIDATES_Q, ())}
+    assert len(written) == 2, "one lever, two tanks: two fillings"
+    first = sorted(written)[0]
+    update(store, f"""
+DELETE {{ GRAPH ?cat {{ <{first}> ?p ?o }} }} INSERT {{ GRAPH ?cat {{ <urn:test:handed> ?p ?o }} }}
+WHERE  {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{first}> ?p ?o }} }}""")
+    admit(store, present["g"], snapshots.ME)
+    assert {r["c"] for r in rows(store, _CANDIDATES_Q, ())} == (written - {first}) | {"urn:test:handed"}

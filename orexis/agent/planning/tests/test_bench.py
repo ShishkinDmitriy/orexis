@@ -1,8 +1,8 @@
 """The bench: the Planner on a problem big enough that the pass is the search, and the ledger
 its results are tracked in.
 
-Two hanoi puzzles, held to their answers — three moves for two disks, seven for three — and
-TIMED as the median of several passes, with the count of engine statements beside the time,
+Two hanoi puzzles and the courier's corner delivery, held to their answers — three moves for
+two disks, seven for three, eight steps for the parcel — and TIMED as the median of several passes, with the count of engine statements beside the time,
 printed so `pytest -s` shows them. No time is asserted: this Pi drifts about twofold between
 invocations, so a threshold would be red on a slow morning and say nothing on a fast one.
 What is asserted is the plan; what is reported is what it cost.
@@ -63,7 +63,7 @@ def _pass(case: Path, budget: int, snapshots, counts: collections.Counter | None
     started = time.perf_counter()
     planner.plan(snapshots.NOW)
     took = (time.perf_counter() - started) * 1000
-    (imagined,) = planner.imaginaria
+    (imagined,) = planner.imaginaria.values()
     (graph,) = graphs_of(imagined, PLAN_GRAPH)
     (plan,) = rows(imagined, bind(_PLAN_Q, plan=Raw(f"<{graph}>")))
     return took, plan
@@ -101,7 +101,8 @@ def _record(row: dict) -> None:
         out.write("\t".join(str(row[c]) for c in COLUMNS) + "\n")
 
 
-@pytest.mark.parametrize("case, moves, budget", [("two_disk_hanoi", 3, 32), ("three_disk_hanoi", 7, 128)])
+@pytest.mark.parametrize("case, moves, budget", [("two_disk_hanoi", 3, 32), ("three_disk_hanoi", 7, 128),
+                                                  ("courier_corner", 8, 128)])
 def test_the_planner_solves_hanoi_and_says_what_it_cost(case, moves, budget, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     path = BENCH / f"{case}.trig"

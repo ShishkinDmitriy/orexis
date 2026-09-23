@@ -19,7 +19,7 @@
  
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
-@@ -79,8 +69,24 @@
+@@ -79,8 +69,20 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -35,10 +35,6 @@
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met true .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
-+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level a planning:Weighing .
-+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:for :keeper.in_range.pursued.tank1.level .
-+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:met true .
-+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:weighs ground:2026-01-01T120000p0000 .
  }
 +
 +

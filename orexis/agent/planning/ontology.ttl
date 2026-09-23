@@ -85,6 +85,10 @@ planning:instance a owl:ObjectProperty ; rdfs:label "instance" ;
 planning:constraint a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "constraint" ;
     rdfs:comment "Which constraint of the met-test a violation is of, as the compiler numbers them within the shape — with the instance, one WAY of failing, which is what a want's stretch is read for across the grounds." .
 
+planning:remaining a owl:DatatypeProperty ; rdfs:domain planning:Weighing ; rdfs:range xsd:decimal ;
+    rdfs:label "remaining" ;
+    rdfs:comment "What the want's `orexis:estimates` reads IN this world — how far it still is, in the unit the search spends, never overstated. With the world's `planning:spent` it is the A* key the frontier is ordered by, and the sum is what the cheapest achiever bounds: a world whose spent and remaining reach what the achiever spent is not opened. A want declaring no estimate reads nought, and the search is uniform-cost. The predecessor's `deliberation:remaining`, the word kept." .
+
 planning:met a owl:DatatypeProperty ; rdfs:domain planning:Weighing ; rdfs:range xsd:boolean ;
     rdfs:label "met" ;
     rdfs:comment "Whether the want's met-test passes in the world weighed. The verdict of one judgment, written where it was decided so that nobody judges the same world for the same want twice — a pass resumed here, or a pass for another want sharing the world. ABSENT MEANS THE QUESTION WAS NEVER PUT, which is not the same as no: a candidate passed over has no world to judge." .

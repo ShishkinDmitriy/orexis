@@ -1,0 +1,512 @@
+# The same pass, and the world did what no move does: disk 2 ended up on disk 1. No world
+# the pass imagined holds that, so nothing is the present and everything the pass made
+# goes — the search will start from the new ground as a first pass would.
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
+
+GRAPH ground:2026-01-01T120000p0000 {
+  :disk_1 hanoi:on :disk_2 .
+  :disk_2 hanoi:on hanoi:PegA .
+}
+
+GRAPH ground:2026-01-01T120100p0000 {
+  :disk_1 hanoi:on hanoi:PegC .
+  :disk_2 hanoi:on :disk_1 .
+}
+
+GRAPH plan:keeper.every_disk_home.pursued {
+  plan:keeper.every_disk_home.pursued a planning:Plan .
+  plan:keeper.every_disk_home.pursued planning:costs 3.0 .
+  plan:keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  plan:keeper.every_disk_home.pursued planning:outcome planning:Satisfied .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB a execution:Step .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB execution:partOf plan:keeper.every_disk_home.pursued .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB execution:then plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB hanoi:disk :disk_1 .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB hanoi:onto hanoi:PegB .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB planning:fills hanoi:Move .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB planning:of possible:Move-disk_1-PegB.by .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC a execution:Step .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC execution:partOf plan:keeper.every_disk_home.pursued .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC execution:then plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC hanoi:disk :disk_2 .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC hanoi:onto hanoi:PegC .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC planning:fills hanoi:Move .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC planning:of possible:Move-disk_1-PegB.Move-disk_2-PegC.by .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC a execution:Step .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC execution:partOf plan:keeper.every_disk_home.pursued .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC hanoi:disk :disk_1 .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC hanoi:onto hanoi:PegC .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC planning:fills hanoi:Move .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC planning:of possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by .
+}
+
+GRAPH possible:Move-disk_1-PegB {
+  :disk_1 hanoi:on hanoi:PegB .
+  :disk_2 hanoi:on hanoi:PegA .
+}
+
+GRAPH possible:Move-disk_1-PegB.Move-disk_1-PegA {
+  :disk_1 hanoi:on :disk_2 .
+  :disk_2 hanoi:on hanoi:PegA .
+}
+
+GRAPH possible:Move-disk_1-PegB.Move-disk_1-PegC {
+  :disk_1 hanoi:on hanoi:PegC .
+  :disk_2 hanoi:on hanoi:PegA .
+}
+
+GRAPH possible:Move-disk_1-PegB.Move-disk_2-PegC {
+  :disk_1 hanoi:on hanoi:PegB .
+  :disk_2 hanoi:on hanoi:PegC .
+}
+
+GRAPH possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA {
+  :disk_1 hanoi:on hanoi:PegA .
+  :disk_2 hanoi:on hanoi:PegC .
+}
+
+GRAPH possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC {
+  :disk_1 hanoi:on :disk_2 .
+  :disk_2 hanoi:on hanoi:PegC .
+}
+
+GRAPH possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA {
+  :disk_1 hanoi:on hanoi:PegB .
+  :disk_2 hanoi:on hanoi:PegA .
+}
+
+GRAPH possible:Move-disk_1-PegC {
+  :disk_1 hanoi:on hanoi:PegC .
+  :disk_2 hanoi:on hanoi:PegA .
+}
+
+GRAPH possible:Move-disk_1-PegC.Move-disk_1-PegA {
+  :disk_1 hanoi:on :disk_2 .
+  :disk_2 hanoi:on hanoi:PegA .
+}
+
+GRAPH possible:Move-disk_1-PegC.Move-disk_1-PegB {
+  :disk_1 hanoi:on hanoi:PegB .
+  :disk_2 hanoi:on hanoi:PegA .
+}
+
+GRAPH possible:Move-disk_1-PegC.Move-disk_2-PegB {
+  :disk_1 hanoi:on hanoi:PegC .
+  :disk_2 hanoi:on hanoi:PegB .
+}
+
+GRAPH possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA {
+  :disk_1 hanoi:on hanoi:PegA .
+  :disk_2 hanoi:on hanoi:PegB .
+}
+
+GRAPH possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB {
+  :disk_1 hanoi:on :disk_2 .
+  :disk_2 hanoi:on hanoi:PegB .
+}
+
+GRAPH possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA {
+  :disk_1 hanoi:on hanoi:PegC .
+  :disk_2 hanoi:on hanoi:PegA .
+}
+
+GRAPH pursued:2026-01-01T120000p0000--open {
+  :keeper orexis:holds :keeper.every_disk_home.pursued .
+  :keeper.every_disk_home.pursued a orexis:Want .
+  :keeper.every_disk_home.pursued orexis:estimates hanoi:disksAstray .
+  :keeper.every_disk_home.pursued orexis:metWhen :keeper.every_disk_home.pursued.met .
+  :keeper.every_disk_home.pursued orexis:state orexis:Recognized .
+  :keeper.every_disk_home.pursued prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  :keeper.every_disk_home.pursued prov:wasDerivedFrom :keeper.every_disk_home .
+  :keeper.every_disk_home.pursued rdfs:label "pursued: every disk home on peg C" .
+  :keeper.every_disk_home.pursued.met a sh:NodeShape .
+  :keeper.every_disk_home.pursued.met sh:property [ sh:hasValue hanoi:PegC ; sh:path [ sh:oneOrMorePath hanoi:on ] ] .
+  :keeper.every_disk_home.pursued.met sh:targetSubjectsOf hanoi:on .
+}
+
+GRAPH :actions {
+  hanoi:Move a orexis:Action .
+  hanoi:Move orexis:available """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      SELECT ?disk ?onto WHERE {
+          ?disk hanoi:on ?below .
+          FILTER NOT EXISTS { ?x hanoi:on ?disk }
+          ?disk hanoi:size ?ds .
+          ?onto a hanoi:Peg .
+          FILTER NOT EXISTS { ?disk (hanoi:on)+ ?onto . }
+          FILTER NOT EXISTS {
+              ?s (hanoi:on)+ ?onto .
+              ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+      }""" .
+  hanoi:Move orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  hanoi:Move orexis:retracts """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      DELETE { GRAPH $state { $disk hanoi:on ?old } }
+      WHERE  { GRAPH $state { $disk hanoi:on ?old } }""" .
+  hanoi:Move orexis:takes hanoi:disk .
+  hanoi:Move orexis:takes hanoi:onto .
+  hanoi:Move sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      CONSTRUCT { $disk hanoi:on ?dest } WHERE {
+          OPTIONAL { ?t (hanoi:on)+ $onto . FILTER NOT EXISTS { ?z hanoi:on ?t } }
+          BIND(COALESCE(?t, $onto) AS ?dest)
+      }""" .
+  hanoi:disk a orexis:Parameter .
+  hanoi:onto a orexis:Parameter .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:DesireGraph .
+  :desires a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  ground:2026-01-01T120000p0000 a planning:GroundGraph .
+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
+  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3ca626386e9cfbfec50dba7d95f347517397bf925e9b116734ec49bd5b663f9" .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home a planning:Weighing .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home planning:for :keeper.every_disk_home .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home planning:met false .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home planning:violation [ planning:constraint 0 ; planning:instance :disk_1 ] .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home planning:violation [ planning:constraint 0 ; planning:instance :disk_2 ] .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home planning:weighs ground:2026-01-01T120000p0000 .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home.pursued a planning:Weighing .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home.pursued planning:expanded true .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home.pursued planning:met false .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home.pursued planning:remaining 2 .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_1 ] .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_2 ] .
+  ground:2026-01-01T120000p0000.for.keeper.every_disk_home.pursued planning:weighs ground:2026-01-01T120000p0000 .
+  ground:2026-01-01T120100p0000 a planning:GroundGraph .
+  ground:2026-01-01T120100p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:01:00+00:00"^^xsd:dateTime ] .
+  ground:2026-01-01T120100p0000 orexis:arrivedBy orexis:Derived .
+  ground:2026-01-01T120100p0000 orexis:hash "sha256:7b2d5882fbc4a79c1a2890c4cf3314b6d63e7e59a967e3d6a7a82da87e181824" .
+  plan:keeper.every_disk_home.pursued a planning:PlanGraph .
+  plan:keeper.every_disk_home.pursued orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegB a planning:PossibleGraph .
+  possible:Move-disk_1-PegB orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegB orexis:hash "sha256:6353a4492c5c50c7eff72768027faf1317062d69b9482f2365f2082034b1be8d" .
+  possible:Move-disk_1-PegB planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegB planning:by possible:Move-disk_1-PegB.by .
+  possible:Move-disk_1-PegB planning:minted 1 .
+  possible:Move-disk_1-PegB planning:spent 1.0 .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA a planning:PossibleGraph .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA orexis:hash "sha256:e3ca626386e9cfbfec50dba7d95f347517397bf925e9b116734ec49bd5b663f9" .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA planning:by possible:Move-disk_1-PegB.Move-disk_1-PegA.by .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA planning:minted 6 .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA planning:spent 2.0 .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA.by a planning:Candidate .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA.by hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA.by hanoi:onto hanoi:PegA .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA.by planning:from possible:Move-disk_1-PegB .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued planning:repeats ground:2026-01-01T120000p0000 .
+  possible:Move-disk_1-PegB.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegB.Move-disk_1-PegA.by .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC a planning:PossibleGraph .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC orexis:hash "sha256:327d7087bf2292d9defc4a4ec5293d068869f3c53e84bb41473f44d9a358f0ba" .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC planning:by possible:Move-disk_1-PegB.Move-disk_1-PegC.by .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC planning:minted 7 .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC planning:spent 2.0 .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC.by a planning:Candidate .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC.by hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC.by hanoi:onto hanoi:PegC .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC.by planning:from possible:Move-disk_1-PegB .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC.by.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC.by.for.keeper.every_disk_home.pursued planning:repeats possible:Move-disk_1-PegC .
+  possible:Move-disk_1-PegB.Move-disk_1-PegC.by.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegB.Move-disk_1-PegC.by .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC a planning:PossibleGraph .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC orexis:hash "sha256:1c0018b53cb3967a664de17142902582c497a8a986e392c67065e29ed192500e" .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC planning:by possible:Move-disk_1-PegB.Move-disk_2-PegC.by .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC planning:minted 8 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC planning:spent 2.0 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA a planning:PossibleGraph .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA orexis:hash "sha256:eb874a6cc955a08c7f9c23657f52ec97df513a49ae43960af5a08201634d7d0f" .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA planning:by possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA planning:minted 12 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA planning:spent 3.0 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by a planning:Candidate .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by hanoi:onto hanoi:PegA .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by planning:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:met false .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:open true .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:remaining 1 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_1 ] .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC a planning:PossibleGraph .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC orexis:hash "sha256:51f59d0a823a58b8140bbc16eff9ec58a3b339d3d807555efa731af1b29f0ee7" .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC planning:by possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC planning:minted 13 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC planning:spent 3.0 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by a planning:Candidate .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by hanoi:onto hanoi:PegC .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by planning:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:met true .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:remaining 0 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA a planning:PossibleGraph .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA orexis:hash "sha256:6353a4492c5c50c7eff72768027faf1317062d69b9482f2365f2082034b1be8d" .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA planning:by possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA planning:minted 14 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA planning:spent 3.0 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by a planning:Candidate .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by hanoi:disk :disk_2 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by hanoi:onto hanoi:PegA .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by planning:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued planning:repeats possible:Move-disk_1-PegB .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.by a planning:Candidate .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.by hanoi:disk :disk_2 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.by hanoi:onto hanoi:PegC .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.by planning:from possible:Move-disk_1-PegB .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:expanded true .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:met false .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:remaining 1 .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_1 ] .
+  possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegB.Move-disk_2-PegC .
+  possible:Move-disk_1-PegB.by a planning:Candidate .
+  possible:Move-disk_1-PegB.by hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegB.by hanoi:onto hanoi:PegB .
+  possible:Move-disk_1-PegB.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegB.by planning:from ground:2026-01-01T120000p0000 .
+  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:expanded true .
+  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:met false .
+  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:remaining 2 .
+  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_1 ] .
+  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_2 ] .
+  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegB .
+  possible:Move-disk_1-PegC a planning:PossibleGraph .
+  possible:Move-disk_1-PegC orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegC orexis:hash "sha256:327d7087bf2292d9defc4a4ec5293d068869f3c53e84bb41473f44d9a358f0ba" .
+  possible:Move-disk_1-PegC planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegC planning:by possible:Move-disk_1-PegC.by .
+  possible:Move-disk_1-PegC planning:minted 2 .
+  possible:Move-disk_1-PegC planning:spent 1.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA a planning:PossibleGraph .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA orexis:hash "sha256:e3ca626386e9cfbfec50dba7d95f347517397bf925e9b116734ec49bd5b663f9" .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA planning:by possible:Move-disk_1-PegC.Move-disk_1-PegA.by .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA planning:minted 3 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA planning:spent 2.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.by a planning:Candidate .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.by hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.by hanoi:onto hanoi:PegA .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.by planning:from possible:Move-disk_1-PegC .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued planning:repeats ground:2026-01-01T120000p0000 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegC.Move-disk_1-PegA.by .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB a planning:PossibleGraph .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB orexis:hash "sha256:6353a4492c5c50c7eff72768027faf1317062d69b9482f2365f2082034b1be8d" .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB planning:by possible:Move-disk_1-PegC.Move-disk_1-PegB.by .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB planning:minted 4 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB planning:spent 2.0 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.by a planning:Candidate .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.by hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.by hanoi:onto hanoi:PegB .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.by planning:from possible:Move-disk_1-PegC .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.by.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.by.for.keeper.every_disk_home.pursued planning:repeats possible:Move-disk_1-PegB .
+  possible:Move-disk_1-PegC.Move-disk_1-PegB.by.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegC.Move-disk_1-PegB.by .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB a planning:PossibleGraph .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB orexis:hash "sha256:f3bbdbbdfbc6ad2770569530757e0173ef35f5df00f3e9d48d93dae171cd2ab8" .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB planning:by possible:Move-disk_1-PegC.Move-disk_2-PegB.by .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB planning:minted 5 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB planning:spent 2.0 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA a planning:PossibleGraph .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA orexis:hash "sha256:86d28365ae96e98abbc59687cd8ae2704acde59787c3b9b7eed5c65dd4ca13bf" .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA planning:by possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.by .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA planning:minted 9 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA planning:spent 3.0 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.by a planning:Candidate .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.by hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.by hanoi:onto hanoi:PegA .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.by planning:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:met false .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:open true .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:remaining 2 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_1 ] .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_2 ] .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB a planning:PossibleGraph .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB orexis:hash "sha256:662f4844e14614046c473275002b942c36f318a0a30de06536c7b9762e09de1f" .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB planning:by possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.by .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB planning:minted 10 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB planning:spent 3.0 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.by a planning:Candidate .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.by hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.by hanoi:onto hanoi:PegB .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.by planning:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:met false .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:open true .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:remaining 2 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_1 ] .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_2 ] .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA a planning:PossibleGraph .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA orexis:arrivedBy orexis:Derived .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA orexis:hash "sha256:327d7087bf2292d9defc4a4ec5293d068869f3c53e84bb41473f44d9a358f0ba" .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA planning:by possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA planning:minted 11 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA planning:spent 3.0 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by a planning:Candidate .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by hanoi:disk :disk_2 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by hanoi:onto hanoi:PegA .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by planning:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued planning:repeats possible:Move-disk_1-PegC .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.by a planning:Candidate .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.by hanoi:disk :disk_2 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.by hanoi:onto hanoi:PegB .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.by planning:from possible:Move-disk_1-PegC .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.for.keeper.every_disk_home.pursued planning:expanded true .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.for.keeper.every_disk_home.pursued planning:met false .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.for.keeper.every_disk_home.pursued planning:remaining 1 .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_2 ] .
+  possible:Move-disk_1-PegC.Move-disk_2-PegB.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegC.Move-disk_2-PegB .
+  possible:Move-disk_1-PegC.by a planning:Candidate .
+  possible:Move-disk_1-PegC.by hanoi:disk :disk_1 .
+  possible:Move-disk_1-PegC.by hanoi:onto hanoi:PegC .
+  possible:Move-disk_1-PegC.by planning:fills hanoi:Move .
+  possible:Move-disk_1-PegC.by planning:from ground:2026-01-01T120000p0000 .
+  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued a planning:Weighing .
+  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:expanded true .
+  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
+  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:met false .
+  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:remaining 1 .
+  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_2 ] .
+  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegC .
+  pursued:2026-01-01T120000p0000--open a orexis:Graph .
+  pursued:2026-01-01T120000p0000--open a orexis:WantGraph .
+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
+  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
+}
+
+GRAPH :desires {
+  :keeper orexis:holds :keeper.every_disk_home .
+  :keeper.every_disk_home a orexis:Desire .
+  :keeper.every_disk_home orexis:estimates hanoi:disksAstray .
+  :keeper.every_disk_home orexis:metWhen hanoi:solved .
+  :keeper.every_disk_home rdfs:label "every disk home on peg C" .
+  hanoi:disksAstray rdfs:label "disks not yet home" .
+  hanoi:disksAstray sh:select """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
+          ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p .
+          ?p a hanoi:Peg .
+          FILTER(?p != hanoi:PegC)
+      }""" .
+  hanoi:solved a sh:NodeShape .
+  hanoi:solved sh:property [ sh:hasValue hanoi:PegC ; sh:path [ sh:oneOrMorePath hanoi:on ] ] .
+  hanoi:solved sh:targetSubjectsOf hanoi:on .
+}
+
+GRAPH :ontology {
+  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :scopes {
+  :keeper.scope.1 a planning:Scope .
+  hanoi:Move planning:inScope :keeper.scope.1 .
+  hanoi:on planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :sensed {
+  :disk_1 hanoi:on hanoi:PegC .
+  :disk_2 hanoi:on :disk_1 .
+}
+
+GRAPH :world {
+  :disk_1 a hanoi:Disk .
+  :disk_1 hanoi:size 1 .
+  :disk_2 a hanoi:Disk .
+  :disk_2 hanoi:size 2 .
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  hanoi:PegA a hanoi:Peg .
+  hanoi:PegB a hanoi:Peg .
+  hanoi:PegC a hanoi:Peg .
+}

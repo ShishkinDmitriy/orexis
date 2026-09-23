@@ -16,7 +16,7 @@ import logging
 from datetime import datetime
 
 from orexis.agent.ontology import OREXIS
-from orexis.agent.store import NAMESPACES, Raw, bind, forget_graph, rows
+from orexis.agent.store import NAMESPACES, Raw, bind, forget_graph, rows, update
 
 log = logging.getLogger("withdraw")
 
@@ -50,14 +50,6 @@ WHERE  { GRAPH $graph { ?s ?p $want } }"""
 
 
 
-#  WHAT A PLAN IS WALKING. An intention that has been adopted and not resolved pursues a want,
-#  and that want is kept whatever its desire now reads: the world has not answered yet, and
-#  taking the want away would leave a plan in flight with nothing it was for.
-_PURSUED_Q = """
-SELECT ?w WHERE {
-  GRAPH ?g { ?i orexis:pursues ?w . FILTER NOT EXISTS { ?i orexis:resolvedAt ?done } }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:IntentionGraph } }"""
-
 #  EVERY WANT THE DERIVATION MINTED, ACROSS ALL TIME. Narrowed to what ARRIVED derived,
 #  because a want a world ratified and a debt the ledger wrote are not this sweep's to judge:
 #  no decomposition here implies them, so measured against one they would all read stale.
@@ -90,20 +82,49 @@ def withdraw(store, wanted, now: datetime) -> list[str]:
     store-wide question askable — a want under a desire the world no longer states was never
     visited by a per-desire loop and stood for ever.
 
-    A WANT A PLAN IS WALKING IS KEPT whatever its desire reads. A want IS its graph (#645), so
-    withdrawing is `forget_want` and there is nothing left behind.
+    A WANT A PLAN IS WALKING IS KEPT whatever its desire reads, and that is the CALLER'S to
+    say: the ledger is another store, so the Planner hands this the derivation's answer with
+    what `execution.plans.pursued` names beside it. This used to ask the store it was handed
+    for an intention graph, in a vocabulary the keeper never wrote, and in production found
+    none.
+
+    NOTHING IS LEFT BEHIND. A want IS its graph (#645), so withdrawing is `forget_want` — and
+    what the search wrote ABOUT the want, its weighings over every world and its plan, goes
+    with it, since the imaginarium outlives the pass and a weighing for a want that no longer
+    exists is a row the frontier would still be handed.
     """
     standing = {r["w"] for r in rows(store, _DERIVED_Q, ())}
     stale = standing - set(wanted)
     if not stale:
         return []
-    pursued = {r["w"] for r in rows(store, _PURSUED_Q, ())}
     gone = []
-    for uri in sorted(stale - pursued):
+    for uri in sorted(stale):
         _forget_want(store, uri)
+        _forget_search(store, uri)
         log.info("%s withdrawn: its desire no longer reads it unmet", uri.rsplit("#", 1)[-1])
         gone.append(uri)
     return gone
+
+
+#  THE SEARCH'S OWN ROWS ABOUT A WANT: its weighings, with the violation rows hanging off each,
+#  and the plan graph it was extracted into, found by class and by the want its row names.
+_WEIGHINGS_U = """
+DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
+WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                      ?x a planning:Weighing ; planning:for $want ; ?p ?o .
+                      OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"""
+
+_PLAN_Q = """
+SELECT ?plan WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a planning:PlanGraph }
+  GRAPH ?plan { ?plan planning:for $want } }"""
+
+
+def _forget_search(store, uri: str) -> None:
+    """Drop what a search wrote about one want: every weighing for it and its plan."""
+    update(store, bind(_WEIGHINGS_U, want=uri))
+    for row in rows(store, _PLAN_Q, (), want=uri):
+        forget_graph(store, row["plan"])
 
 
 def _forget_want(store, uri: str) -> None:

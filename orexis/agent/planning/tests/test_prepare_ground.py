@@ -25,7 +25,10 @@ import pytest
 from orexis.agent import clock
 import pyoxigraph as ox
 
-from orexis.agent.planning.prepare_ground import prepare_ground
+from orexis.agent.planning.lay_ground import lay_ground
+from orexis.agent.planning.ontology import GROUND_GRAPH
+from orexis.agent.planning.prepare_ground import CROSSING, prepare_ground
+from orexis.agent.store import forget_graph, graph_names, graphs_of, quads
 
 CASES_DIR = Path(__file__).parent / "prepare_ground"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -44,3 +47,26 @@ def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):
     """A glob that stopped matching would pass every case by running none."""
     assert len(CASES) >= 3, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)
+
+
+def test_a_second_filling_refreshes_the_copy_and_keeps_what_the_store_made(monkeypatch, snapshots):
+    """The imaginarium outlives the pass, so the filling is called again on a store that holds
+    a copy: a reading the beliefs replaced is replaced here, a forecast the beliefs swept is
+    gone here, and the ground the store laid for itself is untouched."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    beliefs = snapshots.stand_in(CASES_DIR / "a_forecast_holding_later_crosses_whole.trig")
+    into = prepare_ground(beliefs, ox.Store())
+    lay_ground(into, snapshots.NOW)
+    grounds = set(graphs_of(into, GROUND_GRAPH))
+    assert grounds, "the store made grounds of its own"
+    replaced, swept, *_ = sorted(graphs_of(beliefs, *CROSSING))
+    old = next(iter(beliefs.quads_for_pattern(None, None, None, ox.NamedNode(replaced))))
+    beliefs.remove(old)
+    new = ox.Quad(old.subject, old.predicate, ox.Literal("moved on"), ox.NamedNode(replaced))
+    beliefs.add(new)
+    forget_graph(beliefs, swept)
+    prepare_ground(beliefs, into)
+    held = set(quads(into, replaced))
+    assert new in held and old not in held, "the row replaced, not laid beside the old one"
+    assert swept not in graph_names(into), "the graph the beliefs swept is gone from the copy"
+    assert set(graphs_of(into, GROUND_GRAPH)) == grounds, "what the store made stays"

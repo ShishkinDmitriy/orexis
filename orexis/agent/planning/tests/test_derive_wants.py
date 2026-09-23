@@ -45,6 +45,7 @@ from orexis.agent.planning.derive_wants import derive_wants
 from orexis.agent.planning.lay_ground import lay_ground
 from orexis.agent.planning.unweighed import unweighed
 from orexis.agent.planning.weigh import weigh
+from orexis.agent.execution.plans import pursued
 from orexis.agent.planning.withdraw import withdraw
 
 CASES_DIR = Path(__file__).parent / "derive_wants"
@@ -58,7 +59,7 @@ def test_derive_wants_leaves_the_store_as_the_snapshot_says(case, monkeypatch, r
     lay_ground(store, snapshots.NOW)
     for pair in unweighed(store):
         weigh(store, pair["for"], pair["about"])
-    withdraw(store, derive_wants(store, snapshots.NOW), snapshots.NOW)
+    withdraw(store, derive_wants(store, snapshots.NOW) | set(pursued(store)), snapshots.NOW)
     snapshots.held_to_diff(case, request, "derive_wants", snapshots.snapshot_of(store))
 
 
