@@ -36,7 +36,7 @@ Optional, because the first three means predate goals having names: an intention
 
 execution:by a owl:ObjectProperty ; rdfs:domain execution:Intention ; rdfs:range execution:Step ;
     rdfs:label "by" ;
-    rdfs:comment "The ACT committed to — the filled action: which action (execution:fills), through which lever (execution:through), how much (execution:quantity), for whom, and when. It named the action node itself from the-action-is-the-kind until an-act-is-a-filled-action gave the filled one a node of its own. Not a plan: the how stays with whichever capability takes it." .
+    rdfs:comment "The ACT committed to — the filled action: which action it fills, through which lever (execution:through), how much (execution:quantity), for whom, and when. It named the action node itself from the-action-is-the-kind until an-act-is-a-filled-action gave the filled one a node of its own. Not a plan: the how stays with whichever capability takes it." .
 
 execution:Step a owl:Class ; rdfs:label "Step" ;
     rdfs:comment "One orexis:Action filled in and PLANNED — not yet done (the sovereign's ruling, 2026-09-02: a plan is not executed, so its elements are not acts). The lever it goes through (execution:through), the want it serves (execution:pursues), how much (execution:quantity), for whom where it is an obligation's (execution:forAgent), its window (execution:notBefore, execution:notAfter), what the search predicted taking it would reach (execution:predicts) and what its rules read to plan it (execution:precondition), what follows (execution:then). A plan is steps; an intention commits to them (execution:step) and stands at one (execution:by); a claim promises one. Minted per adoption, so it is also the place it fills." .
@@ -54,9 +54,6 @@ execution:taken a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:range 
     rdfs:label "taken" ;
     rdfs:comment "Whether an actor took it; false is an attempt no actor could carry out now, the step standing for the next." .
 
-execution:fills a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range orexis:Action ;
-    rdfs:label "fills" ;
-    rdfs:comment "Which action this act is an instance of — the template it fills. The one hop from a commitment to the precondition, the effect and the taker." .
 
 execution:forAgent a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range orexis:Agent ;
     rdfs:label "for agent" ;

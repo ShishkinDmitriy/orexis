@@ -17,7 +17,7 @@ import pytest
 from orexis.agent import clock
 from orexis.agent.execution.ontology import EXECUTION
 from orexis.agent.planning.extract_plan import extract_plan
-from orexis.agent.planning.ontology import BY, OF, PLAN_GRAPH, PLANNING, SATISFIED
+from orexis.agent.planning.ontology import BY, FILLS, OF, PLAN_GRAPH, PLANNING, SATISFIED
 from orexis.agent.planning.planner import Planner
 from orexis.agent.store import (Raw, bind, catalogue_of, close_catalogue, graphs_of,
                                           put_graph, rows)
@@ -43,7 +43,7 @@ def _steps(store, graph: str) -> list[dict]:
     """The plan's steps in chain order, each with what it fills and what it came from."""
     return rows(store, bind(f"""
         SELECT ?step ?fills ?of (COUNT(?before) AS ?n) WHERE {{
-          GRAPH $plan {{ ?step a <{EXECUTION}Step> ; <{EXECUTION}fills> ?fills ; <{OF}> ?of .
+          GRAPH $plan {{ ?step a <{EXECUTION}Step> ; <{FILLS}> ?fills ; <{OF}> ?of .
                          OPTIONAL {{ ?before <{EXECUTION}then>+ ?step }} }} }}
         GROUP BY ?step ?fills ?of ORDER BY ?n""", plan=Raw(f"<{graph}>")))
 

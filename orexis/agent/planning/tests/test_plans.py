@@ -38,7 +38,7 @@ SELECT ?outcome ?costs ?want WHERE {
 #  `execution:then`, so this reads the claim a plan actually makes rather than a spelling.
 _STEPS_Q = """
 SELECT ?step ?fills (COUNT(?before) AS ?n) WHERE {
-  GRAPH $plan { ?step a execution:Step ; execution:fills ?fills .
+  GRAPH $plan { ?step a execution:Step ; planning:fills ?fills .
                 OPTIONAL { ?before execution:then+ ?step } } }
 GROUP BY ?step ?fills ORDER BY ?n"""
 

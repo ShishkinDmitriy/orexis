@@ -32,7 +32,7 @@ def a_plan(steps: int = 2) -> ox.Store:
     """A plan of `steps` steps in the ledger's own words, chained — what the search writes."""
     st = ox.Store()
     chain = "\n".join(
-        f'  <{PLAN}.{n}> a execution:Step ; execution:fills <http://example.org/test#fill> ; '
+        f'  <{PLAN}.{n}> a execution:Step ; '
         f'execution:partOf <{PLAN}> '
         + (f'; execution:then <{PLAN}.{n + 1}> .' if n + 1 < steps else '.')
         for n in range(steps))

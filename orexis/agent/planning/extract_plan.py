@@ -16,11 +16,12 @@ words: a search walks candidates, and a candidate the search PICKED becomes a st
 names the candidate it came from (`planning:of`), so the plan says not just what to do but
 which of the moves considered at that world it was.
 
-**THE STEPS ARE WRITTEN IN THE LEDGER'S WORDS.** A step is `execution:Step`, what it fills is
-`execution:fills`, what follows it is `execution:then` — the execution layer's vocabulary,
-because the ledger is where they are going and a step that arrived in this layer's words would
-have to be translated on the way, which is a second place the two shapes could disagree.
-`plans.copy_plan` is then a copy.
+**A STEP IS WRITTEN IN THE WORDS OF WHOEVER READS IT.** `execution:Step`, `execution:partOf`
+and `execution:then` are the ledger's, because the ledger reads them — what a plan holds, and
+in what order. It reads nothing else of a step, so everything else is the SEARCH's and says
+so: `planning:fills` for the action, `planning:of` for the candidate it was picked from, and
+one triple per parameter under the parameter's own IRI. `plans.copy_plan` is then a copy, and
+what a lower layer does not read it also does not drop.
 
 **THE PLAN ITSELF IS THIS LAYER'S**, and so is which want it is for and how the pass ended: a
 plan is what a SEARCH found, and a ledger keeps commitments rather than the reasoning that
@@ -49,7 +50,7 @@ WHERE  {{}}"""
 #  its world's, because a world has one candidate and a name is for eyes.
 _STEPS_U = """
 INSERT {{ GRAPH $plan {{ ?step a execution:Step ; execution:partOf $plan ;
-                                execution:fills ?action ; planning:of ?by }} }}
+                                planning:fills ?action ; planning:of ?by }} }}
 WHERE  {{ GRAPH $cat {{ $world prov:wasDerivedFrom* ?w . ?w planning:by ?by .
                         ?by planning:fills ?action
                         BIND(IRI(CONCAT(STR(?w), "#step")) AS ?step) }} }}"""

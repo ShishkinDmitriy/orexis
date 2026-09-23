@@ -57,9 +57,11 @@ planning:Candidate a owl:Class ; rdfs:label "Candidate" ;
 
 ONE PER POSSIBLE WORLD, written beside the world's row when the fork is made, so the chain a search walked is in the store rather than in a tuple a node happened to carry. `extract_plan` reads it back.""" .
 
-planning:fills a owl:ObjectProperty ; rdfs:domain planning:Candidate ; rdfs:range orexis:Action ;
+planning:fills a owl:ObjectProperty ; rdfs:range orexis:Action ;
     rdfs:label "fills" ;
-    rdfs:comment "The action template this candidate is a filling of. `execution:fills` says the same of a step, in the ledger's words, because a step is a candidate that was picked." .
+    rdfs:comment """The action template a candidate — or the step it became — is a filling of. NO DOMAIN, because it is said of both: a step IS a candidate that was picked, and what it fills does not change in the picking.
+
+IT IS PLANNING'S WORD, on a node the ledger also holds. The ledger reads a step's membership (`execution:partOf`) and its order (`execution:then`) and nothing else of it, so what it FILLS is the search's fact about it and carries the search's prefix. It was `execution:fills` beside this one, two spellings of one relationship separated only by whether the search had picked yet — which is the synonym the dictionary refuses, and it was written by planning and read by no line of execution.""" .
 
 planning:of a owl:ObjectProperty ; rdfs:range planning:Candidate ;
     rdfs:label "of" ;
@@ -88,7 +90,7 @@ planning:inScope a owl:ObjectProperty ; rdfs:range planning:Scope ; rdfs:label "
     rdfs:comment "The scope a predicate is in, and the scope an action's reads and writes lie in — by construction one, since an action touching two would have joined them. No domain: said of a property and of an action alike. An action stating no effect is in no scope, as no world admits it; one whose effect cannot be read is in the one scope that joins everything." .
 
 planning:Plan a owl:Class ; rdfs:label "Plan" ;
-    rdfs:comment "WHAT ONE PASS FOUND, written down: the steps it would take, in order, and how long they come to. It lived only as a Python object handed to the keeper and was then discarded, so nothing outside the process could see what had been decided. One per want, named for it and replaced whole, in the imaginarium, which dies with the pass because a plan about a world that has moved is stale. ITS STEPS ARE THE LEDGER'S OWN: `execution:Step`, chained by `execution:then` and held together by `execution:partOf`, each saying what it `execution:fills` — the same shape an intention's steps have, so committing to a plan is copying what is already there rather than being handed a Python object across a layer." .
+    rdfs:comment "WHAT ONE PASS FOUND, written down: the steps it would take, in order, and how long they come to. It lived only as a Python object handed to the keeper and was then discarded, so nothing outside the process could see what had been decided. One per want, named for it and replaced whole, in the imaginarium, which dies with the pass because a plan about a world that has moved is stale. ITS STEPS ARE HELD IN THE WORDS OF WHOEVER READS THEM: `execution:Step`, chained by `execution:then` and held together by `execution:partOf`, because the ledger reads membership and order — the same shape an intention's steps have, so committing to a plan is copying what is already there rather than being handed a Python object across a layer. What each step FILLS and which candidate it came from are the SEARCH's facts about it and carry the search's prefix, and the ledger reads neither." .
 
 planning:outcome a owl:ObjectProperty ; rdfs:domain planning:Plan ; rdfs:range planning:Outcome ;
     rdfs:label "outcome" ;
