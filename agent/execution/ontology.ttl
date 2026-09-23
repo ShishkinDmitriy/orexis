@@ -12,7 +12,7 @@
     rdfs:label "Orexis execution" ;
     rdfs:comment """The execution layer's own words (#529): the intentions — an intention, its steps and acts, and the window each is good in. What every layer and every package writes in stays `orexis:`; a term one layer reads and writes is that layer's, and its prefix says so.
 
-THE SUCCESSOR OF `execution:`, and shorter than it by the whole expectation watch. What a step was predicted to make true is here, because the intentions record it; what VERIFIES that — a baseline, an observed value, a verdict, a lapse, a suspicion count, a patience and its bounds — was the 1.0 keeper's watch, and Agent 2.0's keeper does not yet have one. Those terms return with the thing that reads them and not before, which is what keeps a vocabulary to what is actually said (a-term-nobody-reads-is-annotation).""" .
+THE SUCCESSOR OF `execution:`, and shorter than it by the whole expectation watch. What a step was predicted to make true is here, because the intentions record it; what VERIFIES that — a baseline, an observed value, a verdict, a lapse, a suspicion count, a patience and its bounds — was the 0.1.0 keeper's watch, and Agent 0.2.0's keeper does not yet have one. Those terms return with the thing that reads them and not before, which is what keeps a vocabulary to what is actually said (a-term-nobody-reads-is-annotation).""" .
 
 execution:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
     rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .

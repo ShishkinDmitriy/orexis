@@ -1177,7 +1177,7 @@ it is a record wearing a bullet.
   keeper was renamed rather than kept beside it, since one store has one owner, and what
   taking a step IS today is saying its name.
 - **"Ledger" is the market's word, for the book of what an agent owes, and the intentions
-  are called the intentions** — the 1.0 keeper's intention ledger and the ower's ledger of
+  are called the intentions** — the 0.1.0 keeper's intention ledger and the ower's ledger of
   debts shared one word with no page for either, and a reader of "the ledger's debts" beside
   "the ledger is walking a want" met two things; `agent/` says intentions, intentions store
   and execution's own words now, and leaves the word to the package that has no other.
@@ -1281,9 +1281,9 @@ it is a record wearing a bullet.
    the choir (`subscriptions`, `handle`, `send`) — and the kernel has no mailbox (see
    [the-kernel-has-no-mailbox](knowledge/decisions/the-kernel-has-no-mailbox.md)).
 
-   **TWO KERNEL TREES, FOR NOW.** `agent/` is Agent 2.0 — the store over the engine, the
+   **TWO KERNEL TREES, FOR NOW.** `agent/` is Agent 0.2.0 — the store over the engine, the
    execution ledger and the planning package — and is what `pytest` runs; `agent_old/` is the
-   1.0 container this section describes, still what `orexis-agent` and the image run, and
+   0.1.0 container this section describes, still what `orexis-agent` and the image run, and
    the loader's kernel (`assembly/loader.py` names it by path). Every `agent_old/<file>`
    below is that container's; the two trees meet only through the packages' ontologies,
    which both read.

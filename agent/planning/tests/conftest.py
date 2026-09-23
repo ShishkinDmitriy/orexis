@@ -100,7 +100,7 @@ def _owe(store, uri):
     """A debt, written the way a LEDGER writes one — its own graph, classified its own family.
 
     THE FAMILY IS THIS CASE'S OWN WORD, not a package's. It was `market:ObligationsGraph`, and
-    that prefix reached the store because the 1.0 assembly walked `packages/` and merged every
+    that prefix reached the store because the 0.1.0 assembly walked `packages/` and merged every
     ontology it found. This tree reads its own, so a package's word is not in its dictionary —
     which is the point of the tree being liftable, and which this case is the only thing that
     noticed. What the case is ABOUT is a record graph some package owns; which package is not

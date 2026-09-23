@@ -74,7 +74,7 @@ row — a number without its machine is an impression.
 
 # The planning package's bench, and its ledger
 
-The Agent 2.0 planning package (`agent/planning/`) has a bench of its own, because it
+The Agent 0.2.0 planning package (`agent/planning/`) has a bench of its own, because it
 runs a different search over a different store and the figures above are not its figures:
 `agent/planning/tests/test_bench.py`, over two- and three-disk hanoi cases beside it,
 asserting the plans — three moves and seven — and timing the pass as the median of five.

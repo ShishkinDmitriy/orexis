@@ -1,6 +1,6 @@
 """The manifest: the planning layer — what an agent should do, by a bounded search.
 
-The top of Agent 2.0's stack and the successor of `orexis-agent-deliberation`, which it
+The top of Agent 0.2.0's stack and the successor of `orexis-agent-deliberation`, which it
 replaces rather than extends. One pipeline, and the package is what it is made of:
 
 1. **the derivation** — `derive_wants` judges every desire at the present and at every instant
@@ -69,7 +69,7 @@ returns attached to whatever needs it, never a thing quietly lost
   plan IS.
 
 NOTHING IS CONTRIBUTED AND NOTHING IS GRANTED. This carried a `@contributes(VOCABULARY)`
-manifest, which is how the 1.0 assembly discovers a package's ontology by walking `packages/`.
+manifest, which is how the 0.1.0 assembly discovers a package's ontology by walking `packages/`.
 This tree is not under `packages/` and does not ask that loader anything: `agent.store`
 reads the ontologies of its OWN tree, so a subtree arriving as its own distribution brings its
 words with it and no registry learns its name.

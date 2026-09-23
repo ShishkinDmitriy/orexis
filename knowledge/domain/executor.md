@@ -78,9 +78,9 @@ not exist ([a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a
   the world's feedback; this pass does not search while that plan is in progress — the argument
   is [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md)'s.
 
-# In Agent 2.0, the executor owns the intentions
+# In Agent 0.2.0, the executor owns the intentions
 
-`agent/execution/executor.py` is the keeper and the executor of the 1.0 layers in one
+`agent/execution/executor.py` is the keeper and the executor of the 0.1.0 layers in one
 service, because the intentions store is one thing and one owner writes it. It commits a plan
 under the patience as the keeper did, and it carries the plan out: whatever plan is among
 the intentions is scheduled, whoever wrote it there, since the planner's crossing writes them

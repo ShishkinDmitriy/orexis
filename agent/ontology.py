@@ -22,7 +22,7 @@ Three things the predecessor carried are NOT here, and each absence is a stateme
 
 - **the choir's extension points.** `orexis:desires`, `orexis:reports`, `orexis:series`,
   `orexis:stepDone` and the rest were the questions a container asked every module it had
-  loaded. Agent 2.0 loads no modules, so there is nobody to ask; the terms come back with the
+  loaded. Agent 0.2.0 loads no modules, so there is nobody to ask; the terms come back with the
   thing that needs them, and not before (an-agent-is-four-things).
 - **the planning layer's graph.** What a pass considered was named here while the class that
   typed it lived a layer up, which is a lower layer naming a higher one's furniture. It is
