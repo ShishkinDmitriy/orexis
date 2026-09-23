@@ -194,24 +194,24 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # a-round-is-a-fact-and-offering-is-an-action) makes a package word the destination of two
     # kernel spellings. The map is a record of where things went and cannot avoid naming the
     # place; it leaves when no volume older than that change can exist to migrate.
-    ("agent/vocabulary.py", "market#Offering"): (
+    ("agent_old/vocabulary.py", "market#Offering"): (
         1, "migration: where every older spelling of the host's move went — removable with the last pre-#363 volume"),
-    ("agent/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
-    ("agent/vocabulary.py", "sensing#Aim"): (1, "migration: the aim's destination (#377)"),
-    ("agent/vocabulary.py", "device#Device"): (
+    ("agent_old/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
+    ("agent_old/vocabulary.py", "sensing#Aim"): (1, "migration: the aim's destination (#377)"),
+    ("agent_old/vocabulary.py", "device#Device"): (
         1, "migration: where the ONE substrate word went — removable with the last volume older than the move"),
-    ("agent/vocabulary.py", "sim#"): (
+    ("agent_old/vocabulary.py", "sim#"): (
         1, "migration: where the stand-in vocabulary went — twelve terms behind one prefix, "
            "removable with the last volume older than the move"),
-    ("agent/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
-    ("agent/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
-    ("agent/vocabulary.py", "market#Acquiring"): (1, "migration: buying's destination"),
-    ("agent/vocabulary.py", "market#Presenting"): (1, "migration: the held claim's destination"),
-    ("agent/vocabulary.py", "sensing#Observe"): (1, "migration: a retired spelling on the left-hand side"),
-    ("agent/vocabulary.py", "actuation#Actuate"): (1, "migration: a retired spelling on the left-hand side"),
-    ("agent/vocabulary.py", "market#Offer"): (1, "migration: a retired spelling on the left-hand side"),
-    ("agent/vocabulary.py", "market#Acquire"): (1, "migration: a retired spelling on the left-hand side"),
-    ("agent/vocabulary.py", "market#Apply"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent_old/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
+    ("agent_old/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
+    ("agent_old/vocabulary.py", "market#Acquiring"): (1, "migration: buying's destination"),
+    ("agent_old/vocabulary.py", "market#Presenting"): (1, "migration: the held claim's destination"),
+    ("agent_old/vocabulary.py", "sensing#Observe"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent_old/vocabulary.py", "actuation#Actuate"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent_old/vocabulary.py", "market#Offer"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent_old/vocabulary.py", "market#Acquire"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent_old/vocabulary.py", "market#Apply"): (1, "migration: a retired spelling on the left-hand side"),
 
     # KIND 3 IS PAID. `orexis_agent_progression/ontology.py`'s twelve namespace constants — consumed by onboarding's
     # generators and by nothing in the kernel — are `onboarding/namespaces.py`'s, beside `SOSA`,
@@ -278,27 +278,27 @@ ALLOWED: dict[tuple[str, str], tuple[int, str]] = {
     # the substrate vocabulary (the-substrate-is-not-the-minds). A package naming another
     # package's word is ordinary; only the kernel doing it was debt.
 
-    ("agent/vocabulary.py", "market#Offering"): (
+    ("agent_old/vocabulary.py", "market#Offering"): (
         1, "migration: where every older spelling of the host's move went — removable with the last pre-#363 volume"),
-    ("agent/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
-    ("agent/vocabulary.py", "sensing#Aim"): (1, "migration: the aim's destination (#377)"),
-    ("agent/vocabulary.py", "device#Device"): (
+    ("agent_old/vocabulary.py", "sensing#Observing"): (1, "migration: the look's destination"),
+    ("agent_old/vocabulary.py", "sensing#Aim"): (1, "migration: the aim's destination (#377)"),
+    ("agent_old/vocabulary.py", "device#Device"): (
         1, "migration: where the ONE substrate word went — removable with the last volume older than the move"),
-    ("agent/vocabulary.py", "sim#"): (
+    ("agent_old/vocabulary.py", "sim#"): (
         1, "migration: where the stand-in vocabulary went — twelve terms behind one prefix, "
            "removable with the last volume older than the move"),
-    ("agent/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
-    ("agent/vocabulary.py", "market#"): (
+    ("agent_old/vocabulary.py", "sensing#aims"): (1, "migration: the aim's destination (#377)"),
+    ("agent_old/vocabulary.py", "market#"): (
         1, "migration: the ledger's words went home to the market (#635); the row goes when no "
            "volume predates it"),
-    ("agent/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
-    ("agent/vocabulary.py", "market#Acquiring"): (1, "migration: buying's destination"),
-    ("agent/vocabulary.py", "market#Presenting"): (1, "migration: the held claim's destination"),
-    ("agent/vocabulary.py", "sensing#Observe"): (1, "migration: a retired spelling on the left-hand side"),
-    ("agent/vocabulary.py", "actuation#Actuate"): (1, "migration: a retired spelling on the left-hand side"),
-    ("agent/vocabulary.py", "market#Offer"): (1, "migration: a retired spelling on the left-hand side"),
-    ("agent/vocabulary.py", "market#Acquire"): (1, "migration: a retired spelling on the left-hand side"),
-    ("agent/vocabulary.py", "market#Apply"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent_old/vocabulary.py", "actuation#Dosing"): (1, "migration: the dose's destination"),
+    ("agent_old/vocabulary.py", "market#Acquiring"): (1, "migration: buying's destination"),
+    ("agent_old/vocabulary.py", "market#Presenting"): (1, "migration: the held claim's destination"),
+    ("agent_old/vocabulary.py", "sensing#Observe"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent_old/vocabulary.py", "actuation#Actuate"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent_old/vocabulary.py", "market#Offer"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent_old/vocabulary.py", "market#Acquire"): (1, "migration: a retired spelling on the left-hand side"),
+    ("agent_old/vocabulary.py", "market#Apply"): (1, "migration: a retired spelling on the left-hand side"),
 
     # KIND 3 IS PAID. `orexis_agent_progression/ontology.py`'s twelve namespace constants — consumed by onboarding's
     # generators and by nothing in the kernel — are `onboarding/namespaces.py`'s, beside `SOSA`,

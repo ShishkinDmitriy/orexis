@@ -144,7 +144,7 @@ orexis-capability-sensing = { workspace = true } # codec-json, scaling-identity,
 #  broken — it is not this tree's, and a bare `pytest` that ran both would be red for reasons
 #  none of this work is about. A path comes back by being added here, one at a time, and the
 #  list widens to `["tests", "packages", "orexis"]` before the branch merges.
-testpaths = ["agent"]
+testpaths = ["agent", "packages"]
 
 # A PACKAGE DIRECTORY IS ITS DISTRIBUTION NAME, and a distribution name has hyphens in it.
 # pytest's default `prepend` import mode derives a module name from the path — it walks up from
