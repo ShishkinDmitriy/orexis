@@ -78,12 +78,12 @@ not exist ([a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a
   the world's feedback; this pass does not search while that plan is in progress — the argument
   is [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md)'s.
 
-# In Agent 2.0, the executor owns the ledger
+# In Agent 2.0, the executor owns the intentions
 
 `agent/execution/executor.py` is the keeper and the executor of the 1.0 layers in one
 service, because the intentions store is one thing and one owner writes it. It commits a plan
-under the patience as the keeper did, and it carries the plan out: whatever plan is in the
-ledger is scheduled, whoever wrote it there, since the planner's crossing writes the ledger
+under the patience as the keeper did, and it carries the plan out: whatever plan is among
+the intentions is scheduled, whoever wrote it there, since the planner's crossing writes them
 without asking. Two threads and no more. The timekeeper asks which standing intention has a
 head step whose `execution:notBefore` has passed and hands it to a queue, then sleeps until
 the earliest step still waiting or the poll cadence; it runs nothing. The executing thread

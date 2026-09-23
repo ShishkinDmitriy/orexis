@@ -1,6 +1,6 @@
 """The execution layer's own words (#529).
 
-`execution:` for the ledger — what an intention is made of, and the one figure that governs
+`execution:` for the intentions — what an intention is made of, and the one figure that governs
 keeping. A term one layer reads and writes carries that layer's prefix, so a reader of any
 query can tell which layer it speaks for; what EVERY layer writes in stays `orexis:` and lives
 beside them, in `agent.ontology`.
@@ -16,7 +16,7 @@ from __future__ import annotations
 EXECUTION = "http://example.org/orexis/execution#"
 
 #  HOW LONG A COMMITMENT IS GIVEN before a fresh impulse to do the same thing is decided
-#  again — the one figure of the ledger's that something outside the ledger reads: a want
+#  again — the one figure of execution's that something outside it reads: a want
 #  foreseen at an instant holds until that instant plus this, because the last step is placed
 #  AT the instant and its verdict comes after.
 PATIENCE_S = EXECUTION + "patienceS"
@@ -30,7 +30,7 @@ def intentions_graph(agent_id: str) -> str:
     NOT public, and the absence is the design: an intention disclosed is strategy leaked. Apart
     from the picks graph on purpose — a pick has one value, held to `sh:maxCount 1`, while
     intentions accumulate a history: every resolved one stays, with its outcome and its reason,
-    because a ledger that forgot its resolutions could not answer the only question an operator
+    because intentions that forgot their resolutions could not answer the only question an operator
     brings to it, which is what this agent thought it was doing and why it stopped.
     """
     return _GRAPH + "intentions/" + agent_id

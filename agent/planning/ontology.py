@@ -16,7 +16,7 @@ from __future__ import annotations
 PLANNING = "http://example.org/orexis/planning#"
 
 #  WHAT A PASS FINDS, per want: a graph of its own in the imaginarium, holding the steps in
-#  the ledger's own words. Named by `imaginarium.plan_graph` and copied out by the execution
+#  execution's own words. Named by `imaginarium.plan_graph` and copied out by the execution
 #  layer; nothing here is written to the belief base.
 PLAN_GRAPH = PLANNING + "PlanGraph"
 FOR = PLANNING + "for"

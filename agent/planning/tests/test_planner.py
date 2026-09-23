@@ -62,9 +62,9 @@ SELECT ?disk ?onto WHERE {
              FILTER(STRENDS(STR(?pd), "#disk") && STRENDS(STR(?po), "#onto")) } }"""
 
 
-def _two_disks(snapshots, ledger: bool):
+def _two_disks(snapshots, held: bool):
     store = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
-    return store, Planner(store, snapshots.AGENT, intentions=ox.Store() if ledger else None)
+    return store, Planner(store, snapshots.AGENT, intentions=ox.Store() if held else None)
 
 
 def _worlds(planner) -> set[str]:
@@ -86,12 +86,12 @@ def _move(store, disk: str, onto: str) -> None:
                  f'INSERT DATA {{ GRAPH <{row["g"]}> {{ <{row["d"]}> <{row["p"]}> <{onto}> }} }}')
 
 
-def test_a_pass_a_minute_later_hands_the_ledger_no_second_intention(monkeypatch, snapshots):
+def test_a_pass_a_minute_later_hands_down_no_second_intention(monkeypatch, snapshots):
     """Called every minute with nothing happened, the planner used to mint an intention for the
-    same want every pass — three passes, three intentions, measured. A want the ledger is
+    same want every pass — three passes, three intentions, measured. A want an intention is
     walking is not searched and its plan does not cross again."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    store, planner = _two_disks(snapshots, ledger=True)
+    store, planner = _two_disks(snapshots, held=True)
     planner.plan(snapshots.NOW)
     assert len(pursued(planner.intentions)) == 1
     imagined = _worlds(planner)
@@ -107,7 +107,7 @@ def test_nothing_happened_and_the_next_pass_forks_nothing(monkeypatch, snapshots
     """The old present's hash is the new one's, so the whole cone is kept under the new ground
     and the search reads its way to the same plan."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    store, planner = _two_disks(snapshots, ledger=False)
+    store, planner = _two_disks(snapshots, held=False)
     planner.plan(snapshots.NOW)
     imagined, steps = _worlds(planner), _steps(planner)
     assert steps == 3
@@ -121,12 +121,12 @@ def test_a_step_taken_as_predicted_is_planned_on_from_the_kept_cone(monkeypatch,
     """The plan's first move is taken; the next pass finds that world to be the present, and the
     rest of the plan is read off the cone beneath it without a fork."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    store, planner = _two_disks(snapshots, ledger=True)
+    store, planner = _two_disks(snapshots, held=True)
     planner.plan(snapshots.NOW)
     imagined = _worlds(planner)
     (head,) = rows(planner.intentions, _HEAD_Q, ())
     _move(store, head["disk"].rsplit("#", 1)[-1], head["onto"])
-    #  THE LEDGER ANSWERED: the step landed, so the commitment is resolved and the want is the
+    #  THE EXECUTOR ANSWERED: the step landed, so the commitment is resolved and the want is the
     #  search's again. (The keeper's door; a bare row here says the same thing.)
     planner.intentions.update("""INSERT { GRAPH ?g { ?i <http://example.org/orexis/execution#resolvedAt> "2026-01-01T12:00:30Z" } }
                                  WHERE { GRAPH ?g { ?i a <http://example.org/orexis/execution#Intention> } }""")
@@ -142,7 +142,7 @@ def test_a_surprise_starts_the_search_afresh(monkeypatch, snapshots):
     """A state no move reaches — disk 2 on disk 1, on peg B — is nothing the pass imagined, so
     everything goes and the search forks from the new ground."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    store, planner = _two_disks(snapshots, ledger=False)
+    store, planner = _two_disks(snapshots, held=False)
     planner.plan(snapshots.NOW)
     (im,) = planner.imaginaria.values()
     before = set(graphs_of(im, POSSIBLE_GRAPH))

@@ -27,21 +27,21 @@ process is told:
    achiever refuses the top, or the budget is spent — an iteration admits the world's
    candidates, takes each and weighs what it reached; then `extract_plan` writes what the
    want's weighings come to;
-4. `publish_plan` hands every plan the ledger is not already walking down to it, where a
-   planner was given one.
+4. `publish_plan` hands every plan no intention is already walking down to the executor's
+   store, where a planner was given one.
 
 Nothing comes back: everything a pass finds it WRITES, and `self.imaginaria` is how a
-reader reaches it. Nothing here commits — copying a plan into the ledger is the execution
+reader reaches it. Nothing here commits — copying a plan into the intentions is the execution
 layer's (`plans.copy_plan`), because deciding a thing and remembering that it was decided
 are different acts.
 
 **THE IMAGINARIUM OUTLIVES THE PASS.** Called every minute, a planner that imagined afresh
-each time searched the same cone three times over and handed the ledger three intentions for
+each time searched the same cone three times over and handed down three intentions for
 one want — measured before this was built. What the last pass imagined is kept, and the next
 pass begins by asking which of those worlds the present IS (`reroot`, by hash): the plan
 landed as predicted and the cone beneath the landing is the search already done from here;
 nothing happened and the whole cone is kept under the new ground; the world surprised the
-agent and everything goes. A want the ledger is walking is not searched again and its plan
+agent and everything goes. A want an intention is walking is not searched again and its plan
 is not handed down again: the world has not answered yet, and re-deciding is what the
 executor's verdict on a step is for.
 
@@ -155,7 +155,7 @@ class Planner:
         Everything else is discovered from the graph, which is rule 1: the world says
         `?a orexis:localId "<id>"`, and who I am is the answer rather than an argument.
 
-        `intentions` is the LEDGER, and a pass hands its plans down to it as its last act. A
+        `intentions` is the executor's store, and a pass hands its plans down to it as its last act. A
         planner given none searches and writes its findings into the imaginarium and no
         further — which is what a case wants, and what the search itself is.
         """
@@ -168,7 +168,7 @@ class Planner:
         #  every `plan`. They are where a pass wrote what it found, so this is how a caller
         #  reaches it — each is asked for its graphs of class `planning:PlanGraph`, the same
         #  by-kind read as everywhere else. They are memory and die with the Planner; what
-        #  outlives the Planner is the ledger.
+        #  outlives the Planner is the intentions store.
         self.imaginaria: dict[str, ox.Store] = {}
 
     def _identity(self, agent_id: str) -> str:
@@ -205,7 +205,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
         WHAT IS DERIVED IS KEPT, AND WITHDRAWN BY ITS OWN RULE. The imaginarium outlives the
         pass, so a want the last pass minted is still here; `withdraw` takes away what the
-        derivation no longer implies, except what the ledger is walking, which is kept
+        derivation no longer implies, except what an intention is walking, which is kept
         whatever its desire reads.
 
         ONE PER SCOPE OF THE STORE, which is what the scopes are for: the wants of a scope are
@@ -214,10 +214,10 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         each other by construction. The scopes are READ and never computed — `scope_actions`
         wrote them, and a store holding no scope graph is refused rather than guessed at.
 
-        AND THE LAST ACT IS `publish_plan`, where a planner was given a ledger: the
+        AND THE LAST ACT IS `publish_plan`, where a planner was given an intentions store: the
         imaginarium is the Planner's and dies with it, so an intention is the only thing a
         pass leaves the agent. A plan with no steps does not cross — an answer is not a
-        commitment — and neither does a plan for a want the ledger is already walking.
+        commitment — and neither does a plan for a want an intention is already walking.
         """
         at = now or clock.now()
         scopes = find_scopes(self.beliefs)

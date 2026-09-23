@@ -50,7 +50,7 @@ def _steps(store, graph: str) -> list[dict]:
 
 def test_every_step_names_the_candidate_it_was_minted_from(walked):
     """The one link between what the search walked and what the plan holds. A candidate says
-    which action it fills and what it is filled with; a step says the same in the ledger's
+    which action it fills and what it is filled with; a step says the same in execution's
     words and points back, so a reader can ask which of the moves offered at that world it
     was."""
     (graph,) = graphs_of(walked, PLAN_GRAPH)

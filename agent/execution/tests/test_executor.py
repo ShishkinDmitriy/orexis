@@ -2,7 +2,7 @@
 the plan carried out, step by step, on two doors a test can drive and two threads that drive them.
 
 A package may test itself where the thing means something alone, and this does: a plan graph
-is a handful of quads in the ledger's own vocabulary, so the executor can be asked the whole of
+is a handful of quads in execution's own vocabulary, so the executor can be asked the whole of
 what it promises without a world, a search or a capability.
 """
 
@@ -33,7 +33,7 @@ def stopped_clock(monkeypatch):
 
 
 def a_plan(steps: int = 2) -> ox.Store:
-    """A plan of `steps` steps in the ledger's own words, chained — what the search writes."""
+    """A plan of `steps` steps in execution's own words, chained — what the search writes."""
     st = ox.Store()
     chain = "\n".join(
         f'  <{PLAN}.{n}> a execution:Step ; '
@@ -56,11 +56,11 @@ def test_a_committed_plan_stands_at_its_head():
     assert intention is not None
     (standing,) = k.standing()
     assert standing.want == WANT
-    assert standing.at == f"{PLAN}.0", "the ledger stands at the head, not at the last step"
+    assert standing.at == f"{PLAN}.0", "the intention stands at the head, not at the last step"
 
 
 def test_every_step_crosses_with_the_plan():
-    """A copy and not a rewrite: what the ledger does not read, it also does not drop."""
+    """A copy and not a rewrite: what execution does not read, it also does not drop."""
     k = executor()
     k.commit(a_plan(3), PLAN, WANT)
     steps = bindings(query_over(
@@ -92,8 +92,8 @@ def test_past_the_patience_a_new_plan_supersedes_the_old(monkeypatch):
     assert ended and ended[0]["o"] == "superseded"
 
 
-def test_a_resolved_commitment_stays_in_the_ledger():
-    """A ledger that forgot its resolutions could not answer the only question an operator
+def test_a_resolved_commitment_stays_among_the_intentions():
+    """Intentions that forgot their resolutions could not answer the only question an operator
     brings to it."""
     k = executor()
     intention = k.commit(a_plan(), PLAN, WANT)
@@ -170,9 +170,9 @@ def test_a_step_that_cannot_be_taken_fails_the_intention():
     assert x.standing() == []
 
 
-def test_a_plan_another_hand_wrote_into_the_ledger_is_scheduled_on_the_next_tick():
-    """The planner's crossing writes the ledger directly, without `commit`: any plan in the
-    ledger is the executor's, whoever put it there."""
+def test_a_plan_another_hand_wrote_into_the_intentions_is_scheduled_on_the_next_tick():
+    """The planner's crossing writes the intentions directly, without `commit`: any plan among the
+    intentions is the executor's, whoever put it there."""
     x = executor()
     copy_plan(a_plan(1), PLAN, x.intentions, AGENT, WANT)
     assert x.tick(NOW) == [f"{PLAN}.0"]
@@ -195,7 +195,7 @@ def test_what_a_step_says_reaches_the_log(caplog):
 
 def test_the_two_threads_carry_a_plan_out():
     """Started, the timekeeper finds the committed plan and the executing thread takes its
-    three steps; stopped, both threads are gone and the ledger says `done`."""
+    three steps; stopped, both threads are gone and the intention says `done`."""
     x = executor(poll_s=0.05)
     x.start()
     try:

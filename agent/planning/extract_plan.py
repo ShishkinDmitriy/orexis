@@ -18,15 +18,15 @@ names the candidate it came from (`planning:of`), so the plan says not just what
 which of the moves considered at that world it was.
 
 **A STEP IS WRITTEN IN THE WORDS OF WHOEVER READS IT.** `execution:Step`, `execution:partOf`
-and `execution:then` are the ledger's, because the ledger reads them — what a plan holds, and
+and `execution:then` are execution's, because execution reads them — what a plan holds, and
 in what order. It reads nothing else of a step, so everything else is the SEARCH's and says
 so: `planning:fills` for the action, `planning:of` for the candidate it was picked from, and
 one triple per parameter under the parameter's own IRI. `plans.copy_plan` is then a copy, and
 what a lower layer does not read it also does not drop.
 
 **THE PLAN ITSELF IS THIS LAYER'S**, and so is which want it is for and how the pass ended: a
-plan is what a SEARCH found, and a ledger keeps commitments rather than the reasoning that
-produced them. So the root is `planning:Plan` and the ledger reads past it to the steps.
+plan is what a SEARCH found, and the intentions keep commitments rather than the reasoning that
+produced them. So the root is `planning:Plan` and execution reads past it to the steps.
 """
 
 from __future__ import annotations
@@ -52,7 +52,7 @@ from .ontology import EXHAUSTED, NO_CANDIDATE, SATISFIED
 #     under the plan, so two wants planning through one world mint two steps, and nothing
 #     counts. What each is FILLED with rides on the
 #     same row — one triple per parameter under the parameter's own IRI, the type and
-#     `planning:fills` left out because a step states both in the LEDGER's words — and a
+#     `planning:fills` left out because a step states both in EXECUTION's words — and a
 #     candidate filled with nothing still mints its step, because a template triple whose
 #     variable is unbound is simply not written.
 #  3. THE CHAIN, OFF THE SAME ANCESTRY: a step follows the step of the world its world was
@@ -62,7 +62,7 @@ from .ontology import EXHAUSTED, NO_CANDIDATE, SATISFIED
 #  5. EVERY KIND THE VOCABULARY PUTS A PLAN GRAPH BENEATH, from one `rdfs:subClassOf` step —
 #     the closure is materialised at genesis, so one step is every step. Its own operation,
 #     because a vocabulary that says nothing of plan graphs must not take the row with it.
-#  A STEP SAYS WHEN IT MAY BE TAKEN AND WHEN IT LANDS, in the ledger's words: `execution:notBefore` is
+#  A STEP SAYS WHEN IT MAY BE TAKEN AND WHEN IT LANDS, in execution's words: `execution:notBefore` is
 #  the instant of the world the step is taken in and `execution:landsAt` the instant of the world it
 #  reaches, so a plan placed at the instant of its root carries that placing across, and the executor
 #  keeps time by the first and holds the world to the step by the second.

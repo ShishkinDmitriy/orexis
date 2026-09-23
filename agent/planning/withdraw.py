@@ -83,7 +83,7 @@ def withdraw(store, wanted, now: datetime) -> list[str]:
     visited by a per-desire loop and stood for ever.
 
     A WANT A PLAN IS WALKING IS KEPT whatever its desire reads, and that is the CALLER'S to
-    say: the ledger is another store, so the Planner hands this the derivation's answer with
+    say: the intentions are another store, so the Planner hands this the derivation's answer with
     what `execution.plans.pursued` names beside it. This used to ask the store it was handed
     for an intention graph, in a vocabulary the keeper never wrote, and in production found
     none.

@@ -1,7 +1,7 @@
-"""Copying a found plan into the ledger — the one act between deciding and remembering.
+"""Copying a found plan into the intentions — the one act between deciding and remembering.
 
 The search writes a plan into a store of its own: a graph per want, holding one
-`execution:Step` per step in the ledger's own words, chained by `execution:then`. This takes
+`execution:Step` per step in execution's own words, chained by `execution:then`. This takes
 that graph and puts it in the intentions store under an `execution:Intention` — adopted now,
 standing at its first step, pursuing the want it was found for.
 
@@ -59,7 +59,7 @@ _STEPS_Q = """
 SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step ; execution:partOf $root } }"""
 
 #  WHAT THIS AGENT IS DOING: every want an intention adopted and not resolved pursues. Asked
-#  of the ledger store by pattern and not by graph, because the ledger is the one graph in
+#  of the intentions store by pattern and not by graph, because the intentions are the one graph in
 #  that store and a name is for eyes.
 _PURSUED_Q = """
 SELECT DISTINCT ?want WHERE {
@@ -69,7 +69,7 @@ ORDER BY ?want"""
 
 
 def pursued(intentions: ox.Store) -> list[str]:
-    """Every want a standing commitment pursues — one this agent is WALKING, in the ledger's
+    """Every want a standing commitment pursues — one this agent is WALKING, in execution's
     own words. A search does not plan again for one of these, and the derivation does not
     withdraw one whatever its desire now reads: the world has not answered yet, and a plan in
     flight with nothing it was for is worse than a want nothing implies. Both the planner and
@@ -81,7 +81,7 @@ def pursued(intentions: ox.Store) -> list[str]:
 
 def copy_plan(source: ox.Store, graph: str, intentions: ox.Store, agent_id: str,
               want: str) -> str | None:
-    """Copy the plan in `graph` of `source` into `agent_id`'s ledger. The intention, or None.
+    """Copy the plan in `graph` of `source` into `agent_id`'s intentions. The intention, or None.
 
     None for an empty plan, which is an answer and not a commitment: the search reached the
     want's met state in no steps, so there is nothing to carry out and nothing to stand.
@@ -103,7 +103,7 @@ def copy_plan(source: ox.Store, graph: str, intentions: ox.Store, agent_id: str,
             f"the plan in <{graph}> has {len(head)} heads — a plan is a chain, and a chain "
             "has one step nothing follows")
 
-    #  THE STEPS THEMSELVES, quad for quad, into the ledger's graph. Everything the plan graph
+    #  THE STEPS THEMSELVES, quad for quad, into the intentions graph. Everything the plan graph
     #  holds crosses: the steps, their fillings, the chain, and whatever the layer above wrote
     #  about the plan. What this layer does not read, it also does not drop.
     add_quads(intentions, (ox.Quad(q.subject, q.predicate, q.object, node)

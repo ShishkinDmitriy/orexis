@@ -1132,7 +1132,7 @@ it is a record wearing a bullet.
   against 168, inside one session's noise. And a read asked per iteration is sized by what the iteration opens: `unweighed` narrowed to one want
   and one world took the three-disk bench from 496 ms to 158.
 - **The imaginarium outlives the pass, and the present is identified in it by hash** — a
-  planner called every minute imagined the same cone afresh each time and handed the ledger an
+  planner called every minute imagined the same cone afresh each time and handed down an
   intention per pass for one want; the Planner keeps an imaginarium per scope now, `reroot`
   finds the world of the last pass whose `orexis:hash` the new ground repeats — the old
   present when nothing happened, a child when a step landed as predicted — hands its
@@ -1140,7 +1140,7 @@ it is a record wearing a bullet.
   rest; three disks re-planned after the first move in 34 ms against 132 fresh, and a minute
   later with nothing happened in 42 against 156. A surprise matches nothing and everything
   goes; a name is never trusted, so a re-laid ground's old cone goes too.
-- **A want the ledger is walking is neither searched nor handed down again** — the world has
+- **A want an intention is walking is neither searched nor handed down again** — the world has
   not answered yet, so re-deciding is the executor's verdict on a step and not the clock's;
   `execution.plans.pursued` is the one read, the Planner skips those wants and keeps them from
   `withdraw`, and `publish_plan` crosses no plan for one, since the plan graph of an earlier
@@ -1169,13 +1169,18 @@ it is a record wearing a bullet.
   holds the text to, so the one range the scopes honour is SPARQL's own, in the text the
   engine runs; `footprint` read every variable predicate as anything before, which under a
   derived fork would have copied the whole store per world for a two-valued predicate.
-- **The executor owns the ledger, any plan in it is scheduled, and the two threads are two
-  doors** — the timekeeper's pass is `tick` (the head steps due, by `execution:notBefore`,
+- **The executor owns the intentions, any plan among them is scheduled, and the two threads
+  are two doors** — the timekeeper's pass is `tick` (the head steps due, by `execution:notBefore`,
   handed to the queue) and the executing thread's is `drain` (each step taken, its
   `execution:Act` written, `execution:by` moved, the last step resolving `done`), so a test
   drives a plan through at instants it chooses and the threads call the same two; the
   keeper was renamed rather than kept beside it, since one store has one owner, and what
   taking a step IS today is saying its name.
+- **"Ledger" is the market's word, for the book of what an agent owes, and the intentions
+  are called the intentions** — the 1.0 keeper's intention ledger and the ower's ledger of
+  debts shared one word with no page for either, and a reader of "the ledger's debts" beside
+  "the ledger is walking a want" met two things; `agent/` says intentions, intentions store
+  and execution's own words now, and leaves the word to the package that has no other.
 - **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes
   first** — `?x a planning:Weighing ; … ; planning:weighs ?about` scanned every weighing per
   candidate and cost 74 ms on a kept three-disk cone, answering nothing; `?x planning:weighs

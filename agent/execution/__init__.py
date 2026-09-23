@@ -1,6 +1,6 @@
 """The execution layer: what an agent does with a plan once it has one.
 
-The ledger of what this agent is committed to and the two threads that carry a commitment out
+The intentions this agent is committed to and the two threads that carry a commitment out
 (`executor.py`), and the one function that copies a found plan into it (`plans.py`). That is the whole of it — 280 lines — and the smallness is
 the point rather than an embarrassment: keeping a commitment honest is a small job, and the
 predecessor's 1,736-line keeper was large because it also carried an expectation watch, held
@@ -13,7 +13,7 @@ package because its predecessor was "the lowest layer that persists" — and mea
 planning layer imported 1,936 lines of them and NOT ONE LINE of the keeper or of `plans`. A
 package should be named for most of what is in it; that one was named for a tenth.
 
-`act.py` was beside them on the same reasoning — a `Step` is the ledger's shape, the search
+`act.py` was beside them on the same reasoning — a `Step` is execution's shape, the search
 fills one at every node, and a thing both layers read is not one layer's. Measured, no line of
 this layer read it: `Step` had two importers and both were planning's, the rest of the file
 had none at all, and what the search walks turned out to be a CANDIDATE — `planning`'s word

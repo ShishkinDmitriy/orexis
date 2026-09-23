@@ -2,8 +2,8 @@
 another layer's store.
 
 A pass writes what it found into the imaginarium it searched in: one `planning:PlanGraph` per
-want, holding the steps in the LEDGER's own words. That store outlives the pass and dies with
-the Planner. This is the crossing — every plan found for a want the ledger is not already
+want, holding the steps in EXECUTION's own words. That store outlives the pass and dies with
+the Planner. This is the crossing — every plan found for a want no intention is already
 walking, copied into the intentions store, one `execution:Intention` each.
 
 **IT IS A COPY AND NOT A REWRITE**, which is why the search writes a step as `execution:Step`
@@ -15,8 +15,8 @@ has to understand its own.
 
 **A PLAN WITH NO STEPS DOES NOT CROSS.** It is an ANSWER — the want was already met, no lever
 points at it, or none reached it inside the budget — and an answer is not a commitment. The
-plan graph still holds it, and `planning:outcome` still says which; nothing stands in the
-ledger for a want nobody is doing anything about.
+plan graph still holds it, and `planning:outcome` still says which; nothing stands among the
+intentions for a want nobody is doing anything about.
 
 **AND NOTHING HERE ABSORBS BY PATIENCE.** `Executor.commit` is the other door into the same copy,
 and it refuses a second plan for a want it is already walking while that one is younger than
@@ -58,13 +58,13 @@ def publish_plan(imaginarium: ox.Store, intentions: ox.Store, agent_id: str) -> 
         found = rows(imaginarium, bind(_FOR_Q, plan=Raw(f"<{graph}>")))
         if not found:
             #  A PLAN GRAPH THAT NAMES NO WANT is one nobody can carry out on anyone's behalf,
-            #  and the ledger keeps what an agent is doing and for what.
+            #  and the intentions keep what an agent is doing and for what.
             log.error("%s: a plan graph names no want, so it cannot be committed: %s",
                       agent_id, graph)
             continue
         if found[0]["want"] in walking:
             #  THE IMAGINARIUM OUTLIVES THE PASS, so a plan an earlier pass found is still
-            #  here while the ledger walks it; handed down again it minted a second intention
+            #  here while an intention walks it; handed down again it minted a second intention
             #  for one want every pass — measured, three passes, three intentions.
             continue
         intention = copy_plan(imaginarium, graph, intentions, agent_id, found[0]["want"])

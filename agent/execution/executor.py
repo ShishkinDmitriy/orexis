@@ -1,17 +1,17 @@
-"""The executor: the ledger of what this agent is committed to, and the two threads that carry
+"""The executor: the intentions this agent is committed to, and the two threads that carry
 a commitment out.
 
-**IT OWNS THE INTENTIONS STORE.** A plan found above is copied into the ledger (`commit`, or
+**IT OWNS THE INTENTIONS STORE.** A plan found above is copied into the intentions (`commit`, or
 `plans.copy_plan` by whoever holds the store), and from that moment the executor's: any plan
-in the ledger is scheduled, whoever wrote it there. The ledger is rows — an intention adopted
+among the intentions is scheduled, whoever wrote it there. The intentions are rows — an intention adopted
 at an instant, standing at a step, resolved at another instant with an outcome — and every act
-here is a read of those rows and a write of a few more, so a restart finds the ledger where it
-was and carries on from the head of every standing intention.
+here is a read of those rows and a write of a few more, so a restart finds the intentions where they
+were and carries on from the head of every standing intention.
 
 **TWO THREADS, AND WHICH DOES WHAT** (layered-by-timescale-and-interruptibility). One EXECUTES:
 it drains a queue and takes each step handed to it, and it waits on nothing but that queue,
 so a step that blocks blocks only the steps behind it and never the clock. One KEEPS TIME: it
-asks the ledger which standing intention has a head step due — `execution:notBefore` past,
+asks which standing intention has a head step due — `execution:notBefore` past,
 or none stated — hands each to the queue, and sleeps until the earliest one not yet due or the
 poll cadence, whichever comes first. It runs no step. The predecessor had the same two, the
 reactive loop and progression's scheduler, and this is them without the packages.
@@ -60,12 +60,12 @@ log = logging.getLogger("executor")
 DEFAULT_PATIENCE_S = 60.0
 
 #  HOW OFTEN THE TIMEKEEPER LOOKS WHEN NOTHING IS DUE, in the agent's seconds: a plan another
-#  hand wrote into the ledger is found within this, and a `wake` finds it at once.
+#  hand wrote into the intentions is found within this, and a `wake` finds it at once.
 POLL_S = 1.0
 
 _STANDING_Q = """
 SELECT ?intention ?want ?at ?adopted WHERE {
-  GRAPH $ledger {
+  GRAPH $intentions {
     ?intention a execution:Intention ;
                execution:pursues ?want ;
                execution:adoptedAt ?adopted .
@@ -77,7 +77,7 @@ ORDER BY ?adopted"""
 #  the plan says, at once where it says nothing.
 _HEADS_Q = """
 SELECT ?intention ?step ?due WHERE {
-  GRAPH $ledger {
+  GRAPH $intentions {
     ?intention a execution:Intention ; execution:by ?step .
     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
     OPTIONAL { ?step execution:notBefore ?due } } }
@@ -87,21 +87,21 @@ ORDER BY ?due ?intention"""
 #  the layer above's and the package's to spell, and this layer repeats them without reading.
 _STEP_Q = """
 SELECT ?p ?o WHERE {
-  GRAPH $ledger { $step ?p ?o . FILTER(!STRSTARTS(STR(?p), STR(execution:)) && ?p != rdf:type) } }
+  GRAPH $intentions { $step ?p ?o . FILTER(!STRSTARTS(STR(?p), STR(execution:)) && ?p != rdf:type) } }
 ORDER BY ?p"""
 
-_NEXT_Q = """SELECT ?next WHERE { GRAPH $ledger { $step execution:then ?next } }"""
+_NEXT_Q = """SELECT ?next WHERE { GRAPH $intentions { $step execution:then ?next } }"""
 
 #  THE RECORD THAT A STEP WAS TAKEN — history, and only history.
 _ACT_U = """
-INSERT DATA { GRAPH $ledger { $act a execution:Act ; execution:of $step ;
+INSERT DATA { GRAPH $intentions { $act a execution:Act ; execution:of $step ;
                               execution:takenAt $taken_at ; execution:doneAt $done_at ;
                               execution:taken $taken } }"""
 
 _ADVANCE_U = """
-DELETE { GRAPH $ledger { $intention execution:by $step } }
-INSERT { GRAPH $ledger { $intention execution:by $next } }
-WHERE  { GRAPH $ledger { $intention execution:by $step } }"""
+DELETE { GRAPH $intentions { $intention execution:by $step } }
+INSERT { GRAPH $intentions { $intention execution:by $next } }
+WHERE  { GRAPH $intentions { $intention execution:by $step } }"""
 
 
 class Standing:
@@ -122,13 +122,13 @@ class Standing:
 
 
 class Executor:
-    """One agent's ledger, and what carries it out.
+    """One agent's intentions, and what carries them out.
 
     Handed the beliefs engine and the one identifier a process is told. The intentions store is
     its own — made here where none is handed in, since this layer owns it — and `intentions` is
     how a planner is told where a plan goes. It holds no beliefs of its own: the patience is a
     PICK, read off the beliefs store where the agent's picks are, because how stubborn to be is
-    the agent's own belief and not the ledger's constant.
+    the agent's own belief and not the executor's constant.
     """
 
     def __init__(self, beliefs: ox.Store, agent_id: str, intentions: ox.Store | None = None,
@@ -150,7 +150,7 @@ class Executor:
     # --- committing ---------------------------------------------------------------------------
 
     def commit(self, source: ox.Store, graph: str, want: str) -> str | None:
-        """Copy a found plan into the ledger — unless one for this want is already standing
+        """Copy a found plan into the intentions — unless one for this want is already standing
         and younger than the patience, which is the absorption this class exists for.
 
         None means nothing was committed, and the two reasons are told apart in the log: an
@@ -177,7 +177,7 @@ class Executor:
         """Every commitment adopted and not resolved, oldest first."""
         return [Standing(r["intention"], r["want"], r.get("at"),
                          datetime.fromisoformat(r["adopted"]))
-                for r in rows(self.intentions, bind(_STANDING_Q, ledger=Raw(f"<{self.graph}>")))]
+                for r in rows(self.intentions, bind(_STANDING_Q, intentions=Raw(f"<{self.graph}>")))]
 
     def standing_for(self, want: str) -> Standing | None:
         """The commitment standing for this want, or None. One or none: a second plan for one
@@ -191,7 +191,7 @@ class Executor:
 
         THE LIFECYCLE IS TWO TIMESTAMPS AND AN OUTCOME, not a state machine: standing is an
         adoption with no resolution, and how it ended is a word. A resolved intention STAYS —
-        every one does, with its outcome — because a ledger that forgot its resolutions could
+        every one does, with its outcome — because intentions that forgot their resolutions could
         not answer the only question an operator brings to it, which is what this agent
         thought it was doing and why it stopped.
         """
@@ -208,7 +208,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         steps handed over. A head not yet due is remembered as the instant to wake at."""
         now = now or clock.now()
         due, soonest = [], None
-        for r in rows(self.intentions, bind(_HEADS_Q, ledger=Raw(f"<{self.graph}>"))):
+        for r in rows(self.intentions, bind(_HEADS_Q, intentions=Raw(f"<{self.graph}>"))):
             step = r["step"]
             if step in self._inflight:
                 continue
@@ -253,7 +253,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             taken = False
         done_at = clock.now()
         act = f"{step}.act.{taken_at.strftime('%Y%m%dT%H%M%S%f')}"
-        update(self.intentions, bind(_ACT_U, ledger=Raw(f"<{self.graph}>"), act=act, step=step,
+        update(self.intentions, bind(_ACT_U, intentions=Raw(f"<{self.graph}>"), act=act, step=step,
                                      taken_at=instant(taken_at), done_at=instant(done_at),
                                      taken=Raw("true" if taken else "false")))
         #  THE INTENTION MOVES BEFORE THE STEP LEAVES FLIGHT: a tick between the two would
@@ -261,11 +261,11 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         if not taken:
             self.resolve(intention, "failed")
         else:
-            following = next(iter(rows(self.intentions, bind(_NEXT_Q, ledger=Raw(f"<{self.graph}>"), step=step))), None)
+            following = next(iter(rows(self.intentions, bind(_NEXT_Q, intentions=Raw(f"<{self.graph}>"), step=step))), None)
             if following is None:
                 self.resolve(intention, "done")
             else:
-                update(self.intentions, bind(_ADVANCE_U, ledger=Raw(f"<{self.graph}>"),
+                update(self.intentions, bind(_ADVANCE_U, intentions=Raw(f"<{self.graph}>"),
                                              intention=intention, step=step, next=following["next"]))
         self._inflight.discard(step)
         self.wake()
@@ -274,7 +274,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         """A step's rows in words other than this layer's, keyed by the local part of each
         predicate — what `take` is handed, with the step's own IRI under `step`."""
         said = {"step": step}
-        for r in rows(self.intentions, bind(_STEP_Q, ledger=Raw(f"<{self.graph}>"), step=step)):
+        for r in rows(self.intentions, bind(_STEP_Q, intentions=Raw(f"<{self.graph}>"), step=step)):
             said[local_of(r["p"])] = r["o"]
         return said
 
