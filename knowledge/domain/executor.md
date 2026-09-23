@@ -96,7 +96,9 @@ requirement and prediction — and then the world moves the intention.
 A step carries what it predicts, the diff of the world it reaches against the one it leaves
 as the canonical facts a digest is made of; from its `landsAt` on, every pass of the
 timekeeper asks the present whether every predicted addition holds and every retraction is
-gone, over the agent's readings, and moves `execution:by` along the chain when it does. The
+gone, over the agent's readings holding at the tick's instant — a reading is a graph with a
+period since #783, and one past its horizon answers nothing — and moves `execution:by` along
+the chain when it does. The
 last step resolves the intention `done`; the landing passed by the patience with no answer
 resolves it `failed`, and so does a taker that raises. The executor never replans: it says
 what happened, and the planner's next pass stands in the present that surprised it. A pure

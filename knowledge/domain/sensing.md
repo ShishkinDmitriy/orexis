@@ -373,6 +373,14 @@ and declined the savings. Both firmwares are supported on equal terms — the go
 the agent must steer attention, the sentinel where the world's own events are the story — and
 `orexis-firmware` dispatches on `mc:firmware` alone.
 
+# In Agent 0.2.0
+
+The module above is the 0.1.0 container's. In `agent/` the same package's data — its
+vocabulary, its bands, the drifts the domain packages declare against `sensing:Drift` — is
+read by a layer of three functions and no clock; see the
+[reviser](/domain/reviser.md) page's section on it, and the
+[reading](/domain/reading.md) page for what a reading is there.
+
 # Seams left open
 
 - **Sensing is not yet priced.** The payoff of agent-owned attention is that looking costs

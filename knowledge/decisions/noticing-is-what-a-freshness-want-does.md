@@ -7,7 +7,9 @@ description: >-
   releases of a term, a base method and a real implementation in sensing, computing on request a
   judgment nobody requested. Retired rather than rewired, because the want covers the same ground
   and is PURSUED where the hook was merely reported. The guard that would have caught it the day
-  the deliberator stopped now exists.
+  the deliberator stopped now exists. Amended for Agent 0.2.0 (#783): the failure is still
+  pursued as a want, and its owner is the region desire's `unmeasured` side rather than a
+  freshness desire of sensing's own.
 status: accepted
 timestamp: 2026-08-29T00:00:00Z
 ---
@@ -56,6 +58,15 @@ the point's constant for a kernel-owned question, and a direct call on whoever p
 [a-test-that-asserted-nothing](/decisions/a-test-that-asserted-nothing.md) records, wearing a
 regex. It now asserts a floor on how many declarations it found, so a pattern that stops matching
 a prefix form fails instead of narrowing.
+
+# Amended for Agent 0.2.0 (#783)
+
+The premise holds — being unmet is a fact about the world, and what is unmet is pursued as a
+want — and the owner moves. Sensing in `agent/` derives no desire: a reading is a graph with a
+period, so a reading missing or past its horizon is a way the domain's own region desire
+fails, `orexis:Unmeasured` beside below and above, and the look is the lever that repairs
+that side and no other. The `sensing:Freshness` desire and the horizon it read
+(`sensing:staleAfterS`) stay the 0.1.0 container's and retire with it.
 
 # Seams left open
 

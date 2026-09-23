@@ -63,6 +63,19 @@ handed — never from the mark. Two callers had to change when this arrived, and
 a bidder finds out at the round's close, through the give-up it already kept, and a host lets a
 presented [claim](/domain/claim.md) stay held, which is what an unpursued one did anyway.
 
+# In Agent 0.2.0, the seam is the sensing layer
+
+`agent/sensing/` is the belief revision function of the new tree (#783), three functions over
+the store and no mark: `revise`, which writes what a reading is; `predict`, which runs every
+drift the packages declare over the reading in hand and writes the ladder of predictions,
+each starting where the classification probably changes; and `surprise`, which answers a
+sentence where the reading contradicts the prediction holding at its instant, or where
+nothing was predicted for it, and None where the world went on as believed. The sentence is
+what a container wakes the planner on; the layer itself weighs nothing, mints nothing and
+knows no executor. The freshness want the 0.1.0 module derived is not here: a reading's
+standing as the present is its graph's period, and not knowing is the region desire's
+`unmeasured` side, which a look repairs.
+
 # What it is not
 
 **Not the belief write.** [Sensing](/domain/sensing.md) writes the

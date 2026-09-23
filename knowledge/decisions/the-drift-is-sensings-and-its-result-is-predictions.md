@@ -15,7 +15,9 @@ description: >-
   every verdict. Retired — the drift run inside the search, the projected root, `orexis:Drift`
   and its rule words in the kernel, `orexis:spreadsBy`, sensing's width arithmetic, the
   set-of-bands predicate, the answering shape built per step, the watch on a number, the
-  reviser waking on every reading, and hysteresis in time (#615).
+  reviser waking on every reading, and hysteresis in time (#615). Amended for Agent 0.2.0
+  (#783): the crossing is bisected rather than rounded to the ladder, a prediction carries no
+  number, and a window that has begun stands in for the reading it superseded.
 ---
 
 # The claim
@@ -161,6 +163,32 @@ a dose land.
 6. **The word** ([#640](https://github.com/ShishkinDmitriy/orexis/issues/640), settled): expectation
    is the core's, prediction is sensing's, and the pages that said "watch" for the keeper's row say
    expectation.
+
+# Amended for Agent 0.2.0 (#783)
+
+The claim stands and the runner is `agent/sensing/predict.py`, a function over the store.
+Three things the 0.1.0 runner did are done differently, each engaging a premise above:
+
+- **The crossing is found, not rounded to the ladder.** "The crossing is the first prediction at
+  which the root reads unmet" made the crossing the START of a window whose far end first
+  touched a failing band — an hour early where the window is an hour, four where it is five.
+  The first window whose bands differ from the reading's own is bisected, the drift run
+  between the last elapsed that classifies as the reading does and the first that does not,
+  and the crossed prediction's period begins where the change is placed; what stood before it
+  carries the reading's own bands to that instant. Measured on a widening spread, the ladder
+  said one o'clock and the bisection 15:22 (`a_widening_spread_crosses_later_than_the_ladder_says`).
+- **No number crosses.** The rule may emit a centre, an instant and the sensor it read; the
+  centre's band is entailed from them and then they go, because the mind reads bands and a
+  world that hashed a centre would be a new world at every reading. What the sovereign reads
+  is the band set per window.
+- **A window that has begun is the present.** The ground at an instant holds every prediction
+  whose window covers it, the first window included once the reading's horizon has passed, so
+  a late sensor's forecast stands in for the reading it superseded, and "missed" is silence
+  past the last window rather than the first window closing.
+
+The keeper's intended branch (item 3) and the reviser's marks (item 4) are the 0.1.0
+container's; in 0.2.0 the executor holds a step to the readings at the tick's instant and the
+sentence `surprise` answers is what wakes the planner.
 
 # Seams left open
 

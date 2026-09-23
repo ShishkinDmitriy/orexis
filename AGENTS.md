@@ -1200,6 +1200,40 @@ it is a record wearing a bullet.
   every retraction carries its package's `PREFIX`, so joining the copy and the retraction into
   one text skipped every retraction, at the log level and green; hoist the declarations, and
   run apart the two texts that spell one label two ways.
+- **Sensing is the belief revision function, and it mints no want** (#783) — `revise` writes
+  what a reading IS, `predict` what the drifts say it will be, `surprise` whether it contradicts
+  what was predicted for its instant, and nothing else: the freshness desire sensing kept in
+  0.1.0 was a want about knowing that the region desire's `unmeasured` side already states, and
+  a look repairs; the reading's horizon is the cadence with the instrument's tolerance, said
+  as its graph's period, so nothing keeps a timer and nothing writes a mark.
+- **A reading is two graphs, and the mind's world is bands** — the observation's key and its
+  bands are the state graph a plan forks and a step is held to, and the number, the instant
+  and the instrument are a graph of sensing's own kind beside it — the result graph, declared
+  in `agent/sensing/ontology.ttl` — holding for the same stretch; `facts_of` rounds a number into the digest, so a number in the state
+  graph made every reading a world the search had never seen, and no cone would ever re-root
+  on a plant. A prediction carries none of the instrument's words either: the centre's band
+  is entailed and the centre goes.
+- **A ground is laid at every boundary, ends included, and a forecast begun stands in for a
+  reading missed** — `lay_ground` builds each ground from what holds at the instant, the
+  readings and every prediction whose window covers it, applied group by group in the order
+  the windows open; it forked each from the last and knew no ends, and skipped a prediction
+  already begun as "the present's", which handed the present nothing where the reading had
+  lapsed. A reading past its horizon is not in the ground past it, a late sensor's forecast is
+  the present, and unmeasured is silence past the last window.
+- **The crossing is bisected, never rounded to the ladder** — the ladder's windows are an
+  hour, five and a day, and the window whose far end first touches a failing band would put
+  the crossing at its start; `predict` runs the drift between the last elapsed that classifies
+  as the reading does and the first that does not, and the crossed prediction's period begins
+  where the change is placed, within a minute or a sixty-fourth of the window. Measured on a
+  widening spread: the ladder said one o'clock, the bisection 15:22.
+- **A want's search is rooted at the ground holding at its instant** — a want foreseen at a
+  crossing was minted and never searched, since the pass read wants at the present and rooted
+  every search there; `unweighed` pairs a want with the latest ground opening at or before
+  its trouble begins, the pass reads wants over any stretch, and the plan's first step is
+  placed at the crossing because that is the instant of the root it was found from.
+- **The verifier reads the readings holding at the tick** — a reading is a graph with a
+  period now, so a step is held to the present at the tick's instant and a reading whose
+  standing has run out answers nothing; a prediction never answers a step.
 
 ## The rules the code lives by
 
@@ -1282,7 +1316,7 @@ it is a record wearing a bullet.
    [the-kernel-has-no-mailbox](knowledge/decisions/the-kernel-has-no-mailbox.md)).
 
    **TWO KERNEL TREES, FOR NOW.** `agent/` is Agent 0.2.0 — the store over the engine, the
-   execution ledger and the planning package — and is what `pytest` runs; `agent_old/` is the
+   sensing layer, the planning package and the executor — and is what `pytest` runs; `agent_old/` is the
    0.1.0 container this section describes, still what `orexis-agent` and the image run, and
    the loader's kernel (`assembly/loader.py` names it by path). Every `agent_old/<file>`
    below is that container's; the two trees meet only through the packages' ontologies,

@@ -130,7 +130,10 @@ are built under it (#642, #643, #639, #632).
   drift run from the band would need a centre a band does not have.
 - **The window's far end is the width's horizon.** The set is widened at the instant the
   grace runs out, the widest the window reaches: the safe direction, and a reading arriving
-  early is judged against a set slightly wider than its own instant warrants.
+  early is judged against a set slightly wider than its own instant warrants. In Agent 0.2.0
+  the window whose set first differs from the reading's own is bisected, so the crossing is
+  placed where the set changes and not at the window's start (#783,
+  [the-drift-is-sensings-and-its-result-is-predictions](/decisions/the-drift-is-sensings-and-its-result-is-predictions.md)).
 - **The rate's uncertainty is the world's fact.** Review moves the agent's beliefs, and a run
   of surprises against a stated rate says the rate is wrong; whether review may move a world
   fact is the question #607 left, still open.
