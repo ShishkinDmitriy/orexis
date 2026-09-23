@@ -1,7 +1,7 @@
 """The execution layer: what an agent does with a plan once it has one.
 
 The intentions this agent is committed to and the two threads that carry a commitment out
-(`executor.py`), and the one function that copies a found plan into it (`plans.py`). That is the whole of it — 280 lines — and the smallness is
+(`executor.py`), which alone writes them. That is the whole of it — 280 lines — and the smallness is
 the point rather than an embarrassment: keeping a commitment honest is a small job, and the
 predecessor's 1,736-line keeper was large because it also carried an expectation watch, held
 conditions, methods, bridges and refusals, each of which returns attached to whatever needs it.

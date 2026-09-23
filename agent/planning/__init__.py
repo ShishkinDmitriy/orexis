@@ -42,7 +42,7 @@ EXECUTION's own words, and why the pass ended. Then it hands them down, which is
 intention is all that outlives it. There was a Python record beside it saying the same thing, so the finding
 existed twice and only one of the two could cross a layer — and the half a want most needs,
 that no lever this agent holds points at it, was the half that could not. What happens to a
-plan is the execution layer's: `plans.copy_plan` copies the graph into the intentions store.
+plan is the execution layer's: the executor adopts the graph into the intentions.
 Nothing here commits, because deciding a thing and remembering that it was decided are
 different acts.
 

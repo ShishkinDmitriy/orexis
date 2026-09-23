@@ -45,7 +45,7 @@ from agent.planning.derive_wants import derive_wants
 from agent.planning.lay_ground import lay_ground
 from agent.planning.unweighed import unweighed
 from agent.planning.weigh import weigh
-from agent.execution.plans import pursued
+from agent.execution.executor import Executor
 from agent.planning.withdraw import withdraw
 
 CASES_DIR = Path(__file__).parent / "derive_wants"
@@ -59,7 +59,7 @@ def test_derive_wants_leaves_the_store_as_the_snapshot_says(case, monkeypatch, r
     lay_ground(store, snapshots.NOW)
     for pair in unweighed(store):
         weigh(store, pair["for"], pair["about"])
-    withdraw(store, derive_wants(store, snapshots.NOW) | set(pursued(store)), snapshots.NOW)
+    withdraw(store, derive_wants(store, snapshots.NOW) | set(Executor(store, snapshots.AGENT, intentions=store).walking()), snapshots.NOW)
     snapshots.held_to_diff(case, request, "derive_wants", snapshots.snapshot_of(store))
 
 

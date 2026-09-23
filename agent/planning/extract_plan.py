@@ -21,7 +21,7 @@ which of the moves considered at that world it was.
 and `execution:then` are execution's, because execution reads them — what a plan holds, and
 in what order. It reads nothing else of a step, so everything else is the SEARCH's and says
 so: `planning:fills` for the action, `planning:of` for the candidate it was picked from, and
-one triple per parameter under the parameter's own IRI. `plans.copy_plan` is then a copy, and
+one triple per parameter under the parameter's own IRI. the executor's adoption is then a copy, and
 what a lower layer does not read it also does not drop.
 
 **THE PLAN ITSELF IS THIS LAYER'S**, and so is which want it is for and how the pass ended: a

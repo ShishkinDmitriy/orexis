@@ -24,7 +24,7 @@ from datetime import timedelta
 import pyoxigraph as ox
 
 from agent import clock
-from agent.execution.plans import pursued
+from agent.execution.executor import Executor
 from agent.planning.ontology import PLAN_GRAPH, POSSIBLE_GRAPH
 from agent.planning.planner import Planner
 from agent.store import graphs_of, rows
@@ -64,7 +64,7 @@ SELECT ?disk ?onto WHERE {
 
 def _two_disks(snapshots, held: bool):
     store = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
-    return store, Planner(store, snapshots.AGENT, intentions=ox.Store() if held else None)
+    return store, Planner(store, snapshots.AGENT, executor=Executor(store, snapshots.AGENT) if held else None)
 
 
 def _worlds(planner) -> set[str]:
@@ -93,13 +93,13 @@ def test_a_pass_a_minute_later_hands_down_no_second_intention(monkeypatch, snaps
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store, planner = _two_disks(snapshots, held=True)
     planner.plan(snapshots.NOW)
-    assert len(pursued(planner.intentions)) == 1
+    assert len(planner.executor.walking()) == 1
     imagined = _worlds(planner)
     later = snapshots.NOW + timedelta(minutes=1)
     monkeypatch.setattr(clock, "now", lambda: later)
     planner.plan(later)
-    assert len(pursued(planner.intentions)) == 1, "the same commitment stands, and no second one beside it"
-    assert len(rows(planner.intentions, "SELECT ?i WHERE { GRAPH ?g { ?i a execution:Intention } }")) == 1
+    assert len(planner.executor.walking()) == 1, "the same commitment stands, and no second one beside it"
+    assert len(rows(planner.executor.intentions, "SELECT ?i WHERE { GRAPH ?g { ?i a execution:Intention } }")) == 1
     assert _worlds(planner) == imagined, "and nothing was forked for a want being walked"
 
 
@@ -124,18 +124,18 @@ def test_a_step_taken_as_predicted_is_planned_on_from_the_kept_cone(monkeypatch,
     store, planner = _two_disks(snapshots, held=True)
     planner.plan(snapshots.NOW)
     imagined = _worlds(planner)
-    (head,) = rows(planner.intentions, _HEAD_Q, ())
+    (head,) = rows(planner.executor.intentions, _HEAD_Q, ())
     _move(store, head["disk"].rsplit("#", 1)[-1], head["onto"])
     #  THE EXECUTOR ANSWERED: the step landed, so the commitment is resolved and the want is the
     #  search's again. (The keeper's door; a bare row here says the same thing.)
-    planner.intentions.update("""INSERT { GRAPH ?g { ?i <http://example.org/orexis/execution#resolvedAt> "2026-01-01T12:00:30Z" } }
+    planner.executor.intentions.update("""INSERT { GRAPH ?g { ?i <http://example.org/orexis/execution#resolvedAt> "2026-01-01T12:00:30Z" } }
                                  WHERE { GRAPH ?g { ?i a <http://example.org/orexis/execution#Intention> } }""")
     later = timedelta(minutes=1) + snapshots.NOW
     monkeypatch.setattr(clock, "now", lambda: later)
     planner.plan(later)
     assert _steps(planner) == 2, "two moves left"
     assert _worlds(planner) < imagined, "found in the cone kept, and not one world forked: the siblings went"
-    assert len(pursued(planner.intentions)) == 1, "a new commitment for the rest"
+    assert len(planner.executor.walking()) == 1, "a new commitment for the rest"
 
 
 def test_a_surprise_starts_the_search_afresh(monkeypatch, snapshots):
@@ -207,13 +207,13 @@ def test_a_search_the_budget_cuts_short_is_finished_by_the_passes_after(monkeypa
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     whole, _ = _weighed(snapshots.stand_in(BENCH / "three_disk_hanoi.trig"), 128, estimate=True, snapshots=snapshots)
     store = snapshots.stand_in(BENCH / "three_disk_hanoi.trig")
-    planner = Planner(store, snapshots.AGENT, intentions=ox.Store(), budget=20)
+    planner = Planner(store, snapshots.AGENT, executor=Executor(store, snapshots.AGENT), budget=20)
     passes = []
     for i in range(3):
         at = snapshots.NOW + timedelta(minutes=i)
         monkeypatch.setattr(clock, "now", lambda at=at: at)
         planner.plan(at)
-        passes.append((_outcome(planner), len(pursued(planner.intentions))))
+        passes.append((_outcome(planner), len(planner.executor.walking())))
     assert passes == [("Exhausted", 0), ("Exhausted", 0), ("Satisfied", 1)]
     assert _steps(planner) == 7
     (im,) = planner.imaginaria.values()

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from agent.store import bindings, query_over, update
 from agent.planning.find_wants import find_wants
-from agent.execution.plans import pursued
+from agent.execution.executor import Executor
 from agent.planning.withdraw import withdraw
 
 
@@ -33,7 +33,7 @@ def test_a_want_a_plan_is_walking_is_kept(wants):
     update(wants.store, """INSERT DATA {
   GRAPH <urn:test:intentions> { <urn:test:i> a execution:Intention ; execution:pursues <urn:test:walking> }
   GRAPH <urn:test:catalogue> { <urn:test:intentions> a execution:IntentionGraph } }""")
-    assert withdraw(wants.store, set(pursued(wants.store)), wants.at) == []
+    assert withdraw(wants.store, set(Executor(wants.store, "keeper", intentions=wants.store).walking()), wants.at) == []
     assert find_wants(wants.store) == ["urn:test:walking"]
 
 

@@ -32,7 +32,7 @@ process is told:
 
 Nothing comes back: everything a pass finds it WRITES, and `self.imaginaria` is how a
 reader reaches it. Nothing here commits — copying a plan into the intentions is the execution
-layer's (`plans.copy_plan`), because deciding a thing and remembering that it was decided
+layer's (the executor's adoption), because deciding a thing and remembering that it was decided
 are different acts.
 
 **THE IMAGINARIUM OUTLIVES THE PASS.** Called every minute, a planner that imagined afresh
@@ -69,7 +69,6 @@ import pyoxigraph as ox
 import rdflib
 
 from agent import clock
-from agent.execution.plans import pursued
 from agent.ontology import DESIRE, PUBLIC, RECORD, WANT
 from agent.store import Memo, Raw, bind, bindings, catalogue_of, graphs_of, query, rdflib_view, remember, rows, update
 
@@ -145,8 +144,7 @@ class Planner:
     """One agent's planning: the pass, one want's search, and one iteration of it, each a
     method that sequences the package's acts and reads the store between them."""
 
-    def __init__(self, beliefs: ox.Store, agent_id: str, intentions: ox.Store | None = None,
-                 budget: int = BUDGET):
+    def __init__(self, beliefs: ox.Store, agent_id: str, executor=None, budget: int = BUDGET):
         """The beliefs store, the one identifier a process is told, where a plan goes, and
         how much a search may spend — a ceiling on compute in the unit the search spends,
         which is a container's to size from a measured cost per candidate and not the
@@ -155,12 +153,13 @@ class Planner:
         Everything else is discovered from the graph, which is rule 1: the world says
         `?a orexis:localId "<id>"`, and who I am is the answer rather than an argument.
 
-        `intentions` is the executor's store, and a pass hands its plans down to it as its last act. A
-        planner given none searches and writes its findings into the imaginarium and no
-        further — which is what a case wants, and what the search itself is.
+        `executor` is where a plan goes: a pass hands its plans to it as its last act, and it
+        alone writes the intentions. A planner given none searches and writes its findings
+        into the imaginarium and no further — which is what a case wants, and what the search
+        itself is.
         """
         self.beliefs = beliefs
-        self.intentions = intentions
+        self.executor = executor
         self.id = agent_id
         self.budget = budget
         self.uri = self._identity(agent_id)
@@ -226,7 +225,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         #  A STORE WITH NO ACTION HAS ONE WORLD, not none: `scope_actions` writes the scope
         #  graph whatever it finds, and a desire in a scoped, empty store still has to be
         #  judged, to say that no lever points at it.
-        walking = set(pursued(self.intentions)) if self.intentions is not None else set()
+        walking = set(self.executor.walking()) if self.executor is not None else set()
         for _scope in sorted(set(scopes.values())) or [UNSCOPED]:
             store = self.imaginaria.setdefault(_scope, ox.Store())
             prepare_ground(self.beliefs, store)
@@ -254,8 +253,8 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 if want in walking:
                     continue                # a want a plan is walking is not planned again
                 self.search(store, want, budget=self.budget, memo=memo)
-            if self.intentions is not None:
-                publish_plan(store, self.intentions, self.id)
+            if self.executor is not None:
+                publish_plan(store, self.executor)
 
     # --- one want ------------------------------------------------------------------------
 

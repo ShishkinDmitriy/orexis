@@ -39,7 +39,7 @@ planning:PlanGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:labe
 
 The second reason is the crossing. A plan goes to the execution layer to be carried out, and a graph is what `prepare_ground` showed the shape of: one function over two stores, copying what the other side needs. Copying a plan is then copying a graph, rather than walking `execution:then` and hoping the walk reaches everything a step carries.
 
-A WORKING graph, and memory: the imaginarium is not on disk. A plan is a pass's result and not yet a commitment; what survives is the intention the execution layer mints when it copies one in (`plans.copy_plan`).""" .
+A WORKING graph, and memory: the imaginarium is not on disk. A plan is a pass's result and not yet a commitment; what survives is the intention the execution layer mints when it copies one in (`the executor's adoption`).""" .
 
 planning:PossibleGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Possible graph" ;
     rdfs:comment """ONE NODE OF A SEARCH — what the world comes to if the steps reaching it were taken — in the imaginarium, beside the ground it was forked from and the other worlds the pass imagined. Never mutated: siblings are alive at the same time, so branching rather than backtracking is the hard case, and a world is a VALUE written once when the node is created.

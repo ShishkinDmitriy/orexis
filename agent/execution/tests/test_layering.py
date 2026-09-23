@@ -25,7 +25,7 @@ VOCABULARY = sorted(EXECUTION.rglob("*.ttl"))
 
 
 def test_the_execution_layer_imports_nothing_of_planning():
-    """Upward is not a direction. `publish_plan` reaching DOWN to `plans.copy_plan` is the one
+    """Upward is not a direction. `publish_plan` handing a plan DOWN to the executor is the one
     arrow between them, and it points the other way."""
     assert FILES, "the glob stopped matching, which would pass this by running it on nothing"
     reaching = []

@@ -23,8 +23,9 @@ and it refuses a second plan for a want it is already walking while that one is 
 the agent's patience, superseding it after. This door refuses a second plan for a want being
 walked at all: the plan graph of a want an intention pursues is still in the imaginarium, since
 that outlives the pass, and it is not the pass's to hand down twice. A caller that wants the
-amortisation asks the executor instead. Both end in `plans.copy_plan`, so what a committed plan
-LOOKS like is settled in one place either way.
+amortisation asks the executor instead. Both are the executor's adoption, so what a committed
+plan LOOKS like is settled in one place either way, and nothing but the executor writes the
+intentions.
 """
 
 from __future__ import annotations
@@ -33,7 +34,6 @@ import logging
 
 import pyoxigraph as ox
 
-from agent.execution.plans import copy_plan, pursued
 from agent.store import Raw, bind, graphs_of, rows
 
 from .ontology import PLAN_GRAPH
@@ -45,29 +45,29 @@ log = logging.getLogger("publish_plan")
 _FOR_Q = """SELECT ?want WHERE { GRAPH $plan { $plan planning:for ?want } }"""
 
 
-def publish_plan(imaginarium: ox.Store, intentions: ox.Store, agent_id: str) -> list[str]:
-    """Copy every plan the pass left in `imaginarium` into `intentions`. The intentions minted.
+def publish_plan(imaginarium: ox.Store, executor) -> list[str]:
+    """Hand every plan the pass left in `imaginarium` to `executor`. The intentions minted.
 
     The plans are asked for BY CLASS — `planning:PlanGraph`, whatever the pass named them —
     which is the same read every other door here makes and the reason a pass classifies what
     it writes.
     """
     minted = []
-    walking = set(pursued(intentions))
+    walking = set(executor.walking())
     for graph in sorted(graphs_of(imaginarium, PLAN_GRAPH)):
         found = rows(imaginarium, bind(_FOR_Q, plan=Raw(f"<{graph}>")))
         if not found:
             #  A PLAN GRAPH THAT NAMES NO WANT is one nobody can carry out on anyone's behalf,
             #  and the intentions keep what an agent is doing and for what.
             log.error("%s: a plan graph names no want, so it cannot be committed: %s",
-                      agent_id, graph)
+                      executor.id, graph)
             continue
         if found[0]["want"] in walking:
             #  THE IMAGINARIUM OUTLIVES THE PASS, so a plan an earlier pass found is still
             #  here while an intention walks it; handed down again it minted a second intention
             #  for one want every pass — measured, three passes, three intentions.
             continue
-        intention = copy_plan(imaginarium, graph, intentions, agent_id, found[0]["want"])
+        intention = executor.commit(imaginarium, graph, found[0]["want"])
         if intention is not None:
             minted.append(intention)
     return minted

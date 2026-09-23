@@ -16,7 +16,6 @@ import pyoxigraph as ox
 
 from agent import clock
 from agent.execution.executor import DEFAULT_PATIENCE_S, Executor
-from agent.execution.plans import pursued
 from agent.planning.planner import Planner
 from agent.store import rows
 
@@ -43,8 +42,8 @@ def _planned(snapshots, monkeypatch, **kw):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     beliefs = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
     executor = Executor(beliefs, snapshots.AGENT, **kw)
-    Planner(beliefs, snapshots.AGENT, intentions=executor.intentions).plan(snapshots.NOW)
-    assert len(pursued(executor.intentions)) == 1
+    Planner(beliefs, snapshots.AGENT, executor=executor).plan(snapshots.NOW)
+    assert len(executor.walking()) == 1
     return beliefs, executor
 
 
@@ -57,7 +56,7 @@ def test_a_world_that_does_what_the_plan_said_walks_the_intention_to_done(monkey
         assert x.tick(snapshots.NOW) == [], "taken, and waiting for the world"
         _move(beliefs, head["disk"], head["onto"])
         x.tick(snapshots.NOW)
-    assert pursued(x.intentions) == [], "done: nothing stands"
+    assert x.walking() == [], "done: nothing stands"
     (outcome,) = rows(x.intentions, "SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }", ())
     assert outcome["o"] == "done"
 
@@ -70,13 +69,13 @@ def test_a_fictive_action_is_walked_by_a_plain_executor(monkeypatch, snapshots):
     beliefs.update("INSERT { GRAPH ?g { ?a <http://example.org/orexis/execution#fictive> true } } "
                    "WHERE { GRAPH ?g { ?a a <http://example.org/orexis#Action> } }")
     x = Executor(beliefs, snapshots.AGENT)
-    Planner(beliefs, snapshots.AGENT, intentions=x.intentions).plan(snapshots.NOW)
+    Planner(beliefs, snapshots.AGENT, executor=x).plan(snapshots.NOW)
     (marked,) = rows(x.intentions, "SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a execution:Step ; execution:fictive true } }", ())
     assert int(marked["n"]) == 3, "every step carries its action's word"
     for _ in range(3):
         assert x.tick(snapshots.NOW) and x.drain() == 1
         x.tick(snapshots.NOW)
-    assert pursued(x.intentions) == []
+    assert x.walking() == []
 
 
 def test_a_fictive_executor_walks_the_plan_with_no_world_at_all(monkeypatch, snapshots):
@@ -87,7 +86,7 @@ def test_a_fictive_executor_walks_the_plan_with_no_world_at_all(monkeypatch, sna
         assert x.tick(snapshots.NOW), "the head is due"
         assert x.drain() == 1
         x.tick(snapshots.NOW)               # the world — the executor — has answered
-    assert pursued(x.intentions) == []
+    assert x.walking() == []
     (outcome,) = rows(x.intentions, "SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }", ())
     assert outcome["o"] == "done"
 
@@ -97,6 +96,6 @@ def test_a_world_that_does_not_move_fails_the_intention_after_the_patience(monke
     x.tick(snapshots.NOW)
     x.drain()
     x.tick(snapshots.NOW + timedelta(seconds=DEFAULT_PATIENCE_S))
-    assert pursued(x.intentions) == []
+    assert x.walking() == []
     (outcome,) = rows(x.intentions, "SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }", ())
     assert outcome["o"] == "failed"

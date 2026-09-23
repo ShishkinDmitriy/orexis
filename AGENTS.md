@@ -1142,8 +1142,8 @@ it is a record wearing a bullet.
   goes; a name is never trusted, so a re-laid ground's old cone goes too.
 - **A want an intention is walking is neither searched nor handed down again** — the world has
   not answered yet, so re-deciding is the executor's verdict on a step and not the clock's;
-  `execution.plans.pursued` is the one read, the Planner skips those wants and keeps them from
-  `withdraw`, and `publish_plan` crosses no plan for one, since the plan graph of an earlier
+  `Executor.walking` is the one read, the Planner skips those wants and keeps them from
+  `withdraw`, and `publish_plan` hands no plan down for one, since the plan graph of an earlier
   pass is still in the kept imaginarium.
 - **What crosses into the imaginarium is taken back before it crosses again, and what the
   store made for itself stays** — a refresh forgets every graph of a crossing kind the store
@@ -1169,8 +1169,8 @@ it is a record wearing a bullet.
   holds the text to, so the one range the scopes honour is SPARQL's own, in the text the
   engine runs; `footprint` read every variable predicate as anything before, which under a
   derived fork would have copied the whole store per world for a two-valued predicate.
-- **The executor owns the intentions, any plan among them is scheduled, and the two threads
-  are two doors** — the timekeeper's pass is `tick` (the head steps due, by `execution:notBefore`,
+- **The executor owns the intentions and alone writes them, any plan among them is
+  scheduled, and the two threads are two doors** — the timekeeper's pass is `tick` (the head steps due, by `execution:notBefore`,
   handed to the queue) and the executing thread's is `drain` (each step taken, its
   `execution:Act` written, `execution:by` moved, the last step resolving `done`), so a test
   drives a plan through at instants it chooses and the threads call the same two; the

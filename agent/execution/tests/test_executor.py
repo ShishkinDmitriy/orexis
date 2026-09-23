@@ -18,7 +18,6 @@ import pytest
 
 from agent import clock
 from agent.execution.executor import DEFAULT_PATIENCE_S, Executor
-from agent.execution.plans import copy_plan
 from agent.execution.ontology import EXECUTION, intentions_graph
 from agent.hash_named_graph import facts_of
 from agent.store import bindings, put_graph, query_over, update
@@ -171,13 +170,6 @@ def test_a_step_that_cannot_be_taken_fails_the_intention():
     assert [a["taken"] for a in _acts(x)] == ["false"]
     assert x.standing() == []
 
-
-def test_a_plan_another_hand_wrote_into_the_intentions_is_scheduled_on_the_next_tick():
-    """The planner's crossing writes the intentions directly, without `commit`: any plan among the
-    intentions is the executor's, whoever put it there."""
-    x = executor()
-    copy_plan(a_plan(1), PLAN, x.intentions, AGENT, WANT)
-    assert x.tick(NOW) == [f"{PLAN}.0"]
 
 
 def test_what_a_step_says_reaches_the_log(caplog):

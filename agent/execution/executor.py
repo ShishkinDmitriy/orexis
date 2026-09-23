@@ -1,9 +1,10 @@
 """The executor: the intentions this agent is committed to, and the two threads that carry
 a commitment out.
 
-**IT OWNS THE INTENTIONS STORE.** A plan found above is copied into the intentions (`commit`, or
-`plans.copy_plan` by whoever holds the store), and from that moment the executor's: any plan
-among the intentions is scheduled, whoever wrote it there. The intentions are rows — an intention adopted
+**IT OWNS THE INTENTIONS STORE, AND NOTHING ELSE WRITES THEM.** A plan found above is handed
+to `commit` — the planner's crossing hands every plan of a pass here — and from that moment
+it is the executor's: any plan among the intentions is scheduled, and every adoption wakes
+the timekeeper. The intentions are rows — an intention adopted
 at an instant, standing at a step, resolved at another instant with an outcome — and every act
 here is a read of those rows and a write of a few more, so a restart finds the intentions where they
 were and carries on from the head of every standing intention.
@@ -52,25 +53,56 @@ import json
 import logging
 import queue
 import threading
+import uuid
 from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
 from agent import clock
 from agent.hash_named_graph import facts_of
-from agent.ontology import STATE, local_of
-from agent.store import Raw, add_quads, bind, graphs_of, instant, rows, update
+from agent.ontology import OREXIS, STATE, local_of
+from agent.store import Raw, add_quads, bind, graphs_of, instant, quads, rows, update
 
-from .ontology import intentions_graph
-from .plans import OUTCOME, RESOLVED_AT, copy_plan
+from .ontology import EXECUTION, intentions_graph
 
 log = logging.getLogger("executor")
 
 DEFAULT_PATIENCE_S = 60.0
 
+INTENTION = EXECUTION + "Intention"
+#  The head a standing intention is AT — not the whole plan, which `execution:step` names, and
+#  not the first step for ever: what `by` points at moves as the world answers each step.
+BY = EXECUTION + "by"
+STEP = EXECUTION + "step"
+PURSUES = EXECUTION + "pursues"
+ADOPTED_AT = EXECUTION + "adoptedAt"
+RESOLVED_AT = EXECUTION + "resolvedAt"
+OUTCOME = EXECUTION + "outcome"
+_RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+
 #  HOW OFTEN THE TIMEKEEPER LOOKS WHEN NOTHING IS DUE, in the agent's seconds: a plan another
 #  hand wrote into the intentions is found within this, and a `wake` finds it at once.
 POLL_S = 1.0
+
+#  THE HEAD OF A PLAN is the step nothing else points `execution:then` at — read rather than
+#  written, since the chain already says it and a second statement of the same fact is a
+#  second thing to keep true.
+_HEAD_Q = """
+SELECT ?step WHERE {
+  GRAPH $plan {
+    ?step a execution:Step ; execution:partOf $root .
+    FILTER NOT EXISTS { ?other execution:then ?step } } }"""
+
+_STEPS_Q = """
+SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step ; execution:partOf $root } }"""
+
+#  WHAT THIS AGENT IS WALKING: every want an intention adopted and not resolved pursues. Asked
+#  by pattern and not by graph, because a case may hold the intentions under a name of its own.
+_WALKING_Q = """
+SELECT DISTINCT ?want WHERE {
+  GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
+             FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
+ORDER BY ?want"""
 
 _STANDING_Q = """
 SELECT ?intention ?want ?at ?adopted WHERE {
@@ -207,10 +239,48 @@ class Executor:
             #  as dropped with the reason. A commitment abandoned without a reason is
             #  indistinguishable from one forgotten.
             self.resolve(held.uri, "superseded")
-        intention = copy_plan(source, graph, self.intentions, self.id, want)
+        intention = self._adopt(source, graph, want)
         if intention is not None:
             self.wake()
         return intention
+
+    def _adopt(self, source: ox.Store, graph: str, want: str) -> str | None:
+        """Copy the plan in `graph` of `source` into the intentions. The intention, or None.
+
+        None for an empty plan, which is an answer and not a commitment: the search reached
+        the want's met state in no steps, so there is nothing to carry out and nothing to
+        stand. The intention is adopted at the clock's instant, stands at the plan's HEAD and
+        names the want it pursues. Nothing decides here — whoever found the plan decided,
+        and this keeps the record honest (an-intention-is-a-plan-committed-to).
+
+        A COPY AND NOT A REWRITE, which is why the search writes its steps in this layer's
+        words: a translation on the way would be a second place the two shapes could
+        disagree. What the search adds of its own crosses with the rest and is not read
+        here. QUADS AND NOT TEXT: a serialise-and-reparse relabels blank nodes.
+        """
+        named = Raw(f"<{graph}>")
+        node = ox.NamedNode(self.graph)
+        steps = [r["step"] for r in rows(source, bind(_STEPS_Q, plan=named, root=named))]
+        if not steps:
+            log.debug("%s: the plan for %s has no steps — nothing to commit", self.id, want)
+            return None
+        head = [r["step"] for r in rows(source, bind(_HEAD_Q, plan=named, root=named))]
+        if len(head) != 1:
+            raise RuntimeError(
+                f"the plan in <{graph}> has {len(head)} heads — a plan is a chain, and a chain "
+                "has one step nothing follows")
+        add_quads(self.intentions, (ox.Quad(q.subject, q.predicate, q.object, node)
+                                    for q in quads(source, graph)))
+        intention = ox.NamedNode(f"{OREXIS}intention_{self.id}_{uuid.uuid4().hex[:8]}")
+        own = [ox.Quad(intention, _RDF_TYPE, ox.NamedNode(INTENTION), node),
+               ox.Quad(intention, ox.NamedNode(PURSUES), ox.NamedNode(want), node),
+               ox.Quad(intention, ox.NamedNode(ADOPTED_AT), instant(clock.now()), node),
+               ox.Quad(intention, ox.NamedNode(BY), ox.NamedNode(head[0]), node)]
+        own += [ox.Quad(intention, ox.NamedNode(STEP), ox.NamedNode(s), node) for s in sorted(steps)]
+        add_quads(self.intentions, own)
+        log.info("%s: committed a plan of %d step(s) for %s", self.id, len(steps),
+                 want.rsplit("#", 1)[-1])
+        return intention.value
 
     # --- what stands --------------------------------------------------------------------------
 
@@ -219,6 +289,13 @@ class Executor:
         return [Standing(r["intention"], r["want"], r.get("at"),
                          datetime.fromisoformat(r["adopted"]))
                 for r in rows(self.intentions, bind(_STANDING_Q, intentions=Raw(f"<{self.graph}>")))]
+
+    def walking(self) -> list[str]:
+        """Every want a standing commitment pursues — one this agent is WALKING. A search does
+        not plan again for one of these, and the derivation does not withdraw one whatever
+        its desire now reads: the world has not answered yet, and a plan in flight with
+        nothing it was for is worse than a want nothing implies."""
+        return [r["want"] for r in rows(self.intentions, _WALKING_Q)]
 
     def standing_for(self, want: str) -> Standing | None:
         """The commitment standing for this want, or None. One or none: a second plan for one

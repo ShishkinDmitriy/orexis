@@ -14,6 +14,7 @@ import pyoxigraph as ox
 import pytest
 
 from agent import clock
+from agent.execution.executor import Executor
 from agent.execution.ontology import EXECUTION, intentions_graph
 from agent.planning.planner import Planner
 from agent.planning.scope_actions import scope_actions
@@ -43,8 +44,9 @@ def _held(intentions, what: str) -> list[dict]:
 def test_the_pass_leaves_an_intention_standing_at_the_plans_head(beliefs):
     """The whole crossing, end to end: a want is derived, a plan is found, and what survives
     the imaginarium is one intention pursuing that want and standing at the first step."""
-    intentions = ox.Store()
-    Planner(beliefs, AGENT, intentions).plan(NOW)
+    x = Executor(beliefs, AGENT)
+    intentions = x.intentions
+    Planner(beliefs, AGENT, x).plan(NOW)
 
     pursues = _held(intentions, "pursues")
     assert len(pursues) == 1, pursues
@@ -74,8 +76,9 @@ def test_an_answer_is_not_a_commitment(beliefs):
     ANSWER, and the plan graph keeps it where a reader of outcomes will look."""
     beliefs.update("DELETE WHERE { GRAPH <http://example.org/test#actions> { ?s ?p ?o } }")
     scope_actions(beliefs)
-    intentions = ox.Store()
-    planner = Planner(beliefs, AGENT, intentions)
+    x = Executor(beliefs, AGENT)
+    intentions = x.intentions
+    planner = Planner(beliefs, AGENT, x)
     planner.plan(NOW)
 
     from agent.planning.ontology import PLAN_GRAPH
