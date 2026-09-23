@@ -1,0 +1,21 @@
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  THE SENSING LAYER'S OWN WORD — one, since the layer speaks the sensing package's vocabulary
+#  (`sensing:Drift`, its horizons, the band families) and needs no second spelling of any of
+#  it. What it adds is the kind of graph it keeps the instrument's word in.
+
+#  A READING IS TWO GRAPHS. The graph the mind reads it from is a state graph: the observation
+#  node, its key — what it is of and which property — and the bands the domain says it is.
+#  This is the other: the result the instrument gave, the instant it gave it, which instrument
+#  and by what procedure. A belief, so every rule that wants the number — a drift, an envelope
+#  — reads it at any instant inside its period; NOT a state graph, so no possible world is
+#  forked from it and no digest of a world carries the number. Both hold for the same stretch,
+#  the reading's standing as the present.
+sensing:ResultGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ;
+    rdfs:label "result graph" ;
+    rdfs:seeAlso sosa:Result ;
+    rdfs:comment "What the instrument said of one reading: sosa:hasSimpleResult, sosa:resultTime, sosa:madeBySensor, sosa:usedProcedure — beside the state graph that holds the same node's key and bands, holding for the same period. Written by the sensing layer's `revise` and read by whatever needs the number; the mind reads the bands." .

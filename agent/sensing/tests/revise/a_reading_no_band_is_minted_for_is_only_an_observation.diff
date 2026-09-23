@@ -1,0 +1,32 @@
+--- case
++++ expected
+@@ -45,4 +45,29 @@
+   :ontology a orexis:PublicGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  result:zz_warmth a orexis:BeliefGraph .
++  result:zz_warmth a sensing:ResultGraph .
++  result:zz_warmth dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  result:zz_warmth orexis:arrivedBy orexis:Received .
++  result:zz_warmth orexis:beliefsOf :keeper .
++  sensed:zz_warmth a orexis:BeliefGraph .
++  sensed:zz_warmth a orexis:Graph .
++  sensed:zz_warmth a orexis:StateGraph .
++  sensed:zz_warmth dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  sensed:zz_warmth orexis:arrivedBy orexis:Received .
++  sensed:zz_warmth orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH result:zz_warmth {
++  orexis:obs_zz_warmth prov:wasGeneratedBy :keeper .
++  orexis:obs_zz_warmth sosa:hasSimpleResult 22.0 .
++  orexis:obs_zz_warmth sosa:madeBySensor :probe .
++  orexis:obs_zz_warmth sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++}
++
++GRAPH sensed:zz_warmth {
++  orexis:obs_zz_warmth a sosa:Observation .
++  orexis:obs_zz_warmth sosa:hasFeatureOfInterest :zz .
++  orexis:obs_zz_warmth sosa:observedProperty :warmth .
++}
