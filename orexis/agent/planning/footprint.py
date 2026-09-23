@@ -1,4 +1,4 @@
-"""What each action and each derivation TOUCHES, read off its own texts.
+"""The FOOTPRINT of a text — what it reads and what it writes — read off the text itself.
 
 Two sets per action, both derived and neither declared (#488):
 
@@ -61,7 +61,7 @@ from orexis.agent import clock
 from orexis.agent.ontology import PUBLIC
 from orexis.agent.store import _TOKEN, PREFIXES, graphs_of, rows
 
-log = logging.getLogger("touches")
+log = logging.getLogger("footprint")
 
 SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 ANYTHING = None          # the set that contains every predicate: unreadable, so unfiltered
@@ -253,7 +253,7 @@ def _values_in(node) -> dict:
     return found
 
 
-# --- what each action and each derivation touches -----------------------------------------------
+# --- the footprint of each action and each derivation -----------------------------------------------
 
 _ACTIONS_Q = """
 SELECT ?action ?available ?construct ?retracts WHERE {

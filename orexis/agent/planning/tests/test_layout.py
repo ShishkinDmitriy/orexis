@@ -40,14 +40,14 @@ def test_the_namespace_portions_stay_unclaimed():
 
 #  A MODULE NAMED FOR A THING, which may export several reads of it. Every other module in
 #  the package is named for an ACT and exports that act alone.
-NOUNS = {"touches", "ontology", "planner"}
+NOUNS = {"footprint", "ontology", "planner"}
 
 
 def test_a_module_named_for_an_act_exports_that_act_and_nothing_else():
     """ONE FILE, ONE PUBLIC FUNCTION, NAMED FOR IT — and the name is the file's. A reader who
     wants `expand` opens `expand.py` and finds it first; what else the file holds is private,
     and a second public function is a second act wanting a file of its own. The allowance
-    is a module named for a THING — `touches` — which answers several
+    is a module named for a THING — `footprint` — which answers several
     questions about it, and `planner`, which holds the class that composes the acts.
 
     Constants and classes are not held: a module may export the term it writes by and the
@@ -105,7 +105,7 @@ def test_outside_the_package_only_the_planner_is_imported():
 
 
 #  THE READS: modules that write nothing, which any act may ask.
-READS = {"ontology", "world_at", "find_wants", "find_scopes", "unweighed", "touches"}
+READS = {"ontology", "world_at", "find_wants", "find_scopes", "unweighed", "footprint"}
 
 
 def test_an_act_calls_no_other_act_and_the_planner_sequences_them():

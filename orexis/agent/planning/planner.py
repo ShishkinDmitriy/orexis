@@ -73,7 +73,7 @@ from orexis.agent.execution.plans import pursued
 from orexis.agent.ontology import DESIRE, PUBLIC, RECORD, WANT
 from orexis.agent.store import Memo, Raw, bind, bindings, catalogue_of, graphs_of, query, rdflib_view, remember, rows, update
 
-from . import touches
+from . import footprint
 from .admit import admit
 from .derive_wants import derive_wants
 from .extract_plan import extract_plan
@@ -359,8 +359,8 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
     first = (sorted(set(scopes.values())) or [UNSCOPED])[0]
     mine = []
     for want in find_wants(store, at, holder=holder):
-        reads = touches.reads_of_shape(shapes, rdflib.URIRef(want))
-        if reads is touches.ANYTHING:
+        reads = footprint.reads_of_shape(shapes, rdflib.URIRef(want))
+        if reads is footprint.ANYTHING:
             #  A WANT WHOSE SHAPE THE WALKER CANNOT READ joins everything, which is the
             #  safe direction — it is searched once, in the first scope, rather than
             #  separated from a world that could repair it.

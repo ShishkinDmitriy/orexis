@@ -64,6 +64,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [act](/domain/act.md) - The record that a step was taken: which step, when, whether anyone took it. History, and only history.
 * [history](/domain/history.md) - The chain of presents left behind, each an act and the diff that happened, kept as diffs, bounded as a ring.
 
+* [footprint](/domain/footprint.md) - What one text reads and what it writes, as predicates, taken from the text; unreadable is anything, and only a VALUES block bounds a variable predicate.
 * [relevance](/domain/relevance.md) - Which actions could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every action.
 * [scope](/domain/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.
 

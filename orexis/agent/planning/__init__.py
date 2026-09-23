@@ -8,7 +8,7 @@ replaces rather than extends. One pipeline, and the package is what it is made o
    `withdraw` is its other half, taking away what the same rows no longer imply, one want at
    a time by `forget_want`; both read the ground standing at each instant, `world_at`;
 2. **the scopes** — which predicates move together, read off what each action and each
-   derivation touches (`touches.py`). A want is minted per scope of witnesses and searched
+   derivation reads and writes — its footprint (`footprint.py`). A want is minted per scope of witnesses and searched
    in a world of its own (`scope_actions`, `scopes.py`);
 3. **the imaginarium** — a store per scope, filled from the beliefs by `prepare_ground` and
    given its timeline by `lay_ground`, one ground per period a prediction makes;

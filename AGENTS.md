@@ -1167,7 +1167,7 @@ it is a record wearing a bullet.
   to, and anything only where nothing bounds it** — the range of a filling is the
   precondition that enumerates it and a range declared beside a text is a promise nothing
   holds the text to, so the one range the scopes honour is SPARQL's own, in the text the
-  engine runs; `touches` read every variable predicate as anything before, which under a
+  engine runs; `footprint` read every variable predicate as anything before, which under a
   derived fork would have copied the whole store per world for a two-valued predicate.
 - **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes
   first** — `?x a planning:Weighing ; … ; planning:weighs ?about` scanned every weighing per

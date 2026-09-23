@@ -46,7 +46,7 @@ The second names the limit. A scope here is a set of PREDICATES, so it separates
 vocabulary and never two instances of one. Two vans are two scopes only over VARIABLES, a
 subject and a predicate together, which is what a mechanism that split a plan would need.
 
-An action whose reads or writes cannot be read from its text joins everything. An action that
+An action whose [footprint](/domain/footprint.md) cannot be read from its text joins everything. An action that
 might touch any predicate cannot be proven not to, and a scope wrongly split would let two
 plans contradict each other.
 

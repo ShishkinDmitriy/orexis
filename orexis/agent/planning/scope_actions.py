@@ -6,7 +6,7 @@ together, and which scope each predicate and each action is in; `derive_wants` c
 desire's results by it and reads no action.
 
 The partition is computed from what the shipped rules actually do — never read off namespaces
-— over the edges `touches` reads off an action, which a narrowing closure would read too, and
+— over the edges `footprint` reads off an action, which a narrowing closure would read too, and
 the edges each loaded derivation makes, which genesis put in the store beside the actions
 (`describe_derivations`). It is a function of the actions and the rules loaded, neither of
 which changes while the agent runs, so this runs at boot, once, and whenever they are rebuilt;
@@ -23,9 +23,9 @@ from orexis.agent import clock
 from orexis.agent.ontology import OREXIS
 from orexis.agent.store import NAMESPACES, graphs_of, rows
 
-from . import touches
+from . import footprint
 from .ontology import DERIVATION_GRAPH
-from .touches import ANYTHING
+from .footprint import ANYTHING
 from .find_scopes import STANDING_Q
 
 log = logging.getLogger("scope_actions")
@@ -46,8 +46,8 @@ def scope_actions(store: ox.Store) -> None:
     the same one from the same rows, so there is nobody to name it after (`scopes.py`).
     """
     now = clock.now()
-    actions = touches.actions_of(store, now)
-    edges = touches.stored_edges(store, graphs_of(store, DERIVATION_GRAPH))
+    actions = footprint.actions_of(store, now)
+    edges = footprint.stored_edges(store, graphs_of(store, DERIVATION_GRAPH))
     parts = _partition(actions, edges)
     written = []
     for n, part in enumerate(parts, 1):
@@ -138,7 +138,7 @@ def _partition(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozenset,
     soil, and two vans in one courier vocabulary look like one until you notice nothing they do
     touches the same van.
 
-    Computed from `touches`' own tables, so it says what the shipped rules actually do rather
+    Computed from `footprint`'s own tables, so it says what the shipped rules actually do rather
     than what anyone declared. An action whose reads or writes are unreadable joins everything:
     a lever that might touch any predicate cannot be proven not to.
 
