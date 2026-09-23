@@ -18,10 +18,10 @@ timestamp: 2026-08-25T20:00:00Z
 # What was true before
 
 [the-kernel-names-no-package-word](/decisions/the-kernel-names-no-package-word.md) reached zero
-everywhere but the bus. `agent/world.py` asked the world for `mqtt:MessageBus`; `agent/runtime.py`
+everywhere but the bus. `agent_old/world.py` asked the world for `mqtt:MessageBus`; `agent_old/runtime.py`
 built a paho client, read the MQTT credential off the environment, subscribed to what every
 module's `subscriptions()` returned and offered every message to every module's `handle()`;
-`agent/watchdog.py` reached for paho's private thread; `agent/metrics.py` reported
+`agent/watchdog.py` reached for paho's private thread; `agent_old/metrics.py` reported
 `mqtt_connected`; and `Module` carried `subscriptions`, `handle` and `publish` as kernel
 hooks. The transport package held only a DRIVER — how sensing reaches one device.
 

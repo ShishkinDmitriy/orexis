@@ -22,9 +22,9 @@ from __future__ import annotations
 
 import json
 
-from agent import config
+from agent_old import config
 from orexis_agent_progression.upkeep import tree_bytes
-from agent.module import Module, contributes
+from agent_old.module import Module, contributes
 from orexis_agent_progression.timer import Timer
 from orexis_agent_progression.ontology import HANDLE, REPORTS, SEND, SERIES, SUBSCRIPTIONS
 from orexis_agent_progression.store import bindings

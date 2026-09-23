@@ -30,9 +30,9 @@ import argparse
 import json
 import logging
 
-from agent import ratified
-from agent.config import REPO_ROOT
-from agent.genesis import worlds
+from agent_old import ratified
+from agent_old.config import REPO_ROOT
+from agent_old.genesis import worlds
 from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
 from .namespaces import SENSING, SOSA
 

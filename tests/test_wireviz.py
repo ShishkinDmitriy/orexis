@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from agent.genesis import world_dir
+from agent_old.genesis import world_dir
 from onboarding.wireviz import draft, render
 
 
@@ -140,7 +140,7 @@ def test_only_what_belongs_to_the_board_MODEL_is_left_over(drafted):
 def test_an_import_refuses_to_overwrite_a_world(tmp_path, monkeypatch):
     import shutil
 
-    from agent import genesis
+    from agent_old import genesis
     from onboarding.wireviz import import_harness
 
     dst = tmp_path / "already"

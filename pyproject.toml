@@ -37,6 +37,9 @@ dependencies = [
     "orexis-agent-reactive",
     "orexis-agent-progression",
     "orexis-agent-deliberation",
+    #  The engine `agent/` — Agent 2.0, in this distribution since it left `orexis/` — reads
+    #  and writes directly; the 1.0 container reaches it through progression.
+    "pyoxigraph",
     #  assembly/ and agent/ — rdflib is DIRECT (nine imports across the three trees) and used
     #  to arrive only as a transitive of pyshacl, which is free to drop or re-pin it.
     "rdflib>=7",
@@ -59,7 +62,7 @@ dev = ["pytest>=8", "import-linter>=2", "wireviz>=0.4", "pytest-xdist>=3", "pysh
 
 [project.scripts]
 # The agent. One process, one agent, told only its own id.
-orexis-agent = "agent.runtime:main"
+orexis-agent = "agent_old.runtime:main"
 
 # ONBOARDING — everything between a ratified world and a society that can be started. The
 # umbrella runs the four below; they stay separately callable because rotating one service's
@@ -93,7 +96,7 @@ build-backend = "setuptools.build_meta"
 # portions. That is what lets a twenty-second package be installed from another repository and
 # land in the same namespace as these twenty-one.
 where = ["."]
-include = ["assembly*", "agent*", "onboarding*", "orexis*"]
+include = ["assembly*", "agent*", "agent_old*", "onboarding*"]
 
 # ---------------------------------------------------------------------------------------------
 # THE WORKSPACE. Twenty-one packages and this root are one resolution, so a checkout is set up
@@ -141,7 +144,7 @@ orexis-capability-sensing = { workspace = true } # codec-json, scaling-identity,
 #  broken — it is not this tree's, and a bare `pytest` that ran both would be red for reasons
 #  none of this work is about. A path comes back by being added here, one at a time, and the
 #  list widens to `["tests", "packages", "orexis"]` before the branch merges.
-testpaths = ["orexis"]
+testpaths = ["agent"]
 
 # A PACKAGE DIRECTORY IS ITS DISTRIBUTION NAME, and a distribution name has hyphens in it.
 # pytest's default `prepend` import mode derives a module name from the path — it walks up from
@@ -207,7 +210,7 @@ pythonpath = ["tests"]
 # listing twenty-one modules here would have been a registry, and a registry goes stale the
 # first time somebody adds a package and forgets this file. The two contracts left are between
 # the three trees of the root distribution, which are fixed and few.
-root_packages = ["assembly", "agent", "onboarding"]
+root_packages = ["assembly", "agent_old", "onboarding"]
 
 [[tool.importlinter.contracts]]
 # ASSEMBLY IS UNDER EVERYTHING. It finds packages and owns the extension mechanism; the kernel
@@ -217,10 +220,10 @@ root_packages = ["assembly", "agent", "onboarding"]
 name = "What assembles a build does not import what it assembles"
 type = "forbidden"
 source_modules = ["assembly"]
-forbidden_modules = ["agent", "onboarding"]
+forbidden_modules = ["agent_old", "onboarding"]
 
 [[tool.importlinter.contracts]]
 name = "The agent never reaches for the operator's tools"
 type = "forbidden"
-source_modules = ["agent"]
+source_modules = ["agent_old"]
 forbidden_modules = ["onboarding"]

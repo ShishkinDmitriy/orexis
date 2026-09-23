@@ -150,7 +150,7 @@ def test_a_possible_world_is_computed_and_nothing_is_written(monkeypatch):
     st = genesis_store({("zz", MOISTURE): DRY}, world="loner")
     agent = build_agent("gardener", st, monkeypatch)
     from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
-    from agent.validate import graph_from
+    from agent_old.validate import graph_from
 
     before = graph_from(st, *st.graphs_of(PUBLIC), picks_graph("gardener"), STATE_GRAPH)
     world = effects.world_after(

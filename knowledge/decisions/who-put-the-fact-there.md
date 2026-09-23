@@ -84,7 +84,7 @@ The cost was not aesthetic. The same five were written out in three places — `
 `provenance.py`, and by hand in every rule — so **a capability author maintained a copy of a
 registry**, correctly, per rule, or the derivation silently returned nothing.
 
-So the instances moved into the kernel's ontology (`agent/ontology.ttl`), typed by class, and code asks:
+So the instances moved into the kernel's ontology (`agent_old/ontology.ttl`), typed by class, and code asks:
 
 - `orexis:PublicGraph` is the term. `store.graphs_of(PUBLIC)` returns whatever is an instance of it.
 - A rule writes `$given` and `$derived`; the loader substitutes. No `rules.ru` names a graph.
@@ -137,7 +137,7 @@ person. PROV-O models exactly this, and naming a role is what it expects a domai
     [ a prov:Association ; prov:agent <…/user/…> ; prov:hadRole orexis:Sovereign ] .
 ```
 
-`orexis:Sovereign a prov:Role` is the one term added, in `agent/ontology.ttl` — the kernel,
+`orexis:Sovereign a prov:Role` is the one term added, in `agent_old/ontology.ttl` — the kernel,
 because a world's ratification is true of every world and `orexis:World` already lives there. **There
 is no `orexis:Sovereign` agent and there must not be**; a test refuses one, because the moment the
 role is also an identity, "who is the sovereign" becomes permanent and a second user cannot
@@ -237,7 +237,7 @@ packages happen to load in, which nothing states and nothing guards.
 
 # Two engines, one derivation
 
-`agent/ratified.py` used to be a second implementation: rdflib parsed the same files and re-ran
+`agent_old/ratified.py` used to be a second implementation: rdflib parsed the same files and re-ran
 the same rules, so the operator's tools derived a world separately from the way an agent does. It
 now builds a `Store`, runs `refresh_public`, and pours the result into an rdflib Dataset —
 **rdflib only ever reads the answer.**
@@ -287,7 +287,7 @@ treatment if that ever changes.
 - **Re-running the rules without clearing leaves stale conclusions.** `refresh_public` clears the
   computed graphs first, so production is fine — but anything re-deriving by hand must too. One
   test was silently passing on a stale `sensing:Subscribing` until this landed.
-- **Decimal literals reach the operator's tools canonicalised.** `agent/ratified.py` now hands
+- **Decimal literals reach the operator's tools canonicalised.** `agent_old/ratified.py` now hands
   rdflib what the store computed, so a value written `2.0` in a world file arrives as `2` —
   oxigraph's fixed-point decimal canonicalises it. The value is identical and every consumer
   parses a number (`SIM_LITRES_PER_FRACTION` is read with `_float`), but a generated file's *text*

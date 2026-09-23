@@ -8,12 +8,12 @@ to, and cannot drift from it.
 import pytest
 import rdflib
 
-from agent import genesis
+from agent_old import genesis
 
 from assembly import loader
 from orexis_agent_progression.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 from orexis_agent_deliberation.steps import find_steps
-from agent.world import WorldError, load_world
+from agent_old.world import WorldError, load_world
 from orexis_capability_actuation import ACTUATION
 from orexis_capability_market import BIDDING, HOSTING, PAY_AS_BID
 from orexis_capability_sensing import LISTENING, SUBSCRIBING

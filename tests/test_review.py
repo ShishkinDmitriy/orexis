@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from agent import genesis
+from agent_old import genesis
 from orexis_capability_review.graphs import evidence_graph, revisions_graph
 from orexis_agent_progression.ontology import STATE_GRAPH, WORLD_GRAPH, picks_graph, term
 from onboarding.namespaces import SENSING
@@ -113,7 +113,7 @@ def test_a_world_that_widens_a_mandate_will_not_validate():
     allows is now refused before anything starts, which is where a governance error belongs.
     """
     from orexis_agent_progression.store import Store
-    from agent.validate import conforms, graph_from
+    from agent_old.validate import conforms, graph_from
 
     path = genesis.world_dir("simulation")
 
@@ -261,7 +261,7 @@ def test_a_value_outside_the_range_is_refused_not_clamped(fern):
 def test_a_revision_the_shapes_refuse_is_put_back(fern):
     """Legitimacy is the boot check re-run, so a belief the agent could not have started with is
     one it cannot reach by changing its mind either."""
-    from agent.validate import validate_agent
+    from agent_old.validate import validate_agent
 
     assert not fern.reviewing().settle(Range(SLOW, 0.0, 5.0), 1.0)  # under the constitutional floor
     assert fern.reviewing().current(SLOW) == AUTHORED

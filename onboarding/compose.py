@@ -34,12 +34,12 @@ import json
 import logging
 from pathlib import Path
 
-from agent import ratified
-from agent.config import REPO_ROOT
+from agent_old import ratified
+from agent_old.config import REPO_ROOT
 from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
 from .namespaces import ACTUATION, MARKET, MQTT, SENSING, SIM, SOSA
-from agent import genesis
-from agent.genesis import world_dir, worlds
+from agent_old import genesis
+from agent_old.genesis import world_dir, worlds
 
 log = logging.getLogger("compose")
 
@@ -121,7 +121,7 @@ def _service(agent_id: str, caps: set[str], world: str, pace: str | None = None,
     # Its OWN identity (#144 signing, #145 sealing) — mounted only where keygen minted it, so
     # a world onboarded before keygen learned agents composes exactly as it always did. File
     # by file like everything here: the directory would hand it every other agent's keys.
-    from agent.genesis import secrets_dir, world_dir
+    from agent_old.genesis import secrets_dir, world_dir
 
     own = secrets_dir(world_dir(world))
     for suffix in (".sign.key", ".seal.key"):
@@ -186,7 +186,7 @@ def _service(agent_id: str, caps: set[str], world: str, pace: str | None = None,
       # resolves when a container is CREATED, so a stale one keeps running until the day it
       # cannot.
       - ../../assembly:/app/assembly:ro
-      - ../../agent:/app/agent:ro
+      - ../../agent_old:/app/agent_old:ro
       - ../../packages:/app/packages:ro
 """
 
@@ -544,7 +544,7 @@ def _epoch(world: str) -> str:
     import re
     from datetime import datetime, timezone
 
-    from agent.genesis import world_dir
+    from agent_old.genesis import world_dir
 
     existing = world_dir(world) / "compose.yaml"
     if existing.exists():

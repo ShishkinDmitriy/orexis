@@ -113,7 +113,7 @@ world has one.
 
 **`lint-imports` gained the contract this series was for**: *the kernel loads packages and never
 reaches into one*. It could not be stated before, and the violations were not theoretical —
-`agent/desire.py` and `agent/genesis.py` imported `packages.capability.desire.graphs`, a module
+`agent/desire.py` and `agent_old/genesis.py` imported `packages.capability.desire.graphs`, a module
 whose entire content was re-exporting `agent.ontology.obligations_graph`. The kernel imported a
 package to get its own function handed back. Its docstring even explained the layering problem it
 was recreating.
@@ -178,10 +178,10 @@ this repo already has three of and could use a fourth.
 Both widened here, and both found something the moment they could see:
 
 - `test_only_the_keeper_writes_the_intentions_graph` scanned `packages/` while
-  `agent/intentions.py` and `agent/genesis.py` had named the ledger graph the whole time. The
+  `agent/intentions.py` and `agent_old/genesis.py` had named the ledger graph the whole time. The
   guard could not see the second pen because it looked only at the tree the pen was not in.
 - `onboarding/linker.py` had never read `agent/*.py`. Widening it also produced six false
-  positives from `agent/vocabulary.py` — the migration map, whose every left-hand side is by
+  positives from `agent_old/vocabulary.py` — the migration map, whose every left-hand side is by
   definition an IRI nothing declares — which would have broken `tests/test_linker.py`. Exempt by
   name with a reason, never by a pattern something could meet by accident.
 
@@ -226,7 +226,7 @@ member is argued rather than imagined.
   `superseded-in-part` above refers to — the ruling of this record stands whole; the acceptance
   of the monolith does not.
 - **The kernel's shapes name `mqtt:` and `actuation:`** — two prefixes declared in
-  `agent/shapes.ttl` before any of this. The layering inversion this record refuses for the mind
+  `agent_old/shapes.ttl` before any of this. The layering inversion this record refuses for the mind
   already exists in miniature there, and was left alone rather than widened.
 - **Which deliberator, as a pick, is unbuilt.** `orexis:deliberatesBy` is not declared, because a
   reserved term nobody has an argument about is speculation. The argument exists

@@ -96,7 +96,7 @@ def test_a_duty_carries_its_timestamps_and_what_the_window_decides(monkeypatch):
     the window decides is the STATE and whether the debt may be acted on, asked at the two
     ends, because the ends are what the choice was made about.
     """
-    from agent import genesis
+    from agent_old import genesis
     from orexis_agent_progression.ontology import obligations_graph
     stored = "http://example.org/orexis/water#StoredLitres"
     st = genesis_store({("barrel1", stored): 3.0})
@@ -233,7 +233,7 @@ def test_an_obligation_row_typed_before_the_class_retired_still_serves(monkeypat
     AND ENDOWED what the derivation needs (one-function-mints-every-want): a debt written before the
     ledger predicted its lapse predicts nothing, and the derivation derives nothing from it — so
     boot writes the lapse the ledger would write today, once, and asks the derivation."""
-    from agent import genesis
+    from agent_old import genesis
     from orexis_agent_progression.ontology import obligations_graph
     stored = "http://example.org/orexis/water#StoredLitres"
     st = genesis_store({("barrel1", stored): 3.0})

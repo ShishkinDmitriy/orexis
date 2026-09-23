@@ -63,15 +63,15 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from assembly import loader
-from agent.module import Module, contributes
+from agent_old.module import Module, contributes
 from orexis_agent_progression.ontology import BELIEF_REVISED
 from orexis_agent_deliberation.desires import Desires
-from agent.metrics import Metrics
+from agent_old.metrics import Metrics
 
 READING_RECORDED = "http://example.org/orexis/sensing#readingRecorded"   # sensing's hook, spelled
 from orexis_agent_progression.ontology import picks_graph
 from orexis_agent_progression.store import bindings, decimal
-from agent.validate import BeliefsInvalid, validate_agent
+from agent_old.validate import BeliefsInvalid, validate_agent
 
 from .beliefs import REVIEW_PICKS
 from .graphs import REVIEW, evidence_graph, revisions_graph

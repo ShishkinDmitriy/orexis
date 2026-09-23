@@ -24,7 +24,7 @@ literature's: the state variables an operator may inspect and may change.
 
 A footprint could have been a triple somebody writes next to an action. It is not, because the
 construct settles what is written and a second statement of the same thing would drift from
-the first with nothing to say so. `orexis/agent/planning/footprint.py` parses the texts with
+the first with nothing to say so. `agent/planning/footprint.py` parses the texts with
 rdflib and answers per call. What it answers feeds two things: the [scopes](/domain/scope.md),
 which join predicates that one footprint holds on both halves, and the
 [relevance](/domain/relevance.md) closure of the predecessor, which walked footprints backward

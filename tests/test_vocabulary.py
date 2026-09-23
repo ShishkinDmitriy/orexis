@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from agent import genesis, vocabulary
+from agent_old import genesis, vocabulary
 from orexis_agent_progression.ontology import OREXIS, picks_graph, PROGRESSION
 from orexis_agent_progression.store import Store, bindings
 
@@ -270,7 +270,7 @@ def test_a_graph_nothing_declares_any_more_is_dropped(tmp_path, monkeypatch):
     sits in the volume for ever holding facts in a spelling the code no longer speaks. The
     old `graph/desire` was exactly that after the bounds graph was named, and the first
     migration refused to guess what its `desire:desires` triples meant."""
-    from agent import genesis
+    from agent_old import genesis
 
     st = genesis_store(world="simulation")
     ghost = "http://example.org/orexis/graph/desire"

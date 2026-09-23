@@ -124,7 +124,7 @@ def test_a_world_can_state_a_root_desire_and_an_amendment_can_retire_it(monkeypa
     """
     import shutil
 
-    from agent import genesis
+    from agent_old import genesis
     from orexis_agent_progression.store import Store
 
     src = genesis.world_dir("loner")
@@ -170,7 +170,7 @@ def test_a_commitment_survives_a_restart_in_its_own_room(monkeypatch, tmp_path):
     """
     import pyoxigraph as ox
 
-    from agent import genesis
+    from agent_old import genesis
     from orexis_agent_deliberation.beliefs import Beliefs
     from orexis_agent_progression.intentions import Intentions
     from orexis_agent_progression.store import Store

@@ -8,7 +8,7 @@ and deduces nothing.
 """
 from __future__ import annotations
 
-from agent import genesis
+from agent_old import genesis
 from orexis_agent_deliberation import pursuit
 from orexis_agent_progression.ontology import picks_graph, desires_graph
 from orexis_agent_progression.store import bindings

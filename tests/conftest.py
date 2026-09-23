@@ -17,10 +17,10 @@ from pathlib import Path
 
 import pytest
 
-from agent import genesis
+from agent_old import genesis
 
 from assembly import loader
-from agent.genesis import agent_id_of
+from agent_old.genesis import agent_id_of
 from orexis_agent_progression import clock   # the agent's timeline, which a test helper speaks in
 from orexis_agent_progression.ontology import STATE_GRAPH
 from orexis_capability_sensing.sensed_writer import observation_uri
@@ -44,7 +44,7 @@ def shipped_worlds() -> list[str]:
     A directory with no world files is not a world, which is what keeps a stray `world/society/`
     holding nothing but an orphaned `secrets/` out of the roster without anybody listing it.
     """
-    from agent import genesis
+    from agent_old import genesis
 
     return sorted(d.name for d in WORLDS_ROOT.iterdir() if genesis.world_files(d))
 
@@ -201,7 +201,7 @@ def build_agent(agent_id: str, st: Store | None = None, monkeypatch=None, *,
     from contextlib import nullcontext
     from unittest import mock
 
-    from agent import runtime
+    from agent_old import runtime
 
     class NoInflux:
         def __init__(self, *a, **k):
@@ -407,7 +407,7 @@ def load_wired(query, agent_id: str):
     composite the kernel deliberately no longer has; tests are the one place it is wanted."""
     from types import SimpleNamespace
 
-    from agent.world import load_self
+    from agent_old.world import load_self
     from orexis_capability_actuation.wiring import actuator_for, actuators_of
     from orexis_capability_market.wiring import bidding_markets_of, hosted_markets_of
     from orexis_capability_sensing.wiring import sensors_of

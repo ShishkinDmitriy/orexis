@@ -128,5 +128,5 @@ when along a plan" is on its way out for the same reason `orexis:Always` was.
   said so. The planner is usually standing on a want and sometimes on a root — where a root reads
   unmet and nothing can be minted for it — so the map holds both. Whether the planner should ever
   be handed a root is a separate question, and #675 is where it would be settled.
-- **`agent/inference.py` materialises one axiom fewer.** Nothing depended on that one; the
+- **`agent_old/inference.py` materialises one axiom fewer.** Nothing depended on that one; the
   closure is generic and the guard that refuses a seventh hand-rolled subclass walk is untouched.

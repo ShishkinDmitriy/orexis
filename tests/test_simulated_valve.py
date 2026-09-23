@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from agent import signing
+from agent_old import signing
 
 VALVE_PY = Path(__file__).resolve().parents[1] / "firmware" / "simulated-valve" / "valve.py"
 

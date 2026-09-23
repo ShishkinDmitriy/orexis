@@ -21,7 +21,7 @@ WORKDIR /app
 # the THIRD-PARTY set — pyoxigraph, pyshacl, rdflib, cryptography and the rest — and it changes
 # only when the root's dependency list does.
 COPY pyproject.toml pyproject.toml
-COPY agent/__init__.py agent/__init__.py
+COPY agent_old/__init__.py agent_old/__init__.py
 COPY assembly/__init__.py assembly/__init__.py
 # The kernel's three LAYERS are packages the root depends on — the container's own declared
 # dependencies are what load them until #455 (a-layer-is-a-package-and-need-loads-it) — and
@@ -55,7 +55,7 @@ RUN pip install "setuptools>=68" && pip install -e . \
 # world-agnostic — the same image is every agent of every world, and which one it is comes from
 # OREXIS_AGENT_ID and the world mounted beside it.
 COPY assembly/ assembly/
-COPY agent/    agent/
+COPY agent_old/    agent_old/
 COPY packages/ packages/
 
 # EVERY PACKAGE IS A PROJECT, so every package is installed as one. Twenty-two package

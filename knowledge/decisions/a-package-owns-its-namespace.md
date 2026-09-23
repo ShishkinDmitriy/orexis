@@ -66,7 +66,7 @@ while the kernel derived the region want.) `orexis:` is read the same way, off t
 it, and hard-coding it would have made it an exception for no reason but habit.
 
 **AMENDED in one word.** This said `orexis:` arrives "like any other package's, because the base
-vocabulary is a package". It is not one any more — it is the kernel, `agent/ontology.ttl`, not
+vocabulary is a package". It is not one any more — it is the kernel, `agent_old/ontology.ttl`, not
 discovered but prepended. The mechanism is untouched and is the part that mattered: the prefix is
 read from the ontology rather than registered anywhere, so nothing here changed but the file's
 address.
@@ -152,7 +152,7 @@ than assumed.
 - **A world author sees which package owns a term.** `world.ttl` reads `ag:hosts`… no longer: it
   reads `market:hosts` beside `orexis:localId`, and the prefix says where to look. Noisier to write and
   self-documenting to read.
-- **`agent/world.py` still names market terms.** It queries `market:bidsIn` and `market:marketFor`
+- **`agent_old/world.py` still names market terms.** It queries `market:bidsIn` and `market:marketFor`
   to load an agent's own view of itself. That the kernel knows what a market is predates this
   change and is untouched by it; the namespace makes it visible rather than introducing it.
 

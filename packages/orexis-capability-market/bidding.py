@@ -34,9 +34,9 @@ import uuid
 
 from datetime import datetime, timedelta, timezone
 
-from agent import signing
+from agent_old import signing
 from .trade import EPS, Bid
-from agent.module import Module, contributes
+from agent_old.module import Module, contributes
 from orexis_agent_progression.timer import Timer
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
 

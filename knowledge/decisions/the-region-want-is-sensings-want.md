@@ -138,7 +138,7 @@ it; it no longer has to say it.
    sensing says so; `SOSA` left `agent/ontology.py` for `onboarding/namespaces.py`; the kernel's
    Turtle declares no package prefix it does not use; and the ratchet reads the prefixed form,
    every namespace, and resolves each term it finds (#344). What the widening found was the
-   bus — `mqtt:` in `agent/world.py` and in the simulated-device shape — listed as debt with
+   bus — `mqtt:` in `agent_old/world.py` and in the simulated-device shape — listed as debt with
    what removes it.
 4. No property in the kernel — wants by node, intentions by (act, want), rows carrying the
    want and its about, the actors' door by want, the reading choir out of `Module`, the ledger

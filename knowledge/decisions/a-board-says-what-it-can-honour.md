@@ -61,7 +61,7 @@ unit:SEC ]`.
 
 The rule [settlement-speaks-rea](settlement-speaks-rea.md) set for ValueFlows and
 [a-board-is-a-platform](a-board-is-a-platform.md) for SOSA: reference the IRIs, load none of the
-ontology, add nothing to `agent/inference.py`'s hand-materialised closure.
+ontology, add nothing to `agent_old/inference.py`'s hand-materialised closure.
 
 **It does not come free here, and the reason generalises.** `ssn-system:hasSystemCapability` hangs
 off an `ssn:System`, and what makes that reach a sensor is `sosa:Sensor rdfs:subClassOf
@@ -79,7 +79,7 @@ So:
 `mc:carries rdfs:subPropertyOf sosa:hosts` was the same move from the other direction, and this is
 the second instance — enough to call it the shape rather than the exception.
 
-It is restated in `packages/orexis-capability-sensing/ontology.ttl`, not in the kernel's `agent/ontology.ttl`, though the
+It is restated in `packages/orexis-capability-sensing/ontology.ttl`, not in the kernel's `agent_old/ontology.ttl`, though the
 subject is a class this package does not own. The axiom is load-bearing only because sensors have
 capabilities, and sensing is where a sensor is; the kernel would be asserting it on behalf of a
 package that may not be installed.
@@ -110,7 +110,7 @@ given the wiring, so the society restates it on each sensor that part hosts.
 **How the class states it was wrong here, and is fixed.** This record wrote it as
 `dht11:Dht11 ssn-system:hasSystemCapability […]` — punning, which says the class has a capability
 and entails nothing about any DHT11 in the world. It is an `owl:hasValue` restriction now, and
-`agent/inference.py` materialises it onto the device the wiring declares. The society's copy is
+`agent_old/inference.py` materialises it onto the device the wiring declares. The society's copy is
 therefore a projection of something entailed rather than a second hand-written assertion, and the
 repetition survives for a reason this record only half stated: not "an agent is never given the
 wiring" as a matter of file layout, but **an agent may know a part's properties and not its

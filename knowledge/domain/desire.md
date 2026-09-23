@@ -229,7 +229,7 @@ share is a kernel word.
 # What the rest of the society asks it
 
 Four questions, and none of the askers imports this package — they arrive through the hooks
-every module has (`agent/module.py`) or through `agent.provider(DESIRE)`.
+every module has (`agent_old/module.py`) or through `agent.provider(DESIRE)`.
 
 | question | who asks | what it does with it |
 |---|---|---|

@@ -30,7 +30,7 @@ around them through the same path `orexis-validate` uses.
 
 **Through the real path, not over a bare graph.** Validating the fixture as a standalone graph
 reports two violations about scaling curves that no deployment ever sees, because neither the
-derivation nor `agent/inference.py`'s closure has run. A measurement that reports faults a
+derivation nor `agent_old/inference.py`'s closure has run. A measurement that reports faults a
 deployment cannot have is a measurement of the harness.
 
 ## What the measurement said
@@ -66,7 +66,7 @@ than the example it came from. All three violations that example raised about it
 this, and none was the QUDT version they looked like.
 
 Bridged one direction only — legacy entails canonical — so a vendor's file satisfies our shapes
-and nothing here emits the legacy form. `agent/inference.py` rule 4 carries it, which is the rule
+and nothing here emits the legacy form. `agent_old/inference.py` rule 4 carries it, which is the rule
 written for exactly this and whose own comment recorded that it had nothing left to exercise.
 
 **QUDT 1.1.** Their unit is `qudt-1-1:Second`, a different namespace rather than an older

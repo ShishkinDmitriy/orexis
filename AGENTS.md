@@ -1114,7 +1114,7 @@ it is a record wearing a bullet.
   `expand(store, want, world)`; what one act needs from another it reads off the rows the
   other wrote, so a candidate and a witness are rows and not values in flight, and the price
   is measured per pass rather than argued.
-- **Public is public to the package, and public means tested** — outside `orexis/agent/planning/`
+- **Public is public to the package, and public means tested** — outside `agent/planning/`
   the one name the tree imports is `Planner`, and every module with a public function has a
   test named for it, an act over the store by a case directory; the layout test holds both,
   and ten modules had no test named for them when it was first written.
@@ -1259,6 +1259,13 @@ it is a record wearing a bullet.
    society, connection, delivery loop and watchdog in the transport's module, reached through
    the choir (`subscriptions`, `handle`, `send`) — and the kernel has no mailbox (see
    [the-kernel-has-no-mailbox](knowledge/decisions/the-kernel-has-no-mailbox.md)).
+
+   **TWO KERNEL TREES, FOR NOW.** `agent/` is Agent 2.0 — the store over the engine, the
+   execution ledger and the planning package — and is what `pytest` runs; `agent_old/` is the
+   1.0 container this section describes, still what `orexis-agent` and the image run, and
+   the loader's kernel (`assembly/loader.py` names it by path). Every `agent_old/<file>`
+   below is that container's; the two trees meet only through the packages' ontologies,
+   which both read.
 
    **`agent/` is the kernel that loads them, not their home.** Capability Python used to live
    under it, so the tree itself showed which of it a runtime loads — it does not show that now.
@@ -1522,7 +1529,7 @@ inference and the runtime ran none, so a world could validate against a relation
 would never observe — and six queries carried `rdfs:subClassOf*` by hand to compensate, for
 twenty-five declared axioms. The entailments are now materialised into the store at genesis, and
 validation runs with inference off against that same graph. **Ask what a thing IS; do not walk a
-subclass path.** If the closure does not cover your case, widen `agent/inference.py` rather than
+subclass path.** If the closure does not cover your case, widen `agent_old/inference.py` rather than
 working around it — `tests/test_inference.py` refuses a seventh hand-rolled walk, and separately
 fails if pyshacl ever entails something the closure does not. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
@@ -1995,7 +2002,7 @@ inference and the runtime ran none, so a world could validate against a relation
 would never observe — and six queries carried `rdfs:subClassOf*` by hand to compensate, for
 twenty-five declared axioms. The entailments are now materialised into the store at genesis, and
 validation runs with inference off against that same graph. **Ask what a thing IS; do not walk a
-subclass path.** If the closure does not cover your case, widen `agent/inference.py` rather than
+subclass path.** If the closure does not cover your case, widen `agent_old/inference.py` rather than
 working around it — `tests/test_inference.py` refuses a seventh hand-rolled walk, and separately
 fails if pyshacl ever entails something the closure does not. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).

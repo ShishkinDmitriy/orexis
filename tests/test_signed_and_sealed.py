@@ -15,7 +15,7 @@ import json
 
 import pytest
 
-from agent import signing
+from agent_old import signing
 from orexis_agent_progression.ontology import WORLD_GRAPH
 from onboarding.keygen import (create_agent_signing_keypair, create_keypair,
                                create_sealing_keypair)
@@ -151,7 +151,7 @@ def test_the_roster_attests_keys_against_each_agents_real_node(tmp_path, monkeyp
     keys land on its actual node, supplier included."""
     import shutil
 
-    from agent import genesis
+    from agent_old import genesis
     from onboarding.keygen import publish_roster, roster
 
     worlds = tmp_path / "worlds"

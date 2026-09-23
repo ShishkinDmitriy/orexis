@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from agent import genesis
+from agent_old import genesis
 from orexis_agent_deliberation import effects
 from orexis_agent_progression.ontology import ACTIONS_GRAPH, STATE_GRAPH, picks_graph
 from orexis_agent_progression.store import bindings, Raw

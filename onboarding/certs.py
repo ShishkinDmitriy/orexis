@@ -52,8 +52,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.x509.oid import NameOID
 
-from agent.config import REPO_ROOT
-from agent.genesis import world_dir
+from agent_old.config import REPO_ROOT
+from agent_old.genesis import world_dir
 
 log = logging.getLogger("certs")
 

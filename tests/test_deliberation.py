@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from agent.world import load_self
+from agent_old.world import load_self
 from orexis_agent_deliberation.steps import find_steps
 from orexis_capability_market.terms import ACQUIRING
 from orexis_capability_sensing.terms import OBSERVING

@@ -29,13 +29,13 @@ from dataclasses import asdict, dataclass
 
 import uuid
 
-from agent import signing
+from agent_old import signing
 from orexis_agent_deliberation import effects
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 from orexis_agent_progression.commitment import Commitment
-from agent.module import Module, contributes
+from agent_old.module import Module, contributes
 from orexis_agent_progression.timer import Timer
 from orexis_agent_progression.ontology import HANDLE, SUBSCRIPTIONS
 

@@ -57,7 +57,7 @@ first-class for a stated reason, in `packages/orexis-part-microcontroller/ontolo
 The role became a thing because there was a **pin** for it to be a role of. Before `mc:Pin`
 existed there was nothing to attach it to, and the fused form was what people wrote.
 
-**A user's role.** `prov:hadRole` is used in `agent/provenance.py`, and it hangs off a
+**A user's role.** `prov:hadRole` is used in `agent_old/provenance.py`, and it hangs off a
 `prov:Association` — a node standing for *this agent's involvement in this activity*. PROV-O has
 the qualified pattern precisely because a role is meaningless free-floating: you are not a
 ratifier, you are a ratifier **of** something.
@@ -103,7 +103,7 @@ bidder **there**, and a flag on the agent cannot say that. That is true of a fla
 of what is written, because the predicate's object carries the context.
 
 An agent stating `market:hosts A ; market:bidsIn B` is handled correctly today, and by construction
-rather than by luck. `agent/world.py` loads the two into separate fields, and each module reads its
+rather than by luck. `agent_old/world.py` loads the two into separate fields, and each module reads its
 own:
 
 - `hosting.py` iterates `me.hosted_markets`

@@ -36,7 +36,7 @@ def _pose(st, disks):
 
 
 def _mover(monkeypatch, disks):
-    from agent import genesis, runtime
+    from agent_old import genesis, runtime
     monkeypatch.setenv("INFLUX_BUCKET", "test-tower")
     monkeypatch.setenv("INFLUX_TOKEN", "test-token-tower")
     st = genesis_store(world="tower")

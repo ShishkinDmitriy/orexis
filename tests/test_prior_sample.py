@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from orexis_capability_sensing import pointer
-from agent.config import REPO_ROOT
+from agent_old.config import REPO_ROOT
 
 SENTINEL = REPO_ROOT / "firmware" / "moisture-sentinel" / "src"
 

@@ -11,12 +11,12 @@ import time
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from agent import signing
+from agent_old import signing
 
 from orexis_capability_market.clearing import Claim
-from agent.signing import verify_command
+from agent_old.signing import verify_command
 from orexis_capability_actuation.module import ActuationModule
-from agent.world import Self
+from agent_old.world import Self
 from orexis_capability_actuation.wiring import Actuator
 
 

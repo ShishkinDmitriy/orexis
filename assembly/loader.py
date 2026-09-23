@@ -78,7 +78,7 @@ log = logging.getLogger("loader")
 # This package's own directory, and the one tree every package lives in. `packages/` sits beside
 # `agent/` rather than under it: a package is not the runtime's, it is the project's, and
 # onboarding reads the TTL of every one without importing a line of Python from any.
-AGENT_ROOT = REPO_ROOT / "agent"
+AGENT_ROOT = REPO_ROOT / "agent_old"
 ASSEMBLY_ROOT = Path(__file__).resolve().parent
 PACKAGES = "packages"
 PACKAGES_ROOT = REPO_ROOT / PACKAGES
@@ -232,7 +232,7 @@ class Package:
 KERNEL_KIND = "kernel"
 #  The kernel is named, not discovered — it is what the packages layer on, and a thing outside
 #  the tree cannot be sorted wrong. Assembly names it by PATH and never imports it.
-KERNEL = Package(kind=KERNEL_KIND, name=BASE, path=AGENT_ROOT, module="agent")
+KERNEL = Package(kind=KERNEL_KIND, name=BASE, path=AGENT_ROOT, module="agent_old")
 
 #  MERGED FIRST, before the kernel's: the kernel's own extension points are instances of a class
 #  this declares (`assembly:Extension`). Not a package and not the kernel — a third root, and

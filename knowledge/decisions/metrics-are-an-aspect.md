@@ -16,7 +16,7 @@ timestamp: 2026-08-26T10:00:00Z
 
 # What was true before
 
-`agent/metrics.py` was a hub: sensing counted into it (`reading_recorded`, `cadence_acked`,
+`agent_old/metrics.py` was a hub: sensing counted into it (`reading_recorded`, `cadence_acked`,
 `sensed_failed`, `influx_failed`), reporting read the per-sensor figures back out of it by name
 (`readings`, `reading_age_s`, `sensors_seen`), and it merged every module's `reports()` on the
 way. `agent/influx_writer.py` was the sink, constructed twice — once by sensing's

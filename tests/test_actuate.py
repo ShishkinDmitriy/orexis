@@ -59,7 +59,7 @@ def test_opening_a_shop_on_your_own_bottle_costs_you_the_free_rung():
     consent, a shop on the butt — re-derive, and the venue exists, so the butt is a source a
     market offers and the Actuate row vanishes. The market is about the resource: once it is
     a lot, even its owner's own pump answers to the venue."""
-    from agent import genesis
+    from agent_old import genesis
     from assembly import loader
     from orexis_agent_progression.ontology import WORLD_DERIVED_GRAPH, WORLD_GRAPH
 
@@ -146,7 +146,7 @@ def test_a_self_dose_is_commanded_co_signed_and_ledgered(gardener):
     co-signed, replay-protected, awaiting the device's confirmation. The keeper holds the
     whole story: Actuate adopted with the reason, satisfied at the command, and an
     expectation open for the effect — an unconfirmed self-dose is not a delivered one."""
-    from agent.signing import verify_command
+    from agent_old.signing import verify_command
 
     gardener.deliver("sensors/moisture_probe/reading", {"value": 0.05})
     sent = gardener.sent.to("actuators/pump/command")
@@ -182,7 +182,7 @@ def test_the_gardener_derives_no_market_pair():
     deciding, committing and wanting are the kernel's, granted by nothing, because a mind is
     not plug-in-able. What the gardener DELIBERATES is
     unchanged and is tested elsewhere; what this asserts is only what its world grants it."""
-    from agent.world import load_self
+    from agent_old.world import load_self
 
     caps = {c.rsplit("#", 1)[-1] for c in
             load_self(genesis_store(world="loner").reader(PUBLIC), "gardener").capabilities}

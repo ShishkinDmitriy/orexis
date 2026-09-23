@@ -30,7 +30,7 @@ modern RDF form is **ValueFlows** (`vf:`, `https://w3id.org/valueflows/ont/vf#`)
 The bundle uses REA's terms where they fit, and cites ValueFlows for their definitions. **Nothing
 imports `vf:` and no `world.ttl` gains a prefix.**
 
-That is not timidity, it is the local cost. `agent/inference.py` materialises RDFS closure **by
+That is not timidity, it is the local cost. `agent_old/inference.py` materialises RDFS closure **by
 hand**, and [one-graph-both-engines-read](one-graph-both-engines-read.md) exists because shapes
 inferring while the runtime did not let a world validate against a relationship no code would ever
 observe. Every imported vocabulary's subclass axioms have to be covered or that trap reopens. SOSA

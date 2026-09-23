@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from agent import genesis
+from agent_old import genesis
 from orexis_capability_review.graphs import summaries_graph
 from orexis_agent_progression.ontology import STATE_GRAPH, term
 from orexis_agent_progression.store import Store

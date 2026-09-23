@@ -136,8 +136,8 @@ job is to carry that across the gap cannot be the layer that forgets it.
   injections, needs after needs — a cycle terminates because a package enters the set once —
   a soft annotation injects only what those packages already offer and loads nothing, and
   `Agent.service` refuses a provider outside them by name. What the pull could not reach is
-  the layer roster: the container (`agent/runtime.py`, `agent/module.py`,
-  `agent/validate.py`) and the granted packages import the layer packages as contracts, so
+  the layer roster: the container (`agent_old/runtime.py`, `agent_old/module.py`,
+  `agent_old/validate.py`) and the granted packages import the layer packages as contracts, so
   every agent still loads all three by the kernel's own declared dependencies. CLOSED at
   the assembly half by #455's finish: the strict xfail flipped green — a sensing-only grant
   imports no deliberation Python — and not by decomposing the `Agent`, but by making three

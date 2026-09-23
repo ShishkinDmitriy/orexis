@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 import rdflib
 
-from agent import ratified
+from agent_old import ratified
 from orexis_agent_progression.ontology import WORLD_GRAPH
 from onboarding.namespaces import SENSING
 from onboarding.firmware import _BOARDS_Q, _optional_pins

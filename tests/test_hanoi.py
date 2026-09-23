@@ -30,7 +30,7 @@ def _mover(monkeypatch, disks):
     transport module for the builder's wire conveniences to find — and none is needed, since
     these tests speak only to `considering` and the Planner. Wire-less on purpose: the world's
     whole point is the search."""
-    from agent import genesis, runtime
+    from agent_old import genesis, runtime
 
     monkeypatch.setenv("INFLUX_BUCKET", "test-hanoi")
     monkeypatch.setenv("INFLUX_TOKEN", "test-token-hanoi")
@@ -202,7 +202,7 @@ def test_the_budget_is_the_worlds_pick_and_the_kernel_bounds_it(monkeypatch):
     beliefs say nothing gets the engine's own ceiling; and a statement outside the
     constitutional bounds is refused at the gate, which is the piece a beliefs file can get
     wrong — a budget of zero is an agent that never thinks and looks calm."""
-    from agent.validate import validate_agent
+    from agent_old.validate import validate_agent
     from orexis_agent_deliberation.planner import Planner
 
     agent = _mover(monkeypatch, ["disk_1"])

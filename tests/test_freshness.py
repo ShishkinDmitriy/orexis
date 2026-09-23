@@ -127,7 +127,7 @@ def test_the_want_fires_as_a_shape_and_does_not_refuse_the_boot(monkeypatch):
     """
     from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
     from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
-    from agent.validate import _shapes_and_vocabulary, conforms, graph_from
+    from agent_old.validate import _shapes_and_vocabulary, conforms, graph_from
 
     agent, st = _fern(monkeypatch, value=0.55)
     _age_the_reading(st)
@@ -152,7 +152,7 @@ def _fires(data) -> list:
     the planner asks: over the shapes the data holds, results at whatever severity the
     engine defaults to.
     """
-    from agent.validate import _shapes_and_vocabulary
+    from agent_old.validate import _shapes_and_vocabulary
 
     ontology, _ = _shapes_and_vocabulary()
     mine = rdflib.Graph()
@@ -203,7 +203,7 @@ def test_a_want_about_knowing_fires_on_a_world_that_has_read_nothing(monkeypatch
     reading was satisfied by an empty world, which is how "never looked" once read as met."""
     from orexis_capability_sensing.terms import INSTRUMENTS_GRAPH
     from orexis_agent_progression.ontology import STATE_GRAPH
-    from agent.validate import graph_from
+    from agent_old.validate import graph_from
     from orexis_agent_deliberation import effects
 
     agent, st = _fern(monkeypatch, value=0.55)

@@ -22,7 +22,7 @@ COURIER_W = "http://example.org/orexis/world/courier#"
 
 
 def _agent(monkeypatch, world, name, pose=None, readings=None):
-    from agent import genesis, runtime
+    from agent_old import genesis, runtime
 
     monkeypatch.setenv("INFLUX_BUCKET", f"test-{world}")
     monkeypatch.setenv("INFLUX_TOKEN", f"test-token-{world}")

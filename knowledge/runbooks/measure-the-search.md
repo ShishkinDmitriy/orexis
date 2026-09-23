@@ -74,17 +74,17 @@ row — a number without its machine is an impression.
 
 # The planning package's bench, and its ledger
 
-The Agent 2.0 planning package (`orexis/agent/planning/`) has a bench of its own, because it
+The Agent 2.0 planning package (`agent/planning/`) has a bench of its own, because it
 runs a different search over a different store and the figures above are not its figures:
-`orexis/agent/planning/tests/test_bench.py`, over two- and three-disk hanoi cases beside it,
+`agent/planning/tests/test_bench.py`, over two- and three-disk hanoi cases beside it,
 asserting the plans — three moves and seven — and timing the pass as the median of five.
 
 ```bash
-pytest orexis/agent/planning/tests/test_bench.py -s -n0                 # print the figures
-pytest orexis/agent/planning/tests/test_bench.py -s -n0 --bench-record  # and append them
+pytest agent/planning/tests/test_bench.py -s -n0                 # print the figures
+pytest agent/planning/tests/test_bench.py -s -n0 --bench-record  # and append them
 ```
 
-**The ledger is `orexis/agent/planning/tests/bench/results.tsv`**, one row per case per
+**The ledger is `agent/planning/tests/bench/results.tsv`**, one row per case per
 recorded run: the date, the commit (`-dirty` where the tree had uncommitted changes), the
 machine, the case, the budget, the runs, the median and minimum milliseconds, the queries and
 updates of one pass, and the steps of the plan. It is appended, never rewritten, so the series
@@ -153,7 +153,7 @@ budget of twenty a pass, one pass a minute on one Planner: 20, 40 and 50 candida
 after each pass, EXHAUSTED twice with nothing handed down, the seven-move plan and its
 intention on the third, at 65, 77 and 69 ms a pass against 131 for the search in one. The sum
 is the one-shot search's 50 exactly, and a fourth pass, the want being walked, weighs nothing
-in 24 ms. `orexis/agent/planning/tests/test_planner.py` holds the equality.
+in 24 ms. `agent/planning/tests/test_planner.py` holds the equality.
 
 **Refused on measuring, the same day: spelling the catalogue's name.** Every `?cat` in every
 statement replaced by the constant at the engine's door — the shape a hardcoded singleton

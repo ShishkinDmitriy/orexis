@@ -8,7 +8,7 @@ timestamp: 2026-08-07T00:00:00Z
 
 # Two subjects were sharing a file
 
-The base vocabulary — `agent/ontology.ttl` now, `packages/core/orexis/ontology.ttl` then — had grown
+The base vocabulary — `agent_old/ontology.ttl` now, `packages/core/orexis/ontology.ttl` then — had grown
 to 205 lines holding agents, capabilities, the world
 and its versions, named graphs, simulated devices, boards, pins, pin roles, and the three
 peripherals that happen to be on this bench. Two of those are the same subject and the rest are

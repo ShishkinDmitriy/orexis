@@ -14,7 +14,7 @@ from datetime import timedelta
 
 import pytest
 
-from agent import genesis, runtime
+from agent_old import genesis, runtime
 from conftest import genesis_store
 from orexis_agent_deliberation import derive_wants as judging, pursuit
 from orexis_agent_deliberation.derive_wants import derive_wants

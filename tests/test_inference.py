@@ -22,7 +22,7 @@ import pytest
 import rdflib
 from pyshacl import validate as shacl_validate
 
-from agent import genesis, inference
+from agent_old import genesis, inference
 
 from assembly import loader
 SOSA = "http://www.w3.org/ns/sosa/"   # spelled here: the kernel no longer names it (#378)

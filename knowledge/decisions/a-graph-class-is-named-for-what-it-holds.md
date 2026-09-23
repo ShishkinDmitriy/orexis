@@ -33,7 +33,7 @@ names a collection for the plural of its element. A reader asks by class
 ([who-put-the-fact-there](/decisions/who-put-the-fact-there.md), amended by #708), so the
 class is what a reader means, and a reader means *the graphs of desires* or *the graphs of
 wants* — never *the roots*, which is what those rows are TO THE DERIVATION. Two content classes in
-`agent/ontology.ttl`:
+`agent_old/ontology.ttl`:
 
 - `orexis:DesireGraph` — a graph of `orexis:Desire` rows. The roots graph is one, and
   `progression:PromisesGraph` is beneath it, since a promise the bridge raises is written as

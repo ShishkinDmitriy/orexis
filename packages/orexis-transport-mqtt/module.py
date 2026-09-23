@@ -26,8 +26,8 @@ import time
 
 import paho.mqtt.client as mqtt
 
-from agent import config
-from agent.module import Module, contributes
+from agent_old import config
+from agent_old.module import Module, contributes
 from orexis_agent_progression.ontology import HANDLE, SEND, SUBSCRIPTIONS
 from orexis_agent_progression.store import bindings
 

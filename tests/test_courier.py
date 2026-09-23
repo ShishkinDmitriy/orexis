@@ -32,7 +32,7 @@ def _pose(st, van, parcel):
 def _driver(monkeypatch, van, parcel):
     """A plain Agent, not conftest's wired builder: this driver holds no bus, and the world's
     whole point is the search — the same reason `test_hanoi` builds one by hand."""
-    from agent import genesis, runtime
+    from agent_old import genesis, runtime
 
     monkeypatch.setenv("INFLUX_BUCKET", "test-courier")
     monkeypatch.setenv("INFLUX_TOKEN", "test-token-courier")

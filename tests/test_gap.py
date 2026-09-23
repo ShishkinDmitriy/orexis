@@ -21,7 +21,7 @@ def _judged(st, *extra):
     """Validation data the way the boot builds it since #312: publics and readings from the
     store, the wants and the pick record through the desire modality — and only through it."""
     from orexis_agent_deliberation import effects
-    from agent.validate import graph_from
+    from agent_old.validate import graph_from
 
     data = graph_from(st, *st.graphs_of(PUBLIC), *extra)
     for triple in desires_build(st, "fern").construct(
@@ -159,10 +159,10 @@ def test_a_desire_nothing_watches_warns_at_the_gate(monkeypatch):
     the wiring is legitimate, the sentence in the boot log was the missing part. The shipped
     world stays clean, which is the negative half that keeps the channel worth reading.
     """
-    from agent import genesis
+    from agent_old import genesis
     from assembly import loader
     from orexis_agent_progression.ontology import WORLD_GRAPH, picks_graph
-    from agent.validate import conforms, graph_from
+    from agent_old.validate import conforms, graph_from
 
     st = genesis_store()
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
@@ -192,10 +192,10 @@ def test_a_reading_past_survival_warns_at_boot_and_does_not_refuse(monkeypatch):
     bidding for water, which is the one wrong direction.
     """
     from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
-    from agent.validate import conforms, graph_from
+    from agent_old.validate import conforms, graph_from
 
     st = genesis_store({("fern", MOISTURE): 0.05})   # fern survives 0.20-0.85
-    from agent import genesis
+    from agent_old import genesis
     genesis.birth(st, genesis.world_dir("simulation"), "fern")
     data = _judged(st, STATE_GRAPH)
     ok, report = conforms(data, focus=FERN)
@@ -253,9 +253,9 @@ def test_an_unmet_want_is_not_printed_as_a_finding(monkeypatch):
     and the header must agree with the body, which now means pySHACL's own untouched report
     agreeing with itself.
     """
-    from agent import genesis
+    from agent_old import genesis
     from orexis_agent_progression.ontology import STATE_GRAPH, picks_graph
-    from agent.validate import conforms, graph_from
+    from agent_old.validate import conforms, graph_from
 
     dry = genesis_store({("fern", MOISTURE): 0.30})   # outside the region, inside the envelope
     genesis.birth(dry, genesis.world_dir("simulation"), "fern")
