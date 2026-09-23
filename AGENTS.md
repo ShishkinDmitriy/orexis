@@ -1163,6 +1163,12 @@ it is a record wearing a bullet.
   on the third pass having weighed the fifty one pass with room weighs, not one more; a
   ceiling on compute per pass is then a ceiling on latency, and what is spent in all is the
   problem's.
+- **A variable in predicate position writes what a `VALUES` block in its own text binds it
+  to, and anything only where nothing bounds it** — the range of a filling is the
+  precondition that enumerates it and a range declared beside a text is a promise nothing
+  holds the text to, so the one range the scopes honour is SPARQL's own, in the text the
+  engine runs; `touches` read every variable predicate as anything before, which under a
+  derived fork would have copied the whole store per world for a two-valued predicate.
 - **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes
   first** — `?x a planning:Weighing ; … ; planning:weighs ?about` scanned every weighing per
   candidate and cost 74 ms on a kept three-disk cone, answering nothing; `?x planning:weighs

@@ -10,8 +10,15 @@ Nothing here is declared — a stated `orexis:touches` would be a second stateme
 construct already settles — and nothing is stored: computed per call, parsed once per text.
 
 ANYTHING UNREADABLE READS AS `ANYTHING`: a body the parser refuses, a template with a variable
-predicate. Over-approximation is safe wherever these sets are used and under-approximation is
-not, which is why the unreadable case is a value rather than an error.
+predicate that nothing bounds. Over-approximation is safe wherever these sets are used and
+under-approximation is not, which is why the unreadable case is a value rather than an error.
+
+**A VARIABLE IN PREDICATE POSITION WRITES WHAT A `VALUES` BLOCK BINDS IT TO.** SPARQL's own way
+of bounding a variable is a `VALUES` block in the text the engine runs, and that is the one
+place a range is honoured: a template writing `?s ?p ?o` beside `VALUES ?p { a b }` writes
+two predicates, not anything. A range declared beside the text — `rdfs:range` on a parameter
+— would be a promise about the text that nothing holds the text to, and is not read. A row
+leaving the variable `UNDEF`, or binding it to a literal, unbounds it again.
 
 **AND WHAT A WANT READS**, off its met-test: every predicate its paths navigate and its
 `sh:sparql` constraints mention. That is the question "which words is this want in play over",
@@ -203,18 +210,47 @@ def _shacl_path_iris(g: rdflib.Graph, node) -> set | None:
 
 
 def writes_of_construct(text: str) -> frozenset | None:
-    """The predicates a CONSTRUCT's template writes, or ANYTHING if unparseable or variable."""
+    """The predicates a CONSTRUCT's template writes, or ANYTHING if unparseable — or if a
+    template predicate is a variable that no `VALUES` block in the WHERE bounds to IRIs."""
     try:
         alg = translateQuery(parseQuery(PREFIXES + parseable(text))).algebra
     except Exception as exc:                            # noqa: BLE001
         log.debug("could not parse a construct for the predicates it writes: %s", exc)
         return ANYTHING
-    out = set()
+    out: set = set()
+    bounded = None
     for _, p, _ in alg.get("template") or ():
-        if not isinstance(p, URIRef):
+        if isinstance(p, URIRef):
+            out.add(p)
+            continue
+        if bounded is None:
+            bounded = _values_in(alg.get("p"))
+        iris = bounded.get(p)
+        if not iris:
             return ANYTHING
-        out.add(p)
+        out |= iris
     return frozenset(out)
+
+
+def _values_in(node) -> dict:
+    """Every variable a `VALUES` block under `node` binds, to the IRIs it binds it to — None
+    where any row leaves it `UNDEF` or binds it to something that is not an IRI. Two blocks
+    binding one variable are unioned, which over-approximates the join and is the safe side."""
+    found: dict = {}
+    def visit(n):
+        if getattr(n, "name", None) == "values":
+            for row in n["res"]:
+                for var, term in row.items():
+                    if var in found and found[var] is None:
+                        continue
+                    if isinstance(term, URIRef):
+                        found.setdefault(var, set()).add(term)
+                    else:
+                        found[var] = None
+        return n
+    if node is not None:
+        traverse(node, visitPost=visit)
+    return found
 
 
 # --- what each action and each derivation touches -----------------------------------------------

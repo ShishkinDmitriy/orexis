@@ -41,6 +41,23 @@ def test_what_a_construct_writes_is_its_template_predicates_and_a_variable_one_i
     assert touches.writes_of_construct("this is not a query") is touches.ANYTHING, "unreadable is unfiltered"
 
 
+def test_a_variable_predicate_a_values_block_bounds_writes_those_and_nothing_more():
+    """SPARQL's own range: a template writing `?p` beside `VALUES ?p { a b }` writes two
+    predicates, not anything; a block binding another variable bounds nothing, and a row
+    leaving it UNDEF unbounds it again."""
+    a, b = URIRef("urn:test:a"), URIRef("urn:test:b")
+    assert touches.writes_of_construct(
+        "CONSTRUCT { ?x ?p ?v } WHERE { VALUES ?p { <urn:test:a> <urn:test:b> } ?x ?p ?v }") == frozenset({a, b})
+    assert touches.writes_of_construct(
+        "CONSTRUCT { ?x ?p ?v . ?x <urn:test:q> ?v } WHERE { VALUES ?p { <urn:test:a> } ?x ?p ?v }") \
+        == frozenset({a, URIRef("urn:test:q")})
+    assert touches.writes_of_construct(
+        "CONSTRUCT { ?x ?p ?v } WHERE { VALUES ?q { <urn:test:a> } ?x ?p ?v }") is touches.ANYTHING
+    assert touches.writes_of_construct(
+        "CONSTRUCT { ?x ?p ?v } WHERE { VALUES (?p ?r) { (<urn:test:a> <urn:test:b>) (UNDEF <urn:test:b>) } ?x ?p ?v }") \
+        is touches.ANYTHING
+
+
 def test_a_rule_text_is_made_parseable_and_nothing_more():
     assert "?me" in touches.parseable("SELECT ?x WHERE { $me <urn:test:p> ?x }")
     assert "$into(" not in touches.parseable("INSERT { GRAPH $into(x:G) { ?s ?p ?o } } WHERE { ?s ?p ?o }")
