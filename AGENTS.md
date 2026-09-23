@@ -1169,6 +1169,13 @@ it is a record wearing a bullet.
   holds the text to, so the one range the scopes honour is SPARQL's own, in the text the
   engine runs; `footprint` read every variable predicate as anything before, which under a
   derived fork would have copied the whole store per world for a two-valued predicate.
+- **The executor owns the ledger, any plan in it is scheduled, and the two threads are two
+  doors** — the timekeeper's pass is `tick` (the head steps due, by `execution:notBefore`,
+  handed to the queue) and the executing thread's is `drain` (each step taken, its
+  `execution:Act` written, `execution:by` moved, the last step resolving `done`), so a test
+  drives a plan through at instants it chooses and the threads call the same two; the
+  keeper was renamed rather than kept beside it, since one store has one owner, and what
+  taking a step IS today is saying its name.
 - **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes
   first** — `?x a planning:Weighing ; … ; planning:weighs ?about` scanned every weighing per
   candidate and cost 74 ms on a kept three-disk cone, answering nothing; `?x planning:weighs

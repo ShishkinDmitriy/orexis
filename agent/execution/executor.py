@@ -1,0 +1,361 @@
+"""The executor: the ledger of what this agent is committed to, and the two threads that carry
+a commitment out.
+
+**IT OWNS THE INTENTIONS STORE.** A plan found above is copied into the ledger (`commit`, or
+`plans.copy_plan` by whoever holds the store), and from that moment the executor's: any plan
+in the ledger is scheduled, whoever wrote it there. The ledger is rows — an intention adopted
+at an instant, standing at a step, resolved at another instant with an outcome — and every act
+here is a read of those rows and a write of a few more, so a restart finds the ledger where it
+was and carries on from the head of every standing intention.
+
+**TWO THREADS, AND WHICH DOES WHAT** (layered-by-timescale-and-interruptibility). One EXECUTES:
+it drains a queue and takes each step handed to it, and it waits on nothing but that queue,
+so a step that blocks blocks only the steps behind it and never the clock. One KEEPS TIME: it
+asks the ledger which standing intention has a head step due — `execution:notBefore` past,
+or none stated — hands each to the queue, and sleeps until the earliest one not yet due or the
+poll cadence, whichever comes first. It runs no step. The predecessor had the same two, the
+reactive loop and progression's scheduler, and this is them without the packages.
+
+**THE PASS IS TWO DOORS, CALLABLE WITHOUT A THREAD.** `tick(now)` is one pass of the timekeeper
+and `drain()` one pass of the executor, so a test drives a plan through its steps at an instant
+of its choosing and asserts between them; the threads call the same two, which is what keeps a
+threaded run and a tested run the same run.
+
+**WHAT TAKING A STEP IS, TODAY: SAYING ITS NAME.** The step's rows — the action it fills and
+the filling, in the layer above's and the package's words, which this layer repeats and does
+not read — go to the log, an `execution:Act` row records that the step was taken, when the
+taker was handed it and when it returned (the step's `notBefore` and `landsAt` are the plan's
+requirement and prediction, and the act is what actually happened),
+`execution:by` moves to the next step, and the last step resolves the intention `done`. The
+one seam is `take`, a callable handed the step's rows: it is where a step will reach real
+code — an actuator, a message on the bus — and how an action names its taker is not
+decided here. A `take` that raises records the act as not taken and resolves the intention
+`failed`, and the executing thread outlives it.
+
+**THE PATIENCE IS STILL HERE**, unchanged from the keeper this was: a second plan for a want
+already standing is absorbed inside the patience and supersedes past it, which is the
+amortisation (an-intention-is-an-amortised-deliberation). The planner does not go through
+this door — it never plans for a want being walked — but a caller that wants the absorption
+asks here.
+"""
+
+from __future__ import annotations
+
+import logging
+import queue
+import threading
+from datetime import datetime
+
+import pyoxigraph as ox
+
+from agent import clock
+from agent.ontology import local_of
+from agent.store import Raw, bind, instant, rows, update
+
+from .ontology import intentions_graph
+from .plans import OUTCOME, RESOLVED_AT, copy_plan
+
+log = logging.getLogger("executor")
+
+DEFAULT_PATIENCE_S = 60.0
+
+#  HOW OFTEN THE TIMEKEEPER LOOKS WHEN NOTHING IS DUE, in the agent's seconds: a plan another
+#  hand wrote into the ledger is found within this, and a `wake` finds it at once.
+POLL_S = 1.0
+
+_STANDING_Q = """
+SELECT ?intention ?want ?at ?adopted WHERE {
+  GRAPH $ledger {
+    ?intention a execution:Intention ;
+               execution:pursues ?want ;
+               execution:adoptedAt ?adopted .
+    OPTIONAL { ?intention execution:by ?at }
+    FILTER NOT EXISTS { ?intention execution:resolvedAt ?done } } }
+ORDER BY ?adopted"""
+
+#  THE HEAD OF EVERY STANDING INTENTION and when it may be taken — `execution:notBefore` where
+#  the plan says, at once where it says nothing.
+_HEADS_Q = """
+SELECT ?intention ?step ?due WHERE {
+  GRAPH $ledger {
+    ?intention a execution:Intention ; execution:by ?step .
+    FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
+    OPTIONAL { ?step execution:notBefore ?due } } }
+ORDER BY ?due ?intention"""
+
+#  WHAT A STEP SAYS OF ITSELF IN WORDS OTHER THAN THIS LAYER'S: the action and the filling are
+#  the layer above's and the package's to spell, and this layer repeats them without reading.
+_STEP_Q = """
+SELECT ?p ?o WHERE {
+  GRAPH $ledger { $step ?p ?o . FILTER(!STRSTARTS(STR(?p), STR(execution:)) && ?p != rdf:type) } }
+ORDER BY ?p"""
+
+_NEXT_Q = """SELECT ?next WHERE { GRAPH $ledger { $step execution:then ?next } }"""
+
+#  THE RECORD THAT A STEP WAS TAKEN — history, and only history.
+_ACT_U = """
+INSERT DATA { GRAPH $ledger { $act a execution:Act ; execution:of $step ;
+                              execution:takenAt $taken_at ; execution:doneAt $done_at ;
+                              execution:taken $taken } }"""
+
+_ADVANCE_U = """
+DELETE { GRAPH $ledger { $intention execution:by $step } }
+INSERT { GRAPH $ledger { $intention execution:by $next } }
+WHERE  { GRAPH $ledger { $intention execution:by $step } }"""
+
+
+class Standing:
+    """One commitment that has not been resolved: what it pursues, where it has got to, and
+    when it was adopted."""
+
+    __slots__ = ("uri", "want", "at", "adopted")
+
+    def __init__(self, uri: str, want: str, at: str | None, adopted: datetime):
+        self.uri, self.want, self.at, self.adopted = uri, want, at, adopted
+
+    def age_s(self, now: datetime | None = None) -> float:
+        """How long this has been standing, in the agent's seconds."""
+        return ((now or clock.now()) - self.adopted).total_seconds()
+
+    def __repr__(self) -> str:
+        return f"Standing({self.uri.rsplit('#', 1)[-1]} for {self.want.rsplit('#', 1)[-1]})"
+
+
+class Executor:
+    """One agent's ledger, and what carries it out.
+
+    Handed the beliefs engine and the one identifier a process is told. The intentions store is
+    its own — made here where none is handed in, since this layer owns it — and `intentions` is
+    how a planner is told where a plan goes. It holds no beliefs of its own: the patience is a
+    PICK, read off the beliefs store where the agent's picks are, because how stubborn to be is
+    the agent's own belief and not the ledger's constant.
+    """
+
+    def __init__(self, beliefs: ox.Store, agent_id: str, intentions: ox.Store | None = None,
+                 holder: str | None = None, *, take=None, poll_s: float = POLL_S):
+        self.intentions = intentions if intentions is not None else ox.Store()
+        self.beliefs = beliefs
+        self.id = agent_id
+        self.holder = holder
+        self.graph = intentions_graph(agent_id)
+        self.take = take if take is not None else self.say
+        self.poll_s = poll_s
+        self._work: queue.SimpleQueue = queue.SimpleQueue()
+        self._inflight: set[str] = set()
+        self._next_due: datetime | None = None
+        self._cv = threading.Condition()
+        self._threads: list[threading.Thread] = []
+        self._stopped = False
+
+    # --- committing ---------------------------------------------------------------------------
+
+    def commit(self, source: ox.Store, graph: str, want: str) -> str | None:
+        """Copy a found plan into the ledger — unless one for this want is already standing
+        and younger than the patience, which is the absorption this class exists for.
+
+        None means nothing was committed, and the two reasons are told apart in the log: an
+        empty plan (nothing to do) and an absorbed one (already doing it).
+        """
+        if (held := self.standing_for(want)) is not None:
+            age = held.age_s()
+            if age < self.patience_s:
+                log.debug("%s: absorbed a second plan for %s — %s stands, %.0fs of %.0fs",
+                          self.id, want.rsplit("#", 1)[-1], held, age, self.patience_s)
+                return None
+            #  PAST THE PATIENCE, a new adoption SUPERSEDES the old, and the old is recorded
+            #  as dropped with the reason. A commitment abandoned without a reason is
+            #  indistinguishable from one forgotten.
+            self.resolve(held.uri, "superseded")
+        intention = copy_plan(source, graph, self.intentions, self.id, want)
+        if intention is not None:
+            self.wake()
+        return intention
+
+    # --- what stands --------------------------------------------------------------------------
+
+    def standing(self) -> list[Standing]:
+        """Every commitment adopted and not resolved, oldest first."""
+        return [Standing(r["intention"], r["want"], r.get("at"),
+                         datetime.fromisoformat(r["adopted"]))
+                for r in rows(self.intentions, bind(_STANDING_Q, ledger=Raw(f"<{self.graph}>")))]
+
+    def standing_for(self, want: str) -> Standing | None:
+        """The commitment standing for this want, or None. One or none: a second plan for one
+        want while the first stands is the thing `commit` absorbs."""
+        return next((s for s in self.standing() if s.want == want), None)
+
+    # --- resolving ----------------------------------------------------------------------------
+
+    def resolve(self, intention: str, outcome: str) -> None:
+        """Say this commitment has ended, and how.
+
+        THE LIFECYCLE IS TWO TIMESTAMPS AND AN OUTCOME, not a state machine: standing is an
+        adoption with no resolution, and how it ended is a word. A resolved intention STAYS —
+        every one does, with its outcome — because a ledger that forgot its resolutions could
+        not answer the only question an operator brings to it, which is what this agent
+        thought it was doing and why it stopped.
+        """
+        update(self.intentions, f"""
+INSERT DATA {{ GRAPH <{self.graph}> {{
+  <{intention}> <{RESOLVED_AT}> "{clock.now().isoformat()}"^^xsd:dateTime ;
+                <{OUTCOME}> "{outcome}" . }} }}""")
+        log.info("%s: %s — %s", self.id, intention.rsplit("#", 1)[-1], outcome)
+
+    # --- keeping time: one pass -----------------------------------------------------------------
+
+    def tick(self, now: datetime | None = None) -> list[str]:
+        """One pass of the timekeeper: hand every head step due at `now` to the queue. The
+        steps handed over. A head not yet due is remembered as the instant to wake at."""
+        now = now or clock.now()
+        due, soonest = [], None
+        for r in rows(self.intentions, bind(_HEADS_Q, ledger=Raw(f"<{self.graph}>"))):
+            step = r["step"]
+            if step in self._inflight:
+                continue
+            when = datetime.fromisoformat(r["due"]) if r.get("due") else None
+            if when is None or when <= now:
+                self._inflight.add(step)
+                self._work.put((r["intention"], step))
+                due.append(step)
+            elif soonest is None or when < soonest:
+                soonest = when
+        self._next_due = soonest
+        return due
+
+    # --- executing: one pass ----------------------------------------------------------------------
+
+    def drain(self) -> int:
+        """One pass of the executor, on the calling thread: take every step in the queue. How
+        many were taken."""
+        taken = 0
+        while True:
+            try:
+                item = self._work.get_nowait()
+            except queue.Empty:
+                return taken
+            if item is not None:
+                self._take(*item)
+                taken += 1
+
+    def _take(self, intention: str, step: str) -> None:
+        """Take one step: hand its rows to `take`, record the act, and move the intention
+        along — to the next step, or to `done`; to `failed` where the taking raised."""
+        said = self.step_of(step)
+        #  THE RECORD IS THE ACT'S, NOT THE STEP'S: when the taker was handed the step and
+        #  when it returned, in the one timeline. The step's own instants are the plan's
+        #  requirement (`notBefore`) and prediction (`landsAt`), and stay what they were.
+        taken_at = clock.now()
+        try:
+            self.take(said, intention)
+            taken = True
+        except Exception as exc:                                        # noqa: BLE001
+            log.error("%s: step %s could not be taken: %s", self.id, local_of(step), exc)
+            taken = False
+        done_at = clock.now()
+        act = f"{step}.act.{taken_at.strftime('%Y%m%dT%H%M%S%f')}"
+        update(self.intentions, bind(_ACT_U, ledger=Raw(f"<{self.graph}>"), act=act, step=step,
+                                     taken_at=instant(taken_at), done_at=instant(done_at),
+                                     taken=Raw("true" if taken else "false")))
+        #  THE INTENTION MOVES BEFORE THE STEP LEAVES FLIGHT: a tick between the two would
+        #  find the old head and hand it over twice.
+        if not taken:
+            self.resolve(intention, "failed")
+        else:
+            following = next(iter(rows(self.intentions, bind(_NEXT_Q, ledger=Raw(f"<{self.graph}>"), step=step))), None)
+            if following is None:
+                self.resolve(intention, "done")
+            else:
+                update(self.intentions, bind(_ADVANCE_U, ledger=Raw(f"<{self.graph}>"),
+                                             intention=intention, step=step, next=following["next"]))
+        self._inflight.discard(step)
+        self.wake()
+
+    def step_of(self, step: str) -> dict:
+        """A step's rows in words other than this layer's, keyed by the local part of each
+        predicate — what `take` is handed, with the step's own IRI under `step`."""
+        said = {"step": step}
+        for r in rows(self.intentions, bind(_STEP_Q, ledger=Raw(f"<{self.graph}>"), step=step)):
+            said[local_of(r["p"])] = r["o"]
+        return said
+
+    def say(self, said: dict, intention: str) -> None:
+        """The default taking: the step's name, and what fills it, in the log."""
+        filling = " ".join(f"{k}={local_of(v) if '://' in v else v}"
+                           for k, v in sorted(said.items()) if k != "step")
+        log.info("%s: taking %s of %s — %s", self.id, local_of(said["step"]),
+                 intention.rsplit("#", 1)[-1], filling or "nothing filled")
+
+    # --- the threads -------------------------------------------------------------------------------
+
+    def start(self) -> None:
+        """Start the two threads. Idempotent."""
+        with self._cv:
+            if self._threads or self._stopped:
+                return
+            self._threads = [threading.Thread(target=self._run, name=f"{self.id}-executes", daemon=True),
+                             threading.Thread(target=self._keep_time, name=f"{self.id}-keeps-time", daemon=True)]
+        for t in self._threads:
+            t.start()
+
+    def wake(self) -> None:
+        """Tell the timekeeper to look now rather than at its next cadence."""
+        with self._cv:
+            self._cv.notify_all()
+
+    def stop(self, timeout: float | None = 5.0) -> None:
+        """Finish the step in hand and exit both threads. Idempotent."""
+        with self._cv:
+            if self._stopped:
+                return
+            self._stopped = True
+            self._cv.notify_all()
+            threads = list(self._threads)
+        self._work.put(None)                    # the sentinel: drained after everything before it
+        for t in threads:
+            if t is not threading.current_thread():
+                t.join(timeout)
+
+    def _run(self) -> None:
+        while True:
+            item = self._work.get()
+            if item is None:
+                return
+            try:
+                self._take(*item)
+            except BaseException as exc:                                # noqa: BLE001
+                log.error("%s: the executing thread outlives this: %s", self.id, exc)
+
+    def _keep_time(self) -> None:
+        while True:
+            with self._cv:
+                if self._stopped:
+                    return
+            try:
+                self.tick()
+            except BaseException as exc:                                # noqa: BLE001
+                log.error("%s: the timekeeper outlives this: %s", self.id, exc)
+            with self._cv:
+                if self._stopped:
+                    return
+                wait = self.poll_s
+                if self._next_due is not None:
+                    wait = min(wait, max(0.0, (self._next_due - clock.now()).total_seconds()))
+                self._cv.wait(clock.real_delay(wait))
+
+    # --- the one figure -----------------------------------------------------------------------
+
+    @property
+    def patience_s(self) -> float:
+        """How long a standing commitment blocks re-adoption of one for the same want.
+
+        A CONSTANT HERE, AND IT SHOULD NOT STAY ONE. It is an OPINION — the agent's own
+        belief, which a review may move inside whatever room its world leaves — and it was
+        read from the graph an agent's picks live in. That graph is reached by NAME and has no
+        class, nothing in this tree writes one, and the mechanism that would is review, which
+        this tree does not load. So the read is gone with the rest of picks and the figure is
+        `DEFAULT_PATIENCE_S` until something can revise it (a-pick-is-read-not-guessed).
+        """
+        return DEFAULT_PATIENCE_S
+
+    def __len__(self) -> int:
+        return len(self.standing())

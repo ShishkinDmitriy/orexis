@@ -18,12 +18,12 @@ points at it, or none reached it inside the budget — and an answer is not a co
 plan graph still holds it, and `planning:outcome` still says which; nothing stands in the
 ledger for a want nobody is doing anything about.
 
-**AND NOTHING HERE ABSORBS BY PATIENCE.** `Keeper.commit` is the other door into the same copy,
+**AND NOTHING HERE ABSORBS BY PATIENCE.** `Executor.commit` is the other door into the same copy,
 and it refuses a second plan for a want it is already walking while that one is younger than
 the agent's patience, superseding it after. This door refuses a second plan for a want being
 walked at all: the plan graph of a want an intention pursues is still in the imaginarium, since
 that outlives the pass, and it is not the pass's to hand down twice. A caller that wants the
-amortisation asks the keeper instead. Both end in `plans.copy_plan`, so what a committed plan
+amortisation asks the executor instead. Both end in `plans.copy_plan`, so what a committed plan
 LOOKS like is settled in one place either way.
 """
 

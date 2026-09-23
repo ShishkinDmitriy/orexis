@@ -1,0 +1,209 @@
+"""The executor: a plan copied in, what stands, the patience that absorbs the second one — and
+the plan carried out, step by step, on two doors a test can drive and two threads that drive them.
+
+A package may test itself where the thing means something alone, and this does: a plan graph
+is a handful of quads in the ledger's own vocabulary, so the executor can be asked the whole of
+what it promises without a world, a search or a capability.
+"""
+
+from __future__ import annotations
+
+import logging
+import time
+from datetime import datetime, timedelta, timezone
+
+import pyoxigraph as ox
+import pytest
+
+from agent import clock
+from agent.execution.executor import DEFAULT_PATIENCE_S, Executor
+from agent.execution.plans import copy_plan
+from agent.execution.ontology import EXECUTION, intentions_graph
+from agent.store import bindings, query_over, update
+
+NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+AGENT, ME = "keeper", "http://example.org/test#keeper"
+WANT = "http://example.org/test#want"
+PLAN = "http://example.org/test#plan"
+
+
+@pytest.fixture(autouse=True)
+def stopped_clock(monkeypatch):
+    monkeypatch.setattr(clock, "now", lambda: NOW)
+
+
+def a_plan(steps: int = 2) -> ox.Store:
+    """A plan of `steps` steps in the ledger's own words, chained — what the search writes."""
+    st = ox.Store()
+    chain = "\n".join(
+        f'  <{PLAN}.{n}> a execution:Step ; '
+        f'execution:partOf <{PLAN}> '
+        + (f'; execution:then <{PLAN}.{n + 1}> .' if n + 1 < steps else '.')
+        for n in range(steps))
+    update(st, f"INSERT DATA {{ GRAPH <{PLAN}> {{\n{chain}\n}} }}")
+    return st
+
+
+def executor(beliefs: ox.Store | None = None, holder: str | None = None, **kw) -> Executor:
+    return Executor(beliefs if beliefs is not None else ox.Store(), AGENT, ox.Store(), holder, **kw)
+
+
+def test_a_committed_plan_stands_at_its_head():
+    """The head is the step nothing points `execution:then` at — read off the chain, never
+    written twice."""
+    k = executor()
+    intention = k.commit(a_plan(2), PLAN, WANT)
+    assert intention is not None
+    (standing,) = k.standing()
+    assert standing.want == WANT
+    assert standing.at == f"{PLAN}.0", "the ledger stands at the head, not at the last step"
+
+
+def test_every_step_crosses_with_the_plan():
+    """A copy and not a rewrite: what the ledger does not read, it also does not drop."""
+    k = executor()
+    k.commit(a_plan(3), PLAN, WANT)
+    steps = bindings(query_over(
+        k.intentions, "SELECT ?s WHERE { ?s a execution:Step }", intentions_graph(AGENT)))
+    assert len(steps) == 3, steps
+
+
+def test_a_second_plan_inside_the_patience_is_absorbed():
+    """The amortisation: within your patience, a second impulse to do the same thing is not
+    re-decided. One intention stands, not two."""
+    k = executor()
+    assert k.commit(a_plan(), PLAN, WANT) is not None
+    assert k.commit(a_plan(), PLAN, WANT) is None, "a second plan for one want was adopted"
+    assert len(k.standing()) == 1
+
+
+def test_past_the_patience_a_new_plan_supersedes_the_old(monkeypatch):
+    """And the old one is recorded as superseded — a commitment abandoned without a reason is
+    indistinguishable from one forgotten."""
+    k = executor()
+    first = k.commit(a_plan(), PLAN, WANT)
+    monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=DEFAULT_PATIENCE_S + 1))
+    second = k.commit(a_plan(), PLAN, WANT)
+    assert second is not None and second != first
+    assert [s.uri for s in k.standing()] == [second], "the superseded one is still standing"
+    ended = bindings(query_over(
+        k.intentions, f"SELECT ?o WHERE {{ <{first}> <{EXECUTION}outcome> ?o }}",
+        intentions_graph(AGENT)))
+    assert ended and ended[0]["o"] == "superseded"
+
+
+def test_a_resolved_commitment_stays_in_the_ledger():
+    """A ledger that forgot its resolutions could not answer the only question an operator
+    brings to it."""
+    k = executor()
+    intention = k.commit(a_plan(), PLAN, WANT)
+    k.resolve(intention, "done")
+    assert k.standing() == []
+    kept = bindings(query_over(k.intentions, f"SELECT ?p WHERE {{ <{intention}> ?p ?o }}",
+                               intentions_graph(AGENT)))
+    assert kept, "the resolved intention was removed rather than resolved"
+
+
+def test_an_empty_plan_is_an_answer_and_not_a_commitment():
+    """The search reached the want's met state in no steps: there is nothing to carry out."""
+    assert executor().commit(ox.Store(), PLAN, WANT) is None
+
+
+
+
+# --- carrying a commitment out --------------------------------------------------------------------
+
+_ACTS_Q = """SELECT ?a ?taken ?at ?done WHERE {
+  ?a a execution:Act ; execution:taken ?taken ; execution:takenAt ?at ; execution:doneAt ?done } ORDER BY ?a"""
+
+
+def _acts(x: Executor) -> list[dict]:
+    return bindings(query_over(x.intentions, _ACTS_Q, intentions_graph(AGENT)))
+
+
+def _resolved(x: Executor, intention: str) -> list[dict]:
+    return bindings(query_over(x.intentions, f"SELECT ?o WHERE {{ <{intention}> execution:outcome ?o }}",
+                               intentions_graph(AGENT)))
+
+
+def test_a_committed_plan_is_taken_step_by_step_and_resolved_done():
+    """One tick hands the head over, one drain takes it and the intention moves to the next
+    step; the last step resolves it `done`, and every act is on record."""
+    x = executor()
+    intention = x.commit(a_plan(2), PLAN, WANT)
+    assert x.tick(NOW) == [f"{PLAN}.0"], "the head is due at once where the plan states no instant"
+    assert x.tick(NOW) == [], "and handed over once while it is in flight"
+    assert x.drain() == 1
+    (standing,) = x.standing()
+    assert standing.at == f"{PLAN}.1"
+    assert x.tick(NOW) == [f"{PLAN}.1"] and x.drain() == 1
+    assert x.standing() == [] and _resolved(x, intention) == [{"o": "done"}]
+    acts = _acts(x)
+    assert [a["taken"] for a in acts] == ["true", "true"]
+    assert all(a["done"] >= a["at"] for a in acts), "the act says when it was handed over and when the taker returned"
+
+
+def test_a_step_waits_for_its_instant():
+    """`execution:notBefore` on the head keeps it out of the queue until the timekeeper stands
+    at that instant."""
+    x = executor()
+    source = a_plan(1)
+    later = NOW + timedelta(hours=1)
+    update(source, f'INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notBefore '
+                   f'"{later.isoformat()}"^^xsd:dateTime }} }}')
+    x.commit(source, PLAN, WANT)
+    assert x.tick(NOW) == []
+    assert x.tick(later) == [f"{PLAN}.0"]
+
+
+def test_a_step_that_cannot_be_taken_fails_the_intention():
+    """The act is recorded as not taken, the intention resolves `failed`, and the executor
+    outlives the taker that raised."""
+    def refuse(said, intention):
+        raise RuntimeError("no valve answers")
+    x = executor(take=refuse)
+    intention = x.commit(a_plan(2), PLAN, WANT)
+    x.tick(NOW)
+    assert x.drain() == 1
+    assert _resolved(x, intention) == [{"o": "failed"}]
+    assert [a["taken"] for a in _acts(x)] == ["false"]
+    assert x.standing() == []
+
+
+def test_a_plan_another_hand_wrote_into_the_ledger_is_scheduled_on_the_next_tick():
+    """The planner's crossing writes the ledger directly, without `commit`: any plan in the
+    ledger is the executor's, whoever put it there."""
+    x = executor()
+    copy_plan(a_plan(1), PLAN, x.intentions, AGENT, WANT)
+    assert x.tick(NOW) == [f"{PLAN}.0"]
+
+
+def test_what_a_step_says_reaches_the_log(caplog):
+    """Taking a step, today, is saying its name and its filling — in the package's words,
+    which this layer repeats without reading."""
+    x = executor()
+    source = a_plan(1)
+    update(source, f"INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> <http://example.org/test#disk> "
+                   f"<http://example.org/test#disk_1> }} }}")
+    x.commit(source, PLAN, WANT)
+    with caplog.at_level(logging.INFO, logger="executor"):
+        x.tick(NOW)
+        x.drain()
+    assert any("disk=disk_1" in r.getMessage() and "plan.0" in r.getMessage() for r in caplog.records), \
+        [r.getMessage() for r in caplog.records]
+
+
+def test_the_two_threads_carry_a_plan_out():
+    """Started, the timekeeper finds the committed plan and the executing thread takes its
+    three steps; stopped, both threads are gone and the ledger says `done`."""
+    x = executor(poll_s=0.05)
+    x.start()
+    try:
+        intention = x.commit(a_plan(3), PLAN, WANT)
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and not _resolved(x, intention):
+            time.sleep(0.02)
+    finally:
+        x.stop()
+    assert _resolved(x, intention) == [{"o": "done"}]
+    assert len(_acts(x)) == 3

@@ -48,7 +48,12 @@ execution:of a owl:ObjectProperty ; rdfs:domain execution:Act ; rdfs:range execu
     rdfs:label "of" .
 
 execution:takenAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:range xsd:dateTime ;
-    rdfs:label "taken at" .
+    rdfs:label "taken at" ;
+    rdfs:comment "When the executor handed the step to its taker — the record, against the step's `execution:notBefore`, which is the requirement." .
+
+execution:doneAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:range xsd:dateTime ;
+    rdfs:label "done at" ;
+    rdfs:comment "When the taker returned, taken or not. With `execution:takenAt` it is how long the taking took, in the one timeline; it is NOT when the step's change landed in the world, which is the world's to say through a reading and is held against the step's `execution:landsAt`, the prediction, by whoever holds the world to the step." .
 
 execution:taken a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:range xsd:boolean ;
     rdfs:label "taken" ;
@@ -65,7 +70,7 @@ execution:quantity a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:ra
 
 execution:notBefore a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "not before" ;
-    rdfs:comment "The window's opening. Declared and unwritten: a held claim spent later — futures — is the first thing that would write it, and that is the market's decision." .
+    rdfs:comment "The window's opening — a REQUIREMENT on the step and never a record of it. Written by the plan's extraction as the instant of the world the step is taken in, so a plan placed at its root's instant carries that placing across; the executor's timekeeper hands a step to the queue no earlier. What actually happened is the act's: `execution:takenAt` and `execution:doneAt`." .
 
 execution:notAfter a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:dateTime ;
     rdfs:label "not after" ;

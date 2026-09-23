@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -85,4 +85,102 @@
+@@ -85,4 +85,106 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -72,12 +72,16 @@
 +  plan:keeper.in_range.pursued.tank1 planning:outcome planning:Satisfied .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 :tank :tank1 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 a execution:Step .
++  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:landsAt "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:partOf plan:keeper.in_range.pursued.tank1 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:then plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 planning:fills :fill .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 planning:of possible:fill-tank1.by .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 :tank :tank1 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 a execution:Step .
++  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:landsAt "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:partOf plan:keeper.in_range.pursued.tank1 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 planning:fills :fill .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 planning:of possible:fill-tank1.fill-tank1.by .

@@ -62,6 +62,10 @@ from .ontology import EXHAUSTED, NO_CANDIDATE, SATISFIED
 #  5. EVERY KIND THE VOCABULARY PUTS A PLAN GRAPH BENEATH, from one `rdfs:subClassOf` step —
 #     the closure is materialised at genesis, so one step is every step. Its own operation,
 #     because a vocabulary that says nothing of plan graphs must not take the row with it.
+#  A STEP SAYS WHEN IT MAY BE TAKEN AND WHEN IT LANDS, in the ledger's words: `execution:notBefore` is
+#  the instant of the world the step is taken in and `execution:landsAt` the instant of the world it
+#  reaches, so a plan placed at the instant of its root carries that placing across, and the executor
+#  keeps time by the first and holds the world to the step by the second.
 #  A STEP IS NAMED FOR ITS WORLD UNDER THE PLAN — `<plan>.<world's tail>` — so two wants
 #  planning through one world mint two steps, and nothing counts: a depth-numbered name needed
 #  a subselect walking the ancestry per world, measured at twice this update's cost, and a
@@ -71,12 +75,16 @@ _PLAN_U = """
 INSERT { GRAPH $plan { $plan a planning:Plan ; planning:for $want ; planning:outcome $outcome $costs } }
 WHERE  {} ;
 INSERT { GRAPH $plan { ?step a execution:Step ; execution:partOf $plan ;
-                       planning:fills ?action ; planning:of ?by . ?step ?p ?v } }
+                       planning:fills ?action ; planning:of ?by ;
+                       execution:notBefore ?since ; execution:landsAt ?lands . ?step ?p ?v } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
-                      ?by planning:fills ?action .
+                      ?by planning:fills ?action ; planning:from ?in .
+                      OPTIONAL { ?in planning:atInstant ?a0 } OPTIONAL { ?in dcterms:temporal/orexis:start ?s0 }
+                      OPTIONAL { ?w planning:atInstant ?lands }
                       OPTIONAL { ?by ?p ?v . FILTER(?p NOT IN (planning:fills, planning:from, rdf:type)) } }
-         BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step) } ;
+         BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step)
+         BIND(COALESCE(?a0, ?s0) AS ?since) } ;
 INSERT { GRAPH $plan { ?prev execution:then ?step } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       $world (planning:by/planning:from)* ?w . ?w planning:by ?by .

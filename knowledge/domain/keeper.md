@@ -39,3 +39,10 @@ Nothing here chooses. [Execution](/domain/executor.md) hands it a plan's head; t
 belongs to [deliberation](/domain/deliberator.md). And what a commitment IS — the lifecycle, the
 expectation, why absorption is a cost model — is [intention](/domain/intention.md)'s to say. This
 page is the service: its three jobs and the one graph it may write.
+
+# In Agent 2.0
+
+There is no keeper. The ledger it kept, the patience it owned and the taking the 1.0 executor
+did are one service there, the [executor](/domain/executor.md), and this page describes the
+progression layer's keeper alone.
+
