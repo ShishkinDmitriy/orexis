@@ -587,6 +587,8 @@ def _bound_terms(meta: dict) -> list[str]:
 
 
 def test_a_dictionary_term_is_a_declared_one():
+    import re
+
     import rdflib
 
     from assembly import loader
@@ -597,11 +599,23 @@ def test_a_dictionary_term_is_a_declared_one():
     #  left `packages/core/orexis/` for `agent/` the glob went on matching twenty files while
     #  covering none of `orexis:`. Non-empty is not complete, and the two asserts at the foot of this
     #  function would both have passed.
-    ontologies = list(loader.ontology_files())
+    #  AND THE 0.2.0 TREE'S, which the 0.1.0 loader never walks: `agent/<layer>/ontology.ttl`
+    #  is where a layer or the belief package declares its words, and a dictionary page that
+    #  binds one of them binds a term this guard would otherwise call undeclared. Their
+    #  prefixes are read off their own `@prefix` lines, as `agent.store` reads them.
+    ontologies = list(loader.ontology_files()) + sorted(
+        p for p in (REPO_ROOT / "agent").rglob("ontology.ttl") if "tests" not in p.parts)
     project = rdflib.Graph()
     for ttl in ontologies:
         project.parse(ttl)
     declared = {str(s) for s in project.subjects() if isinstance(s, rdflib.URIRef)}
+    #  An ontology that spells its own words with the empty prefix (`@prefix : <…/belief#>`)
+    #  binds them under the last segment of its namespace, since a binding needs a label and
+    #  the file gives none.
+    namespaces = dict(NAMESPACES)
+    for ttl in ontologies:
+        for label, iri in re.findall(r"@prefix\s+([A-Za-z][\w.-]*)?:\s*<([^>]*)>", ttl.read_text()):
+            namespaces.setdefault(label or iri.rstrip("#/").rsplit("/", 1)[-1], iri)
 
     vendored: dict[str, set[str]] = {}
     for prefix, filename in _VENDORED_VOCABULARIES.items():
@@ -611,7 +625,7 @@ def test_a_dictionary_term_is_a_declared_one():
 
     #  Longest binding first, so nested namespaces (orexis: inside every package's) resolve to the
     #  package that actually owns the term rather than to the kernel.
-    bindings = sorted(((str(iri), prefix) for prefix, iri in NAMESPACES.items()),
+    bindings = sorted(((str(iri), prefix) for prefix, iri in namespaces.items()),
                       key=lambda pair: -len(pair[0]))
 
     owners: dict[str, list[str]] = {}
@@ -635,7 +649,7 @@ def test_a_dictionary_term_is_a_declared_one():
                 wrong.append(f"{rel}: {iri} is in no namespace the store binds")
                 continue
             owners.setdefault(iri, []).append(page.name)
-            if str(NAMESPACES[prefix]).startswith("http://example.org/orexis"):
+            if str(namespaces[prefix]).startswith("http://example.org/orexis"):
                 if iri not in declared:
                     wrong.append(f"{rel}: {iri} is not declared by any project ontology")
             elif prefix in vendored:
@@ -652,7 +666,7 @@ def test_a_dictionary_term_is_a_declared_one():
     # `a orexis:Capability` directly are deliberately out of scope — a member is the family's page's
     # to describe, not a second owner.
     RDFS = rdflib.RDFS
-    ag_capability = rdflib.URIRef(str(NAMESPACES["orexis"]) + "Capability")
+    ag_capability = rdflib.URIRef(str(namespaces["orexis"]) + "Capability")
     families = {str(s) for s in project.subjects(RDFS.subClassOf, ag_capability)}
     for family in sorted(families - set(owners)):
         wrong.append(f"{family} is a capability family no dictionary page binds")

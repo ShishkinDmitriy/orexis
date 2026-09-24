@@ -543,6 +543,29 @@ it is a record wearing a bullet.
   and a caller never said what it read; a query is handed its graphs now, `graphs_of` answers
   by kind and instant, every row carries every kind, and the union of everything was refused
   as the default because it reads every sibling world and next hour's readings as the present.
+- **A rule concludes and never deletes, and what replaces a revision is its source
+  rewritten** — SHACL 1.2 Inference Rules and the sovereign's instinct agree; the revisions
+  of a graph live in a graph of their own, derived from it, and go when it goes, so no rule
+  ever names what it takes away; the rules are the draft's, adopted as they stand — a rules
+  graph, a rule set, SPARQL rules by layer and order — with nothing of ours on them
+  (`agent/belief/revise.py`).
+- **Any belief is accepted, and revised; validation was built beside revision and struck the
+  same day** — every new graph held to the packages' shapes and forgotten whole on a
+  violation; belief revision keeps the new information, dropping testimony over a shape is a
+  gate wearing revision's name, and a law's objection to a graph is a revision a rule can conclude for the mind to want repaired.
+- **A state that served a gate goes with the gate** — a proposal, a graph classified as not
+  yet believed until `believe` retyped it, bought only that a graph was never seen without its
+  revisions; a graph with no catalogue row is already invisible to every reader, so the
+  writer concludes and then classifies, and a class, a property, two acts and a page said
+  nothing the row's absence did not.
+- **Revision's ceiling is a budget in rule executions, and a source the budget cuts short is
+  continued by the next pass** — `revise` capped its own iterations at a number the module
+  chose, where the search's ceiling is the container's in the unit it spends; a cut keeps what
+  was concluded with the row saying so, the deliberator re-queues such rows at boot, and a
+  rule set that never settles spends a budget every pass and is reported rather than looped on.
+- **A belief kind enters through `propose`, and a package's working graph is not a belief** —
+  the belief package's layout test holds every writer in the tree to the door, and what
+  bypasses it is what no rule reads as the world.
 # Working on Orexis
 
 A society of self-interested agents that bid for a scarce resource. The v1 domain is plant
@@ -1088,6 +1111,29 @@ it is a record wearing a bullet.
   and a caller never said what it read; a query is handed its graphs now, `graphs_of` answers
   by kind and instant, every row carries every kind, and the union of everything was refused
   as the default because it reads every sibling world and next hour's readings as the present.
+- **A rule concludes and never deletes, and what replaces a revision is its source
+  rewritten** — SHACL 1.2 Inference Rules and the sovereign's instinct agree; the revisions
+  of a graph live in a graph of their own, derived from it, and go when it goes, so no rule
+  ever names what it takes away; the rules are the draft's, adopted as they stand — a rules
+  graph, a rule set, SPARQL rules by layer and order — with nothing of ours on them
+  (`agent/belief/revise.py`).
+- **Any belief is accepted, and revised; validation was built beside revision and struck the
+  same day** — every new graph held to the packages' shapes and forgotten whole on a
+  violation; belief revision keeps the new information, dropping testimony over a shape is a
+  gate wearing revision's name, and a law's objection to a graph is a revision a rule can conclude for the mind to want repaired.
+- **A state that served a gate goes with the gate** — a proposal, a graph classified as not
+  yet believed until `believe` retyped it, bought only that a graph was never seen without its
+  revisions; a graph with no catalogue row is already invisible to every reader, so the
+  writer concludes and then classifies, and a class, a property, two acts and a page said
+  nothing the row's absence did not.
+- **Revision's ceiling is a budget in rule executions, and a source the budget cuts short is
+  continued by the next pass** — `revise` capped its own iterations at a number the module
+  chose, where the search's ceiling is the container's in the unit it spends; a cut keeps what
+  was concluded with the row saying so, the deliberator re-queues such rows at boot, and a
+  rule set that never settles spends a budget every pass and is reported rather than looped on.
+- **A belief kind enters through `propose`, and a package's working graph is not a belief** —
+  the belief package's layout test holds every writer in the tree to the door, and what
+  bypasses it is what no rule reads as the world.
 - **A prediction is a diff, and only a ground has applied it** — the derivation judged a
   foreseen instant over the state graph beside the prediction holding then, so a tank low now
   with a forecast refilling it read unmet for ever while the search beside it read the grounds

@@ -117,7 +117,15 @@ def _digest(facts: frozenset) -> str:
 
 
 def _facts(triples) -> frozenset:
-    """The canonical facts a set of triples states — what of it counts as 'where I am'.
+    """The canonical facts a set of triples states — what of it counts as 'where I am'."""
+    return frozenset(forms(triples))
+
+
+def forms(triples) -> list[tuple]:
+    """The canonical form of EACH triple, in the order given, in the universe of the triples
+    given — a blank node being its neighbourhood there. For a writer deciding which of a
+    rule's conclusions it already holds: a triple whose form is among the forms of what
+    stands says nothing new, whatever label its blank node was minted with.
 
     Read twice: once to learn what hangs off each blank node, once to emit, because a blank
     node's canonical form is its neighbourhood and a single pass would not have it yet.
@@ -130,7 +138,7 @@ def _facts(triples) -> frozenset:
         if isinstance(o, ox.BlankNode):
             incoming.setdefault(o, []).append((s, p))
     world = _World(outgoing, incoming)
-    return frozenset((world.term(s), p.value, world.term(o)) for s, p, o in triples)
+    return [(world.term(s), p.value, world.term(o)) for s, p, o in triples]
 
 
 class _World:

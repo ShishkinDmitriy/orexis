@@ -51,7 +51,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a region want AND an action.
 
-* [deliberation](/domain/deliberator.md) - The whether: name the next move by building the world each action would make and keeping the one worth reaching. One path.
+* [deliberation](/domain/deliberator.md) - In 0.1.0 the whether, the search; in 0.2.0 the belief package's pass, revising what was written within a budget and continuing a cut.
 
 
 # Means — actions, steps, and what taking one comes to
@@ -138,4 +138,5 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [keeper](/domain/keeper.md) - Runs keeping, the patience and the verification arc; the intention graph's only writer.
 * [ower](/domain/ower.md) - Runs owing: one row per claim issued against this agent, durable across a restart.
 * [inference](/domain/inference.md) - Materialises what the vocabulary entails, so both engines read one graph.
+* [revision](/domain/revision.md) - A belief derived from beliefs by SHACL 1.2's rules, adopted as they stand, into a graph of the source's own, on the present only.
 * [deducer](/domain/deducer.md) - Runs deducing: derives what an agent pursues; the desires repository's only writer, and inside it.

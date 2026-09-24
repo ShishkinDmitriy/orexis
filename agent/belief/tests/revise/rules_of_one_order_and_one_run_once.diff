@@ -1,0 +1,20 @@
+--- case
++++ expected
+@@ -57,4 +57,17 @@
+   :sensed orexis:beliefsOf :keeper .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  sensed:revisions a belief:RevisionGraph .
++  sensed:revisions a orexis:Graph .
++  sensed:revisions belief:settled true .
++  sensed:revisions orexis:arrivedBy orexis:Derived .
++  sensed:revisions orexis:beliefsOf :keeper .
++  sensed:revisions prov:wasDerivedFrom :sensed .
+ }
++
++
++GRAPH sensed:revisions {
++  :obs1 :side :Below .
++  :zz :isDry true .
++  :zz :seen 1 .
++}

@@ -1,0 +1,66 @@
+# a_chain_settles_in_a_later_round
+#
+# Two rule sets, the one reading the other's conclusion placed FIRST by sh:order: the first
+# round concludes Below alone, the second concludes the pot is dry from it, the third
+# concludes nothing new and the rounds stop. Both conclusions stand.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sensed: <http://example.org/test#sensed/> .
+
+GRAPH :ontology {
+  belief:RevisionGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :zz :high 0.3 .
+  :zz :low 0.1 .
+  :zz a :Pot .
+}
+
+GRAPH :rules {
+  :below a sh:RuleSet .
+  :below rdfs:label "a reading under the low end of its subject's range is Below" .
+  :below sh:hasRule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?obs :side :Below } WHERE {
+      ?obs a :Observation ; :of ?s ; :reads ?v . ?s :low ?lo . FILTER(?v < ?lo) }""" ] .
+  :dryness a sh:RuleSet .
+  :dryness rdfs:label "a pot whose reading is Below is dry" .
+  :dryness sh:hasRule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?s :isDry true } WHERE { ?obs :of ?s ; :side :Below }""" ] .
+  :dryness sh:order 1 .
+}
+
+GRAPH :sensed {
+  :obs1 :of :zz .
+  :obs1 :reads 0.05 .
+  :obs1 a :Observation .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :sensed orexis:arrivedBy orexis:Received .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}
