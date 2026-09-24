@@ -36,3 +36,21 @@ one package; a wired transport could be a driver alone.
 
 **Not the kernel's.** The runtime builds the mind, loads the modules, starts them and waits
 for a signal. It never learns a message exists.
+
+# In Agent 0.2.0, the MQTT transport speaks MQTT4SSN and declares nothing of its own
+
+`agent/transport/mqtt/` adopts MQTT4SSN as it stands — the ontology that extends SSN and SOSA with
+the MQTT protocol in the OASIS specification's own terms, vendored under `tests/fixtures/vocabularies/`
+— the way the belief package adopted SHACL's rules. A board is a `mqtt4ssn:Client` that
+`mqtt4ssn:hosts` its sensors and `mqtt4ssn:isConnectedToBroker` a `mqtt4ssn:Broker`; a sensor
+`mqtt4ssn:observesTopic` the `mqtt4ssn:Topic` it publishes on; a board that takes commands
+`mqtt4ssn:listensToTopic` another; and a topic is named only by the `mqtt4ssn:TopicFilter`s that
+`mqtt4ssn:matchesTopic` it, each with its `mqtt4ssn:hasFilterPattern`, since a topic name is itself a
+valid filter. The agent is a client too, and what it listens to is never authored: its sensors are
+those mounted in what it acts for, and their topics' patterns are its subscriptions. Three parts:
+`Mqtt` answers sensing's driver contract and hands a command to whoever publishes; `handle` is the
+listener, one call of sensing's `received` per sensor of the agent's whose pattern matches the
+message's topic; `Link` wraps a client the container has connected. The broker's address and the
+agent's credentials stay in the environment, and no host or port is read off the world. The words
+`MessageBus`, `readingTopic`, `commandTopic`, `Channel`, `publishesOn` and `listensOn` are the 0.1.0
+package's, and 0.2.0 speaks none of them.

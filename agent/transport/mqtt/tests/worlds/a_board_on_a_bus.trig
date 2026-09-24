@@ -1,0 +1,102 @@
+# a_board_on_a_bus
+#
+# THE WORLD THE TRANSPORT IS HELD TO, in MQTT4SSN's words: one broker; the keeper, a client on it,
+# acting for the pot; a board in the pot, a client too, hosting a thermometer and a hygrometer that
+# publish one document on one topic and taking commands on another — each topic named by the filter
+# that matches it; a moisture probe in the pot that speaks no MQTT at all; and a neighbour's lamp
+# on the same broker, whose photometer publishes for a fern the keeper does not act for.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+GRAPH :ontology {
+  belief:RevisionGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:BeliefGraph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:StateGraph .
+}
+
+GRAPH :world {
+  :board a mqtt4ssn:Client .
+  :board a sosa:Actuator .
+  :board a ssn:System .
+  :board mqtt4ssn:hasClientID "board" .
+  :board mqtt4ssn:hosts :hygro .
+  :board mqtt4ssn:hosts :thermo .
+  :board mqtt4ssn:isConnectedToBroker :broker .
+  :board mqtt4ssn:listensToTopic :board_commands .
+  :board ssn:hasSubSystem :hygro .
+  :board ssn:hasSubSystem :thermo .
+  :board_commands a mqtt4ssn:Topic .
+  :board_readings a mqtt4ssn:Topic .
+  :broker a mqtt4ssn:Broker .
+  :commands_filter a mqtt4ssn:TopicFilter .
+  :commands_filter mqtt4ssn:hasFilterPattern "sensors/board/command" .
+  :commands_filter mqtt4ssn:matchesTopic :board_commands .
+  :fern a :Pot .
+  :hygro a sosa:Sensor .
+  :hygro mqtt4ssn:observesTopic :board_readings .
+  :hygro sensing:readingPointer "/humidity" .
+  :hygro sosa:isHostedBy :zamioculcas .
+  :hygro sosa:observes :humidity .
+  :hygro ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:MIN ; schema:value 2 ] ] .
+  :keeper a mqtt4ssn:Client .
+  :keeper a orexis:Agent .
+  :keeper mqtt4ssn:hasClientID "keeper" .
+  :keeper mqtt4ssn:isConnectedToBroker :broker .
+  :keeper orexis:actsFor :zamioculcas .
+  :keeper orexis:localId "keeper" .
+  :lamp a mqtt4ssn:Client .
+  :lamp a ssn:System .
+  :lamp mqtt4ssn:hasClientID "lamp" .
+  :lamp mqtt4ssn:hosts :photometer .
+  :lamp mqtt4ssn:isConnectedToBroker :broker .
+  :lamp ssn:hasSubSystem :photometer .
+  :lamp_filter a mqtt4ssn:TopicFilter .
+  :lamp_filter mqtt4ssn:hasFilterPattern "sensors/lamp/+" .
+  :lamp_filter mqtt4ssn:matchesTopic :lamp_readings .
+  :lamp_readings a mqtt4ssn:Topic .
+  :photometer a sosa:Sensor .
+  :photometer mqtt4ssn:observesTopic :lamp_readings .
+  :photometer sosa:isHostedBy :fern .
+  :photometer sosa:observes :light .
+  :probe a sosa:Sensor .
+  :probe sosa:isHostedBy :zamioculcas .
+  :probe sosa:observes :moisture .
+  :readings_filter a mqtt4ssn:TopicFilter .
+  :readings_filter mqtt4ssn:hasFilterPattern "sensors/board/reading" .
+  :readings_filter mqtt4ssn:matchesTopic :board_readings .
+  :thermo a sosa:Sensor .
+  :thermo mqtt4ssn:observesTopic :board_readings .
+  :thermo sensing:readingPointer "/temperature" .
+  :thermo sosa:isHostedBy :zamioculcas .
+  :thermo sosa:observes :warmth .
+  :thermo ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:MIN ; schema:value 2 ] ] .
+  :zamioculcas a :Pot .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

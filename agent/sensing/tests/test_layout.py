@@ -48,14 +48,23 @@ def test_no_file_of_this_layer_speaks_the_minds_words_or_a_transports(path):
     assert not said, f"{path.name} names another layer's or a transport's words: {sorted(set(said))}"
 
 
+#  A TRANSPORT IS BENEATH SENSING AND IMPORTS ITS CONTRACT: `Driver`, which it implements, and
+#  `received`, the callback it calls — the one downward import a family's member is allowed.
+CONTRACT = ("agent.sensing.driver", "agent.sensing.received")
+
+
 def test_nothing_above_imports_sensing():
     """The prediction package and the executor read observations by KIND: a graph classified
-    `orexis:StateGraph` is theirs to read whoever wrote it."""
+    `orexis:StateGraph` is theirs to read whoever wrote it. A transport, beneath, imports the
+    contract and the callback and nothing else of sensing's."""
     for path in sorted((ROOT / "agent").rglob("*.py")):
         if SENSING in path.parents or "tests" in path.parts:
             continue
+        transport = "transport" in path.parts
         for node in ast.walk(ast.parse(path.read_text())):
             mod = (node.module if isinstance(node, ast.ImportFrom) else None) or ""
+            if transport and mod in CONTRACT:
+                continue
             assert "agent.sensing" not in mod, f"{path.relative_to(ROOT)} imports sensing"
             if isinstance(node, ast.Import):
                 assert not any(a.name.startswith("agent.sensing") for a in node.names), path
