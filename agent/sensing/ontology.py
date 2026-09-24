@@ -24,7 +24,6 @@ from agent.ontology import GRAPH_PREFIX, OREXIS
 SENSING = "http://example.org/orexis/sensing#"
 SOSA = "http://www.w3.org/ns/sosa/"
 SSN = "http://www.w3.org/ns/ssn/"
-SSN_SYSTEM = "http://www.w3.org/ns/ssn/systems/"
 SCHEMA = "https://schema.org/"
 PROV = "http://www.w3.org/ns/prov#"
 SH = "http://www.w3.org/ns/shacl#"
@@ -61,10 +60,6 @@ MADE_BY = SOSA + "madeBySensor"
 PROCEDURE = SOSA + "usedProcedure"
 IS_SAMPLE_OF = SOSA + "isSampleOf"
 GENERATED_BY = PROV + "wasGeneratedBy"
-
-#  SSN-SYSTEM'S, on a range.
-OPERATING_RANGE = SSN_SYSTEM + "OperatingRange"
-SURVIVAL_RANGE = SSN_SYSTEM + "SurvivalRange"
 
 #  THE DRAFT'S graph kind the registered rules are kept in.
 RULES_GRAPH = SH + "RulesGraph"

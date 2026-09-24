@@ -43,7 +43,7 @@ from agent.store import (Raw, bind, catalogue_of, construct, entry, forget_graph
                          instant, quads, remember, rows, update)
 
 from .ontology import FEATURE, PROPERTY, RECORDED, RESULT, prediction_graph
-from .ranges import ranges_of
+from .ranges import ranges_of, side
 
 log = logging.getLogger("predict")
 
@@ -118,7 +118,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
 
     def sides(elapsed: float):
         value = _value(at(elapsed), node)
-        return None if value is None else tuple(r.side(value) for r in ranges)
+        return None if value is None else tuple(side(low, high, value) for low, high in ranges)
 
     #  THE SCAN, rung by rung, and every crossing within a rung bisected in turn.
     crossings: list[tuple[float, float]] = []       # (last elapsed on the old side, first on the new)
