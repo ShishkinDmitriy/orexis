@@ -14,11 +14,12 @@ import pytest
 
 from agent import clock
 from agent.sensing.received import received
-from agent.sensing.wiring import sensors_of
+from agent.store import update
 
 CASES_DIR = Path(__file__).parent / "received"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 HORIZON_S = 900.0
+PROBE = "http://example.org/test#probe"
 
 #  WHAT EACH CASE'S BYTES SAY, and which graph they land in.
 BYTES = {
@@ -32,9 +33,8 @@ BYTES = {
 def test_received_leaves_the_observation_the_patch_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
-    (probe,) = sensors_of(store, snapshots.ME)
     payload, feature = BYTES[case.stem]
-    graph = received(store, snapshots.ME, probe, payload, snapshots.NOW, horizon=HORIZON_S)
+    graph = received(store, snapshots.ME, PROBE, payload, snapshots.NOW, horizon=HORIZON_S)
     assert graph == f"http://example.org/orexis/graph/observed/keeper/{feature}_moisture"
     snapshots.held_to_diff(case, request, "received", snapshots.snapshot_of(store))
 
@@ -42,12 +42,24 @@ def test_received_leaves_the_observation_the_patch_says(case, monkeypatch, reque
 def test_bytes_that_hold_no_reading_write_nothing(monkeypatch, snapshots, caplog):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(CASES_DIR / "a_first_reading_becomes_an_observation.trig")
-    (probe,) = sensors_of(store, snapshots.ME)
     before = set(snapshots.graph_names(store))
     with caplog.at_level("WARNING", logger="pipeline"):
-        assert received(store, snapshots.ME, probe, b'{"temperature": 21}', snapshots.NOW, horizon=HORIZON_S) is None
+        assert received(store, snapshots.ME, PROBE, b'{"temperature": 21}', snapshots.NOW, horizon=HORIZON_S) is None
     assert set(snapshots.graph_names(store)) == before
     assert "unread" in caplog.text
+
+
+def test_a_sensor_with_no_host_has_no_key_and_writes_nothing(monkeypatch, snapshots, caplog):
+    """The key is what the sensor observes of what hosts it, in SOSA's words; a sensor the
+    world mounts nowhere is not keyed, and its bytes are not a measurement of anything."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(CASES_DIR / "a_first_reading_becomes_an_observation.trig")
+    update(store, "DELETE WHERE { GRAPH ?g { ?probe sosa:isHostedBy ?host } }")
+    before = set(snapshots.graph_names(store))
+    with caplog.at_level("WARNING", logger="received"):
+        assert received(store, snapshots.ME, PROBE, b'{"value": 0.2}', snapshots.NOW, horizon=HORIZON_S) is None
+    assert set(snapshots.graph_names(store)) == before
+    assert "no key" in caplog.text
 
 
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):

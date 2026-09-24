@@ -20,11 +20,11 @@ from agent.ontology import KNOWN
 from agent.sensing.predict import predict
 from agent.sensing.received import received
 from agent.sensing.register import register
-from agent.sensing.wiring import sensors_of
 from agent.store import graphs_of, rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 HORIZON_S = 900.0
+PROBE = "http://example.org/test#probe"
 
 _SIDES_Q = "SELECT ?p ?range WHERE { GRAPH $g { ?obs ?p ?range } }"
 _PREDICTIONS_Q = """
@@ -41,8 +41,7 @@ def pot(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
     register(store)
-    (probe,) = sensors_of(store, snapshots.ME)
-    return store, probe
+    return store, PROBE
 
 
 def _reading(store, snapshots, probe, value, minutes=0):

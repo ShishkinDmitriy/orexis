@@ -37,9 +37,8 @@ GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:actsFor :zz .
   :keeper orexis:localId "keeper" .
-  :keeper sensing:polls :probe .
   :probe a sosa:Sensor .
-  :probe sensing:monitors :zz .
+  :probe sosa:isHostedBy :zz .
   :probe sosa:observes :moisture .
   :zz :driesPerDay 0.5 .
   :zz a :Pot .
@@ -54,9 +53,6 @@ GRAPH :world {
 GRAPH :actions {
   :Drying a sensing:Drift .
   :Drying rdfs:label "what a pot loses while nobody waters it" .
-  :Drying sensing:atHorizon 18000 .
-  :Drying sensing:atHorizon 3600 .
-  :Drying sensing:atHorizon 86400 .
   :Drying sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT {
           ?obs a sosa:Observation ;

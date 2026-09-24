@@ -22,7 +22,10 @@ from __future__ import annotations
 import json
 import logging
 
-from .ontology import IDENTITY_SCALING, JSON_CODEC
+from agent.ontology import PUBLIC
+from agent.store import Raw, graphs_of, rows
+
+from .ontology import DECODED_BY, IDENTITY_SCALING, JSON_CODEC, SCALED_BY
 
 log = logging.getLogger("pipeline")
 
@@ -58,7 +61,9 @@ class Scaling:
 
     TERM: str = ""
 
-    def apply(self, sensor, raw: float) -> float:
+    def apply(self, sensor: str, raw: float) -> float:
+        """The quantity `raw` is for the sensor named — its IRI, for a scaling that must ask
+        the world about it."""
         raise NotImplementedError
 
 
@@ -85,7 +90,7 @@ class IdentityScaling(Scaling):
 
     TERM = IDENTITY_SCALING
 
-    def apply(self, sensor, raw: float) -> float:
+    def apply(self, sensor: str, raw: float) -> float:
         return raw
 
 
@@ -119,21 +124,32 @@ def resolve(pointer: str, doc):
     return node
 
 
-def decode(sensor, payload: bytes) -> float | None:
-    """The quantity this sensor's share of `payload` holds, or None where any stage refuses —
-    said in the log, since a pointer that misses is not a measurement and nothing is written."""
-    codec_cls = CODECS.get(sensor.decoded_by or JsonCodec.TERM)
+#  THE BINDING: what the world derives onto a sensor about its bytes, every part optional.
+_BINDING_Q = """
+SELECT ?codec ?pointer ?scaling WHERE {
+  OPTIONAL { $sensor $decodedBy ?codec }
+  OPTIONAL { $sensor sensing:readingPointer ?pointer }
+  OPTIONAL { $sensor $scaledBy ?scaling } }"""
+
+
+def decode(store, sensor: str, payload: bytes) -> float | None:
+    """The quantity `sensor`'s share of `payload` holds, by the binding public knowledge states
+    for it, or None where any stage refuses — said in the log, since a pointer that misses is not
+    a measurement and nothing is written."""
+    binding = next(iter(rows(store, _BINDING_Q, graphs_of(store, PUBLIC), sensor=sensor,
+                             decodedBy=Raw(f"<{DECODED_BY}>"), scaledBy=Raw(f"<{SCALED_BY}>"))), {})
+    codec_cls = CODECS.get(binding.get("codec") or JsonCodec.TERM)
     if codec_cls is None:
-        log.warning("%s names a codec nothing here implements: %s", sensor.uri, sensor.decoded_by)
+        log.warning("%s names a codec nothing here implements: %s", sensor, binding["codec"])
         return None
-    scaling_cls = SCALINGS.get(sensor.scaled_by or IdentityScaling.TERM)
+    scaling_cls = SCALINGS.get(binding.get("scaling") or IdentityScaling.TERM)
     if scaling_cls is None:
-        log.warning("%s names a scaling nothing here implements: %s", sensor.uri, sensor.scaled_by)
+        log.warning("%s names a scaling nothing here implements: %s", sensor, binding["scaling"])
         return None
     try:
         document = codec_cls().decode(payload)
-        raw = resolve(sensor.pointer or DEFAULT_POINTER, document)
+        raw = resolve(binding.get("pointer") or DEFAULT_POINTER, document)
         return float(scaling_cls().apply(sensor, float(raw)))
     except (CodecError, PointerError) as exc:
-        log.warning("%s: unread — %s", sensor.uri, exc)
+        log.warning("%s: unread — %s", sensor, exc)
         return None

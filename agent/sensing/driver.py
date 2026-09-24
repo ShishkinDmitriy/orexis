@@ -4,7 +4,7 @@ implements.
 A driver knows how one kind of device is reached: whether the world's binding of a sensor is
 one it recognises, which channels carry that sensor's readings, whether a message on a channel
 is that sensor's, how to nudge the device and how to set its cadence. It reads that binding
-from the store by the sensor's IRI in its own words; sensing hands it a `Sensor` and never a
+from the store by the sensor's IRI in its own words; sensing hands it that IRI and never a
 topic. What a driver no longer does is `parse`: bytes to number is the pipeline's, so the
 transport hands sensing the bytes and the sensor they are for, and sensing's `received` is
 the callback it calls.

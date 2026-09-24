@@ -16,11 +16,11 @@ import pytest
 
 from agent import clock
 from agent.sensing.predict import predict
-from agent.sensing.wiring import sensors_of
 from agent.store import rows
 
 CASES_DIR = Path(__file__).parent / "predict"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
+PROBE = "http://example.org/test#probe"
 
 _WINDOWS_Q = """
 SELECT ?g ?start ?end WHERE {
@@ -45,8 +45,7 @@ OPENS = {
 def test_predict_writes_the_stretches_the_patch_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
-    (probe,) = sensors_of(store, snapshots.ME)
-    written = predict(store, snapshots.ME, probe)
+    written = predict(store, snapshots.ME, PROBE)
     snapshots.held_to_diff(case, request, "predict", snapshots.snapshot_of(store))
     opened = [(datetime.fromisoformat(r["start"]) - snapshots.NOW).total_seconds() / 60 for r in rows(store, _WINDOWS_Q, ())]
     assert len(opened) == len(OPENS[case.stem]), opened
@@ -60,9 +59,8 @@ def test_the_ladder_is_rewritten_whole_by_the_next_prediction(monkeypatch, snaps
     prediction derived from the observation's graph goes before its own is written."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(CASES_DIR / "a_fast_dryer_crosses_inside_the_first_rung.trig")
-    (probe,) = sensors_of(store, snapshots.ME)
-    first = predict(store, snapshots.ME, probe)
-    again = predict(store, snapshots.ME, probe)
+    first = predict(store, snapshots.ME, PROBE)
+    again = predict(store, snapshots.ME, PROBE)
     assert first == again
     assert [r["g"] for r in rows(store, _WINDOWS_Q, ())] == again
 

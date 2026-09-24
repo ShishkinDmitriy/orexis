@@ -10,8 +10,9 @@
 #  THE RULES SENSING REGISTERS: which side of each of its subject's ranges an observation's result
 #  lies on. Three global SPARQL rules of one layer and one order, as SHACL 1.2 Inference Rules
 #  defines them, run by the deliberator over every observation and every predicted observation.
-#  A range is SSN-System's: the subject's own, or an instrument's that monitors it, whose condition
-#  is for the observed property and states a floor and a ceiling. A sample stands for its subject.
+#  A range is SSN-System's, stated by what hosts the sensor, by what that is a sample of — a sample
+#  stands for its subject — or by the sensor itself, whose condition is for the observed property
+#  and states a floor and a ceiling.
 #  The bounds are inclusive on the inside, so a result on a bound is inside — the bisection that
 #  places a crossing agrees.
 
@@ -23,11 +24,9 @@
     rdfs:label "under the floor" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:below ?range } WHERE {
-            ?obs a sosa:Observation ; sosa:hasFeatureOfInterest ?feature ;
-                 sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
-            OPTIONAL { ?feature sosa:isSampleOf ?of }
-            BIND(COALESCE(?of, ?feature) AS ?subject)
-            ?subject (^sensing:monitors)?/(ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange) ?range .
+            ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
+            ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
+            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:minValue ?low .
             FILTER(?value < ?low)
@@ -37,11 +36,9 @@
     rdfs:label "within the range, bounds included" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:inside ?range } WHERE {
-            ?obs a sosa:Observation ; sosa:hasFeatureOfInterest ?feature ;
-                 sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
-            OPTIONAL { ?feature sosa:isSampleOf ?of }
-            BIND(COALESCE(?of, ?feature) AS ?subject)
-            ?subject (^sensing:monitors)?/(ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange) ?range .
+            ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
+            ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
+            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:minValue ?low ; schema:maxValue ?high .
             FILTER(?value >= ?low && ?value <= ?high)
@@ -51,11 +48,9 @@
     rdfs:label "over the ceiling" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:above ?range } WHERE {
-            ?obs a sosa:Observation ; sosa:hasFeatureOfInterest ?feature ;
-                 sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
-            OPTIONAL { ?feature sosa:isSampleOf ?of }
-            BIND(COALESCE(?of, ?feature) AS ?subject)
-            ?subject (^sensing:monitors)?/(ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange) ?range .
+            ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
+            ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
+            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:maxValue ?high .
             FILTER(?value > ?high)

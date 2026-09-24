@@ -1,6 +1,6 @@
 # a_pot_and_its_probe
 #
-# THE WORLD SENSING IS HELD TO: one agent acting for one pot, a probe it polls, the pot's own physics —
+# THE WORLD SENSING IS HELD TO: one agent acting for one pot, the probe the pot hosts, the pot's own physics —
 # four fractions a day, a fast dryer, so a reading inside its operating range meets the floor within the
 # hour — the pot's operating and survival ranges in SSN-System's words, and the drift that predicts the
 # number. Nothing about sides: those are the rules this layer registers, concluded by the deliberator.
@@ -40,9 +40,8 @@ GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:actsFor :zz .
   :keeper orexis:localId "keeper" .
-  :keeper sensing:polls :probe .
   :probe a sosa:Sensor .
-  :probe sensing:monitors :zz .
+  :probe sosa:isHostedBy :zz .
   :probe sosa:observes :moisture .
   :probe ssn-system:hasOperatingRange :probe.operating .
   :probe.operating a ssn-system:OperatingRange .
@@ -60,9 +59,6 @@ GRAPH :world {
 GRAPH :actions {
   :Drying a sensing:Drift .
   :Drying rdfs:label "what a pot loses while nobody waters it" .
-  :Drying sensing:atHorizon 18000 .
-  :Drying sensing:atHorizon 3600 .
-  :Drying sensing:atHorizon 86400 .
   :Drying sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT {
           ?obs a sosa:Observation ;

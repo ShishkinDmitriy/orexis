@@ -92,14 +92,15 @@ with the prediction once at arrival, and that comparison is the step's verdict.
 # In Agent 0.2.0, a prediction is when the reading changes range
 
 The set of bands above is the 0.1.0 tree's. In `agent/sensing/`, `predict` runs the domain's
-drifts over the observation in hand at the rungs of the ladder and, against every range the
-subject states for the property, bisects each crossing of a bound; what it writes is one
+drifts over the observation in hand at the rungs of the ladder and, against every range that
+applies to what the sensor observes, bisects each crossing of a bound; what it writes is one
 `orexis:PredictionGraph` per stretch — from the horizon to the first crossing, crossing to
 crossing, and from the last to the ladder's end — each holding a predicted `sosa:Observation`
 in SOSA's words with the number the drift gives at the last instant of that stretch known to
 lie on its side. No band is written: the side of a predicted observation is a
 [revision](/domain/revision.md), concluded by the rules sensing registers exactly as for the
 observation itself, so the mind reads a stretch as the side it is. The ladder is the scan, not
-the answer; a key no drift moves is carried forward for the first rung alone; a key that
+the answer, and it is sensing's own — an hour, five and a day past the reading's horizon, and
+a drift declares no horizon; a key no drift moves is carried forward for the first rung alone; a key that
 crosses nothing has one prediction to the ladder's end.
 

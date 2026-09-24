@@ -2,22 +2,33 @@
 @prefix : <http://example.org/orexis/sensing#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a owl:Ontology ;
     rdfs:label "Orexis sensing, Agent 0.2.0" ;
-    rdfs:comment """What the sensing layer of Agent 0.2.0 adds to the sensing package's vocabulary,
-    which it otherwise speaks as it stands: the drift and its horizons, what an agent polls and
-    what a sensor monitors. Sensing here is the translation row of the agent stack and nothing
-    above it — a transport hands it bytes, it makes a number of them and writes one
-    sosa:Observation, and predicts the number's future with the domain's drifts — one prediction per
-    stretch between the instants a registered rule's result would change. It concludes nothing
-    itself: the sides an observation
-    is on are revisions, concluded by the three rules this layer registers (rules.ttl beside this
-    file) and run by the deliberator over the present. No word of any transport is spoken here.""" .
+    rdfs:comment """The sensing layer of Agent 0.2.0 speaks SOSA and SSN, and declares only what they
+    lack. A sensor sosa:observes a property and sosa:isHostedBy what it is mounted in — the feature
+    of interest, or a sosa:Sample that sosa:isSampleOf one — and its board reaches it by
+    ssn:hasSubSystem; a range is SSN-System's, stated by the host, by what the host is a sample of,
+    or by the sensor itself. Declared here is the drift, the graph an observation is kept in, the
+    pointer, and the three sides this layer's rules conclude — six words. Sensing is the translation
+    row of the agent stack and nothing above it: a transport hands it bytes, it makes a number of
+    them and writes one sosa:Observation, and predicts the number's future with the domain's
+    drifts, one prediction per stretch between the instants a registered rule's result would
+    change. It concludes nothing itself: the sides are revisions, concluded by the three rules
+    this layer registers (rules.ttl beside this file) and run by the deliberator over the present.
+    No word of any transport is spoken here.""" .
+
+:Drift a owl:Class ;
+    rdfs:label "Drift" ;
+    rdfs:comment """What a value does by itself while nobody acts — a pot drying, a barrel draining.
+    SOSA has no word for it: a sosa:Procedure is how an observation is MADE, and a drift is how the
+    world moves what was observed. A drift carries sh:construct, a rule over the observation in hand
+    answering the predicted observation $elapsed seconds past it, landing at $lands. It declares no
+    horizon: the ladder it is asked at is the scan's, and the bisection places a crossing wherever it
+    falls.""" .
 
 :ObservationGraph a owl:Class ;
     rdfs:subClassOf orexis:StateGraph ;
@@ -34,18 +45,19 @@
     rdfs:range xsd:string ;
     rdfs:label "reading pointer" ;
     rdfs:comment """Which value of a decoded document is this sensor's, as a JSON Pointer (RFC 6901).
-    A fact about a document and not about a bus, which is why it is sensing's word: two sensors on
-    one board share a message and differ only here. Absent, the pointer is /value, which is what
-    every single-property device here publishes.""" .
+    A fact about a document and not about a bus: two sensors on one board share a message and
+    differ only here. It is the JSON codec's parameter, and moves to the codec's namespace when
+    the codec packages join 0.2.0. Absent, the pointer is /value, which is what every
+    single-property device here publishes.""" .
 
 :below a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;
     rdfs:label "below" ;
     rdfs:comment """The observation's result lies under the floor of this range — an
-    ssn-system:OperatingRange or ssn-system:SurvivalRange the subject, or an instrument monitoring
-    it, states for the observed property. Concluded by this layer's rule as a revision, read by a
-    desire's met-test, and written by an effect that predicts a reading. One triple per observation
-    and range; nothing is minted per subject.""" .
+    ssn-system:OperatingRange or ssn-system:SurvivalRange stated for the observed property by what
+    hosts the sensor, by what that is a sample of, or by the sensor itself. Concluded by this
+    layer's rule as a revision, read by a desire's met-test, and written by an effect that predicts
+    a reading. One triple per observation and range; nothing is minted per subject.""" .
 
 :inside a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;

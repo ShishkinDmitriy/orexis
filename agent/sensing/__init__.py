@@ -8,10 +8,12 @@ drifts over the observation and writes one prediction per stretch between the in
 reading changes range — the crossing found on numbers, by bisection against SSN-System's
 bounds — which is to say, every instant at which the result of a registered rule would
 change. Whether a reading landed where its stretch said is the planner's to tell, by the
-hash of the present; sensing says nothing twice. Everything is SOSA's and SSN's words and
-the sensing package's, and not one word of any transport: what a sensor is wired to and what
-its bytes mean is `wiring`, and how a device is reached is a driver's, behind the contract in
-`driver.py`.
+hash of the present; sensing says nothing twice. Everything is SOSA's and SSN's words — a
+sensor `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, and that pair
+is the key an observation is written under — but the six this layer declares in
+`ontology.ttl`, and not one word of any transport: how a sensor's bytes decode is the
+pipeline's binding on it, and how a device is reached is a driver's, behind the contract in
+`driver.py`, which is handed the sensor's IRI and bytes.
 
 **IT CONCLUDES NOTHING.** Which side of a range an observation is on is a revision: the rules
 this layer registers (`rules.ttl`, `register`) conclude it, and the deliberator runs them when

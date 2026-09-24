@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -93,6 +93,20 @@
+@@ -89,6 +89,20 @@
    :ontology a orexis:PublicGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -21,7 +21,7 @@
    observed:zz_moisture a orexis:BeliefGraph .
    observed:zz_moisture a orexis:Graph .
    observed:zz_moisture a orexis:StateGraph .
-@@ -101,3 +115,22 @@
+@@ -97,3 +111,22 @@
    observed:zz_moisture orexis:arrivedBy orexis:Received .
    observed:zz_moisture orexis:beliefsOf :keeper .
  }

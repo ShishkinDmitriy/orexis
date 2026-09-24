@@ -3,9 +3,11 @@ in hand, and a prediction written for each stretch between crossings.
 
 **A PREDICTION IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** Every `sensing:Drift`
 the domain declares — a package's rule over `$elapsed`, what the world does to a reading while
-nobody acts — is run over the observation at the instants of the LADDER, each `sensing:atHorizon`
-past the observation's own horizon; the ladder is the scan, not the answer. Against every range
-the subject states for the property (SSN-System's operating and survival ranges, `ranges_of`),
+nobody acts — is run over the observation at the instants of the LADDER, `LADDER_S`, each rung
+past the observation's own horizon; the ladder is the scan, not the answer, and it is this
+layer's: a drift declares no horizon, since the bisection places a crossing wherever it falls
+and a rung only bounds how far the scan looks. Against every range that applies to what the
+sensor observes (SSN-System's operating and survival ranges, `ranges_of`),
 wherever the drift's number lies on one side of a bound at one rung and the other side at the
 next, the crossing is bisected between them, within a minute or a sixty-fourth of the rung, and
 the scan goes on from it — so a rung that crosses two bounds yields two crossings. A comparison
@@ -22,9 +24,10 @@ written, and its row carries `orexis:retracts`, the `DELETE … WHERE` naming `G
 takes the key's standing node out of whatever ground the boundary is laid over — the key is
 this layer's, so the text is this layer's to write, in the form `lay_ground` reads today.
 
-**A KEY NO DRIFT MOVES** is predicted to stay as it reads for the first rung alone: a package
-that declares no drift has made no claim about the world past that, and this layer invents no
-persistence. A key that crosses nothing has one prediction to the ladder's end.
+**A KEY NO DRIFT MOVES** — a store declaring no drift at all is the same case — is predicted
+to stay as it reads for the first rung alone: a package that declares no drift has made no
+claim about the world past that, and this layer invents no persistence. A key that crosses
+nothing has one prediction to the ladder's end.
 """
 
 from __future__ import annotations
@@ -46,22 +49,24 @@ log = logging.getLogger("predict")
 
 _RESULT = ox.NamedNode(RESULT)
 
-#  THE OBSERVATION IN HAND: the graph holding this key's node, the stretch it stands for, and
-#  its number — asked by kind and by pattern, never by name.
+#  THE OBSERVATION IN HAND: the graph holding the node this sensor last made, its key, the
+#  stretch it stands for and its number — asked by kind and by pattern, never by name.
 _OBSERVATION_Q = """
-SELECT ?graph ?node ?value ?taken ?from ?until WHERE {
+SELECT ?graph ?node ?feature ?property ?value ?taken ?from ?until WHERE {
   GRAPH $cat { ?graph a sensing:ObservationGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
                OPTIONAL { ?p orexis:end ?until } }
-  GRAPH ?graph { ?node sosa:hasFeatureOfInterest $feature ; sosa:observedProperty $property ;
-                 sosa:hasSimpleResult ?value . OPTIONAL { ?node sosa:resultTime ?taken } } }
+  GRAPH ?graph { ?node sosa:madeBySensor $sensor ; sosa:hasFeatureOfInterest ?feature ;
+                 sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
+                 OPTIONAL { ?node sosa:resultTime ?taken } } }
 ORDER BY DESC(?from) LIMIT 1"""
 
-#  EVERY DRIFT THE STORE HOLDS, with the horizons its package lists beside it.
-_DRIFTS_Q = """
-SELECT ?drift ?construct (GROUP_CONCAT(STR(?h); SEPARATOR=" ") AS ?horizons) WHERE {
-  ?drift a sensing:Drift ; sh:construct ?construct .
-  OPTIONAL { ?drift sensing:atHorizon ?h }
-} GROUP BY ?drift ?construct ORDER BY ?drift"""
+#  EVERY DRIFT THE STORE HOLDS.
+_DRIFTS_Q = "SELECT ?drift ?construct WHERE { ?drift a sensing:Drift ; sh:construct ?construct } ORDER BY ?drift"
+
+#  THE LADDER: how far past the observation's horizon the drifts are asked, in the timeline's
+#  seconds — an hour, five and a day. The scan, not the answer: a crossing inside a rung is
+#  bisected to the minute, and a rung only says how far ahead the agent looks.
+LADDER_S = (3600.0, 18000.0, 86400.0)
 
 #  THE LADDER WRITTEN FOR THIS KEY BEFORE: every prediction derived from the observation's graph.
 _LADDER_Q = """
@@ -76,34 +81,32 @@ _RETRACTS = ("DELETE { GRAPH $state { ?o ?p ?v } } "
 _RESOLUTION_S = 60.0
 
 
-def predict(store, me: str, sensor, *, now: datetime | None = None, memo=None) -> list[str]:
-    """Rewrite the predictions of `sensor`'s key from the observation in hand: one per stretch
-    between the instants the drifts say the reading changes range. The graphs written, first
-    stretch first; none where no observation of the key stands or no drift's ladder reaches
-    past its horizon.
+def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=None) -> list[str]:
+    """Rewrite the predictions of the key `sensor` last observed, from the observation in hand:
+    one per stretch between the instants the drifts say the reading changes range. The graphs
+    written, first stretch first; none where no observation by the sensor stands or the ladder
+    does not reach past its horizon.
 
     `me` is who holds the observation, `now` the present the records are read at — the
     observation's own instant where none is given.
     """
-    feature, observed_property = sensor.feature, sensor.observes
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
-    found = next(iter(rows(store, _OBSERVATION_Q, (), cat=cat, feature=feature, property=observed_property)), None)
+    found = next(iter(rows(store, _OBSERVATION_Q, (), cat=cat, sensor=sensor)), None)
     if found is None:
-        log.debug("nothing observed of %s of %s: nothing to predict", local_of(observed_property), local_of(feature))
+        log.debug("nothing observed by %s: nothing to predict", local_of(sensor))
         return []
-    graph, node = found["graph"], found["node"]
+    graph, node, feature, observed_property = found["graph"], found["node"], found["feature"], found["property"]
     reading = float(found["value"])
     taken = datetime.fromisoformat(found["taken"] if found.get("taken") else found["from"])
     opens = datetime.fromisoformat(found["until"]) if found.get("until") else taken
     for old in rows(store, _LADDER_Q, (), cat=cat, graph=graph):
         forget_graph(store, old["g"])
     drifts = remember(memo, ("drifts",), lambda: rows(store, _DRIFTS_Q, graphs_of(store, PUBLIC)))
-    ladder = sorted({float(h) for d in drifts for h in (d.get("horizons") or "").split()
-                     if taken + timedelta(seconds=float(h)) > opens})
+    ladder = [h for h in LADDER_S if taken + timedelta(seconds=h) > opens]
     if not ladder:
         return []
-    ranges = ranges_of(store, sensor.subject, observed_property, memo)
-    tokens = {"me": me, "subject": sensor.subject, "about": observed_property}
+    ranges = ranges_of(store, sensor, observed_property, memo)
+    tokens = {"me": me, "about": observed_property}
     own = [ox.Triple(q.subject, q.predicate, q.object) for q in quads(store, graph)]
     base = (opens - taken).total_seconds()
 

@@ -24,7 +24,7 @@ CODE = sorted(p for p in SENSING.glob("*.py"))
 VOCABULARY = sorted(SENSING.glob("*.ttl"))
 
 #  A MODULE NAMED FOR A THING, which may export several reads of it.
-NOUNS = {"ontology", "pipeline", "wiring", "driver", "ranges"}
+NOUNS = {"ontology", "pipeline", "driver", "ranges"}
 
 ABOVE = ("planning", "execution", "belief")
 
@@ -88,6 +88,22 @@ def test_the_rules_are_the_drafts_and_the_graph_kind_is_its():
     assert "a sh:RuleSet" in rules and rules.count("a sh:SPARQLRule") == 3
     assert not re.search(r"sensing:\w*Rule\b", rules)
     assert "RulesGraph" in (SENSING / "register.py").read_text()
+
+
+def test_every_sensing_word_the_tree_speaks_is_declared_in_its_ontology():
+    """Sensing speaks SOSA and SSN, and declares only what they lack: a `sensing:` word in the
+    code, the rules, a test, a world or a case is one `ontology.ttl` beside the code declares.
+    The 0.1.0 package's own — what an agent polled, what a sensor monitored or sampled, a
+    device's sense mode, a drift's horizons — are not spoken here."""
+    declared = set(re.findall(r"^:(\w+) a owl:", (SENSING / "ontology.ttl").read_text(), re.M))
+    assert declared, "the ontology declares nothing"
+    spoken = {}
+    for path in sorted(p for p in SENSING.rglob("*") if p.suffix in (".py", ".ttl", ".trig", ".diff")):
+        text = path.read_text()
+        for word in re.findall(r"\bsensing:(\w+)", text) + re.findall(r'SENSING \+ "(\w+)"', text):
+            spoken.setdefault(word, set()).add(path.name)
+    undeclared = {w: sorted(where) for w, where in spoken.items() if w not in declared}
+    assert not undeclared, f"spoken and not declared: {undeclared}"
 
 
 def test_the_package_says_it_is_one():

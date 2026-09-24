@@ -37,12 +37,10 @@ GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:actsFor :zz .
   :keeper orexis:localId "keeper" .
-  :keeper sensing:polls :probe .
   :patch a sosa:Sample .
   :patch sosa:isSampleOf :zz .
   :probe a sosa:Sensor .
-  :probe sensing:monitors :zz .
-  :probe sensing:samples :patch .
+  :probe sosa:isHostedBy :patch .
   :probe sosa:observes :moisture .
   :zz :driesPerDay 0.5 .
   :zz a :Pot .

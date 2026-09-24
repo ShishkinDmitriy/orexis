@@ -16,11 +16,11 @@ from agent.ontology import KNOWN
 from agent.sensing.ontology import ABOVE, BELOW, INSIDE, RULES_GRAPH
 from agent.sensing.received import received
 from agent.sensing.register import register
-from agent.sensing.wiring import Sensor, sensors_of
-from agent.store import graphs_of, rows
+from agent.store import graphs_of, rows, update
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 TEST = "http://example.org/test#"
+PROBE = TEST + "probe"
 
 _SIDES_Q = "SELECT ?p ?range WHERE { GRAPH $g { ?obs ?p ?range } }"
 
@@ -50,34 +50,31 @@ def test_the_rules_graph_is_the_drafts_kind(world):
 
 
 def test_a_reading_under_the_floor_is_below_the_operating_range_and_inside_the_survival_one(world, snapshots):
-    (probe,) = sensors_of(world, snapshots.ME)
-    graph = _read(world, snapshots, probe, 0.05)
+    graph = _read(world, snapshots, PROBE, 0.05)
     assert _sides(world, graph) == {("below", "zz.operating"), ("inside", "zz.survival"), ("inside", "probe.operating")}
 
 
 def test_a_reading_inside_is_inside_every_range(world, snapshots):
-    (probe,) = sensors_of(world, snapshots.ME)
-    graph = _read(world, snapshots, probe, 0.2)
+    graph = _read(world, snapshots, PROBE, 0.2)
     assert {p for p, _ in _sides(world, graph)} == {"inside"}
 
 
 def test_a_reading_over_the_ceiling_is_above(world, snapshots):
-    (probe,) = sensors_of(world, snapshots.ME)
-    graph = _read(world, snapshots, probe, 0.5)
+    graph = _read(world, snapshots, PROBE, 0.5)
     assert _sides(world, graph) == {("above", "zz.operating"), ("above", "zz.survival"), ("inside", "probe.operating")}
 
 
 def test_a_bound_is_inside(world, snapshots):
-    (probe,) = sensors_of(world, snapshots.ME)
-    graph = _read(world, snapshots, probe, 0.1)
+    graph = _read(world, snapshots, PROBE, 0.1)
     assert ("inside", "zz.operating") in _sides(world, graph)
 
 
 def test_a_samples_observation_is_judged_by_its_subjects_ranges(world, snapshots):
-    from agent.store import update
-    update(world, """PREFIX : <http://example.org/test#> PREFIX sosa: <http://www.w3.org/ns/sosa/>
-INSERT DATA { GRAPH <http://example.org/test#world> { :patch a sosa:Sample ; sosa:isSampleOf :zz } }""")
-    probe = Sensor(uri=TEST + "probe", subject=TEST + "zz", observes=TEST + "moisture", sample=TEST + "patch")
-    graph = _read(world, snapshots, probe, 0.05)
+    """A probe mounted in a patch of the pot — `sosa:isHostedBy` a `sosa:Sample` that
+    `sosa:isSampleOf` it — keys its node by the patch and is judged by the pot's ranges."""
+    update(world, """PREFIX : <http://example.org/test#>
+DELETE DATA { GRAPH :world { :probe sosa:isHostedBy :zz } } ;
+INSERT DATA { GRAPH :world { :patch a sosa:Sample ; sosa:isSampleOf :zz . :probe sosa:isHostedBy :patch } }""")
+    graph = _read(world, snapshots, PROBE, 0.05)
     assert graph.endswith("/patch_moisture")
     assert ("below", "zz.operating") in _sides(world, graph)

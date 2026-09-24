@@ -68,7 +68,8 @@ is baked at derivation time, since a shape minted per (agent, property) already 
 # In Agent 0.2.0, a range is SSN-System's and nothing is intersected
 
 `agent/sensing/` reads a range as the world states it — `ssn-system:hasOperatingRange` and
-`ssn-system:hasSurvivalRange` on the subject or on an instrument that monitors it, a condition
+`ssn-system:hasSurvivalRange` on what hosts the sensor, on what that host is a sample of, or on
+the sensor itself, a condition
 `ssn:forProperty` the property with `schema:minValue` and `schema:maxValue` — and mints
 nothing (#785). The two readers of a range are sensing itself, for where a predicted number
 crosses a bound, and the three rules

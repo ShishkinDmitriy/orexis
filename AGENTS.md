@@ -570,10 +570,15 @@ it is a record wearing a bullet.
   verdict on a prediction is sensing's own write — a stretch already says when a rule's result
   changes, and the planner's re-root tells a surprise — and a range is SSN-System's as the
   world states it, nothing minted.
-- **Sensing names no transport word, and a driver hands bytes** — the wiring reaches a
-  sensor's device through `ssn:hasSubSystem`, the pointer is sensing's word since it is about a
-  document, bytes become a number in sensing's own pipeline, and the driver contract keeps only
-  what a transport alone knows: claim, subscriptions, own, cadence, nudge.
+- **Sensing speaks SOSA and SSN, and declares only what they lack** — a sensor
+  `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is the
+  observation's key, and the layer's own six words are the drift (a value moving by itself,
+  which no `sosa:Procedure` is), the observation graph's kind, the pointer and the three sides;
+  `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
+  declare the scan's reach, and the wiring module that read them had no caller, so the ladder
+  is sensing's, a driver is handed the sensor's IRI and bytes and keeps only what a transport
+  alone knows, and the layout test holds every `sensing:` word the tree speaks to the ontology
+  beside it.
 - **A belief kind enters through `propose`, and a package's working graph is not a belief** —
   the belief package's layout test holds every writer in the tree to the door, and what
   bypasses it is what no rule reads as the world.
@@ -1149,10 +1154,15 @@ it is a record wearing a bullet.
   verdict on a prediction is sensing's own write — a stretch already says when a rule's result
   changes, and the planner's re-root tells a surprise — and a range is SSN-System's as the
   world states it, nothing minted.
-- **Sensing names no transport word, and a driver hands bytes** — the wiring reaches a
-  sensor's device through `ssn:hasSubSystem`, the pointer is sensing's word since it is about a
-  document, bytes become a number in sensing's own pipeline, and the driver contract keeps only
-  what a transport alone knows: claim, subscriptions, own, cadence, nudge.
+- **Sensing speaks SOSA and SSN, and declares only what they lack** — a sensor
+  `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is the
+  observation's key, and the layer's own six words are the drift (a value moving by itself,
+  which no `sosa:Procedure` is), the observation graph's kind, the pointer and the three sides;
+  `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
+  declare the scan's reach, and the wiring module that read them had no caller, so the ladder
+  is sensing's, a driver is handed the sensor's IRI and bytes and keeps only what a transport
+  alone knows, and the layout test holds every `sensing:` word the tree speaks to the ontology
+  beside it.
 - **A belief kind enters through `propose`, and a package's working graph is not a belief** —
   the belief package's layout test holds every writer in the tree to the door, and what
   bypasses it is what no rule reads as the world.

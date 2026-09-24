@@ -5,40 +5,52 @@ from __future__ import annotations
 
 import pytest
 
+from pathlib import Path
+
 from agent.sensing.pipeline import (DEFAULT_POINTER, CodecError, JsonCodec, PointerError, decode,
                                     resolve)
-from agent.sensing.wiring import Sensor
+from agent.store import update
 
+WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 TEST = "http://example.org/test#"
+PROBE = TEST + "probe"
 
 
-def _sensor(**fields) -> Sensor:
-    return Sensor(uri=TEST + "probe", subject=TEST + "zz", observes=TEST + "moisture", **fields)
+def _bound(snapshots, *triples: str):
+    """The pot's world, with what the world says of the probe's bytes added — nothing, by
+    default, which is JSON, `/value` and the raw number."""
+    store = snapshots.stand_in(WORLD)
+    if triples:
+        update(store, "PREFIX : <http://example.org/test#>\nINSERT DATA { GRAPH :world { "
+               + " . ".join(f":probe {t}" for t in triples) + " } }")
+    return store
 
 
-def test_json_then_the_default_pointer_then_identity():
-    assert decode(_sensor(), b'{"value": 0.183}') == 0.183
+def test_json_then_the_default_pointer_then_identity(snapshots):
+    assert decode(_bound(snapshots), PROBE, b'{"value": 0.183}') == 0.183
 
 
-def test_a_stated_pointer_takes_this_sensors_field_of_a_shared_message():
-    assert decode(_sensor(pointer="/soil/moisture"), b'{"soil": {"moisture": 0.2, "temp": 21}}') == 0.2
+def test_a_stated_pointer_takes_this_sensors_field_of_a_shared_message(snapshots):
+    store = _bound(snapshots, 'sensing:readingPointer "/soil/moisture"')
+    assert decode(store, PROBE, b'{"soil": {"moisture": 0.2, "temp": 21}}') == 0.2
 
 
-def test_a_missing_field_is_unread(caplog):
+def test_a_missing_field_is_unread(snapshots, caplog):
     with caplog.at_level("WARNING", logger="pipeline"):
-        assert decode(_sensor(), b'{"temperature": 21}') is None
+        assert decode(_bound(snapshots), PROBE, b'{"temperature": 21}') is None
     assert "unread" in caplog.text
 
 
-def test_bytes_that_are_no_document_are_unread(caplog):
+def test_bytes_that_are_no_document_are_unread(snapshots, caplog):
     with caplog.at_level("WARNING", logger="pipeline"):
-        assert decode(_sensor(), b"\xff\xfe") is None
+        assert decode(_bound(snapshots), PROBE, b"\xff\xfe") is None
     assert "unread" in caplog.text
 
 
-def test_a_codec_nothing_here_implements_is_said(caplog):
+def test_a_codec_nothing_here_implements_is_said(snapshots, caplog):
+    store = _bound(snapshots, "<http://example.org/orexis/codec#decodedBy> <http://example.org/orexis/codec#Cbor>")
     with caplog.at_level("WARNING", logger="pipeline"):
-        assert decode(_sensor(decoded_by="http://example.org/orexis/codec#Cbor"), b"\xa1") is None
+        assert decode(store, PROBE, b"\xa1") is None
     assert "codec nothing here implements" in caplog.text
 
 
