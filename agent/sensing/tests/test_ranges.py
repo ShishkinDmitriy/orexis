@@ -1,5 +1,4 @@
-"""The ranges a subject states for a property, in SSN-System's words, read by the crossing and
-the surprise."""
+"""The ranges a subject states for a property, in SSN-System's words, read by the crossing."""
 
 from __future__ import annotations
 

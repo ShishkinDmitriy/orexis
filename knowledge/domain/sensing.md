@@ -403,11 +403,12 @@ A transport's driver knows which message on which channel is whose and hands sen
 and the sensor; `received` is the callback it calls, and the pipeline — codec, pointer, scaling —
 makes a number of the bytes and writes one `sosa:Observation` per feature and property into
 the graph of that key, `sensing:ObservationGraph`, holding from its instant to the horizon and
-replacing the one before. `surprise` says whether the number contradicts the number predicted
-for its instant, bound by bound against the [region](/domain/region.md)s the subject states,
-and `predict` is the calculation of when the reading changes range: the domain's drifts run at
-the ladder's rungs, every crossing of a bound bisected, one [prediction](/domain/prediction.md)
-per stretch between crossings. It concludes nothing: the three rules it registers
+replacing the one before. `predict` is the calculation of when the reading changes range —
+every instant at which the result of a registered rule would change: the domain's drifts run at
+the ladder's rungs, every crossing of a bound of the [region](/domain/region.md)s the subject
+states bisected, one [prediction](/domain/prediction.md) per stretch between crossings. Whether
+a reading landed where its stretch said is not sensing's to say: the planner's re-root by the
+hash of the present tells a confirmation from a surprise, and nothing is said twice. It concludes nothing: the three rules it registers
 (`rules.ttl`, `register`) say which side of each range an observation is on, `sensing:below`,
 `sensing:inside`, `sensing:above`, and the [deliberator](/domain/deliberator.md) concludes
 them over every graph the container reports changed — a [revision](/domain/revision.md), never

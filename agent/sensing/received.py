@@ -14,8 +14,9 @@ ends by the clock, and nothing here keeps a timer or writes a mark.
 
 **NOTHING ELSE.** No side is drawn here: which side of its subject's ranges the number lies on
 is a revision, concluded by the rules this layer registers and run by the deliberator when the
-container says this graph changed. No want, no wake: `surprise` answers whether the number
-contradicted what was predicted, and `predict` rewrites the key's future.
+container says this graph changed. No want, no wake, no verdict on what was predicted: a
+reading either lands where the stretch holding at its instant said it would or it does not,
+and that is the planner's re-root by hash to tell — `predict` then rewrites the key's future.
 
 **IT IS CALLED, NOT CALLING.** A transport's driver knows which message on which channel is
 whose; it hands the bytes and the sensor here and learns nothing of what they meant.

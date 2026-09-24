@@ -566,8 +566,10 @@ it is a record wearing a bullet.
 - **Sensing tracks numbers, and a prediction is when the reading changes range** — `received`
   writes one `sosa:Observation` per key with its number, `predict` bisects every crossing of a
   range bound between the ladder's rungs and writes one prediction per stretch, and the side
-  is a revision the three rules sensing registers conclude; no band, no side, no want is
-  sensing's own write, and a range is SSN-System's as the world states it, nothing minted.
+  is a revision the three rules sensing registers conclude; no band, no side, no want, no
+  verdict on a prediction is sensing's own write — a stretch already says when a rule's result
+  changes, and the planner's re-root tells a surprise — and a range is SSN-System's as the
+  world states it, nothing minted.
 - **Sensing names no transport word, and a driver hands bytes** — the wiring reaches a
   sensor's device through `ssn:hasSubSystem`, the pointer is sensing's word since it is about a
   document, bytes become a number in sensing's own pipeline, and the driver contract keeps only
@@ -1143,8 +1145,10 @@ it is a record wearing a bullet.
 - **Sensing tracks numbers, and a prediction is when the reading changes range** — `received`
   writes one `sosa:Observation` per key with its number, `predict` bisects every crossing of a
   range bound between the ladder's rungs and writes one prediction per stretch, and the side
-  is a revision the three rules sensing registers conclude; no band, no side, no want is
-  sensing's own write, and a range is SSN-System's as the world states it, nothing minted.
+  is a revision the three rules sensing registers conclude; no band, no side, no want, no
+  verdict on a prediction is sensing's own write — a stretch already says when a rule's result
+  changes, and the planner's re-root tells a surprise — and a range is SSN-System's as the
+  world states it, nothing minted.
 - **Sensing names no transport word, and a driver hands bytes** — the wiring reaches a
   sensor's device through `ssn:hasSubSystem`, the pointer is sensing's word since it is about a
   document, bytes become a number in sensing's own pipeline, and the driver contract keeps only

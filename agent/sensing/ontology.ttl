@@ -13,8 +13,9 @@
     which it otherwise speaks as it stands: the drift and its horizons, what an agent polls and
     what a sensor monitors. Sensing here is the translation row of the agent stack and nothing
     above it — a transport hands it bytes, it makes a number of them and writes one
-    sosa:Observation, predicts the number's future with the domain's drifts, and says whether the
-    number contradicted what was predicted. It concludes nothing itself: the sides an observation
+    sosa:Observation, and predicts the number's future with the domain's drifts — one prediction per
+    stretch between the instants a registered rule's result would change. It concludes nothing
+    itself: the sides an observation
     is on are revisions, concluded by the three rules this layer registers (rules.ttl beside this
     file) and run by the deliberator over the present. No word of any transport is spoken here.""" .
 

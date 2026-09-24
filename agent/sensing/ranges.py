@@ -1,6 +1,6 @@
 """The ranges a subject states for a property, in SSN-System's words — read by `predict` to
-place a crossing and by `surprise` to tell a contradiction, and by the rules this layer
-registers to conclude a side. Nothing is minted: a range is what the world says.
+place a crossing, and by the rules this layer registers to conclude a side. Nothing is
+minted: a range is what the world says.
 
 A range is the subject's own or an instrument's that monitors it, an operating range or a
 survival range, whose condition is for the property and states a floor and a ceiling. Both
