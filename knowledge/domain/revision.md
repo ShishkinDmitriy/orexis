@@ -32,11 +32,14 @@ within a **budget** of rule executions, the unit revision spends, which the
 [deliberator](/domain/deliberator.md) states per pass. A source the budget cuts short keeps what was concluded, its row saying the rules
 did not settle, and the next pass continues it; a rule minting new content every iteration,
 the draft's own worry and the reason `sh:runOnce` exists, spends the budget and is said in the
-log every pass rather than looped on. Where the draft says a rule set fails, a rule of a type this
-engine cannot execute, a shape rule, or a construct that will not run, this engine reports an
-error naming the rule and runs the rest, since a package's bug must not take an agent down.
-`sh:condition`, `sh:expectedPredicate`, temporary triples and `sh:sourceRule` are in the draft
-and not run here.
+log every pass rather than looped on. Where the draft says a rule set fails, this engine reports an
+error naming what it cannot honour and runs the rest, since a package's bug must not take an
+agent down: a rule of another type, a shape rule, a `sh:condition` or a `sh:expectedPredicate`
+on a rule, a `sh:ruleProcessor`, a construct that will not run, and a `sh:prefixes` declaring
+a name the store spells differently. A rule's other declared prefixes are honoured as
+SHACL-SPARQL says. Not run and not detected, seams: a rule set asked for by name, so that
+`sh:includesRuleSet` has no effect beside the default rule set of a graph; temporary triples;
+and `sh:sourceRule`.
 
 # It is concluded and never deleted
 

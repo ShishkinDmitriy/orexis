@@ -16,12 +16,16 @@ again while an iteration concludes something new; within an iteration the rules 
 (`sh:order`, ascending, 0 unless said), and rules of ONE order are run over the same state and
 see none of each other's inferences until they have all run — the draft's "executed
 concurrently". What is inferred is what is NOT in the base graph: a rule restating a fact the
-evaluation graph already holds infers nothing. A rule of a type this engine cannot execute —
-a `sh:TripleRule`, or a shape rule, which runs per focus node and has none here — is the
-failure the draft says to report, and here that is an error in the log naming the rule, once
-per pass, since a package's bug must not take an agent down; a construct that will not run is
-reported the same way and the rest of the rule set runs, where the draft would fail it whole.
-Expected derived triples (`sh:expectedPredicate`) and temporary triples are not supported.
+evaluation graph already holds infers nothing. What this engine cannot honour is the failure
+the draft says to report, and here that is an error in the log naming it, once per pass, since
+a package's bug must not take an agent down: a rule of another type (`sh:TripleRule`), a shape
+rule (it runs per focus node and nothing here has one), a `sh:condition` or a
+`sh:expectedPredicate` on a rule, a `sh:ruleProcessor`, and a construct that will not run —
+after which the rest of the rule set runs, where the draft would fail it whole. Temporary
+triples and `sh:sourceRule` are not supported and not detected. A rule's `sh:prefixes` are
+honoured as SHACL-SPARQL says: each `sh:declare` block becomes a `PREFIX` line at the head of
+its construct where the text does not declare that name itself, and a name the store's
+dictionary spells differently refuses the rule.
 
 **A CEILING ON COMPUTE IS STATED IN THE UNIT THE WORK SPENDS**, and what revision spends is
 rule executions: one construct run. `budget` is this call's, and it replaces a cap on
@@ -60,11 +64,12 @@ period where the source's row already states them, and says derived-from either 
 from __future__ import annotations
 
 import logging
+import re
 
 import pyoxigraph as ox
 
 from agent.hash_named_graph import forms
-from agent.ontology import OREXIS
+from agent.ontology import OREXIS, PUBLIC
 from agent.store import (Raw, catalogue_of, construct, entry, forget_graph, graphs_of, quads,
                          remember, rows, update)
 
@@ -80,13 +85,28 @@ BUDGET = 64
 #  has one, and whether a shape links it, so that what cannot be run is reported rather than
 #  passed over. Read by kind, as every reader here states the kinds it reads.
 _RULES_Q = """
-SELECT ?rule ?type ?construct ?layer ?order ?once ?shape WHERE {
+SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHERE {
   ?rule a ?type . FILTER(?type IN (sh:SPARQLRule, sh:TripleRule, sh:Rule))
   OPTIONAL { ?rule sh:construct ?construct }
   OPTIONAL { ?rule sh:layer ?layer } OPTIONAL { ?rule sh:order ?order }
   OPTIONAL { ?rule sh:runOnce ?once }
   OPTIONAL { ?shape sh:rule ?rule }
+  OPTIONAL { ?rule sh:condition ?condition } OPTIONAL { ?rule sh:expectedPredicate ?expects }
   FILTER NOT EXISTS { ?rule sh:deactivated true } }"""
+
+#  WHAT A RULE'S `sh:prefixes` DECLARE, as SHACL-SPARQL spells it — the ontology node's
+#  `sh:declare` blocks, each a prefix and a namespace — read over the rules graphs and public
+#  knowledge, since an ontology node sits in either.
+_DECLARED_Q = """
+SELECT ?rule ?prefix ?namespace WHERE {
+  ?rule sh:prefixes ?ontology . ?ontology sh:declare ?d . ?d sh:prefix ?prefix ; sh:namespace ?namespace }"""
+
+#  A CUSTOM RULE PROCESSOR named anywhere in a rules graph: an instruction this engine cannot
+#  follow, reported.
+_PROCESSOR_Q = """SELECT ?x ?processor WHERE { ?x sh:ruleProcessor ?processor }"""
+
+#  `PREFIX name: <iri>` at the head of a text, the empty name included.
+_PREFIX_LINE = re.compile(r"^\s*PREFIX\s+([A-Za-z][\w.\-]*)?\s*:\s*<([^>]*)>", re.I | re.M)
 
 #  WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its row: the revisions are the same.
 _SOURCE_Q = """
@@ -204,10 +224,16 @@ def _layers(store) -> list[tuple[float, list[tuple[float, list[dict]]]]]:
     report, logged once per pass and left out."""
     found = []
     seen: dict = {}
-    for r in rows(store, _RULES_Q, graphs_of(store, RULES_GRAPH)):
+    rules_graphs = graphs_of(store, RULES_GRAPH)
+    for r in rows(store, _PROCESSOR_Q, rules_graphs):
+        log.error("%s names a custom rule processor %s, which this engine cannot follow", r["x"], r["processor"])
+    for r in rows(store, _RULES_Q, rules_graphs):
         entry_ = seen.setdefault(r["rule"], {"types": set(), "shape": None, "row": r})
         entry_["types"].add(r["type"])
         entry_["shape"] = entry_["shape"] or r.get("shape")
+    declared: dict = {}
+    for r in rows(store, _DECLARED_Q, list(dict.fromkeys([*rules_graphs, *graphs_of(store, PUBLIC)]))):
+        declared.setdefault(r["rule"], {})[r["prefix"]] = r["namespace"]
     for rule, about in sorted(seen.items()):
         r = about["row"]
         if about["shape"]:
@@ -218,7 +244,16 @@ def _layers(store) -> list[tuple[float, list[tuple[float, list[dict]]]]]:
             log.error("rule %s is of a type this engine cannot execute (%s)", rule,
                       ", ".join(sorted(t.rsplit("#", 1)[-1] for t in about["types"])))
             continue
-        found.append({"rule": rule, "construct": r["construct"],
+        if r.get("condition"):
+            log.error("rule %s states a sh:condition, which this engine cannot honour: a condition is a "
+                      "shape rule's, and this is a global rule", rule)
+        if r.get("expects"):
+            log.error("rule %s states a sh:expectedPredicate, which this engine cannot honour: derived "
+                      "value nodes are not computed here", rule)
+        construct_text = _prefixed(rule, r["construct"], declared.get(rule, {}))
+        if construct_text is None:
+            continue
+        found.append({"rule": rule, "construct": construct_text,
                       "layer": float(r.get("layer") or 0), "order": float(r.get("order") or 0),
                       "once": (r.get("once") or "").lower() == "true"})
     found.sort(key=lambda r: (r["layer"], r["order"], r["rule"]))
@@ -226,6 +261,25 @@ def _layers(store) -> list[tuple[float, list[tuple[float, list[dict]]]]]:
     for r in found:
         layers.setdefault(r["layer"], {}).setdefault(r["order"], []).append(r)
     return [(layer, sorted(orders.items())) for layer, orders in sorted(layers.items())]
+
+
+def _prefixed(rule: str, text: str, declared: dict) -> str | None:
+    """`text` with a `PREFIX` line at its head for each name its `sh:prefixes` declare and the
+    text does not declare itself; None, and the rule refused, where a declared name is one the
+    store's dictionary spells differently — two spellings of one name is the confusion
+    prefixes exist to prevent, and the engine would silently take one."""
+    own = {label or "": iri for label, iri in _PREFIX_LINE.findall(text)}
+    lines = []
+    for label, namespace in sorted(declared.items()):
+        known = _NAMESPACES.get(label)
+        if known is not None and known != namespace:
+            log.error("rule %s declares %s: as <%s>, and the store spells that name <%s>; refused",
+                      rule, label, namespace, known)
+            return None
+        if label in own:
+            continue
+        lines.append(f"PREFIX {label}: <{namespace}>")
+    return "\n".join([*lines, text]) if lines else text
 
 
 def _describe(store, source: str, into: str, settled: bool, continuing: bool) -> None:

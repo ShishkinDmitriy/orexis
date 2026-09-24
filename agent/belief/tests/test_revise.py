@@ -104,6 +104,32 @@ INSERT DATA { GRAPH <http://example.org/test#rules> {
     assert any(r["p"].endswith("side") for r in rows(store, _CONCLUDED_Q, (), g=SENSED + "/revisions"))
 
 
+def test_what_this_engine_cannot_honour_is_reported(snapshots, caplog):
+    """A sh:condition on a global rule, a sh:expectedPredicate, a custom rule processor and a
+    declared prefix the store spells differently are each said in the log; the rule with the
+    conflicting prefix is refused and the others still conclude."""
+    store = snapshots.stand_in(CASES_DIR / "a_reading_below_its_range_is_concluded_below.trig")
+    update(store, """
+PREFIX sh: <http://www.w3.org/ns/shacl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+INSERT DATA { GRAPH <http://example.org/test#rules> {
+  <http://example.org/test#rules> sh:ruleProcessor <http://example.org/test#somebody> .
+  <http://example.org/test#conditioned> a sh:SPARQLRule ;
+    sh:construct "CONSTRUCT { <http://example.org/test#zz> <http://example.org/test#noted> true } WHERE { }" ;
+    sh:condition <http://example.org/test#some_shape> ; sh:expectedPredicate <http://example.org/test#reads> .
+  <http://example.org/test#misspelt> a sh:SPARQLRule ;
+    sh:construct "CONSTRUCT { <http://example.org/test#zz> orexis:wrong true } WHERE { }" ;
+    sh:prefixes <http://example.org/test#other> .
+  <http://example.org/test#other> sh:declare [ sh:prefix "orexis" ; sh:namespace "http://example.org/elsewhere#"^^xsd:anyURI ] } }""")
+    with caplog.at_level("ERROR", logger="revise"):
+        revise(store, SENSED, read=graphs_of(store, *KNOWN))
+    said = "\n".join(caplog.messages)
+    for word in ("custom rule processor", "sh:condition", "sh:expectedPredicate", "spells that name"):
+        assert word in said, word
+    concluded = {r["p"].rsplit("#", 1)[-1] for r in rows(store, _CONCLUDED_Q, (), g=SENSED + "/revisions")}
+    assert "side" in concluded and "noted" in concluded and "wrong" not in concluded
+
+
 def test_what_revising_costs(snapshots):
     """The price of one revision over one reading, printed (`pytest -s`): revised again and
     again on the same store. No figure is asserted — the Pi drifts — and the number is what the
@@ -120,5 +146,5 @@ def test_what_revising_costs(snapshots):
 
 
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
-    assert len(CASES) >= 7, [c.name for c in CASES]
+    assert len(CASES) >= 8, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)
