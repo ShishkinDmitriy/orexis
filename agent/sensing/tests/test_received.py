@@ -19,7 +19,8 @@ from agent.store import rows, update
 
 CASES_DIR = Path(__file__).parent / "received"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
-PROBE = "http://example.org/test#probe"
+TEST = "http://example.org/test#"
+PROBE = TEST + "probe"
 
 #  WHAT EACH CASE'S BYTES SAY, and which graph they land in.
 BYTES = {
@@ -60,6 +61,23 @@ def test_a_sensor_with_no_host_has_no_key_and_writes_nothing(monkeypatch, snapsh
         assert received(store, snapshots.ME, PROBE, b'{"value": 0.2}', snapshots.NOW) is None
     assert set(snapshots.graph_names(store)) == before
     assert "no key" in caplog.text
+
+
+def test_one_message_for_two_sensors_is_two_observations(monkeypatch, snapshots):
+    """A board carrying two peripherals publishes one message; a transport hands it to sensing
+    once per sensor that owns the channel, and each writes the observation of its own key."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(CASES_DIR / "a_first_reading_becomes_an_observation.trig")
+    update(store, """PREFIX : <http://example.org/test#>
+INSERT DATA { GRAPH :world {
+  :thermo a sosa:Sensor ; sosa:observes :warmth ; sosa:isHostedBy :zz ; sensing:readingPointer "/temperature" .
+  :probe sensing:readingPointer "/soil/moisture" } }""")
+    message = b'{"temperature": 21.5, "soil": {"moisture": 0.22}}'
+    written = [received(store, snapshots.ME, sensor, message, snapshots.NOW) for sensor in (PROBE, TEST + "thermo")]
+    assert written == ["http://example.org/orexis/graph/observed/keeper/zz_moisture",
+                       "http://example.org/orexis/graph/observed/keeper/zz_warmth"]
+    found = rows(store, "SELECT ?p ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:observedProperty ?p ; sosa:hasSimpleResult ?v } } ORDER BY ?p", ())
+    assert [(r["p"].rsplit("#", 1)[-1], float(r["v"])) for r in found] == [("moisture", 0.22), ("warmth", 21.5)]
 
 
 def test_a_sensor_stating_no_frequency_stands_until_replaced(monkeypatch, snapshots):

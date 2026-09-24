@@ -7,8 +7,8 @@ import pytest
 
 from pathlib import Path
 
-from agent.sensing.pipeline import (DEFAULT_POINTER, CodecError, JsonCodec, PointerError, decode,
-                                    resolve)
+from agent.sensing.pipeline import (CODECS, DEFAULT_POINTER, SCALINGS, Codec, CodecError, JsonCodec,
+                                    PointerError, Scaling, decode, resolve)
 from agent.store import update
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
@@ -24,6 +24,55 @@ def _bound(snapshots, *triples: str):
         update(store, "PREFIX : <http://example.org/test#>\nINSERT DATA { GRAPH :world { "
                + " . ".join(f":probe {t}" for t in triples) + " } }")
     return store
+
+
+#  ONE BOARD, THREE PERIPHERALS, ONE MESSAGE: what a DHT11 beside a moisture probe publishes.
+BOARD_MESSAGE = b'{"temperature": 21.5, "humidity": 0.61, "soil": {"moisture": 0.22}}'
+
+
+def test_two_sensors_on_one_board_take_their_own_values_from_one_message(snapshots):
+    """A board carrying several peripherals is one client publishing one document; each sensor
+    is bound to its own pointer and reads its own number out of the same bytes."""
+    store = _bound(snapshots, 'sensing:readingPointer "/soil/moisture"')
+    update(store, """PREFIX : <http://example.org/test#>
+INSERT DATA { GRAPH :world {
+  :thermo a sosa:Sensor ; sosa:observes :warmth ; sosa:isHostedBy :zz ; sensing:readingPointer "/temperature" .
+  :hygro a sosa:Sensor ; sosa:observes :humidity ; sosa:isHostedBy :zz ; sensing:readingPointer "/humidity" } }""")
+    assert decode(store, TEST + "thermo", BOARD_MESSAGE) == 21.5
+    assert decode(store, TEST + "hygro", BOARD_MESSAGE) == 0.61
+    assert decode(store, PROBE, BOARD_MESSAGE) == 0.22
+
+
+def test_a_member_from_elsewhere_serves_by_the_term_it_declares(snapshots, monkeypatch):
+    """What a codec or a scaling package would ship: a term declared as an instance of the
+    family, a class implementing the contract under that term, and a sensor bound to it —
+    found by the term, never by the class, so two pipelines run side by side."""
+    class Csv(Codec):
+        TERM = TEST + "Csv"
+
+        def decode(self, payload: bytes):
+            return [float(x) for x in payload.decode().split(",")]
+
+        def encode(self, document) -> bytes:
+            return ",".join(str(x) for x in document).encode()
+
+    class Tenths(Scaling):
+        TERM = TEST + "Tenths"
+
+        def apply(self, sensor: str, raw: float) -> float:
+            return raw / 10
+
+    monkeypatch.setitem(CODECS, Csv.TERM, Csv)
+    monkeypatch.setitem(SCALINGS, Tenths.TERM, Tenths)
+    store = _bound(snapshots, "sensing:scaledBy :Tenths")
+    update(store, """PREFIX : <http://example.org/test#>
+INSERT DATA { GRAPH :world {
+  :Csv a sensing:Codec . :Tenths a sensing:Scaling .
+  :gauge a sosa:Sensor ; sosa:observes :pressure ; sosa:isHostedBy :zz ;
+         sensing:decodedBy :Csv ; sensing:scaledBy :Tenths ; sensing:readingPointer "/1" } }""")
+    assert decode(store, TEST + "gauge", b"10130,225") == 22.5
+    assert decode(store, PROBE, b'{"value": 2.5}') == 0.25
+    assert decode(store, PROBE, b"10130,225") is None, "the probe's bytes are JSON, whatever the gauge's are"
 
 
 def test_json_then_the_default_pointer_then_identity(snapshots):
