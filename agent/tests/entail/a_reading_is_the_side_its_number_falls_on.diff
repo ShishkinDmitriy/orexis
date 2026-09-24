@@ -4,13 +4,13 @@
  }
  
  GRAPH :sensed {
-+  :dry a orexis:band.zz.moisture.below .
++  :dry a :zz.moisture.below .
 +  :dry a sensing:BelowRegion .
    :dry a sosa:Observation .
    :dry sosa:hasFeatureOfInterest :zz .
    :dry sosa:hasSimpleResult 0.05 .
    :dry sosa:observedProperty :moisture .
-+  :fine a orexis:band.zz.moisture.inside .
++  :fine a :zz.moisture.inside .
 +  :fine a sensing:InRegion .
    :fine a sosa:Observation .
    :fine sosa:hasFeatureOfInterest :zz .
@@ -19,7 +19,7 @@
    :warm sosa:hasFeatureOfInterest :zz .
    :warm sosa:hasSimpleResult 22 .
    :warm sosa:observedProperty :warmth .
-+  :wet a orexis:band.zz.moisture.above .
++  :wet a :zz.moisture.above .
 +  :wet a sensing:AboveRegion .
    :wet a sosa:Observation .
    :wet sosa:hasFeatureOfInterest :zz .

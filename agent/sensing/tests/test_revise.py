@@ -1,8 +1,8 @@
 """`revise`, one case per file, held to a PATCH of the store it leaves.
 
-A case in `revise/` is a belief base as a reading finds it — the vocabulary with the bands the
+A case in `revise/` is a belief base as a reading finds it — the vocabulary with the sides the
 domain minted, the world, whatever reading of the key already stands — and the diff is what
-the reading leaves: the graph of readings with the node's key and bands, the result graph
+the reading leaves: the graph of readings with the node's key and sides, the result graph
 beside it with the number and the instant, and the catalogue's account of both.
 """
 
@@ -24,9 +24,9 @@ HORIZON_S = 900.0
 
 #  WHAT EACH CASE'S READING IS: the value, and the property where it is not the moisture.
 READ = {
-    "a_first_reading_becomes_its_bands_and_its_result": (0.22, "moisture"),
+    "a_first_reading_becomes_its_side_and_its_result": (0.22, "moisture"),
     "a_second_reading_replaces_the_first": (0.08, "moisture"),
-    "a_reading_no_band_is_minted_for_is_only_an_observation": (22, "warmth"),
+    "a_reading_no_side_class_is_minted_for_is_only_an_observation": (22, "warmth"),
 }
 
 

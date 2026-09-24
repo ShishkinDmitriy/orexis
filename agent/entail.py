@@ -10,22 +10,22 @@ member class per (subject, property) is minted from the range the world states, 
 `owl:intersectionOf` the observation class, the subject and the property by `owl:hasValue`,
 and the result by a datatype restriction. This is the one evaluator of those definitions: it
 reads them as data off public knowledge and asserts exactly what the OWL says, so a step's
-precondition and a desire's met-test say the band as a triple and an outside reasoner would
-agree. The band is what the mind reads; the number it was drawn from is the instrument's
+precondition and a desire's met-test say the side as a triple and an outside reasoner would
+agree. The side is what the mind reads; the number it was drawn from is the instrument's
 word and stays where the instrument put it.
 
 **A FUNCTION OVER THE ENGINE**, handed the store and the graph to write into — and, where the
 node's facts are spread over two graphs, the graphs to read them from: the sensing layer
-keeps a reading's key and its bands in one graph and its number in another, so the number is
-read from the second and the band written into the first. It was `Store.entail`, a method
+keeps a reading's key and its sides in one graph and its number in another, so the number is
+read from the second and the side written into the first. It was `Store.entail`, a method
 on the wrapper that held the engine, reading the definitions through a memo the wrapper
 dropped on every write; the definitions are a fact only a write to public knowledge can
 change, so the memo is the caller's (`Memo`), as every other such answer's is.
 
-**THE FAMILIES STOP AT THE BASE.** A member band's ancestors are its family
+**THE SIDES STOP AT THE BASE.** A member side's ancestors are its family
 (`sensing:BelowRegion`) and then whatever sits above `sosa:Observation`; the node was typed
 `sosa:Observation` already, and what THAT class is beneath is the closure's business at genesis
-and never a fact a reading gained by being classified. So every band the node carries — one
+and never a fact a reading gained by being classified. So every side the node carries — one
 entailed here, or one a drift's rule typed it with — brings its ancestors up to, and not
 including, a class some definition intersects; a rule that types the member alone leaves the
 family to this, and a shape asking `sh:class sensing:BelowRegion` reads either alike.
@@ -40,22 +40,26 @@ from .store import graphs_of, remember, rows
 
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
-#  EVERY DEFINITION THE VOCABULARY STATES, as three kinds of row: the named classes a class
-#  intersects, the values it pins, and the facets it holds a value to.
+#  EVERY DEFINITION THE VOCABULARY STATES, one row per PART of an intersection, of three
+#  kinds: a named class the node must be (`?base`); a property the definition FIXES to one
+#  value with `owl:hasValue` (`?fixedProperty`, and the value as `?fixedIri` where it is an
+#  IRI or `?fixedText` where it is a literal — two columns, since one variable cannot say
+#  which kind of term came back); and a datatype restriction, the property it holds a value
+#  of (`?facetProperty`) with each `?facet` and its `?bound`.
 _DEFINITIONS_Q = """
-SELECT ?cls ?base ?pinP ?pinV ?pinVt ?rangeP ?facet ?bound WHERE {
+SELECT ?cls ?base ?fixedProperty ?fixedIri ?fixedText ?facetProperty ?facet ?bound WHERE {
   { ?cls owl:equivalentClass/owl:intersectionOf ?list .
     ?list rdf:rest*/rdf:first ?base . FILTER(isIRI(?base)) }
   UNION
   { ?cls owl:equivalentClass/owl:intersectionOf ?list .
     ?list rdf:rest*/rdf:first ?part .
-    ?part owl:onProperty ?pinP ; owl:hasValue ?pin .
-    BIND(IF(isIRI(?pin), STR(?pin), "") AS ?pinV)
-    BIND(IF(isIRI(?pin), "", STR(?pin)) AS ?pinVt) }
+    ?part owl:onProperty ?fixedProperty ; owl:hasValue ?fixed .
+    BIND(IF(isIRI(?fixed), STR(?fixed), "") AS ?fixedIri)
+    BIND(IF(isIRI(?fixed), "", STR(?fixed)) AS ?fixedText) }
   UNION
   { ?cls owl:equivalentClass/owl:intersectionOf ?list .
     ?list rdf:rest*/rdf:first ?part .
-    ?part owl:onProperty ?rangeP ; owl:someValuesFrom/owl:withRestrictions ?facets .
+    ?part owl:onProperty ?facetProperty ; owl:someValuesFrom/owl:withRestrictions ?facets .
     ?facets rdf:rest*/rdf:first ?f . ?f ?facet ?bound . FILTER(?facet != rdf:type) }
 }"""
 
@@ -90,17 +94,17 @@ def entail(store, graph: str, *, of=(), read=(), memo=None) -> list[tuple]:
                 if q.predicate == _RDF_TYPE:
                     types.add(q.object)
                 values.setdefault(q.predicate, set()).add(q.object)
-        for cls, (bases, pinned, ranges) in defs.items():
+        for cls, (bases, fixed, ranges) in defs.items():
             if cls in types or not bases <= types:
                 continue
-            if any(v not in values.get(p, ()) for p, v in pinned):
+            if any(v not in values.get(p, ()) for p, v in fixed):
                 continue
             if all(_within(values.get(p, ()), facets) for p, facets in ranges):
                 out.append((node, cls))
                 types.add(cls)
-        #  AND THE FAMILIES: every class the node is typed with, closed upward — the member a
+        #  AND THE SIDES: every class the node is typed with, closed upward — the member a
         #  rule typed it with as much as one entailed here — stopping at a BASE, a class some
-        #  definition intersects, and at everything above one: a reading gains its bands'
+        #  definition intersects, and at everything above one: a reading gains its sides'
         #  families and never what sits above `sosa:Observation`.
         rooted = types & bases_of(defs)
         stop = {s for t in rooted for s in supers.get(t, ())} | rooted
@@ -129,20 +133,20 @@ def _typed_in(store, graph: ox.NamedNode) -> list:
 
 def _definitions(store) -> tuple[dict, dict]:
     """The domain's class definitions off public knowledge — class to (the named classes it
-    intersects, the values it pins, the ranges it holds a value to) — and every class's
+    intersects, the values it fixes, the ranges it holds a value to) — and every class's
     ancestors."""
     public = graphs_of(store, PUBLIC)
     defs: dict = {}
     for r in rows(store, _DEFINITIONS_Q, public):
         cls = ox.NamedNode(r["cls"])
-        bases, pinned, ranges = defs.setdefault(cls, (set(), set(), {}))
+        bases, fixed, ranges = defs.setdefault(cls, (set(), set(), {}))
         if r.get("base"):
             bases.add(ox.NamedNode(r["base"]))
-        if r.get("pinP"):
-            pinned.add((ox.NamedNode(r["pinP"]),
-                        ox.NamedNode(r["pinV"]) if r.get("pinV") else ox.Literal(r.get("pinVt", ""))))
-        if r.get("rangeP") and r.get("facet"):
-            ranges.setdefault(ox.NamedNode(r["rangeP"]), []).append(
+        if r.get("fixedProperty"):
+            fixed.add((ox.NamedNode(r["fixedProperty"]),
+                        ox.NamedNode(r["fixedIri"]) if r.get("fixedIri") else ox.Literal(r.get("fixedText", ""))))
+        if r.get("facetProperty") and r.get("facet"):
+            ranges.setdefault(ox.NamedNode(r["facetProperty"]), []).append(
                 (r["facet"].rsplit("#", 1)[-1], float(r["bound"])))
     closed = {c: (b, p, tuple((k, tuple(v)) for k, v in r.items())) for c, (b, p, r) in defs.items()}
     supers: dict = {}

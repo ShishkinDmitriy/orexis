@@ -100,7 +100,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [observation](/domain/observation.md) - The node recording one act of observing. One per subject and property, and it replaces rather than accumulates.
 
-* [reading](/domain/reading.md) - The value an observation carries, somebody else's word; in 0.2.0 it stands as the present until its horizon, and the mind reads its band.
+* [reading](/domain/reading.md) - The value an observation carries, somebody else's word; in 0.2.0 it stands as the present until its horizon, and the mind reads its side.
 * [interval](/domain/interval.md) - A number with two ends. Not the core's: built into it as PR #575 and refused; a package's own tool for sizing, inside progression.
 
 * [channel](/domain/channel.md) - One named message flow on a bus, as a node — derived per distinct topic, discovered never authored, and the bearer of the encoding.

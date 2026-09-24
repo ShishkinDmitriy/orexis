@@ -171,16 +171,16 @@ Three things the 0.1.0 runner did are done differently, each engaging a premise 
 
 - **The crossing is found, not rounded to the ladder.** "The crossing is the first prediction at
   which the root reads unmet" made the crossing the START of a window whose far end first
-  touched a failing band — an hour early where the window is an hour, four where it is five.
-  The first window whose bands differ from the reading's own is bisected, the drift run
+  touched a failing side — an hour early where the window is an hour, four where it is five.
+  The first window whose sides differ from the reading's own is bisected, the drift run
   between the last elapsed that classifies as the reading does and the first that does not,
   and the crossed prediction's period begins where the change is placed; what stood before it
-  carries the reading's own bands to that instant. Measured on a widening spread, the ladder
+  carries the reading's own sides to that instant. Measured on a widening spread, the ladder
   said one o'clock and the bisection 15:22 (`a_widening_spread_crosses_later_than_the_ladder_says`).
 - **No number crosses.** The rule may emit a centre, an instant and the sensor it read; the
-  centre's band is entailed from them and then they go, because the mind reads bands and a
+  centre's side is entailed from them and then they go, because the mind reads sides and a
   world that hashed a centre would be a new world at every reading. What the sovereign reads
-  is the band set per window.
+  is the set of sides per window.
 - **A window that has begun is the present.** The ground at an instant holds every prediction
   whose window covers it, the first window included once the reading's horizon has passed, so
   a late sensor's forecast stands in for the reading it superseded, and "missed" is silence

@@ -3,10 +3,10 @@
 # THE SENSOR IS LATE. The pot's moisture was read at eleven and stood as the present until a
 # quarter past; it is noon, no reading has come, and the drift's first window — opened at a
 # quarter past eleven, closing at half past twelve — says the region. The PRESENT ground holds
-# the predicted node, the region band and no number: a forecast whose window has begun stands
-# in for the reading it superseded, so a dose admits on its band and nothing plans on a
+# the predicted node, the region side and no number: a forecast whose window has begun stands
+# in for the reading it superseded, so a dose admits on its side and nothing plans on a
 # reading that has lapsed. At half past twelve the second window takes over, the region and
-# the band below; at four the ladder runs out and the ground past it holds nothing of the key
+# the side below; at four the ladder runs out and the ground past it holds nothing of the key
 # — unmeasured is silence past the last window, and that is the desire's to notice.
 #
 # Three boundaries after noon in the store — the first window's close, the second's, and
@@ -28,33 +28,33 @@
 @prefix result: <http://example.org/orexis/graph/result/keeper/> .
 @prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
 
-# THE VOCABULARY THE CASE IS LOADED WITH: what the graph kinds are beneath, the three band
-# families, and the member bands genesis would mint for the pot's moisture from the range it
+# THE VOCABULARY THE CASE IS LOADED WITH: what the graph kinds are beneath, the three side
+# families, and the side classes genesis would mint for the pot's moisture from the range it
 # states — 0.10 to 0.30 of saturation, the loner's zamioculcas.
 GRAPH :ontology {
+  :zz.moisture.above a owl:Class .
+  :zz.moisture.above owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation [ a owl:Restriction ; owl:hasValue :zz ; owl:onProperty sosa:hasFeatureOfInterest ] [ a owl:Restriction ; owl:hasValue :moisture ; owl:onProperty sosa:observedProperty ] [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ; owl:withRestrictions ( [ xsd:minExclusive 0.3 ] ) ] ] ) ] .
+  :zz.moisture.above rdfs:label "moisture above 0.30" .
+  :zz.moisture.above rdfs:subClassOf sensing:AboveRegion .
+  :zz.moisture.above sensing:ofProperty :moisture .
+  :zz.moisture.above sensing:ofSubject :zz .
+  :zz.moisture.below a owl:Class .
+  :zz.moisture.below owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation [ a owl:Restriction ; owl:hasValue :zz ; owl:onProperty sosa:hasFeatureOfInterest ] [ a owl:Restriction ; owl:hasValue :moisture ; owl:onProperty sosa:observedProperty ] [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ; owl:withRestrictions ( [ xsd:maxExclusive 0.1 ] ) ] ] ) ] .
+  :zz.moisture.below rdfs:label "moisture below 0.10" .
+  :zz.moisture.below rdfs:subClassOf sensing:BelowRegion .
+  :zz.moisture.below sensing:ofProperty :moisture .
+  :zz.moisture.below sensing:ofSubject :zz .
+  :zz.moisture.inside a owl:Class .
+  :zz.moisture.inside owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation [ a owl:Restriction ; owl:hasValue :zz ; owl:onProperty sosa:hasFeatureOfInterest ] [ a owl:Restriction ; owl:hasValue :moisture ; owl:onProperty sosa:observedProperty ] [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ; owl:withRestrictions ( [ xsd:minInclusive 0.1 ] [ xsd:maxInclusive 0.3 ] ) ] ] ) ] .
+  :zz.moisture.inside rdfs:label "moisture inside 0.10-0.30" .
+  :zz.moisture.inside rdfs:subClassOf sensing:InRegion .
+  :zz.moisture.inside sensing:ofProperty :moisture .
+  :zz.moisture.inside sensing:ofSubject :zz .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
   orexis:WantGraph rdfs:subClassOf orexis:Graph .
-  orexis:band.zz.moisture.above a owl:Class .
-  orexis:band.zz.moisture.above owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation [ a owl:Restriction ; owl:hasValue :zz ; owl:onProperty sosa:hasFeatureOfInterest ] [ a owl:Restriction ; owl:hasValue :moisture ; owl:onProperty sosa:observedProperty ] [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ; owl:withRestrictions ( [ xsd:minExclusive 0.3 ] ) ] ] ) ] .
-  orexis:band.zz.moisture.above rdfs:label "moisture above 0.30" .
-  orexis:band.zz.moisture.above rdfs:subClassOf sensing:AboveRegion .
-  orexis:band.zz.moisture.above sensing:ofProperty :moisture .
-  orexis:band.zz.moisture.above sensing:ofSubject :zz .
-  orexis:band.zz.moisture.below a owl:Class .
-  orexis:band.zz.moisture.below owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation [ a owl:Restriction ; owl:hasValue :zz ; owl:onProperty sosa:hasFeatureOfInterest ] [ a owl:Restriction ; owl:hasValue :moisture ; owl:onProperty sosa:observedProperty ] [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ; owl:withRestrictions ( [ xsd:maxExclusive 0.1 ] ) ] ] ) ] .
-  orexis:band.zz.moisture.below rdfs:label "moisture below 0.10" .
-  orexis:band.zz.moisture.below rdfs:subClassOf sensing:BelowRegion .
-  orexis:band.zz.moisture.below sensing:ofProperty :moisture .
-  orexis:band.zz.moisture.below sensing:ofSubject :zz .
-  orexis:band.zz.moisture.inside a owl:Class .
-  orexis:band.zz.moisture.inside owl:equivalentClass [ a owl:Class ; owl:intersectionOf ( sosa:Observation [ a owl:Restriction ; owl:hasValue :zz ; owl:onProperty sosa:hasFeatureOfInterest ] [ a owl:Restriction ; owl:hasValue :moisture ; owl:onProperty sosa:observedProperty ] [ a owl:Restriction ; owl:onProperty sosa:hasSimpleResult ; owl:someValuesFrom [ a rdfs:Datatype ; owl:onDatatype xsd:decimal ; owl:withRestrictions ( [ xsd:minInclusive 0.1 ] [ xsd:maxInclusive 0.3 ] ) ] ] ) ] .
-  orexis:band.zz.moisture.inside rdfs:label "moisture inside 0.10-0.30" .
-  orexis:band.zz.moisture.inside rdfs:subClassOf sensing:InRegion .
-  orexis:band.zz.moisture.inside sensing:ofProperty :moisture .
-  orexis:band.zz.moisture.inside sensing:ofSubject :zz .
   sensing:AboveRegion rdfs:subClassOf sosa:Observation .
   sensing:BelowRegion rdfs:subClassOf sosa:Observation .
   sensing:InRegion rdfs:subClassOf sosa:Observation .
@@ -73,10 +73,10 @@ GRAPH :world {
   :zz a :Pot .
 }
 
-# THE READING IN HAND, as `revise` leaves it: the node, its key and its bands in the graph of
+# THE READING IN HAND, as `revise` leaves it: the node, its key and its sides in the graph of
 # readings; the number, the instant and the instrument in the result graph beside it.
 GRAPH sensed:zz_moisture {
-  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
+  orexis:obs_zz_moisture a :zz.moisture.inside .
   orexis:obs_zz_moisture a sensing:InRegion .
   orexis:obs_zz_moisture a sosa:Observation .
   orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
@@ -91,7 +91,7 @@ GRAPH result:zz_moisture {
 }
 
 GRAPH <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> {
-  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
+  orexis:obs_zz_moisture a :zz.moisture.inside .
   orexis:obs_zz_moisture a sensing:InRegion .
   orexis:obs_zz_moisture a sosa:Observation .
   orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
@@ -99,8 +99,8 @@ GRAPH <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> {
 }
 
 GRAPH <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> {
-  orexis:obs_zz_moisture a orexis:band.zz.moisture.below .
-  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
+  orexis:obs_zz_moisture a :zz.moisture.below .
+  orexis:obs_zz_moisture a :zz.moisture.inside .
   orexis:obs_zz_moisture a sensing:BelowRegion .
   orexis:obs_zz_moisture a sensing:InRegion .
   orexis:obs_zz_moisture a sosa:Observation .

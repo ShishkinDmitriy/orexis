@@ -26,20 +26,20 @@ TEST = "http://example.org/test#"
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
-def test_entail_asserts_the_bands_the_patch_says(case, request, snapshots):
+def test_entail_asserts_the_sides_the_patch_says(case, request, snapshots):
     store = snapshots.stand_in(case)
     (sensed,) = graphs_of(store, STATE)
     asserted = entail(store, sensed)
     snapshots.held_to_diff(case, request, "entail", snapshots.snapshot_of(store))
     said = {(n.value.rsplit("#", 1)[-1], c.value.rsplit("#", 1)[-1]) for n, c in asserted}
-    assert said == {("dry", "band.zz.moisture.below"), ("dry", "BelowRegion"),
-                    ("fine", "band.zz.moisture.inside"), ("fine", "InRegion"),
-                    ("wet", "band.zz.moisture.above"), ("wet", "AboveRegion")}, said
+    assert said == {("dry", "zz.moisture.below"), ("dry", "BelowRegion"),
+                    ("fine", "zz.moisture.inside"), ("fine", "InRegion"),
+                    ("wet", "zz.moisture.above"), ("wet", "AboveRegion")}, said
 
 
 def test_a_node_may_be_read_from_one_graph_and_classified_in_another(snapshots):
     """The sensing layer keeps a reading's key in one graph and its number in another, and
-    asks for the band to be written into the first."""
+    asks for the side to be written into the first."""
     store = snapshots.stand_in(CASES[0])
     (sensed,) = graphs_of(store, STATE)
     apart = "http://example.org/test#apart"
@@ -49,7 +49,7 @@ WHERE {{ GRAPH <{sensed}> {{ ?s <http://www.w3.org/ns/sosa/hasSimpleResult> ?v }
 DELETE WHERE {{ GRAPH <{sensed}> {{ ?s <http://www.w3.org/ns/sosa/hasSimpleResult> ?v }} }}""")
     assert entail(store, sensed, of=[TEST + "dry"]) == [], "the number is elsewhere, so nothing is entailed"
     asserted = entail(store, sensed, of=[TEST + "dry"], read=(sensed, apart), memo=Memo())
-    assert {c.value for _, c in asserted} == {"http://example.org/orexis#band.zz.moisture.below", SENSING + "BelowRegion"}
+    assert {c.value for _, c in asserted} == {TEST + "zz.moisture.below", SENSING + "BelowRegion"}
     graph = ox.NamedNode(sensed)
     assert all(q.graph_name == graph for q in store.quads_for_pattern(ox.NamedNode(TEST + "dry"), None, None, None)
                if q.predicate.value.endswith("#type")), "classified in the graph asked, not the one read"

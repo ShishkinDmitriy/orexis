@@ -376,7 +376,8 @@ the agent must steer attention, the sentinel where the world's own events are th
 # In Agent 0.2.0
 
 The module above is the 0.1.0 container's. In `agent/` the same package's data — its
-vocabulary, its bands, the drifts the domain packages declare against `sensing:Drift` — is
+vocabulary, the classes that say which side of a region a reading is on, the drifts the domain
+packages declare against `sensing:Drift` — is
 read by a layer of three functions and no clock; see the
 [reviser](/domain/reviser.md) page's section on it, and the
 [reading](/domain/reading.md) page for what a reading is there.

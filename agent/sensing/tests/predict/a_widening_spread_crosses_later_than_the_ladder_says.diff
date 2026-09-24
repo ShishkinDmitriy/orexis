@@ -44,7 +44,7 @@
 +
 +
 +GRAPH <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> {
-+  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
++  orexis:obs_zz_moisture a :zz.moisture.inside .
 +  orexis:obs_zz_moisture a sensing:InRegion .
 +  orexis:obs_zz_moisture a sosa:Observation .
 +  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
@@ -52,7 +52,7 @@
 +}
 +
 +GRAPH <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> {
-+  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
++  orexis:obs_zz_moisture a :zz.moisture.inside .
 +  orexis:obs_zz_moisture a sensing:InRegion .
 +  orexis:obs_zz_moisture a sosa:Observation .
 +  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
@@ -60,8 +60,8 @@
 +}
 +
 +GRAPH <http://example.org/orexis/graph/predicted/keeper/zz_moisture/2> {
-+  orexis:obs_zz_moisture a orexis:band.zz.moisture.below .
-+  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
++  orexis:obs_zz_moisture a :zz.moisture.below .
++  orexis:obs_zz_moisture a :zz.moisture.inside .
 +  orexis:obs_zz_moisture a sensing:BelowRegion .
 +  orexis:obs_zz_moisture a sensing:InRegion .
 +  orexis:obs_zz_moisture a sosa:Observation .
@@ -70,9 +70,9 @@
 +}
 +
 +GRAPH <http://example.org/orexis/graph/predicted/keeper/zz_moisture/3> {
-+  orexis:obs_zz_moisture a orexis:band.zz.moisture.above .
-+  orexis:obs_zz_moisture a orexis:band.zz.moisture.below .
-+  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
++  orexis:obs_zz_moisture a :zz.moisture.above .
++  orexis:obs_zz_moisture a :zz.moisture.below .
++  orexis:obs_zz_moisture a :zz.moisture.inside .
 +  orexis:obs_zz_moisture a sensing:AboveRegion .
 +  orexis:obs_zz_moisture a sensing:BelowRegion .
 +  orexis:obs_zz_moisture a sensing:InRegion .

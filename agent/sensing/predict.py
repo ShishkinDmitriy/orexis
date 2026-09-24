@@ -1,5 +1,5 @@
 """`predict`: what the drifts say one reading will be, written as predictions — graphs of
-band sets holding during their windows, each starting where the classification probably
+side sets holding during their windows, each starting where the classification probably
 changes (the-drift-is-sensings-and-its-result-is-predictions, #642, #783).
 
 **A DRIFT IS A PACKAGE'S RULE OVER `$elapsed`** — what the world does to a reading while
@@ -7,20 +7,20 @@ nobody acts — declared against this layer's word (`sensing:Drift`) with the ho
 package predicts at beside it. After every reading, for one key, this runs every drift the
 store holds at each horizon of the ladder past the reading's own horizon and writes one
 prediction per window: `orexis:PredictionGraph`, holding during its window, carrying the
-predicted node keyed exactly as the reading is and typed with every band the rule says it may
+predicted node keyed exactly as the reading is and typed with every side the rule says it may
 be in. The rate, the spread and the instrument's noise are inside the package's text; what
-leaves it is bands, and where a rule types none the vocabulary entails the one the centre
+leaves it is sides, and where a rule types none the vocabulary entails the one the centre
 falls in — and then the centre goes: a prediction carries no number, no instant and no
-instrument, because the mind reads bands and a world that hashed a centre would be a new
+instrument, because the mind reads sides and a world that hashed a centre would be a new
 world at every reading.
 
 **THE CROSSING IS FOUND, NOT ROUNDED TO THE LADDER.** The ladder's windows are an hour, five
 and a day; a prediction for the window at which the set first differs from the reading's own
-bands would put the crossing at that window's START, which the drift may not reach for hours.
-So the first window whose bands differ is bisected — the drift run at instants between the
+sides would put the crossing at that window's START, which the drift may not reach for hours.
+So the first window whose sides differ is bisected — the drift run at instants between the
 last elapsed known to classify as the reading does and the first known not to — until the
 change is placed within a minute or a sixty-fourth of the window, and that instant is where
-the crossed prediction's period begins; what stood before it carries the reading's own bands
+the crossed prediction's period begins; what stood before it carries the reading's own sides
 to that instant. A crossing the ladder placed at one o'clock and the bisection at four is the
 case the suite holds (`a_widening_spread_crosses_later_than_the_ladder_says`), because a
 refinement is measured before it is believed. The crossed window's set is the union of what
@@ -34,7 +34,7 @@ write. The row also says which reading the prediction was derived from, so the n
 of the key drops the whole ladder before it writes its own.
 
 **A KEY NO DRIFT MOVES IS PREDICTED TO STAY AS IT READS** for the first window alone — its
-bands carried forward — and at no later one: a package that declares no drift has made no
+sides carried forward — and at no later one: a package that declares no drift has made no
 claim about the world past that, and this layer invents no persistence. A key no ladder
 reaches at all is predicted nowhere, and stands until its horizon.
 """
@@ -52,7 +52,7 @@ from agent.ontology import BELIEF, DESIRE, PREDICTION, PUBLIC, RECORD, WANT, loc
 from agent.store import (Raw, bind, catalogue_of, construct, entry, forget_graph, graphs_of,
                          instant, quads, remember, rows, update)
 
-from .ontology import (FAMILIES, FEATURE, PROPERTY, RECORDED, RESULT_WORDS, prediction_graph)
+from .ontology import (SIDES, FEATURE, PROPERTY, RECORDED, RESULT_WORDS, prediction_graph)
 
 log = logging.getLogger("predict")
 
@@ -86,14 +86,14 @@ _LADDER_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:PredictionGraph ; prov:wasDerivedFrom $reading } }"""
 
 #  WHAT OF A NODE'S TYPES IS A BAND: the three families and every member the world minted.
-_BANDS_Q = """
+_SIDES_Q = """
 SELECT DISTINCT ?b ?f WHERE { VALUES ?f { $families } ?b rdfs:subClassOf+ ?f }"""
 
 #  THE DIFF A PREDICTION MAKES: the key's standing node goes, whole.
 _RETRACTS = ("DELETE { GRAPH $state { ?o ?p ?v } } "
              "WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <%s> ; sosa:observedProperty <%s> ; ?p ?v } }")
 
-#  THE INSTRUMENT'S WORDS OFF A PREDICTION, once the centre's band is drawn from them.
+#  THE INSTRUMENT'S WORDS OFF A PREDICTION, once the centre's side is drawn from them.
 _STRIP_U = """
 DELETE { GRAPH $g { ?s ?p ?o } } WHERE { GRAPH $g { ?s ?p ?o } VALUES ?p { $words } }"""
 
@@ -127,10 +127,10 @@ def predict(store: ox.Store, me: str, subject: str, observed_property: str, *,
                      if taken + timedelta(seconds=float(h)) > opens})
     if not ladder:
         return []
-    bands = remember(memo, ("bands",), lambda: _bands(store))
+    sides = remember(memo, ("sides",), lambda: _sides(store))
     results = [r["result"] for r in rows(store, _RESULTS_Q, (), cat=cat, node=node)]
     held = [reading, *results]
-    own = _bands_of(store, reading, node, bands)
+    own = _sides_of(store, reading, node, sides)
     tokens = {"me": me, "subject": subject, "about": observed_property}
     run = lambda elapsed: _run(store, drifts, tokens, held, feature, observed_property, taken, elapsed, now, memo)
 
@@ -145,8 +145,8 @@ def predict(store: ox.Store, me: str, subject: str, observed_property: str, *,
         if triples:
             windows.append((start, closes, triples))
 
-    #  THE CROSSING: the first window whose bands differ from the reading's own, bisected.
-    crossed = next((i for i, (_, _, t) in enumerate(windows) if own and _typed(t, node, bands) != own), None)
+    #  THE CROSSING: the first window whose sides differ from the reading's own, bisected.
+    crossed = next((i for i, (_, _, t) in enumerate(windows) if own and _typed(t, node, sides) != own), None)
     if crossed is not None:
         start, closes, triples = windows[crossed]
         lo = (start - taken).total_seconds()
@@ -156,7 +156,7 @@ def predict(store: ox.Store, me: str, subject: str, observed_property: str, *,
         while hi - lo > tolerance:
             mid = (lo + hi) / 2
             there = run(mid)
-            if not there or _typed(there, node, bands) == own:
+            if not there or _typed(there, node, sides) == own:
                 lo, before = mid, there
             else:
                 hi = mid
@@ -214,34 +214,34 @@ def _run(store, drifts, tokens: dict, held: list[str], feature: str, observed_pr
     return out
 
 
-def _bands(store) -> dict:
-    """Every band class to the family it sits beneath, a family to itself: the members asked
+def _sides(store) -> dict:
+    """Every side class to the family it sits beneath, a family to itself: the members asked
     of the store, the families known, since a BIND inside a UNION branch sees nothing bound
     outside it (AGENTS.md, the traps)."""
-    out = {f: f for f in FAMILIES}
-    for r in rows(store, _BANDS_Q, graphs_of(store, PUBLIC), families=Raw(" ".join(f"<{f}>" for f in FAMILIES))):
+    out = {f: f for f in SIDES}
+    for r in rows(store, _SIDES_Q, graphs_of(store, PUBLIC), families=Raw(" ".join(f"<{f}>" for f in SIDES))):
         out[r["b"]] = r["f"]
     return out
 
 
-def _bands_of(store, graph: str, node: str, bands: dict) -> frozenset:
+def _sides_of(store, graph: str, node: str, sides: dict) -> frozenset:
     return _closed((q.object.value for q in store.quads_for_pattern(
-        ox.NamedNode(node), _RDF_TYPE, None, ox.NamedNode(graph))), bands)
+        ox.NamedNode(node), _RDF_TYPE, None, ox.NamedNode(graph))), sides)
 
 
-def _typed(triples, node: str, bands: dict) -> frozenset:
-    """The bands a set of triples types `node` with."""
-    return _closed((t.object.value for t in triples if t.predicate == _RDF_TYPE and t.subject.value == node), bands)
+def _typed(triples, node: str, sides: dict) -> frozenset:
+    """The sides a set of triples types `node` with."""
+    return _closed((t.object.value for t in triples if t.predicate == _RDF_TYPE and t.subject.value == node), sides)
 
 
-def _closed(types, bands: dict) -> frozenset:
-    """A set of band types with each member's family beside it — so a rule that typed the
+def _closed(types, sides: dict) -> frozenset:
+    """A set of side types with each member's family beside it — so a rule that typed the
     member alone and one that typed both classify alike, which is what the entailment writes."""
     out = set()
     for t in types:
-        if t in bands:
+        if t in sides:
             out.add(t)
-            out.add(bands[t])
+            out.add(sides[t])
     return frozenset(out)
 
 

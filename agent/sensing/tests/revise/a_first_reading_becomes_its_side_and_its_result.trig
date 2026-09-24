@@ -1,9 +1,10 @@
-# a_second_reading_replaces_the_first
+# a_first_reading_becomes_its_side_and_its_result
 #
-# A reading of 0.22 stands from eleven; one of 0.08 arrives at noon. One node per subject and
-# property: the graphs are re-made whole — the node now IS the side below the region, the
-# number and the instant are the new ones, and the periods run from noon. Nothing of the
-# first survives, which is the invariant every retraction leans on (#669).
+# Nothing has been read. A reading of 0.22 at noon with a horizon of fifteen minutes leaves
+# TWO graphs: the graph of readings with the node, its key and the sides the domain says a
+# 0.22 is — the class of readings inside the region, and the side above it — and the result graph beside it
+# with the number, the instant, the probe and the author. Both hold from noon to a quarter
+# past, both are the keeper's, and both arrived received: the instrument's word.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 @prefix : <http://example.org/test#> .
@@ -66,23 +67,6 @@ GRAPH :world {
   :zz a :Pot .
 }
 
-# THE READING IN HAND, as `revise` leaves it: the node, its key and its sides in the graph of
-# readings; the number, the instant and the instrument in the result graph beside it.
-GRAPH sensed:zz_moisture {
-  orexis:obs_zz_moisture a :zz.moisture.inside .
-  orexis:obs_zz_moisture a sensing:InRegion .
-  orexis:obs_zz_moisture a sosa:Observation .
-  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
-  orexis:obs_zz_moisture sosa:observedProperty :moisture .
-}
-
-GRAPH result:zz_moisture {
-  orexis:obs_zz_moisture prov:wasGeneratedBy :keeper .
-  orexis:obs_zz_moisture sosa:hasSimpleResult 0.22 .
-  orexis:obs_zz_moisture sosa:madeBySensor :probe .
-  orexis:obs_zz_moisture sosa:resultTime "2026-01-01T11:00:00+00:00"^^xsd:dateTime .
-}
-
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
@@ -91,15 +75,4 @@ GRAPH :catalogue {
   :ontology a orexis:PublicGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  result:zz_moisture a orexis:BeliefGraph .
-  result:zz_moisture a sensing:ResultGraph .
-  result:zz_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T11:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
-  result:zz_moisture orexis:arrivedBy orexis:Received .
-  result:zz_moisture orexis:beliefsOf :keeper .
-  sensed:zz_moisture a orexis:BeliefGraph .
-  sensed:zz_moisture a orexis:Graph .
-  sensed:zz_moisture a orexis:StateGraph .
-  sensed:zz_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T11:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
-  sensed:zz_moisture orexis:arrivedBy orexis:Received .
-  sensed:zz_moisture orexis:beliefsOf :keeper .
 }

@@ -1,6 +1,6 @@
-# a_reading_no_band_is_minted_for_is_only_an_observation
+# a_reading_no_side_class_is_minted_for_is_only_an_observation
 #
-# The pot states no range for its warmth, so the domain minted no band for it. A reading of
+# The pot states no range for its warmth, so the domain minted no side for it. A reading of
 # 22 is written like any other — keyed, timed, authored, holding until its horizon — and is
 # typed `sosa:Observation` and nothing else: what a reading IS is the domain's to say, and
 # where the domain says nothing the layer says nothing for it.
@@ -21,8 +21,8 @@
 @prefix result: <http://example.org/orexis/graph/result/keeper/> .
 @prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
 
-# THE VOCABULARY THE CASE IS LOADED WITH: what the graph kinds are beneath, the three band
-# families, and the member bands genesis would mint for the pot's moisture from the range it
+# THE VOCABULARY THE CASE IS LOADED WITH: what the graph kinds are beneath, the three side
+# families, and the side classes genesis would mint for the pot's moisture from the range it
 # states — 0.10 to 0.30 of saturation, the loner's zamioculcas.
 GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .

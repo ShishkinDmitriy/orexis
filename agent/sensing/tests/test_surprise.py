@@ -36,21 +36,21 @@ def _arrives(store, snapshots, value: float, minutes: float) -> str | None:
     return surprise(store, ZZ, MOISTURE)
 
 
-def test_a_reading_inside_the_predicted_bands_is_no_surprise(predicted, snapshots):
+def test_a_reading_inside_the_predicted_sides_is_no_surprise(predicted, snapshots):
     """At a quarter past, the first window says the region: a reading of 0.24 is the world
     going on as believed."""
     assert _arrives(predicted, snapshots, 0.24, 16) is None
 
 
-def test_a_reading_outside_the_predicted_bands_is_a_surprise(predicted, snapshots):
+def test_a_reading_outside_the_predicted_sides_is_a_surprise(predicted, snapshots):
     """The first window says the region alone, and a reading of 0.05 is below it: the sentence
     names what contradicted what."""
     said = _arrives(predicted, snapshots, 0.05, 16)
-    assert said == "moisture of zz read BelowRegion, band.zz.moisture.below where InRegion, band.zz.moisture.inside was expected", said
+    assert said == "moisture of zz read BelowRegion, zz.moisture.below where InRegion, zz.moisture.inside was expected", said
 
 
 def test_a_boundary_crossed_inside_the_predicted_set_is_absorbed(predicted, snapshots):
-    """By half past three the crossed window holds the region AND the band below: a reading
+    """By half past three the crossed window holds the region AND the side below: a reading
     below is inside the set, and wakes nothing — the hysteresis a margin would have bought."""
     assert _arrives(predicted, snapshots, 0.09, 210) is None
 
@@ -68,7 +68,7 @@ def test_a_reading_nothing_predicted_is_news(monkeypatch, snapshots):
     revise(store, snapshots.ME, ZZ, MOISTURE, 0.24, snapshots.NOW + timedelta(minutes=16), 900.0)
     predict(store, snapshots.ME, ZZ, MOISTURE)     # the ladder rewritten from the new reading
     revise(store, snapshots.ME, TEST + "other", MOISTURE, 0.2, snapshots.NOW, 900.0)
-    assert surprise(store, TEST + "other", MOISTURE) == "moisture of other read no band where nothing was predicted"
+    assert surprise(store, TEST + "other", MOISTURE) == "moisture of other read no side where nothing was predicted"
 
 
 def test_nothing_read_is_nothing_to_say(predicted):

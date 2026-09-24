@@ -1206,12 +1206,13 @@ it is a record wearing a bullet.
   0.1.0 was a want about knowing that the region desire's `unmeasured` side already states, and
   a look repairs; the reading's horizon is the cadence with the instrument's tolerance, said
   as its graph's period, so nothing keeps a timer and nothing writes a mark.
-- **A reading is two graphs, and the mind's world is bands** — the observation's key and its
-  bands are the state graph a plan forks and a step is held to, and the number, the instant
+- **A reading is two graphs, and the mind's world is sides** — the observation's key and the
+  side of its region it is on are the state graph a plan forks and a step is held to, and the
+  number, the instant
   and the instrument are a graph of sensing's own kind beside it — the result graph, declared
   in `agent/sensing/ontology.ttl` — holding for the same stretch; `facts_of` rounds a number into the digest, so a number in the state
   graph made every reading a world the search had never seen, and no cone would ever re-root
-  on a plant. A prediction carries none of the instrument's words either: the centre's band
+  on a plant. A prediction carries none of the instrument's words either: the centre's side
   is entailed and the centre goes.
 - **A ground is laid at every boundary, ends included, and a forecast begun stands in for a
   reading missed** — `lay_ground` builds each ground from what holds at the instant, the
@@ -1221,7 +1222,7 @@ it is a record wearing a bullet.
   lapsed. A reading past its horizon is not in the ground past it, a late sensor's forecast is
   the present, and unmeasured is silence past the last window.
 - **The crossing is bisected, never rounded to the ladder** — the ladder's windows are an
-  hour, five and a day, and the window whose far end first touches a failing band would put
+  hour, five and a day, and the window whose far end first touches a failing side would put
   the crossing at its start; `predict` runs the drift between the last elapsed that classifies
   as the reading does and the first that does not, and the crossed prediction's period begins
   where the change is placed, within a minute or a sixty-fourth of the window. Measured on a

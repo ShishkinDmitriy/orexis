@@ -10,7 +10,7 @@ sentence `surprise` answers is what a container would wake the Planner on. One w
 - a reading inside the region crosses below it within the hour, and the dose is placed at the
   crossing the drift found — the search is rooted at the ground the crossing makes;
 - the sensor is late, the forecast whose window has begun stands in for the reading, and a dose
-  admits on its band rather than on a reading that has lapsed;
+  admits on its side rather than on a reading that has lapsed;
 - the sensor has been silent past the whole ladder, the pot is unmeasured, and what is planned is
   a look — taken by nudging the sensor, answered by the reading that comes.
 """
@@ -105,9 +105,9 @@ def test_a_foreseen_crossing_places_the_dose_at_the_crossing(agent, snapshots):
     assert x.walking() == []
 
 
-def test_a_late_sensors_forecast_stands_in_and_a_dose_admits_on_its_band(agent, snapshots):
+def test_a_late_sensors_forecast_stands_in_and_a_dose_admits_on_its_side(agent, snapshots):
     """Read below at eleven and silent since: at noon the reading has lapsed and the first
-    window of its ladder stands in — below — so the dose is available on the forecast's band
+    window of its ladder stands in — below — so the dose is available on the forecast's side
     and placed now, on no reading at all."""
     beliefs, planner, x, nudged = agent
     _reading(beliefs, snapshots, 0.05, -60)
@@ -120,7 +120,7 @@ def test_a_late_sensors_forecast_stands_in_and_a_dose_admits_on_its_band(agent, 
 def test_silence_past_the_ladder_is_unmeasured_and_a_look_is_planned(agent, snapshots):
     """Read two days ago and nothing since: every window of the ladder has closed, the pot is
     unmeasured, and the one lever that admits is the look — taken by nudging the probe, and
-    answered by the reading it sends, whatever band that is."""
+    answered by the reading it sends, whatever side that is."""
     beliefs, planner, x, nudged = agent
     _reading(beliefs, snapshots, 0.22, -2 * 24 * 60)
     planner.plan(snapshots.NOW)

@@ -1,7 +1,7 @@
 """The words the sensing layer reads and writes, and the names it spells for eyes.
 
 THE VOCABULARY IS THE PACKAGE'S. `sensing:` is declared by `packages/orexis-capability-sensing/
-ontology.ttl` — the drift and its horizons, the three band families, what a sensor monitors —
+ontology.ttl` — the drift and its horizons, the three side families, what a sensor monitors —
 and this layer speaks it rather than restating it; the one word of its own is the kind of
 graph the instrument's result is kept in (`ontology.ttl` beside this file). SOSA's words are
 SOSA's.
@@ -27,12 +27,12 @@ PROV = "http://www.w3.org/ns/prov#"
 DRIFT = SENSING + "Drift"
 AT_HORIZON = SENSING + "atHorizon"
 
-#  THE THREE FAMILIES a range divides a property into; a member per (subject, property) is
+#  THE THREE SIDES a range divides a property into; a member per (subject, property) is
 #  minted beneath each, and a reading IS the member its number falls in.
 BELOW = SENSING + "BelowRegion"
 INSIDE = SENSING + "InRegion"
 ABOVE = SENSING + "AboveRegion"
-FAMILIES = (BELOW, INSIDE, ABOVE)
+SIDES = (BELOW, INSIDE, ABOVE)
 
 #  THE INSTRUMENT'S WORD, as a graph kind of this layer's own.
 RESULT_GRAPH = SENSING + "ResultGraph"
@@ -48,7 +48,7 @@ PROCEDURE = SOSA + "usedProcedure"
 GENERATED_BY = PROV + "wasGeneratedBy"
 #  WHAT A PREDICTION MAY NOT CARRY: the words that belong to the instrument. A drift's construct
 #  may emit them — a centre, an instant, the sensor it read — and the mind reads none, so the
-#  layer takes them off the prediction once the centre's band is drawn from them.
+#  layer takes them off the prediction once the centre's side is drawn from them.
 RESULT_WORDS = (RESULT, RESULT_TIME, PHENOMENON_TIME, MADE_BY, PROCEDURE, GENERATED_BY)
 
 RECEIVED = OREXIS + "Received"
@@ -68,7 +68,7 @@ def observation_of(feature: str, observed_property: str) -> str:
 
 
 def reading_graph(agent_id: str, feature: str, observed_property: str) -> str:
-    """Where one key's reading stands as the present: its node, key and bands."""
+    """Where one key's reading stands as the present: its node, key and sides."""
     return f"{GRAPH_PREFIX}sensed/{agent_id}/{slug(feature)}_{slug(observed_property)}"
 
 

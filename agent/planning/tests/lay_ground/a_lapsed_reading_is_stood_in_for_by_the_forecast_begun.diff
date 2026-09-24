@@ -7,11 +7,11 @@
 +  <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> a <http://example.org/orexis/planning#GroundGraph> .
 +  <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> orexis:arrivedBy orexis:Derived .
-+  <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> orexis:hash "sha256:cbed4defc605dc72abebccd2e9ee207ab076873cbb0556ae85419dfe80ec3149" .
++  <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> orexis:hash "sha256:09d8830ba77586a3aec3b6d827a6a36983feea5ee8bd03eb74b4f6c9a2ac2818" .
 +  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> a <http://example.org/orexis/planning#GroundGraph> .
 +  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T16:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
 +  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> orexis:arrivedBy orexis:Derived .
-+  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> orexis:hash "sha256:0cad1d8e7428ca91fb946a5a606b5686ffa2914da8ad5d35cfacb211c941ae58" .
++  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> orexis:hash "sha256:fd6a22986250d0f9e726c3d95540cb461a951afe5cf82796925c3869285ca14a" .
 +  <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> prov:wasDerivedFrom <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> .
 +  <http://example.org/orexis/graph/ground/2026-01-01T160000p0000> a <http://example.org/orexis/planning#GroundGraph> .
 +  <http://example.org/orexis/graph/ground/2026-01-01T160000p0000> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T16:00:00+00:00"^^xsd:dateTime ] .
@@ -36,7 +36,7 @@
 +
 +
 +GRAPH <http://example.org/orexis/graph/ground/2026-01-01T120000p0000> {
-+  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
++  orexis:obs_zz_moisture a :zz.moisture.inside .
 +  orexis:obs_zz_moisture a sensing:InRegion .
 +  orexis:obs_zz_moisture a sosa:Observation .
 +  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
@@ -44,8 +44,8 @@
 +}
 +
 +GRAPH <http://example.org/orexis/graph/ground/2026-01-01T123000p0000> {
-+  orexis:obs_zz_moisture a orexis:band.zz.moisture.below .
-+  orexis:obs_zz_moisture a orexis:band.zz.moisture.inside .
++  orexis:obs_zz_moisture a :zz.moisture.below .
++  orexis:obs_zz_moisture a :zz.moisture.inside .
 +  orexis:obs_zz_moisture a sensing:BelowRegion .
 +  orexis:obs_zz_moisture a sensing:InRegion .
 +  orexis:obs_zz_moisture a sosa:Observation .

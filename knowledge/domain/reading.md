@@ -10,7 +10,7 @@ description: >-
   the agent's own judgement rather than a property of the number — so "stale" is a verdict a
   reader reaches, never a flag anybody sets. Absent is not zero: a property never read yields no
   gap rather than a satisfied one. In Agent 0.2.0 a reading STANDS as the present for the horizon
-  sensing gives it and then does not, by the clock, and the number is kept beside the bands.
+  sensing gives it and then does not, by the clock, and the number is kept beside the side.
 ---
 
 # What it is
@@ -91,13 +91,13 @@ What happened before is in the series store, which is a different question asked
   worth.
 - [belief-base](/domain/belief-base.md) — why it lives in a graph of its own.
 
-# In Agent 0.2.0, it stands for its horizon and the mind reads its band
+# In Agent 0.2.0, it stands for its horizon and the mind reads its side
 
 The sensing layer of `agent/` (`agent/sensing/revise.py`, #783) writes a reading as TWO graphs
 holding for one stretch, from the instant it was taken to the horizon — the cadence with
 whatever tolerance the instrument earns. The graph of readings holds the node, what it is of,
-which property, and every [band](/domain/band.md) the domain's definitions say a value like
-this one is; a graph of sensing's own kind beside it holds the number, the instant, the
+which property, and the side of its [region](/domain/region.md) the domain's definitions say
+a value like this one is on — below, inside or above; a graph of sensing's own kind beside it holds the number, the instant, the
 instrument and its procedure. A plan forks the first and a step is held to it; a drift and an
 envelope read the second where it holds. Nothing marks a reading cold: past the horizon a
 reader asking at an instant is handed neither graph, the drift's [prediction](/domain/prediction.md)

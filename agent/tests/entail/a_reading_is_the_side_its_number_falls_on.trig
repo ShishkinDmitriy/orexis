@@ -1,11 +1,12 @@
-# a_second_reading_replaces_the_first
+# a_reading_is_the_side_its_number_falls_on
 #
-# A reading of 0.22 stands from eleven; one of 0.08 arrives at noon. One node per subject and
-# property: the graphs are re-made whole — the node now IS the side below the region, the
-# number and the instant are the new ones, and the periods run from noon. Nothing of the
-# first survives, which is the invariant every retraction leans on (#669).
+# Three readings of one pot's moisture, one per zone of the range it states, and one of a
+# property no side is minted for. `entail` over the graph of readings asserts on each the
+# member side its number falls in and the family that side sits beneath — and nothing above
+# `sosa:Observation`, which the node was typed already — and nothing at all on the fourth.
 #
-# The clock stands at 2026-01-01T12:00:00Z.
+# The number is read from the reading's own graph here; `revise` keeps it in a graph beside
+# and hands both to read.
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
@@ -55,32 +56,26 @@ GRAPH :ontology {
 }
 
 GRAPH :world {
-  :keeper a orexis:Agent .
-  :keeper orexis:actsFor :zz .
-  :keeper orexis:localId "keeper" .
-  :keeper sensing:polls :probe .
-  :probe a sosa:Sensor .
-  :probe sensing:monitors :zz .
-  :probe sosa:observes :moisture .
-  :zz :driesPerDay 0.03 .
   :zz a :Pot .
 }
 
-# THE READING IN HAND, as `revise` leaves it: the node, its key and its sides in the graph of
-# readings; the number, the instant and the instrument in the result graph beside it.
-GRAPH sensed:zz_moisture {
-  orexis:obs_zz_moisture a :zz.moisture.inside .
-  orexis:obs_zz_moisture a sensing:InRegion .
-  orexis:obs_zz_moisture a sosa:Observation .
-  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
-  orexis:obs_zz_moisture sosa:observedProperty :moisture .
-}
-
-GRAPH result:zz_moisture {
-  orexis:obs_zz_moisture prov:wasGeneratedBy :keeper .
-  orexis:obs_zz_moisture sosa:hasSimpleResult 0.22 .
-  orexis:obs_zz_moisture sosa:madeBySensor :probe .
-  orexis:obs_zz_moisture sosa:resultTime "2026-01-01T11:00:00+00:00"^^xsd:dateTime .
+GRAPH :sensed {
+  :dry a sosa:Observation .
+  :dry sosa:hasFeatureOfInterest :zz .
+  :dry sosa:hasSimpleResult 0.05 .
+  :dry sosa:observedProperty :moisture .
+  :fine a sosa:Observation .
+  :fine sosa:hasFeatureOfInterest :zz .
+  :fine sosa:hasSimpleResult 0.3 .
+  :fine sosa:observedProperty :moisture .
+  :warm a sosa:Observation .
+  :warm sosa:hasFeatureOfInterest :zz .
+  :warm sosa:hasSimpleResult 22 .
+  :warm sosa:observedProperty :warmth .
+  :wet a sosa:Observation .
+  :wet sosa:hasFeatureOfInterest :zz .
+  :wet sosa:hasSimpleResult 0.31 .
+  :wet sosa:observedProperty :moisture .
 }
 
 GRAPH :catalogue {
@@ -89,17 +84,10 @@ GRAPH :catalogue {
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :sensed orexis:arrivedBy orexis:Received .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  result:zz_moisture a orexis:BeliefGraph .
-  result:zz_moisture a sensing:ResultGraph .
-  result:zz_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T11:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
-  result:zz_moisture orexis:arrivedBy orexis:Received .
-  result:zz_moisture orexis:beliefsOf :keeper .
-  sensed:zz_moisture a orexis:BeliefGraph .
-  sensed:zz_moisture a orexis:Graph .
-  sensed:zz_moisture a orexis:StateGraph .
-  sensed:zz_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T11:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
-  sensed:zz_moisture orexis:arrivedBy orexis:Received .
-  sensed:zz_moisture orexis:beliefsOf :keeper .
 }

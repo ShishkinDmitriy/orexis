@@ -1,7 +1,7 @@
 """`revise`: a reading arrived, and the belief base says what it is.
 
 **ONE READING IS TWO GRAPHS, AND THE MIND READS ONE OF THEM.** The observation node — of
-what, which property, and every band the domain says a reading with this number is — goes
+what, which property, and every side the domain says a reading with this number is — goes
 into a graph of readings, `orexis:StateGraph`, the kind a plan forks and an effect rewrites.
 The number, the instant, the instrument and its procedure go beside it into a graph of this
 layer's own kind, `sensing:ResultGraph`, a belief every rule that wants the number may read
@@ -46,7 +46,7 @@ def revise(store: ox.Store, me: str, subject: str, observed_property: str, value
            procedure: str | None = None, sample: str | None = None,
            phenomenon_at: datetime | None = None, memo=None) -> str:
     """Write what a sensor read: the observation node keyed by `subject` (or the `sample` a
-    probe states) and `observed_property`, typed with its bands, standing as the present from
+    probe states) and `observed_property`, typed with its sides, standing as the present from
     `at` for `horizon` seconds; and its result beside it. The node's IRI.
 
     `me` is who holds it — the one identifier a process is handed — and is written as the
@@ -80,7 +80,7 @@ INSERT DATA {{
   GRAPH <{result}> {{ {' . '.join(said)} . }}
   {entry(store, reading, STATE, RECEIVED, me, start=at, end=until)}
   {entry(store, result, RESULT_GRAPH, RECEIVED, me, start=at, end=until)} }}""")
-    bands = entail(store, reading, of=[node], read=(reading, result), memo=memo)
+    sides = entail(store, reading, of=[node], read=(reading, result), memo=memo)
     log.info("%s: %s of %s reads %s — %s", who, local_of(observed_property), local_of(feature),
-             value, ", ".join(local_of(c.value) for _, c in bands) or "no band")
+             value, ", ".join(local_of(c.value) for _, c in sides) or "no side")
     return node
