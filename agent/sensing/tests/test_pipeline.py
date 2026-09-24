@@ -48,7 +48,7 @@ def test_bytes_that_are_no_document_are_unread(snapshots, caplog):
 
 
 def test_a_codec_nothing_here_implements_is_said(snapshots, caplog):
-    store = _bound(snapshots, "<http://example.org/orexis/codec#decodedBy> <http://example.org/orexis/codec#Cbor>")
+    store = _bound(snapshots, "sensing:decodedBy :Cbor")
     with caplog.at_level("WARNING", logger="pipeline"):
         assert decode(store, PROBE, b"\xa1") is None
     assert "codec nothing here implements" in caplog.text

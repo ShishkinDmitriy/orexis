@@ -13,8 +13,10 @@
     of interest, or a sosa:Sample that sosa:isSampleOf one — its board reaches it by
     ssn:hasSubSystem, and how often it reports is its ssn-system:Frequency; a range is SSN-System's,
     stated by the host, by what the host is a sample of, or by the sensor itself. Declared here is
-    the graph an observation is kept in, the pointer, the silence of a sensor that has stopped
-    reporting, and the three sides this layer's rules conclude — six words. Sensing is the
+    the graph an observation is kept in, the silence of a sensor that has stopped reporting, the
+    three sides this layer's rules conclude, and the pipeline's own concepts, since neither standard
+    says how bytes become a number: a codec and a scaling, the binding of a sensor to one of each,
+    the two members that ship, and the pointer. Sensing is the
     translation row of the agent stack and nothing above it: a transport hands it bytes, it makes a
     number of them and writes one sosa:Observation holding until the next is due, and on the
     container's tick it says which readings are missing and which sensors have gone silent. It
@@ -32,14 +34,51 @@
     orexis:StateGraph so that the readers of the present find it by that kind today; that parent
     goes when what a plan may change is the actions' footprint rather than a graph kind.""" .
 
+:Codec a owl:Class ;
+    rdfs:label "Codec" ;
+    rdfs:comment """A wire format, both ways: how a sensor's bytes are a document and a document is
+    bytes. The first stage of the pipeline, bytes → document → raw value → quantity, and a family
+    in rule 2's sense: the members are interchangeable and a sensor is bound to one by
+    :decodedBy. JSON ships with this layer; a member from a package declares its own term as an
+    instance of this class and implements this layer's Codec contract, and genesis loads it by
+    that term. Absent a binding, a sensor's bytes are JSON, which every board here speaks.""" .
+
+:decodedBy a owl:ObjectProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range :Codec ;
+    rdfs:label "decoded by" ;
+    rdfs:comment "The codec a sensor's bytes are read with — derived onto the sensor at genesis from what its device states." .
+
+:Json a :Codec ;
+    rdfs:label "JSON" ;
+    rdfs:comment "The document is JSON, and a value in it is found by the pointer." .
+
+:Scaling a owl:Class ;
+    rdfs:label "Scaling" ;
+    rdfs:comment """How a raw value is a quantity: the last stage of the pipeline, and a family as the
+    codec is. Identity ships with this layer — the firmware scaled before it published, which is
+    what every board here does — and a member from a package declares its own term as an instance
+    of this class and implements this layer's Scaling contract. A scaling that is arithmetic could
+    be a rule rather than code; none here is yet.""" .
+
+:scaledBy a owl:ObjectProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range :Scaling ;
+    rdfs:label "scaled by" ;
+    rdfs:comment "The scaling a sensor's raw value is a quantity by — derived onto the sensor at genesis, identity where nothing says otherwise." .
+
+:Identity a :Scaling ;
+    rdfs:label "Identity" ;
+    rdfs:comment "The raw value, as it stands." .
+
 :readingPointer a owl:DatatypeProperty ;
     rdfs:domain sosa:Sensor ;
     rdfs:range xsd:string ;
     rdfs:label "reading pointer" ;
     rdfs:comment """Which value of a decoded document is this sensor's, as a JSON Pointer (RFC 6901).
     A fact about a document and not about a bus: two sensors on one board share a message and
-    differ only here. It is the JSON codec's parameter, and moves to the codec's namespace when
-    the codec packages join 0.2.0. Absent, the pointer is /value, which is what every
+    differ only here. The middle stage of the pipeline, document → raw value, and the one that
+    is data rather than a member. Absent, the pointer is /value, which is what every
     single-property device here publishes.""" .
 
 :silentSince a owl:DatatypeProperty ;

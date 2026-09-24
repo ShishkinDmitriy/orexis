@@ -398,9 +398,13 @@ the keeper's ledger, since a tell nobody heard is gone.
 
 # In Agent 0.2.0, sensing is the translation row and nothing above it
 
-`agent/sensing/` speaks SOSA's and SSN's words, declares six of its own where they have none —
-the observation graph's kind, the pointer, the silence and the three sides — and not one of any
-transport's. A transport's driver knows which message on which channel is whose and hands
+`agent/sensing/` speaks SOSA's and SSN's words, declares its own where they have none — the
+observation graph's kind, the silence, the three sides, and the pipeline's concepts, since
+neither standard says how bytes become a number: `sensing:Codec` and `sensing:Scaling` as
+families, `sensing:decodedBy` and `sensing:scaledBy` binding a sensor to a member of each,
+JSON and identity as the members that ship, and the pointer — and not one of any transport's.
+A member from a package declares its own term as an instance of the family and implements the
+contract in `pipeline.py`, and genesis 0.2.0 loads it by that term. A transport's driver knows which message on which channel is whose and hands
 sensing the bytes and the sensor's IRI; `received` is the callback it calls, and the pipeline —
 codec, pointer, scaling — makes a number of the bytes and writes one `sosa:Observation` per
 feature and property into the graph of that key, `sensing:ObservationGraph`, holding from its

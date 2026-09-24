@@ -575,8 +575,10 @@ it is a record wearing a bullet.
   re-root tells a surprise — and a range is SSN-System's as the world states it, nothing minted.
 - **Sensing speaks SOSA and SSN, and declares only what they lack** — a sensor
   `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is the
-  observation's key, and the layer's own six words are the observation graph's kind, the
-  pointer, the silence and the three sides, while the drift (a value moving by itself, which no
+  observation's key, and the layer's own words are the observation graph's kind, the silence,
+  the three sides and the pipeline's — a codec and a scaling as families, a sensor's binding to
+  a member of each, JSON and identity as the members that ship, and the pointer — since neither
+  standard says how bytes become a number, while the drift (a value moving by itself, which no
   `sosa:Procedure` is) is the prediction package's one word;
   `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
   declare the scan's reach, and the wiring module that read them had no caller, so the ladder
@@ -1163,8 +1165,10 @@ it is a record wearing a bullet.
   re-root tells a surprise — and a range is SSN-System's as the world states it, nothing minted.
 - **Sensing speaks SOSA and SSN, and declares only what they lack** — a sensor
   `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is the
-  observation's key, and the layer's own six words are the observation graph's kind, the
-  pointer, the silence and the three sides, while the drift (a value moving by itself, which no
+  observation's key, and the layer's own words are the observation graph's kind, the silence,
+  the three sides and the pipeline's — a codec and a scaling as families, a sensor's binding to
+  a member of each, JSON and identity as the members that ship, and the pointer — since neither
+  standard says how bytes become a number, while the drift (a value moving by itself, which no
   `sosa:Procedure` is) is the prediction package's one word;
   `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
   declare the scan's reach, and the wiring module that read them had no caller, so the ladder

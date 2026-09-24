@@ -82,7 +82,7 @@ def test_every_module_with_a_public_function_has_a_test_named_for_it():
 def test_every_prediction_word_the_tree_speaks_is_declared_in_its_ontology():
     """One word of its own, and every `prediction:` word in the code, a test, a world or a
     case is one `ontology.ttl` beside the code declares."""
-    declared = set(re.findall(r"^:(\w+) a owl:", (PREDICTION / "ontology.ttl").read_text(), re.M))
+    declared = set(re.findall(r"^:(\w+) a ", (PREDICTION / "ontology.ttl").read_text(), re.M))
     assert declared, "the ontology declares nothing"
     spoken = {}
     for path in sorted(p for p in PREDICTION.rglob("*") if p.suffix in (".py", ".ttl", ".trig", ".diff")):

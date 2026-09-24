@@ -95,7 +95,7 @@ def test_every_sensing_word_the_tree_speaks_is_declared_in_its_ontology():
     code, the rules, a test, a world or a case is one `ontology.ttl` beside the code declares.
     The 0.1.0 package's own — what an agent polled, what a sensor monitored or sampled, a
     device's sense mode, a drift's horizons — are not spoken here."""
-    declared = set(re.findall(r"^:(\w+) a owl:", (SENSING / "ontology.ttl").read_text(), re.M))
+    declared = set(re.findall(r"^:(\w+) a ", (SENSING / "ontology.ttl").read_text(), re.M))
     assert declared, "the ontology declares nothing"
     spoken = {}
     for path in sorted(p for p in SENSING.rglob("*") if p.suffix in (".py", ".ttl", ".trig", ".diff")):

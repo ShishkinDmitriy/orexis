@@ -9,12 +9,15 @@ here is where `parse` lives: it was the transport's driver that ran the codec an
 fusing how a device is reached with what its bytes mean; bytes to number is sensing's, and a
 transport hands bytes.
 
-**THE MEMBERS ARE A TABLE UNTIL GENESIS 0.2.0 LOADS THEM.** Which codec and which scaling serve
-a sensor are facts the world derives onto it (`codec:decodedBy`, `scaling:scaledBy`) and the
-runtime looks up; the two members that ship, JSON and identity, are held here by their IRIs,
-and a sensor whose world states neither gets them, which is what every board here speaks and
-does. A member the world names and this table lacks is one unread sensor and a warning, never
-a dead agent.
+**THE CONCEPTS ARE THIS LAYER'S, IN ITS ONTOLOGY.** A codec and a scaling are families in
+rule 2's sense, `sensing:Codec` and `sensing:Scaling`; which member serves a sensor is a fact
+the world derives onto it (`sensing:decodedBy`, `sensing:scaledBy`) and this module looks up;
+the two members that ship, JSON and identity, are declared beside the families and held here
+by their terms, and a sensor whose world states neither gets them, which is what every board
+here speaks and does. A member from a package declares its own term as an instance of the
+family and implements the contract below, and genesis 0.2.0 loads it by that term; until then
+the table holds this layer's two, and a member the world names that the table lacks is one
+unread sensor and a warning, never a dead agent.
 """
 
 from __future__ import annotations
@@ -23,9 +26,9 @@ import json
 import logging
 
 from agent.ontology import PUBLIC
-from agent.store import Raw, graphs_of, rows
+from agent.store import graphs_of, rows
 
-from .ontology import DECODED_BY, IDENTITY_SCALING, JSON_CODEC, SCALED_BY
+from .ontology import IDENTITY_SCALING, JSON_CODEC
 
 log = logging.getLogger("pipeline")
 
@@ -43,7 +46,8 @@ class PointerError(ValueError):
 
 
 class Codec:
-    """One wire format, both ways. `TERM` is the T-Box term the class implements."""
+    """One wire format, both ways — a member of `sensing:Codec`. `TERM` is the term the class
+    implements, an instance of the family declared by this layer or by the member's package."""
 
     TERM: str = ""
 
@@ -57,7 +61,7 @@ class Codec:
 
 
 class Scaling:
-    """One way of turning a raw value into a quantity, in the unit the sensor declares."""
+    """One way of turning a raw value into a quantity — a member of `sensing:Scaling`."""
 
     TERM: str = ""
 
@@ -127,17 +131,16 @@ def resolve(pointer: str, doc):
 #  THE BINDING: what the world derives onto a sensor about its bytes, every part optional.
 _BINDING_Q = """
 SELECT ?codec ?pointer ?scaling WHERE {
-  OPTIONAL { $sensor $decodedBy ?codec }
+  OPTIONAL { $sensor sensing:decodedBy ?codec }
   OPTIONAL { $sensor sensing:readingPointer ?pointer }
-  OPTIONAL { $sensor $scaledBy ?scaling } }"""
+  OPTIONAL { $sensor sensing:scaledBy ?scaling } }"""
 
 
 def decode(store, sensor: str, payload: bytes) -> float | None:
     """The quantity `sensor`'s share of `payload` holds, by the binding public knowledge states
     for it, or None where any stage refuses — said in the log, since a pointer that misses is not
     a measurement and nothing is written."""
-    binding = next(iter(rows(store, _BINDING_Q, graphs_of(store, PUBLIC), sensor=sensor,
-                             decodedBy=Raw(f"<{DECODED_BY}>"), scaledBy=Raw(f"<{SCALED_BY}>"))), {})
+    binding = next(iter(rows(store, _BINDING_Q, graphs_of(store, PUBLIC), sensor=sensor)), {})
     codec_cls = CODECS.get(binding.get("codec") or JsonCodec.TERM)
     if codec_cls is None:
         log.warning("%s names a codec nothing here implements: %s", sensor, binding["codec"])

@@ -1,11 +1,12 @@
 """The words the sensing layer reads and writes, and the names it spells for eyes.
 
-THE VOCABULARY IS SOSA'S AND SSN'S, AND SIX WORDS OF THIS LAYER'S. A sensor `sosa:observes`
-a property and `sosa:isHostedBy` what it is mounted in, and that pair is the key an
-observation is written under; how often it reports is its `ssn-system:Frequency`, and a range
-is SSN-System's. What this layer declares is in `ontology.ttl` beside this file — the graph an
-observation is kept in, the pointer, the silence, and the three sides its rules conclude — and
-nothing of the 0.1.0 package's own: what an agent polled, what a sensor monitored or sampled,
+THE VOCABULARY IS SOSA'S AND SSN'S, AND THIS LAYER'S WHERE THEY HAVE NONE. A sensor
+`sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, and that pair is the
+key an observation is written under; how often it reports is its `ssn-system:Frequency`, and
+a range is SSN-System's. What this layer declares is in `ontology.ttl` beside this file — the
+graph an observation is kept in, the silence, the three sides its rules conclude, and the
+pipeline's concepts: a codec and a scaling, the binding of a sensor to one of each, the JSON
+and identity members that ship, and the pointer — and nothing of the 0.1.0 packages' own: what an agent polled, what a sensor monitored or sampled,
 a device's sense mode and a drift's horizons were SSN restated or read by nothing, and 0.2.0
 speaks none of them. The drift is the prediction package's. Not one word of any transport.
 
@@ -23,22 +24,23 @@ from agent.ontology import GRAPH_PREFIX, OREXIS
 
 SENSING = "http://example.org/orexis/sensing#"
 SH = "http://www.w3.org/ns/shacl#"
-CODEC = "http://example.org/orexis/codec#"
-SCALING = "http://example.org/orexis/scaling#"
 
-#  THIS LAYER'S OWN: the graph an observation is kept in, the pointer, the silence, the sides.
+#  THIS LAYER'S OWN: the graph an observation is kept in, the silence, the sides.
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
-READING_POINTER = SENSING + "readingPointer"
 SILENT_SINCE = SENSING + "silentSince"
 BELOW = SENSING + "below"
 INSIDE = SENSING + "inside"
 ABOVE = SENSING + "above"
 
-#  THE PIPELINE'S FAMILIES, whose words the codec and scaling packages own.
-DECODED_BY = CODEC + "decodedBy"
-JSON_CODEC = CODEC + "Json"
-SCALED_BY = SCALING + "scaledBy"
-IDENTITY_SCALING = SCALING + "Identity"
+#  THE PIPELINE'S: the two families, a sensor's binding to a member of each, the members that
+#  ship, and the pointer.
+CODEC = SENSING + "Codec"
+DECODED_BY = SENSING + "decodedBy"
+JSON_CODEC = SENSING + "Json"
+SCALING = SENSING + "Scaling"
+SCALED_BY = SENSING + "scaledBy"
+IDENTITY_SCALING = SENSING + "Identity"
+READING_POINTER = SENSING + "readingPointer"
 
 #  THE DRAFT'S graph kind the registered rules are kept in.
 RULES_GRAPH = SH + "RulesGraph"
