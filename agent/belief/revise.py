@@ -8,13 +8,20 @@ since a shape rule runs per focus node and nothing here has one — and not `sh:
 package's `sh:RuleSet` with `sh:hasRule` and `sh:includesRuleSet` is how it ships them, and the
 default rule set is what a reader of the graph gets without being told which set to run.
 
-**LAYER BY LAYER, TO A FIXPOINT, OVER THE EVALUATION GRAPH.** The evaluation graph is what the
-caller hands as standing beside the source, the source itself, and what has been concluded of
-it so far. Within a layer (`sh:layer`, ascending, 0 unless said) the rules are run in order
+**LAYER BY LAYER, TO A FIXPOINT, OVER THE EVALUATION GRAPH — SECTION 8 OF THE DRAFT.** The
+evaluation graph is what the caller hands as standing beside the source, the source itself,
+and what has been concluded of it so far. Within a layer (`sh:layer`, ascending, 0 unless
+said) one iteration runs every `sh:runOnce` rule FIRST, then the iterating rules are run
+again while an iteration concludes something new; within an iteration the rules run in order
 (`sh:order`, ascending, 0 unless said), and rules of ONE order are run over the same state and
 see none of each other's inferences until they have all run — the draft's "executed
-concurrently". A `sh:runOnce` rule runs in a layer's first iteration only; the others are run
-again while an iteration concludes something new.
+concurrently". What is inferred is what is NOT in the base graph: a rule restating a fact the
+evaluation graph already holds infers nothing. A rule of a type this engine cannot execute —
+a `sh:TripleRule`, or a shape rule, which runs per focus node and has none here — is the
+failure the draft says to report, and here that is an error in the log naming the rule, once
+per pass, since a package's bug must not take an agent down; a construct that will not run is
+reported the same way and the rest of the rule set runs, where the draft would fail it whole.
+Expected derived triples (`sh:expectedPredicate`) and temporary triples are not supported.
 
 **A CEILING ON COMPUTE IS STATED IN THE UNIT THE WORK SPENDS**, and what revision spends is
 rule executions: one construct run. `budget` is this call's, and it replaces a cap on
@@ -68,15 +75,18 @@ log = logging.getLogger("revise")
 #  RULE EXECUTIONS one call may spend, unless the caller says otherwise.
 BUDGET = 64
 
-#  THE DEFAULT RULE SET of every rules graph: each global, active SPARQL rule, with where the
-#  draft places it — read by kind, as every reader here states the kinds it reads.
+#  THE DEFAULT RULE SET of every rules graph: every active rule of any kind — `sh:SPARQLRule`
+#  or another type beneath `sh:Rule` — with where the draft places it, its construct where it
+#  has one, and whether a shape links it, so that what cannot be run is reported rather than
+#  passed over. Read by kind, as every reader here states the kinds it reads.
 _RULES_Q = """
-SELECT ?rule ?construct ?layer ?order ?once WHERE {
-  ?rule a sh:SPARQLRule ; sh:construct ?construct .
+SELECT ?rule ?type ?construct ?layer ?order ?once ?shape WHERE {
+  ?rule a ?type . FILTER(?type IN (sh:SPARQLRule, sh:TripleRule, sh:Rule))
+  OPTIONAL { ?rule sh:construct ?construct }
   OPTIONAL { ?rule sh:layer ?layer } OPTIONAL { ?rule sh:order ?order }
   OPTIONAL { ?rule sh:runOnce ?once }
-  FILTER NOT EXISTS { ?rule sh:deactivated true }
-  FILTER NOT EXISTS { ?shape sh:rule ?rule } }"""
+  OPTIONAL { ?shape sh:rule ?rule }
+  FILTER NOT EXISTS { ?rule sh:deactivated true } }"""
 
 #  WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its row: the revisions are the same.
 _SOURCE_Q = """
@@ -112,15 +122,18 @@ def revise(store, source: str, *, read=(), budget: int = BUDGET, memo=None) -> i
     if not layers:
         return 0
     evaluation = list(dict.fromkeys([*read, source, into]))
+    base = [ox.NamedNode(g) for g in evaluation if g != into]
     spent = 0
     settled = True
     for layer, orders in layers:
-        iteration = 0
-        while True:
-            iteration += 1
+        #  ONE ITERATION OVER THE RUN-ONCE RULES FIRST, then the iterating rules while new.
+        once = [(order, [r for r in rules if r["once"]]) for order, rules in orders]
+        iterating = [(order, [r for r in rules if not r["once"]]) for order, rules in orders]
+        rounds = [once]
+        while rounds:
+            groups = rounds.pop(0)
             concluded = 0
-            for _, rules in orders:
-                due = [r for r in rules if not (iteration > 1 and r["once"])]
+            for _, due in groups:
                 if not due:
                     continue
                 if spent >= budget:
@@ -137,13 +150,15 @@ def revise(store, source: str, *, read=(), budget: int = BUDGET, memo=None) -> i
                         #  A rule that will not run is a package's bug and must not take an
                         #  agent down: the others conclude, and the log says which did not.
                         log.error("rule %s would not run over %s: %s", rule["rule"], source, exc)
-                fresh = _novel(held, added)
+                fresh = _novel(held, _inferred(store, added, base))
                 if fresh:
                     store.extend(ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(into)) for t in fresh)
                     held.extend(fresh)
                     concluded += len(fresh)
-            if not settled or not concluded:
+            if not settled:
                 break
+            if groups is once or concluded:
+                rounds.append(iterating)
         if not settled:
             log.warning("the rules over %s did not settle within %d execution(s) at layer %s; "
                         "what they concluded stands, and the next pass continues", source, budget, layer)
@@ -173,13 +188,37 @@ def _novel(held: list, added: list) -> list:
     return out
 
 
+def _inferred(store, added: list, base: list) -> list:
+    """The triples of `added` the base graph does not already hold — what the draft calls
+    inferred: a rule restating a fact of the evaluation graph infers nothing."""
+    return [t for t in added if not any(
+        next(iter(store.quads_for_pattern(t.subject, t.predicate, t.object, g)), None) is not None
+        for g in base)]
+
+
 def _layers(store) -> list[tuple[float, list[tuple[float, list[dict]]]]]:
     """The default rule set of every rules graph, as the draft executes it: layers ascending,
     and within a layer the rules grouped by order ascending — `[(layer, [(order, rules)])]`,
-    each rule a dict with its construct and whether it runs once."""
+    each rule a dict with its construct and whether it runs once. A rule this engine cannot
+    execute — not a SPARQL rule, or linked to a shape — is the failure the draft says to
+    report, logged once per pass and left out."""
     found = []
+    seen: dict = {}
     for r in rows(store, _RULES_Q, graphs_of(store, RULES_GRAPH)):
-        found.append({"rule": r["rule"], "construct": r["construct"],
+        entry_ = seen.setdefault(r["rule"], {"types": set(), "shape": None, "row": r})
+        entry_["types"].add(r["type"])
+        entry_["shape"] = entry_["shape"] or r.get("shape")
+    for rule, about in sorted(seen.items()):
+        r = about["row"]
+        if about["shape"]:
+            log.error("rule %s is a shape rule of %s, which this engine cannot execute: it runs per "
+                      "focus node and nothing here has one", rule, about["shape"])
+            continue
+        if "http://www.w3.org/ns/shacl#SPARQLRule" not in about["types"] or not r.get("construct"):
+            log.error("rule %s is of a type this engine cannot execute (%s)", rule,
+                      ", ".join(sorted(t.rsplit("#", 1)[-1] for t in about["types"])))
+            continue
+        found.append({"rule": rule, "construct": r["construct"],
                       "layer": float(r.get("layer") or 0), "order": float(r.get("order") or 0),
                       "once": (r.get("once") or "").lower() == "true"})
     found.sort(key=lambda r: (r["layer"], r["order"], r["rule"]))

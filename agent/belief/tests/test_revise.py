@@ -85,6 +85,25 @@ def test_a_cut_is_continued_from_what_is_held(snapshots):
     assert {(r["s"], r["p"], r["o"]) for r in rows(store, _CONCLUDED_Q, (), g=SENSED + "/revisions")} == expected
 
 
+def test_a_rule_this_engine_cannot_execute_is_reported_and_the_rest_run(snapshots, caplog):
+    """Section 8: an engine that cannot execute a rule's type reports a failure. A triple rule
+    and a shape rule are logged as errors naming them, once, and the SPARQL rule beside them
+    concludes as before."""
+    store = snapshots.stand_in(CASES_DIR / "a_reading_below_its_range_is_concluded_below.trig")
+    update(store, """
+INSERT DATA { GRAPH <http://example.org/test#rules> {
+  <http://example.org/test#triple> a <http://www.w3.org/ns/shacl#TripleRule> .
+  <http://example.org/test#shape> a <http://www.w3.org/ns/shacl#NodeShape> ;
+    <http://www.w3.org/ns/shacl#rule> <http://example.org/test#per_focus> .
+  <http://example.org/test#per_focus> a <http://www.w3.org/ns/shacl#SPARQLRule> ;
+    <http://www.w3.org/ns/shacl#construct> "CONSTRUCT { $this a <http://example.org/test#Seen> } WHERE { }" } }""")
+    with caplog.at_level("ERROR", logger="revise"):
+        revise(store, SENSED, read=graphs_of(store, *KNOWN))
+    said = [m for m in caplog.messages if "cannot execute" in m]
+    assert len(said) == 2 and any("shape rule" in m for m in said) and any("TripleRule" in m for m in said)
+    assert any(r["p"].endswith("side") for r in rows(store, _CONCLUDED_Q, (), g=SENSED + "/revisions"))
+
+
 def test_what_revising_costs(snapshots):
     """The price of one revision over one reading, printed (`pytest -s`): revised again and
     again on the same store. No figure is asserted — the Pi drifts — and the number is what the
@@ -101,5 +120,5 @@ def test_what_revising_costs(snapshots):
 
 
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
-    assert len(CASES) >= 6, [c.name for c in CASES]
+    assert len(CASES) >= 7, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)

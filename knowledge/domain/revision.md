@@ -24,15 +24,19 @@ by `sh:runOnce`. An [action](/domain/action.md) carries a construct too and is n
 in it — one not linked to a shape by `sh:rule`, since a shape rule runs per focus node and
 nothing here has one — layer by layer over an **evaluation graph**: what the caller hands as
 standing beside the source, the source itself, and what has been concluded of it so far.
-Within a layer the rules run in order, rules of one order see none of each other's inferences
-until they have all run, a run-once rule runs in the first iteration only, and the others are
-run again while an iteration concludes something new — within a **budget** of rule
-executions, the unit revision spends, which the [deliberator](/domain/deliberator.md) states
-per pass. A source the budget cuts short keeps what was concluded, its row saying the rules
+Within a layer one iteration runs the run-once rules first, then the iterating rules are run
+again while an iteration concludes something new; within an iteration the rules run in order,
+and rules of one order see none of each other's inferences until they have all run. What is
+inferred is what the base graph does not already hold. All of that is section 8 of the draft,
+within a **budget** of rule executions, the unit revision spends, which the
+[deliberator](/domain/deliberator.md) states per pass. A source the budget cuts short keeps what was concluded, its row saying the rules
 did not settle, and the next pass continues it; a rule minting new content every iteration,
 the draft's own worry and the reason `sh:runOnce` exists, spends the budget and is said in the
-log every pass rather than looped on. Shape rules, `sh:condition`, `sh:expectedPredicate`,
-temporary triples and `sh:sourceRule` are in the draft and not run here.
+log every pass rather than looped on. Where the draft says a rule set fails, a rule of a type this
+engine cannot execute, a shape rule, or a construct that will not run, this engine reports an
+error naming the rule and runs the rest, since a package's bug must not take an agent down.
+`sh:condition`, `sh:expectedPredicate`, temporary triples and `sh:sourceRule` are in the draft
+and not run here.
 
 # It is concluded and never deleted
 

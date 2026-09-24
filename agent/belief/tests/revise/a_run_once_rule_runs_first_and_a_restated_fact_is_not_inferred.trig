@@ -1,0 +1,66 @@
+# a_run_once_rule_runs_first_and_a_restated_fact_is_not_inferred
+#
+# Section 8: one iteration over the run-once rules comes BEFORE the iterating rules of the layer,
+# so the run-once rule placed after the side rule by sh:order sees no side and concludes nothing;
+# and what is inferred is what the base graph does not hold, so the rule restating the
+# observation's subject infers nothing. One revision stands: the side.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sensed: <http://example.org/test#sensed/> .
+
+GRAPH :ontology {
+  belief:RevisionGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :zz :high 0.3 .
+  :zz :low 0.1 .
+  :zz a :Pot .
+}
+
+GRAPH :rules {
+  :sides a sh:RuleSet .
+  :sides rdfs:label "a run-once rule placed after an iterating one, and one restating the source" .
+  :sides sh:hasRule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?obs :of ?s } WHERE { ?obs :of ?s }""" ; sh:order 3 ] .
+  :sides sh:hasRule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?obs :side :Below } WHERE {
+      ?obs a :Observation ; :of ?s ; :reads ?v . ?s :low ?lo . FILTER(?v < ?lo) }""" ; sh:order 1 ] .
+  :sides sh:hasRule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?obs :wasBelowAtFirst true } WHERE { ?obs :side :Below }""" ; sh:order 2 ; sh:runOnce true ] .
+}
+
+GRAPH :sensed {
+  :obs1 :of :zz .
+  :obs1 :reads 0.05 .
+  :obs1 a :Observation .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :sensed orexis:arrivedBy orexis:Received .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}
