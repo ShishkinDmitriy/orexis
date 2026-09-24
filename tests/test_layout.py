@@ -583,7 +583,7 @@ def test_the_docs_only_name_terms_that_exist(doc):
     #  name one — AGENTS.md cites `orexis:KeeperShape` to say what a region want still decides. While the
     #  shapes lived in packages this cost nothing to miss, because the docs happened not to name
     #  one; the kernel's shapes are named in the entry documents now.
-    for path in loader.ontology_files() + loader.shapes_files() + layers:
+    for path in [*loader.ontology_files(), *loader.shapes_files(), *layers]:
         g = rdflib.Graph()
         g.parse(path, format="turtle")
         for triple in g:
