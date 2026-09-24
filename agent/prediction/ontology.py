@@ -37,5 +37,7 @@ def slug(iri: str) -> str:
 
 
 def prediction_graph(agent_id: str, feature: str, observed_property: str, n: int) -> str:
-    """The n-th prediction of one key, first stretch first."""
-    return f"{GRAPH_PREFIX}predicted/{agent_id}/{slug(feature)}_{slug(observed_property)}/{n}"
+    """The n-th prediction of one key, first stretch first — the ordinal joined by an
+    underscore, since a slash cannot sit in a prefixed name's local part and a case would
+    have to spell the graph in full."""
+    return f"{GRAPH_PREFIX}predicted/{agent_id}/{slug(feature)}_{slug(observed_property)}_{n}"

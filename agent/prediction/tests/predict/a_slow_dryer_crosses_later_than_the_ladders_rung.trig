@@ -23,6 +23,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
 @prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
 
 GRAPH :ontology {
