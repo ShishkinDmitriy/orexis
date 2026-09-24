@@ -395,3 +395,22 @@ arrival, answering the keeper with the verdict. No shape is built per step, and 
 word ever reaches the kernel. A number a caller stated is held to the band it falls in,
 read off the region this module keeps; a step standing when the process starts is asked of
 the keeper's ledger, since a tell nobody heard is gone.
+
+# In Agent 0.2.0, sensing is the translation row and nothing above it
+
+`agent/sensing/` speaks SOSA's, SSN's and this package's words and not one of any transport's.
+A transport's driver knows which message on which channel is whose and hands sensing the bytes
+and the sensor; `received` is the callback it calls, and the pipeline — codec, pointer, scaling —
+makes a number of the bytes and writes one `sosa:Observation` per feature and property into
+the graph of that key, `sensing:ObservationGraph`, holding from its instant to the horizon and
+replacing the one before. `surprise` says whether the number contradicts the number predicted
+for its instant, bound by bound against the [region](/domain/region.md)s the subject states,
+and `predict` is the calculation of when the reading changes range: the domain's drifts run at
+the ladder's rungs, every crossing of a bound bisected, one [prediction](/domain/prediction.md)
+per stretch between crossings. It concludes nothing: the three rules it registers
+(`rules.ttl`, `register`) say which side of each range an observation is on, `sensing:below`,
+`sensing:inside`, `sensing:above`, and the [deliberator](/domain/deliberator.md) concludes
+them over every graph the container reports changed — a [revision](/domain/revision.md), never
+sensing's own write. What a sensor is wired to is `wiring`, read through `ssn:hasSubSystem` for
+the device that keeps its clock; the driver contract in `driver.py` has no `parse`, since bytes
+to number is sensing's. No freshness want, no timer, no mark, no band.

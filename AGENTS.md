@@ -563,6 +563,15 @@ it is a record wearing a bullet.
   chose, where the search's ceiling is the container's in the unit it spends; a cut keeps what
   was concluded with the row saying so, the deliberator re-queues such rows at boot, and a
   rule set that never settles spends a budget every pass and is reported rather than looped on.
+- **Sensing tracks numbers, and a prediction is when the reading changes range** — `received`
+  writes one `sosa:Observation` per key with its number, `predict` bisects every crossing of a
+  range bound between the ladder's rungs and writes one prediction per stretch, and the side
+  is a revision the three rules sensing registers conclude; no band, no side, no want is
+  sensing's own write, and a range is SSN-System's as the world states it, nothing minted.
+- **Sensing names no transport word, and a driver hands bytes** — the wiring reaches a
+  sensor's device through `ssn:hasSubSystem`, the pointer is sensing's word since it is about a
+  document, bytes become a number in sensing's own pipeline, and the driver contract keeps only
+  what a transport alone knows: claim, subscriptions, own, cadence, nudge.
 - **A belief kind enters through `propose`, and a package's working graph is not a belief** —
   the belief package's layout test holds every writer in the tree to the door, and what
   bypasses it is what no rule reads as the world.
@@ -1131,6 +1140,15 @@ it is a record wearing a bullet.
   chose, where the search's ceiling is the container's in the unit it spends; a cut keeps what
   was concluded with the row saying so, the deliberator re-queues such rows at boot, and a
   rule set that never settles spends a budget every pass and is reported rather than looped on.
+- **Sensing tracks numbers, and a prediction is when the reading changes range** — `received`
+  writes one `sosa:Observation` per key with its number, `predict` bisects every crossing of a
+  range bound between the ladder's rungs and writes one prediction per stretch, and the side
+  is a revision the three rules sensing registers conclude; no band, no side, no want is
+  sensing's own write, and a range is SSN-System's as the world states it, nothing minted.
+- **Sensing names no transport word, and a driver hands bytes** — the wiring reaches a
+  sensor's device through `ssn:hasSubSystem`, the pointer is sensing's word since it is about a
+  document, bytes become a number in sensing's own pipeline, and the driver contract keeps only
+  what a transport alone knows: claim, subscriptions, own, cadence, nudge.
 - **A belief kind enters through `propose`, and a package's working graph is not a belief** —
   the belief package's layout test holds every writer in the tree to the door, and what
   bypasses it is what no rule reads as the world.

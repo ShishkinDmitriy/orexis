@@ -139,3 +139,12 @@ are built under it (#642, #643, #639, #632).
   shipped instrument's does.
 - **A forecast's own width.** A service's forecast arrives as bands already; whether it should
   arrive as a widening sequence is the service's to say.
+
+# Amended 2026-09-24: in Agent 0.2.0 a prediction is a number per stretch
+
+The set of bands stands for the 0.1.0 tree. In `agent/sensing/` a prediction carries the
+number the drift gives, one prediction per stretch between the instants the reading changes
+range, and the side of it is a [revision](/domain/revision.md) the rules sensing registers
+conclude; the widening set is what the rules would conclude of each stretch, and no band is
+written by sensing. The window an event is expected in is unchanged. See
+[prediction](/domain/prediction.md).

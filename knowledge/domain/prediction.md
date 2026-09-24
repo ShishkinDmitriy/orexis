@@ -3,13 +3,12 @@ type: Domain Concept
 title: Prediction
 term: http://example.org/orexis#PredictionGraph
 description: >-
-  What an agent expects the world to hold at a horizon it has not reached — always a SET of
-  bands, never a value, and wider the further out. A value is a band collapsed to a point. A
-  prediction of a fluent is a graph holding during a period; a prediction of an event, an
-  observation, is an expected occurrence stated inside a graph, carrying the window it is
-  expected in and the bands it may carry. The first element of the sequence is the one the
-  next reading is held to, from the instrument's cadence and the drift, which sensing writes after
-  every reading; the far end is every band, which is not knowing said honestly.
+  What an agent expects the world to hold at a horizon it has not reached. In 0.1.0 a set of
+  bands, wider the further out, never a value. In Agent 0.2.0 a predicted observation with its
+  NUMBER, one per stretch between the instants the reading changes range, which is what
+  sensing's `predict` calculates; which side of a range it is on is a revision the rules
+  conclude of it. A prediction of a fluent is a graph holding during a period; the next
+  reading rewrites the ladder.
 ---
 
 # What it is
@@ -89,3 +88,18 @@ with the prediction once at arrival, and that comparison is the step's verdict.
 - [interval](/domain/interval.md) — why the width lives in the domain's measure and never in
   the core.
 - [effect](/domain/effect.md) — the drift, which gives a prediction its centre.
+
+# In Agent 0.2.0, a prediction is when the reading changes range
+
+The set of bands above is the 0.1.0 tree's. In `agent/sensing/`, `predict` runs the domain's
+drifts over the observation in hand at the rungs of the ladder and, against every range the
+subject states for the property, bisects each crossing of a bound; what it writes is one
+`orexis:PredictionGraph` per stretch — from the horizon to the first crossing, crossing to
+crossing, and from the last to the ladder's end — each holding a predicted `sosa:Observation`
+in SOSA's words with the number the drift gives at the last instant of that stretch known to
+lie on its side. No band is written: the side of a predicted observation is a
+[revision](/domain/revision.md), concluded by the rules sensing registers exactly as for the
+observation itself, so the mind reads a stretch as the side it is. The ladder is the scan, not
+the answer; a key no drift moves is carried forward for the first rung alone; a key that
+crosses nothing has one prediction to the ladder's end.
+

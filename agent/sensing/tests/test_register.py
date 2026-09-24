@@ -1,0 +1,83 @@
+"""`register`: this layer's rules put where the deliberator runs them, and held — through the
+belief package's `revise`, which a test here may import and the code may not — to what they
+conclude of an observation against its subject's ranges.
+"""
+
+from __future__ import annotations
+
+from datetime import timezone
+from pathlib import Path
+
+import pytest
+
+from agent import clock
+from agent.belief.revise import revise
+from agent.ontology import KNOWN
+from agent.sensing.ontology import ABOVE, BELOW, INSIDE, RULES_GRAPH
+from agent.sensing.received import received
+from agent.sensing.register import register
+from agent.sensing.wiring import Sensor, sensors_of
+from agent.store import graphs_of, rows
+
+WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
+TEST = "http://example.org/test#"
+
+_SIDES_Q = "SELECT ?p ?range WHERE { GRAPH $g { ?obs ?p ?range } }"
+
+
+def _sides(store, graph: str) -> set[tuple[str, str]]:
+    return {(r["p"].rsplit("#", 1)[-1], r["range"].rsplit("#", 1)[-1])
+            for r in rows(store, _SIDES_Q, (), g=graph + "/revisions")}
+
+
+@pytest.fixture
+def world(monkeypatch, snapshots):
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(WORLD)
+    register(store)
+    return store
+
+
+def _read(store, snapshots, sensor, value: float) -> str:
+    graph = received(store, snapshots.ME, sensor, f'{{"value": {value}}}'.encode(), snapshots.NOW, horizon=900.0)
+    revise(store, graph, read=graphs_of(store, *KNOWN, at=snapshots.NOW))
+    return graph
+
+
+def test_the_rules_graph_is_the_drafts_kind(world):
+    assert graphs_of(world, RULES_GRAPH) == ["http://example.org/orexis/graph/rules/sensing"]
+    assert register(world) == graphs_of(world, RULES_GRAPH)[0], "registered again, one graph"
+
+
+def test_a_reading_under_the_floor_is_below_the_operating_range_and_inside_the_survival_one(world, snapshots):
+    (probe,) = sensors_of(world, snapshots.ME)
+    graph = _read(world, snapshots, probe, 0.05)
+    assert _sides(world, graph) == {("below", "zz.operating"), ("inside", "zz.survival"), ("inside", "probe.operating")}
+
+
+def test_a_reading_inside_is_inside_every_range(world, snapshots):
+    (probe,) = sensors_of(world, snapshots.ME)
+    graph = _read(world, snapshots, probe, 0.2)
+    assert {p for p, _ in _sides(world, graph)} == {"inside"}
+
+
+def test_a_reading_over_the_ceiling_is_above(world, snapshots):
+    (probe,) = sensors_of(world, snapshots.ME)
+    graph = _read(world, snapshots, probe, 0.5)
+    assert _sides(world, graph) == {("above", "zz.operating"), ("above", "zz.survival"), ("inside", "probe.operating")}
+
+
+def test_a_bound_is_inside(world, snapshots):
+    (probe,) = sensors_of(world, snapshots.ME)
+    graph = _read(world, snapshots, probe, 0.1)
+    assert ("inside", "zz.operating") in _sides(world, graph)
+
+
+def test_a_samples_observation_is_judged_by_its_subjects_ranges(world, snapshots):
+    from agent.store import update
+    update(world, """PREFIX : <http://example.org/test#> PREFIX sosa: <http://www.w3.org/ns/sosa/>
+INSERT DATA { GRAPH <http://example.org/test#world> { :patch a sosa:Sample ; sosa:isSampleOf :zz } }""")
+    probe = Sensor(uri=TEST + "probe", subject=TEST + "zz", observes=TEST + "moisture", sample=TEST + "patch")
+    graph = _read(world, snapshots, probe, 0.05)
+    assert graph.endswith("/patch_moisture")
+    assert ("below", "zz.operating") in _sides(world, graph)

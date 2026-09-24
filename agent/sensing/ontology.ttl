@@ -1,0 +1,57 @@
+@base <http://example.org/orexis/sensing> .
+@prefix : <http://example.org/orexis/sensing#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a owl:Ontology ;
+    rdfs:label "Orexis sensing, Agent 0.2.0" ;
+    rdfs:comment """What the sensing layer of Agent 0.2.0 adds to the sensing package's vocabulary,
+    which it otherwise speaks as it stands: the drift and its horizons, what an agent polls and
+    what a sensor monitors. Sensing here is the translation row of the agent stack and nothing
+    above it — a transport hands it bytes, it makes a number of them and writes one
+    sosa:Observation, predicts the number's future with the domain's drifts, and says whether the
+    number contradicted what was predicted. It concludes nothing itself: the sides an observation
+    is on are revisions, concluded by the three rules this layer registers (rules.ttl beside this
+    file) and run by the deliberator over the present. No word of any transport is spoken here.""" .
+
+:ObservationGraph a owl:Class ;
+    rdfs:subClassOf orexis:StateGraph ;
+    rdfs:label "Observation graph" ;
+    rdfs:comment """One graph per feature and property, holding the whole sosa:Observation the
+    sensor last made of it — feature, property, result, instant, sensor, procedure, and the
+    instant the device says the result applies to where it says one — from its instant to the
+    horizon its period states, replaced whole by the next. Named for what it holds. Beneath
+    orexis:StateGraph so that the readers of the present find it by that kind today; that parent
+    goes when what a plan may change is the actions' footprint rather than a graph kind.""" .
+
+:readingPointer a owl:DatatypeProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range xsd:string ;
+    rdfs:label "reading pointer" ;
+    rdfs:comment """Which value of a decoded document is this sensor's, as a JSON Pointer (RFC 6901).
+    A fact about a document and not about a bus, which is why it is sensing's word: two sensors on
+    one board share a message and differ only here. Absent, the pointer is /value, which is what
+    every single-property device here publishes.""" .
+
+:below a owl:ObjectProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:label "below" ;
+    rdfs:comment """The observation's result lies under the floor of this range — an
+    ssn-system:OperatingRange or ssn-system:SurvivalRange the subject, or an instrument monitoring
+    it, states for the observed property. Concluded by this layer's rule as a revision, read by a
+    desire's met-test, and written by an effect that predicts a reading. One triple per observation
+    and range; nothing is minted per subject.""" .
+
+:inside a owl:ObjectProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:label "inside" ;
+    rdfs:comment "The observation's result lies within this range, its bounds included." .
+
+:above a owl:ObjectProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:label "above" ;
+    rdfs:comment "The observation's result lies over the ceiling of this range." .

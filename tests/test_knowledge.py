@@ -454,8 +454,11 @@ def _declared() -> set[str]:
     #  ALL of the kernel's TTL, not just its ontology. A SHAPE is declared in `shapes.ttl` and a
     #  page may legitimately name one — `orexis:KeeperShape` does — and while the shapes lived in
     #  packages the `packages/**` glob swept them up for free. It does not any more.
+    #  AND THE 0.2.0 TREE'S OWN ONTOLOGIES, which the 0.1.0 loader never walks: a layer's
+    #  `agent/<layer>/ontology.ttl` (and a rule set beside it) declares words a page names.
     names: set[str] = set()
-    for ttl in list(loader.sources("*.ttl")) + list((REPO_ROOT / "world").rglob("*.ttl")):
+    for ttl in (list(loader.sources("*.ttl")) + list((REPO_ROOT / "world").rglob("*.ttl"))
+                + sorted(p for p in (REPO_ROOT / "agent").rglob("*.ttl") if "tests" not in p.parts)):
         text = ttl.read_text()
         names |= set(re.findall(r"^:(\w+)\b", text, re.M))
         names |= {local for _, local in _TERM.findall(text)}

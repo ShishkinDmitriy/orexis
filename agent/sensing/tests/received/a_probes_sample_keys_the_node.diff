@@ -1,0 +1,25 @@
+--- case
++++ expected
+@@ -56,4 +56,22 @@
+   :ontology a orexis:PublicGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  observed:patch_moisture a orexis:BeliefGraph .
++  observed:patch_moisture a orexis:Graph .
++  observed:patch_moisture a orexis:StateGraph .
++  observed:patch_moisture a sensing:ObservationGraph .
++  observed:patch_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  observed:patch_moisture orexis:arrivedBy orexis:Received .
++  observed:patch_moisture orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH observed:patch_moisture {
++  orexis:obs_patch_moisture a sosa:Observation .
++  orexis:obs_patch_moisture prov:wasGeneratedBy :keeper .
++  orexis:obs_patch_moisture sosa:hasFeatureOfInterest :patch .
++  orexis:obs_patch_moisture sosa:hasSimpleResult 0.22 .
++  orexis:obs_patch_moisture sosa:madeBySensor :probe .
++  orexis:obs_patch_moisture sosa:observedProperty :moisture .
++  orexis:obs_patch_moisture sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++}

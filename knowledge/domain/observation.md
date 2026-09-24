@@ -73,3 +73,12 @@ writer, the shape and this sentence are ready for the first one where they do no
 - [reading](/domain/reading.md) — the value this node carries, and what happens to it over time.
 - [sensing](/domain/sensing.md) — the capability that produces one, and who holds the clock.
 - [an-observation-says-how-it-was-made](/decisions/an-observation-says-how-it-was-made.md).
+
+# In Agent 0.2.0, one graph per key holds the whole node
+
+`agent/sensing/received` writes the observation, number and all, into a graph of its own,
+`sensing:ObservationGraph`, one per feature and property, holding from its instant to the
+horizon and replaced whole by the next; a probe that states a sample keys it by the sample.
+The number is in the mind's world there, and what a plan may change is the actions'
+footprint rather than the graph's kind — the [reading](/domain/reading.md) page says what the
+number is.

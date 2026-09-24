@@ -1,0 +1,109 @@
+# a_fast_dryer_crosses_inside_the_first_rung
+#
+# Four fractions a day: the operating floor is met 54 minutes out, inside the first rung, and the
+# survival floor 83 minutes out, in the second. Three stretches from a quarter past.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
+@prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
+
+GRAPH :ontology {
+  belief:RevisionGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:BeliefGraph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:StateGraph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :zz .
+  :keeper orexis:localId "keeper" .
+  :keeper sensing:polls :probe .
+  :probe a sosa:Sensor .
+  :probe sensing:monitors :zz .
+  :probe sosa:observes :moisture .
+  :zz :driesPerDay 4.0 .
+  :zz a :Pot .
+  :zz ssn-system:hasOperatingRange :zz.operating .
+  :zz ssn-system:hasSurvivalRange :zz.survival .
+  :zz.operating a ssn-system:OperatingRange .
+  :zz.operating ssn-system:inCondition [ schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture ] .
+  :zz.survival a ssn-system:SurvivalRange .
+  :zz.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
+}
+
+GRAPH :actions {
+  :Drying a sensing:Drift .
+  :Drying rdfs:label "what a pot loses while nobody waters it" .
+  :Drying sensing:atHorizon 18000 .
+  :Drying sensing:atHorizon 3600 .
+  :Drying sensing:atHorizon 86400 .
+  :Drying sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT {
+          ?obs a sosa:Observation ;
+               sosa:hasFeatureOfInterest ?pot ;
+               sosa:observedProperty :moisture ;
+               sosa:hasSimpleResult ?now ;
+               sosa:resultTime ?at ;
+               sosa:madeBySensor ?sensor .
+      } WHERE {
+          ?obs sosa:hasFeatureOfInterest ?pot ;
+               sosa:observedProperty :moisture ;
+               sosa:hasSimpleResult ?was .
+          OPTIONAL { ?obs sosa:madeBySensor ?sensor }
+          ?pot :driesPerDay ?rate .
+          FILTER(?rate > 0 && $elapsed > 0)
+          BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
+          BIND(?was - (?rate * ?days) AS ?fell)
+          BIND(IF(?fell < 0.0, 0.0, ?fell) AS ?now)
+          BIND($lands AS ?at)
+      }""" .
+}
+
+GRAPH observed:zz_moisture {
+  orexis:obs_zz_moisture a sosa:Observation .
+  orexis:obs_zz_moisture prov:wasGeneratedBy :keeper .
+  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
+  orexis:obs_zz_moisture sosa:hasSimpleResult 0.25 .
+  orexis:obs_zz_moisture sosa:madeBySensor :probe .
+  orexis:obs_zz_moisture sosa:observedProperty :moisture .
+  orexis:obs_zz_moisture sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  observed:zz_moisture a orexis:BeliefGraph .
+  observed:zz_moisture a orexis:Graph .
+  observed:zz_moisture a orexis:StateGraph .
+  observed:zz_moisture a sensing:ObservationGraph .
+  observed:zz_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  observed:zz_moisture orexis:arrivedBy orexis:Received .
+  observed:zz_moisture orexis:beliefsOf :keeper .
+}
