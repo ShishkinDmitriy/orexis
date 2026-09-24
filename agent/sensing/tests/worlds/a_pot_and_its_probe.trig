@@ -15,15 +15,10 @@
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix schema: <https://schema.org/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix prov: <http://www.w3.org/ns/prov#> .
-@prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
-@prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
 
 GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
@@ -40,21 +35,21 @@ GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:actsFor :zz .
   :keeper orexis:localId "keeper" .
-  :probe <http://www.w3.org/ns/ssn/systems/hasOperatingRange> :probe.operating .
-  :probe <http://www.w3.org/ns/ssn/systems/hasSystemCapability> [ <http://www.w3.org/ns/ssn/systems/hasSystemProperty> [ a <http://www.w3.org/ns/ssn/systems/Frequency> ; schema:unitCode unit:SEC ; schema:value 900 ] ] .
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :zz .
   :probe sosa:observes :moisture .
-  :probe.operating <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 1.0 ; schema:minValue 0.0 ; ssn:forProperty :moisture ] .
-  :probe.operating a <http://www.w3.org/ns/ssn/systems/OperatingRange> .
+  :probe ssn-system:hasOperatingRange :probe.operating .
+  :probe ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:SEC ; schema:value 900 ] ] .
+  :probe.operating a ssn-system:OperatingRange .
+  :probe.operating ssn-system:inCondition [ schema:maxValue 1.0 ; schema:minValue 0.0 ; ssn:forProperty :moisture ] .
   :zz :driesPerDay 4.0 .
-  :zz <http://www.w3.org/ns/ssn/systems/hasOperatingRange> :zz.operating .
-  :zz <http://www.w3.org/ns/ssn/systems/hasSurvivalRange> :zz.survival .
   :zz a :Pot .
-  :zz.operating <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture ] .
-  :zz.operating a <http://www.w3.org/ns/ssn/systems/OperatingRange> .
-  :zz.survival <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
-  :zz.survival a <http://www.w3.org/ns/ssn/systems/SurvivalRange> .
+  :zz ssn-system:hasOperatingRange :zz.operating .
+  :zz ssn-system:hasSurvivalRange :zz.survival .
+  :zz.operating a ssn-system:OperatingRange .
+  :zz.operating ssn-system:inCondition [ schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture ] .
+  :zz.survival a ssn-system:SurvivalRange .
+  :zz.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
 }
 
 GRAPH :catalogue {

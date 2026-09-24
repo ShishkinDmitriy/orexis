@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -76,4 +76,15 @@
+@@ -73,4 +73,15 @@
    observed:zz_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    observed:zz_moisture orexis:arrivedBy orexis:Received .
    observed:zz_moisture orexis:beliefsOf :keeper .

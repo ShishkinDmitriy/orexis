@@ -21,6 +21,7 @@ CASES_DIR = Path(__file__).parent / "received"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 TEST = "http://example.org/test#"
 PROBE = TEST + "probe"
+OBSERVED = "http://example.org/orexis/graph/observed/keeper/"     # the writer's name, for eyes
 
 #  WHAT EACH CASE'S BYTES SAY, and which graph they land in.
 BYTES = {
@@ -36,7 +37,7 @@ def test_received_leaves_the_observation_the_patch_says(case, monkeypatch, reque
     store = snapshots.stand_in(case)
     payload, feature = BYTES[case.stem]
     graph = received(store, snapshots.ME, PROBE, payload, snapshots.NOW)
-    assert graph == f"http://example.org/orexis/graph/observed/keeper/{feature}_moisture"
+    assert graph == f"{OBSERVED}{feature}_moisture"
     snapshots.held_to_diff(case, request, "received", snapshots.snapshot_of(store))
 
 
@@ -74,8 +75,7 @@ INSERT DATA { GRAPH :world {
   :probe sensing:readingPointer "/soil/moisture" } }""")
     message = b'{"temperature": 21.5, "soil": {"moisture": 0.22}}'
     written = [received(store, snapshots.ME, sensor, message, snapshots.NOW) for sensor in (PROBE, TEST + "thermo")]
-    assert written == ["http://example.org/orexis/graph/observed/keeper/zz_moisture",
-                       "http://example.org/orexis/graph/observed/keeper/zz_warmth"]
+    assert written == [OBSERVED + "zz_moisture", OBSERVED + "zz_warmth"]
     found = rows(store, "SELECT ?p ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:observedProperty ?p ; sosa:hasSimpleResult ?v } } ORDER BY ?p", ())
     assert [(r["p"].rsplit("#", 1)[-1], float(r["v"])) for r in found] == [("moisture", 0.22), ("warmth", 21.5)]
 

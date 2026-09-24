@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -50,10 +50,10 @@
+@@ -48,10 +48,10 @@
    orexis:obs_zz_moisture a sosa:Observation .
    orexis:obs_zz_moisture prov:wasGeneratedBy :keeper .
    orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
@@ -13,7 +13,7 @@
  }
  
  GRAPH :catalogue {
-@@ -68,7 +68,7 @@
+@@ -66,7 +66,7 @@
    observed:zz_moisture a orexis:Graph .
    observed:zz_moisture a orexis:StateGraph .
    observed:zz_moisture a sensing:ObservationGraph .

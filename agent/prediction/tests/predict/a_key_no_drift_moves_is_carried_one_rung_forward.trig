@@ -21,7 +21,6 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
-@prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
 
 GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .

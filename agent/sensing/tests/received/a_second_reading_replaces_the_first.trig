@@ -13,7 +13,6 @@
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix schema: <https://schema.org/> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
@@ -21,7 +20,6 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
-@prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
 
 GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
