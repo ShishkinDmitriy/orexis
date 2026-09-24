@@ -95,3 +95,10 @@ What happened before is in the series store, which is a different question asked
 When a present is matched to a kept world, or a step states what it read, a reading is
 stated by its [band](/domain/band.md) — the class the domain asserted on it — and not by its
 number; two readings the domain calls the same are one fact (#576).
+
+# In Agent 0.2.0, the number stays with its observation
+
+The value sits on the `sosa:Observation` in its own graph, the one `received` writes per key,
+and no side is drawn from it there; which side of a range it is on is a
+[revision](/domain/revision.md), and a [prediction](/domain/prediction.md) carries a number
+too. Sensing names no transport word, and bytes become this number in its own pipeline.

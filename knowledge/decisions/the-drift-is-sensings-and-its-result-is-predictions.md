@@ -181,3 +181,13 @@ a dose land.
 - **Resuming from the branch point** ([#527](https://github.com/ShishkinDmitriy/orexis/issues/527)):
   a surprise now names the step and the band it failed; whether keeping the frontier pays
   is still that issue's measurement.
+
+# Amended 2026-09-24: in Agent 0.2.0 the result is the crossings, and the drift is prediction's
+
+In 0.2.0 the drift is no longer sensing's: it is `prediction:Drift`, the one word of
+`agent/prediction/`, a package of its own above sensing, since the sovereign asked that sensing
+observe and say when a sensor has gone silent and predict nothing. What `predict` comes to there
+is the calculation of when the reading changes range — every crossing of a range bound bisected
+between the ladder's rungs — and one prediction per stretch, carrying a number rather than a
+set of bands. The rules sensing registers conclude the side of each stretch. See
+[prediction](/domain/prediction.md).

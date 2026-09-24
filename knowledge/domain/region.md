@@ -64,3 +64,15 @@ is baked at derivation time, since a shape minted per (agent, property) already 
 - [aim](/domain/aim.md) — the point the agent picks inside it.
 - [gap](/domain/gap.md) — how far outside it something sits.
 - [desire](/domain/desire.md) — the capability that deduces one.
+
+# In Agent 0.2.0, a range is SSN-System's and nothing is intersected
+
+`agent/sensing/` reads a range as the world states it — `ssn-system:hasOperatingRange` and
+`ssn-system:hasSurvivalRange` on what hosts the sensor, on what that host is a sample of, or on
+the sensor itself, a condition
+`ssn:forProperty` the property with `schema:minValue` and `schema:maxValue` — and mints
+nothing (#785). The two readers of a range are the [prediction](/domain/prediction.md)
+package, for where a predicted number crosses a bound, and the three rules sensing registers, which conclude `sensing:below`, `sensing:inside` or `sensing:above` each
+range as a [revision](/domain/revision.md) of an observation. The intersection this page
+describes above is the 0.1.0 tree's; in 0.2.0 it moves to the desire's met-test, which asks
+about the ranges it means.

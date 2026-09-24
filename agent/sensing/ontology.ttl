@@ -1,0 +1,111 @@
+@base <http://example.org/orexis/sensing> .
+@prefix : <http://example.org/orexis/sensing#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a owl:Ontology ;
+    rdfs:label "Orexis sensing, Agent 0.2.0" ;
+    rdfs:comment """The sensing layer of Agent 0.2.0 speaks SOSA and SSN, and declares only what they
+    lack. A sensor sosa:observes a property and sosa:isHostedBy what it is mounted in — the feature
+    of interest, or a sosa:Sample that sosa:isSampleOf one — its board reaches it by
+    ssn:hasSubSystem, and how often it reports is its ssn-system:Frequency; a range is SSN-System's,
+    stated by the host, by what the host is a sample of, or by the sensor itself. Declared here is
+    the graph an observation is kept in, the silence of a sensor that has stopped reporting, the
+    three sides this layer's rules conclude, and the pipeline's own concepts, since neither standard
+    says how bytes become a number: a codec and a scaling, the binding of a sensor to one of each,
+    the two members that ship, and the pointer. Sensing is the
+    translation row of the agent stack and nothing above it: a transport hands it bytes, it makes a
+    number of them and writes one sosa:Observation holding until the next is due, and on the
+    container's tick it says which readings are missing and which sensors have gone silent. It
+    predicts nothing — that is the prediction package's — and concludes nothing itself: the sides
+    are revisions, concluded by the three rules this layer registers (rules.ttl beside this file)
+    and run by the deliberator over the present. No word of any transport is spoken here.""" .
+
+:ObservationGraph a owl:Class ;
+    rdfs:subClassOf orexis:StateGraph ;
+    rdfs:label "Observation graph" ;
+    rdfs:comment """One graph per feature and property, holding the whole sosa:Observation the
+    sensor last made of it — feature, property, result, instant, sensor, procedure, and the
+    instant the device says the result applies to where it says one — from its instant to the
+    horizon its period states, replaced whole by the next. Named for what it holds. Beneath
+    orexis:StateGraph so that the readers of the present find it by that kind today; that parent
+    goes when what a plan may change is the actions' footprint rather than a graph kind.""" .
+
+:Codec a owl:Class ;
+    rdfs:label "Codec" ;
+    rdfs:comment """A wire format, both ways: how a sensor's bytes are a document and a document is
+    bytes. The first stage of the pipeline, bytes → document → raw value → quantity, and a family
+    in rule 2's sense: the members are interchangeable and a sensor is bound to one by
+    :decodedBy. JSON ships with this layer; a member from a package declares its own term as an
+    instance of this class and implements this layer's Codec contract, and genesis loads it by
+    that term. Absent a binding, a sensor's bytes are JSON, which every board here speaks.""" .
+
+:decodedBy a owl:ObjectProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range :Codec ;
+    rdfs:label "decoded by" ;
+    rdfs:comment "The codec a sensor's bytes are read with — derived onto the sensor at genesis from what its device states." .
+
+:Json a :Codec ;
+    rdfs:label "JSON" ;
+    rdfs:comment "The document is JSON, and a value in it is found by the pointer." .
+
+:Scaling a owl:Class ;
+    rdfs:label "Scaling" ;
+    rdfs:comment """How a raw value is a quantity: the last stage of the pipeline, and a family as the
+    codec is. Identity ships with this layer — the firmware scaled before it published, which is
+    what every board here does — and a member from a package declares its own term as an instance
+    of this class and implements this layer's Scaling contract. A scaling that is arithmetic could
+    be a rule rather than code; none here is yet.""" .
+
+:scaledBy a owl:ObjectProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range :Scaling ;
+    rdfs:label "scaled by" ;
+    rdfs:comment "The scaling a sensor's raw value is a quantity by — derived onto the sensor at genesis, identity where nothing says otherwise." .
+
+:Identity a :Scaling ;
+    rdfs:label "Identity" ;
+    rdfs:comment "The raw value, as it stands." .
+
+:readingPointer a owl:DatatypeProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range xsd:string ;
+    rdfs:label "reading pointer" ;
+    rdfs:comment """Which value of a decoded document is this sensor's, as a JSON Pointer (RFC 6901).
+    A fact about a document and not about a bus: two sensors on one board share a message and
+    differ only here. The middle stage of the pipeline, document → raw value, and the one that
+    is data rather than a member. Absent, the pointer is /value, which is what every
+    single-property device here publishes.""" .
+
+:silentSince a owl:DatatypeProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "silent since" ;
+    rdfs:comment """The sensor has stopped reporting: its last reading fell due at this instant and
+    nothing has arrived for a limit of its cadences since. A row present while the silence lasts,
+    named for the state and not for the tick that noticed it, written by `missed` into a graph of
+    the agent's own and dropped by the sensor's next reading. SOSA and SSN say how often a sensor
+    reports and nothing about one that has stopped, which is why this is sensing's word.""" .
+
+:below a owl:ObjectProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:label "below" ;
+    rdfs:comment """The observation's result lies under the floor of this range — an
+    ssn-system:OperatingRange or ssn-system:SurvivalRange stated for the observed property by what
+    hosts the sensor, by what that is a sample of, or by the sensor itself. Concluded by this
+    layer's rule as a revision, read by a desire's met-test, and written by an effect that predicts
+    a reading. One triple per observation and range; nothing is minted per subject.""" .
+
+:inside a owl:ObjectProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:label "inside" ;
+    rdfs:comment "The observation's result lies within this range, its bounds included." .
+
+:above a owl:ObjectProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:label "above" ;
+    rdfs:comment "The observation's result lies over the ceiling of this range." .

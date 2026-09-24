@@ -133,3 +133,12 @@ is a statement about bands rather than a change of logic.
 - [region](/domain/region.md) — what divides a property into bands.
 - [sensing](/domain/sensing.md) — how the verdict reaches peers and boards.
 - [desire](/domain/desire.md) — who is asked for it.
+
+# In Agent 0.2.0, there is no band
+
+The classes above are the 0.1.0 tree's. In `agent/sensing/` a reading is its number, in
+SOSA's words, and which side of each of its subject's ranges it is on is a
+[revision](/domain/revision.md) the rules sensing registers conclude — one triple per
+observation and range, `sensing:below`, `sensing:inside` or `sensing:above` the
+[region](/domain/region.md)'s node — never a class minted per subject and property, and never
+sensing's own write. `water:Band` stays the wire's word.

@@ -96,7 +96,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 # Sensing
 
 * [band](/domain/band.md) - A zone a region divides a property into, as a class of readings the domain declares; asserted on a reading by entailment, never a stored number.
-* [prediction](/domain/prediction.md) - What an agent expects at a horizon it has not reached: a set of bands, wider the further out; an event is expected in a window.
+* [prediction](/domain/prediction.md) - What an agent expects at a horizon: in 0.2.0 a predicted observation per stretch between the instants the reading changes range.
 
 * [observation](/domain/observation.md) - The node recording one act of observing. One per subject and property, and it replaces rather than accumulates.
 
@@ -104,7 +104,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [interval](/domain/interval.md) - A number with two ends. Not the core's: built into it as PR #575 and refused; a package's own tool for sizing, inside progression.
 
 * [channel](/domain/channel.md) - One named message flow on a bus, as a node — derived per distinct topic, discovered never authored, and the bearer of the encoding.
-* [sensing](/domain/sensing.md) - Split by WHO HOLDS THE CLOCK: Polling, Subscribing, Listening. Either way the agent owns the freshness rule.
+* [sensing](/domain/sensing.md) - Split by who holds the clock. In 0.2.0 the translation row: bytes to an observation, predictions of when it changes range, no transport word.
 
 # Structure — how the project is put together
 

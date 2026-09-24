@@ -1,0 +1,25 @@
+--- case
++++ expected
+@@ -52,4 +52,22 @@
+   :ontology a orexis:PublicGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  observed:zamioculcas_moisture a orexis:BeliefGraph .
++  observed:zamioculcas_moisture a orexis:Graph .
++  observed:zamioculcas_moisture a orexis:StateGraph .
++  observed:zamioculcas_moisture a sensing:ObservationGraph .
++  observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
++  observed:zamioculcas_moisture orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH observed:zamioculcas_moisture {
++  orexis:obs_zamioculcas_moisture a sosa:Observation .
++  orexis:obs_zamioculcas_moisture prov:wasGeneratedBy :keeper .
++  orexis:obs_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
++  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.22 .
++  orexis:obs_zamioculcas_moisture sosa:madeBySensor :probe .
++  orexis:obs_zamioculcas_moisture sosa:observedProperty :moisture .
++  orexis:obs_zamioculcas_moisture sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++}

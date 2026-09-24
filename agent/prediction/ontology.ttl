@@ -1,0 +1,23 @@
+@base <http://example.org/orexis/prediction> .
+@prefix : <http://example.org/orexis/prediction#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a owl:Ontology ;
+    rdfs:label "Orexis prediction, Agent 0.2.0" ;
+    rdfs:comment """What the prediction package of Agent 0.2.0 declares: one word. A prediction is the
+    calculation of when a reading changes range — the domain's drifts run over the observation a
+    sensor last made, at the rungs of a ladder that is this package's scan, every crossing of a
+    range bound bisected, and one orexis:PredictionGraph written per stretch between crossings,
+    holding a predicted sosa:Observation with its number. The observation is found by the kernel's
+    kind and SOSA's words, a range is SSN-System's, and which side a stretch is on is a revision
+    the sensing layer's rules conclude of it; nothing of sensing is imported or spoken here.""" .
+
+:Drift a owl:Class ;
+    rdfs:label "Drift" ;
+    rdfs:comment """What a value does by itself while nobody acts — a pot drying, a barrel draining.
+    SOSA has no word for it: a sosa:Procedure is how an observation is MADE, and a drift is how the
+    world moves what was observed. A drift carries sh:construct, a rule over the observation in hand
+    answering the predicted observation $elapsed seconds past it, landing at $lands. It declares no
+    horizon: the ladder it is asked at is the scan's, and the bisection places a crossing wherever it
+    falls.""" .

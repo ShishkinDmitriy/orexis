@@ -3,13 +3,12 @@ type: Domain Concept
 title: Prediction
 term: http://example.org/orexis#PredictionGraph
 description: >-
-  What an agent expects the world to hold at a horizon it has not reached — always a SET of
-  bands, never a value, and wider the further out. A value is a band collapsed to a point. A
-  prediction of a fluent is a graph holding during a period; a prediction of an event, an
-  observation, is an expected occurrence stated inside a graph, carrying the window it is
-  expected in and the bands it may carry. The first element of the sequence is the one the
-  next reading is held to, from the instrument's cadence and the drift, which sensing writes after
-  every reading; the far end is every band, which is not knowing said honestly.
+  What an agent expects the world to hold at a horizon it has not reached. In 0.1.0 a set of
+  bands, wider the further out, never a value. In Agent 0.2.0 a predicted observation with its
+  NUMBER, one per stretch between the instants the reading changes range, which is what the
+  prediction package's `predict` calculates; which side of a range it is on is a revision
+  sensing's rules conclude of it. A prediction of a fluent is a graph holding during a period; the next
+  reading rewrites the ladder.
 ---
 
 # What it is
@@ -89,3 +88,24 @@ with the prediction once at arrival, and that comparison is the step's verdict.
 - [interval](/domain/interval.md) — why the width lives in the domain's measure and never in
   the core.
 - [effect](/domain/effect.md) — the drift, which gives a prediction its centre.
+
+# In Agent 0.2.0, a prediction is when the reading changes range
+
+The set of bands above is the 0.1.0 tree's. In `agent/prediction/` — a package of its own
+above sensing, importing nothing of it, since the sovereign asked that sensing observe and say
+when a sensor has gone silent and predict nothing — `predict` takes the observation a sensor
+last made, found by the kernel's kind and `sosa:madeBySensor`, runs the domain's drifts over it
+at the rungs of the ladder and, against every range that applies to what the sensor observes,
+bisects each crossing of a bound; what it writes is one
+`orexis:PredictionGraph` per stretch — from the horizon to the first crossing, crossing to
+crossing, and from the last to the ladder's end — each holding a predicted `sosa:Observation`
+in SOSA's words with the number the drift gives at the last instant of that stretch known to
+lie on its side. No band is written: the side of a predicted observation is a
+[revision](/domain/revision.md), concluded by the rules sensing registers exactly as for the
+observation itself, so the mind reads a stretch as the side it is. The drift is the package's
+one word, `prediction:Drift` — what a value does by itself while nobody acts, which no
+`sosa:Procedure` is — carrying `sh:construct` and no horizon. The ladder is the scan, not the
+answer, and it is the package's own — an hour, five and a day past the instant the reading
+falls due; a key no drift moves is carried forward for the first rung alone; a key that
+crosses nothing has one prediction to the ladder's end.
+

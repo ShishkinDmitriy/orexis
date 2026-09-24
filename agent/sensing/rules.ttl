@@ -1,0 +1,57 @@
+@prefix : <http://example.org/orexis/sensing#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  THE RULES SENSING REGISTERS: which side of each of its subject's ranges an observation's result
+#  lies on. Three global SPARQL rules of one layer and one order, as SHACL 1.2 Inference Rules
+#  defines them, run by the deliberator over every observation and every predicted observation.
+#  A range is SSN-System's, stated by what hosts the sensor, by what that is a sample of — a sample
+#  stands for its subject — or by the sensor itself, whose condition is for the observed property
+#  and states a floor and a ceiling.
+#  The bounds are inclusive on the inside, so a result on a bound is inside — the bisection that
+#  places a crossing agrees.
+
+:sides a sh:RuleSet ;
+    rdfs:label "which side of each of its subject's ranges an observation is on" ;
+    sh:hasRule :belowRule , :insideRule , :aboveRule .
+
+:belowRule a sh:SPARQLRule ;
+    rdfs:label "under the floor" ;
+    sh:construct """
+        CONSTRUCT { ?obs sensing:below ?range } WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
+            ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
+            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
+            ?range ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty ?property ; schema:minValue ?low .
+            FILTER(?value < ?low)
+        }""" .
+
+:insideRule a sh:SPARQLRule ;
+    rdfs:label "within the range, bounds included" ;
+    sh:construct """
+        CONSTRUCT { ?obs sensing:inside ?range } WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
+            ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
+            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
+            ?range ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty ?property ; schema:minValue ?low ; schema:maxValue ?high .
+            FILTER(?value >= ?low && ?value <= ?high)
+        }""" .
+
+:aboveRule a sh:SPARQLRule ;
+    rdfs:label "over the ceiling" ;
+    sh:construct """
+        CONSTRUCT { ?obs sensing:above ?range } WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
+            ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
+            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
+            ?range ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty ?property ; schema:maxValue ?high .
+            FILTER(?value > ?high)
+        }""" .
