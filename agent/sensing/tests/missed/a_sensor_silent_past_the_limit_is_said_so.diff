@@ -1,0 +1,18 @@
+--- case
++++ expected
+@@ -76,4 +76,15 @@
+   observed:zz_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+   observed:zz_moisture orexis:arrivedBy orexis:Received .
+   observed:zz_moisture orexis:beliefsOf :keeper .
++  silent:probe a orexis:BeliefGraph .
++  silent:probe a orexis:Graph .
++  silent:probe a orexis:StateGraph .
++  silent:probe dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
++  silent:probe orexis:arrivedBy orexis:Derived .
++  silent:probe orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH silent:probe {
++  :probe sensing:silentSince "2026-01-01T12:15:00+00:00"^^xsd:dateTime .
++}

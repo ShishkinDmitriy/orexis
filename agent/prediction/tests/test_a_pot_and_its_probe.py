@@ -1,10 +1,11 @@
-"""Sensing and its rules over a pot: bytes become an observation the rules revise to its sides,
-predictions are the instants the reading changes range, revised the same, and a second reading
-replaces the first and its predictions.
+"""Prediction over a pot, with sensing and the rules beside it: bytes become an observation
+the rules revise to its sides, predictions are the instants the reading changes range, revised
+the same, and a second reading replaces the first and its predictions.
 
-Held to `worlds/a_pot_and_its_probe.trig`. The rules are run through the belief package's
-`revise`, which a test here may import and the code may not; the loop through the planner and
-the executor waits for the neighbours to read an observation's revisions.
+Held to `worlds/a_pot_and_its_probe.trig`. The story crosses three packages — sensing's
+`received` and `register`, this package's `predict`, the belief package's `revise` — which a
+TEST here may import and the code may not; the loop through the planner and the executor
+waits for the neighbours to read an observation's revisions.
 """
 
 from __future__ import annotations
@@ -17,13 +18,12 @@ import pytest
 from agent import clock
 from agent.belief.revise import revise
 from agent.ontology import KNOWN
-from agent.sensing.predict import predict
+from agent.prediction.predict import predict
 from agent.sensing.received import received
 from agent.sensing.register import register
 from agent.store import graphs_of, rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
-HORIZON_S = 900.0
 PROBE = "http://example.org/test#probe"
 
 _SIDES_Q = "SELECT ?p ?range WHERE { GRAPH $g { ?obs ?p ?range } }"
@@ -49,7 +49,7 @@ def _reading(store, snapshots, probe, value, minutes=0):
     revised — the order a container would keep."""
     at = snapshots.NOW + timedelta(minutes=minutes)
     read = graphs_of(store, *KNOWN, at=at)
-    graph = received(store, snapshots.ME, probe, f'{{"value": {value}}}'.encode(), at, horizon=HORIZON_S)
+    graph = received(store, snapshots.ME, probe, f'{{"value": {value}}}'.encode(), at)
     written = predict(store, snapshots.ME, probe, now=at)
     for g in (graph, *written):
         revise(store, g, read=read)

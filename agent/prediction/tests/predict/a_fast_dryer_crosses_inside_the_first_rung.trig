@@ -1,13 +1,13 @@
-# a_reading_already_below_crosses_only_the_survival_floor
+# a_fast_dryer_crosses_inside_the_first_rung
 #
-# Read at 0.05, already under the operating floor: the one change left is the survival floor, 0.03
-# away at half a fraction a day, 86 minutes out. Two stretches.
+# Four fractions a day: the operating floor is met 54 minutes out, inside the first rung, and the
+# survival floor 83 minutes out, in the second. Three stretches from a quarter past.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
-@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
 @prefix belief: <http://example.org/orexis/belief#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
@@ -28,9 +28,6 @@ GRAPH :ontology {
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:BeliefGraph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:StateGraph .
 }
 
 GRAPH :world {
@@ -40,7 +37,7 @@ GRAPH :world {
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :zz .
   :probe sosa:observes :moisture .
-  :zz :driesPerDay 0.5 .
+  :zz :driesPerDay 4.0 .
   :zz a :Pot .
   :zz ssn-system:hasOperatingRange :zz.operating .
   :zz ssn-system:hasSurvivalRange :zz.survival .
@@ -51,7 +48,7 @@ GRAPH :world {
 }
 
 GRAPH :actions {
-  :Drying a sensing:Drift .
+  :Drying a prediction:Drift .
   :Drying rdfs:label "what a pot loses while nobody waters it" .
   :Drying sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT {
@@ -79,7 +76,7 @@ GRAPH observed:zz_moisture {
   orexis:obs_zz_moisture a sosa:Observation .
   orexis:obs_zz_moisture prov:wasGeneratedBy :keeper .
   orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
-  orexis:obs_zz_moisture sosa:hasSimpleResult 0.05 .
+  orexis:obs_zz_moisture sosa:hasSimpleResult 0.25 .
   orexis:obs_zz_moisture sosa:madeBySensor :probe .
   orexis:obs_zz_moisture sosa:observedProperty :moisture .
   orexis:obs_zz_moisture sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
@@ -98,7 +95,6 @@ GRAPH :catalogue {
   observed:zz_moisture a orexis:BeliefGraph .
   observed:zz_moisture a orexis:Graph .
   observed:zz_moisture a orexis:StateGraph .
-  observed:zz_moisture a sensing:ObservationGraph .
   observed:zz_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   observed:zz_moisture orexis:arrivedBy orexis:Received .
   observed:zz_moisture orexis:beliefsOf :keeper .

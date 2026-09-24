@@ -1,13 +1,17 @@
-# a_second_reading_replaces_the_first
+# a_pot_and_its_probe
 #
-# A reading of 0.25 stood from a quarter to twelve; bytes for 0.08 arrive at noon. One node per key,
-# kept at the writer: the graph is replaced whole, its row and period with it.
+# THE WORLD PREDICTION IS HELD TO, with sensing and the rules beside it: one agent acting for one pot, the probe the pot hosts, the pot's own physics —
+# four fractions a day, a fast dryer, so a reading inside its operating range meets the floor within the
+# hour — the pot's operating and survival ranges in SSN-System's words, and the drift that predicts the
+# number. Nothing about sides: those are the rules this layer registers, concluded by the deliberator.
+# No reading: `received` writes those, and `predict` the stretches.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
 @prefix belief: <http://example.org/orexis/belief#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
@@ -41,8 +45,11 @@ GRAPH :world {
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :zz .
   :probe sosa:observes :moisture .
+  :probe ssn-system:hasOperatingRange :probe.operating .
   :probe ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:SEC ; schema:value 900 ] ] .
-  :zz :driesPerDay 0.5 .
+  :probe.operating a ssn-system:OperatingRange .
+  :probe.operating ssn-system:inCondition [ schema:maxValue 1.0 ; schema:minValue 0.0 ; ssn:forProperty :moisture ] .
+  :zz :driesPerDay 4.0 .
   :zz a :Pot .
   :zz ssn-system:hasOperatingRange :zz.operating .
   :zz ssn-system:hasSurvivalRange :zz.survival .
@@ -52,17 +59,34 @@ GRAPH :world {
   :zz.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
 }
 
-GRAPH observed:zz_moisture {
-  orexis:obs_zz_moisture a sosa:Observation .
-  orexis:obs_zz_moisture prov:wasGeneratedBy :keeper .
-  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
-  orexis:obs_zz_moisture sosa:hasSimpleResult 0.25 .
-  orexis:obs_zz_moisture sosa:madeBySensor :probe .
-  orexis:obs_zz_moisture sosa:observedProperty :moisture .
-  orexis:obs_zz_moisture sosa:resultTime "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
+GRAPH :actions {
+  :Drying a prediction:Drift .
+  :Drying rdfs:label "what a pot loses while nobody waters it" .
+  :Drying sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT {
+          ?obs a sosa:Observation ;
+               sosa:hasFeatureOfInterest ?pot ;
+               sosa:observedProperty :moisture ;
+               sosa:hasSimpleResult ?now ;
+               sosa:resultTime ?at ;
+               sosa:madeBySensor ?sensor .
+      } WHERE {
+          ?obs sosa:hasFeatureOfInterest ?pot ;
+               sosa:observedProperty :moisture ;
+               sosa:hasSimpleResult ?was .
+          OPTIONAL { ?obs sosa:madeBySensor ?sensor }
+          ?pot :driesPerDay ?rate .
+          FILTER(?rate > 0 && $elapsed > 0)
+          BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
+          BIND(?was - (?rate * ?days) AS ?fell)
+          BIND(IF(?fell < 0.0, 0.0, ?fell) AS ?now)
+          BIND($lands AS ?at)
+      }""" .
 }
 
 GRAPH :catalogue {
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
   :ontology a orexis:Graph .
@@ -70,11 +94,4 @@ GRAPH :catalogue {
   :ontology a orexis:PublicGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  observed:zz_moisture a orexis:BeliefGraph .
-  observed:zz_moisture a orexis:Graph .
-  observed:zz_moisture a orexis:StateGraph .
-  observed:zz_moisture a sensing:ObservationGraph .
-  observed:zz_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
-  observed:zz_moisture orexis:arrivedBy orexis:Received .
-  observed:zz_moisture orexis:beliefsOf :keeper .
 }

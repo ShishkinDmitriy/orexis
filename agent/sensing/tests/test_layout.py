@@ -1,9 +1,9 @@
 """What the sensing tree's SHAPE promises, and the one direction its arrows may point.
 
-Sensing is the translation row and BENEATH the mind: the planner reads the predictions it
-writes and the executor the observations, both by kind, and neither imports a line of it; it
-imports nothing of theirs, nor of the belief package whose deliberator concludes over what it
-writes, and speaks none of their words — and not one word of any transport, which is the
+Sensing is the translation row and BENEATH everything: the prediction package reads the
+observations it writes and the executor too, both by kind, and neither imports a line of it;
+it imports nothing of theirs, nor of the belief package whose deliberator concludes over what
+it writes, and speaks none of their words — and not one word of any transport, which is the
 decoupling this layer exists for. A module named for an act exports that act alone, a module
 named for a thing may answer several questions about it, and every public function has a test
 named for it. A TEST here may import the belief package, to hold this layer's rules to what
@@ -24,9 +24,9 @@ CODE = sorted(p for p in SENSING.glob("*.py"))
 VOCABULARY = sorted(SENSING.glob("*.ttl"))
 
 #  A MODULE NAMED FOR A THING, which may export several reads of it.
-NOUNS = {"ontology", "pipeline", "driver", "ranges"}
+NOUNS = {"ontology", "pipeline", "driver", "cadence"}
 
-ABOVE = ("planning", "execution", "belief")
+ABOVE = ("prediction", "planning", "execution", "belief")
 
 
 def test_the_layer_imports_nothing_above_it_and_no_transport():
@@ -44,13 +44,13 @@ def test_the_layer_imports_nothing_above_it_and_no_transport():
 
 @pytest.mark.parametrize("path", CODE + VOCABULARY, ids=lambda p: p.name)
 def test_no_file_of_this_layer_speaks_the_minds_words_or_a_transports(path):
-    said = re.findall(r"\b(?:planning|execution|belief|mqtt):\w+", path.read_text())
+    said = re.findall(r"\b(?:prediction|planning|execution|belief|mqtt):\w+", path.read_text())
     assert not said, f"{path.name} names another layer's or a transport's words: {sorted(set(said))}"
 
 
-def test_the_mind_imports_nothing_of_sensing():
-    """The planner reads predictions and the executor observations, by KIND: a graph classified
-    `orexis:PredictionGraph` or `orexis:StateGraph` is theirs to read whoever wrote it."""
+def test_nothing_above_imports_sensing():
+    """The prediction package and the executor read observations by KIND: a graph classified
+    `orexis:StateGraph` is theirs to read whoever wrote it."""
     for path in sorted((ROOT / "agent").rglob("*.py")):
         if SENSING in path.parents or "tests" in path.parts:
             continue

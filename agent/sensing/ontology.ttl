@@ -10,25 +10,17 @@
     rdfs:label "Orexis sensing, Agent 0.2.0" ;
     rdfs:comment """The sensing layer of Agent 0.2.0 speaks SOSA and SSN, and declares only what they
     lack. A sensor sosa:observes a property and sosa:isHostedBy what it is mounted in — the feature
-    of interest, or a sosa:Sample that sosa:isSampleOf one — and its board reaches it by
-    ssn:hasSubSystem; a range is SSN-System's, stated by the host, by what the host is a sample of,
-    or by the sensor itself. Declared here is the drift, the graph an observation is kept in, the
-    pointer, and the three sides this layer's rules conclude — six words. Sensing is the translation
-    row of the agent stack and nothing above it: a transport hands it bytes, it makes a number of
-    them and writes one sosa:Observation, and predicts the number's future with the domain's
-    drifts, one prediction per stretch between the instants a registered rule's result would
-    change. It concludes nothing itself: the sides are revisions, concluded by the three rules
-    this layer registers (rules.ttl beside this file) and run by the deliberator over the present.
-    No word of any transport is spoken here.""" .
-
-:Drift a owl:Class ;
-    rdfs:label "Drift" ;
-    rdfs:comment """What a value does by itself while nobody acts — a pot drying, a barrel draining.
-    SOSA has no word for it: a sosa:Procedure is how an observation is MADE, and a drift is how the
-    world moves what was observed. A drift carries sh:construct, a rule over the observation in hand
-    answering the predicted observation $elapsed seconds past it, landing at $lands. It declares no
-    horizon: the ladder it is asked at is the scan's, and the bisection places a crossing wherever it
-    falls.""" .
+    of interest, or a sosa:Sample that sosa:isSampleOf one — its board reaches it by
+    ssn:hasSubSystem, and how often it reports is its ssn-system:Frequency; a range is SSN-System's,
+    stated by the host, by what the host is a sample of, or by the sensor itself. Declared here is
+    the graph an observation is kept in, the pointer, the silence of a sensor that has stopped
+    reporting, and the three sides this layer's rules conclude — six words. Sensing is the
+    translation row of the agent stack and nothing above it: a transport hands it bytes, it makes a
+    number of them and writes one sosa:Observation holding until the next is due, and on the
+    container's tick it says which readings are missing and which sensors have gone silent. It
+    predicts nothing — that is the prediction package's — and concludes nothing itself: the sides
+    are revisions, concluded by the three rules this layer registers (rules.ttl beside this file)
+    and run by the deliberator over the present. No word of any transport is spoken here.""" .
 
 :ObservationGraph a owl:Class ;
     rdfs:subClassOf orexis:StateGraph ;
@@ -49,6 +41,16 @@
     differ only here. It is the JSON codec's parameter, and moves to the codec's namespace when
     the codec packages join 0.2.0. Absent, the pointer is /value, which is what every
     single-property device here publishes.""" .
+
+:silentSince a owl:DatatypeProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "silent since" ;
+    rdfs:comment """The sensor has stopped reporting: its last reading fell due at this instant and
+    nothing has arrived for a limit of its cadences since. A row present while the silence lasts,
+    named for the state and not for the tick that noticed it, written by `missed` into a graph of
+    the agent's own and dropped by the sensor's next reading. SOSA and SSN say how often a sensor
+    reports and nothing about one that has stopped, which is why this is sensing's word.""" .
 
 :below a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;

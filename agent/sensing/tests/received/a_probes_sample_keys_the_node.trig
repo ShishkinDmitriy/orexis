@@ -16,6 +16,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
@@ -42,6 +43,7 @@ GRAPH :world {
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :patch .
   :probe sosa:observes :moisture .
+  :probe ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:SEC ; schema:value 900 ] ] .
   :zz :driesPerDay 0.5 .
   :zz a :Pot .
   :zz ssn-system:hasOperatingRange :zz.operating .

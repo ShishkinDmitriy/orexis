@@ -1,10 +1,9 @@
 # a_pot_and_its_probe
 #
-# THE WORLD SENSING IS HELD TO: one agent acting for one pot, the probe the pot hosts, the pot's own physics —
-# four fractions a day, a fast dryer, so a reading inside its operating range meets the floor within the
-# hour — the pot's operating and survival ranges in SSN-System's words, and the drift that predicts the
-# number. Nothing about sides: those are the rules this layer registers, concluded by the deliberator.
-# No reading: `received` writes those, and `predict` the stretches.
+# THE WORLD SENSING IS HELD TO: one agent acting for one pot, the probe the pot hosts, the probe's
+# quarter-hour frequency, and the pot's operating and survival ranges in SSN-System's words. Nothing
+# about sides: those are the rules this layer registers, concluded by the deliberator. No reading:
+# `received` writes those. No drift: the prediction package's world carries one.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -19,6 +18,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
@@ -40,50 +40,24 @@ GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:actsFor :zz .
   :keeper orexis:localId "keeper" .
+  :probe <http://www.w3.org/ns/ssn/systems/hasOperatingRange> :probe.operating .
+  :probe <http://www.w3.org/ns/ssn/systems/hasSystemCapability> [ <http://www.w3.org/ns/ssn/systems/hasSystemProperty> [ a <http://www.w3.org/ns/ssn/systems/Frequency> ; schema:unitCode unit:SEC ; schema:value 900 ] ] .
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :zz .
   :probe sosa:observes :moisture .
-  :probe ssn-system:hasOperatingRange :probe.operating .
-  :probe.operating a ssn-system:OperatingRange .
-  :probe.operating ssn-system:inCondition [ schema:maxValue 1.0 ; schema:minValue 0.0 ; ssn:forProperty :moisture ] .
+  :probe.operating <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 1.0 ; schema:minValue 0.0 ; ssn:forProperty :moisture ] .
+  :probe.operating a <http://www.w3.org/ns/ssn/systems/OperatingRange> .
   :zz :driesPerDay 4.0 .
+  :zz <http://www.w3.org/ns/ssn/systems/hasOperatingRange> :zz.operating .
+  :zz <http://www.w3.org/ns/ssn/systems/hasSurvivalRange> :zz.survival .
   :zz a :Pot .
-  :zz ssn-system:hasOperatingRange :zz.operating .
-  :zz ssn-system:hasSurvivalRange :zz.survival .
-  :zz.operating a ssn-system:OperatingRange .
-  :zz.operating ssn-system:inCondition [ schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture ] .
-  :zz.survival a ssn-system:SurvivalRange .
-  :zz.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
-}
-
-GRAPH :actions {
-  :Drying a sensing:Drift .
-  :Drying rdfs:label "what a pot loses while nobody waters it" .
-  :Drying sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT {
-          ?obs a sosa:Observation ;
-               sosa:hasFeatureOfInterest ?pot ;
-               sosa:observedProperty :moisture ;
-               sosa:hasSimpleResult ?now ;
-               sosa:resultTime ?at ;
-               sosa:madeBySensor ?sensor .
-      } WHERE {
-          ?obs sosa:hasFeatureOfInterest ?pot ;
-               sosa:observedProperty :moisture ;
-               sosa:hasSimpleResult ?was .
-          OPTIONAL { ?obs sosa:madeBySensor ?sensor }
-          ?pot :driesPerDay ?rate .
-          FILTER(?rate > 0 && $elapsed > 0)
-          BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
-          BIND(?was - (?rate * ?days) AS ?fell)
-          BIND(IF(?fell < 0.0, 0.0, ?fell) AS ?now)
-          BIND($lands AS ?at)
-      }""" .
+  :zz.operating <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture ] .
+  :zz.operating a <http://www.w3.org/ns/ssn/systems/OperatingRange> .
+  :zz.survival <http://www.w3.org/ns/ssn/systems/inCondition> [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
+  :zz.survival a <http://www.w3.org/ns/ssn/systems/SurvivalRange> .
 }
 
 GRAPH :catalogue {
-  :actions a orexis:Graph .
-  :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
   :ontology a orexis:Graph .

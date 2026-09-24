@@ -399,24 +399,26 @@ the keeper's ledger, since a tell nobody heard is gone.
 # In Agent 0.2.0, sensing is the translation row and nothing above it
 
 `agent/sensing/` speaks SOSA's and SSN's words, declares six of its own where they have none —
-the drift, the observation graph's kind, the pointer and the three sides — and not one of any
-transport's.
-A transport's driver knows which message on which channel is whose and hands sensing the bytes
-and the sensor; `received` is the callback it calls, and the pipeline — codec, pointer, scaling —
-makes a number of the bytes and writes one `sosa:Observation` per feature and property into
-the graph of that key, `sensing:ObservationGraph`, holding from its instant to the horizon and
-replacing the one before. `predict` is the calculation of when the reading changes range —
-every instant at which the result of a registered rule would change: the domain's drifts run at
-the ladder's rungs, every crossing of a bound of the [region](/domain/region.md)s that apply to
-what the sensor observes bisected, one [prediction](/domain/prediction.md) per stretch between crossings. Whether
-a reading landed where its stretch said is not sensing's to say: the planner's re-root by the
-hash of the present tells a confirmation from a surprise, and nothing is said twice. It concludes nothing: the three rules it registers
-(`rules.ttl`, `register`) say which side of each range an observation is on, `sensing:below`,
+the observation graph's kind, the pointer, the silence and the three sides — and not one of any
+transport's. A transport's driver knows which message on which channel is whose and hands
+sensing the bytes and the sensor's IRI; `received` is the callback it calls, and the pipeline —
+codec, pointer, scaling — makes a number of the bytes and writes one `sosa:Observation` per
+feature and property into the graph of that key, `sensing:ObservationGraph`, holding from its
+instant until the next reading is due by the sensor's `ssn-system:Frequency` and replacing the
+one before. `missed` is what the container's tick asks: which sensors' readings have fallen due
+with nothing arrived, for the container to nudge through the driver, and which of them have been
+silent for a limit of their cadences, said so by `sensing:silentSince` on the sensor, a row
+present while the silence lasts and dropped by the next reading. A reading merely missed gets no
+mark, since its graph's period ending already says it. It predicts nothing: when the reading
+changes range is the [prediction](/domain/prediction.md) package's calculation, over the
+observation written here. It concludes nothing: the three rules it registers (`rules.ttl`,
+`register`) say which side of each range an observation is on, `sensing:below`,
 `sensing:inside`, `sensing:above`, and the [deliberator](/domain/deliberator.md) concludes
 them over every graph the container reports changed — a [revision](/domain/revision.md), never
 sensing's own write. A sensor `sosa:observes` its property and `sosa:isHostedBy` what it is
 mounted in — the subject, or a `sosa:Sample` of it — and that pair is the observation's key;
 what the 0.1.0 package said in words of its own, what an agent polls, what a sensor monitors or
-samples, a device's sense mode and a drift's horizons, 0.2.0 does not say, and the ladder is the
-scan's. The driver contract in `driver.py` is handed the sensor's IRI and has no `parse`, since
-bytes to number is sensing's. No freshness want, no timer, no mark, no band.
+samples, a device's sense mode and a drift's horizons, 0.2.0 does not say. The driver contract
+in `driver.py` is handed the sensor's IRI and has no `parse`, since bytes to number is
+sensing's. No freshness want, no timer, no band; a sensor that has never reported is not told
+from one not yet due, which is the container's to count from boot.

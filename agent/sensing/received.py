@@ -9,17 +9,22 @@ the scaling the sensor's binding names; a payload that does not decode writes no
 the log, because a pointer that misses is not a measurement. What is written is one
 `sosa:Observation` in SOSA's words — of what, which property, the result, the instant it
 arrived, the sensor, the procedure and the instant the device says the result applies to
-where it says one — into the graph of this key, `sensing:ObservationGraph`,
-received, the agent's, holding from its instant to the HORIZON the caller gives, and replacing
-whole the observation of the key before (#669's invariant, kept at the writer). A reader asking
-at an instant past the horizon is handed nothing: the observation's standing as the present
-ends by the clock, and nothing here keeps a timer or writes a mark.
+where it says one — into the graph of this key, `sensing:ObservationGraph`, received, the
+agent's, holding from its instant UNTIL THE NEXT IS DUE — the sensor's `ssn-system:Frequency`
+past it (`cadence_of`), or with no end where the world states none — and replacing whole the
+observation of the key before (#669's invariant, kept at the writer). A reader asking at an
+instant past that is handed nothing: the observation's standing as the present ends by the
+clock, `missed` says so on the container's tick, and nothing here keeps a timer.
+
+**A READING ENDS A SILENCE.** A sensor `missed` had said silent is silent no longer: the graph
+saying so goes before the observation is written, found by the row's content and never by name.
 
 **NOTHING ELSE.** No side is drawn here: which side of its subject's ranges the number lies on
 is a revision, concluded by the rules this layer registers and run by the deliberator when the
-container says this graph changed. No want, no wake, no verdict on what was predicted: a
-reading either lands where the stretch holding at its instant said it would or it does not,
-and that is the planner's re-root by hash to tell — `predict` then rewrites the key's future.
+container says this graph changed. No prediction: that is the prediction package's, over the
+observation written here. No want, no wake, no verdict on what was predicted: a reading either
+lands where the stretch holding at its instant said it would or it does not, and that is the
+planner's re-root by hash to tell.
 
 **IT IS CALLED, NOT CALLING.** A transport's driver knows which message on which channel is
 whose; it hands the bytes and the sensor here and learns nothing of what they meant.
@@ -31,8 +36,9 @@ import logging
 from datetime import datetime, timedelta
 
 from agent.ontology import PUBLIC, local_of
-from agent.store import entry, forget_graph, graphs_of, rows, update
+from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
+from .cadence import cadence_of
 from .ontology import OBSERVATION_GRAPH, RECEIVED, observation_graph, observation_of
 from .pipeline import decode
 
@@ -41,13 +47,17 @@ log = logging.getLogger("received")
 #  THE KEY: what the sensor observes, of what it is mounted in.
 _KEY_Q = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; sosa:isHostedBy ?feature }"
 
+#  THE SILENCE SAID OF THIS SENSOR, if any — the graph holding the row, found by its content.
+_SILENCE_Q = """
+SELECT ?g WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { $sensor sensing:silentSince ?since } }"""
 
-def received(store, me: str, sensor: str, payload: bytes, at: datetime, *, horizon: float,
-             procedure: str | None = None, phenomenon_at: datetime | None = None) -> str | None:
+
+def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
+             procedure: str | None = None, phenomenon_at: datetime | None = None, memo=None) -> str | None:
     """Write what `sensor` read, `payload` decoded by its binding: the observation of the
-    property it observes, of what it is hosted by, standing as the present from `at` for
-    `horizon` seconds. The graph's name, or None where the sensor has no key or the payload
-    holds no reading.
+    property it observes, of what it is hosted by, standing as the present from `at` until
+    the next is due by the sensor's frequency — with no end where the world states none. The
+    graph's name, or None where the sensor has no key or the payload holds no reading.
 
     `me` is who holds it — the one identifier a process is handed — and is written as the
     observation's author and the graph's owner. `procedure` is the instrument's word about
@@ -65,7 +75,11 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *, horiz
     node = observation_of(feature, observed_property)
     graph = observation_graph(local_of(me), feature, observed_property)
     forget_graph(store, graph)
-    until = at + timedelta(seconds=float(horizon))
+    cat = Raw(f"<{catalogue_of(store)}>")
+    for silence in rows(store, _SILENCE_Q, (), cat=cat, sensor=sensor):
+        forget_graph(store, silence["g"])
+    cadence = cadence_of(store, sensor, memo)
+    until = at + timedelta(seconds=cadence) if cadence is not None else None
     said = [f'<{node}> a sosa:Observation',
             f'<{node}> sosa:hasFeatureOfInterest <{feature}>',
             f'<{node}> sosa:observedProperty <{observed_property}>',

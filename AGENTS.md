@@ -563,17 +563,21 @@ it is a record wearing a bullet.
   chose, where the search's ceiling is the container's in the unit it spends; a cut keeps what
   was concluded with the row saying so, the deliberator re-queues such rows at boot, and a
   rule set that never settles spends a budget every pass and is reported rather than looped on.
-- **Sensing tracks numbers, and a prediction is when the reading changes range** — `received`
-  writes one `sosa:Observation` per key with its number, `predict` bisects every crossing of a
-  range bound between the ladder's rungs and writes one prediction per stretch, and the side
-  is a revision the three rules sensing registers conclude; no band, no side, no want, no
-  verdict on a prediction is sensing's own write — a stretch already says when a rule's result
-  changes, and the planner's re-root tells a surprise — and a range is SSN-System's as the
-  world states it, nothing minted.
+- **Sensing observes and says when a sensor has gone silent, and prediction is a package of
+  its own** — `received` writes one `sosa:Observation` per key with its number, holding until
+  the next is due by the sensor's `ssn-system:Frequency`, `missed` answers the readings fallen
+  due on the container's tick and says `sensing:silentSince` of a sensor silent past a limit of
+  its cadences, and the side is a revision the three rules sensing registers conclude; no band,
+  no side, no want, no verdict on a prediction is sensing's own write. `agent/prediction/`
+  bisects every crossing of a range bound between the ladder's rungs and writes one prediction
+  per stretch, finds the observation by the kernel's kind and `sosa:madeBySensor` and imports
+  nothing of sensing — a stretch already says when a rule's result changes, and the planner's
+  re-root tells a surprise — and a range is SSN-System's as the world states it, nothing minted.
 - **Sensing speaks SOSA and SSN, and declares only what they lack** — a sensor
   `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is the
-  observation's key, and the layer's own six words are the drift (a value moving by itself,
-  which no `sosa:Procedure` is), the observation graph's kind, the pointer and the three sides;
+  observation's key, and the layer's own six words are the observation graph's kind, the
+  pointer, the silence and the three sides, while the drift (a value moving by itself, which no
+  `sosa:Procedure` is) is the prediction package's one word;
   `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
   declare the scan's reach, and the wiring module that read them had no caller, so the ladder
   is sensing's, a driver is handed the sensor's IRI and bytes and keeps only what a transport
@@ -1147,17 +1151,21 @@ it is a record wearing a bullet.
   chose, where the search's ceiling is the container's in the unit it spends; a cut keeps what
   was concluded with the row saying so, the deliberator re-queues such rows at boot, and a
   rule set that never settles spends a budget every pass and is reported rather than looped on.
-- **Sensing tracks numbers, and a prediction is when the reading changes range** — `received`
-  writes one `sosa:Observation` per key with its number, `predict` bisects every crossing of a
-  range bound between the ladder's rungs and writes one prediction per stretch, and the side
-  is a revision the three rules sensing registers conclude; no band, no side, no want, no
-  verdict on a prediction is sensing's own write — a stretch already says when a rule's result
-  changes, and the planner's re-root tells a surprise — and a range is SSN-System's as the
-  world states it, nothing minted.
+- **Sensing observes and says when a sensor has gone silent, and prediction is a package of
+  its own** — `received` writes one `sosa:Observation` per key with its number, holding until
+  the next is due by the sensor's `ssn-system:Frequency`, `missed` answers the readings fallen
+  due on the container's tick and says `sensing:silentSince` of a sensor silent past a limit of
+  its cadences, and the side is a revision the three rules sensing registers conclude; no band,
+  no side, no want, no verdict on a prediction is sensing's own write. `agent/prediction/`
+  bisects every crossing of a range bound between the ladder's rungs and writes one prediction
+  per stretch, finds the observation by the kernel's kind and `sosa:madeBySensor` and imports
+  nothing of sensing — a stretch already says when a rule's result changes, and the planner's
+  re-root tells a surprise — and a range is SSN-System's as the world states it, nothing minted.
 - **Sensing speaks SOSA and SSN, and declares only what they lack** — a sensor
   `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is the
-  observation's key, and the layer's own six words are the drift (a value moving by itself,
-  which no `sosa:Procedure` is), the observation graph's kind, the pointer and the three sides;
+  observation's key, and the layer's own six words are the observation graph's kind, the
+  pointer, the silence and the three sides, while the drift (a value moving by itself, which no
+  `sosa:Procedure` is) is the prediction package's one word;
   `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
   declare the scan's reach, and the wiring module that read them had no caller, so the ladder
   is sensing's, a driver is handed the sensor's IRI and bytes and keeps only what a transport

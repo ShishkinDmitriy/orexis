@@ -571,12 +571,19 @@ def test_the_docs_only_name_terms_that_exist(doc):
     # prefixes keeps the guard's point — a renamed term vanishes from the graph exactly as
     # it vanished from the text — without caring how a file chooses to write itself.
     inverse = {iri: label for label, iri in loader.prefixes().items()}
+    #  AND THE 0.2.0 TREE'S OWN ONTOLOGIES, which the 0.1.0 loader never walks: a layer's
+    #  `agent/<layer>/ontology.ttl` declares words the entry documents name, under a bare `:`
+    #  bound here by the last segment of its namespace, as the knowledge guard binds it.
+    layers = sorted(REPO_ROOT.glob("agent/*/ontology.ttl"))
+    for path in layers:
+        for iri in re.findall(r"^@prefix :\s*<([^>]*)>", path.read_text(), re.M):
+            inverse.setdefault(iri, iri.rstrip("#/").rsplit("/", 1)[-1])
     declared = set()
     #  Shapes as well as ontologies. A SHAPE is a declared thing and prose may legitimately
     #  name one — AGENTS.md cites `orexis:KeeperShape` to say what a region want still decides. While the
     #  shapes lived in packages this cost nothing to miss, because the docs happened not to name
     #  one; the kernel's shapes are named in the entry documents now.
-    for path in loader.ontology_files() + loader.shapes_files():
+    for path in loader.ontology_files() + loader.shapes_files() + layers:
         g = rdflib.Graph()
         g.parse(path, format="turtle")
         for triple in g:
@@ -586,7 +593,7 @@ def test_the_docs_only_name_terms_that_exist(doc):
                 for ns, label in inverse.items():
                     if str(node).startswith(ns):
                         declared.add(f"{label}:{str(node)[len(ns):]}")
-    known = set(loader.prefixes()) | {"orexis"}
+    known = set(loader.prefixes()) | {"orexis"} | set(inverse.values())
 
     named = {t for t in re.findall(r"`([a-z][a-z0-9-]*:[A-Za-z][A-Za-z0-9_]*)`",
                                    (REPO_ROOT / doc).read_text())

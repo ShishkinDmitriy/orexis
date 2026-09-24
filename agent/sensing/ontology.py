@@ -2,14 +2,14 @@
 
 THE VOCABULARY IS SOSA'S AND SSN'S, AND SIX WORDS OF THIS LAYER'S. A sensor `sosa:observes`
 a property and `sosa:isHostedBy` what it is mounted in, and that pair is the key an
-observation is written under; a range is SSN-System's. What this layer declares is in
-`ontology.ttl` beside this file — the drift, the graph an observation is kept in, the pointer
-and the three sides its rules conclude — and nothing of the 0.1.0 package's own: what an
-agent polled, what a sensor monitored or sampled, a device's sense mode and a drift's
-horizons were SSN restated or read by nothing, and 0.2.0 speaks none of them. Not one word
-of any transport.
+observation is written under; how often it reports is its `ssn-system:Frequency`, and a range
+is SSN-System's. What this layer declares is in `ontology.ttl` beside this file — the graph an
+observation is kept in, the pointer, the silence, and the three sides its rules conclude — and
+nothing of the 0.1.0 package's own: what an agent polled, what a sensor monitored or sampled,
+a device's sense mode and a drift's horizons were SSN restated or read by nothing, and 0.2.0
+speaks none of them. The drift is the prediction package's. Not one word of any transport.
 
-THE NAMES ARE FOR EYES. An observation's graph and its predictions' are spelled here for the
+THE NAMES ARE FOR EYES. An observation's graph and a silence's are spelled here for the
 writer, from the one identifier a process is handed and the key an observation is written
 under; every reader asks the catalogue by class and by pattern, and renaming one here would
 change nothing a reader sees.
@@ -22,19 +22,14 @@ import re
 from agent.ontology import GRAPH_PREFIX, OREXIS
 
 SENSING = "http://example.org/orexis/sensing#"
-SOSA = "http://www.w3.org/ns/sosa/"
-SSN = "http://www.w3.org/ns/ssn/"
-SCHEMA = "https://schema.org/"
-PROV = "http://www.w3.org/ns/prov#"
 SH = "http://www.w3.org/ns/shacl#"
 CODEC = "http://example.org/orexis/codec#"
 SCALING = "http://example.org/orexis/scaling#"
 
-#  THIS LAYER'S OWN: what a value does by itself while nobody acts, the graph an observation is
-#  kept in, the pointer, and the three sides.
-DRIFT = SENSING + "Drift"
+#  THIS LAYER'S OWN: the graph an observation is kept in, the pointer, the silence, the sides.
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
 READING_POINTER = SENSING + "readingPointer"
+SILENT_SINCE = SENSING + "silentSince"
 BELOW = SENSING + "below"
 INSIDE = SENSING + "inside"
 ABOVE = SENSING + "above"
@@ -45,27 +40,11 @@ JSON_CODEC = CODEC + "Json"
 SCALED_BY = SCALING + "scaledBy"
 IDENTITY_SCALING = SCALING + "Identity"
 
-#  SOSA'S, on a sensor: what it observes and what it is mounted in, which together are the key.
-OBSERVES = SOSA + "observes"
-HOSTED_BY = SOSA + "isHostedBy"
-
-#  SOSA'S, on an observation.
-OBSERVATION = SOSA + "Observation"
-FEATURE = SOSA + "hasFeatureOfInterest"
-PROPERTY = SOSA + "observedProperty"
-RESULT = SOSA + "hasSimpleResult"
-RESULT_TIME = SOSA + "resultTime"
-PHENOMENON_TIME = SOSA + "phenomenonTime"
-MADE_BY = SOSA + "madeBySensor"
-PROCEDURE = SOSA + "usedProcedure"
-IS_SAMPLE_OF = SOSA + "isSampleOf"
-GENERATED_BY = PROV + "wasGeneratedBy"
-
 #  THE DRAFT'S graph kind the registered rules are kept in.
 RULES_GRAPH = SH + "RulesGraph"
 
 RECEIVED = OREXIS + "Received"
-RECORDED = OREXIS + "Recorded"
+DERIVED = OREXIS + "Derived"
 ASSERTED = OREXIS + "Asserted"
 
 
@@ -86,9 +65,9 @@ def observation_graph(agent_id: str, feature: str, observed_property: str) -> st
     return f"{GRAPH_PREFIX}observed/{agent_id}/{slug(feature)}_{slug(observed_property)}"
 
 
-def prediction_graph(agent_id: str, feature: str, observed_property: str, n: int) -> str:
-    """The n-th prediction of one key, first stretch first."""
-    return f"{GRAPH_PREFIX}predicted/{agent_id}/{slug(feature)}_{slug(observed_property)}/{n}"
+def silent_graph(agent_id: str, sensor: str) -> str:
+    """Where a sensor's silence is said, while it lasts."""
+    return f"{GRAPH_PREFIX}silent/{agent_id}/{slug(sensor)}"
 
 
 def rules_graph() -> str:

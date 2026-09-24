@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from agent.sensing.ranges import ranges_of, side
+from agent.prediction.ranges import ranges_of, side
 from agent.store import update
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"

@@ -1,7 +1,7 @@
 """`predict`: when the reading will change range — the domain's drifts run over the observation
 in hand, and a prediction written for each stretch between crossings.
 
-**A PREDICTION IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** Every `sensing:Drift`
+**A PREDICTION IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** Every `prediction:Drift`
 the domain declares — a package's rule over `$elapsed`, what the world does to a reading while
 nobody acts — is run over the observation at the instants of the LADDER, `LADDER_S`, each rung
 past the observation's own horizon; the ladder is the scan, not the answer, and it is this
@@ -11,8 +11,8 @@ sensor observes (SSN-System's operating and survival ranges, `ranges_of`),
 wherever the drift's number lies on one side of a bound at one rung and the other side at the
 next, the crossing is bisected between them, within a minute or a sixty-fourth of the rung, and
 the scan goes on from it — so a rung that crosses two bounds yields two crossings. A comparison
-to a bound is arithmetic this layer does on numbers; the SIDE as a fact the mind reads is the
-rules', concluded over what is written here.
+to a bound is arithmetic this package does on numbers; the SIDE as a fact the mind reads is
+the sensing layer's rules', concluded over what is written here as over the observation.
 
 **WHAT IS WRITTEN IS ONE PREDICTION PER STRETCH**: from the horizon to the first crossing,
 crossing to crossing, and from the last to the ladder's end — each an `orexis:PredictionGraph`
@@ -21,12 +21,12 @@ number the drift gives at the last instant of that stretch the bisection knows t
 side, so the rules classify every stretch as the side it is. Each says which observation it
 was derived from, so the next observation of the key drops the whole ladder before its own is
 written, and its row carries `orexis:retracts`, the `DELETE … WHERE` naming `GRAPH $state` that
-takes the key's standing node out of whatever ground the boundary is laid over — the key is
-this layer's, so the text is this layer's to write, in the form `lay_ground` reads today.
+takes the key's standing node out of whatever ground the boundary is laid over — in the form
+`lay_ground` reads today.
 
 **A KEY NO DRIFT MOVES** — a store declaring no drift at all is the same case — is predicted
 to stay as it reads for the first rung alone: a package that declares no drift has made no
-claim about the world past that, and this layer invents no persistence. A key that crosses
+claim about the world past that, and this package invents no persistence. A key that crosses
 nothing has one prediction to the ladder's end.
 """
 
@@ -42,7 +42,7 @@ from agent.ontology import BELIEF, DESIRE, PREDICTION, PUBLIC, RECORD, WANT, loc
 from agent.store import (Raw, bind, catalogue_of, construct, entry, forget_graph, graphs_of,
                          instant, quads, remember, rows, update)
 
-from .ontology import FEATURE, PROPERTY, RECORDED, RESULT, prediction_graph
+from .ontology import DRIFT, FEATURE, PROPERTY, RECORDED, RESULT, prediction_graph
 from .ranges import ranges_of, side
 
 log = logging.getLogger("predict")
@@ -50,18 +50,20 @@ log = logging.getLogger("predict")
 _RESULT = ox.NamedNode(RESULT)
 
 #  THE OBSERVATION IN HAND: the graph holding the node this sensor last made, its key, the
-#  stretch it stands for and its number — asked by kind and by pattern, never by name.
+#  stretch it stands for and its number — asked by the kernel's kind and by SOSA's pattern,
+#  never by name and never by a word of sensing's.
 _OBSERVATION_Q = """
 SELECT ?graph ?node ?feature ?property ?value ?taken ?from ?until WHERE {
-  GRAPH $cat { ?graph a sensing:ObservationGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
+  GRAPH $cat { ?graph a orexis:StateGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
                OPTIONAL { ?p orexis:end ?until } }
   GRAPH ?graph { ?node sosa:madeBySensor $sensor ; sosa:hasFeatureOfInterest ?feature ;
                  sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
                  OPTIONAL { ?node sosa:resultTime ?taken } } }
 ORDER BY DESC(?from) LIMIT 1"""
 
-#  EVERY DRIFT THE STORE HOLDS.
-_DRIFTS_Q = "SELECT ?drift ?construct WHERE { ?drift a sensing:Drift ; sh:construct ?construct } ORDER BY ?drift"
+#  EVERY DRIFT THE STORE HOLDS — the class spliced as the term it is, since no file of this
+#  package binds a label for its namespace and a query needs none.
+_DRIFTS_Q = "SELECT ?drift ?construct WHERE { ?drift a $drift ; sh:construct ?construct } ORDER BY ?drift"
 
 #  THE LADDER: how far past the observation's horizon the drifts are asked, in the timeline's
 #  seconds — an hour, five and a day. The scan, not the answer: a crossing inside a rung is
@@ -101,7 +103,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
     opens = datetime.fromisoformat(found["until"]) if found.get("until") else taken
     for old in rows(store, _LADDER_Q, (), cat=cat, graph=graph):
         forget_graph(store, old["g"])
-    drifts = remember(memo, ("drifts",), lambda: rows(store, _DRIFTS_Q, graphs_of(store, PUBLIC)))
+    drifts = remember(memo, ("drifts",), lambda: rows(store, _DRIFTS_Q, graphs_of(store, PUBLIC), drift=Raw(f"<{DRIFT}>")))
     ladder = [h for h in LADDER_S if taken + timedelta(seconds=h) > opens]
     if not ladder:
         return []

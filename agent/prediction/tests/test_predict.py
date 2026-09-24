@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from agent import clock
-from agent.sensing.predict import predict
+from agent.prediction.predict import predict
 from agent.store import rows
 
 CASES_DIR = Path(__file__).parent / "predict"

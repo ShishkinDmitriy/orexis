@@ -1,27 +1,34 @@
 --- case
 +++ expected
-@@ -89,6 +89,20 @@
+@@ -86,6 +86,27 @@
    :ontology a orexis:PublicGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> a orexis:Graph .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> a orexis:PredictionGraph .
-+  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
++  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:54:23+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> orexis:arrivedBy orexis:Recorded .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> orexis:beliefsOf :keeper .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zz> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> prov:wasDerivedFrom observed:zz_moisture .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> a orexis:Graph .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> a orexis:PredictionGraph .
-+  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T13:30:00+00:00"^^xsd:dateTime ] .
++  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:26:15+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:54:23+00:00"^^xsd:dateTime ] .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> orexis:arrivedBy orexis:Recorded .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> orexis:beliefsOf :keeper .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zz> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
 +  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> prov:wasDerivedFrom observed:zz_moisture .
++  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/2> a orexis:Graph .
++  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/2> a orexis:PredictionGraph .
++  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/2> dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T13:26:15+00:00"^^xsd:dateTime ] .
++  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/2> orexis:arrivedBy orexis:Recorded .
++  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/2> orexis:beliefsOf :keeper .
++  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/2> orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zz> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
++  <http://example.org/orexis/graph/predicted/keeper/zz_moisture/2> prov:wasDerivedFrom observed:zz_moisture .
    observed:zz_moisture a orexis:BeliefGraph .
    observed:zz_moisture a orexis:Graph .
    observed:zz_moisture a orexis:StateGraph .
-@@ -97,3 +111,22 @@
+@@ -93,3 +114,31 @@
    observed:zz_moisture orexis:arrivedBy orexis:Received .
    observed:zz_moisture orexis:beliefsOf :keeper .
  }
@@ -30,13 +37,22 @@
 +GRAPH <http://example.org/orexis/graph/predicted/keeper/zz_moisture/0> {
 +  orexis:obs_zz_moisture a sosa:Observation .
 +  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
-+  orexis:obs_zz_moisture sosa:hasSimpleResult 0.020052 .
++  orexis:obs_zz_moisture sosa:hasSimpleResult 0.100924 .
 +  orexis:obs_zz_moisture sosa:madeBySensor :probe .
 +  orexis:obs_zz_moisture sosa:observedProperty :moisture .
-+  orexis:obs_zz_moisture sosa:resultTime "2026-01-01T13:26:15+00:00"^^xsd:dateTime .
++  orexis:obs_zz_moisture sosa:resultTime "2026-01-01T12:53:40+00:00"^^xsd:dateTime .
 +}
 +
 +GRAPH <http://example.org/orexis/graph/predicted/keeper/zz_moisture/1> {
++  orexis:obs_zz_moisture a sosa:Observation .
++  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
++  orexis:obs_zz_moisture sosa:hasSimpleResult 0.020832 .
++  orexis:obs_zz_moisture sosa:madeBySensor :probe .
++  orexis:obs_zz_moisture sosa:observedProperty :moisture .
++  orexis:obs_zz_moisture sosa:resultTime "2026-01-01T13:22:30+00:00"^^xsd:dateTime .
++}
++
++GRAPH <http://example.org/orexis/graph/predicted/keeper/zz_moisture/2> {
 +  orexis:obs_zz_moisture a sosa:Observation .
 +  orexis:obs_zz_moisture sosa:hasFeatureOfInterest :zz .
 +  orexis:obs_zz_moisture sosa:hasSimpleResult 0.0 .

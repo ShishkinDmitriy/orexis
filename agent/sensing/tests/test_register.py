@@ -39,7 +39,7 @@ def world(monkeypatch, snapshots):
 
 
 def _read(store, snapshots, sensor, value: float) -> str:
-    graph = received(store, snapshots.ME, sensor, f'{{"value": {value}}}'.encode(), snapshots.NOW, horizon=900.0)
+    graph = received(store, snapshots.ME, sensor, f'{{"value": {value}}}'.encode(), snapshots.NOW)
     revise(store, graph, read=graphs_of(store, *KNOWN, at=snapshots.NOW))
     return graph
 
