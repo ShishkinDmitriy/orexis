@@ -1,21 +1,53 @@
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-#  THE SENSING LAYER'S OWN WORD — one, since the layer speaks the sensing package's vocabulary
-#  (`sensing:Drift`, its horizons, the side families) and needs no second spelling of any of
-#  it. What it adds is the kind of graph it keeps the instrument's word in.
+#  THE SENSING LAYER'S OWN WORDS. The layer speaks the sensing package's vocabulary — the drift
+#  and its horizons, what a sensor monitors, what a thing is of and which property — and adds
+#  the two it needs and the package does not have: the kind of graph the instrument's word is
+#  kept in, and the verdict the belief revision function draws about a reading (#785).
 
 #  A READING IS TWO GRAPHS. The graph the mind reads it from is a state graph: the observation
-#  node, its key — what it is of and which property — and the sides the domain says it is.
+#  node with its key — what it is of and which property — and the revisions drawn from it.
 #  This is the other: the result the instrument gave, the instant it gave it, which instrument
-#  and by what procedure. A belief, so every rule that wants the number — a drift, an envelope
-#  — reads it at any instant inside its period; NOT a state graph, so no possible world is
-#  forked from it and no digest of a world carries the number. Both hold for the same stretch,
-#  the reading's standing as the present.
+#  and by what procedure, stated on a node of its own that carries the same key. A belief, so
+#  every rule that wants the number — a drift, an envelope — reads it at any instant inside its
+#  period; NOT a state graph, so no possible world is forked from it and no digest of a world
+#  carries the number. Both hold for the same stretch, the reading's standing as the present.
 sensing:ResultGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "result graph" ;
     rdfs:seeAlso sosa:Result ;
-    rdfs:comment "What the instrument said of one reading: sosa:hasSimpleResult, sosa:resultTime, sosa:madeBySensor, sosa:usedProcedure — beside the state graph that holds the same node's key and sides, holding for the same period. Written by the sensing layer's `revise` and read by whatever needs the number; the mind reads the sides." .
+    rdfs:comment "What the instrument said of one reading: sosa:hasSimpleResult, sosa:resultTime, sosa:madeBySensor, sosa:usedProcedure — beside the state graph that holds the same key with the reading's revisions, holding for the same period. Written by the sensing layer's `revise` and read by whatever needs the number; the mind reads the revisions." .
+
+#  A REVISION IS THE VERDICT ABOUT ONE READING AGAINST ONE REGION, and one library class is the
+#  whole of it: no class is minted per subject, property or side, since every one of those is a
+#  link. A region is any range the world states for a property of a subject — SSN's operating
+#  and survival ranges, on the subject or on an instrument monitoring it — exactly as authored;
+#  the condition that carries the property's two bounds is what a revision points at. One
+#  revision per region that applies, written beside the reading it was drawn from, so it holds
+#  for the reading's period, is hashed as the mind's world and goes when the reading goes. A
+#  desire quantifies over them — no revision of my subject's property against an operating
+#  region whose side is below — and an action names the regions it cares about, so the
+#  intersection of the ranges is the judgment's and nobody computes it.
+sensing:Revision a owl:Class ;
+    rdfs:label "revision" ;
+    rdfs:comment "The belief revision function's verdict about one reading against one region: which subject and property the reading is of (sensing:ofSubject, sensing:ofProperty), the region it is compared with (sensing:ofRegion) and which side of it the reading is on (sensing:side). A blank node, as everything the mind reads is: a node is its content, so a revision a drift or an effect constructs is the same fact as one `revise` wrote." .
+
+sensing:ofRegion a owl:ObjectProperty ; rdfs:domain sensing:Revision ; rdfs:range ssn-system:Condition ;
+    rdfs:label "of region" ;
+    rdfs:comment "The region a revision compares the reading with: a condition of a range the world states — reached from the subject or from an instrument monitoring it by ssn-system:hasOperatingRange or ssn-system:hasSurvivalRange, then ssn-system:inCondition — saying ssn:forProperty which property and, by schema:minValue and schema:maxValue, its two bounds. An IRI, since a revision points at it from the reading's graph." .
+
+sensing:side a owl:ObjectProperty ; rdfs:domain sensing:Revision ; rdfs:range sensing:Side ;
+    rdfs:label "side" ;
+    rdfs:comment "Which side of the region the reading is on: below its minimum, inside both bounds inclusive, or above its maximum." .
+
+sensing:Side a owl:Class ; rdfs:label "side" ;
+    rdfs:comment "The three answers a comparison with a region has." .
+sensing:Below a sensing:Side ; rdfs:label "below" .
+sensing:Inside a sensing:Side ; rdfs:label "inside" .
+sensing:Above a sensing:Side ; rdfs:label "above" .

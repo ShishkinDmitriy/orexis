@@ -1,42 +1,49 @@
-"""`predict`: what the drifts say one reading will be, written as predictions — graphs of
-side sets holding during their windows, each starting where the classification probably
-changes (the-drift-is-sensings-and-its-result-is-predictions, #642, #783).
+"""`predict`: what the drifts say one reading will be, written as predictions — graphs holding
+during their windows, each carrying the key's node and its revisions against every region the
+drift's width reaches, and each starting where the classification probably changes
+(the-drift-is-sensings-and-its-result-is-predictions, #642, #783, #785).
 
 **A DRIFT IS A PACKAGE'S RULE OVER `$elapsed`** — what the world does to a reading while
 nobody acts — declared against this layer's word (`sensing:Drift`) with the horizons the
 package predicts at beside it. After every reading, for one key, this runs every drift the
 store holds at each horizon of the ladder past the reading's own horizon and writes one
 prediction per window: `orexis:PredictionGraph`, holding during its window, carrying the
-predicted node keyed exactly as the reading is and typed with every side the rule says it may
-be in. The rate, the spread and the instrument's noise are inside the package's text; what
-leaves it is sides, and where a rule types none the vocabulary entails the one the centre
-falls in — and then the centre goes: a prediction carries no number, no instant and no
-instrument, because the mind reads sides and a world that hashed a centre would be a new
-world at every reading.
+predicted observation keyed exactly as the reading is and one `sensing:Revision` per region
+and side the rule says the reading may be on by then. The rate, the spread and the
+instrument's noise are inside the package's text, and so is the comparison with each
+region's two bounds; what leaves it is revisions. A prediction carries no number, no instant
+and no instrument, because the mind reads revisions and a world that hashed a centre would be
+a new world at every reading.
 
 **THE CROSSING IS FOUND, NOT ROUNDED TO THE LADDER.** The ladder's windows are an hour, five
-and a day; a prediction for the window at which the set first differs from the reading's own
-sides would put the crossing at that window's START, which the drift may not reach for hours.
-So the first window whose sides differ is bisected — the drift run at instants between the
-last elapsed known to classify as the reading does and the first known not to — until the
-change is placed within a minute or a sixty-fourth of the window, and that instant is where
-the crossed prediction's period begins; what stood before it carries the reading's own sides
-to that instant. A crossing the ladder placed at one o'clock and the bisection at four is the
-case the suite holds (`a_widening_spread_crosses_later_than_the_ladder_says`), because a
-refinement is measured before it is believed. The crossed window's set is the union of what
-the drift says at the crossing and at the window's far end, since the set moves across it.
+and a day; a prediction for the window at which the revisions first differ from the reading's
+own would put the crossing at that window's START, which the drift may not reach for hours.
+So the first window whose revisions differ is bisected — the drift run at instants between
+the last elapsed known to classify as the reading does and the first known not to — until
+the change is placed within a minute or a sixty-fourth of the window, and that instant is
+where the crossed prediction's period begins; what stood before it carries the reading's own
+revisions to that instant. A crossing the ladder placed at one o'clock and the bisection at
+four is the case the suite holds (`a_widening_spread_crosses_later_than_the_ladder_says`),
+because a refinement is measured before it is believed. The crossed window's revisions are
+the union of what the drift says at the crossing and at the window's far end, since the set
+moves across it.
 
 **WHAT IT RETRACTS IS SAID ON THE ROW.** A prediction is a diff, and only a ground has
 applied it: the graph holds what it ADDS, and its catalogue row carries `orexis:retracts`, the
-`DELETE … WHERE` naming `GRAPH $state` that takes the key's standing node out of whatever
-ground the boundary is laid over — the key is this layer's, so the text is this layer's to
-write. The row also says which reading the prediction was derived from, so the next reading
-of the key drops the whole ladder before it writes its own.
+`DELETE … WHERE` naming `GRAPH $state` that takes the key's standing node and its revisions
+out of whatever ground the boundary is laid over — the key is this layer's, so the text is
+this layer's to write. The row also says which reading the prediction was derived from, so
+the next reading of the key drops the whole ladder before it writes its own.
 
 **A KEY NO DRIFT MOVES IS PREDICTED TO STAY AS IT READS** for the first window alone — its
-sides carried forward — and at no later one: a package that declares no drift has made no
-claim about the world past that, and this layer invents no persistence. A key no ladder
-reaches at all is predicted nowhere, and stands until its horizon.
+node and revisions carried forward — and at no later one: a package that declares no drift
+has made no claim about the world past that, and this layer invents no persistence. A key no
+ladder reaches at all is predicted nowhere, and stands until its horizon.
+
+**IDENTITY IS BY CONTENT.** The nodes a drift constructs are blank nodes, as the reading's
+are, so a predicted revision and the one the next reading is revised into are one fact where
+they say the same thing — which is what lets the present be identified among the worlds
+imagined, and a step be answered by a reading.
 """
 
 from __future__ import annotations
@@ -47,12 +54,12 @@ from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
-from agent.entail import entail
 from agent.ontology import BELIEF, DESIRE, PREDICTION, PUBLIC, RECORD, WANT, local_of
 from agent.store import (Raw, bind, catalogue_of, construct, entry, forget_graph, graphs_of,
                          instant, quads, remember, rows, update)
 
-from .ontology import (SIDES, FEATURE, PROPERTY, RECORDED, RESULT_WORDS, prediction_graph)
+from .ontology import (FEATURE, OF_PROPERTY, OF_REGION, OF_SUBJECT, PROPERTY, RECORDED, RESULT_WORDS,
+                       REVISION, SIDE, prediction_graph)
 
 log = logging.getLogger("predict")
 
@@ -61,18 +68,20 @@ _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 #  THE READING IN HAND: the graph of readings holding this key's node, the stretch it stands
 #  for, and the result beside it — asked by kind and by pattern, never by name.
 _READING_Q = """
-SELECT ?reading ?node ?from ?until ?value ?taken WHERE {
+SELECT ?reading ?from ?until ?result ?value ?taken WHERE {
   GRAPH $cat { ?reading a orexis:StateGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
                OPTIONAL { ?p orexis:end ?until } }
-  GRAPH ?reading { ?node sosa:hasFeatureOfInterest $feature ; sosa:observedProperty $property }
+  GRAPH ?reading { ?o sosa:hasFeatureOfInterest $feature ; sosa:observedProperty $property }
   OPTIONAL { GRAPH $cat { ?result a sensing:ResultGraph }
-             GRAPH ?result { ?node sosa:hasSimpleResult ?value ; sosa:resultTime ?taken } } }
+             GRAPH ?result { ?m sosa:hasFeatureOfInterest $feature ; sosa:observedProperty $property ;
+                             sosa:hasSimpleResult ?value ; sosa:resultTime ?taken } } }
 ORDER BY DESC(?from) LIMIT 1"""
 
-_RESULTS_Q = """
-SELECT ?result WHERE {
-  GRAPH $cat { ?result a sensing:ResultGraph }
-  GRAPH ?result { $node ?p ?o } }"""
+#  THE READING'S OWN REVISIONS: its side of every region, which the crossing is measured from.
+_REVISIONS_Q = """
+SELECT ?region ?side WHERE {
+  GRAPH $g { ?r a sensing:Revision ; sensing:ofSubject $feature ; sensing:ofProperty $property ;
+             sensing:ofRegion ?region ; sensing:side ?side } }"""
 
 #  EVERY DRIFT THE STORE HOLDS, with the horizons its package lists beside it.
 _DRIFTS_Q = """
@@ -85,15 +94,12 @@ SELECT ?drift ?construct (GROUP_CONCAT(STR(?h); SEPARATOR=" ") AS ?horizons) WHE
 _LADDER_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:PredictionGraph ; prov:wasDerivedFrom $reading } }"""
 
-#  WHAT OF A NODE'S TYPES IS A BAND: the three families and every member the world minted.
-_SIDES_Q = """
-SELECT DISTINCT ?b ?f WHERE { VALUES ?f { $families } ?b rdfs:subClassOf+ ?f }"""
+#  THE DIFF A PREDICTION MAKES: the key's standing node and its revisions go, whole.
+_RETRACTS = ("DELETE { GRAPH $state { ?x ?p ?v } } "
+             "WHERE { GRAPH $state { { ?x sosa:hasFeatureOfInterest <%s> ; sosa:observedProperty <%s> } "
+             "UNION { ?x a sensing:Revision ; sensing:ofSubject <%s> ; sensing:ofProperty <%s> } ?x ?p ?v } }")
 
-#  THE DIFF A PREDICTION MAKES: the key's standing node goes, whole.
-_RETRACTS = ("DELETE { GRAPH $state { ?o ?p ?v } } "
-             "WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <%s> ; sosa:observedProperty <%s> ; ?p ?v } }")
-
-#  THE INSTRUMENT'S WORDS OFF A PREDICTION, once the centre's side is drawn from them.
+#  THE INSTRUMENT'S WORDS OFF A PREDICTION, where a rule emitted any.
 _STRIP_U = """
 DELETE { GRAPH $g { ?s ?p ?o } } WHERE { GRAPH $g { ?s ?p ?o } VALUES ?p { $words } }"""
 
@@ -117,7 +123,7 @@ def predict(store: ox.Store, me: str, subject: str, observed_property: str, *,
     if found is None:
         log.debug("nothing read of %s of %s: nothing to predict", local_of(observed_property), local_of(feature))
         return []
-    reading, node = found["reading"], found["node"]
+    reading = found["reading"]
     taken = datetime.fromisoformat(found["taken"] if found.get("taken") else found["from"])
     opens = datetime.fromisoformat(found["until"]) if found.get("until") else taken
     for old in rows(store, _LADDER_Q, (), cat=cat, reading=reading):
@@ -127,10 +133,9 @@ def predict(store: ox.Store, me: str, subject: str, observed_property: str, *,
                      if taken + timedelta(seconds=float(h)) > opens})
     if not ladder:
         return []
-    sides = remember(memo, ("sides",), lambda: _sides(store))
-    results = [r["result"] for r in rows(store, _RESULTS_Q, (), cat=cat, node=node)]
-    held = [reading, *results]
-    own = _sides_of(store, reading, node, sides)
+    held = [reading] + ([found["result"]] if found.get("result") else [])
+    own = frozenset((r["region"], r["side"]) for r in rows(store, _REVISIONS_Q, (), g=Raw(f"<{reading}>"),
+                                                            feature=feature, property=observed_property))
     tokens = {"me": me, "subject": subject, "about": observed_property}
     run = lambda elapsed: _run(store, drifts, tokens, held, feature, observed_property, taken, elapsed, now, memo)
 
@@ -145,8 +150,8 @@ def predict(store: ox.Store, me: str, subject: str, observed_property: str, *,
         if triples:
             windows.append((start, closes, triples))
 
-    #  THE CROSSING: the first window whose sides differ from the reading's own, bisected.
-    crossed = next((i for i, (_, _, t) in enumerate(windows) if own and _typed(t, node, sides) != own), None)
+    #  THE CROSSING: the first window whose revisions differ from the reading's own, bisected.
+    crossed = next((i for i, (_, _, t) in enumerate(windows) if own and _revisions(t) != own), None)
     if crossed is not None:
         start, closes, triples = windows[crossed]
         lo = (start - taken).total_seconds()
@@ -156,7 +161,7 @@ def predict(store: ox.Store, me: str, subject: str, observed_property: str, *,
         while hi - lo > tolerance:
             mid = (lo + hi) / 2
             there = run(mid)
-            if not there or _typed(there, node, sides) == own:
+            if not there or _revisions(there) == own:
                 lo, before = mid, there
             else:
                 hi = mid
@@ -174,9 +179,8 @@ INSERT DATA {{
   {entry(store, graph, PREDICTION, RECORDED, me, start=start, end=closes)}
   GRAPH <{catalogue_of(store)}> {{
     <{graph}> prov:wasDerivedFrom <{reading}> ;
-              orexis:retracts {_literal(_RETRACTS % (feature, observed_property))} . }} }}""")
+              orexis:retracts {_literal(_RETRACTS % (feature, observed_property, feature, observed_property))} . }} }}""")
         store.extend(ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(graph)) for t in triples)
-        entail(store, graph, of=[node], memo=memo)
         update(store, bind(_STRIP_U, g=Raw(f"<{graph}>"), words=Raw(" ".join(f"<{w}>" for w in RESULT_WORDS))))
         written.append(graph)
     log.info("predicted %s of %s in %d window(s), the first opening %s%s",
@@ -190,8 +194,8 @@ INSERT DATA {{
 def _run(store, drifts, tokens: dict, held: list[str], feature: str, observed_property: str,
          taken: datetime, elapsed: float, now: datetime | None, memo) -> list:
     """Every drift over the reading in hand at `elapsed` seconds past it, as the triples about
-    this key's node — the world at the instant reached, and the reading whatever its period,
-    since the reading in hand is what the drift is about."""
+    this key — its observation node and its revisions — over the world at the instant reached,
+    and the reading whatever its period, since the reading in hand is what the drift is about."""
     lands = taken + timedelta(seconds=elapsed)
     known = remember(memo, ("known", lands), lambda: graphs_of(
         store, PUBLIC, BELIEF, RECORD, DESIRE, WANT, at=lands, now=now or taken))
@@ -206,48 +210,43 @@ def _run(store, drifts, tokens: dict, held: list[str], feature: str, observed_pr
         by_node: dict = {}
         for t in added:
             by_node.setdefault(t.subject, []).append(t)
-        for subject, ts in by_node.items():
+        for ts in by_node.values():
             facts = {t.predicate.value: t.object for t in ts}
-            if (getattr(facts.get(FEATURE), "value", None) == feature
-                    and getattr(facts.get(PROPERTY), "value", None) == observed_property):
+            keyed = (getattr(facts.get(FEATURE), "value", None) == feature
+                     and getattr(facts.get(PROPERTY), "value", None) == observed_property)
+            revised = (getattr(facts.get(OF_SUBJECT), "value", None) == feature
+                       and getattr(facts.get(OF_PROPERTY), "value", None) == observed_property)
+            if keyed or revised:
                 out.extend(ts)
     return out
 
 
-def _sides(store) -> dict:
-    """Every side class to the family it sits beneath, a family to itself: the members asked
-    of the store, the families known, since a BIND inside a UNION branch sees nothing bound
-    outside it (AGENTS.md, the traps)."""
-    out = {f: f for f in SIDES}
-    for r in rows(store, _SIDES_Q, graphs_of(store, PUBLIC), families=Raw(" ".join(f"<{f}>" for f in SIDES))):
-        out[r["b"]] = r["f"]
-    return out
-
-
-def _sides_of(store, graph: str, node: str, sides: dict) -> frozenset:
-    return _closed((q.object.value for q in store.quads_for_pattern(
-        ox.NamedNode(node), _RDF_TYPE, None, ox.NamedNode(graph))), sides)
-
-
-def _typed(triples, node: str, sides: dict) -> frozenset:
-    """The sides a set of triples types `node` with."""
-    return _closed((t.object.value for t in triples if t.predicate == _RDF_TYPE and t.subject.value == node), sides)
-
-
-def _closed(types, sides: dict) -> frozenset:
-    """A set of side types with each member's family beside it — so a rule that typed the
-    member alone and one that typed both classify alike, which is what the entailment writes."""
-    out = set()
-    for t in types:
-        if t in sides:
-            out.add(t)
-            out.add(sides[t])
-    return frozenset(out)
+def _revisions(triples) -> frozenset:
+    """The (region, side) pairs the revisions among `triples` state."""
+    by_node: dict = {}
+    for t in triples:
+        by_node.setdefault(t.subject, {})[t.predicate.value] = t.object.value
+    return frozenset((facts[OF_REGION], facts[SIDE]) for facts in by_node.values()
+                     if facts.get(_RDF_TYPE.value) == REVISION and OF_REGION in facts and SIDE in facts)
 
 
 def _union(first, second) -> list:
-    seen = {(t.subject, t.predicate, t.object) for t in first}
-    return list(first) + [t for t in second if (t.subject, t.predicate, t.object) not in seen]
+    """The triples of both — the observation node once, and every revision of either, a
+    revision being the same fact where it says the same thing."""
+    out = list(first)
+    said = {_content(t, first) for t in first}
+    for t in second:
+        if _content(t, second) not in said:
+            out.append(t)
+    return out
+
+
+def _content(triple, triples) -> tuple:
+    """A triple as its content: a blank node subject is what is said about it."""
+    s = triple.subject
+    if isinstance(s, ox.BlankNode):
+        s = tuple(sorted((t.predicate.value, str(t.object)) for t in triples if t.subject == triple.subject))
+    return (s, triple.predicate.value, str(triple.object))
 
 
 def _literal(text: str) -> str:

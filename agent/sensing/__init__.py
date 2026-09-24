@@ -2,20 +2,23 @@
 
 **THREE ACTS OVER THE STORE, AND NO WANT.** A reading arrives as a number, and this layer is
 what turns it into belief: `revise` writes the observation it is — keyed by subject and
-property, typed with the sides the domain declares, standing as the present until the
-horizon, the number beside it as the instrument's own word — `predict` runs every drift the
-domain packages declare over the reading in hand and writes what comes out as predictions,
-graphs of side sets holding during their windows, each starting where the classification
+property, with one REVISION per region the world states for it, which side of that region the
+reading is on, standing as the present until the horizon, the number beside it as the
+instrument's own word — `predict` runs every drift the domain packages declare over the
+reading in hand and writes what comes out as predictions, graphs holding during their windows
+carrying the revisions the drift's width reaches, each starting where the classification
 probably changes, and `surprise` says whether a reading contradicts what was predicted for
 its instant. It declares no desire, weighs nothing and mints nothing: what the mind does with
-a side and a crossing is the derivation's, and what to do about not knowing is the desire's
-own sentence (#783).
+a revision and a crossing is the derivation's, and what to do about not knowing is the
+desire's own sentence (#783, #785).
 
 **IT IS THE LAYER THAT WORKS WITH THE NUMBERS**, and the one that decides what is state. The
-mind's world is sides: the graph a reading is read from holds its key and its sides, and its
-number, its instant and its instrument are a graph of another kind beside it, holding for the
-same stretch, so the world a plan is placed in hashes the same for two readings the domain
-calls the same. Every drift and every envelope reads the number where it is.
+mind's world is revisions: the graph a reading is read from holds its key and its revisions,
+and its number, its instant and its instrument are a graph of another kind beside it, holding
+for the same stretch, so the world a plan is placed in hashes the same for two readings the
+regions call the same. Every drift and every envelope reads the number where it is. Nothing
+is minted per subject, property or side: a region is the range the world states, as authored,
+a revision is one library class, and every node the mind reads is blank and is its content.
 
 **WHAT ENDS BY THE CLOCK IS A GRAPH WITH A PERIOD.** A reading's standing as the present ends
 at the horizon this layer gives it, and what stands in for it then is what the drift
@@ -23,6 +26,7 @@ predicted for that window; unmeasured is silence past the last prediction, and t
 desire's to notice. Nothing here keeps a timer.
 
 The predecessor was a module (`packages/orexis-capability-sensing/module.py`) that kept the
-pipeline, the predictions, a freshness desire of its own, a timer per reading and the
-keeper's verdicts; the pipeline and the drift runner are what came across, as functions.
+pipeline, the predictions, a freshness desire of its own, a timer per reading, the keeper's
+verdicts and a class minted per subject, property and side; the pipeline and the drift runner
+are what came across, as functions.
 """

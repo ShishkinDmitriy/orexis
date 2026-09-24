@@ -2,9 +2,10 @@
 
 A case in `predict/` is a belief base with a reading in hand and the drifts the packages
 declare; the diff is the ladder of predictions the reading comes to — one graph per window,
-each carrying the key's node typed with the sides the drift reaches, holding during its
-window, its row saying which reading it was derived from and how it supersedes the standing
-node — and a first window split where the bisection places the crossing.
+each carrying the key's node and the revisions the drift's width reaches against every region
+the world states, holding during its window, its row saying which reading it was derived from
+and how it supersedes the standing node — and a first window split where the bisection places
+the crossing.
 """
 
 from __future__ import annotations
