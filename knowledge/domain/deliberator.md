@@ -431,3 +431,16 @@ on the deliberation worker and nowhere else. Where the work comes from, and why 
 in hand — everything the old welded bidder needed — submits nothing, because the whether
 genuinely is not the bidder's any more. Before the extraction no test could have made that fail,
 and it is the property a model member stands on: replace the answerer, touch no actor.
+
+# In Agent 0.2.0, the deliberator revises beliefs
+
+The 0.2.0 tree keeps the word for the B of BDI: `agent/belief/deliberator.py` is the belief
+package's pass, sequenced as the planner's and the executor's are. A writer that wrote a graph
+says so, and the pass revises every such source in turn, spending at most a budget of rule
+executions across them; a source whose rules settled leaves the queue, and one the budget cut
+short keeps what was concluded, its row saying it did not settle, and is continued by the next
+pass — or by a new deliberator over the same store, which re-queues every such row at
+construction. The search this page describes above is the 0.1.0 tree's, and in 0.2.0 it is the
+[planner](/domain/planner.md)'s; what a [revision](/domain/revision.md) is, and that it runs on
+the present only, is that page's.
+

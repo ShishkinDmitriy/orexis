@@ -1,0 +1,63 @@
+# one_rule_set_of_two_rules
+#
+# One sh:RuleSet carrying two rules, ordered: the first concludes the side, the second reads it in the
+# same iteration and concludes the pot is dry, since a later order sees an earlier order's
+# inferences and rules of ONE order do not see each other's.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sensed: <http://example.org/test#sensed/> .
+
+GRAPH :ontology {
+  belief:RevisionGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :zz :high 0.3 .
+  :zz :low 0.1 .
+  :zz a :Pot .
+}
+
+GRAPH :rules {
+  :sides a sh:RuleSet .
+  :sides rdfs:label "one rule set of two rules: the side, then what the side means for the pot" .
+  :sides sh:hasRule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?obs :side :Below } WHERE {
+      ?obs a :Observation ; :of ?s ; :reads ?v . ?s :low ?lo . FILTER(?v < ?lo) }""" ; sh:order 1 ] .
+  :sides sh:hasRule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?s :isDry true } WHERE { ?obs :of ?s ; :side :Below }""" ; sh:order 2 ] .
+}
+
+GRAPH :sensed {
+  :obs1 :of :zz .
+  :obs1 :reads 0.05 .
+  :obs1 a :Observation .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :sensed orexis:arrivedBy orexis:Received .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

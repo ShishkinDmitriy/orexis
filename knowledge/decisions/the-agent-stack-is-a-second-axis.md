@@ -94,9 +94,12 @@ infrastructure rather than with the code.
 - **The speech-act path has no vocabulary.** A message's performative and sender are implicit —
   the topic it arrived on, the signature it carries — and nothing refuses an observation minted
   from a peer's message. Filed as [#394](https://github.com/ShishkinDmitriy/orexis/issues/394).
-- ~~**The BRF is implicit.**~~ `packages/orexis-agent-deliberation/reviser.py` is the row: every reactive path marks a
+- ~~**The BRF is implicit.**~~ In 0.1.0, `packages/orexis-agent-deliberation/reviser.py` is the row: every reactive path marks a
   want there and the pass runs on the mind's own thread (#392). What it DECIDES is still thin —
-  dedupe by want, and nothing else — but where it decides is one place now.
+  dedupe by want, and nothing else — but where it decides is one place now. In Agent 0.2.0 the
+  row is `agent/belief/`: a change is written as any belief is, and the rules conclude its
+  [revisions](/domain/revision.md) beside it. What it decides is
+  nothing — any belief is accepted — and that is the decision.
 - **`sensor_unreachable(...)` is not modelled.** The freshness want covers not-knowing, which is
   what a planner can act on; whether the DISTINCTION between a quiet board and a dead link is
   worth a belief of its own is open, and `quiet()` says it in logs today.
