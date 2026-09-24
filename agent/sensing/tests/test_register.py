@@ -16,7 +16,7 @@ from agent.ontology import KNOWN
 from agent.sensing.ontology import ABOVE, BELOW, INSIDE, RULES_GRAPH
 from agent.sensing.received import received
 from agent.sensing.register import register
-from agent.store import graphs_of, rows, update
+from agent.store import graphs_of, rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 TEST = "http://example.org/test#"
@@ -51,7 +51,7 @@ def test_the_rules_graph_is_the_drafts_kind(world):
 
 def test_a_reading_under_the_floor_is_below_the_operating_range_and_inside_the_survival_one(world, snapshots):
     graph = _read(world, snapshots, PROBE, 0.05)
-    assert _sides(world, graph) == {("below", "zz.operating"), ("inside", "zz.survival"), ("inside", "probe.operating")}
+    assert _sides(world, graph) == {("below", "zamioculcas.operating"), ("inside", "zamioculcas.survival"), ("inside", "probe.operating")}
 
 
 def test_a_reading_inside_is_inside_every_range(world, snapshots):
@@ -61,20 +61,21 @@ def test_a_reading_inside_is_inside_every_range(world, snapshots):
 
 def test_a_reading_over_the_ceiling_is_above(world, snapshots):
     graph = _read(world, snapshots, PROBE, 0.5)
-    assert _sides(world, graph) == {("above", "zz.operating"), ("above", "zz.survival"), ("inside", "probe.operating")}
+    assert _sides(world, graph) == {("above", "zamioculcas.operating"), ("above", "zamioculcas.survival"), ("inside", "probe.operating")}
 
 
 def test_a_bound_is_inside(world, snapshots):
     graph = _read(world, snapshots, PROBE, 0.1)
-    assert ("inside", "zz.operating") in _sides(world, graph)
+    assert ("inside", "zamioculcas.operating") in _sides(world, graph)
 
 
-def test_a_samples_observation_is_judged_by_its_subjects_ranges(world, snapshots):
+def test_a_samples_observation_is_judged_by_its_subjects_ranges(monkeypatch, snapshots):
     """A probe mounted in a patch of the pot — `sosa:isHostedBy` a `sosa:Sample` that
-    `sosa:isSampleOf` it — keys its node by the patch and is judged by the pot's ranges."""
-    update(world, """PREFIX : <http://example.org/test#>
-DELETE DATA { GRAPH :world { :probe sosa:isHostedBy :zz } } ;
-INSERT DATA { GRAPH :world { :patch a sosa:Sample ; sosa:isSampleOf :zz . :probe sosa:isHostedBy :patch } }""")
+    `sosa:isSampleOf` it, the received case's world — keys its node by the patch and is judged
+    by the pot's ranges."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    world = snapshots.stand_in(Path(__file__).parent / "received" / "a_probes_sample_keys_the_node.trig")
+    register(world)
     graph = _read(world, snapshots, PROBE, 0.05)
     assert graph.endswith("/patch_moisture")
-    assert ("below", "zz.operating") in _sides(world, graph)
+    assert ("below", "zamioculcas.operating") in _sides(world, graph)

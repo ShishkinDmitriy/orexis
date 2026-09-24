@@ -34,22 +34,22 @@ GRAPH :ontology {
 
 GRAPH :world {
   :keeper a orexis:Agent .
-  :keeper orexis:actsFor :zz .
+  :keeper orexis:actsFor :zamioculcas .
   :keeper orexis:localId "keeper" .
   :patch a sosa:Sample .
-  :patch sosa:isSampleOf :zz .
+  :patch sosa:isSampleOf :zamioculcas .
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :patch .
   :probe sosa:observes :moisture .
   :probe ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:SEC ; schema:value 900 ] ] .
-  :zz :driesPerDay 0.5 .
-  :zz a :Pot .
-  :zz ssn-system:hasOperatingRange :zz.operating .
-  :zz ssn-system:hasSurvivalRange :zz.survival .
-  :zz.operating a ssn-system:OperatingRange .
-  :zz.operating ssn-system:inCondition [ schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture ] .
-  :zz.survival a ssn-system:SurvivalRange .
-  :zz.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
+  :zamioculcas :driesPerDay 0.5 .
+  :zamioculcas a :Pot .
+  :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
+  :zamioculcas ssn-system:hasSurvivalRange :zamioculcas.survival .
+  :zamioculcas.operating a ssn-system:OperatingRange .
+  :zamioculcas.operating ssn-system:inCondition [ schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture ] .
+  :zamioculcas.survival a ssn-system:SurvivalRange .
+  :zamioculcas.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
 }
 
 GRAPH :catalogue {

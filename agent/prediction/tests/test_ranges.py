@@ -6,7 +6,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from agent.prediction.ranges import ranges_of, side
-from agent.store import update
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 TEST = "http://example.org/test#"
@@ -24,10 +23,8 @@ def test_the_hosts_and_the_sensors_own_bounds_for_the_property(snapshots):
 
 
 def test_a_sensor_in_a_sample_gets_the_subjects_ranges(snapshots):
-    store = snapshots.stand_in(WORLD)
-    update(store, """PREFIX : <http://example.org/test#>
-DELETE DATA { GRAPH :world { :probe sosa:isHostedBy :zz } } ;
-INSERT DATA { GRAPH :world { :patch a sosa:Sample ; sosa:isSampleOf :zz . :probe sosa:isHostedBy :patch } }""")
+    """The probe mounted in a patch of the pot reaches the pot's ranges through the sample."""
+    store = snapshots.stand_in(Path(__file__).parent / "worlds" / "a_probe_in_a_patch.trig")
     assert ranges_of(store, PROBE, TEST + "moisture") == BOUNDS
 
 

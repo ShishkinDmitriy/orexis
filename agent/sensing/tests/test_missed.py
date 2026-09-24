@@ -17,11 +17,12 @@ import pytest
 from agent import clock
 from agent.sensing.missed import SILENT_AFTER, missed
 from agent.sensing.received import received
-from agent.store import rows, update
+from agent.store import rows
 
 CASES_DIR = Path(__file__).parent / "missed"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
+BOARD = Path(__file__).parent / "worlds" / "a_board_and_its_peripherals.trig"
 PROBE = "http://example.org/test#probe"
 CADENCE = timedelta(seconds=900)
 
@@ -84,10 +85,10 @@ def test_a_reading_ends_the_silence(pot, snapshots):
 
 
 def test_a_sensor_stating_no_frequency_is_never_missing(monkeypatch, snapshots):
+    """The board's probe states no frequency, so its reading never falls due."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    store = snapshots.stand_in(WORLD)
-    update(store, "DELETE WHERE { GRAPH ?g { ?probe ssn-system:hasSystemCapability ?c } }")
-    received(store, snapshots.ME, PROBE, b'{"value": 0.2}', snapshots.NOW)
+    store = snapshots.stand_in(BOARD)
+    assert received(store, snapshots.ME, PROBE, b'{"soil": {"moisture": 0.2}}', snapshots.NOW)
     assert missed(store, snapshots.ME, snapshots.NOW + timedelta(days=30)) == []
 
 

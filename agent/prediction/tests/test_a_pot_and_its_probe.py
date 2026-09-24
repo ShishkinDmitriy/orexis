@@ -59,7 +59,7 @@ def _reading(store, snapshots, probe, value, minutes=0):
 def test_a_reading_under_the_floor_is_revised_to_its_sides(pot, snapshots):
     store, probe = pot
     graph, _ = _reading(store, snapshots, probe, 0.05)
-    assert _sides(store, graph) >= {("below", "zz.operating"), ("inside", "zz.survival")}
+    assert _sides(store, graph) >= {("below", "zamioculcas.operating"), ("inside", "zamioculcas.survival")}
 
 
 def test_a_reading_inside_is_predicted_to_meet_the_floor_within_the_hour_and_each_stretch_has_its_side(pot, snapshots):
@@ -67,9 +67,9 @@ def test_a_reading_inside_is_predicted_to_meet_the_floor_within_the_hour_and_eac
     _, written = _reading(store, snapshots, probe, 0.25)
     opened = [(snapshots.NOW.fromisoformat(r["start"]) - snapshots.NOW).total_seconds() / 60 for r in rows(store, _PREDICTIONS_Q, ())]
     assert len(written) == 3 and abs(opened[1] - 54) <= 1 and abs(opened[2] - 83) <= 4, opened
-    assert ("inside", "zz.operating") in _sides(store, written[0])
-    assert {("below", "zz.operating"), ("inside", "zz.survival")} <= _sides(store, written[1])
-    assert {("below", "zz.operating"), ("below", "zz.survival")} <= _sides(store, written[2])
+    assert ("inside", "zamioculcas.operating") in _sides(store, written[0])
+    assert {("below", "zamioculcas.operating"), ("inside", "zamioculcas.survival")} <= _sides(store, written[1])
+    assert {("below", "zamioculcas.operating"), ("below", "zamioculcas.survival")} <= _sides(store, written[2])
 
 
 def test_a_second_reading_replaces_the_first_and_its_predictions(pot, snapshots):
@@ -78,4 +78,4 @@ def test_a_second_reading_replaces_the_first_and_its_predictions(pot, snapshots)
     graph, second = _reading(store, snapshots, probe, 0.09, minutes=16)
     standing = [r["g"] for r in rows(store, _PREDICTIONS_Q, ())]
     assert standing == second and len(first) == 3 and first[2] not in standing, "the first ladder went whole"
-    assert _sides(store, graph) >= {("below", "zz.operating"), ("inside", "zz.survival")}
+    assert _sides(store, graph) >= {("below", "zamioculcas.operating"), ("inside", "zamioculcas.survival")}

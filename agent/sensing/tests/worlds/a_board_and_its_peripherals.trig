@@ -1,0 +1,86 @@
+# a_board_and_its_peripherals
+#
+# THE WORLD THE PIPELINE IS HELD TO: one board in the pot carrying a thermometer, a hygrometer and the
+# moisture probe, publishing one document each takes its own value out of by its pointer; a gauge whose
+# bytes are CSV and whose raw value is in tenths, bound to a codec and a scaling declared here as
+# instances of sensing's families, the way a member package would declare its own; and a barometer bound
+# to a codec nothing implements; and a light sensor mounted nowhere, which has no key. Each states how often it reports in a unit of its own — minutes, an
+# hour by its UN/CEFACT code, bare seconds, one nothing converts — and the probe states none at all.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+GRAPH :ontology {
+  belief:RevisionGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:BeliefGraph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:StateGraph .
+}
+
+GRAPH :world {
+  :Cbor a sensing:Codec .
+  :Csv a sensing:Codec .
+  :Tenths a sensing:Scaling .
+  :barometer a sosa:Sensor .
+  :barometer sensing:decodedBy :Cbor .
+  :barometer sosa:isHostedBy :zamioculcas .
+  :barometer sosa:observes :airPressure .
+  :barometer ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:FortNight ; schema:value 1 ] ] .
+  :board a ssn:System .
+  :board ssn:hasSubSystem :hygro .
+  :board ssn:hasSubSystem :probe .
+  :board ssn:hasSubSystem :thermo .
+  :gauge a sosa:Sensor .
+  :gauge sensing:decodedBy :Csv .
+  :gauge sensing:readingPointer "/1" .
+  :gauge sensing:scaledBy :Tenths .
+  :gauge sosa:isHostedBy :zamioculcas .
+  :gauge sosa:observes :pressure .
+  :gauge ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:value 30 ] ] .
+  :hygro a sosa:Sensor .
+  :hygro sensing:readingPointer "/humidity" .
+  :hygro sosa:isHostedBy :zamioculcas .
+  :hygro sosa:observes :humidity .
+  :hygro ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode "HUR" ; schema:value 1 ] ] .
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :zamioculcas .
+  :keeper orexis:localId "keeper" .
+  :loose a sosa:Sensor .
+  :loose sosa:observes :light .
+  :probe a sosa:Sensor .
+  :probe sensing:readingPointer "/soil/moisture" .
+  :probe sosa:isHostedBy :zamioculcas .
+  :probe sosa:observes :moisture .
+  :thermo a sosa:Sensor .
+  :thermo sensing:readingPointer "/temperature" .
+  :thermo sosa:isHostedBy :zamioculcas .
+  :thermo sosa:observes :warmth .
+  :thermo ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:MIN ; schema:value 2 ] ] .
+  :zamioculcas a :Pot .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

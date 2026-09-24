@@ -1,52 +1,44 @@
 """The pipeline: bytes to a document by the codec, to a raw value by the pointer, to a quantity
-by the scaling — and every way it refuses, which is None and a warning, never a number."""
+by the scaling — over the pot's probe and over a board's peripherals, and every way it refuses,
+which is None and a warning, never a number."""
 
 from __future__ import annotations
 
-import pytest
-
 from pathlib import Path
+
+import pytest
 
 from agent.sensing.pipeline import (CODECS, DEFAULT_POINTER, SCALINGS, Codec, CodecError, JsonCodec,
                                     PointerError, Scaling, decode, resolve)
-from agent.store import update
 
-WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
+WORLDS = Path(__file__).parent / "worlds"
+POT = WORLDS / "a_pot_and_its_probe.trig"
+BOARD = WORLDS / "a_board_and_its_peripherals.trig"
 TEST = "http://example.org/test#"
 PROBE = TEST + "probe"
-
-
-def _bound(snapshots, *triples: str):
-    """The pot's world, with what the world says of the probe's bytes added — nothing, by
-    default, which is JSON, `/value` and the raw number."""
-    store = snapshots.stand_in(WORLD)
-    if triples:
-        update(store, "PREFIX : <http://example.org/test#>\nINSERT DATA { GRAPH :world { "
-               + " . ".join(f":probe {t}" for t in triples) + " } }")
-    return store
-
 
 #  ONE BOARD, THREE PERIPHERALS, ONE MESSAGE: what a DHT11 beside a moisture probe publishes.
 BOARD_MESSAGE = b'{"temperature": 21.5, "humidity": 0.61, "soil": {"moisture": 0.22}}'
 
 
+def test_json_then_the_default_pointer_then_identity(snapshots):
+    """The pot's probe states no binding at all, and reads as every board here speaks."""
+    assert decode(snapshots.stand_in(POT), PROBE, b'{"value": 0.183}') == 0.183
+
+
 def test_two_sensors_on_one_board_take_their_own_values_from_one_message(snapshots):
     """A board carrying several peripherals is one client publishing one document; each sensor
     is bound to its own pointer and reads its own number out of the same bytes."""
-    store = _bound(snapshots, 'sensing:readingPointer "/soil/moisture"')
-    update(store, """PREFIX : <http://example.org/test#>
-INSERT DATA { GRAPH :world {
-  :thermo a sosa:Sensor ; sosa:observes :warmth ; sosa:isHostedBy :zz ; sensing:readingPointer "/temperature" .
-  :hygro a sosa:Sensor ; sosa:observes :humidity ; sosa:isHostedBy :zz ; sensing:readingPointer "/humidity" } }""")
+    store = snapshots.stand_in(BOARD)
     assert decode(store, TEST + "thermo", BOARD_MESSAGE) == 21.5
     assert decode(store, TEST + "hygro", BOARD_MESSAGE) == 0.61
     assert decode(store, PROBE, BOARD_MESSAGE) == 0.22
 
 
 def test_a_member_from_elsewhere_serves_by_the_term_it_declares(snapshots, monkeypatch):
-    """What a codec or a scaling package would ship: a term declared as an instance of the
-    family, a class implementing the contract under that term, and a sensor bound to it —
-    found by the term, never by the class, so two pipelines run side by side."""
+    """What a codec or a scaling package would ship: a term the world declares as an instance
+    of the family, a class implementing the contract under that term, and a sensor bound to
+    it — found by the term, never by the class, so two pipelines run side by side."""
     class Csv(Codec):
         TERM = TEST + "Csv"
 
@@ -64,42 +56,27 @@ def test_a_member_from_elsewhere_serves_by_the_term_it_declares(snapshots, monke
 
     monkeypatch.setitem(CODECS, Csv.TERM, Csv)
     monkeypatch.setitem(SCALINGS, Tenths.TERM, Tenths)
-    store = _bound(snapshots, "sensing:scaledBy :Tenths")
-    update(store, """PREFIX : <http://example.org/test#>
-INSERT DATA { GRAPH :world {
-  :Csv a sensing:Codec . :Tenths a sensing:Scaling .
-  :gauge a sosa:Sensor ; sosa:observes :pressure ; sosa:isHostedBy :zz ;
-         sensing:decodedBy :Csv ; sensing:scaledBy :Tenths ; sensing:readingPointer "/1" } }""")
+    store = snapshots.stand_in(BOARD)
     assert decode(store, TEST + "gauge", b"10130,225") == 22.5
-    assert decode(store, PROBE, b'{"value": 2.5}') == 0.25
-    assert decode(store, PROBE, b"10130,225") is None, "the probe's bytes are JSON, whatever the gauge's are"
-
-
-def test_json_then_the_default_pointer_then_identity(snapshots):
-    assert decode(_bound(snapshots), PROBE, b'{"value": 0.183}') == 0.183
-
-
-def test_a_stated_pointer_takes_this_sensors_field_of_a_shared_message(snapshots):
-    store = _bound(snapshots, 'sensing:readingPointer "/soil/moisture"')
-    assert decode(store, PROBE, b'{"soil": {"moisture": 0.2, "temp": 21}}') == 0.2
+    assert decode(store, TEST + "thermo", b"10130,225") is None, "the thermometer's bytes are JSON, whatever the gauge's are"
 
 
 def test_a_missing_field_is_unread(snapshots, caplog):
     with caplog.at_level("WARNING", logger="pipeline"):
-        assert decode(_bound(snapshots), PROBE, b'{"temperature": 21}') is None
+        assert decode(snapshots.stand_in(POT), PROBE, b'{"temperature": 21}') is None
     assert "unread" in caplog.text
 
 
 def test_bytes_that_are_no_document_are_unread(snapshots, caplog):
     with caplog.at_level("WARNING", logger="pipeline"):
-        assert decode(_bound(snapshots), PROBE, b"\xff\xfe") is None
+        assert decode(snapshots.stand_in(POT), PROBE, b"\xff\xfe") is None
     assert "unread" in caplog.text
 
 
 def test_a_codec_nothing_here_implements_is_said(snapshots, caplog):
-    store = _bound(snapshots, "sensing:decodedBy :Cbor")
+    """The barometer is bound to a codec the world declares and nothing implements."""
     with caplog.at_level("WARNING", logger="pipeline"):
-        assert decode(store, PROBE, b"\xa1") is None
+        assert decode(snapshots.stand_in(BOARD), TEST + "barometer", b"\xa1") is None
     assert "codec nothing here implements" in caplog.text
 
 
