@@ -66,8 +66,10 @@ SELECT ?w WHERE {
                ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived } }"""
 
 
-def withdraw(store, wanted, now: datetime) -> list[str]:
-    """Drop every derived want standing at `now` that `wanted` does not name. Returns what went.
+def withdraw(store, wanted, now: datetime, *, reached=()) -> list[str]:
+    """Drop every derived want standing at `now` that `wanted` does not name, and every want in
+    `reached` however it arrived. Returns what went. `wanted` None judges no derived want, which
+    is how the Planner withdraws from the beliefs, where the derivation writes none.
 
     `wanted` IS `derive_wants`' ANSWER, and that is the whole contract between them. A want
     exists because its desire read unmet, so a want the decomposition no longer produces is
@@ -93,15 +95,18 @@ def withdraw(store, wanted, now: datetime) -> list[str]:
     with it, since the imaginarium outlives the pass and a weighing for a want that no longer
     exists is a row the frontier would still be handed.
     """
-    standing = {r["w"] for r in rows(store, _DERIVED_Q, ())}
-    stale = standing - set(wanted)
-    if not stale:
-        return []
+    standing = {r["w"] for r in rows(store, _DERIVED_Q, ())} if wanted is not None else set()
+    stale = standing - set(wanted or ())
+    #  A WANT REACHED IS SETTLED WHOEVER WROTE IT. One the world authored is no derivation's to
+    #  withdraw, so the sweep above never sees it; the pass that weighs it met in the present
+    #  ground is what settles it, and hands it here — the other half of a one-shot want's life.
+    done = set(reached) - stale
     gone = []
-    for uri in sorted(stale):
+    for uri in sorted(stale | done):
         _forget_want(store, uri)
         _forget_search(store, uri)
-        log.info("%s withdrawn: its desire no longer reads it unmet", uri.rsplit("#", 1)[-1])
+        log.info("%s withdrawn: %s", uri.rsplit("#", 1)[-1],
+                 "reached" if uri in done else "its desire no longer reads it unmet")
         gone.append(uri)
     return gone
 

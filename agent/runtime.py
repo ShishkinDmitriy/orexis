@@ -1,5 +1,5 @@
 """The runtime of Agent 0.2.0: one process, one agent, one world — booted from the world's files
-and run, pass by pass, until every desire is met.
+and run, pass by pass, until nothing is left to pursue.
 
 **A WORLD IS A DIRECTORY OF DOCUMENTS, AND EACH SAYS WHAT IT IS.** `boot` reads every document
 the kernel ships — its T-Box (`agent/ontology.ttl`), every package's ontology and rule set — and
@@ -24,13 +24,13 @@ are its beliefs from the first boot on (an-amendment-endows-what-it-grants).
 **A PASS PLANS, THEN WALKS WHAT IS DUE.** `Runtime.run` calls the planner's pass, which derives
 the wants, searches each and hands the plans to the executor; then ticks and drains the
 executor until nothing is due, which for a fictive action is the whole plan and for a real one
-is up to the first landing the world has not answered. **IT STOPS WHEN EVERY DESIRE IS MET**,
-which is when no want stands and no intention walks after a pass — a desire met mints no want,
-and a want met is withdrawn — so a world whose one want is one-shot, Hanoi, solves its tower and
-exits. Wants standing with nothing walking is one of two things: the budget cut the search
-short, which a plan's `planning:Exhausted` says and the next pass continues, or nothing this
-agent holds reaches the want, which is UNREACHABLE and is exited saying so rather than looped
-on. Nothing here is threaded: the executor's two doors are called in turn on this thread, and a
+is up to the first landing the world has not answered. **IT STOPS WHEN NO DESIRE IS HELD AND
+EVERY WANT IS REACHED.** A desire is universal and never ends, so an agent holding one runs for
+good; a want is one-shot and the pass withdraws it once met, so Hanoi's mover, holding one want
+and no desire, solves its tower and exits. Wants standing with nothing walking is one of two
+things: the budget cut the search short, which a plan's `planning:Exhausted` says and the next
+pass continues, or nothing this agent holds reaches the want, which such an agent exits as
+UNREACHABLE rather than looping on. Nothing here is threaded: the executor's two doors are called in turn on this thread, and a
 pass that moved nothing sleeps the poll before the next.
 
 **NOT YET WIRED**, and named so: sensing, prediction, the belief package's deliberator and the
@@ -63,12 +63,14 @@ DERIVED = OREXIS + "Derived"
 ONTOLOGY = OREXIS + "OntologyGraph"
 WORLD = OREXIS + "WorldGraph"
 PUBLIC = OREXIS + "PublicGraph"
+DESIRES = OREXIS + "DesireGraph"
 
 MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
 
 DOCUMENTS = (".ttl", ".trig")
 
 _ME_Q = "SELECT ?me WHERE { ?me orexis:localId $id }"
+_DESIRES_Q = "SELECT ?d WHERE { ?d a orexis:Desire } LIMIT 1"
 #  WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner — the kernel's,
 #  the packages' and the world's public graphs — and the closure derived from them.
 _FILES_Q = """
@@ -184,26 +186,43 @@ class Runtime:
         self.planner = Planner(beliefs, agent_id, executor=self.executor, **({"budget": budget} if budget else {}))
 
     def run(self, *, passes: int | None = None, poll_s: float = 1.0) -> str:
-        """Pass after pass until every desire is met (`met`), or nothing this agent holds
-        reaches a want that stands (`unreachable`), or `passes` ran out (`unfinished`)."""
+        """Pass after pass until nothing is left to pursue (`met`), or nothing this agent holds
+        reaches a want that stands (`unreachable`), or `passes` ran out (`unfinished`).
+
+        A DESIRE NEVER ENDS AND A WANT DOES. A desire is universal — it asks that something hold
+        whenever it is asked — so an agent holding one runs for as long as the process does, and
+        a pass with nothing to do waits the poll for the world to move. A want is one-shot and is
+        withdrawn once reached, so an agent holding wants and no desire, Hanoi's mover, exits
+        when every want is reached and nothing walks. Unreachable is an exit only for such an
+        agent: one holding a desire keeps watching, since the world may yet open a way."""
         n = 0
         while passes is None or n < passes:
             n += 1
             now = clock.now()
             self.planner.plan(now)
             standing, walking = self.planner.standing(now), self.executor.walking()
+            lasting = self._holds_a_desire()
             if not standing and not walking:
-                log.info("%s: every desire is met after %d pass(es)", self.id, n)
-                return MET
+                if not lasting:
+                    log.info("%s: every want is reached and no desire is held, after %d pass(es)", self.id, n)
+                    return MET
+                time.sleep(poll_s)
+                continue
             if not walking:
                 if self.planner.exhausted():
                     continue                    # the budget cut a search short; the next pass continues it
                 log.error("%s: %d want(s) stand and nothing this agent holds reaches them: %s",
                           self.id, len(standing), ", ".join(local_of(w) for w in standing))
-                return UNREACHABLE
+                if not lasting:
+                    return UNREACHABLE
+                time.sleep(poll_s)
+                continue
             if not self._walk(now):
                 time.sleep(poll_s)
         return UNFINISHED
+
+    def _holds_a_desire(self) -> bool:
+        return bool(rows(self.beliefs, _DESIRES_Q, graphs_of(self.beliefs, DESIRES)))
 
     def _walk(self, now) -> int:
         """Tick and drain until nothing more happens at this instant: how many steps were taken.
@@ -222,7 +241,7 @@ class Runtime:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="One agent of Agent 0.2.0, booted from a world's files and run until every desire is met.")
+    parser = argparse.ArgumentParser(description="One agent of Agent 0.2.0, booted from a world's files and run until nothing is left to pursue.")
     parser.add_argument("world", type=Path, help="the world's directory")
     parser.add_argument("agent", help="this agent's id — the one identifier a process is told")
     parser.add_argument("--volume", type=Path, help="where the store persists; in memory when absent")
