@@ -36,6 +36,25 @@ services:
       # its agent set before the broker bounced
       - orexis-greenhouse-mosquitto:/var/lib/mosquitto
 
+  simulation:
+    image: orexis:local
+    command: ["python", "-m", "simulation", "/app/world/greenhouse"]
+    environment:
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1889"
+    env_file:
+      # the credential of `bed_board`, the client that hosts what the world says no one built
+      - ./secrets/mqtt-bed_board.env
+    network_mode: host
+    userns_mode: "keep-id:uid=10001,gid=10001"
+    restart: unless-stopped
+    volumes:
+      - ./desires.ttl:/app/world/greenhouse/desires.ttl:ro
+      - ./world.ttl:/app/world/greenhouse/world.ttl:ro
+      - ../../agent:/app/agent:ro
+      - ../../domains:/app/domains:ro
+      - ../../simulation:/app/simulation:ro
+
   agent-grower:
     image: orexis:local
     command: ["orexis-agent", "/app/world/greenhouse", "grower", "--volume", "/app/state"]
@@ -68,6 +87,7 @@ services:
       # the Containerfile copies, which `tests/test_layout.py` holds the two lists to.
       - ../../agent:/app/agent:ro
       - ../../domains:/app/domains:ro
+      - ../../simulation:/app/simulation:ro
       - ../../assembly:/app/assembly:ro
       - ../../agent_old:/app/agent_old:ro
       - ../../packages:/app/packages:ro

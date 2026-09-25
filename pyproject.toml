@@ -96,7 +96,7 @@ build-backend = "setuptools.build_meta"
 # portions. That is what lets a twenty-second package be installed from another repository and
 # land in the same namespace as these twenty-one.
 where = ["."]
-include = ["assembly*", "agent*", "agent_old*", "onboarding*"]
+include = ["assembly*", "agent*", "agent_old*", "onboarding*", "simulation*"]
 
 # ---------------------------------------------------------------------------------------------
 # THE WORKSPACE. Twenty-one packages and this root are one resolution, so a checkout is set up

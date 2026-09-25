@@ -2,6 +2,7 @@
 @prefix climate: <http://example.org/orexis/climate#> .
 @prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix sim: <http://example.org/orexis/sim#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -12,7 +13,8 @@
 @prefix unit: <http://qudt.org/vocab/unit/> .
 
 <> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
-    owl:imports <../../domains/climate/ontology.ttl> , <../../domains/actuation/ontology.ttl> .
+    owl:imports <../../domains/climate/ontology.ttl> , <../../domains/actuation/ontology.ttl> ,
+                <../../domains/sim/ontology.ttl> .
 
 #  ONE BED, TWO PROPERTIES, TWO DEVICES, ONE DESIRE.
 #
@@ -30,15 +32,11 @@
 :broker a mqtt4ssn:Broker ;
     schema:url "mqtt://localhost:1889" , "mqtts://localhost:8889" .
 
-#  THE CLIENTS that host the devices — each a stand-in's identity on the bus, as a board's would be.
-:probe_client a mqtt4ssn:Client ; mqtt4ssn:hasClientID "moisture_probe" ;
-    mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :moisture_probe .
-:thermometer_client a mqtt4ssn:Client ; mqtt4ssn:hasClientID "thermometer" ;
-    mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :thermometer .
-:pump_client a mqtt4ssn:Client ; mqtt4ssn:hasClientID "pump" ;
-    mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :pump .
-:heater_client a mqtt4ssn:Client ; mqtt4ssn:hasClientID "heater" ;
-    mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :heater .
+#  THE BED'S BOARD: one client hosting the bed's four devices, as a real board hosts its
+#  peripherals — and one connection for the simulator that plays them.
+:bed_board a mqtt4ssn:Client ; mqtt4ssn:hasClientID "bed_board" ;
+    mqtt4ssn:isConnectedToBroker :broker ;
+    mqtt4ssn:hosts :moisture_probe , :thermometer , :pump , :heater .
 
 :grower a orexis:Agent , mqtt4ssn:Client ;
     orexis:localId "grower" ;
@@ -71,7 +69,9 @@
 :water_butt a climate:WaterSource ; rdfs:label "the water butt" ; climate:capacityL 20.0 .
 
 #  THE INSTRUMENTS, each reporting every ten minutes on a topic of its own.
+#  None of the four exists: the simulator plays them, from where each reading starts.
 :moisture_probe a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 0.40 ; sim:minValue 0.0 ; sim:maxValue 1.0 ] ;
     sosa:isHostedBy :bed ;
     sosa:observes climate:SoilMoisture ;
     mqtt4ssn:observesTopic :moisture_readings ;
@@ -82,6 +82,7 @@
     mqtt4ssn:hasFilterPattern "sensors/moisture_probe/reading" ; mqtt4ssn:matchesTopic :moisture_readings .
 
 :thermometer a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 21.0 ; sim:minValue -10.0 ; sim:maxValue 45.0 ] ;
     sosa:isHostedBy :bed ;
     sosa:observes climate:AirTemperature ;
     mqtt4ssn:observesTopic :thermometer_readings ;
@@ -94,6 +95,7 @@
 #  THE DEVICES. The pump pours ten millilitres a second and at most half a litre a command; the
 #  heater warms the bed two degrees an hour and runs at most an hour a command.
 :pump a actuation:Valve ;
+    sim:simulatedBy [ a sim:Model ] ;
     rdfs:label "the pump" ;
     actuation:actuates :bed ;
     actuation:actuatesProperty climate:SoilMoisture ;
@@ -106,6 +108,7 @@
     mqtt4ssn:hasFilterPattern "actuators/pump/command" ; mqtt4ssn:matchesTopic :pump_commands .
 
 :heater a climate:Heater ;
+    sim:simulatedBy [ a sim:Model ] ;
     rdfs:label "the heater" ;
     climate:warms :bed ;
     climate:warmsProperty climate:AirTemperature ;

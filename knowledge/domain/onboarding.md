@@ -46,7 +46,9 @@ nothing is signed — an agent trusts itself, and the broker's ACL admits only t
 devices' command topics — so `orexis-keygen` is not run; `orexis-mqtt` grants an agent the topics of the sensors on what it acts for and the
 command topics of the devices it holds, and a device client its own, and runs the broker on the
 `schema:url`s the world states on its `mqtt4ssn:Broker`; `orexis-compose` runs each agent as
-`orexis-agent <world> <id>`, told its broker through its environment. The series store, the dashboards and the firmware generator are 0.1.0's
+`orexis-agent <world> <id>`, told its broker through its environment, and — where the world marks
+systems `sim:simulatedBy` — its simulator, `python -m simulation <world>`, connected as the one
+client hosting them. The series store, the dashboards and the firmware generator are 0.1.0's
 still, and wait for the terrace.
 
 `orexis-firmware` is deliberately **not** in the umbrella. It writes into a firmware project rather

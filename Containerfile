@@ -79,6 +79,8 @@ COPY firmware/ firmware/
 # mounted at /app/world/<name>, so its `owl:imports <../../domains/...>` resolve to /app/domains.
 COPY agent/ agent/
 COPY domains/ domains/
+# THE SIMULATOR, a process of a world that plays the systems it says no one built.
+COPY simulation/ simulation/
 
 # An agent runs as nobody in particular. Its belief base is a file in its own volume, which
 # nothing outside this container can name — that is the isolation, and it needs no credential
