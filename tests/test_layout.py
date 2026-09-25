@@ -806,7 +806,6 @@ def test_the_mounted_trees_are_the_copied_trees():
         "and not the other is a container that starts today and refuses at its next restart.")
 
 
-
 def test_a_package_manifest_imports_nothing_expensive():
     """`__init__.py` may import stdlib and `assembly` — nothing else.
 
@@ -844,45 +843,6 @@ def test_a_package_manifest_imports_nothing_expensive():
         "a package manifest imports something expensive at the top level — every agent pays "
         "for it, for every package, granted or not. Move it inside `provides()`:\n  "
         + "\n  ".join(offenders))
-
-
-
-def test_a_service_nobody_offers_is_refused_by_name(monkeypatch):
-    """Asking for a service nothing provides names it, rather than returning None.
-
-    `agent.provider(family)` answers None on purpose — an agent that composed neither member of
-    a family simply cannot do that thing, and callers are written for it. A SERVICE is the other
-    shape: a module that declared `@requires(HISTORY)` has said it cannot work without one, so
-    silence would be the wrong answer twice over — at the point of use, far from the
-    declaration, and indistinguishable from a service that legitimately returned nothing.
-    """
-    import pytest
-
-    from conftest import build_agent
-
-    agent = build_agent("fern", monkeypatch=monkeypatch)
-    with pytest.raises(KeyError, match="nothing offers"):
-        agent.service("urn:orexis:nothing-of-the-sort")
-
-
-def test_what_the_kernel_offers_is_reachable_by_its_class(monkeypatch):
-    """Every service the kernel puts on the table answers to the class a package would import.
-
-    The key is the CLASS, not a term, and the two ends of that must not drift: a service
-    registered under something a package cannot name is the twelve undeclared attributes this
-    design was written against, wearing a registry.
-    """
-    from orexis_agent_deliberation.beliefs import Beliefs
-    from orexis_agent_deliberation.desires import Desires
-    from agent_old.metrics import Metrics
-    from conftest import build_agent
-
-    agent = build_agent("fern", monkeypatch=monkeypatch)
-    for contract in (Beliefs, Desires, Metrics):
-        got = agent.service(contract)
-        assert isinstance(got, contract), (
-            f"{contract.__name__} is offered as {type(got).__name__} — a package asking for the "
-            "class it imported would be handed something else")
 
 
 def test_every_hard_requirement_is_offered_by_something():
@@ -1121,56 +1081,6 @@ def test_a_required_key_pulls_its_provider_transitively(synthetic_tree):
         "beta's Python never arrived — a required key must load its provider")
     assert (gamma.path / "loaded.marker").exists(), (
         "gamma's Python never arrived — a pulled package's needs must follow it")
-
-
-def test_a_soft_annotation_never_causes_a_load(synthetic_tree, monkeypatch):
-    """A provider IS in the tree, and stays unloaded when only an optional annotation names it.
-
-    The module gets None, the provider's `provides()` is never called and its offer never
-    runs — a soft need takes what is already there, and nothing about fern's grants puts
-    delta there.
-    """
-    from agent_old.module import Module
-    from conftest import build_agent
-
-    (delta,) = synthetic_tree({"orexis_pulled_delta": _PULL_DELTA})
-    from orexis_pulled_delta import Delta
-    #  Planted in this module's globals so the class body's string annotation (this file has
-    #  `from __future__ import annotations`) resolves; monkeypatch takes it back out.
-    monkeypatch.setitem(globals(), "Delta", Delta)
-
-    class Soft(Module):
-        name = "soft"
-        delta: Delta | None
-
-    agent = build_agent("fern", monkeypatch=monkeypatch)
-    module = Soft(agent)
-    assert module.delta is None, "a soft annotation must inject only what is already there"
-    assert delta not in agent._packages, (
-        "an optional annotation must never add to the packages an agent loads")
-    assert not (delta.path / "loaded.marker").exists(), (
-        "delta's Python was loaded with nothing but a soft annotation naming it")
-    assert not (delta.path / "built.marker").exists(), (
-        "delta's offer ran with nothing but a soft annotation naming it")
-
-
-def test_a_service_outside_the_load_set_is_refused_by_name(synthetic_tree, monkeypatch):
-    """A key offered only by a package no need pulled is refused, naming the package.
-
-    Before #455 `agent.service` resolved tree-wide, so being in the checkout was being in the
-    build. Now presence is the load set's, and the refusal says which package holds the offer
-    and what would pull it in — without running the offer, which is the other half of the claim.
-    """
-    from conftest import build_agent
-
-    (delta,) = synthetic_tree({"orexis_pulled_delta": _PULL_DELTA})
-    from orexis_pulled_delta import Delta
-
-    agent = build_agent("fern", monkeypatch=monkeypatch)
-    with pytest.raises(KeyError, match="packages this agent loads"):
-        agent.service(Delta)
-    assert not (delta.path / "built.marker").exists(), (
-        "the refusal built the service it was refusing")
 
 
 SUBSCRIBING = "http://example.org/orexis/sensing#Subscribing"

@@ -120,7 +120,7 @@ So the pump is a **guarded** MQTT subscriber, with four properties the sensor ed
    [an-unconfirmed-dose-is-not-a-delivered-one](/decisions/an-unconfirmed-dose-is-not-a-delivered-one.md),
    so a dose that never happened looked exactly like one that did. Actuation matches the report
    to the command by `jti`, and a dose nobody confirms before its deadline — that dose's own
-   open-seconds plus `actuation:doseGraceS` — is logged and counted as `doses_unconfirmed`.
+   open-seconds plus the agent's dose grace (0.1.0's `doseGraceS`) — is logged and counted as `doses_unconfirmed`.
    **Silence is the device's refusal**, not an oversight: the valve publishes here after
    dispensing and says nothing when it rejects a command.
 
