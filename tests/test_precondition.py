@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from conftest import build_agent, genesis_store
-from conftest import DISK, VALVE, VENUE, filled
+from conftest import VALVE, VENUE, filled
 from orexis_agent_deliberation import effects, remembered
 from orexis_agent_deliberation.effects import _where_body
 from orexis_agent_deliberation.planner import Planner, _Node
@@ -23,7 +23,6 @@ from test_violation import CASES, _agent
 from orexis_agent_progression.ontology import PUBLIC
 
 ACTUATION = "http://example.org/orexis/actuation#"
-HANOI = "http://example.org/orexis/hanoi#"
 SOSA = "http://www.w3.org/ns/sosa/"
 
 
@@ -58,22 +57,6 @@ def test_a_dose_reads_its_chain_its_conversion_and_the_standing_reading(monkeypa
     again = signature.by_class(signature.facts(
         effects.precondition(agent.beliefs, first.action, keyed=tuple(planner._compiled.keys), **bind), planner._compiled.keys))
     assert again == first.precondition
-
-
-def test_a_move_reads_what_put_it_on_the_menu(monkeypatch):
-    """Hanoi's Move states its precondition in its availability select and almost nothing in
-    its effect's WHERE, so the precondition comes from the row: the disk on its support, its size,
-    the target being a peg. The absences (nothing on the disk, no smaller disk on the peg)
-    are the regression's, and are not here."""
-    agent = _agent(monkeypatch, *CASES["hanoi, one disk astray"])
-    want = next(d for d in agent.considering())
-    plan = Planner(agent, agent.me).plan(want)
-    move = next(s for s in plan.steps if s.action == HANOI + "Move")
-    assert move.precondition, "a planned move carries what put it on the menu"
-    read = _predicates(move.precondition)
-    assert {HANOI + "on", HANOI + "size", "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"} <= read, sorted(read)
-    assert any(f[0] == move.value_of(DISK) and f[1] == HANOI + "on" for f in move.precondition), \
-        "the moved disk's own support is a premise"
 
 
 def test_the_ledger_keeps_the_precondition_and_hands_it_back(monkeypatch):

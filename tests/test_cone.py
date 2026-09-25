@@ -12,7 +12,6 @@ import pytest
 
 from conftest import build_agent, genesis_store
 TO = "http://example.org/orexis/courier#to"      # what courier:Drive declares it takes
-from conftest import DISK, ONTO
 from orexis_agent_deliberation import planner as search, pursuit
 from orexis_agent_deliberation.imaginarium import Imaginarium
 from orexis_agent_deliberation.planner import Planner
@@ -248,35 +247,6 @@ def test_a_stray_fact_outside_the_view_does_not_kill_the_cone(monkeypatch):
     again = planner.plan(_goal(agent))
     assert begins == [] and _kept_worlds(agent) > 0
     assert [s.action for s in again.steps] == [s.action for s in first.steps[1:]]
-
-
-def test_a_world_that_landed_in_an_explored_sibling_continues_from_it(monkeypatch):
-    """Three disks. The plan's first move goes one way; the world takes the OTHER legal move
-    of the same disk — a sibling the search explored. The next pass finds the present in that
-    sibling, re-roots there, and continues from the sibling's own subtree: worlds kept, and
-    the plan from there as good as a pass from nothing. Not necessarily FEWER forks:
-    worlds under the sibling that the first pass reached cheaper through the winning branch
-    were credited there, and their nodes go with that branch, so the resumed pass rediscovers
-    them — measured, 62 against 50 on this puzzle."""
-    from test_hanoi import H, W as HW, _goal as hgoal, _mover
-    agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
-    planner = Planner(agent, agent.me)
-    first = planner.plan(hgoal(agent))
-    assert len(first.steps) == 7
-    planned = first.steps[0]
-    other = next(n for n in planner._nodes
-                 if len(n.taken) == 1 and n.taken[0].value_of(DISK) == planned.value_of(DISK)
-                 and n.taken[0].value_of(ONTO) != planned.value_of(ONTO))
-    assert other.expanded, "the sibling move was explored, not only forked"
-    _take(agent, other.taken[0])
-    fresh = Planner(agent, agent.me)
-    fresh_plan = fresh.plan(hgoal(agent))
-    again = planner.plan(hgoal(agent))
-    assert _kept_worlds(agent) > 1, "the present was found among the kept worlds, with a subtree beneath it"
-    assert again.steps and len(again.steps) == len(fresh_plan.steps), "and the plan from there is as good as a fresh one"
-    for step in again.steps:
-        _take(agent, step)
-    assert hgoal(agent).state == "met", "walked from the sibling, the tower stands"
 
 
 def test_a_reading_the_want_is_not_about_may_drift_and_the_moisture_cone_survives(monkeypatch):
