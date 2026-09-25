@@ -41,7 +41,7 @@ a `marketFor` pointing at the source, and a host who owns it. So:
 Both markets are then one mechanism. The plants' market derives from today's wiring
 unchanged — the same triples land in the derived graph with honest provenance
 ([who-put-the-fact-there](/decisions/who-put-the-fact-there.md)) — and the refill market
-self-assembles the moment its wiring exists: a `:city_mains` source plumbed to the barrel,
+self-assembles the moment its wiring exists: a city-mains source plumbed to the barrel,
 owned by a city agent that states its matching rule, meeting the want the region want arc created.
 Metered mains IS a market relationship, which is why the refill buys rather than Actuates;
 the Actuate rung ([#190](https://github.com/ShishkinDmitriy/orexis/issues/190)) stays for a

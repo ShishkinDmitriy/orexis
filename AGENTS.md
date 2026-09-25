@@ -862,7 +862,7 @@ it is a record wearing a bullet.
    the choir. `agent/` is the CONTAINER that assembles them and may import all three; nothing
    imports it from below, and a capability may import any layer's contract (see
    [a-layer-is-a-package-and-need-loads-it](knowledge/decisions/a-layer-is-a-package-and-need-loads-it.md)).
-   The order is spelled once, `LAYERS` in `tests/test_projects.py`, and `tests/test_layering.py`
+   The order is spelled once, `LAYERS` in `tests/test_projects.py`, and the 0.1.0 suite's layering test
    holds every arrow, finding each layer by its family.
    **A layer with words of its own owns a namespace** (#529) — `progression:` for the ledger,
    `deliberation:` for the trace and the budget, each declared in the layer package's own
@@ -870,7 +870,7 @@ it is a record wearing a bullet.
    carries its prefix, so a query says which layer it speaks for. What every layer and every
    package writes in — `orexis:Agent`, `orexis:Action`, a want's grammar, the choir's extension
    points — stays `orexis:`, and a file naming a HIGHER layer's prefix fails
-   `tests/test_layering.py` as an upward import would.
+   the layering test as an upward import would.
    A transport is also a capability the fact of its bus grants — how the agent reaches its
    society, connection, delivery loop and watchdog in the transport's module, reached through
    the choir (`subscriptions`, `handle`, `send`) — and the kernel has no mailbox (see
@@ -1146,8 +1146,8 @@ would never observe — and six queries carried `rdfs:subClassOf*` by hand to co
 twenty-five declared axioms. The entailments are now materialised into the store at genesis, and
 validation runs with inference off against that same graph. **Ask what a thing IS; do not walk a
 subclass path.** If the closure does not cover your case, widen `agent_old/inference.py` rather than
-working around it — `tests/test_inference.py` refuses a seventh hand-rolled walk, and separately
-fails if pyshacl ever entails something the closure does not. See
+working around it — the 0.1.0 suite's inference test refused a seventh hand-rolled walk, and separately
+failed if pyshacl ever entailed something the closure did not. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
 - **Name the graph CLASS, never an instance — and scope by MODALITY when you leave belief.**
@@ -1168,7 +1168,7 @@ fails if pyshacl ever entails something the closure does not. See
   result is not an error. Updates are the exception and must name their target; a `rules.ru`
   writes `$given` and `$derived`, or `$into(pkg:SomeGraphClass)` when its package owns a graph —
   a graph *class* is a T-Box term and genesis resolves it, so **no rule names a graph**.
-  `tests/test_provenance.py` refuses a narrowed SELECT. See
+  The 0.1.0 suite's provenance test refused a narrowed SELECT. See
   [who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
 - **An update's WHERE reads the unnamed default graph unless `USING` says otherwise**, and the
   engine's `query` the same unless `default_graph` is passed — so a rule text run raw against
@@ -1264,7 +1264,7 @@ fails if pyshacl ever entails something the closure does not. See
   over an IRI binds nothing — no column at all, measured — where `GROUP_CONCAT(STR(?x))`
   binds; `find_wants` reads a want's several abouts that way and `test_wants.py` pins it. It is the
   same family as the empty-result trap above, arriving through arithmetic and aggregation: measure an unfamiliar operation on a
-  literal before building a column on it, and pin what you measured — `tests/test_desires.py`
+  literal before building a column on it, and pin what you measured — the 0.1.0 suite's desires test
   does, so the day the engine grows the operation the guard says so.
 - **`build_agent` does not run the boot gate.** The fixture patches `validate_agent` out of
   the boot unless a test passes `validating=True`: the gate raises or passes and changes

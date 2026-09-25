@@ -83,7 +83,7 @@ that wants both simply asks, because every public graph is the default graph of 
 | `sensing:polls` a sensor whose `sensing:senseMode` is `sensing:PushProcedure` | `sensing:Listening` |
 | `market:bidsIn` a market | `market:Bidding` |
 | `market:hosts` a market | `market:Hosting` |
-| `actuation:hasActuator` anything that is a kind of `actuation:Actuator` | `actuation:Actuation` |
+| `actuation:hasActuator` anything that is a kind of `actuation:Actuator` | the Actuation capability (0.1.0) |
 
 Reflash a board from `Push` to `Scheduled`, re-seed, and its agent gains an interval to state —
 with no edit to the agent, because there is nothing about the agent to edit. See
@@ -254,7 +254,7 @@ Three details are load-bearing rather than packaging taste:
   volume, exclusively locked by its owner — nothing else can open it, including you.
 - **The world is mounted file by file, not as a directory.** An agent gets every public `*.ttl`
   and its **own** `beliefs/<id>.ttl`, and nothing else — it has no business reading what another agent
-  was authored to want. Only an agent that derived `actuation:Actuation` also gets
+  was authored to want. Only an agent that derived the 0.1.0 Actuation capability also got
   `secrets/host.key` and `secrets/clearing.key`; the generator runs the real derivation rules
   in memory to know which one that is. Verified: a plant agent's container contains exactly the
   public topology plus its own beliefs under `/app/world`, and no key.
@@ -308,7 +308,7 @@ lower: not a binding but the device itself.
 
 **An actuator is stood in for the same way, and the check is the point.** A simulated valve is
 an `actuation:Valve` carrying `sim:simulatedBy`, held by `actuation:hasActuator` like any other — so its
-supplier derives plain `actuation:Actuation` and co-signs every command exactly as it would for
+supplier derives the plain Actuation capability and co-signs every command exactly as it would for
 hardware. The stand-in verifies both signatures before it opens, holding the two PUBLIC keys and
 no private one.
 

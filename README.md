@@ -182,94 +182,58 @@ orexis-validate simulation  # build the world from its files and hold it to ever
 **There is no default world.** Every command takes one as a required argument and refuses rather
 than guessing, because a fallback puts a misconfigured agent on the same topics as the real one.
 
-[`world/`](world/) holds one directory per ratified world, each complete on its own. Four ship:
-`simulation` is the full society — plants, a supplier, a barrel market, valves and a meddler who
-waters pots unasked; `loner` is a gardener alone with a water butt and no market at all; `sensing`
-is the smallest one that produces a working agent, and the one that runs against a real board;
-`terrace` is that same shape taken outdoors — a planter bed, a FireBeetle 2 ESP32-E running
-`firmware/outdoor-sentinel` (the sentinel, copied, with a moisture probe and a BME280),
-monitoring only, and the first world whose agent only listens to a real board.
-[`domain/world`](knowledge/domain/world.md) is the guide to authoring your own — what a world
-is made of, what you state versus what gets derived, and how to check it.
+[`world/`](world/) holds one directory per world, each complete on its own, and each a directory
+of documents that say which graph they are. On Agent 0.2.0: `hanoi` and `courier`, puzzles an agent
+solves and then stops; `greenhouse`, a heated bed the grower keeps comfortable by dosing and
+heating it, played by the simulator; and `terrace`, a planter bed outdoors watched through a
+FireBeetle 2 ESP32-E running `firmware/outdoor-sentinel`, a real board. `sensing` and `tower` are
+still 0.1.0's. [`domain/world`](knowledge/domain/world.md) says what a world is made of, and
+[`domain/domain`](knowledge/domain/domain.md) where the vocabulary several worlds share lives.
 
 **There is nothing to seed and no store to provision.** A world is Turtle; each agent builds its
 own belief base from it at boot and keeps it in a volume of its own, which nothing else can
 open. Privacy is structural rather than enforced — see
 [`where-the-belief-base-lives`](knowledge/decisions/where-the-belief-base-lives.md).
 
-Each agent, at boot, loads the T-Box and the **world** (wiring), **derives its capabilities**
-from that wiring, and writes its **private beliefs** once if it has none. `orexis-validate` does
-the same thing without running anything, and prints what it derived:
-
-```
-fern       Linking, Subscribing, Reckoning, Storing, Bidding
-supplier   Linking, Listening, Storing, Bidding, PayAsBid, Hosting, Actuation
-```
-
-Then bring the society up. **Agents are not launched from a list — they are born from the
-world**, one process each:
+Bring a world up from the world — its broker's credentials and ACL, its series buckets, its
+dashboards and its compose file are all generated from it:
 
 ```bash
-orexis-onboard simulation                # credentials, ACL and the compose file FROM the world
-cd world/simulation && podman compose up -d
+orexis-mqtt greenhouse          # a credential per principal and the ACL, from the MQTT4SSN wiring
+orexis-influx greenhouse        # a bucket per agent, and a token that opens only it
+orexis-dashboards greenhouse    # a panel per sensor on what each agent acts for
+orexis-compose greenhouse       # the broker, the simulator and one container per agent
+cd world/greenhouse && podman compose up -d
 ```
 
-```
-born  fern       Bidding, Subscribing
-born  succulent  Bidding, Subscribing
-born  supplier   Hosting, Actuation
-born  tomato     Bidding, Subscribing
-```
-
-The roster is the ratified world, so a different world brings up a different society with no
-edit anywhere — `orexis-onboard sensing` yields exactly one agent that only watches, and
-`orexis-onboard loner` a single gardener that owns both ends of its own problem.
-`OREXIS_AGENT_ID=fern orexis-agent` is still the primitive underneath; the container merely sets
-that variable. Turn an agent up with `OREXIS_LOG_LEVEL=DEBUG`: every subsystem keeps a logger of
-its own — the search, the reviser, the ledger, the reactive loop, and one per agent and module —
-and they follow that one setting. What the planner considered is not in the log at all: it is
-written as a trace and read back with `orexis-ask`.
+Each agent is `orexis-agent <world> <id>`: it boots the world's documents, listens to the sensors on
+what it acts for, writes every reading and what its rules conclude of it, predicts what comes
+next, and plans and acts where a desire it holds reads unmet. An agent that holds only wants stops
+when every one is reached; one that holds a desire, or that a transport reaches, runs for good.
 
 **One container per agent, and that is the point.** On one filesystem every agent could read
-every other agent's beliefs. Now each agent's belief base is a file in its own volume, locked
-by its owner and unopenable by anything else — including you. Only an agent that holds an
-actuator (`actuation:hasActuator`) is given the signing keys. See
+every other agent's beliefs. Now each agent's belief base is a store in its own volume, locked
+by its owner and unopenable by anything else — including you. See
 [`domain/world`](knowledge/domain/world.md) §Deployment.
 
-Note what is *not* born this way: firmware. A board is hardware and is flashed by hand. What
-the model decides is what an **agent** is — which is why the same flashed board is a watcher
-in one world and a bidder in another.
-
-Each agent boots from its id alone: it reads the world (*what am I wired to, and what does
-that let me do?*), then its own beliefs (*what do I want, how closely should I watch?*), and
-runs exactly the modules its capabilities name. A round is a conversation — a plant announces
-its own verdict, the host offers, bidders answer with numbers only they can compute, clearing
-validates, claims come back, and the winner's own valve opens. Deterministic, no LLM.
-
-A bidder **looks before it bids** and sits out the round if its sensor does not answer in
-time, or if the newest reading is older than its own `sensing:maxReadingAgeS`. Owning the cadence
-must not mean bidding on a stale, comfortable number — and the limit is each agent's own
-belief, so a slow-living succulent may accept older data than a fern.
+Note what is *not* born this way: firmware. A board is hardware and is flashed by hand, from the
+`config.h` `orexis-firmware` generates out of the world it belongs to.
 
 For unattended operation see [`runbooks/run-a-world`](knowledge/runbooks/run-a-world.md)
 §Unattended — there are no orexis services, only podman's own restart handling.
 
 ## Running without hardware
 
-**A simulation is a world**, not a flag or a mode. `world/simulation` and `world/loner` need no
-board at all: what stands in for one is a container the compose generator writes, told by the
-world which subject it is pretending to be — so nothing is passed a flag, and a world cannot
-disagree with how it is actually running.
+**A simulation is a world**, not a flag or a mode. `world/greenhouse` needs no board at all: the
+simulator (`python -m simulation <world>`, one more service in its compose file) is a process of
+the world that plays every system the world marks `sim:simulatedBy`, from the world's own words —
+the topics from MQTT4SSN, how often a sensor reports, how the bed dries and what a dose or a
+heating does to it. See [`domain/domain`](knowledge/domain/domain.md).
 
-**The agent cannot tell.** A stand-in publishes on the same topics, speaks the same protocol and
-is reached through the same credential, so the mark that says a thing is stood in for
-(`sim:simulatedBy`) sits on the SYSTEM and never on the agent. An agent that could tell would be
-a second code path, and a second code path is what a simulation exists to avoid.
-
-A simulated world lives fast: `sim:timeScale 24` makes one bench hour a simulated day, so an
-hour shows a day's drying, a day's bidding and a day's watering. The agents are deliberately not
-told — they act in real time against a world that happens to age quickly. See
-[`a-stand-in-is-not-a-device`](knowledge/decisions/a-stand-in-is-not-a-device.md).
+**The agent cannot tell.** The simulator publishes on the same topics, speaks the same protocol and
+is reached through the same kind of credential, so the mark that says a thing is played
+(`sim:simulatedBy`) sits on the SYSTEM and never on the agent. An agent that could tell would be a
+second code path, and a second code path is what a simulation exists to avoid.
 
 ## 4. Inspect
 

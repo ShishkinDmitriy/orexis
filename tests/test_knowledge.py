@@ -283,6 +283,39 @@ def test_no_document_names_a_path_that_is_not_there():
     each one is a sentence that says "was" or "at the time" or draws a before/after.
     """
     absent_on_purpose = {
+        # RETIRED WITH 0.1.0 (2026-09-25): the switched-off suite's files, the loner and
+        # simulation worlds and the stand-ins the simulator replaced. The records narrate them as
+        # what 0.1.0 had and did; git history keeps every one.
+        "firmware/simulated-sensor/simulator.py",
+        "firmware/simulated-valve",
+        "tests/test_capabilities.py",
+        "tests/test_clearing.py",
+        "tests/test_clock.py",
+        "tests/test_clockless.py",
+        "tests/test_deliberation.py",
+        "tests/test_desires.py",
+        "tests/test_execution.py",
+        "tests/test_firmware.py",
+        "tests/test_hooks.py",
+        "tests/test_inference.py",
+        "tests/test_intention.py",
+        "tests/test_isolation.py",
+        "tests/test_kernel_namespaces.py",
+        "tests/test_layering.py",
+        "tests/test_legality.py",
+        "tests/test_linker.py",
+        "tests/test_provenance.py",
+        "tests/test_runtime.py",
+        "tests/test_shapes.py",
+        "tests/test_simulated_valve.py",
+        "tests/test_tower.py",
+        "tests/test_violation.py",
+        "tests/test_vocabulary.py",
+        "tests/test_w3c_descriptions.py",
+        "world/loner",
+        "world/simulation",
+        "world/simulation/compose.yaml",
+        "world/simulation/world.ttl",
         # one-tree-and-one-mechanic: the before/after diagram, and the argument that the old
         # name already spelled the new idea.
         "agent/capabilities/<name>/",

@@ -40,7 +40,7 @@ thought about, and the questions only surface once something concrete is on the 
   that alone decides whether its agent gets `sensing:Polling`, `sensing:Subscribing` or `sensing:Listening`
   (see [who-holds-the-clock](/decisions/who-holds-the-clock.md)).
 - "they share the barrel" → *who owns it?* — because owning the venue is what derives
-  `market:Hosting`, and owning the valves is what derives `actuation:Actuation`. A barrel with no owner
+  `market:Hosting`, and owning the valves is what derived the 0.1.0 Actuation capability. A barrel with no owner
   produces a market nobody hosts.
 - "the fern is thirstier than the succulent" → *what range does each need, and what will each
   merely survive?* — those are facts about the plants and go in `world.ttl`; what stays the
