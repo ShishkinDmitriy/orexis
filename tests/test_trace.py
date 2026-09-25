@@ -204,40 +204,6 @@ SELECT ?way ?text WHERE {{ GRAPH <{DELIBERATION_GRAPH}> {{
     return rows[0]["way"], rows[0].get("text")
 
 
-def test_a_shape_want_shows_the_select_it_was_judged_by_and_the_shape_stays_clean(monkeypatch):
-    """The courier's want is a shape the kernel compiles (#497); the text lived nowhere. Now
-    the trace shows the very select the pass ran — equal to what the compiler says of the
-    shape today, so a reader can re-run it — while the shape itself carries no `sh:sparql`:
-    written there it would be a second constraint the judge conjoins and reports twice."""
-    from rdflib import URIRef
-    from test_courier import _driver, _goal
-    from orexis_agent_deliberation.conformance import graph_from
-    from orexis_agent_progression.violation import unmet_select
-
-    agent = _driver(monkeypatch, "b1", "a1")
-    want = _goal(agent)
-    Planner(agent, agent.me).plan(want)
-
-    way, text = _judged(agent)
-    assert way == trace.COMPILED
-    public = graph_from(agent.beliefs, *agent.beliefs.graphs_of(PUBLIC))
-    shape = public.value(URIRef(want.uri), URIRef(f"{KERNEL}metWhen"))
-    #  MODULO VARIABLE NUMBERING. The compiler names variables in the order it meets the
-    #  shape's blank nodes, and rdflib hands a cbd's blank nodes in an order that differs
-    #  from graph to graph and run to run — the pass's `?v0` was the recompile's `?v1`, one
-    #  run in three under `-n0` and every run under xdist, with the text otherwise identical.
-    #  What the claim needs is the same select, not the same spelling of its variables.
-    same = lambda select: re.sub(r"\?v\d+", lambda m: "?v", select)
-    assert same(text) == same(unmet_select(public.cbd(shape), shape)), \
-        "the trace must show the select the pass actually ran, not a paraphrase of it"
-    assert "SELECT" in text
-    #  Never written INTO the shape, in any store the agent holds.
-    for query in (agent.beliefs.query_union, agent.desires.query):
-        assert not bindings(query(
-            f"SELECT ?c WHERE {{ <{shape}> sh:sparql ?c }}")), \
-            "the compiled select is an explanation in the trace, never a constraint on the shape"
-
-
 def test_a_derived_want_is_judged_by_its_compiled_shape_and_measured_apart(monkeypatch):
     """Two questions, two paths, and the trace names the one it answers. The gardener's
     moisture want is a shape the deduction emits, so whether a world MEETS it is the compiled

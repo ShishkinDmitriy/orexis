@@ -432,7 +432,9 @@ exists, and nothing would go red.
 package's own actions and their costs, and only their declarer can keep it, so the node a
 want points at — the estimate's and the avoided pattern's alike — is declared in the domain
 package's ontology beside the actions, and a world asserts the want and points at it
-(`world/courier/want.ttl` says `orexis:estimates courier:drivesOwed`). A world may still
+(the courier's asserted want said `orexis:estimates courier:drivesOwed`). In Agent 0.2.0 a world
+owns its vocabulary and the planner reads a met-test off the graph of desires, so the courier's
+shape and estimate sit beside its desire in `world/courier/desires.ttl`. A world may still
 write a select inline beside an asserted want, as the avoidance tests do, and the kernel
 reads both paths; the domains ship theirs. The step after this one is derivation — the
 package deduces the want from what the world states, as

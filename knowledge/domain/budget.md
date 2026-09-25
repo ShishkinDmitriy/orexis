@@ -29,8 +29,11 @@ number of seconds on different worlds, and that is the point of stating it in th
 sovereign says how much imagining, and the world says what imagining costs.
 
 **Leave it out where the default serves.** `Planner.BUDGET` is sized for a plant, whose pass
-forks a handful, and it solves two disks of hanoi but not three. `world/hanoi` states 64 and
-`world/courier` 128 because their solves need it; no plant world states one.
+forks a handful, and it solves two disks of hanoi but not three. In Agent 0.2.0 no world
+states one: the [runtime](/domain/runtime.md) is handed it (`--budget`) or takes the Planner's,
+and a search the budget cuts short is finished by the passes after, so a small budget costs
+latency and not the answer — Hanoi's tower and the courier's corner are held to that in their
+worlds' own tests.
 
 **It is not a depth.** A depth bounds how far ahead a plan may reach, which nothing needs — a
 plan is re-derived every pass and only its head is acted on — and under a best-first search

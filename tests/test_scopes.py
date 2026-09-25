@@ -17,7 +17,7 @@ from orexis_agent_deliberation.scope_actions import scopes, spans
 from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.ontology import PUBLIC
 
-WORLDS = ("loner", "simulation", "courier")
+WORLDS = ("loner", "simulation")
 
 
 def _parts(store):
@@ -41,7 +41,7 @@ def test_every_shipped_world_is_one_scope(world):
     assert len(actions_alone) == 1, "the actions join it without the derivations' help"
 
 
-@pytest.mark.parametrize("world", ("loner", "simulation", "courier"))
+@pytest.mark.parametrize("world", ("loner", "simulation"))
 def test_every_shipped_want_falls_inside_one_scope(world, monkeypatch):
     """The claim as each WANT sees it: a want's view — what it reads, plus what the actions
     relevant to it read and write — lies inside one scope, so its plan is one cone. True

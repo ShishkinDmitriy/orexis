@@ -612,6 +612,11 @@ it is a record wearing a bullet.
   names and one vocabulary graph before, and now every ontology and rule set is a graph of its
   own that a lived-in volume reads again at boot, so updating one is editing its file; and no
   `owl:Ontology` header, since nothing read one — a package's prose about itself is a comment.
+- **A pass weighs its grounds, and a candidate is weighed where it is taken** — the pass's own
+  loop weighed every unweighed pair, so the candidates a budget cut left untaken were weighed
+  and never offered to the expansion that takes them; the courier's corner at sixteen a pass
+  emptied its frontier short of the door and read EXHAUSTED for ever, while Hanoi's cuts had
+  happened to leave nothing behind.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1233,6 +1238,11 @@ it is a record wearing a bullet.
   names and one vocabulary graph before, and now every ontology and rule set is a graph of its
   own that a lived-in volume reads again at boot, so updating one is editing its file; and no
   `owl:Ontology` header, since nothing read one — a package's prose about itself is a comment.
+- **A pass weighs its grounds, and a candidate is weighed where it is taken** — the pass's own
+  loop weighed every unweighed pair, so the candidates a budget cut left untaken were weighed
+  and never offered to the expansion that takes them; the courier's corner at sixteen a pass
+  emptied its frontier short of the door and read EXHAUSTED for ever, while Hanoi's cuts had
+  happened to leave nothing behind.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads

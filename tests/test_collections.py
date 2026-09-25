@@ -25,7 +25,7 @@ from conftest import genesis_store
 #  One agent per shipped world that authors something to want, and they are deliberately
 #  different shapes: three ratify a WANT directly — standing, authored, handed to a search —
 #  and the fourth's are all deduced desires with wants derived under them at runtime.
-WORLDS = [("tower", "mover"), ("courier", "courier"), ("loner", "gardener")]
+WORLDS = [("tower", "mover"), ("loner", "gardener")]
 
 
 def _held(world: str, agent_id: str):

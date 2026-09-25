@@ -243,3 +243,28 @@ def test_scope_is_the_boots_act_and_writes_what_a_pass_reads(snapshots):
     Planner.scope(store)
     assert int(rows(store, scopes_q, ())[0]["n"]) >= 1, "the scopes are written again, from the actions"
     Planner(store, snapshots.AGENT).plan(snapshots.NOW)
+
+
+def test_a_candidate_a_cut_left_untaken_is_taken_by_the_next_pass(monkeypatch, snapshots):
+    """The courier's corner at sixteen candidates a pass: a cut leaves candidates of the world it
+    was expanding admitted and untaken, and the next pass must hand them to the expansion that
+    takes them. Weighed by the pass's own loop instead, they were never taken, the frontier
+    emptied short of the door and every pass after answered EXHAUSTED; now the passes reach the
+    eight-step delivery, having weighed what one pass with room weighs."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    whole, steps = _weighed(snapshots.stand_in(BENCH / "courier_corner.trig"), 128, estimate=True, snapshots=snapshots)
+    assert steps == 8
+    store = snapshots.stand_in(BENCH / "courier_corner.trig")
+    planner = Planner(store, snapshots.AGENT, executor=Executor(store, snapshots.AGENT), budget=16)
+    outcomes = []
+    for i in range(8):
+        at = snapshots.NOW + timedelta(minutes=i)
+        monkeypatch.setattr(clock, "now", lambda at=at: at)
+        planner.plan(at)
+        outcomes.append(_outcome(planner))
+        if outcomes[-1] == "Satisfied":
+            break
+    assert outcomes[-1] == "Satisfied" and len(outcomes) > 1, outcomes
+    assert _steps(planner) == 8
+    (im,) = planner.imaginaria.values()
+    assert int(rows(im, _WEIGHED_Q, ())[0]["n"]) == whole, "no candidate weighed twice, and none skipped"

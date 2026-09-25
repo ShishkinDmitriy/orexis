@@ -1,0 +1,66 @@
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:PublicGraph .    # this document is one graph, and this is what it is
+
+#  THREE ACTIONS, one ground instance per legal filling the state admits. FICTIVE, because the
+#  grid is its own physics: no instrument answers a drive, so the executor writes what the step
+#  predicted into the state itself, and that is the world moving. The texts declare `courier:`
+#  themselves, since the store's dictionary learns no world's namespace.
+
+courier:Drive a orexis:Action ;
+    rdfs:label "drive the van to a neighbouring cell" ;
+    orexis:takes courier:van , courier:to ;
+    execution:fictive true ;
+    orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT ?van ?to WHERE {
+            ?van courier:at ?here .
+            ?van a courier:Van .
+            ?here courier:x ?hx ; courier:y ?hy .
+            ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
+            FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
+        }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { GRAPH $state { $van courier:at ?old } }
+        WHERE  { GRAPH $state { $van courier:at ?old } }""" ;
+    sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { $van courier:at $to } WHERE { }""" .
+
+#  THE PICK DELETES: it removes where the parcel stood and puts it aboard, a different pair, so
+#  nothing replaces the fact that goes.
+courier:Pick a orexis:Action ;
+    rdfs:label "load a parcel standing where the van stands" ;
+    orexis:takes courier:parcel , courier:van ;
+    execution:fictive true ;
+    orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT ?parcel ?van WHERE {
+            ?van courier:at ?cell . ?parcel courier:at ?cell .
+            ?parcel a courier:Parcel .
+            ?van a courier:Van .
+        }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { GRAPH $state { $parcel courier:at ?cell } }
+        WHERE  { GRAPH $state { $parcel courier:at ?cell } }""" ;
+    sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { $parcel courier:carriedBy $van } WHERE { }""" .
+
+courier:Drop a orexis:Action ;
+    rdfs:label "set a carried parcel down where the van stands" ;
+    orexis:takes courier:parcel , courier:to ;
+    execution:fictive true ;
+    orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT ?parcel ?to WHERE {
+            ?parcel courier:carriedBy ?van . ?van courier:at ?to .
+            ?parcel a courier:Parcel .
+        }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { GRAPH $state { $parcel courier:carriedBy ?van } }
+        WHERE  { GRAPH $state { $parcel courier:carriedBy ?van } }""" ;
+    sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { $parcel courier:at $to } WHERE { }""" .
