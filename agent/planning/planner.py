@@ -69,7 +69,7 @@ import pyoxigraph as ox
 import rdflib
 
 from agent import clock
-from agent.ontology import DESIRE, PUBLIC, RECORD, WANT
+from agent.ontology import DESIRE, PUBLIC, RECORD, SHAPES, WANT
 from agent.store import Memo, Raw, bind, bindings, catalogue_of, graphs_of, query, rdflib_view, remember, rows, update
 
 from . import footprint
@@ -259,7 +259,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  fifth of a pass re-reading them, measured.
             #  THE SHAPES, CROSSED ONCE PER SCOPE and after the derivation, under the memo's
             #  key so `weigh` finds the same crossing.
-            shapes = memo.get(("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD)))
+            shapes = memo.get(("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
             for want in _of_scope(store, shapes, self.uri, _scope, scopes, at):
                 if want in walking:
                     continue                # a want a plan is walking is not planned again

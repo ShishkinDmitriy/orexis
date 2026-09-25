@@ -4,16 +4,17 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+<> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
+    owl:imports <actions.ttl> , <shapes.ttl> .
 
-#  THE COURIER GRID.
-#  The courier's words, owned by the world that poses the delivery. A van on a grid of cells is
-#  the smallest world whose search NEEDS guiding: Hanoi's want is binary, so no world is nearer
-#  than another, and here a van two cells from a parcel is closer than one five cells away, in
-#  the unit a drive costs. It is also the world whose effects DELETE: picking a parcel up removes
-#  where it stood and puts nothing in its place. The cells, the van and the parcel are the
-#  world's, in world.ttl; where the van and the parcel stand is posed in state.ttl; what
-#  delivered means and how far it is are the desire's, in desires.ttl.
+#  THE COURIER GRID, A DOMAIN.
+#  The courier's words, shared by every world that poses a delivery: a cell and its coordinates,
+#  a van, a parcel and where it is owed, where each stands and what an action is filled with.
+#  Beside this document the domain ships its three actions (actions.ttl) and what delivered means
+#  and how far it is (shapes.ttl), which this document imports. The cells, the vans and the
+#  parcels are a world's, since how big the grid is IS the puzzle; where they stand is a world's
+#  state. It is the smallest domain whose search NEEDS guiding — a van two cells from a parcel is
+#  closer than one five cells away, in the unit a drive costs — and the one whose effects DELETE.
 
 #################  The grid  #################
 

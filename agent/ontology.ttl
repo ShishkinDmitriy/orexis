@@ -84,6 +84,12 @@ orexis:PredictionGraph
     rdfs:label "Prediction graph" ;
     rdfs:comment "A PREDICTION: a graph holding during the window it predicts for, carrying what a package expects a reading to be by then — the predicted reading keyed exactly as the present's is, typed with every band it may be in, a centre where the package has one — written by sensing from the drifts after every reading, one graph per horizon (the-drift-is-sensings-and-its-result-is-predictions, #642). A KIND OF ITS OWN to the doors: `query_at` hands a reader the predictions holding at the instant asked about beside public knowledge and the records holding then; the agent's own records never list them, no validation reads them, and no plan carries them into its imaginarium until the search reads predictions (#643). The first is the one the next reading is held to, its window the next reading's; the window closing with no reading is staleness. Typed in the classification when written, with a period in the periods table, as a round is." .
 
+orexis:ShapesGraph
+    a owl:Class ;
+    rdfs:subClassOf orexis:PublicGraph ;
+    rdfs:label "Shapes graph" ;
+    rdfs:comment "What a desire's met-test and estimate point at: the SHACL shapes a domain declares for what its words mean when wanted — delivered, solved — and the selects that say how far a world still is, in the unit its actions cost. SHACL's own notion of a shapes graph, typed so that the planner crosses these beside the graphs of desires, wants and records, which is where it reads a met-test, without crossing every vocabulary: all nine ontology graphs cost thirty times the crossing, measured. Public, since what a word means is everyone's; a domain ships one, and a world that authors a shape of its own may put it here or beside its desire." .
+
 orexis:PublicGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;

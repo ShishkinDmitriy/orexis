@@ -4,17 +4,17 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+<> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
+    owl:imports <actions.ttl> , <shapes.ttl> .
 
-#  TOWER OF HANOI.
-#  The puzzle's words, owned by the world that poses it. Tower of Hanoi is the smallest world
-#  whose whole point is the search: a classical planning domain that is an ontology, one move and
-#  no Python, and in Agent 0.2.0 it is a WORLD — this directory — rather than a package, because a
-#  vocabulary specific to one world belongs with that world. The pegs are the puzzle's invariant
-#  and are declared here; the disks are the world's and are declared in world.ttl; where each disk
-#  rests is runtime state, posed in state.ttl and rewritten by the move. What solving means and
-#  how far it is are the desire's, in desires.ttl, since the met-test is read from the graph of
-#  desires.
+#  TOWER OF HANOI, A DOMAIN.
+#  The puzzle's words, shared by every world that poses it: the pegs, what a disk is and what it
+#  rests on, and what a move is filled with. Beside this document the domain ships its one move
+#  (actions.ttl) and what solving means and how far it is (shapes.ttl), which this document
+#  imports, so a world that imports this has the whole domain. The disks are a world's, since how
+#  many there are is the world's whole authorship of an instance of the puzzle; where each rests
+#  is a world's state. Tower of Hanoi is the smallest domain whose whole point is the search: an
+#  ontology, one move and no Python.
 
 #################  The board  #################
 

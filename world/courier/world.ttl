@@ -2,8 +2,10 @@
 @prefix courier: <http://example.org/orexis/courier#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 
-<> a orexis:WorldGraph .    # this document is one graph, and this is what it is
+<> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
+    owl:imports <../../domains/courier/ontology.ttl> .    # the domain this world poses
 
 #  A 4x4 grid, one van, one parcel owed at the far corner. The state is where the van is times
 #  where the parcel is or that it is aboard, 16 x 17 = 272 worlds, and a world can be nearer the

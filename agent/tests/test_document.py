@@ -9,7 +9,7 @@ import pyoxigraph as ox
 import pytest
 
 from agent.ontology import CATALOGUE_GRAPH, OREXIS
-from agent.store import DocumentRefused, document, graphs_of, kinds_in, put_document, rows, update
+from agent.store import DocumentRefused, document, graphs_of, imports_of, kinds_in, put_document, rows, update
 
 PREFIXES = "@prefix orexis: <http://example.org/orexis#> .\n@prefix dcterms: <http://purl.org/dc/terms/> .\n"
 _ROWS_Q = "SELECT ?p ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g ?p ?o } }"
@@ -91,3 +91,16 @@ def test_a_trig_row_about_no_graph_the_document_holds_is_refused(tmp_path):
     path = _write(tmp_path, "stray.trig", "<#g> a orexis:StateGraph .\n<urn:x> <urn:y> <urn:z> .\n<#g> { <urn:a> <urn:b> <urn:c> . }\n")
     with pytest.raises(DocumentRefused, match="no graph it holds"):
         document(path)
+
+
+def test_an_import_by_relative_iri_names_the_graph_the_imported_file_is_loaded_under(tmp_path):
+    """`owl:imports <../domain/ontology.ttl>` on the document resolves to the imported file's own
+    IRI, which is the name `put_document` gives its graph — so the import names the graph it
+    brings, and it is a row about the graph, in the catalogue, not a fact in it."""
+    (tmp_path / "domain").mkdir(); (tmp_path / "world").mkdir()
+    imported = _write(tmp_path / "domain", "ontology.ttl", "<> a orexis:OntologyGraph .\n")
+    path = _write(tmp_path / "world", "world.ttl", "@prefix owl: <http://www.w3.org/2002/07/owl#> .\n"
+                  "<> a orexis:WorldGraph ; owl:imports <../domain/ontology.ttl> .\n")
+    doc = document(path)
+    assert imports_of(doc) == [imported.resolve().as_uri()]
+    assert kinds_in(document(imported)) == {imported.resolve().as_uri(): {OREXIS + "OntologyGraph"}}

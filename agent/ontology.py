@@ -106,6 +106,7 @@ PREDICTION = OREXIS + "PredictionGraph"  # what is expected, holding during its 
 RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period
 DESIRE = OREXIS + "DesireGraph"          # desires
 WANT = OREXIS + "WantGraph"              # wants
+SHAPES = OREXIS + "ShapesGraph"          # what a met-test and an estimate point at
 #  What a RULE is answered over — a met-test, a precondition, an availability select, an
 #  effect: everyone's knowledge, what is, the records, the desires and the wants. Stated once
 #  here and named at every runner, so a runner says what it hands a text.

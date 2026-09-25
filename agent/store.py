@@ -555,6 +555,17 @@ def kinds_in(doc: ox.Store) -> dict[str, set[str]]:
     return out
 
 
+_OWL_IMPORTS = "http://www.w3.org/2002/07/owl#imports"
+
+
+def imports_of(doc: ox.Store) -> list[str]:
+    """The documents a document imports, `owl:imports` on a graph it holds — sorted. A world
+    imports a domain by the domain document's relative IRI, which resolves to that file's
+    `file:` IRI, the name its graph is loaded under: the import names the graph it brings."""
+    return sorted({q.object.value for q in doc.quads_for_pattern(None, ox.NamedNode(_OWL_IMPORTS), None, ox.DefaultGraph())
+                   if isinstance(q.object, ox.NamedNode)})
+
+
 def put_document(store, doc: ox.Store, owner: str | None = None, graphs=None) -> list[str]:
     """Put a document's graphs in the store, each replacing any graph of its name, and its rows
     in the catalogue with the arrival and, where `owner` is given, whose it is. `graphs`, where

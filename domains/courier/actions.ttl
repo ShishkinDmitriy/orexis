@@ -9,7 +9,7 @@
 #  THREE ACTIONS, one ground instance per legal filling the state admits. FICTIVE, because the
 #  grid is its own physics: no instrument answers a drive, so the executor writes what the step
 #  predicted into the state itself, and that is the world moving. The texts declare `courier:`
-#  themselves, since the store's dictionary learns no world's namespace.
+#  themselves, since the store's dictionary learns no domain's namespace.
 
 courier:Drive a orexis:Action ;
     rdfs:label "drive the van to a neighbouring cell" ;
