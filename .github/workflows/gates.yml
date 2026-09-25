@@ -37,11 +37,11 @@ concurrency:
 
 #
 # IN PARALLEL JOBS, since the sovereign asked whether the packages' tests could run apart from
-# the rest: the worlds and the two file gates in one job, the root tests in four shards of
-# files dealt round-robin so the shards are even, the packages' own tests in one more. Each
-# job installs on a runner of its own — a minute, cached — and the wall time is the slowest
-# shard's rather than the sum; the minutes are free on a public repository. One job in sequence
-# took seven and a half minutes on the same runner.
+# the rest: the worlds and the two file gates in one job, the repo's four gates in another, the
+# packages' own tests in a third and Agent 0.2.0's suite in a fourth. Each job installs on a
+# runner of its own — a minute, cached — and the wall time is the slowest job's rather than the
+# sum; the minutes are free on a public repository. The 0.1.0 suite ran here too, `tests/` in
+# four shards dealt round-robin, until 2026-09-25 — the `repo` job says why it is off.
 
 jobs:
   worlds:
@@ -93,13 +93,16 @@ jobs:
       - name: OKF bundle
         run: ./tools/validate-okf.sh knowledge
 
-  tests:
+  repo:
+    # THE REPO'S OWN GATES: the four files in `tests/` that read the whole tree rather than the
+    # 0.1.0 kernel — the bundle (`test_knowledge`), the layout of both trees (`test_layout`),
+    # the prefixes every query speaks (`test_store`) and each distribution's dependencies
+    # against its imports (`test_projects`). The rest of `tests/` is the 0.1.0 suite, SWITCHED
+    # OFF here since 2026-09-25 by the sovereign's decision: 0.1.0 is not started any more, and
+    # its packages are amended into Agent 0.2.0's domains rather than copied, which breaks what
+    # the old suite built on. `pytest tests` still runs it by hand.
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -110,12 +113,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]" $(ls -d packages/*/)
-      # THE ROOT TESTS IN FOUR SHARDS, the files dealt round-robin — the first, fifth, ninth
-      # to the first shard and so on — so a slow file's neighbours land elsewhere; every core
-      # of the runner inside each. The Pi's recipe is two halves, because the whole suite at
-      # `-n auto` was killed for memory there; a quarter at every core is well inside 16 GB.
-      - name: pytest, shard ${{ matrix.shard }} of 4
-        run: pytest -q -n auto $(ls tests/test_*.py | awk 'NR % 4 == ${{ matrix.shard }} % 4')
+      - name: pytest, the repo's gates
+        run: pytest -q -n auto tests/test_knowledge.py tests/test_layout.py tests/test_store.py tests/test_projects.py
 
   packages:
     runs-on: ubuntu-latest
@@ -131,13 +130,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]" $(ls -d packages/*/)
       # The packages' own tests are named, not reached through `pytest tests`: a package
-      # carries its own beside its code, and the shards above split the root tree alone.
+      # carries its own beside its code, and the `repo` job above names four files of the
+      # root tree alone.
       - name: pytest, the packages' own
         run: pytest -q -n auto packages
   agent:
-    # Agent 0.2.0: `agent/` at the repo root, the tree `testpaths` names — its own suite, its
-    # bench's asserted plans included. The old suite above is `tests/`, and `pytest -q` alone
-    # would run only this tree, which is why the two are named apart.
+    # Agent 0.2.0: `agent/` at the repo root and the worlds migrated to it under `world/`, two
+    # of the trees `testpaths` names — its own suite, its bench's asserted plans included. The
+    # jobs name the trees apart so that a red says which.
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

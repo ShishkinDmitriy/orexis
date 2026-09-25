@@ -637,6 +637,9 @@ it is a record wearing a bullet.
   ground holds the readings and their revisions, a prediction is laid with its own, and the
   executor answers a step over both, so a dose that predicts the soil `inside` its range is
   answered when the next reading is revised to it (`store.derived_from`).
+- **0.1.0 is not started any more, so it is amended, not copied** — a package 0.2.0 needs moves
+  into a domain and changes there, and the 0.1.0 suite that built on it is switched off in the
+  gates rather than propped up; the four files in `tests/` that read the whole tree still run.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1283,6 +1286,9 @@ it is a record wearing a bullet.
   ground holds the readings and their revisions, a prediction is laid with its own, and the
   executor answers a step over both, so a dose that predicts the soil `inside` its range is
   answered when the next reading is revised to it (`store.derived_from`).
+- **0.1.0 is not started any more, so it is amended, not copied** — a package 0.2.0 needs moves
+  into a domain and changes there, and the 0.1.0 suite that built on it is switched off in the
+  gates rather than propped up; the four files in `tests/` that read the whole tree still run.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1487,7 +1493,9 @@ it is a record wearing a bullet.
    belief, sensing, prediction, planning and execution packages and the MQTT transport — and
    is what `pytest` runs; `agent_old/` is the
    0.1.0 container this section describes, still what `orexis-agent` and the image run, and
-   the loader's kernel (`assembly/loader.py` names it by path). Every `agent_old/<file>`
+   the loader's kernel (`assembly/loader.py` names it by path); it is not started any more, its
+   suite in `tests/` is switched off in the gates, and its packages are amended into 0.2.0's
+   domains rather than copied. Every `agent_old/<file>`
    below is that container's; the two trees meet only through the packages' ontologies,
    which both read.
 
@@ -1678,9 +1686,10 @@ orexis-ask <world> <agent> <modality> 'SPARQL'  # the sovereign asks a RUNNING a
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 cd world/<world> && podman compose up -d      # one container per agent
 podman build -t orexis:local .                 # only when a dependency changes
-pytest -q              # BOTH roots: tests/ and any a package carries. No infra needed.
-                       # NOT `pytest tests` — a package's own tests are invisible to that,
-                       # and to a bare `pytest` if testpaths does not name packages.
+pytest -q              # what testpaths names: agent/, packages/ and world/. No infra needed.
+                       # NOT `pytest tests` — that is the 0.1.0 suite, switched off in the gates
+                       # since 2026-09-25; its four files that read the whole tree (knowledge,
+                       # layout, store, projects) still gate.
 pytest infra -q -n0    # 8 more, against the RUNNING broker and store — see below.
                        # -n0 is REQUIRED: they rewrite one acl.conf in place. It refuses without it.
 lint-imports           # the layering: onboarding may import agent, never the reverse
@@ -2151,9 +2160,10 @@ orexis-ask <world> <agent> <modality> 'SPARQL'  # the sovereign asks a RUNNING a
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 cd world/<world> && podman compose up -d      # one container per agent
 podman build -t orexis:local .                 # only when a dependency changes
-pytest -q              # BOTH roots: tests/ and any a package carries. No infra needed.
-                       # NOT `pytest tests` — a package's own tests are invisible to that,
-                       # and to a bare `pytest` if testpaths does not name packages.
+pytest -q              # what testpaths names: agent/, packages/ and world/. No infra needed.
+                       # NOT `pytest tests` — that is the 0.1.0 suite, switched off in the gates
+                       # since 2026-09-25; its four files that read the whole tree (knowledge,
+                       # layout, store, projects) still gate.
 pytest infra -q -n0    # 8 more, against the RUNNING broker and store — see below.
                        # -n0 is REQUIRED: they rewrite one acl.conf in place. It refuses without it.
 lint-imports           # the layering: onboarding may import agent, never the reverse

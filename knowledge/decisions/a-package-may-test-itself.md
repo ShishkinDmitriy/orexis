@@ -92,8 +92,10 @@ A bare `pytest` does **not** rescue it, because `testpaths` confines collection 
 suite would have gone green while skipping the file entirely — the same failure that cost 143
 cases during the layout move, arriving by a different door.
 
-`testpaths = ["tests", "packages"]` now, and `AGENTS.md`, `README.md` and `gates.yml` all run
-`pytest -q` rather than naming a path. `tests/test_layout.py` asserts the link rather than either
+`testpaths` named `tests` and `packages` then, and names `agent`, `packages` and `world` since
+Agent 0.2.0 — the 0.1.0 suite in `tests/` is switched off in the gates since 2026-09-25, and only
+its four files that read the whole tree still run; `AGENTS.md` and `README.md` say `pytest -q`
+rather than naming a path, and `gates.yml` names the trees apart so a red says which. `tests/test_layout.py` asserts the link rather than either
 fact alone: **if any package carries a test, `testpaths` must name the tree it lives in.**
 Mutation-tested by narrowing it back, which fails with both the file and the setting in the
 message.
