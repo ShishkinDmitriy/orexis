@@ -357,7 +357,7 @@ into sleeping through a drought.
 
 ```bash
 pip install -e ".[dev]"
-pytest -q                    # BOTH roots: tests/ and any a package carries
+pytest -q                    # agent/, packages/ and world/; the 0.1.0 suite in tests/ is switched off
 orexis-validate simulation   # and every other world you have
 lint-imports                 # the layering: onboarding may import agent, never the reverse
 ```
