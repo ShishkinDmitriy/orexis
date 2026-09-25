@@ -60,27 +60,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]" $(ls -d packages/*/)
 
-      # Each world is built from its files and held to every package's shapes.
-      #
-      # Found by looking, not listed — the same rule capabilities and packages are found by, and
-      # for the same reason: a list here goes stale silently. It did. Removing `society` left
-      # three hardcoded steps validating a world that no longer existed, and CI failed on a
-      # change whose four local gates were all green, because none of them reads this file.
-      #
-      # The world is still named on failure, which is why the loop groups and annotates rather
-      # than just running: a red X should say WHICH world, not send you into a log.
-      - name: orexis-validate every world
-        run: |
-          # THE LIST IS ASKED FIRST AND HELD NON-EMPTY: with `$(…)` inside the `for`, an import
-          # error printed to stderr, the loop ran over nothing and the gate passed having
-          # validated no world — which is how the layout move went green here.
-          worlds=$(python -c "from agent_old import genesis; print(' '.join(genesis.worlds()))") || exit 1
-          [ -n "$worlds" ] || { echo "::error::no worlds to validate — is genesis importable?"; exit 1; }
-          for w in $worlds; do
-            echo "::group::orexis-validate $w"
-            orexis-validate "$w" || { echo "::error::$w failed validation"; exit 1; }
-            echo "::endgroup::"
-          done
+      # THE 0.1.0 WORLDS ARE NOT VALIDATED HERE ANY MORE. `orexis-validate` built every world
+      # with 0.1.0 genesis and held it to the packages' shapes; 0.1.0 is not started since
+      # 2026-09-25, its packages are amended into Agent 0.2.0's domains, and a 0.2.0 world is
+      # held to what it does by the tests beside it, which the `agent` job runs.
 
       # The layering the flat layout gave up a packaging split to assert: onboarding may import
       # agent, agent may never import onboarding, and no capability or transport may touch
