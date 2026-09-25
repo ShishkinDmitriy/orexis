@@ -7,7 +7,9 @@
 # soil is below its range reads what the deliberator concluded, and a step's effect written in
 # that concept has a fact to retract.
 #
-# A drift predicts the soil back inside by 13:00, and its own revision says so. The later ground
+# A drift predicts the soil back inside by 13:00, and its own revision says so. The prediction was
+# derived from the observation's graph too, as a drift's is, and is no revision of it: the
+# present holds 0.2 and `below`, never the 0.35 foreseen. The later ground
 # is the prediction applied: its retraction takes the observation node whole — the number and the
 # side with it — and the predicted reading and its side are added.
 #
@@ -66,6 +68,8 @@ GRAPH :catalogue {
   :drying_stops orexis:retracts """PREFIX : <http://example.org/test#>
       DELETE { GRAPH $state { :soil ?p ?o } }
       WHERE  { GRAPH $state { :soil ?p ?o } }""" .
+  :drying_stops prov:wasDerivedFrom :sensed .
+  :drying_stops_revisions a orexis:BeliefGraph .
   :drying_stops_revisions a orexis:Graph .
   :drying_stops_revisions orexis:arrivedBy orexis:Derived .
   :drying_stops_revisions prov:wasDerivedFrom :drying_stops .
@@ -75,6 +79,7 @@ GRAPH :catalogue {
   :sensed a orexis:Graph .
   :sensed a orexis:StateGraph .
   :sensed orexis:beliefsOf :keeper .
+  :sensed_revisions a orexis:BeliefGraph .
   :sensed_revisions a orexis:Graph .
   :sensed_revisions orexis:arrivedBy orexis:Derived .
   :sensed_revisions prov:wasDerivedFrom :sensed .

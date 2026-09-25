@@ -61,7 +61,7 @@ import pyoxigraph as ox
 from agent import clock
 from agent.hash_named_graph import facts_of
 from agent.ontology import OREXIS, STATE, local_of
-from agent.store import Raw, add_quads, bind, derived_from, graphs_of, instant, quads, rows, update
+from agent.store import Raw, add_quads, bind, revisions_of, graphs_of, instant, quads, rows, update
 
 from .ontology import EXECUTION, intentions_graph
 
@@ -378,7 +378,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         #  a dose, that the soil comes to be inside its range — so it is answered when the next
         #  reading is revised to that, and the side lives in the graph derived from the reading's.
         states = graphs_of(self.beliefs, STATE)
-        present = {json.dumps(f) for f in facts_of(self.beliefs, *states, *derived_from(self.beliefs, *states))}
+        present = {json.dumps(f) for f in facts_of(self.beliefs, *states, *revisions_of(self.beliefs, *states))}
         return all(json.dumps(f) in present for f in said.get("adds", ())) \
             and not any(json.dumps(f) in present for f in said.get("retracts", ()))
 

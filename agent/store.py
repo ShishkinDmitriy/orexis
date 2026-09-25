@@ -600,19 +600,23 @@ SELECT ?g ?class WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }"""
 
 
-_DERIVED_Q = """
+_REVISIONS_Q = """
 SELECT DISTINCT ?r WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-  VALUES ?source { $sources } ?r prov:wasDerivedFrom ?source } }"""
+  VALUES ?source { $sources } ?r prov:wasDerivedFrom ?source ; a orexis:BeliefGraph } }"""
 
 
-def derived_from(store, *sources: str) -> list[str]:
-    """Every graph the catalogue says was derived from one of `sources`, sorted — what the
-    belief package's rules concluded of an observation or a prediction, its REVISIONS, which is
+def revisions_of(store, *sources: str) -> list[str]:
+    """Every BELIEF the catalogue says was derived from one of `sources`, sorted — what the
+    belief package's rules concluded of an observation or a prediction, its revisions, which is
     where a reading's side lives. A reader that means a graph as the agent believes it means the
-    graph and these: the side of a reading is a belief as much as its number is."""
+    graph and these: the side of a reading is a belief as much as its number is.
+
+    A BELIEF, AND NOT ANY GRAPH DERIVED FROM IT. A drift's prediction says it was derived from
+    the observation it runs over too, and a prediction is what a reading WILL be: asked without
+    the kind, this handed the present ground and the executor's answer the future as the present."""
     if not sources:
         return []
-    return sorted(r["r"] for r in rows(store, bind(_DERIVED_Q, sources=Raw(" ".join(f"<{s}>" for s in sources)))))
+    return sorted(r["r"] for r in rows(store, bind(_REVISIONS_Q, sources=Raw(" ".join(f"<{s}>" for s in sources)))))
 
 
 def close_catalogue(store) -> None:

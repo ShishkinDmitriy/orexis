@@ -27,7 +27,7 @@
 #  which graph is an agent's is genesis's to create and the catalogue's to say.
 
 :RevisionGraph a owl:Class ;
-    rdfs:subClassOf orexis:Graph ;
+    rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Revision graph" ;
     rdfs:comment """The revisions of ONE source graph — the beliefs the rules conclude of it, and
     nothing the source itself says; SHACL 1.2's inference graph, for one source. prov:wasDerivedFrom

@@ -60,6 +60,8 @@ GRAPH :catalogue {
   :drying_stops orexis:retracts """PREFIX : <http://example.org/test#>
       DELETE { GRAPH $state { :soil ?p ?o } }
       WHERE  { GRAPH $state { :soil ?p ?o } }""" .
+  :drying_stops prov:wasDerivedFrom :sensed .
+  :drying_stops_revisions a orexis:BeliefGraph .
   :drying_stops_revisions a orexis:Graph .
   :drying_stops_revisions orexis:arrivedBy orexis:Derived .
   :drying_stops_revisions prov:wasDerivedFrom :drying_stops .
@@ -69,6 +71,7 @@ GRAPH :catalogue {
   :sensed a orexis:Graph .
   :sensed a orexis:StateGraph .
   :sensed orexis:beliefsOf :keeper .
+  :sensed_revisions a orexis:BeliefGraph .
   :sensed_revisions a orexis:Graph .
   :sensed_revisions orexis:arrivedBy orexis:Derived .
   :sensed_revisions prov:wasDerivedFrom :sensed .

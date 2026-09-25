@@ -263,7 +263,7 @@ def test_a_step_predicting_a_side_is_answered_by_the_readings_revision():
     revisions = STATE + "/revisions"
     beliefs = _beliefs(PEG_A)
     update(beliefs, f"""INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{bed_range}> }}
-        GRAPH <http://example.org/test#catalogue> {{ <{revisions}> <http://www.w3.org/ns/prov#wasDerivedFrom> <{STATE}> }} }}""")
+        GRAPH <http://example.org/test#catalogue> {{ <{revisions}> <http://www.w3.org/ns/prov#wasDerivedFrom> <{STATE}> ; a <http://example.org/orexis#BeliefGraph> }} }}""")
     source = a_plan(2)
     def fact(side):
         one = ox.Store()
