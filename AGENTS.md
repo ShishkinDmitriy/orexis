@@ -636,7 +636,9 @@ it is a record wearing a bullet.
   from the reading's; the imaginarium takes every graph derived from what crosses, the present
   ground holds the readings and their revisions, a prediction is laid with its own, and the
   executor answers a step over both, so a dose that predicts the soil `inside` its range is
-  answered when the next reading is revised to it (`store.derived_from`).
+  answered when the next reading is revised to it (`store.revisions_of`) — a revision is a
+  belief and a drift's prediction, derived from the same observation, is not, which is what
+  keeps the foreseen reading out of the present.
 - **0.1.0 is not started any more, so it is amended, not copied** — a package 0.2.0 needs moves
   into a domain and changes there, and the 0.1.0 suite that built on it is switched off in the
   gates rather than propped up; the four files in `tests/` that read the whole tree still run.
@@ -1285,7 +1287,9 @@ it is a record wearing a bullet.
   from the reading's; the imaginarium takes every graph derived from what crosses, the present
   ground holds the readings and their revisions, a prediction is laid with its own, and the
   executor answers a step over both, so a dose that predicts the soil `inside` its range is
-  answered when the next reading is revised to it (`store.derived_from`).
+  answered when the next reading is revised to it (`store.revisions_of`) — a revision is a
+  belief and a drift's prediction, derived from the same observation, is not, which is what
+  keeps the foreseen reading out of the present.
 - **0.1.0 is not started any more, so it is amended, not copied** — a package 0.2.0 needs moves
   into a domain and changes there, and the 0.1.0 suite that built on it is switched off in the
   gates rather than propped up; the four files in `tests/` that read the whole tree still run.

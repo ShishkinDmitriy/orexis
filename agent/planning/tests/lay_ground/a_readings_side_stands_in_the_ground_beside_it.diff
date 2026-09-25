@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -66,4 +66,30 @@
+@@ -69,4 +69,30 @@
    :sensed_revisions prov:wasDerivedFrom :sensed .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
