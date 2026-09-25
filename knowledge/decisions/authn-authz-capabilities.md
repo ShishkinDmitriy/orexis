@@ -159,3 +159,17 @@ command is co-signed (the pump is networked) — consistent, not an oversight.
 
 Open, gated registration (naturalize + broke endowment); reputation attached to the durable
 cert identity. See [roadmap](/decisions/roadmap.md).
+
+# Amended 2026-09-25: signing is between agents, and in Agent 0.2.0 an agent trusts itself
+
+The settlement token is signed because one agent asks for an act and ANOTHER agent's device
+performs it: the host authorises the match and clearing validates it, and the device, which
+belongs to neither the buyer nor the bidder, opens only for proof that both did. The 0.2.0
+greenhouse has no such second party — its grower doses its own bed through its own pump — and the
+sovereign ruled that an agent trusts itself. So 0.2.0 signs nothing: the broker's ACL, derived from
+the world, already admits only the holder (`actuation:hasActuator`) to its devices' command topics,
+which is the trust boundary this record calls the network boundary.
+
+Refused: every command signed by its holder with its own key, the holder's public key on the
+device. It was built and closed unmerged (#798): a signature from the only party there is proves
+nothing the ACL does not. Signing returns with the market, where a second agent asks.

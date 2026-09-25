@@ -38,7 +38,7 @@ CONTAINERFILE = REPO_ROOT / "Containerfile"
 #  .containerignore exception narrows the COPY to them; the test below holds both halves.
 #  `assembly` is what FINDS packages, so an agent that loads any needs it — the kernel is
 #  one of the things it assembles (the-assembly-is-not-the-mind).
-ALLOWED_TREES = {"assembly", "agent_old", "packages", "firmware"}
+ALLOWED_TREES = {"assembly", "agent_old", "packages", "firmware", "agent", "domains"}
 
 # Never in an agent image. `orexis-influx` reads the admin token, which opens every bucket in the
 # store and which no agent may ever hold; the surest guarantee is that the code using it is

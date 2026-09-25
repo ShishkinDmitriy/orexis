@@ -40,6 +40,15 @@ term nobody declares matches nothing, and an empty result is not an error — th
 what makes that silence a gate instead of a hazard. They remain separately callable,
 because rotating one service's credentials should not touch the other's.
 
+**For an Agent 0.2.0 world** — the only kind `orexis-agent` runs since 2026-09-25 — the grants are
+read from the world as an agent boots it (`agent.runtime.world_of`), in MQTT4SSN's words:
+nothing is signed — an agent trusts itself, and the broker's ACL admits only the holder to its
+devices' command topics — so `orexis-keygen` is not run; `orexis-mqtt` grants an agent the topics of the sensors on what it acts for and the
+command topics of the devices it holds, and a device client its own, and runs the broker on the
+`schema:url`s the world states on its `mqtt4ssn:Broker`; `orexis-compose` runs each agent as
+`orexis-agent <world> <id>`, told its broker through its environment. The series store, the dashboards and the firmware generator are 0.1.0's
+still, and wait for the terrace.
+
 `orexis-firmware` is deliberately **not** in the umbrella. It writes into a firmware project rather
 than granting anything, and it is only useful when a board is in front of you — onboarding a world
 should not touch a source tree you are about to build from.

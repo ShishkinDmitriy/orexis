@@ -654,6 +654,15 @@ it is a record wearing a bullet.
 - **The plant's surroundings are one domain** — water and climate were two 0.1.0 packages, and the
   soil's moisture, the air's temperature, the source and the heater are one `climate:` vocabulary
   in `domains/climate/`; actuation is the other, the devices and the dose.
+- **A broker's address is the world's to state and the agent's to be told** — MQTT4SSN names a
+  broker and no port, so the world says `schema:url` on its `mqtt4ssn:Broker` and the operator's
+  tools read it to run the broker and write each agent's environment; the agent reads only its
+  environment, as the transport's principle has it, and `orexis-agent` runs the 0.2.0 runtime.
+- **Signing is between agents, and an agent trusts itself** — a signature proves to a device that
+  the agent asking for an act was authorised by another, which is the market's case; an agent
+  dosing its own bed through its own pump has no second party to convince, and the broker's ACL
+  already admits only the holder to its devices' command topics, so 0.2.0 signs nothing until the
+  market returns (authn-authz-capabilities).
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1317,6 +1326,15 @@ it is a record wearing a bullet.
 - **The plant's surroundings are one domain** — water and climate were two 0.1.0 packages, and the
   soil's moisture, the air's temperature, the source and the heater are one `climate:` vocabulary
   in `domains/climate/`; actuation is the other, the devices and the dose.
+- **A broker's address is the world's to state and the agent's to be told** — MQTT4SSN names a
+  broker and no port, so the world says `schema:url` on its `mqtt4ssn:Broker` and the operator's
+  tools read it to run the broker and write each agent's environment; the agent reads only its
+  environment, as the transport's principle has it, and `orexis-agent` runs the 0.2.0 runtime.
+- **Signing is between agents, and an agent trusts itself** — a signature proves to a device that
+  the agent asking for an act was authorised by another, which is the market's case; an agent
+  dosing its own bed through its own pump has no second party to convince, and the broker's ACL
+  already admits only the holder to its devices' command topics, so 0.2.0 signs nothing until the
+  market returns (authn-authz-capabilities).
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1519,9 +1537,9 @@ it is a record wearing a bullet.
 
    **TWO KERNEL TREES, FOR NOW.** `agent/` is Agent 0.2.0 — the store over the engine, the
    belief, sensing, prediction, planning and execution packages and the MQTT transport — and
-   is what `pytest` runs; `agent_old/` is the
-   0.1.0 container this section describes, still what `orexis-agent` and the image run, and
-   the loader's kernel (`assembly/loader.py` names it by path); it is not started any more, its
+   is what `pytest` runs and, since 2026-09-25, what `orexis-agent` and the image run; `agent_old/`
+   is the 0.1.0 container this section describes and the loader's kernel (`assembly/loader.py`
+   names it by path); it is not started any more, its
    suite in `tests/` is switched off in the gates, and its packages are amended into 0.2.0's
    domains rather than copied. Every `agent_old/<file>`
    below is that container's; the two trees meet only through the packages' ontologies,

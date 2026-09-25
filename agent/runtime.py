@@ -136,24 +136,16 @@ def _close_vocabulary(store: ox.Store) -> None:
     classify(store, CLOSURE_GRAPH, ONTOLOGY, DERIVED)
 
 
-def boot(world: Path, agent_id: str, store: ox.Store | None = None) -> ox.Store:
-    """The agent's store from the documents: every graph classified by the document that holds
-    it, the vocabulary closed, the catalogue closed, the scopes written. Handed a store that
-    already holds a catalogue, read again every graph nobody owns and leave the agent's own."""
-    world = Path(world).resolve()
-    store = store if store is not None else ox.Store()
-    lived_in = catalogue_of(store) is not None
-    if lived_in:
-        _forget_the_files(store)
-    else:
-        update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
+def _put_public(store: ox.Store, world: Path) -> list[tuple[ox.Store, str]]:
+    """Read every document and put in the vocabulary, closed, and every public graph; answer the
+    world's other graphs — the agent's own — as (document, graph), for the caller to put or not.
+
+    THE VOCABULARY FIRST, since whether a graph is public is the vocabulary's to say."""
     read = _read_with_imports(documents(world))
-    #  THE VOCABULARY FIRST, since whether a graph is public is the vocabulary's to say.
     vocabulary = {path for path, doc in read if any(ONTOLOGY in k for k in kinds_in(doc).values())}
     for path, doc in read:
-        if path not in vocabulary:
-            continue
-        put_document(store, doc)
+        if path in vocabulary:
+            put_document(store, doc)
     _close_vocabulary(store)
     public, own = [], []
     for path, doc in read:
@@ -167,6 +159,32 @@ def boot(world: Path, agent_id: str, store: ox.Store | None = None) -> ox.Store:
                 own.append((doc, graph))
     for doc, graph in public:
         put_document(store, doc, graphs={graph})
+    return own
+
+
+def world_of(world: Path) -> ox.Store:
+    """What a world says publicly, read as a boot reads it and closed, with no agent in it — what
+    the operator's tools read to derive a deployment from the world: its agents, its devices, its
+    topics and where its broker listens."""
+    store = ox.Store()
+    update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
+    _put_public(store, Path(world).resolve())
+    close_catalogue(store)
+    return store
+
+
+def boot(world: Path, agent_id: str, store: ox.Store | None = None) -> ox.Store:
+    """The agent's store from the documents: every graph classified by the document that holds
+    it, the vocabulary closed, the catalogue closed, the scopes written. Handed a store that
+    already holds a catalogue, read again every graph nobody owns and leave the agent's own."""
+    world = Path(world).resolve()
+    store = store if store is not None else ox.Store()
+    lived_in = catalogue_of(store) is not None
+    if lived_in:
+        _forget_the_files(store)
+    else:
+        update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
+    own = _put_public(store, world)
     me = _identity(store, agent_id)
     if not lived_in:
         for doc, graph in own:

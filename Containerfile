@@ -75,6 +75,10 @@ RUN pip install --no-build-isolation --no-deps -e . $(ls -d packages/*/)
 # `.containerignore` narrows this COPY to the ontologies alone: firmware code is flashed, not
 # shipped, and a generated include/config.h carries credentials that must never reach a layer.
 COPY firmware/ firmware/
+# AGENT 0.2.0: the runtime `orexis-agent` runs, and the domains its worlds import. A world is
+# mounted at /app/world/<name>, so its `owl:imports <../../domains/...>` resolve to /app/domains.
+COPY agent/ agent/
+COPY domains/ domains/
 
 # An agent runs as nobody in particular. Its belief base is a file in its own volume, which
 # nothing outside this container can name — that is the isolation, and it needs no credential
