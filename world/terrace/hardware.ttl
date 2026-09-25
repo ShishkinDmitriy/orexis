@@ -12,10 +12,12 @@
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix schema: <https://schema.org/> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
-@prefix water: <http://example.org/orexis/water#> .
+@prefix climate: <http://example.org/orexis/climate#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix esp32: <http://example.org/orexis/esp32#> .
+
+<> a orexis:PublicGraph .    # this document is one graph, and this is what it is
 
 # The hardware the terrace runs on: what is physically there and how it is wired. Separate
 # from the society beside it because it changes for different reasons and is read by different
@@ -40,7 +42,10 @@
 :esp32_terrace a mc:Microcontroller , esp32:FireBeetle2Esp32E ;
     orexis:localId "esp32_terrace" ;
     mc:model "DFRobot FireBeetle 2 ESP32-E" ;
-    mqtt:onBus :local_bus ;
+    #  What the 0.1.0 closure carried onto this unit from its classes, stated: the firmware it runs
+    #  and the built-in WS2812's line. Agent 0.2.0 closes subclasses and no restriction.
+    mc:firmware "outdoor-sentinel" ;
+    esp32:ws2812Gpio 5 ;
     #  No mc:firmware: the board's connecting DEVICE is typed outdoor:Node in world.ttl and
     #  the firmware name ("outdoor-sentinel") is entailed onto it from that class, reached
     #  through the hosting this deployment produces.
@@ -63,9 +68,9 @@
     ssn:deployedSystem :moisture_sensor_terrace , :air_sensor_terrace ;
     prov:startedAtTime "2026-08-30T12:00:00Z"^^xsd:dateTime ;
     ssn-system:inCondition
-        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirTemperature ;
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:AirTemperature ;
           schema:minValue -20.0 ; schema:maxValue 40.0 ; schema:unitCode unit:DEG_C ] ,
-        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirHumidity ;
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:AirHumidity ;
           schema:minValue 10 ; schema:maxValue 100 ; schema:unitCode unit:PERCENT ] ;
     rdfs:comment "The terrace: a planter bed, outdoors, unheated. Board and both parts outside; on battery." .
 
