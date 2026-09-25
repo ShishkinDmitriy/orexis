@@ -60,6 +60,9 @@ def test_nothing_above_imports_the_transport():
 
 
 def test_a_module_named_for_an_act_exports_that_act_and_nothing_else():
+    """Every module here is a noun today, so the act loop below walks nothing; the nouns are
+    asserted to exist so that this test asserts something whatever the tree holds (#106)."""
+    assert {p.stem for p in CODE} >= NOUNS, "a listed noun has no module"
     for path in CODE:
         if path.stem in NOUNS or path.stem == "__init__":
             continue
