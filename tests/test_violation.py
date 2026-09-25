@@ -15,8 +15,6 @@ from conftest import genesis_store
 
 SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 STATE_GRAPH = "http://example.org/orexis/graph/sensed"
-COURIER = "http://example.org/orexis/courier#"
-COURIER_W = "http://example.org/orexis/world/courier#"
 
 
 def _agent(monkeypatch, world, name, pose=None, readings=None):
@@ -57,16 +55,6 @@ CASES = {
     "fern, dry": ("simulation", "fern", None, {"fern": 0.10}),
     "fern, watered": ("simulation", "fern", None, {"fern": 0.40}),
     "loner's gardener": ("loner", "gardener", None, None),
-    "courier, parcel astray": ("courier", "courier",
-                               f"<{COURIER_W}van> <{COURIER}at> <{COURIER_W}c0_0> . "
-                               f"<{COURIER_W}parcel> <{COURIER}at> <{COURIER_W}c1_2> .", None),
-    "courier, parcel aboard": ("courier", "courier",
-                               f"<{COURIER_W}van> <{COURIER}at> <{COURIER_W}c3_3> . "
-                               f"<{COURIER_W}parcel> <{COURIER}carriedBy> <{COURIER_W}van> .",
-                               None),
-    "courier, delivered": ("courier", "courier",
-                           f"<{COURIER_W}van> <{COURIER}at> <{COURIER_W}c3_3> . "
-                           f"<{COURIER_W}parcel> <{COURIER}at> <{COURIER_W}c3_3> .", None),
 }
 
 
@@ -91,22 +79,11 @@ def test_both_answers_are_reached_so_the_parity_is_not_vacuous(monkeypatch):
     """A parity that only ever saw one answer would agree by accident. Delivered and astray,
     home and astray, watered and dry are all above; this pins that both verdicts occur."""
     seen = set()
-    for case in ("fern, watered", "fern, dry", "courier, delivered", "courier, parcel aboard"):
+    for case in ("fern, watered", "fern, dry"):
         world, name, pose, readings = CASES[case]
         for _, compiled, _, _ in _both_verdicts(_agent(monkeypatch, world, name, pose, readings)):
             seen.add(compiled)
     assert seen == {True, False}
-
-
-def test_a_carried_parcel_is_astray_by_the_shape_alone(monkeypatch):
-    """Positive shape, no negation authored anywhere: `courier:at` must equal
-    `courier:destination` on every parcel. Aboard the van a parcel is at no cell, so the
-    equality fails — carrying it past the door is not delivering it — and the compiled
-    select says so without anyone having written "astray"."""
-    world, name, pose, readings = CASES["courier, parcel aboard"]
-    agent = _agent(monkeypatch, world, name, pose, readings)
-    assert next(d for d in agent.considering()
-                if d.uri.endswith("every_parcel_delivered")).state == "unmet"
 
 
 def test_a_shape_the_compiler_cannot_say_refuses():

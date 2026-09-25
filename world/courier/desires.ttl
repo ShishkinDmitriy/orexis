@@ -1,0 +1,53 @@
+@prefix : <http://example.org/orexis/world/courier#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:DesireGraph .    # this document is one graph, and this is what it is
+
+#  THE GOAL, as a desire the derivation mints one want from: every parcel standing where it is
+#  owed. What delivered MEANS is the shape — on every parcel, the cell it is at equals the cell it
+#  is owed at, so a carried parcel, at no cell, is not delivered — and how far it is is the
+#  estimate, the drives still owed. Both sit here because the met-test is read off the graph of
+#  desires; the want is one-shot, and once the parcel is home the runtime stops.
+
+:courier orexis:holds :every_parcel_delivered .
+
+:every_parcel_delivered a orexis:Desire ;
+    rdfs:label "every parcel where it is owed" ;
+    orexis:metWhen courier:delivered ;
+    orexis:estimates courier:drivesOwed .
+
+courier:delivered a sh:NodeShape ;
+    rdfs:label "every parcel standing where it is owed" ;
+    sh:targetClass courier:Parcel ;
+    sh:property [ sh:path courier:at ; sh:equals courier:destination ] .
+
+#  DRIVES STILL OWED: aboard, the road to the door; standing somewhere, the road to the parcel
+#  and then its road home. It counts drives and not the pick or the drop, so it never overstates
+#  what is left. EACH BRANCH REPEATS THE PREAMBLE, since a BIND inside a UNION branch cannot see
+#  a variable bound outside it — written the tidy way it answered 0 for every world.
+courier:drivesOwed rdfs:label "drives still owed" ;
+    sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT (SUM(?d) AS ?estimate) WHERE {
+            SELECT ?p (MIN(?dist) AS ?d) WHERE {
+                {
+                    ?p a courier:Parcel ; courier:destination ?owed .
+                    ?owed courier:x ?ox ; courier:y ?oy .
+                    ?p courier:carriedBy ?van . ?van courier:at ?vc .
+                    ?vc courier:x ?vx ; courier:y ?vy .
+                    BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
+                } UNION {
+                    ?p a courier:Parcel ; courier:destination ?owed .
+                    ?owed courier:x ?ox ; courier:y ?oy .
+                    ?p courier:at ?pc . ?v courier:at ?vc .
+                    ?v a courier:Van .
+                    ?pc courier:x ?px ; courier:y ?py .
+                    ?vc courier:x ?vx ; courier:y ?vy .
+                    FILTER(?px != ?ox || ?py != ?oy)
+                    BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
+                         + ABS(?px - ?ox) + ABS(?py - ?oy) AS ?dist)
+                }
+            } GROUP BY ?p
+        }""" .

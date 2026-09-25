@@ -1,10 +1,9 @@
 """Which levers could serve a want, read off the actions and closed backward (#488).
 
-The unit half: what the sets are on the shipped domains, that the closure keeps a chain alive,
-that a derivation rule is an edge in it, and that anything unreadable keeps every action —
-over-approximation is safe and under-approximation prunes a needed step. The measured half —
-one free foreign action, two domains in one world — lives beside the puzzles in
-`test_hanoi.py` and `test_courier.py`.
+The unit half: that the closure keeps a chain alive, that a derivation rule is an edge in it,
+and that anything unreadable keeps every action — over-approximation is safe and
+under-approximation prunes a needed step. What the sets were on the puzzles went with them to
+Agent 0.2.0, where `agent/planning/footprint.py` is what reads them.
 """
 
 import rdflib
@@ -21,48 +20,6 @@ X = rdflib.Namespace("http://example.org/x#")
 
 def _short(s):
     return None if s is None else {str(p).rsplit("#", 1)[-1] for p in s}
-
-
-def test_what_the_shipped_actions_read_and_write():
-    """Off the texts themselves: Drive writes where the van is and nothing else, Move writes
-    what a disk rests on, and a plant lever whose retraction template carries a variable
-    predicate writes what its construct writes — the node it removes is the one it replaces."""
-    acts = R.actions_of(genesis_store(world="courier").reader(PUBLIC))
-    reads, writes = acts[C + "Drive"]
-    assert _short(writes) == {"at"} and _short(reads) == {"at", "x", "y", "type"}
-    assert _short(acts[C + "Pick"][1]) == {"at", "carriedBy"}
-    assert _short(acts[H + "Move"][1]) == {"on"}
-    #  A retraction of `?obs ?p ?o` removes the node the construct replaces — the readings
-    #  graph's upsert — and so writes what the construct writes (#554): read as ANYTHING it
-    #  made every reading-replacing lever relevant to every want, and every want's view the
-    #  whole world.
-    #  A dose writes what the reading IS and no number (#579): the type carries the band.
-    assert {x.rsplit("/", 1)[-1].rsplit("#", 1)[-1] for x in acts["http://example.org/orexis/actuation#Dosing"][1]} == {
-        "type", "hasFeatureOfInterest", "observedProperty", "resultTime"}
-
-
-def test_what_the_shipped_wants_read_and_which_levers_reach_them():
-    """The courier's shape reads where things are and where they are owed; every courier lever
-    is relevant and hanoi's Move is not. Hanoi's shape reads what a disk rests on; Move is
-    relevant and no courier lever is. The plant levers that write ANYTHING stay in both sets,
-    which costs forks and never correctness."""
-    st = genesis_store(world="courier")
-    public = rdflib.Graph()
-    for g in st.graphs_of(PUBLIC):
-        public.parse(data=st.get_graph(g), format="turtle")
-    acts = R.actions_of(st.reader(PUBLIC))
-
-    delivered = R.reads_of_shape(public, rdflib.URIRef(C + "delivered"))
-    assert _short(delivered) == {"at", "destination", "type"}
-    chosen = R.relevant(delivered, acts)
-    assert {C + "Drive", C + "Pick", C + "Drop"} <= chosen
-    assert H + "Move" not in chosen
-
-    solved = R.reads_of_shape(public, rdflib.URIRef(H + "solved"))
-    assert _short(solved) == {"on"}
-    chosen = R.relevant(solved, acts)
-    assert H + "Move" in chosen
-    assert not {C + "Drive", C + "Pick", C + "Drop"} & chosen
 
 
 def test_the_closure_keeps_a_chain_alive():

@@ -241,7 +241,13 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             present, *_ = lay_ground(store, at)
             reroot(store, present)
             for pair in unweighed(store, memo=memo):
-                weigh(store, pair["for"], pair["about"], memo=memo)      # every desire, every ground
+                #  GROUNDS ONLY. A candidate the budget left untaken in a world it cut is
+                #  unweighed too, and weighed here it would never be offered to the expansion
+                #  that takes it: its world would never be forked, and the search the passes
+                #  after were to finish would empty its frontier short of the answer — the
+                #  courier's corner delivery did, at sixteen candidates a pass.
+                if not pair.get("from"):
+                    weigh(store, pair["for"], pair["about"], memo=memo)  # every desire, every ground
             withdraw(store, derive_wants(store, at) | walking, at)
             memo.forget("shapes", "select")
             #  THE SHAPES ARE FORGOTTEN AFTER THE DERIVATION, because the derivation WRITES

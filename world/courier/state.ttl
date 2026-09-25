@@ -1,0 +1,12 @@
+@prefix : <http://example.org/orexis/world/courier#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:StateGraph .    # this document is one graph, and this is what it is
+
+#  THE DELIVERY AS POSED: the van at the origin, the parcel two cells away. The first state
+#  graph, and the only file here the runtime never reloads — from the first boot on, where the
+#  van and the parcel stand is the agent's belief, rewritten by its own actions.
+
+:van courier:at :c0_0 .
+:parcel courier:at :c1_2 .

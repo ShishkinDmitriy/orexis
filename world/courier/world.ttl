@@ -2,35 +2,25 @@
 @prefix courier: <http://example.org/orexis/courier#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix prov: <http://www.w3.org/ns/prov#> .
 
-#  A 4x4 grid, one van, one parcel — the smallest world whose search NEEDS guiding.
-#
-#  Hanoi settles at 27 states and a binary want: nothing is nearer than anything else, so the
-#  search can only be exhaustive. Here the state is (where the van is) x (where the parcel is,
-#  or aboard) = 16 x 17 = 272 states, and a want CAN be nearer — the van three cells from the
-#  parcel is closer than the van five cells away, in the same unit a drive costs. That is the
-#  case for an admissible heuristic, and the reason this world exists.
-#
-#  The grid is the WORLD's, coordinates and all: unlike Hanoi's three pegs, how big it is IS
-#  the puzzle. Nothing here states which cells adjoin — the drive works that out from the
-#  coordinates, which are the same numbers a distance is measured in.
+<> a orexis:WorldGraph .    # this document is one graph, and this is what it is
 
-:world a orexis:World ; orexis:currentVersion :version_1 ;
-    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole orexis:Sovereign ] .
-:version_1 a orexis:WorldVersion ; orexis:versionNumber 1 .
+#  A 4x4 grid, one van, one parcel owed at the far corner. The state is where the van is times
+#  where the parcel is or that it is aboard, 16 x 17 = 272 worlds, and a world can be nearer the
+#  goal than another in the unit a drive costs, which is what makes the estimate worth having.
+#  Nothing here says which cells adjoin: the drive works that out from the coordinates, the same
+#  numbers the estimate measures a distance in. Where the van and the parcel stand is posed in
+#  state.ttl.
 
 :courier a orexis:Agent ;
     orexis:localId "courier" ;
-    rdfs:comment "The driver. It senses nothing, owes nobody and holds no capability — a mind with three moves, so what this world tests is the search and nothing else." .
+    rdfs:comment "The driver: a mind with three actions, acting for nothing and owing nobody." .
 
 :van a courier:Van ; rdfs:label "the van" .
 
 :parcel a courier:Parcel ; courier:destination :c3_3 ;
     rdfs:label "the parcel owed at the far corner" .
 
-#  The grid. Where the van and the parcel STAND is runtime and appears nowhere here — it is
-#  seeded by whoever poses the delivery, exactly as a reading is.
 :c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
 :c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
 :c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .

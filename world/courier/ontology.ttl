@@ -1,0 +1,51 @@
+@prefix : <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  THE COURIER GRID.
+#  The courier's words, owned by the world that poses the delivery. A van on a grid of cells is
+#  the smallest world whose search NEEDS guiding: Hanoi's want is binary, so no world is nearer
+#  than another, and here a van two cells from a parcel is closer than one five cells away, in
+#  the unit a drive costs. It is also the world whose effects DELETE: picking a parcel up removes
+#  where it stood and puts nothing in its place. The cells, the van and the parcel are the
+#  world's, in world.ttl; where the van and the parcel stand is posed in state.ttl; what
+#  delivered means and how far it is are the desire's, in desires.ttl.
+
+#################  The grid  #################
+
+:Cell a owl:Class ; rdfs:label "Cell" ;
+    rdfs:comment "A place on the grid, authored by a world with its coordinates. How big the grid is IS the puzzle, so the cells are the world's." .
+
+:x a owl:DatatypeProperty ; rdfs:domain :Cell ; rdfs:range xsd:integer ; rdfs:label "column" .
+:y a owl:DatatypeProperty ; rdfs:domain :Cell ; rdfs:range xsd:integer ; rdfs:label "row" ;
+    rdfs:comment "Coordinates rather than a declared adjacency, because the estimate measures a distance the graph does not state. Two cells are neighbours where |dx| + |dy| = 1, which the drive's own precondition works out." .
+
+:Van a owl:Class ; rdfs:label "Van" ;
+    rdfs:comment "What moves and what carries. A pure subject of the search, with no capability and no grant." .
+
+:Parcel a owl:Class ; rdfs:label "Parcel" ;
+    rdfs:comment "A thing with somewhere to be." .
+
+:destination a owl:ObjectProperty ; rdfs:domain :Parcel ; rdfs:range :Cell ; rdfs:label "destination" ;
+    rdfs:comment "Where a parcel is owed. Authored and never moved: the world states it, no effect touches it, and it is what the desire's met-test compares against." .
+
+#################  What is true while the world runs  #################
+
+:at a owl:ObjectProperty ; rdfs:range :Cell ; rdfs:label "at" ;
+    rdfs:comment "Where a van or an unloaded parcel stands. Runtime state, posed in state.ttl: one for a van, and none for a parcel being carried, which is the point — a pick removes it and puts nothing in its place." .
+
+:carriedBy a owl:ObjectProperty ; rdfs:domain :Parcel ; rdfs:range :Van ; rdfs:label "carried by" ;
+    rdfs:comment "The other half of the deletion: a parcel is at a cell or aboard a van, never both and never neither." .
+
+#################  What an action is filled with  #################
+
+:van a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "van" ;
+    rdfs:comment "The van a drive moves and a pick loads into." .
+:parcel a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "parcel" ;
+    rdfs:comment "The parcel a pick loads or a drop sets down." .
+:to a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "to" ;
+    rdfs:comment "Where a drive drives or a drop drops: a cell of the grid." .
