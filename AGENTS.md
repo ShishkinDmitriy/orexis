@@ -628,6 +628,12 @@ it is a record wearing a bullet.
   so Hanoi's actions were typed the bare `orexis:PublicGraph` and `admit`, `take` and
   `footprint` read every public graph to find them; named for what it holds, and asked for by
   the three reads, it is a term somebody reads.
+- **The search runs no rules, so a reading's revisions travel with it and an effect speaks the
+  concept they conclude** — a side is what the rules concluded of a reading, in a graph derived
+  from the reading's; the imaginarium takes every graph derived from what crosses, the present
+  ground holds the readings and their revisions, a prediction is laid with its own, and the
+  executor answers a step over both, so a dose that predicts the soil `inside` its range is
+  answered when the next reading is revised to it (`store.derived_from`).
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1265,6 +1271,12 @@ it is a record wearing a bullet.
   so Hanoi's actions were typed the bare `orexis:PublicGraph` and `admit`, `take` and
   `footprint` read every public graph to find them; named for what it holds, and asked for by
   the three reads, it is a term somebody reads.
+- **The search runs no rules, so a reading's revisions travel with it and an effect speaks the
+  concept they conclude** — a side is what the rules concluded of a reading, in a graph derived
+  from the reading's; the imaginarium takes every graph derived from what crosses, the present
+  ground holds the readings and their revisions, a prediction is laid with its own, and the
+  executor answers a step over both, so a dose that predicts the soil `inside` its range is
+  answered when the next reading is revised to it (`store.derived_from`).
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
