@@ -4,13 +4,13 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<> a orexis:PublicGraph .    # this document is one graph, and this is what it is
+<> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
 #  ONE move, filled with a disk and a peg. Available once per (disk, target) the state allows:
 #  the disk is on top of its stack and the target holds no smaller disk. FICTIVE, because the
 #  puzzle is its own physics: no instrument answers a move, so the executor writes what the step
 #  predicted into the state itself, and that is the world moving. The texts declare `hanoi:`
-#  themselves, since the store's dictionary learns no world's namespace.
+#  themselves, since the store's dictionary learns no domain's namespace.
 
 hanoi:Move a orexis:Action ;
     rdfs:label "move a movable disk onto a legal peg" ;

@@ -58,7 +58,7 @@ from rdflib.plugins.sparql.parser import parseQuery
 #  WHAT A `$token` IS, from the module that BINDS one. It was spelled here too, a
 #  character apart, which is two definitions of one thing waiting to disagree.
 from agent import clock
-from agent.ontology import PUBLIC
+from agent.ontology import ACTION
 from agent.store import _TOKEN, PREFIXES, graphs_of, rows
 
 log = logging.getLogger("footprint")
@@ -272,7 +272,7 @@ def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
     which is this module's to ask for, as `stored_edges` beside it already asks.
     """
     out = {}
-    for row in rows(store, _ACTIONS_Q, graphs_of(store, PUBLIC, at=at or clock.now())):
+    for row in rows(store, _ACTIONS_Q, graphs_of(store, ACTION, at=at or clock.now())):
         if not row.get("construct"):
             #  AN ACTION STATING NO EFFECT is an action an event adopts (#506) — never on a
             #  admitted by any world, never simulated — and has no place in a closure that

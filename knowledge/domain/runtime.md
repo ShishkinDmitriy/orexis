@@ -25,7 +25,10 @@ they are: the loader writes `orexis:Asserted`, and the owner where a graph is th
 graph stating no kind, one claiming to be the catalogue and one stating an arrival or an owner are
 refused (`store.document`).
 
-The vocabulary goes first, since whether a graph is public is the vocabulary's to say: every
+A document may import others, `owl:imports` with a relative IRI that resolves to the imported
+file's `file:` IRI, which is the name its graph is loaded under; the boot reads every import too,
+once each, so a world brings the [domains](/domain/domain.md) it speaks and a domain its own
+actions and shapes. The vocabulary goes first, since whether a graph is public is the vocabulary's to say: every
 document that says it is an ontology graph, each a graph of its own, then the closure over
 `rdfs:subClassOf` across all of them, written into one graph the runtime derives, so that a kind
 is every kind it is beneath. Then the world's public graphs, then the agent's identity, read off

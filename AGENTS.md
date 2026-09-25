@@ -594,9 +594,9 @@ it is a record wearing a bullet.
   `mqtt4ssn:matchesTopic` it — and a topic name is itself a valid filter — the agent subscribes by
   the pattern and publishes a command to one with no wildcard; what it listens to is derived from
   what it acts for, and the broker's address stays in the environment.
-- **A world owns its vocabulary, and the runtime boots from its files** — Hanoi's puzzle was a
-  tool package with an ontology and one action; in 0.2.0 `world/hanoi/` carries its own
-  `ontology.ttl` beside its actions, desires and state, `agent/runtime.py` reads the kernel's
+- **A world's words are its own or a domain's it imports, and the runtime boots from its files** — Hanoi's puzzle was a
+  tool package with an ontology and one action; in 0.2.0 the puzzle is the domain
+  `domains/hanoi/` and `world/hanoi/` imports it beside its desires and state, `agent/runtime.py` reads the kernel's
   T-Box, every package's and the world's as graphs of their own and derives the closure into
   one more, and the world's tests live with the world, since the target state is no global tests.
 - **The runtime stops when every desire is met** — a pass plans and then walks what is due; no
@@ -617,6 +617,17 @@ it is a record wearing a bullet.
   and never offered to the expansion that takes them; the courier's corner at sixteen a pass
   emptied its frontier short of the door and read EXHAUSTED for ever, while Hanoi's cuts had
   happened to leave nothing behind.
+- **A vocabulary two worlds speak is a domain, and a world imports it** — `domains/<name>/` holds
+  the words, the actions and the shapes a desire points at, and a world says
+  `owl:imports <../../domains/hanoi/ontology.ttl>`, which resolves to the `file:` IRI the graph is
+  loaded under, so the import names the graph it brings and the boot loads only what a world
+  asks for; the shapes are `orexis:ShapesGraph`, their own kind, because crossing every ontology
+  graph into the planner's view cost thirty times crossing the desires.
+- **A graph of actions is an `orexis:ActionGraph`, and the planner reads actions from those
+  alone** — the kind was 0.1.0's and the 0.2.0 census dropped it because nothing asked for it,
+  so Hanoi's actions were typed the bare `orexis:PublicGraph` and `admit`, `take` and
+  `footprint` read every public graph to find them; named for what it holds, and asked for by
+  the three reads, it is a term somebody reads.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1220,9 +1231,9 @@ it is a record wearing a bullet.
   `mqtt4ssn:matchesTopic` it — and a topic name is itself a valid filter — the agent subscribes by
   the pattern and publishes a command to one with no wildcard; what it listens to is derived from
   what it acts for, and the broker's address stays in the environment.
-- **A world owns its vocabulary, and the runtime boots from its files** — Hanoi's puzzle was a
-  tool package with an ontology and one action; in 0.2.0 `world/hanoi/` carries its own
-  `ontology.ttl` beside its actions, desires and state, `agent/runtime.py` reads the kernel's
+- **A world's words are its own or a domain's it imports, and the runtime boots from its files** — Hanoi's puzzle was a
+  tool package with an ontology and one action; in 0.2.0 the puzzle is the domain
+  `domains/hanoi/` and `world/hanoi/` imports it beside its desires and state, `agent/runtime.py` reads the kernel's
   T-Box, every package's and the world's as graphs of their own and derives the closure into
   one more, and the world's tests live with the world, since the target state is no global tests.
 - **The runtime stops when every desire is met** — a pass plans and then walks what is due; no
@@ -1243,6 +1254,17 @@ it is a record wearing a bullet.
   and never offered to the expansion that takes them; the courier's corner at sixteen a pass
   emptied its frontier short of the door and read EXHAUSTED for ever, while Hanoi's cuts had
   happened to leave nothing behind.
+- **A vocabulary two worlds speak is a domain, and a world imports it** — `domains/<name>/` holds
+  the words, the actions and the shapes a desire points at, and a world says
+  `owl:imports <../../domains/hanoi/ontology.ttl>`, which resolves to the `file:` IRI the graph is
+  loaded under, so the import names the graph it brings and the boot loads only what a world
+  asks for; the shapes are `orexis:ShapesGraph`, their own kind, because crossing every ontology
+  graph into the planner's view cost thirty times crossing the desires.
+- **A graph of actions is an `orexis:ActionGraph`, and the planner reads actions from those
+  alone** — the kind was 0.1.0's and the 0.2.0 census dropped it because nothing asked for it,
+  so Hanoi's actions were typed the bare `orexis:PublicGraph` and `admit`, `take` and
+  `footprint` read every public graph to find them; named for what it holds, and asked for by
+  the three reads, it is a term somebody reads.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads

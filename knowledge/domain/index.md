@@ -126,6 +126,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [agent-metrics](/domain/agent-metrics.md) - What an agent says about itself: belief base size, seconds since a sensor delivered, and the write failures.
 * [onboarding](/domain/onboarding.md) - The phase between genesis and a running society: a bucket, a token, a credential, an ACL, a compose file — all derived.
 * [world](/domain/world.md) - What a ratified world is made of, the rules for authoring one, and what genesis DERIVES rather than accepts.
+* [domain](/domain/domain.md) - What several worlds pose: its words, its actions, what its words mean when wanted. A world imports it.
 
 # Rules and resources
 

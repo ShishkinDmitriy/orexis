@@ -143,3 +143,8 @@ fictive moves itself and stops when every disk is home. The tool package under `
 words from it. The desire's met-test and estimate sit in `desires.ttl` rather than in the ontology,
 because the 0.2.0 planner reads a shape off the graph of desires. The world's tests live in
 `world/hanoi/tests/`, which is the shape every world takes: no global tests.
+
+The same day the puzzle moved again, since the tower poses Hanoi on the courier's grid and a
+vocabulary two worlds speak cannot belong to either: the words, the Move and what solving means
+are the [domain](/domain/domain.md) `domains/hanoi/`, and `world/hanoi/` imports it and keeps
+the mover, the disks, the desire and the tower as posed.

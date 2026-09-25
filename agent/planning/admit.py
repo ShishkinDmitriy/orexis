@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from urllib.parse import quote
 
-from agent.ontology import GRAPH_PREFIX, PUBLIC, local_of
+from agent.ontology import ACTION, GRAPH_PREFIX, local_of
 from agent.store import Raw, bind, bindings, catalogue_of, graphs_of, query, remember, render, rows, update
 
 from .world_at import world_at
@@ -84,7 +84,7 @@ def admit(store, world: str, me: str, *, memo=None) -> None:
     already = {(action, frozenset(filling)) for (_, action), filling in admitted.items()}
     edges = []
     for action in remember(memo, ("actions",), lambda: sorted(
-            bindings(query(store, _ACTIONS_Q, graphs_of(store, PUBLIC))), key=lambda r: r["action"])):
+            bindings(query(store, _ACTIONS_Q, graphs_of(store, ACTION))), key=lambda r: r["action"])):
         #  A precondition carrying a token nobody binds REFUSES rather than reaching the engine
         #  as a free variable (#500), so what is offered is what a premise may read: `$me`.
         params = {local_of(p): p for p in (action.get("takes_") or "").split()}

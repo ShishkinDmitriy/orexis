@@ -27,7 +27,7 @@ import pyoxigraph as ox
 import rdflib
 
 from agent import violation
-from agent.ontology import DESIRE, OREXIS, RECORD, WANT, local_of
+from agent.ontology import DESIRE, OREXIS, RECORD, SHAPES, WANT, local_of
 from agent.store import NAMESPACES, Raw, bind, catalogue_of, graphs_of, rdflib_view, remember, rows, update
 
 from .world_at import world_at
@@ -189,7 +189,7 @@ def _remaining(store, for_, world: str, held: dict, memo) -> str | None:
 def _estimate(store, for_, memo) -> str | None:
     """The `sh:select` the want's `orexis:estimates` points at — the want's own, or its
     desire's — off the shapes crossed once for the pass. None where neither declares one."""
-    shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD)))
+    shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
     want = rdflib.URIRef(for_)
     node = shapes.value(want, _ESTIMATES)
     if node is None:
@@ -204,7 +204,7 @@ def _select(store, for_, memo) -> str | None:
     constraint's index, what it is about and which way it broke — off the shapes crossed once
     for the pass. None, with a word in the log, where there is no shape or the compiler
     refuses it: a shape compiled to an empty pattern would read as met for ever."""
-    shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD)))
+    shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
     shape = shapes.value(rdflib.URIRef(for_), _MET_WHEN)
     if shape is None:
         return None

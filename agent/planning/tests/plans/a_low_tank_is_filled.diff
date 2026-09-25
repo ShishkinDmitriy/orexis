@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -85,4 +85,108 @@
+@@ -86,4 +86,108 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .

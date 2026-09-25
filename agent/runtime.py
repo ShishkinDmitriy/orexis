@@ -44,6 +44,7 @@ import logging
 import sys
 import time
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import pyoxigraph as ox
 
@@ -51,7 +52,7 @@ from agent import clock
 from agent.execution.executor import Executor
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, local_of
 from agent.planning.planner import Planner
-from agent.store import (catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, kinds_in,
+from agent.store import (catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of, kinds_in,
                          put_document, rows, update)
 
 log = logging.getLogger("runtime")
@@ -90,6 +91,24 @@ def documents(world: Path) -> list[Path]:
     return [kernel, *packages, *own]
 
 
+def _read_with_imports(paths: list[Path]) -> list[tuple[Path, ox.Store]]:
+    """Every document `paths` names and every one they import, each read once, in the order
+    met: a world imports the domains it speaks, and a domain its own documents. An import that
+    is no `file:` IRI names nothing a boot can read, and stays a row in the catalogue."""
+    read, seen, queue = [], set(), [p.resolve() for p in paths]
+    while queue:
+        path = queue.pop(0)
+        if path in seen:
+            continue
+        seen.add(path)
+        doc = document(path)
+        read.append((path, doc))
+        for iri in imports_of(doc):
+            if iri.startswith("file:"):
+                queue.append(Path(unquote(urlparse(iri).path)).resolve())
+    return read
+
+
 def _forget_the_files(store: ox.Store) -> None:
     """A volume lived in: every graph a document put in and nobody holds goes, rows and all,
     and the closure with them, since every one of them is read again."""
@@ -119,7 +138,7 @@ def boot(world: Path, agent_id: str, store: ox.Store | None = None) -> ox.Store:
         _forget_the_files(store)
     else:
         update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
-    read = [(path, document(path)) for path in documents(world)]
+    read = _read_with_imports(documents(world))
     #  THE VOCABULARY FIRST, since whether a graph is public is the vocabulary's to say.
     vocabulary = {path for path, doc in read if any(ONTOLOGY in k for k in kinds_in(doc).values())}
     for path, doc in read:

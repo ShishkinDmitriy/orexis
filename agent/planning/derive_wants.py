@@ -32,7 +32,7 @@ from datetime import datetime
 import pyoxigraph as ox
 import rdflib
 
-from agent.ontology import DESIRE, OREXIS, RECORD, WANT
+from agent.ontology import DESIRE, OREXIS, RECORD, SHAPES, WANT
 from agent.store import NAMESPACES, Memo, Raw, bind, graphs_of, rdflib_view, remember, rows
 
 from .withdraw import FORGET_ONE_U
@@ -103,7 +103,7 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
     """
     memo = Memo()
     shapes = remember(memo, ("shapes",),
-                      lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD)))
+                      lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
     scopes = find_scopes(store)
     if not rows(store, _GROUNDS_Q, ()):
         raise RuntimeError("the store holds no ground — lay_ground has not run")

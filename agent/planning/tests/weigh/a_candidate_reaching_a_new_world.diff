@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -111,6 +111,12 @@
+@@ -112,6 +112,12 @@
    possible:fill-tank1.by a planning:Candidate .
    possible:fill-tank1.by planning:fills :fill .
    possible:fill-tank1.by planning:from ground:2026-01-01T120000p0000 .

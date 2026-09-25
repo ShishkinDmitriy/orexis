@@ -27,6 +27,7 @@ GRAPH :actions {
 }
 
 GRAPH :catalogue {
+  :actions a orexis:ActionGraph .
   :actions a orexis:Graph .
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
