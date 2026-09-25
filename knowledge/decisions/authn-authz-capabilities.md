@@ -159,3 +159,18 @@ command is co-signed (the pump is networked) — consistent, not an oversight.
 
 Open, gated registration (naturalize + broke endowment); reputation attached to the durable
 cert identity. See [roadmap](/decisions/roadmap.md).
+
+# Amended 2026-09-25: in Agent 0.2.0 the holder signs, alone, until the market returns
+
+The settlement token needed a host to authorise a match and clearing to validate it, and 0.2.0 has
+no market yet: the greenhouse's grower doses its own bed through its own pump. The sovereign kept
+the boundary — a device still opens only for a signed command — and ruled who signs: the agent
+that holds the device (`actuation:hasActuator`), with its own Ed25519 key, the one `orexis-keygen`
+already makes per agent. The runtime signs every command a step sends before the transport carries
+it (`agent/signing.py`), and a runtime with no key sends nothing; the device holds the holder's
+public key alone and refuses a command that is unsigned, signed by anyone else, past its `exp`, or
+carrying a `jti` it has already taken.
+
+Refused: two signatures kept by adding a per-world key the runtime would also hold. Both keys would
+sit in one container, so the second proves nothing the first does not, and it would look like the
+separation the market gives without giving it. Host and clearing co-signing return with the market.

@@ -13,7 +13,9 @@ from agent import clock
 from agent.ontology import OREXIS
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import graphs_of, rows
+from agent.signing import verify
 from agent.transport.mqtt.driver import Mqtt
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -21,16 +23,20 @@ GH = "http://example.org/orexis/world/greenhouse#"
 
 
 class Broker:
-    """What the grower subscribes to and publishes, and nothing else of MQTT."""
+    """What the grower subscribes to and publishes, and nothing else of MQTT — each command held to
+    the signature of the agent that holds the device, as a device holds it."""
 
     def __init__(self):
-        self.subscribed, self.published = [], []
+        self.subscribed, self.published, self.holder = [], [], None
 
     def subscribe(self, pattern):
         self.subscribed.append(pattern)
 
     def publish(self, topic, payload, retain=False):
-        self.published.append((topic, json.loads(payload), retain))
+        """A command as the device reads it: what it asks, once the holder's signature checks."""
+        said = json.loads(payload)
+        assert verify(said, self.holder, spent=set(), now=clock.now().timestamp()), "the holder signed it"
+        self.published.append((topic, {k: v for k, v in said.items() if k not in ("jti", "exp", "sig")}, retain))
 
 
 class Clock:
@@ -50,8 +56,9 @@ def _grower(monkeypatch):
     monkeypatch.setattr(clock, "now", time)
     beliefs = boot(WORLD, "grower")
     broker = Broker()
-    runtime = Runtime(beliefs, "grower", transport=Mqtt(GH + "grower", broker))
-    runtime.time = time
+    key = Ed25519PrivateKey.generate()
+    runtime = Runtime(beliefs, "grower", transport=Mqtt(GH + "grower", broker), signing_key=key)
+    runtime.time, broker.holder = time, key.public_key()
     return runtime, broker
 
 
@@ -100,3 +107,13 @@ def test_a_cold_bed_is_heated_for_as_long_as_the_gap_takes(monkeypatch):
     runtime.deliver("sensors/thermometer/reading", b'{"value": 16.0}', NOW)
     runtime.run(passes=1, poll_s=0)
     assert broker.published == [("actuators/heater/command", {"heat_s": 3600}, False)]
+
+
+def test_with_no_key_a_command_is_not_sent(monkeypatch):
+    """A device opens only for its holder's signature, so an unsigned command is not sent at all."""
+    runtime, broker = _grower(monkeypatch)
+    runtime.signing_key = None
+    runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
+    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    runtime.run(passes=1, poll_s=0)
+    assert broker.published == []

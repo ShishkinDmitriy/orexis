@@ -62,7 +62,8 @@ the [deliberator](/domain/deliberator.md) runs the rules that conclude its side,
 [prediction](/domain/prediction.md) package writes the stretches ahead and the rules conclude
 theirs, and a reading fallen due is asked for again. A step whose action carries
 `execution:command` is taken by sending what the command answers, sized from the present, through
-the transport's `actuate`; the [greenhouse](/domain/domain.md)'s pump and heater are taken so.
+the transport's `actuate`, signed with the agent's own key since a device opens only for its holder;
+the [greenhouse](/domain/domain.md)'s pump and heater are taken so.
 
 **A world's tests live with the world.** `world/hanoi/tests/` boots the world from the files
 beside it and runs it to met; the target is no global tests at all.

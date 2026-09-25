@@ -654,6 +654,11 @@ it is a record wearing a bullet.
 - **The plant's surroundings are one domain** — water and climate were two 0.1.0 packages, and the
   soil's moisture, the air's temperature, the source and the heater are one `climate:` vocabulary
   in `domains/climate/`; actuation is the other, the devices and the dose.
+- **A device opens only for its holder's signature** — with the market waiting, the agent that
+  `actuation:hasActuator` a device signs every command a step sends with its own Ed25519 key, a
+  single-use `jti` and an `exp` beside it, and a runtime with no key sends nothing; a second,
+  per-world key in the same container was weighed and refused as separation it would not give
+  (authn-authz-capabilities).
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1317,6 +1322,11 @@ it is a record wearing a bullet.
 - **The plant's surroundings are one domain** — water and climate were two 0.1.0 packages, and the
   soil's moisture, the air's temperature, the source and the heater are one `climate:` vocabulary
   in `domains/climate/`; actuation is the other, the devices and the dose.
+- **A device opens only for its holder's signature** — with the market waiting, the agent that
+  `actuation:hasActuator` a device signs every command a step sends with its own Ed25519 key, a
+  single-use `jti` and an `exp` beside it, and a runtime with no key sends nothing; a second,
+  per-world key in the same container was weighed and refused as separation it would not give
+  (authn-authz-capabilities).
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads

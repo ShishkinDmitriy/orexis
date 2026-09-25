@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import queue
 import sys
 import time
@@ -57,6 +58,7 @@ from agent.execution.command import command
 from agent.execution.executor import Executor
 from agent.prediction.predict import predict
 from agent.sensing.missed import missed
+from agent.signing import load_key, sign
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, local_of
 from agent.planning.planner import Planner
 from agent.store import (catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of, kinds_in,
@@ -198,8 +200,9 @@ class Runtime:
     does alone."""
 
     def __init__(self, beliefs: ox.Store, agent_id: str, *, budget: int | None = None,
-                 intentions: ox.Store | None = None, transport=None, connect=None):
+                 intentions: ox.Store | None = None, transport=None, connect=None, signing_key=None):
         self.beliefs, self.id = beliefs, agent_id
+        self.signing_key = signing_key
         self.me = _identity(beliefs, agent_id)
         self.inbox: queue.SimpleQueue = queue.SimpleQueue()
         self.transport = transport if transport is not None else (
@@ -241,14 +244,19 @@ class Runtime:
         return written
 
     def _take(self, said: dict, intention: str) -> None:
-        """Take a step by sending what its action's command answers, sized from the present; a
-        step whose action carries none is said in the log, as the executor would."""
+        """Take a step by sending what its action's command answers, sized from the present and
+        SIGNED with this agent's key, since a device opens only for its holder; a step whose action
+        carries none is said in the log, as the executor would. With no key the command is not
+        sent — a device would refuse it — and the executor's patience says what that costs."""
         sent = command(self.beliefs, said, self.me)
         if not sent:
             self.executor.say(said, intention)
             return
+        if self.signing_key is None:
+            log.error("%s: no signing key, so the command for %s is not sent", self.id, local_of(said["step"]))
+            return
         for actuator, payload in sent:
-            self.transport.actuate(self.beliefs, actuator, payload)
+            self.transport.actuate(self.beliefs, actuator, sign(payload, self.signing_key))
 
     def run(self, *, passes: int | None = None, poll_s: float = 1.0) -> str:
         """Pass after pass until nothing is left to pursue (`met`), or nothing this agent holds
@@ -326,7 +334,10 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     store = ox.Store(str(args.volume)) if args.volume else None
     beliefs = boot(args.world, args.agent, store)
-    outcome = Runtime(beliefs, args.agent, budget=args.budget, connect=_transport_of(beliefs)).run(passes=args.passes)
+    #  THE AGENT'S OWN KEY, mounted into its container alone: where a deployment says it is.
+    key = os.environ.get("OREXIS_SIGNING_KEY")
+    outcome = Runtime(beliefs, args.agent, budget=args.budget, connect=_transport_of(beliefs),
+                      signing_key=load_key(key) if key else None).run(passes=args.passes)
     return {MET: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
 
 
