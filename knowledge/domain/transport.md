@@ -48,12 +48,22 @@ the MQTT protocol in the OASIS specification's own terms, vendored under `tests/
 `mqtt4ssn:matchesTopic` it, each with its `mqtt4ssn:hasFilterPattern`, since a topic name is itself a
 valid filter. The agent is a client too, and what it listens to is never authored: its sensors are
 those mounted in what it acts for, and their topics' patterns are its subscriptions. One class,
-`Mqtt`, over a client the container connected: it answers the family's `Transport` contract, `open`
-subscribes what the world implies, and `handle` is the listener, one call of sensing's `received`
-per sensor of the agent's whose pattern matches the message's topic, `received` reading the codec,
-the pointer and the scaling off the sensor's own binding. The driver sets no callback: a message
-arrives on the client's network thread, and the container enqueues it for the one executing thread.
-The broker's address and the agent's credentials stay in the environment, and no host or port is
-read off the world. The words
+`Mqtt`, answering the family's `Transport` contract at `agent/transport/transport.py`: `connect`
+brings it up from the environment — the broker's address, the agent's credential and its
+certificate in this transport's own variables, refusing to guess either, with paho imported there
+and nowhere else in the agent — `open` subscribes what the world implies, and `handle` is the
+listener, one call of sensing's `received` per sensor of the agent's whose pattern matches the
+message's topic, `received` reading the codec, the pointer and the scaling off the sensor's own
+binding. A message arrives on the client's network thread, so `connect` hands it to the
+container's `deliver`, which enqueues it for the one executing thread. No host or port is read off
+the world; 0.1.0 read the bus's off the world as the one piece of infrastructure everyone must
+agree on, and MQTT4SSN has `hasHostAddress` on a Broker, so that is a choice open to reversal.
+
+**A seam, not a debt.** The member is not yet a distribution of its own with paho as its
+dependency: the root declares paho because `onboarding/ask.py` imports it too, and
+`tests/test_projects.py` holds the root's list to its own trees' imports both ways, so paho leaves
+the root only when the transport carries it. Whether the 0.2.0 packages become distributions, and
+under what module names given that 0.1.0 abandoned a shared import root for flat top-level
+modules, is genesis 0.2.0's question. The words
 `MessageBus`, `readingTopic`, `commandTopic`, `Channel`, `publishesOn` and `listensOn` are the 0.1.0
 package's, and 0.2.0 speaks none of them.

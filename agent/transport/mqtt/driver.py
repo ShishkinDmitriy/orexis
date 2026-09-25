@@ -19,20 +19,29 @@ document, and each sensor takes its own value out of it — and `received` reads
 pointer and the scaling off the sensor's own binding in the world. What `handle` answers is the
 sensor and the graph written, for whoever runs the rest of a pass over them.
 
-**THE CLIENT IS THE CONTAINER'S, AND SO IS THE THREAD.** The driver is handed a client with
-paho's shape — `subscribe(pattern)`, `publish(topic, payload, retain=)` — that the container
-made with the broker's address and the agent's credentials from the environment and connected;
-it sets no callback, since a message arrives on the client's network thread and a write belongs
-on the one executing thread, so the container's `on_message` enqueues and its thread calls
-`handle`. Nothing here reads a host or a port off the world.
+**THE MEMBER BRINGS ITSELF UP, AND THE THREAD IS THE CONTAINER'S.** `connect` makes the client
+from the environment, in this transport's own variables — `MQTT_HOST` and `MQTT_PORT`, the
+agent's `MQTT_USERNAME` and `MQTT_PASSWORD`, and `MQTT_CA`, `MQTT_CERT` and `MQTT_KEY` with
+`MQTT_TLS_PORT` where it holds a certificate — and paho is imported there and nowhere else in
+the agent. It refuses without a host or a credential rather than guess one, for the reason no
+command has a default world: a guess puts a misconfigured agent on the real topics. A message
+arrives on the client's network thread, and a write belongs on the one executing thread, so
+`connect` hands every message to the container's `deliver(topic, payload, at)`, which enqueues,
+and the container's thread calls `handle`. A test hands a client of its own with paho's shape —
+`subscribe`, `publish`, `connect`, `loop_start` and the two setters. Nothing here reads a host
+or a port off the world; 0.1.0 read the bus's off the world as the one piece of infrastructure
+everyone must agree on, and MQTT4SSN has `hasHostAddress` on a Broker, so that is a choice the
+sovereign may reverse.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import os
 from datetime import datetime
 
+from agent import clock
 from agent.ontology import PUBLIC, local_of
 from agent.sensing.received import received
 from agent.store import graphs_of, rows
@@ -77,6 +86,34 @@ class Mqtt(Transport):
 
     def __init__(self, me: str, client):
         self.me, self.client = me, client
+
+    @classmethod
+    def connect(cls, me: str, deliver, *, environ=None, client=None) -> "Mqtt":
+        """The agent's side of the bus, up: a client under the agent's credential, with a
+        certificate where the environment holds one, connected to the broker the environment
+        names, its loop running, and every message handed to `deliver(topic, payload, at)`."""
+        env = os.environ if environ is None else environ
+        host, username = env.get("MQTT_HOST"), env.get("MQTT_USERNAME")
+        if not host:
+            raise RuntimeError("no MQTT_HOST in the environment — this agent is told where its bus is, never guesses")
+        if not username:
+            raise RuntimeError("no MQTT_USERNAME in the environment — this agent has no credential for the bus. "
+                               "Run `orexis-mqtt <world>` and regenerate the compose file.")
+        if client is None:
+            import paho.mqtt.client as paho                 # the one import of the library in the agent
+            client = paho.Client(paho.CallbackAPIVersion.VERSION2, client_id=local_of(me))
+        ca, cert, key = env.get("MQTT_CA"), env.get("MQTT_CERT"), env.get("MQTT_KEY")
+        if ca and cert and key:
+            client.tls_set(ca_certs=ca, certfile=cert, keyfile=key)
+            port = int(env.get("MQTT_TLS_PORT", 8883))
+        else:
+            port = int(env.get("MQTT_PORT", 1883))
+        client.username_pw_set(username, env.get("MQTT_PASSWORD"))
+        client.on_message = lambda _client, _userdata, message: deliver(message.topic, message.payload, clock.now())
+        client.connect(host, port)
+        client.loop_start()
+        log.info("%s on %s:%s%s", local_of(me), host, port, " with a certificate" if ca and cert and key else "")
+        return cls(me, client)
 
     @classmethod
     def claims(cls, store, sensor: str) -> bool:

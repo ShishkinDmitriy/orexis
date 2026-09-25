@@ -25,16 +25,43 @@ _RESULTS_Q = "SELECT ?p ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:obser
 
 
 @dataclass
+class Message:
+    topic: str
+    payload: bytes
+
+
+@dataclass
 class Client:
-    """What paho's client looks like to the driver: subscribe and publish."""
+    """What paho's client looks like to the driver: subscribe and publish, and for `connect`
+    the two setters, the connection and the loop, with an `on_message` it sets."""
     subscribed: list = field(default_factory=list)
     published: list = field(default_factory=list)
+    tls: tuple | None = None
+    credential: tuple | None = None
+    connected: tuple | None = None
+    looping: bool = False
+    on_message: object = None
 
     def subscribe(self, pattern: str) -> None:
         self.subscribed.append(pattern)
 
     def publish(self, topic: str, payload: bytes, retain: bool = False) -> None:
         self.published.append((topic, payload, retain))
+
+    def tls_set(self, ca_certs=None, certfile=None, keyfile=None) -> None:
+        self.tls = (ca_certs, certfile, keyfile)
+
+    def username_pw_set(self, username, password=None) -> None:
+        self.credential = (username, password)
+
+    def connect(self, host, port) -> None:
+        self.connected = (host, port)
+
+    def loop_start(self) -> None:
+        self.looping = True
+
+
+BY_PASSWORD = {"MQTT_HOST": "broker", "MQTT_PORT": "1888", "MQTT_USERNAME": "keeper", "MQTT_PASSWORD": "s3cret"}
 
 
 @pytest.fixture
@@ -101,6 +128,31 @@ def test_a_message_a_sensor_cannot_read_writes_nothing_for_it(bus, snapshots, ca
         written = driver.handle(store, "sensors/board/reading", b'{"temperature": 21.5}', snapshots.NOW)
     assert written == [(THERMO, OBSERVED + "zamioculcas_warmth")], "the hygrometer's field is missing, the thermometer's is there"
     assert "unread" in caplog.text
+
+
+def test_connect_brings_the_bus_up_from_the_environment_and_delivers_to_the_container(monkeypatch, snapshots):
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    delivered, session = [], Client()
+    bus = Mqtt.connect(snapshots.ME, lambda topic, payload, at: delivered.append((topic, payload, at)), environ=BY_PASSWORD, client=session)
+    assert isinstance(bus, Mqtt) and bus.client is session
+    assert session.credential == ("keeper", "s3cret") and session.connected == ("broker", 1888) and session.looping
+    assert session.tls is None, "no certificate in the environment, so by password"
+    session.on_message(session, None, Message("sensors/board/reading", b"{}"))
+    assert delivered == [("sensors/board/reading", b"{}", snapshots.NOW)], "to the container's queue, at the present"
+
+
+def test_connect_uses_a_certificate_and_the_tls_port_where_the_environment_holds_one(snapshots):
+    session = Client()
+    Mqtt.connect(snapshots.ME, lambda *a: None, client=session,
+                 environ={**BY_PASSWORD, "MQTT_CA": "ca.pem", "MQTT_CERT": "keeper.pem", "MQTT_KEY": "keeper.key", "MQTT_TLS_PORT": "8888"})
+    assert session.tls == ("ca.pem", "keeper.pem", "keeper.key") and session.connected == ("broker", 8888)
+
+
+def test_connect_refuses_to_guess_a_host_or_a_credential(snapshots):
+    with pytest.raises(RuntimeError, match="MQTT_HOST"):
+        Mqtt.connect(snapshots.ME, lambda *a: None, environ={"MQTT_USERNAME": "keeper"}, client=Client())
+    with pytest.raises(RuntimeError, match="MQTT_USERNAME"):
+        Mqtt.connect(snapshots.ME, lambda *a: None, environ={"MQTT_HOST": "broker"}, client=Client())
 
 
 def test_filter_matching_is_mqtts_own():
