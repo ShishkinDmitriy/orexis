@@ -663,6 +663,12 @@ it is a record wearing a bullet.
   dosing its own bed through its own pump has no second party to convince, and the broker's ACL
   already admits only the holder to its devices' command topics, so 0.2.0 signs nothing until the
   market returns (authn-authz-capabilities).
+- **The simulator is a process of the world, not a pretend board** — it reads the world as an agent
+  boots it and plays every system marked `sim:simulatedBy` from the world's own words: the topics
+  from MQTT4SSN, the cadence from a sensor's `ssn-system:Frequency`, the drying, a dose and a
+  heating from the climate and actuation domains; so `domains/sim/` says only what the world
+  lacks, a system's model, starting reading and bounds, and the 0.1.0 stand-ins, told everything
+  as environment like a board, went with the physics they duplicated (`simulation/`).
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1335,6 +1341,12 @@ it is a record wearing a bullet.
   dosing its own bed through its own pump has no second party to convince, and the broker's ACL
   already admits only the holder to its devices' command topics, so 0.2.0 signs nothing until the
   market returns (authn-authz-capabilities).
+- **The simulator is a process of the world, not a pretend board** — it reads the world as an agent
+  boots it and plays every system marked `sim:simulatedBy` from the world's own words: the topics
+  from MQTT4SSN, the cadence from a sensor's `ssn-system:Frequency`, the drying, a dose and a
+  heating from the climate and actuation domains; so `domains/sim/` says only what the world
+  lacks, a system's model, starting reading and bounds, and the 0.1.0 stand-ins, told everything
+  as environment like a board, went with the physics they duplicated (`simulation/`).
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads

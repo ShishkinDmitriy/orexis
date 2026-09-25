@@ -95,7 +95,7 @@ orexis-validate simulation
 | `tool/` | vocabularies a generator reads, not the society |
 
 **A family nobody thought of is still found.** `KINDS` in the loader is a sort order, not a
-gate: a new family sorts after the known ones instead of being ignored. `packages/orexis-sim-*/` was
+gate: a new family sorts after the known ones instead of being ignored. `domains/sim/` was
 added without touching the loader.
 
 # What may be in it, and what an omission means

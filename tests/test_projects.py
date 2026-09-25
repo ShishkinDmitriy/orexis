@@ -34,7 +34,7 @@ PACKAGES_ROOT = REPO_ROOT / "packages"
 
 #  The trees this repository's own distribution ships. An import of one is a dependency on
 #  `orexis` and not on anything third-party.
-OWN_TREES = {"assembly", "agent", "agent_old", "onboarding"}
+OWN_TREES = {"assembly", "agent", "agent_old", "onboarding", "simulation"}
 ROOT_DIST = "orexis"
 
 #  THE LAYERS, IN ORDER, spelled ONCE. The kernel is three packages in the one tree — the

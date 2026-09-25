@@ -609,7 +609,8 @@ def test_a_dictionary_term_is_a_declared_one():
     #  binds one of them binds a term this guard would otherwise call undeclared. Their
     #  prefixes are read off their own `@prefix` lines, as `agent.store` reads them.
     ontologies = list(loader.ontology_files()) + sorted(
-        p for p in (REPO_ROOT / "agent").rglob("ontology.ttl") if "tests" not in p.parts)
+        p for p in (REPO_ROOT / "agent").rglob("ontology.ttl") if "tests" not in p.parts) + sorted(
+        (REPO_ROOT / "domains").glob("*/ontology.ttl"))     # and the domains 0.2.0's worlds import
     project = rdflib.Graph()
     for ttl in ontologies:
         project.parse(ttl)

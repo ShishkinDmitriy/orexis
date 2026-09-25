@@ -129,7 +129,7 @@ and **eleven are not true of every agent**:
 - **The simulated device model — seven terms** *(eleven since the scenario grew: the physics
   went time-based and the weather arrived)*. (AMENDED, and this paragraph's own closing line is what
   happened: **the simulation package exists.** Every term here is `sim:` now, in
-  `packages/orexis-sim-standin/`, and shed the `model` prefix it wore to fake a namespace inside `orexis:` —
+  `domains/sim/`, and shed the `model` prefix it wore to fake a namespace inside `orexis:` —
   see [the-substrate-is-not-the-minds](/decisions/the-substrate-is-not-the-minds.md) for why it
   left the kernel and [a-stand-in-is-not-a-device](/decisions/a-stand-in-is-not-a-device.md) for
   why it is not filed with the hardware.)

@@ -1,0 +1,34 @@
+@prefix : <http://example.org/orexis/sim#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  SIMULATION, A DOMAIN.
+#  What a world lacks to be played without its hardware, and nothing more. The simulator
+#  (`simulation/`) is a process of the world, not a pretend board: it reads the world as an agent
+#  boots it and plays every system marked `sim:simulatedBy` from the world's own words — the topics
+#  from MQTT4SSN, how often a sensor reports from its `ssn-system:Frequency`, how the subject dries
+#  and what a dose or a heating does to it from the climate and actuation domains. What only a
+#  simulation needs is here: that no such thing exists and a process plays it, and where its
+#  reading starts and between which bounds it can move. The 0.1.0 package's own physics rates, its
+#  tick, its time scale and its meddler went with the physics to the domains that own it.
+
+:simulatedBy a owl:ObjectProperty ; rdfs:domain ssn:System ; rdfs:range :Model ;
+    rdfs:label "simulated by" ;
+    rdfs:comment "No such thing exists: the simulator plays it, publishing on the same topics and taking the same commands. On the system, so a sensor and an actuator are marked alike." .
+
+:Model a owl:Class ; rdfs:label "Model" ;
+    rdfs:comment "What the simulator needs of a simulated system that the world does not already say: for a sensor, where its reading starts and its bounds." .
+
+:initialValue a owl:DatatypeProperty ; rdfs:domain :Model ; rdfs:range xsd:decimal ;
+    rdfs:label "initial value" ;
+    rdfs:comment "What the sensor reads before anything has happened to what it observes." .
+
+:minValue a owl:DatatypeProperty ; rdfs:domain :Model ; rdfs:range xsd:decimal ; rdfs:label "minimum" ;
+    rdfs:comment "The floor of what it can report: a moisture fraction runs 0 to 1, a thermometer does not." .
+
+:maxValue a owl:DatatypeProperty ; rdfs:domain :Model ; rdfs:range xsd:decimal ; rdfs:label "maximum" .

@@ -67,7 +67,7 @@ should be rewriting it.
 So the owner is the package whose **absence makes the rule meaningless**, not the one that owns the
 words the rule happens to be spelled in. *An actuator on a bus must state a command topic* is
 meaningless without the bus, so it is the transport's. *A stand-in must report* is meaningless
-without stand-ins, so it is `packages/orexis-sim-standin/`'s — and `sim:StandInReportsShape` and
+without stand-ins, so it is `domains/sim/`'s — and `sim:StandInReportsShape` and
 `sim:StandInReachableShape` live there, naming `mqtt:` terms and, in the first case,
 `actuation:actuates` too. A package about pretending to be an X reachable over a Y has both words
 in its subject; that is its business rather than a leak.
