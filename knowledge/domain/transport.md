@@ -47,10 +47,13 @@ the MQTT protocol in the OASIS specification's own terms, vendored under `tests/
 `mqtt4ssn:listensToTopic` another; and a topic is named only by the `mqtt4ssn:TopicFilter`s that
 `mqtt4ssn:matchesTopic` it, each with its `mqtt4ssn:hasFilterPattern`, since a topic name is itself a
 valid filter. The agent is a client too, and what it listens to is never authored: its sensors are
-those mounted in what it acts for, and their topics' patterns are its subscriptions. Three parts:
-`Mqtt` answers sensing's driver contract and hands a command to whoever publishes; `handle` is the
-listener, one call of sensing's `received` per sensor of the agent's whose pattern matches the
-message's topic; `Link` wraps a client the container has connected. The broker's address and the
-agent's credentials stay in the environment, and no host or port is read off the world. The words
+those mounted in what it acts for, and their topics' patterns are its subscriptions. One class,
+`Mqtt`, over a client the container connected: it answers sensing's driver contract, `open`
+subscribes what the world implies, and `handle` is the listener, one call of sensing's `received`
+per sensor of the agent's whose pattern matches the message's topic, `received` reading the codec,
+the pointer and the scaling off the sensor's own binding. The driver sets no callback: a message
+arrives on the client's network thread, and the container enqueues it for the one executing thread.
+The broker's address and the agent's credentials stay in the environment, and no host or port is
+read off the world. The words
 `MessageBus`, `readingTopic`, `commandTopic`, `Channel`, `publishesOn` and `listensOn` are the 0.1.0
 package's, and 0.2.0 speaks none of them.

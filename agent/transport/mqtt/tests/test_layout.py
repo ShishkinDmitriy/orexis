@@ -23,7 +23,7 @@ VOCABULARY = sorted(MQTT.glob("*.ttl"))
 VENDORED = ROOT / "tests" / "fixtures" / "vocabularies" / "mqtt4ssn.ttl"
 
 #  A MODULE NAMED FOR A THING, which may hold a class and several reads of it.
-NOUNS = {"ontology", "driver", "link"}
+NOUNS = {"ontology", "driver"}
 
 ABOVE = ("planning", "prediction", "execution", "belief")
 

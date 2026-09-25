@@ -13,11 +13,13 @@ declares no word of its own; its ontology imports MQTT4SSN and says which of its
 its sensors are those `sosa:isHostedBy` the subject it `orexis:actsFor`, or a sample of it, and their
 topics' filters are its subscriptions. The world never says "the agent polls this sensor".
 
-**THREE PARTS, AND THE SOCKET IS THE CONTAINER'S.** `Mqtt` implements sensing's `Driver` contract —
-claims, subscriptions, own, cadence, nudge — and hands a command to whoever publishes for it.
-`handle` is the listener: a message's topic and bytes, at an instant, become one call of sensing's
-`received` per sensor of the agent's whose filter matches the topic. `Link` wraps an MQTT client the
-container has connected — subscribes what the world implies, routes each message to `handle`, and
-publishes what the driver hands it. The broker's address and credentials are deployment facts and
-stay in the environment; nothing here reads a host or a port off the world.
+**ONE CLASS, AND THE SOCKET AND THE THREAD ARE THE CONTAINER'S.** `Mqtt` is the agent's side of
+the bus over a client the container made from the environment and connected: it answers sensing's
+`Driver` contract — claims, subscriptions, own, cadence, nudge — `open` subscribes what the world
+implies, and `handle` is the listener, a message's topic and bytes at an instant becoming one call
+of sensing's `received` per sensor of the agent's whose filter matches; `received` reads the codec,
+the pointer and the scaling off the sensor's own binding, so the transport knows no codec. The
+driver sets no callback of its own: a message arrives on the client's network thread, and the
+container's `on_message` enqueues it for the one executing thread to hand to `handle`. Nothing here
+reads a host or a port off the world.
 """
