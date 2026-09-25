@@ -132,3 +132,14 @@ the tree; the optimum is the deontic sitting's two-stage ranking doing what it s
 tested is tested, its three bullets each answered, and the design question it reserved was
 answered by the deontic sitting before this world existed. The runtime half stands above as
 a named seam.
+
+# Amended 2026-09-25: in Agent 0.2.0 the plug-in is the world's own ontology
+
+The claim stands and the place moved. A vocabulary specific to one world belongs with that world,
+so `world/hanoi/` carries its own `ontology.ttl` beside `actions.ttl`, `world.ttl`, `desires.ttl` and
+`state.ttl`, and the [runtime](/domain/runtime.md) boots from those five files, plans, takes the
+fictive moves itself and stops when every disk is home. The tool package under `packages/` is the
+0.1.0 tree's and stays until `world/tower` migrates, since tower's genesis still loads the puzzle's
+words from it. The desire's met-test and estimate sit in `desires.ttl` rather than in the ontology,
+because the 0.2.0 planner reads a shape off the graph of desires. The world's tests live in
+`world/hanoi/tests/`, which is the shape every world takes: no global tests.

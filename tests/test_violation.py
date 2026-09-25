@@ -15,8 +15,6 @@ from conftest import genesis_store
 
 SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 STATE_GRAPH = "http://example.org/orexis/graph/sensed"
-HANOI = "http://example.org/orexis/hanoi#"
-HANOI_W = "http://example.org/orexis/world/hanoi#"
 COURIER = "http://example.org/orexis/courier#"
 COURIER_W = "http://example.org/orexis/world/courier#"
 
@@ -59,14 +57,6 @@ CASES = {
     "fern, dry": ("simulation", "fern", None, {"fern": 0.10}),
     "fern, watered": ("simulation", "fern", None, {"fern": 0.40}),
     "loner's gardener": ("loner", "gardener", None, None),
-    "hanoi, one disk astray": ("hanoi", "hanoi",
-                               f"<{HANOI_W}disk_1> <{HANOI}on> <{HANOI}PegA> .", None),
-    "hanoi, one disk home": ("hanoi", "hanoi",
-                             f"<{HANOI_W}disk_1> <{HANOI}on> <{HANOI}PegC> .", None),
-    "hanoi, three astray": ("hanoi", "hanoi",
-                            f"<{HANOI_W}disk_3> <{HANOI}on> <{HANOI}PegA> . "
-                            f"<{HANOI_W}disk_2> <{HANOI}on> <{HANOI_W}disk_3> . "
-                            f"<{HANOI_W}disk_1> <{HANOI}on> <{HANOI_W}disk_2> .", None),
     "courier, parcel astray": ("courier", "courier",
                                f"<{COURIER_W}van> <{COURIER}at> <{COURIER_W}c0_0> . "
                                f"<{COURIER_W}parcel> <{COURIER}at> <{COURIER_W}c1_2> .", None),
@@ -101,8 +91,7 @@ def test_both_answers_are_reached_so_the_parity_is_not_vacuous(monkeypatch):
     """A parity that only ever saw one answer would agree by accident. Delivered and astray,
     home and astray, watered and dry are all above; this pins that both verdicts occur."""
     seen = set()
-    for case in ("hanoi, one disk home", "hanoi, one disk astray",
-                 "courier, delivered", "courier, parcel aboard"):
+    for case in ("fern, watered", "fern, dry", "courier, delivered", "courier, parcel aboard"):
         world, name, pose, readings = CASES[case]
         for _, compiled, _, _ in _both_verdicts(_agent(monkeypatch, world, name, pose, readings)):
             seen.add(compiled)

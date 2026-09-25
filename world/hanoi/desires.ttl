@@ -1,0 +1,32 @@
+@prefix : <http://example.org/orexis/world/hanoi#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  THE GOAL, as a desire the derivation mints one want from: every disk home on peg C. What
+#  solving MEANS is the shape — on every disk in play, following hanoi:on one or more times
+#  reaches peg C — and how far it is is the estimate, the count of disks astray, which never
+#  overstates the moves left. Both are here rather than in the ontology because the met-test is
+#  read off the graph of desires, and the want this becomes is one-shot: met once, it stays met,
+#  and the runtime stops.
+
+:hanoi orexis:holds :every_disk_home .
+
+:every_disk_home a orexis:Desire ;
+    rdfs:label "every disk home on peg C" ;
+    orexis:metWhen hanoi:solved ;
+    orexis:estimates hanoi:disksAstray .
+
+hanoi:solved a sh:NodeShape ;
+    rdfs:label "every disk's chain bottoms out on peg C" ;
+    sh:targetSubjectsOf hanoi:on ;
+    sh:property [ sh:path [ sh:oneOrMorePath hanoi:on ] ; sh:hasValue hanoi:PegC ] .
+
+hanoi:disksAstray rdfs:label "disks not yet home" ;
+    sh:select """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+        SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
+            ?d hanoi:on ?rest . ?d (hanoi:on)+ ?p .
+            ?p a hanoi:Peg .
+            FILTER(?p != hanoi:PegC)
+        }""" .

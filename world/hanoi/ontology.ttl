@@ -1,0 +1,40 @@
+@prefix : <http://example.org/orexis/hanoi#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/orexis/hanoi> a owl:Ontology ;
+    rdfs:label "Tower of Hanoi" ;
+    rdfs:comment """The puzzle's words, owned by the world that poses it. Tower of Hanoi is the smallest world
+    whose whole point is the search: a classical planning domain that is an ontology, one move and no
+    Python, and in Agent 0.2.0 it is a WORLD — this directory — rather than a package, because a
+    vocabulary specific to one world belongs with that world. The pegs are the puzzle's invariant and
+    are declared here; the disks are the world's and are declared in world.ttl; where each disk rests
+    is runtime state, posed in state.ttl and rewritten by the move. What solving means and how far it
+    is are the desire's, in desires.ttl, since the met-test is read from the graph of desires.""" .
+
+#################  The board  #################
+
+:Peg a owl:Class ; rdfs:label "Peg" ;
+    rdfs:comment "One of the three rods — an individual each, because every Tower of Hanoi ever posed has exactly these three." .
+:PegA a :Peg ; rdfs:label "peg A" ; rdfs:comment "Where every puzzle starts." .
+:PegB a :Peg ; rdfs:label "peg B" ; rdfs:comment "The spare." .
+:PegC a :Peg ; rdfs:label "peg C" ; rdfs:comment "Where every goal points." .
+
+:Disk a owl:Class ; rdfs:label "Disk" ;
+    rdfs:comment "A world's individuals, sized. How many there are is the world's whole authorship of an instance of this puzzle." .
+
+:size a owl:DatatypeProperty ; rdfs:domain :Disk ; rdfs:range xsd:integer ; rdfs:label "size" ;
+    rdfs:comment "Smaller number, smaller disk. Legality is one comparison: a move onto a peg holding any smaller disk is no move at all." .
+
+:on a owl:ObjectProperty ; rdfs:domain :Disk ; rdfs:label "on" ;
+    rdfs:comment "What a disk rests on — another disk, or a peg. Runtime state, never authored as the world: it lives in the state graph, the move retracts and adds it, and the chain (:on)+ down to a peg is what 'on peg P' means in every text here." .
+
+#################  What a move is filled with  #################
+
+:disk a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "disk" ;
+    rdfs:comment "The disk a move moves. Declared by :Move as orexis:takes, bound by its precondition to whatever is on top of a stack." .
+
+:onto a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "onto" ;
+    rdfs:comment "The peg a move moves its disk onto. Bound to a peg holding no smaller disk; the effect walks to the top of whatever rests there." .

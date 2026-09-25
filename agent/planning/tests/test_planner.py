@@ -218,3 +218,28 @@ def test_a_search_the_budget_cuts_short_is_finished_by_the_passes_after(monkeypa
     assert _steps(planner) == 7
     (im,) = planner.imaginaria.values()
     assert int(rows(im, _WEIGHED_Q, ())[0]["n"]) == whole, "no candidate weighed twice, and none skipped"
+
+
+def test_standing_and_exhausted_are_what_a_runtime_asks_after_a_pass(monkeypatch, snapshots):
+    """A runtime stops when nothing stands and nothing walks, and tells a search the budget
+    cut short from a want nothing reaches by `exhausted`; both are the Planner's to answer,
+    since the wants stand in its imaginaria and the outcomes on its plans."""
+    store = snapshots.stand_in(BENCH / "three_disk_hanoi.trig")
+    planner = Planner(store, snapshots.AGENT, executor=Executor(store, snapshots.AGENT), budget=20)
+    for i in range(3):
+        at = snapshots.NOW + timedelta(minutes=i)
+        monkeypatch.setattr(clock, "now", lambda at=at: at)
+        planner.plan(at)
+        assert len(planner.standing(at)) == 1, "the want stands until its desire reads met"
+        assert planner.exhausted() == (i < 2), "cut short twice, then satisfied"
+
+
+def test_scope_is_the_boots_act_and_writes_what_a_pass_reads(snapshots):
+    """A boot calls it once, on the store, and a pass reads what it wrote."""
+    store = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
+    scopes_q = "SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a <http://example.org/orexis/planning#Scope> } }"
+    store.update("DELETE WHERE { GRAPH ?g { ?s ?p <http://example.org/orexis/planning#Scope> } }")
+    assert int(rows(store, scopes_q, ())[0]["n"]) == 0
+    Planner.scope(store)
+    assert int(rows(store, scopes_q, ())[0]["n"]) >= 1, "the scopes are written again, from the actions"
+    Planner(store, snapshots.AGENT).plan(snapshots.NOW)

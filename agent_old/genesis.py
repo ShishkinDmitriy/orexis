@@ -101,8 +101,11 @@ def worlds() -> list[str]:
     """Every ratified world on disk. Found by looking, like everything else."""
     if not WORLDS_ROOT.is_dir():
         return []
+    #  A 0.1.0 WORLD MOUNTS PRIVATE BELIEFS. A directory of world files with no `beliefs/` is a
+    #  0.2.0 world — five files and its own ontology, booted by `agent.runtime` and tested in its
+    #  own `tests/` — which this genesis has no shapes for and is not asked to validate.
     return sorted(
-        d.name for d in WORLDS_ROOT.iterdir() if d.is_dir() and world_files(d)
+        d.name for d in WORLDS_ROOT.iterdir() if d.is_dir() and world_files(d) and (d / "beliefs").is_dir()
     )
 
 

@@ -1,0 +1,10 @@
+@prefix : <http://example.org/orexis/world/hanoi#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+
+#  THE TOWER AS POSED: three disks on peg A, smallest on top. The first state graph, and the
+#  only file here the runtime never reloads — from the first boot on, where the disks rest is
+#  the agent's belief, rewritten by its own moves.
+
+:disk_1 hanoi:on :disk_2 .
+:disk_2 hanoi:on :disk_3 .
+:disk_3 hanoi:on hanoi:PegA .
