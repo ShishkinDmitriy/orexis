@@ -599,7 +599,9 @@ it is a record wearing a bullet.
   `domains/hanoi/` and `world/hanoi/` imports it beside its desires and state, `agent/runtime.py` reads the kernel's
   T-Box, every package's and the world's as graphs of their own and derives the closure into
   one more, and the world's tests live with the world, since the target state is no global tests.
-- **The runtime stops when no desire is held and every want is reached** — a desire is universal
+- **The runtime stops when no desire is held, no transport reaches it and every want is reached** —
+  a transport keeps an agent running whatever it wants, since what it senses goes on arriving and
+  the terrace watches and pursues nothing; a desire is universal
   and asks at every instant, so an agent holding one runs for as long as the process does; a
   want is one-shot, and a pass that weighs one met in the present ground withdraws it from the
   imaginarium and the beliefs whoever authored it, so Hanoi's mover, holding a want and no
@@ -1277,7 +1279,9 @@ it is a record wearing a bullet.
   `domains/hanoi/` and `world/hanoi/` imports it beside its desires and state, `agent/runtime.py` reads the kernel's
   T-Box, every package's and the world's as graphs of their own and derives the closure into
   one more, and the world's tests live with the world, since the target state is no global tests.
-- **The runtime stops when no desire is held and every want is reached** — a desire is universal
+- **The runtime stops when no desire is held, no transport reaches it and every want is reached** —
+  a transport keeps an agent running whatever it wants, since what it senses goes on arriving and
+  the terrace watches and pursues nothing; a desire is universal
   and asks at every instant, so an agent holding one runs for as long as the process does; a
   want is one-shot, and a pass that weighs one met in the present ground withdraws it from the
   imaginarium and the beliefs whoever authored it, so Hanoi's mover, holding a want and no

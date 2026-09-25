@@ -26,7 +26,7 @@ orexis-validate terrace     # the same shape outdoors, on a sentinel: a bed, a F
 |---|---|---|
 | `simulation/` | 3 plants + agents, a supplier, a barrel market, 3 valves, a meddler who waters pots unasked — every device stood in for, on a 24× clock (`ag:timeScale`: one bench hour is one simulated day) | `Subscribing` + `Bidding` per plant agent; `Hosting` + `Actuation` for the supplier |
 | `sensing/` | one subject, one real board, one agent | `Subscribing`, and nothing else |
-| `terrace/` | one planter bed, one FireBeetle 2 ESP32-E outdoors running `firmware/outdoor-sentinel` (the sentinel, copied, with a probe and a BME280), one agent — the first world with a sentinel's temperament | `Listening`, and nothing else |
+| `terrace/` | one planter bed, one FireBeetle 2 ESP32-E outdoors running `firmware/outdoor-sentinel` (a probe and a BME280), one agent — on Agent 0.2.0 since 2026-09-25, watching and pursuing nothing | nothing: 0.2.0 derives no capability; the agent listens to its board's topic because it acts for the bed |
 
 There were three before `terrace/` made it four again. `society/` held what `simulation/` holds and expected real devices for it, and
 the two differed by 45 lines of ~230 with identical beliefs — so it went, and the world that can

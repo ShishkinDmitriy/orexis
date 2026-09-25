@@ -277,7 +277,8 @@ class Runtime:
         a pass with nothing to do waits the poll for the world to move. A want is one-shot and is
         withdrawn once reached, so an agent holding wants and no desire, Hanoi's mover, exits
         when every want is reached and nothing walks. Unreachable is an exit only for such an
-        agent: one holding a desire keeps watching, since the world may yet open a way."""
+        agent: one holding a desire keeps watching, since the world may yet open a way. An agent a
+        transport reaches runs for good too, desire or not: what it senses goes on arriving."""
         n = 0
         while passes is None or n < passes:
             n += 1
@@ -285,7 +286,10 @@ class Runtime:
             self.sense(now)
             self.planner.plan(now)
             standing, walking = self.planner.standing(now), self.executor.walking()
-            lasting = self._holds_a_desire()
+            #  WHAT KEEPS AN AGENT RUNNING: a desire, which asks at every instant, or a transport,
+            #  since an agent that senses has readings to keep writing whether or not it wants
+            #  anything of them — the terrace watches and pursues nothing.
+            lasting = self.transport is not None or self._holds_a_desire()
             if not standing and not walking:
                 if not lasting:
                     log.info("%s: every want is reached and no desire is held, after %d pass(es)", self.id, n)

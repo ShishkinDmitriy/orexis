@@ -4,9 +4,11 @@
   orexis-firmware sensing --board esp32_fern
 
 **Everything in a `config.h` is a per-instance deployment fact**, and every one of them was
-already written down somewhere else. The broker and its port are in the world's `mqtt:MessageBus`;
-the ids and topics are the society's; the pins are the hardware's; the credential was minted by
-`orexis-mqtt`; the cadence bounds are the ontology's. Keeping a second copy in a C header is the
+already written down somewhere else. The broker's port is the `schema:url` on the world's
+`mqtt4ssn:Broker`; the ids and topics are the world's, in MQTT4SSN's words; the pins and the
+calibration are the hardware's; the credential was minted by `orexis-mqtt`; a sentinel's heartbeat
+is its sensor's stated `ssn-system:Frequency`. The world is read as an Agent 0.2.0 boot reads it
+(`agent.runtime.world_of`). Keeping a second copy in a C header is the
 same second list this project refuses everywhere else — and it is the expensive kind, because
 correcting it means physically retrieving a board.
 
@@ -35,11 +37,34 @@ import argparse
 import logging
 from pathlib import Path
 
-from agent_old import ratified
+from agent.runtime import world_of
+from agent.store import graphs_of, rows as _rows_of
 from agent_old.config import REPO_ROOT
 from agent_old.genesis import world_dir, worlds
-from orexis_agent_progression.ontology import OREXIS, ONTOLOGY_GRAPH, WORLD_GRAPH
-from .namespaces import BME280, DHT11, ESP32, I2C, MC, MQTT, ONEWIRE, PROBE, RGBLED, SENSING, SOSA
+from .mqtt import broker
+from .namespaces import BME280, DHT11, ESP32, I2C, MC, ONEWIRE, PROBE, RGBLED
+
+OREXIS = "http://example.org/orexis#"
+SENSING = "http://example.org/orexis/sensing#"
+SOSA = "http://www.w3.org/ns/sosa/"
+MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
+PUBLIC = OREXIS + "PublicGraph"
+
+#  THE SOCIETY'S FIGURES for a sentinel, which the 0.1.0 sensing capability stated and Agent 0.2.0
+#  has no capability to state them on: a move of a quarter of the band since the last report wakes
+#  the board, two breaching looks in a row make the news real, and a governed board's cadence stays
+#  between ten seconds and fifteen minutes.
+WAKE_DELTA_FRACTION = 0.25
+PERSIST_LOOKS = 2
+SLEEP_BOUNDS_S = (10, 900)
+
+
+def _world(world: str):
+    return world_of(world_dir(world))
+
+
+def _rows(store, text: str) -> list[dict]:
+    return _rows_of(store, text, graphs_of(store, PUBLIC))
 
 
 
@@ -52,28 +77,25 @@ WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 # the OPTIONAL parts this generator has a template for — an LED, a DHT11, a BME280. A board
 # carrying something it has no template for is reported (_untemplated), not guessed at.
 _BOARDS_Q = f"""
-SELECT ?boardId ?firmware ?lan ?host ?port ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
+SELECT ?boardId ?firmware ?lan ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
        ?alarm
        ?ledRed ?ledGreen ?ledBlue ?airPin ?bmeSda ?bmeScl ?bmeAddr ?ws2812
 WHERE {{
-  ?board a <{MC}Microcontroller> ; <{OREXIS}localId> ?boardId ; <{SOSA}hosts> ?sensor .
+  ?board a <{MC}Microcontroller> ; <{OREXIS}localId> ?boardId ; <{MQTT4SSN}hosts> ?sensor .
   # The firmware name: stated on the board directly, or — since #175 — entailed onto the
   # board's connecting DEVICE from its firmware class, and reached through the hosting the
   # deployment produces. Two spellings of one fact, and either satisfies the query.
   {{ ?board <{MC}firmware> ?firmware }}
   UNION
-  {{ ?board <{SOSA}hosts> ?fwBearer . ?fwBearer <{MC}firmware> ?firmware }}
+  {{ ?board <{MQTT4SSN}hosts> ?fwBearer . ?fwBearer <{MC}firmware> ?firmware }}
   ?sensor a <{PROBE}CapacitiveMoistureProbe> ; <{OREXIS}localId> ?sensorId ;
-          <{MQTT}readingTopic> ?readTopic ;
+          <{MQTT4SSN}observesTopic> ?topic ;
           <{PROBE}rawDry> ?rawDry ; <{PROBE}rawWet> ?rawWet .
-  OPTIONAL {{ ?sensor <{MQTT}commandTopic> ?cmdTopic }}
-  # Whether the board's connecting device promises announce-on-crossing (#151) — the same
-  # stream-and-bus join every other device fact makes since #96.
-  OPTIONAL {{ ?watcher <{MQTT}readingTopic> ?readTopic ; <{MQTT}onBus> ?wBus ;
-              <http://www.w3.org/ns/ssn/implements>
-                <http://example.org/orexis/sensing#AlarmProcedure> .
-             BIND(true AS ?alarm) }}
-  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerHost> ?host ; <{MQTT}brokerPort> ?port .
+  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?readTopic .
+  OPTIONAL {{ ?board <{MQTT4SSN}listensToTopic> ?cmd . ?cmdFilter <{MQTT4SSN}matchesTopic> ?cmd ;
+                     <{MQTT4SSN}hasFilterPattern> ?cmdTopic }}
+  #  Whether the board promises announce-on-crossing (#151), stated on the sensor.
+  OPTIONAL {{ ?sensor <http://www.w3.org/ns/ssn/implements> <{SENSING}AlarmProcedure> . BIND(true AS ?alarm) }}
   OPTIONAL {{ ?pi a <{OREXIS}ComputeHost> ; <{OREXIS}lanHost> ?lan }}
 
   # Which LINE a leg is on is now two facts and a wire: the role belongs to the peripheral's
@@ -87,7 +109,7 @@ WHERE {{
   # All OPTIONAL and all separate, because a board without a status LED is an ordinary board
   # and must still generate — the alternative is a query that silently returns no rows and a
   # generator that reports the world states no boards at all.
-  OPTIONAL {{ ?board <{SOSA}hosts> ?led . ?led a <{RGBLED}RgbLed> ;
+  OPTIONAL {{ ?board <{MQTT4SSN}hosts> ?led . ?led a <{RGBLED}RgbLed> ;
                 <{MC}hasPin> ?rLeg, ?gLeg, ?bLeg .
              ?rLeg <{MC}pinRole> <{RGBLED}RedPinRole>   . ?rw <{MC}joins> ?rLeg, ?rPin . ?rPin <{MC}gpio> ?ledRed .
              ?gLeg <{MC}pinRole> <{RGBLED}GreenPinRole> . ?gw <{MC}joins> ?gLeg, ?gPin . ?gPin <{MC}gpio> ?ledGreen .
@@ -98,7 +120,7 @@ WHERE {{
   # is what the firmware actually needs to know anyway: this is the pin it must bit-bang,
   # whatever part is on the end of it. Matching the class would be asking a question whose
   # answer it would then have to translate.
-  OPTIONAL {{ ?board <{SOSA}hosts> ?air .
+  OPTIONAL {{ ?board <{MQTT4SSN}hosts> ?air .
              ?air <{MC}hasPin> ?airLeg .
              ?airLeg <{MC}pinRole> <{ONEWIRE}DataPinRole> .
              ?aw <{MC}joins> ?airLeg, ?airPinNode . ?airPinNode <{MC}gpio> ?airPin }}
@@ -107,7 +129,7 @@ WHERE {{
   # has no driver for must be reported (see _untemplated), not driven as a BME280 because it
   # happens to have an SDA leg. The address is the unit's, by its SDO strap, and defaults in
   # the firmware to 0x76 when the world states none.
-  OPTIONAL {{ ?board <{SOSA}hosts> ?bme . ?bme a <{BME280}Bme280> ;
+  OPTIONAL {{ ?board <{MQTT4SSN}hosts> ?bme . ?bme a <{BME280}Bme280> ;
                 <{MC}hasPin> ?sdaLeg, ?sclLeg .
              ?sdaLeg <{MC}pinRole> <{I2C}DataPinRole>  . ?sdaW <{MC}joins> ?sdaLeg, ?sdaPin . ?sdaPin <{MC}gpio> ?bmeSda .
              ?sclLeg <{MC}pinRole> <{I2C}ClockPinRole> . ?sclW <{MC}joins> ?sclLeg, ?sclPin . ?sclPin <{MC}gpio> ?bmeScl .
@@ -124,7 +146,7 @@ WHERE {{
 # a line in. The templates are the OPTIONAL blocks above; this is their complement.
 _HOSTED_Q = f"""
 SELECT ?boardId ?partId ?class WHERE {{
-  ?board a <{MC}Microcontroller> ; <{OREXIS}localId> ?boardId ; <{SOSA}hosts> ?part .
+  ?board a <{MC}Microcontroller> ; <{OREXIS}localId> ?boardId ; <{MQTT4SSN}hosts> ?part .
   ?part <{MC}hasPin> ?leg ; a ?class .
   OPTIONAL {{ ?part <{OREXIS}localId> ?partId }}
  }}"""
@@ -133,11 +155,6 @@ SELECT ?boardId ?partId ?class WHERE {{
 # gets a warning naming it, which is the whole of what this generator can honestly do for it.
 _TEMPLATED = (f"{PROBE}CapacitiveMoistureProbe", f"{RGBLED}RgbLed", f"{DHT11}Dht11",
               f"{BME280}Bme280")
-
-_BOUNDS_Q = f"""
-SELECT ?min ?max WHERE {{ 
-  <{SENSING}SensingCapability> <{SENSING}minSleepS> ?min ; <{SENSING}maxSleepS> ?max  }} LIMIT 1"""
-
 
 def _env(path: Path, key: str) -> str | None:
     if not path.exists():
@@ -242,15 +259,6 @@ def _crossing(row: dict, persist: int = 2) -> str:
             f"#define WAKE_PERSIST_LOOKS {persist}\n")
 
 
-def _persist_looks(ds) -> int:
-    """The constitutional debounce (#180), read where the delta's default is read — and like
-    it, a figure of the FAMILY's: what counts as evidence of a real event is the society's to
-    say, so both temperaments compile the same answer."""
-    n = ratified.rows(ds, f"""
-SELECT ?n WHERE {{ <{SENSING}SensingCapability> <{SENSING}alarmPersistenceLooks> ?n }} LIMIT 1""")
-    return int(float(n[0]["n"])) if n else 2
-
-
 def _optional_pins(row: dict) -> str:
     """The rest of what the board carries, emitted only where the world states it.
 
@@ -298,10 +306,10 @@ def _optional_pins(row: dict) -> str:
     return "\n".join(out) + "\n" if out else ""
 
 
-def _untemplated(ds, board: str) -> list[str]:
+def _untemplated(store, board: str) -> list[str]:
     """The parts on this board the header says nothing about, by id."""
     classes: dict[str, set[str]] = {}
-    for r in ratified.rows(ds, _HOSTED_Q):
+    for r in _rows(store, _HOSTED_Q):
         if r["boardId"] == board:
             classes.setdefault(r.get("partId") or "(unnamed)", set()).add(r["class"])
     return sorted(p for p, c in classes.items() if not c & set(_TEMPLATED))
@@ -309,44 +317,21 @@ def _untemplated(ds, board: str) -> list[str]:
 
 
 _SENTINEL_Q = """
-SELECT ?lo ?hi ?agentId WHERE {{
-  ?s <{OREXIS}localId> "{sensor_id}" ; <{SENSING}monitors> ?subject ;
-     <http://www.w3.org/ns/sosa/observes> ?prop .
-  ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange> ?r .
-  ?r <http://www.w3.org/ns/ssn/systems/inCondition> ?c .
-  ?c <http://www.w3.org/ns/ssn/forProperty> ?prop ;
-     <https://schema.org/minValue> ?lo ; <https://schema.org/maxValue> ?hi .
-  OPTIONAL {{ ?agent <{SENSING}polls> ?s ; <{OREXIS}localId> ?agentId }}
- }}"""
+SELECT ?lo ?hi ?every ?unit WHERE {{
+  ?s <{OREXIS}localId> "{sensor_id}" ; <{SOSA}isHostedBy> ?subject ; <{SOSA}observes> ?p .
+  ?subject <http://www.w3.org/ns/ssn/systems/hasOperatingRange>/<http://www.w3.org/ns/ssn/systems/inCondition> ?c .
+  ?c <http://www.w3.org/ns/ssn/forProperty> ?p ; <https://schema.org/minValue> ?lo ; <https://schema.org/maxValue> ?hi .
+  OPTIONAL {{ ?s <http://www.w3.org/ns/ssn/systems/hasSystemCapability>/<http://www.w3.org/ns/ssn/systems/hasSystemProperty> ?f .
+             ?f a <http://www.w3.org/ns/ssn/systems/Frequency> ; <https://schema.org/value> ?every ;
+                <https://schema.org/unitCode> ?unit }} }} LIMIT 1"""
+
+_SECONDS = {"SEC": 1, "MIN": 60, "HR": 3600, "HUR": 3600, "DAY": 86400}
 
 
-def _max_reading_age(world: str, agent_id: str | None) -> int | None:
-    """The polling agent's `sensing:maxReadingAgeS`, read from ITS beliefs file.
-
-    Found on the sentinel template's first real run (world/terrace): the ratified dataset holds
-    the PUBLIC graphs, and a freshness rule is a belief — private, in `beliefs/<agent>.ttl`,
-    never in the world. So an OPTIONAL that asked the dataset for it bound nothing, silently,
-    and every sentinel would have been compiled to the 750 s default whatever its agent
-    believed — exactly the mismatch #323 warned would bite. The sovereign holds the beliefs
-    files (it authored them), so the generator reads the one that matters here.
-    """
-    if not agent_id:
-        return None
-    path = world_dir(world) / "beliefs" / f"{agent_id}.ttl"
-    if not path.exists():
-        return None
-    import rdflib
-    g = rdflib.Graph().parse(path, format="turtle")
-    for value in g.objects(None, rdflib.URIRef(f"{SENSING}maxReadingAgeS")):
-        return int(value.toPython())
-    return None
-
-
-def render_sentinel(world: str, row: dict, ds) -> str:
+def render_sentinel(world: str, row: dict, store) -> str:
     """config.h for the SECOND firmware (#151): a sentinel takes no orders, so its config
-    carries what a command would have — the band, compiled from the WORLD's operating range
-    for the pot it watches, and a heartbeat generated to fit under the polling agent's own
-    Listening freshness rule so a healthy sentinel is never called stale.
+    carries what a command would have — the deviation limit, sized from the WORLD's operating range
+    for the subject it watches, and a heartbeat that is the cadence the world states for it.
 
     The rest of what the board carries — an LED, a DHT11, a BME280, a built-in WS2812 — is the
     same wiring question for either temperament, so `_optional_pins` answers it for both."""
@@ -357,30 +342,23 @@ def render_sentinel(world: str, row: dict, ds) -> str:
     ssid, wifi_pass = _wifi()
     broker = row.get("lan") or row["host"]
 
-    found = ratified.rows(ds, _SENTINEL_Q.format(OREXIS=OREXIS, SENSING=SENSING,
-                                                 sensor_id=row["sensorId"]))
+    found = _rows(store, _SENTINEL_Q.format(OREXIS=OREXIS, SOSA=SOSA, sensor_id=row["sensorId"]))
     if not found:
         raise SystemExit(f"{row['sensorId']}: a sentinel watches the world's operating range, "
                          f"and its subject states none for the observed property")
     lo, hi = float(found[0]["lo"]), float(found[0]["hi"])
-    # Under the agent's absolute freshness rule with a fifth to spare, or its default when the
-    # world grants no Listening yet: a heartbeat the agent would call stale is a lie on a timer.
-    stated = _max_reading_age(world, found[0].get("agentId"))
-    max_age = stated if stated is not None else 750
-    heartbeat = max(60, int(max_age * 0.8))
-    # The FAMILY's figure, deliberately, where a governed board is told its agent's own pick:
-    # a sentinel takes no orders, so no revision could ever reach it, and baking anything but
-    # the society's default would freeze one agent's passing opinion into a flash image.
-    frac = ratified.rows(ds, f"""
-SELECT ?f WHERE {{ <{SENSING}SensingCapability> <{SENSING}alarmDeltaFraction> ?f }} LIMIT 1""")
-    delta = round((float(frac[0]["f"]) if frac else 0.25) * (hi - lo), 3)
-    persist = _persist_looks(ds)
+    if not found[0].get("every"):
+        raise SystemExit(f"{row['sensorId']}: a sentinel's heartbeat is the cadence the world states "
+                         f"for it, and it states no ssn-system:Frequency")
+    heartbeat = int(float(found[0]["every"]) * _SECONDS.get(found[0]["unit"].rsplit("/", 1)[-1], 1))
+    delta = round(WAKE_DELTA_FRACTION * (hi - lo), 3)
+    persist = PERSIST_LOOKS
 
     return f"""// GENERATED by `orexis-firmware {world}` for {row['boardId']} — do not edit.
 //
 // A SENTINEL's config carries what a command would have (#151): this board takes no orders,
-// so the band comes from the world's own operating range and the heartbeat is fitted under
-// its agent's Listening freshness rule. Regenerate after either changes.
+// so the band comes from the world's own operating range and the heartbeat is the cadence the
+// world states for this sensor. Regenerate after either changes.
 #pragma once
 
 #define WIFI_SSID "{ssid}"
@@ -404,28 +382,29 @@ SELECT ?f WHERE {{ <{SENSING}SensingCapability> <{SENSING}alarmDeltaFraction> ?f
 // it is what SIZES the deviation limit below. See
 // knowledge/decisions/the-sentinel-alarms-on-movement.md.
 
-// Fitted under the polling agent's sensing:maxReadingAgeS ({max_age}s) with room to spare:
-// a heartbeat the agent would call stale would make a healthy sentinel read as a dead one.
+// The cadence the world states for this sensor (its ssn-system:Frequency): the agent expects a
+// reading this often and calls one missed past it, so board and agent keep one heartbeat.
 #define HEARTBEAT_S {heartbeat}
 
-// How many consecutive breaching looks make the news real (#180) — the same constitutional
-// figure the governed node compiles, because what counts as evidence is the society's to say.
+// How many consecutive breaching looks make the news real (#180) — the society's figure, the
+// same the governed node compiles, because what counts as evidence is the society's to say.
 #define WAKE_PERSIST_LOOKS {persist}
 
-// The deviation limit (sensing:alarmDeltaFraction of the band): an in-band move of more than
+// The deviation limit (a quarter of the band, the society's figure): an in-band move of more than
 // this since the last report wakes the board — a stranger's water on a comfortable pot.
 #define WAKE_DELTA {delta}
 """
 
 def generate(world: str, board: str | None = None) -> None:
-    ds = ratified.dataset(world)
-    rows = [r for r in ratified.rows(ds, _BOARDS_Q) if board is None or r["boardId"] == board]
+    store = _world(world)
+    host, port, _ = broker(world)
+    rows = [{**r, "host": host, "port": port}
+            for r in _rows(store, _BOARDS_Q) if board is None or r["boardId"] == board]
     if not rows:
         raise SystemExit(
             f"orexis-firmware: no board in world {world!r}"
             + (f" called {board!r}" if board else " states mc:firmware and carries a probe"))
-    b = ratified.rows(ds, _BOUNDS_Q)
-    bounds = (int(b[0]["min"]), int(b[0]["max"])) if b else (5, 900)
+    bounds = SLEEP_BOUNDS_S
 
     for row in rows:
         project = FIRMWARE_ROOT / row["firmware"]
@@ -440,13 +419,13 @@ def generate(world: str, board: str | None = None) -> None:
         # The outdoor sentinel is the sentinel copied onto another board with an air part
         # (#461); its config is the sentinel's template plus what `_optional_pins` adds.
         if row["firmware"] in ("moisture-sentinel", "outdoor-sentinel"):
-            out.write_text(render_sentinel(world, row, ds))
+            out.write_text(render_sentinel(world, row, store))
         else:
-            out.write_text(render(world, row, bounds, _persist_looks(ds)))
+            out.write_text(render(world, row, bounds, PERSIST_LOOKS))
         out.chmod(0o600)  # it carries this board's password
         log.info("  wrote %s  (%s -> %s:%s, pin %s)", out.relative_to(REPO_ROOT),
                  row["boardId"], row.get("lan") or row["host"], row["port"], row["gpio"])
-        for part in _untemplated(ds, row["boardId"]):
+        for part in _untemplated(store, row["boardId"]):
             log.warning("  ! %s carries %s, which this generator has no template for — the "
                         "header says nothing about it", row["boardId"], part)
 

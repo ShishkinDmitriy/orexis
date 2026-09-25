@@ -43,7 +43,8 @@ the agent owns are left as they are, since they are its beliefs now.
 wants derived, each searched, the plans handed to the [executor](/domain/executor.md) — and then
 the executor ticked and drained until nothing more happens at that instant, which for a fictive
 action is the whole plan and for a real one is up to the first landing the world has not
-answered. A [desire](/domain/desire.md) is universal, so an agent holding one is never done: a
+answered. An agent a transport reaches is never done either: what it senses goes on arriving, and
+the terrace, which wants nothing, watches for good. A [desire](/domain/desire.md) is universal, so an agent holding one is never done: a
 pass with nothing to do waits for the world to move, and so does one whose wants nothing
 reaches, since the world may yet open a way. A want is one-shot: a pass that weighs one met in
 the present ground withdraws it, from the planner's imaginaria and from the beliefs, where a want
