@@ -1,0 +1,7 @@
+Id	Description	Qty	Unit	Designators
+1	Cable, 3 wires	0	m	esp32_fern-to-air_sensor_fern, esp32_fern-to-moisture_sensor_fern
+2	Cable, 4 wires	0	m	esp32_fern-to-status_led_fern
+3	Connector, Capacitive Soil Moisture Sensor v2.0, 3 pins	1		moisture_sensor_fern
+4	Connector, ESP32-WROOM-32D, 7 pins	1		esp32_fern
+5	Connector, KY-015 (DHT11), 3 pins	1		air_sensor_fern
+6	Connector, KY-016 4-pin RGB LED (common cathode), 4 pins	1		status_led_fern

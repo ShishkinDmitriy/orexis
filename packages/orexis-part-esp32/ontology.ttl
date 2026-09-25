@@ -2,7 +2,6 @@
 @prefix mc:     <http://example.org/orexis/microcontroller#> .
 @prefix esp32:  <http://example.org/orexis/esp32#> .
 @prefix : <http://example.org/orexis/esp32#> .
-@prefix wokwi:  <http://example.org/orexis/wokwi#> .
 @prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:    <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
@@ -26,7 +25,6 @@ Started here because a picture needs to know which board it is drawing, and that
         [ a owl:Restriction ; owl:onProperty mc:watcherReachesRole ;
           owl:hasValue mc:AnalogInPinRole ] ;
     rdfs:label "ESP32 DevKitC" ;
-    wokwi:part "board-esp32-devkit-c-v4" ;
     rdfs:comment "The 38-pin development board, the one with 3V3 on the same header as GPIO 34. Its legs carry their own silkscreen notation, which is what a drawing names them by." .
 
 #  The terrace's board. The SAME silicon as the DevKitC — an ESP32-E module is an ESP32-D0WD-V3

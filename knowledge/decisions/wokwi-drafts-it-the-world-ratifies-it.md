@@ -122,3 +122,11 @@ can supply once asked.
 - **Genesis does not use this yet.** The intended next step is that drawing a stand is one of the
   ways a world gets narrated, alongside the prose — but genesis produces a whole world and this
   produces one file of it.
+
+# Amended 2026-09-25: the Wokwi and WireViz generators are removed, unused
+
+The sovereign dropped `orexis-wokwi` and `orexis-wireviz`: neither was run, and neither was ported to
+Agent 0.2.0's worlds. The tools, the Wokwi tool package and its `wokwi:` drawing names on the parts,
+the generated drawings and harnesses and their tests are gone; a stand is authored in its world's
+`hardware.ttl` and drawn by nothing. The argument above stands for whatever drawing comes back:
+a drawing drafts, the world ratifies.

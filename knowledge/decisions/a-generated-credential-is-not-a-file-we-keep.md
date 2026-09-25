@@ -56,7 +56,7 @@ mints new ones. Nothing about the low risk makes the old hashes worth keeping.
 
 # What this is not
 
-**Not an argument for committing generated files elsewhere.** `world/*/wiring.yaml` is committed
+**Not an argument for committing generated files elsewhere.** A world's WireViz harness was committed, until the generator was removed unused (2026-09-25),
 because it is the thing that DIFFS; its renderings are not. `world/*/keys.ttl` is a public roster
 and is still ignored, because it is machine-generated and committing one machine's would attest
 another's identities. The line is authorship, not secrecy, and this record does not move it.

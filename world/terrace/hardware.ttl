@@ -76,9 +76,7 @@
 
 ##########  The board's own legs  ##########
 #
-# skos:notation is what DFRobot PRINTED beside the leg — A2, SDA, SCL, 3V3, GND. No wokwi:name:
-# Wokwi has no FireBeetle and the esp32 package deliberately draws it as nothing (see the class),
-# so a drawing name here would name a leg on a picture that is never drawn.
+# skos:notation is what DFRobot PRINTED beside the leg — A2, SDA, SCL, 3V3, GND.
 
 :esp32_terrace mc:hasPin :pin_gpio21 , :pin_gpio22 , :pin_gpio34 , :pin_3v3 , :pin_gnd ;
     mc:logicVolts 3.3 .
