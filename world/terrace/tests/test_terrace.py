@@ -12,6 +12,7 @@ from agent import clock
 from agent.ontology import OREXIS, STATE
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import graphs_of, rows
+from agent.series import Series
 from agent.transport.mqtt.driver import Mqtt
 
 WORLD = Path(__file__).resolve().parents[1]
@@ -34,7 +35,9 @@ class Broker:
 def _terrace(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW)
     broker = Broker()
-    return Runtime(boot(WORLD, "terrace"), "terrace", transport=Mqtt(AGENT, broker)), broker
+    series = Series("terrace-terrace", lambda bucket, record: broker.points.extend(record))
+    broker.points = []
+    return Runtime(boot(WORLD, "terrace"), "terrace", transport=Mqtt(AGENT, broker), series=series), broker
 
 
 def test_the_agent_listens_on_the_boards_one_topic(monkeypatch):
@@ -53,3 +56,16 @@ def test_one_message_is_four_observations_and_the_soil_is_below_the_beds_range(m
     below = rows(runtime.beliefs, "SELECT ?o WHERE { ?o sensing:below ?r }", graphs_of(runtime.beliefs, OREXIS + "BeliefGraph"))
     assert [r["o"].rsplit("#", 1)[-1] for r in below] == ["obs_terrace_bed_SoilMoisture"]
     assert broker.published == [], "nothing is wanted, so nothing is sent"
+
+
+def test_each_reading_reaches_the_series_as_the_terrace_panels_draw_it(monkeypatch):
+    """The Grafana terrace folder filters on the `sensor` tag of `soil_moisture`; the four values of
+    one message are four points, tagged as the 0.1.0 agent tagged them."""
+    runtime, broker = _terrace(monkeypatch)
+    runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
+    runtime.sense(NOW)
+    assert sorted((p["tags"]["sensor"], p["fields"]["value"]) for p in broker.points) == [
+        ("air_humidity_terrace", 0.8), ("air_pressure_terrace", 1012.0),
+        ("air_temp_terrace", 14.5), ("moisture_sensor_terrace", 0.2)]
+    assert {p["measurement"] for p in broker.points} == {"soil_moisture"}
+    assert {p["tags"]["plant"] for p in broker.points} == {"terrace_bed"}

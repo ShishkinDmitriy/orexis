@@ -103,7 +103,11 @@ without re-ratifying a world, so that stays a loud warning.
 
 # The dashboard
 
-`orexis-dashboards <world>` generates a second dashboard per world, `health.json`, derived from
+**The 0.1.0 agent's, and gone with it.** Agent 0.2.0 writes its readings to the series store and
+reports nothing of its own health, so since 2026-09-25 `orexis-dashboards` generates the readings
+dashboard alone; what follows describes the second one the 0.1.0 tool generated.
+
+`orexis-dashboards <world>` generated a second dashboard per world, `health.json`, derived from
 the **roster** rather than the wiring — every agent, not only the ones that observe, because a
 market host owns a belief base and can go quiet exactly as loudly as a sensing agent can.
 

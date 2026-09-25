@@ -120,7 +120,11 @@ def _service(agent_id: str, world: str, host: str, plain: int, tls: int | None) 
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
     env_file:
-      # its own broker credential, minted by `orexis-mqtt {world}`; mounted into THIS container alone
+      # where the series store is, and the org — safe for every agent to hold
+      - ../../infra/.env
+      # its own bucket and a token that opens only it, minted by `orexis-influx {world}`, and its
+      # own broker credential, minted by `orexis-mqtt {world}`; mounted into THIS container alone
+      - ./secrets/influx-{agent_id}.env
       - ./secrets/mqtt-{agent_id}.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent

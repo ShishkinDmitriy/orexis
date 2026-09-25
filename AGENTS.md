@@ -671,6 +671,11 @@ it is a record wearing a bullet.
   heating from the climate and actuation domains; so `domains/sim/` says only what the world
   lacks, a system's model, starting reading and bounds, and the 0.1.0 stand-ins, told everything
   as environment like a board, went with the physics they duplicated (`simulation/`).
+- **A series is watched and never believed, and it keeps the shape the panels draw** — the 0.2.0
+  runtime writes each observation it receives to the agent's bucket as the 0.1.0 agent did,
+  `soil_moisture` tagged plant, sensor and property at the reading's own time, so the terrace's
+  panels drew across the switch unchanged; a store that refuses is said in the log and costs the
+  agent nothing, and 0.2.0 reports none of its own health, so the health dashboard went with 0.1.0.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1351,6 +1356,11 @@ it is a record wearing a bullet.
   heating from the climate and actuation domains; so `domains/sim/` says only what the world
   lacks, a system's model, starting reading and bounds, and the 0.1.0 stand-ins, told everything
   as environment like a board, went with the physics they duplicated (`simulation/`).
+- **A series is watched and never believed, and it keeps the shape the panels draw** — the 0.2.0
+  runtime writes each observation it receives to the agent's bucket as the 0.1.0 agent did,
+  `soil_moisture` tagged plant, sensor and property at the reading's own time, so the terrace's
+  panels drew across the switch unchanged; a store that refuses is said in the log and costs the
+  agent nothing, and 0.2.0 reports none of its own health, so the health dashboard went with 0.1.0.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads

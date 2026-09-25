@@ -48,8 +48,9 @@ command topics of the devices it holds, and a device client its own, and runs th
 `schema:url`s the world states on its `mqtt4ssn:Broker`; `orexis-compose` runs each agent as
 `orexis-agent <world> <id>`, told its broker through its environment, and — where the world marks
 systems `sim:simulatedBy` — its simulator, `python -m simulation <world>`, connected as the one
-client hosting them. The series store, the dashboards and the firmware generator are 0.1.0's
-still, and wait for the terrace.
+client hosting them. `orexis-influx` grants each agent its bucket, the runtime writes every reading
+it receives there in the shape the panels already draw (`agent/series.py`), and `orexis-dashboards`
+draws a panel per sensor on what each agent acts for. `orexis-firmware` reads the 0.2.0 world too.
 
 `orexis-firmware` is deliberately **not** in the umbrella. It writes into a firmware project rather
 than granting anything, and it is only useful when a board is in front of you — onboarding a world
@@ -115,8 +116,10 @@ shipped here queried a bucket named `sensors`, which has not existed since each 
 its own. It is derived now — a panel per watcher, against the bucket `orexis-influx` actually
 created.
 
-Two dashboards, not one: `orexis.json` is what the plants are doing, `health.json` is whether the
-society reporting it is still working — see [agent-metrics](/domain/agent-metrics.md). They are
+Two dashboards, not one, while the agents were 0.1.0's: `orexis.json` is what the plants are
+doing, `health.json` was whether the society reporting it was still working — see
+[agent-metrics](/domain/agent-metrics.md); an Agent 0.2.0 world gets the first alone, since its
+agents report readings and nothing of their own health. They are
 separate because a flat-zero write-failure count next to a moisture curve reads as noise until
 the moment it is the only thing that matters.
 
