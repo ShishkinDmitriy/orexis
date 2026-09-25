@@ -33,17 +33,17 @@ orexis-onboard <world>
 | `orexis-dashboards` | a Grafana folder per world: what was measured, and how the agents are | what each agent observes, and the roster |
 | `orexis-firmware` | a board's `config.h` | the broker, the ids and topics, the pins, the calibration, the credential |
 
-`orexis-onboard` runs the first four, after `orexis-validate` — which itself begins with the
-LINK step (#210): every project-namespace IRI the loaded packages reference must be declared
-by some loaded ontology, or the world is refused naming the dangling term. A reference to a
-term nobody declares matches nothing, and an empty result is not an error — the linker is
-what makes that silence a gate instead of a hazard. They remain separately callable,
-because rotating one service's credentials should not touch the other's.
+`orexis-onboard` runs the first four, after loading the world as an agent boots it — a document
+that states no kind, or claims what only the loader says, refuses the world before any credential
+is minted. They remain separately callable, because rotating one service's credentials should not
+touch the other's. The 0.1.0 `orexis-validate`, its link step, `orexis-keygen` and `orexis-ask`
+were retired with 0.1.0 (2026-09-25): a 0.2.0 world is held to what it does by the tests beside
+it, and nothing is signed.
 
 **For an Agent 0.2.0 world** — the only kind `orexis-agent` runs since 2026-09-25 — the grants are
 read from the world as an agent boots it (`agent.runtime.world_of`), in MQTT4SSN's words:
 nothing is signed — an agent trusts itself, and the broker's ACL admits only the holder to its
-devices' command topics — so `orexis-keygen` is not run; `orexis-mqtt` grants an agent the topics of the sensors on what it acts for and the
+devices' command topics; `orexis-mqtt` grants an agent the topics of the sensors on what it acts for and the
 command topics of the devices it holds, and a device client its own, and runs the broker on the
 `schema:url`s the world states on its `mqtt4ssn:Broker`; `orexis-compose` runs each agent as
 `orexis-agent <world> <id>`, told its broker through its environment, and — where the world marks

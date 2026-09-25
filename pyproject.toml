@@ -62,7 +62,6 @@ orexis-agent = "agent.runtime:main"
 # umbrella runs the four below; they stay separately callable because rotating one service's
 # credentials should not touch the other's.
 orexis-onboard = "onboarding.onboard:main"
-orexis-validate = "onboarding.validate:main"
 orexis-influx = "onboarding.influx:main"
 orexis-mqtt = "onboarding.mqtt:main"
 orexis-compose = "onboarding.compose:main"
@@ -71,8 +70,6 @@ orexis-dashboards = "onboarding.dashboards:main"
 # stated by the world. Regenerating beats retrieving the board.
 orexis-firmware = "onboarding.firmware:main"
 # Once per world, before it is onboarded. An agent may LOAD its two keys; it may not mint them.
-orexis-keygen = "onboarding.keygen:main"
-orexis-ask = "onboarding.ask:main"
 # INFRA, not onboarding: the services' own identities and whom the broker trusts. Its lifecycle
 # is the infrastructure's — possibly another host, certainly another schedule.
 orexis-infra-certs = "onboarding.infra_certs:main"
@@ -202,7 +199,7 @@ pythonpath = ["tests"]
 # listing twenty-one modules here would have been a registry, and a registry goes stale the
 # first time somebody adds a package and forgets this file. The two contracts left are between
 # the three trees of the root distribution, which are fixed and few.
-root_packages = ["assembly", "agent_old", "onboarding"]
+root_packages = ["assembly", "agent_old", "onboarding", "agent", "simulation"]
 
 [[tool.importlinter.contracts]]
 # ASSEMBLY IS UNDER EVERYTHING. It finds packages and owns the extension mechanism; the kernel
@@ -217,5 +214,5 @@ forbidden_modules = ["agent_old", "onboarding"]
 [[tool.importlinter.contracts]]
 name = "The agent never reaches for the operator's tools"
 type = "forbidden"
-source_modules = ["agent_old"]
+source_modules = ["agent_old", "agent", "simulation"]
 forbidden_modules = ["onboarding"]

@@ -36,8 +36,8 @@ from influxdb_client import Authorization, BucketRetentionRules, InfluxDBClient,
     PermissionResource
 
 from . import compose
-from agent_old.config import REPO_ROOT, env
-from agent_old.genesis import world_dir, worlds
+from .worlds import REPO_ROOT, env
+from .worlds import world_dir, worlds
 
 log = logging.getLogger("influx")
 
