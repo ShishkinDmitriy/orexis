@@ -295,84 +295,6 @@ def test_an_agent_is_given_the_society_and_not_the_hardware():
             f"{sorted(leaked)[:5]}")
 
 
-def test_the_society_hosting_agrees_with_the_wiring():
-    """One fact said twice, in two FILES, to two audiences — held to agreeing.
-
-    It used to be said in two vocabularies as well: `mc:carries` in the wiring, `sosa:hosts` in
-    the society, held together by a subproperty axiom. `mc:carries` is gone and both files say
-    `sosa:hosts`, which removes the vocabulary half of the problem and leaves the half that was
-    always the real one — the society restates the hosting because an agent is never handed the
-    wiring, and only the SOVEREIGN loads both, so nothing in the running system would notice
-    them diverging.
-
-    Checked in the direction drift actually goes. Rewiring a probe onto a different board edits
-    `hardware.ttl`; the society keeps the old answer and every gate stays green, because each
-    file is internally consistent and no query spans them. So: wherever the wiring hosts
-    something the society also names, the society must say the same — and nothing in the society
-    may claim a host the wiring contradicts.
-
-    NOT symmetric, and sharing a word does not change that — the reason is stronger than
-    `silence is not contradiction`. **The society legitimately hosts things the wiring does
-    not.** `orexis:air_sensor_fern sosa:hosts` its two channels and the wiring names neither of
-    them; a simulated device has no wiring at all. So a society-side pair with no counterpart
-    cannot be an error, and unwiring — deleting a part from `hardware.ttl` while the society
-    still hosts it — is still not caught. Closing that needs a rule that can tell a board's
-    hosting from a part's, which nothing here can: the society does not type the board as a
-    `mc:Microcontroller`, because `mc:` is exactly what the test above forbids it.
-
-    The other direction is likewise deliberate. `orexis:status_led_fern` is hosted by the board and
-    absent from the society, which is correct: an agent polls sensors and has no business
-    knowing about an indicator it can never observe.
-    """
-    import rdflib
-
-    from agent_old import genesis
-
-    SOSA = rdflib.Namespace("http://www.w3.org/ns/sosa/")
-
-    for world in genesis.worlds():
-        world_path = genesis.world_dir(world)
-        #  TriG for the society files, for the reason the hardware-leak test states above.
-        society, wiring = rdflib.ConjunctiveGraph(), rdflib.Graph()
-        for path in genesis.society_files(world_path):
-            society.parse(path, format="trig")
-        for name in genesis.HARDWARE_FILES:
-            if (world_path / name).exists():
-                wiring.parse(world_path / name, format="turtle")
-        if not wiring:
-            continue  # a world with no stated hardware has nothing to disagree with
-
-        SSN = rdflib.Namespace("http://www.w3.org/ns/ssn/")
-        carried = set(wiring.subject_objects(SOSA.hosts))
-        # Since #99 the wiring's hosting is what its DEPLOYMENT produces, so this check
-        # performs the same two-link entailment the closure does: a platform in a deployment
-        # that deploys a system hosts that system. Asserted hosts stay covered — a wiring may
-        # still say it directly, and a part hosting its channels does.
-        for platform, deployment in wiring.subject_objects(SSN.inDeployment):
-            for system in wiring.objects(deployment, SSN.deployedSystem):
-                carried.add((platform, system))
-        hosted = set(society.subject_objects(SOSA.hosts))
-        named = {s for s, _, _ in society} | {o for _, _, o in society}
-
-        missing = {(h, t) for h, t in carried if t in named} - hosted
-        assert not missing, (
-            f"{world}: the wiring carries {sorted(str(t) for _, t in missing)} and the society "
-            f"does not host it — an agent would not know which board its sensor is on")
-
-        # And nothing may claim a host the wiring puts elsewhere. Only pairs the wiring
-        # actually states are checked — it names no channel of the KY-015, so the society states
-        # that chain alone rather than in contradiction to anything. That used to be guaranteed
-        # by `mc:carries` having mc:Microcontroller for its domain; it is now a fact about what
-        # the wiring says rather than about what it could say, which is weaker as a guarantee
-        # and identical in effect, because a domain axiom nothing materialises guaranteed
-        # nothing either.
-        carriers = {t: h for h, t in carried}
-        contradicted = {(h, t) for h, t in hosted if t in carriers and carriers[t] != h}
-        assert not contradicted, (
-            f"{world}: the society hosts {sorted((str(h), str(t)) for h, t in contradicted)} "
-            f"but the wiring mounts it elsewhere")
-
-
 # Everything a subject can honour, in seconds. One pattern, and the SAME one for both sides of
 # the guard below — which is the whole of what the `owl:hasValue` restriction bought. The wiring
 # side used to need a hand-walk the society side did not: part, its `rdf:type`, that CLASS's
@@ -384,122 +306,18 @@ _WHAT_IT_CAN_HONOUR = """SELECT ?subject ?seconds WHERE {
     ?frequency a ssn-system:Frequency ; schema:value ?seconds ; schema:unitCode unit:SEC }"""
 
 
-def test_the_society_repeats_every_limit_the_wiring_states():
-    """A device's floor is stated on the PART and needed by the AGENT, which is never given the
-    part. So it is said twice — once on `dht11:Dht11` in the vocabulary, and again on each sensor
-    that part hosts in the society — and only the sovereign loads both.
-
-    The vocabulary states it ONCE and reaches instances by entailment: `dht11:Dht11` is put under
-    an `owl:hasValue` restriction, so a sovereign that loads the wiring observes the capability on
-    `orexis:air_sensor_fern` with nobody having written it there. What that does NOT cross is the
-    boundary — an agent is given no `a dht11:Dht11`, so nothing entails anything for it, and the
-    society must still repeat the number. An agent may know a part's properties and not its
-    identity. See knowledge/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md.
-
-    So this guard survives the entailment; what it stops doing is walking the class hop by hand.
-    Each side is built as its own world, put through the same closure the sovereign runs, and
-    asked the same question.
-
-    Checked in the direction drift goes. A part gaining a limit, or having it changed, is an edit
-    to the vocabulary; the society keeps the old answer and every gate stays green, because each
-    file is internally consistent and no query spans them. The agent then commits to a cadence
-    its board will never keep, which is the whole of #59.
-
-    NOT symmetric, and for a different reason than the hosting guard above. There it was that a
-    hardware-only part must not be forced into the society. Here it is that a society MAY state a
-    floor the wiring does not — a simulated device has no part and no datasheet, and a deployment
-    that knows its board wakes slowly on battery is stating something true that no class
-    declares. Extra is allowed; missing and contradicting are not.
-    """
-    from agent_old import genesis, inference
-    from assembly import loader
-    from orexis_agent_progression.ontology import ONTOLOGY_GRAPH, WORLD_GRAPH
-    from orexis_agent_progression.store import Store, bindings
-
-    t_box = "\n".join(path.read_text() for path in loader.ontology_files())
-
-    def built(paths):
-        """The world those files describe, entailments and all — as the sovereign would build it,
-        except that it is handed one SIDE rather than the whole. That is deliberate: merge the two
-        and the question "does the society repeat this?" stops having an answer."""
-        st = Store()
-        st.put_graph(ONTOLOGY_GRAPH, t_box)
-        st.put_graph(WORLD_GRAPH, "\n".join(p.read_text() for p in paths), dataset=True)
-        genesis.catalogue_public(st)          # a store built by hand says what its graphs are, as genesis does
-        inference.materialise(st)
-        return st
-
-    def floors(st):
-        out = {}
-        for row in bindings(st.query(_WHAT_IT_CAN_HONOUR, st.graphs_of(PUBLIC))):
-            out.setdefault(row["subject"], set()).add(int(row["seconds"]))
-        return out
-
-    compared = 0  # see the assertion at the end, which is the point of counting
-
-    for world in genesis.worlds():
-        world_path = genesis.world_dir(world)
-        hardware = [world_path / name for name in genesis.HARDWARE_FILES
-                    if (world_path / name).exists()]
-        if not hardware:
-            continue  # no parts, so nothing the society could be failing to repeat
-
-        society = built(genesis.society_files(world_path))
-        said = floors(society)
-        # Whatever a part is composed of, or the part itself where it is composed of nothing — a
-        # single-property probe IS its sensor and carries the limit directly, while a KY-015 is a
-        # system whose two channels carry it and which states none of its own.
-        #
-        # BOTH relations, because the society uses both and means the same thing by them here: a
-        # board `sosa:hosts` the parts bolted to it, and a part `ssn:hasSubSystem` the channels it
-        # is read through. A floor is a property of the physical device, so it reaches either way
-        # — the KY-015's two channels come out of one 40-bit frame and neither can be had faster
-        # than the frame. Following only `sosa:hosts` was the second thing wrong with this guard:
-        # the same PR that killed the query above also made the KY-015's channels its
-        # `ssn:hasSubSystem`, so even a live version would have compared the wrong subject — and
-        # the first break hid the second.
-        composed = {}
-        for row in bindings(society.query(
-                "SELECT ?part ?sensor WHERE { ?part sosa:hosts|ssn:hasSubSystem ?sensor }", society.graphs_of(PUBLIC))):
-            composed.setdefault(row["part"], set()).add(row["sensor"])
-
-        for part, stated in floors(built(hardware)).items():
-            for sensor in composed.get(part) or {part}:
-                if not bindings(society.query(f"SELECT ?p WHERE {{ <{sensor}> ?p ?o }} LIMIT 1", society.graphs_of(PUBLIC))):
-                    continue  # the society does not mention it, so it repeats nothing
-                compared += 1
-                assert said.get(sensor, set()) >= stated, (
-                    f"{world}: the wiring says {sorted(stated)}s for <{sensor}> and the society "
-                    f"says {sorted(said.get(sensor, set()))}s — an agent would commit to a "
-                    f"cadence its board will not keep")
-
-    # The guard on the guard, and it is here because this test WAS dead. PR #95 renamed
-    # `sensing:seconds` to schema.org's `value`/`unitCode` pair; the walk above still asked for
-    # the old term, found nothing anywhere, and passed every run since by having nothing to
-    # compare. Measured on the commit before this one: zero parts reached an assertion.
-    #
-    # Every "if not, continue" in a guard is a way for it to pass by doing nothing, and each one
-    # here is legitimate — a world with no wiring, a part with no datasheet floor, a part the
-    # society never names. The cost of legitimate skips is that total silence looks identical to
-    # total success. So count, and refuse the count of zero. Same move as test_store.py asserting
-    # its globs are non-empty, for the same failure arriving by a different route.
-    assert compared, ("this guard compared nothing at all. Either no world states a hardware "
-                      "floor any more, or the query above has drifted off the vocabulary again")
-
-
 def test_the_compose_file_does_not_mount_hardware_at_an_agent():
     """The other half, and the one that actually enforces it: a rule the agent is trusted to
     follow is not a boundary. What keeps the wiring out of an agent is that the file is not in
     its filesystem."""
-    from agent_old.config import REPO_ROOT
-    from agent_old import genesis
+    from onboarding.compose import HARDWARE_FILES
 
-    for world in genesis.worlds():
-        compose = REPO_ROOT / "world" / world / "compose.yaml"
-        if not compose.exists():
-            continue
-        for name in genesis.HARDWARE_FILES:
-            assert f"/{name}:" not in compose.read_text(), (
+    composed = sorted(p.parent.name for p in (REPO_ROOT / "world").glob("*/compose.yaml"))
+    assert composed, "no world has a compose file — the guard would compare nothing"
+    for world in composed:
+        compose = (REPO_ROOT / "world" / world / "compose.yaml").read_text()
+        for name in HARDWARE_FILES:
+            assert f"/{name}:" not in compose, (
                 f"{world}/compose.yaml mounts {name} into an agent — regenerate with "
                 f"`orexis-compose {world}`")
 

@@ -1,205 +1,89 @@
 @prefix : <http://example.org/orexis/world/sensing#> .
-@prefix review: <http://example.org/orexis/review#> .
+@prefix climate: <http://example.org/orexis/climate#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
-@prefix water: <http://example.org/orexis/water#> .
-@prefix mqtt: <http://example.org/orexis/mqtt#> .
-@prefix schema: <https://schema.org/> .
-@prefix orexis:   <http://example.org/orexis#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix prov: <http://www.w3.org/ns/prov#> .
-@prefix ssn: <http://www.w3.org/ns/ssn/> .
-@prefix governed: <http://example.org/orexis/firmware/moisture-sensor#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix market: <http://example.org/orexis/market#> .
-@prefix scaling: <http://example.org/orexis/scaling#> .
-@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
-@prefix device: <http://example.org/orexis/device#> .
+@prefix schema: <https://schema.org/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
 
-#  A ratified world, v1 — the SMALLEST one that produces a working agent.
-#
-#  One bus, one subject, one board, one agent. No market, no supplier, no valves, and
-#  therefore no economy at all: this world has nothing to allocate, so nobody bids and nobody
-#  hosts. It is the whole of what is needed to perceive something.
-#
-#  What it is FOR: bringing a real board up, and integration tests that have no business
-#  starting a market. It is also the clearest demonstration of the central claim — nothing
-#  here says what the agent can DO. It is wired to a sensor and to nothing else, and
-#  derivation gives it sensing:Subscribing and nothing else. Seed world/society instead, without
-#  touching the board or the agent, and the very same hardware joins a market.
-#
-#  The device ids and channels are deliberately IDENTICAL to world/society, so one flashed
-#  board works in either world. Which world is in the store decides what the agent becomes.
-#
-#  See knowledge/domain/world.md, knowledge/decisions/world-graph.md.
+<> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
+    owl:imports <../../domains/climate/ontology.ttl> .
 
-##########  The bus everyone speaks over  ##########
+#  THE SENSING WORLD, on Agent 0.2.0: the smallest world that runs against a real board. One fern
+#  on a windowsill, one ESP32 beside it with a capacitive probe and a KY-015, one agent that
+#  watches. The board is GOVERNED (firmware/moisture-sensor): it takes commands on a topic of its
+#  own — a cadence, a look now — and deep-sleeps between readings at the interval it was last set,
+#  retained on the broker. It publishes ONE document with three values on one topic, and each
+#  sensor reads its own by pointer; nothing on the wire changed, so the flashed board goes on as it
+#  is. The fern states no range yet: its readings are written and predicted, and nothing is wanted
+#  of them. Its parts, pins and calibration are in hardware.ttl.
 
-:local_bus a mqtt:MessageBus ;
-    orexis:localId "local_bus" ;
-    mqtt:brokerHost "localhost" ;
-    mqtt:brokerPort 1884 ;
-    # Agents connect here and prove who they are with a certificate; the boards keep the
-    # plaintext port above. One bus, one ACL, two ways of authenticating.
-    mqtt:brokerTlsPort 8884 .
+:broker a mqtt4ssn:Broker ;
+    schema:url "mqtt://localhost:1884" , "mqtts://localhost:8884" .
 
-##########  World version  ##########
-
-#  Who ratified it. A REFERENCE, never a declaration: the world says which user stands behind
-#  these files and says nothing else about them — no name, no key, no type. A user is
-#  installation-level (AGENTS.md rule 3) and an agent is given only its world, so the URI is an
-#  identifier it never resolves, exactly as `mqtt:brokerHost` names a host it never introspects.
-#  Sovereign is the ROLE that user held HERE — stated, not assumed, because another user may
-#  operate what this one ratified, and a loader that inferred the capacity could never say so.
-:world a orexis:World ; orexis:currentVersion :version_1 ;
-    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole orexis:Sovereign ] .
-:version_1 a orexis:WorldVersion ; orexis:versionNumber 1 .
-
-
-##########  The subject — a thing that is watched, and nothing more  ##########
-#  NOT an water:Plant here, and the difference is the point: a plant is a participant in a water
-#  economy (it is served by a source, it has a pot size), and this world has no economy for it
-#  to participate in. It is a feature of interest — something a sensor reads. The same IRI is
-#  an water:Plant over in world/society, because there it is one.
+:fern_agent a orexis:Agent , mqtt4ssn:Client ;
+    orexis:localId "fern" ;
+    mqtt4ssn:hasClientID "fern" ;
+    mqtt4ssn:isConnectedToBroker :broker ;
+    orexis:actsFor :fern .
 
 :fern a sosa:FeatureOfInterest ;
     orexis:localId "fern" .
 
-##########  The board  ##########
+#  THE BOARD, as the bus knows it: one client, flashed as `moisture_sensor_fern` and kept, hosting
+#  the probe and the KY-015, listening for commands on its own topic.
+:esp32_fern a mqtt4ssn:Client , ssn:System ;
+    mqtt4ssn:hasClientID "moisture_sensor_fern" ;
+    mqtt4ssn:isConnectedToBroker :broker ;
+    mqtt4ssn:hosts :moisture_sensor_fern , :air_sensor_fern , :status_led_fern ;
+    ssn:hasSubSystem :moisture_sensor_fern , :air_temp_fern , :air_humidity_fern ;
+    mqtt4ssn:listensToTopic :fern_commands .
 
-#  ONE board, THREE sensors. The ESP32 carries a capacitive probe and a KY-015, and it is one
-#  MQTT client with one credential — so it publishes ONE message on ONE topic, and each sensor
-#  says which value in it is its own. That is what mqtt:readingPointer is for; the probe states
-#  none because `/value` is the default and is what every single-property board already sends.
-#
-#  All three are sensing:ScheduledProcedure and share ONE command topic, because there is one board and it
-#  sleeps once: a cadence is a property of the board, not of a property being measured. The
-#  agent aims that channel once, at the tightest cadence any sensor on it asks for.
-#
-#  Each states the UNIT of what it reports, as a QUDT IRI. That is not decoration on a board
-#  like this one: soil moisture 0.183 and air humidity 0.46 are both dimensionless fractions
-#  and look identical, while 21.4 is degrees Celsius — three numbers, two dimensions, and
-#  before this nothing in the graph said which was which. None of them states a calibration,
-#  so all three get scaling:Identity: the firmware scales before it publishes, and what
-#  arrives is already the quantity. Stating the unit converts nothing.
+:fern_readings a mqtt4ssn:Topic .
+:fern_readings_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "sensors/moisture_sensor_fern/reading" ; mqtt4ssn:matchesTopic :fern_readings .
+:fern_commands a mqtt4ssn:Topic .
+:fern_commands_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "sensors/moisture_sensor_fern/command" ; mqtt4ssn:matchesTopic :fern_commands .
 
-#  WHAT IS MOUNTED ON WHAT, in the one vocabulary an agent may hold for it. `sosa:Platform` is
-#  *an entity that hosts other entities, particularly Sensors, Actuators, Samplers, and other
-#  Platforms*, and `sosa:hosts` is that relation — so a board hosting a part hosting two
-#  channels is expressible without inventing a term. See decisions/a-board-is-a-platform.md.
-#
-#  It is stated HERE rather than read from the wiring because an agent is never given
-#  `hardware.ttl` (agent/genesis.py, HARDWARE_FILES) — the enforcement is that the file is not
-#  in the container. The wiring says the same thing in its own words: `mc:carries` is now
-#  `rdfs:subPropertyOf sosa:hosts`, so a sovereign loading both sees one fact twice and
-#  `tests/test_layout.py` refuses a society whose hosting contradicts its hardware.
-#
-#  `orexis:status_led_fern` is deliberately absent. The board carries it and the society has no
-#  business knowing: an agent polls sensors, and a thing it can never observe is the
-#  sovereign's. What is projected is the hosting of things the society already names.
-
-:esp32_fern a sosa:Platform ;
-    orexis:localId "esp32_fern" ;
-    sosa:hosts :moisture_sensor_fern , :air_sensor_fern ;
-    rdfs:comment "The board. One MQTT client, one credential, one wake — which is why its three channels share a topic and a cadence, and why those are facts about IT rather than about any one of them." .
-
-#  The KY-015 itself, which until now the society did not name at all: its two channels were
-#  loose sensors with nothing tying them to the part they read. That was the gap issue #51 left
-#  open when it split them, and hosting is the thing that closes it.
 :air_sensor_fern a ssn:System ;
     orexis:localId "air_sensor_fern" ;
     ssn:hasSubSystem :air_temp_fern , :air_humidity_fern ;
-    rdfs:comment "One part reporting two properties. A System rather than a Sensor because a sensor observes ONE property here, and this observes none itself — it has the two that do as sub-systems. Not a Platform either: it is hosted and has sub-systems, and nothing is MOUNTED on a KY-015. What the part itself does is produce both values in one frame, which is why they share an instant." .
+    rdfs:comment "One part reporting two properties in one frame, which is why they share an instant." .
 
-:moisture_sensor_fern a sosa:Sensor , device:Device , governed:Node ;
+#  THE THREE VALUES of one message, one sensor each, every one reporting at the ten seconds the
+#  board was last set to.
+:moisture_sensor_fern a sosa:Sensor ;
     orexis:localId "moisture_sensor_fern" ;
-    mqtt:onBus :local_bus ;
-    #  No senseMode stated since #175: the FIRMWARE says what it is — this device is typed
-    #  governed:Node above, and the mode (Scheduled -> its agent gains sensing:Subscribing)
-    #  follows from firmware/moisture-sensor/ontology.ttl by the closure. Restating it here
-    #  would be a second copy of the flashed image's fact; contradicting it, refusable.
-    #  Named for what it measures, moving in step with world/simulation because the two worlds
-    #  share this device id ON PURPOSE — one flashed board, either society — and a shared board
-    #  cannot send two message shapes. REFLASH BEFORE THE NEXT RESTART of this world: until
-    #  then the agent will say "nothing at /moisture in the payload" on every reading, which is
-    #  the loud version of this comment.
-    mqtt:readingPointer "/moisture" ;
-    #  No ssn:implements sensing:AlarmProcedure stated since #181: the promise arrives from
-    #  governed:Node above, the way the sense mode and the firmware name already do — the
-    #  flashed image watches its analog channel unconditionally, and only the connecting
-    #  device is typed, so the air channels stay honest by absence with nobody saying so.
-    #  What holds the promise to the silicon is the wiring: the board's class states which
-    #  pin roles its sleep-watcher reaches (esp32), and mc:WatchedChannelWiringShape refuses
-    #  a watched channel wired past that reach.
-    sensing:monitors :fern ;
-    sosa:observes water:SoilMoisture ;
-    scaling:quantityUnit unit:UNITLESS ;   # a fraction of saturation, 0-1
-    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
-    mqtt:commandTopic "sensors/moisture_sensor_fern/command" .
+    schema:unitCode unit:UNITLESS ;
+    sosa:isHostedBy :fern ;
+    sosa:observes climate:SoilMoisture ;
+    mqtt4ssn:observesTopic :fern_readings ;
+    sensing:readingPointer "/moisture" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
 
-#  The KY-015's two channels. They are sensing:Sensor and NOT devices: they have no mqtt:onBus of
-#  their own and mint no credential, because the thing that connects to the broker is the
-#  board, which already has one. `orexis:air_sensor_fern` in hardware.ttl is the peripheral they
-#  read — its pins, its model and its wires are stated there and nothing here repeats them.
-
-:air_temp_fern a sosa:Sensor , device:Device ;
+:air_temp_fern a sosa:Sensor ;
     orexis:localId "air_temp_fern" ;
-    #  no senseMode here since #96: the clock is the BOARD's, stated once where it
-    #  connects — this element rides that wire and shares that answer
-    sensing:monitors :fern ;
-    sosa:observes water:AirTemperature ;
-    scaling:quantityUnit unit:DEG_C ;      # the one reading here that is NOT a fraction
-    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
-    mqtt:readingPointer "/temperature" ;
-    mqtt:commandTopic "sensors/moisture_sensor_fern/command" ;
-    # PROJECTED from the wiring, not typed. `dht11:Dht11` states this floor on the class, and an
-    # agent is never given hardware.ttl — so it is restated here in the one vocabulary an agent
-    # may hold for it. `tests/test_layout.py` holds the two to agreeing.
-    ssn-system:hasSystemCapability [
-        a ssn-system:SystemCapability ;
-        ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
-        ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .
+    schema:unitCode unit:DEG_C ;
+    sosa:isHostedBy :fern ;
+    sosa:observes climate:AirTemperature ;
+    mqtt4ssn:observesTopic :fern_readings ;
+    sensing:readingPointer "/temperature" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
 
-:air_humidity_fern a sosa:Sensor , device:Device ;
+:air_humidity_fern a sosa:Sensor ;
     orexis:localId "air_humidity_fern" ;
-    #  no senseMode here since #96: the clock is the BOARD's, stated once where it
-    #  connects — this element rides that wire and shares that answer
-    sensing:monitors :fern ;
-    sosa:observes water:AirHumidity ;
-    scaling:quantityUnit unit:UNITLESS ;   # relative humidity as a fraction, 0-1
-    mqtt:readingTopic "sensors/moisture_sensor_fern/reading" ;
-    mqtt:readingPointer "/humidity" ;
-    mqtt:commandTopic "sensors/moisture_sensor_fern/command" ;
-    # PROJECTED from the wiring, not typed. `dht11:Dht11` states this floor on the class, and an
-    # agent is never given hardware.ttl — so it is restated here in the one vocabulary an agent
-    # may hold for it. `tests/test_layout.py` holds the two to agreeing.
-    ssn-system:hasSystemCapability [
-        a ssn-system:SystemCapability ;
-        ssn-system:inCondition [ a ssn-system:Condition ; rdfs:label "continuous operation" ] ;
-        ssn-system:hasSystemProperty [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 2 ; schema:unitCode unit:SEC ] ] .
-
-##########  The agent  ##########
-#  No orexis:actsFor: with nothing to advance for it, this agent holds no region want — it records.
-#  No market:bidsIn and no market:hosts, so no market capability can be derived for it.
-
-:fern_agent a orexis:Agent ;
-    orexis:localId "fern" ;
-    sensing:polls :moisture_sensor_fern , :air_temp_fern , :air_humidity_fern ;
-    mqtt:eventTopic "readings/fern" .
-
-##########  What each agent may re-pick, and how far  ##########
-#  A MANDATE: the room this world gives an agent on one of its own settings. Here rather than in
-#  its beliefs because latitude GRANTED is a governance fact — what an agent is allowed, not what
-#  it wants. The pick inside the range stays private; the range does not.
-#
-#  Stating one is also what GRANTS the review capability: room to move and the ability to use it
-#  are one decision said once, so `capabilities/review/rules.ru` derives review:Reckoning from exactly
-#  these triples. An agent with no mandate never arises, which is how a deployment that wants no
-#  drift says so — by granting none, rather than by omitting a belief and hoping something
-#  notices. The supplier has none: it holds no revisable setting, so there is nothing to give it
-#  room on.
-#
-#  Note what is NOT written here: no orexis:hasCapability. See AGENTS.md.
-
-:fern_agent review:commits [ review:onTerm sensing:slowSleepS ; review:notBelow 10 ; review:notAbove 900 ] .
-:fern_agent review:commits [ review:onTerm sensing:alarmDeltaFraction ; review:notBelow 0.1 ; review:notAbove 0.5 ] .
+    schema:unitCode unit:UNITLESS ;
+    sosa:isHostedBy :fern ;
+    sosa:observes climate:AirHumidity ;
+    mqtt4ssn:observesTopic :fern_readings ;
+    sensing:readingPointer "/humidity" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .

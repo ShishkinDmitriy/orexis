@@ -54,8 +54,12 @@ SELECT DISTINCT ?id WHERE {
           <https://www.w3id.org/MQTT4SSN-Ontology#hosts> ?system .
   ?system <http://example.org/orexis/sim#simulatedBy> ?model } ORDER BY ?id"""
 
-#  WHAT A WORLD IS MOUNTED AS: its documents, file by file — never its secrets.
+#  WHAT A WORLD IS MOUNTED AS: its documents, file by file — never its secrets, and never its
+#  wiring. An agent is not handed the hardware: only the sovereign loads both, and what keeps the
+#  wiring out of an agent is that the file is not in its filesystem. `orexis-firmware` reads it, on
+#  the host.
 DOCUMENTS = (".ttl", ".trig")
+HARDWARE_FILES = ("hardware.ttl",)
 
 
 def roster(world: str) -> list[str]:
@@ -103,7 +107,8 @@ def _simulator(world: str, client: str, host: str, plain: int) -> str:
 def _documents(world: str) -> str:
     here = world_dir(world)
     return "".join(f"\n      - ./{p.name}:/app/world/{world}/{p.name}:ro"
-                   for p in sorted(here.iterdir()) if p.is_file() and p.suffix in DOCUMENTS)
+                   for p in sorted(here.iterdir())
+                   if p.is_file() and p.suffix in DOCUMENTS and p.name not in HARDWARE_FILES)
 
 
 def _service(agent_id: str, world: str, host: str, plain: int, tls: int | None) -> str:
