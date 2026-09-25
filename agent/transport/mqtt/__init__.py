@@ -14,9 +14,10 @@ its sensors are those `sosa:isHostedBy` the subject it `orexis:actsFor`, or a sa
 topics' filters are its subscriptions. The world never says "the agent polls this sensor".
 
 **ONE CLASS, AND THE SOCKET AND THE THREAD ARE THE CONTAINER'S.** `Mqtt` is the agent's side of
-the bus over a client the container made from the environment and connected: it answers sensing's
-`Driver` contract — claims, subscriptions, own, cadence, nudge — `open` subscribes what the world
-implies, and `handle` is the listener, a message's topic and bytes at an instant becoming one call
+the bus over a client the container made from the environment and connected: it answers the
+family's `Transport` contract, kept at `agent/transport/` so that sensing knows no transport —
+`claims` says whether a sensor is reached this way, `open` subscribes what the world implies, and
+`handle` is the listener, a message's topic and bytes at an instant becoming one call
 of sensing's `received` per sensor of the agent's whose filter matches; `received` reads the codec,
 the pointer and the scaling off the sensor's own binding, so the transport knows no codec. The
 driver sets no callback of its own: a message arrives on the client's network thread, and the

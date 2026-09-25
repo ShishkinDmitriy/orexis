@@ -582,9 +582,10 @@ it is a record wearing a bullet.
   `sosa:Procedure` is) is the prediction package's one word;
   `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
   declare the scan's reach, and the wiring module that read them had no caller, so the ladder
-  is sensing's, a driver is handed the sensor's IRI and bytes and keeps only what a transport
-  alone knows, and the layout test holds every `sensing:` word the tree speaks to the ontology
-  beside it.
+  is sensing's, a transport hands `received` the sensor's IRI and bytes and sensing knows no
+  transport — the contract a member answers is the family's own, `Transport` at
+  `agent/transport/` — and the layout test holds every `sensing:` word the tree speaks to the
+  ontology beside it.
 - **The transport speaks MQTT4SSN, and a topic is named by the filters that match it** — the
   ontology that extends SSN and SOSA with the protocol in the OASIS terms is adopted as it stands,
   as SHACL's rules were, and `agent/transport/mqtt/` declares no word of its own; a sensor
@@ -1180,9 +1181,10 @@ it is a record wearing a bullet.
   `sosa:Procedure` is) is the prediction package's one word;
   `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
   declare the scan's reach, and the wiring module that read them had no caller, so the ladder
-  is sensing's, a driver is handed the sensor's IRI and bytes and keeps only what a transport
-  alone knows, and the layout test holds every `sensing:` word the tree speaks to the ontology
-  beside it.
+  is sensing's, a transport hands `received` the sensor's IRI and bytes and sensing knows no
+  transport — the contract a member answers is the family's own, `Transport` at
+  `agent/transport/` — and the layout test holds every `sensing:` word the tree speaks to the
+  ontology beside it.
 - **The transport speaks MQTT4SSN, and a topic is named by the filters that match it** — the
   ontology that extends SSN and SOSA with the protocol in the OASIS terms is adopted as it stands,
   as SHACL's rules were, and `agent/transport/mqtt/` declares no word of its own; a sensor

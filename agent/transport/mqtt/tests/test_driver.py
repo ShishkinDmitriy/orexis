@@ -12,6 +12,7 @@ import pytest
 
 from agent import clock
 from agent.transport.mqtt.driver import Mqtt, matches
+from agent.transport.transport import Transport
 from agent.store import rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_board_on_a_bus.trig"
@@ -48,30 +49,15 @@ def _results(store):
 
 
 def test_a_sensor_that_publishes_on_a_topic_speaks_mqtt_and_one_that_does_not_does_not(bus):
-    store, _, _ = bus
+    store, driver, _ = bus
+    assert isinstance(driver, Transport), "the family's contract, answered"
     assert Mqtt.claims(store, THERMO) and Mqtt.claims(store, PHOTOMETER)
     assert not Mqtt.claims(store, PROBE), "the probe is in the pot and on no bus"
 
 
-def test_the_subscription_is_the_pattern_of_the_filter_naming_the_topic(bus):
-    store, driver, _ = bus
-    assert driver.subscriptions(store, THERMO) == ["sensors/board/reading"]
-    assert driver.subscriptions(store, HYGRO) == ["sensors/board/reading"], "one board, one topic, two sensors"
-    assert driver.subscriptions(store, PHOTOMETER) == ["sensors/lamp/+"]
-    assert driver.subscriptions(store, PROBE) == []
-
-
-def test_a_message_is_the_sensors_when_its_pattern_matches_the_channel(bus):
-    store, driver, _ = bus
-    assert driver.owns(store, THERMO, "sensors/board/reading")
-    assert not driver.owns(store, THERMO, "sensors/lamp/reading")
-    assert driver.owns(store, PHOTOMETER, "sensors/lamp/reading") and driver.owns(store, PHOTOMETER, "sensors/lamp/status")
-    assert not driver.owns(store, PHOTOMETER, "sensors/lamp/reading/raw")
-
-
 def test_the_driver_listens_where_the_agents_sensors_publish(bus):
     store, driver, client = bus
-    assert driver.open(store) == ["sensors/board/reading"]
+    assert driver.open(store) == ["sensors/board/reading"], "one board, one topic, two sensors"
     assert client.subscribed == ["sensors/board/reading"], "the lamp's topic is the neighbour's, and the probe has none"
 
 

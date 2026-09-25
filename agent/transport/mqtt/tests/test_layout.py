@@ -1,9 +1,9 @@
 """What the transport tree's SHAPE promises, and the one direction its arrows may point.
 
-The transport is a member of a family whose contract is sensing's: it imports sensing's `Driver`
-and calls sensing's `received`, the downward imports a plug-in is allowed, and nothing of the
-mind, of prediction or of the belief package; nothing above imports it, since the container
-hands it a client and calls its link. It declares no word of its own — every `mqtt4ssn:` word
+The transport is a member of a family: it imports the family's `Transport` contract, kept at
+`agent/transport/`, and calls sensing's `received`, the two downward imports a member is allowed,
+and nothing else of sensing, nor of the mind, of prediction or of the belief package; nothing
+above imports it, since the container hands it a client and calls it. It declares no word of its own — every `mqtt4ssn:` word
 it speaks is one the vendored MQTT4SSN declares — and speaks no other package's words.
 """
 
@@ -37,8 +37,8 @@ def test_the_transport_imports_only_downward():
             names = [a.name for a in getattr(n, "names", [])] if isinstance(n, ast.Import) else []
             if any(w in mod for w in ABOVE) or any(any(w in a for w in ABOVE) for a in names):
                 reaching.append(f"{p.name}:{n.lineno}")
-            if mod.startswith("agent.sensing") and mod not in ("agent.sensing.driver", "agent.sensing.received"):
-                reaching.append(f"{p.name}:{n.lineno} reaches into sensing past its contract and its callback")
+            if mod.startswith("agent.sensing") and mod != "agent.sensing.received":
+                reaching.append(f"{p.name}:{n.lineno} reaches into sensing past its callback")
     assert not reaching, reaching
 
 

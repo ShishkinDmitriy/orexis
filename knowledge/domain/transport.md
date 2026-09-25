@@ -30,7 +30,7 @@ and reports `link_connected` and `link_reconnects` into the health series.
 
 # What it is not
 
-**Not a driver.** A driver is chosen per sensor and answers *how is this device spoken to*; in Agent 0.2.0 the contract it implements (`agent/sensing/driver.py`) is claim, subscriptions, own, cadence and nudge, and no `parse` — bytes to number is sensing's pipeline, and a driver hands sensing the bytes and the sensor;
+**Not a driver.** A driver is chosen per sensor and answers *how is this device spoken to*; in Agent 0.2.0 the contract a transport implements is the family's own, `Transport` at `agent/transport/transport.py` — claim, open, handle, cadence and nudge, and no `parse` — bytes to number is sensing's pipeline, a transport hands sensing's `received` the bytes and the sensor, and sensing knows no transport;
 this is chosen per world and answers *how does this agent reach everyone*. MQTT is both, in
 one package; a wired transport could be a driver alone.
 
@@ -48,7 +48,7 @@ the MQTT protocol in the OASIS specification's own terms, vendored under `tests/
 `mqtt4ssn:matchesTopic` it, each with its `mqtt4ssn:hasFilterPattern`, since a topic name is itself a
 valid filter. The agent is a client too, and what it listens to is never authored: its sensors are
 those mounted in what it acts for, and their topics' patterns are its subscriptions. One class,
-`Mqtt`, over a client the container connected: it answers sensing's driver contract, `open`
+`Mqtt`, over a client the container connected: it answers the family's `Transport` contract, `open`
 subscribes what the world implies, and `handle` is the listener, one call of sensing's `received`
 per sensor of the agent's whose pattern matches the message's topic, `received` reading the codec,
 the pointer and the scaling off the sensor's own binding. The driver sets no callback: a message

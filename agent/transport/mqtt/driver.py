@@ -1,10 +1,11 @@
-"""The MQTT driver: the agent's side of the bus, answering sensing's `Driver` contract from
-MQTT4SSN's words, with the topic filter matching MQTT itself specifies.
+"""The MQTT driver: the agent's side of the bus, answering the transport family's `Transport`
+contract from MQTT4SSN's words, with the topic filter matching MQTT itself specifies.
 
 **WHAT THE WORLD SAYS AND WHAT FOLLOWS.** A sensor speaks MQTT when it `mqtt4ssn:observesTopic`
-a topic. What the agent subscribes to for it is the pattern of every `mqtt4ssn:TopicFilter` that
-`mqtt4ssn:matchesTopic` that topic, and a message on a channel is the sensor's when a pattern of
-its topic matches the channel by MQTT's own rules — `+` one level, `#` the rest. A command goes
+a topic. What the agent subscribes to is the pattern of every `mqtt4ssn:TopicFilter` that
+`mqtt4ssn:matchesTopic` a topic one of its sensors publishes on, and a message on a channel is a
+sensor's when a pattern of its topic matches the channel by MQTT's own rules — `+` one level,
+`#` the rest. A command goes
 to the topic the sensor's board `mqtt4ssn:listensToTopic`, by a pattern with no wildcard in it,
 since a publish takes a topic name; the payloads are the ones the firmware has always read,
 `{"sleep_s": n}` retained so a board deep asleep finds it on waking, and `{"sense": true}` not
@@ -33,18 +34,11 @@ import logging
 from datetime import datetime
 
 from agent.ontology import PUBLIC, local_of
-from agent.sensing.driver import Driver
 from agent.sensing.received import received
 from agent.store import graphs_of, rows
+from agent.transport.transport import Transport
 
 log = logging.getLogger("mqtt")
-
-#  THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR PUBLISHES ON.
-_READINGS_Q = """
-SELECT ?pattern WHERE {
-  $sensor mqtt4ssn:observesTopic ?topic .
-  ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
-ORDER BY ?pattern"""
 
 #  THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
 _COMMANDS_Q = """
@@ -77,9 +71,9 @@ def matches(pattern: str, topic: str) -> bool:
     return len(levels) == len(names)
 
 
-class Mqtt(Driver):
-    """One agent's side of the bus: what sensing needs of this transport, answered from the
-    world in MQTT4SSN's words, over a client the container connected."""
+class Mqtt(Transport):
+    """One agent's side of the bus: what the container needs of this transport, answered from
+    the world in MQTT4SSN's words, over a client the container connected."""
 
     def __init__(self, me: str, client):
         self.me, self.client = me, client
@@ -89,12 +83,6 @@ class Mqtt(Driver):
         """A sensor that publishes on a topic speaks MQTT, whether or not a filter names it yet."""
         return bool(rows(store, "SELECT ?topic WHERE { $sensor mqtt4ssn:observesTopic ?topic }",
                          graphs_of(store, PUBLIC), sensor=sensor))
-
-    def subscriptions(self, store, sensor: str) -> list[str]:
-        return [r["pattern"] for r in rows(store, _READINGS_Q, graphs_of(store, PUBLIC), sensor=sensor)]
-
-    def owns(self, store, sensor: str, channel: str) -> bool:
-        return any(matches(pattern, channel) for pattern in self.subscriptions(store, sensor))
 
     def set_cadence(self, store, sensor: str, sleep_s: int) -> bool:
         topic = self._command_topic(store, sensor)
