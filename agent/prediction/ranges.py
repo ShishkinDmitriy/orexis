@@ -1,5 +1,5 @@
 """The ranges that apply to what a sensor observes, in SSN-System's words — read by `predict`
-to place a crossing, and by the rules this layer registers to conclude a side. Nothing is
+to place a crossing, and by the rules sensing ships to conclude a side. Nothing is
 minted: a range is what the world says, and what is answered is its two numbers.
 
 A range is stated by what hosts the sensor (`sosa:isHostedBy` — the subject, or a `sosa:Sample`
@@ -35,5 +35,5 @@ def ranges_of(store, sensor: str, observed_property: str, memo=None) -> list[tup
 
 def side(low: float, high: float, value: float) -> int:
     """Which side of a range a number lies on: -1 under the floor, 0 inside, bounds included,
-    +1 over the ceiling — the same reading the registered rules take."""
+    +1 over the ceiling — the same reading sensing's rules take."""
     return -1 if value < low else 1 if value > high else 0

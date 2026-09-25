@@ -1,6 +1,7 @@
-"""`register`: this layer's rules put where the deliberator runs them, and held — through the
-belief package's `revise`, which a test here may import and the code may not — to what they
-conclude of an observation against its subject's ranges.
+"""`rules.ttl`: this layer's rule set, a document saying it is a `sh:RulesGraph`, put in the
+store as a boot puts every document, and held — through the belief package's `revise`, which a
+test here may import and the code may not — to what it concludes of an observation against its
+subject's ranges.
 """
 
 from __future__ import annotations
@@ -13,12 +14,13 @@ import pytest
 from agent import clock
 from agent.belief.revise import revise
 from agent.ontology import KNOWN
-from agent.sensing.ontology import ABOVE, BELOW, INSIDE, RULES_GRAPH
+from agent.belief.ontology import RULES_GRAPH
+from agent.sensing.ontology import ABOVE, BELOW, INSIDE
 from agent.sensing.received import received
-from agent.sensing.register import register
-from agent.store import graphs_of, rows
+from agent.store import document, graphs_of, put_document, rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
+RULES = Path(__file__).parents[1] / "rules.ttl"
 TEST = "http://example.org/test#"
 PROBE = TEST + "probe"
 
@@ -34,7 +36,7 @@ def _sides(store, graph: str) -> set[tuple[str, str]]:
 def world(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
-    register(store)
+    put_document(store, document(RULES))
     return store
 
 
@@ -44,9 +46,9 @@ def _read(store, snapshots, sensor, value: float) -> str:
     return graph
 
 
-def test_the_rules_graph_is_the_drafts_kind(world):
-    assert graphs_of(world, RULES_GRAPH) == ["http://example.org/orexis/graph/rules/sensing"]
-    assert register(world) == graphs_of(world, RULES_GRAPH)[0], "registered again, one graph"
+def test_the_rules_graph_is_the_drafts_kind_and_named_by_its_document(world):
+    assert graphs_of(world, RULES_GRAPH) == [RULES.resolve().as_uri()]
+    assert put_document(world, document(RULES)) == graphs_of(world, RULES_GRAPH), "put again, one graph"
 
 
 def test_a_reading_under_the_floor_is_below_the_operating_range_and_inside_the_survival_one(world, snapshots):
@@ -75,7 +77,7 @@ def test_a_samples_observation_is_judged_by_its_subjects_ranges(monkeypatch, sna
     by the pot's ranges."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     world = snapshots.stand_in(Path(__file__).parent / "received" / "a_probes_sample_keys_the_node.trig")
-    register(world)
+    put_document(world, document(RULES))
     graph = _read(world, snapshots, PROBE, 0.05)
     assert graph.endswith("/patch_moisture")
     assert ("below", "zamioculcas.operating") in _sides(world, graph)

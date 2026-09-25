@@ -15,8 +15,9 @@ the transport family's own and which hands `received` the sensor's IRI and bytes
 
 **IT PREDICTS NOTHING AND CONCLUDES NOTHING.** When the reading changes range is the prediction
 package's calculation, over the observation written here. Which side of a range an observation
-is on is a revision: the rules this layer registers (`rules.ttl`, `register`) conclude it, and
-the deliberator runs them when the container says a graph changed. No side, no want, no wake
+is on is a revision: the rules this layer ships (`rules.ttl`, a document saying it is a
+`sh:RulesGraph`, which a boot reads as it reads every document) conclude it, and the
+deliberator runs them when the container says a graph changed. No side, no want, no wake
 is written here; a range is SSN-System's concept, read by the rules and by the prediction
 package, minted by nobody.
 

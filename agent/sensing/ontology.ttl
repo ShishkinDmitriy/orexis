@@ -1,4 +1,3 @@
-@base <http://example.org/orexis/sensing> .
 @prefix : <http://example.org/orexis/sensing#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -6,23 +5,24 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<> a owl:Ontology ;
-    rdfs:label "Orexis sensing, Agent 0.2.0" ;
-    rdfs:comment """The sensing layer of Agent 0.2.0 speaks SOSA and SSN, and declares only what they
-    lack. A sensor sosa:observes a property and sosa:isHostedBy what it is mounted in — the feature
-    of interest, or a sosa:Sample that sosa:isSampleOf one — its board reaches it by
-    ssn:hasSubSystem, and how often it reports is its ssn-system:Frequency; a range is SSN-System's,
-    stated by the host, by what the host is a sample of, or by the sensor itself. Declared here is
-    the graph an observation is kept in, the silence of a sensor that has stopped reporting, the
-    three sides this layer's rules conclude, and the pipeline's own concepts, since neither standard
-    says how bytes become a number: a codec and a scaling, the binding of a sensor to one of each,
-    the two members that ship, and the pointer. Sensing is the
-    translation row of the agent stack and nothing above it: a transport hands it bytes, it makes a
-    number of them and writes one sosa:Observation holding until the next is due, and on the
-    container's tick it says which readings are missing and which sensors have gone silent. It
-    predicts nothing — that is the prediction package's — and concludes nothing itself: the sides
-    are revisions, concluded by the three rules this layer registers (rules.ttl beside this file)
-    and run by the deliberator over the present. No word of any transport is spoken here.""" .
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS SENSING, AGENT 0.2.0.
+#  The sensing layer of Agent 0.2.0 speaks SOSA and SSN, and declares only what they lack. A
+#  sensor sosa:observes a property and sosa:isHostedBy what it is mounted in — the feature of
+#  interest, or a sosa:Sample that sosa:isSampleOf one — its board reaches it by ssn:hasSubSystem,
+#  and how often it reports is its ssn-system:Frequency; a range is SSN-System's, stated by the
+#  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph an
+#  observation is kept in, the silence of a sensor that has stopped reporting, the three sides
+#  this layer's rules conclude, and the pipeline's own concepts, since neither standard says how
+#  bytes become a number: a codec and a scaling, the binding of a sensor to one of each, the two
+#  members that ship, and the pointer. Sensing is the translation row of the agent stack and
+#  nothing above it: a transport hands it bytes, it makes a number of them and writes one
+#  sosa:Observation holding until the next is due, and on the container's tick it says which
+#  readings are missing and which sensors have gone silent. It predicts nothing — that is the
+#  prediction package's — and concludes nothing itself: the sides are revisions, concluded by the
+#  three rules this layer ships (rules.ttl beside this file) and run by the deliberator over
+#  the present. No word of any transport is spoken here.
 
 :ObservationGraph a owl:Class ;
     rdfs:subClassOf orexis:StateGraph ;

@@ -4,6 +4,8 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
+<> a orexis:PublicGraph .    # this document is one graph, and this is what it is
+
 #  ONE move, filled with a disk and a peg. Available once per (disk, target) the state allows:
 #  the disk is on top of its stack and the target holds no smaller disk. FICTIVE, because the
 #  puzzle is its own physics: no instrument answers a move, so the executor writes what the step

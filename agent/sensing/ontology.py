@@ -23,7 +23,6 @@ import re
 from agent.ontology import GRAPH_PREFIX, OREXIS
 
 SENSING = "http://example.org/orexis/sensing#"
-SH = "http://www.w3.org/ns/shacl#"
 
 #  THIS LAYER'S OWN: the graph an observation is kept in, the silence, the sides.
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
@@ -41,9 +40,6 @@ SCALING = SENSING + "Scaling"
 SCALED_BY = SENSING + "scaledBy"
 IDENTITY_SCALING = SENSING + "Identity"
 READING_POINTER = SENSING + "readingPointer"
-
-#  THE DRAFT'S graph kind the registered rules are kept in.
-RULES_GRAPH = SH + "RulesGraph"
 
 RECEIVED = OREXIS + "Received"
 DERIVED = OREXIS + "Derived"
@@ -71,7 +67,3 @@ def silent_graph(agent_id: str, sensor: str) -> str:
     """Where a sensor's silence is said, while it lasts."""
     return f"{GRAPH_PREFIX}silent/{agent_id}/{slug(sensor)}"
 
-
-def rules_graph() -> str:
-    """Where this layer's registered rules are kept — one graph, the layer's own."""
-    return f"{GRAPH_PREFIX}rules/sensing"

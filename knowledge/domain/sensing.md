@@ -415,8 +415,8 @@ silent for a limit of their cadences, said so by `sensing:silentSince` on the se
 present while the silence lasts and dropped by the next reading. A reading merely missed gets no
 mark, since its graph's period ending already says it. It predicts nothing: when the reading
 changes range is the [prediction](/domain/prediction.md) package's calculation, over the
-observation written here. It concludes nothing: the three rules it registers (`rules.ttl`,
-`register`) say which side of each range an observation is on, `sensing:below`,
+observation written here. It concludes nothing: the three rules it ships (`rules.ttl`, a
+document saying it is a `sh:RulesGraph`, which a boot reads like every other) say which side of each range an observation is on, `sensing:below`,
 `sensing:inside`, `sensing:above`, and the [deliberator](/domain/deliberator.md) concludes
 them over every graph the container reports changed — a [revision](/domain/revision.md), never
 sensing's own write. A sensor `sosa:observes` its property and `sosa:isHostedBy` what it is

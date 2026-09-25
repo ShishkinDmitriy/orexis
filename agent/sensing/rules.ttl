@@ -7,6 +7,8 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
+<> a sh:RulesGraph .    # this document is one graph, and this is what it is
+
 #  THE RULES SENSING REGISTERS: which side of each of its subject's ranges an observation's result
 #  lies on. Three global SPARQL rules of one layer and one order, as SHACL 1.2 Inference Rules
 #  defines them, run by the deliberator over every observation and every predicted observation.

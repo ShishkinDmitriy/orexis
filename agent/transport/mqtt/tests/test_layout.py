@@ -83,10 +83,10 @@ def test_every_module_with_a_public_name_has_a_test_named_for_it():
 
 
 def test_the_package_declares_nothing_and_every_word_it_speaks_is_mqtt4ssns():
-    """The ontology imports MQTT4SSN and declares no term; every `mqtt4ssn:` word in the code, a
-    test or a world is one the vendored vocabulary declares."""
+    """The ontology names MQTT4SSN's namespace and declares no term; every `mqtt4ssn:` word in the
+    code, a test or a world is one the vendored vocabulary declares."""
     own = (MQTT / "ontology.ttl").read_text()
-    assert "owl:imports <https://www.w3id.org/MQTT4SSN-Ontology>" in own
+    assert "@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> ." in own
     assert not re.search(r"^:\w+ a ", own, re.M), "the transport declares a word of its own"
     vocabulary = rdflib.Graph(); vocabulary.parse(VENDORED, format="turtle")
     ns = "https://www.w3id.org/MQTT4SSN-Ontology#"

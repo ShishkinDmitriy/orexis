@@ -567,7 +567,7 @@ it is a record wearing a bullet.
   its own** — `received` writes one `sosa:Observation` per key with its number, holding until
   the next is due by the sensor's `ssn-system:Frequency`, `missed` answers the readings fallen
   due on the container's tick and says `sensing:silentSince` of a sensor silent past a limit of
-  its cadences, and the side is a revision the three rules sensing registers conclude; no band,
+  its cadences, and the side is a revision the three rules sensing ships conclude; no band,
   no side, no want, no verdict on a prediction is sensing's own write. `agent/prediction/`
   bisects every crossing of a range bound between the ladder's rungs and writes one prediction
   per stretch, finds the observation by the kernel's kind and `sosa:madeBySensor` and imports
@@ -596,15 +596,22 @@ it is a record wearing a bullet.
   what it acts for, and the broker's address stays in the environment.
 - **A world owns its vocabulary, and the runtime boots from its files** — Hanoi's puzzle was a
   tool package with an ontology and one action; in 0.2.0 `world/hanoi/` carries its own
-  `ontology.ttl` beside its actions, desires and state, `agent/runtime.py` loads the kernel's
-  T-Box, every package's and the world's into one vocabulary graph and closes it, and the
-  world's tests live with the world, since the target state is no global tests.
+  `ontology.ttl` beside its actions, desires and state, `agent/runtime.py` reads the kernel's
+  T-Box, every package's and the world's as graphs of their own and derives the closure into
+  one more, and the world's tests live with the world, since the target state is no global tests.
 - **The runtime stops when every desire is met** — a pass plans and then walks what is due; no
   want standing in any imaginarium and no intention walking is met, wants standing with nothing
   walking is either a search the budget cut short, which `planning:Exhausted` says and the next
   pass continues, or unreachable, and the process exits saying which. A pass at the same instant
   as the last re-lays the present under its name and the search starts over, so a clock that
   does not tick is a test's mistake and not a runtime's.
+- **A document says which graph it is, and the file's name is for eyes** — a Turtle file is one
+  graph named by its own IRI and `<> a orexis:StateGraph` says what it is, a TriG file names its
+  graphs and says so in its default graph, and the loader moves those rows to the catalogue and
+  adds the arrival and the owner, which a document may not state; the runtime knew five file
+  names and one vocabulary graph before, and now every ontology and rule set is a graph of its
+  own that a lived-in volume reads again at boot, so updating one is editing its file; and no
+  `owl:Ontology` header, since nothing read one — a package's prose about itself is a comment.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1181,7 +1188,7 @@ it is a record wearing a bullet.
   its own** — `received` writes one `sosa:Observation` per key with its number, holding until
   the next is due by the sensor's `ssn-system:Frequency`, `missed` answers the readings fallen
   due on the container's tick and says `sensing:silentSince` of a sensor silent past a limit of
-  its cadences, and the side is a revision the three rules sensing registers conclude; no band,
+  its cadences, and the side is a revision the three rules sensing ships conclude; no band,
   no side, no want, no verdict on a prediction is sensing's own write. `agent/prediction/`
   bisects every crossing of a range bound between the ladder's rungs and writes one prediction
   per stretch, finds the observation by the kernel's kind and `sosa:madeBySensor` and imports
@@ -1210,15 +1217,22 @@ it is a record wearing a bullet.
   what it acts for, and the broker's address stays in the environment.
 - **A world owns its vocabulary, and the runtime boots from its files** — Hanoi's puzzle was a
   tool package with an ontology and one action; in 0.2.0 `world/hanoi/` carries its own
-  `ontology.ttl` beside its actions, desires and state, `agent/runtime.py` loads the kernel's
-  T-Box, every package's and the world's into one vocabulary graph and closes it, and the
-  world's tests live with the world, since the target state is no global tests.
+  `ontology.ttl` beside its actions, desires and state, `agent/runtime.py` reads the kernel's
+  T-Box, every package's and the world's as graphs of their own and derives the closure into
+  one more, and the world's tests live with the world, since the target state is no global tests.
 - **The runtime stops when every desire is met** — a pass plans and then walks what is due; no
   want standing in any imaginarium and no intention walking is met, wants standing with nothing
   walking is either a search the budget cut short, which `planning:Exhausted` says and the next
   pass continues, or unreachable, and the process exits saying which. A pass at the same instant
   as the last re-lays the present under its name and the search starts over, so a clock that
   does not tick is a test's mistake and not a runtime's.
+- **A document says which graph it is, and the file's name is for eyes** — a Turtle file is one
+  graph named by its own IRI and `<> a orexis:StateGraph` says what it is, a TriG file names its
+  graphs and says so in its default graph, and the loader moves those rows to the catalogue and
+  adds the arrival and the owner, which a document may not state; the runtime knew five file
+  names and one vocabulary graph before, and now every ontology and rule set is a graph of its
+  own that a lived-in volume reads again at boot, so updating one is editing its file; and no
+  `owl:Ontology` header, since nothing read one — a package's prose about itself is a comment.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads

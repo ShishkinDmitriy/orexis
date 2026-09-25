@@ -1,19 +1,17 @@
-@base <http://example.org/orexis/transport/mqtt> .
+@prefix orexis: <http://example.org/orexis#> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<> a owl:Ontology ;
-    owl:imports <https://www.w3id.org/MQTT4SSN-Ontology> ;
-    rdfs:label "Orexis MQTT transport, Agent 0.2.0" ;
-    rdfs:comment """The MQTT transport of Agent 0.2.0 declares no word of its own: it speaks MQTT4SSN, the
-    ontology that extends SSN and SOSA with the MQTT protocol in the OASIS specification's terms, and
-    the terms it reads are named beside this header. A sensor observesTopic the Topic it publishes on,
-    a board that takes commands listensToTopic another, a TopicFilter matchesTopic a Topic and carries
-    its hasFilterPattern — the one place a topic's name is said, since MQTT4SSN names a topic through
-    the filters that match it and a topic name is itself a valid filter — and a Client, board or agent,
-    isConnectedToBroker a Broker. The broker's address is a deployment fact and is not read off the
-    world.""" ;
-    rdfs:seeAlso mqtt4ssn:observesTopic , mqtt4ssn:listensToTopic , mqtt4ssn:matchesTopic ,
-        mqtt4ssn:hasFilterPattern , mqtt4ssn:Topic , mqtt4ssn:TopicFilter , mqtt4ssn:Client ,
-        mqtt4ssn:Broker .
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS MQTT TRANSPORT, AGENT 0.2.0.
+#  The MQTT transport of Agent 0.2.0 declares no word of its own: it speaks MQTT4SSN, the ontology
+#  that extends SSN and SOSA with the MQTT protocol in the OASIS specification's terms, and these
+#  are the terms it reads. A sensor observesTopic the Topic it publishes on,
+#  a board that takes commands listensToTopic another, a TopicFilter matchesTopic a Topic and
+#  carries its hasFilterPattern — the one place a topic's name is said, since MQTT4SSN names a
+#  topic through the filters that match it and a topic name is itself a valid filter — and a
+#  Client, board or agent, isConnectedToBroker a Broker. The broker's address is a deployment fact
+#  and is not read off the world. The adoption is by prefix: this file names MQTT4SSN's namespace
+#  and speaks its words, and the vendored copy the tests read is
+#  tests/fixtures/vocabularies/mqtt4ssn.ttl.

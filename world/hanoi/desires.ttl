@@ -4,6 +4,8 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
+<> a orexis:DesireGraph .    # this document is one graph, and this is what it is
+
 #  THE GOAL, as a desire the derivation mints one want from: every disk home on peg C. What
 #  solving MEANS is the shape — on every disk in play, following hanoi:on one or more times
 #  reaches peg C — and how far it is is the estimate, the count of disks astray, which never

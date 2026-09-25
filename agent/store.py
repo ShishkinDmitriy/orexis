@@ -474,6 +474,116 @@ WHERE  {{ GRAPH <{catalogue}> {{ }}
           FILTER NOT EXISTS {{ GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal ?period }} }} }}""")
 
 
+#  ── a document says what its graphs are ────────────────────────────────────────────────────
+#
+#  A FILE IS READ AS THE GRAPHS IT HOLDS AND THE ROWS IT STATES ABOUT THEM. The conventions are
+#  the two RDF already has. A Turtle file is ONE graph, named by the document's own IRI, and
+#  `<> a orexis:StateGraph` in it says what that graph is — the Linked Data reading, where a
+#  document describes itself and the graph store's protocol names a graph by its document. A
+#  TriG file names its graphs in `GRAPH <…> { }` blocks and states the rows about them in its
+#  default graph, as a nanopublication's head does. Both are read into one shape, a dataset
+#  whose named graphs are the content and whose default graph is the rows, and the rows go to
+#  the catalogue when the document is put: a rule reading the graph would otherwise read
+#  `<> a orexis:DesireGraph` as a fact about the world.
+#
+#  WHAT A DOCUMENT MAY NOT SAY is how it arrived and whose it is — the loader writes
+#  `orexis:arrivedBy orexis:Asserted` and, where the caller says so, `orexis:beliefsOf` — and
+#  that it is the catalogue, which is created and never loaded. A graph stating no kind is
+#  refused rather than guessed at, since a graph with no row is invisible to every reader.
+
+_RDF_TYPE_IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+_LOADERS_OWN = (OREXIS + "arrivedBy", OREXIS + "beliefsOf")
+_TRIG = (".trig",)
+
+
+class DocumentRefused(ValueError):
+    """A document that says nothing of what its graphs are, or says what only the loader may."""
+
+
+def document(path) -> ox.Store:
+    """The document at `path` as a dataset: its graphs named, its rows about them in the default
+    graph. Refused where a graph states no kind, where the rows speak of anything but the
+    document's graphs, or where they say the catalogue, an arrival or an owner."""
+    path = Path(path)
+    base = path.resolve().as_uri()
+    doc = ox.Store()
+    if path.suffix in _TRIG:
+        doc.load(path.read_bytes(), format=ox.RdfFormat.TRIG, base_iri=base)
+    else:
+        named = ox.NamedNode(base)
+        doc.load(path.read_bytes(), format=ox.RdfFormat.TURTLE, base_iri=base, to_graph=named)
+        about = {q for q in doc.quads_for_pattern(named, None, None, named)}
+        reached = {q.object for q in about if isinstance(q.object, ox.BlankNode)}
+        while reached:
+            more = {q for node in reached for q in doc.quads_for_pattern(node, None, None, named)} - about
+            about |= more
+            reached = {q.object for q in more if isinstance(q.object, ox.BlankNode)}
+        for q in about:
+            doc.remove(q)
+            doc.add(ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()))
+    graphs = {g.value for g in doc.named_graphs()}
+    rows_ = list(doc.quads_for_pattern(None, None, None, ox.DefaultGraph()))
+    kinds = {q.subject.value: q.object.value for q in rows_
+             if q.predicate.value == _RDF_TYPE_IRI and isinstance(q.subject, ox.NamedNode)}
+    reachable = {ox.NamedNode(g) for g in graphs}
+    frontier = set(reachable)
+    while frontier:
+        frontier = {q.object for q in rows_ if q.subject in frontier and isinstance(q.object, ox.BlankNode)} - reachable
+        reachable |= frontier
+    stray = sorted({str(q.subject) for q in rows_ if q.subject not in reachable})
+    if stray:
+        raise DocumentRefused(f"{path.name} states rows about {', '.join(stray)}, which is no graph it holds")
+    if not graphs:
+        raise DocumentRefused(f"{path.name} holds no graph")
+    unkinded = sorted(g for g in graphs if g not in kinds)
+    if unkinded:
+        raise DocumentRefused(f"{path.name} says of {', '.join(unkinded)} no kind — `<> a <a graph kind>` says it")
+    for q in rows_:
+        if q.predicate.value in _LOADERS_OWN:
+            raise DocumentRefused(f"{path.name} says {q.predicate.value} of a graph, which only the loader says")
+        if q.predicate.value == _RDF_TYPE_IRI and q.object.value == CATALOGUE:
+            raise DocumentRefused(f"{path.name} says a graph is the catalogue, which is created and never loaded")
+    return doc
+
+
+def kinds_in(doc: ox.Store) -> dict[str, set[str]]:
+    """Each graph a document holds, with the kinds it says that graph is."""
+    out: dict[str, set[str]] = {g.value: set() for g in doc.named_graphs()}
+    for q in doc.quads_for_pattern(None, ox.NamedNode(_RDF_TYPE_IRI), None, ox.DefaultGraph()):
+        if isinstance(q.subject, ox.NamedNode) and q.subject.value in out:
+            out[q.subject.value].add(q.object.value)
+    return out
+
+
+def put_document(store, doc: ox.Store, owner: str | None = None, graphs=None) -> list[str]:
+    """Put a document's graphs in the store, each replacing any graph of its name, and its rows
+    in the catalogue with the arrival and, where `owner` is given, whose it is. `graphs`, where
+    given, puts only those. The names put, sorted. The kinds each row says are closed by
+    `close_catalogue`, which the caller runs once when every document is in."""
+    catalogue = catalogue_of(store)
+    if catalogue is None:
+        raise RuntimeError("no graph describes itself as the catalogue — nothing has said what the graphs are")
+    cat = ox.NamedNode(catalogue)
+    names = sorted(g for g in kinds_in(doc) if graphs is None or g in graphs)
+    rows_ = list(doc.quads_for_pattern(None, None, None, ox.DefaultGraph()))
+    for name in names:
+        node = ox.NamedNode(name)
+        forget_graph(store, name)
+        for q in doc.quads_for_pattern(None, None, None, node):
+            store.add(q)
+        reached, frontier = set(), {node}
+        while frontier:
+            mine = [q for q in rows_ if q.subject in frontier]
+            for q in mine:
+                store.add(ox.Quad(q.subject, q.predicate, q.object, cat))
+            reached |= frontier
+            frontier = {q.object for q in mine if isinstance(q.object, ox.BlankNode)} - reached
+        store.add(ox.Quad(node, ox.NamedNode(OREXIS + "arrivedBy"), ox.NamedNode(OREXIS + "Asserted"), cat))
+        if owner is not None:
+            store.add(ox.Quad(node, ox.NamedNode(OREXIS + "beliefsOf"), ox.NamedNode(owner), cat))
+    return names
+
+
 _ROWS_Q = """
 SELECT ?g ?class WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }"""
