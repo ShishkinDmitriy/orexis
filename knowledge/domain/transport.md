@@ -60,7 +60,7 @@ the world; 0.1.0 read the bus's off the world as the one piece of infrastructure
 agree on, and MQTT4SSN has `hasHostAddress` on a Broker, so that is a choice open to reversal.
 
 **A seam, not a debt.** The member is not yet a distribution of its own with paho as its
-dependency: the root declares paho because `onboarding/ask.py` imports it too, and
+dependency: the root declares paho because the runtime's own tree imports it through the member, and
 `tests/test_projects.py` holds the root's list to its own trees' imports both ways, so paho leaves
 the root only when the transport carries it. Whether the 0.2.0 packages become distributions, and
 under what module names given that 0.1.0 abandoned a shared import root for flat top-level

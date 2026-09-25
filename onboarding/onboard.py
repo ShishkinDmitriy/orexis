@@ -42,8 +42,11 @@ from __future__ import annotations
 import argparse
 import logging
 
-from . import certs, compose, dashboards, influx, mqtt, validate
-from agent_old.genesis import worlds
+from agent.runtime import world_of
+from agent.store import DocumentRefused
+
+from . import certs, compose, dashboards, influx, mqtt
+from .worlds import world_dir, worlds
 
 log = logging.getLogger("onboard")
 
@@ -55,10 +58,14 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     destructive option here — it replaces credentials that are currently in use, so anything
     holding an old one is locked out until it is restarted with the new.
     """
-    if check and not validate.validate_world(world):
-        # Onboarding an inconsistent world is worse than refusing: it mints real credentials for
-        # agents that will fail their own startup validation, and leaves them lying around.
-        raise SystemExit(f"orexis-onboard: world {world!r} does not hold together — nothing granted")
+    if check:
+        # Onboarding a world whose documents will not load is worse than refusing: it mints real
+        # credentials for agents that will refuse to boot, and leaves them lying around. So the
+        # world is read as an agent boots it first.
+        try:
+            world_of(world_dir(world))
+        except DocumentRefused as refused:
+            raise SystemExit(f"orexis-onboard: world {world!r} does not load — {refused}; nothing granted")
 
     log.info("onboarding %s", world)
     influx.provision(world, rotate=rotate)
@@ -88,8 +95,8 @@ def main() -> None:
                    help="replace credentials that already exist. Anything still holding an old "
                         "one is locked out until restarted.")
     p.add_argument("--no-check", action="store_true",
-                   help="skip validation. Only useful when you are onboarding a world you are "
-                        "deliberately part-way through authoring.")
+                   help="skip loading the world first. Only useful when you are onboarding a world "
+                        "you are deliberately part-way through authoring.")
     args = p.parse_args()
     onboard(args.world, rotate=args.rotate, check=not args.no_check)
 

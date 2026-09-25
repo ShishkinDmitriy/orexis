@@ -1057,18 +1057,12 @@ stops being theoretical.
 source .venv/bin/activate
 pip install -e . $(ls -d packages/*/)   # 25 distributions; or `uv sync --all-packages`
 
-orexis-validate <world> # build the world from its files and hold it to every package's shapes
-orexis-onboard <world>       # ONBOARDING: validate, then grant everything below. One command.
+orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, then grant everything below.
   orexis-influx <world>      #   a bucket per agent, and a token that opens only it
   orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
   orexis-dashboards <world>  #   a Grafana folder per world, from what its agents observe
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
-orexis-keygen <world>        # once per world, before it is onboarded
-orexis-ask <world> <agent> <modality> 'SPARQL'  # the sovereign asks a RUNNING agent — naming
-                       # WHICH of its mind's stores (beliefs, desires; more as they land),
-                       # required like the world is: no default modality. Read-only by
-                       # construction. See decisions/the-sovereign-may-ask.md.
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 cd world/<world> && podman compose up -d      # one container per agent
 podman build -t orexis:local .                 # only when a dependency changes
@@ -1081,7 +1075,9 @@ pytest infra -q -n0    # 8 more, against the RUNNING broker and store — see be
 lint-imports           # the layering: onboarding may import agent, never the reverse
 ```
 
-`orexis-validate` and `pytest` are the two gates, and both must pass before a change is done.
+`pytest` and `lint-imports` are the gates, and both must pass before a change is done; a world is
+held to what it does by the tests beside it, and `orexis-onboard` refuses one whose documents will
+not load.
 `pytest infra` is a third thing, run deliberately, and it is not part of them — and it must
 be run `-n0`, because `addopts` carries `-n auto` for everything else and those eight tests
 cannot share a broker. They refuse rather than letting you find out: see

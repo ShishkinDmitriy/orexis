@@ -183,7 +183,7 @@ def test_a_package_declares_exactly_what_it_imports(pkg: Path):
         f"  unused:  {sorted(have - want) or 'none'}")
 
 
-#  ONBOARDING REACHES INTO THREE PACKAGES, and this is the count of record (#426).
+#  WHAT ONBOARDING REACHES INTO IN THE PACKAGES, and this is the count of record (#426).
 #
 #  It was invisible until the packages became top-level modules: the scan skipped anything
 #  under `packages.`, so the root's imports of them never reached the comparison. They are not
@@ -194,9 +194,9 @@ def test_a_package_declares_exactly_what_it_imports(pkg: Path):
 #  The real fix is for onboarding to read these facts off the graph rather than out of Python,
 #  which is rule 1 applied to the operator's tools. Until then this holds the line: a NEW one
 #  fails, and one that stops occurring fails too, so the number can only fall to zero.
-ONBOARDING_REACHES_IN = {
-    ("onboarding/ask.py", "orexis_capability_reporting"),       # the sovereign's identity
-}
+#  AT ZERO since 2026-09-25: the tools that reached in — the sovereign's question channel, the
+#  validation and the market's topic namespace — were retired with 0.1.0 or read the world now.
+ONBOARDING_REACHES_IN: set[tuple[str, str]] = set()
 
 
 def test_the_root_trees_reach_into_exactly_the_packages_on_record():

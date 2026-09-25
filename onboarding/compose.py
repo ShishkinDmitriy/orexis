@@ -35,8 +35,8 @@ from pathlib import Path
 
 from agent.runtime import world_of
 from agent.store import graphs_of, rows
-from agent_old.config import REPO_ROOT
-from agent_old.genesis import world_dir, worlds
+from .worlds import REPO_ROOT
+from .worlds import world_dir, worlds
 
 from .mqtt import broker
 

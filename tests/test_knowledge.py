@@ -283,6 +283,12 @@ def test_no_document_names_a_path_that_is_not_there():
     each one is a sentence that says "was" or "at the time" or draws a before/after.
     """
     absent_on_purpose = {
+        # THE 0.1.0 ONBOARDING COMMANDS, retired with it (2026-09-25): validation, its link step,
+        # the key generator and the sovereign's question channel, narrated by the records.
+        "onboarding/ask.py",
+        "onboarding/linker",
+        "onboarding/linker.py",
+        "onboarding/validate.py",
         # RETIRED WITH 0.1.0 (2026-09-25): the switched-off suite's files, the loner and
         # simulation worlds and the stand-ins the simulator replaced. The records narrate them as
         # what 0.1.0 had and did; git history keeps every one.

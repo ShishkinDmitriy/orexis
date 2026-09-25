@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import argparse
 import logging
-from agent_old.config import REPO_ROOT
+from .worlds import REPO_ROOT
 from .certs import _ca, _leaf, _write
 
 log = logging.getLogger("broker-cert")

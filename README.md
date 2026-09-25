@@ -172,13 +172,6 @@ pip install -e .
 
 ## 3. Run the slice
 
-One-time setup, in order:
-
-```bash
-orexis-keygen simulation    # that world's host + clearing signing keys, once
-orexis-validate simulation  # build the world from its files and hold it to every shape
-```
-
 **There is no default world.** Every command takes one as a required argument and refuses rather
 than guessing, because a fallback puts a misconfigured agent on the same topics as the real one.
 
@@ -245,16 +238,6 @@ second code path, and a second code path is what a simulation exists to avoid.
   recreating Grafana restores them, and nothing lives only in the container.
 - **The wire** — `mosquitto_sub -t '#' -v -p <that world's port>`, which is the one place a
   society is visible from outside without asking anybody.
-- **An agent's own mind** — `orexis-ask`, the sovereign's single question to a RUNNING agent
-  over its world's bus. There is no shared store to query and no endpoint to point a browser
-  at: a belief base is a file in its owner's volume, and this is disclosure rather than access,
-  read-only by construction.
-
-  ```bash
-  orexis-ask simulation fern beliefs \
-    'SELECT ?p ?v WHERE { ?s <http://www.w3.org/ns/sosa/hasSimpleResult> ?v ;
-                             <http://www.w3.org/ns/sosa/observedProperty> ?p }'
-  ```
 
   The modality is required — `beliefs` or `desires` — as the world is, because there is no
   default for either. See
@@ -322,17 +305,11 @@ into sleeping through a drought.
 
 ```bash
 pip install -e ".[dev]"
-pytest -q                    # agent/, packages/ and world/; the 0.1.0 suite in tests/ is switched off
-orexis-validate simulation   # and every other world you have
+pytest -q                    # agent/, packages/ and world/ — each world's own tests among them
 lint-imports                 # the layering: onboarding may import agent, never the reverse
 ```
 
-`orexis-validate` holds a world to every package's `shapes.ttl`, and the checks are
-**capability-aware**: a rule applies to an agent only if the world derived that capability for
-it. So the supplier is never asked for a cadence, a subscribing agent must have one, and a
-listening agent must *not* — plus the usual: a band whose floor is below its ceiling, a cadence
-that watches more closely when thirsty, nobody sleeping past the constitutional ceiling, and
-every device stating where it is reachable.
+A world is held to what it does by the tests beside it, in `world/<name>/tests/`.
 
 A third thing, run deliberately and **not** part of the two:
 
