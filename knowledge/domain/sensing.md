@@ -422,7 +422,7 @@ them over every graph the container reports changed — a [revision](/domain/rev
 sensing's own write. A sensor `sosa:observes` its property and `sosa:isHostedBy` what it is
 mounted in — the subject, or a `sosa:Sample` of it — and that pair is the observation's key;
 what the 0.1.0 package said in words of its own, what an agent polls, what a sensor monitors or
-samples, a device's sense mode and a drift's horizons, 0.2.0 does not say. The driver contract
-in `driver.py` is handed the sensor's IRI and has no `parse`, since bytes to number is
-sensing's. No freshness want, no timer, no band; a sensor that has never reported is not told
+samples, a device's sense mode and a drift's horizons, 0.2.0 does not say. Sensing knows no
+transport: the contract a transport answers is the transport family's own, and what a transport
+hands `received` is the sensor's IRI and bytes, since bytes to number is sensing's. No freshness want, no timer, no band; a sensor that has never reported is not told
 from one not yet due, which is the container's to count from boot.

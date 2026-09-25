@@ -24,7 +24,7 @@ CODE = sorted(p for p in SENSING.glob("*.py"))
 VOCABULARY = sorted(SENSING.glob("*.ttl"))
 
 #  A MODULE NAMED FOR A THING, which may export several reads of it.
-NOUNS = {"ontology", "pipeline", "driver", "cadence"}
+NOUNS = {"ontology", "pipeline", "cadence"}
 
 ABOVE = ("prediction", "planning", "execution", "belief")
 
@@ -48,14 +48,23 @@ def test_no_file_of_this_layer_speaks_the_minds_words_or_a_transports(path):
     assert not said, f"{path.name} names another layer's or a transport's words: {sorted(set(said))}"
 
 
+#  A TRANSPORT IS BENEATH SENSING AND IMPORTS ITS CALLBACK, `received`, and nothing else of it;
+#  the contract a transport answers is the transport family's own, not sensing's.
+CALLBACK = ("agent.sensing.received",)
+
+
 def test_nothing_above_imports_sensing():
     """The prediction package and the executor read observations by KIND: a graph classified
-    `orexis:StateGraph` is theirs to read whoever wrote it."""
+    `orexis:StateGraph` is theirs to read whoever wrote it. A transport, beneath, imports the
+    callback and nothing else of sensing's."""
     for path in sorted((ROOT / "agent").rglob("*.py")):
         if SENSING in path.parents or "tests" in path.parts:
             continue
+        transport = "transport" in path.parts
         for node in ast.walk(ast.parse(path.read_text())):
             mod = (node.module if isinstance(node, ast.ImportFrom) else None) or ""
+            if transport and mod in CALLBACK:
+                continue
             assert "agent.sensing" not in mod, f"{path.relative_to(ROOT)} imports sensing"
             if isinstance(node, ast.Import):
                 assert not any(a.name.startswith("agent.sensing") for a in node.names), path

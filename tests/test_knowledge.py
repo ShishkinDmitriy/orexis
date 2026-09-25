@@ -579,6 +579,7 @@ _VENDORED_VOCABULARIES = {
     "prov": "prov.ttl",
     "dcterms": "dcterms.ttl",
     "sh": "shacl.ttl",
+    "mqtt4ssn": "mqtt4ssn.ttl",
 }
 
 

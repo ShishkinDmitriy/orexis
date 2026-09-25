@@ -10,8 +10,8 @@ of their cadences, said so by `sensing:silentSince` until a reading ends it. Eve
 SOSA's and SSN's words — a sensor `sosa:observes` a property and `sosa:isHostedBy` what it is
 mounted in, and that pair is the key an observation is written under — but the six this layer
 declares in `ontology.ttl`, and not one word of any transport: how a sensor's bytes decode is
-the pipeline's binding on it, and how a device is reached is a driver's, behind the contract
-in `driver.py`, which is handed the sensor's IRI and bytes.
+the pipeline's binding on it, and how a device is reached is a transport's, whose contract is
+the transport family's own and which hands `received` the sensor's IRI and bytes.
 
 **IT PREDICTS NOTHING AND CONCLUDES NOTHING.** When the reading changes range is the prediction
 package's calculation, over the observation written here. Which side of a range an observation

@@ -48,3 +48,10 @@ The concept had two names, and the losing one is worth recording because it is s
 titles: *stream*. [channel-is-the-word](/decisions/channel-is-the-word.md) ruled — the T-Box
 declares `mqtt:Channel`, so discussion says channel, and *stream* survives only as plain
 English for flows that are not this node.
+
+# In Agent 0.2.0, a channel is a topic named by its filter
+
+The MQTT transport of `agent/` has no channel node of its own: what this page calls a channel is a
+`mqtt4ssn:Topic`, reached through the `mqtt4ssn:TopicFilter` that matches it and carries the one
+string the protocol needs, and whether a message on a topic is a sensor's is MQTT's own filter
+matching, `+` for one level and `#` for the rest. See [transport](/domain/transport.md).

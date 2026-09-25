@@ -571,19 +571,23 @@ def test_the_docs_only_name_terms_that_exist(doc):
     # prefixes keeps the guard's point — a renamed term vanishes from the graph exactly as
     # it vanished from the text — without caring how a file chooses to write itself.
     inverse = {iri: label for label, iri in loader.prefixes().items()}
-    #  AND THE 0.2.0 TREE'S OWN ONTOLOGIES, which the 0.1.0 loader never walks: a layer's
-    #  `agent/<layer>/ontology.ttl` declares words the entry documents name, under a bare `:`
-    #  bound here by the last segment of its namespace, as the knowledge guard binds it.
-    layers = sorted(REPO_ROOT.glob("agent/*/ontology.ttl"))
+    #  AND THE 0.2.0 TREE'S OWN ONTOLOGIES, which the 0.1.0 loader never walks: a package's
+    #  `agent/<package>/ontology.ttl` declares words the entry documents name, under a bare `:`
+    #  bound here by the last segment of its namespace, as the knowledge guard binds it, and
+    #  under whatever labels it binds for the vocabularies it adopts. AND THE VENDORED
+    #  VOCABULARIES, since a package that adopts one as it stands (SHACL's rules, MQTT4SSN)
+    #  declares none of the words the documents then name.
+    layers = sorted(p for p in REPO_ROOT.glob("agent/**/ontology.ttl") if "tests" not in p.parts)
     for path in layers:
-        for iri in re.findall(r"^@prefix :\s*<([^>]*)>", path.read_text(), re.M):
-            inverse.setdefault(iri, iri.rstrip("#/").rsplit("/", 1)[-1])
+        for label, iri in re.findall(r"^@prefix ([A-Za-z][\w.-]*)?:\s*<([^>]*)>", path.read_text(), re.M):
+            inverse.setdefault(iri, label or iri.rstrip("#/").rsplit("/", 1)[-1])
+    vendored = sorted(REPO_ROOT.glob("tests/fixtures/vocabularies/*.ttl"))
     declared = set()
     #  Shapes as well as ontologies. A SHAPE is a declared thing and prose may legitimately
     #  name one — AGENTS.md cites `orexis:KeeperShape` to say what a region want still decides. While the
     #  shapes lived in packages this cost nothing to miss, because the docs happened not to name
     #  one; the kernel's shapes are named in the entry documents now.
-    for path in [*loader.ontology_files(), *loader.shapes_files(), *layers]:
+    for path in [*loader.ontology_files(), *loader.shapes_files(), *layers, *vendored]:
         g = rdflib.Graph()
         g.parse(path, format="turtle")
         for triple in g:
@@ -593,7 +597,9 @@ def test_the_docs_only_name_terms_that_exist(doc):
                 for ns, label in inverse.items():
                     if str(node).startswith(ns):
                         declared.add(f"{label}:{str(node)[len(ns):]}")
-    known = set(loader.prefixes()) | {"orexis"} | set(inverse.values())
+    #  XSD's datatypes and the RDF, RDFS and OWL vocabularies are the standards' own and no file
+    #  here declares them, so a document may name `xsd:double` without a census to check it.
+    known = (set(loader.prefixes()) | {"orexis"} | set(inverse.values())) - {"xsd", "rdf", "rdfs", "owl"}
 
     named = {t for t in re.findall(r"`([a-z][a-z0-9-]*:[A-Za-z][A-Za-z0-9_]*)`",
                                    (REPO_ROOT / doc).read_text())
