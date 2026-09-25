@@ -1,7 +1,6 @@
 ---
 type: Domain Concept
 title: Tolerance
-term: http://example.org/orexis/actuation#tolerance
 description: >-
   How close an observed value must land to the one a step predicted to count as the effect the
   search planned on — a fraction of the predicted movement. Not physics but a belief about how

@@ -1,0 +1,45 @@
+@prefix climate: <http://example.org/orexis/climate#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:ActionGraph .    # this document is one graph, and this is what it is
+
+#  THE HEATING, stated in the concepts the rules conclude, as the dose is: a reading of what a
+#  heater warms, below a range of its subject, comes to be inside it. How long to heat is sized
+#  when the step is taken, from how far the reading is below the middle of the range and how fast
+#  the heater warms, at most its longest run.
+
+climate:Heating a orexis:Action ;
+    rdfs:label "heat a subject until its reading is inside its range" ;
+    orexis:takes climate:heater , actuation:reading ;
+    orexis:available """PREFIX climate: <http://example.org/orexis/climate#>
+        PREFIX actuation: <http://example.org/orexis/actuation#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        SELECT DISTINCT ?heater ?reading WHERE {
+            $me actuation:hasActuator ?heater ; orexis:actsFor ?subject .
+            ?heater climate:warms ?subject ; climate:warmsProperty ?property .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ;
+                     sensing:below ?range .
+        }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { GRAPH $state { $reading sensing:below ?range } }
+        WHERE  { GRAPH $state { $reading sensing:below ?range } }""" ;
+    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ;
+    execution:command """PREFIX climate: <http://example.org/orexis/climate#>
+        SELECT ?actuator ?payload WHERE {
+            $reading sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value ;
+                     sosa:observedProperty ?property .
+            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty ?property ; schema:minValue ?lo ; schema:maxValue ?hi .
+            $heater climate:degreesPerHour ?rate ; climate:maxHeatS ?cap .
+            BIND(((xsd:double(?lo) + xsd:double(?hi)) / 2.0) AS ?aim)
+            BIND(((?aim - xsd:double(?value)) / xsd:double(?rate)) * 3600.0 AS ?wanted)
+            BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), IF(?wanted < 0.0, 0.0, ?wanted)) AS ?seconds)
+            BIND($heater AS ?actuator)
+            BIND(CONCAT('{"heat_s": ', STR(xsd:integer(ROUND(?seconds))), '}') AS ?payload)
+        }""" .

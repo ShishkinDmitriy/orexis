@@ -1,0 +1,50 @@
+@prefix : <http://example.org/orexis/actuation#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
+    owl:imports <actions.ttl> .
+
+#  ACTUATION, A DOMAIN.
+#  How a device an agent holds changes the thing it acts for: a valve that doses a subject from a
+#  source, what property its dose moves, how fast it pours and how much it will pour at most. A
+#  device is SOSA's `sosa:Actuator`; a world says which subject and property it acts on and how it
+#  is reached, in MQTT4SSN's words, and the dose (actions.ttl) says what taking it makes true and
+#  how big it is, sized from the present when the step is taken. The 0.1.0 package's capability,
+#  its tolerance and its review are not here: 0.2.0 grants nothing and revises no setting.
+
+:Valve a owl:Class ; rdfs:subClassOf sosa:Actuator ; rdfs:label "Valve" ;
+    rdfs:comment "What pours: a pump or a valve, dosing a subject from a source." .
+
+:hasActuator a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range sosa:Actuator ;
+    rdfs:label "has actuator" ;
+    rdfs:comment "A device an agent may take a step through. The dose is available only on an actuator the agent holds." .
+
+:actuates a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:label "actuates" ;
+    rdfs:comment "The subject the device changes: the bed a pump waters." .
+
+:actuatesProperty a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "actuates property" ;
+    rdfs:comment "Which of the subject's properties the device moves: the soil's moisture for a pump. A reading of that property is what a dose answers." .
+
+:drawsFrom a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:label "draws from" ;
+    rdfs:comment "Where what the device pours comes from." .
+
+:mlPerSecond a owl:DatatypeProperty ; rdfs:domain sosa:Actuator ; rdfs:range xsd:decimal ;
+    rdfs:label "millilitres per second" ;
+    rdfs:comment "How fast the device pours, so a dose in millilitres is a time the device is open." .
+
+:maxDoseMl a owl:DatatypeProperty ; rdfs:domain sosa:Actuator ; rdfs:range xsd:decimal ;
+    rdfs:label "maximum dose" ;
+    rdfs:comment "The most the device pours for one command, whatever it is asked." .
+
+#################  What an action is filled with  #################
+
+:valve a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "valve" ;
+    rdfs:comment "The device a dose opens." .
+
+:reading a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "reading" ;
+    rdfs:comment "The observation a step answers: the reading below its range that a dose or a heating brings inside it. Its side is what the step's effect retracts and adds." .

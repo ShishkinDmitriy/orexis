@@ -54,9 +54,15 @@ one of two things, told apart by the plan's `planning:outcome`: a search the bud
 `planning:Exhausted`, which the next pass continues, or nothing this agent holds reaching the
 want, which such an agent exits as unreachable rather than looping on.
 
-**What is not wired yet.** Sensing, prediction, the deliberator and the transport. Hanoi has
-none of them, and they join with the first sensed world, where the runtime will also own the
-queue between a transport's network thread and the one executing thread.
+**A sensed world runs through its transport.** Where the world says a sensor is reached over a
+[transport](/domain/transport.md), the runtime brings the member up from the environment and
+hands it `deliver`: a message arrives on the member's thread and is queued, and each pass drains
+the queue on the one executing thread — [sensing](/domain/sensing.md) writes the observation,
+the [deliberator](/domain/deliberator.md) runs the rules that conclude its side, the
+[prediction](/domain/prediction.md) package writes the stretches ahead and the rules conclude
+theirs, and a reading fallen due is asked for again. A step whose action carries
+`execution:command` is taken by sending what the command answers, sized from the present, through
+the transport's `actuate`; the [greenhouse](/domain/domain.md)'s pump and heater are taken so.
 
 **A world's tests live with the world.** `world/hanoi/tests/` boots the world from the files
 beside it and runs it to met; the target is no global tests at all.

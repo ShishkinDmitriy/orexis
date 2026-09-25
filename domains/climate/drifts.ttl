@@ -1,0 +1,34 @@
+@prefix climate: <http://example.org/orexis/climate#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:PublicGraph .    # this document is one graph, and this is what it is
+
+#  THE DRYING: what a subject's soil loses while nobody waters it, `climate:driesPerDay` a day. A
+#  drift writes the predicted number and nothing else; which side of a range it is on is what the
+#  rules conclude of the prediction, as of any reading.
+
+climate:Drying a prediction:Drift ;
+    rdfs:label "what a subject's soil loses while nobody waters it" ;
+    sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
+        CONSTRUCT {
+            ?obs a sosa:Observation ;
+                 sosa:hasFeatureOfInterest ?subject ;
+                 sosa:observedProperty climate:SoilMoisture ;
+                 sosa:hasSimpleResult ?now ;
+                 sosa:resultTime ?at ;
+                 sosa:madeBySensor ?sensor .
+        } WHERE {
+            ?obs sosa:hasFeatureOfInterest ?subject ;
+                 sosa:observedProperty climate:SoilMoisture ;
+                 sosa:hasSimpleResult ?was .
+            OPTIONAL { ?obs sosa:madeBySensor ?sensor }
+            ?subject climate:driesPerDay ?rate .
+            FILTER(?rate > 0 && $elapsed > 0)
+            BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
+            BIND(?was - (?rate * ?days) AS ?fell)
+            BIND(IF(?fell < 0.0, 0.0, ?fell) AS ?now)
+            BIND($lands AS ?at)
+        }""" .

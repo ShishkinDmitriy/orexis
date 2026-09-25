@@ -162,3 +162,17 @@ def test_filter_matching_is_mqtts_own():
     assert matches("#", "anything/at/all") and not matches("#", "$SYS/broker/load")
     assert not matches("sensors/#/reading", "sensors/board/reading"), "# ends a filter or matches nothing"
     assert not matches("sensors/board", "sensors/board/reading")
+
+
+def test_a_steps_command_goes_to_the_topic_the_actuator_listens_on_and_is_not_retained(bus):
+    """A command is an act: retained, a device that reconnects would take it again."""
+    store, driver, client = bus
+    assert driver.actuate(store, TEST + "board", {"dose_ml": 250}) is True
+    assert client.published == [("sensors/board/command", json.dumps({"dose_ml": 250}).encode(), False)]
+
+
+def test_an_actuator_that_listens_nowhere_is_sent_nothing(bus, caplog):
+    store, driver, client = bus
+    with caplog.at_level("WARNING", logger="mqtt"):
+        assert driver.actuate(store, PROBE, {"dose_ml": 250}) is False
+    assert client.published == [] and "listens on no topic" in caplog.text

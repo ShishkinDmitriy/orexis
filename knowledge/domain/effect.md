@@ -132,7 +132,7 @@ the kernel assuming it. The honest full answer is a RANGE, nothing to the ceilin
 An effect is what a LEVER makes true. A [drift](/domain/prediction.md) is what the world makes
 true while nobody pulls one — `sensing:Drift`, declared by the package that owns the physics,
 in exactly this grammar: a construct, a retraction, and `$elapsed` in place of a taker.
-`water:Drying` is the first, and it reads `water:driesPerDay`, which every plant has stated
+`climate:Drying` is the first, and it reads `climate:driesPerDay`, which every plant has stated
 since #164 and nothing in planning had ever read.
 
 **It is run by sensing and read by the search as a prediction** (#643,

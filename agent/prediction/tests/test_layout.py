@@ -50,8 +50,8 @@ def test_the_mind_imports_nothing_of_prediction():
     """The planner reads predictions by KIND: a graph classified `orexis:PredictionGraph` is
     its to read whoever wrote it."""
     for path in sorted((ROOT / "agent").rglob("*.py")):
-        if PREDICTION in path.parents or "tests" in path.parts:
-            continue
+        if PREDICTION in path.parents or "tests" in path.parts or path == ROOT / "agent" / "runtime.py":
+            continue                  # the container assembles every layer and may import them all
         for node in ast.walk(ast.parse(path.read_text())):
             mod = (node.module if isinstance(node, ast.ImportFrom) else None) or ""
             assert "agent.prediction" not in mod, f"{path.relative_to(ROOT)} imports prediction"

@@ -30,7 +30,7 @@ and reports `link_connected` and `link_reconnects` into the health series.
 
 # What it is not
 
-**Not a driver.** A driver is chosen per sensor and answers *how is this device spoken to*; in Agent 0.2.0 the contract a transport implements is the family's own, `Transport` at `agent/transport/transport.py` — claim, open, handle, cadence and nudge, and no `parse` — bytes to number is sensing's pipeline, a transport hands sensing's `received` the bytes and the sensor, and sensing knows no transport;
+**Not a driver.** A driver is chosen per sensor and answers *how is this device spoken to*; in Agent 0.2.0 the contract a transport implements is the family's own, `Transport` at `agent/transport/transport.py` — claim, open, handle, cadence, nudge and a step's command (`actuate`), and no `parse` — bytes to number is sensing's pipeline, a transport hands sensing's `received` the bytes and the sensor, and sensing knows no transport;
 this is chosen per world and answers *how does this agent reach everyone*. MQTT is both, in
 one package; a wired transport could be a driver alone.
 

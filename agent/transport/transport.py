@@ -8,7 +8,7 @@ and nothing else does), whether a sensor is reached through this member (`claims
 channels to listen on for the agent's sensors (`open`), what a message on a channel becomes
 (`handle`: one call of sensing's `received` per sensor of the agent's the message is for,
 answered as the sensor and the graph written), and the two commands a device may take
-(`set_cadence`, `sense_now`). What differs is the member's: how a channel is named in the
+(`set_cadence`, `sense_now`), and the command a step sends an actuator (`actuate`). What differs is the member's: how a channel is named in the
 world, in the vocabulary it adopts, what a device publishes on, and what its library is.
 
 THE ARROW POINTS ONE WAY. A member imports this contract and sensing's `received`, the callback
@@ -58,3 +58,9 @@ class Transport:
 
     def sense_now(self, store, sensor: str) -> None:
         """Ask for a reading now, best-effort."""
+
+    def actuate(self, store, actuator: str, payload: dict) -> bool:
+        """Send a device the command a step was sized to — the payload `execution:command`
+        answered when the step was taken. Whether anything was SENT: a member that does not
+        reach the actuator sends nothing, and the executor's patience says what that costs."""
+        return False

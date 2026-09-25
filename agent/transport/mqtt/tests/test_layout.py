@@ -50,8 +50,8 @@ def test_no_file_of_this_package_speaks_another_packages_words(path):
 
 def test_nothing_above_imports_the_transport():
     for path in sorted((ROOT / "agent").rglob("*.py")):
-        if MQTT in path.parents or "tests" in path.parts:
-            continue
+        if MQTT in path.parents or "tests" in path.parts or path == ROOT / "agent" / "runtime.py":
+            continue                  # the container assembles every layer and may import them all
         for node in ast.walk(ast.parse(path.read_text())):
             mod = (node.module if isinstance(node, ast.ImportFrom) else None) or ""
             assert "agent.transport" not in mod, f"{path.relative_to(ROOT)} imports the transport"

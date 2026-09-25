@@ -1,3 +1,6 @@
+# `actuation:` is Agent 0.2.0's actuation domain (domains/actuation/) since the 0.1.0 package that
+# declared it was amended there; this package's texts still speak its words, so it binds the label.
+@prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix orexis:   <http://example.org/orexis#> .
 @prefix progression: <http://example.org/orexis/progression#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .

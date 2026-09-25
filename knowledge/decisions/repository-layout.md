@@ -22,7 +22,7 @@ onboarding/                  the sovereign's tools
 packages/core/orexis/            the society kernel everything layers on
 packages/orexis-part-microcontroller/  boards, peripherals, pins, wires
 vocabulary/<part>/           one concrete part, or one protocol — dht11, onewire, rgb-led
-packages/orexis-plant-water/            what this society is about
+domains/climate/            what this society is about
 tests/  firmware/  infra/  world/  knowledge/
 ```
 
@@ -118,7 +118,7 @@ the kernel vocabulary travels with the store engine in the progression layer and
 `from orexis_agent_progression.ontology import …`, which reads as the layering it is. The import
 contract states the rule explicitly, so the name surprises and the contract does not.
 
-`packages/core/orexis` and `packages/orexis-plant-water` rather than `kernel/` and `domain/water/`: at the
+`packages/core/orexis` and `domains/climate` rather than `kernel/` and `domain/water/`: at the
 time those two were the only trees with no Python at all, which is exactly what they had in
 common. There are now more of them than two — the stand, a package per protocol, a package per
 part — and that is the same rule applied further: see
