@@ -7,7 +7,6 @@
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix dht11: <http://example.org/orexis/dht11#> .
 @prefix : <http://example.org/orexis/dht11#> .
-@prefix wokwi: <http://example.org/orexis/wokwi#> .
 @prefix onewire: <http://example.org/orexis/onewire#> .
 @prefix mc: <http://example.org/orexis/microcontroller#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
@@ -30,10 +29,6 @@ The difference is not academic — it is what the reading path got wrong. Believ
 
 :Dht11 a owl:Class ;
     mc:modelName "KY-015 (DHT11)" ; rdfs:subClassOf :TempHumidityPeripheral ; rdfs:label "DHT11" ;
-    wokwi:part "wokwi-dht22" ;
-    wokwi:pin [ mc:pinRole onewire:DataPinRole ; wokwi:name "SDA" ] ,
-              [ mc:pinRole mc:PowerPinRole     ; wokwi:name "VCC" ] ,
-              [ mc:pinRole mc:GroundPinRole    ; wokwi:name "GND" ] ;
     rdfs:comment "Three legs and a pull-up to its own VCC, which is the fact worth writing down: the data line idles at whatever the part is powered from, so the rail choice IS the logic level. On a KY-015 breakout the pull-up is on the board. Rated 3-5V, and that range is a trap next to a 3.3V microcontroller — it will run perfectly happily on 5V and present 5V to an input that is not 5V tolerant." .
 
 #################  What it is made of  #################

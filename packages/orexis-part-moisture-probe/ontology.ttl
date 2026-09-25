@@ -5,7 +5,6 @@
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix probe: <http://example.org/orexis/moisture-probe#> .
 @prefix : <http://example.org/orexis/moisture-probe#> .
-@prefix wokwi: <http://example.org/orexis/wokwi#> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix water: <http://example.org/orexis/water#> .
 @prefix mc: <http://example.org/orexis/microcontroller#> .
@@ -24,10 +23,6 @@
     # It was drawn as a potentiometer for a while, on my claim that Wokwi had no soil probe.
     # Wrong, and wrong in the way worth noticing: a plausible stand-in is harder to doubt than
     # a missing one, so it would have simulated perfectly well while misdescribing the bench.
-    wokwi:part "chip-soil-moisture-sensor" ;
-    wokwi:pin [ mc:pinRole mc:AnalogInPinRole ; wokwi:name "SIG" ] ,
-              [ mc:pinRole mc:PowerPinRole    ; wokwi:name "VCC" ] ,
-              [ mc:pinRole mc:GroundPinRole   ; wokwi:name "GND" ] ;
     rdfs:label "Capacitive soil moisture probe" ;
     rdfs:comment """Reports a raw ADC count that falls as the soil wets. A class rather than a model string because how you READ it is what differs; the model is for the person holding it.
 

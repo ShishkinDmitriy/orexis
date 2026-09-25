@@ -36,7 +36,7 @@ Four defects, none exotic, all found within a minute of asserting the lists agai
 which is the argument for this change more than any principle is:
 
 - **`requests>=2.31`** was declared and imported by nothing anywhere in the repository.
-- **`pyyaml`** is imported by `onboarding/wireviz.py` and was declared in the `dev` extra alone,
+- **`pyyaml`** was imported by the WireViz generator, since removed unused, and was declared in the `dev` extra alone,
   so `orexis-wireviz` raised `ModuleNotFoundError` on any install that was not a developer's. The
   import is deferred inside a function, so it failed only when that branch ran — the same shape
   as the deferred import that crash-looped every agent for four merges

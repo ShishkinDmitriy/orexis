@@ -102,7 +102,7 @@ hand.
 
 # It is also now runnable
 
-`orexis-wokwi <world>` writes `world/<world>/wokwi/diagram.json` — the stand as a
+`orexis-wokwi <world>` wrote the world's Wokwi `diagram.json` — the stand as a
 [wokwi.com](https://wokwi.com) project. Every part, every wire, coloured by what it carries.
 
 Two other renderings were tried and dropped, and the reasons are the useful part. **Grafana's
@@ -123,7 +123,7 @@ argument that no longer applies.
 
 One consequence of dropping simulation: the chip a custom board delegates to only has to supply
 pin NAMES for `target` to map onto. So `wokwi-dht22` standing in for a DHT11 costs nothing here,
-and would cost everything the day anything runs — see `packages/orexis-part-dht11/wokwi/README.md`.
+and would cost everything the day anything runs — see the DHT11 package's Wokwi board notes, removed with the generator.
 
 **A part says how it draws in its own package.** `packages/orexis-part-dht11/` already states what a DHT11
 is and what legs it has; that it draws as `wokwi-dht22` with SDA/VCC/GND is the same kind of
@@ -149,7 +149,7 @@ graph shows it and nothing contradicts it the day they change it. A leg with no 
 now reported and omitted, which is the same treatment a part with no `wokwi:part` gets.
 
 A generated picture can go stale in the one way a hand-drawn one cannot be saved from, so
-`tests/test_wokwi.py` regenerates and compares. A stale drawing looks exactly like a current
+Its test regenerated and compared. A stale drawing looks exactly like a current
 one, which is why trusting the author to remember was not an option.
 
 # What became checkable

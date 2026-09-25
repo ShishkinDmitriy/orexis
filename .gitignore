@@ -51,12 +51,5 @@ infra/grafana/dashboards/
 # agent worktrees — a live checkout of this repo inside itself
 .claude/worktrees/
 
-# What WireViz renders from world/<w>/wiring.yaml. The YAML is committed because it is
-# the thing that DIFFS — a changed wire is one changed line in a pull request — and a
-# rendered graph layout diffs as noise. Regenerate with `wireviz world/<w>/wiring.yaml`.
-world/*/wiring.svg
-world/*/wiring.png
-world/*/wiring.html
-world/*/wiring.bom.tsv
 # what a case's store actually held when its snapshot disagreed — for `diff`, never committed
 *.actual.trig

@@ -1746,10 +1746,6 @@ orexis-onboard <world>       # ONBOARDING: validate, then grant everything below
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
   orexis-dashboards <world>  #   a Grafana folder per world, from what its agents observe
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
-orexis-wokwi <world>         # world/<world>/wokwi/ — its hardware as a wokwi.com project, which RUNS
-orexis-wokwi <world> --import d.json  # the other way: DRAFT a hardware.ttl from a drawing
-orexis-wireviz <world>       # world/<world>/wiring.yaml — the wiring as a WireViz harness
-orexis-wireviz <world> --import w.yaml   # and the same, drafted back from one
 orexis-keygen <world>        # once per world, before it is onboarded
 orexis-ask <world> <agent> <modality> 'SPARQL'  # the sovereign asks a RUNNING agent — naming
                        # WHICH of its mind's stores (beliefs, desires; more as they land),
@@ -2220,10 +2216,6 @@ orexis-onboard <world>       # ONBOARDING: validate, then grant everything below
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
   orexis-dashboards <world>  #   a Grafana folder per world, from what its agents observe
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
-orexis-wokwi <world>         # world/<world>/wokwi/ — its hardware as a wokwi.com project, which RUNS
-orexis-wokwi <world> --import d.json  # the other way: DRAFT a hardware.ttl from a drawing
-orexis-wireviz <world>       # world/<world>/wiring.yaml — the wiring as a WireViz harness
-orexis-wireviz <world> --import w.yaml   # and the same, drafted back from one
 orexis-keygen <world>        # once per world, before it is onboarded
 orexis-ask <world> <agent> <modality> 'SPARQL'  # the sovereign asks a RUNNING agent — naming
                        # WHICH of its mind's stores (beliefs, desires; more as they land),
