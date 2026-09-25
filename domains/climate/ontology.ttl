@@ -1,0 +1,69 @@
+@prefix : <http://example.org/orexis/climate#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
+    owl:imports <actions.ttl> , <drifts.ttl> .
+
+#  CLIMATE, A DOMAIN.
+#  A planted thing's surroundings: the properties its instruments observe — the soil's moisture,
+#  the air's temperature, humidity and pressure — where its water comes from, how its soil dries
+#  while nobody waters it (drifts.ttl), and a heater that warms its air, taken through the heating
+#  (actions.ttl). The ranges a subject should be in are SSN-System's, stated by a world; the side
+#  a reading is on is a revision sensing's rules conclude. It was two 0.1.0 packages, water and
+#  climate; the market good, the bands and the revisable conversion stayed behind, since the
+#  market waits, a band is a side now and 0.2.0 revises no setting. The vent, what it opens onto
+#  and the air's drift toward the outside wait until an agent can listen to a feature it does not
+#  act for.
+
+#################  What is observed, and where water comes from  #################
+
+:SoilMoisture a sosa:ObservableProperty ; rdfs:label "Soil moisture" ;
+    rdfs:comment "How wet the soil is, as a fraction of saturation." .
+:AirTemperature a sosa:ObservableProperty ; rdfs:label "Air temperature" ;
+    rdfs:comment "In degrees Celsius." .
+:AirHumidity a sosa:ObservableProperty ; rdfs:label "Air humidity" ;
+    rdfs:comment "Relative humidity, as a fraction." .
+:AirPressure a sosa:ObservableProperty ; rdfs:label "Air pressure" .
+:StoredLitres a sosa:ObservableProperty ; rdfs:label "Stored litres" ;
+    rdfs:comment "What a water source holds." .
+
+:WaterSource a owl:Class ; rdfs:label "Water source" ;
+    rdfs:comment "Where a dose draws from: a butt, a tank." .
+
+:capacityL a owl:DatatypeProperty ; rdfs:domain :WaterSource ; rdfs:range xsd:decimal ;
+    rdfs:label "capacity in litres" .
+
+:driesPerDay a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "dries per day" ;
+    rdfs:comment "How much soil moisture a subject loses a day while nobody waters it, as a fraction: what the drying drift runs on." .
+
+:litresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "litres per fraction" ;
+    rdfs:comment "How many litres raise a subject's soil moisture by a whole fraction: what a dose is sized by when it is taken." .
+
+#################  The heater  #################
+
+:Heater a owl:Class ; rdfs:subClassOf sosa:Actuator ; rdfs:label "Heater" ;
+    rdfs:comment "What warms a subject's air." .
+
+:warms a owl:ObjectProperty ; rdfs:domain :Heater ; rdfs:label "warms" ;
+    rdfs:comment "The subject the heater warms: the bed whose air it heats." .
+
+:warmsProperty a owl:ObjectProperty ; rdfs:domain :Heater ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "warms property" ;
+    rdfs:comment "Which property of the subject the heater moves: the air's temperature." .
+
+:degreesPerHour a owl:DatatypeProperty ; rdfs:domain :Heater ; rdfs:range xsd:decimal ;
+    rdfs:label "degrees per hour" ;
+    rdfs:comment "How fast the heater warms its subject, so a gap in degrees is a time it is on." .
+
+:maxHeatS a owl:DatatypeProperty ; rdfs:domain :Heater ; rdfs:range xsd:decimal ;
+    rdfs:label "longest heating" ;
+    rdfs:comment "The longest the heater runs for one command, whatever it is asked." .
+
+#################  What an action is filled with  #################
+
+:heater a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "heater" ;
+    rdfs:comment "The heater a heating turns on." .

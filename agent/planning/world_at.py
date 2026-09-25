@@ -22,7 +22,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from agent.ontology import FORESEEN, PREDICTION, STATE
-from agent.store import Raw, catalogue_of, graphs_of, remember, rows
+from agent.store import Raw, catalogue_of, graphs_of, remember, revisions_of, rows
 
 from .ontology import GROUND_GRAPH, POSSIBLE_GRAPH
 
@@ -49,8 +49,15 @@ def world_at(store, world: str, *, holder: str | None = None, now: datetime | No
     if when is None:
         raise LookupError(f"{world} says no instant — is it a ground or a possible world?")
     at = datetime.fromisoformat(when)
-    spoken_for = remember(memo, ("spoken_for",), lambda: frozenset(
-        graphs_of(store, STATE, PREDICTION, GROUND_GRAPH, POSSIBLE_GRAPH)))
+    #  WHAT A WORLD SPEAKS FOR: the readings, the predictions, the grounds and the possible
+    #  worlds — and what the rules concluded of a reading or a prediction, since a ground is laid
+    #  with those revisions and a step's effect rewrites them there. Read beside the world, a
+    #  reading's old side would outlive the dose that answered it.
+    def spoken():
+        readings = graphs_of(store, STATE, PREDICTION)
+        return frozenset([*graphs_of(store, STATE, PREDICTION, GROUND_GRAPH, POSSIBLE_GRAPH),
+                          *revisions_of(store, *readings)])
+    spoken_for = remember(memo, ("spoken_for",), spoken)
     known = remember(memo, ("knowable", at, holder, now), lambda: tuple(
         g for g in graphs_of(store, *FORESEEN, at=at, holder=holder, now=now)
         if g not in spoken_for))

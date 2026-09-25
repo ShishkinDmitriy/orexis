@@ -56,6 +56,14 @@ SELECT ?pattern WHERE {
   ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
 ORDER BY ?pattern"""
 
+#  WHERE AN ACTUATOR TAKES COMMANDS: a topic it listens to itself, as MQTT4SSN's
+#  `listensToTopic` says of an actuator, or its board's.
+_ACTUATES_Q = """
+SELECT ?pattern WHERE {
+  { $actuator mqtt4ssn:listensToTopic ?topic } UNION { ?board ssn:hasSubSystem $actuator ; mqtt4ssn:listensToTopic ?topic }
+  ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
+ORDER BY ?pattern"""
+
 #  EVERY SENSOR OF THE AGENT'S THAT PUBLISHES ON A TOPIC, with each pattern that names it.
 _MINE_Q = """
 SELECT ?sensor ?pattern WHERE {
@@ -126,6 +134,19 @@ class Mqtt(Transport):
         if topic is None:
             return False
         self.publish(topic, {"sleep_s": int(sleep_s)}, True)
+        return True
+
+    def actuate(self, store, actuator: str, payload: dict) -> bool:
+        """Publish a step's command on the topic the actuator listens to, or its board's; not
+        retained, since a command is an act and a retained one would be taken again by a device
+        that reconnects."""
+        names = [p for p in (r["pattern"] for r in rows(store, _ACTUATES_Q, graphs_of(store, PUBLIC), actuator=actuator))
+                 if "+" not in p and "#" not in p]
+        if not names:
+            log.warning("%s listens on no topic name, so the command is not sent", local_of(actuator))
+            return False
+        self.publish(names[0], payload, False)
+        log.info("%s: %s on %s", local_of(actuator), payload, names[0])
         return True
 
     def sense_now(self, store, sensor: str) -> None:

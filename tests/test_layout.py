@@ -577,7 +577,8 @@ def test_the_docs_only_name_terms_that_exist(doc):
     #  under whatever labels it binds for the vocabularies it adopts. AND THE VENDORED
     #  VOCABULARIES, since a package that adopts one as it stands (SHACL's rules, MQTT4SSN)
     #  declares none of the words the documents then name.
-    layers = sorted(p for p in REPO_ROOT.glob("agent/**/ontology.ttl") if "tests" not in p.parts)
+    layers = sorted(p for p in REPO_ROOT.glob("agent/**/ontology.ttl") if "tests" not in p.parts) + sorted(
+        REPO_ROOT.glob("domains/*/ontology.ttl"))       # and the domains Agent 0.2.0's worlds import
     for path in layers:
         for label, iri in re.findall(r"^@prefix ([A-Za-z][\w.-]*)?:\s*<([^>]*)>", path.read_text(), re.M):
             inverse.setdefault(iri, label or iri.rstrip("#/").rsplit("/", 1)[-1])

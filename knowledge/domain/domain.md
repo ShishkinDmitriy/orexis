@@ -4,7 +4,7 @@ title: Domain
 description: >-
   A body of knowledge several worlds can pose — its words, its actions and what its words mean
   when wanted — kept in `domains/<name>/` in Agent 0.2.0 and imported by a world that speaks it.
-  Hanoi and the courier grid are the two that ship.
+  Hanoi, the courier grid, climate and actuation are the four that ship.
 ---
 
 # What it is

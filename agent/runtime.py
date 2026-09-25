@@ -33,14 +33,17 @@ pass continues, or nothing this agent holds reaches the want, which such an agen
 UNREACHABLE rather than looping on. Nothing here is threaded: the executor's two doors are called in turn on this thread, and a
 pass that moved nothing sleeps the poll before the next.
 
-**NOT YET WIRED**, and named so: sensing, prediction, the belief package's deliberator and the
-transport. Hanoi has none of them; they join the runtime with the first sensed world.
+**A SENSED WORLD RUNS THROUGH ITS TRANSPORT.** Where a sensor is reached over one, the member is
+brought up and handed `deliver`; each pass drains what it queued — sensing writes, the rules
+conclude sides, prediction writes the stretches ahead — before the planner's pass, and a step
+whose action carries `execution:command` is taken by sending what the command answers.
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
+import queue
 import sys
 import time
 from pathlib import Path
@@ -49,7 +52,11 @@ from urllib.parse import unquote, urlparse
 import pyoxigraph as ox
 
 from agent import clock
+from agent.belief.deliberator import Deliberator
+from agent.execution.command import command
 from agent.execution.executor import Executor
+from agent.prediction.predict import predict
+from agent.sensing.missed import missed
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, local_of
 from agent.planning.planner import Planner
 from agent.store import (catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of, kinds_in,
@@ -178,12 +185,70 @@ def _identity(store: ox.Store, agent_id: str) -> str:
 
 
 class Runtime:
-    """One agent's process: the planner and the executor over one store, run pass by pass."""
+    """One agent's process: what arrives sensed and revised, then the planner and the executor
+    over one store, run pass by pass.
 
-    def __init__(self, beliefs: ox.Store, agent_id: str, *, budget: int | None = None, intentions: ox.Store | None = None):
+    A SENSED WORLD'S TRANSPORT is handed in brought up, or brought up here from the environment
+    by `connect` — a `Transport` member's class, whose `connect` is handed `deliver`. A message
+    arrives on the member's thread and is queued; the pass drains the queue on this one: sensing
+    writes the observation, the rules conclude its side, prediction writes the stretches ahead and
+    the rules conclude theirs, and the readings fallen due are asked for again. A step whose
+    action carries `execution:command` is taken by sending what the command answers, sized from
+    the present, through the transport; a world with no transport takes steps as the executor
+    does alone."""
+
+    def __init__(self, beliefs: ox.Store, agent_id: str, *, budget: int | None = None,
+                 intentions: ox.Store | None = None, transport=None, connect=None):
         self.beliefs, self.id = beliefs, agent_id
-        self.executor = Executor(beliefs, agent_id, intentions)
+        self.me = _identity(beliefs, agent_id)
+        self.inbox: queue.SimpleQueue = queue.SimpleQueue()
+        self.transport = transport if transport is not None else (
+            connect.connect(self.me, self.deliver) if connect is not None else None)
+        self.executor = Executor(beliefs, agent_id, intentions,
+                                 take=self._take if self.transport is not None else None)
         self.planner = Planner(beliefs, agent_id, executor=self.executor, **({"budget": budget} if budget else {}))
+        self.deliberator = Deliberator(beliefs, agent_id)
+        if self.transport is not None:
+            self.transport.open(beliefs)
+
+    def deliver(self, channel: str, payload: bytes, at) -> None:
+        """What a transport's thread hands on: queued, for the pass to take on this thread."""
+        self.inbox.put((channel, payload, at))
+
+    def sense(self, now) -> list[str]:
+        """Take every message queued since the last pass: each written by sensing, revised, and
+        predicted from; then ask again for every reading fallen due. The graphs written."""
+        written, sensors = [], []
+        while self.transport is not None:
+            try:
+                channel, payload, at = self.inbox.get_nowait()
+            except queue.Empty:
+                break
+            for sensor, graph in self.transport.handle(self.beliefs, channel, payload, at):
+                written.append(graph)
+                sensors.append(sensor)
+                self.deliberator.changed(graph)
+        if not written:
+            return []
+        self.deliberator.deliberate(now)
+        for sensor in dict.fromkeys(sensors):
+            for graph in predict(self.beliefs, self.me, sensor, now=now):
+                written.append(graph)
+                self.deliberator.changed(graph)
+        self.deliberator.deliberate(now)
+        for sensor in missed(self.beliefs, self.me, now):
+            self.transport.sense_now(self.beliefs, sensor)
+        return written
+
+    def _take(self, said: dict, intention: str) -> None:
+        """Take a step by sending what its action's command answers, sized from the present; a
+        step whose action carries none is said in the log, as the executor would."""
+        sent = command(self.beliefs, said, self.me)
+        if not sent:
+            self.executor.say(said, intention)
+            return
+        for actuator, payload in sent:
+            self.transport.actuate(self.beliefs, actuator, payload)
 
     def run(self, *, passes: int | None = None, poll_s: float = 1.0) -> str:
         """Pass after pass until nothing is left to pursue (`met`), or nothing this agent holds
@@ -199,6 +264,7 @@ class Runtime:
         while passes is None or n < passes:
             n += 1
             now = clock.now()
+            self.sense(now)
             self.planner.plan(now)
             standing, walking = self.planner.standing(now), self.executor.walking()
             lasting = self._holds_a_desire()
@@ -240,6 +306,15 @@ class Runtime:
         return taken
 
 
+def _transport_of(beliefs: ox.Store):
+    """The transport member the world says the agent's sensors are reached through, or None for
+    a world nothing is sensed in. MQTT is the one member that ships; its library is imported by
+    its own `connect`, so a world with no sensors never loads it."""
+    from agent.transport.mqtt.driver import Mqtt
+    sensors = rows(beliefs, "SELECT ?s WHERE { ?s a sosa:Sensor }", graphs_of(beliefs, PUBLIC))
+    return Mqtt if any(Mqtt.claims(beliefs, r["s"]) for r in sensors) else None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="One agent of Agent 0.2.0, booted from a world's files and run until nothing is left to pursue.")
     parser.add_argument("world", type=Path, help="the world's directory")
@@ -250,7 +325,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     store = ox.Store(str(args.volume)) if args.volume else None
-    outcome = Runtime(boot(args.world, args.agent, store), args.agent, budget=args.budget).run(passes=args.passes)
+    beliefs = boot(args.world, args.agent, store)
+    outcome = Runtime(beliefs, args.agent, budget=args.budget, connect=_transport_of(beliefs)).run(passes=args.passes)
     return {MET: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
 
 

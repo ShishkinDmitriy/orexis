@@ -1,7 +1,6 @@
 ---
 type: Domain Concept
 title: Band
-term: http://example.org/orexis/water#Band
 description: >-
   One of the three zones a region divides a property into — LOW, OK, HIGH — and the agent's
   verdict about its own subject rather than a fact about the number.
@@ -141,4 +140,4 @@ SOSA's words, and which side of each of its subject's ranges it is on is a
 [revision](/domain/revision.md) the rules sensing registers conclude — one triple per
 observation and range, `sensing:below`, `sensing:inside` or `sensing:above` the
 [region](/domain/region.md)'s node — never a class minted per subject and property, and never
-sensing's own write. `water:Band` stays the wire's word.
+sensing's own write. The 0.1.0 package's band word stayed the wire's, and went with the package.

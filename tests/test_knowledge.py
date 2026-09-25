@@ -458,7 +458,8 @@ def _declared() -> set[str]:
     #  `agent/<layer>/ontology.ttl` (and a rule set beside it) declares words a page names.
     names: set[str] = set()
     for ttl in (list(loader.sources("*.ttl")) + list((REPO_ROOT / "world").rglob("*.ttl"))
-                + sorted(p for p in (REPO_ROOT / "agent").rglob("*.ttl") if "tests" not in p.parts)):
+                + sorted(p for p in (REPO_ROOT / "agent").rglob("*.ttl") if "tests" not in p.parts)
+                + sorted((REPO_ROOT / "domains").rglob("*.ttl"))):
         text = ttl.read_text()
         names |= set(re.findall(r"^:(\w+)\b", text, re.M))
         names |= {local for _, local in _TERM.findall(text)}

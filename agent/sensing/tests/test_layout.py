@@ -58,8 +58,8 @@ def test_nothing_above_imports_sensing():
     `orexis:StateGraph` is theirs to read whoever wrote it. A transport, beneath, imports the
     callback and nothing else of sensing's."""
     for path in sorted((ROOT / "agent").rglob("*.py")):
-        if SENSING in path.parents or "tests" in path.parts:
-            continue
+        if SENSING in path.parents or "tests" in path.parts or path == ROOT / "agent" / "runtime.py":
+            continue                  # the container assembles every layer and may import them all
         transport = "transport" in path.parts
         for node in ast.walk(ast.parse(path.read_text())):
             mod = (node.module if isinstance(node, ast.ImportFrom) else None) or ""

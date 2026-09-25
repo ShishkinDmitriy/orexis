@@ -75,10 +75,10 @@ Inside a package the same names mean the same things every time:
 | `beliefs.py` | its `Block`s — the private parameters it reads, and their dataclasses |
 | `__init__.py` | the manifest: `PROVIDES = (…)` |
 
-**Every one of them is optional, and an omission is a statement.** `packages/orexis-plant-water/` has no
+**Every one of them is optional, and an omission is a statement.** `domains/climate/` has no
 code, because a domain contributes vocabulary. `packages/orexis-transport-mqtt/` has no `rules.ru`, because
 a transport grants no capability — which is the whole point of it not being one.
-`packages/orexis-capability-actuation/` has no `beliefs.py`, because it decides nothing: it reads the
+`domains/actuation/` has no `beliefs.py`, because it decides nothing: it reads the
 device's own calibration from the world and obeys.
 
 `orexis.loader` finds all of this by looking. There is no list of capabilities anywhere in the

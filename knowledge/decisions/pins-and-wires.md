@@ -28,7 +28,7 @@ packages/orexis-bus-i2c/              a protocol                                
 packages/orexis-part-dht11/            a part, and the shapes that refuse it wired wrong   dht11:
 packages/orexis-part-rgb-led/          a part                                        rgbled:
 packages/orexis-part-moisture-probe/   a part                                        probe:
-packages/orexis-plant-water/            the domain, unchanged
+domains/climate/            the domain, unchanged
 ```
 
 **Adding a part is adding a directory.** Nothing registers it; nothing imports it.

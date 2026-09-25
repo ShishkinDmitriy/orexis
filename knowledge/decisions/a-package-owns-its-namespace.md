@@ -108,7 +108,7 @@ Nineteen terms and five shapes. The line is **who declares the term**:
 | stays `orexis:` | why |
 |---|---|
 | `orexis:Agent`, `orexis:Capability`, `orexis:hasCapability`, `orexis:localId` | the kernel's — true of every agent |
-| `water:hasTarget`, `water:bandLow`, `water:maxValuePerL` | `packages/orexis-plant-water`'s — what a bid is *worth* here |
+| `water:hasTarget`, `water:bandLow`, `water:maxValuePerL` | `domains/climate`'s — what a bid is *worth* here |
 | `mqtt:eventTopic`, `mqtt:readingTopic` | the mqtt transport's |
 
 A bidder's belief block now reads from two namespaces at once, and that is the split stated rather

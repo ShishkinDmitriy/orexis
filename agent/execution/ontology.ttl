@@ -62,6 +62,10 @@ execution:fictive a owl:DatatypeProperty ; rdfs:range xsd:boolean ;
     rdfs:label "fictive" ;
     rdfs:comment "Said of an ACTION whose effect is its own physics: no instrument reports what taking it did, so the executor applies the step's prediction to the readings itself and the present answers because nothing else could have — a hanoi move, a courier's drive. The plan's extraction carries it onto every step that fills such an action, which is where the executor reads it; an executor built `fictive` treats every step so, which is the shorthand for a world that exists only in the store." .
 
+execution:command a owl:DatatypeProperty ;
+    rdfs:label "command" ;
+    rdfs:comment "Said of an ACTION a device takes: a SELECT run over the present beliefs when a step filling the action is taken, with the step's parameters as `$tokens` and `$me`, answering `?actuator` and `?payload`, the JSON document the device is sent. The executor decides nothing of the search's here: how much to pour or how long to heat is sized from the situation as it is when the step is taken, by the text the domain declares, and the container sends each answer through the transport that reaches the actuator." .
+
 execution:doneAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:range xsd:dateTime ;
     rdfs:label "done at" ;
     rdfs:comment "When the taker returned, taken or not. With `execution:takenAt` it is how long the taking took, in the one timeline; it is NOT when the step's change landed in the world, which is the world's to say through a reading and is held against the step's `execution:landsAt`, the prediction, by whoever holds the world to the step." .

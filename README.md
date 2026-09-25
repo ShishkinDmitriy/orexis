@@ -89,9 +89,9 @@ packages/orexis-capability-sensing/
   __init__.py    the manifest: PROVIDES = (SubscribingModule, ListeningModule)
 ```
 
-Every one of them is optional, and an omission is a statement: `packages/orexis-plant-water/` has no code,
+Every one of them is optional, and an omission is a statement: `domains/climate/` has no code,
 `packages/orexis-transport-mqtt/` has no `rules.ru` because a transport grants no capability, and
-`packages/orexis-capability-actuation/` has no `beliefs.py` because it decides nothing.
+`domains/actuation/` has no `beliefs.py` because it decides nothing.
 
 Nothing lists these — `assembly.loader` finds them by looking, one level down, and the
 FAMILY is the second segment of the package's own NAME rather than a directory above it or
@@ -232,8 +232,8 @@ written as a trace and read back with `orexis-ask`.
 
 **One container per agent, and that is the point.** On one filesystem every agent could read
 every other agent's beliefs. Now each agent's belief base is a file in its own volume, locked
-by its owner and unopenable by anything else — including you. Only the agent that derived
-`actuation:Actuation` is given the signing keys. See
+by its owner and unopenable by anything else — including you. Only an agent that holds an
+actuator (`actuation:hasActuator`) is given the signing keys. See
 [`domain/world`](knowledge/domain/world.md) §Deployment.
 
 Note what is *not* born this way: firmware. A board is hardware and is flashed by hand. What

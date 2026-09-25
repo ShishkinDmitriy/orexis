@@ -642,6 +642,18 @@ it is a record wearing a bullet.
 - **0.1.0 is not started any more, so it is amended, not copied** — a package 0.2.0 needs moves
   into a domain and changes there, and the 0.1.0 suite that built on it is switched off in the
   gates rather than propped up; the four files in `tests/` that read the whole tree still run.
+- **A step is sized when it is taken, from the present, and the search only says the side it
+  reaches** — a dose's effect is the soil coming to be inside its range; `execution:command` on the
+  action is run over the beliefs as they stand when the step is taken and answers the actuator and
+  the payload, the dose's size from how far the reading is below the middle of the range, and the
+  runtime sends it through the transport's `actuate`.
+- **A world speaks for its readings' revisions** — `world_at` hands a rule every known graph but
+  those a world speaks for, and once a ground carries the sides beside the readings, the revision
+  graphs are among them: read beside a possible world, a dry reading's `below` outlived the dose
+  that answered it, and the greenhouse's search offered the same dose for ever.
+- **The plant's surroundings are one domain** — water and climate were two 0.1.0 packages, and the
+  soil's moisture, the air's temperature, the source and the heater are one `climate:` vocabulary
+  in `domains/climate/`; actuation is the other, the devices and the dose.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1293,6 +1305,18 @@ it is a record wearing a bullet.
 - **0.1.0 is not started any more, so it is amended, not copied** — a package 0.2.0 needs moves
   into a domain and changes there, and the 0.1.0 suite that built on it is switched off in the
   gates rather than propped up; the four files in `tests/` that read the whole tree still run.
+- **A step is sized when it is taken, from the present, and the search only says the side it
+  reaches** — a dose's effect is the soil coming to be inside its range; `execution:command` on the
+  action is run over the beliefs as they stand when the step is taken and answers the actuator and
+  the payload, the dose's size from how far the reading is below the middle of the range, and the
+  runtime sends it through the transport's `actuate`.
+- **A world speaks for its readings' revisions** — `world_at` hands a rule every known graph but
+  those a world speaks for, and once a ground carries the sides beside the readings, the revision
+  graphs are among them: read beside a possible world, a dry reading's `below` outlived the dose
+  that answered it, and the greenhouse's search offered the same dose for ever.
+- **The plant's surroundings are one domain** — water and climate were two 0.1.0 packages, and the
+  soil's moisture, the air's temperature, the source and the heater are one `climate:` vocabulary
+  in `domains/climate/`; actuation is the other, the devices and the dose.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
