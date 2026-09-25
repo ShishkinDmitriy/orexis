@@ -57,6 +57,7 @@ from agent.execution.command import command
 from agent.execution.executor import Executor
 from agent.prediction.predict import predict
 from agent.sensing.missed import missed
+from agent.series import Series
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, local_of
 from agent.planning.planner import Planner
 from agent.store import (catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of, kinds_in,
@@ -216,8 +217,9 @@ class Runtime:
     does alone."""
 
     def __init__(self, beliefs: ox.Store, agent_id: str, *, budget: int | None = None,
-                 intentions: ox.Store | None = None, transport=None, connect=None):
+                 intentions: ox.Store | None = None, transport=None, connect=None, series=None):
         self.beliefs, self.id = beliefs, agent_id
+        self.series = series
         self.me = _identity(beliefs, agent_id)
         self.inbox: queue.SimpleQueue = queue.SimpleQueue()
         self.transport = transport if transport is not None else (
@@ -246,6 +248,8 @@ class Runtime:
                 written.append(graph)
                 sensors.append(sensor)
                 self.deliberator.changed(graph)
+                if self.series is not None:
+                    self.series.record(self.beliefs, graph)     # what a person watches
         if not written:
             return []
         self.deliberator.deliberate(now)
@@ -348,7 +352,8 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     store = ox.Store(str(args.volume)) if args.volume else None
     beliefs = boot(args.world, args.agent, store)
-    outcome = Runtime(beliefs, args.agent, budget=args.budget, connect=_transport_of(beliefs)).run(passes=args.passes)
+    outcome = Runtime(beliefs, args.agent, budget=args.budget, connect=_transport_of(beliefs),
+                      series=Series.from_environment()).run(passes=args.passes)
     return {MET: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
 
 

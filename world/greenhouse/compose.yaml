@@ -67,7 +67,11 @@ services:
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
     env_file:
-      # its own broker credential, minted by `orexis-mqtt greenhouse`; mounted into THIS container alone
+      # where the series store is, and the org — safe for every agent to hold
+      - ../../infra/.env
+      # its own bucket and a token that opens only it, minted by `orexis-influx greenhouse`, and its
+      # own broker credential, minted by `orexis-mqtt greenhouse`; mounted into THIS container alone
+      - ./secrets/influx-grower.env
       - ./secrets/mqtt-grower.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent

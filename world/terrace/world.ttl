@@ -57,6 +57,7 @@
 #  THE FOUR VALUES of one message, one sensor each, every one reporting at the board's heartbeat.
 :moisture_sensor_terrace a sosa:Sensor ;
     orexis:localId "moisture_sensor_terrace" ;
+    schema:unitCode unit:UNITLESS ;
     sosa:isHostedBy :terrace_bed ;
     sosa:observes climate:SoilMoisture ;
     mqtt4ssn:observesTopic :terrace_readings ;
@@ -71,6 +72,7 @@
 
 :air_temp_terrace a sosa:Sensor ;
     orexis:localId "air_temp_terrace" ;
+    schema:unitCode unit:DEG_C ;
     sosa:isHostedBy :terrace_bed ;
     sosa:observes climate:AirTemperature ;
     mqtt4ssn:observesTopic :terrace_readings ;
@@ -80,6 +82,7 @@
 
 :air_humidity_terrace a sosa:Sensor ;
     orexis:localId "air_humidity_terrace" ;
+    schema:unitCode unit:UNITLESS ;
     sosa:isHostedBy :terrace_bed ;
     sosa:observes climate:AirHumidity ;
     mqtt4ssn:observesTopic :terrace_readings ;
@@ -89,6 +92,7 @@
 
 :air_pressure_terrace a sosa:Sensor ;
     orexis:localId "air_pressure_terrace" ;
+    schema:unitCode unit:HectoPA ;
     sosa:isHostedBy :terrace_bed ;
     sosa:observes climate:AirPressure ;
     mqtt4ssn:observesTopic :terrace_readings ;
