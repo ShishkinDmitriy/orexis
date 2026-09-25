@@ -79,9 +79,11 @@ from .extract_plan import extract_plan
 from .find_scopes import find_scopes
 from .find_wants import find_wants
 from .lay_ground import lay_ground
+from .ontology import PLAN_GRAPH, PLANNING
 from .prepare_ground import prepare_ground
 from .publish_plan import publish_plan
 from .reroot import reroot
+from .scope_actions import scope_actions
 from .take import take
 from .unweighed import unweighed
 from .weigh import weigh
@@ -119,6 +121,9 @@ UNSCOPED = "unscoped"
 #  is on the weighing already, written when the world was weighed, so ordering by it costs
 #  the frontier nothing per iteration. Measured on the predecessor: hanoi 56 forks to 50, the
 #  courier's corner delivery 198 to 78; this tree's figures are in the runbook.
+EXHAUSTED = PLANNING + "Exhausted"
+_OUTCOMES_Q = "SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"
+
 _FRONTIER_Q = """
 SELECT ?w ?spent ?remaining ?minted ?weighing ?best ?used WHERE {
   GRAPH $cat { ?weighing a planning:Weighing ; planning:for $want ; planning:open true ; planning:weighs ?w .
@@ -255,6 +260,30 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 self.search(store, want, budget=self.budget, memo=memo)
             if self.executor is not None:
                 publish_plan(store, self.executor)
+
+    # --- what a runtime asks after a pass ---------------------------------------------------
+
+    def standing(self, at: datetime | None = None) -> list[str]:
+        """Every want that stands after the last pass, across the imaginaria — which is where
+        the derivation mints them, so the beliefs hold none. Empty, with nothing walking, is
+        every desire met."""
+        at = at or clock.now()
+        return sorted({w for store in self.imaginaria.values() for w in find_wants(store, at)})
+
+    def exhausted(self) -> bool:
+        """Whether any search of the last pass stopped on its budget rather than on an answer,
+        `planning:Exhausted` on its plan — the next pass continues it, where a want standing
+        with no exhausted search is one nothing this agent holds reaches."""
+        return any(r["o"] == EXHAUSTED
+                   for store in self.imaginaria.values()
+                   for plan in graphs_of(store, PLAN_GRAPH)
+                   for r in rows(store, _OUTCOMES_Q, (), plan=plan))
+
+    @staticmethod
+    def scope(beliefs: ox.Store) -> None:
+        """Write the scopes a pass reads — `scope_actions`, the boot's act, since a store with
+        no scope graph is refused rather than guessed at."""
+        scope_actions(beliefs)
 
     # --- one want ------------------------------------------------------------------------
 

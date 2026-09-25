@@ -1,0 +1,36 @@
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+#  ONE move, filled with a disk and a peg. Available once per (disk, target) the state allows:
+#  the disk is on top of its stack and the target holds no smaller disk. FICTIVE, because the
+#  puzzle is its own physics: no instrument answers a move, so the executor writes what the step
+#  predicted into the state itself, and that is the world moving. The texts declare `hanoi:`
+#  themselves, since the store's dictionary learns no world's namespace.
+
+hanoi:Move a orexis:Action ;
+    rdfs:label "move a movable disk onto a legal peg" ;
+    orexis:takes hanoi:disk , hanoi:onto ;
+    execution:fictive true ;
+    orexis:available """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+        SELECT ?disk ?onto WHERE {
+            ?disk hanoi:on ?below .
+            FILTER NOT EXISTS { ?x hanoi:on ?disk }
+            ?disk hanoi:size ?ds .
+            ?onto a hanoi:Peg .
+            FILTER NOT EXISTS { ?disk (hanoi:on)+ ?onto . }
+            FILTER NOT EXISTS {
+                ?s (hanoi:on)+ ?onto .
+                ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
+        }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    orexis:retracts """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+        DELETE { GRAPH $state { $disk hanoi:on ?old } }
+        WHERE  { GRAPH $state { $disk hanoi:on ?old } }""" ;
+    sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+        CONSTRUCT { $disk hanoi:on ?dest } WHERE {
+            OPTIONAL { ?t (hanoi:on)+ $onto . FILTER NOT EXISTS { ?z hanoi:on ?t } }
+            BIND(COALESCE(?t, $onto) AS ?dest)
+        }""" .

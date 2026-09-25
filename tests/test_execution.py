@@ -196,32 +196,3 @@ def test_an_impulse_within_patience_writes_no_row(monkeypatch):
     everything = bindings(keeper.agent.intentions.query(
         "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a <http://example.org/orexis/progression#Intention> } }", ()))
     assert int(everything[0]["n"]) == n, "no dropped rows either"
-
-
-def test_a_plan_is_searched_once_committed_and_taken(monkeypatch):
-    """The loner's gardener with a nearly empty butt plans a dose. `pursue` searches ONCE,
-    commits the plan and takes its first step; a second `pursue` while the plan is in progress
-    searches nothing (#510).
-
-ASKED OF HANOI, whose plans are still many steps. It used to be the loner's two doses,
-    and a plant's plan is one step since #579: an effect declares the band it reaches, so two
-    doses each too small to cross a boundary are one world and the second is found by
-    re-planning after the first lands. A world of plain facts is where a plan of several steps
-    still lives, and the claim under test was never about water."""
-    from orexis_agent_deliberation import planner, pursuit
-    from test_hanoi import _mover, _goal
-
-    agent = _mover(monkeypatch, ["disk_1", "disk_2", "disk_3"])
-    searches = []
-    real = planner.Planner.plan
-    monkeypatch.setattr(planner.Planner, "plan", lambda self, d, **kw: (searches.append(1), real(self, d, **kw))[1])
-    keeper = agent.keeper
-    desire = _goal(agent)
-
-    uri = pursuit.pursue(agent, desire)
-    assert uri and len(searches) == 1
-    assert len(keeper.standing(want=desire.uri)) == 1, "the plan stands as one commitment"
-    assert keeper.in_progress(desire.uri) is not None, "several steps stand as one plan"
-
-    assert pursuit.pursue(agent, desire) == uri and len(searches) == 1, \
-        "a plan in progress is not searched over again"

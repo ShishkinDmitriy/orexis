@@ -2,24 +2,14 @@
 @prefix hanoi: <http://example.org/orexis/hanoi#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix prov: <http://www.w3.org/ns/prov#> .
 
-#  A ratified world that is a PUZZLE: the smallest world whose whole point is the search.
-#  No sensors, no market, no bus — one agent, three disks, and a goal ratified as a desire.
-#  What this world exists to prove is #257's claim: the domain is a plug-in, and this one
-#  shipped as an ontology and one move action with no Python at all.
-#
-#  The pegs are the DOMAIN's (T-Box individuals — the puzzle's invariant, not any world's); the disks are this world's, and how many there are is this
-#  file's whole authorship of the puzzle. The on-state is nobody's to author: it is runtime,
-#  seeded by whatever poses the puzzle, exactly as readings are.
-
-:world a orexis:World ; orexis:currentVersion :version_1 ;
-    prov:qualifiedAttribution [ prov:agent <http://example.org/orexis/user/dimonina> ; prov:hadRole orexis:Sovereign ] .
-:version_1 a orexis:WorldVersion ; orexis:versionNumber 1 .
+#  One agent, three disks. The mover acts for nothing, senses nothing and owes nobody — a pure
+#  mind with one move, which is what makes this world a test of the search and of nothing else.
+#  The pegs are the puzzle's, in ontology.ttl; where the disks rest is posed in state.ttl.
 
 :hanoi a orexis:Agent ;
     orexis:localId "hanoi" ;
-    rdfs:comment "The mover. It acts for nothing, senses nothing and owes nobody — a pure mind with one move, which is what makes this world a test of the search and of nothing else." .
+    rdfs:comment "The mover." .
 
 :disk_1 a hanoi:Disk ; hanoi:size 1 ; rdfs:label "the small disk" .
 :disk_2 a hanoi:Disk ; hanoi:size 2 ; rdfs:label "the middle disk" .

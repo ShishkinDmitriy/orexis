@@ -594,6 +594,21 @@ it is a record wearing a bullet.
   `mqtt4ssn:matchesTopic` it — and a topic name is itself a valid filter — the agent subscribes by
   the pattern and publishes a command to one with no wildcard; what it listens to is derived from
   what it acts for, and the broker's address stays in the environment.
+- **A world owns its vocabulary, and the runtime boots from its files** — Hanoi's puzzle was a
+  tool package with an ontology and one action; in 0.2.0 `world/hanoi/` carries its own
+  `ontology.ttl` beside its actions, desires and state, `agent/runtime.py` loads the kernel's
+  T-Box, every package's and the world's into one vocabulary graph and closes it, and the
+  world's tests live with the world, since the target state is no global tests.
+- **The runtime stops when every desire is met** — a pass plans and then walks what is due; no
+  want standing in any imaginarium and no intention walking is met, wants standing with nothing
+  walking is either a search the budget cut short, which `planning:Exhausted` says and the next
+  pass continues, or unreachable, and the process exits saying which. A pass at the same instant
+  as the last re-lays the present under its name and the search starts over, so a clock that
+  does not tick is a test's mistake and not a runtime's.
+- **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
+  0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
+  over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
+  is annotation and goes.
 - **A belief kind enters through `propose`, and a package's working graph is not a belief** —
   the belief package's layout test holds every writer in the tree to the door, and what
   bypasses it is what no rule reads as the world.
@@ -1193,6 +1208,21 @@ it is a record wearing a bullet.
   `mqtt4ssn:matchesTopic` it — and a topic name is itself a valid filter — the agent subscribes by
   the pattern and publishes a command to one with no wildcard; what it listens to is derived from
   what it acts for, and the broker's address stays in the environment.
+- **A world owns its vocabulary, and the runtime boots from its files** — Hanoi's puzzle was a
+  tool package with an ontology and one action; in 0.2.0 `world/hanoi/` carries its own
+  `ontology.ttl` beside its actions, desires and state, `agent/runtime.py` loads the kernel's
+  T-Box, every package's and the world's into one vocabulary graph and closes it, and the
+  world's tests live with the world, since the target state is no global tests.
+- **The runtime stops when every desire is met** — a pass plans and then walks what is due; no
+  want standing in any imaginarium and no intention walking is met, wants standing with nothing
+  walking is either a search the budget cut short, which `planning:Exhausted` says and the next
+  pass continues, or unreachable, and the process exits saying which. A pass at the same instant
+  as the last re-lays the present under its name and the search starts over, so a clock that
+  does not tick is a test's mistake and not a runtime's.
+- **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
+  0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
+  over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
+  is annotation and goes.
 - **A belief kind enters through `propose`, and a package's working graph is not a belief** —
   the belief package's layout test holds every writer in the tree to the door, and what
   bypasses it is what no rule reads as the world.

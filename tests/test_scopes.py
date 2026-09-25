@@ -17,7 +17,7 @@ from orexis_agent_deliberation.scope_actions import scopes, spans
 from orexis_agent_deliberation.planner import Planner
 from orexis_agent_progression.ontology import PUBLIC
 
-WORLDS = ("loner", "simulation", "courier", "hanoi")
+WORLDS = ("loner", "simulation", "courier")
 
 
 def _parts(store):

@@ -46,7 +46,9 @@ def shipped_worlds() -> list[str]:
     """
     from agent_old import genesis
 
-    return sorted(d.name for d in WORLDS_ROOT.iterdir() if genesis.world_files(d))
+    #  A world migrated to Agent 0.2.0 mounts no private beliefs and is not 0.1.0's to build;
+    #  `genesis.worlds()` is the roster that knows it.
+    return sorted(genesis.worlds())
 
 # The property the water domain is about, spelled out because a reading is now keyed by it.
 MOISTURE = "http://example.org/orexis/water#SoilMoisture"
