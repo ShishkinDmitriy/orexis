@@ -1,0 +1,83 @@
+# a_readings_side_stands_in_the_ground_beside_it
+#
+# A SIDE IS A REVISION, AND THE GROUND HOLDS IT. The soil's observation says a number; which side
+# of the bed's operating range that number is on is what the rules concluded of it, in a graph
+# derived from the observation's — `:sensed_revisions`, whose catalogue row says
+# `prov:wasDerivedFrom :sensed`. The present ground holds both, so a met-test asking whether the
+# soil is below its range reads what the deliberator concluded, and a step's effect written in
+# that concept has a fact to retract.
+#
+# A drift predicts the soil back inside by 13:00, and its own revision says so. The later ground
+# is the prediction applied: its retraction takes the observation node whole — the number and the
+# side with it — and the predicted reading and its side are added.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+GRAPH :ontology {
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :bed a sosa:FeatureOfInterest .
+  :keeper a orexis:Agent .
+}
+
+GRAPH :sensed {
+  :soil a sosa:Observation .
+  :soil sosa:hasFeatureOfInterest :bed .
+  :soil sosa:hasSimpleResult 0.2 .
+  :soil sosa:observedProperty :SoilMoisture .
+}
+
+GRAPH :sensed_revisions {
+  :soil sensing:below :bed_operating .
+}
+
+GRAPH :drying_stops {
+  :soil a sosa:Observation .
+  :soil sosa:hasFeatureOfInterest :bed .
+  :soil sosa:hasSimpleResult 0.35 .
+  :soil sosa:observedProperty :SoilMoisture .
+}
+
+GRAPH :drying_stops_revisions {
+  :soil sensing:inside :bed_operating .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :drying_stops a orexis:Graph .
+  :drying_stops a orexis:PredictionGraph .
+  :drying_stops dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+  :drying_stops orexis:beliefsOf :keeper .
+  :drying_stops orexis:retracts """PREFIX : <http://example.org/test#>
+      DELETE { GRAPH $state { :soil ?p ?o } }
+      WHERE  { GRAPH $state { :soil ?p ?o } }""" .
+  :drying_stops_revisions a orexis:Graph .
+  :drying_stops_revisions orexis:arrivedBy orexis:Derived .
+  :drying_stops_revisions prov:wasDerivedFrom :drying_stops .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :sensed orexis:beliefsOf :keeper .
+  :sensed_revisions a orexis:Graph .
+  :sensed_revisions orexis:arrivedBy orexis:Derived .
+  :sensed_revisions prov:wasDerivedFrom :sensed .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

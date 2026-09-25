@@ -600,6 +600,21 @@ SELECT ?g ?class WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }"""
 
 
+_DERIVED_Q = """
+SELECT DISTINCT ?r WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+  VALUES ?source { $sources } ?r prov:wasDerivedFrom ?source } }"""
+
+
+def derived_from(store, *sources: str) -> list[str]:
+    """Every graph the catalogue says was derived from one of `sources`, sorted — what the
+    belief package's rules concluded of an observation or a prediction, its REVISIONS, which is
+    where a reading's side lives. A reader that means a graph as the agent believes it means the
+    graph and these: the side of a reading is a belief as much as its number is."""
+    if not sources:
+        return []
+    return sorted(r["r"] for r in rows(store, bind(_DERIVED_Q, sources=Raw(" ".join(f"<{s}>" for s in sources)))))
+
+
 def close_catalogue(store) -> None:
     """Say on every row each kind the vocabulary puts its class beneath — what `entry` writes
     on a new row, said again of every row there is: a volume written when a row said one

@@ -38,7 +38,7 @@ import pyoxigraph as ox
 
 from agent.ontology import OREXIS, STATE
 from agent.hash_named_graph import hash_named_graph
-from agent.store import fork, Raw, add_quads, bind, catalogue_of, classify, forget_graph, graphs_of, quads, rows, update
+from agent.store import fork, Raw, add_quads, bind, catalogue_of, classify, derived_from, forget_graph, graphs_of, quads, rows, update
 
 from .ontology import GROUND_GRAPH
 
@@ -110,7 +110,8 @@ def lay_ground(store: ox.Store, now: datetime) -> list[str]:
         #  rather than one seeing another's work.
         added, retracts = [], []
         for prediction, supersedes in group:
-            added += list(_triples(store, prediction))
+            for graph in (prediction, *derived_from(store, prediction)):
+                added += list(_triples(store, graph))       # the predicted reading and its side
             if supersedes:
                 retracts.append(supersedes)
         if not added and not retracts:
@@ -144,7 +145,11 @@ def _present(store: ox.Store, now: datetime) -> str:
     """
     name = _name(now)
     _relaid(store, name)
-    for source in graphs_of(store, STATE):
+    #  THE READINGS AND WHAT WAS CONCLUDED OF THEM: a side is a revision, in a graph derived from
+    #  the reading's, and the met-tests and the effects speak the side — so the ground a pass
+    #  stands on holds both, and a fork writes a side as it writes any fact.
+    states = graphs_of(store, STATE)
+    for source in [*states, *derived_from(store, *states)]:
         update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                        f"WHERE {{ GRAPH <{source}> {{ ?s ?p ?o }} }}")
     return name

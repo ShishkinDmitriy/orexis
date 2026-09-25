@@ -77,7 +77,7 @@ import logging
 import pyoxigraph as ox
 
 from agent.ontology import BELIEF, DESIRE, PREDICTION, PUBLIC, RECORD, STATE, WANT
-from agent.store import catalogue_of, forget_graph, graphs_of, rows
+from agent.store import catalogue_of, derived_from, forget_graph, graphs_of, rows
 
 from .ontology import SCOPE_GRAPH
 
@@ -127,10 +127,15 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store) -> ox.Store:
     #  catalogue for a set that is unioned anyway. Measured at 107 µs a call on the plans case,
     #  which is why the list is spelled out here rather than built in pieces.
     made = {r["g"] for r in rows(into, _MADE_Q, ())}
-    for iri in graphs_of(into, *CROSSING):
+    crossed = graphs_of(into, *CROSSING)
+    for iri in [*crossed, *derived_from(into, *crossed)]:
         if iri not in made:
             forget_graph(into, iri)           # what the last filling brought across
-    for iri in dict.fromkeys([*graphs_of(beliefs, *CROSSING), catalogue_of(beliefs)]):
+    #  AND THE REVISIONS OF WHAT CROSSES: a reading's side is what the rules concluded of it,
+    #  in a graph derived from the reading's, and a met-test asks the side — so the present a
+    #  pass stands on is the readings and what was concluded of them.
+    crossing = graphs_of(beliefs, *CROSSING)
+    for iri in dict.fromkeys([*crossing, *derived_from(beliefs, *crossing), catalogue_of(beliefs)]):
         if iri is None:
             continue                          # a store nobody has told anything to has no catalogue
         into.extend(beliefs.quads_for_pattern(None, None, None, ox.NamedNode(iri)))

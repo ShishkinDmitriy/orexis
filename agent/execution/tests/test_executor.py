@@ -253,6 +253,36 @@ def test_a_step_that_predicts_something_waits_for_the_world_to_answer():
     assert _resolved(x, intention) == []
 
 
+def test_a_step_predicting_a_side_is_answered_by_the_readings_revision():
+    """A step speaks the concept the rules conclude — the soil comes to be inside its range — and
+    the side lives in the graph derived from the reading's. A new reading alone answers nothing;
+    once the rules conclude `inside` of it, in the revision graph the catalogue says was derived
+    from the state, the intention moves on."""
+    soil, bed_range = "http://example.org/test#soil", "http://example.org/test#bed_operating"
+    below, inside = ("http://example.org/orexis/sensing#below", "http://example.org/orexis/sensing#inside")
+    revisions = STATE + "/revisions"
+    beliefs = _beliefs(PEG_A)
+    update(beliefs, f"""INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{bed_range}> }}
+        GRAPH <http://example.org/test#catalogue> {{ <{revisions}> <http://www.w3.org/ns/prov#wasDerivedFrom> <{STATE}> }} }}""")
+    source = a_plan(2)
+    def fact(side):
+        one = ox.Store()
+        update(one, f"INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{side}> <{bed_range}> }} }}")
+        (said,) = facts_of(one, revisions)
+        return said
+    predicts = json.dumps({"adds": [fact(inside)], "retracts": [fact(below)]})
+    update(source, f"""INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:predicts {json.dumps(predicts)} ;
+                                                       execution:landsAt "{NOW.isoformat()}"^^xsd:dateTime }} }}""")
+    x = Executor(beliefs, AGENT, ox.Store())
+    x.commit(source, PLAN, WANT)
+    x.tick(NOW)
+    assert x.drain() == 1
+    assert x.tick(NOW) == [] and x.standing()[0].at == f"{PLAN}.0", "still below: the world has not answered"
+    update(beliefs, f"DELETE DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{bed_range}> }} }} ; "
+                    f"INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{inside}> <{bed_range}> }} }}")
+    assert x.tick(NOW) == [] and x.standing()[0].at == f"{PLAN}.1", "revised inside: the intention moved"
+
+
 def test_a_step_of_a_fictive_action_is_taken_by_the_executor_itself():
     """The action's row says fictive and the step carries it; a plain executor writes the
     prediction into the readings for that step and holds every other step to the world."""
