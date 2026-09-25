@@ -7,21 +7,19 @@ The bus had no ACLs at all: `allow_anonymous true`, so any process on the LAN co
 store had, and it gets the same answer — except that here the answer is *derivable*, because
 the world already states every channel and who is wired to it.
 
-**The ACL is the wiring.** Nothing is listed by hand. The same connections that give an agent a
-capability give it exactly the topics that capability needs:
+**The ACL is the wiring.** Nothing is listed by hand. The world says, in MQTT4SSN's words, which
+topic each sensor publishes on and which each device listens to, and who acts for what:
 
-    sensing:polls S          read S's readingTopic, write S's commandTopic
-    market:bidsIn M         read M's offerTopic and M's claimTopic/<me>, write M's bidTopic/<me>
-                            and M's redeemTopic/<me> — the holder presents its own claim (#132)
-    market:hosts M          write M's offerTopic and claimTopic/<bidder>, read bidTopic/+ and
-                            redeemTopic/+
-                        and each bidder's eventTopic
-    actuation:hasActuator V    write V's commandTopic
-    mqtt:eventTopic E     write E
+    an agent acts for S         read the topics of every sensor S hosts, and write the topic its
+                                board listens to (cadence and sense-now)
+    an agent holds actuator A   write the topic A listens to, or its board's (a step's command)
+    a client hosts sensor X     write the topics X publishes on
+    a client hosts actuator A   read the topics A listens to, and the client's own
 
-Read that list against `capabilities/market/bidding.py` and `hosting.py` and it is the same
-set of topics they subscribe and publish. If it ever stops being, an agent fails to connect —
-which is the point of deriving it rather than maintaining it.
+Read that list against `agent/transport/mqtt/driver.py` and it is the same set of topics the agent
+subscribes to and publishes on. If it ever stops being, an agent fails to connect — which is the
+point of deriving it rather than maintaining it. A topic is named by the patterns of the filters
+that match it (MQTT4SSN), so a grant is a pattern, wildcards and all.
 
 **Every principal is world-scoped, devices included.** An agent runs in a container belonging to
 one world. A board was argued to be different — flashed once, the same physical thing whichever
@@ -51,15 +49,12 @@ import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from agent_old import ratified
-from orexis_capability_reporting import sovereign
-
 from . import certs
+from agent.runtime import world_of
+from agent.store import graphs_of, rows
 from agent_old.config import REPO_ROOT
 from agent_old.genesis import world_dir, worlds
-from orexis_capability_market.terms import NS as MARKET
-from orexis_agent_progression.ontology import OREXIS, WORLD_GRAPH
-from .namespaces import ACTUATION, MQTT, SENSING, SIM
+
 log = logging.getLogger("mqtt")
 
 def mosquitto_dir(world: str):
@@ -106,124 +101,80 @@ class Principal:
         ]
 
 
-def _q(body: str) -> str:
-    """IRIs in full: this runs on rdflib, which pre-binds prefixes that a real store does not.
-    See backend/tests/test_store.py."""
-    return f"SELECT {body}"
+PUBLIC = "http://example.org/orexis#PublicGraph"
+ACTUATION = "http://example.org/orexis/actuation#"
+
+#  A TOPIC IS NAMED BY THE PATTERNS OF THE FILTERS THAT MATCH IT, in every query below.
+#  MQTT4SSN's words in full: onboarding's texts are held to the 0.1.0 store's dictionary too, which
+#  never loaded the transport that binds `mqtt4ssn:`.
+MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
+_AGENTS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
+
+_HEARS_Q = f"""
+SELECT ?id ?pattern WHERE {{
+  ?a a orexis:Agent ; orexis:localId ?id ; orexis:actsFor ?subject .
+  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?subject ; <{MQTT4SSN}observesTopic> ?topic .
+  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
+
+_NUDGES_Q = f"""
+SELECT ?id ?pattern WHERE {{
+  ?a a orexis:Agent ; orexis:localId ?id ; orexis:actsFor ?subject .
+  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?subject .
+  ?board ssn:hasSubSystem ?sensor ; <{MQTT4SSN}listensToTopic> ?topic .
+  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
+
+_COMMANDS_Q = f"""
+SELECT ?id ?pattern WHERE {{
+  ?a a orexis:Agent ; orexis:localId ?id ; <{ACTUATION}hasActuator> ?device .
+  {{ ?device <{MQTT4SSN}listensToTopic> ?topic }} UNION {{ ?board ssn:hasSubSystem ?device ; <{MQTT4SSN}listensToTopic> ?topic }}
+  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
+
+_CLIENTS_Q = f"""
+SELECT ?client ?id WHERE {{ ?client a <{MQTT4SSN}Client> ; <{MQTT4SSN}hasClientID> ?id .
+  FILTER NOT EXISTS {{ ?client a orexis:Agent }} }}"""
+
+_PUBLISHES_Q = f"""
+SELECT ?id ?pattern WHERE {{
+  ?client <{MQTT4SSN}hasClientID> ?id ; <{MQTT4SSN}hosts> ?sensor . ?sensor <{MQTT4SSN}observesTopic> ?topic .
+  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
+
+_LISTENS_Q = f"""
+SELECT ?id ?pattern WHERE {{
+  ?client <{MQTT4SSN}hasClientID> ?id .
+  {{ ?client <{MQTT4SSN}listensToTopic> ?topic }} UNION {{ ?client <{MQTT4SSN}hosts> ?device . ?device <{MQTT4SSN}listensToTopic> ?topic }}
+  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
+
+#  WHERE THE BROKER LISTENS: `schema:url` on the world's `mqtt4ssn:Broker`, plain and TLS. The
+#  agent is told this through its environment, generated from here; it never reads it off the world.
+_BROKER_Q = f"SELECT ?url WHERE {{ ?b a <{MQTT4SSN}Broker> ; schema:url ?url }} ORDER BY ?url"
 
 
-_AGENTS_Q = _q(f"""?id ?eventTopic WHERE {{ 
-  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id .
-  OPTIONAL {{ ?a <{MQTT}eventTopic> ?eventTopic }}
- }}""")
-
-_POLLS_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ 
-  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{SENSING}polls> ?s .
-  ?s <{MQTT}readingTopic> ?readingTopic .
-  OPTIONAL {{ ?s <{MQTT}commandTopic> ?commandTopic }}
- }}""")
-
-_BIDS_Q = _q(f"""?id ?offerTopic ?bidTopic ?claimTopic ?redeemTopic WHERE {{ 
-  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{MARKET}bidsIn> ?m .
-  ?m <{MARKET}offerTopic> ?offerTopic ; <{MARKET}bidTopic> ?bidTopic ;
-     <{MARKET}claimTopic> ?claimTopic .
-  OPTIONAL {{ ?m <{MARKET}redeemTopic> ?redeemTopic }}
- }}""")
-
-_HOSTS_Q = _q(f"""?id ?offerTopic ?bidTopic ?claimTopic ?redeemTopic ?bidderEvent
-WHERE {{ 
-  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{MARKET}hosts> ?m .
-  ?m <{MARKET}offerTopic> ?offerTopic ; <{MARKET}bidTopic> ?bidTopic ;
-     <{MARKET}claimTopic> ?claimTopic .
-  OPTIONAL {{ ?m <{MARKET}redeemTopic> ?redeemTopic }}
-  OPTIONAL {{ ?b <{MARKET}bidsIn> ?m ; <{MQTT}eventTopic> ?bidderEvent }}
- }}""")
-
-# A simulated sensor learns it was watered by reading what the valve REPORTED, never what the
-# valve was told. A real plant gets wet because water arrives; nothing arrives here, so the
-# valve's own account of what it dispensed stands in for the water — and a command the valve
-# refused produces no report, so the soil stays dry. Reading the command instead would have
-# watered the plant on an unsigned order, which is exactly the failure the market exists to
-# prevent. The grant belongs to the DEVICE, not to its agent: an agent in this world has no
-# more business reading a valve's traffic than one in any other world.
-# Guarded on mqtt:onBus, because the grant belongs to whatever CONNECTS. A board reporting two
-# properties is two sensors and one process: without this, the second sensor mints a principal
-# of its own holding a single dose grant, for a client that never connects — the same defect
-# #81 names one level up, where a board authenticates as one of its own peripherals.
-_SIM_DOSE_Q = _q(f"""?id ?statusTopic WHERE {{
-  ?d <{OREXIS}localId> ?id ; <{SIM}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
-     <{MQTT}onBus> ?bus .
-  {{ ?valve <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic }}
-  UNION
-  {{ ?valve <{ACTUATION}drawsFrom> ?subject ; <{MQTT}statusTopic> ?statusTopic }}
- }}""")
-# The UNION's second branch is the SUPPLY side (the barrel learns to run dry): a source's
-# level stand-in hears every valve that draws from its subject — same guard, same grant
-# shape, because the litre is one event with two witnesses.
-
-# And the rain, by the same guard: a simulated sensor whose subject can be rained on hears it
-# arrive on the subject's sim:rainTopic. Its own channel rather than the valve's status topic,
-# because the status topic is the VALVE's testimony and rain is nobody's — the soil cannot tell
-# the two waters apart, but the record must never say a valve dispensed what a stranger poured.
-_SIM_RAIN_Q = _q(f"""?id ?rainTopic WHERE {{
-  ?d <{OREXIS}localId> ?id ; <{SIM}simulatedBy> ?model ; <{SENSING}monitors> ?subject ;
-     <{MQTT}onBus> ?bus .
-  ?subject <{SIM}rainTopic> ?rainTopic .
- }}""")
-
-# The meddler itself: ONE principal per world that states sim:strayDoseMeanDays, granted WRITE on
-# every rain topic and nothing else. The worst a compromised meddler can do is be over-generous
-# with water — it cannot hear a reading, see an offer, or speak for a valve.
-_MEDDLER_Q = _q(f"""?rainTopic WHERE {{
-  ?w a <{OREXIS}World> ; <{SIM}strayDoseMeanDays> ?mean .
-  ?subject <{SIM}rainTopic> ?rainTopic .
- }}""")
-
-# Any valve that reports, stood in for or not. This used to require sim:simulatedBy, which meant
-# a REAL valve could not publish the status its own firmware sends — "so the executor knows water
-# actually flowed" — and the broker dropped it silently, because MQTT never refuses a publish out
-# loud. The simulation was strictly more capable than the hardware it stands for, which is the
-# wrong way round.
-_VALVE_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ 
-  ?v <{OREXIS}localId> ?id ; <{ACTUATION}actuates> ?subject ; <{MQTT}statusTopic> ?statusTopic .
- }}""")
-
-# And whoever actuates it must be able to HEAR that report, or the confirmation goes nowhere.
-_ACTUATOR_STATUS_Q = _q(f"""?id ?statusTopic WHERE {{ 
-  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id ; <{ACTUATION}hasActuator> ?v .
-  ?v <{MQTT}statusTopic> ?statusTopic .
- }}""")
-
-# One way of holding an actuator. There used to be two, because a simulated valve was a
-# different class held by a different property; it is an actuation:Valve that happens to be stood in
-# for now, so the agent side of this stopped needing to know the difference at all.
-_ACTUATES_Q = _q(f"""?id ?commandTopic WHERE {{ 
-  ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id .
-  ?a <{ACTUATION}hasActuator> ?v .
-  ?v <{MQTT}commandTopic> ?commandTopic .
- }}""")
-
-# `mqtt:onBus` is the device's own declaration that it is reachable on a bus — the same test
-# `MqttDriver.claims()` applies. Anything without it speaks no MQTT and needs no credential.
-_DEVICES_Q = _q(f"""?id ?readingTopic ?commandTopic WHERE {{ 
-  ?d <{OREXIS}localId> ?id ; <{MQTT}onBus> ?bus .
-  OPTIONAL {{ ?d <{MQTT}readingTopic> ?readingTopic }}
-  OPTIONAL {{ ?d <{MQTT}commandTopic> ?commandTopic }}
- }}""")
+def _world(world: str):
+    return world_of(world_dir(world))
 
 
-_BUS_Q = f"""
-SELECT ?host WHERE {{  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerHost> ?host  }}
-LIMIT 1"""
+def _rows(store, text: str) -> list[dict]:
+    return rows(store, text, graphs_of(store, PUBLIC))
+
+
+def broker(world: str) -> tuple[str, int, int | None]:
+    """(host, plain port, TLS port or None), off the broker's `schema:url`s."""
+    from urllib.parse import urlparse
+    plain = tls = host = None
+    for row in _rows(_world(world), _BROKER_Q):
+        url = urlparse(row["url"])
+        host = host or url.hostname
+        if url.scheme == "mqtts":
+            tls = url.port or 8883
+        elif url.scheme == "mqtt":
+            plain = url.port or 1883
+    if plain is None:
+        raise SystemExit(f"orexis-mqtt: world {world!r} states no mqtt:// url on its mqtt4ssn:Broker")
+    return host or "localhost", plain, tls
 
 
 def broker_host(world: str) -> str:
-    """The name this world's members meet the broker under — which must be the CN on its
-    certificate, or every agent that verifies it will refuse the connection."""
-    found = ratified.rows(ratified.dataset(world), _BUS_Q)
-    if not found:
-        raise SystemExit(f"orexis-mqtt: world {world!r} declares no mqtt:MessageBus")
-    return found[0]["host"]
+    return broker(world)[0]
 
 
 def agent_username(world: str, agent_id: str) -> str:
@@ -233,82 +184,34 @@ def agent_username(world: str, agent_id: str) -> str:
 
 
 def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
-    """(agents, devices) — every principal this world implies, and what the wiring allows it.
-
-    The world is composed exactly as an agent composes it, derivation included, so this asks
-    the same graph the agent will act from rather than a description of it.
-    """
-    ds = ratified.dataset(world)
+    """(agents, devices) — every principal this world implies, and what the wiring allows it,
+    asked of the world as an agent boots it."""
+    store = _world(world)
     agents: dict[str, Principal] = {}
     devices: dict[str, Principal] = {}
 
     def agent(agent_id: str) -> Principal:
         return agents.setdefault(agent_id, Principal(agent_username(world, agent_id)))
 
-    for row in ratified.rows(ds, _AGENTS_Q):
-        # Voluntary disclosure: an agent announces its own verdict, and may write nowhere else.
-        agent(row["id"]).may(WRITE, row.get("eventTopic"))
+    for row in _rows(store, _AGENTS_Q):
+        agent(row["id"])
+    for row in _rows(store, _HEARS_Q):
+        agent(row["id"]).may(READ, row["pattern"])
+    for row in _rows(store, _NUDGES_Q):
+        agent(row["id"]).may(WRITE, row["pattern"])
+    for row in _rows(store, _COMMANDS_Q):
+        agent(row["id"]).may(WRITE, row["pattern"])
 
-    for row in ratified.rows(ds, _POLLS_Q):
-        me = agent(row["id"])
-        me.may(READ, row["readingTopic"])
-        me.may(WRITE, row.get("commandTopic"))  # cadence and sense-now
-
-    for row in ratified.rows(ds, _BIDS_Q):
-        me, who = agent(row["id"]), row["id"]
-        me.may(READ, row["offerTopic"])
-        me.may(READ, f"{row['claimTopic']}/{who}")  # its own claim, and nobody else's
-        if row.get("redeemTopic"):
-            me.may(WRITE, f"{row['redeemTopic']}/{who}")  # presents its OWN claim (#132)
-        me.may(WRITE, f"{row['bidTopic']}/{who}")
-
-    for row in ratified.rows(ds, _HOSTS_Q):
-        me = agent(row["id"])
-        me.may(WRITE, row["offerTopic"])
-        me.may(WRITE, f"{row['claimTopic']}/+")  # it addresses each winner in turn
-        if row.get("redeemTopic"):
-            me.may(READ, f"{row['redeemTopic']}/+")  # and hears every holder's claim (#132)
-        me.may(READ, f"{row['bidTopic']}/+")
-        me.may(READ, row.get("bidderEvent"))
-
-    for row in ratified.rows(ds, _ACTUATES_Q):
-        agent(row["id"]).may(WRITE, row["commandTopic"])
-
-    # The sovereign's question channel (packages/orexis-capability-reporting/sovereign.py): one principal per world, never
-    # mounted into any agent container, may ask each agent and hear each answer — and each
-    # agent may hear only its own questions and answer only on its own channel. Explicit
-    # topic pairs rather than wildcards, in this file's own idiom: silence is not permission.
-    asker = devices.setdefault(sovereign.SOVEREIGN, Principal(sovereign.SOVEREIGN))
-    for agent_id in sorted(agents):
-        asker.may(WRITE, sovereign.query_topic(agent_id))
-        asker.may(READ, sovereign.result_topic(agent_id))
-        agents[agent_id].may(READ, sovereign.query_topic(agent_id))
-        agents[agent_id].may(WRITE, sovereign.result_topic(agent_id))
-
-    for row in ratified.rows(ds, _DEVICES_Q):
+    for row in _rows(store, _CLIENTS_Q):
         if row["id"] in agents:
-            continue  # an agent and a device may not share a name; the world says which it is
-        device = devices.setdefault(row["id"], Principal(row["id"]))
-        device.may(WRITE, row.get("readingTopic"))  # it publishes what it read
-        device.may(READ, row.get("commandTopic"))  # it listens for what to do
-
-    for row in ratified.rows(ds, _SIM_DOSE_Q):
-        devices.setdefault(row["id"], Principal(row["id"])).may(READ, row["statusTopic"])
-
-    for row in ratified.rows(ds, _SIM_RAIN_Q):
-        devices.setdefault(row["id"], Principal(row["id"])).may(READ, row["rainTopic"])
-
-    for row in ratified.rows(ds, _MEDDLER_Q):
-        devices.setdefault("meddler", Principal("meddler")).may(WRITE, row["rainTopic"])
-
-    for row in ratified.rows(ds, _VALVE_STATUS_Q):
-        # it already reads its command topic as any device does; this is the other direction
-        devices.setdefault(row["id"], Principal(row["id"])).may(WRITE, row["statusTopic"])
-
-    for row in ratified.rows(ds, _ACTUATOR_STATUS_Q):
-        agents.setdefault(row["id"], Principal(agent_username(world, row["id"]))).may(
-            READ, row["statusTopic"])
-
+            continue                # an agent and a device may not share a name
+        devices.setdefault(row["id"], Principal(row["id"]))
+    for row in _rows(store, _PUBLISHES_Q):
+        if row["id"] in devices:
+            devices[row["id"]].may(WRITE, row["pattern"])
+    for row in _rows(store, _LISTENS_Q):
+        if row["id"] in devices:
+            devices[row["id"]].may(READ, row["pattern"])
     return agents, devices
 
 
@@ -394,9 +297,7 @@ def provision(world: str, rotate: bool = False) -> None:
         # NOT rotated with the world: a device credential is flashed into a board, and rotating
         # it here would silently strand hardware that is not in front of you.
         fresh = not path.exists()
-        what = ("the sovereign's question channel — held on the host, never mounted into any "
-                "agent container" if device_id == sovereign.SOVEREIGN
-                else f"device {device_id} — flashed into the board")
+        what = f"device {device_id} — flashed into the board, or handed to its stand-in"
         _credential(path, principal.username, what, rotate=False)
         log.info("  device %-14s %-28s %2d grants%s", device_id, principal.username,
                  len(principal.grants), "  (new — reflash the board)" if fresh else "")
@@ -410,12 +311,6 @@ def provision(world: str, rotate: bool = False) -> None:
     write_config(world)
 
 
-_PORTS_Q = f"""
-SELECT ?port ?tlsPort WHERE {{ 
-  ?bus a <{MQTT}MessageBus> ; <{MQTT}brokerPort> ?port .
-  OPTIONAL {{ ?bus <{MQTT}brokerTlsPort> ?tlsPort }}  }} LIMIT 1"""
-
-
 def write_config(world: str) -> None:
     """This world's broker configuration, from the ports the world itself states.
 
@@ -423,16 +318,13 @@ def write_config(world: str) -> None:
     one host must not collide. Everything else is the same in every world, and is here rather
     than in the image so that changing it is regenerating rather than rebuilding.
     """
-    found = ratified.rows(ratified.dataset(world), _PORTS_Q)
-    if not found:
-        raise SystemExit(f"orexis-mqtt: world {world!r} declares no mqtt:MessageBus")
-    plain, tls = int(found[0]["port"]), found[0].get("tlsPort")
+    _, plain, tls = broker(world)
 
     lines = [
         f"# GENERATED by `orexis-mqtt {world}` — do not edit. One broker per world.",
         "#",
-        "# The ports come from this world's mqtt:MessageBus, which is also where its agents read",
-        "# them. Two worlds are two brokers on two ports, and neither can hear the other.",
+        "# The ports come from the `schema:url`s on this world's mqtt4ssn:Broker, which is also where",
+        "# its agents' environment is generated from. Two worlds are two brokers on two ports.",
         "",
         "log_dest stdout",
         "connection_messages true",

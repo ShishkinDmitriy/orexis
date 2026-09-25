@@ -24,7 +24,21 @@
 #  step is sized to when it is taken. The vent and the outdoor thermometer of the 0.1.0 world wait
 #  until an agent can listen to a feature it does not act for.
 
-:broker a mqtt4ssn:Broker .
+#  THE BROKER, and where it listens: the world's own, on ports no other world's broker uses. The
+#  operator's tools read these to run it and to tell each agent through its environment; an agent
+#  never reads them off the world.
+:broker a mqtt4ssn:Broker ;
+    schema:url "mqtt://localhost:1889" , "mqtts://localhost:8889" .
+
+#  THE CLIENTS that host the devices — each a stand-in's identity on the bus, as a board's would be.
+:probe_client a mqtt4ssn:Client ; mqtt4ssn:hasClientID "moisture_probe" ;
+    mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :moisture_probe .
+:thermometer_client a mqtt4ssn:Client ; mqtt4ssn:hasClientID "thermometer" ;
+    mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :thermometer .
+:pump_client a mqtt4ssn:Client ; mqtt4ssn:hasClientID "pump" ;
+    mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :pump .
+:heater_client a mqtt4ssn:Client ; mqtt4ssn:hasClientID "heater" ;
+    mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :heater .
 
 :grower a orexis:Agent , mqtt4ssn:Client ;
     orexis:localId "grower" ;

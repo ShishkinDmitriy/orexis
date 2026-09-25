@@ -62,7 +62,7 @@ dev = ["pytest>=8", "import-linter>=2", "wireviz>=0.4", "pytest-xdist>=3", "pysh
 
 [project.scripts]
 # The agent. One process, one agent, told only its own id.
-orexis-agent = "agent_old.runtime:main"
+orexis-agent = "agent.runtime:main"
 
 # ONBOARDING — everything between a ratified world and a society that can be started. The
 # umbrella runs the four below; they stay separately callable because rotating one service's

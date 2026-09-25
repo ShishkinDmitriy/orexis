@@ -195,8 +195,6 @@ def test_a_package_declares_exactly_what_it_imports(pkg: Path):
 #  which is rule 1 applied to the operator's tools. Until then this holds the line: a NEW one
 #  fails, and one that stops occurring fails too, so the number can only fall to zero.
 ONBOARDING_REACHES_IN = {
-    ("onboarding/mqtt.py", "orexis_capability_reporting"),      # the sovereign's identity
-    ("onboarding/mqtt.py", "orexis_capability_market"),         # the market's topic namespace
     ("onboarding/ask.py", "orexis_capability_reporting"),       # the sovereign's identity
 }
 
