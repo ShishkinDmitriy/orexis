@@ -129,6 +129,14 @@ SELECT ?id ?pattern WHERE {{
   {{ ?device <{MQTT4SSN}listensToTopic> ?topic }} UNION {{ ?board ssn:hasSubSystem ?device ; <{MQTT4SSN}listensToTopic> ?topic }}
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
+#  WHERE AN AGENT IS TOLD THINGS: the topic it listens to itself. It reads its own, and every other
+#  agent of the world may write to it — whom an agent may speak to is the world's roster, and what
+#  it may say is what the one it speaks to believes (speech's `heard`), not the broker's to judge.
+_TOLD_Q = f"""
+SELECT ?id ?pattern WHERE {{
+  ?a a orexis:Agent ; orexis:localId ?id ; <{MQTT4SSN}listensToTopic> ?topic .
+  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
+
 _CLIENTS_Q = f"""
 SELECT ?client ?id WHERE {{ ?client a <{MQTT4SSN}Client> ; <{MQTT4SSN}hasClientID> ?id .
   FILTER NOT EXISTS {{ ?client a orexis:Agent }} }}"""
@@ -201,6 +209,11 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
         agent(row["id"]).may(WRITE, row["pattern"])
     for row in _rows(store, _COMMANDS_Q):
         agent(row["id"]).may(WRITE, row["pattern"])
+    for row in _rows(store, _TOLD_Q):
+        agent(row["id"]).may(READ, row["pattern"])
+        for other in list(agents):
+            if other != row["id"]:
+                agent(other).may(WRITE, row["pattern"])
 
     for row in _rows(store, _CLIENTS_Q):
         if row["id"] in agents:

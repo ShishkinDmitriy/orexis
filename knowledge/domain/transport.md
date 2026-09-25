@@ -30,7 +30,7 @@ and reports `link_connected` and `link_reconnects` into the health series.
 
 # What it is not
 
-**Not a driver.** A driver is chosen per sensor and answers *how is this device spoken to*; in Agent 0.2.0 the contract a transport implements is the family's own, `Transport` at `agent/transport/transport.py` — claim, open, handle, cadence, nudge and a step's command (`actuate`), and no `parse` — bytes to number is sensing's pipeline, a transport hands sensing's `received` the bytes and the sensor, and sensing knows no transport;
+**Not a driver.** A driver is chosen per sensor and answers *how is this device spoken to*; in Agent 0.2.0 the contract a transport implements is the family's own, `Transport` at `agent/transport/transport.py` — claim, open, handle, cadence, nudge, a step's command (`actuate`) and a document to a peer (`tell`), and no `parse` — bytes to number is sensing's pipeline, a transport hands sensing's `received` the bytes and the sensor, and sensing knows no transport;
 this is chosen per world and answers *how does this agent reach everyone*. MQTT is both, in
 one package; a wired transport could be a driver alone.
 
@@ -47,7 +47,8 @@ the MQTT protocol in the OASIS specification's own terms, vendored under `tests/
 `mqtt4ssn:listensToTopic` another; and a topic is named only by the `mqtt4ssn:TopicFilter`s that
 `mqtt4ssn:matchesTopic` it, each with its `mqtt4ssn:hasFilterPattern`, since a topic name is itself a
 valid filter. The agent is a client too, and what it listens to is never authored: its sensors are
-those mounted in what it acts for, and their topics' patterns are its subscriptions. One class,
+those mounted in what it acts for, and their topics' patterns are its subscriptions, beside the
+topic it `mqtt4ssn:listensToTopic` itself, where a peer's document arrives for speech's `heard`. One class,
 `Mqtt`, answering the family's `Transport` contract at `agent/transport/transport.py`: `connect`
 brings it up from the environment — the broker's address, the agent's credential and its
 certificate in this transport's own variables, refusing to guess either, with paho imported there

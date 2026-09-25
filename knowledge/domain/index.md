@@ -20,7 +20,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 * [good](/domain/good.md) - What a lot is a quantity OF. One good has a valuation per kind of recipient, and every denomination join closes through it.
 * [lot](/domain/lot.md) - What one auction sells — a quantity of the venue's good at a reserve, both the host's own beliefs, sized by nothing anyone needs.
-* [market](/domain/market.md) - The standing structure — a resource, who supplies it, who consumes it, and the links between. The auction condenses inside it.
+* [market](/domain/market.md) - The standing structure — who supplies a resource, who consumes it. In 0.2.0 a domain of files: documents, rules and actions.
 * [venue](/domain/venue.md) - One market, as a node in the graph — minted from stock plus consent, keyed by its source, so one owner with two goods holds two.
 * [auction](/domain/auction.md) - The process, not a place: it condenses out of scarcity, announces terms, collects bids, matches, is co-signed, and dissolves.
 * [round](/domain/round.md) - One pass of bidding inside an auction. Exactly one is built, so today the two coincide.
@@ -68,6 +68,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [relevance](/domain/relevance.md) - Which actions could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every action.
 * [scope](/domain/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.
 
+* [speech](/domain/speech.md) - A peer's word is a document: heard where it is state and replaces only a peer's word, and what the agent said, believed as said.
 * [transport](/domain/transport.md) - How an agent reaches its society: a capability the bus grants, holding the connection and three choir hooks. Not a driver.
 
 * [remembered plan](/domain/remembered-plan.md) - A plan that worked, kept on its want and keyed by what its steps read: adopted where that holds, forgotten when it fails.

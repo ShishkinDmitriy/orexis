@@ -34,3 +34,17 @@ def test_an_agent_holding_a_desire_keeps_running_once_it_is_met(tmp_path, monkey
     runtime = Runtime(boot(_as_a_desire(tmp_path), "hanoi"), "hanoi", budget=64)
     assert runtime.run(passes=6, poll_s=0) == UNFINISHED
     assert runtime.planner.standing() == [] and runtime.executor.walking() == [], "met, and waiting"
+
+
+def test_an_agent_reads_its_own_beliefs_file_and_no_other_agents(tmp_path):
+    """A world of several agents states each one's desires under `beliefs/<id>`: the boot reads the
+    world's own files and the agent's, never a peer's."""
+    from agent.runtime import documents
+    (tmp_path / "world.ttl").write_text("")
+    (tmp_path / "beliefs").mkdir()
+    for name in ("rose.ttl", "fern.ttl", "rose.txt"):
+        (tmp_path / "beliefs" / name).write_text("")
+    read = [p.relative_to(tmp_path).as_posix() for p in documents(tmp_path, "rose") if tmp_path in p.parents]
+    assert read == ["world.ttl", "beliefs/rose.ttl"]
+    assert [p for p in documents(tmp_path) if tmp_path in p.parents] == [tmp_path / "world.ttl"], \
+        "what the world says to nobody in particular — the operator's tools — is its own files alone"

@@ -104,11 +104,15 @@ def _simulator(world: str, client: str, host: str, plain: int) -> str:
 """
 
 
-def _documents(world: str) -> str:
+def _documents(world: str, agent_id: str | None = None) -> str:
+    """The world's documents, file by file, and an agent's own beliefs file where it has one —
+    never another agent's."""
     here = world_dir(world)
-    return "".join(f"\n      - ./{p.name}:/app/world/{world}/{p.name}:ro"
-                   for p in sorted(here.iterdir())
-                   if p.is_file() and p.suffix in DOCUMENTS and p.name not in HARDWARE_FILES)
+    files = [p for p in sorted(here.iterdir())
+             if p.is_file() and p.suffix in DOCUMENTS and p.name not in HARDWARE_FILES]
+    if agent_id is not None:
+        files += [p for p in sorted((here / "beliefs").glob(f"{agent_id}.*")) if p.suffix in DOCUMENTS]
+    return "".join(f"\n      - ./{p.relative_to(here)}:/app/world/{world}/{p.relative_to(here)}:ro" for p in files)
 
 
 def _service(agent_id: str, world: str, host: str, plain: int, tls: int | None) -> str:
@@ -139,7 +143,7 @@ def _service(agent_id: str, world: str, host: str, plain: int, tls: int | None) 
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-{world}-{agent_id}:/app/state
-      # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world)}
+      # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world, agent_id)}
       - ./secrets/{agent_id}.crt:/app/secrets/agent.crt:ro
       - ./secrets/{agent_id}.key:/app/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro

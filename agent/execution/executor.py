@@ -118,12 +118,12 @@ ORDER BY ?adopted"""
 #  plan says, at once where it says nothing — whether it has been taken (an act saying so), and
 #  where it has, what it predicted and when that should show.
 _HEADS_Q = """
-SELECT ?intention ?step ?due ?act ?lands ?predicts WHERE {
+SELECT ?intention ?step ?due ?act ?taken ?lands ?predicts WHERE {
   GRAPH $intentions {
     ?intention a execution:Intention ; execution:by ?step .
     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
     OPTIONAL { ?step execution:notBefore ?due }
-    OPTIONAL { ?act execution:of ?step ; execution:taken true }
+    OPTIONAL { ?act execution:of ?step ; execution:taken true ; execution:takenAt ?taken }
     OPTIONAL { ?step execution:landsAt ?lands }
     OPTIONAL { ?step execution:predicts ?predicts } } }
 ORDER BY ?due ?intention"""
@@ -269,14 +269,22 @@ class Executor:
             raise RuntimeError(
                 f"the plan in <{graph}> has {len(head)} heads — a plan is a chain, and a chain "
                 "has one step nothing follows")
-        add_quads(self.intentions, (ox.Quad(q.subject, q.predicate, q.object, node)
+        #  EVERY INTENTION'S STEPS ARE ITS OWN. A plan names its steps for the want and the worlds
+        #  it searched, so a second plan for one want — after the first failed — names its steps
+        #  as the first did, and the act the first recorded would read as the second's step taken.
+        #  A name an earlier intention holds is tagged with this one's; a fresh one is kept.
+        tag = uuid.uuid4().hex[:8]
+        held = {s for s in steps if next(self.intentions.quads_for_pattern(ox.NamedNode(s), None, None, node), None)}
+        own_name = {s: ox.NamedNode(f"{s}.{tag}" if s in held else s) for s in steps}
+        renamed = lambda t: own_name.get(t.value, t) if isinstance(t, ox.NamedNode) else t
+        add_quads(self.intentions, (ox.Quad(renamed(q.subject), q.predicate, renamed(q.object), node)
                                     for q in quads(source, graph)))
-        intention = ox.NamedNode(f"{OREXIS}intention_{self.id}_{uuid.uuid4().hex[:8]}")
+        intention = ox.NamedNode(f"{OREXIS}intention_{self.id}_{tag}")
         own = [ox.Quad(intention, _RDF_TYPE, ox.NamedNode(INTENTION), node),
                ox.Quad(intention, ox.NamedNode(PURSUES), ox.NamedNode(want), node),
                ox.Quad(intention, ox.NamedNode(ADOPTED_AT), instant(clock.now()), node),
-               ox.Quad(intention, ox.NamedNode(BY), ox.NamedNode(head[0]), node)]
-        own += [ox.Quad(intention, ox.NamedNode(STEP), ox.NamedNode(s), node) for s in sorted(steps)]
+               ox.Quad(intention, ox.NamedNode(BY), own_name[head[0]], node)]
+        own += [ox.Quad(intention, ox.NamedNode(STEP), own_name[s], node) for s in sorted(steps)]
         add_quads(self.intentions, own)
         log.info("%s: committed a plan of %d step(s) for %s", self.id, len(steps),
                  want.rsplit("#", 1)[-1])
@@ -355,7 +363,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 continue
             if not r.get("predicts"):
                 continue                        # advanced when it was taken; nothing to hold it to
-            lands = datetime.fromisoformat(r["lands"]) if r.get("lands") else now
+            lands = self._landing(r, now)
             if now < lands:
                 wake_at(lands)
             elif self._answered(r["predicts"]):
@@ -368,6 +376,20 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 wake_at(lands + timedelta(seconds=self.patience_s))
         self._next_due = soonest
         return due
+
+    @staticmethod
+    def _landing(head: dict, now: datetime) -> datetime:
+        """When a taken head should show what it predicted: as long after it was TAKEN as the
+        plan placed its landing after its opening. A plan places every step at the instants of
+        the worlds it searched, and a step taken late — the step before it waited on a round
+        that cleared late, or on a peer — lands late by as much; held to the placed instant, it
+        would fail before the world could answer it."""
+        if not head.get("lands"):
+            return now
+        lands = datetime.fromisoformat(head["lands"])
+        if head.get("taken") and head.get("due"):
+            lands += max(timedelta(0), datetime.fromisoformat(head["taken"]) - datetime.fromisoformat(head["due"]))
+        return lands
 
     def _answered(self, predicts: str) -> bool:
         """Does the present hold what a step predicted — every addition present, every

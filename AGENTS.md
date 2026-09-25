@@ -661,10 +661,11 @@ it is a record wearing a bullet.
   tools read it to run the broker and write each agent's environment; the agent reads only its
   environment, as the transport's principle has it, and `orexis-agent` runs the 0.2.0 runtime.
 - **Signing is between agents, and an agent trusts itself** — a signature proves to a device that
-  the agent asking for an act was authorised by another, which is the market's case; an agent
-  dosing its own bed through its own pump has no second party to convince, and the broker's ACL
-  already admits only the holder to its devices' command topics, so 0.2.0 signs nothing until the
-  market returns (authn-authz-capabilities).
+  the agent asking for an act was authorised by another; an agent dosing its own bed through its
+  own pump has no second party to convince, and the broker's ACL already admits only the holder to
+  its devices' command topics. The 0.2.0 market signs nothing either: the host serves only a claim
+  its own said documents hold, so what signing would still close is which peer spoke, which the
+  transport does not say (speech).
 - **The simulator is a process of the world, not a pretend board** — it reads the world as an agent
   boots it and plays every system marked `sim:simulatedBy` from the world's own words: the topics
   from MQTT4SSN, the cadence from a sensor's `ssn-system:Frequency`, the drying, a dose and a
@@ -798,6 +799,28 @@ it is a record wearing a bullet.
   every retraction carries its package's `PREFIX`, so joining the copy and the retraction into
   one text skipped every retraction, at the log level and green; hoist the declarations, and
   run apart the two texts that spell one label two ways.
+
+- **A peer's word is a document, and it is believed as it stands where it is state** — a
+  message between agents arrives as TriG naming its graphs and saying what each is, as a world's
+  files do; `heard` refuses a graph that is no `orexis:StateGraph` or that replaces anything but a
+  peer's word, `said` believes what the agent told, and neither concludes anything.
+- **The market is files** — calls, rounds, bids, claims and presentations are documents one agent
+  says to another, what they mean is five rules, and the protocol is six actions whose effects
+  speak those conclusions and whose `execution:says` makes the documents at take time; the kernel
+  learned to tell a peer something and nothing of what a bid is (`domains/market/`).
+- **A graph is revised beside what the world states and nothing else** — every rule shipped reads
+  one graph and public knowledge, and a revision is replaced only when its source is written
+  again, so revised beside everything believed the first of two readings took the second's side
+  into its own revision and kept it after the second was read inside.
+- **A step lands as long after it is taken as its plan placed it after its opening** — a plan
+  places steps at the instants of the worlds it searched, and a presentation taken late behind a
+  round that cleared late failed at its placed instant before the probe could answer.
+- **An intention's steps are its own** — a second plan for one want names its steps as the first
+  did, and the act the first recorded read as the second's step taken, so the grower never
+  called again; a held name is tagged at adoption.
+- **An agent's own documents are under `beliefs/<id>`** — the derivation mints a want under every
+  desire a store holds, so a world of several agents states each one's desires apart, and a boot
+  and a compose file read only the agent's own.
 
 ## The rules the code lives by
 

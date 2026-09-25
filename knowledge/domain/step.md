@@ -148,6 +148,13 @@ doses are too coarse*, which is a distinction a planner that reported them alike
   name; see [precondition](/domain/precondition.md)
 - its QUANTITY is filled when it is TAKEN, not when it is planned (#579): the search sizes
   nothing, and the actuator or the bidder computes how much from the reading in hand
+- in Agent 0.2.0 it LANDS as long after it is TAKEN as the plan placed its landing after its
+  opening (`execution:landsAt` less `execution:notBefore`): a plan places its steps at the
+  instants of the worlds it searched, and a presentation taken a minute late behind a round that
+  cleared late was held to its placed instant and failed before the probe could answer it
+- in Agent 0.2.0 each [intention](/domain/intention.md)'s steps are its own: a second plan for one
+  want names its steps as the first did, so a name an earlier intention holds is tagged, or the
+  act the first recorded reads as the second's step already taken
 - where it was expanded from a [method](/domain/method.md), the filling it is part of
   (`progression:partOf`)
 - once answered, the number it predicted and the number the world showed

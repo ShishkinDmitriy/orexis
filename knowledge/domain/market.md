@@ -130,3 +130,17 @@ reconciles across them by [bids-as-unmet-demand](/decisions/bids-as-unmet-demand
 through price** (a multi-homed consumer prefers the cheaper source; scarcity in one
 propagates as price), never shared control. This is the N-to-N seam; v1 has one supply and
 one cluster.
+
+# In Agent 0.2.0, the market is files
+
+`domains/market/` is the market as a [domain](/domain/world.md) a world imports: a vocabulary, five
+rules and six actions, and no Python. A bidder in trouble calls for a [round](/domain/round.md) on a
+venue it bids in, tenders a bid sized from its reading at what a litre is worth to it, and presents
+the [claim](/domain/claim.md) it won; a host with an unanswered [call](/domain/call.md) offers a
+round to every bidder on the venue and clears it by pay-as-bid when its window closes, and serves a
+presented claim through its own device. Each of those is an action whose taking says a document to
+a peer ([speech](/domain/speech.md)), and each fact a plan speaks — a venue open, a call answered, a
+claim held — is what the domain's rules conclude of the documents. The host's two desires, no
+unanswered call and no unserved claim, and each bidder's own are the world's to state, in the
+agent's own `beliefs/<id>.ttl`; `world/allotment/` is the world that trades this way. Uniform price,
+a wallet and signing are not there yet.

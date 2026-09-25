@@ -342,3 +342,36 @@ def test_a_step_is_not_held_to_the_world_before_it_lands():
     assert _resolved(x, intention) == [], "not yet landed, so not yet asked"
     x.tick(later)
     assert _resolved(x, intention) == [{"o": "done"}]
+
+
+def test_a_step_taken_late_lands_late_by_as_much(monkeypatch):
+    """A plan places a step at the instants of the worlds it searched; taken a hundred seconds
+    after its opening — the step before it waited on a peer — it lands a hundred seconds after
+    its placed landing, and the patience runs from there."""
+    x = Executor(_beliefs(PEG_A), AGENT, ox.Store())
+    source = _predicting(1)
+    update(source, f"""INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notBefore "{NOW.isoformat()}"^^xsd:dateTime }} }}""")
+    intention = x.commit(source, PLAN, WANT)
+    late = NOW + timedelta(seconds=100)
+    monkeypatch.setattr(clock, "now", lambda: late)
+    x.tick(late)
+    x.drain()
+    x.tick(late + timedelta(seconds=DEFAULT_PATIENCE_S - 1))
+    assert _resolved(x, intention) == [], "held to the landing it was placed at, it would have failed already"
+    x.tick(late + timedelta(seconds=DEFAULT_PATIENCE_S))
+    assert _resolved(x, intention) == [{"o": "failed"}]
+
+
+def test_a_second_plan_for_a_want_is_walked_by_steps_of_its_own(monkeypatch):
+    """The first plan's step was taken and failed; the second, found for the same want, names its
+    steps as the first did. Its head is its own and due, not the first's taken step waiting."""
+    x = Executor(_beliefs(PEG_A), AGENT, ox.Store())
+    first = x.commit(_predicting(1), PLAN, WANT)
+    x.tick(NOW)
+    x.drain()
+    x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S))
+    assert _resolved(x, first) == [{"o": "failed"}]
+    second = x.commit(_predicting(1), PLAN, WANT)
+    (standing,) = x.standing()
+    assert standing.uri == second and standing.at != f"{PLAN}.0" and standing.at.startswith(f"{PLAN}.0.")
+    assert x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S)) == [standing.at], "due, since it was never taken"

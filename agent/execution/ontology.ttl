@@ -66,6 +66,14 @@ execution:command a owl:DatatypeProperty ;
     rdfs:label "command" ;
     rdfs:comment "Said of an ACTION a device takes: a SELECT run over the present beliefs when a step filling the action is taken, with the step's parameters as `$tokens` and `$me`, answering `?actuator` and `?payload`, the JSON document the device is sent. The executor decides nothing of the search's here: how much to pour or how long to heat is sized from the situation as it is when the step is taken, by the text the domain declares, and the container sends each answer through the transport that reaches the actuator." .
 
+execution:says a owl:DatatypeProperty ;
+    rdfs:label "says" ;
+    rdfs:comment "Said of an ACTION whose taking tells a peer something: a CONSTRUCT run over the present beliefs when a step filling the action is taken, with the step's parameters as `$tokens`, `$me` and `$now`, whose result is one or more DOCUMENTS. A graph is an IRI the result says is `execution:to` an agent; what the result says of that IRI and what hangs off it through blank nodes is the graph's content, but for its kind (an `rdf:type` the vocabulary puts beneath `orexis:Graph`), its period (`dcterms:temporal`) and the agents it is to, which are the rows about it. So a round, a bid or a claim is a graph named for itself, and a document is what a world's own files are. The agent believes what it said, and the container sends each document to each agent it is to through the transport; an action may carry several, and their documents are merged by graph." .
+
+execution:to a owl:ObjectProperty ; rdfs:range orexis:Agent ;
+    rdfs:label "to" ;
+    rdfs:comment "Whom a document an action says is for — written in the result of `execution:says`, read by the container to address it, and never part of the document itself." .
+
 execution:doneAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:range xsd:dateTime ;
     rdfs:label "done at" ;
     rdfs:comment "When the taker returned, taken or not. With `execution:takenAt` it is how long the taking took, in the one timeline; it is NOT when the step's change landed in the world, which is the world's to say through a reading and is held against the step's `execution:landsAt`, the prediction, by whoever holds the world to the step." .

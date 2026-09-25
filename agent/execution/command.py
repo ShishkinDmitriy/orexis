@@ -1,7 +1,7 @@
 """`command`: what taking a step sends, sized from the present.
 
 An action a device takes carries `execution:command`, a SELECT over the beliefs as they stand when
-the step is taken, with the step's parameters as `$tokens` and `$me`, answering `?actuator` and
+the step is taken, with the step's parameters as `$tokens`, `$me` and `$now`, answering `?actuator` and
 `?payload`. The search never sizes an act — a dose's effect is the side it reaches, not litres —
 so how much to pour, or how long to heat, is decided here, from the reading in hand, by the text
 the domain declares. The answer is what the container hands the transport; execution names no
@@ -15,7 +15,7 @@ import logging
 
 from agent import clock
 from agent.ontology import ACTION, KNOWN
-from agent.store import bind, graphs_of, rows
+from agent.store import bind, graphs_of, instant, rows
 
 log = logging.getLogger("command")
 
@@ -35,12 +35,12 @@ def command(store, said: dict, me: str) -> list[tuple[str, dict]]:
     found = rows(store, _COMMAND_Q, graphs_of(store, ACTION), action=action)
     if not found:
         return []
-    tokens = {"me": me}
+    now = clock.now()
+    tokens = {"me": me, "now": instant(now)}
     for param in (found[0].get("params") or "").split():
         local = param.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
         if local in said:
             tokens[local] = said[local]
-    now = clock.now()
     out = []
     for row in rows(store, bind(found[0]["text"], **tokens), graphs_of(store, *KNOWN, at=now, now=now)):
         try:

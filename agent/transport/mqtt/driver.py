@@ -44,6 +44,7 @@ from datetime import datetime
 from agent import clock
 from agent.ontology import PUBLIC, local_of
 from agent.sensing.received import received
+from agent.speech.heard import heard
 from agent.store import graphs_of, rows
 from agent.transport.transport import Transport
 
@@ -71,6 +72,15 @@ SELECT ?sensor ?pattern WHERE {
   ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?subject ; mqtt4ssn:observesTopic ?topic .
   ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
 ORDER BY ?sensor ?pattern"""
+
+
+#  WHERE AN AGENT IS TOLD THINGS: the topic it listens to itself, as a board listens for
+#  commands. Its own is what it subscribes to; a peer's is where a document to it is published.
+_LISTENS_Q = """
+SELECT ?pattern WHERE {
+  $agent mqtt4ssn:listensToTopic ?topic .
+  ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
+ORDER BY ?pattern"""
 
 
 def matches(pattern: str, topic: str) -> bool:
@@ -154,19 +164,36 @@ class Mqtt(Transport):
         if topic is not None:
             self.publish(topic, {"sense": True}, False)
 
+    def tell(self, store, to: str, document: bytes) -> bool:
+        """Publish a document on the topic the agent `to` listens to, by a pattern with no
+        wildcard; not retained, since what was said is said once."""
+        names = [p for p in (r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=to))
+                 if "+" not in p and "#" not in p]
+        if not names:
+            log.warning("%s listens on no topic name, so nothing said to it is sent", local_of(to))
+            return False
+        self.client.publish(names[0], document, retain=False)
+        log.info("told %s on %s", local_of(to), names[0])
+        return True
+
     def open(self, store) -> list[str]:
-        """Subscribe to every pattern the world implies for the agent's sensors; the patterns."""
-        patterns = sorted({r["pattern"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me)})
+        """Subscribe to every pattern the world implies for the agent's sensors, and to the topic
+        it listens to itself; the patterns."""
+        patterns = sorted({r["pattern"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me)}
+                          | {r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=self.me)})
         for pattern in patterns:
             self.client.subscribe(pattern)
         log.info("%s listening on %s", local_of(self.me), patterns or "nothing")
         return patterns
 
-    def handle(self, store, topic: str, payload: bytes, at: datetime, *, memo=None) -> list[tuple[str, str]]:
-        """Route one message to sensing: for every sensor of the agent's whose topic's filter
-        matches `topic`, the observation `received` writes of `payload` at `at`. The sensor
-        and the graph written, first sensor first, and none where the topic is nobody's of
-        the agent's."""
+    def handle(self, store, topic: str, payload: bytes, at: datetime, *, memo=None) -> list[tuple[str | None, str]]:
+        """Route one message: on the topic the agent listens to, a peer's document, believed by
+        speech's `heard`, each graph answered with no sensor; otherwise to sensing — for every
+        sensor of the agent's whose topic's filter matches `topic`, the observation `received`
+        writes of `payload` at `at`. The sensor and the graph written, first sensor first, and
+        none where the topic is nobody's of the agent's."""
+        if any(matches(r["pattern"], topic) for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=self.me)):
+            return [(None, graph) for graph in heard(store, self.me, payload)]
         written, seen = [], set()
         for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me):
             sensor = r["sensor"]
