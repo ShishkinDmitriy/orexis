@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent import clock
-from agent.ontology import DESIRE, STATE
+from agent.ontology import STATE, WANT
 from agent.runtime import MET, Runtime, boot
 from agent.store import graphs_of, rows
 
@@ -29,7 +29,7 @@ def _acts(runtime) -> int:
 
 def test_the_boot_says_what_each_graph_is():
     beliefs = boot(WORLD, "hanoi")
-    assert len(graphs_of(beliefs, DESIRE)) == 1 and len(graphs_of(beliefs, STATE)) == 1
+    assert len(graphs_of(beliefs, WANT)) == 1 and len(graphs_of(beliefs, STATE)) == 1
     assert _home(beliefs) == 0, "three disks on peg A"
     (scopes,) = rows(beliefs, "SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a planning:Scope } }", ())
     assert int(scopes["n"]) >= 1, "scope_actions ran at boot"
@@ -61,4 +61,5 @@ def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeyp
     Runtime(beliefs, "hanoi", budget=64).run()
     boot(WORLD, "hanoi", beliefs)                     # a restart on the same volume
     assert _home(beliefs) == 3, "the solved tower is the agent's belief, not the file's"
-    assert len(graphs_of(beliefs, STATE)) == 1 and len(graphs_of(beliefs, DESIRE)) == 1
+    assert len(graphs_of(beliefs, STATE)) == 1
+    assert graphs_of(beliefs, WANT) == [], "the want was reached and withdrawn, and a restart does not bring it back"

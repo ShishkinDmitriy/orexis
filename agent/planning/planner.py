@@ -122,6 +122,13 @@ UNSCOPED = "unscoped"
 #  the frontier nothing per iteration. Measured on the predecessor: hanoi 56 forks to 50, the
 #  courier's corner delivery 198 to 78; this tree's figures are in the runbook.
 EXHAUSTED = PLANNING + "Exhausted"
+#  THE WANTS MET IN THE PRESENT GROUND: a weighing of a want in the ground just laid, saying met.
+_MET_NOW_Q = """
+SELECT DISTINCT ?for WHERE {
+  GRAPH ?cat { ?x planning:weighs $ground ; planning:for ?for ; planning:met true .
+               ?cat a orexis:CatalogueGraph }
+  GRAPH ?any { ?for a orexis:Want } }"""
+
 _OUTCOMES_Q = "SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"
 
 _FRONTIER_Q = """
@@ -248,7 +255,13 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 #  courier's corner delivery did, at sixteen candidates a pass.
                 if not pair.get("from"):
                     weigh(store, pair["for"], pair["about"], memo=memo)  # every desire, every ground
-            withdraw(store, derive_wants(store, at) | walking, at)
+            #  A WANT MET IN THE PRESENT IS REACHED, and one-shot: it goes, from here and from the
+            #  beliefs, where a want the world authored lives — unless a plan is still walking it,
+            #  whose last step the executor has yet to see answered.
+            reached = {r["for"] for r in rows(store, _MET_NOW_Q, (), ground=present)} - walking
+            withdraw(store, derive_wants(store, at) | walking, at, reached=reached)
+            if reached:
+                withdraw(self.beliefs, None, at, reached=reached)
             memo.forget("shapes", "select")
             #  THE SHAPES ARE FORGOTTEN AFTER THE DERIVATION, because the derivation WRITES
             #  them: the shapes crossed to judge the desires hold no want, and a search that

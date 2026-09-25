@@ -147,4 +147,6 @@ because the 0.2.0 planner reads a shape off the graph of desires. The world's te
 The same day the puzzle moved again, since the tower poses Hanoi on the courier's grid and a
 vocabulary two worlds speak cannot belong to either: the words, the Move and what solving means
 are the [domain](/domain/domain.md) `domains/hanoi/`, and `world/hanoi/` imports it and keeps
-the mover, the disks, the desire and the tower as posed.
+the mover, the disks, the tower as posed and a WANT rather than a desire: a desire is
+universal and would ask for the tower at every instant for ever, while the puzzle is one-shot,
+so the mover stops once the want is reached.

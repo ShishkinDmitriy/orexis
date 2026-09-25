@@ -599,10 +599,13 @@ it is a record wearing a bullet.
   `domains/hanoi/` and `world/hanoi/` imports it beside its desires and state, `agent/runtime.py` reads the kernel's
   T-Box, every package's and the world's as graphs of their own and derives the closure into
   one more, and the world's tests live with the world, since the target state is no global tests.
-- **The runtime stops when every desire is met** — a pass plans and then walks what is due; no
-  want standing in any imaginarium and no intention walking is met, wants standing with nothing
-  walking is either a search the budget cut short, which `planning:Exhausted` says and the next
-  pass continues, or unreachable, and the process exits saying which. A pass at the same instant
+- **The runtime stops when no desire is held and every want is reached** — a desire is universal
+  and asks at every instant, so an agent holding one runs for as long as the process does; a
+  want is one-shot, and a pass that weighs one met in the present ground withdraws it from the
+  imaginarium and the beliefs whoever authored it, so Hanoi's mover, holding a want and no
+  desire, exits once the tower stands. Wants standing with nothing walking is either a search
+  the budget cut short, which `planning:Exhausted` says and the next pass continues, or
+  unreachable, which an agent holding no desire exits saying. A pass at the same instant
   as the last re-lays the present under its name and the search starts over, so a clock that
   does not tick is a test's mistake and not a runtime's.
 - **A document says which graph it is, and the file's name is for eyes** — a Turtle file is one
@@ -1242,10 +1245,13 @@ it is a record wearing a bullet.
   `domains/hanoi/` and `world/hanoi/` imports it beside its desires and state, `agent/runtime.py` reads the kernel's
   T-Box, every package's and the world's as graphs of their own and derives the closure into
   one more, and the world's tests live with the world, since the target state is no global tests.
-- **The runtime stops when every desire is met** — a pass plans and then walks what is due; no
-  want standing in any imaginarium and no intention walking is met, wants standing with nothing
-  walking is either a search the budget cut short, which `planning:Exhausted` says and the next
-  pass continues, or unreachable, and the process exits saying which. A pass at the same instant
+- **The runtime stops when no desire is held and every want is reached** — a desire is universal
+  and asks at every instant, so an agent holding one runs for as long as the process does; a
+  want is one-shot, and a pass that weighs one met in the present ground withdraws it from the
+  imaginarium and the beliefs whoever authored it, so Hanoi's mover, holding a want and no
+  desire, exits once the tower stands. Wants standing with nothing walking is either a search
+  the budget cut short, which `planning:Exhausted` says and the next pass continues, or
+  unreachable, which an agent holding no desire exits saying. A pass at the same instant
   as the last re-lays the present under its name and the search starts over, so a clock that
   does not tick is a test's mistake and not a runtime's.
 - **A document says which graph it is, and the file's name is for eyes** — a Turtle file is one

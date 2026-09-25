@@ -4,8 +4,8 @@ title: Runtime
 description: >-
   The process of Agent 0.2.0: one agent, one world, booted from the world's files into a store
   whose catalogue says what every graph is, then run pass by pass — the planner's pass, then the
-  executor walked until nothing is due — and stopped when every desire is met, which is when no
-  want stands and no intention walks. `agent/runtime.py`.
+  executor walked until nothing is due — and stopped when no desire is held, no want stands and
+  no intention walks; an agent holding a desire runs for good. `agent/runtime.py`.
 ---
 
 # Runtime
@@ -43,13 +43,16 @@ the agent owns are left as they are, since they are its beliefs now.
 wants derived, each searched, the plans handed to the [executor](/domain/executor.md) — and then
 the executor ticked and drained until nothing more happens at that instant, which for a fictive
 action is the whole plan and for a real one is up to the first landing the world has not
-answered. The loop ends when every desire is met: no want stands in any of the planner's
-imaginaria, which is where the derivation mints them, and no intention walks. A world whose one
-want is one-shot, [Hanoi](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md), solves
-its tower in seven moves and exits. Wants standing with nothing walking is one of two things,
-told apart by the plan's `planning:outcome`: a search the budget cut short, `planning:Exhausted`,
-which the next pass continues, or nothing this agent holds reaching the want, which is exited
-as unreachable rather than looped on.
+answered. A [desire](/domain/desire.md) is universal, so an agent holding one is never done: a
+pass with nothing to do waits for the world to move, and so does one whose wants nothing
+reaches, since the world may yet open a way. A want is one-shot: a pass that weighs one met in
+the present ground withdraws it, from the planner's imaginaria and from the beliefs, where a want
+a world authored lives. So an agent holding wants and no desire —
+[Hanoi](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md)'s mover, the courier —
+exits once every want is reached and no intention walks. Wants standing with nothing walking is
+one of two things, told apart by the plan's `planning:outcome`: a search the budget cut short,
+`planning:Exhausted`, which the next pass continues, or nothing this agent holds reaching the
+want, which such an agent exits as unreachable rather than looping on.
 
 **What is not wired yet.** Sensing, prediction, the deliberator and the transport. Hanoi has
 none of them, and they join with the first sensed world, where the runtime will also own the
