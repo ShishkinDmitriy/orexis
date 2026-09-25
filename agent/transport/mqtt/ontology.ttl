@@ -1,9 +1,11 @@
-@base <http://example.org/orexis/transport/mqtt> .
+@prefix orexis: <http://example.org/orexis#> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<> a owl:Ontology ;
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+<http://example.org/orexis/transport/mqtt> a owl:Ontology ;
     owl:imports <https://www.w3id.org/MQTT4SSN-Ontology> ;
     rdfs:label "Orexis MQTT transport, Agent 0.2.0" ;
     rdfs:comment """The MQTT transport of Agent 0.2.0 declares no word of its own: it speaks MQTT4SSN, the

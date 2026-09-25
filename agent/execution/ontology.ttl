@@ -8,6 +8,8 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix : <http://example.org/orexis/execution#> .
 
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
 <http://example.org/orexis/execution> a owl:Ontology ;
     rdfs:label "Orexis execution" ;
     rdfs:comment """The execution layer's own words (#529): the intentions — an intention, its steps and acts, and the window each is good in. What every layer and every package writes in stays `orexis:`; a term one layer reads and writes is that layer's, and its prefix says so.

@@ -3,6 +3,8 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
+<> a orexis:WorldGraph .    # this document is one graph, and this is what it is
+
 #  One agent, three disks. The mover acts for nothing, senses nothing and owes nobody — a pure
 #  mind with one move, which is what makes this world a test of the search and of nothing else.
 #  The pegs are the puzzle's, in ontology.ttl; where the disks rest is posed in state.ttl.

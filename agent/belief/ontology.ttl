@@ -1,11 +1,12 @@
-@base <http://example.org/orexis/belief> .
 @prefix : <http://example.org/orexis/belief#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<> a owl:Ontology ;
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+<http://example.org/orexis/belief> a owl:Ontology ;
     rdfs:label "Orexis belief" ;
     rdfs:comment """The belief package's own words: beliefs, and the beliefs derived on top of
     them. A graph is written as any belief is, and the rules the store holds conclude what

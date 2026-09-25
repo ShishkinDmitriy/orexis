@@ -13,16 +13,28 @@ description: >-
 The runtime is what a container runs: `python -m agent.runtime world/<name> <agent-id>`, one
 process told one identifier and given one world. It has two acts.
 
-**`boot` reads the world's files into the agent's store.** A 0.2.0 world is a directory of five
-files, each becoming the graph it is: `ontology.ttl`, the world's own words, loaded into one
-vocabulary graph after the kernel's T-Box (`agent/ontology.ttl`) and every package's, and closed
-over `rdfs:subClassOf` so that a kind is every kind it is beneath; `world.ttl`, the world graph,
-where the agent's identity is read off `orexis:localId`; `actions.ttl`, the actions; `desires.ttl`,
-the graph of desires with their met-tests and estimates, the agent's; and `state.ttl`, the first
-state graph, the agent's. Every graph is classified as it is created, the catalogue is closed and
+**`boot` reads documents, and each says what graph it is.** The kernel's T-Box
+(`agent/ontology.ttl`), every package's ontology and rule set, and every `.ttl` and `.trig` file
+in the world's directory, whatever it is called, are read the same way. A Turtle file is one graph
+named by its own IRI, and `<> a orexis:DesireGraph` in it says what that graph is — the Linked
+Data reading, where a document describes itself. A TriG file names its graphs and states their
+kinds in its default graph, as a nanopublication's head does. The rows about a graph go to the
+catalogue, where every reader asks, and not into the graph, where a rule would read them as a fact
+about the world. A document says what its graphs are and nothing about how they arrived or whose
+they are: the loader writes `orexis:Asserted`, and the owner where a graph is the agent's. A
+graph stating no kind, one claiming to be the catalogue and one stating an arrival or an owner are
+refused (`store.document`).
+
+The vocabulary goes first, since whether a graph is public is the vocabulary's to say: every
+document that says it is an ontology graph, each a graph of its own, then the closure over
+`rdfs:subClassOf` across all of them, written into one graph the runtime derives, so that a kind
+is every kind it is beneath. Then the world's public graphs, then the agent's identity, read off
+`orexis:localId` in the world graph, then the world's other graphs — the desires with their
+met-tests and estimates, the first state — owned by the agent. The catalogue is closed and
 `scope_actions` writes the scopes. A store that already holds a catalogue is a volume the agent
-has lived in: the public graphs are reloaded, since they are asserted from files and replaced at
-every boot, and the desires and the state are left as they are, since they are the agent's now.
+has lived in: every graph a document put in and nobody owns is forgotten and read again, with the
+closure, which is how an updated ontology or rule set reaches an agent that has lived; the graphs
+the agent owns are left as they are, since they are its beliefs now.
 
 **`run` is a loop of passes, and it stops.** A pass is the [planner](/domain/planner.md)'s — the
 wants derived, each searched, the plans handed to the [executor](/domain/executor.md) — and then

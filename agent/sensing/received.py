@@ -20,7 +20,7 @@ clock, `missed` says so on the container's tick, and nothing here keeps a timer.
 saying so goes before the observation is written, found by the row's content and never by name.
 
 **NOTHING ELSE.** No side is drawn here: which side of its subject's ranges the number lies on
-is a revision, concluded by the rules this layer registers and run by the deliberator when the
+is a revision, concluded by the rules this layer ships and run by the deliberator when the
 container says this graph changed. No prediction: that is the prediction package's, over the
 observation written here. No want, no wake, no verdict on what was predicted: a reading either
 lands where the stretch holding at its instant said it would or it does not, and that is the

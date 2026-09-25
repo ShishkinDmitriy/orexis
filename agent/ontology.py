@@ -82,21 +82,12 @@ HASH = OREXIS + "hash"
 
 GRAPH_PREFIX = _GRAPH
 
-ONTOLOGY_GRAPH = _GRAPH + "ontology"                    # the T-Box as the packages assert it
-ONTOLOGY_ENTAILED_GRAPH = _GRAPH + "ontology/entailed"  # what that vocabulary implies
-WORLD_GRAPH = _GRAPH + "world"                          # topology, as the sovereign ratified it
-WORLD_DERIVED_GRAPH = _GRAPH + "world/derived"          # what each package's rules.ru computed
-WORLD_ENTAILED_GRAPH = _GRAPH + "world/entailed"        # what the vocabulary implies of instances
-#  The world's current state as this agent holds it — what an effect rewrites and a plan forks.
-#  The IRI still says "sensed", for every volume that holds readings under it.
-STATE_GRAPH = _GRAPH + "sensed"
-#  What every ACTION makes true, loaded from the packages at genesis (#238). Public, because a
-#  search reads it on every pass; asserted from files, so it is replaced at each boot.
-ACTIONS_GRAPH = _GRAPH + "actions"
-#  The desire and want roots a world ratifies — write targets, projected by nothing now that
-#  nothing stands between a desire and a want.
-DESIRE_ASSERTED_GRAPH = _GRAPH + "desire/asserted"
-WANT_ASSERTED_GRAPH = _GRAPH + "want/asserted"
+#  WHAT THE VOCABULARY ENTAILS: every `rdfs:subClassOf` step the ontology graphs reach, written
+#  by the runtime at boot into one graph of its own, classified `orexis:OntologyGraph` and
+#  derived. Every other public graph is a document's, named by the document and found by its
+#  kind; this is the one no file holds.
+CLOSURE_GRAPH = _GRAPH + "ontology/closure"
+
 #  THE CATALOGUE: the one graph that says what every graph IS — class, owner, arrival, period —
 #  and describes itself, so no reader knows this name: `store.catalogue_of` finds the graph
 #  that says of itself `a orexis:CatalogueGraph`. Named here for the one writer that CREATES

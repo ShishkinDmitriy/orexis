@@ -1,9 +1,11 @@
-@base <http://example.org/orexis/prediction> .
+@prefix orexis: <http://example.org/orexis#> .
 @prefix : <http://example.org/orexis/prediction#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<> a owl:Ontology ;
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+<http://example.org/orexis/prediction> a owl:Ontology ;
     rdfs:label "Orexis prediction, Agent 0.2.0" ;
     rdfs:comment """What the prediction package of Agent 0.2.0 declares: one word. A prediction is the
     calculation of when a reading changes range — the domain's drifts run over the observation a

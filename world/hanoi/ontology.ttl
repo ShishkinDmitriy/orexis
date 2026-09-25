@@ -4,6 +4,8 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
 <http://example.org/orexis/hanoi> a owl:Ontology ;
     rdfs:label "Tower of Hanoi" ;
     rdfs:comment """The puzzle's words, owned by the world that poses it. Tower of Hanoi is the smallest world

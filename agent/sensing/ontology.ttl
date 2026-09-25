@@ -1,4 +1,3 @@
-@base <http://example.org/orexis/sensing> .
 @prefix : <http://example.org/orexis/sensing#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -6,7 +5,9 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<> a owl:Ontology ;
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+<http://example.org/orexis/sensing> a owl:Ontology ;
     rdfs:label "Orexis sensing, Agent 0.2.0" ;
     rdfs:comment """The sensing layer of Agent 0.2.0 speaks SOSA and SSN, and declares only what they
     lack. A sensor sosa:observes a property and sosa:isHostedBy what it is mounted in — the feature

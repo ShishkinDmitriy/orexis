@@ -3,7 +3,7 @@ the rules revise to its sides, predictions are the instants the reading changes 
 the same, and a second reading replaces the first and its predictions.
 
 Held to `worlds/a_pot_and_its_probe.trig`. The story crosses three packages — sensing's
-`received` and `register`, this package's `predict`, the belief package's `revise` — which a
+`received` and its rule set, this package's `predict`, the belief package's `revise` — which a
 TEST here may import and the code may not; the loop through the planner and the executor
 waits for the neighbours to read an observation's revisions.
 """
@@ -20,10 +20,10 @@ from agent.belief.revise import revise
 from agent.ontology import KNOWN
 from agent.prediction.predict import predict
 from agent.sensing.received import received
-from agent.sensing.register import register
-from agent.store import graphs_of, rows
+from agent.store import document, graphs_of, put_document, rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
+SENSING_RULES = Path(__file__).parents[2] / "sensing" / "rules.ttl"
 PROBE = "http://example.org/test#probe"
 
 _SIDES_Q = "SELECT ?p ?range WHERE { GRAPH $g { ?obs ?p ?range } }"
@@ -40,7 +40,7 @@ def _sides(store, graph):
 def pot(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
-    register(store)
+    put_document(store, document(SENSING_RULES))
     return store, PROBE
 
 
