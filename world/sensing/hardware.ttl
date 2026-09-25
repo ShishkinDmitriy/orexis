@@ -15,10 +15,12 @@
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix schema: <https://schema.org/> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
-@prefix water: <http://example.org/orexis/water#> .
+@prefix climate: <http://example.org/orexis/water#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix esp32: <http://example.org/orexis/esp32#> .
+
+<> a orexis:PublicGraph .    # this document is one graph, and this is what it is
 
 # The hardware this world runs on: what is physically here and how it is wired.
 #
@@ -64,13 +66,9 @@
 :esp32_fern a mc:Microcontroller , esp32:DevKitC ;
     orexis:localId "esp32_fern" ;
     mc:model "ESP32-WROOM-32D" ;
-    mqtt:onBus :local_bus ;
-    #  No mc:firmware stated since #175: the board's connecting DEVICE is typed governed:Node
-    #  in world.ttl — the two nodes are one physical board wearing two roles (#81) — and the
-    #  firmware name is entailed onto the device from its class. The generator reads it
-    #  through the hosting this board's deployment already produces. NOT typed here too: the
-    #  class entails a senseMode, and a mode on the bare microcontroller node would demand a
-    #  command channel that belongs to the device role, not this one.
+    #  What the 0.1.0 closure carried onto this board from its firmware class, stated: the firmware
+    #  it runs. Agent 0.2.0 closes subclasses and no restriction.
+    mc:firmware "moisture-sensor" ;
     ssn:inDeployment :fern_windowsill_deployment ;
     rdfs:comment "Deep-sleeps between readings, which is why its agent is sensing:Subscribing: the board keeps the interval and cannot be reached in between." .
 
@@ -97,9 +95,9 @@
     #  would refuse an outdoor envelope, from its own datasheet figures, at orexis-validate
     #  time instead of at the first frost.
     ssn-system:inCondition
-        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirTemperature ;
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:AirTemperature ;
           schema:minValue 15.0 ; schema:maxValue 32.0 ; schema:unitCode unit:DEG_C ] ,
-        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty water:AirHumidity ;
+        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:AirHumidity ;
           schema:minValue 25 ; schema:maxValue 70 ; schema:unitCode unit:PERCENT ] ;
     rdfs:comment "The windowsill bench: one fern, watched where it lives, on battery." .
 
@@ -132,6 +130,8 @@
 # Declared as a sensor in world.ttl; this says what KIND of instrument it is, what legs it has,
 # and what its numbers mean. GPIO 34 is deliberate and should not be moved casually: it is ADC1,
 # the only ADC that keeps working while WiFi is up.
+#  Its promise to announce on a crossing, stated: the 0.1.0 firmware class entailed it.
+:moisture_sensor_fern ssn:implements <http://example.org/orexis/sensing#AlarmProcedure> .
 :moisture_sensor_fern a probe:CapacitiveMoistureProbe ;
     mc:model "Capacitive Soil Moisture Sensor v2.0" ;
     mc:hasPin :probe_out , :probe_vcc , :probe_gnd ;

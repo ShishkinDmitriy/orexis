@@ -186,8 +186,9 @@ than guessing, because a fallback puts a misconfigured agent on the same topics 
 of documents that say which graph they are. On Agent 0.2.0: `hanoi` and `courier`, puzzles an agent
 solves and then stops; `greenhouse`, a heated bed the grower keeps comfortable by dosing and
 heating it, played by the simulator; and `terrace`, a planter bed outdoors watched through a
-FireBeetle 2 ESP32-E running `firmware/outdoor-sentinel`, a real board. `sensing` and `tower` are
-still 0.1.0's. [`domain/world`](knowledge/domain/world.md) says what a world is made of, and
+FireBeetle 2 ESP32-E running `firmware/outdoor-sentinel`, a real board; and `sensing`, a fern
+on a windowsill watched through a governed ESP32 that takes a cadence. `tower` is still 0.1.0's,
+waiting for planning on two levels. [`domain/world`](knowledge/domain/world.md) says what a world is made of, and
 [`domain/domain`](knowledge/domain/domain.md) where the vocabulary several worlds share lives.
 
 **There is nothing to seed and no store to provision.** A world is Turtle; each agent builds its

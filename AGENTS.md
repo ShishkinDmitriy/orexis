@@ -676,6 +676,9 @@ it is a record wearing a bullet.
   `soil_moisture` tagged plant, sensor and property at the reading's own time, so the terrace's
   panels drew across the switch unchanged; a store that refuses is said in the log and costs the
   agent nothing, and 0.2.0 reports none of its own health, so the health dashboard went with 0.1.0.
+- **A process is the AGENT with the id it was told, never whatever carries that id** — the sensing
+  world's fern and the agent acting for it are both `localId "fern"`, and the runtime's identity
+  read found two and refused to boot; it asks for an `orexis:Agent` now.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads

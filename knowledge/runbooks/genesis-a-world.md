@@ -66,7 +66,7 @@ Register each in the catalog inside `world.ttl`:
 
 **A world's individuals live in the world's own namespace, not in `orexis:`.** Declare it once at
 the top of every file in the world — `@prefix : <http://example.org/orexis/world/<name>#> .` —
-and write your agents, sensors, subjects and pins unprefixed: `:fern_agent`, `:local_bus`.
+and write your agents, sensors, subjects and pins unprefixed: `:fern_agent`, `:broker`.
 `orexis:` is the vocabulary's; a test refuses a world that puts an individual there. The same
 declaration goes in each `beliefs/<agent>.ttl`, whose subject is that same `:fern_agent`.
 

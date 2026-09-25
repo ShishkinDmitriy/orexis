@@ -77,7 +77,9 @@ MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
 
 DOCUMENTS = (".ttl", ".trig")
 
-_ME_Q = "SELECT ?me WHERE { ?me orexis:localId $id }"
+#  WHO THIS PROCESS IS: the AGENT with the id it was told. The id alone is not enough — the
+#  sensing world's fern and the agent acting for it share one — so the kind is asked too.
+_ME_Q = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }"
 _DESIRES_Q = "SELECT ?d WHERE { ?d a orexis:Desire } LIMIT 1"
 #  WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner — the kernel's,
 #  the packages' and the world's public graphs — and the closure derived from them.
