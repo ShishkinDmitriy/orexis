@@ -23,10 +23,10 @@ graph it is:
 | document | graph kind | holds |
 |---|---|---|
 | `ontology.ttl` | `orexis:OntologyGraph` | the classes and properties, the domain's invariant individuals (Hanoi's pegs), the parameters its actions take — and `owl:imports` of the other two |
-| `actions.ttl` | `orexis:PublicGraph` | its actions, each with what it takes, when it is available, what it costs and what it adds and retracts |
+| `actions.ttl` | `orexis:ActionGraph` | its actions, each with what it takes, when it is available, what it costs and what it adds and retracts |
 | `shapes.ttl` | `orexis:ShapesGraph` | what its words mean when wanted — a met-test shape a desire's `orexis:metWhen` points at, and the select its `orexis:estimates` points at |
 
-The measures sit with the actions because *never overstates* is a promise about the domain's own
+The planner reads actions from action graphs alone, not from every public graph. The measures sit with the actions because *never overstates* is a promise about the domain's own
 costs, which no world can keep. A shapes graph is its own kind, crossed by the
 [planner](/domain/planner.md) beside the graphs of desires, wants and records, so that a pass
 reads a met-test without reading every vocabulary.

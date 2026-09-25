@@ -4,7 +4,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<> a orexis:PublicGraph .    # this document is one graph, and this is what it is
+<> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
 #  THREE ACTIONS, one ground instance per legal filling the state admits. FICTIVE, because the
 #  grid is its own physics: no instrument answers a drive, so the executor writes what the step

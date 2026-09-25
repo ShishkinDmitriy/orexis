@@ -102,7 +102,7 @@
  
  GRAPH pursued:2026-01-01T120000p0000--open {
    :keeper orexis:holds :keeper.every_disk_home.pursued .
-@@ -183,279 +138,12 @@
+@@ -184,279 +139,12 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .

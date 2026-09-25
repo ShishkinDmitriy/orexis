@@ -623,6 +623,11 @@ it is a record wearing a bullet.
   loaded under, so the import names the graph it brings and the boot loads only what a world
   asks for; the shapes are `orexis:ShapesGraph`, their own kind, because crossing every ontology
   graph into the planner's view cost thirty times crossing the desires.
+- **A graph of actions is an `orexis:ActionGraph`, and the planner reads actions from those
+  alone** — the kind was 0.1.0's and the 0.2.0 census dropped it because nothing asked for it,
+  so Hanoi's actions were typed the bare `orexis:PublicGraph` and `admit`, `take` and
+  `footprint` read every public graph to find them; named for what it holds, and asked for by
+  the three reads, it is a term somebody reads.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1255,6 +1260,11 @@ it is a record wearing a bullet.
   loaded under, so the import names the graph it brings and the boot loads only what a world
   asks for; the shapes are `orexis:ShapesGraph`, their own kind, because crossing every ontology
   graph into the planner's view cost thirty times crossing the desires.
+- **A graph of actions is an `orexis:ActionGraph`, and the planner reads actions from those
+  alone** — the kind was 0.1.0's and the 0.2.0 census dropped it because nothing asked for it,
+  so Hanoi's actions were typed the bare `orexis:PublicGraph` and `admit`, `take` and
+  `footprint` read every public graph to find them; named for what it holds, and asked for by
+  the three reads, it is a term somebody reads.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads

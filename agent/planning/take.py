@@ -38,7 +38,7 @@ import logging
 from datetime import datetime, timedelta
 
 from agent.hash_named_graph import digest_of
-from agent.ontology import PUBLIC, local_of
+from agent.ontology import ACTION, PUBLIC, local_of
 from agent.store import (Raw, bind, bindings, catalogue_of, closed, construct, fork,
                                 graphs_of, instant, query, remember, render, rows, update)
 
@@ -108,7 +108,6 @@ SELECT ?from ?at ?spent ?action ?p ?v WHERE {
   BIND(COALESCE(?a, ?start) AS ?at) BIND(COALESCE(?s, 0.0) AS ?spent) }"""
 
 #  WHOM THE AGENT ACTS FOR, off the world graph — `$subject` in a rule text.
-_ACTS_FOR_Q = """SELECT ?for WHERE { $me orexis:actsFor ?for } LIMIT 1"""
 
 
 
@@ -239,7 +238,7 @@ def _rule(store, action: str, memo) -> dict | None:
     change it, yet it was fetched on every fork by three callers each.
     """
     def fetch():
-        found = bindings(query(store, _RULE_Q, graphs_of(store, PUBLIC), {"rule": action}))
+        found = bindings(query(store, _RULE_Q, graphs_of(store, ACTION), {"rule": action}))
         return found[0] if found else None
     return remember(memo, ("rule", action), fetch)
 
