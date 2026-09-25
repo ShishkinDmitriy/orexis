@@ -7,7 +7,7 @@ commands `mqtt4ssn:listensToTopic` another. A topic is named only through the `m
 that `mqtt4ssn:matchesTopic` it, each with its `mqtt4ssn:hasFilterPattern` — which is MQTT's own
 shape, since a topic name is a valid filter — so the agent subscribes by the pattern and publishes a
 command to a pattern with no wildcard in it. The agent is a `mqtt4ssn:Client` too. This package
-declares no word of its own; its ontology imports MQTT4SSN and says which of its terms the code reads.
+declares no word of its own; its ontology names MQTT4SSN's namespace and says which of its terms the code reads.
 
 **WHAT IS DERIVED, NOT AUTHORED.** Which topics the agent listens to follows from what it acts for:
 its sensors are those `sosa:isHostedBy` the subject it `orexis:actsFor`, or a sample of it, and their

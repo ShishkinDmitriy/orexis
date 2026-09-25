@@ -6,15 +6,15 @@
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
-<http://example.org/orexis/hanoi> a owl:Ontology ;
-    rdfs:label "Tower of Hanoi" ;
-    rdfs:comment """The puzzle's words, owned by the world that poses it. Tower of Hanoi is the smallest world
-    whose whole point is the search: a classical planning domain that is an ontology, one move and no
-    Python, and in Agent 0.2.0 it is a WORLD — this directory — rather than a package, because a
-    vocabulary specific to one world belongs with that world. The pegs are the puzzle's invariant and
-    are declared here; the disks are the world's and are declared in world.ttl; where each disk rests
-    is runtime state, posed in state.ttl and rewritten by the move. What solving means and how far it
-    is are the desire's, in desires.ttl, since the met-test is read from the graph of desires.""" .
+#  TOWER OF HANOI.
+#  The puzzle's words, owned by the world that poses it. Tower of Hanoi is the smallest world
+#  whose whole point is the search: a classical planning domain that is an ontology, one move and
+#  no Python, and in Agent 0.2.0 it is a WORLD — this directory — rather than a package, because a
+#  vocabulary specific to one world belongs with that world. The pegs are the puzzle's invariant
+#  and are declared here; the disks are the world's and are declared in world.ttl; where each disk
+#  rests is runtime state, posed in state.ttl and rewritten by the move. What solving means and
+#  how far it is are the desire's, in desires.ttl, since the met-test is read from the graph of
+#  desires.
 
 #################  The board  #################
 

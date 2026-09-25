@@ -610,7 +610,8 @@ it is a record wearing a bullet.
   graphs and says so in its default graph, and the loader moves those rows to the catalogue and
   adds the arrival and the owner, which a document may not state; the runtime knew five file
   names and one vocabulary graph before, and now every ontology and rule set is a graph of its
-  own that a lived-in volume reads again at boot, so updating one is editing its file.
+  own that a lived-in volume reads again at boot, so updating one is editing its file; and no
+  `owl:Ontology` header, since nothing read one — a package's prose about itself is a comment.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
@@ -1230,7 +1231,8 @@ it is a record wearing a bullet.
   graphs and says so in its default graph, and the loader moves those rows to the catalogue and
   adds the arrival and the owner, which a document may not state; the runtime knew five file
   names and one vocabulary graph before, and now every ontology and rule set is a graph of its
-  own that a lived-in volume reads again at boot, so updating one is editing its file.
+  own that a lived-in volume reads again at boot, so updating one is editing its file; and no
+  `owl:Ontology` header, since nothing read one — a package's prose about itself is a comment.
 - **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
   0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
   over what each declaration reaches; a mention in prose is not a read, and a term nothing reads

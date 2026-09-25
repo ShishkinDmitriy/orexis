@@ -6,29 +6,25 @@
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
-<http://example.org/orexis/belief> a owl:Ontology ;
-    rdfs:label "Orexis belief" ;
-    rdfs:comment """The belief package's own words: beliefs, and the beliefs derived on top of
-    them. A graph is written as any belief is, and the rules the store holds conclude what
-    follows from it — its revisions — into a graph of its own, derived from it. Any belief is
-    accepted, and revised; nothing refuses one and nothing stands between a writer and the
-    store. A validation and a proposal state to serve it were built here and struck: belief
-    revision keeps the new information, dropping testimony over a shape is a gate wearing
-    revision's name, and a graph with no catalogue row is already invisible to every reader, so
-    a writer that means its graph never to be seen without its revisions writes the graph,
-    revises it and classifies it last.
-
-    The rules are SHACL 1.2 Inference Rules (W3C FPWD, 2026-09-17), adopted as they stand and
-    nothing added: a graph in the role of a rules graph is typed sh:RulesGraph, a package's
-    rules are a sh:RuleSet with sh:hasRule and sh:includesRuleSet, a rule is a sh:SPARQLRule with
-    sh:construct, placed by sh:layer and sh:order, taken out by sh:deactivated, run once by
-    sh:runOnce; `revise` runs a rules graph's default rule set — every global rule in it, one
-    not linked to a shape by sh:rule — layer by layer to a fixpoint, rules of one order not
-    seeing each other's inferences within an iteration, and keeps the inferences in an
-    inference graph apart from the base graph, never deleting. The draft names that graph as a
-    role and not a class, so the one word here is the class of it. The engine is the store's
-    own, not SHACL's. Classes only: which graph is an agent's is genesis's to create and the
-    catalogue's to say.""" .
+#  OREXIS BELIEF.
+#  The belief package's own words: beliefs, and the beliefs derived on top of them. A graph is
+#  written as any belief is, and the rules the store holds conclude what follows from it — its
+#  revisions — into a graph of its own, derived from it. Any belief is accepted, and revised;
+#  nothing refuses one and nothing stands between a writer and the store. A validation and a
+#  proposal state to serve it were built here and struck: belief revision keeps the new
+#  information, dropping testimony over a shape is a gate wearing revision's name, and a graph
+#  with no catalogue row is already invisible to every reader, so a writer that means its graph
+#  never to be seen without its revisions writes the graph, revises it and classifies it last.
+#  The rules are SHACL 1.2 Inference Rules (W3C FPWD, 2026-09-17), adopted as they stand and
+#  nothing added: a graph in the role of a rules graph is typed sh:RulesGraph, a package's rules
+#  are a sh:RuleSet with sh:hasRule and sh:includesRuleSet, a rule is a sh:SPARQLRule with
+#  sh:construct, placed by sh:layer and sh:order, taken out by sh:deactivated, run once by
+#  sh:runOnce; `revise` runs a rules graph's default rule set — every global rule in it, one not
+#  linked to a shape by sh:rule — layer by layer to a fixpoint, rules of one order not seeing each
+#  other's inferences within an iteration, and keeps the inferences in an inference graph apart
+#  from the base graph, never deleting. The draft names that graph as a role and not a class, so
+#  the one word here is the class of it. The engine is the store's own, not SHACL's. Classes only:
+#  which graph is an agent's is genesis's to create and the catalogue's to say.
 
 :RevisionGraph a owl:Class ;
     rdfs:subClassOf orexis:Graph ;

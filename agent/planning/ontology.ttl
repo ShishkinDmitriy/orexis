@@ -11,11 +11,15 @@
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
-<http://example.org/orexis/planning> a owl:Ontology ;
-    rdfs:label "Orexis planning" ;
-    rdfs:comment """The top layer's own words (#529): what a pass FINDS — a plan, and the want it was found for — what the derivations read and write, and the scopes that partition follows. What every layer and every package writes in stays `orexis:`; a term one layer reads and writes is that layer's, and its prefix says so.
-
-FEWER WORDS THAN THE PREDECESSOR'S FIFTY-FOUR, and never counted here. What is gone is everything a pass RECORDED about itself for a reader — the candidates it weighed, what each world would reach, how long it took, what it chose and why — and the remembered plan hung on a want. Both were read by code this layer no longer has, and a term nobody reads is annotation: they come back with their readers and not before.""" .
+#  OREXIS PLANNING.
+#  The top layer's own words (#529): what a pass FINDS — a plan, and the want it was found for —
+#  what the derivations read and write, and the scopes that partition follows. What every layer
+#  and every package writes in stays `orexis:`; a term one layer reads and writes is that layer's,
+#  and its prefix says so.  FEWER WORDS THAN THE PREDECESSOR'S FIFTY-FOUR, and never counted here.
+#  What is gone is everything a pass RECORDED about itself for a reader — the candidates it
+#  weighed, what each world would reach, how long it took, what it chose and why — and the
+#  remembered plan hung on a want. Both were read by code this layer no longer has, and a term
+#  nobody reads is annotation: they come back with their readers and not before.
 
 
 

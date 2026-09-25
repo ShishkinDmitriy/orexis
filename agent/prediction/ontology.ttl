@@ -5,15 +5,14 @@
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
-<http://example.org/orexis/prediction> a owl:Ontology ;
-    rdfs:label "Orexis prediction, Agent 0.2.0" ;
-    rdfs:comment """What the prediction package of Agent 0.2.0 declares: one word. A prediction is the
-    calculation of when a reading changes range — the domain's drifts run over the observation a
-    sensor last made, at the rungs of a ladder that is this package's scan, every crossing of a
-    range bound bisected, and one orexis:PredictionGraph written per stretch between crossings,
-    holding a predicted sosa:Observation with its number. The observation is found by the kernel's
-    kind and SOSA's words, a range is SSN-System's, and which side a stretch is on is a revision
-    the sensing layer's rules conclude of it; nothing of sensing is imported or spoken here.""" .
+#  OREXIS PREDICTION, AGENT 0.2.0.
+#  What the prediction package of Agent 0.2.0 declares: one word. A prediction is the calculation
+#  of when a reading changes range — the domain's drifts run over the observation a sensor last
+#  made, at the rungs of a ladder that is this package's scan, every crossing of a range bound
+#  bisected, and one orexis:PredictionGraph written per stretch between crossings, holding a
+#  predicted sosa:Observation with its number. The observation is found by the kernel's kind and
+#  SOSA's words, a range is SSN-System's, and which side a stretch is on is a revision the sensing
+#  layer's rules conclude of it; nothing of sensing is imported or spoken here.
 
 :Drift a owl:Class ;
     rdfs:label "Drift" ;
