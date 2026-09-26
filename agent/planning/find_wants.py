@@ -7,7 +7,9 @@ import logging
 from datetime import datetime
 
 from agent import clock
-from agent.ontology import OREXIS, RECORD, WANT
+from agent.ontology import OREXIS, RECORD
+
+from .ontology import WANT
 from agent.store import bindings, query
 
 log = logging.getLogger("find_wants")
@@ -50,7 +52,7 @@ log = logging.getLogger("find_wants")
 PAGE = 100
 
 #  HOW THE DERIVATION'S WANTS ARRIVED, which `derived=True` narrows to. This was a graph CLASS
-#  of its own once, under `orexis:WantGraph`, whose whole content was that the derivation
+#  of its own once, under `planning:WantGraph`, whose whole content was that the derivation
 #  rather than a world put the rows there — the ARRIVAL axis wearing a content class, which the
 #  kernel vocabulary forbids in its own words. A want is in a graph of wants whoever wrote it,
 #  and which writer is `orexis:arrivedBy`.
@@ -78,7 +80,7 @@ def find_wants(store, at: datetime | None = None, *, uri: str = "", desire: str 
     cap: the caller gets a plausible answer and no way to know it was cut. Whoever meets the
     bound either pages or has a leak, and either way someone should see it.
     """
-    patterns = "?w a orexis:Want"
+    patterns = "?w a planning:Want"
     if desire:
         patterns += f" ; prov:wasDerivedFrom <{desire}>"
     where = f"BIND(<{uri}> AS ?w) {patterns} ." if uri else f"{patterns} ."
@@ -131,7 +133,7 @@ def _select(store, where: str, at: datetime | None, limit: int, offset: int,
             f'    FILTER(!BOUND(?owner) || ?owner = <{holder}>)'
             if holder else "")
     #  `?g a ?kind` IS THE JOIN, not only the filter, and removing it loses a want SILENTLY.
-    #  Finding the rows needs no class at all — `GRAPH ?g { ?w a orexis:Want }` with `?g` a
+    #  Finding the rows needs no class at all — `GRAPH ?g { ?w a planning:Want }` with `?g` a
     #  variable already searches every named graph, which is what this does. What the clause
     #  buys is that `?g` appears in the catalogue block's REQUIRED part: drop it and the only
     #  required pattern there is `?catalogue a orexis:CatalogueGraph`, so `?g` is bound solely

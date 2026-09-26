@@ -2,7 +2,7 @@
 that leave it.
 
 **ONE PER ACTION PER LEGAL FILLING**, and the filling is the point: an action's
-`orexis:precondition` is a SELECT projecting the parameters the action declares it takes, so its
+`planning:precondition` is a SELECT projecting the parameters the action declares it takes, so its
 ROWS are the candidates. It is not a filter the search applies to a list it already had — it is
 where the list comes from, and where `$tank = tank1` comes from.
 
@@ -42,7 +42,7 @@ POSSIBLE = GRAPH_PREFIX + "possible/"
 #  all, measured. An action declaring no parameter yields the empty string, which is a legal
 #  answer: it is filled with nothing and affords at most one row.
 _ACTIONS_Q = """SELECT ?action ?precondition (GROUP_CONCAT(DISTINCT STR(?takes); separator=" ") AS ?takes_) WHERE {
-  ?action a orexis:Action ; orexis:precondition ?precondition .
+  ?action a orexis:Action ; planning:precondition ?precondition .
   OPTIONAL { ?action orexis:takes ?takes }
 } GROUP BY ?action ?precondition"""
 

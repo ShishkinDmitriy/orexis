@@ -11,7 +11,7 @@
 #
 # The fern stands in the cold room, whose air reads BELOW. The warm room's air reads inside and
 # the fern is not in it, so the desire is violated through where the fern stands. The row names
-# the FERN — the focus node the shape targets — and says which way, `orexis:violationIs`.
+# the FERN — the focus node the shape targets — and which of its blocks refused.
 #
 # The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
@@ -33,7 +33,7 @@
 
 
 GRAPH :ontology {
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -50,14 +50,14 @@ GRAPH :world {
 }
 
 GRAPH :desires {
-  :keeper orexis:holds :keeper.warm_enough .
-  :keeper.warm_enough a orexis:Desire .
-  :keeper.warm_enough orexis:about water:AirTemperature .
-  :keeper.warm_enough orexis:metWhen :warm_where_it_stands .
+  :keeper planning:holds :keeper.warm_enough .
+  :keeper.warm_enough a planning:Desire .
+  :keeper.warm_enough planning:about water:AirTemperature .
+  :keeper.warm_enough planning:metWhen :warm_where_it_stands .
   :keeper.warm_enough rdfs:label "every plant stands where the air is inside the range it wants" .
   :warm_where_it_stands a sh:NodeShape .
-  :warm_where_it_stands sh:property [ orexis:about water:AirTemperature ; orexis:violationIs orexis:Above ; sh:message "the air where this plant stands reads above the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
-  :warm_where_it_stands sh:property [ orexis:about water:AirTemperature ; orexis:violationIs orexis:Below ; sh:message "the air where this plant stands reads below the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
+  :warm_where_it_stands sh:property [ planning:about water:AirTemperature ; sh:message "the air where this plant stands reads above the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
+  :warm_where_it_stands sh:property [ planning:about water:AirTemperature ; sh:message "the air where this plant stands reads below the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
   :warm_where_it_stands sh:targetClass water:Plant .
 }
 
@@ -91,8 +91,8 @@ GRAPH :scopes {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a orexis:DesireGraph .
   :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .

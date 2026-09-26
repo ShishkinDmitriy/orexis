@@ -77,7 +77,7 @@
 +
  
  GRAPH pursued:2026-01-01T120000p0000--open {
-   :keeper orexis:holds :keeper.every_disk_home.pursued .
+   :keeper planning:holds :keeper.every_disk_home.pursued .
 @@ -183,49 +156,24 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
@@ -351,5 +351,5 @@
 -  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_2 ] .
 -  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegC .
    pursued:2026-01-01T120000p0000--open a orexis:Graph .
-   pursued:2026-01-01T120000p0000--open a orexis:WantGraph .
+   pursued:2026-01-01T120000p0000--open a planning:WantGraph .
    pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .

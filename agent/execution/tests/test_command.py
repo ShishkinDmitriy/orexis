@@ -23,7 +23,7 @@ def store(monkeypatch):
     update(st, f"""INSERT DATA {{
   GRAPH <{T}actions> {{
     <{T}Dose> a orexis:Action ; orexis:takes <{T}valve> , <{T}reading> ;
-      orexis:implementation [ orexis:operation [ a execution:Command ; sh:select \"\"\"SELECT ?actuator ?payload WHERE {{
+      execution:implementation [ execution:operation [ a execution:Command ; sh:select \"\"\"SELECT ?actuator ?payload WHERE {{
           $reading sosa:hasSimpleResult ?value . $valve <{T}cap> ?cap .
           BIND($valve AS ?actuator)
           BIND(CONCAT('{{"dose_ml": ', STR(xsd:integer(ROUND((0.45 - ?value) * 2000.0))), '}}') AS ?payload) }}\"\"\" ] ] .

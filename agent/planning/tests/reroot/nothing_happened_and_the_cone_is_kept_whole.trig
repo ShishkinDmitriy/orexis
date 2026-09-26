@@ -29,9 +29,9 @@ GRAPH ground:2026-01-01T120100p0000 {
 
 GRAPH plan:keeper.every_disk_home.pursued {
   plan:keeper.every_disk_home.pursued a planning:Plan .
-  plan:keeper.every_disk_home.pursued planning:costs 3.0 .
   plan:keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
   plan:keeper.every_disk_home.pursued planning:outcome planning:Satisfied .
+  plan:keeper.every_disk_home.pursued planning:spent 3.0 .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB a execution:Step .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB execution:partOf plan:keeper.every_disk_home.pursued .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB execution:then plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC .
@@ -125,11 +125,11 @@ GRAPH possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA {
 }
 
 GRAPH pursued:2026-01-01T120000p0000--open {
-  :keeper orexis:holds :keeper.every_disk_home.pursued .
-  :keeper.every_disk_home.pursued a orexis:Want .
-  :keeper.every_disk_home.pursued orexis:estimates hanoi:disksAstray .
-  :keeper.every_disk_home.pursued orexis:metWhen :keeper.every_disk_home.pursued.met .
-  :keeper.every_disk_home.pursued orexis:state orexis:Recognized .
+  :keeper planning:holds :keeper.every_disk_home.pursued .
+  :keeper.every_disk_home.pursued a planning:Want .
+  :keeper.every_disk_home.pursued planning:estimates hanoi:disksAstray .
+  :keeper.every_disk_home.pursued planning:metWhen :keeper.every_disk_home.pursued.met .
+  :keeper.every_disk_home.pursued planning:state planning:Recognized .
   :keeper.every_disk_home.pursued prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   :keeper.every_disk_home.pursued prov:wasDerivedFrom :keeper.every_disk_home .
   :keeper.every_disk_home.pursued rdfs:label "pursued: every disk home on peg C" .
@@ -140,15 +140,17 @@ GRAPH pursued:2026-01-01T120000p0000--open {
 
 GRAPH :actions {
   hanoi:Move a orexis:Action .
-  hanoi:Move orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  hanoi:Move orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+  hanoi:Move orexis:takes hanoi:disk .
+  hanoi:Move orexis:takes hanoi:onto .
+  hanoi:Move planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  hanoi:Move planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       DELETE { $disk hanoi:on ?old  }
       WHERE  { $disk hanoi:on ?old  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       CONSTRUCT { $disk hanoi:on ?dest } WHERE {
           OPTIONAL { ?t (hanoi:on)+ $onto . FILTER NOT EXISTS { ?z hanoi:on ?t } }
           BIND(COALESCE(?t, $onto) AS ?dest)
       }""" ] ] .
-  hanoi:Move orexis:precondition """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+  hanoi:Move planning:precondition """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       SELECT ?disk ?onto WHERE {
           ?disk hanoi:on ?below .
           FILTER NOT EXISTS { ?x hanoi:on ?disk }
@@ -159,8 +161,6 @@ GRAPH :actions {
               ?s (hanoi:on)+ ?onto .
               ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
       }""" .
-  hanoi:Move orexis:takes hanoi:disk .
-  hanoi:Move orexis:takes hanoi:onto .
   hanoi:disk a orexis:Parameter .
   hanoi:onto a orexis:Parameter .
 }
@@ -171,8 +171,8 @@ GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a orexis:DesireGraph .
   :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .
@@ -460,17 +460,17 @@ GRAPH :catalogue {
   possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_2 ] .
   possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegC .
   pursued:2026-01-01T120000p0000--open a orexis:Graph .
-  pursued:2026-01-01T120000p0000--open a orexis:WantGraph .
+  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
   pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
   pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
 }
 
 GRAPH :desires {
-  :keeper orexis:holds :keeper.every_disk_home .
-  :keeper.every_disk_home a orexis:Desire .
-  :keeper.every_disk_home orexis:estimates hanoi:disksAstray .
-  :keeper.every_disk_home orexis:metWhen hanoi:solved .
+  :keeper planning:holds :keeper.every_disk_home .
+  :keeper.every_disk_home a planning:Desire .
+  :keeper.every_disk_home planning:estimates hanoi:disksAstray .
+  :keeper.every_disk_home planning:metWhen hanoi:solved .
   :keeper.every_disk_home rdfs:label "every disk home on peg C" .
   hanoi:disksAstray rdfs:label "disks not yet home" .
   hanoi:disksAstray sh:select """PREFIX hanoi: <http://example.org/orexis/hanoi#>
@@ -485,7 +485,7 @@ GRAPH :desires {
 }
 
 GRAPH :ontology {
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :scopes {

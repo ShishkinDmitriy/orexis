@@ -1,13 +1,13 @@
 ---
 type: Domain Concept
 title: Effect
-term: http://example.org/orexis#effect
+term: http://example.org/orexis/planning#effect
 description: >-
-  What taking an action would MAKE TRUE and false — `orexis:effect` on the action's own node, rules
-  in SHACL's shape grouped by `sh:order`: a construct for what a rule adds, an `orexis:update`
+  What taking an action would MAKE TRUE and false — `planning:effect` on the action's own node, rules
+  in SHACL's shape grouped by `sh:order`: a construct for what a rule adds, an `planning:update`
   for what one deletes, run on the possible world a step makes and never on beliefs. It is what turns a step
   row from "this is available" into something a planner can reason about, and it carries the
-  timing (`orexis:landsAfter`) so that
+  timing (`planning:landsAfter`) so that
   the number a planner predicts and the number a keeper later verifies cannot be two numbers.
   Most means have no effect, and that is an ordinary answer.
 ---
@@ -20,8 +20,8 @@ matching a desire to an action means asking what taking it would make true.
 
 So the effect sits on the [action](/domain/action.md) node itself, beside the precondition and
 the implementation, loaded into the action graph at genesis. Its shape is SHACL's rules': an
-`orexis:Effect` holding `sh:rule`s, each a `sh:SPARQLRule` whose `sh:construct` yields the triples
-applying it adds, or whose `orexis:update` is a `DELETE … WHERE` naming no graph, which the
+`planning:Effect` holding `sh:rule`s, each a `sh:SPARQLRule` whose `sh:construct` yields the triples
+applying it adds, or whose `planning:update` is a `DELETE … WHERE` naming no graph, which the
 search runs `WITH` the new world and `USING` every graph of it. The update is ours because
 SHACL's rules only conclude — rightly, over beliefs, which a [revision](/domain/revision.md) only
 enriches. An effect runs over a possible world, where taking something away is the point.
@@ -88,7 +88,7 @@ would buy water to find out how wet it is. A look comes first, as it always did.
 
 Two more terms hang off the rule, for the same single-source reason one axis over.
 
-`orexis:landsAfter` is a SELECT yielding `?seconds`: how long until the WORLD CHANGE completes. A
+`planning:landsAfter` is a SELECT yielding `?seconds`: how long until the WORLD CHANGE completes. A
 query and not a number, because the duration is a function of the act — a two-litre dose holds a
 valve open longer than a half-litre one. **Zero is a real answer** and the honest one for a look.
 
@@ -119,7 +119,7 @@ marked partial and defers, because the one it could not simulate may be the one 
 
 # How long it takes, asked by two readers
 
-`orexis:landsAfter` is asked with a size and asked without one, and the difference is who is
+`planning:landsAfter` is asked with a size and asked without one, and the difference is who is
 asking. The KEEPER asks when the step is taken, with the litres the actor sized from the reading
 in hand, and gets how long the valve will actually be open. The SEARCH asks about an act nobody
 has sized — `$litres` is bound at nothing since an effect declared the band and not the number —
@@ -172,7 +172,7 @@ future instant is what is held less what is owed to holders whose windows have o
 ([a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md)).
 
 **The crossing is the first prediction at which the root reads unmet.** No drift says WHEN any
-more: the instant a want with an `orexis:holdsAt` is derived at is the start of the earliest prediction
+more: the instant a want with an `planning:holdsAt` is derived at is the start of the earliest prediction
 whose world violates the root's own met-test, asked over the graphs holding at each window's start
 (#643). A prediction typed with the region band and the one below reads unmet, so the safe
 direction (#633) falls out of the bands, and the resolution is the package's ladder — a pot

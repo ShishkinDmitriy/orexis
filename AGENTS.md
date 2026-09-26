@@ -334,8 +334,8 @@ it is a record wearing a bullet.
   its name against a prefix its class declared, the planner and the projection named five,
   and asked which graphs could be renamed freely the answer was none — it is all of them now.
 - **A graph class is named for the rows it holds, and a retired spelling may return with a
-  different claim** — `RootsGraph` named the derivation's role for rows `orexis:Desire` already
-  typed, the asserted graph said desire and held wants, and `orexis:DesireGraph`, retired as a
+  different claim** — `RootsGraph` named the derivation's role for rows `planning:Desire` already
+  typed, the asserted graph said desire and held wants, and `planning:DesireGraph`, retired as a
   modality class, returns as a content one, because a second spelling for a graph of desires
   would be the synonym the dictionary refuses.
 - **A content class may not say how a graph arrived, and the cost of one that did was a second
@@ -407,14 +407,15 @@ it is a record wearing a bullet.
   pattern reaching a graph nobody copied returns an EMPTY RESULT, not an error.
 - **A function over the store is handed the engine and nothing else** — `derive_wants` and
   `scope_actions` take `pyoxigraph.Store` and no wrapper: which graphs they read they ask of
-  the catalogue in their own texts, whose a desire is they read off `orexis:holds`, and the
+  the catalogue in their own texts, whose a desire is they read off `planning:holds`, and the
   present is the clock's; the wrapper caching a view of the store cannot see a write it did
   not make, so asking it for the engine (`Store.engine`) is what makes it forget.
-- **A met-test asked by band names which way it broke, and tests no topology** — a reading is
-  the band it is in, so a desire says *it should be inside* once per way of failing and each
-  block declares its side, which the WANT carries (`orexis:violationIs`: below, above,
-  unmeasured, stale) because that is what decides the repair — a look answers the unmeasured
-  one and no act of any kind does. A test that walked the topology instead would be satisfiable by
+- **A met-test asked by band says it once per way of failing, and tests no topology** — a reading
+  is the band it is in, so a desire says *it should be inside* once per way of failing, and the
+  violation row names the block that refused. Which way that is was once a term the want carried
+  (`violationIs`: below, above, unmeasured, stale) on the claim that it decided the repair; in
+  0.2.0 no precondition, effect or line of planning read it, so it was retired as annotation —
+  to planning a side is the domain's, and a domain that needs it says so in its own words. A test that walked the topology instead would be satisfiable by
   moving the sample off the subject or by re-pointing what counts as ideal, which is the goal
   repaired by editing its own premises; a structural repair stays reachable because the
   closure walks back from what the want reads to whatever changes it.
@@ -442,7 +443,7 @@ it is a record wearing a bullet.
   decomposition never had a runtime form; the per-instance DESIRE level was drawn and
   struck, because the instance is the want's grain.
 - **A want states no time semantics of its own** — the KIND is its type, the INTERVAL is its
-  graph's period, the INSTANT is `orexis:holdsAt`, and the FAMILY a reader filtering on a binding
+  graph's period, the INSTANT is `planning:holdsAt`, and the FAMILY a reader filtering on a binding
   actually wanted is the graph's classification; the binding property said all four a fifth
   time, was computed from whether an instant was known, and the planner its own comment named
   as its reader never branched on it (#681).
@@ -450,9 +451,9 @@ it is a record wearing a bullet.
   it which KIND a node was, while the planner it named as its reader never branched on it; a node
   could be a desire by type and a want by binding at once, which three shipped worlds were, and
   neither collection could see them.
-- **`orexis:Want` is not a subclass of `orexis:Desire`** — the closure is materialised once at
+- **`planning:Want` is not a subclass of `planning:Desire`** — the closure is materialised once at
   genesis and a want is minted long after, so the entailment never reached one and every writer
-  hand-wrote both types; what the axis actually did was make `?d a orexis:Desire` match both
+  hand-wrote both types; what the axis actually did was make `?d a planning:Desire` match both
   kinds, so a collection of desires had to filter on a binding to find its own contents.
 - **Standing versus occasioned is the axis, and who wrote it is provenance** — three worlds
   ratify a WANT directly, authored and standing and handed to a search, so declared-versus-derived
@@ -626,7 +627,7 @@ it is a record wearing a bullet.
   the words, the actions and the shapes a desire points at, and a world says
   `owl:imports <../../domains/hanoi/ontology.ttl>`, which resolves to the `file:` IRI the graph is
   loaded under, so the import names the graph it brings and the boot loads only what a world
-  asks for; the shapes are `orexis:ShapesGraph`, their own kind, because crossing every ontology
+  asks for; the shapes are `planning:ShapesGraph`, their own kind, because crossing every ontology
   graph into the planner's view cost thirty times crossing the desires.
 - **A graph of actions is an `orexis:ActionGraph`, and the planner reads actions from those
   alone** — the kind was 0.1.0's and the 0.2.0 census dropped it because nothing asked for it,
@@ -750,7 +751,7 @@ it is a record wearing a bullet.
   replaced is replaced and a forecast swept is gone; laid on top, the old facts stood beside
   the new.
 - **The estimate rides on the weighing, and the frontier is A\* by reading it** — a want's
-  `orexis:estimates` select, the package's promise of what is left in the unit the search
+  `planning:estimates` select, the package's promise of what is left in the unit the search
   spends, is run where the world is weighed and written as `planning:remaining`, so ordering
   by spent plus remaining costs the frontier nothing per iteration and the first achiever
   bounds the sum; the courier's corner delivery went from exhausting a budget of 128 to
@@ -825,10 +826,18 @@ it is a record wearing a bullet.
 - **An action is a precondition, an effect and an implementation, and the effect is rules** — the
   precondition is the select whose rows are the steps a world admits, the effect is `sh:rule`s run
   on the possible world a step makes, grouped by `sh:order` as SHACL groups them, a delete being
-  an `orexis:update` the runner scopes `WITH` the new world, and the implementation is the
+  an `planning:update` the runner scopes `WITH` the new world, and the implementation is the
   operations that go out when the step is taken, grouped the same way; the never-delete rule is
   belief revision's, and an effect deletes because a possible world is where taking something
   away is the point. `orexis:retracts` survives on a prediction's catalogue row alone.
+
+- **A term belongs to the package that owns the concept, and the kernel keeps what packages meet
+  at** — ownership and not touch: desires, wants, the met-test's words and the searched half of an
+  action are `planning:`, an action's implementation and its operations `execution:`, while
+  `orexis:Action` and `orexis:takes`, where planning and execution meet, and
+  `orexis:PredictionGraph`, which planning reads by kind and must not import prediction to name,
+  stay the kernel's; a plan's scored total became `planning:spent`, since `planning:costs` now
+  names the action's cost select and one word is one concept.
 
 ## The rules the code lives by
 
@@ -1181,7 +1190,7 @@ failed if pyshacl ever entailed something the closure did not. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
 - **Name the graph CLASS, never an instance — and scope by MODALITY when you leave belief.**
-  `?d a orexis:DesireGraph` unions every instance of that class, exactly as `store.graphs_of(PUBLIC)`
+  `?d a planning:DesireGraph` unions every instance of that class, exactly as `store.graphs_of(PUBLIC)`
   does, so a scoped query keeps the property the rule below exists to protect. A MODALITY
   class is a legitimate thing to name; a graph instance never is. (This first carried a
   sharper warning — that a want and a fact would share their shape, so an unscoped query would
@@ -1228,7 +1237,7 @@ failed if pyshacl ever entailed something the closure did not. See
   imports one — a reader asks the class. Every one of those answers comes from ONE graph, the
   catalogue, which describes itself and is asked for from the store (`store.catalogue`) by a
   reader that must name it in a `GRAPH` clause — never spelled, since genesis alone creates it.
-  Every row carries every kind its class is beneath, so a text asks `?g a orexis:WantGraph`
+  Every row carries every kind its class is beneath, so a text asks `?g a planning:WantGraph`
   and walks no path.
 - **SPARQL prefixes.** Only what `store.NAMESPACES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in

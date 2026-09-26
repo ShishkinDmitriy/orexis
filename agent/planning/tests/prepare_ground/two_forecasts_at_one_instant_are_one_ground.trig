@@ -35,6 +35,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
 @prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
 
 GRAPH :ontology {
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .

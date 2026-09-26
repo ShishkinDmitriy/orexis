@@ -66,8 +66,8 @@ def test_a_fictive_action_is_walked_by_a_plain_executor(monkeypatch, snapshots):
     operation — and an executor that holds other steps to the world takes these itself."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     beliefs = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
-    beliefs.update("INSERT { GRAPH ?g { ?a <http://example.org/orexis#implementation> [ "
-                   "<http://example.org/orexis#operation> [ a <http://example.org/orexis/execution#Fictive> ] ] } } "
+    beliefs.update("INSERT { GRAPH ?g { ?a <http://example.org/orexis/execution#implementation> [ "
+                   "<http://example.org/orexis/execution#operation> [ a <http://example.org/orexis/execution#Fictive> ] ] } } "
                    "WHERE { GRAPH ?g { ?a a <http://example.org/orexis#Action> } }")
     x = Executor(beliefs, snapshots.AGENT)
     Planner(beliefs, snapshots.AGENT, executor=x).plan(snapshots.NOW)

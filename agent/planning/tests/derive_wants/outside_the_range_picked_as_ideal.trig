@@ -10,9 +10,9 @@
 #
 # ASKED BY BAND, AND NO NUMBER IS COMPARED HERE. A reading is the band it is in — below the
 # range, inside it, or above it, always those three — so the desire says one thing, that it
-# should be INSIDE, and says it once per way of failing. Each block declares which side it is,
-# `orexis:violationIs`, so the judgment can say which way. The desire says *it should be
-# inside*; the judgment says *but it was below*.
+# should be INSIDE, and says it once per way of failing. The row names the block that refused, by
+# its index; which way that is, is the domain's to read off the block, and nothing in planning
+# does.
 #
 # WHICH PART IS BROKEN IS THE POINT, and it is the blocks that say it. A met-test written as one
 # pattern — this plant has this sample, which has this property, which is classified thus —
@@ -48,7 +48,7 @@
 # in, and blooming is what is picked for this period. The air's humidity is inside and says
 # nothing, so the case shows a silent property beside the two in trouble.
 #
-# Judging names the watched property that failed and nothing coarser: `orexis:about sh:this`,
+# Judging names the watched property that failed and nothing coarser: `planning:about sh:this`,
 # so each row is about the very node in trouble. Two nodes, two rows — and two wants under one
 # desire, each about one watched property (derive_wants/).
 #
@@ -80,7 +80,7 @@
 
 
 GRAPH :ontology {
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -121,13 +121,13 @@ GRAPH :world {
 
 GRAPH :desires {
   :inside_the_picked_range a sh:NodeShape .
-  :inside_the_picked_range sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Above ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
-  :inside_the_picked_range sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Below ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
-  :inside_the_picked_range sh:property [ orexis:about sh:this ; orexis:violationIs orexis:Unmeasured ; sh:message "a watched property has never been read" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ] [ sh:class sensing:AboveRegion ] ) ] ] .
+  :inside_the_picked_range sh:property [ planning:about sh:this ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
+  :inside_the_picked_range sh:property [ planning:about sh:this ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
+  :inside_the_picked_range sh:property [ planning:about sh:this ; sh:message "a watched property has never been read" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ] [ sh:class sensing:AboveRegion ] ) ] ] .
   :inside_the_picked_range sh:targetClass sosa:ObservableProperty .
-  :keeper orexis:holds :keeper.ideal .
-  :keeper.ideal a orexis:Desire .
-  :keeper.ideal orexis:metWhen :inside_the_picked_range .
+  :keeper planning:holds :keeper.ideal .
+  :keeper.ideal a planning:Desire .
+  :keeper.ideal planning:metWhen :inside_the_picked_range .
   :keeper.ideal rdfs:label "every watched property of every sample around a plant reads inside the range picked as ideal" .
 }
 
@@ -165,8 +165,8 @@ GRAPH :scopes {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a orexis:DesireGraph .
   :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .

@@ -5,24 +5,24 @@
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
-<> a orexis:DesireGraph .    # this document is one graph, and this is what it is
+<> a planning:DesireGraph .    # this document is one graph, and this is what it is
 
 #  THE ROSE GROWER'S ONE DESIRE: its plot's soil is not read below a range the plot states. It holds
 #  no valve, so what repairs a dry plot is a claim on the supplier's water, presented.
 
-:rose_grower orexis:holds :the_rose_is_watered .
+:rose_grower planning:holds :the_rose_is_watered .
 
-:the_rose_is_watered a orexis:Desire ;
+:the_rose_is_watered a planning:Desire ;
     rdfs:label "the rose's soil is inside the ranges its plot states" ;
-    orexis:metWhen :rose_watered .
+    planning:metWhen :rose_watered .
 
 :rose_watered a sh:NodeShape ;
     sh:targetNode :rose_grower ;
     sh:property [
         sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-        orexis:violationIs orexis:Below ;
-        orexis:about climate:SoilMoisture ;
+        planning:about climate:SoilMoisture ;
         sh:qualifiedMaxCount 0 ;
         sh:qualifiedValueShape [
             sh:property [ sh:path sosa:observedProperty ; sh:hasValue climate:SoilMoisture ] ;

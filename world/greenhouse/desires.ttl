@@ -5,8 +5,9 @@
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
-<> a orexis:DesireGraph .    # this document is one graph, and this is what it is
+<> a planning:DesireGraph .    # this document is one graph, and this is what it is
 
 #  THE DESIRE THIS WORLD EXISTS FOR, about TWO properties: the bed is comfortable when neither its
 #  soil nor its air is read below a range the bed states. A desire and not a want, since it asks at
@@ -15,18 +16,17 @@
 #  same concept. Each property shape says which property and which way it broke, so the want
 #  minted from a dry bed is about the soil and a cold one about the air.
 
-:grower orexis:holds :the_bed_is_comfortable .
+:grower planning:holds :the_bed_is_comfortable .
 
-:the_bed_is_comfortable a orexis:Desire ;
+:the_bed_is_comfortable a planning:Desire ;
     rdfs:label "the bed is comfortable — soil and air both inside the ranges the bed states" ;
-    orexis:metWhen :comfortable .
+    planning:metWhen :comfortable .
 
 :comfortable a sh:NodeShape ;
     sh:targetNode :grower ;
     sh:property [
         sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-        orexis:violationIs orexis:Below ;
-        orexis:about climate:SoilMoisture ;
+        planning:about climate:SoilMoisture ;
         sh:qualifiedMaxCount 0 ;
         sh:qualifiedValueShape [
             sh:property [ sh:path sosa:observedProperty ; sh:hasValue climate:SoilMoisture ] ;
@@ -34,8 +34,7 @@
         sh:message "the bed's soil is below a range the bed states" ] ;
     sh:property [
         sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-        orexis:violationIs orexis:Below ;
-        orexis:about climate:AirTemperature ;
+        planning:about climate:AirTemperature ;
         sh:qualifiedMaxCount 0 ;
         sh:qualifiedValueShape [
             sh:property [ sh:path sosa:observedProperty ; sh:hasValue climate:AirTemperature ] ;

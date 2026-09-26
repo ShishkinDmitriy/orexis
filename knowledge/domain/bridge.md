@@ -16,14 +16,14 @@ and an [action](/domain/action.md) nobody takes at its own level — hanoi's Mov
 promise the level beneath keeps. The bridge is what makes the promise sayable below:
 `orexis:refines` the action; `sh:construct` translates its predicted facts, bound as `$via`
 and `$about` from the [step](/domain/step.md) with the world at `$state`, into the lower
-vocabulary's facts (a disk on a peg becomes the disk at the peg's cell); `orexis:estimates`
+vocabulary's facts (a disk on a peg becomes the disk at the peg's cell); `planning:estimates`
 names the lower package's estimate for the want those facts make, a template over the same
 tokens, bound once into a node of the promise's own.
 
 # How a promise is kept
 
 When the keeper reaches a step of a taker-less action, it asks for the action's bridge, runs
-the translation, and writes the result as an `orexis:Desire` this agent holds — in its
+the translation, and writes the result as an `planning:Desire` this agent holds — in its
 promises graph, `progression:promisedBy` the step, projected into the desire modality — so the
 ordinary path lifts it, plans it over the actions that ARE taken, and walks the plan. The
 step itself waits on the same translated fact as its completion. When the fact arrives the

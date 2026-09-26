@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -56,4 +56,34 @@
+@@ -57,4 +57,34 @@
    :sensed orexis:beliefsOf :keeper .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .

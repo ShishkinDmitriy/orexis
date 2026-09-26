@@ -4,7 +4,7 @@ A want is authored as a SHACL shape (a-desire-is-a-shape): positive, universal, 
 the met world. The search judges every candidate world, and a shape goes through the judge,
 whose reader has a fixed floor of tens of milliseconds per call — where a select on the
 store's own engine costs about a millisecond. That gap is why the two puzzle worlds wrote
-their goals as `orexis:unmetWhen` patterns by hand, and why those patterns read as a double
+their goals as `planning:unmetWhen` patterns by hand, and why those patterns read as a double
 negative: rows are existential, the want is universal, so "every parcel delivered" had to be
 said as "some parcel astray".
 
@@ -42,7 +42,7 @@ import rdflib
 from rdflib import RDF, Literal, URIRef
 from rdflib.collection import Collection
 
-from .store import NAMESPACES, Raw, bind
+from agent.store import NAMESPACES, Raw, bind
 
 #  Longest namespace first, so a prefix whose namespace extends another's wins.
 _PREFIX_OF = dict(sorted(NAMESPACES.items(), key=lambda kv: -len(kv[1])))
@@ -52,10 +52,11 @@ _PREFIX_LINE = re.compile(r"PREFIX\s+([A-Za-z][\w.\-]*)?\s*:\s*<([^>]*)>", re.I)
 
 SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 OREXIS = rdflib.Namespace("http://example.org/orexis#")
+PLANNING = rdflib.Namespace("http://example.org/orexis/planning#")
 
 #  What a property shape and a node shape may carry in SHACL's OWN namespace beside a
 #  constraint this compiles. A predicate outside `sh:` is an annotation — a label, a
-#  provenance link, sensing's `ssn:forProperty`, the kernel's `orexis:violationIs` — and
+#  provenance link, sensing's `ssn:forProperty`, planning's `planning:about` — and
 #  constrains nothing; a `sh:` predicate this does not list is a constraint it does not know,
 #  and refuses.
 _PROPERTY_ANNOTATIONS = {SH.path, SH.message, SH.severity, SH.name, SH.description, SH.order,
@@ -142,7 +143,7 @@ def report_selects(shapes: rdflib.Graph, focus_node=None) -> dict:
 
 def entered_select(shapes: rdflib.Graph, shape) -> str:
     """The select whose rows are the focus nodes that CONFORM to `shape` — the negative twin
-    (#499). An aversion under `orexis:unmetWhen` is authored as the avoided state itself, so
+    (#499). An aversion under `planning:unmetWhen` is authored as the avoided state itself, so
     its want is unmet exactly where a focus node conforms; the two terms keep their polarity
     and the compiler reads either. Same fragment, same refusals, same parity."""
     return _Compiler(shapes).select(shape, entered=True)
@@ -189,9 +190,9 @@ class _Compiler:
         if not branches:
             return None
         #  `?_about` is unbound on a row whose constraint's block says nothing, and that is the
-        #  reader's signal to fall back to the desire's own `orexis:about`.
+        #  reader's signal to fall back to the desire's own `planning:about`.
         return (self.preamble()
-                + "SELECT DISTINCT ?this ?_constraint ?_offending ?_about ?_side WHERE { "
+                + "SELECT DISTINCT ?this ?_constraint ?_offending ?_about WHERE { "
                 + " UNION ".join(branches) + " }")
 
     def targeted(self, shape) -> bool:
@@ -208,13 +209,13 @@ class _Compiler:
             target = f"VALUES ?this {{ {self.term(focus_node)} }} " + target
         severity = self.g.value(shape, SH.severity) or SH.Violation
         branches = []
-        for k, (text, value, about, side) in enumerate(
+        for k, (text, value, about) in enumerate(
                 self.alternatives(shape, "?this", severity, SH.Violation)):
             #  Projected under UNDERSCORED names, reserved for the report — an authored body
             #  says `?shape`, and one that says `?_shape` is refused: a BIND onto a variable
             #  the branch already binds is a parse error the engine reports, never a quiet
             #  wrong row.
-            for projected in ("?_constraint", "?_offending", "?_about", "?_side"):
+            for projected in ("?_constraint", "?_offending", "?_about"):
                 if projected in text or projected in target:
                     raise Unsupported(f"{shape}: a select body binds {projected}, which the report projects")
             bound = f" BIND({value} AS ?_offending)" if value else ""
@@ -224,10 +225,6 @@ class _Compiler:
                 bound += " BIND(?this AS ?_about)"
             elif about is not None:
                 bound += f" BIND({self.term(about)} AS ?_about)"
-            #  WHICH WAY IT FAILED, where the block says: a desire asked by band says the same
-            #  thing once per side, and this is how the row knows which one refused.
-            if side is not None:
-                bound += f" BIND({self.term(side)} AS ?_side)"
             branches.append(f"{{ {target} {text} BIND({k} AS ?_constraint){bound} }}")
         return branches
 
@@ -275,14 +272,14 @@ class _Compiler:
 
     def alternatives(self, shape, focus: str, severity=None, only=None) -> list[tuple]:
         """Each way `focus` can violate `shape`, as (pattern, the offending value's variable
-        or None, what the constraint is ABOUT or None, which SIDE it is or None).
+        or None, what the constraint is ABOUT or None).
 
-        THE THIRD MEMBER is `orexis:about` stated on the property block — the one kernel word a
+        THE THIRD MEMBER is `planning:about` stated on the property block — the one kernel word a
         block may carry beside SHACL's own. A desire universal over several properties states it
         per block, and a violation row can then say WHICH property is in trouble, which is what
         lets a want be minted about that and not about everything the desire covers
         (one-function-mints-every-want). A block that states none yields None, and a reader falls
-        back to the desire's own `orexis:about`. With `only`, an alternative whose severity is not `only` is left out; a
+        back to the desire's own `planning:about`. With `only`, an alternative whose severity is not `only` is left out; a
         conformance check passes neither.
 
         WHOSE SEVERITY, measured against the judge (#548) rather than read off the
@@ -311,23 +308,22 @@ class _Compiler:
                 #  A SPARQL constraint may say what it is about, as a property block may — the
                 #  ledger's desire says each of its is about the debt itself, `sh:this`.
                 out.append((self.sparql_body(constraint, focus), None,
-                            self.g.value(constraint, OREXIS.about),
-                            self.g.value(constraint, OREXIS.violationIs)))
-            out.extend((t, v, None, None) for t, v in self.value_violations(shape, focus))
+                            self.g.value(constraint, PLANNING.about)))
+            out.extend((t, v, None) for t, v in self.value_violations(shape, focus))
             for negated in self.g.objects(shape, SH["not"]):
                 #  Violated exactly where the negated shape is CONFORMED to.
-                out.append((self.conforms(negated, focus), None, None, None))
+                out.append((self.conforms(negated, focus), None, None))
             for members in self.g.objects(shape, SH["or"]):
                 #  Violated where NO member is conformed to: every member violated.
                 out.append((" ".join(f"FILTER({self.violated(m, focus)})"
-                                     for m in Collection(self.g, members)), None, None, None))
+                                     for m in Collection(self.g, members)), None, None))
             for members in self.g.objects(shape, SH.xone):
                 shapes = list(Collection(self.g, members))
                 if len(shapes) != 2:
                     raise Unsupported(f"{shape}: sh:xone over {len(shapes)} shapes — only two")
                 a, b = (self.violated(m, focus) for m in shapes)
                 #  Violated where both or neither conform: exactly one is what xone means.
-                out.append((f"FILTER(({a} && {b}) || (!({a}) && !({b})))", None, None, None))
+                out.append((f"FILTER(({a} && {b}) || (!({a}) && !({b})))", None, None))
         return out
 
     def value_violations(self, shape, focus: str) -> list[tuple[str, str | None]]:
@@ -377,18 +373,12 @@ class _Compiler:
 
     def _about_each(self, block, alternatives) -> list[tuple]:
         """Every alternative of one property block, tagged with what the block says it is
-        about and WHICH SIDE it is — `orexis:about` and `orexis:violationIs` on the block, or
-        None. `orexis:about sh:this` means the focus node ITSELF: a desire universal over
+        about — `planning:about` on the block, or None. `planning:about sh:this` means the focus node ITSELF: a desire universal over
         instances — every debt of mine — says each constraint is about the instance it failed
         on, and the row carries that instance.
-
-        THE SIDE is what a desire asked BY BAND already states and no reader could reach. A
-        region want says the same thing twice, once per side — no reading of this property is a
-        `sensing:BelowRegion` one, and none is an `AboveRegion` one — so the desire says *it
-        should be inside* and each block says which way it can fail. Carried to the row, the
-        judgment says *but it was below*, where before it said only which block, by index."""
-        about, side = self.g.value(block, OREXIS.about), self.g.value(block, OREXIS.violationIs)
-        return [(text, value, about, side) for text, value in alternatives]
+"""
+        about = self.g.value(block, PLANNING.about)
+        return [(text, value, about) for text, value in alternatives]
 
     def property_violations(self, prop, focus: str) -> list[tuple[str, str | None]]:
         path = self.path(self.g.value(prop, SH.path))

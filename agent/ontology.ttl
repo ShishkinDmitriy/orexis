@@ -19,6 +19,8 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix execution: <http://example.org/orexis/execution#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -27,7 +29,7 @@
 orexis:Action
     a owl:Class ;
     rdfs:label "Action" ;
-    rdfs:comment "One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:precondition` is a SELECT whose rows are the steps a world admits; `orexis:effect` is what taking one makes true and false, as rules; `orexis:implementation` is what goes out when one is taken, as operations; `orexis:costs` and `orexis:landsAfter` sit beside them. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing." ;
+    rdfs:comment "One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `planning:precondition` is a SELECT whose rows are the steps a world admits; `planning:effect` is what taking one makes true and false, as rules; `execution:implementation` is what goes out when one is taken, as operations; `planning:costs` and `planning:landsAfter` sit beside them. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing." ;
     <http://example.org/orexis/assembly#signature> "(act, judgment, intention) -> bool" .
 
 orexis:Agent
@@ -53,21 +55,6 @@ orexis:CatalogueGraph
     rdfs:label "Catalogue graph" ;
     rdfs:comment "THE ONE GRAPH THAT SAYS WHAT EVERY GRAPH IS, ITSELF INCLUDED (one-catalogue-describes-every-graph-and-itself): its class, whose it is (`orexis:beliefsOf`), how it arrived (`orexis:arrivedBy`), when it holds (`dcterms:temporal`, a `dcterms:PeriodOfTime` either end open) and, for a public graph, the PROV-O account of the load that made it. Written by whoever creates a graph, in the same update as the graph; the vocabulary's own instances below are transcribed into it on every start. It describes ITSELF, which is what lets a store find it without knowing its name — `Store.catalogue` asks every graph for the one that says of itself it is this — so no reader names it, and the three graphs it replaced (the classification, the periods, the provenance) were the bootstrap root's names. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merged into the default graph they would answer open patterns that mean something else — `?device a ?class` would return graphs — and a period is a fact that moves, which in every possible world would move the invariant signature and kill a kept cone. The door reads it and hands a rule a dataset; the rule learns nothing of it." .
 
-orexis:Desire
-    a owl:Class ;
-    rdfs:label "Desire" ;
-    rdfs:comment """One thing an agent stands for, for its whole life: a node carrying the met-test (orexis:metWhen, a SHACL shape, unchanged in content from when the desire WAS that shape) and a label a dashboard or the ask channel can print. It holds at every instant, it is NEVER handed to a search, and what is pursued is an orexis:Want.
-
-IT STATES NO TIME SEMANTICS, and neither does a want. A desire holds always, which its type says; a want holds over its graph's period, which the period says; a want that must hold AT an instant carries orexis:holdsAt, which is the one thing a period cannot say. There was a binding property carrying all of that beside them, and every reader of it was asking which KIND or which FAMILY a node was (a-kind-is-a-type-not-a-binding, #681).
-
-What the node does NOT carry is a measure of how badly it is unmet, and nothing else does either: a capability answered that through the choir, of whichever world was being judged, and a want is judged by its met-test now — see a-want-is-judged-by-its-met-test-and-nothing-else.""" .
-
-orexis:DesireGraph
-    a owl:Class ;
-    rdfs:subClassOf orexis:Graph ;
-    rdfs:label "Desire graph" ;
-    rdfs:comment "A graph of `orexis:Desire` rows — named for what it HOLDS, as every graph class is since a-graph-class-is-named-for-what-it-holds, and NOT the modality class of the same spelling that #312 retired (a-store-is-a-modality): a modality is a store now, and this says only which kind of row a graph carries. The roots graph is one, `roots/<agent>` for eyes: ONE agent's desires, every `orexis:Desire` it holds for its whole life: the region want per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source. The promises are another (`progression:PromisesGraph`), desires the bridge raised. Called `orexis:RootsGraph` until the class was named for the derivation's role instead of the rows, a synonym in the T-Box." .
-
 orexis:Graph
     a owl:Class ;
     rdfs:label "Named graph" .
@@ -78,23 +65,11 @@ orexis:OntologyGraph
     rdfs:label "Ontology graph" ;
     rdfs:comment "The T-Box: this module and every other, plus what RDFS entails of it." .
 
-orexis:PredictionGraph
-    a owl:Class ;
-    rdfs:subClassOf orexis:Graph ;
-    rdfs:label "Prediction graph" ;
-    rdfs:comment "A PREDICTION: a graph holding during the window it predicts for, carrying what a package expects a reading to be by then — the predicted reading keyed exactly as the present's is, typed with every band it may be in, a centre where the package has one — written by sensing from the drifts after every reading, one graph per horizon (the-drift-is-sensings-and-its-result-is-predictions, #642). A KIND OF ITS OWN to the doors: `query_at` hands a reader the predictions holding at the instant asked about beside public knowledge and the records holding then; the agent's own records never list them, no validation reads them, and no plan carries them into its imaginarium until the search reads predictions (#643). The first is the one the next reading is held to, its window the next reading's; the window closing with no reading is staleness. Typed in the classification when written, with a period in the periods table, as a round is." .
-
 orexis:ActionGraph
     a owl:Class ;
     rdfs:subClassOf orexis:PublicGraph ;
     rdfs:label "Action graph" ;
     rdfs:comment "A graph of `orexis:Action` rows — what an agent can do, each with what it takes, when it is available, what it costs and what it adds and retracts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/actions.ttl`), and the planner reads its actions from these graphs alone rather than from every public graph, the vocabularies and the world included. Public, since what can be done is everyone's to read. The 0.1.0 kind of this spelling was also a menu graph; 0.2.0 has no menu." .
-
-orexis:ShapesGraph
-    a owl:Class ;
-    rdfs:subClassOf orexis:PublicGraph ;
-    rdfs:label "Shapes graph" ;
-    rdfs:comment "What a desire's met-test and estimate point at: the SHACL shapes a domain declares for what its words mean when wanted — delivered, solved — and the selects that say how far a world still is, in the unit its actions cost. SHACL's own notion of a shapes graph, typed so that the planner crosses these beside the graphs of desires, wants and records, which is where it reads a met-test, without crossing every vocabulary: all nine ontology graphs cost thirty times the crossing, measured. Public, since what a word means is everyone's; a domain ships one, and a world that authors a shape of its own may put it here or beside its desire." .
 
 orexis:PublicGraph
     a owl:Class ;
@@ -108,38 +83,11 @@ orexis:RecordGraph
     rdfs:label "Record graph" ;
     rdfs:comment "ONE agent's own graph whose period says how long what it states is WORTH BELIEVING, not when it holds (#645): a record of a commitment — a debt, from its issue to the claim's expiry. A reader standing at a later instant is handed such a graph as it stands NOW, since the arrival a standing debt predicts is an arrival at every later instant though the debt's own window will have closed by then; a graph holding DURING its period — a round, a claim, a cooling row, a forecast, a prediction — is handed as of the instant asked about. The class is the door's to read; a package says which of its graphs are records by subclassing it." .
 
-orexis:Side
-    a owl:Class ;
-    rdfs:label "Side" ;
-    rdfs:comment "Which way a want is unmet. Three values and not two, because not having looked is its own answer rather than a point on the number line." .
-
 orexis:StateGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph , orexis:Graph ;
     rdfs:label "State graph" ;
     rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing writes observations into it, RECEIVED, since a reading is an instrument's word rather than this agent's). It was `orexis:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
-
-orexis:Want
-    a owl:Class ;
-    rdfs:label "Want" ;
-    rdfs:comment """What a desire comes to when a situation makes it bite: deduced FROM one — `prov:wasDerivedFrom` names which — bound to the instance the situation gives it, holding during a period of its own, and withdrawn when it is met. A desire stands and is never handed to a search; a want is the only thing that ever is. \"No unpaid debts\" is a desire, and a debt arriving deduces the want that closes it.
-
-NOT A SUBCLASS OF orexis:Desire, and it was one until the axis was measured. The entailment is materialised ONCE at genesis, and a want is minted long after — so nothing ever entailed the supertype for a runtime want and every writer hand-wrote `a orexis:Want , orexis:Desire` to compensate. The subclass bought nothing at runtime, cost a doubled type on every mint, and made `?d a orexis:Desire` match both kinds, which is why a collection of desires had to filter on a binding to find its own contents. Unlinked, each type means exactly itself and no query filters (a-kind-is-a-type-not-a-binding).
-
-HOW IT CAME TO BE IS NOT THE AXIS. Most wants are derived — `prov:wasDerivedFrom` names the desire — but a world may ratify one directly, and three do: hanoi's every disk home, the courier's every parcel delivered, the tower's. Those are wants, authored rather than deduced, and they are handed to a search like any other. Standing versus occasioned is the axis; who wrote it is provenance.
-
-NOT a second modality and not a second store. Both live in the desire modality; what differs is which graph class holds them — `orexis:DesireGraph` for the desires, holding at every instant, and `orexis:WantGraph` for one graph per want, each with its period (#618, #645). See knowledge/domain/desire.md.""" .
-
-orexis:WantGraph
-    a owl:Class ;
-    rdfs:subClassOf orexis:Graph ;
-    rdfs:label "Want graph" ;
-    rdfs:comment "A graph of `orexis:Want` rows — what a desire came to when a situation made it bite (orexis:Want). The derivation's are these, one per want it minted, each holding during its period and `orexis:arrivedBy orexis:Derived`; the world's asserted graph is one too where a world ratifies a standing want directly, and it is `orexis:Asserted`. Which of the two a reader means is the ARRIVAL axis and never a subclass of this one — `deliberation:PursuedGraph` was that subclass and is retired. Named for what it holds, like `orexis:DesireGraph` beside it, and no subclass of it: a want is not a desire (orexis:Want)." .
-
-orexis:WantState
-    a owl:Class ;
-    rdfs:label "Want state" ;
-    rdfs:comment "Where a want has got to. Seven values and no eighth: it has been recognised, it is being planned for, a plan was found, the plan is being carried out, it is finished, it failed, or nothing can reach it." .
 
 orexis:WorkingGraph
     a owl:Class ;
@@ -155,12 +103,6 @@ orexis:WorldGraph
 
 #################  Properties  #################
 
-orexis:about
-    a owl:ObjectProperty ;
-    rdfs:domain orexis:Desire ;
-    rdfs:label "about" ;
-    rdfs:comment "What a want is ABOUT — the one node an action query may join a lever to. Stated by whoever derived the want, and opaque to the kernel: sensing says a region want and a freshness want are about an observable property, and its own action queries walk from there; a want that is about nothing (a debt, a call) states none and is joined to its rows another way. The kernel carries it from the want to the row to the rule (`VALUES (?want ?about)` in a precondition, `$about` in an effect) and never reads it. It replaced the ledger's and the row's `ssn:forProperty`, which was the kernel naming a sensing notion (the-region-want-is-sensings-want)." .
-
 orexis:actsFor
     a owl:ObjectProperty ;
     rdfs:domain orexis:Agent ;
@@ -172,54 +114,6 @@ orexis:arrivedBy
     rdfs:domain orexis:Graph ;
     rdfs:range orexis:Arrival ;
     rdfs:label "arrived by" .
-
-orexis:precondition
-    a owl:DatatypeProperty ;
-    rdfs:domain orexis:Action ;
-    rdfs:range xsd:string ;
-    rdfs:label "precondition" ;
-    rdfs:comment "When an action may be taken, as a SELECT over the world binding one variable per parameter the action `orexis:takes`, named for the parameter's local part; `$me` is substituted by whoever asks. A row is a step the world admits: it exists only where every hop of the walk holds, which is why chaining needs no `requires` of its own. The facts a step's precondition read in the world it was planned from are the step's precondition too (knowledge/domain/precondition.md)." .
-
-orexis:effect
-    a owl:ObjectProperty ;
-    rdfs:domain orexis:Action ;
-    rdfs:range orexis:Effect ;
-    rdfs:label "effect" ;
-    rdfs:comment "What taking an action makes true and false of the world it is taken in: the one declaration a search plans on and the world is held to (an-effect-is-one-declaration)." .
-
-orexis:Effect
-    a owl:Class ;
-    rdfs:label "Effect" ;
-    rdfs:comment "An action's effect as rules, `sh:rule` to each, run by a search on the possible world a step makes and never on beliefs — which is why an effect may delete, where a revision only concludes. A rule is a `sh:SPARQLRule` with an `sh:construct`, whose result is ADDED, or with an `orexis:update`, a `DELETE … WHERE` naming no graph, which is run against the new world with the world's graphs as its dataset. Rules are grouped by `sh:order` as SHACL groups them: every rule of one order reads the same world, its deletions are applied before its additions, and a later order reads what the earlier ones made." .
-
-orexis:update
-    a owl:DatatypeProperty ;
-    rdfs:range xsd:string ;
-    rdfs:label "update" ;
-    rdfs:comment "On an effect's `sh:SPARQLRule`, where SHACL has only `sh:construct`: a `DELETE … WHERE` taking out of the world a step makes whatever stands in the place the step changes, which nobody can name in advance. It names no graph; the search runs it `WITH` the new world and `USING` every graph of it." .
-
-orexis:implementation
-    a owl:ObjectProperty ;
-    rdfs:domain orexis:Action ;
-    rdfs:range orexis:Implementation ;
-    rdfs:label "implementation" ;
-    rdfs:comment "How an action is carried out when a step filling it is taken — what actually goes out, sized from the present. The search never reads it: it plans on the effect, and the world is held to the effect whichever operations carried it out." .
-
-orexis:Implementation
-    a owl:Class ;
-    rdfs:label "Implementation" ;
-    rdfs:comment "An action's operations, `orexis:operation` to each, grouped by `sh:order` as an effect's rules are: every operation of one order is made from the same present, and a later order's from the present after what the earlier ones said was believed and revised." .
-
-orexis:operation
-    a owl:ObjectProperty ;
-    rdfs:domain orexis:Implementation ;
-    rdfs:range orexis:Operation ;
-    rdfs:label "operation" .
-
-orexis:Operation
-    a owl:Class ;
-    rdfs:label "Operation" ;
-    rdfs:comment "One thing taking a step does: a command to a device, a document to a peer, or writing the effect itself for a world with nothing to report it. The kinds are execution's (`execution:Command`, `execution:Saying`, `execution:Fictive`)." .
 
 orexis:beliefsOf
     a owl:ObjectProperty ;
@@ -235,29 +129,12 @@ orexis:carries
     rdfs:label "carries" ;
     rdfs:comment "The predicate a keyed node STATES — the value that makes two worlds different. Everything else on the node (an instant, who made it) is not where a plan stands: a look that predicts the value it already holds nets to nothing, which is what keeps looking from being a new world every time." .
 
-orexis:costs
-    a owl:DatatypeProperty ;
-    rdfs:domain orexis:Action ;
-    rdfs:range xsd:string ;
-    rdfs:label "costs" ;
-    rdfs:comment """A SELECT yielding `?cost`: what taking this act spends, in the wallet's unit — euros, the unit of account bids are already priced in. Declared by the package that owns the action, exactly as `orexis:landsAfter` declares its timing and for the same single-source reason: a search that invented a price would manufacture findings, and nothing upstream may pin a price on a specific act — the cost shapes the RANKING and nothing else (#466, control-the-derivative).
-
-ABSENCE IS FREE, and that is a statement rather than a gap — the reading an omitted effect and an omitted timing already get. A look's energy and a dose's spent litres are real and unpriced today; each is one declaration in its owning package's file the day a world cares.
-
-WHERE IT RANKS: under urgency, lexicographically. Cost speaks only between candidates urgency cannot separate — same urgency, cheaper wins — because wellbeing and money are different currencies and a scalar that mixed them could rank but never explain. A plan no better than standing still stays refused however cheap it is.""" .
-
 orexis:end
     a owl:DatatypeProperty ;
     rdfs:domain dcterms:PeriodOfTime ;
     rdfs:range xsd:dateTime ;
     rdfs:label "end" ;
     rdfs:comment "When the period closes, exclusive: an instant equal to this is outside. Absent means the period does not close on its own." .
-
-orexis:estimates
-    a owl:ObjectProperty ;
-    rdfs:domain orexis:Desire ;
-    rdfs:label "what is left to pay" ;
-    rdfs:comment "Points at a node carrying one `sh:select` that binds ?estimate — the remaining cost to meet this want, in the unit `orexis:costs` is stated in, evaluated against whichever world is being judged with $state naming that world's readings. Substituted and run exactly as an avoided pattern is: one declaration, the store's own engine, no Python anywhere. A want that declares none is simply not measurable this way, and the search treats every unmet world as equally far." .
 
 orexis:hash
     a owl:DatatypeProperty ;
@@ -266,19 +143,6 @@ orexis:hash
     rdfs:label "hash" ;
     rdfs:comment "The canonical digest of what a graph holds, on its catalogue row beside what it is — written by whoever lays or forks the graph (a ground, a possible world) and replaced when the graph is re-hashed, since a graph has one content. Two graphs with one hash hold the same facts whatever their names, which is how a search knows a fork repeated a world it had seen, and how the pass after identifies the present among the worlds the last one imagined: the ground just laid is the world whose hash it repeats, never the one it is named like (the-future-is-a-cone-and-the-present-is-identified-in-it)." .
 
-orexis:holds
-    a owl:ObjectProperty ;
-    rdfs:domain orexis:Agent ;
-    rdfs:label "holds" ;
-    rdfs:comment "What this agent is held to or holds to: an `orexis:Desire` (which carries its met-shape and its measure), or a bare shape like the survival envelope, whose violation is a warning rather than a want. Replaces `orexis:boundedBy`, which named only the first and named it as though bounds were a kind of thing rather than a kind of FORCE. No `rdfs:range` since the desire was reified: a held thing is a desire OR a shape, and a range naming one would quietly claim the other is not held." .
-
-orexis:holdsAt
-    a owl:DatatypeProperty ;
-    rdfs:domain orexis:Desire ;
-    rdfs:range xsd:dateTime ;
-    rdfs:label "holds at" ;
-    rdfs:comment "The instant an `orexis:At` want must hold at — a predicted crossing — the start of the earliest prediction at which the root reads unmet (#643). The keeper holds the plan's first step `progression:notBefore` this instant less the plan's own duration, so acting early is placed rather than immediate (#619)." .
-
 orexis:keyedBy
     a owl:ObjectProperty ;
     rdfs:domain owl:Class ;
@@ -286,41 +150,17 @@ orexis:keyedBy
     rdfs:label "keyed by" ;
     rdfs:comment "A predicate that IDENTIFIES a node of this class — the writer upserts one node per key. Declared by the package that writes such nodes (sensing: an observation is keyed by what it observes of what), and read by the planner's cycle detection, which canonicalises a keyed node to its class, its key values and what it carries — never its identity. The kernel used to spell sosa here by hand." .
 
-orexis:landsAfter
-    a owl:DatatypeProperty ;
-    rdfs:domain orexis:Action ;
-    rdfs:range xsd:string ;
-    rdfs:label "lands after" ;
-    rdfs:comment """A SELECT yielding `?seconds`: how long after the act until the WORLD CHANGE is complete. A query and not a number, because the duration is a function of the act rather than a property of the lever — a valve open for a two-litre dose is open longer than for a half-litre one, and `min(litres, cap) / calibration` is exactly the arithmetic the effect rule already performs. Its parameters are the effect's own, so one text answers for any act it could be asked about.
-
-ZERO is a real answer and the honest one for a look. Observing changes nothing about the world; what a sensing act delays is KNOWLEDGE, and that is the confirmation route's business rather than this one's. A rule that omitted this would be claiming immediacy by silence, so the shapes ask for it.
-
-WHAT IT DOES NOT INCLUDE, said here because the name could be read as promising it: SETTLING. This is delivery — when the valve stops — and not when the world has reached a steady state a reading would report. Three terms separate an act from its evidence: delivery (here, from the device's own calibration), absorption (the pot's, and stated in NO world today), and the next reading (the cadence the agent commanded plus its grace). Only the first and third are facts anyone has written down, and the sensor's cadence has been covering for the second by coincidence — a plant in trouble reads every thirty seconds, which is longer than a small pot takes to absorb a dose. A planner that wants to know when its work would become visible is wrong by exactly the missing term, and the honest first step is that somebody must say what these pots do, not that the code should pick a number.""" .
-
 orexis:localId
     a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:label "local id" ;
     rdfs:comment "The short name a resource is known by outside RDF. Stated here so nothing has to infer it from the shape of a URI. The ONE instance identifier a process is given is an agent's localId; everything else it discovers." .
 
-orexis:metWhen
-    a owl:ObjectProperty ;
-    rdfs:domain orexis:Desire ;
-    rdfs:range sh:NodeShape ;
-    rdfs:label "met when" ;
-    rdfs:comment "The met-test: a SHACL node shape whose conformance says nothing is wanted here right now. Boolean by nature — it governs the outcome LABEL and a duty's discharge, never how hard to try. Validated exactly as it was when the desire WAS this shape: unfocused, over the shapes the agent holds. Its negative twin is `orexis:unmetWhen`, and a want carries one of the two, never both (orexis:MetTestShape)." .
-
 orexis:resignAfterS
     a owl:DatatypeProperty ;
     rdfs:range xsd:integer ;
     rdfs:label "resign after seconds" ;
     rdfs:comment "How long an agent endures a dead bus before it resigns and lets its container bring it back fresh (#53). The fault this bounds is the one that cost two days: a session that ends and never returns, inside a container that looks perfectly healthy, on a bus whose broker never restarted. Ten minutes is far past any reconnect paho would ever achieve — a link that flaps recovers in seconds and never meets this — and far under the hours a quiet failure used to cost. Stated here rather than compiled in, like the compaction ratio above: it is what this society tolerates, not how the code happens to be written." .
-
-orexis:retracts
-    a owl:DatatypeProperty ;
-    rdfs:range xsd:string ;
-    rdfs:label "retracts" ;
-    rdfs:comment """On a PREDICTION's catalogue row: the `DELETE … WHERE` naming `GRAPH $state` that takes out of a ground what the prediction's graph replaces — the reading it predicts is no longer the reading that stood — when a boundary applies it. A prediction is an action nobody takes, and this is the half of its effect its graph cannot hold; an action states its own as an `orexis:update` rule of its `orexis:effect`.""" .
 
 orexis:start
     a owl:DatatypeProperty ;
@@ -329,35 +169,11 @@ orexis:start
     rdfs:label "start" ;
     rdfs:comment "When the period opens. Absent means always, on that side. Ours because DCMI defines no such property: its period is a class with a prose definition and, in the wild, whatever properties its user hangs on it." .
 
-orexis:state
-    a owl:ObjectProperty ;
-    rdfs:domain orexis:Want ;
-    rdfs:range orexis:WantState ;
-    rdfs:label "state" ;
-    rdfs:comment "Where this want has got to. On a WANT and never on a desire, because a desire has nowhere to get to — it stands for the agent's life and is either met or not at that instant. Exactly one value at a time: whoever moves the want to a stage removes the stage it was in. `orexis:Done` is TERMINAL — nothing moves a want out of it, so that the writers stay independent of each other and of the order they happen to run in; what clears it is the want being collected." .
-
 orexis:takes
     a owl:ObjectProperty ;
     rdfs:domain orexis:Action ;
     rdfs:label "takes" ;
     rdfs:comment "A parameter this action is filled with, by IRI. Its local part is the variable its precondition projects, the `$token` its rules read and the predicate a step writes it under. An action may take none — it is then filled with nothing and affords at most one row." .
-
-orexis:unmetWhen
-    a owl:ObjectProperty ;
-    rdfs:domain orexis:Desire ;
-    rdfs:label "unmet when" ;
-    rdfs:comment """The met-test's negative twin (#468): a want met by ABSENCE points here at the AVOIDED state — a node carrying one `sh:select`, the pattern whose rows mean the want is unmet. Ruled by the sovereign when the first build routed avoidance through `orexis:metWhen`: a met-test pointing at the bad state evaluates right and READS inverted — 'met when dry-and-hot' — and a term that reads wrong to every skimmer is the flag-that-eventually-disagrees, in the reader's head.
-
-The contract of the pattern: `$this` is the agent and `$state` names the graph the readings live in, both substituted exactly as a measure's parameters are — in the PATTERN, never the projection, where a substituted IRI is a parse error — and everything else is an unqualified pattern over public knowledge. Run by the STORE'S OWN ENGINE against whichever world is judged, live or a candidate node, so entered-or-held is one text on one engine; a pattern that fails to run reads as unmet, the loud direction. Its urgency is binary — met 0, unmet 1 — which the four-measures table calls sufficiency where no intermediate worlds exist, and the kernel judges it with no capability in the room: a want that is pure ratified data has no behaviour to grant, and where nothing could differ there is a function, not a capability.""" .
-
-orexis:violationIs
-    a owl:ObjectProperty ;
-    rdfs:domain sh:PropertyShape ;
-    rdfs:range orexis:Side ;
-    rdfs:label "violation is" ;
-    rdfs:comment "What it MEANS when this property shape is violated. On the shape, so the answer travels with the constraint that produced the result and cannot be recomputed differently by two readers. The alternative was for every consumer to compare the value against the bounds again — which is what the module, the query and the dashboard each did separately, and which is how a fern above its region came to be reported as one unmet want indistinguishable from a fern dying of thirst." .
-
-#################  Individuals  #################
 
 orexis:Asserted
     a orexis:Arrival ;
@@ -375,20 +191,10 @@ orexis:desires
     rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." ;
     <http://example.org/orexis/assembly#signature> "(now=…) -> list['Judgment']" .
 
-orexis:Done
-    a orexis:WantState ;
-    rdfs:label "done" ;
-    rdfs:comment "The plan finished, or a search found the want already reached in no steps. What is wanted has happened, and `forget_wants` collects it — the want is not deleted where it is finished, because deciding and collecting are two acts and one sweep is easier to reason about than a delete at every decision point." .
-
 orexis:Received
     a orexis:Arrival ;
     rdfs:label "received" ;
     rdfs:comment "Another party's word: an instrument's reading, a peer's claim. The only arrival whose trustworthiness is a question — an assertion is the sovereign's by definition and a derivation is checkable arithmetic, but this either carries a signature or does not, which is why the graph classification and the trust story are one story." .
-
-orexis:Recognized
-    a orexis:WantState ;
-    rdfs:label "recognized" ;
-    rdfs:comment "Minted. Its desire's met-test read unmet for this instance, or a world ratified it; nothing has been planned yet." .
 
 orexis:Recorded
     a orexis:Arrival ;
@@ -412,3 +218,17 @@ orexis:stepDone
     rdfs:label "step done" ;
     rdfs:comment "Progression handed a committed act to its actors and this is the answer: took, or not now. Told on the executing thread, to whoever above cares — a lower layer says this upward as an event, never as an import (#452)." ;
     <http://example.org/orexis/assembly#signature> "(act, intention, took) -> None" .
+
+
+orexis:PredictionGraph
+    a owl:Class ;
+    rdfs:subClassOf orexis:Graph ;
+    rdfs:label "Prediction graph" ;
+    rdfs:comment "A PREDICTION: a graph holding during the window it predicts for, carrying what a package expects a reading to be by then — the predicted reading keyed exactly as the present's is, typed with every band it may be in, a centre where the package has one — written by sensing from the drifts after every reading, one graph per horizon (the-drift-is-sensings-and-its-result-is-predictions, #642). A KIND OF ITS OWN to the doors: `query_at` hands a reader the predictions holding at the instant asked about beside public knowledge and the records holding then; the agent's own records never list them, no validation reads them, and no plan carries them into its imaginarium until the search reads predictions (#643). The first is the one the next reading is held to, its window the next reading's; the window closing with no reading is staleness. Typed in the classification when written, with a period in the periods table, as a round is." .
+
+
+orexis:retracts
+    a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "retracts" ;
+    rdfs:comment """On a PREDICTION's catalogue row: the `DELETE … WHERE` naming `GRAPH $state` that takes out of a ground what the prediction's graph replaces — the reading it predicts is no longer the reading that stood — when a boundary applies it. A prediction is an action nobody takes, and this is the half of its effect its graph cannot hold; an action states its own as an `planning:update` rule of its `planning:effect`.""" .

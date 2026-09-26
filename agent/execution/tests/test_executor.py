@@ -291,7 +291,7 @@ def test_a_step_of_a_fictive_action_is_taken_by_the_executor_itself():
     move = "http://example.org/test#Move"
     update(beliefs, f"""INSERT DATA {{
   GRAPH <http://example.org/test#actions> {{ <{move}> a orexis:Action ;
-      orexis:implementation [ orexis:operation [ a execution:Fictive ] ] }}
+      execution:implementation [ execution:operation [ a execution:Fictive ] ] }}
   GRAPH <http://example.org/test#catalogue> {{ <http://example.org/test#actions> a orexis:ActionGraph }} }}""")
     x = Executor(beliefs, AGENT, ox.Store())
     source = _predicting(1)

@@ -69,7 +69,7 @@ import pyoxigraph as ox
 import rdflib
 
 from agent import clock
-from agent.ontology import DESIRE, PUBLIC, RECORD, SHAPES, WANT
+from agent.ontology import PUBLIC, RECORD
 from agent.store import Memo, Raw, bind, bindings, catalogue_of, graphs_of, query, rdflib_view, remember, rows, update
 
 from . import footprint
@@ -79,7 +79,7 @@ from .extract_plan import extract_plan
 from .find_scopes import find_scopes
 from .find_wants import find_wants
 from .lay_ground import lay_ground
-from .ontology import PLAN_GRAPH, PLANNING
+from .ontology import DESIRE, PLAN_GRAPH, PLANNING, SHAPES, WANT
 from .prepare_ground import prepare_ground
 from .publish_plan import publish_plan
 from .reroot import reroot
@@ -127,7 +127,7 @@ _MET_NOW_Q = """
 SELECT DISTINCT ?for WHERE {
   GRAPH ?cat { ?x planning:weighs $ground ; planning:for ?for ; planning:met true .
                ?cat a orexis:CatalogueGraph }
-  GRAPH ?any { ?for a orexis:Want } }"""
+  GRAPH ?any { ?for a planning:Want } }"""
 
 _OUTCOMES_Q = "SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"
 
@@ -288,6 +288,12 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         every desire met."""
         at = at or clock.now()
         return sorted({w for store in self.imaginaria.values() for w in find_wants(store, at)})
+
+    def holds_a_desire(self) -> bool:
+        """Whether the agent holds any desire — what keeps it running when nothing is wanted now,
+        since a desire asks at every instant. The container's question and planning's word."""
+        return bool(rows(self.beliefs, "SELECT ?d WHERE { ?d a planning:Desire } LIMIT 1",
+                         graphs_of(self.beliefs, DESIRE)))
 
     def exhausted(self) -> bool:
         """Whether any search of the last pass stopped on its budget rather than on an answer,

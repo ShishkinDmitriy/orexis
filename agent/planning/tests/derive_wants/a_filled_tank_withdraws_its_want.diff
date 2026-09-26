@@ -5,10 +5,10 @@
  }
  
 -GRAPH pursued:keeper.in_range.pursued.tank1.level {
--  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
--  :keeper.in_range.pursued.tank1.level a orexis:Want .
--  :keeper.in_range.pursued.tank1.level orexis:about :level .
--  :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
+-  :keeper planning:holds :keeper.in_range.pursued.tank1.level .
+-  :keeper.in_range.pursued.tank1.level a planning:Want .
+-  :keeper.in_range.pursued.tank1.level planning:about :level .
+-  :keeper.in_range.pursued.tank1.level planning:metWhen :keeper.in_range.pursued.tank1.level.met .
 -  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
 -  :keeper.in_range.pursued.tank1.level rdfs:label "pursued: every tank in range" .
 -  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
@@ -24,7 +24,7 @@
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 -  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
--  pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
+-  pursued:keeper.in_range.pursued.tank1.level a planning:WantGraph .
 -  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
 -  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .

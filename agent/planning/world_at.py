@@ -21,7 +21,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from agent.ontology import FORESEEN, PREDICTION, STATE
+from agent.ontology import PREDICTION, STATE
+
+from .ontology import FORESEEN
 from agent.store import Raw, catalogue_of, graphs_of, remember, revisions_of, rows
 
 from .ontology import GROUND_GRAPH, POSSIBLE_GRAPH

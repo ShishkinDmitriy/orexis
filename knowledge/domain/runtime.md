@@ -16,7 +16,7 @@ process told one identifier and given one world. It has two acts.
 **`boot` reads documents, and each says what graph it is.** The kernel's T-Box
 (`agent/ontology.ttl`), every package's ontology and rule set, and every `.ttl` and `.trig` file
 in the world's directory, whatever it is called, are read the same way. A Turtle file is one graph
-named by its own IRI, and `<> a orexis:DesireGraph` in it says what that graph is — the Linked
+named by its own IRI, and `<> a planning:DesireGraph` in it says what that graph is — the Linked
 Data reading, where a document describes itself. A TriG file names its graphs and states their
 kinds in its default graph, as a nanopublication's head does. The rows about a graph go to the
 catalogue, where every reader asks, and not into the graph, where a rule would read them as a fact

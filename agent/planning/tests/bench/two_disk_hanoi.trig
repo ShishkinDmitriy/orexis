@@ -25,7 +25,7 @@
 @prefix plan: <http://example.org/orexis/graph/plan/> .
 
 GRAPH :ontology {
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -45,15 +45,15 @@ GRAPH :world {
 # has never heard the word.
 GRAPH :actions {
   hanoi:Move a orexis:Action .
-  hanoi:Move orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  hanoi:Move orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+  hanoi:Move planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  hanoi:Move planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       DELETE { $disk hanoi:on ?old  }
       WHERE  { $disk hanoi:on ?old  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       CONSTRUCT { $disk hanoi:on ?dest } WHERE {
           OPTIONAL { ?t (hanoi:on)+ $onto . FILTER NOT EXISTS { ?z hanoi:on ?t } }
           BIND(COALESCE(?t, $onto) AS ?dest)
       }""" ] ] .
-  hanoi:Move orexis:precondition """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+  hanoi:Move planning:precondition """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       SELECT ?disk ?onto WHERE {
           ?disk hanoi:on ?below .
           FILTER NOT EXISTS { ?x hanoi:on ?disk }
@@ -71,11 +71,11 @@ GRAPH :actions {
 }
 
 GRAPH :desires {
-  :keeper orexis:holds :keeper.every_disk_home .
-  :keeper.every_disk_home a orexis:Desire .
-  :keeper.every_disk_home orexis:metWhen hanoi:solved .
+  :keeper planning:holds :keeper.every_disk_home .
+  :keeper.every_disk_home a planning:Desire .
+  :keeper.every_disk_home planning:metWhen hanoi:solved .
   :keeper.every_disk_home rdfs:label "every disk home on peg C" .
-  :keeper.every_disk_home orexis:estimates hanoi:disksAstray .
+  :keeper.every_disk_home planning:estimates hanoi:disksAstray .
   hanoi:disksAstray rdfs:label "disks not yet home" .
   hanoi:disksAstray sh:select """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
@@ -105,7 +105,7 @@ GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a orexis:DesireGraph .
+  :desires a planning:DesireGraph .
   :desires a orexis:Graph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .

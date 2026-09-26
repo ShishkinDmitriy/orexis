@@ -22,7 +22,7 @@ sets that are all derived:
   predicates of any `sh:sparql` constraint or authored pattern, parsed;
 - **what an action writes** — the predicates of its effect's rules, construct templates and
   deletes alike;
-- **what an action reads** — the predicates of its `orexis:precondition`.
+- **what an action reads** — the predicates of its `planning:precondition`.
 
 A derivation rule joins as an edge, its INSERT writing and its WHERE reading, with no row of
 its own; a narrower property reaches a want reading the broader one, as the entailment would

@@ -7,6 +7,7 @@
 @prefix sh:   <http://www.w3.org/ns/shacl#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix : <http://example.org/orexis/execution#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -58,15 +59,15 @@ execution:takenAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:rang
     rdfs:label "taken at" ;
     rdfs:comment "When the executor handed the step to its taker — the record, against the step's `execution:notBefore`, which is the requirement." .
 
-execution:Command a owl:Class ; rdfs:subClassOf orexis:Operation ;
+execution:Command a owl:Class ; rdfs:subClassOf execution:Operation ;
     rdfs:label "Command" ;
     rdfs:comment "An operation sending a device a command: an `sh:select` run over the present beliefs when the step is taken, with the step's parameters as `$tokens`, `$me` and `$now`, answering `?actuator` and `?payload`, the JSON document the device is sent. How much to pour or how long to heat is sized here from the situation as it is, never by the search, and the container sends each answer through the transport that reaches the actuator." .
 
-execution:Saying a owl:Class ; rdfs:subClassOf orexis:Operation ;
+execution:Saying a owl:Class ; rdfs:subClassOf execution:Operation ;
     rdfs:label "Saying" ;
     rdfs:comment "An operation telling a peer something: an `sh:construct` run over the present beliefs when the step is taken, with the step's parameters as `$tokens`, `$me` and `$now`, whose result is one or more DOCUMENTS. A graph is an IRI the result says is `execution:to` an agent; what the result says of that IRI and what hangs off it through blank nodes is the graph's content, but for its kind (an `rdf:type` the vocabulary puts beneath `orexis:Graph`), its period (`dcterms:temporal`) and the agents it is to, which are the rows about it. The agent believes what it said, and the container sends each document to each agent it is to through the transport; several sayings of one order are merged by graph." .
 
-execution:Fictive a owl:Class ; rdfs:subClassOf orexis:Operation ;
+execution:Fictive a owl:Class ; rdfs:subClassOf execution:Operation ;
     rdfs:label "Fictive" ;
     rdfs:comment "An operation writing the step's own prediction into the agent's readings: the implementation of an action whose effect is its own physics, where no instrument reports what taking it did — a hanoi move, a courier's drive — so the present answers because nothing else could have. An executor built `fictive` takes every step so, the shorthand for a world that exists only in the store." .
 
@@ -161,3 +162,31 @@ execution:deadlineAt a owl:DatatypeProperty ; rdfs:domain execution:Intention ; 
 execution:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "patience seconds" ;
     rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second impulse to do the same thing is ABSORBED — that is the amortisation, and with a consulted deliberator it is the cost model. Past it, a new adoption supersedes the old, which is recorded as dropped with the reason. An OPINION, so it is each agent's own belief. Read outside execution by exactly one thing, which is why it is here and the rest of the watch is not: a want foreseen at an instant holds until that instant plus this." .
+
+#################  How an action is carried out — execution's  #################
+
+execution:implementation
+    a owl:ObjectProperty ;
+    rdfs:domain orexis:Action ;
+    rdfs:range execution:Implementation ;
+    rdfs:label "implementation" ;
+    rdfs:comment "How an action is carried out when a step filling it is taken — what actually goes out, sized from the present. The search never reads it: it plans on the effect, and the world is held to the effect whichever operations carried it out." .
+
+
+execution:Implementation
+    a owl:Class ;
+    rdfs:label "Implementation" ;
+    rdfs:comment "An action's operations, `execution:operation` to each, grouped by `sh:order` as an effect's rules are: every operation of one order is made from the same present, and a later order's from the present after what the earlier ones said was believed and revised." .
+
+
+execution:operation
+    a owl:ObjectProperty ;
+    rdfs:domain execution:Implementation ;
+    rdfs:range execution:Operation ;
+    rdfs:label "operation" .
+
+
+execution:Operation
+    a owl:Class ;
+    rdfs:label "Operation" ;
+    rdfs:comment "One thing taking a step does: a command to a device, a document to a peer, or writing the effect itself for a world with nothing to report it. The kinds are execution's (`execution:Command`, `execution:Saying`, `execution:Fictive`)." .

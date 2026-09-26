@@ -29,7 +29,7 @@
 @prefix plan: <http://example.org/orexis/graph/plan/> .
 
 GRAPH :ontology {
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -94,12 +94,12 @@ GRAPH :world {
 # out, not declared: |dx| + |dy| = 1 over the cells' own coordinates.
 GRAPH :actions {
   courier:Drive a orexis:Action .
-  courier:Drive orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Drive orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Drive planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  courier:Drive planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $van courier:at ?old  }
       WHERE  { $van courier:at ?old  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
       CONSTRUCT { $van courier:at $to } WHERE { }""" ] ] .
-  courier:Drive orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Drive planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?van ?to WHERE {
           ?van courier:at ?here .
           ?van a courier:Van .
@@ -110,12 +110,12 @@ GRAPH :actions {
   courier:Drive orexis:takes courier:to .
   courier:Drive orexis:takes courier:van .
   courier:Drop a orexis:Action .
-  courier:Drop orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Drop orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Drop planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  courier:Drop planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:carriedBy ?van  }
       WHERE  { $parcel courier:carriedBy ?van  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
       CONSTRUCT { $parcel courier:at $to } WHERE { }""" ] ] .
-  courier:Drop orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Drop planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?parcel ?to WHERE {
           ?parcel courier:carriedBy ?van . ?van courier:at ?to .
           ?parcel a courier:Parcel .
@@ -123,12 +123,12 @@ GRAPH :actions {
   courier:Drop orexis:takes courier:parcel .
   courier:Drop orexis:takes courier:to .
   courier:Pick a orexis:Action .
-  courier:Pick orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Pick orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Pick planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  courier:Pick planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:at ?cell  }
       WHERE  { $parcel courier:at ?cell  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
       CONSTRUCT { $parcel courier:carriedBy $van } WHERE { }""" ] ] .
-  courier:Pick orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Pick planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?parcel ?van WHERE {
           ?van courier:at ?cell . ?parcel courier:at ?cell .
           ?parcel a courier:Parcel .
@@ -145,10 +145,10 @@ GRAPH :actions {
 # that still is in drives — the van to the parcel and the parcel to its door, which never
 # overstates since every drive moves one cell.
 GRAPH :desires {
-  :keeper orexis:holds :keeper.every_parcel_delivered .
-  :keeper.every_parcel_delivered a orexis:Desire .
-  :keeper.every_parcel_delivered orexis:metWhen courier:delivered .
-  :keeper.every_parcel_delivered orexis:estimates courier:drivesOwed .
+  :keeper planning:holds :keeper.every_parcel_delivered .
+  :keeper.every_parcel_delivered a planning:Desire .
+  :keeper.every_parcel_delivered planning:metWhen courier:delivered .
+  :keeper.every_parcel_delivered planning:estimates courier:drivesOwed .
   :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
   courier:delivered a sh:NodeShape .
   courier:delivered sh:targetClass courier:Parcel .
@@ -198,7 +198,7 @@ GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a orexis:DesireGraph .
+  :desires a planning:DesireGraph .
   :desires a orexis:Graph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .

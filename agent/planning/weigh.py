@@ -26,10 +26,11 @@ from datetime import datetime
 import pyoxigraph as ox
 import rdflib
 
-from agent import violation
-from agent.ontology import DESIRE, OREXIS, RECORD, SHAPES, WANT, local_of
+from . import violation
+from agent.ontology import OREXIS, RECORD, local_of
 from agent.store import NAMESPACES, Raw, bind, catalogue_of, graphs_of, rdflib_view, remember, rows, update
 
+from .ontology import DESIRE, PLANNING, SHAPES, WANT
 from .world_at import world_at
 
 #  THE CATALOGUE IS BOUND, NOT FOUND, IN THE HOT READS: `GRAPH ?cat { ?cat a
@@ -41,8 +42,8 @@ from .world_at import world_at
 
 log = logging.getLogger("weigh")
 
-_MET_WHEN = rdflib.URIRef(OREXIS + "metWhen")
-_ESTIMATES = rdflib.URIRef(OREXIS + "estimates")
+_MET_WHEN = rdflib.URIRef(PLANNING + "metWhen")
+_ESTIMATES = rdflib.URIRef(PLANNING + "estimates")
 _DERIVED_FROM = rdflib.URIRef("http://www.w3.org/ns/prov#wasDerivedFrom")
 _SELECT = rdflib.URIRef("http://www.w3.org/ns/shacl#select")
 
@@ -63,7 +64,7 @@ ORDER BY ?seen LIMIT 1"""
 #  goes on the frontier.
 _HELD_Q = """
 SELECT ?holder ?want WHERE {
-  GRAPH ?g { ?holder orexis:holds $for . OPTIONAL { $for a orexis:Want . BIND(true AS ?want) } } }
+  GRAPH ?g { ?holder planning:holds $for . OPTIONAL { $for a planning:Want . BIND(true AS ?want) } } }
 LIMIT 1"""
 
 #  THE PRESENT: where the timeline begins — the earliest ground.
@@ -161,7 +162,7 @@ def _remaining(store, for_, world: str, held: dict, memo) -> str | None:
     """What the want's estimate reads in `world` — how far it still is, in the unit the search
     spends — or None where the want declares none or the select refuses to run.
 
-    THE DESIRE OWNS THE TERM AND THE PACKAGE OWNS THE MEASURE: `orexis:estimates` on the want,
+    THE DESIRE OWNS THE TERM AND THE PACKAGE OWNS THE MEASURE: `planning:estimates` on the want,
     or on the desire it was derived from, points at a node carrying one `sh:select` that
     binds `?estimate`; the package that declares the actions declares the node, because
     *never overstates* is a promise about the package's own costs and no world can keep it.
@@ -187,7 +188,7 @@ def _remaining(store, for_, world: str, held: dict, memo) -> str | None:
 
 
 def _estimate(store, for_, memo) -> str | None:
-    """The `sh:select` the want's `orexis:estimates` points at — the want's own, or its
+    """The `sh:select` the want's `planning:estimates` points at — the want's own, or its
     desire's — off the shapes crossed once for the pass. None where neither declares one."""
     shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
     want = rdflib.URIRef(for_)
@@ -221,7 +222,5 @@ def _violation(node: str, row: dict) -> str:
     if "_constraint" in row:
         parts.append(f"planning:constraint {row['_constraint']}")
     if "_about" in row:
-        parts.append(f"orexis:about {row['_about']}")
-    if "_side" in row:
-        parts.append(f"orexis:violationIs {row['_side']}")
+        parts.append(f"planning:about {row['_about']}")
     return f"<{node}> planning:violation [ {' ; '.join(parts)} ] .\n"

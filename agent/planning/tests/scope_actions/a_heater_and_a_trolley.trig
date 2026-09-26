@@ -23,10 +23,10 @@ GRAPH :ontology {
 
 GRAPH :actions {
   :heat a orexis:Action .
-  :heat orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX sosa: <http://www.w3.org/ns/sosa/>
+  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX sosa: <http://www.w3.org/ns/sosa/>
         CONSTRUCT { ?o sosa:hasSimpleResult ?x . } WHERE { ?o a sosa:Observation }""" ] ] .
   :move a orexis:Action .
-  :move orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+  :move planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
         PREFIX water: <http://example.org/orexis/water#>
         CONSTRUCT { ?p :standsIn ?room . } WHERE { ?p a water:Plant }""" ] ] .
 }

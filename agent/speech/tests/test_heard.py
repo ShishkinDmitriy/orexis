@@ -43,7 +43,7 @@ def test_a_round_said_again_replaces_the_one_before(store):
 
 
 def test_a_peer_cannot_say_a_desire(store):
-    assert heard(store, ME, _doc(T + "wish", OREXIS + "DesireGraph", "want")) == []
+    assert heard(store, ME, _doc(T + "wish", "http://example.org/orexis/planning#DesireGraph", "want")) == []
     assert not list(store.quads_for_pattern(None, None, None, ox.NamedNode(T + "wish")))
 
 

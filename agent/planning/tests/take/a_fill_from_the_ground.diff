@@ -2,7 +2,7 @@
 +++ expected
 @@ -94,6 +94,13 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
-   ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
 +  possible:fill-tank1 a planning:PossibleGraph .
 +  possible:fill-tank1 orexis:arrivedBy orexis:Derived .
@@ -15,7 +15,7 @@
    possible:fill-tank1.by a planning:Candidate .
    possible:fill-tank1.by planning:fills :fill .
 @@ -121,3 +128,8 @@
-   :keeper.in_range.pursued.tank1.met sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+   :keeper.in_range.pursued.tank1.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
    :keeper.in_range.pursued.tank1.met sh:targetNode :tank1 .
  }
 +

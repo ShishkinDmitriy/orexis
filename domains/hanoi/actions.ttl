@@ -3,6 +3,7 @@
 @prefix execution: <http://example.org/orexis/execution#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
 <> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
@@ -15,9 +16,9 @@
 hanoi:Move a orexis:Action ;
     rdfs:label "move a movable disk onto a legal peg" ;
     orexis:takes hanoi:disk , hanoi:onto ;
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Fictive ] ] ;
-    orexis:precondition """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Fictive ] ] ;
+    planning:precondition """PREFIX hanoi: <http://example.org/orexis/hanoi#>
         SELECT ?disk ?onto WHERE {
             ?disk hanoi:on ?below .
             FILTER NOT EXISTS { ?x hanoi:on ?disk }
@@ -28,9 +29,9 @@ hanoi:Move a orexis:Action ;
                 ?s (hanoi:on)+ ?onto .
                 ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
         }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:effect [ a orexis:Effect ;
-        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
         DELETE { $disk hanoi:on ?old  }
         WHERE  { $disk hanoi:on ?old  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>

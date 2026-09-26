@@ -6,7 +6,7 @@ A WANT.
 A stored judgment stood between the two once — what a met-test read, per desire per instant,
 written to a working graph and read back by the minting and by whoever wanted a crossing. It is
 gone, and everything it carried a want carries: which instance is in trouble, what the trouble
-is about, which way it broke (`orexis:violationIs`) and the instant it must hold at. What a
+is about and the instant it must hold at. What a
 met-test reads is a WITNESS, computed where it is needed and stored nowhere, because the answer
 is about a situation and the situation has moved by the next pass.
 
@@ -32,23 +32,24 @@ from datetime import datetime
 import pyoxigraph as ox
 import rdflib
 
-from agent.ontology import DESIRE, OREXIS, RECORD, SHAPES, WANT
+from agent.ontology import OREXIS, RECORD
 from agent.store import NAMESPACES, Memo, Raw, bind, graphs_of, rdflib_view, remember, rows
 
+from .ontology import DESIRE, PLANNING, SHAPES, WANT
 from .withdraw import FORGET_ONE_U
 from .find_scopes import find_scopes
 
-RECOGNIZED = OREXIS + "Recognized"
+RECOGNIZED = PLANNING + "Recognized"
 
 log = logging.getLogger("derive_wants")
 
-OREXIS_MET_WHEN = OREXIS + "metWhen"
+MET_WHEN = PLANNING + "metWhen"
 #  THE TWO OF A DESIRE'S OWN WORDS THIS FILE SORTS BY. They were matched as string SUFFIXES —
 #  `p.endswith("#about")` at three sites — which is safe only because `_SAID_Q` four hundred
 #  lines away filters to five named predicates, so nothing else can end in those letters. That
 #  coupling was invisible at every site, and a sixth predicate whose local name ended in
 #  `about` or `label` would have been read as one of these, silently.
-OREXIS_ABOUT = OREXIS + "about"
+ABOUT = PLANNING + "about"
 RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
 
 #  WHAT A DESIRE SAYS, from the graphs of desires and wants asked by class: what it is about,
@@ -57,9 +58,9 @@ RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
 _SAID_Q = """
 SELECT ?p ?o WHERE {
   GRAPH ?g { $desire ?p ?o
-    FILTER(?p IN (orexis:metWhen, orexis:unmetWhen, orexis:estimates, orexis:about, rdfs:label)) }
+    FILTER(?p IN (planning:metWhen, planning:unmetWhen, planning:estimates, planning:about, rdfs:label)) }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
-               VALUES ?kind { orexis:DesireGraph orexis:WantGraph } } }"""
+               VALUES ?kind { planning:DesireGraph planning:WantGraph } } }"""
 
 #  WHAT THIS DERIVATION HAS MINTED UNDER ONE DESIRE, ACROSS ALL TIME and not at an instant.
 #  A want's period is the stretch its TROUBLE occupies, so a want foreseen from three is not
@@ -69,9 +70,9 @@ SELECT ?p ?o WHERE {
 #  arrived. Existence is not an instant question.
 _STANDING_Q = """
 SELECT ?w WHERE {
-  GRAPH ?g { ?w a orexis:Want ; prov:wasDerivedFrom $desire }
+  GRAPH ?g { ?w a planning:Want ; prov:wasDerivedFrom $desire }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived } }
+               ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }
 ORDER BY ?w"""
 
 
@@ -83,8 +84,8 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
     IT READS THE WEIGHINGS THE PLANNER WROTE. A desire is judged where the search judges a
     want, by `weigh`, which the Planner calls for every desire in every ground before this —
     an act calls no other act — writing the met-test's report in each ground as a weighing
-    with its violation rows: the instances in trouble, which constraint, what it is about,
-    which way it broke. Read across the grounds in order, a violation has a stretch: the
+    with its violation rows: the instances in trouble, which constraint and what it is
+    about. Read across the grounds in order, a violation has a stretch: the
     first ground it holds in is when the trouble begins, the first later ground it does not is
     when it lifts. A want is minted per cluster of them. Nothing stands between a desire and
     a want but the weighings, which are in the store where a reader can see what the
@@ -176,12 +177,8 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
         #  whether it is two o'clock or four.
         if child in standing:
             continue
-        #  ONE SIDE OR NONE: the witnesses of a cluster agree where the same block found them
-        #  all, and two sides in one cluster is a want about two troubles, which says neither.
-        sides = {w["side"] for w in cluster if w["side"]}
         child = _mint(store, shapes, holder, desire, now, at, until, said,
-                     about=about, instance=instance,
-                     side=next(iter(sides)) if len(sides) == 1 else None)
+                     about=about, instance=instance)
         if child is not None:
             minted.append(child)
     return minted
@@ -274,7 +271,7 @@ def _name_of(shapes: rdflib.Graph, desire: str, said, about: tuple, instance: st
     node — since two tanks low about their level are two clusters, two plans, and would be one
     name otherwise (found by the derivation's own table, `tests/derive_wants/`); a desire whose shape names
     its one node (`sh:targetNode`, sensing's and the greenhouse's) keeps its names, and an
-    instance the want is already about (a debt, `orexis:about sh:this`) is not said twice.
+    instance the want is already about (a debt, `planning:about sh:this`) is not said twice.
     """
     #  NARROWER THAN THE DESIRE, or the desire's own name. A want carries what it is about in
     #  its NAME only where the cluster covers less than the desire does: a desire about one
@@ -282,7 +279,7 @@ def _name_of(shapes: rdflib.Graph, desire: str, said, about: tuple, instance: st
     #  broken on soil alone mints a second node. Inlined because this is the one place that
     #  asks it — it was a helper while `_mint` also needed the desire's own abouts, to default a
     #  want's stored ones, and a want states none now.
-    declared = {str(o.value) for p, o in said if p == OREXIS_ABOUT}
+    declared = {str(o.value) for p, o in said if p == ABOUT}
     tails = [_tail(a) for a in about] if about and set(about) != declared else []
     if instance is not None and instance not in about and not _targets_one_node(shapes, said):
         tails.insert(0, _tail(instance))
@@ -296,7 +293,7 @@ def _targets_one_node(shapes: rdflib.Graph, said) -> bool:
     from rdflib import URIRef
     from rdflib.namespace import SH
     return any((URIRef(str(o.value)), SH.targetNode, None) in shapes
-               for p, o in said if p == OREXIS_MET_WHEN)
+               for p, o in said if p == MET_WHEN)
 
 
 # --- what a want IS on disk, and how one goes -------------------------------------------
@@ -314,7 +311,7 @@ def _graph_of(agent_id: str, at: datetime, until: datetime | None) -> str:
     """The graph the wants in trouble over ONE STRETCH live in, named for that stretch.
 
     A WANT'S TEMPORAL EXTENT IS ITS GRAPH'S PERIOD, and it is said once. A want used to carry
-    `orexis:holdsAt` — the instant it must hold at — beside a graph whose period ran from when
+    `planning:holdsAt` — the instant it must hold at — beside a graph whose period ran from when
     it was derived, so the same fact was in two places and neither said the whole of it. The
     period IS the trouble now: from the boundary it begins at to the one it lifts by. `at what
     instant is this wanted` is then a question the DOOR answers — `find_wants(store, at=T)`
@@ -345,7 +342,7 @@ def _stamp(at: datetime) -> str:
 
 def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
            now: datetime, at: datetime, until: datetime | None = None, *,
-           points: tuple = (), shape: tuple = (), side: str | None = None) -> None:
+           points: tuple = (), shape: tuple = ()) -> None:
     """Write one derived want over the ENGINE: its graph, replaced whole, and the catalogue's
     account of that graph — its family, how it arrived, whose it is and the period it holds
     during — in one update, so a want and what is said about it land together or not at all.
@@ -380,7 +377,7 @@ def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
     `dcterms:temporal` returned each want three times. The classification itself is plain
     triples and idempotent by RDF; only the period needed guarding.
 
-    AND NO `orexis:about`. A want used to state the one domain property it was in trouble
+    AND NO `planning:about`. A want used to state the one domain property it was in trouble
     over, and actions joined themselves to it to find the want they served. That is filtering
     to the goal's predicates, which the closure exists because it is wrong: *"filtering to the
     goal's predicates deletes every chain; closing backward through preconditions keeps the
@@ -398,12 +395,10 @@ def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
     #
     #  WHEN THE AGENT FOUND IT, always and not only for a foreseen one: the period says when
     #  the trouble IS and this says when we learned of it, which is the arrival axis and PROV's
-    #  to state. A want used to carry `orexis:holdsAt` beside it — the instant it must hold at
+    #  to state. A want used to carry `planning:holdsAt` beside it — the instant it must hold at
     #  — which the period now says, and said it only for foreseen wants, so a want in trouble
     #  now recorded neither instant.
     found_at = f' ; prov:generatedAtTime "{now.isoformat()}"^^xsd:dateTime'
-    #  WHICH WAY IT BROKE, where the met-test's block said so (`orexis:violationIs`).
-    broke = f" ; orexis:violationIs <{side}>" if side else ""
     #  THE STRETCH, on the graph: from the boundary this trouble begins at to the one it lifts
     #  by, open where nothing the agent can see ahead to repairs it. A fact the predictions
     #  state, which is the only honest source for one — the predecessor took the closing
@@ -414,14 +409,14 @@ def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
     store.update(bind(FORGET_ONE_U, graph=Raw(f"<{graph}>"), want=Raw(f"<{uri}>")) + f""" ;
 INSERT {{
   GRAPH <{graph}> {{
-  <{holder}> orexis:holds <{uri}> .
-  <{uri}> a orexis:Want{found_at}{broke} ;
-      orexis:state <{RECOGNIZED}> ;
+  <{holder}> planning:holds <{uri}> .
+  <{uri}> a planning:Want{found_at} ;
+      planning:state <{RECOGNIZED}> ;
       prov:wasDerivedFrom <{desire}> ;
       rdfs:label {json.dumps(label)} .
   {said_points}
   {shape_lines} }}
-  GRAPH ?cat {{ <{graph}> a orexis:WantGraph ; orexis:arrivedBy orexis:Derived ;
+  GRAPH ?cat {{ <{graph}> a planning:WantGraph ; orexis:arrivedBy orexis:Derived ;
       orexis:beliefsOf <{holder}> . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> dcterms:temporal
@@ -430,13 +425,13 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }}
          FILTER NOT EXISTS {{ GRAPH ?cat {{ <{graph}> dcterms:temporal ?held }} }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
-        GRAPH ?vocabulary {{ orexis:WantGraph rdfs:subClassOf ?kind }} }}""",
+        GRAPH ?vocabulary {{ planning:WantGraph rdfs:subClassOf ?kind }} }}""",
                  prefixes=NAMESPACES)
 
 
 def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: datetime,
          at: datetime, until: datetime | None = None, said=None,
-         about: tuple = (), instance: str | None = None, side: str | None = None) -> str | None:
+         about: tuple = (), instance: str | None = None) -> str | None:
     """Derive the want pursued under `desire` and write it to the pursued graph, named by
     `_name_of`. None, and the desire stays the goal, where the desire states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
@@ -458,9 +453,9 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
         #  desire's whole where it did not; the avoided state and the estimate are pointed at
         #  as ever, and the met-test is carried, instantiated, below. The label is read here
         #  too and is not a point: a want's is made from it.
-        if p in (OREXIS_ABOUT, RDFS_LABEL):
+        if p in (ABOUT, RDFS_LABEL):
             continue
-        if p == OREXIS_MET_WHEN:
+        if p == MET_WHEN:
             met_test = str(o.value)
             continue
         points.append((p, str(o.value)))
@@ -472,7 +467,7 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
     if met_test is not None:
         own = child + ".met"
         shape_lines = _narrowed(shapes, met_test, own, instance, about)
-        points.append((OREXIS_MET_WHEN, own))
+        points.append((MET_WHEN, own))
 
     labels = [str(o.value) for p, o in said if p == RDFS_LABEL]
     label = "pursued: " + (labels[0] if labels else desire.rsplit("#", 1)[-1])
@@ -502,7 +497,7 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
     #  classified and what period it holds during are `wants.py`'s, whether a collection or
     #  this derivation asks for the write.
     _write(store, _local(holder), child, holder, desire, label, now, at, until,
-           points=tuple(points), shape=shape_lines, side=side)
+           points=tuple(points), shape=shape_lines)
     log.info("%s reads unmet: pursuing %s", desire.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
 
@@ -529,7 +524,7 @@ def _narrowed(shapes: rdflib.Graph, shape: str, own: str, instance: str | None, 
     from rdflib.namespace import SH
 
 
-    about_p = URIRef(OREXIS + "about")
+    about_p = URIRef(PLANNING + "about")
     targets = {SH.targetNode, SH.targetClass, SH.targetSubjectsOf, SH.targetObjectsOf, SH.target}
     #  From the graphs that hold desires and wants, crossed ONCE for the pass and handed in:
     #  this runs per want minted, and fetching it here crossed every one of them per want.
@@ -562,8 +557,8 @@ def _narrowed(shapes: rdflib.Graph, shape: str, own: str, instance: str | None, 
 #  which holds at every instant as the T-Box does.
 _DESIRES_Q = """
 SELECT DISTINCT ?holder ?desire WHERE {
-  GRAPH ?g { ?holder orexis:holds ?desire . ?desire a orexis:Desire }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:DesireGraph } }
+  GRAPH ?g { ?holder planning:holds ?desire . ?desire a planning:Desire }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:DesireGraph } }
 ORDER BY ?holder ?desire"""
 
 #  THE TIMELINE: every ground, earliest first — the present, and what each prediction makes
@@ -575,17 +570,16 @@ SELECT ?g WHERE {
 ORDER BY ?start"""
 
 #  WHAT ONE DESIRE'S WEIGHINGS SAY, ground by ground: the verdict, and every violation with
-#  its instance, its constraint, what it is about and which way it broke.
+#  its instance, its constraint and what it is about.
 _TROUBLES_Q = """
-SELECT ?start ?met ?instance ?constraint ?about ?side WHERE {
+SELECT ?start ?met ?instance ?constraint ?about WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     ?x a planning:Weighing ; planning:for $desire ; planning:weighs ?g .
     ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start .
     OPTIONAL { ?x planning:met ?met }
     OPTIONAL { ?x planning:violation ?v . ?v planning:instance ?instance .
                OPTIONAL { ?v planning:constraint ?constraint }
-               OPTIONAL { ?v orexis:about ?about }
-               OPTIONAL { ?v orexis:violationIs ?side } } } }
+               OPTIONAL { ?v planning:about ?about } } } }
 ORDER BY ?start ?instance ?constraint"""
 
 
@@ -623,7 +617,7 @@ def _troubles(store: ox.Store, desire: str) -> list[dict] | None:
             key = (r["instance"], r.get("constraint", ""))
             unmet.add(key)
             seen.setdefault(key, {"instance": r["instance"], "constraint": r.get("constraint", ""),
-                                  "about": r.get("about"), "side": r.get("side"), "at": at})
+                                  "about": r.get("about"), "at": at})
         for key in seen.keys() - unmet:
             lifted.setdefault(key, at)
     return sorted(({**w, "until": lifted.get(k)} for k, w in seen.items()),

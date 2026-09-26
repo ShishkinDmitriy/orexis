@@ -30,8 +30,8 @@ for a report, to a working graph replaced whole. That class is gone, and so is t
 object beside it.
 
 Everything it carried a WANT carries — which instance is in trouble, what the trouble is about,
-which way it broke (`orexis:violationIs`: below, above, unmeasured, stale) and the instant it
-must hold at. What is left of the reading itself is a WITNESS: one row of what a met-test read,
+and the instant it must hold at — and which way it broke, until that term was retired, since
+nothing read it. What is left of the reading itself is a WITNESS: one row of what a met-test read,
 computed where it is needed and stored nowhere, since the answer is about a situation and the
 situation has moved by the next pass. `derive_wants` asks for witnesses to mint; a reader
 asking where a crossing is asks the same code for the same answer, and neither reads a graph

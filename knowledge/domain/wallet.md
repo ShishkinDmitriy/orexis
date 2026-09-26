@@ -98,7 +98,7 @@ often* a model is asked, rather than on a bill.
 
 The first COST EDGE exists since
 [#466](https://github.com/ShishkinDmitriy/orexis/issues/466) — an action may declare
-`orexis:costs`, the search sums it per candidate and breaks urgency ties cheaper — but a cost
+`planning:costs`, the search sums it per candidate and breaks urgency ties cheaper — but a cost
 READ is not a cost PAID: nothing debits the figure, the wallet still charges nothing for
 anything, and every not-built row above stands. See
 [a-step-declares-its-cost](/decisions/a-step-declares-its-cost.md).

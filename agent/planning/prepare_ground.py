@@ -76,10 +76,10 @@ import logging
 
 import pyoxigraph as ox
 
-from agent.ontology import BELIEF, DESIRE, PREDICTION, PUBLIC, RECORD, STATE, WANT
+from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD, STATE
 from agent.store import catalogue_of, forget_graph, graphs_of, rows
 
-from .ontology import SCOPE_GRAPH
+from .ontology import DESIRE, SCOPE_GRAPH, WANT
 
 log = logging.getLogger("prepare_ground")
 
@@ -151,4 +151,4 @@ _MADE_Q = """
 SELECT ?g WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     { ?g a ?kind . VALUES ?kind { planning:GroundGraph planning:PossibleGraph planning:PlanGraph } }
-    UNION { ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived } } }"""
+    UNION { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } } }"""

@@ -64,7 +64,7 @@ def _weighed_in_the_ground(snapshots, text: str | None = None):
     if text is not None:
         beliefs.update(f"""DELETE {{ GRAPH ?g {{ ?n <http://www.w3.org/ns/shacl#select> ?old }} }}
                            INSERT {{ GRAPH ?g {{ ?n <http://www.w3.org/ns/shacl#select> {json.dumps(text)} }} }}
-                           WHERE  {{ GRAPH ?g {{ ?d <http://example.org/orexis#estimates> ?n . ?n <http://www.w3.org/ns/shacl#select> ?old }} }}""")
+                           WHERE  {{ GRAPH ?g {{ ?d <http://example.org/orexis/planning#estimates> ?n . ?n <http://www.w3.org/ns/shacl#select> ?old }} }}""")
     store = prepare_ground(beliefs, ox.Store())
     lay_ground(store, snapshots.NOW)
     for pair in unweighed(store):
@@ -77,7 +77,7 @@ def _weighed_in_the_ground(snapshots, text: str | None = None):
 
 
 def test_a_wants_weighing_carries_what_its_desires_estimate_reads_there(monkeypatch, snapshots):
-    """The desire owns the term: `orexis:estimates` on the desire the want was derived from
+    """The desire owns the term: `planning:estimates` on the desire the want was derived from
     points at the package's select, and the weighing of the want in the ground says what it
     read — two disks astray, two moves at least."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)

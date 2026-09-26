@@ -27,7 +27,7 @@
 
 GRAPH :ontology {
   :level a rdf:Property .
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -39,30 +39,30 @@ GRAPH :world {
 
 GRAPH :actions {
   :fill a orexis:Action .
-  :fill orexis:costs """PREFIX : <http://example.org/test#>
+  :fill orexis:takes :tank .
+  :fill planning:costs """PREFIX : <http://example.org/test#>
       SELECT (1 AS ?cost) WHERE { }""" .
-  :fill orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX : <http://example.org/test#>
+  :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>
       DELETE { $tank :level ?l  }
       WHERE  { $tank :level ?l  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?tank :level ?next } WHERE {
       $tank :level ?l .
       BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
-  :fill orexis:precondition """PREFIX : <http://example.org/test#>
+  :fill planning:precondition """PREFIX : <http://example.org/test#>
       SELECT ?tank WHERE {
       ?tank a :Tank ; :level ?l .
       FILTER(?l < 10) }""" .
-  :fill orexis:takes :tank .
   :tank a orexis:Parameter .
 }
 
 GRAPH :desires {
   :in_range a sh:NodeShape .
-  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
   :in_range sh:targetClass :Tank .
-  :keeper orexis:holds :keeper.in_range .
-  :keeper.in_range a orexis:Desire .
-  :keeper.in_range orexis:about :level .
-  :keeper.in_range orexis:metWhen :in_range .
+  :keeper planning:holds :keeper.in_range .
+  :keeper.in_range a planning:Desire .
+  :keeper.in_range planning:about :level .
+  :keeper.in_range planning:metWhen :in_range .
   :keeper.in_range rdfs:label "every tank in range" .
 }
 
@@ -83,8 +83,8 @@ GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a orexis:DesireGraph .
   :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .

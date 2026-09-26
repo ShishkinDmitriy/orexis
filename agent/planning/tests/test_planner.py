@@ -169,8 +169,8 @@ SELECT (COUNT(?x) AS ?n) WHERE {
 def _weighed(store, budget: int, *, estimate: bool, snapshots) -> tuple[int, int]:
     """Three-disk hanoi planned once: candidates weighed, and the plan's steps."""
     if not estimate:
-        store.update("DELETE { GRAPH ?g { ?d <http://example.org/orexis#estimates> ?e } } "
-                     "WHERE { GRAPH ?g { ?d <http://example.org/orexis#estimates> ?e } }")
+        store.update("DELETE { GRAPH ?g { ?d <http://example.org/orexis/planning#estimates> ?e } } "
+                     "WHERE { GRAPH ?g { ?d <http://example.org/orexis/planning#estimates> ?e } }")
     planner = Planner(store, snapshots.AGENT, budget=budget)
     planner.plan(snapshots.NOW)
     (im,) = planner.imaginaria.values()
