@@ -134,10 +134,8 @@ WHERE {{
              ?sdaLeg <{MC}pinRole> <{I2C}DataPinRole>  . ?sdaW <{MC}joins> ?sdaLeg, ?sdaPin . ?sdaPin <{MC}gpio> ?bmeSda .
              ?sclLeg <{MC}pinRole> <{I2C}ClockPinRole> . ?sclW <{MC}joins> ?sclLeg, ?sclPin . ?sclPin <{MC}gpio> ?bmeScl .
              OPTIONAL {{ ?bme <{I2C}address> ?bmeAddr }} }}
-  # A BUILT-IN status LED, from the board's CLASS rather than from any wire: a FireBeetle 2
-  # ESP32-E carries a WS2812 on GPIO 5 by construction, stated once as a restriction in
-  # packages/orexis-part-esp32 and carried to this unit by the closure. Nothing in a world's
-  # hardware.ttl says it, and nothing could unsay it.
+  # A BUILT-IN status LED, from no wire: a FireBeetle 2 ESP32-E carries a WS2812 on GPIO 5 by
+  # construction, and the world's hardware.ttl states it of the board.
   OPTIONAL {{ ?board <{ESP32}ws2812Gpio> ?ws2812 }}
  }}"""
 

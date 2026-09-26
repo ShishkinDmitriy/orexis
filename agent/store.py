@@ -126,7 +126,7 @@ _KERNEL = {
 #  `agent/ontology.ttl` for the kernel's and `agent/planning/ontology.ttl` for
 #  the layer's, and a subtree that arrives as its own distribution brings its own.
 #
-#  IT USED TO ASK A LOADER THAT SCANNED SOMEWHERE ELSE. The 0.1.0 assembly walks `packages/` and
+#  IT USED TO ASK A LOADER THAT SCANNED SOMEWHERE ELSE. The 0.1.0 assembly walked `packages/` and
 #  merges whatever it finds there; this tree is not under it, so every query speaking
 #  `planning:` or `execution:` would have read a prefix nobody declared — which pyoxigraph
 #  refuses loudly, and which is the only reason this was noticed before the move landed.

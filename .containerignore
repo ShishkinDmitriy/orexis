@@ -1,5 +1,5 @@
 # The build context is the repo root, because the image needs `agent/` (which carries the
-# capability and transport trees) and `vocabulary/`. These are the parts it never needs, and
+# packages) and `domains/`. These are the parts it never needs, and
 # sending them is pure cost on a Pi.
 #
 # NOTE: onboarding/ is deliberately NOT ignored here. Excluding it from the context would hide
@@ -14,20 +14,9 @@ venv
 **/.pytest_cache
 **/*.egg-info
 
-# Firmware CODE is flashed to a board, not built into an image — but since #175 each firmware
-# directory may carry an ontology.ttl, a third T-Box source the loader merges, and an agent
-# whose world types a board by its firmware class derives NOTHING without it (the sensing
-# world's fern subscribed to nothing, silently, which is how this exception was found).
-# Everything else stays out, and one exclusion is load-bearing for secrets: a generated
-# include/config.h carries the wifi and a device credential, and must never reach a layer.
-# One level deep, not `firmware/**`: excluding the per-firmware DIRECTORIES prunes them from
-# the walk entirely, so a `!` exception under them can never fire — measured, not read in a
-# manual. This shape leaves the directories traversable and excludes their contents, and the
-# negation wins on the one file it names.
-firmware/*/*
-firmware/*.md
-!firmware/*/ontology.ttl
-**/.pio
+# Firmware is flashed to a board, never built into an image; a generated include/config.h
+# carries the wifi and a device credential, and must never reach a layer.
+firmware
 
 # an agent's belief base is created at birth, never baked in
 **/state
@@ -37,8 +26,8 @@ world/*/secrets
 keys
 
 # not needed at runtime
-# A package may carry its own tests as plain files beside its code, so this is per-FILE rather
-# than a directory: `COPY packages/` would otherwise put pytest cases in the agent image.
+# The agent's packages carry their tests beside their code.
+**/tests
 **/test_*.py
 knowledge
 infra/grafana
