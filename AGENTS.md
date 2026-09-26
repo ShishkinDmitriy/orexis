@@ -54,7 +54,12 @@ If it is unavailable, the rules are short enough to follow by hand:
   frontmatter, an orphan document, a dead link, an over-long index entry, or a document naming
   a path that is not on disk.
 
-**`knowledge/domain/` is the shared dictionary, and a term is defined before it is used.** The
+**`knowledge/domain/` is the shared dictionary, filed by the package that owns each word** —
+`kernel/`, `sensing/`, `transport/`, `belief/`, `prediction/`, `planning/`, `execution/`,
+`speech/`, `market/`, `actuation/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
+live terms in its folder's namespace, so retiring a term fails until its page follows. A record
+stays in `knowledge/decisions/` while something current cites it; 0.1.0's are filed under
+`decisions/0.1.0/`. **And a term is defined before it is used.** The
 pages there fix what our words MEAN — step, gap, imaginarium, capability, action, lot, venue
 — and a discussion, a commit message, a docstring or an issue that uses one of them uses it the
 way its page does. **If a change needs a word the bundle does not have, write the page in the SAME
@@ -812,6 +817,9 @@ it is a record wearing a bullet.
   forks a world the met-test cannot tell from its parent, and spent the budget moving no disk;
   and a want is placed by what it reads that some action can CHANGE, since a disk's size
   counted pulled a courier goal into the puzzle's scope.
+- **A dictionary that nothing holds to the code rots in the present tense** — 38 of 88 pages
+  described a deleted kernel as current until each page was filed under its owning package and
+  gated to live terms (the-knowledge-is-filed-like-the-code).
 - **A plan whose want is gone is nobody's** — the imaginarium outlives the pass, so a plan
   kept in one after its want was reached in another was handed down and walked again.
 - **A step is refined only where it would be fictive** — a dose predicts the soil inside its
