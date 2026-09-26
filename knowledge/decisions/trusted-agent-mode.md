@@ -18,7 +18,7 @@ themselves), the witness is defending against a threat that isn't there.
 
 Under an explicit **trusted-agent assumption**, drop the gateway/witness and let each agent
 **state its own current-state as its own opinion** — self-asserted belief, not witnessed
-truth. This deliberately relaxes [trust-boundary](/decisions/trust-boundary.md)'s first
+truth. This deliberately relaxes [trust-boundary](/decisions/0.1.0/trust-boundary.md)'s first
 power ("agents cite but never author facts"): an agent may now author facts **about itself**.
 It still may **not** author facts about *others*, mint currency, or actuate hardware — those
 stay in trusted infrastructure.

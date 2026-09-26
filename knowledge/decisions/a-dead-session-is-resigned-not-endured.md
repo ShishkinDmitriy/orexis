@@ -29,7 +29,7 @@ socket, a fresh TLS session, a fresh subscribe. What was missing was not a remed
 # Decision
 
 **The agent notices, and resigns.** `packages/orexis-transport-mqtt/watchdog.py` (it was `agent/watchdog.py`, in the kernel, until the kernel lost its mailbox) runs on a `Timer` of its
-own — not a capability, by [upkeep's](/decisions/self-review-is-a-capability.md) argument: every agent has
+own — not a capability, by [upkeep's](/decisions/0.1.0/self-review-is-a-capability.md) argument: every agent has
 one connection whatever else it can do, and noticing you are dead is not an ability whose *how*
 could differ. Not on paho's thread, because that thread is one of the things being watched.
 
@@ -81,5 +81,5 @@ failure used to cost.
   disconnection bound still stands guard behind it.
 - **The quiet() sweep informs and does not act.** A sensor gone silent is the *board's* fault
   or the wire's, and restarting the agent would cure neither — the sibling
-  [freshness-follows-the-cadence](/decisions/freshness-follows-the-cadence.md) records from the other
+  [freshness-follows-the-cadence](/decisions/0.1.0/freshness-follows-the-cadence.md) records from the other
   side: nothing nudges a returning sensor either.

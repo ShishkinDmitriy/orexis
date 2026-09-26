@@ -15,7 +15,7 @@ timestamp: 2026-08-27T12:00:00Z
 
 # What was true before
 
-[one-word-for-one-relation](/decisions/one-word-for-one-relation.md) retired `sensing:Sensor` and
+[one-word-for-one-relation](/decisions/0.1.0/one-word-for-one-relation.md) retired `sensing:Sensor` and
 `actuation:Actuator` in favour of `sosa:Sensor` and `sosa:Actuator`. Both had been intersections —
 *a device that observes*, *a device that acts* — and the audit preserved the conjunction into the
 shape that had enforced it:

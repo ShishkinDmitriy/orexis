@@ -19,7 +19,7 @@ timestamp: 2026-08-27T18:00:00Z
 # What was true before
 
 After [sensing-owns-the-reading-pipeline](/decisions/sensing-owns-the-reading-pipeline.md) and
-[self-is-bdi-and-wiring-is-the-packages](/decisions/self-is-bdi-and-wiring-is-the-packages.md)
+[self-is-bdi-and-wiring-is-the-packages](/decisions/0.1.0/self-is-bdi-and-wiring-is-the-packages.md)
 the kernel still speaks `sosa` in five places, and every one of them is *what a reading looks
 like*:
 

@@ -31,7 +31,7 @@ states a rule concluding `hanoi:on` and hanoi's world does not.
 
 - **A bridge declared per action**, 0.1.0's: `orexis:Bridge` refining Move, with a CONSTRUCT
   translating the promised fact down and an estimate named beside it
-  ([a-level-is-a-vocabulary-and-a-bridge](/decisions/a-level-is-a-vocabulary-and-a-bridge.md)).
+  ([a-level-is-a-vocabulary-and-a-bridge](/decisions/0.1.0/a-level-is-a-vocabulary-and-a-bridge.md)).
   It worked, and it made the hierarchy an authored fact about ONE action: a second domain
   whose facts the courier could keep needed its own bridge per action, and the translation was
   a second statement of what the world's rules already said. A rule concluding `hanoi:on`

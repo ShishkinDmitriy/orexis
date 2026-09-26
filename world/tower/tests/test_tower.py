@@ -3,7 +3,7 @@
 The world combines two domains and one rule set saying what a disk is on from where it stands.
 The mover plans hanoi's Moves; each Move, when its turn comes, is refined into a want the
 courier's actions reach — nothing declares the hierarchy, the rules are where it is found
-(knowledge/domain/refinement.md). The gate runs it on TWO disks, the world's third taken out of
+(knowledge/domain/planning/refinement.md). The gate runs it on TWO disks, the world's third taken out of
 the booted beliefs, since three cost two and a half minutes on the Pi; the world as authored is
 the three-disk demonstration.
 """

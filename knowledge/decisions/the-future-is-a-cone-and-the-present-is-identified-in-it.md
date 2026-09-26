@@ -19,7 +19,7 @@ description: >-
 # The claim
 
 **Amended 2026-09-10 by
-[planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md).**
+[planning-branches-on-action-forecasting-on-belief](/decisions/0.1.0/planning-branches-on-action-forecasting-on-belief.md).**
 Nothing below becomes false; the tree gains an axis and a twin. Every node carries a TIME, so
 two nodes holding the same facts at different instants are different worlds — the world moves
 whether or not the agent does — and beside this cone, which branches on what the agent may DO,
@@ -60,7 +60,7 @@ else the present says. The check is an ASK over the present; a shape gives the s
 with a report saying which fact is missing.
 
 **Numbers are intervals.** The companion record
-[a-predicted-number-is-an-interval](/decisions/a-predicted-number-is-an-interval.md) carries that
+[a-predicted-number-is-an-interval](/decisions/0.1.0/a-predicted-number-is-an-interval.md) carries that
 half: a reading widened by staleness and by the actuator's learned tolerance, an effect
 declaring two bounds, met meaning the interval lies inside the region. It is what makes
 identification need no tolerance of its own — "am I in this child" is "is the reading inside
@@ -127,19 +127,19 @@ refused on the way.
   about — a rule is asked about a world, one named graph per node, the fork rather than the
   replay, the isolation from the ledger. The Future is still a store of its own and still never
   written back; what changes is how long it lives and that it is re-rooted rather than rebuilt.
-- [there-is-no-bdi-ontology](/decisions/there-is-no-bdi-ontology.md) is superseded **in part**:
+- [there-is-no-bdi-ontology](/decisions/0.1.0/there-is-no-bdi-ontology.md) is superseded **in part**:
   its premise that "our plan is required to be lost" narrows to *a plan the world has moved away
   from is lost*. Its conclusion — no import, because a mind crosses no trust boundary — stands
   untouched, and nothing here makes a plan an entity anything cites.
-- [a-remembered-plan-is-a-method-on-the-want](/decisions/a-remembered-plan-is-a-method-on-the-want.md)
+- [a-remembered-plan-is-a-method-on-the-want](/decisions/0.1.0/a-remembered-plan-is-a-method-on-the-want.md)
   keeps its refusals and loses its keying: the whole-world signature gives way to the regressed
   precondition, which its own seams named. Amended with
   [#551](https://github.com/ShishkinDmitriy/orexis/issues/551).
-- [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md)
+- [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/0.1.0/progression-steps-through-a-plan-on-confirmed-feedback.md)
   keeps its refusals — no re-simulation before taking a step, no unconditional tail — and its
   seam "what matches means" closes with
   [#554](https://github.com/ShishkinDmitriy/orexis/issues/554): matching is identification.
-- [a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md) is amended with
+- [a-pass-is-budgeted-in-worlds](/decisions/0.1.0/a-pass-is-budgeted-in-worlds.md) is amended with
   [#553](https://github.com/ShishkinDmitriy/orexis/issues/553): the budget counts new forks,
   and a pass that re-rooted spent none.
 

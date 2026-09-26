@@ -15,7 +15,7 @@ timestamp: 2026-08-26T12:00:00Z
 
 # What was true before
 
-[bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md) moved the *allocation*
+[bid-matching-is-a-capability](/decisions/0.1.0/bid-matching-is-a-capability.md) moved the *allocation*
 out of `agent/auction.py` into the market package and recorded that `run_round` **stayed** —
 "propose, validate, issue is the auction's shape, not a strategy". True, and beside the point:
 the shape of an auction is still the market's business, not the kernel's. Three kernel modules
@@ -46,8 +46,8 @@ neither imports the other. See commitment.
 # What did not change
 
 The signing keys are still named `host` and `clearing` (`agent_old/signing.py`), because the
-*roles* are the constitution's — [trust-boundary](/decisions/trust-boundary.md) — and a key
-name is not an import. [a-role-needs-something-to-be-a-role-in](/decisions/a-role-needs-something-to-be-a-role-in.md)'s
+*roles* are the constitution's — [trust-boundary](/decisions/0.1.0/trust-boundary.md) — and a key
+name is not an import. [a-role-needs-something-to-be-a-role-in](/decisions/0.1.0/a-role-needs-something-to-be-a-role-in.md)'s
 line that the clearing validator is "a function; no agent holds it" stays true one directory
 over.
 

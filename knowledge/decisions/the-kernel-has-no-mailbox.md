@@ -17,7 +17,7 @@ timestamp: 2026-08-25T20:00:00Z
 
 # What was true before
 
-[the-kernel-names-no-package-word](/decisions/the-kernel-names-no-package-word.md) reached zero
+[the-kernel-names-no-package-word](/decisions/0.1.0/the-kernel-names-no-package-word.md) reached zero
 everywhere but the bus. `agent_old/world.py` asked the world for `mqtt:MessageBus`; `agent_old/runtime.py`
 built a paho client, read the MQTT credential off the environment, subscribed to what every
 module's `subscriptions()` returned and offered every message to every module's `handle()`;
@@ -66,7 +66,7 @@ and never learns a message exists.
 `sim:StandInReachableShape` now. Reachable is still the transport's WORD, but the rule is the
 simulation's — a stand-in nothing can reach is a stand-in for nothing — and filing it under the
 transport meant replacing the transport would delete it in silence. See
-[a-shape-belongs-to-the-vocabulary-it-checks](/decisions/a-shape-belongs-to-the-vocabulary-it-checks.md).)
+[a-shape-belongs-to-the-vocabulary-it-checks](/decisions/0.1.0/a-shape-belongs-to-the-vocabulary-it-checks.md).)
 
 # What did not change
 

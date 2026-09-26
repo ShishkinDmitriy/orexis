@@ -88,7 +88,7 @@ joined to what any action declares a parameter now — a step carries what it wa
 and the ledger gives it back whole.
 
 The one-time migration for volumes older than
-[an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan](/decisions/an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan.md)
+[an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan](/decisions/0.1.0/an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan.md)
 still moves `progression:through` onto the act, and nothing interprets that predicate any more.
 Such an intention stands with nothing bound until it lapses and is planned again.
 

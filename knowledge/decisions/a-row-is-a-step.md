@@ -100,5 +100,5 @@ outlived its word would be the same drift in telemetry.
 - [an-action-takes-parameters](/decisions/an-action-takes-parameters.md) — the change before
   this, which made the binding the row's identity and so made the two shapes identical.
 - [step](/domain/execution/step.md) — the one page now.
-- [an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan](/decisions/an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan.md)
+- [an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan](/decisions/0.1.0/an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan.md)
   — why a step is not an act, which is untouched.

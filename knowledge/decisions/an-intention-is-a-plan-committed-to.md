@@ -16,7 +16,7 @@ timestamp: 2026-08-24T18:00:00Z
 
 > **Superseded in part, 2026-09-02.** The clause "a committed tail is a promise about a future
 > nobody has seen, so the tail is trace, not ledger" is answered by
-> [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md):
+> [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/0.1.0/progression-steps-through-a-plan-on-confirmed-feedback.md):
 > the tail rides on the intention as its expected continuation and is advanced only when each
 > step's prediction is confirmed by the feedback the keeper already checks. The one path, the
 > head committed as an intention, and `orexis:takenBy` all stand.
@@ -83,9 +83,9 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
   committed, satisfied by the claim — is two desires pursued in the right order rather than one
   plan with a step chosen blind.
 - **The host's trigger.** A host has no gap, and whether to *sell* is the
-  [strategic-supplier](/decisions/strategic-supplier.md) seam. (`ag:Offer` was adopted on
+  [strategic-supplier](/decisions/0.1.0/strategic-supplier.md) seam. (`ag:Offer` was adopted on
   deferral by hosting and carried no `orexis:takenBy` when this was written; since
-  [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md)
+  [a-round-is-a-fact-and-offering-is-an-action](/decisions/0.1.0/a-round-is-a-fact-and-offering-is-an-action.md)
   it is an action serving a [call](/domain/market/call.md), and the seam is unchanged: plannable is
   not wanted.)
 - **The patience, and who answers it.** `adopt` still absorbs a commitment that STANDS within
@@ -95,12 +95,12 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
   (the 584-dose morning) was kept at first as an `absorbs` hook asked before committing;
   generalising it to every means was refused by `test_expectation`, and the hook itself was
   retired when the Actuate intention was made to stand until its verdict — see
-  [an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md).
+  [an-intention-stands-until-the-world-answers](/decisions/0.1.0/an-intention-stands-until-the-world-answers.md).
 
 # Seams left open
 
 - ~~**The round is still an event, not a fact.**~~ Closed by
-  [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md):
+  [a-round-is-a-fact-and-offering-is-an-action](/decisions/0.1.0/a-round-is-a-fact-and-offering-is-an-action.md):
   a round is a belief on both sides, the Acquire row exists only while one is open, and
   nothing stands to buy between rounds.
 - **The tail is trace, not ledger.** `ag:plannedThen` would be one triple and a reader outside

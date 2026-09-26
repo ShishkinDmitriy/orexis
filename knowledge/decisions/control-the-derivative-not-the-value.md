@@ -49,7 +49,7 @@ slogan (*you control your perceptions, not your actions*) arrived at from the ot
 # Why the sovereign can leave the room
 
 This is the same fact as
-[the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md)'s
+[the-model-is-consulted-at-the-edge-of-knowledge](/decisions/0.1.0/the-model-is-consulted-at-the-edge-of-knowledge.md)'s
 governance split, seen structurally. A sovereign who controlled positions would have to stay —
 every step would need them. One whose control is entirely in rules — ranges, mandates, shapes,
 the constitution — exercises all of it at genesis and can vanish at start, because there is
@@ -63,7 +63,7 @@ Any change that reaches **down** a level is grabbing the walking-controls from t
 seat, and is refused on sight:
 
 - a deliberator that sets a bid *price* — the whether is its; the how much is
-  [deterministic-bid](/decisions/deterministic-bid.md)'s;
+  [deterministic-bid](/decisions/0.1.0/deterministic-bid.md)'s;
 - a sovereign field that pins an *aim* — the world states ranges; a pick written in `world.ttl`
   is an agent's end authored by someone else;
 - a model that emits an *action* — it writes rules (affordances) or it writes nothing;
@@ -74,7 +74,7 @@ seat, and is refused on sight:
 
 Not a new rule — every row of the table is already enforced by its own decision, shape or test.
 It is the *why* behind
-[a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md),
-[self-review-is-a-capability](/decisions/self-review-is-a-capability.md)'s mandate,
-[the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md)
+[a-belief-is-a-pick-within-a-range](/decisions/0.1.0/a-belief-is-a-pick-within-a-range.md),
+[self-review-is-a-capability](/decisions/0.1.0/self-review-is-a-capability.md)'s mandate,
+[the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/0.1.0/the-range-is-the-plants-and-the-pick-is-the-agents.md)
 and the edge-of-knowledge design, said once instead of implied four times.

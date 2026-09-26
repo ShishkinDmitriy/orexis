@@ -17,7 +17,7 @@ timestamp: 2026-08-19T21:41:18Z
 ---
 
 > **Superseded in part** by
-> [a-desire-states-its-own-measure](/decisions/a-desire-states-its-own-measure.md). What does
+> [a-desire-states-its-own-measure](/decisions/0.1.0/a-desire-states-its-own-measure.md). What does
 > not hold any more is the IDENTITY: a desire is no longer the `sh:NodeShape` itself but a
 > node (`orexis:Desire`) CARRYING that shape through `orexis:metWhen` — unchanged in content — beside
 > a label, with an urgency measure its KIND declares from a capability's `measures.ttl`,

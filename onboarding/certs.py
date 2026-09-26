@@ -15,7 +15,7 @@ certificate is a *different way of proving who you are*, not a different notion 
 TLS handshake on every wake costs radio time and battery on the most constrained thing in the
 system. Boards keep their password on the plaintext listener, and the broker enforces the same
 ACL for both — one authorisation model, two ways of authenticating. See
-knowledge/domain/onboarding.md.
+knowledge/domain/onboarding/onboarding.md.
 
 **The broker's certificate IS issued here, from this world's authority.** One broker per world
 means the broker belongs to the world, so the world vouches for it — and an agent verifies its

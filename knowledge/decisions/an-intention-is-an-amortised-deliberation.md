@@ -19,16 +19,16 @@ timestamp: 2026-08-14T00:00:00Z
 > code does; what changed is WHERE it lives. Wanting, committing and deciding are the kernel's,
 > granted by nothing, because the stores they read were built for every agent unconditionally
 > while the code reading them was a grant. See
-> [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md).
+> [the-mind-is-not-a-package](/decisions/0.1.0/the-mind-is-not-a-package.md).
 
 
 # The question
 
-[desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
+[desire-is-deduced-from-the-ranges-the-world-states](/decisions/0.1.0/desire-is-deduced-from-the-ranges-the-world-states.md)
 gave BDI's middle letter a package. That immediately sharpened the question the older records
 kept deferring: *what is the third letter here, and where does the LLM sit?*
-[llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) says one LLM call produces a
-stance; [the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md)
+[llm-heavy-deliberation](/decisions/0.1.0/llm-heavy-deliberation.md) says one LLM call produces a
+stance; [the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/0.1.0/the-range-is-the-plants-and-the-pick-is-the-agents.md)
 records *"intention is still unnamed"* as a seam and declines to settle whether that is a gap or
 a happy absence. It is a gap, and this record says why and what to do about it.
 
@@ -70,7 +70,7 @@ the region, and the signed distance normalised by the survival room on that side
 arithmetic, expressed where any consumer can run it. Three consumers exist the moment it does:
 metrics reports the gap, a shape can refuse an agent that has sat outside its region for N
 windows, and a `review.rq` can finally *justify* an aim against gap history — the seam
-[the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md)
+[the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/0.1.0/the-range-is-the-plants-and-the-pick-is-the-agents.md)
 has carried since it was written.
 
 **A gap is computed and never stored**, exactly as a band is: it is a verdict, and the same
@@ -110,7 +110,7 @@ review may move, bounded the way cadences are bounded.
 ## 4. Deliberation becomes a family, and Reflex is its first member
 
 *The plan as it was written, and it did not survive contact: the family collapsed into one
-class ([the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md)) and the Reflex
+class ([the-mind-is-not-a-package](/decisions/0.1.0/the-mind-is-not-a-package.md)) and the Reflex
 member was later deleted outright, subsumed by the search
 ([a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)). What did
 survive is the thing the step was for — the whether is not the bidder's, and an answerer can be
@@ -126,7 +126,7 @@ cleanly: the *how* genuinely differs.
   intention **from a menu of affordances**, never free text-to-action. The formal layer holds
   it: the intention validates against shapes or is not adopted, an intention outside the mandate
   fails the same check every belief fails, and the bid *number* stays deterministic —
-  [deterministic-bid](/decisions/deterministic-bid.md) stands, the model picks *whether and
+  [deterministic-bid](/decisions/0.1.0/deterministic-bid.md) stands, the model picks *whether and
   when*, code computes *how much*.
 
 The granting premise, since each capability names its own: **a desire plus at least one lever**
@@ -135,7 +135,7 @@ nothing to plan with; an agent with levers and no wants has nothing to plan for.
 
 # What this amends
 
-[llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) says the LLM's output is a
+[llm-heavy-deliberation](/decisions/0.1.0/llm-heavy-deliberation.md) says the LLM's output is a
 *stance*. This record narrows that without reversing it: **the intention is the stance, made
 checkable**. Prose remains how the model reasons; what it *commits* is a typed intention the
 shapes can refuse. The consequence section of that record — the formal layer is load-bearing
@@ -188,14 +188,14 @@ so this is that decision growing teeth rather than changing course.
   scalar "wellness" number tells nobody which lever to pull, so it waits for a consumer.
 - **Regimes still unexpressed.** A second `orexis:ConstraintGraph` is where a seasonal regime would
   land; the selection mechanism is still missing, unchanged from
-  [the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md).
+  [the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/0.1.0/the-range-is-the-plants-and-the-pick-is-the-agents.md).
 - ~~**Which model, and what context window**~~ — the *when* and the *what-becomes-of-the-answer*
   are now settled by
-  [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/the-model-is-consulted-at-the-edge-of-knowledge.md):
+  [the-model-is-consulted-at-the-edge-of-knowledge](/decisions/0.1.0/the-model-is-consulted-at-the-edge-of-knowledge.md):
   consulted at the edge of knowledge, answer written down as affordance facts, approval split by
   time because the interface is genesis-only. What stays open there is the residue that was open
   here — endpoint as environment, the prompt as a menu derived per #127.
 
-Amended by [a-habit-is-a-compiled-deliberation](/decisions/a-habit-is-a-compiled-deliberation.md):
+Amended by [a-habit-is-a-compiled-deliberation](/decisions/0.1.0/a-habit-is-a-compiled-deliberation.md):
 the amortisation this record names has one rung above it — a stable environment lets the
 deliberation itself compile into policy, and review is what compiles and retires it.

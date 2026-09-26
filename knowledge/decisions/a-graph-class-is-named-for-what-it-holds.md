@@ -28,7 +28,7 @@ the misnomer the vocabulary's own comment on `orexis:BeliefGraph` records.
 # The rule
 
 **A graph class is named for the kind of row the graph holds**, as
-[a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md)
+[a-repository-is-named-for-what-it-holds](/decisions/0.1.0/a-repository-is-named-for-what-it-holds.md)
 names a collection for the plural of its element. A reader asks by class
 ([who-put-the-fact-there](/decisions/who-put-the-fact-there.md), amended by #708), so the
 class is what a reader means, and a reader means *the graphs of desires* or *the graphs of

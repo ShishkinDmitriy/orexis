@@ -28,7 +28,7 @@ board IS, it comes from the world; if it means changing how the firmware behaves
 
 The output is gitignored, like every other credential-bearing generated file.
 
-See knowledge/domain/onboarding.md.
+See knowledge/domain/onboarding/onboarding.md.
 """
 
 from __future__ import annotations

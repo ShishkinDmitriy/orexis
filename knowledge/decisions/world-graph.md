@@ -59,7 +59,7 @@ The T-Box gains `orexis:Agent`, `sensing:Sensor` (`sosa:Sensor`), `actuation:Act
 (`sosa:Actuator`), and the connection properties `actsFor` / `polls` / `hasActuator` /
 `monitors` / `actuates`. (These were first drafted as `agentFor`/`hasSensor`; the later split
 into capability modules renamed them to the transport-neutral forms used above. See
-[capability-modules](/decisions/capability-modules.md).) Two consequences worth naming:
+[capability-modules](/decisions/0.1.0/capability-modules.md).) Two consequences worth naming:
 
 **An agent is no longer a plant.** `Plant` used to be a subclass of `Agent`, so `orexis:fern`
 was both the thing measured and the thing bidding. Now `orexis:fern` is a
@@ -123,6 +123,6 @@ ratify, write — only the ratified artifact's format changed.
   credentials and a per-graph access list generated from this graph, so `:picks/fern` is
   private in fact and not only by habit. Writes remain unscoped — the same gap
   [trusted-agent-mode](/decisions/trusted-agent-mode.md) accepts. See
-  [belief-base-isolation](/decisions/belief-base-isolation.md).
+  [belief-base-isolation](/decisions/0.1.0/belief-base-isolation.md).
 - **Seam kept open:** the world is versioned but not yet *amendable at runtime* — agents read
   it once at startup. A world-version bump should eventually be an event agents react to.

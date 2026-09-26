@@ -21,7 +21,7 @@ a means "the joint" — the one term an affordance row offered, an effect rule a
 that knew nothing of each other could be joined without storing a correspondence. That was
 true and useful while the three were three files.
 
-[an-action-is-one-node](/decisions/an-action-is-one-node.md) folded them: one `orexis:Action`
+[an-action-is-one-node](/decisions/0.1.0/an-action-is-one-node.md) folded them: one `orexis:Action`
 node carries the precondition, the effect and the taker. From then on every shipped means
 pointed at exactly one action and every action named exactly one means — `orexis:means` was a
 one-to-one edge whose two ends could never differ. The sovereign asked what `orexis:Means` was

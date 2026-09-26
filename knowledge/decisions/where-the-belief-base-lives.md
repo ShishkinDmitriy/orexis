@@ -12,7 +12,7 @@ timestamp: 2026-08-04T00:00:00Z
 
 # Context
 
-[belief-base-isolation](/decisions/belief-base-isolation.md) put per-agent read isolation in
+[belief-base-isolation](/decisions/0.1.0/belief-base-isolation.md) put per-agent read isolation in
 the store: each agent authenticates as itself and Fuseki's graph-level access control means
 another agent's beliefs come back empty. [world](/domain/kernel/world.md) then gave each world its own
 dataset, so worlds cannot overwrite each other.
@@ -125,7 +125,7 @@ are gone; `infra/fuseki/` no longer exists. Three things only became clear by bu
 
 - **The derivation rules survived unchanged**, which the earlier rejection of "a dataset per
   agent" predicted they would not (see
-  [belief-base-isolation](/decisions/belief-base-isolation.md)). That prediction assumed
+  [belief-base-isolation](/decisions/0.1.0/belief-base-isolation.md)). That prediction assumed
   beliefs split *out* of a shared dataset; each agent instead holds a **complete** one, so
   `rules.ru` runs in SPARQL inside every agent exactly as written. Load + derive measures 4 ms.
 - **An agent validating itself has to scope the focus.** A capability shape targets every agent
@@ -157,7 +157,7 @@ restart also survives every *code* change, so it can hold a vocabulary the code 
 speaks — which the namespace sweep proved by moving 102 terms with both gates green. Birth
 happening once is still right; what was missing was anything asking, on the way in, whether the
 store still says what the code reads. See
-[a-volume-can-be-older-than-the-vocabulary](/decisions/a-volume-can-be-older-than-the-vocabulary.md).
+[a-volume-can-be-older-than-the-vocabulary](/decisions/0.1.0/a-volume-can-be-older-than-the-vocabulary.md).
 
 # When the world changes under a running agent
 

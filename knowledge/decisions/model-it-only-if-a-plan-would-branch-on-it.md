@@ -66,7 +66,7 @@ nearest thing that exists is suspicion — `suspects()` flags an (action, want) 
 gone unmet `suspectAfter` times running, which is the graph claiming a movement the world keeps
 refusing. It is flagged and never auto-retracted, because what to do about a belief that is not
 paying is a decision
-([an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md)).
+([an-intention-stands-until-the-world-answers](/decisions/0.1.0/an-intention-stands-until-the-world-answers.md)).
 
 # Where it goes wrong
 
@@ -81,7 +81,7 @@ paying is a decision
   unshippable. **First-order observed behaviour only** — that this agent won that round, what it
   has bid before — and reliability estimated from observation rather than from a nested
   epistemic state. Nothing here nests today, and the structure helps: a bid is sealed and
-  private ([deterministic-bid](/decisions/deterministic-bid.md)), so there is nothing to model a
+  private ([deterministic-bid](/decisions/0.1.0/deterministic-bid.md)), so there is nothing to model a
   peer's reasoning FROM, and what a host records about a participant is an
   obligation, which is first-order by construction.
 
@@ -91,7 +91,7 @@ Resource beliefs and the epistemic layer — freshness, the source a reading cam
 instrument is still speaking — carry nearly all the weight in `world/simulation`. Capability and
 performance history become load-bearing when the market starts needing an agent to bid honestly
 about what it can actually deliver, which is
-[strategic-supplier](/decisions/strategic-supplier.md)'s seam.
+[strategic-supplier](/decisions/0.1.0/strategic-supplier.md)'s seam.
 
 # Seams left open
 

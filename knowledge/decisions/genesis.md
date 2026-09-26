@@ -72,7 +72,7 @@ instead of a directory full of everyone's. See [world](/domain/kernel/world.md) 
 flashed by hand and the model cannot conjure it. What genesis decides is what an *agent* is —
 which is exactly why the same board is a watcher in one world and a bidder in another.
 
-This is [english-vs-formal](/decisions/english-vs-formal.md) applied to *creation*: the story
+This is [english-vs-formal](/decisions/0.1.0/english-vs-formal.md) applied to *creation*: the story
 is fuzzy human intent (English); the ratified structure is trusted formal. What the session
 itself has to elicit, and how to tell the result hangs together, is
 genesis-process.
@@ -156,7 +156,7 @@ Amendment changes the **current world and go-forward beliefs**. It must **never*
 retro-edit **testimony/history** — past attestations (with their timestamps) and the Influx
 series are the *record of what happened*, append-only. You may change what the world **is**,
 never what it **was**. That is what keeps the witness of record trustworthy. See
-[belief-base](/domain/belief/belief-base.md) and [trust-boundary](/decisions/trust-boundary.md).
+[belief-base](/domain/belief/belief-base.md) and [trust-boundary](/decisions/0.1.0/trust-boundary.md).
 
 # v1 vs v2
 

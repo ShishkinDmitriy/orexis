@@ -40,7 +40,7 @@ which is the argument for this change more than any principle is:
   so `orexis-wireviz` raised `ModuleNotFoundError` on any install that was not a developer's. The
   import is deferred inside a function, so it failed only when that branch ran — the same shape
   as the deferred import that crash-looped every agent for four merges
-  ([a-deferred-import-is-code-no-test-runs](/decisions/a-deferred-import-is-code-no-test-runs.md)).
+  ([a-deferred-import-is-code-no-test-runs](/decisions/0.1.0/a-deferred-import-is-code-no-test-runs.md)).
 - **`rdflib`** is imported directly in nine places across `assembly/`, `agent/` and
   `onboarding/`, and was declared nowhere. It arrived only as a transitive of `pyshacl`, which is
   free to drop it or re-pin it at any release.
@@ -72,7 +72,7 @@ checks, which is how a supply chain stops being audited.
 
 **The root depends on no package.** `orexis` is assembly, the kernel and the operator's tools.
 That the kernel needs no package was already a claim
-([the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md)) and a test
+([the-mind-is-not-a-package](/decisions/0.1.0/the-mind-is-not-a-package.md)) and a test
 (`test_the_kernel_stands_alone_with_no_packages_at_all`); it is now also the shape of the
 install.
 
@@ -114,7 +114,7 @@ one thing pip *can* manage and the loader never could: who needs what.
   the standard answer** and are how a third-party package will eventually announce itself; until
   then, an external package is found only if its directory is inside the tree (#424).
 - ~~**`packages` is a very general top-level namespace to ask an external developer to share.**~~
-  Closed by [a-package-is-its-name](/decisions/a-package-is-its-name.md): the tree went flat, the
+  Closed by [a-package-is-its-name](/decisions/0.1.0/a-package-is-its-name.md): the tree went flat, the
   shared import root went with it, and each package owns a top-level module named for its own
   distribution. There is no namespace to share any more.
 - **Versions all read `0.1.0` and move together.** Nothing is released independently, so nothing

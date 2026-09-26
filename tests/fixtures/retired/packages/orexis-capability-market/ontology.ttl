@@ -26,7 +26,7 @@
 #################  The venue  #################
 
 :Market a owl:Class ; rdfs:label "Market" ;
-    rdfs:comment "The standing STRUCTURE around a resource: what is allocated, who may supply it, who may consume it, and the channels they meet on (see transport), so participants discover the venue rather than being configured with it. A market is not an event — the AUCTION is the event, condensing out of scarcity and dissolving again, and a market with nothing contested is still a market with no auction in it. Both were called 'market' until recently and the two readings are opposites; see knowledge/domain/market.md." .
+    rdfs:comment "The standing STRUCTURE around a resource: what is allocated, who may supply it, who may consume it, and the channels they meet on (see transport), so participants discover the venue rather than being configured with it. A market is not an event — the AUCTION is the event, condensing out of scarcity and dissolving again, and a market with nothing contested is still a market with no auction in it. Both were called 'market' until recently and the two readings are opposites; see knowledge/domain/market/market.md." .
 
 :marketFor a owl:ObjectProperty ; rdfs:domain :Market ;
     rdfs:label "market for" ;
@@ -216,7 +216,7 @@ Must comfortably exceed the longest a holder may wait before presenting, which i
 #  and announced. Now that a round is a fact and offering is an action, the LOW is what makes
 #  a round WANTED — a want the host did not source, as a claim makes a dose wanted
 #  (an-obligation-is-a-desire-someone-else-sourced) — and the search plans it: Offer, or
-#  acquire upstream then Offer when the vessel is dry. See knowledge/domain/call.md.
+#  acquire upstream then Offer when the vessel is dry. See knowledge/domain/market/call.md.
 
 :Call a owl:Class ; rdfs:label "Call" ;
     rdfs:comment "A round is wanted on this venue, because a participant said it is in trouble. One per venue, in the host's own graph, written on the LOW and retracted when a round opens there. Unmet while no round stands and no clock runs it down: a call is answered or it is not, and the search says what stands in the way." .

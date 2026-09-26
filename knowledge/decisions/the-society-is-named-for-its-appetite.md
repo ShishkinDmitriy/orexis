@@ -22,13 +22,13 @@ more interesting: the name pointed at the wrong feature.
 
 Agora names the marketplace. But the market here is **one package among eight**,
 and it is this architecture's own flagship example of interchangeability — pay-as-bid and
-uniform-price are two members of one [bid-matching](/decisions/bid-matching-is-a-capability.md)
+uniform-price are two members of one [bid-matching](/decisions/0.1.0/bid-matching-is-a-capability.md)
 family, and `hosting.py` never learns which answered. A name should survive every planned
 substitution, and a name that points at the most explicitly replaceable part does not. What
-nothing swaps out is the mind: a [belief is a pick within a range](/decisions/a-belief-is-a-pick-within-a-range.md),
+nothing swaps out is the mind: a [belief is a pick within a range](/decisions/0.1.0/a-belief-is-a-pick-within-a-range.md),
 a [desire is a shape](/decisions/a-desire-is-a-shape.md), an
 [intention is an amortised deliberation](/decisions/an-intention-is-an-amortised-deliberation.md),
-and [a market arises where want meets supply](/decisions/a-market-arises-where-want-meets-supply.md)
+and [a market arises where want meets supply](/decisions/0.1.0/a-market-arises-where-want-meets-supply.md)
 — the market itself is downstream of wanting.
 
 # The choice

@@ -12,7 +12,7 @@ timestamp: 2026-08-03T12:00:00Z
 
 # Context
 
-[capability-modules](/decisions/capability-modules.md) established what a capability *is*:
+[capability-modules](/decisions/0.1.0/capability-modules.md) established what a capability *is*:
 a vocabulary, its rules, its derivation, and the code that reads them — derived from hardware
 rather than declared. That decision stands. What it got wrong was where those four things
 live.
@@ -90,7 +90,7 @@ codebase — not in the seeder, not in the validator, not in the runtime, not in
 capability is a directory*, and `capabilities/market/` already provided two — bidding and hosting —
 when it was written. A directory is how a package is FOUND and how one is DELETED; what isolates a
 capability is `PROVIDES` and its term. See
-[a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md), which corrected the rule and folded
+[a-package-owns-its-namespace](/decisions/0.1.0/a-package-owns-its-namespace.md), which corrected the rule and folded
 a third capability into that same package to show the seam holds without it.
 
 **Adding a capability is adding a directory.** No registry line, no term constant, no belief
@@ -131,7 +131,7 @@ about your own state* conditional on being a market participant, and limited it 
 property a bid is priced in. The seam this section is about is unchanged and is why the second
 move cost nothing — sensing still asks whoever will answer, and never learned either address.
 See
-[desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md).
+[desire-is-deduced-from-the-ranges-the-world-states](/decisions/0.1.0/desire-is-deduced-from-the-ranges-the-world-states.md).
 
 **Belief blocks moved to their capabilities.** `orexis.beliefs` keeps the *reader* — the block
 query, the no-defaults error, the freshness rule — because that is identical for every
@@ -145,7 +145,7 @@ loading the module that issued it.
 
 **The market mechanism stayed in the kernel.** `market.py`, `auction.py` and `clearing.py` are
 pure and domain-neutral, and clearing is a separate authority on its way to being a separate
-service (see [standalone-clearing](/decisions/standalone-clearing.md)). What lives in
+service (see [standalone-clearing](/decisions/0.1.0/standalone-clearing.md)). What lives in
 `packages/orexis-capability-market/` is the *choreography* — announce, collect, match, issue — which is the
 part that reads the vocabulary and holds a capability.
 

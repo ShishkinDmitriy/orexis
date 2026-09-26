@@ -24,7 +24,7 @@ member — agents, stand-ins, a board on the LAN — must reach one bus by one n
 
 **A world's simulated systems are played by its simulator**, one more service: `python -m
 simulation <world>`, connected as the one client that hosts every system the world marks
-`sim:simulatedBy`, reading the world as an agent does. See knowledge/domain/world.md.
+`sim:simulatedBy`, reading the world as an agent does. See knowledge/domain/kernel/world.md.
 """
 
 from __future__ import annotations
@@ -161,7 +161,7 @@ def _broker(world: str, plain: int, tls: int | None) -> str:
     A broker per world costs about 2 MB and removes more than it adds: its ACL derives from ONE
     world's wiring instead of every provisioned world at once, it trusts exactly one certificate
     authority instead of a bundle rebuilt whenever a world appears, and a new world no longer
-    forces a restart of something other societies are talking to. See knowledge/domain/onboarding.md.
+    forces a restart of something other societies are talking to. See knowledge/domain/onboarding/onboarding.md.
     """
     ports = f'["{plain}:{plain}"' + (f', "{tls}:{tls}"]' if tls else "]")
     tls_mounts = "" if not tls else (

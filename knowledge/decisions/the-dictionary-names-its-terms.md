@@ -23,9 +23,9 @@ already gates — prose against prose (`tests/test_knowledge.py`'s
 (`tests/test_vocabulary.py`, per
 [every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md)) — and the third, dictionary
 against ontology, was convention. Convention had let two synonyms stand for months after being
-noticed: [a-mandate-is-not-a-commitment](/decisions/a-mandate-is-not-a-commitment.md) acted on a collision
+noticed: [a-mandate-is-not-a-commitment](/decisions/0.1.0/a-mandate-is-not-a-commitment.md) acted on a collision
 that `every-term-in-its-own-house` had *recorded* without renaming, and
-[channel-is-the-word](/decisions/channel-is-the-word.md) closed a split nobody had chosen at all.
+[channel-is-the-word](/decisions/0.1.0/channel-is-the-word.md) closed a split nobody had chosen at all.
 
 # Decision
 
@@ -62,7 +62,7 @@ the dictionary is deliberately larger than the T-Box.
 
 `tests/fixtures/vocabularies/` holds SOSA and SSN (from the W3C sdw repository's integrated
 files), PROV-O, DCTERMS and SHACL — on the
-[their-descriptions-are-our-fixtures](/decisions/their-descriptions-are-our-fixtures.md) precedent, and
+[their-descriptions-are-our-fixtures](/decisions/0.1.0/their-descriptions-are-our-fixtures.md) precedent, and
 for the same reason the gate exists at all: `sosa:hasSimpleResult` should be checked against
 what SOSA declares, not against our memory of it, and a gate that needs w3.org up is a gate
 that flakes (w3.org served 503s during the very session that vendored these). Words borrowed

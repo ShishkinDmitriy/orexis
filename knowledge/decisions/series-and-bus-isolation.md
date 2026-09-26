@@ -20,7 +20,7 @@ in `infra/.env`, which the generated compose files hand to every agent container
 
 **The bus.** `allow_anonymous true`, no ACL file, one open listener. Any process on the LAN
 could subscribe `#` and watch every reading, every bid and every claim, or publish a forged
-offer as the supplier. The [capability-modules](/decisions/capability-modules.md) note admitting
+offer as the supplier. The [capability-modules](/decisions/0.1.0/capability-modules.md) note admitting
 this was accurate: *"the bus has no ACLs at all."*
 
 # Decision

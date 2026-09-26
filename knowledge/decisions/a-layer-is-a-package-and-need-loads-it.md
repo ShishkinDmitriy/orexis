@@ -17,7 +17,7 @@ timestamp: 2026-08-30T18:00:00Z
 
 # Context
 
-[a-layer-is-a-distribution](/decisions/a-layer-is-a-distribution.md) decided the split and
+[a-layer-is-a-distribution](/decisions/0.1.0/a-layer-is-a-distribution.md) decided the split and
 placed the layer trees at the root, beside `assembly/`, on the argument that the package tree
 is the granted tree and a layer is unconditional — "a grant nobody can lack is not a grant."
 The first implementation was built and verified to the letter: the stores extracted to a root
@@ -37,7 +37,7 @@ each a family whose members are interchangeable implementations, which is what
 capability's own test always asked of a package and what the
 superseded record sidestepped as "a different rationale." It passes now rather than being
 excused: deliberation by bounded search and deliberation by a model are two members of one
-family ([llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) already argues the
+family ([llm-heavy-deliberation](/decisions/0.1.0/llm-heavy-deliberation.md) already argues the
 second); execution against hardware and execution against a stand-in likewise. ~~The mind's
 stores become a package the layers depend on.~~ *Struck by the amendment below: there is no
 floor, and a store lives in the layer that owns it.* Review needs no move at all —
@@ -77,7 +77,7 @@ decision inside that placement but a consequence of it, and consequences that ar
 unexamined are how architecture drifts.
 
 **Layers as granted capabilities, still.** The refusal in
-[the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md) stands and this record
+[the-mind-is-not-a-package](/decisions/0.1.0/the-mind-is-not-a-package.md) stands and this record
 leans on it harder: a layer is not granted by a premise, it is depended on by a need, and the
 tautological grant stays refused. The failure shape that record retired — a store built
 unconditionally beside readers that arrive by grant — is answered better than either
@@ -117,7 +117,7 @@ kept for capabilities; see the struck seam below):
 
 The event mechanism is the assembly's choir — a lower layer `agent.tell`s a term some ontology
 declares as an `assembly:Extension`, and an upper layer fills the point with `@contributes` —
-because [the-assembly-is-not-the-mind](/decisions/the-assembly-is-not-the-mind.md) decided one
+because [the-assembly-is-not-the-mind](/decisions/0.1.0/the-assembly-is-not-the-mind.md) decided one
 mechanism and a second bus beside it would be the registry this tree refuses. It served: a
 tell is a method call on the caller's thread, which for progression's events is the loop, and
 the subscribers do milliseconds (mark a want, count a step).

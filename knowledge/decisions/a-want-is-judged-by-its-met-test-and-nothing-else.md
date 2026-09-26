@@ -29,7 +29,7 @@ were the same question.
 | `sensing:urgency` | how pressing one reading is | the cadence |
 
 They were not strengths of one scale, which is the thing
-[shall-must-and-may-are-not-strengths-of-one-scale](/decisions/shall-must-and-may-are-not-strengths-of-one-scale.md)
+[shall-must-and-may-are-not-strengths-of-one-scale](/decisions/0.1.0/shall-must-and-may-are-not-strengths-of-one-scale.md)
 argued about the SOURCES of desire and which turns out to be true one level down as well.
 
 # The first had no reader at all
@@ -151,7 +151,7 @@ Hosting answered "is this call met" through the choir, and it was the LAST reade
 and the graph a plan imagines them into, which is what let a host plan to open a round.
 
 A call carries `orexis:unmetWhen` now, exactly as the debt did in
-[#635](/decisions/a-package-owns-its-namespace.md): a select whose rows are the venue having no
+[#635](/decisions/0.1.0/a-package-owns-its-namespace.md): a select whose rows are the venue having no
 round, in a `market:CallsGraph` the host classifies when it writes the call. It names no world
 (#666), so the runner's graph list answers for both the standing round and the imagined one.
 Writing one asks for the desire projection to be rebuilt, as the ledger does when it writes a

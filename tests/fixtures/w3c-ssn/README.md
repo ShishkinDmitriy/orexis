@@ -88,5 +88,5 @@ fails and tells us to drop the patch, rather than silently applying a no-op fore
 - **One in four of the published examples does not parse.** `IBS-TH2-PLUS.ttl` is deliberately
   not vendored: it comes from the successor draft
   [`w3c/sdw-sosa-ssn`](https://github.com/w3c/sdw-sosa-ssn), which models a datasheet a different
-  way. See `knowledge/decisions/their-descriptions-are-our-fixtures.md` for why that is a
+  way. See `knowledge/decisions/0.1.0/their-descriptions-are-our-fixtures.md` for why that is a
   warning rather than a fixture.

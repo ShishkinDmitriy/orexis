@@ -93,7 +93,7 @@ universal's instances is a read, not a re-derivation, and the scar stands.
 
 # The forest stands, and it is a forest of wants
 
-[a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md)
+[a-desire-is-a-forest-of-derived-roots](/decisions/0.1.0/a-desire-is-a-forest-of-derived-roots.md)
 settled that an agent's desires are several trees, a root per premise, decomposed per instance,
 per property and per side. What this record changes is what the nodes below a root ARE: not
 derived desires, but WANTS. A root is a desire; everything under it is minted by the function above

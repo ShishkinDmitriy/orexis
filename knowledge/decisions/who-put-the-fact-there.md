@@ -171,7 +171,7 @@ not be mistaken for proof, and the distinction belongs where somebody deciding w
 will read it.
 
 Closing it needs no new design: `orexis-keygen <world> sovereign` already mints a named keypair
-with no code changes, and [thin-trusted-infra](/decisions/thin-trusted-infra.md) already points at signed
+with no code changes, and [thin-trusted-infra](/decisions/0.1.0/thin-trusted-infra.md) already points at signed
 artifacts as the direction. Deliberately not done here — a signature that nothing verifies is
 worse than an honest claim, and verification is its own pass.
 
@@ -299,7 +299,7 @@ treatment if that ever changes.
 
 # Amended: there are six, and a package may own one
 
-[desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
+[desire-is-deduced-from-the-ranges-the-world-states](/decisions/0.1.0/desire-is-deduced-from-the-ranges-the-world-states.md)
 added `…/graph/constraint`, so **"five" is now the count at the time of writing and not the claim**.
 Read every "five" below as "the public set", which is what the record actually argues for — the
 whole point of `orexis:PublicGraph` being a class is that the number is data.

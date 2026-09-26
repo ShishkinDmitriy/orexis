@@ -69,7 +69,7 @@ wrong row.
 
 **Where the model sits.** A model may be asked in **deliberation only**. Sensing's cadence, the
 bid arithmetic and the dose are deterministic code and stay so
-([deterministic-bid](/decisions/deterministic-bid.md)); a plant agent stays committed to a water
+([deterministic-bid](/decisions/0.1.0/deterministic-bid.md)); a plant agent stays committed to a water
 grant through progression while readings keep arriving underneath it, and no handler ever waits
 on anything.
 
@@ -108,7 +108,7 @@ is a want marked for re-planning, without the ledger ever importing the search.
   the act is committed and its actor cannot act yet); satisfied; dropped, including *outwaited*,
   which is supersession by a fresher decision. Fail is a separate fact rather than an outcome:
   satisfied-and-`endMet` false is the false-knowledge signature
-  ([an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md)).
+  ([an-intention-stands-until-the-world-answers](/decisions/0.1.0/an-intention-stands-until-the-world-answers.md)).
 
 # What this made wrong, and what fixed it
 

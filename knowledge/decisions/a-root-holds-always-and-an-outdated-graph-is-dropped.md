@@ -27,7 +27,7 @@ endowed on amendment — a never-held root arrives, a held one stays
 ([an-amendment-endows-what-it-grants](/decisions/an-amendment-endows-what-it-grants.md)) — and a
 rebuild never touches it. Foresight leaves the root and is read by the child's derivation at the
 instant it derives. The argument of
-[desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
+[desire-is-deduced-from-the-ranges-the-world-states](/decisions/0.1.0/desire-is-deduced-from-the-ranges-the-world-states.md)
 survives untouched: the sovereign's ranges are the source, genesis receives the root from them,
 and an agent never authors one. What that record decided about the region — who works it out,
 and that the how could differ — is about the met-test, which is still minted from the ranges.

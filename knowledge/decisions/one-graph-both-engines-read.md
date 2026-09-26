@@ -31,7 +31,7 @@ The trap had already caught the code twice. `orexis:models rdfs:subPropertyOf se
 see simulated sensors as polled while the runtime did not, and the workarounds are still legible
 — `onboarding/mqtt.py` asks a second time, `dashboards.py` survives on a `UNION`. And it had just
 caught it a third time: `review.py`'s `_REVISABLE_Q`, shipped in
-[a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md), reads
+[a-belief-is-a-pick-within-a-range](/decisions/0.1.0/a-belief-is-a-pick-within-a-range.md), reads
 `?term a review:RevisableBelief` with no path, so a package declaring a revisable belief through a
 subclass would have validated perfectly and returned nothing.
 
@@ -44,7 +44,7 @@ out how to find out.
 
 What is computed is deliberately narrow: transitivity of `rdfs:subClassOf` and
 `rdfs:subPropertyOf`, the type and property entailments that follow, and — since
-[what-is-true-of-a-part-is-true-of-every-one-of-them](/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md)
+[what-is-true-of-a-part-is-true-of-every-one-of-them](/decisions/0.1.0/what-is-true-of-a-part-is-true-of-every-one-of-them.md)
 — `owl:hasValue`, the one OWL class expression that produces ground triples rather than
 constraining them. Nothing else.
 
@@ -56,7 +56,7 @@ triple this closure exists to leave out.
 Full RDFS entailment was refused rather than deferred. It would assert that every resource is an
 `rdfs:Resource` and every property an `rdf:Property` — true, useless, and it would multiply the
 triple count that agent-metrics reports as flat and that
-[a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md) leans on to trigger
+[a-belief-is-a-pick-within-a-range](/decisions/0.1.0/a-belief-is-a-pick-within-a-range.md) leans on to trigger
 compaction. The closure is exactly what the code and the shapes actually ask.
 
 ## It cannot go stale, and it cannot accumulate

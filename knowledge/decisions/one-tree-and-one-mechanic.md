@@ -116,7 +116,7 @@ nothing missing — which is a check nothing performs automatically. See
   package if it directly holds one of the four files or Python beyond `__init__.py` — and
   nothing needs a third level yet.
 - **Tests did not move here; they did in the record that follows.** See
-  [a-package-may-test-itself](/decisions/a-package-may-test-itself.md), which also corrects the
+  [a-package-may-test-itself](/decisions/0.1.0/a-package-may-test-itself.md), which also corrects the
   count stated here — it was 17, not 29. The reporting half was misclassified: eleven of its
   twelve take a fixture built by `conftest.build_agent`, which is *"a real Agent — real world,
   real beliefs, real modules"*, and the marker list used to measure it did not name that helper.

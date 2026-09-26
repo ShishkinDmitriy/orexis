@@ -21,7 +21,7 @@ target. Attesting `hasCurrentMoisture :LOW` into a shared graph was asserting a 
 testimony* — it broke "no shared knowledge, only testimony + private belief." The
 gateway attests the measurement; each [agent](/domain/kernel/agent.md)
 computes its own band. (The old "threshold is the gateway's one authority" reasoning in
-[two-store-beliefs](/decisions/two-store-beliefs.md) conflated measurement with judgment.)
+[two-store-beliefs](/decisions/0.1.0/two-store-beliefs.md) conflated measurement with judgment.)
 
 Keep separate: the **comfort band** (desire-relative → the agent's) vs the **rot limit**
 (objective physical harm → the constitution's). Agents own what
@@ -54,7 +54,7 @@ can't back a bid, and an agent can't stay willfully ignorant to bid high).
 
 The payoff: sensing costs energy (battery + budget), so **how much to observe becomes an
 economic decision** — bounded rationality extended from cognition to *sensing*
-(see [single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md)). Guard: a
+(see [single-wallet-metabolic-cost](/decisions/0.1.0/single-wallet-metabolic-cost.md)). Guard: a
 **constitutional cadence floor** — autonomy over attention, but never the freedom to sleep
 through a drought and rot.
 
@@ -124,7 +124,7 @@ the cadence floor is clamped on both sides of the wire. See [sensing](/domain/se
 
 **Not yet.** Sensing is *initiated* by the agent but not **priced** — no wallet debit per
 `sense`, so "how much to observe" is not yet the economic decision §3 promises; that waits on
-[single-wallet-metabolic-cost](/decisions/single-wallet-metabolic-cost.md). Disclosure (§2) is
+[single-wallet-metabolic-cost](/decisions/0.1.0/single-wallet-metabolic-cost.md). Disclosure (§2) is
 still coarse: one shared `:sensed` graph rather than per-plant private scopes — nothing yet
 *enforces* that a peer can't read fern's moisture. And the ledger (§4) is not yet
 clearing-authored. Those remain the v2 epistemics/observability work; the principle stays

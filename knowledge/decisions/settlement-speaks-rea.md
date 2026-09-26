@@ -9,8 +9,8 @@ timestamp: 2026-08-10T00:00:00Z
 # Context
 
 Two vocabulary passes in a row found this project using a word two ways
-([bid-matching-is-the-word](/decisions/bid-matching-is-the-word.md),
-[a-round-is-an-iteration-not-the-auction](/decisions/a-round-is-an-iteration-not-the-auction.md)), and both
+([bid-matching-is-the-word](/decisions/0.1.0/bid-matching-is-the-word.md),
+[a-round-is-an-iteration-not-the-auction](/decisions/0.1.0/a-round-is-an-iteration-not-the-auction.md)), and both
 were found by a reader rather than by a gate. The obvious next move is to stop inventing terms
 where a standard already has one, and check the ones we have against it.
 
