@@ -53,8 +53,8 @@ returns attached to whatever needs it, never a thing quietly lost
 
 - **the `Deliberator`** — the mind's whether and its clock, which asked the search on the
   agent's patience. A container calls `Planner.plan` now.
-- **`pursuit`** — plan, commit, hand down. The commit half is the execution layer's; there is
-  nothing yet to hand down to.
+- **`pursuit`** — plan, commit, hand down. The commit half is the executor's now, and
+  `publish_plan` hands a pass's plans to it.
 - **`considering`** — the collection that presented what an agent was considering, and the
   `Desires` projection it read. The search reads the desire and want graphs straight out of
   the beliefs store, which is what removed the projection's whole reason to exist.
@@ -64,9 +64,9 @@ returns attached to whatever needs it, never a thing quietly lost
 - **the judge** (`conformance`) — it belongs at the gates, where a world is entire and the
   question can be asked at all. What the search reads is the SELECT a shape compiles to, which
   is the execution layer's `violation`.
-- **the relevance closure, the cone, remembered plans and the trace** — a narrowing, a resume,
-  a reuse and a record. Three are speed and the fourth is for a reader; none of them is what a
-  plan IS.
+- **the relevance closure, remembered plans and the trace** — a narrowing, a reuse and a
+  record; none of them is what a plan IS. The cone came back: the imaginarium is kept from pass
+  to pass and `reroot` identifies the present in it.
 
 NOTHING IS CONTRIBUTED AND NOTHING IS GRANTED. This carried a `@contributes(VOCABULARY)`
 manifest, which is how the 0.1.0 assembly discovers a package's ontology by walking `packages/`.

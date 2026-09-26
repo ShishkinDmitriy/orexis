@@ -143,7 +143,7 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
     #  at T", and a plan for it is placed to land at T (#619). A cluster unmet NOW whose want
     #  still says T — the holder asked before the claim lapsed, the pot crossed before the
     #  drift said it would — is re-minted with no instant, under the same name, so the
-    #  trace, a remembered plan and the keeper meet the want they kept and a plan is found
+    #  kept cone and a standing intention meet the want they kept and a plan is found
     #  from the present. The instant was the derivation's reading of the predictions; the present
     #  outranks it, as it does everywhere else here.
     #  STANDING IS BY NAME, and the name is the cluster's: what it is about, and which instance
@@ -261,7 +261,7 @@ def _tail(iri: str) -> str:
 def _name_of(shapes: rdflib.Graph, desire: str, said, about: tuple, instance: str | None) -> str:
     """The name of the want minted under `desire` for one cluster of its witnesses: the desire's,
     suffixed, so a second episode of the same cluster pursues the same node and everything
-    keyed by it — the planner, a remembered plan, the trace, the keeper — finds what it kept.
+    keyed by it — the planner's kept cone, the executor's intentions — finds what it kept.
 
     NAMED FOR WHAT IT IS ABOUT where that is NARROWER than the desire, so two wants under one
     desire — soil now, air later — are two nodes; and for the desire alone where it is not,

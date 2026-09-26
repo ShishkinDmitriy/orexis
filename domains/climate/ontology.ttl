@@ -28,8 +28,6 @@
 :AirHumidity a sosa:ObservableProperty ; rdfs:label "Air humidity" ;
     rdfs:comment "Relative humidity, as a fraction." .
 :AirPressure a sosa:ObservableProperty ; rdfs:label "Air pressure" .
-:StoredLitres a sosa:ObservableProperty ; rdfs:label "Stored litres" ;
-    rdfs:comment "What a water source holds." .
 
 :WaterSource a owl:Class ; rdfs:label "Water source" ;
     rdfs:comment "Where a dose draws from: a butt, a tank." .
