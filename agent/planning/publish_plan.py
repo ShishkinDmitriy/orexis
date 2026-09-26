@@ -34,14 +34,16 @@ import logging
 
 import pyoxigraph as ox
 
-from agent.store import Raw, bind, graphs_of, rows
+from agent.store import Raw, bind, forget_graph, graphs_of, rows
 
-from .ontology import PLAN_GRAPH
+from .ontology import PLAN_GRAPH, WANT
 
 log = logging.getLogger("publish_plan")
 
 #  WHICH WANT A PLAN IS FOR, off the plan's own root. A plan graph is named for its want and
 #  the row says so; the read asks the row, because a name is for eyes.
+_STANDS_Q = """SELECT ?w WHERE { $want a planning:Want . BIND($want AS ?w) } LIMIT 1"""
+
 _FOR_Q = """SELECT ?want WHERE { GRAPH $plan { $plan planning:for ?want } }"""
 
 
@@ -61,6 +63,13 @@ def publish_plan(imaginarium: ox.Store, executor) -> list[str]:
             #  and the intentions keep what an agent is doing and for what.
             log.error("%s: a plan graph names no want, so it cannot be committed: %s",
                       executor.id, graph)
+            continue
+        if not rows(imaginarium, _STANDS_Q, graphs_of(imaginarium, WANT), want=found[0]["want"]):
+            #  A PLAN WHOSE WANT IS GONE is nobody's: the want was reached, or withdrawn from the
+            #  beliefs and taken back by the refresh, and the plan graph the imaginarium kept
+            #  would be walked a second time — measured on the tower, whose goal was reached in
+            #  the courier's imaginarium and re-committed from the puzzle's. Dropped with it.
+            forget_graph(imaginarium, graph)
             continue
         if found[0]["want"] in walking:
             #  THE IMAGINARIUM OUTLIVES THE PASS, so a plan an earlier pass found is still

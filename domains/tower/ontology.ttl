@@ -1,0 +1,18 @@
+@prefix : <http://example.org/orexis/tower#> .
+@prefix tower: <http://example.org/orexis/tower#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
+    owl:imports <../hanoi/ontology.ttl> , <../courier/ontology.ttl> , <rules.ttl> .
+
+#  THE TOWER, A COMBINATION: hanoi's puzzle on the courier's grid. Neither domain knows the other,
+#  and this one says only how their facts relate — a disk is a parcel the van can carry, and what
+#  a disk is ON follows from where the disks stand (rules.ttl). Nothing here says how to plan or
+#  when to plan below: the core bridges a Move by itself, because a rule here concludes the fact
+#  a Move predicts (knowledge/domain/refinement.md).
+
+hanoi:Disk rdfs:subClassOf courier:Parcel .

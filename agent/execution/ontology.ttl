@@ -190,3 +190,7 @@ execution:Operation
     a owl:Class ;
     rdfs:label "Operation" ;
     rdfs:comment "One thing taking a step does: a command to a device, a document to a peer, or writing the effect itself for a world with nothing to report it. The kinds are execution's (`execution:Command`, `execution:Saying`, `execution:Fictive`)." .
+
+execution:refinedBy a owl:ObjectProperty ; rdfs:domain execution:Act ;
+    rdfs:label "refined by" ;
+    rdfs:comment "The want an act kept its step one level down as — written when the container's `refine` answered one instead of the step being taken. The step then waits on that want and not on the clock: while an intention walking it stands, patience does not run; when one ends undone, the step fails at once; and when the step's own intention ends undone, whatever walks that want is abandoned with it." .

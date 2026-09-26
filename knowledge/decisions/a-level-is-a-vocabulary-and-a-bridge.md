@@ -1,8 +1,9 @@
 ---
 type: Decision
 title: A level is a vocabulary, and a bridge is what connects two
-status: accepted
+status: superseded-in-part
 timestamp: 2026-09-03
+superseded-by: the-hierarchy-is-found-in-the-rules
 description: >-
   Hierarchical planning here is not hand-written decomposition. A level is the vocabulary
   some actions write their effects in; a search runs inside one vocabulary and never leaves

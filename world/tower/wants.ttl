@@ -1,0 +1,14 @@
+@prefix : <http://example.org/orexis/world/tower#> .
+@prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+
+<> a planning:WantGraph .    # this document is one graph, and this is what it is
+
+#  HANOI'S SENTENCE, on the grid: every disk home on peg C. The mover holds this want and no
+#  desire, so it stops when the tower stands.
+:mover planning:holds :every_disk_home .
+:every_disk_home a planning:Want ;
+    rdfs:label "every disk home on peg C — hanoi's sentence, on the courier's grid" ;
+    planning:metWhen hanoi:solved ;
+    planning:estimates hanoi:disksAstray .
