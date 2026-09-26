@@ -6,8 +6,8 @@ description: >-
   separate where nothing does — a bulkhead in the vocabulary. Two wants in different
   scopes cannot contradict, because no action of one writes a fact the other reads, which
   is what would make it safe to plan them apart and concatenate their plans. Computed from what
-  the shipped rules do, never read off namespaces. Measured on every shipped world: one
-  scope, so nothing yet splits.
+  the shipped rules do, never read off namespaces. The tower is the first world that splits:
+  the puzzle's words and the grid's, one imaginarium each.
 ---
 
 # What it is
@@ -50,24 +50,26 @@ An action whose [footprint](/domain/footprint.md) cannot be read from its text j
 might touch any predicate cannot be proven not to, and a scope wrongly split would let two
 plans contradict each other.
 
-# What it measures today: nothing splits
+# What it measures: the tower splits, and everything else is one
 
-Every shipped world is ONE scope, around ninety predicates, whether the derivations are
-counted or the actions taken alone. The actions alone already join the market's plumbing to
-sensing's readings, because every effect this project ships predicts a reading of the same
-shape. Every want every shipped agent holds falls inside that one scope.
+Most shipped worlds are ONE scope: every effect they ship predicts a reading of the same shape,
+so the market's plumbing and sensing's readings are joined by the actions alone. The
+greenhouse was built to break that and did not — a heater that dries the soil couples two
+properties through a VALUE, and both readings carry the same predicates.
 
-So the mechanism this concept exists for — one cone per scope, plans concatenated — has
-nothing to split, and is not built. The measurement is the point: it is what says so, and the
-first world that breaks it is the first one worth planning as several cones. See
-[#565](https://github.com/ShishkinDmitriy/orexis/issues/565).
+`world/tower` splits in two, the first world to: hanoi's Move reads and writes `hanoi:on` and
+what a peg is, the courier's drives and drops read and write `courier:at` and
+`courier:carriedBy`, and no action touches both — what joins them is a RULE, which is not an
+action and couples nothing here ([refinement](/domain/refinement.md)). It split only once a
+type pattern was read as its CLASS: keyed by `rdf:type` alone, `?x a hanoi:Peg` and
+`?v a courier:Van` read one predicate, and every action of both domains was one scope.
 
-**The world built to break it did not, and that is the finding.** `world/greenhouse` holds one
-want about two properties, a pump that moves one and a heater that moves the other, and a world
-fact — `heating:driesTheSoil` — that makes the heater reach into the pump's property. The plan
-reorders when it is set, so the coupling is real and the search reads it. The scope count does
-not move: one, either way, because both readings carry the same predicates and differ only in a
-VALUE. That world is what will measure a scope over variables the day one is computed.
+**One imaginarium per scope, and a scope's worlds admit the scope's actions alone.** A want is
+searched in the scope its met-test reads, counting only what some action can change — a disk's
+size is read by a refined want and changed by nothing, and counted, it pulled a courier goal
+into the puzzle's scope. An action of another scope writes nothing that want reads, so its
+steps fork worlds the met-test cannot tell apart; admitted everywhere, the courier's drives
+spent the puzzle's budget and moved no disk.
 
 # Related
 
@@ -76,11 +78,8 @@ VALUE. That world is what will measure a scope over variables the day one is com
 
 # In the store
 
-`scope_actions` writes the partition to the agent's scope graph at boot — a
-`deliberation:Scope` per part, each predicate and each action `deliberation:inScope` its own —
-and `derive_wants` clusters a desire's results by reading it, never by recomputing it
-([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)). The
-partition is `relevance.scopes`' as it always was; what changed is that it is data, replaced
-whole when the actions are, and a store holding no scope graph is refused rather than
-clustered as one scope. The cases in `packages/orexis-agent-deliberation/tests/scope_actions/`
-hold the function to a snapshot of what it writes.
+`scope_actions` writes the partition to the store's scope graph at boot — a `planning:Scope`
+per part, each predicate and each action `planning:inScope` its own — and `derive_wants`
+clusters a desire's results by reading it, never by recomputing it. The Planner keeps an
+imaginarium per scope and hands each search the actions `planning:inScope` of it. The cases in
+`agent/planning/tests/scope_actions/` hold the function to a snapshot of what it writes.

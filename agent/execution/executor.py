@@ -130,6 +130,21 @@ ORDER BY ?due ?intention"""
 
 _PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH $intentions { $step execution:predicts ?predicts } }"""
 
+#  WHAT A STEP KEPT BELOW WAITS ON: the intentions walking the want it was refined into — standing,
+#  or ended and how.
+_REFINED_Q = """
+SELECT ?outcome WHERE { GRAPH $intentions { $act execution:refinedBy ?want .
+  ?below a execution:Intention ; execution:pursues ?want .
+  OPTIONAL { ?below execution:outcome ?outcome } } }"""
+
+#  WHAT HANGS BELOW AN INTENTION: every standing intention walking a want one of its steps' acts
+#  was refined into.
+_BELOW_Q = """
+SELECT DISTINCT ?below WHERE { GRAPH $intentions {
+  $intention execution:step ?step . ?act execution:of ?step ; execution:refinedBy ?want .
+  ?below a execution:Intention ; execution:pursues ?want .
+  FILTER NOT EXISTS { ?below execution:resolvedAt ?at } } }"""
+
 
 #  WHAT A STEP SAYS OF ITSELF IN WORDS OTHER THAN THIS LAYER'S: the action and the filling are
 #  the layer above's and the package's to spell, and this layer repeats them without reading.
@@ -203,7 +218,7 @@ class Executor:
 
     def __init__(self, beliefs: ox.Store, agent_id: str, intentions: ox.Store | None = None,
                  holder: str | None = None, *, take=None, fictive: bool = False,
-                 poll_s: float = POLL_S):
+                 poll_s: float = POLL_S, refine=None, on_write=None):
         self.intentions = intentions if intentions is not None else ox.Store()
         self.beliefs = beliefs
         self.id = agent_id
@@ -212,6 +227,12 @@ class Executor:
         self.take = take if take is not None else self.say
         self.all_fictive = fictive
         self.poll_s = poll_s
+        #  THE LEVEL BENEATH, asked before a step is taken: `refine(said, intention)` answers the
+        #  want that keeps the step below, or None — the container hands the Planner's. And
+        #  `on_write(graph)`, told of every graph the executor writes as the world, so what the
+        #  rules conclude of it is concluded.
+        self.refine = refine
+        self.on_write = on_write
         self._work: queue.SimpleQueue = queue.SimpleQueue()
         self._inflight: set[str] = set()
         self._next_due: datetime | None = None
@@ -325,6 +346,11 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
   <{intention}> <{RESOLVED_AT}> "{clock.now().isoformat()}"^^xsd:dateTime ;
                 <{OUTCOME}> "{outcome}" . }} }}""")
         log.info("%s: %s — %s", self.id, intention.rsplit("#", 1)[-1], outcome)
+        if outcome != "done":
+            #  NOTHING HANGS BELOW WHAT ENDED UNDONE: an intention walking the want one of this
+            #  intention's steps is kept below by is abandoned with it.
+            for r in rows(self.intentions, bind(_BELOW_Q, intentions=Raw(f"<{self.graph}>"), intention=intention)):
+                self.resolve(r["below"], "abandoned")
 
     # --- keeping time: one pass -----------------------------------------------------------------
 
@@ -363,10 +389,18 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             if not r.get("predicts"):
                 continue                        # advanced when it was taken; nothing to hold it to
             lands = self._landing(r, now)
+            below = [b.get("outcome") for b in rows(self.intentions, bind(
+                _REFINED_Q, intentions=Raw(f"<{self.graph}>"), act=r["act"]))]
             if now < lands:
                 wake_at(lands)
             elif self._answered(r["predicts"]):
                 self._advance(intention, step)
+            elif None in below:
+                continue                        # kept below: a plan for it stands, and waits on no clock
+            elif below and "done" not in below:
+                log.warning("%s: %s could not be kept below — %s fails", self.id, local_of(step),
+                            intention.rsplit("#", 1)[-1])
+                self.resolve(intention, "failed")
             elif now >= lands + timedelta(seconds=self.patience_s):
                 log.warning("%s: the world did not answer %s by %s — %s fails",
                             self.id, local_of(step), lands.isoformat(), intention.rsplit("#", 1)[-1])
@@ -437,8 +471,17 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         #  when it returned, in the one timeline. The step's own instants are the plan's
         #  requirement (`notBefore`) and prediction (`landsAt`), and stay what they were.
         taken_at = clock.now()
+        refined = None
         try:
-            self._taker_for(step)(said, intention)
+            #  THE ORDER THE CORE DECIDES IN: an implementation that reaches the world is taken —
+            #  a dose predicts the soil inside its range, which sensing's rules conclude, and is
+            #  still a command; only a step that would be taken fictively is asked whether a
+            #  level beneath keeps it, and is fictive where none does.
+            taker = self._taker_for(step)
+            if taker == self.fictive and self.refine is not None:
+                refined = self.refine(said, intention)
+            if refined is None:
+                taker(said, intention)
             taken = True
         except Exception as exc:                                        # noqa: BLE001
             log.error("%s: step %s could not be taken: %s", self.id, local_of(step), exc)
@@ -448,6 +491,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         update(self.intentions, bind(_ACT_U, intentions=Raw(f"<{self.graph}>"), act=act, step=step,
                                      taken_at=instant(taken_at), done_at=instant(done_at),
                                      taken=Raw("true" if taken else "false")))
+        if refined is not None:
+            #  KEPT BELOW: the act says which want, and the step waits on it and not on the clock.
+            update(self.intentions, f"INSERT DATA {{ GRAPH <{self.graph}> {{ <{act}> <{EXECUTION}refinedBy> <{refined}> }} }}")
         #  THE INTENTION MOVES BEFORE THE STEP LEAVES FLIGHT: a tick between the two would
         #  find the old head and hand it over twice. A step that predicts something does not
         #  move here at all — the act on record is what the next tick reads, and the world's
@@ -508,6 +554,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         for fact in change.get("retracts", ()):
             self.beliefs.remove(_quad(fact, state))
         add_quads(self.beliefs, (_quad(fact, state) for fact in change.get("adds", ())))
+        if self.on_write is not None:
+            self.on_write(state)                # the rules conclude of the world the step moved
 
     # --- the threads -------------------------------------------------------------------------------
 

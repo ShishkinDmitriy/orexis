@@ -22,8 +22,12 @@ P, Q = URIRef("urn:test:p"), URIRef("urn:test:q")
 
 
 def test_what_a_select_reads_is_the_predicates_of_its_patterns():
+    """A type pattern reads its CLASS: two domains' `a hanoi:Peg` and `a courier:Van` keyed by
+    `rdf:type` alone joined every action of both into one scope. A class that is a variable
+    reads every type."""
     assert footprint.reads_of_select("SELECT ?x WHERE { ?x <urn:test:p> ?y . ?y a <urn:test:C> }") \
-        == frozenset({P, RDF.type})
+        == frozenset({P, URIRef("urn:test:C")})
+    assert footprint.reads_of_select("SELECT ?x WHERE { ?x a ?c }") == frozenset({RDF.type})
 
 
 def test_a_pattern_under_not_exists_is_read_too():
@@ -31,7 +35,7 @@ def test_a_pattern_under_not_exists_is_read_too():
     fact is absent' reads that fact's predicate (#523)."""
     assert footprint.reads_of_select(
         "SELECT ?x WHERE { ?x a <urn:test:C> FILTER NOT EXISTS { ?x <urn:test:q> ?z } }") \
-        == frozenset({Q, RDF.type})
+        == frozenset({Q, URIRef("urn:test:C")})
 
 
 def test_what_a_construct_writes_is_its_template_predicates_and_a_variable_one_is_anything():
@@ -63,12 +67,12 @@ def test_a_rule_text_is_made_parseable_and_nothing_more():
     assert "$into(" not in footprint.parseable("INSERT { GRAPH $into(x:G) { ?s ?p ?o } } WHERE { ?s ?p ?o }")
 
 
-def test_what_a_shape_reads_is_its_paths_and_its_target():
+def test_what_a_shape_reads_is_its_paths_and_its_target_class():
     g = rdflib.Graph()
     shape, prop = URIRef("urn:test:shape"), rdflib.BNode()
     g.add((shape, RDF.type, SH.NodeShape)); g.add((shape, SH.targetClass, URIRef("urn:test:C")))
     g.add((shape, SH.property, prop)); g.add((prop, SH.path, P)); g.add((prop, SH.minInclusive, rdflib.Literal(10)))
-    assert footprint.reads_of_shape(g, shape) == frozenset({P, RDF.type})
+    assert footprint.reads_of_shape(g, shape) == frozenset({P, URIRef("urn:test:C")})
 
 
 def test_actions_of_reads_every_action_the_store_holds(monkeypatch, snapshots):

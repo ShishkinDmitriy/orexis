@@ -66,10 +66,10 @@ from agent.prediction.predict import predict
 from agent.sensing.missed import missed
 from agent.speech.said import said as believe_said
 from agent.series import Series
-from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, local_of
+from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, STATE, local_of
 from agent.planning.planner import Planner
 from agent.store import (catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of, kinds_in,
-                         put_document, rows, update)
+                         put_document, revisions_of, rows, update)
 
 log = logging.getLogger("runtime")
 
@@ -243,6 +243,14 @@ class Runtime:
                                  take=self._take if self.transport is not None else None)
         self.planner = Planner(beliefs, agent_id, executor=self.executor, **({"budget": budget} if budget else {}))
         self.deliberator = Deliberator(beliefs, agent_id)
+        #  A STEP KEPT BELOW, AND THE WORLD THE EXECUTOR MOVES: before a step is taken the Planner
+        #  says whether a rule keeps it one level down, and what the executor writes as the world
+        #  is revised, so a fact the rules conclude of it — what a disk is on — moves with it.
+        self.executor.refine = self.planner.refine
+        self.executor.on_write = lambda graph: self._revise([graph], clock.now())
+        #  AND WHAT THE WORLD AUTHORED: its state, revised once, so a fact concluded from where
+        #  things stand is believed from the first pass and not only after something moves.
+        self._revise([g for g in graphs_of(beliefs, STATE) if not revisions_of(beliefs, g)], clock.now())
         if self.transport is not None:
             self.transport.open(beliefs)
 

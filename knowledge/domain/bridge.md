@@ -1,60 +1,54 @@
 ---
 type: Domain Concept
 title: Bridge
-term: http://example.org/orexis#Bridge
 description: >-
-  What joins an abstract action to the vocabulary beneath it: a translation of the action's
-  promised facts into the lower vocabulary, and the lower level's estimate for the want those
-  facts make. Declared by the package that knows both vocabularies, applied to a step's
-  promise going down and its verdict coming back, never to the world a search plans over.
+  A rule of a world that combines two domains, concluding a fact in one vocabulary from facts in
+  the other — a disk is on the peg standing on its cell. Authored by whoever combines the
+  domains, run forwards over the beliefs like any rule, and run backwards by refinement to keep
+  a step one level down. Neither domain knows it.
 ---
 
 # What it is
 
-`orexis:Bridge`. A [level](/decisions/a-level-is-a-vocabulary-and-a-bridge.md) is a vocabulary,
-and an [action](/domain/action.md) nobody takes at its own level — hanoi's Move — is a
-promise the level beneath keeps. The bridge is what makes the promise sayable below:
-`orexis:refines` the action; `sh:construct` translates its predicted facts, bound as `$via`
-and `$about` from the [step](/domain/step.md) with the world at `$state`, into the lower
-vocabulary's facts (a disk on a peg becomes the disk at the peg's cell); `planning:estimates`
-names the lower package's estimate for the want those facts make, a template over the same
-tokens, bound once into a node of the promise's own.
+A [level](/decisions/the-hierarchy-is-found-in-the-rules.md) is a vocabulary: hanoi's, where a
+disk is on a peg; the courier's, where a parcel is at a cell. Neither domain mentions the
+other, and each plans on its own. A world that wants the puzzle solved by a van combines them,
+and says in a `sh:RulesGraph` of its own how the two describe one thing:
 
-# How a promise is kept
+```sparql
+CONSTRUCT { ?disk hanoi:on ?peg } WHERE {
+  ?disk a hanoi:Disk ; courier:at ?cell .
+  ?peg a hanoi:Peg ; courier:at ?cell .
+  FILTER NOT EXISTS { ?larger a hanoi:Disk ; courier:at ?cell ; hanoi:size ?l .
+                      ?disk hanoi:size ?s . FILTER(?l > ?s) } }
+```
 
-When the keeper reaches a step of a taker-less action, it asks for the action's bridge, runs
-the translation, and writes the result as an `planning:Desire` this agent holds — in its
-promises graph, `progression:promisedBy` the step, projected into the desire modality — so the
-ordinary path lifts it, plans it over the actions that ARE taken, and walks the plan. The
-step itself waits on the same translated fact as its completion. When the fact arrives the
-promise is withdrawn, whatever stood for it is resolved, and the step's own predicted facts
-are written to the state: the bridge says the fact the world showed and the fact the step
-promised are one thing described twice, and materialising it upward is the keeper's until a
-saturation rule exists. Then the next abstract step becomes current and is planned in turn,
-from wherever the world now stands.
+That is the bridge, and it is an ordinary SHACL rule: a [revision](/domain/revision.md) the
+deliberator concludes of the state whenever the state moves, so the puzzle's words are believed
+beside the grid's with no file stating them. `domains/tower/` holds two — a disk on the next
+larger disk sharing its cell, and the largest on the peg — and one axiom, that a disk is a
+parcel.
 
-**And a promise the level beneath cannot keep is said, not waited out.** When the search
-below finds no way, the keeper writes `progression:refusedBelow` on the step and lapses it at
-once; the search above passes that move over while the refusal is younger than the patience
-(#533), the same shape as suspicion one level down.
+# Which way it runs
+
+**Forwards, over the beliefs**, as every rule does: where the disks stand says what each is on.
+
+**Backwards, at a step's boundary**, by [refinement](/domain/refinement.md): a step that
+predicts `disk_1 hanoi:on hanoi:PegC` binds the rule's head to that fact, and the rule's
+WHERE, bound, is what the level beneath must make true. A bridge is therefore held to a shape a
+rule elsewhere is not — ONE head triple, whose variables its WHERE binds plainly — and a rule
+outside that shape is left out and said in the log, never guessed at.
+
+**Never inside a search.** The search runs no rules, so a bridge couples no actions and joins
+no [scope](/domain/scope.md): the puzzle's search forks Moves and the courier's forks drives,
+each in its own imaginarium.
 
 # What it is not
 
-**Not a method.** A [method](/domain/method.md) is declared, for a protocol; a bridge declares
-nothing about HOW the promise is kept. The drives are found by the search below, from the
-world as it is when the step is reached.
+**Not declared per action.** 0.1.0's bridge was a node refining one action, translating its
+promised facts down with a CONSTRUCT of its own; the rule here refines no action and translates
+nothing — whichever step predicts a fact some bridge concludes is kept below, and the met-test
+below is the rule's own text.
 
-**Not applied to the world.** The outer search never sees the lower actions, because the
-bridge is not a rule inside the search: relevance keeps each search inside its want's
-vocabulary. Applied inside the search, seven moves would be thirty drives in one budget.
-
-**Not a claim the world is allowed to make lightly.** A bridge asserts that a level beneath
-exists, and onboarding and boot hold it to the actions the tree declares: every predicate its
-construct writes must be one some action's effect writes, taken here or not, since a level
-nobody executes is still a level somebody could plan (#532). A bridge into facts no action
-writes is refused with its name and the fact. A taker-less action with NO bridge is a different
-thing and admitted: knowledge-only, planned and never executed — hanoi's own world, whose point
-is the search — and said loudly at execution when a step of it is reached.
-
-The tower package (`packages/orexis-tool-tower/`) is the one that ships: one axiom (a disk is
-a parcel), one bridge, one estimate, and a world naming both domains.
+**Not a [method](/domain/method.md).** A method declares how an action is taken; a bridge says
+only what one level's fact means in the other's words, and the steps are found by a search.

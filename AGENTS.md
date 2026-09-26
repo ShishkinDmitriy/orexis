@@ -169,9 +169,11 @@ it is a record wearing a bullet.
   adopted where the facts its steps read still hold, since every step is checked when it is
   taken and a failed step drops the tail; re-simulating it first would be a search per reuse,
   and hashing the whole world keyed it to facts it never read.
-- **A level is a vocabulary, and a taker-less action is a promise the level beneath keeps** —
-  a search never leaves the vocabulary its want is written in; the bridge translates a step's
-  promised fact downward when the step is reached, and the verdict back, never the world.
+- **A level is a vocabulary, and the hierarchy is found in the rules a world combines** — a
+  search never leaves the vocabulary its want is written in; a step whose predicted fact a
+  bridge rule concludes is refined, the rule run backwards over the world the step lands in,
+  and nothing marks an action abstract: Move is fictive in hanoi's world and refined in the
+  tower's (the-hierarchy-is-found-in-the-rules).
 - **A method is walked, never searched** — the steps an abstract action comes to are the
   package's protocol, not a choice, so the keeper expands them at adoption and each step says
   what it waits for; simulating them would spend the budget on worlds the measure cannot tell apart.
@@ -801,6 +803,23 @@ it is a record wearing a bullet.
   every retraction carries its package's `PREFIX`, so joining the copy and the retraction into
   one text skipped every retraction, at the log level and green; hoist the declarations, and
   run apart the two texts that spell one label two ways.
+- **A refined step's goal below is the world it lands in, not its diff** — `disk_1 on disk_2`
+  alone was met by carrying disk_2 over to disk_1, off the peg the plan above had put it on,
+  and the plan walked on over a world it had not predicted; the frame is held below.
+- **A type pattern reads its CLASS** — keyed by `rdf:type`, `?x a hanoi:Peg` and `?v a
+  courier:Van` read one predicate, and two domains nothing else joined were one scope.
+- **A scope's worlds admit the scope's actions alone** — a courier's drive in hanoi's search
+  forks a world the met-test cannot tell from its parent, and spent the budget moving no disk;
+  and a want is placed by what it reads that some action can CHANGE, since a disk's size
+  counted pulled a courier goal into the puzzle's scope.
+- **A plan whose want is gone is nobody's** — the imaginarium outlives the pass, so a plan
+  kept in one after its want was reached in another was handed down and walked again.
+- **A step is refined only where it would be fictive** — a dose predicts the soil inside its
+  range, which sensing's rules conclude, so asked first every command became a want below and
+  no pump ran; an implementation that reaches the world is taken, and a bridge is asked next.
+- **A read of the clock is a tick in a test** — `footprint.written` read the clock once per
+  want, and the allotment's clock, which advances per read, sized a dose five hundred where it
+  was four; a pass hands its own instant down.
 
 - **A peer's word is a document, and it is believed as it stands where it is state** — a
   message between agents arrives as TriG naming its graphs and saying what each is, as a world's

@@ -62,6 +62,7 @@ See knowledge/domain/planner.md.
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime
 
@@ -70,16 +71,17 @@ import rdflib
 
 from agent import clock
 from agent.ontology import PUBLIC, RECORD
-from agent.store import Memo, Raw, bind, bindings, catalogue_of, graphs_of, query, rdflib_view, remember, rows, update
+from agent.store import Memo, Raw, forget_graph, bind, bindings, catalogue_of, graphs_of, query, rdflib_view, remember, rows, update
 
 from . import footprint
 from .admit import admit
 from .derive_wants import derive_wants
 from .extract_plan import extract_plan
 from .find_scopes import find_scopes
+from .refine import refine
 from .find_wants import find_wants
 from .lay_ground import lay_ground
-from .ontology import DESIRE, PLAN_GRAPH, PLANNING, SHAPES, WANT
+from .ontology import DESIRE, PLAN_GRAPH, PLANNING, SCOPE_GRAPH, SHAPES, WANT
 from .prepare_ground import prepare_ground
 from .publish_plan import publish_plan
 from .reroot import reroot
@@ -102,6 +104,16 @@ BUDGET = 32
 #  THE WORLD OF A STORE THAT SCOPED NOTHING. A name for eyes like any other scope's, and the
 #  one every want falls to when no predicate it reads is in a scope.
 UNSCOPED = "unscoped"
+
+#  WHAT A STEP PREDICTS, off the intentions — execution's word, read from the layer beneath.
+_IN_SCOPE_Q = """SELECT ?a WHERE { ?a planning:inScope $scope }"""
+
+_PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH ?g { $step execution:predicts ?predicts } } LIMIT 1"""
+
+#  EVERY WANT KEPT BELOW FOR A STEP, with its graph and the step.
+_REFINED_Q = """
+SELECT ?want ?g ?step WHERE { GRAPH ?g { ?want planning:refines ?step }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }"""
 
 #  THE CATALOGUE IS BOUND, NOT FOUND, IN THE HOT READS: `GRAPH ?cat { ?cat a
 #  orexis:CatalogueGraph . … }` makes the engine evaluate the group per named graph, and with
@@ -238,6 +250,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         #  graph whatever it finds, and a desire in a scoped, empty store still has to be
         #  judged, to say that no lever points at it.
         walking = set(self.executor.walking()) if self.executor is not None else set()
+        self._withdraw_orphaned_refinements(walking)
         for _scope in sorted(set(scopes.values())) or [UNSCOPED]:
             store = self.imaginaria.setdefault(_scope, ox.Store())
             prepare_ground(self.beliefs, store)
@@ -272,13 +285,48 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  fifth of a pass re-reading them, measured.
             #  THE SHAPES, CROSSED ONCE PER SCOPE and after the derivation, under the memo's
             #  key so `weigh` finds the same crossing.
+            #  THE SCOPE'S OWN ACTIONS are what its worlds admit; a store of no scope admits all.
+            only = None if _scope == UNSCOPED else {
+                r["a"] for r in rows(self.beliefs, _IN_SCOPE_Q, graphs_of(self.beliefs, SCOPE_GRAPH), scope=_scope)}
             shapes = memo.get(("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
             for want in _of_scope(store, shapes, self.uri, _scope, scopes, at):
                 if want in walking:
                     continue                # a want a plan is walking is not planned again
-                self.search(store, want, budget=self.budget, memo=memo)
+                self.search(store, want, budget=self.budget, only=only, memo=memo)
             if self.executor is not None:
                 publish_plan(store, self.executor)
+
+    # --- a step kept one level down ----------------------------------------------------------
+
+    def refine(self, said: dict, intention: str) -> str | None:
+        """The want that keeps the step `said` one level down, minted where a rule concludes a
+        fact the step predicts — or None, and the step is taken as it would be with no level
+        beneath (`refine`). The executor asks before it takes a step; `said` is its rows."""
+        if self.executor is None:
+            return None
+        step = said["step"]
+        found = rows(self.executor.intentions, _PREDICTS_Q, (), step=step)
+        if not found:
+            return None
+        said = json.loads(found[0]["predicts"])
+        adds = said.get("adds", ())
+        return refine(self.beliefs, self.uri, step, adds, clock.now(),
+                      said.get("retracts", ())) if adds else None
+
+    def _withdraw_orphaned_refinements(self, walking: set[str]) -> None:
+        """A want kept below for a step no intention stands at any more — the step answered, or
+        its intention failed or superseded — is nothing's: withdrawn, so a plan in flight never
+        outlives what it was for."""
+        standing_at = {s.at for s in self.executor.standing()} if self.executor is not None else set()
+        for r in rows(self.beliefs, _REFINED_Q, ()):
+            if r["step"] not in standing_at and r["want"] not in walking:
+                forget_graph(self.beliefs, r["g"])
+                #  AND WHAT EACH IMAGINARIUM SEARCHED FOR IT: its plan outlives the pass there,
+                #  and a plan whose intention is over is handed down again unless it goes.
+                for store in self.imaginaria.values():
+                    withdraw(store, None, clock.now(), reached={r["want"]})
+                log.info("%s: withdrew %s, since nothing stands at the step it kept", self.id,
+                         r["want"].rsplit("#", 1)[-1])
 
     # --- what a runtime asks after a pass ---------------------------------------------------
 
@@ -312,7 +360,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
     # --- one want ------------------------------------------------------------------------
 
-    def search(self, store: ox.Store, want: str, *, budget: int = BUDGET,
+    def search(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
                memo: Memo | None = None) -> None:
         """Plan for `want` from the present ground, spending at most `budget` candidates, and
         write the plan — whatever the search concluded, since an empty plan is an answer and
@@ -333,14 +381,14 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             if not pair.get("from"):
                 weigh(store, want, pair["about"], memo=memo)             # the root: the present
         ceiling = _spent(store, want, memo) + budget
-        while (spent := self.expand(store, want, budget=ceiling, memo=memo)) is not None \
+        while (spent := self.expand(store, want, budget=ceiling, only=only, memo=memo)) is not None \
                 and spent < ceiling:
             pass
         extract_plan(store, want)
 
     # --- one iteration -------------------------------------------------------------------
 
-    def expand(self, store: ox.Store, want: str, *, budget: int = BUDGET,
+    def expand(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
                memo: Memo | None = None) -> int | None:
         """Open the top of `want`'s frontier: admit what it admits, take each candidate this
         want has not yet weighed, weigh what it reached, close the world's weighing. What the
@@ -365,7 +413,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                            and float(top["spent"]) + float(top["remaining"]) >= float(top["best"])):
             return None
         world = top["w"]
-        admit(store, world, self.uri, memo=memo)
+        admit(store, world, self.uri, only=only, memo=memo)
         spent = int(top.get("used") or 0)
         for pair in unweighed(store, for_=want, leaving=world, memo=memo):
             if spent >= budget:
@@ -411,8 +459,13 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
     """
     first = (sorted(set(scopes.values())) or [UNSCOPED])[0]
     mine = []
+    written = footprint.written(store, at)       # at the pass's instant: a read of the clock is a tick
     for want in find_wants(store, at, holder=holder):
-        reads = footprint.reads_of_shape(shapes, rdflib.URIRef(want))
+        #  WHAT ITS MET-TEST READS, off the shape it is met when — the want node itself is no
+        #  shape and reads nothing, which placed every want in the first scope and went unseen
+        #  while every world was one scope.
+        met = shapes.value(rdflib.URIRef(want), rdflib.URIRef(PLANNING + "metWhen"))
+        reads = footprint.reads_of_shape(shapes, met) if met is not None else footprint.ANYTHING
         if reads is footprint.ANYTHING:
             #  A WANT WHOSE SHAPE THE WALKER CANNOT READ joins everything, which is the
             #  safe direction — it is searched once, in the first scope, rather than
@@ -420,7 +473,11 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
             if scope == first:
                 mine.append(want)
             continue
-        reached = sorted({scopes[str(p)] for p in reads if str(p) in scopes})
+        #  PLACED BY WHAT IT READS THAT SOME ACTION CAN CHANGE. A disk's size and what a peg is
+        #  are read by a want refined below and changed by nothing, so they say nothing about
+        #  which world could repair it — counted, they pulled a courier goal into hanoi's scope.
+        changeable = [p for p in reads if str(p) in written] or list(reads)
+        reached = sorted({scopes[str(p)] for p in changeable if str(p) in scopes})
         if reached[:1] == [scope] or (not reached and scope == first):
             mine.append(want)
     return mine

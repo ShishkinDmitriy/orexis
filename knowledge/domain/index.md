@@ -73,9 +73,6 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [speech](/domain/speech.md) - A peer's word is a document: heard where it is state and replaces only a peer's word, and what the agent said, believed as said.
 * [transport](/domain/transport.md) - How an agent reaches its society: a capability the bus grants, holding the connection and three choir hooks. Not a driver.
 
-* [remembered plan](/domain/remembered-plan.md) - A plan that worked, kept on its want and keyed by what its steps read: adopted where that holds, forgotten when it fails.
-* [bridge](/domain/bridge.md) - Joins an abstract action to the vocabulary beneath: translates its promised facts down and its verdict back, with the lower level's estimate. Never a method.
-* [method](/domain/method.md) - The steps an action comes to, declared by its package: expanded at adoption, walked on feedback, never searched; each step says what it waits for.
 * [effect](/domain/effect.md) - What taking an action would make true and false: rules in SHACL's shape, grouped by order, run on a possible world, deletes included.
 
 * [gap](/domain/gap.md) - The signed, normalised distance from what is sensed to what is wanted. A verdict, computed always and stored never; no reading yields no row.
@@ -87,6 +84,13 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [executor](/domain/executor.md) - Plan, commit the head as an intention, hand it to its actor. One path for every trigger; a standing step is taken, not re-decided.
 
 * [actor](/domain/actor.md) - The module a step is linked to: whichever contributes its action. Takes a step; never decides one.
+
+# Levels — what a step comes to beneath it
+
+* [remembered plan](/domain/remembered-plan.md) - A plan that worked, kept on its want and keyed by what its steps read: adopted where that holds, forgotten when it fails.
+* [bridge](/domain/bridge.md) - A rule concluding one domain's fact from another's, authored by the world combining them; run forwards over beliefs, backwards to refine a step.
+* [refinement](/domain/refinement.md) - A step whose predicted fact a bridge concludes is kept below, as a want whose met-test is the landing world regressed.
+* [method](/domain/method.md) - The steps an action comes to, declared by its package: expanded at adoption, walked on feedback, never searched; each step says what it waits for.
 
 # Doing
 

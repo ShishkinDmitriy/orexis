@@ -15,9 +15,11 @@ and the class is gone. A candidate is named for the world it would reach, `<chil
 the edge and the world it makes are one spelling apart, for eyes.
 
 **THE WORLD IS ASKED ABOUT, NOT HELD**: `world_at` says what a precondition reads there, and
-the precondition names no graph to get it (#666). **AND EVERY ACTION IS ASKED.** There was
-an `only` parameter — the set worth asking at all, which the relevance closure computes from
-what a want READS — and no caller passed it; narrowing returns with the closure.
+the precondition names no graph to get it (#666). **AND EVERY ACTION OF THE SCOPE IS ASKED**,
+`only` naming them: an action of another scope writes nothing a want of this one reads, so its
+steps fork worlds the met-test cannot tell apart — a courier's drive, taken in hanoi's search
+once a world combined the two domains, spent the budget and moved no disk. None asks every
+action, which a store of one scope is.
 
 `me` is the one identifier a process is handed, and the one token a precondition may read.
 """
@@ -58,7 +60,7 @@ SELECT ?c ?action ?p ?v WHERE {
                OPTIONAL { ?c ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, rdf:type)) } } }"""
 
 
-def admit(store, world: str, me: str, *, memo=None) -> None:
+def admit(store, world: str, me: str, *, only=None, memo=None) -> None:
     """Write every candidate `world` admits for the agent `me`: one per action per row its
     precondition binds there, each saying which world it leaves (`planning:from`), which
     action it fills and, one triple per parameter under the parameter's own IRI, what it is
@@ -85,6 +87,8 @@ def admit(store, world: str, me: str, *, memo=None) -> None:
     edges = []
     for action in remember(memo, ("actions",), lambda: sorted(
             bindings(query(store, _ACTIONS_Q, graphs_of(store, ACTION))), key=lambda r: r["action"])):
+        if only is not None and action["action"] not in only:
+            continue
         #  A precondition carrying a token nobody binds REFUSES rather than reaching the engine
         #  as a free variable (#500), so what is offered is what a premise may read: `$me`.
         params = {local_of(p): p for p in (action.get("takes_") or "").split()}

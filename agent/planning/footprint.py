@@ -105,14 +105,24 @@ def _path_iris(p) -> set | None:
     return ANYTHING                                      # a variable predicate
 
 
+def _read(s, p, o) -> set | None:
+    """What one triple pattern reads: its predicate's IRIs — or, for a type pattern whose class is
+    an IRI, the CLASS. `?x a hanoi:Peg` and `?v a courier:Van` read two different things; keyed by
+    `rdf:type` alone they read one, and every domain's actions joined one scope through it (#663).
+    A type pattern whose class is a variable reads every type, `rdf:type` itself."""
+    if p == RDF.type and isinstance(o, URIRef):
+        return {o}
+    return _path_iris(p)
+
+
 def _predicates_in(node, out: set) -> bool:
     """Collect the predicates of every triple pattern under `node`; False if any is unreadable."""
     ok = [True]
 
     def visit(n):
         if getattr(n, "name", None) == "BGP":
-            for _, p, _ in n["triples"]:
-                iris = _path_iris(p)
+            for s_, p, o in n["triples"]:
+                iris = _read(s_, p, o)
                 if iris is None:
                     ok[0] = False
                 else:
@@ -124,7 +134,7 @@ def _predicates_in(node, out: set) -> bool:
             #  TriplesBlock rather than a BGP (#523: a promise's want is exactly that shape,
             #  and read nothing before this).
             for triple in n["triples"]:
-                iris = _path_iris(triple[1]) if len(triple) == 3 else None
+                iris = _read(*triple) if len(triple) == 3 else None
                 if iris is None:
                     ok[0] = False
                 else:
@@ -182,8 +192,7 @@ def reads_of_shape(shapes: rdflib.Graph, shape) -> frozenset | None:
         out |= inner
     for p in (SH.targetSubjectsOf, SH.targetObjectsOf):
         out |= set(shapes.objects(shape, p))
-    if (shape, SH.targetClass, None) in shapes:
-        out.add(RDF.type)
+    out |= set(shapes.objects(shape, SH.targetClass))       # a class target reads that class
     return frozenset(out)
 
 def _shacl_path_iris(g: rdflib.Graph, node) -> set | None:
@@ -219,7 +228,10 @@ def writes_of_construct(text: str) -> frozenset | None:
         return ANYTHING
     out: set = set()
     bounded = None
-    for _, p, _ in alg.get("template") or ():
+    for _, p, o in alg.get("template") or ():
+        if p == RDF.type and isinstance(o, URIRef):
+            out.add(o)                                   # a type written is its class, as read
+            continue
         if isinstance(p, URIRef):
             out.add(p)
             continue
@@ -262,6 +274,17 @@ SELECT ?action ?precondition ?construct ?update WHERE {
   OPTIONAL { ?action planning:precondition ?precondition }
   OPTIONAL { ?action planning:effect/sh:rule ?r . OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r planning:update ?update } }
 }"""
+
+def written(store, at: datetime | None = None) -> frozenset[str]:
+    """Every predicate some action's effect can write, as strings — what a world can change. An
+    action whose writes cannot be read writes anything, and then nothing is left out."""
+    out: set[str] = set()
+    for _, writes in actions_of(store, at).values():
+        if writes is ANYTHING:
+            return frozenset()
+        out |= {str(w) for w in writes}
+    return frozenset(out)
+
 
 def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
     """Every action the store holds as `iri -> (reads, writes)`, each ANYTHING where unreadable.

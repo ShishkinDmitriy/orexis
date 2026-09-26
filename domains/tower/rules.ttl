@@ -1,0 +1,39 @@
+@prefix : <http://example.org/orexis/tower#> .
+@prefix tower: <http://example.org/orexis/tower#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a sh:RulesGraph .    # this document is one graph, and this is what it is
+
+#  HANOI'S FACTS FROM THE GRID'S: where a disk stands is the courier's word, and what it is on is
+#  hanoi's — the next larger disk in its cell, or the peg there when there is none. A disk the van
+#  carries stands in no cell and is on nothing. Written to be run BACKWARDS as well: one rule per
+#  case, every variable of the head plain in the WHERE, so a step predicting `hanoi:on` regresses
+#  through them to a goal in the courier's words.
+
+tower:stacking a sh:RuleSet ;
+    rdfs:label "what a disk is on, from where the disks stand" ;
+    sh:hasRule tower:onADisk , tower:onThePeg .
+
+tower:onADisk a sh:SPARQLRule ;
+    rdfs:label "a disk is on the next larger disk in its cell" ;
+    sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+        PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { ?disk hanoi:on ?larger } WHERE {
+            ?disk a hanoi:Disk ; hanoi:size ?s ; courier:at ?cell .
+            ?larger a hanoi:Disk ; hanoi:size ?l ; courier:at ?cell .
+            FILTER(?l > ?s)
+            FILTER NOT EXISTS { ?mid a hanoi:Disk ; hanoi:size ?m ; courier:at ?cell .
+                                FILTER(?m > ?s && ?m < ?l) }
+        }""" .
+
+tower:onThePeg a sh:SPARQLRule ;
+    rdfs:label "a disk with nothing larger in its cell is on the peg there" ;
+    sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+        PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { ?disk hanoi:on ?peg } WHERE {
+            ?disk a hanoi:Disk ; hanoi:size ?s ; courier:at ?cell .
+            ?peg a hanoi:Peg ; courier:at ?cell .
+            FILTER NOT EXISTS { ?larger a hanoi:Disk ; hanoi:size ?l ; courier:at ?cell .
+                                FILTER(?l > ?s) }
+        }""" .
