@@ -223,6 +223,4 @@ def _violation(node: str, row: dict) -> str:
         parts.append(f"planning:constraint {row['_constraint']}")
     if "_about" in row:
         parts.append(f"planning:about {row['_about']}")
-    if "_side" in row:
-        parts.append(f"planning:violationIs {row['_side']}")
     return f"<{node}> planning:violation [ {' ; '.join(parts)} ] .\n"

@@ -410,11 +410,12 @@ it is a record wearing a bullet.
   the catalogue in their own texts, whose a desire is they read off `planning:holds`, and the
   present is the clock's; the wrapper caching a view of the store cannot see a write it did
   not make, so asking it for the engine (`Store.engine`) is what makes it forget.
-- **A met-test asked by band names which way it broke, and tests no topology** — a reading is
-  the band it is in, so a desire says *it should be inside* once per way of failing and each
-  block declares its side, which the WANT carries (`planning:violationIs`: below, above,
-  unmeasured, stale) because that is what decides the repair — a look answers the unmeasured
-  one and no act of any kind does. A test that walked the topology instead would be satisfiable by
+- **A met-test asked by band says it once per way of failing, and tests no topology** — a reading
+  is the band it is in, so a desire says *it should be inside* once per way of failing, and the
+  violation row names the block that refused. Which way that is was once a term the want carried
+  (`violationIs`: below, above, unmeasured, stale) on the claim that it decided the repair; in
+  0.2.0 no precondition, effect or line of planning read it, so it was retired as annotation —
+  to planning a side is the domain's, and a domain that needs it says so in its own words. A test that walked the topology instead would be satisfiable by
   moving the sample off the subject or by re-pointing what counts as ideal, which is the goal
   repaired by editing its own premises; a structural repair stays reachable because the
   closure walks back from what the want reads to whatever changes it.
@@ -832,9 +833,7 @@ it is a record wearing a bullet.
 
 - **A term belongs to the package that owns the concept, and the kernel keeps what packages meet
   at** — ownership and not touch: desires, wants, the met-test's words and the searched half of an
-  action are `planning:`, which way a reading broke (`sensing:Side`) is sensing's since it is a
-  side of a range a sensor's subject states, an action's implementation and its operations
-  `execution:`, while
+  action are `planning:`, an action's implementation and its operations `execution:`, while
   `orexis:Action` and `orexis:takes`, where planning and execution meet, and
   `orexis:PredictionGraph`, which planning reads by kind and must not import prediction to name,
   stay the kernel's; a plan's scored total became `planning:spent`, since `planning:costs` now

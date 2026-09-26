@@ -60,7 +60,7 @@ def _graph_of(at, until) -> str:
     return f"urn:test:wants/{stamp(at)}--{stamp(until) if until else 'open'}"
 
 
-def _derived(store, uri="urn:test:want", desire=_W_DESIRE, *, at=_W_NOW, until=None, side=None):
+def _derived(store, uri="urn:test:want", desire=_W_DESIRE, *, at=_W_NOW, until=None):
     """A want, written the way the DERIVATION writes one — a graph of wants that arrived
     derived, whose PERIOD IS THE STRETCH the trouble occupies, and provenance saying when the
     agent found it.
@@ -72,13 +72,12 @@ def _derived(store, uri="urn:test:want", desire=_W_DESIRE, *, at=_W_NOW, until=N
     snapshot cases in `tests/derive_wants/` are what say so.
     """
     graph = _graph_of(at, until)
-    broke = f" ; planning:violationIs <{side}>" if side else ""
     period = f' ; orexis:start "{at.isoformat()}"^^xsd:dateTime' + (
         f' ; orexis:end "{until.isoformat()}"^^xsd:dateTime' if until else "")
     update(store, f"""INSERT DATA {{
   GRAPH <{graph}> {{
     <{_W_HOLDER}> planning:holds <{uri}> .
-    <{uri}> a planning:Want{broke} ;
+    <{uri}> a planning:Want ;
         prov:generatedAtTime "{_W_NOW.isoformat()}"^^xsd:dateTime ;
         prov:wasDerivedFrom <{desire}> ;
         rdfs:label "a want under test" . }}
@@ -131,8 +130,8 @@ class _Wants:
     def __init__(self, store):
         self.store = store
 
-    def derived(self, uri="urn:test:want", desire=_W_DESIRE, *, at=_W_NOW, until=None, side=None):
-        _derived(self.store, uri, desire, at=at, until=until, side=side)
+    def derived(self, uri="urn:test:want", desire=_W_DESIRE, *, at=_W_NOW, until=None):
+        _derived(self.store, uri, desire, at=at, until=until)
 
     def owed(self, uri):
         _owe(self.store, uri)

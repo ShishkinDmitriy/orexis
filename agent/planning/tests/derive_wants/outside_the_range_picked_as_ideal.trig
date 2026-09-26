@@ -10,9 +10,9 @@
 #
 # ASKED BY BAND, AND NO NUMBER IS COMPARED HERE. A reading is the band it is in — below the
 # range, inside it, or above it, always those three — so the desire says one thing, that it
-# should be INSIDE, and says it once per way of failing. Each block declares which side it is,
-# `planning:violationIs`, so the judgment can say which way. The desire says *it should be
-# inside*; the judgment says *but it was below*.
+# should be INSIDE, and says it once per way of failing. The row names the block that refused, by
+# its index; which way that is, is the domain's to read off the block, and nothing in planning
+# does.
 #
 # WHICH PART IS BROKEN IS THE POINT, and it is the blocks that say it. A met-test written as one
 # pattern — this plant has this sample, which has this property, which is classified thus —
@@ -121,9 +121,9 @@ GRAPH :world {
 
 GRAPH :desires {
   :inside_the_picked_range a sh:NodeShape .
-  :inside_the_picked_range sh:property [ planning:about sh:this ; planning:violationIs sensing:Above ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
-  :inside_the_picked_range sh:property [ planning:about sh:this ; planning:violationIs sensing:Below ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
-  :inside_the_picked_range sh:property [ planning:about sh:this ; planning:violationIs sensing:Unmeasured ; sh:message "a watched property has never been read" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ] [ sh:class sensing:AboveRegion ] ) ] ] .
+  :inside_the_picked_range sh:property [ planning:about sh:this ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
+  :inside_the_picked_range sh:property [ planning:about sh:this ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
+  :inside_the_picked_range sh:property [ planning:about sh:this ; sh:message "a watched property has never been read" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ] [ sh:class sensing:AboveRegion ] ) ] ] .
   :inside_the_picked_range sh:targetClass sosa:ObservableProperty .
   :keeper planning:holds :keeper.ideal .
   :keeper.ideal a planning:Desire .

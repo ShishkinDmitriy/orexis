@@ -6,7 +6,7 @@ A WANT.
 A stored judgment stood between the two once — what a met-test read, per desire per instant,
 written to a working graph and read back by the minting and by whoever wanted a crossing. It is
 gone, and everything it carried a want carries: which instance is in trouble, what the trouble
-is about, which way it broke (`planning:violationIs`) and the instant it must hold at. What a
+is about and the instant it must hold at. What a
 met-test reads is a WITNESS, computed where it is needed and stored nowhere, because the answer
 is about a situation and the situation has moved by the next pass.
 
@@ -84,8 +84,8 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
     IT READS THE WEIGHINGS THE PLANNER WROTE. A desire is judged where the search judges a
     want, by `weigh`, which the Planner calls for every desire in every ground before this —
     an act calls no other act — writing the met-test's report in each ground as a weighing
-    with its violation rows: the instances in trouble, which constraint, what it is about,
-    which way it broke. Read across the grounds in order, a violation has a stretch: the
+    with its violation rows: the instances in trouble, which constraint and what it is
+    about. Read across the grounds in order, a violation has a stretch: the
     first ground it holds in is when the trouble begins, the first later ground it does not is
     when it lifts. A want is minted per cluster of them. Nothing stands between a desire and
     a want but the weighings, which are in the store where a reader can see what the
@@ -177,12 +177,8 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
         #  whether it is two o'clock or four.
         if child in standing:
             continue
-        #  ONE SIDE OR NONE: the witnesses of a cluster agree where the same block found them
-        #  all, and two sides in one cluster is a want about two troubles, which says neither.
-        sides = {w["side"] for w in cluster if w["side"]}
         child = _mint(store, shapes, holder, desire, now, at, until, said,
-                     about=about, instance=instance,
-                     side=next(iter(sides)) if len(sides) == 1 else None)
+                     about=about, instance=instance)
         if child is not None:
             minted.append(child)
     return minted
@@ -346,7 +342,7 @@ def _stamp(at: datetime) -> str:
 
 def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
            now: datetime, at: datetime, until: datetime | None = None, *,
-           points: tuple = (), shape: tuple = (), side: str | None = None) -> None:
+           points: tuple = (), shape: tuple = ()) -> None:
     """Write one derived want over the ENGINE: its graph, replaced whole, and the catalogue's
     account of that graph — its family, how it arrived, whose it is and the period it holds
     during — in one update, so a want and what is said about it land together or not at all.
@@ -403,8 +399,6 @@ def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
     #  — which the period now says, and said it only for foreseen wants, so a want in trouble
     #  now recorded neither instant.
     found_at = f' ; prov:generatedAtTime "{now.isoformat()}"^^xsd:dateTime'
-    #  WHICH WAY IT BROKE, where the met-test's block said so (`planning:violationIs`).
-    broke = f" ; planning:violationIs <{side}>" if side else ""
     #  THE STRETCH, on the graph: from the boundary this trouble begins at to the one it lifts
     #  by, open where nothing the agent can see ahead to repairs it. A fact the predictions
     #  state, which is the only honest source for one — the predecessor took the closing
@@ -416,7 +410,7 @@ def _write(store, agent_id: str, uri: str, holder: str, desire: str, label: str,
 INSERT {{
   GRAPH <{graph}> {{
   <{holder}> planning:holds <{uri}> .
-  <{uri}> a planning:Want{found_at}{broke} ;
+  <{uri}> a planning:Want{found_at} ;
       planning:state <{RECOGNIZED}> ;
       prov:wasDerivedFrom <{desire}> ;
       rdfs:label {json.dumps(label)} .
@@ -437,7 +431,7 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
 
 def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: datetime,
          at: datetime, until: datetime | None = None, said=None,
-         about: tuple = (), instance: str | None = None, side: str | None = None) -> str | None:
+         about: tuple = (), instance: str | None = None) -> str | None:
     """Derive the want pursued under `desire` and write it to the pursued graph, named by
     `_name_of`. None, and the desire stays the goal, where the desire states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
@@ -503,7 +497,7 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
     #  classified and what period it holds during are `wants.py`'s, whether a collection or
     #  this derivation asks for the write.
     _write(store, _local(holder), child, holder, desire, label, now, at, until,
-           points=tuple(points), shape=shape_lines, side=side)
+           points=tuple(points), shape=shape_lines)
     log.info("%s reads unmet: pursuing %s", desire.rsplit("#", 1)[-1], child.rsplit("#", 1)[-1])
     return child
 
@@ -576,17 +570,16 @@ SELECT ?g WHERE {
 ORDER BY ?start"""
 
 #  WHAT ONE DESIRE'S WEIGHINGS SAY, ground by ground: the verdict, and every violation with
-#  its instance, its constraint, what it is about and which way it broke.
+#  its instance, its constraint and what it is about.
 _TROUBLES_Q = """
-SELECT ?start ?met ?instance ?constraint ?about ?side WHERE {
+SELECT ?start ?met ?instance ?constraint ?about WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     ?x a planning:Weighing ; planning:for $desire ; planning:weighs ?g .
     ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start .
     OPTIONAL { ?x planning:met ?met }
     OPTIONAL { ?x planning:violation ?v . ?v planning:instance ?instance .
                OPTIONAL { ?v planning:constraint ?constraint }
-               OPTIONAL { ?v planning:about ?about }
-               OPTIONAL { ?v planning:violationIs ?side } } } }
+               OPTIONAL { ?v planning:about ?about } } } }
 ORDER BY ?start ?instance ?constraint"""
 
 
@@ -624,7 +617,7 @@ def _troubles(store: ox.Store, desire: str) -> list[dict] | None:
             key = (r["instance"], r.get("constraint", ""))
             unmet.add(key)
             seen.setdefault(key, {"instance": r["instance"], "constraint": r.get("constraint", ""),
-                                  "about": r.get("about"), "side": r.get("side"), "at": at})
+                                  "about": r.get("about"), "at": at})
         for key in seen.keys() - unmet:
             lifted.setdefault(key, at)
     return sorted(({**w, "until": lifted.get(k)} for k, w in seen.items()),

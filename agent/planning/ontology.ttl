@@ -9,7 +9,6 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix : <http://example.org/orexis/planning#> .
 @prefix prediction: <http://example.org/orexis/prediction#> .
-@prefix sensing: <http://example.org/orexis/sensing#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -87,7 +86,7 @@ planning:weighs a owl:ObjectProperty ; rdfs:domain planning:Weighing ;
 
 planning:violation a owl:ObjectProperty ; rdfs:domain planning:Weighing ;
     rdfs:label "violation" ;
-    rdfs:comment "One row of the met-test's report in the world weighed: which instance (`planning:instance`), which constraint of the shape (`planning:constraint`, the constraint's index within it), what that constraint is about (`planning:about`) and which way it broke (`planning:violationIs`), where the shape's block says either. A weighing with none, and `planning:met true`, is a world the want or desire is met in; one with none and NO `planning:met` is a question never put — the met-test could not be compiled or run — which is not the same as met." .
+    rdfs:comment "One row of the met-test's report in the world weighed: which instance (`planning:instance`), which constraint of the shape (`planning:constraint`, the constraint's index within it), and what that constraint is about (`planning:about`), where the shape's block says it. A weighing with none, and `planning:met true`, is a world the want or desire is met in; one with none and NO `planning:met` is a question never put — the met-test could not be compiled or run — which is not the same as met." .
 planning:instance a owl:ObjectProperty ; rdfs:label "instance" ;
     rdfs:comment "The focus node a violation is about — the instance in trouble, which is the grain a want is minted at." .
 planning:constraint a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "constraint" ;
@@ -272,12 +271,6 @@ planning:unmetWhen
 The contract of the pattern: `$this` is the agent and `$state` names the graph the readings live in, both substituted exactly as a measure's parameters are — in the PATTERN, never the projection, where a substituted IRI is a parse error — and everything else is an unqualified pattern over public knowledge. Run by the STORE'S OWN ENGINE against whichever world is judged, live or a candidate node, so entered-or-held is one text on one engine; a pattern that fails to run reads as unmet, the loud direction. Its urgency is binary — met 0, unmet 1 — which the four-measures table calls sufficiency where no intermediate worlds exist, and the kernel judges it with no capability in the room: a want that is pure ratified data has no behaviour to grant, and where nothing could differ there is a function, not a capability.""" .
 
 
-planning:violationIs
-    a owl:ObjectProperty ;
-    rdfs:domain sh:PropertyShape ;
-    rdfs:range sensing:Side ;
-    rdfs:label "violation is" ;
-    rdfs:comment "What it MEANS when this property shape is violated. On the shape, so the answer travels with the constraint that produced the result and cannot be recomputed differently by two readers. The alternative was for every consumer to compare the value against the bounds again — which is what the module, the query and the dashboard each did separately, and which is how a fern above its region came to be reported as one unmet want indistinguishable from a fern dying of thirst." .
 
 #################  Individuals  #################
 

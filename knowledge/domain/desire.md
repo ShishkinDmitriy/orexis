@@ -303,9 +303,8 @@ Three deliberate differences from the diff above:
   uncomfortable, which is the answer `urgency(None)` has always given.
 - **`side` says which way out a region want sits.** For moisture only the low side has an action, so a
   drowning plant and a dying one are both `unmet` at urgency 1.00 and mean opposite things. The
-  shape says the same thing in `planning:violationIs` now; the query still reaches it by comparing the
-  value to the bounds, which is the same answer, and reading it off a validation report waits for
-  something that produces one in the hot path.
+  query reaches it by comparing the value to the bounds; a want carried the same as a term of
+  its own for a while, and nothing in 0.2.0 read it, so it was retired.
 - **A count is about wanting, not about distance.** `unmet` means the reading sits outside the
   region, and `unactionable` means a desire nothing can be done about — both read off the row's
   `state`. The first cut inferred them from urgency, which is zero only exactly at the point
