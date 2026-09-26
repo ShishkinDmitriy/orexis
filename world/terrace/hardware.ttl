@@ -1,5 +1,4 @@
 @prefix : <http://example.org/orexis/world/terrace#> .
-@prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
@@ -46,11 +45,8 @@
     #  and the built-in WS2812's line. Agent 0.2.0 closes subclasses and no restriction.
     mc:firmware "outdoor-sentinel" ;
     esp32:ws2812Gpio 5 ;
-    #  No mc:firmware: the board's connecting DEVICE is typed outdoor:Node in world.ttl and
-    #  the firmware name ("outdoor-sentinel") is entailed onto it from that class, reached
-    #  through the hosting this deployment produces.
     ssn:inDeployment :terrace_deployment ;
-    rdfs:comment "A sentinel on a LiPo: deep-sleeps while its ULP watches the soil for movement, wakes to speak on a crossing or a heartbeat, takes no orders. Its agent is sensing:Listening." .
+    rdfs:comment "A sentinel on a LiPo: deep-sleeps while its ULP watches the soil for movement, wakes to speak on a crossing or a heartbeat, takes no orders." .
 
 #  The deployment: which systems, on which platform, from when, into what. The hosting is
 #  entailed from it (#99), and the society's own sosa:hosts in world.ttl is held to agreeing.

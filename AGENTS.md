@@ -817,6 +817,11 @@ it is a record wearing a bullet.
   forks a world the met-test cannot tell from its parent, and spent the budget moving no disk;
   and a want is placed by what it reads that some action can CHANGE, since a disk's size
   counted pulled a courier goal into the puzzle's scope.
+- **Hardware is the firmware generator's input, and no vocabulary types it** — `hardware.ttl`'s
+  pins, parts and boards are read by `orexis-firmware` alone, which interpolates their IRIs into a
+  `config.h`, and no agent is given them; bringing the parts back as a domain was weighed and
+  refused, since a vocabulary one string-filling reader uses checks nothing, and the firmware
+  ontologies nothing loaded were deleted with the `config.h` they fed unchanged byte for byte.
 - **A dictionary that nothing holds to the code rots in the present tense** — 38 of 88 pages
   described a deleted kernel as current until each page was filed under its owning package and
   gated to live terms (the-knowledge-is-filed-like-the-code).

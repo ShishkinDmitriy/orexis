@@ -10,7 +10,7 @@ Note what this is *not*. It is not `orexis:Polling`, where the agent asks for ea
 device replies: this board is unreachable while asleep, so a request would land on nothing.
 The agent hands it a standing instruction instead of a repeated one, and that trade — giving
 up "read now" to get deep sleep — is exactly why the two are separate capabilities. See
-[sensing](../../knowledge/domain/sensing.md).
+[sensing](../../knowledge/domain/sensing/sensing.md).
 
 ```
 wake -> read -> publish  sensors/<subject>/moisture  {"value":0.183,"sensor":"..."}

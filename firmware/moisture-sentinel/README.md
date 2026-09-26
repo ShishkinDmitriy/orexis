@@ -33,7 +33,7 @@ it at the same time, so `setup()` stops the ULP before reading and hands the uni
 explicitly before sleeping. Getting that wrong is silent — the ULP reads full scale forever —
 and it needs ESP-IDF 5.x, which is why this project pins its own platform in
 [`platformio.ini`](platformio.ini). See
-[two-owners-of-one-peripheral](../../knowledge/decisions/two-owners-of-one-peripheral.md).
+[two-owners-of-one-peripheral](../../knowledge/decisions/0.1.0/two-owners-of-one-peripheral.md).
 
 Declare a board with `mc:firmware "moisture-sentinel"`, mark its channel
 `ssn:implements sensing:AlarmProcedure`, run `orexis-firmware <world>`, and flash. **No world
@@ -72,7 +72,7 @@ three-month cell. So `WATCH_PATROL_S` is chosen for detection latency alone, and
 What a faster patrol *can* cost is indirect — it notices more transients, and each extra alarm is a
 full 0.25 mAh wake, about 1.7 hours of standing vigil. If it ever hurts, that is the mechanism, and
 `WAKE_DELTA` is the knob rather than the period. The derivation is in
-[the-vigil-costs-standing-not-looking](../../knowledge/decisions/the-vigil-costs-standing-not-looking.md),
+[the-vigil-costs-standing-not-looking](../../knowledge/decisions/0.1.0/the-vigil-costs-standing-not-looking.md),
 including which of these numbers are measured and which are estimated.
 
 **The battery is spent by the agent's epistemology, not by the firmware.** The sentinel's

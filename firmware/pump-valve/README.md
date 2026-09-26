@@ -9,7 +9,7 @@ executor (Pi) --publish--> actuators/<plant>/valve --subscribe--> ESP32 --> rela
 ```
 
 Because actuation is physically irreversible, this board is dumb but *guarded*
-(see [`knowledge/domain/executor.md`](../../knowledge/domain/executor.md)):
+(see [`knowledge/domain/executor.md`](../../knowledge/domain/execution/executor.md)):
 
 - **Commands only from a co-signed token** — the valve must open only on a command signed by
   **both host (`match_sig`) and clearing (`val_sig`)** (Ed25519). The Python sim-pump already
