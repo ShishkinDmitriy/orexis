@@ -31,7 +31,7 @@ restated by another node is a second owner of that content.
 
 # What is decided
 
-**The [action](/domain/action.md) is the kind.** What a row carries (`Affordance.action`),
+**The [action](/domain/kernel/action.md) is the kind.** What a row carries (`Affordance.action`),
 what an intention commits to (`progression:by`), what a trace weighs (`deliberation:wouldTake`) and what the
 keeper keys patience and suspicion on is the action node: `sensing:Observing`,
 `actuation:Dosing`, `market:Acquiring`, `market:Offering`, `market:Serving` — and
@@ -58,7 +58,7 @@ A rename across every consumer and every test that read a local name (`"Acquire"
 `"Acquiring"` now), and one more paragraph in the #334 allowlist for the migration
 destinations. `means.md` folds into `action.md`; `lever.md` (retired when an action came to
 declare what it takes) and
-[effect](/domain/effect.md) stay as parts of an action.
+[effect](/domain/planning/effect.md) stay as parts of an action.
 
 # Seams left open
 

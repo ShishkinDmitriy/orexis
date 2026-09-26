@@ -62,12 +62,12 @@ loading it implied are what the `superseded-in-part` above refers to — see
 the layering, the contract-only imports and the tested arrows stand.* The granted tree is for what a world can
 grant, and a layer is unconditional — a grant nobody can lack is not a grant, which is the
 mind's record applied consistently rather than argued with. This also keeps
-[package](/domain/package.md)'s claim intact: the kernel is not a family. `assembly/` stays
+[package](/domain/kernel/package.md)'s claim intact: the kernel is not a family. `assembly/` stays
 beneath all of it, unchanged — a layer is one more thing it assembles
 ([the-assembly-is-not-the-mind](/decisions/the-assembly-is-not-the-mind.md)).
 
-Working names are the domain's — [executor](/domain/executor.md), [keeper](/domain/keeper.md),
-[deliberator](/domain/deliberator.md) — and the implementing change has final say, including the
+Working names are the domain's — [executor](/domain/execution/executor.md), keeper,
+[deliberator](/domain/belief/deliberator.md) — and the implementing change has final say, including the
 stores' name (#451).
 
 # The alternatives, and what each was refused for

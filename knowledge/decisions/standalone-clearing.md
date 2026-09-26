@@ -22,7 +22,7 @@ than allocates, it is **topology-invariant** — it does not know or care who ho
 # Why (the seam)
 
 The host is the only thing that changes across topologies:
-- 1 supplier, N consumers → the [supplier](/domain/supplier.md) hosts (forward auction) — v1
+- 1 supplier, N consumers → the [supplier](/domain/market/supplier.md) hosts (forward auction) — v1
 - N suppliers, 1 consumer → the consumer hosts (reverse auction)
 - N ↔ N → no participant can host. This row first read "a region-want-free exchange hosts (order
   book)"; that resolution was refused when the case was decided — N-to-N clears through
@@ -35,4 +35,4 @@ In every case the participants sign their **orders** (bids or asks), the host si
 **match**, and clearing signs the **validation** — the same predicate over signed orders. So
 a new topology is a change of *host*, not a rewrite of clearing. Mint and actuate stay in
 infrastructure regardless of host. See [roadmap](/decisions/roadmap.md) and
-[clearing](/domain/clearing.md).
+clearing.

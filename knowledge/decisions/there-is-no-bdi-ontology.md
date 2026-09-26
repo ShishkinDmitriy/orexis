@@ -28,10 +28,10 @@ description: >-
 
 # Context
 
-[settlement-speaks-rea](settlement-speaks-rea.md) set the method: where a standard already has
+[settlement-speaks-rea](/decisions/settlement-speaks-rea.md) set the method: where a standard already has
 the words, check ours against it, borrow the words, state the deviations, and import no IRIs
 that nothing consumes. It found no canonical auction ontology and a very good accounting one.
-After [the-dictionary-names-its-terms](the-dictionary-names-its-terms.md) made term-binding a
+After [the-dictionary-names-its-terms](/decisions/the-dictionary-names-its-terms.md) made term-binding a
 gate, the sovereign asked the same question of the mind: is the BDI layer — `progression:Intention`,
 the desire shapes, the deliberation modes, the modality graphs — reinventing something a
 standard owns?
@@ -48,14 +48,14 @@ agent communication, not RDF; there is no OWL artifact to import; and FIPA has b
 since IEEE absorbed it in the early 2000s. At most it is a words-check target, and our words
 already pass it: *belief*, *desire*, *intention* and *deliberation* here are the literature's
 words (Bratman; Rao–Georgeff), used in the literature's senses —
-[an-intention-is-an-amortised-deliberation](an-intention-is-an-amortised-deliberation.md) is
+[an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md) is
 explicit that an intention is BDI's third letter.
 
 # The adjacent four, examined and refused
 
 | candidate | what it offers | why refused |
 |---|---|---|
-| **DOLCE Ultralite** (`DUL.owl#`) | `Goal`, `Plan`, `Task`, `Situation` — the closest maintained ontology with intentional concepts | an upper-ontology commitment: every class wants a place in its hierarchy, and the hand-materialised closure ([one-graph-both-engines-read](one-graph-both-engines-read.md)) would have to cover its axioms — the cost settlement-speaks-rea refused for ValueFlows, paid for four words |
+| **DOLCE Ultralite** (`DUL.owl#`) | `Goal`, `Plan`, `Task`, `Situation` — the closest maintained ontology with intentional concepts | an upper-ontology commitment: every class wants a place in its hierarchy, and the hand-materialised closure ([one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md)) would have to cover its axioms — the cost settlement-speaks-rea refused for ValueFlows, paid for four words |
 | **prov:Plan** (+ p-plan) | already **bound and vendored** here — the one candidate a `term:` could name today | see below — the sharpest refusal, because it is the only one that was actually available |
 | **WoT Thing Description** (`2019/wot/td#`) | `ActionAffordance`, `PropertyAffordance` — the one place our word and a W3C Recommendation's word coincide | same Gibson word, different kind of fact — see below |
 | **hmas** (`purl.org/hmas/`) | agents, artifacts, workspaces, signifiers — the hypermedia-MAS research line | research-grade and evolving, not a standard; and it models an agent's *situation* (where it is, what artifacts it can reach), not its mental states — the part of the mind it covers is the part our world graph already is |
@@ -71,7 +71,7 @@ PROV is spoken here and its vocabulary sits in `tests/fixtures/vocabularies/prov
 - **PROV's plan is an entity because it persists** — its own comment says plans are entities
   *"since plans may evolve over time, it may become necessary to track their provenance"*, and
   it exists to be cited by `prov:hadPlan` from an activity that followed it. Our plan is the
-  opposite fact: a path of graph diffs searched inside the [imaginarium](../domain/imaginarium.md),
+  opposite fact: a path of graph diffs searched inside the [imaginarium](/domain/planning/imaginarium.md),
   the one thing in this design **required to be lost**. Nothing ever cites a plan, because by
   the time anything has happened the plan is gone and what remains is an intention.
 - **PROV declines to say what a plan is made of** — *"there exist no prescriptive requirement
@@ -88,7 +88,7 @@ Gibson, and mean the same idea by it — what could be done here. The modelling 
 
 - a TD affordance is **authored** — a Thing's interface contract, written in its description,
   stable until re-described;
-- what a world admits — a [step](../domain/step.md) before it is picked — is **derived and never stored**, a conclusion
+- what a world admits — a [step](/domain/execution/step.md) before it is picked — is **derived and never stored**, a conclusion
   recomputed on every ask, precisely so that a row can never outlive the plumbing it was
   concluded from. A stored affordance is the failure mode our page warns against, and it is
   TD's normal case, because a device's interface genuinely is stable in a way an agent's
@@ -102,13 +102,13 @@ interface, which is the one thing they must never be.
 
 External vocabulary pays where data crosses a trust boundary: SOSA at the sensing edge, PROV
 for who-put-the-fact-there, REA's words at settlement. A mind never crosses one.
-[where-the-belief-base-lives](where-the-belief-base-lives.md) makes isolation structural — no
-external consumer ever reads a `DesireGraph`, and [the-sovereign-may-ask](the-sovereign-may-ask.md)
+[where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) makes isolation structural — no
+external consumer ever reads a `DesireGraph`, and [the-sovereign-may-ask](/decisions/the-sovereign-may-ask.md)
 returns answers, not graphs. An interop vocabulary for data with no interop surface buys the
 closure cost and the alignment risk for nothing.
 
 And the semantics deviate on purpose. A desire here is a SHACL shape
-([a-desire-is-a-shape](a-desire-is-a-shape.md)); an intention is an amortised deliberation
+([a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md)); an intention is an amortised deliberation
 kept in a private ledger; deliberation is a capability with interchangeable members, one of
 them an LLM consulted at the edge of knowledge. A borrowed mental-state ontology would claim
 Rao–Georgeff operator semantics the design deliberately does not keep. Home-made IRIs are not
@@ -119,9 +119,9 @@ process is meant to interpret them.
 
 - **WoT TD for device descriptions is a real candidate** — not for minds. A board's MQTT
   interface is exactly what TD describes (forms, protocol bindings, authored stability), and
-  [a-firmware-describes-itself](a-firmware-describes-itself.md) already treats the flashed
+  [a-firmware-describes-itself](/decisions/a-firmware-describes-itself.md) already treats the flashed
   image as a T-Box source. The day a board's description must interop beyond this repo, TD is
-  the vocabulary to check first, on the [their-descriptions-are-our-fixtures](their-descriptions-are-our-fixtures.md)
+  the vocabulary to check first, on the [their-descriptions-are-our-fixtures](/decisions/their-descriptions-are-our-fixtures.md)
   pattern.
 - **FIPA ACL performatives, the day the conversation is formalised.** Agents already exchange
   offers, bids and justifications; if that protocol ever grows message *types*, the

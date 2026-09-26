@@ -67,7 +67,7 @@ The seam below that asked what "matches" means closed with #554. The keeper's ve
 holds one committed step to its prediction, and the tail still drops on a surprise; what
 changed is what happens to the search's worlds afterwards. They are kept (#553), and the next
 pass identifies the present among them within the want's view
-([identification](/domain/identification.md)): a step that landed as predicted resumes the
+(identification): a step that landed as predicted resumes the
 cone at the child it reached, a step that landed in a sibling the search explored resumes
 there, and a present no kept world matches starts a pass from nothing. Matching is exact
 within the view until intervals (#556) give a prediction a width.

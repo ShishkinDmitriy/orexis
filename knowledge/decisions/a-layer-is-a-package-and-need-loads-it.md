@@ -34,7 +34,7 @@ images. That clause is what falls.
 
 **The layers join the one package tree as families.** Execution, progression, deliberation —
 each a family whose members are interchangeable implementations, which is what
-[capability](/domain/capability.md)'s own test always asked of a package and what the
+capability's own test always asked of a package and what the
 superseded record sidestepped as "a different rationale." It passes now rather than being
 excused: deliberation by bounded search and deliberation by a model are two members of one
 family ([llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) already argues the
@@ -172,7 +172,7 @@ job is to carry that across the gap cannot be the layer that forgets it.
   but the surface they arrive through is the belief base's, and a reader who wants "never
   reads a belief" to be structural rather than a discipline would hand progression its own
   public-graph query at construction. #451 chose
-  `modality` for the stores' family, the word [modality](/domain/modality.md) owns, and `graph`
+  `modality` for the stores' family, the word [modality](/domain/kernel/modality.md) owns, and `graph`
   for the member — the modalities held as named RDF graphs, which a member holding them another
   way would not be; #452's are still its own.
 

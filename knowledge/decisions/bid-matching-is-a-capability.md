@@ -9,7 +9,7 @@ timestamp: 2026-08-10T00:00:00Z
 This record was filed as *an-auction-format-is-a-capability* and retitled when the vocabulary was
 settled: the thing described here is **matching**, and *auction format* means something wider that
 this project does not model. Nothing else in it changed. See
-[bid-matching-is-the-word](bid-matching-is-the-word.md) and [bid matching](/domain/bid-matching.md).
+[bid-matching-is-the-word](/decisions/bid-matching-is-the-word.md) and bid matching.
 
 # Context
 
@@ -18,7 +18,7 @@ and it is a replaceable v1 choice"*, and `hosting.py` did `from agent.auction im
 Swapping greedy pay-as-bid for uniform-price meant editing that file. The seam was a claim.
 
 A claimed seam is worse than an acknowledged gap because it is cited:
-[the-lot-is-the-hosts-standing-offer](the-lot-is-the-hosts-standing-offer.md) and
+[the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md) and
 [#50](https://github.com/ShishkinDmitriy/orexis/issues/50) both park the pay-as-bid-versus-uniform-price
 argument as *a separate argument*, on the assumption that there is somewhere to have it.
 
@@ -27,7 +27,7 @@ argument as *a separate argument*, on the assumption that there is somewhere to 
 This could not be said cleanly until the vocabulary was fixed, because the bundle held both
 readings of one word.
 
-`domain/market.md` opened *"A market is **not a standing thing** — it condenses out of scarcity and
+`domain/market/market.md` opened *"A market is **not a standing thing** — it condenses out of scarcity and
 dissolves again. There is no permanent 'the auction'."* Meanwhile `market:Market` was declared in
 `world.ttl` with three MQTT topics on it, and its own comment called it a *venue* that participants
 *discover*. Both were called market and they are opposites.
@@ -38,7 +38,7 @@ The split, now stated in both places:
   consume it, and the channels they meet on. It is in the world. A market with nothing contested
   is still a market.
 - **An auction is the process** — it condenses out of scarcity, allocates, and dissolves. That is
-  what [round](/domain/round.md) has always described.
+  what [round](/domain/market/round.md) has always described.
 
 The consequence that matters here: **the terms of an auction belong to whoever convenes it**, not
 to the venue. A market that stated how bids are matched would be holding a fact nobody asked it to
@@ -67,7 +67,7 @@ The stated fact is what the host *does*; the ability follows. So `world.ttl` sti
 ## Named `matchesBy`, not `clearsBy`
 
 Clearing is already a thing here — the validator that co-signs a trade, in
-[clearing-as-validator](clearing-as-validator.md). Reusing the word would have made a host's
+[clearing-as-validator](/decisions/clearing-as-validator.md). Reusing the word would have made a host's
 allocation read as the notary's business, which is precisely the boundary the phrase *the host
 proposes, clearing disposes* exists to hold. A matching capability decides an allocation; whether
 it is **permitted** is not its business and never was.
@@ -112,7 +112,7 @@ announced is necessarily what will run — a host cannot advertise one and apply
 
 # Seams left open
 
-- **Who hosts.** [standalone-clearing](standalone-clearing.md) says the scarce side hosts and that
+- **Who hosts.** [standalone-clearing](/decisions/standalone-clearing.md) says the scarce side hosts and that
   the host rotates with topology; nothing implements it, and v1 declares the supplier statically.
   Under the split above the question sharpens rather than resolves: **hosting a market is
   structural, **convening an auction is per-auction**, so who convenes *this* auction could follow from
@@ -126,7 +126,7 @@ announced is necessarily what will run — a host cannot advertise one and apply
   states exactly one member and there is no ambiguity to resolve. The question the seam was really
   reaching for survives as the one below it — not *which member* but *whether the one announced is
   the one that ran*. `review:Consulting` leaves the genuine version of this seam in
-  [self-review-is-a-capability](self-review-is-a-capability.md), where the grant names a member
+  [self-review-is-a-capability](/decisions/self-review-is-a-capability.md), where the grant names a member
   directly and a second premise would be needed.
 - **The offer announces the bid matching; nothing verifies it.** A bidder reads `matches_by` and
   trusts it. Clearing does not recompute the allocation — `validate` checks identity, no duplicate

@@ -52,7 +52,7 @@ added one clause asking `_my_shop_needs` — which answers only for a property t
 own vessel's stock, and returns None for every other agent.
 
 A member that CONTAINS the other, whose extra branch is inert everywhere else, is not an
-interchangeable implementation. [capability](/domain/capability.md)'s test is whether the HOW
+interchangeable implementation. capability's test is whether the HOW
 could differ; here it differed by a condition on the data, which is a branch. They are one class,
 and no shipped behaviour moved.
 
@@ -193,7 +193,7 @@ because it is not the one that looks obvious.
 
 It is **not** "is it universal". `reporting` is granted to every agent by a rule whose WHERE
 clause is `?agent a orexis:Agent` — a premise that asks nothing — and it is still a capability.
-[telemetry-is-a-mandatory-capability](telemetry-is-a-mandatory-capability.md) settled that
+[telemetry-is-a-mandatory-capability](/decisions/telemetry-is-a-mandatory-capability.md) settled that
 exact question and its argument holds: mandatory and uniform are different, counting stays in
 the kernel because counting could not differ, and `reporting:Announcing` is a second member with
 an independent failure mode — a bucket that has gone and a bus that has gone fail separately,

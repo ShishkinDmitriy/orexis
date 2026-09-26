@@ -21,7 +21,7 @@ description: >-
 > **THE NOUNS MOVED.** This record says *want* for the root and *want* for what is derived under
 > it, because when it was written they were one word. They are two kinds now — a **desire**
 > stands and is never pursued, a **want** is deduced from one and carries a period — and
-> [desire](/domain/desire.md) is the current statement. Read *want* below as *desire* wherever
+> [desire](/domain/planning/desire.md) is the current statement. Read *want* below as *desire* wherever
 > it means the root. The argument is unchanged; only what the two ends are called is.
 
 # The claim
@@ -33,7 +33,7 @@ and everything below holds with that substitution.)*
 
 **A root is never pursued.** It is the agent's for its whole
 life — every subject on the roster inside what it states it needs — and it is the PREMISE of
-what is pursued: a [desire](/domain/desire.md) in the forest's sense, with the
+what is pursued: a [desire](/domain/planning/desire.md) in the forest's sense, with the
 pursued wants derived under it. **It is not the search's law**, and the first draft of this
 record said it was: the binding record gives an Always want the reading *judged at every
 state*, and what enforces that today is never-newly-enter over the shapes an agent holds at
@@ -49,7 +49,7 @@ definition of done.** Two kinds, by what implies them:
   is pursued forward from the present, and it is gone when its intention resolves met.
   [#618](https://github.com/ShishkinDmitriy/orexis/issues/618).
 - **Predicted to be.** The drift's crossing — from the observed value, or the band's own width
-  over the rate where only the band is known ([effect](/domain/effect.md)) — says when the
+  over the rate where only the band is known ([effect](/domain/planning/effect.md)) — says when the
   reading leaves its region. A want that must hold AT that instant is derived under the root,
   naming the prediction in PROV. Its room is time, by the binding. It is pursued from the node
   the present's own drift reaches at the instant minus the plan's duration, its steps placed
@@ -57,7 +57,7 @@ definition of done.** Two kinds, by what implies them:
   [#619](https://github.com/ShishkinDmitriy/orexis/issues/619).
 
 Both are minted at runtime, as the promise path mints a want for a taker-less step and withdraws
-it on the verdict ([bridge](/domain/bridge.md)). Neither is authored, and a world file names
+it on the verdict ([bridge](/domain/planning/bridge.md)). Neither is authored, and a world file names
 neither. The desires modality holds the roots, the children while they live, and nothing else
 that is pursued.
 

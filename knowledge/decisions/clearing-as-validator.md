@@ -39,7 +39,7 @@ Pure checks on the proposed trade against the participants' **signed orders**:
 - **Solvency / availability** — each buyer's wallet covers its bid; each seller can supply
   its ask.
 - **Identity** — every party is a certified id. See [authn-authz-capabilities](/decisions/authn-authz-capabilities.md).
-- **Constitution** — no allocation past rot threshold, total ≤ tank. See [constitution](/domain/constitution.md).
+- **Constitution** — no allocation past rot threshold, total ≤ tank. See constitution.
 - **Order-consistency** — the trade never exceeds any party's signed order.
 
 *Not* checked in v1: "did the host follow a committed auction rule" (mechanism conformance).
@@ -57,7 +57,7 @@ host        match_sig : "I, the scarce side, propose this match"     — supplie
 clearing    val_sig   : "conserves, fits every signed order, ids ok, constitution holds"
 ```
 
-The settlement token is that bundle. The [actuation](/domain/actuation.md) actuates **only**
+The settlement token is that bundle. The [actuation](/domain/actuation/actuation.md) actuates **only**
 a fully-signed token — counterparties consented (orders), host proposed (match), clearing
 notarized (validity). This also kills fabrication and shill bids: the host can neither sign
 as another agent nor out-mint its wallet.
@@ -79,7 +79,7 @@ clearing blocks that. Greedy-but-committed, not non-greedy. See
   stays region-want-free infra; but it is now a tiny predicate, not a discretionary allocator.
 - **Atomic settlement + the mint** — someone must debit-and-actuate atomically and mint the
   allowance; those stay in infrastructure, never the host, or penalties and bonds become
-  meaningless. See [trust-boundary](/decisions/trust-boundary.md) and [wallet](/domain/wallet.md).
+  meaningless. See [trust-boundary](/decisions/trust-boundary.md) and wallet.
 
 # Relation to the other seam
 

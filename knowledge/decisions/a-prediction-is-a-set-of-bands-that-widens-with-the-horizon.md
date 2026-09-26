@@ -29,7 +29,7 @@ mechanism: a graph scoped by the window would answer a question about one instan
 claim about the stretch, which is the mistake #613 caught in a filed issue.
 
 **An observation is an event.** `sosa:resultTime` is its instant once it has occurred. The
-next one can be expected: the instrument's cadence says when, and the [drift](/domain/effect.md)
+next one can be expected: the instrument's cadence says when, and the [drift](/domain/planning/effect.md)
 applied over that stretch to the reading in hand says what. Both halves exist today and are
 not joined.
 
@@ -144,7 +144,7 @@ are built under it (#642, #643, #639, #632).
 
 The set of bands stands for the 0.1.0 tree. In `agent/sensing/` a prediction carries the
 number the drift gives, one prediction per stretch between the instants the reading changes
-range, and the side of it is a [revision](/domain/revision.md) the rules sensing registers
+range, and the side of it is a [revision](/domain/belief/revision.md) the rules sensing registers
 conclude; the widening set is what the rules would conclude of each stretch, and no band is
 written by sensing. The window an event is expected in is unchanged. See
-[prediction](/domain/prediction.md).
+[prediction](/domain/prediction/prediction.md).

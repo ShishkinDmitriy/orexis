@@ -8,7 +8,7 @@ timestamp: 2026-08-11T00:00:00Z
 
 # Context
 
-[one-word-for-one-relation](one-word-for-one-relation.md) settled which of our terms defer to a
+[one-word-for-one-relation](/decisions/one-word-for-one-relation.md) settled which of our terms defer to a
 standard, by asking whether the standard answers the same question. That worked for terms. It did
 not answer the operational question behind it: **can a description written by somebody else be
 used here at all?**
@@ -61,7 +61,7 @@ for the foreseeable future"* — but RDF does not care what a registry prefers. 
 states correctly in the other scheme.
 
 Sharpest detail: the idiom was copied **from this example** in
-[one-word-for-one-relation](one-word-for-one-relation.md), and written in a different spelling
+[one-word-for-one-relation](/decisions/one-word-for-one-relation.md), and written in a different spelling
 than the example it came from. All three violations that example raised about its frequency were
 this, and none was the QUDT version they looked like.
 

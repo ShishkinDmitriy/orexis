@@ -14,8 +14,8 @@ the auction stops being honest.
 # Decision
 
 The **bid amount is deterministic code** — a value model over attested moisture, target,
-evaporation, forecast (see [wallet](/domain/wallet.md) and
-[plant agent](/domain/plant-agent.md)). The **LLM produces only the stance**: the English
+evaporation, forecast (see wallet and
+plant agent). The **LLM produces only the stance**: the English
 justification and any coalition move. The mediator clears on the number; it ignores the prose.
 
 # Why
@@ -29,4 +29,4 @@ justification and any coalition move. The mediator clears on the number; it igno
 - The justification cites the agent's sensed facts — "the leash." Originally mandatory (cite
   or be rejected); relaxed to **voluntary disclosure** in trusted mode (reveal to be believed,
   witness-signed to be credible). See [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)
-  and [belief-base](/domain/belief-base.md).
+  and [belief-base](/domain/belief/belief-base.md).

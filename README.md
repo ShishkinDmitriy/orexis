@@ -4,7 +4,7 @@
 is the mover itself: reason alone moves nothing, and orexis is what turns a judgement into
 motion. Its species there are *epithymia* (appetite), *thymos* (spirit) and **boulēsis**
 (reasoned wish) — the last of which gives modal logic its word for desire, *bouletic*, which is
-[what a want asserts here](knowledge/domain/modality.md).
+[what a want asserts here](knowledge/domain/kernel/modality.md).
 
 The name points at the kernel rather than the shop floor: the market is one domain among several,
 while the desiring mind is the part nothing swaps out. The project was called Agora and the rename says why —
@@ -61,8 +61,8 @@ knowledge/     OKF knowledge bundle (architecture decisions + domain model)
 `<> a orexis:WorldGraph` in it says what; a world imports the domains it speaks with
 `owl:imports`, and an agent's desires are its own file under `beliefs/`. Adding a way of acting
 is a node in a domain's `actions.ttl` — a precondition, an effect and an implementation — and a
-world that imports the domain has it. See [`domain/world`](knowledge/domain/world.md) and
-[`domain/action`](knowledge/domain/action.md).
+world that imports the domain has it. See [`domain/world`](knowledge/domain/kernel/world.md) and
+[`domain/action`](knowledge/domain/kernel/action.md).
 
 ## Prerequisites
 
@@ -142,8 +142,8 @@ solves and then stops; `greenhouse`, a heated bed the grower keeps comfortable b
 heating it, played by the simulator; and `terrace`, a planter bed outdoors watched through a
 FireBeetle 2 ESP32-E running `firmware/outdoor-sentinel`, a real board; and `sensing`, a fern
 on a windowsill watched through a governed ESP32 that takes a cadence; and `allotment`, two
-growers buying water from a supplier on a market. `tower` waits for planning on two levels. [`domain/world`](knowledge/domain/world.md) says what a world is made of, and
-[`domain/domain`](knowledge/domain/domain.md) where the vocabulary several worlds share lives.
+growers buying water from a supplier on a market. `tower` waits for planning on two levels. [`domain/world`](knowledge/domain/kernel/world.md) says what a world is made of, and
+[`domain/domain`](knowledge/domain/kernel/domain.md) where the vocabulary several worlds share lives.
 
 **There is nothing to seed and no store to provision.** A world is Turtle; each agent builds its
 own belief base from it at boot and keeps it in a volume of its own, which nothing else can
@@ -169,7 +169,7 @@ when every one is reached; one that holds a desire, or that a transport reaches,
 **One container per agent, and that is the point.** On one filesystem every agent could read
 every other agent's beliefs. Now each agent's belief base is a store in its own volume, locked
 by its owner and unopenable by anything else — including you. See
-[`domain/world`](knowledge/domain/world.md) §Deployment.
+[`domain/world`](knowledge/domain/kernel/world.md) §Deployment.
 
 Note what is *not* born this way: firmware. A board is hardware and is flashed by hand, from the
 `config.h` `orexis-firmware` generates out of the world it belongs to.
@@ -183,7 +183,7 @@ For unattended operation see [`runbooks/run-a-world`](knowledge/runbooks/run-a-w
 simulator (`python -m simulation <world>`, one more service in its compose file) is a process of
 the world that plays every system the world marks `sim:simulatedBy`, from the world's own words —
 the topics from MQTT4SSN, how often a sensor reports, how the bed dries and what a dose or a
-heating does to it. See [`domain/domain`](knowledge/domain/domain.md).
+heating does to it. See [`domain/domain`](knowledge/domain/kernel/domain.md).
 
 **The agent cannot tell.** The simulator publishes on the same topics, speaks the same protocol and
 is reached through the same kind of credential, so the mark that says a thing is played

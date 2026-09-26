@@ -13,7 +13,7 @@ timestamp: 2026-08-10T00:00:00Z
 
 # Context
 
-[bid-matching-is-a-capability](bid-matching-is-a-capability.md) made matching a family,
+[bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md) made matching a family,
 `market:BidMatchingCapability`, with pay-as-bid implemented and `market:UniformPrice` declared beside it
 under a claim: *"adding it is a class and one line of `PROVIDES`; no other package moves."*
 
@@ -24,7 +24,7 @@ falsifiable, which is most of why this was worth doing next.
 
 Everything that changed is inside the matching package, plus tests. (It was its own directory at
 the time — `capabilities/bid_matching/` — and is now `packages/orexis-capability-market/matching.py`; see
-[a-package-owns-its-namespace](a-package-owns-its-namespace.md). The claim below is about what
+[a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md). The claim below is about what
 did NOT have to move, and folding it in did not weaken that: `hosting.py` is still untouched.)
 
 | | |
@@ -120,7 +120,7 @@ two members now agree on the uncontested bill and differ on the contested one.
 # Seams left open
 
 - **Nothing selects between the two.** A world names one and gets it. With two implemented, the
-  question [bid-matching-is-a-capability](bid-matching-is-a-capability.md) recorded is now live rather
+  question [bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md) recorded is now live rather
   than hypothetical: nothing stops a world naming both, and nothing would choose.
 - **The allocation walk is written out twice**, deliberately. That these two members allocate
   identically is a fact about them and not about the family — a pro-rata member across everyone

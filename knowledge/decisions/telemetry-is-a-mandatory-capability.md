@@ -15,7 +15,7 @@ timestamp: 2026-08-11T00:00:00Z
 
 # Context
 
-[every-term-in-its-own-house](every-term-in-its-own-house.md) moved 102 terms into their packages
+[every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) moved 102 terms into their packages
 and left eleven in the kernel that are not true of every agent. `ag:SelfReporting` was one, and it
 was a different kind of wrong from the rest: not misplaced, but **self-contradictory**.
 
@@ -84,7 +84,7 @@ tempted by the symmetry with `review:Reckoning`.
   session for days and nothing says so* — would become permanently unfixable for exactly the
   agents that cannot speak for themselves.
 - **A merged record already depends on it.**
-  [self-review-is-a-capability](self-review-is-a-capability.md) reads absence as a signal:
+  [self-review-is-a-capability](/decisions/self-review-is-a-capability.md) reads absence as a signal:
 
   > `belief_compactions` comes off the kernel and **every agent reports it**; the revision counts
   > come off a module an agent may not have … so the **absence** of those lines in the series is

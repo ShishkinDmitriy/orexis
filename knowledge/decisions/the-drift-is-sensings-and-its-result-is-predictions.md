@@ -190,4 +190,4 @@ observe and say when a sensor has gone silent and predict nothing. What `predict
 is the calculation of when the reading changes range — every crossing of a range bound bisected
 between the ladder's rungs — and one prediction per stretch, carrying a number rather than a
 set of bands. The rules sensing registers conclude the side of each stretch. See
-[prediction](/domain/prediction.md).
+[prediction](/domain/prediction/prediction.md).

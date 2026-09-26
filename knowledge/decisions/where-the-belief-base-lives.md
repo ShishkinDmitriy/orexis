@@ -14,7 +14,7 @@ timestamp: 2026-08-04T00:00:00Z
 
 [belief-base-isolation](/decisions/belief-base-isolation.md) put per-agent read isolation in
 the store: each agent authenticates as itself and Fuseki's graph-level access control means
-another agent's beliefs come back empty. [world](/domain/world.md) then gave each world its own
+another agent's beliefs come back empty. [world](/domain/kernel/world.md) then gave each world its own
 dataset, so worlds cannot overwrite each other.
 
 Both rest on Fuseki's `access:SecurityRegistry`, and it is **assembled at startup**. Apache's
@@ -65,7 +65,7 @@ added live. So if a world *declares* an agent, its ACL can be in place before th
 born — and birth then costs no restart at all: write the credential, write the beliefs graph,
 start the container.
 
-This lands exactly on the [lifecycle](/domain/agent.md): **the world declaring an agent** is a
+This lands exactly on the [lifecycle](/domain/kernel/agent.md): **the world declaring an agent** is a
 ratified fact and may cost a restart, because ratification is rare and sovereign; **birth** and
 **start** are dynamic. It does not fix adding a *world*.
 
@@ -83,7 +83,7 @@ its own beliefs. Nothing is shared at runtime.
 **It must be persistent.** Oxigraph offers an in-memory store and a RocksDB-backed one; only
 the second is admissible. Beliefs that vanished on restart would make every start a partial
 re-birth, resetting the agent to whatever the sovereign last authored — the exact collapse
-[agent](/domain/agent.md) §Lifecycle exists to prevent. Start and stop are pause and resume, so
+[agent](/domain/kernel/agent.md) §Lifecycle exists to prevent. Start and stop are pause and resume, so
 revision has to survive them or a belief is configuration again. In practice: a RocksDB store on
 a per-agent named volume, which `orexis-compose` can emit as one line per service.
 
@@ -101,7 +101,7 @@ Two things make this more attractive than it first looks:
   graph; the only join is in `validate.py`, in rdflib, after fetching each separately.
 
 What it costs: the belief base stops being one place. That is a genuine reframe of
-[belief-base](/domain/belief-base.md), and it puts validation somewhere new — see below.
+[belief-base](/domain/belief/belief-base.md), and it puts validation somewhere new — see below.
 
 # Persistence is the default, and an exception must be declared
 
@@ -157,7 +157,7 @@ restart also survives every *code* change, so it can hold a vocabulary the code 
 speaks — which the namespace sweep proved by moving 102 terms with both gates green. Birth
 happening once is still right; what was missing was anything asking, on the way in, whether the
 store still says what the code reads. See
-[a-volume-can-be-older-than-the-vocabulary](a-volume-can-be-older-than-the-vocabulary.md).
+[a-volume-can-be-older-than-the-vocabulary](/decisions/a-volume-can-be-older-than-the-vocabulary.md).
 
 # When the world changes under a running agent
 
@@ -199,7 +199,7 @@ is *refusing to start* rather than claiming to be fine.
 
 The residual gap is honest and small: a modified agent could skip its own check — but a modified
 agent could ignore the shapes anyway. Belief validation catches misconfiguration, not malice.
-Malice is caught where it always was, at [clearing](/domain/clearing.md), which validates what an
+Malice is caught where it always was, at clearing, which validates what an
 agent may *do* rather than what it believes.
 
 # Decision — option 4
@@ -207,7 +207,7 @@ agent may *do* rather than what it believes.
 **The world becomes TTL files. Beliefs live inside each agent. No shared store survives.**
 
 The argument that decided it is not memory and not latency — it is **coupling**. A shared
-Fuseki means adding the 21st world restarts the other 20. [world](/domain/world.md) isolated
+Fuseki means adding the 21st world restarts the other 20. [world](/domain/kernel/world.md) isolated
 worlds at the data level and then left them joined at the config level, which makes that
 isolation partly cosmetic: two worlds that cannot see each other's data can still take each
 other down.

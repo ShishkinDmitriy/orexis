@@ -22,19 +22,19 @@ timestamp: 2026-08-29T00:00:00Z
 
 **A repository is built two ways here and both are fine.** `Beliefs`, `Desires` and `Intentions`
 WRAP a store and delegate; `Imaginarium` and `_Derivation` EXTEND one. The
-[imaginarium](/domain/imaginarium.md) is a full repository — its domain method is `reached()`,
+[imaginarium](/domain/planning/imaginarium.md) is a full repository — its domain method is `reached()`,
 which mints the graph for a search node — and it belongs to the planner rather than the agent,
 which is why an audit of the constructor missed it.
 
 **A repository also carries its own support functions.** Compaction was written as a service and
 is not one: it decides nothing, asserts nothing, and reclaims bytes belonging to one repository,
-so it is a function of [belief-base](/domain/belief-base.md). Writing no graph is only the hint —
+so it is a function of [belief-base](/domain/belief/belief-base.md). Writing no graph is only the hint —
 three services write none either, and stay services because each decides something.
 
 # The types follow, and Component folds
 
 `Component` meant *a part of the implementation* and carried nine pages: two that hold data
-([belief-base](/domain/belief-base.md), [imaginarium](/domain/imaginarium.md)) and seven that
+([belief-base](/domain/belief/belief-base.md), [imaginarium](/domain/planning/imaginarium.md)) and seven that
 hold logic.
 
 **Its own definition gave it away.** It read *"a part of the implementation — the belief base,
@@ -49,8 +49,8 @@ arguing, and it is a service: the mechanism by which services ask each other is 
 data.
 
 **Two repositories is thin, and it is the honest count.** The mind has four today and six in the
-target, but only two can have pages: [desire](/domain/desire.md) and
-[intention](/domain/intention.md) already state what their stores are, and a repository page for
+target, but only two can have pages: [desire](/domain/planning/desire.md) and
+[intention](/domain/execution/intention.md) already state what their stores are, and a repository page for
 either would be a second owner of a claim. Pointing beats extracting, so the count follows.
 
 # The picture draws the target, not today

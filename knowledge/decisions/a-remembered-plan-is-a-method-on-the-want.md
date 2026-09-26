@@ -25,7 +25,7 @@ and this builds its first honest form: a plan that reached its end is lifted FIL
 agent's remembered graph, hung on the want with the signature of the world it was decided in;
 the next pursuit of that want in a world of that signature adopts it without a search, the
 trace says `remembered`, and the keeper walks it as any plan. See
-[remembered plan](/domain/remembered-plan.md).
+remembered plan.
 
 # What was refused
 
@@ -74,7 +74,7 @@ imaginarium can say for a fork per step what the world would say for a patience 
 # Amended 2026-09-06: keyed by the regressed precondition, not by a signature
 
 The hash is gone (#551). A remembered plan is keyed by what its steps' rules READ — each step's
-[premises](/domain/precondition.md), carried since #550 — regressed through the chain: step n's
+[premises](/domain/planning/precondition.md), carried since #550 — regressed through the chain: step n's
 premises less what steps 1 to n−1 add. That set is asked of the present as one query, a keyed
 reading by class and key and never by its value, and the first step must be on the menu now.
 Nothing is stored about when a plan applies; it is computed from the steps each time.

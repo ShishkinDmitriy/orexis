@@ -87,7 +87,7 @@ the transports by directory rather than by a list.
 - **A capability's `rules.ru` may still join through a transport's terms.** Sensing's three
   derivation rules read `mqtt:readingTopic` and `mqtt:onBus` to find the device sharing a sensor's
   stream. That is a recorded wait rather than a debt —
-  [channel](/domain/channel.md) says a transport-neutral class earns its place the day a second
+  channel says a transport-neutral class earns its place the day a second
   transport exists, and a capability's premise is its own to state whatever happens, so those
   rules could not move here even if the word existed.
 - **Every requirement still fires.** A valve on a bus with no command topic is refused; a stood-in

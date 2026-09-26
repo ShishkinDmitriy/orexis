@@ -14,7 +14,7 @@ timestamp: 2026-08-03T00:00:00Z
 > another's Python. The file table and the "one line of registry" in this document are the
 > parts that were replaced.
 >
-> **Current statement: [package](/domain/package.md)** — the model as it stands after all
+> **Current statement: [package](/domain/kernel/package.md)** — the model as it stands after all
 > four amendments, so nobody has to replay them.
 
 # Context
@@ -55,7 +55,7 @@ it until genesis derives it.
 A **transport** is a smaller thing, deliberately: a `Driver` under `packages/orexis-transport-*/` plus its
 terms and completeness rules. No capability, no module, no belief changes — because how a
 device is reached is not something an agent decides. That line is the subject of
-[the sensing/binding split](/domain/sensing.md): a capability distinguishes what an agent
+[the sensing/binding split](/domain/sensing/sensing.md): a capability distinguishes what an agent
 must decide, a binding distinguishes how a device is spoken to.
 
 # Capabilities are derived from hardware, not declared

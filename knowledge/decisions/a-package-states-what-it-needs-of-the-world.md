@@ -26,7 +26,7 @@ timestamp: 2026-08-28T00:00:00Z
 st.put_graph(WORLD_GRAPH, "\n".join(world_files(world)), dataset=True)
 ```
 
-Every ratified triple, verbatim, into every belief base — which [world](/domain/world.md)
+Every ratified triple, verbatim, into every belief base — which [world](/domain/kernel/world.md)
 records plainly. Isolation is per world and per agent's own graphs
 ([where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md)); *inside* a world
 nothing is scoped at all. An agent that bids holds every rival's actuator wiring, every venue

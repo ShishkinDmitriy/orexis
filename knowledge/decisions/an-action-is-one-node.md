@@ -33,7 +33,7 @@ chosen row did not. Two terms for a fact one column states is a second owner of 
 
 # What is decided
 
-**An [action](/domain/action.md) is one node**, `a orexis:Action`, in a package's `actions.ttl`:
+**An [action](/domain/kernel/action.md) is one node**, `a orexis:Action`, in a package's `actions.ttl`:
 
 | part | property | what it is |
 |---|---|---|
@@ -47,7 +47,7 @@ graph** (`orexis:ActionGraph`, was the effect graph); `menu_of` runs every actio
 `effects.rule_for` and `execution.taken_by` join on `orexis:means`. Nothing lists the actions, and a
 new way of acting is a node in a new directory plus a `take()`.
 
-**Whom a row serves is a column.** An [affordance](/domain/step.md) with `for_agent` bound
+**Whom a row serves is a column.** An [affordance](/domain/execution/step.md) with `for_agent` bound
 is an obligation's — exercised for that counterparty on a valid presentation and never proposed for the
 agent's own gap; one without is the agent's own option. `Affordance.is_own` reads the column;
 the planner's filter and the deliberator's obligation fallback read the same column; `orexis:Mode`,
@@ -90,4 +90,4 @@ every IRI in every query, because the TTL loop already resolves SPARQL inside li
   the two condition-only shapes, because a second statement of a precondition nothing reads is
   one that can disagree with the first. A shape's validation report — *why* an action is
   unavailable — is the one thing it would add, and it is added the day it is wanted
-  ([action](/domain/action.md)).
+  ([action](/domain/kernel/action.md)).

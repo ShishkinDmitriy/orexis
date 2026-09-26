@@ -21,16 +21,16 @@ One word, three concepts — and two of the three had external anchors:
 
 - **REA / ValueFlows**: `vf:Commitment` is *"a planned economic flow that has been scheduled
   or promised by one agent to another agent"*.
-  [settlement-speaks-rea](settlement-speaks-rea.md) assigned that word to the **claim**, whose
+  [settlement-speaks-rea](/decisions/settlement-speaks-rea.md) assigned that word to the **claim**, whose
   record is literally titled "a claim is a commitment".
 - **BDI**: an intention *is* a commitment — "a commitment to reduce a named gap by a named
-  means", per [an-intention-is-an-amortised-deliberation](an-intention-is-an-amortised-deliberation.md).
+  means", per [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md).
 - **`review:Commitment`**: how far one agent may re-pick one term — granted latitude, a
   governance fact. Twenty-five bundle files, AGENTS.md, review's Python comments and the
   class's own `rdfs:comment`s all call this thing **the mandate**; only the class name
   disagreed.
 
-[every-term-in-its-own-house](every-term-in-its-own-house.md) already recorded the first
+[every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) already recorded the first
 collision — *"a name collision, not an alignment. Ours is a governance mandate… Same word,
 different concept"* — and stopped at recording it. The ubiquitous-language audit found the
 recorded collision still standing, plus the BDI one beside it.
@@ -45,12 +45,12 @@ sits one namespace over, already mapped.
 
 Was there a better external home? **ODRL** is the nearest: a mandate resembles an
 `odrl:Permission` bounded by an `odrl:Constraint`. Not adopted, and the refusal is
-[one-word-for-one-relation](one-word-for-one-relation.md)'s: nothing here consumes ODRL
+[one-word-for-one-relation](/decisions/one-word-for-one-relation.md)'s: nothing here consumes ODRL
 semantics, so the axiom would be a synonym nothing checks. And the resemblance is loose —
 ODRL permits *actions on assets*; a mandate grants a *range to a value*, and its presence is
 itself the capability grant, which ODRL has no word for.
 
-So the method is [settlement-speaks-rea](settlement-speaks-rea.md)'s: check the words against
+So the method is [settlement-speaks-rea](/decisions/settlement-speaks-rea.md)'s: check the words against
 the standards, state the deviations, and keep our own where the standard does not fit.
 
 # Decision
@@ -62,7 +62,7 @@ name: "the world commits this agent to a range" reads correctly and collides wit
 **No volume migrates and no world changes.** Worlds write mandates as blank nodes under
 `review:commits` and never type them — the type is entailed from the property's range at
 genesis, and entailed graphs are rebuilt, not migrated
-([a-volume-can-be-older-than-the-vocabulary](a-volume-can-be-older-than-the-vocabulary.md)
+([a-volume-can-be-older-than-the-vocabulary](/decisions/a-volume-can-be-older-than-the-vocabulary.md)
 covers beliefs, which never held this term).
 
 After this, *commitment* means exactly two things, both external and both deliberate: REA's

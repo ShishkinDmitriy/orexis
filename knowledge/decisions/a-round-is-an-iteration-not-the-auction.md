@@ -8,8 +8,8 @@ timestamp: 2026-08-10T00:00:00Z
 
 # Context
 
-[bid-matching-is-the-word](bid-matching-is-the-word.md) settled one word and did not look at the
-next one. *Round* was used for two different things, and both uses were in `domain/round.md`:
+[bid-matching-is-the-word](/decisions/bid-matching-is-the-word.md) settled one word and did not look at the
+next one. *Round* was used for two different things, and both uses were in `domain/market/round.md`:
 
 - line 10 — *"the unit the [auction] runs in"*, which makes a round the whole allocating process;
 - step 4 — *"a new **deliberation round** opens because a sensed belief changed"*, which makes it
@@ -31,9 +31,9 @@ inside. Three words, three referents:
 
 | | what it is | built? |
 |---|---|---|
-| [market](/domain/market.md) | the standing structure | yes |
-| [auction](/domain/auction.md) | the process that allocates one lot | yes |
-| [round](/domain/round.md) | one iteration of bidding within it | **no** — exactly one, single-pass |
+| [market](/domain/market/market.md) | the standing structure | yes |
+| [auction](/domain/market/auction.md) | the process that allocates one lot | yes |
+| [round](/domain/market/round.md) | one iteration of bidding within it | **no** — exactly one, single-pass |
 
 ## Because that is what the word means everywhere else
 
@@ -45,13 +45,13 @@ rejected reading the format's name would be a contradiction.
 Splitting a large quantity into smaller pieces does not produce rounds either — it produces
 **lots**, each allocated by its own auction. Here one auction sells the host's lot whole, so that
 axis is unused; see
-[the-lot-is-the-hosts-standing-offer](the-lot-is-the-hosts-standing-offer.md).
+[the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md).
 
 ## Which makes hosting per-auction
 
-The seam in [bid-matching-is-a-capability](bid-matching-is-a-capability.md) read *"hosting a market
+The seam in [bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md) read *"hosting a market
 is structural, hosting an auction is **per-round**"*, and
-[a-role-needs-something-to-be-a-role-in](a-role-needs-something-to-be-a-role-in.md) quoted it.
+[a-role-needs-something-to-be-a-role-in](/decisions/a-role-needs-something-to-be-a-role-in.md) quoted it.
 Corrected in both, to *owning the venue is structural, convening an auction is per-auction* — which
 also removes the circularity that a literal find-and-replace would have left behind.
 
@@ -62,7 +62,7 @@ changes; both were about the auction and said round.
 
 # Consequences
 
-- **`domain/round.md` states one meaning and marks the boundary.** Steps 1–3 are the round that
+- **`domain/market/round.md` states one meaning and marks the boundary.** Steps 1–3 are the round that
   runs; step 4 onward is designed and unbuilt, and step 4 is the only thing that makes *round* mean
   anything distinct from *auction*. A page describing an unbuilt loop as though it ran is how the
   two meanings stayed comfortable together.
@@ -97,7 +97,7 @@ Two facts made it cheap today, and neither would have survived:
 
 `run_round` became `run_auction` and `RoundResult` became `AuctionResult` with it: what that
 function does — propose, validate, issue — is the auction's shape, which is precisely what
-[auction](/domain/auction.md) says `agent/auction.py` kept when it lost the allocation.
+[auction](/domain/market/auction.md) says `agent/auction.py` kept when it lost the allocation.
 
 ## One consequence, and one term deliberately left
 
@@ -117,7 +117,7 @@ can survive a rename.
 - ~~**`round_id` names an auction.**~~ **Closed** — see *What the identifier turned out to be on*
   above. It is `auction_id` now, on all four payloads at once.
 - **Iteration is not designed, only named.** What a bidder sees between rounds, what may be
-  re-bid, and what stops the loop other than the wallet are open. `domain/round.md` describes a
+  re-bid, and what stops the loop other than the wallet are open. `domain/market/round.md` describes a
   shape; nothing here commits to it.
 - **Nothing enforces the vocabulary**, which the previous record already recorded and which this
   one is the evidence for.

@@ -20,7 +20,7 @@ The device was already telling the truth. `firmware/simulated-valve` publishes o
 topic after dispensing and stays **silent** when it refuses — signature, replay, nothing to
 dispense — so silence is its refusal, deliberately. The only thing missing was a listener.
 
-**[settlement-speaks-rea](settlement-speaks-rea.md) had already named the gap without anyone
+**[settlement-speaks-rea](/decisions/settlement-speaks-rea.md) had already named the gap without anyone
 noticing it was open.** A claim is a `vf:Commitment`; the valve opening is the
 `vf:EconomicEvent` that fulfils it; and REA defines an economic event as an **observed** flow.
 Nothing here observed anything. We marked a commitment fulfilled on the strength of having
@@ -88,7 +88,7 @@ pretending it does.
 - **A valve with no status channel is a deployment, not an error.** `mqtt:statusTopic` is
   optional on an actuator, nothing goes pending without one, and the permanent zeroes in
   `reports()` are themselves the reading — the same argument
-  [self-review-is-a-capability](self-review-is-a-capability.md) makes for the absence of revision
+  [self-review-is-a-capability](/decisions/self-review-is-a-capability.md) makes for the absence of revision
   lines.
 - **A report for a dose the agent has forgotten is not an error either.** A restarted agent has
   lost its pending set, and the device is right to report anyway.

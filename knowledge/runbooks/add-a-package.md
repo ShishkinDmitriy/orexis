@@ -200,7 +200,7 @@ package author previously had to learn by reading other packages.
 
 | you want | the door |
 |---|---|
-| everyone's opinion, merged your way | `agent.ask(POINT)` — the [choir](/domain/choir.md) |
+| everyone's opinion, merged your way | `agent.ask(POINT)` — the choir |
 | whoever implements an ability | `agent.provider(family)` — answers `None` if nobody does |
 | **a particular thing another package offers** | **annotate a field with its type** |
 | another package's *contract* (a base class) | an ordinary import of its `contract` module — never its implementation |

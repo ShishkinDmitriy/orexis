@@ -25,8 +25,8 @@ static device binding and a per-round entitlement differ on every axis.
   [genesis](/decisions/genesis.md); binds an agent ↔ a device (its sensor / its valve).
   Long-lived. "Is this Fern's valve/sensor?"
 - **Claim = *what you may do right now*.** Dynamic, **won** in the auction — issued per
-  round by the host + [clearing](/domain/clearing.md) after the
-  [constitution](/domain/constitution.md) check, co-signed, single-use (`jti`), expiring.
+  round by the host + clearing after the
+  constitution check, co-signed, single-use (`jti`), expiring.
   "Did Fern win *this* 2 L dispense?"
 
 The distinction that matters: an **access grant is *granted*** (standing, who your devices
@@ -42,7 +42,7 @@ registry; the artifact carries its own proof.
 # Certificates (identity)
 
 - **Provisioned before, in v1.** The system is closed — three sovereign-chartered agents.
-  The certificate is part of the [charter](/domain/agent.md): creating an agent atomically
+  The certificate is part of the [charter](/domain/kernel/agent.md): creating an agent atomically
   issues its cert (signs its public key + plant URI) and its endowment. There is no open
   registration desk in v1.
 - **Registry tracks existence + validity, never liveness.** Two states only: *issued* and
@@ -65,8 +65,8 @@ registry; the artifact carries its own proof.
   on them reintroduces the adjudicator [trust-boundary](/decisions/trust-boundary.md)
   forbids.
 - **You already have two judge-free revocations.** The *leash* revokes a specific claim
-  per-message (uncitable → rejected; see [belief-base](/domain/belief-base.md)); *insolvency*
-  revokes an agent economically (broke → can't bid; see [wallet](/domain/wallet.md)). Both
+  per-message (uncitable → rejected; see [belief-base](/domain/belief/belief-base.md)); *insolvency*
+  revokes an agent economically (broke → can't bid; see wallet). Both
   are per-action and preventive, strictly better than reactive cert-revocation for the powers
   that matter.
 - **Grants self-expire; only certs need a list.** Round-scoped grants die at round end, so

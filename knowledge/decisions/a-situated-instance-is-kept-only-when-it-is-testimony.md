@@ -41,7 +41,7 @@ gets wrong.
 **Cardinality.** `Agent.pursuing()` keys its dict by uri and deduplicates on purpose — *"one
 want, one node… the second sighting is the same want and not a second one"* — so a judgment is
 one per desire, always. An observation is one per (subject, property) and UPSERTS, which
-[observation](/domain/observation.md) already states. An affordance is one per *binding*:
+[observation](/domain/sensing/observation.md) already states. An affordance is one per *binding*:
 measured on `world/simulation`, eleven actions yielded four rows for the fern and four for the
 supplier, of which `Serving` alone was three — one per valve — and nine of the eleven actions
 yielded nothing at all. So a judgment ANNOTATES its abstraction, an observation RECORDS an
@@ -73,7 +73,7 @@ modality of its own, and why every agent holds a freshness desire per sensor.
 A **judgment and an affordance are conclusions whose premises are all stored** — regions, wiring,
 the ledger, the world's facts. Writing the conclusion down lets it outlive them: unplumb the
 valve and a stored row still says you can dose; the pot dries and a stored urgency still says you
-are content. [affordance](/domain/step.md) makes this argument for its own half, and the
+are content. [affordance](/domain/execution/step.md) makes this argument for its own half, and the
 other half is the same argument.
 
 This is not a new rule. AGENTS.md already says **anything the interpreter already knows is

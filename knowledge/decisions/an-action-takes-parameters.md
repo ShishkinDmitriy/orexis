@@ -98,7 +98,7 @@ Such an intention stands with nothing bound until it lapses and is planned again
   fields across; the row IS the step, minus what the search adds. Folding them would delete a
   class, a conversion and a word.
 - **`menu` is still a word for the set of rows**, with 96 sites in Python. It names a modality,
-  a collection and its contents, which is what [menu](/domain/menu.md) exists to disentangle.
+  a collection and its contents, which is what menu exists to disentangle.
 - **Nothing gates an action against its declaration.** A precondition projecting a variable the
   action does not declare is silently ignored, and a rule reading a `$token` nobody declares
   refuses only at simulation time. The audit that found `sensing:Observing` projecting an
@@ -111,5 +111,5 @@ Such an intention stands with nothing bound until it lapses and is planned again
 
 - [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) — the record that folded
   `means` into `action`; this one folds the columns.
-- [affordance](/domain/step.md) — the row, and what its binding is.
-- [action](/domain/action.md) — the schema, and what an author writes.
+- [affordance](/domain/execution/step.md) — the row, and what its binding is.
+- [action](/domain/kernel/action.md) — the schema, and what an author writes.

@@ -44,7 +44,7 @@ a style question.** Ask whether the fact's absence is itself evidence:
 | treatment | when | here |
 |---|---|---|
 | **retract** | the absence says nothing worth keeping | a round the host has declared closed (#599) — and, where that word never came, one past its `closesAt`, the horizon on a belief about another agent (`rounds.sweep_expired`) |
-| **keep and mark** | the absence IS evidence | an [obligation](/domain/obligation.md) past `orexis:expiresAt` — a debt nobody presented is a fact about a counterparty, so it is `lapsed` and unpursuable, never deleted |
+| **keep and mark** | the absence IS evidence | an obligation past `orexis:expiresAt` — a debt nobody presented is a fact about a counterparty, so it is `lapsed` and unpursuable, never deleted |
 | **keep and let a want go cold** | the fact is still the best evidence there is | a reading past its horizon — kept, with its instant, and the want about knowing goes unmet |
 
 **Which rules out the tempting generalisation.** A single sweeper that retracted anything past
@@ -59,7 +59,7 @@ the owner that knows which treatment its fact deserves.
 A fact that becomes false for a reason other than the clock — somebody else watered the pot — is
 detectable only by looking. That is what the expectation machinery is for
 ([an-intention-stands-until-the-world-answers](/decisions/an-intention-stands-until-the-world-answers.md)),
-and it is the same reason looking is an [act](/domain/act.md) with a cost rather than a
+and it is the same reason looking is an [act](/domain/execution/act.md) with a cost rather than a
 background refresh.
 
 # Seams left open

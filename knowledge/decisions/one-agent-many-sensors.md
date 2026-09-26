@@ -196,7 +196,7 @@ them had to be rewritten when it turned out to pass with the fix removed.
   built in a temporary directory. The board is flashed and publishing all three. What made that
   possible was giving the two air channels a way to say which value in the shared message is
   theirs; see
-  [a-reading-is-one-value-so-it-is-pointed-at](a-reading-is-one-value-so-it-is-pointed-at.md).
+  [a-reading-is-one-value-so-it-is-pointed-at](/decisions/a-reading-is-one-value-so-it-is-pointed-at.md).
 - **A desire is about exactly one property.** `market:aboutProperty` is read as a single value, so an
   agent whose region want spans two — wanting both moisture and nutrient held — has no representation.
   Nothing depends on this yet, and widening it is one query and a loop.

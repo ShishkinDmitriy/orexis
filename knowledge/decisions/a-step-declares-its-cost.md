@@ -26,7 +26,7 @@ timestamp: 2026-08-31T22:48:47Z
 `urgency_after` alone — strictly-less, ties to the first found — so two plans reaching the same
 urgency were indistinguishable however much water, money or thought they burned. "Better plan"
 had exactly one axis, while the domain already had money and
-[wallet](/domain/wallet.md) reserved metering for thought.
+wallet reserved metering for thought.
 
 ## The shape: declared beside the effect, asked about a world
 

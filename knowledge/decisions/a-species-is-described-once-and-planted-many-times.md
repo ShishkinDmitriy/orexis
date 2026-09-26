@@ -13,7 +13,7 @@ status: accepted
 timestamp: 2026-08-12T00:00:00Z
 ---
 
-> **Current statement: [model-and-unit](/domain/model-and-unit.md).** This record is one
+> **Current statement: model-and-unit.** This record is one
 > application of a principle four of them share; the domain concept states the principle
 > and the mechanism once.
 

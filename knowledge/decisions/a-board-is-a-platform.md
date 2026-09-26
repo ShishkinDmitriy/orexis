@@ -122,10 +122,10 @@ KY-015 implements two sensing procedures rather than being two things mounted to
 of that turned out to be worth taking, and neither by the trigger named:
 
 - the cheap alignment — `sensing:senseMode`'s values ARE `sosa:Procedure`s by definition — was
-  taken in [an-observation-says-how-it-was-made](an-observation-says-how-it-was-made.md), which
-  did indeed arrive by way of [who-holds-the-clock](who-holds-the-clock.md);
+  taken in [an-observation-says-how-it-was-made](/decisions/an-observation-says-how-it-was-made.md), which
+  did indeed arrive by way of [who-holds-the-clock](/decisions/who-holds-the-clock.md);
 - the procedural axis itself was taken in
-  [a-procedure-belongs-to-whatever-performs-it](a-procedure-belongs-to-whatever-performs-it.md),
+  [a-procedure-belongs-to-whatever-performs-it](/decisions/a-procedure-belongs-to-whatever-performs-it.md),
   and what made it worth modelling was not code caring but the ABSENCE of it hiding a defect. A
   DHT11's single message was being explained by the credential model rather than by the part, and
   the reading path was written to match — stamping each value separately, so one physical read
@@ -152,7 +152,7 @@ a fact about equipment, and a fact can be worth stating for what it rules out.
   them without one. That was recorded here as an unanswered question — *what is a platform in a
   world with no stated hardware?* — and it is not one. A codec is a fact about a **connection**,
   and it was being hung on a node that exists for a different reason. See
-  [the-wire-is-ours-and-it-has-two-levels](the-wire-is-ours-and-it-has-two-levels.md): the bearer is the principal, every
+  [the-wire-is-ours-and-it-has-two-levels](/decisions/the-wire-is-ours-and-it-has-two-levels.md): the bearer is the principal, every
   world already has principals, and **a simulated world correctly has no platforms at all.** The
   measured hole is still open; what was blocking it is not.
 - **`mqtt:onBus` did not move either**, and it is the sharper case: it mints the broker credential,

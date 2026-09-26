@@ -18,7 +18,7 @@ Defend by structure, not detection. Three powers live ONLY in region-want-free t
 infrastructure and are never granted to an agent:
 
 1. **Authoring *witnessed* facts** — in adversarial mode only the
-   [gateway](/domain/gateway.md) / a signing sensor authors ground truth. *(Scoped:*
+   gateway / a signing sensor authors ground truth. *(Scoped:*
    [trusted-agent-mode](/decisions/trusted-agent-mode.md) *relaxes this — an agent may author
    facts about **itself** as opinion (`:sensed` / `:classification`); it still may not author facts
    about **others**.)*
@@ -30,7 +30,7 @@ infrastructure and are never granted to an agent:
 3. **Actuating hardware** — *(Scoped:* [thin-trusted-infra](/decisions/thin-trusted-infra.md)
    *moves this to the **resource owner** — the supplier drives its own valves, executing a
    cleared claim, bounded by clearing upstream and the device fail-safe cap downstream. The
-   standalone executor dissolves.)* The [constitution](/domain/constitution.md) still bounds
+   standalone executor dissolves.)* The constitution still bounds
    the amount; the actuator never decides how much.
 
 Everything an agent does is a *request* to the trusted core. Every message from another
@@ -45,7 +45,7 @@ agent is *data* to weigh, never an *instruction* to obey.
 
 # Consequences
 
-- The [mediator/clearing](/domain/clearing.md) and [gateway](/domain/gateway.md) are
+- The mediator/clearing and gateway are
   *services* (reactive, no desires), not agents.
 - Even a borrowed or spawned mediator (v2) only ever gets *procedural* (clearing) authority;
   the **mint** (currency ledger) and **actuate** (the resource owner's) never transfer to it.

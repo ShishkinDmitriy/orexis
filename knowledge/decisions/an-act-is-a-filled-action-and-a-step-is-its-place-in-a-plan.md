@@ -18,11 +18,11 @@ timestamp: 2026-08-26T18:00:00Z
 
 [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) left `orexis:Action` as the one
 kernel word for acting, and it is a template: a precondition, an effect, a taker. The filled
-version existed in four places and was named in none. An [affordance](/domain/step.md)
+version existed in four places and was named in none. An [affordance](/domain/execution/step.md)
 row is action + lever + want, unsized. The planner's `_Node.taken` is a tuple of rows plus
-the sizing it asked the taker for. An [intention](/domain/intention.md) records action, lever
+the sizing it asked the taker for. An [intention](/domain/execution/intention.md) records action, lever
 and want (`progression:by`, `progression:through`, `progression:pursues`) and not the size. A
-[commitment](/domain/commitment.md) records how much of what for whom until when, and no
+commitment records how much of what for whom until when, and no
 action at all. And every *when* an act carries — the bidder's give-up timer at the round's
 close, the host's redeem window, the keeper's expectation deadline — is a clock some module
 keeps by hand.
@@ -35,10 +35,10 @@ commitment to execute an action with parameters?
 **An act is a filled action, and it is execution's word.** Action, lever, the want it serves
 and what that is about, quantity, whom for, and a **window** — not before, not after. What an intention commits to (`progression:by`
 names the act; the action is reachable through it), what an actor is handed (`take(act, …)`),
-what a [commitment](/domain/commitment.md) promises (`Commitment.act`). A
-[claim](/domain/claim.md) is therefore exactly what the sovereign said: a commitment to the
+what a commitment promises (`Commitment.act`). A
+[claim](/domain/market/claim.md) is therefore exactly what the sovereign said: a commitment to the
 host's `Serving` act — this valve, this pot, so many litres — not after `exp`. A self-dose is
-a commitment to a `Dosing` act with nobody to pay. See [act](/domain/act.md).
+a commitment to a `Dosing` act with nobody to pay. See [act](/domain/execution/act.md).
 
 **A step is planning's word.** An act at its place in a plan, with what the search predicted
 it would reach. `Plan.steps` holds steps; the trace's `deliberation:Candidate` is a weighed step; only
@@ -46,14 +46,14 @@ the head's act is ever committed. *Amended, 2026-09-02, the sovereign's ruling: 
 kept and their contents swap. A STEP is the planned instance — filled, windowed, predicted,
 waiting — and a plan, an intention and a claim are made of steps; an ACT is the record that a
 step was taken, written by execution, one per attempt. A plan is not executed, so its elements
-are not acts. See [step](/domain/step.md) and [act](/domain/act.md). "Only the head is
+are not acts. See [step](/domain/execution/step.md) and [act](/domain/execution/act.md). "Only the head is
 committed" is superseded by
 [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md).*
 
 **The window is the act's, not the actor's.** Not-after is what every hand-kept timer was
 saying: a bid not after `closesAt`, a serve not after `exp`, a look not after the round that
 wanted it closes. Not-before is the half nothing uses yet — it is where a held claim spent
-later arrives, which is the futures seam in [claim](/domain/claim.md) stated as a field
+later arrives, which is the futures seam in [claim](/domain/market/claim.md) stated as a field
 rather than as a roadmap item.
 
 # Order of work

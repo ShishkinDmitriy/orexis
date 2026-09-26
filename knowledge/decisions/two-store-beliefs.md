@@ -29,7 +29,7 @@ timestamp: 2026-08-01T00:00:00Z
 >   [who-put-the-fact-there](/decisions/who-put-the-fact-there.md).
 > - **The gateway is decommissioned** in v1 and signs nothing; the plant edge asserts its own
 >   readings. See [trusted-agent-mode](/decisions/trusted-agent-mode.md) and
->   [gateway](/domain/gateway.md).
+>   gateway.
 >
 > Kept because the *reason* for two stores — a reasoner cannot hold millions of readings, and a
 > federation over the series store would rebuild that wall — is why the split survived every
@@ -42,7 +42,7 @@ timestamp: 2026-08-01T00:00:00Z
 - **Fuseki (RDF) owns the *current qualitative state* and structure** — `plant :hasCurrentMoisture :LOW`,
   species, tank-sharing. Low-volume, queryable, provenance-tagged, reasoned-over. The
   tank-sharing / plumbing topology here *is* the market-cluster boundary — who competes with
-  whom. See [market](/domain/market.md).
+  whom. See [market](/domain/market/market.md).
 - The two are **joined by the plant URI in code**, not by any SPARQL-over-Influx federation
   (no such thing should be built — it re-creates the triple-count wall).
 
@@ -57,11 +57,11 @@ timestamp: 2026-08-01T00:00:00Z
 - Cite a fact → LLM-composed **SPARQL** on the witnessed graph (read-only, small, safe). *Named
   `:attested` when this was written; the banner above records that no such graph was built.*
 - Need a trend → **typed Influx function** (fixed Flux, LLM fills params only). Tighter leash
-  on the high-volume quantitative path. See [belief-base](/domain/belief-base.md).
+  on the high-volume quantitative path. See [belief-base](/domain/belief/belief-base.md).
 
 # The one seam to get right
 
-Only the **measurement** must be single-authored — the [gateway](/domain/gateway.md) signs
+Only the **measurement** must be single-authored — the gateway signs
 `0.18` so nobody argues about the number. The numeric→qualitative *band* (0.18 → `:LOW`) is
 **not** ground truth: it is desire-relative, so it is **per-agent private judgment**, not a
 gateway authority. (An earlier version put the threshold in the gateway "or agents disagree

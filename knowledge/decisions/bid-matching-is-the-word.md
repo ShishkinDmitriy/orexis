@@ -30,13 +30,13 @@ Nothing was wrong with the code. What was missing was a statement of which word 
 
 **Bid matching** is the term. The other two words were corrected to it, in comments, docstrings,
 shape messages, test names and this bundle. `knowledge/domain/bid-matching.md` defines it and
-`knowledge/domain/auction.md` defines the process it is a step of; those two pages are the
+`knowledge/domain/market/auction.md` defines the process it is a step of; those two pages are the
 deliverable, and this record is why they say what they say.
 
 The identifiers that carry the family name moved with it: `market:BidMatchingCapability`, the
 directory, and the `BID_MATCHING` constant. (The directory was `capabilities/bid_matching/` when
 this was written and is now `packages/orexis-capability-market/`, which also took the namespace — see
-[a-package-owns-its-namespace](a-package-owns-its-namespace.md).) **`market:matchesBy` did not**, and neither did `propose_match`, the `Match` callable or
+[a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md).) **`market:matchesBy` did not**, and neither did `propose_match`, the `Match` callable or
 `market:HostStatesHowItMatchesShape` — see below. No behaviour changed.
 
 ## Why the qualifier — the collision is inside this repository
@@ -48,7 +48,7 @@ against **this codebase**, and that is where it breaks.
 
 **Matching a capability to a provider is what this project does everywhere.**
 `agent.provider(family)` matches a request for an ability to whichever module registered a member
-of it — the central move of [capability-packages](capability-packages.md), performed by every
+of it — the central move of [capability-packages](/decisions/capability-packages.md), performed by every
 package. So `ag:MatchingCapability` parses two ways: *the capability of matching*, which was meant,
 and *matching, of capabilities*, which is a different and equally real thing here. The class name
 sat exactly on the ambiguity, and a reader hitting it had no way to tell which was intended.
@@ -88,7 +88,7 @@ Two reasons, and the second is the stronger.
 **It over-claims.** In the literature an *auction format* — equivalently *auction type* — names a
 bidding procedure and a payment rule together: Dutch is descending open outcry *with* first-price;
 a first-price sealed-bid auction is one-shot sealed *with* first-price. We model the
-allocation-and-payment half only. [round](/domain/round.md) describes an iterative-ascending round, which is a fact about the
+allocation-and-payment half only. [round](/domain/market/round.md) describes an iterative-ascending round, which is a fact about the
 bidding procedure and is fixed in the protocol rather than pluggable. Calling
 `market:BidMatchingCapability` a format would advertise a second slot that does not exist.
 
@@ -136,7 +136,7 @@ names it: pay-as-bid, uniform price.
   directory, so the name is not an implementation detail. That is why renaming the term meant
   moving the directory and touching every import of it, where the earlier draft of this change had
   touched none. What the directory does NOT name is a capability: it named this one only while
-  this one had a package to itself, and [a-package-owns-its-namespace](a-package-owns-its-namespace.md)
+  this one had a package to itself, and [a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md)
   folded it into `packages/orexis-capability-market/` shortly afterwards. The term is what survived.
 - **The scope boundary is now written down twice** — in `market:BidMatchingCapability`'s comment and in
   `domain/bid-matching.md`. Unstated scope is what a ubiquitous language exists to prevent, and *we

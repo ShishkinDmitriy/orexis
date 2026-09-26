@@ -28,7 +28,7 @@ hooks. The transport package held only a DRIVER — how sensing reaches one devi
 A first cut (`Link`, `link_for`) moved the vocabulary out and left the concept in: the kernel
 still believed it had a connection, channels and a pulse. The sovereign's question — *why
 should the core know about transport?* — has one honest answer. A BDI engine perceives and
-acts through capabilities; how bytes move is a capability, and [rule 2](/domain/capability.md)
+acts through capabilities; how bytes move is a capability, and rule 2
 already says what that means: a named ability with interchangeable implementations, granted
 by the fact that makes it meaningful.
 

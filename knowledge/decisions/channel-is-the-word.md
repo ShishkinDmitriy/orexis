@@ -28,12 +28,12 @@ noticed the other.
 **Channel.** The T-Box declares `mqtt:Channel`, `mqtt:channelTopic`, `mqtt:publishesOn` and
 `mqtt:listensOn`, and rule 1 means every query and every rule already says channel — so the
 prose moves to the code's word, the cheap direction. The dictionary gains
-[channel](../domain/channel.md), the interleaved passages in `sensing.md` and the two
+channel, the interleaved passages in `sensing.md` and the two
 `rdfs:comment`s now say channel, and *stream* survives only as plain English for a flow that is
 not this node (an agent's annotation stream in Grafana is not an `mqtt:Channel`).
 
 Note the direction is the opposite of
-[a-mandate-is-not-a-commitment](a-mandate-is-not-a-commitment.md), decided the same day: there
+[a-mandate-is-not-a-commitment](/decisions/a-mandate-is-not-a-commitment.md), decided the same day: there
 the ontology moved to the prose word. The rule is not "the ontology wins" or "the prose wins" —
 it is that the winner is wherever ONE meaning already lives. *Channel* meant one thing
 everywhere it appeared; *Commitment* meant three.

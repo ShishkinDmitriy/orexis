@@ -14,13 +14,13 @@ status: accepted
 timestamp: 2026-08-12T00:00:00Z
 ---
 
-> **Current statement: [model-and-unit](/domain/model-and-unit.md).** This record is one
+> **Current statement: model-and-unit.** This record is one
 > application of a principle four of them share; the domain concept states the principle
 > and the mechanism once.
 
 # Context
 
-[a-board-says-what-it-can-honour](a-board-says-what-it-can-honour.md) put a DHT11's two-second
+[a-board-says-what-it-can-honour](/decisions/a-board-says-what-it-can-honour.md) put a DHT11's two-second
 sampling period on the class, with the right reason: *every* DHT11 has it, unlike `probe:rawDry`
 which is measured per probe in the pot it sits in. It was written as
 
@@ -77,7 +77,7 @@ would then need telling apart by name. The naming already anticipates the second
 
 This is the same shape the W3C's own worked DHT22 example takes, which names
 `#TemperatureSensorCapability` and its conditions rather than leaving them anonymous. See
-[their-descriptions-are-our-fixtures](their-descriptions-are-our-fixtures.md).
+[their-descriptions-are-our-fixtures](/decisions/their-descriptions-are-our-fixtures.md).
 
 **The punned triple is gone, not kept alongside.** Two statements of one fact is what this reduces,
 and nothing read the pun: the derivation in `packages/orexis-capability-sensing/rules.ru` asks about *sensors*
@@ -113,7 +113,7 @@ A restriction is a class, so `orexis:air_sensor_fern a _:restriction` follows fr
 useless" category the closure exists to leave out, alongside `every resource is an rdfs:Resource`.
 Rules 2 and 3 gained `isIRI(?super)`, which was unnecessary until the vocabulary contained its
 first class expression and is load-bearing from now on. See
-[one-graph-both-engines-read](one-graph-both-engines-read.md).
+[one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md).
 
 # What does not change: an agent may know a part's properties and not its identity
 
@@ -134,7 +134,7 @@ This is a boundary, not a shortfall. Restated as the rule it actually is:
 > **An agent may know a part's properties and not its identity.** Knowing you must not sample faster
 > than two seconds does not require knowing you are a DHT11.
 
-That is the same line [where-the-belief-base-lives](where-the-belief-base-lives.md) draws and the
+That is the same line [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) draws and the
 one `test_an_agent_is_given_the_society_and_not_the_hardware` enforces: pins, rails, silkscreen and
 part models decide what *can* be built, and once it is built the agent talks to topics. Letting the
 part class cross would hand an agent a fact it has no use for and a name it could reason about.
@@ -158,13 +158,13 @@ class-level facts to justify it.
 
 `test_the_society_repeats_every_limit_the_wiring_states` **had asserted nothing since
 [PR #95](https://github.com/ShishkinDmitriy/orexis/pull/95)**, which renamed `sensing:seconds` to
-schema.org's `value`/`unitCode` pair ([one-word-for-one-relation](one-word-for-one-relation.md)).
+schema.org's `value`/`unitCode` pair ([one-word-for-one-relation](/decisions/one-word-for-one-relation.md)).
 The guard still asked for the old term, found it nowhere, and passed every run since by having
 nothing to compare. Measured on the commit before this one: **zero parts reached an assertion.**
 
 Behind that, a second fault it could never reach: it followed `sosa:hosts` alone, and the same PR
 had made the KY-015's channels its `ssn:hasSubSystem` rather than things it hosts
-([one-word-for-one-relation](one-word-for-one-relation.md) again). So even a live version would
+([one-word-for-one-relation](/decisions/one-word-for-one-relation.md) again). So even a live version would
 have compared the wrong subject. **One change broke it twice and neither break was visible**,
 because the first hid the second.
 

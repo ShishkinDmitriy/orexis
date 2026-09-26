@@ -171,7 +171,7 @@ Three consequences worth having in one place, because each surprised somebody:
   nonzero freshness urgency makes looking an improvement and the agent nudges its board on the
   patience clock rather than on the cadence. The region want's deadband comes from the dose
   sizing to nothing near the aim; a look has no analogue, since it always fully refreshes. The
-  trigger is [sensing](/domain/sensing.md)'s standing seam — *sensing is not yet priced* — and
+  trigger is [sensing](/domain/sensing/sensing.md)'s standing seam — *sensing is not yet priced* — and
   when a look costs something, the gradient becomes rankable against it.
 - **An Observe row is bound to the agent's own subject.** The row's walk demands
   `$me orexis:actsFor ?subject`, so an instrument pointed at something the agent does not act for

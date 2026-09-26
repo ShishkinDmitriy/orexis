@@ -14,7 +14,7 @@ timestamp: 2026-08-12T00:00:00Z
 
 # Context
 
-[one-word-for-one-relation](one-word-for-one-relation.md) typed the three sense modes as
+[one-word-for-one-relation](/decisions/one-word-for-one-relation.md) typed the three sense modes as
 `sosa:Procedure` alongside `sensing:SenseMode`, and deliberately kept the *relation* ours.
 It left two things it did not look at.
 
@@ -37,14 +37,14 @@ Observation."*
 | `sensing:Push` | `sensing:PushProcedure` | `sensing:Listening` |
 
 Each keeps its mode word. That was the constraint, not decoration: the pairing in
-[who-holds-the-clock](who-holds-the-clock.md) is what the whole family is about, and a name that
+[who-holds-the-clock](/decisions/who-holds-the-clock.md) is what the whole family is about, and a name that
 lost the tie to its capability would have cost more than the elliptical reading did.
 
 This record shipped them as `…Sensing` — SOSA's own word, free, and used by nothing else here.
 That spelling has since been superseded by `…Procedure`, for a reason this record could not have
 seen: it did not yet have a use site where the name is read aloud. See
 [a-sensor-implements-its-procedure](/decisions/a-procedure-belongs-to-whatever-performs-it.md), and the amendment
-table in [who-holds-the-clock](who-holds-the-clock.md), which is where these spellings are
+table in [who-holds-the-clock](/decisions/who-holds-the-clock.md), which is where these spellings are
 tracked. The table above shows today's names against the ones this record replaced.
 
 ## The first names were wrong, and the reason generalises
@@ -110,12 +110,12 @@ Some of the rest of the method is now named — a one-wire transaction, a combin
 publish — and named on the systems that perform them rather than on the observation. Nothing
 re-points yet, because an observation citing a procedure is a claim about *this reading* and
 `ssn:implements` is a claim about the equipment; joining the two is what
-[a-procedure-belongs-to-whatever-performs-it](a-procedure-belongs-to-whatever-performs-it.md)
+[a-procedure-belongs-to-whatever-performs-it](/decisions/a-procedure-belongs-to-whatever-performs-it.md)
 leaves open.
 
 # The rename crossed seven spellings, and one left the process
 
-[every-term-in-its-own-house](every-term-in-its-own-house.md) recorded that a term is named seven
+[every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) recorded that a term is named seven
 ways here and that six of them fail silently. This is the second live case, and it is the first
 where a spelling crossed a **process boundary**.
 
@@ -148,7 +148,7 @@ could have differed there, and it is worth knowing that anything in that file ca
 ## The seventh arrived after the sweep, from another branch
 
 The enumeration above was complete when it was made, and was **stale by the time it merged**.
-[their-descriptions-are-our-fixtures](their-descriptions-are-our-fixtures.md) landed on `main`
+[their-descriptions-are-our-fixtures](/decisions/their-descriptions-are-our-fixtures.md) landed on `main`
 while this branch was in flight, bringing `tests/fixtures/w3c-ssn/deploy-dht22.ttl` — the
 deployment half this project writes to sit beside a vendor's part description, and it names a
 sense mode twice. Rebasing produced no conflict in that file, because nothing on this branch had
@@ -216,6 +216,6 @@ and then `"pushprocedure"`, breaking a device twice more in the same silent way.
   `senseMode`, which carries `sh:maxCount 1` and guards a derivation. What changed is that the
   two predicates now visibly answer different questions rather than one appearing to be a
   home-made stand-in for the other. See
-  [a-procedure-belongs-to-whatever-performs-it](a-procedure-belongs-to-whatever-performs-it.md).
+  [a-procedure-belongs-to-whatever-performs-it](/decisions/a-procedure-belongs-to-whatever-performs-it.md).
 - **`sensing:PolledProcedure` is still reserved.** No rule maps it, so no observation can cite
   it, and the shape would accept one that did.

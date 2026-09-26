@@ -25,7 +25,7 @@ PEP 420 namespace that twenty-two distributions shared.
 `orexis-capability-market`. Nothing compared them, so a package could sit in `part/` and publish
 as `orexis-plant-something` and every gate would pass. That is the shape this project keeps
 removing — a fact with two owners drifts, and the drift is silent
-([one concept, one article](/domain/package.md) is the same rule for prose).
+([one concept, one article](/domain/kernel/package.md) is the same rule for prose).
 
 **And `packages` was a very general name to ask an outside developer to share.** That was the
 second seam [every-package-is-a-project](/decisions/every-package-is-a-project.md) left open:

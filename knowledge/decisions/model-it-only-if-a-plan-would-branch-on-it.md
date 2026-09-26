@@ -73,7 +73,7 @@ paying is a decision
 - **Deliberation storms.** Self-telemetry churns faster than the world. Put queue depth or load
   in the belief base and the revision function fires constantly. Anything modelled gets the same
   treatment sensor data gets: **bands and transitions, never raw values**
-  ([band](/domain/band.md)) — which is already why an announcement carries LOW and not 0.31.
+  (band) — which is already why an announcement carries LOW and not 0.31.
 - **Regress.** Beliefs about beliefs about beliefs. **Cap at one level of reflection** unless a
   specific plan needs the second, and it almost never does.
 - **Social nesting.** In an auction this is the real hazard: reasoning about what one bidder
@@ -83,7 +83,7 @@ paying is a decision
   epistemic state. Nothing here nests today, and the structure helps: a bid is sealed and
   private ([deterministic-bid](/decisions/deterministic-bid.md)), so there is nothing to model a
   peer's reasoning FROM, and what a host records about a participant is an
-  [obligation](/domain/obligation.md), which is first-order by construction.
+  obligation, which is first-order by construction.
 
 # What this settles for the shipped worlds
 

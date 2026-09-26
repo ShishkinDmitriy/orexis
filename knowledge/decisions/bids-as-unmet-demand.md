@@ -16,7 +16,7 @@ demand between auctions) or *price* (iterative coupling).
 # Decision
 
 Make each agent's bid a **pure function of its current *unmet* need**, updated by whatever
-it has already been allocated. See [plant-agent](/domain/plant-agent.md) and [wallet](/domain/wallet.md).
+it has already been allocated. See plant-agent and wallet.
 
 # Why (the seam)
 

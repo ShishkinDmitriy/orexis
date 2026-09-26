@@ -39,9 +39,9 @@ it, most of the taxonomy turns out to exist under the house's names:
 
 | the sovereign's word | what it is here | its logic | state |
 |---|---|---|---|
-| SHALL | a [desire](/domain/desire.md) — the [region](/domain/region.md), the [aim](/domain/aim.md) picked inside it, a met-shape and a declared measure | bouletic | built |
+| SHALL | a [desire](/domain/planning/desire.md) — the [region](/domain/sensing/region.md), the aim picked inside it, a met-shape and a declared measure | bouletic | built |
 | SHALL NOT | per property, the region's own side shapes; in general, a want met by ABSENCE | bouletic | half-built — [#468](https://github.com/ShishkinDmitriy/orexis/issues/468) |
-| MUST | an [obligation](/domain/obligation.md) — a desire someone else sourced, with a deadline | deontic | built |
+| MUST | an obligation — a desire someone else sourced, with a deadline | deontic | built |
 | MUST, unbreakable | not a stronger duty — the ratified shapes, the gates, the planner's refusal | alethic | built |
 | MUST NOT | the same split — the alethic half built (shapes, mandate), the deontic half without a customer | alethic / deontic | built / waiting |
 | MAY | not a modality — the plan library | none; a cost model | [#469](https://github.com/ShishkinDmitriy/orexis/issues/469) |
@@ -53,7 +53,7 @@ between them goes — the second cut, below.
 ## Why the principle decides it, in the machinery's own terms
 
 Watch what *violated* means in each row, because that is where the logics refuse to be one
-scale. An unmet SHALL is a [gap](/domain/gap.md) — a distance and an urgency, legitimate while
+scale. An unmet SHALL is a gap — a distance and an urgency, legitimate while
 a plan runs. A broken deontic MUST is a breach — a counterparty defaulted on, kept on the books
 because a debt paid and a debt forgotten must not look alike. A broken alethic MUST is nothing
 at all — not a bad world but an illegitimate one, refused by the gates at ratification and by
@@ -107,7 +107,7 @@ everything else — is carried on
 ## SHALL NOT — one gap, and it covers the deontic MUST NOT too
 
 Per property, the two directions of leaving the region are already avoidances with a named
-side (`orexis:violationIs`, [region](/domain/region.md)). And "if we have alternatives" is
+side (`orexis:violationIs`, [region](/domain/sensing/region.md)). And "if we have alternatives" is
 satisficing, which the search already is: a move is taken only when the world it reaches beats
 standing still, and NOT_BETTER is an answer, not a failure. What has no expressible form is a
 GENERAL avoidance — a state to steer away from that is not a band in one observed property.
@@ -144,7 +144,7 @@ habit, because it is a suggestion the search tries first and may reject — *you
 find better* is the contract, literally — and stronger than re-deriving from nothing. The
 storage tension resolves the way habits resolved it: what is stored is a suggestion whose
 every use re-verifies against current premises, so it cannot outlive them in effect, and the
-[imaginarium](/domain/imaginarium.md) stays required to be lost, because what is kept is steps
+[imaginarium](/domain/planning/imaginarium.md) stays required to be lost, because what is kept is steps
 to re-try, never a possible world. The price signal that makes reuse rational is
 [#466](https://github.com/ShishkinDmitriy/orexis/issues/466)'s: without costs, search is free
 in the ranking and a library buys nothing. That is
@@ -348,7 +348,7 @@ The sovereign asked both directly, and both dissolve against rules already paid 
 subclass, and the KIND of a want read off the premises it has and the others do not — a region want
 carries a reading, an obligation a claim and a counterparty, an epistemic want its instrument
 — because a flag that can disagree with the data beside it is a flag that eventually does
-([desire](/domain/desire.md)). A mood class beside them — a Shall, an Avoidance, a
+([desire](/domain/planning/desire.md)). A mood class beside them — a Shall, an Avoidance, a
 Prohibition — would be exactly such a flag, and one nothing reads: the met-shape gives the
 state, the declared measure gives the urgency, the search minimises it, and an avoidance
 differs only in what its shape and measure SAY. A term nobody reads is annotation. What #468

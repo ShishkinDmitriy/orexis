@@ -11,9 +11,9 @@ timestamp: 2026-08-01T00:00:00Z
 Three plant agents (Fern, Tomato, Succulent), one strategic supplier hosting one iterative
 auction, grounded in real sensors on a Raspberry Pi.
 
-The pipeline: [gateway](/domain/gateway.md) → [belief base](/domain/belief-base.md) →
-[clearing](/domain/clearing.md) inside the [supplier](/domain/supplier.md) →
-[plant agents](/domain/plant-agent.md). Build order: gateway first (most settled, most
+The pipeline: gateway → [belief base](/domain/belief/belief-base.md) →
+clearing inside the [supplier](/domain/market/supplier.md) →
+plant agents. Build order: gateway first (most settled, most
 trusted), then clearing (pure code, fully unit-testable with scripted bids), then agents
 (the only LLM part, stubbed against a working clearing).
 

@@ -10,7 +10,7 @@ timestamp: 2026-08-01T00:00:00Z
 
 Each agent has **one wallet**. It pays for water AND for its own deliberation — LLM tokens
 and host electricity, metered by the trusted runtime per `deliberate()` call and settled
-against the wallet by the [clearing](/domain/clearing.md) step, **regardless of outcome**
+against the wallet by the clearing step, **regardless of outcome**
 (winners and losers both pay to think).
 
 # Why
@@ -22,7 +22,7 @@ against the wallet by the [clearing](/domain/clearing.md) step, **regardless of 
   to think* as part of deciding what to do. Metareasoning as a line item, not a control layer.
 - Aligns economy with architecture: an agent that deliberates when it should reflex goes
   broke, which enforces the reactive/deliberative split from
-  [plant-agent](/domain/plant-agent.md).
+  plant-agent.
 
 # Notes
 

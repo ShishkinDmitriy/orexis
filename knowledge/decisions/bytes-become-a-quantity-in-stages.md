@@ -8,7 +8,7 @@ timestamp: 2026-08-10T00:00:00Z
 
 # Context
 
-[a-reading-is-one-value-so-it-is-pointed-at](a-reading-is-one-value-so-it-is-pointed-at.md) named
+[a-reading-is-one-value-so-it-is-pointed-at](/decisions/a-reading-is-one-value-so-it-is-pointed-at.md) named
 three stages and built one:
 
 ```
@@ -75,7 +75,7 @@ field calls it that anyway.
 
 The rename happened before this record was ever merged, which is the only reason it cost a
 `sed` rather than a migration — the same timing that made
-[bid-matching-is-the-word](bid-matching-is-the-word.md) cheap. A term of art is only clear
+[bid-matching-is-the-word](/decisions/bid-matching-is-the-word.md) cheap. A term of art is only clear
 relative to the vocabulary it lands in, and here the vocabulary that mattered was not the
 literature's but **the user's plans**: a word can be free in the codebase and already spoken for
 in the design.
@@ -158,13 +158,13 @@ the two fractions, `unit:DEG_C` for the temperature. SOSA deliberately defines n
 QUDT as one of the vocabularies to reach for, so it is the standard companion to what is already in
 use here.
 
-**Borrowed, not imported**, exactly as [settlement-speaks-rea](settlement-speaks-rea.md) decided for
+**Borrowed, not imported**, exactly as [settlement-speaks-rea](/decisions/settlement-speaks-rea.md) decided for
 ValueFlows: the IRIs are referenced, nothing of QUDT is loaded, and `agent_old/inference.py`'s
 hand-materialised closure gains no axioms to cover. `unit:` reaches a query from whichever ontology declares it, and the loader refuses a second
 ontology binding the label to another IRI — one that could rebind `unit:` could quietly redirect
 every unit in the society. (It sat in a kernel prefix list in `agent/store.py` when this was
 written, on the same argument; the refusal is what the argument needed, and the list went with
-[the-region-want-is-sensings-want](the-region-want-is-sensings-want.md).)
+[the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md).)
 
 **Nothing was converted and no number moved.** Identity stays identity. This declares what the
 numbers already meant, which is what turns [#26](https://github.com/ShishkinDmitriy/orexis/issues/26)
@@ -218,7 +218,7 @@ deliberately: introducing a platform touches every world's topology, and doing i
 about package layout would make neither reviewable.
 
 **Half of it has since landed, and the half that did not is the interesting half.**
-[a-board-is-a-platform](a-board-is-a-platform.md) gave the fern's board a `sosa:Platform` and its
+[a-board-is-a-platform](/decisions/a-board-is-a-platform.md) gave the fern's board a `sosa:Platform` and its
 hosting, so the entity exists. The codec did **not** move onto it, because the other two worlds
 have **nine sensors and no platform between them** — `society` and `simulation` state no wiring, so
 there is nothing to project a board from. Deriving the codec onto a platform would leave every one
@@ -235,7 +235,7 @@ This record derives `codec:decodedBy` onto the **sensor**, and it no longer does
 property of a stream: three sensors sharing a topic carried three copies of one fact with nothing
 comparing them, and a command channel — which has no sensor at all — could not carry one. It is
 derived onto an `mqtt:Channel` now, and a sensor reads its codec through `mqtt:publishesOn`. See
-[a-stream-is-a-thing](a-stream-is-a-thing.md). Everything else here stands: the families, the
+[a-stream-is-a-thing](/decisions/a-stream-is-a-thing.md). Everything else here stands: the families, the
 premise-then-conclusion discipline, and the pointer staying a function.
 
 # Seams left open

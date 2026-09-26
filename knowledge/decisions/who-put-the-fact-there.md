@@ -10,7 +10,7 @@ timestamp: 2026-08-09T00:00:00Z
 
 `refresh_public` loaded the ratified files into `:world`, then ran every package's `rules.ru`,
 which `INSERT`ed into **the same graph**. So `orexis:hasCapability` — computed from the wiring — sat
-indistinguishably beside topology a sovereign typed. [one-graph-both-engines-read](one-graph-both-engines-read.md)
+indistinguishably beside topology a sovereign typed. [one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md)
 then materialised the RDFS closure into those same two graphs, and a third kind of fact joined
 the pile.
 
@@ -171,7 +171,7 @@ not be mistaken for proof, and the distinction belongs where somebody deciding w
 will read it.
 
 Closing it needs no new design: `orexis-keygen <world> sovereign` already mints a named keypair
-with no code changes, and [thin-trusted-infra](thin-trusted-infra.md) already points at signed
+with no code changes, and [thin-trusted-infra](/decisions/thin-trusted-infra.md) already points at signed
 artifacts as the direction. Deliberately not done here — a signature that nothing verifies is
 worse than an honest claim, and verification is its own pass.
 
@@ -338,7 +338,7 @@ which had to settle the same question for an interval.
   kind of fact, distinguishable from a ratified one only when world files start carrying both.
   That is what the TriG parsing is for and it is not built.
 - **`owl:` axioms are still not materialised**, unchanged from
-  [one-graph-both-engines-read](one-graph-both-engines-read.md). Nothing declares one.
+  [one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md). Nothing declares one.
 - **A world file with its own `GRAPH` block still needs somewhere to be described.** The
   meta-graph names the five; a sixth arriving from inside a TriG file would be silent until
   `provenance.py` learned about it, which is the same seam as the one above seen from the other

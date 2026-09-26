@@ -17,8 +17,8 @@ timestamp: 2026-08-11T00:00:00Z
 
 `ReviewModule.ranges()` has documented three narrowing sources since it was written — *"the
 constitution, narrowed by this agent's mandate. Hardware limits when any exist."* **None existed.**
-[a-belief-is-a-pick-within-a-range](a-belief-is-a-pick-within-a-range.md) names the same three and
-[self-review-is-a-capability](self-review-is-a-capability.md) tabulates them, and for both the
+[a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md) names the same three and
+[self-review-is-a-capability](/decisions/self-review-is-a-capability.md) tabulates them, and for both the
 hardware row was aspiration.
 
 The world says how a device is **driven** — `sensing:senseMode`, from which its agent's
@@ -52,15 +52,15 @@ content-negotiated Turtle at `http://www.w3.org/ns/ssn/systems/`, which is the g
 
 SSN deliberately leaves values to other vocabularies, so schema.org's `value`/`unitCode` pair
 carries it — the idiom the W3C's own worked example uses, adopted in place of a term of ours by
-[one-word-for-one-relation](one-word-for-one-relation.md). The class says which end it is; the
+[one-word-for-one-relation](/decisions/one-word-for-one-relation.md). The class says which end it is; the
 properties say how far and in what. A device that can be read no faster than every thirty seconds
 states `[ a ssn-system:Frequency , schema:PropertyValue ; schema:value 30 ; schema:unitCode
 unit:SEC ]`.
 
 # Borrowed, not imported — and this one cost an axiom
 
-The rule [settlement-speaks-rea](settlement-speaks-rea.md) set for ValueFlows and
-[a-board-is-a-platform](a-board-is-a-platform.md) for SOSA: reference the IRIs, load none of the
+The rule [settlement-speaks-rea](/decisions/settlement-speaks-rea.md) set for ValueFlows and
+[a-board-is-a-platform](/decisions/a-board-is-a-platform.md) for SOSA: reference the IRIs, load none of the
 ontology, add nothing to `agent_old/inference.py`'s hand-materialised closure.
 
 **It does not come free here, and the reason generalises.** `ssn-system:hasSystemCapability` hangs
@@ -115,10 +115,10 @@ therefore a projection of something entailed rather than a second hand-written a
 repetition survives for a reason this record only half stated: not "an agent is never given the
 wiring" as a matter of file layout, but **an agent may know a part's properties and not its
 identity**. See
-[what-is-true-of-a-part-is-true-of-every-one-of-them](what-is-true-of-a-part-is-true-of-every-one-of-them.md).
+[what-is-true-of-a-part-is-true-of-every-one-of-them](/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md).
 
 `test_the_society_repeats_every_limit_the_wiring_states` holds the two together, following
-[a-board-is-a-platform](a-board-is-a-platform.md)'s guard. **Not symmetric, and for a different
+[a-board-is-a-platform](/decisions/a-board-is-a-platform.md)'s guard. **Not symmetric, and for a different
 reason than that one.** There, a hardware-only part must not be forced into the society. Here, a
 society *may* state a floor the wiring does not: a simulated device has no part and no datasheet,
 and a deployment that knows its board wakes slowly on battery is stating something true no class

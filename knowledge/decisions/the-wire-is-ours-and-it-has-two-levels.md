@@ -14,7 +14,7 @@ timestamp: 2026-08-11T00:00:00Z
 
 # Context
 
-[a-board-is-a-platform](a-board-is-a-platform.md) projected the physical decomposition into the
+[a-board-is-a-platform](/decisions/a-board-is-a-platform.md) projected the physical decomposition into the
 society and then stalled. The codec was supposed to move from each sensor onto the board that
 sends the message, closing a measured hole — two sensors on one stream with two different
 encodings validates clean today. It could not: `society` and `simulation` state no wiring at all,
@@ -86,7 +86,7 @@ principal, and its own last seam said why that could not be the end of it.
 
 `mqtt:readingTopic` is a literal. The stream it names has no node, so nothing can say *this stream
 is JSON* — exactly as nothing could say *these sensors share a wake* before
-[a-board-is-a-platform](a-board-is-a-platform.md), and for the same reason: the thing the fact is
+[a-board-is-a-platform](/decisions/a-board-is-a-platform.md), and for the same reason: the thing the fact is
 about was never declared. `_aimed_with` recovering a group by comparing topic strings is the same
 symptom.
 
@@ -97,7 +97,7 @@ form mosquitto wants. Which makes [#81](https://github.com/ShishkinDmitriy/orexi
 *"a peripheral's topics roll up into its board's grants"* a consequence rather than a rule.
 
 The concept is not new either. `onboarding/mqtt.py` has carried it since
-[series-and-bus-isolation](series-and-bus-isolation.md):
+[series-and-bus-isolation](/decisions/series-and-bus-isolation.md):
 
 ```python
 class Principal:
@@ -176,8 +176,8 @@ principal, and its sensors' topics are its grants.
 
 - **Half is built.** The channel exists and the codec moved onto it. `ag:Principal` does not:
   moving the credential onto the board collides with a property
-  [series-and-bus-isolation](series-and-bus-isolation.md) holds — that one flashed board works in
-  either world — and the collision is described in [a-stream-is-a-thing](a-stream-is-a-thing.md)
+  [series-and-bus-isolation](/decisions/series-and-bus-isolation.md) holds — that one flashed board works in
+  either world — and the collision is described in [a-stream-is-a-thing](/decisions/a-stream-is-a-thing.md)
   rather than resolved.
 - **The firmware's identity is wrong and unfixed.** Filed rather than folded in, because changing
   which principal a board connects as rewrites its credential and its ACL — the regression class
@@ -186,9 +186,9 @@ principal, and its sensors' topics are its grants.
 - **The procedural axis stays unadopted.** `ssn:System` and `ssn:hasSubSystem` are the right terms
   the day something needs them, and `sensing:senseMode`'s values are `sosa:Procedure`s by definition —
   a cheap alignment that belongs with whatever next touches
-  [who-holds-the-clock](who-holds-the-clock.md).
+  [who-holds-the-clock](/decisions/who-holds-the-clock.md).
 - ~~**A channel is not a node yet.**~~ **Built** in
-  [a-stream-is-a-thing](a-stream-is-a-thing.md): one node per distinct topic, derived from what
+  [a-stream-is-a-thing](/decisions/a-stream-is-a-thing.md): one node per distinct topic, derived from what
   devices already state, with the encoding on it and a shape refusing a second. The hole this
   record predicted turned out to be real — accepted on `main`, refused now — though the evidence
   first offered for it was not, which that record explains.

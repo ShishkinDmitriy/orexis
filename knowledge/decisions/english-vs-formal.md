@@ -16,9 +16,9 @@ timestamp: 2026-08-01T00:00:00Z
 # Why each formal job can't be English
 
 - **Attested facts** need provenance an agent can *cite but not author* — an English claim
-  in a prompt is unverifiable. See [belief-base](/domain/belief-base.md).
+  in a prompt is unverifiable. See [belief-base](/domain/belief/belief-base.md).
 - **The constitution** must be enforced by code that can't be argued with — an English rule
-  is one clever justification from being talked around. See [constitution](/domain/constitution.md).
+  is one clever justification from being talked around. See constitution.
 - **Shared state** needs a concurrent, queryable, consistent store — a pile of English
   assertions is not a database.
 

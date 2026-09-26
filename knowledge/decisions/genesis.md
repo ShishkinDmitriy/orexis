@@ -9,7 +9,7 @@ timestamp: 2026-08-02T00:00:00Z
 # Context
 
 The belief base holds two kinds of belief that arise differently. **State** (current
-moisture) is *sensed* by each agent's own sensor (see [sensing](/domain/sensing.md)).
+moisture) is *sensed* by each agent's own sensor (see [sensing](/domain/sensing/sensing.md)).
 **Structure + identity** (topology, wiring) is *durable* and must be *authored* — it cannot
 be sensed.
 Where does that come from, and — since no one describes a world correctly the first time —
@@ -26,7 +26,7 @@ Structure and identity are seeded by **genesis**, a sovereign act in four steps:
    beliefs (target, bands, cadence, valuation). The LLM is a **drafting assistant, not an
    agent** — no region want, proposes only.
 3. **Ratify** — the sovereign reviews, edits, accepts. Only the sovereign authors the world
-   (see [constitution](/domain/constitution.md): only the sovereign amends).
+   (see constitution: only the sovereign amends).
 4. **Write** — the ratified draft is Turtle in `world/<world>/`, and that is the end of
    genesis. There is nothing to load: each agent reads those files at boot, copies the wiring
    into its own `:world` (which it never rewires) and writes its opening beliefs into its own
@@ -39,7 +39,7 @@ Structure and identity are seeded by **genesis**, a sovereign act in four steps:
 
 `world/` holds **one directory per ratified world**, each complete and seedable on its own —
 not a base with fragments layered on it. An agent is given exactly one, mounted. What a world is
-made of, and how to author one, is [world](/domain/world.md).
+made of, and how to author one, is [world](/domain/kernel/world.md).
 
 This matters more than convenience. A world is the *entire* model of a system, so a second one
 is not a variant of the first: it is a different society. `world/simulation` has a market;
@@ -66,7 +66,7 @@ makes one agent unable to read another's beliefs, and it is why a round had to b
 protocol rather than a calculation (see
 [capability-packages](/decisions/capability-packages.md)). Supervision must not undo it — and
 a container goes further than a process, because it can be given exactly one credential
-instead of a directory full of everyone's. See [world](/domain/world.md) §Deployment.
+instead of a directory full of everyone's. See [world](/domain/kernel/world.md) §Deployment.
 
 **Firmware is the exception, and the contrast is the point.** A board is hardware; it is
 flashed by hand and the model cannot conjure it. What genesis decides is what an *agent* is —
@@ -75,7 +75,7 @@ which is exactly why the same board is a watcher in one world and a bidder in an
 This is [english-vs-formal](/decisions/english-vs-formal.md) applied to *creation*: the story
 is fuzzy human intent (English); the ratified structure is trusted formal. What the session
 itself has to elicit, and how to tell the result hangs together, is
-[genesis-process](/domain/genesis-process.md).
+genesis-process.
 
 # Genesis vs sensing — each belief has one origin
 
@@ -85,16 +85,16 @@ itself has to elicit, and how to tell the result hangs together, is
 - **Desire / limits** ← genesis *seeds* them, then they are the agent's own to revise. Opening
   beliefs, not permanent law.
 
-They never mix. See [belief-base](/domain/belief-base.md).
+They never mix. See [belief-base](/domain/belief/belief-base.md).
 
 # Config is ratified belief, owned by a party
 
 What looks like flat config is the *ratified output* of genesis, and each fact has an owner:
 
 - **topology / wiring / device calibration** → the **`:world`** graph (sovereign-declared;
-  agents read, never rewire — see [market](/domain/market.md)).
+  agents read, never rewire — see [market](/domain/market/market.md)).
 - **target / endowment / value curve** → each agent's own **`:picks/<agent>`** (internal to
-  the agent — see [agent](/domain/agent.md)).
+  the agent — see [agent](/domain/kernel/agent.md)).
 - **bands / cadence / freshness limit** → also the agent's: desire-relative judgments, not
   ground truth (see [agent-centric-epistemics](/decisions/agent-centric-epistemics.md)).
 - **quantity / reserve / cooldown** → the **supplier's** own beliefs — its strategy.
@@ -156,7 +156,7 @@ Amendment changes the **current world and go-forward beliefs**. It must **never*
 retro-edit **testimony/history** — past attestations (with their timestamps) and the Influx
 series are the *record of what happened*, append-only. You may change what the world **is**,
 never what it **was**. That is what keeps the witness of record trustworthy. See
-[belief-base](/domain/belief-base.md) and [trust-boundary](/decisions/trust-boundary.md).
+[belief-base](/domain/belief/belief-base.md) and [trust-boundary](/decisions/trust-boundary.md).
 
 # v1 vs v2
 

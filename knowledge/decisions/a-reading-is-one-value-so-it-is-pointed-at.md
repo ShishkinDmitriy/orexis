@@ -74,7 +74,7 @@ bytes ──[codec]──▶ document ──[pointer]──▶ raw value ──[
 **Amended.** This record called the third stage a *transducer*; the word is now **calibration**,
 because a transducer is the physical device that converts one form of energy to another and this
 project's sensors are physical devices. Both outer stages became packages in
-[bytes-become-a-quantity-in-stages](bytes-become-a-quantity-in-stages.md), which also found that
+[bytes-become-a-quantity-in-stages](/decisions/bytes-become-a-quantity-in-stages.md), which also found that
 the third stage was never missing — it was set to identity, because the firmware scales before it
 publishes.
 
@@ -93,7 +93,7 @@ and no second in sight.
 was not a second format but the discovery that JSON was being *chosen* — by `json.loads` inside the
 MQTT driver and a default on a Python class — with the choice written down nowhere. A family whose
 one member is picked by an unstated default is not a deferred decision, it is an unrecorded one.
-See [bytes-become-a-quantity-in-stages](bytes-become-a-quantity-in-stages.md).
+See [bytes-become-a-quantity-in-stages](/decisions/bytes-become-a-quantity-in-stages.md).
 
 The naming carries the split: a driver's `parse` returns **the raw value the pointer identifies**,
 and `ingest` records **what is observed**. Two nameable things with nothing between them yet.
@@ -140,7 +140,7 @@ without being made a principal. The ACL is byte-identical across all three world
   three values were pointed at correctly and then stamped one at a time as each was written, so
   a single physical read left three different instants in the record. Why they are simultaneous
   is a fact about the part rather than about the transport, which is what
-  [a-procedure-belongs-to-whatever-performs-it](a-procedure-belongs-to-whatever-performs-it.md)
+  [a-procedure-belongs-to-whatever-performs-it](/decisions/a-procedure-belongs-to-whatever-performs-it.md)
   set out to state and found by stating.
 
 # Seams left open
@@ -148,13 +148,13 @@ without being made a principal. The ACL is byte-identical across all three world
 - ~~**No codec family.**~~ **Closed**, though not by the trigger this seam named. No non-JSON
   device arrived; what arrived was the realisation that the default was a fact nothing could read.
   `codec:Json` is now derived onto every sensor at genesis. See
-  [bytes-become-a-quantity-in-stages](bytes-become-a-quantity-in-stages.md).
+  [bytes-become-a-quantity-in-stages](/decisions/bytes-become-a-quantity-in-stages.md).
 - **Nothing checks a pointer against what a device sends.** A world may state `/humidty` and
   validate perfectly; the agent warns at runtime, once per message, forever. A shape cannot catch
   it because the payload is not in the graph. **Narrowed**: a pointer is now exercised against a
   real payload from a real device in `world/simulation`, so a pointer that matches nothing shows
   up in a world that runs — see
-  [a-stand-in-reports-what-its-world-says-it-does](a-stand-in-reports-what-its-world-says-it-does.md).
+  [a-stand-in-reports-what-its-world-says-it-does](/decisions/a-stand-in-reports-what-its-world-says-it-does.md).
   A world nobody brings up is still unguarded.
 - **The tightest cadence wins, and nothing says a sensor may be exempt.** A board carrying one
   urgent property and five indifferent ones reads all six at the urgent rate.

@@ -15,7 +15,7 @@ timestamp: 2026-08-11T00:00:00Z
 
 # Context
 
-[the-wire-is-ours-and-it-has-two-levels](the-wire-is-ours-and-it-has-two-levels.md) said the
+[the-wire-is-ours-and-it-has-two-levels](/decisions/the-wire-is-ours-and-it-has-two-levels.md) said the
 encoding belongs to the stream and left the stream undeclared: *"`mqtt:readingTopic` is still a
 literal, and until a stream is a thing the shape that would refuse two encodings on one has
 nothing to target."*
@@ -54,7 +54,7 @@ node has to be stable and distinct; nothing looks one up by name, which is the s
 A stream is one thing however many parties read it. Putting read/write into the identity would
 split one topic into two nodes the moment a device both sent and listened on it — and the
 direction is already a property of the *use*, which is why `Principal.grants` has been a set of
-`(read|write, topic)` pairs since [series-and-bus-isolation](series-and-bus-isolation.md).
+`(read|write, topic)` pairs since [series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 
 # The hole was real, and the first measurement of it was not
 
@@ -101,7 +101,7 @@ collides with a property this project already holds.
 `tests/test_isolation.py::test_a_board_is_known_by_the_same_name_and_granted_the_same_channels_in_both`
 asserts that `world/sensing` and `world/simulation` model the same probe identically. A device
 credential is deliberately not world-scoped, and that is
-[series-and-bus-isolation](series-and-bus-isolation.md)'s doing. (This paragraph named
+[series-and-bus-isolation](/decisions/series-and-bus-isolation.md)'s doing. (This paragraph named
 `world/society` and a test called `test_two_worlds_that_share_a_device_share_its_credential`,
 quoting it as *"so one flashed board works in either"*. The world is gone, the test was rewritten,
 and its successor's docstring disowns that very phrase as overclaiming — each world mints its own
@@ -121,7 +121,7 @@ Both positions are right, which is what makes it a collision rather than a bug:
 
 They only conflict because the two worlds now disagree about *what the device is* — a board
 carrying three sensors in one, three independent sensors in the other. That divergence arrived
-with [a-board-is-a-platform](a-board-is-a-platform.md) and nothing has decided whether it is a
+with [a-board-is-a-platform](/decisions/a-board-is-a-platform.md) and nothing has decided whether it is a
 modelling accident or a real difference between a wired world and a simulated one. Deciding it is
 the prerequisite for #81, and it is not a decision to take inside a change about streams.
 

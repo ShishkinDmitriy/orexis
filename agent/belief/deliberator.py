@@ -16,7 +16,7 @@ half-concluded is not left there because the process came back.
 
 **DELIBERATION, IN THE B OF BDI**, is the process by which facts follow from facts; the search
 that finds a plan is the planner's and is not this. The 0.1.0 tree's deliberator was the
-search, and `knowledge/domain/deliberator.md` says which is which.
+search, and `knowledge/domain/belief/deliberator.md` says which is which.
 """
 
 from __future__ import annotations

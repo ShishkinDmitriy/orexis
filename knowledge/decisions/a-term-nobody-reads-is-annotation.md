@@ -41,7 +41,7 @@ an expectation IS — [#430](https://github.com/ShishkinDmitriy/orexis/issues/43
 rather than a cleanup. A term held against that day is a term held for a reader who does not
 exist; the design can declare what it needs when someone builds it.
 
-**What it distinguished stays.** [effect](/domain/effect.md) still separates a constitutive
+**What it distinguished stays.** [effect](/domain/planning/effect.md) still separates a constitutive
 effect from a causal one — that distinction is why conflating them produces code verifying an
 agent wrote down what it just wrote down. It never needed an IRI to say so.
 

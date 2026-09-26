@@ -92,7 +92,7 @@ Not `Standing` (the keeper's word for an adopted intention), not `Urgency` (whic
 it), not `Pursuit` (which is what the agent does with it). A judgment is what you make when you
 weigh one thing against what it needs — which is precisely what a capability does with a redeem
 window or an envelope — and it does not pretend to be a record. See
-[judgment](/domain/judgment.md).
+judgment.
 
 # What it cost, and what came free
 

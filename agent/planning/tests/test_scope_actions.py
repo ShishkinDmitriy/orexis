@@ -11,7 +11,7 @@ gives — compared over every quad, exactly as a snapshot is. The argument for i
 reader checking a case reads the DIFF and nothing else, so storing the diff puts the artifact
 and the claim in one file; the argument against is that a snapshot can be opened and read as a
 store, which a diff cannot. Five cases here, and the other directories keep their snapshots,
-so the two can be compared before either is made the rule. See knowledge/domain/scope.md.
+so the two can be compared before either is made the rule. See knowledge/domain/planning/scope.md.
 
 THE DERIVATIONS ARE THE CASE'S. In a running agent the partition also joins what every loaded
 package's derivation rules read and write, and genesis puts those edges in the store beside the

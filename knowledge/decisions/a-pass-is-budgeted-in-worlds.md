@@ -27,7 +27,7 @@ follows the want's estimate as deep as it likes, and a depth bounds only how far
 may reach — which nothing needs, since a plan is re-derived every pass and only its head is
 acted on.
 
-What a pass spends is worlds: forks in the [imaginarium](/domain/imaginarium.md), each a
+What a pass spends is worlds: forks in the [imaginarium](/domain/planning/imaginarium.md), each a
 measured cost per mutable-slice size
 ([measure-the-search](/runbooks/measure-the-search.md)). So the ceiling is stated in that unit,
 `deliberation:budgetWorlds`, and the search counts what it forks and stops there. It is anytime by
@@ -77,7 +77,7 @@ nobody needs bounded, since a cone is dropped whole the moment the present leave
   found a plateau — hanoi's optimal path moves away from the goal — and the answer is to
   escalate: a larger budget, then Consulting, which is the amortisation tower the intention
   records describe. Not built; the budget is one number.
-- **Metering.** The [wallet](/domain/wallet.md) is designed to pay for thinking and does not
+- **Metering.** The wallet is designed to pay for thinking and does not
   yet; a pass's worlds are the unit it would be charged in, and the two words meet there.
 - **A time cap beside the count**, for a slice large enough that a world costs seconds. Not
   until a world shows it.

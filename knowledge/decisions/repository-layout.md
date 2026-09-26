@@ -7,7 +7,7 @@ superseded-by: every-package-is-a-project
 timestamp: 2026-08-07T00:00:00Z
 ---
 
-> **Current statement: [package](/domain/package.md).** This record is how the model got
+> **Current statement: [package](/domain/kernel/package.md).** This record is how the model got
 > there and why; the domain concept is what it is now. Four records amend each other on
 > this subject, so read the concept first unless you want the argument.
 
@@ -113,7 +113,7 @@ onboarding tools had already moved out and what remained was precisely what an a
 `agent` rather than `orexis` because the whole project is orexis; a component inside it called orexis
 is the same redundancy as `onboarding/src/onboarding`. The known cost was that onboarding imported
 `from agent.ontology import …`, which read like a layering smell even though the direction was
-correct; since [a-layer-is-a-package-and-need-loads-it](a-layer-is-a-package-and-need-loads-it.md)
+correct; since [a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md)
 the kernel vocabulary travels with the store engine in the progression layer and the spelling is
 `from orexis_agent_progression.ontology import …`, which reads as the layering it is. The import
 contract states the rule explicitly, so the name surprises and the contract does not.
@@ -149,7 +149,7 @@ Python — `terms.py`'s equivalent — was always next door.
   reads. Extracting a shared core was proposed twice and declined twice: the dependency is already
   one-way and acyclic, the shared surface is seven modules, and a third distribution would buy a
   boundary the import contract already states.~~ Overturned by
-  [a-layer-is-a-package-and-need-loads-it](a-layer-is-a-package-and-need-loads-it.md), and for a
+  [a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md), and for a
   reason this seam never weighed: what landed (#452) is not a shared core for onboarding's sake
   but the kernel's own layering — three packages in the one tree, `packages/orexis-agent-reactive/`,
   `packages/orexis-agent-progression/` and `packages/orexis-agent-deliberation/`, each
@@ -157,7 +157,7 @@ Python — `terms.py`'s equivalent — was always next door.
   them. A floor beneath the three was built first (#457, refused) and dissolved into them:
   the store engine went to progression, the lowest layer that persists, and the belief and
   desire modalities to deliberation. What made a distribution boundary worth having was
-  [every-package-is-a-project](every-package-is-a-project.md): it is held to its imports in both
+  [every-package-is-a-project](/decisions/every-package-is-a-project.md): it is held to its imports in both
   directions, so it fails when violated instead of merely restating what a contract already said.
 
 # Capability-specific dependencies (settled when Consulting came into view)

@@ -23,7 +23,7 @@ wallet emits the move; skills are affordances named in the prompt).
 
 # Decision
 
-Go **LLM-heavy**. The [plant agent](/domain/plant-agent.md)'s deliberation is one LLM call
+Go **LLM-heavy**. The plant agent's deliberation is one LLM call
 that produces a stance; skill selection can be the model's call rather than symbolic
 context-matching.
 

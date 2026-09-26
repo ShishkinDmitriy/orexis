@@ -21,8 +21,8 @@ Asked by the sovereign after #708 made every graph's name a convention for eyes:
 `orexis:RootsGraph`, and should it be `orexis:DesireGraph`? And what is
 `orexis:PickRecordGraph`? The first holds one agent's `orexis:Desire` rows with their
 met-tests, declared at birth from the ranges the world states and endowed on amendment. The
-second holds the record of picking — the [pick](/domain/pick.md) per term that birth authored
-and [review](/domain/review.md) re-picks — and is still called `beliefs/<agent>` for eyes,
+second holds the record of picking — the pick per term that birth authored
+and review re-picks — and is still called `beliefs/<agent>` for eyes,
 the misnomer the vocabulary's own comment on `orexis:BeliefGraph` records.
 
 # The rule

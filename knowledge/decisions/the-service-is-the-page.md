@@ -29,14 +29,14 @@ outputs are the natural unit to describe it by.
 
 **The wiring belongs on the service page.** Which repositories a service reads, which named
 graphs it writes, and what its one process is — these have no other home today, and
-[deliberation](/domain/deliberator.md) has already grown them by itself: it carries *the menu*,
+[deliberation](/domain/belief/deliberator.md) has already grown them by itself: it carries *the menu*,
 *what the search does with an effect* and *what deliberation does with an obligation*, three sections
 that are wiring rather than concept. The proposal names something the bundle was already doing.
 
 **A service is an `-er` and its process is the `-ing`.** `Planner` runs planning, `Keeper` runs
 keeping, `Deliberator` runs deliberating — and those three already carry the name in code, which
 is the test that makes the convention worth having. `deliberation.md` was named for the process
-and is now [deliberator](/domain/deliberator.md); the page names the thing that acts, and the
+and is now [deliberator](/domain/belief/deliberator.md); the page names the thing that acts, and the
 process is a heading inside it.
 
 **The convention is applied only where the code agrees, and that is deliberate.** Renaming a
@@ -46,7 +46,7 @@ would need a code rename first, and each has a defensible name waiting:
 
 *(One of the six has since dissolved rather than been renamed: affording turned out to be a
 COLLECTION derived per ask rather than a service that decides something, so `Afforder` is
-`Affordances` and its page folded into [affordance](/domain/step.md) — the model keeps the
+`Affordances` and its page folded into [affordance](/domain/execution/step.md) — the model keeps the
 page and the collection lives in the code, which is the shape
 [a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md)
 settles. The discipline below is what forced it: the page followed the code rather than drifting
@@ -61,18 +61,18 @@ itself from execution, which is the tell that one word was standing between two 
 not separate region-want-free infra — the resource owner drives its own valves. The 'executor' is the
 supplier's actuation ARM, not a distinct component."* A page for a component that had been
 reframed away, holding a name a live service needed. Its body moved into
-[actuation](/domain/actuation.md), which is where that decision put the thing, and eleven links
+[actuation](/domain/actuation/actuation.md), which is where that decision put the thing, and eleven links
 followed.
 
 **A repository carries its own support functions, and they are not services.** Compaction was
 written as one and is not: every service runs a process and writes a named graph, because what a
 service concludes is a fact somebody authored, while compaction decides nothing, asserts nothing
 and reclaims bytes belonging to one repository. It is a function of
-[belief-base](/domain/belief-base.md), and no other repository is obliged to have the same ones.
+[belief-base](/domain/belief/belief-base.md), and no other repository is obliged to have the same ones.
 
 The test that separates them is what a thing PRODUCES. Three services write no graph either —
-the menu build returns rows, [executor](/domain/executor.md) only orchestrates,
-[reviser](/domain/reviser.md) only marks — and all three stay services, because each decides
+the menu build returns rows, [executor](/domain/execution/executor.md) only orchestrates,
+reviser only marks — and all three stay services, because each decides
 something. Writing no graph is the hint; deciding nothing is the finding.
 
 **The four words are the vocabulary.** A page is about a Service or a Repository
@@ -108,16 +108,16 @@ instances would teach the opposite of what the code enforces.
 
 **And the type is not always enough.** `graph/ontology` and `graph/ontology/entailed` are both
 `orexis:OntologyGraph`; only `orexis:arrivedBy` separates them. So a service writing back into the type
-it read carries the arrival beside it — [inference](/domain/inference.md) is the case, and the
+it read carries the arrival beside it — [inference](/domain/kernel/inference.md) is the case, and the
 only one.
 
 # What is refused, and why it is the interesting half
 
 **The dictionary does not fold into the services.** `knowledge/domain/` is the shared vocabulary,
 and a word is defined before it is used. Fold the data pages into service pages and a term used
-by several services has no owner: [act](/domain/act.md) is sized by the planner, committed by
-execution, handed to an [actor](/domain/actor.md), and promised by a
-[commitment](/domain/commitment.md). Putting `progression:Act` inside any one of those pages picks an
+by several services has no owner: [act](/domain/execution/act.md) is sized by the planner, committed by
+execution, handed to an actor, and promised by a
+commitment. Putting `progression:Act` inside any one of those pages picks an
 arbitrary owner for a word the other three must speak.
 
 So the split is by **how many services share the word**:
@@ -153,10 +153,10 @@ finds immediately.
 - **Nothing yet enforces a service page's shape.** A gate could require that a page typed
   `Service` names at least one repository and one process, which would make the convention real
   rather than encouraged. It is not written.
-- **Five services have a page and no wiring diagram**, on purpose: [actor](/domain/actor.md) is a
-  contract rather than a service that holds a store, [choir](/domain/choir.md) is how services
-  reach each other, and [clearing](/domain/clearing.md), [actuation](/domain/actuation.md) and
-  [gateway](/domain/gateway.md) are separate processes outside the agent's repositories. A
+- **Five services have a page and no wiring diagram**, on purpose: actor is a
+  contract rather than a service that holds a store, choir is how services
+  reach each other, and clearing, [actuation](/domain/actuation/actuation.md) and
+  gateway are separate processes outside the agent's repositories. A
   diagram of repos they do not have would assert something false.
 - - **Nothing renders the mermaid at build time.** GitHub and any OKF viewer draw it; a broken
   block fails silently in a plain `cat`. The blocks are small enough that this has not bitten.

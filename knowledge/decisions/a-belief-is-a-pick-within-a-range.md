@@ -48,7 +48,7 @@ So the room comes from constraints, and there are three sources:
 | | what it says | where it lives |
 |---|---|---|
 | **constitution** | what the society allows *any* agent | figures on the capability family, e.g. `sensing:minSleepS` / `sensing:maxSleepS` |
-| **hardware** | what the equipment can do | on a device, as an `ssn-system:Frequency` — borrowed from SSN rather than invented, and carried to the agent at genesis. See [a-board-says-what-it-can-honour](a-board-says-what-it-can-honour.md) |
+| **hardware** | what the equipment can do | on a device, as an `ssn-system:Frequency` — borrowed from SSN rather than invented, and carried to the agent at genesis. See [a-board-says-what-it-can-honour](/decisions/a-board-says-what-it-can-honour.md) |
 | **mandate** | what **this** agent's world allows it | `review:commits`, in `world.ttl` |
 
 They intersect, and a mandate can only narrow: one looser than the constitution *is* the
@@ -61,7 +61,7 @@ constitution.
 > wants, and only that stays private. Range public, value private. Making it public is also what
 > made the capability derivable and put the two ends of "a world may not widen the constitution"
 > in graphs a single shape can compare. See
-> [self-review-is-a-capability](self-review-is-a-capability.md).
+> [self-review-is-a-capability](/decisions/self-review-is-a-capability.md).
 
 The author's job becomes **constraining well rather than guessing well**, and how much autonomy
 each agent has stops being implied and becomes a line you can read and diff.
@@ -98,7 +98,7 @@ reviewer, and the evidence is statistics computable without knowing what a prope
 It can read the evidence, the beliefs and the T-Box and do nothing else. A `SELECT` cannot write,
 cannot call out, and cannot loop unboundedly — and because **an agent's store already contains
 only what it may see**, the sandbox is the isolation design rather than anything added here. That
-is [where-the-belief-base-lives](where-the-belief-base-lives.md) paying a dividend it was not
+is [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) paying a dividend it was not
 designed for.
 
 Three things a shipped rule cannot know — the agent, its beliefs graph, its evidence graph — are
@@ -128,16 +128,16 @@ subject and property holding count, extremes, sum and sum-of-squares, from which
 and spread all follow. Constant size, whatever it summarises.
 
 That line — *a reading is a measurement, a summary is current state* — is exactly the one
-[two-store-beliefs](two-store-beliefs.md) already draws between Influx and here, and following it
+[two-store-beliefs](/decisions/two-store-beliefs.md) already draws between Influx and here, and following it
 gives three things at once:
 
-- the triple count **stays flat**, so the guarantee in [agent-metrics](/domain/agent-metrics.md)
+- the triple count **stays flat**, so the guarantee in agent-metrics
   survives and #45's signal is not buried under a growing window;
 - the evidence **survives a restart**, so a rebooting agent keeps the grounds for its own
   judgement instead of earning them again — and therefore outlives the code that wrote it, which
   is why boot now checks that the vocabulary still declares what the store holds. Everything
   persisted here is in that scope, not only the beliefs. See
-  [a-volume-can-be-older-than-the-vocabulary](a-volume-can-be-older-than-the-vocabulary.md);
+  [a-volume-can-be-older-than-the-vocabulary](/decisions/a-volume-can-be-older-than-the-vocabulary.md);
 - reflection **never waits on the series store**, which attention must never do.
 
 `review:sampleMax` is kept beside the sums although a variance could be derived without it, because
@@ -208,7 +208,7 @@ choice.
 > **Amended.** Still true, and it acquired teeth: once review became a capability an agent might
 > not have, upkeep riding the review timer would have made a mandate-less agent stop compacting
 > silently. It runs its own hourly clock now. See
-> [self-review-is-a-capability](self-review-is-a-capability.md).
+> [self-review-is-a-capability](/decisions/self-review-is-a-capability.md).
 
 # Consequences
 

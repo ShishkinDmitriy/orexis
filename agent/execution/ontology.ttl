@@ -149,7 +149,7 @@ execution:predicts a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:ra
 execution:precondition a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:string ;
     rdfs:label "precondition" ;
     rdfs:comment "What the step's rules READ in the world it was planned from — the positive patterns of its effect's WHERE and of its availability select, instantiated for this step and stated as the same canonical facts `predicts` is made of, one JSON literal of one list (#550). The step's precondition there: the facts whose presence made the diff what it is. Derived from the rule texts and never authored beside them; an absence a rule requires (FILTER NOT EXISTS) is not here, being the regression's to state (#551). A step the search did not make carries none." .
-#  THE WORD IS THE BUNDLE'S. `knowledge/domain/precondition.md` grounds it and the term spells
+#  THE WORD IS THE BUNDLE'S. `knowledge/domain/planning/precondition.md` grounds it and the term spells
 #  it, which is what #580 settled for the predecessor's vocabulary after a page and its term had
 #  disagreed. Intentions written under the old namespace are not migrated into this one: there is
 #  no migration between a layer and its successor, because there was never a volume holding

@@ -27,7 +27,7 @@ a role should be a **thing** here — `market:Host`, `market:Bidder`, an agent `
 context — rather than a predicate plus the capability derived from it.
 
 The question is sharper than it first looks, because
-[bid-matching-is-a-capability](bid-matching-is-a-capability.md) left a seam that seems to demand
+[bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md) left a seam that seems to demand
 roles: **owning the venue is structural, convening an auction is per-auction.** If the host rotates
 with whichever side is short, then "host" cannot be a standing fact about an agent — it is
 something an agent *is*, for the duration of one auction. That is exactly the shape a role has and a
@@ -48,7 +48,7 @@ this record depends on it rather than restating it.
 This is the whole argument, and it is not an analogy — it is the same fact twice.
 
 **A pin's role.** `mc:PinRole` is first-class: `mc:pinRole` has `mc:Pin` for its domain, and a pin
-is an object with a GPIO number and a rail voltage. [pins-and-wires](pins-and-wires.md) made it
+is an object with a GPIO number and a rail voltage. [pins-and-wires](/decisions/pins-and-wires.md) made it
 first-class for a stated reason, in `packages/orexis-part-microcontroller/ontology.ttl`:
 
 > `orexis:pin [ mc:pinRole mc:AnalogInPinRole ; mc:gpio 34 ]` used to say in one node, and the length
@@ -62,7 +62,7 @@ existed there was nothing to attach it to, and the fused form was what people wr
 the qualified pattern precisely because a role is meaningless free-floating: you are not a
 ratifier, you are a ratifier **of** something.
 
-**And an auction has no object.** [auction](/domain/auction.md) says so deliberately: an auction is
+**And an auction has no object.** [auction](/domain/market/auction.md) says so deliberately: an auction is
 a process, it condenses and dissolves, and *there is no `orexis:Auction` to point at — looking for one
 is the usual sign that a market fact and an auction fact have been confused.* So a per-auction role has
 nothing to be a role in. Making one first-class today would mean either:
@@ -92,7 +92,7 @@ second spelling.
 
 **So when the trigger fires, the shape is off the shelf.** `org:` is small — `Role`, `Membership`,
 `member`, `organization` — and importing four terms is nothing like importing an accounting
-ontology (see [settlement-speaks-rea](settlement-speaks-rea.md) for why that distinction is about
+ontology (see [settlement-speaks-rea](/decisions/settlement-speaks-rea.md) for why that distinction is about
 the hand-materialised RDFS closure). Nothing is imported today, because there is no membership to
 represent while positions are standing facts.
 
@@ -122,7 +122,7 @@ independently of the predicate is a synonym rather than a term.
 # Clearing having no position is not the inconsistency it looks like
 
 The table above invites the reading that clearing is missing something the other two have. It is
-not. [clearing-as-validator](clearing-as-validator.md) makes it a **thin, region-want-free notary**: it
+not. [clearing-as-validator](/decisions/clearing-as-validator.md) makes it a **thin, region-want-free notary**: it
 holds no resource, wants nothing, and takes no side. Giving it a role would say it occupies a
 position in the market, which is the one thing it is designed not to do — a role implies a region want in
 a way a function does not.
@@ -137,7 +137,7 @@ telling the truth about which is which. That it *looks* untidy is the cost of it
   to a role, because the promotion needs an auction object first.
 - **Two questions are now known to be one.** *Should positions be roles?* and *should an auction be
   an object?* have the same answer, and the second is the one to argue. Anyone reaching for roles
-  again should be sent to [auction](/domain/auction.md) rather than to this record's conclusion.
+  again should be sent to [auction](/domain/market/auction.md) rather than to this record's conclusion.
 - **The rule generalises past markets.** A package adding a role should be asked what
   node it hangs off. If the answer is "the agent", it is a predicate.
 

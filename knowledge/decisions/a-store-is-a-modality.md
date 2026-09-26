@@ -42,7 +42,7 @@ the runtime holds a read-only handle. Three standing rules stop being rules:
 - *an asserted want is written from files and never by the agent*
   ([#264](https://github.com/ShishkinDmitriy/orexis/issues/264)) — the self-satisfaction
   loophole closes because there is no handle to open it with;
-- the violation [aim](/domain/aim.md) files — a want living among settings, excused because
+- the violation aim files — a want living among settings, excused because
   one dataset made it merely untidy — becomes unwritable instead of filed.
 
 **Each modality chooses its own persistence, and two already had.** The imaginarium is this
@@ -61,7 +61,7 @@ precedents generalised, because modality *determines* lifecycle:
 | menu | memory | its rebuild alone, from premises | every rebuild — a conclusion is recomputed, never edited |
 | intentions | volume | the keeper | nothing — a commitment survives a restart |
 | history | volume ring | the runtime, append-only | the ring's own bound; Influx keeps the rest |
-| the [imaginarium](/domain/imaginarium.md) | memory, per pass | the planner | the end of the pass |
+| the [imaginarium](/domain/planning/imaginarium.md) | memory, per pass | the planner | the end of the pass |
 
 **The modality graph classes are retired — ALL of them, by
 [#312](https://github.com/ShishkinDmitriy/orexis/issues/312)**: `orexis:BeliefsGraph` first, then

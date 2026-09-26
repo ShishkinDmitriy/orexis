@@ -290,7 +290,7 @@ not, and which the hanoi want skips entirely for want of an `orexis:about`. The 
 CORRECT; only the cost explodes, which is why nothing catches it.
 
 That was [#488](https://github.com/ShishkinDmitriy/orexis/issues/488), closed by
-[relevance](/domain/relevance.md): what the want reads off its shape, what each action writes
+relevance: what the want reads off its shape, what each action writes
 and reads off its texts, closed backward. Re-measured with the budget in place of depth, which
 changes what the knob costs — no longer a slower solve but a SPENT budget and no solution:
 

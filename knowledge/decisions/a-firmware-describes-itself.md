@@ -11,7 +11,7 @@ status: accepted
 timestamp: 2026-08-15T16:33:30Z
 ---
 
-> **Current statement: [model-and-unit](/domain/model-and-unit.md).** This record is one
+> **Current statement: model-and-unit.** This record is one
 > application of a principle four of them share; the domain concept states the principle
 > and the mechanism once.
 
@@ -32,7 +32,7 @@ its kind's facts, and nothing could refuse a board that contradicted its own ima
 it beside `packages/`, prefixes flow through unchanged, and the description is a class —
 `governed:Node`, `sentinel:Node` — carrying the image's facts as `owl:hasValue` restrictions
 that the closure's existing rule 5 entails onto every typed board. This is
-[a-part-is-described-once-and-fitted-many-times](a-part-is-described-once-and-fitted-many-times.md)
+[a-part-is-described-once-and-fitted-many-times](/decisions/a-part-is-described-once-and-fitted-many-times.md)
 applied to code instead of silicon: one image, one set of promises, however many boards run it.
 
 The sensing world's board now states neither fact. `world.ttl` types the connecting device

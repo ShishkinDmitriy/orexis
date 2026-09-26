@@ -28,7 +28,7 @@ actually has.
 
 **The axis is latency and interruptibility, not push versus plan.**
 
-| [row](/domain/row.md) | latency | interruptible | searches |
+| row | latency | interruptible | searches |
 |---|---|---|---|
 | reactive | ms | n/a — atomic | no |
 | progression | s–min | suspends | no |
@@ -41,13 +41,13 @@ status — never to decide.
 
 **Progression** is executing what is already committed. It is neither reactive (it spans time
 and holds state) nor deliberative (it searches nothing): the keeper's ledger, `take_standing`,
-and an [actor](/domain/actor.md) answering False for *not now* so the [intention](/domain/intention.md)
+and an actor answering False for *not now* so the [intention](/domain/execution/intention.md)
 stands until a trigger changes the answer. This is the layer BDI names and a generic three-layer
 architecture does not — Gat's 3T, Firby's RAPs and Bonasso all have a sequencing layer, and what
 BDI adds is that its contents are **intentions with a lifecycle**, which is what carries
 commitment across the gap between two deliberation episodes.
 
-**Deliberation** is the search: `decide` over the [imaginarium](/domain/imaginarium.md), ranked
+**Deliberation** is the search: `decide` over the [imaginarium](/domain/planning/imaginarium.md), ranked
 by simulation. Slow, and it should be interruptible. It runs when something goal-relevant moved.
 
 **The belief base is the interface, not plumbing between the two.** It is what decouples the
@@ -58,7 +58,7 @@ staleness became a want with a measure ([the-region-want-is-sensings-want](/deci
 a dead sensor became a freshness want going cold rather than a special case
 ([a-test-that-asserted-nothing](/decisions/a-test-that-asserted-nothing.md)'s neighbour, #124),
 and event thinning became the upsert key plus the summary window
-([one-agent-many-sensors](/decisions/one-agent-many-sensors.md), [review](/domain/review.md)).
+([one-agent-many-sensors](/decisions/one-agent-many-sensors.md), review).
 What decides whether a write is worth waking the deliberator for is the revision function, not
 the handler that produced it.
 
@@ -118,7 +118,7 @@ which searched — all inside `handle`, on the callback thread. That was deliber
 reactive row: it blocked every other message for the length of a pass, and a slow deliberator
 (a model, later) would have stalled the bus.
 
-**Fixed (#392).** `revision.wake` leaves a [mark](/domain/reviser.md) and returns, and the
+**Fixed (#392).** `revision.wake` leaves a mark and returns, and the
 marks are drained on a thread of the mind's own, started with the agent and stopped with it. Three consequences worth
 knowing, because each is the rule showing its teeth:
 

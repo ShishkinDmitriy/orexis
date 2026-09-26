@@ -41,7 +41,7 @@ sovereign's correction is the better answer: a claim is the *embodiment* of REA'
 so), and commitment is structure, as an intention is. So `commitment.py` (progression's, `packages/orexis-agent-progression/`) holds the six
 fields a valve fulfils, `Claim` extends it with the credit leg, and a self-dose is a
 `Commitment` with nobody to pay. Actuation imports the kernel; the market imports the kernel;
-neither imports the other. See [commitment](/domain/commitment.md).
+neither imports the other. See commitment.
 
 # What did not change
 

@@ -9,8 +9,8 @@ description: Author a new world and seed it — what you write, what genesis der
 You are adding a society: new hardware, a new test rig, or a variant of an existing world.
 Editing an existing world is the same steps from 3 onward.
 
-Background, if the *why* matters: [world](/domain/world.md) for what a world is made of,
-[genesis-process](/domain/genesis-process.md) for the conversation that produces one.
+Background, if the *why* matters: [world](/domain/kernel/world.md) for what a world is made of,
+genesis-process for the conversation that produces one.
 
 # 1. Describe it in English first
 
@@ -47,7 +47,7 @@ board whose `PLANT_ID` disagrees with the world simply never gets read, and noth
 Only the blocks for capabilities the wiring will give it. Unsure which? Do step 4 and read the
 output.
 
-Two families, and they behave differently ([genesis-process](/domain/genesis-process.md)):
+Two families, and they behave differently (genesis-process):
 **operational** (`sensing:fastSleepS`, `sensing:slowSleepS`, `sensing:maxReadingAgeS`) follows the *kind* of
 world — a bench rig wants 10s, a garden wants 600s; **region want** (`sensing:aims`,
 `market:hasEndowment`, `water:maxValuePerL`) is the agent's own and derivable from nothing.
@@ -56,7 +56,7 @@ There is no band to author. Where a plant is parched and where it is soaked belo
 **plant**, as `ssn-system:hasOperatingRange` and `ssn-system:hasSurvivalRange` in `world.ttl`,
 and the agent's region is deduced from them — so the only region want number about moisture you are
 asked for is the *target*, and it must sit inside that region or the agent will not start. See
-[desire](/domain/desire.md).
+[desire](/domain/planning/desire.md).
 
 Register each in the catalog inside `world.ttl`:
 

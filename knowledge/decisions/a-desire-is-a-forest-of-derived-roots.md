@@ -19,7 +19,7 @@ timestamp: 2026-08-24T14:30:00Z
 ---
 
 > **THE NOUNS MOVED.** A *root desire* here is simply a **desire**: standing, underived, never
-> pursued. What grows below it are **wants**. [desire](/domain/desire.md) is the current
+> pursued. What grows below it are **wants**. [desire](/domain/planning/desire.md) is the current
 > statement; the forest and the argument for it are unchanged.
 
 # A desire is a forest of derived roots
@@ -53,7 +53,7 @@ already has it for the leaves.
 One reconciliation, so nobody reads a contradiction into the bundle.
 [a-store-is-a-modality](/decisions/a-store-is-a-modality.md) built the other channel: a world's
 TriG may carry an asserted desire block — "a world states a root desire" — and
-[world](/domain/world.md)'s market-roles seam is its intended customer. That is not the
+[world](/domain/kernel/world.md)'s market-roles seam is its intended customer. That is not the
 hand-declaration this record refuses. The guardrail in
 [a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md) was always
 *"deduced or ratified patterns, never privately authored goals"* — a ratified statement is the
@@ -96,7 +96,7 @@ labelled root reads as an explanation, each hop carrying its why.
 
 The world may say *this particular sensor we check more strictly*: an authored instance-level
 range statement overrides the type-level one for that leaf. The precedent is
-[model-and-unit](/domain/model-and-unit.md) — a unit inherits from its model unless it states
+model-and-unit — a unit inherits from its model unless it states
 its own — and the decomposition follows the same inheritance. Note what this changes: today the
 arithmetic is intersection, every range that applies, so a pot's own statement could narrow its
 species' and never depart from it. Under specificity, intersection survives across DISTINCT
@@ -173,7 +173,7 @@ that argument starts.
 
 - **The per-side split** the plan record demanded — *"splitting makes the violation name the
   side"* — landed before this record was written: the region derivation emits the side shapes and
-  [region](/domain/region.md) documents them. The forest does not re-ask for it; it gives the
+  [region](/domain/sensing/region.md) documents them. The forest does not re-ask for it; it gives the
   sides a parent.
 - **The epistemic want gets a principled seat.** *This property in range* decomposes into
   *known freshly* AND *value inside* — which is what `desire.state` (`unmeasured`, `stale`)
@@ -207,7 +207,7 @@ hangs off the node exactly as this paragraph provided for.)
   weight would have to come from a ratified source none exists for. The same seam
   [desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
   recorded per property, now visible one level up.
-- **A world-stated root deriving market roles** stays [world](/domain/world.md)'s seam — the
+- **A world-stated root deriving market roles** stays [world](/domain/kernel/world.md)'s seam — the
   asserted block is the mechanism, the derivation of `market:bidsIn` and `market:hosts` from a
   stated stewardship desire is the unbuilt half, and this record adds the place such a root
   would sit without building it.

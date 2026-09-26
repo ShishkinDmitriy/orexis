@@ -41,19 +41,19 @@ happened to be holding the trigger. The planner's rows already said *through whi
 # What is decided
 
 **An intention is the head of a plan, committed to.** `Deliberator.decide(desire)` returns the
-[plan](/domain/deliberator.md) itself — rows, not a means — and what the keeper writes is the
+[plan](/domain/belief/deliberator.md) itself — rows, not a means — and what the keeper writes is the
 first row whole: `progression:by` the means, `progression:through` the lever, `progression:pursues` the desire. Only the
 head, and that is not a shortcut: the plan is re-derived every pass because the world moves, so
 a committed tail would be a promise about a future nobody has seen. The tail is in the trace for
 a reader; the head is in the ledger for the agent.
 
-**Carrying it out is one process, [executor](/domain/executor.md), and it is the kernel's**:
+**Carrying it out is one process, [executor](/domain/execution/executor.md), and it is the kernel's**:
 plan, commit, take. `agent/execution.py` was the whole of it — `pursuit.py` in deliberation and `execution.py` in progression since #452, and every trigger goes through it —
 the keeper's tick for every want, a fresh reading for the actuator, a round knocking for the
 bidder, a presentation for the host. Nothing decides on the way: a trigger says *now*, the
 search says *what*, the ledger says *committed*, and the actor says *done*.
 
-**Every affordance is linked to the code that takes it, by a triple.** An [action](/domain/action.md)
+**Every affordance is linked to the code that takes it, by a triple.** An [action](/domain/kernel/action.md)
 states `orexis:takenBy` a capability, in the ontology of the package that ships the row —
 `ag:Observe orexis:takenBy sensing:SensingCapability`, `ag:Acquire orexis:takenBy market:Bidding`,
 `ag:Actuate orexis:takenBy actuation:Actuation`, `ag:Apply orexis:takenBy market:Hosting`. Execution
@@ -63,7 +63,7 @@ The kernel names no package, and which code takes a step is a fact a sovereign c
 where `planner._dose` still spells the two sizing families by hand, because sizing a bid and
 sizing a dose are different questions with different names. A package that ships a row and no
 `orexis:takenBy` has shipped an intention nothing can carry out, which
-`tests/test_execution.py` refuses. See [actor](/domain/actor.md).
+`tests/test_execution.py` refuses. See actor.
 
 **The bidder answers a round from what stands.** A standing `Acquire` is a commitment spanning
 rounds — that was always its documented meaning — so an offer arriving while one stands is
@@ -74,7 +74,7 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
 # What did not change, and why
 
 - **The search.** Not a line. The imaginarium, the effects, the scoring and the trace are as
-  [deliberation](/domain/deliberator.md) describes them. This record is about who carries an
+  [deliberation](/domain/belief/deliberator.md) describes them. This record is about who carries an
   answer out.
 - **"Look, then bid" is still two intentions, not one plan.** The freshness want and the region
   want are different desires; an unmet epistemic want answers first by sensing's `want_about` rule;
@@ -86,7 +86,7 @@ metrics tick) are one, and `submit` no longer holds an opinion about whether to 
   [strategic-supplier](/decisions/strategic-supplier.md) seam. (`ag:Offer` was adopted on
   deferral by hosting and carried no `orexis:takenBy` when this was written; since
   [a-round-is-a-fact-and-offering-is-an-action](/decisions/a-round-is-a-fact-and-offering-is-an-action.md)
-  it is an action serving a [call](/domain/call.md), and the seam is unchanged: plannable is
+  it is an action serving a [call](/domain/market/call.md), and the seam is unchanged: plannable is
   not wanted.)
 - **The patience, and who answers it.** `adopt` still absorbs a commitment that STANDS within
   patience, and that is the whole rule for a means whose commitment outlives the act — an

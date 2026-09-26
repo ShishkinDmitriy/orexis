@@ -96,7 +96,7 @@ belonging to one world, so its credential obviously belongs to that world. A boa
 be different: flashed once, the same physical thing whichever world is loaded, so one credential
 per device — and `world/sensing` was device-for-device identical to `world/society` precisely so
 one ESP32 works in either. (`society` has since been removed and `simulation` took its place in
-that pair; see [two-worlds-were-one](two-worlds-were-one.md).)
+that pair; see [two-worlds-were-one](/decisions/two-worlds-were-one.md).)
 
 That argument died with the shared broker. A board is flashed with one host and **one port**, and
 each world's broker now listens on its own — so a board already reaches exactly one world, and
@@ -138,7 +138,7 @@ decision is built on.
   broker on its own port, so two worlds naming one topic are two channels and cannot meet. The
   sentence this replaced — *two worlds meet wherever they name the same topic* — was true of a
   shared bus and is not true of separate ones. See
-  [two-worlds-were-one](two-worlds-were-one.md).
+  [two-worlds-were-one](/decisions/two-worlds-were-one.md).
 - **A missed grant is silent.** Mosquitto accepts a SUBSCRIBE it will not honour and simply never
   delivers, so an under-derived ACL looks like an agent that has gone quiet rather than an error.
   Hence the test, rather than trust — and hence `orexis-mqtt` reloading the broker itself rather

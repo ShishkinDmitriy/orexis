@@ -6,7 +6,7 @@ status: accepted
 timestamp: 2026-08-03T12:00:00Z
 ---
 
-> **Current statement: [package](/domain/package.md).** This record is how the model got
+> **Current statement: [package](/domain/kernel/package.md).** This record is how the model got
 > there and why; the domain concept is what it is now. Four records amend each other on
 > this subject, so read the concept first unless you want the argument.
 
@@ -90,7 +90,7 @@ codebase — not in the seeder, not in the validator, not in the runtime, not in
 capability is a directory*, and `capabilities/market/` already provided two — bidding and hosting —
 when it was written. A directory is how a package is FOUND and how one is DELETED; what isolates a
 capability is `PROVIDES` and its term. See
-[a-package-owns-its-namespace](a-package-owns-its-namespace.md), which corrected the rule and folded
+[a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md), which corrected the rule and folded
 a third capability into that same package to show the seam holds without it.
 
 **Adding a capability is adding a directory.** No registry line, no term constant, no belief

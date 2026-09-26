@@ -1024,7 +1024,7 @@ change. Both files report the version they ran against and assert nothing about 
 `infra/compose.yaml`, rebuild, and re-run `pytest infra -q -n0`.
 
 **Onboarding is the phase between a ratified world and a running society** — see
-[onboarding](knowledge/domain/onboarding.md). Its generators all read the world as an agent boots
+[onboarding](knowledge/domain/onboarding/onboarding.md). Its generators all read the world as an agent boots
 it and grant exactly what its wiring implies, so adding an agent and re-running `orexis-onboard`
 is the whole of deploying one. They stay separately callable because rotating one service's
 credentials should not touch the other's.

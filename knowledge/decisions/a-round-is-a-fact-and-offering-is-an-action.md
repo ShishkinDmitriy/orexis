@@ -29,7 +29,7 @@ actor answers "not now", and the intention stands until an offer arrives. It is 
 whose precondition is known to be incomplete.
 
 **Convening has one trigger.** A round opens when a participant announces `LOW` — the demand
-shock — and [market](/domain/market.md) names three more (supply, budget, belief) as designed
+shock — and [market](/domain/market/market.md) names three more (supply, budget, belief) as designed
 and unbuilt. [the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md)
 records the ceiling that follows: half a lot can be wanted by agents none of whom can convene,
 and *the host has no region want in when to open*. `ag:Offer` is a means with no action — no
@@ -106,7 +106,7 @@ second fix proposes as the cheap guard.
 by the demand shock: a participant's `LOW` is the fact that makes a round owed, as a claim is the
 fact that makes a dose owed — a want someone else sourced, in
 [an-obligation-is-a-desire-someone-else-sourced](/decisions/an-obligation-is-a-desire-someone-else-sourced.md)'s
-sense. The implementing change named it: a [call](/domain/call.md).
+sense. The implementing change named it: a [call](/domain/market/call.md).
 The other three shocks are three more sources of the same want, each a later change. Whether a
 host would *rather* sell — costs, a reserve, a season — remains
 [strategic-supplier](/decisions/strategic-supplier.md)'s seam, untouched: this makes Offer
@@ -146,7 +146,7 @@ Three changes, each a PR, in this order because each is the next one's premise:
 
 1. the round as a belief, both sides, with `market:Round` and its four properties (#357);
 2. Acquiring's availability walks it, and the bidder executes from the offer (#358);
-3. Offering as an action, the LOW-sourced want — a [call](/domain/call.md) — and the deferral
+3. Offering as an action, the LOW-sourced want — a [call](/domain/market/call.md) — and the deferral
    dissolved (#359). #340 stays open, for the reason above.
 
 # Seams left open

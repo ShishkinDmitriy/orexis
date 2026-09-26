@@ -30,13 +30,13 @@ direction. One declaration read twice, by two pieces of arithmetic that had alre
 disagreed once (the false-UNMET incident the effect page records), and a kernel figure,
 `orexis:metFraction`, saying how much of the actor's delta counted.
 
-Now a [step](/domain/step.md) carries what its world predicted — `progression:predicts`, the same
+Now a [step](/domain/execution/step.md) carries what its world predicted — `progression:predicts`, the same
 canonical facts the plan's signature is made of — and the keeper generates the answering shape
 from that when the step is taken. A predicted READING is put to the package that declared the
 observation keyed (sensing, through `orexis:answer`), which answers with an observation later
 than the baseline within the tolerance of the predicted value; a PLAIN fact is the kernel's,
 present for an addition and gone for a retraction, one query under a shape. The actor passes
-its [tolerance](/domain/tolerance.md) and nothing else. Hanoi's seven moves and the courier's
+its tolerance and nothing else. Hanoi's seven moves and the courier's
 eight drives are held to the world by the same path as a dose, with no actor at all.
 
 # What was refused
@@ -64,7 +64,7 @@ eight drives are held to the world by the same path as a dose, with no actor at 
 - **The review rule over residuals** — settled, 2026-09-03: the keeper writes what a step
   predicted and what the world showed beside the verdict, review publishes them as
   `review:Residual`, and the market's and actuation's `review.rq` re-pick the conversion on a
-  lean and the tolerance on a scatter. See [review](/domain/review.md).
+  lean and the tolerance on a scatter. See review.
 - **A fact the search labelled by content** (a blank node's) cannot be stated as a triple and
   is passed over with a warning; the market's claim nodes are the case to watch.
 - **Booleans and string literals** in a plain fact are told from IRIs by their shape, not by

@@ -30,7 +30,7 @@ What the search plans on is a template, not a number. For facts that was always 
 the courier plan over facts and their plans are already templates. For numbers it is not: the
 dosing rule predicts one value, the search sizes one dose, the met test compares one number to
 the region, and the actor's tolerance is applied once, at verification, as a band around the
-point. Under this record a number in a possible world is an [interval](/domain/interval.md).
+point. Under this record a number in a possible world is an interval.
 
 The example, with the simulation world's own figures — two litres per fraction of moisture, a
 pot drying 0.12 a day, the last reading 0.23 six hours ago, a learned tolerance of ten percent,

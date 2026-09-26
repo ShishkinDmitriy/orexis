@@ -38,9 +38,9 @@ because its name is right.
 |---|---|---|
 | — | `Desires` | a repository, named for its content |
 | — | `Intentions` | a repository, named for its content |
-| [belief-base](/domain/belief-base.md) | `Beliefs` | a modality that FORWARDS the whole store surface — 122 calls pass through it |
-| [menu](/domain/menu.md) | *none, and none is owed* | typed `Repository` here and on its own page, and it is a MODALITY — `Actions` and `Affordances` are the collections inside it (#686) |
-| [imaginarium](/domain/imaginarium.md) | `Imaginarium` | a repository of worlds, named for a mood |
+| [belief-base](/domain/belief/belief-base.md) | `Beliefs` | a modality that FORWARDS the whole store surface — 122 calls pass through it |
+| menu | *none, and none is owed* | typed `Repository` here and on its own page, and it is a MODALITY — `Actions` and `Affordances` are the collections inside it (#686) |
+| [imaginarium](/domain/planning/imaginarium.md) | `Imaginarium` | a repository of worlds, named for a mood |
 
 Two repositories exist. Everywhere else, domain code holds the store and writes SPARQL against
 it: **136 direct calls to `.query`, `.update` and `.quads` on a belief base or a desires store,

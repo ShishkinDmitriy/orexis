@@ -16,8 +16,8 @@ timestamp: 2026-08-26T22:00:00Z
 # The two proposals
 
 **Weak: publishing is a goal, not a primitive.** Right, and worth building. The apparatus
-already exists here and comes free — an [action](/domain/action.md) with a precondition and an
-effect, an [intention](/domain/intention.md) that stands until the world answers, a window
+already exists here and comes free — an [action](/domain/kernel/action.md) with a precondition and an
+effect, an [intention](/domain/execution/intention.md) that stands until the world answers, a window
 (`progression:notAfter`) that is already what every hand-kept timer says, and a compensation the actor
 declares. The prize is the last one: *delivery failed* stops being an exception and becomes a
 fact the search can weigh. If a plant cannot get its bid to the venue, that is not a socket
@@ -86,8 +86,8 @@ that cannot tell a lost bid from a losing one.
 
 1. The outbox (#396, landed) — **and not as a new action**. What it was wanted FOR is one
    guarantee — a message the agent may stop meaning is never handed to a queue — and the act
-   that carries the message already had every part of it: an [intention](/domain/intention.md) that stands, a
-   window, and an [actor](/domain/actor.md) whose False means *not now*. So `orexis:send` answers
+   that carries the message already had every part of it: an [intention](/domain/execution/intention.md) that stands, a
+   window, and an actor whose False means *not now*. So `orexis:send` answers
    whether the message LEFT, a message that states when it stops mattering is refused rather
    than queued while the link is down, and the Acquire stands until the round's close drops it.
    A `Delivering` action node buys nothing over that and would put a second machinery under the

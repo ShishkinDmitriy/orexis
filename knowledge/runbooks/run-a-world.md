@@ -140,7 +140,7 @@ The file is **generated, never hand-edited**. Adding an agent is adding it to `w
 regenerating; a hand-edit is a second roster waiting to drift from the model. Only the agent
 that derived `actuation:Actuation` is given signing keys, and each container mounts exactly one store
 credential — its own. That is the boundary, not packaging taste
-([world](/domain/world.md) §Deployment).
+([world](/domain/kernel/world.md) §Deployment).
 
 # Up, down, and watch
 
@@ -160,7 +160,7 @@ runs it are one directory. There is no separate deploy tree to keep in step.
 beliefs once, and logs `born`. Every start after that refreshes the public world from the files
 and leaves beliefs alone, so a restart cannot reset who an agent became. Beliefs live in a
 named volume per agent and survive `up`, `down` and `restart` alike — see
-[agent](/domain/agent.md) §Lifecycle.
+[agent](/domain/kernel/agent.md) §Lifecycle.
 
 `down` removes only what *this* file declares. It is not a way to stop everything; for that see
 [tear-down](/runbooks/tear-down.md).
@@ -276,7 +276,7 @@ cannot disagree with how it is actually running.
 **That world is `simulation`, and it is now the one to reach for.** Every device in it is stood
 in for by a container that reads its own model out of the world, so `podman compose up` in it
 needs no hardware at all. `sensing` and `terrace` are the worlds with a real board. See
-[world](/domain/world.md) §Simulation and
+[world](/domain/kernel/world.md) §Simulation and
 [two-worlds-were-one](/decisions/two-worlds-were-one.md).
 
 # It went wrong

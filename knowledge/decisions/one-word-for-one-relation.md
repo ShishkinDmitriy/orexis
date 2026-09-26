@@ -13,7 +13,7 @@ it says the narrower term means something the wider one does not. Where that is 
 earns its keep. Where it is not, we are paying for a specialisation nobody collects on — two
 words for one relation, and every reader having to learn which of them a query wants.
 
-[every-term-in-its-own-house](every-term-in-its-own-house.md) audited this once and asked *is it
+[every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) audited this once and asked *is it
 ours at all*. It answered by kind — intersection, narrowing, genuinely ours — and stopped there.
 This pass asks the harder question: **is the distinction checked?**
 
@@ -40,7 +40,7 @@ hangs off the role instead, which is
 
 # What went
 
-**`mc:carries` → `sosa:hosts`.** [#79](a-board-is-a-platform.md) declared it a subproperty, which
+**`mc:carries` → `sosa:hosts`.** [#79](/decisions/a-board-is-a-platform.md) declared it a subproperty, which
 was honest at the time. Its `rdfs:domain mc:Microcontroller` and `rdfs:range mc:Peripheral` were
 never enforced — neither is in `agent_old/inference.py`'s closure and no shape read them — so
 board-to-part was a comment. **The narrowing survives as `orexis:ABoardCarriesPartsShape` and is
@@ -131,11 +131,11 @@ agent's dealings with them.** Of 27 terms across `sensing` and `actuation`, thre
 - **Instances assert what they used to entail.** `a sensing:Sensor` entailed both halves; a
   sensor now states both. Two tests were about that entailment and had to find another —
   `test_provenance`'s spanning pattern is `ssn:System`, which is entailed through the axiom
-  [#94](a-board-says-what-it-can-honour.md) restated, so it now exercises the borrowed-axiom
+  [#94](/decisions/a-board-says-what-it-can-honour.md) restated, so it now exercises the borrowed-axiom
   bridge rather than one of our own subclass edges.
 - **A term is still named in ways a sweep cannot see.** A full IRI inside a `sh:sparql` string
   survived every prefix-aware pass — the first time
-  [every-term-in-its-own-house](every-term-in-its-own-house.md)'s *seven ways* finding has been
+  [every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md)'s *seven ways* finding has been
   met since it was written down. And `onboarding/firmware.py` held three call sites nobody had
   listed, because every generator that walks a board starts from the hosting relation.
 

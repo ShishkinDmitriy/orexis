@@ -86,7 +86,7 @@ outlived its word would be the same drift in telemetry.
 # Seams left open
 
 - **`menu` still names three things**: the modality, the templates written into it and the steps
-  derived out. [menu](/domain/menu.md) exists to disentangle them, which is a page doing a word's
+  derived out. menu exists to disentangle them, which is a page doing a word's
   job.
 - **`Steps.find_all` takes four criteria and a keyword.** It reads long at the three sites that
   spell them. Whether the container should hand them as one thing is open; handing the agent
@@ -99,6 +99,6 @@ outlived its word would be the same drift in telemetry.
 
 - [an-action-takes-parameters](/decisions/an-action-takes-parameters.md) — the change before
   this, which made the binding the row's identity and so made the two shapes identical.
-- [step](/domain/step.md) — the one page now.
+- [step](/domain/execution/step.md) — the one page now.
 - [an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan](/decisions/an-act-is-a-filled-action-and-a-step-is-its-place-in-a-plan.md)
   — why a step is not an act, which is untouched.

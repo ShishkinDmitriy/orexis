@@ -22,7 +22,7 @@ the reserve and release quantity.
 
 A seller that also *judges its own auction* will rig it. The resolution is not to stop the
 supplier running the auction, but to stop it *cheating*: it may run the auction and propose
-the match, but [clearing](/domain/clearing.md) **validates** that trade (conservation,
+the match, but clearing **validates** that trade (conservation,
 solvency, identity, constitution, order-consistency) and co-signs it before settlement.
 Greedy terms are fine; a trade that breaks an invariant is rejected. Seller runs the
 auction; neutral clearing checks nobody cheated. See

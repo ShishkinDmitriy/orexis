@@ -29,7 +29,7 @@ What was left behind is the name. The **only** constraint under it was unrelated
 So a warning about a blind region arrived under a heading about dying. It is live: it accounts for
 every warning line `orexis-validate loner` prints.
 
-**The tell was in the bundle.** `domain/desire.md` cited this constraint as
+**The tell was in the bundle.** `domain/planning/desire.md` cited this constraint as
 `desire:UnwatchedDesireShape` — a term that exists nowhere in the repo. Whoever wrote the page
 reached for the name the constraint deserves and did not check that the code had it, which is the
 clearest evidence available that the name described nothing the shape does. (The term guard added
@@ -38,7 +38,7 @@ for [#275](https://github.com/ShishkinDmitriy/orexis/issues/275) is what surface
 # What is decided
 
 **`sensing:UnwatchedRegionShape`**, with a comment describing the constraint that is actually
-there. It uses [region](/domain/region.md)'s word rather than *desire*, because a region is what
+there. It uses [region](/domain/sensing/region.md)'s word rather than *desire*, because a region is what
 the agent holds and what goes unwatched.
 
 **And the sweep the issue asked for was done** — every named shape in the repo, its name and

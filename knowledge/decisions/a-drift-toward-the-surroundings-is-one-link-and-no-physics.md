@@ -33,7 +33,7 @@ constant, no gap arithmetic, no curve: a heater in another room stops mattering 
 points there, which is a triple rather than a simulation.
 
 **Two forms, because a reading is known two ways** — the water package's pattern
-([effect](/domain/effect.md)). A reading the agent observed carries a value and moves by the
+([effect](/domain/planning/effect.md)). A reading the agent observed carries a value and moves by the
 rate; one an effect predicted carries a band and no value, and crosses to the band on the
 surroundings' side after the region's own width over the rate, optimistic in the direction the
 world corrects, and only from inside the region, since the bands beyond it have no width to

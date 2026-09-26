@@ -88,7 +88,7 @@ out. What this record argued survives unchanged: met-or-not IS the pattern-want'
 and the judging is one select. What it did not foresee is that the pattern could be derived
 rather than authored, and that for a want whose content is positive it should be. An authored
 `unmetWhen` remains the honest form for an aversion, whose content is the avoided state itself.
-See [desire](/domain/desire.md).
+See [desire](/domain/planning/desire.md).
 
 # Seams left open
 

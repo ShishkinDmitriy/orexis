@@ -18,8 +18,8 @@ beneath a step is found by **goal regression** through **derived predicates** (P
 here SHACL rules), the rules themselves are **bridge rules** in the multi-context systems'
 sense, and planning the upper level whole and refining each step only when it comes up is
 **Hierarchical Planning in the Now** (Kaelbling and Lozano-Pérez, 2011), with the BDI
-intention stack as the execution side. The mechanism is [refinement](/domain/refinement.md);
-the rule it runs backwards is a [bridge](/domain/bridge.md).
+intention stack as the execution side. The mechanism is [refinement](/domain/planning/refinement.md);
+the rule it runs backwards is a [bridge](/domain/planning/bridge.md).
 
 **The core decides, in one order, when it takes a step**: a step whose action has an
 implementation that reaches the world — a command, a saying — is taken; one whose predicted
@@ -40,7 +40,7 @@ states a rule concluding `hanoi:on` and hanoi's world does not.
 - **The rules run inside the search.** Every fork would then conclude `hanoi:on` from the
   van's moves, and one search over Moves and drives together is seven Moves as thirty-odd
   drives in one budget. The search runs no rules, the bridge couples no actions, and the two
-  vocabularies are two [scopes](/domain/scope.md), planned apart.
+  vocabularies are two [scopes](/domain/planning/scope.md), planned apart.
 - **The step's diff as the goal below.** Measured before it was refused: the lower search met
   `disk_1 on disk_2` by moving disk_2, and the upper plan walked on over a world it had not
   predicted. The goal is the landing world's concluded facts — the frame, in the upper level's

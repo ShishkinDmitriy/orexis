@@ -25,7 +25,7 @@ courier-and-hanoi world — planning inside another — is an instance rather th
 **There is one search and one keeper.** A level is a vocabulary that some actions write
 their effects in: hanoi's, where a disk is on a peg; the courier's, where a van and a parcel
 are at cells; a motor domain's, where a heading and a speed are numbers. A search runs inside
-one vocabulary and never leaves it, because [relevance](/domain/relevance.md) keeps the
+one vocabulary and never leaves it, because relevance keeps the
 actions whose effects write what the want reads, and a want is written in one vocabulary.
 That is the whole of "abstraction": Move's effect asserts the disk arrives and says nothing
 about how, the way a coarse operator always does, so the outer search plans seven Moves and
@@ -37,12 +37,12 @@ pick and drop are taken. When the keeper reaches a step of a taker-less action i
 it to anyone, so it translates the step's promised fact — the one triple its
 `progression:predicts` carries — through the bridge into the lower vocabulary, and puts that to
 deliberation as a want, from the world as it then is. The plan that comes back is spliced
-in under the step, its steps [`progression:partOf`](/domain/step.md) the abstract step's filling,
+in under the step, its steps [`progression:partOf`](/domain/execution/step.md) the abstract step's filling,
 and walked as any plan is. When the last of them is answered the abstract step's own verdict
 is judged through the same bridge, and the next abstract step becomes current and is planned
 in turn, from wherever the van now stands. The parts of the desire appear one level down as
 the steps' predictions, one fact each, and the tree of facts ends where the world confirms
-a leaf. A declared [method](/domain/method.md) is the same splice with the search skipped, for
+a leaf. A declared method is the same splice with the search skipped, for
 a protocol that has no choice in it.
 
 **A domain defines its level by three things, and none of them is a number.** The facts its

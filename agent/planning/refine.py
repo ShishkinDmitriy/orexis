@@ -13,7 +13,7 @@ concludes the step's fact from the present and the executor answers the step fro
 
 This is goal regression through derived predicates, and the whole is Hierarchical Planning in
 the Now's shape (Kaelbling and Lozano-Pérez, 2011), with the hierarchy found in the rules a
-world combines rather than written into the actions (knowledge/domain/refinement.md).
+world combines rather than written into the actions (knowledge/domain/planning/refinement.md).
 
 **A RULE THAT CANNOT RUN BACKWARDS IS NOT A BRIDGE.** Its head must be one triple whose subject
 and object are constants or variables its WHERE binds plainly; anything else — a head of two

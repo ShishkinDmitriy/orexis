@@ -156,7 +156,7 @@ A temperature for an hour is a third thing again, being an average over it.
   forecast of demand made at noon may be worth believing for an hour and be about five minutes
   of it.
 
-**And the third case is why [bands](/domain/band.md) carry the weather honestly.** A number over
+**And the third case is why bands carry the weather honestly.** A number over
 an interval is an average, which is not true at any particular instant and therefore not a
 fluent; the BAND is. *Two degrees at three in the morning* is a summary; *below the bed's
 region, all night* holds at every instant inside. Stating the forecast as the band makes the

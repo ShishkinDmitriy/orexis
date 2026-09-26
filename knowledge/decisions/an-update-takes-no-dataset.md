@@ -34,7 +34,7 @@ update. That is a few milliseconds and a few dozen lines, and nothing here defen
 Python that matters does not copy, it CHOOSES: which graphs are the world at the
 instant a witness is read (the door,
 [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md)),
-which witnesses one action could move together (the [scope](/domain/scope.md) partition,
+which witnesses one action could move together (the [scope](/domain/planning/scope.md) partition,
 a union-find in `relevance.scopes` memoised on the agent), what the choir answers for
 `orexis:foresight` — a question since deleted — and what time it is. A repository is not what the question is about; a
 repository is a NAME for a collection
@@ -86,7 +86,7 @@ as well be a belief the update reads.
 
 A fork is copy-graph-and-apply-diff in the store already, and the effect is a rule
 ([planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md)).
-What is Python in the [imaginarium](/domain/imaginarium.md)'s pass is not the fork, it is the
+What is Python in the [imaginarium](/domain/planning/imaginarium.md)'s pass is not the fork, it is the
 CHOICE around it: which node to expand next, when the budget is spent, which worlds have been
 seen by signature, which levers the closure keeps. An update is one fixpoint step — every row
 at once, no order among them, no budget, no stop. Breadth-first would fit that shape, one update

@@ -34,7 +34,7 @@ built; fan-in is missing.**
 
 # What is decided
 
-**A [service](/domain/service.md) is offered by term and resolved lazily.** A package's manifest
+**A service is offered by term and resolved lazily.** A package's manifest
 declares one; the agent hands it back on request; nothing imports the provider to find out it
 exists.
 

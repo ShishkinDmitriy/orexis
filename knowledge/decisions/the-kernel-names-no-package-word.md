@@ -39,7 +39,7 @@ the file's contents disagreed, and #337 asked which of them was wrong.
 
 **The kernel names no package's word.** Not in Python, where `lint-imports` has held it since the
 mind came home, and not in RDF, where nothing has held it at all. A package is optional and the
-core depends on none of them — that is [package](/domain/package.md)'s claim, and it does not
+core depends on none of them — that is [package](/domain/kernel/package.md)'s claim, and it does not
 survive being true of imports and negotiable for vocabulary.
 
 There is no exception clause, and its absence is the point rather than an oversight. The exception
@@ -76,7 +76,7 @@ A smaller reason, which also holds: **the permitted set was not stable.** An `OP
 edit away from a bare pattern, and a widener that becomes a judge changes category without changing
 a word of the argument around it. The exception would have needed a reviewer to re-derive the whole
 taxonomy at every touch — a maintenance burden shaped exactly like the registry
-[capability-packages](capability-packages.md) exists to refuse.
+[capability-packages](/decisions/capability-packages.md) exists to refuse.
 
 # The loudness analysis survives as triage
 
@@ -98,7 +98,7 @@ The distinction #337 floats — *a dangling RDF reference merely matches nothing
 import crashes* — is rejected in both readings. As a permission it is what the sovereign overruled.
 As a **reassurance** it was never true: matching nothing is the failure this repo has been bitten by
 four separate times, catalogued as six of the seven naming forms in
-[every-term-in-its-own-house](every-term-in-its-own-house.md) and as a trap in AGENTS.md. "It
+[every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) and as a trap in AGENTS.md. "It
 degrades gracefully" and "it degrades silently" are the same sentence about different things.
 
 # What was measured
@@ -168,7 +168,7 @@ are different objects, which is one reason the count alone could never have orde
 | 3 | `ontology.ttl` `sensing#` ×1 — the `@prefix`; `sensing:` appears only in a `#` comment and inside an `rdfs:comment` string | spelling | the same, and the same issue |
 | 4 | `shapes.ttl` `sensing#monitors` ×1 (l.108) — the `OPTIONAL` reaching the monitored subject's max | widener | wants a kernel-owned way to say "the range this thing is measured against"; loud meanwhile |
 | 5 | `shapes.ttl` `sensing#monitors` ×1 (l.376) and `sensing#polls` ×1 (l.375) — the `FILTER NOT EXISTS` behind the no-sensor warning | excuse | the warning is arguably sensing's to raise rather than the kernel's; loud meanwhile |
-| 6 | `shapes.ttl` `actuation#` ×1 — the prefix, serving `sh:targetSubjectsOf actuation:actuates` | selector | wants the simulation package [every-term-in-its-own-house](every-term-in-its-own-house.md) says does not exist yet; loud meanwhile |
+| 6 | `shapes.ttl` `actuation#` ×1 — the prefix, serving `sh:targetSubjectsOf actuation:actuates` | selector | wants the simulation package [every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md) says does not exist yet; loud meanwhile |
 
 Two of the six rows are cheap deletions, one is a real bug, and the last three are each waiting on
 somewhere for the knowledge to live — which is the honest reason they are last, rather than a claim
@@ -188,7 +188,7 @@ it forbids the lever half **even for someone who rejected the rule entirely**. T
 predicates would enumerate an **open set**. Every package that grants a lever would have to be
 added to a kernel shape by hand, and one added without that edit would silently take its agents
 *out* of the patience requirement — an obligation removed rather than a population, with no engine
-anywhere to say so. It is the registry smell [capability-packages](capability-packages.md)
+anywhere to say so. It is the registry smell [capability-packages](/decisions/capability-packages.md)
 refuses, wearing a shape.
 
 So the accepted cost stands: an agent with a region want and no lever states a patience it never spends.
@@ -209,7 +209,7 @@ be tried. `ag:SimulatedActuatorShape` could target `sosa:Actuator` instead of su
 `actuation:actuates`, spelling the dependency in a standardised namespace. But a world types its
 valve as `actuation:Valve`, and `sosa:Actuator` reaches it only through the `rdfs:subClassOf` that
 the actuation package's own ontology declares and
-[one-graph-both-engines-read](one-graph-both-engines-read.md) materialises. The dependency is
+[one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) materialises. The dependency is
 identical and the spelling hides it. **This is the trap for whoever pays row 6 down**: moving to a
 standard namespace turns the ratchet green while changing nothing, and the honest fix is for the
 knowledge to move rather than the spelling.
@@ -237,17 +237,17 @@ written to support.
 - The ratchet's `UNCLASSIFIED` block is reclassified in place: nine occurrences, all debt, in the
   order above, each saying what removes it. What the test *enforces* is untouched, and **#334's
   endgame is restored** — the list empties and the ratchet flips to a prohibition.
-- [package](/domain/package.md)'s count was three keys stale — twenty-one when the ratchet landed,
+- [package](/domain/kernel/package.md)'s count was three keys stale — twenty-one when the ratchet landed,
   eighteen since #339 retired the reflex. Corrected, and the ratchet named as the count of record
   so the number is not restated in two places again.
-- [the-mind-is-not-a-package](the-mind-is-not-a-package.md) says the same thing about the lever
+- [the-mind-is-not-a-package](/decisions/the-mind-is-not-a-package.md) says the same thing about the lever
   half that `orexis:KeeperShape` does, and under this rule it needed no amendment. It briefly carried
   one, from this record's first ruling; it was reverted.
 
 # Seams left open
 
 - ~~**Nothing enforces the rule beyond the count.**~~ Closed with
-  [the-region-want-is-sensings-want](the-region-want-is-sensings-want.md)'s third step. The ratchet reads the
+  [the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)'s third step. The ratchet reads the
   prefixed form where it means something — a query string, a rule or a shape with its prose
   stripped — scans for every namespace the loader reports rather than five families by hand, and
   resolves every term it finds against what the ontologies declare (#344). `agent_old/world.py`'s

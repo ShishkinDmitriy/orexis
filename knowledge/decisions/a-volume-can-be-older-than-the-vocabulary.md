@@ -13,14 +13,14 @@ timestamp: 2026-08-11T00:00:00Z
 
 # Context
 
-[a-package-owns-its-namespace](a-package-owns-its-namespace.md) and the sweep that followed it
+[a-package-owns-its-namespace](/decisions/a-package-owns-its-namespace.md) and the sweep that followed it
 moved 102 terms out of `orexis:` into their packages' namespaces. Every gate was green: 764 tests,
 three worlds conforming, grants byte-identical, compose and firmware unchanged.
 
 **It would have silenced every deployed agent on its next restart.**
 
 `agent_old/genesis.py` writes an agent's beliefs once and never again, and
-[where-the-belief-base-lives](where-the-belief-base-lives.md) made that deliberate — *"write an
+[where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) made that deliberate — *"write an
 agent's beliefs only if it has none, and require an explicit act to reset an agent that already
 exists."* That is what makes a belief the agent's rather than the sovereign's. It also means a
 volume can be **older than the vocabulary**: one written before the sweep holds `ag:hasTarget`
@@ -57,7 +57,7 @@ this does, for two reasons.
 **A version is a fact somebody must remember to bump**, and everywhere else this project derives
 rather than declares. One that goes un-bumped is worse than none, because it asserts an agreement
 nothing ever checked — the same objection
-[self-review-is-a-capability](self-review-is-a-capability.md) raised against an optional interval
+[self-review-is-a-capability](/decisions/self-review-is-a-capability.md) raised against an optional interval
 that meant *never review*: a side channel dressed as a decision.
 
 **And it answers the wrong question.** A version says the vocabulary moved. It cannot say whether

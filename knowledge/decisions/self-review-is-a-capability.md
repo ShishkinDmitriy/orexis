@@ -8,7 +8,7 @@ timestamp: 2026-08-10T00:00:00Z
 
 # Context
 
-[a-belief-is-a-pick-within-a-range](a-belief-is-a-pick-within-a-range.md) gave an agent the right
+[a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md) gave an agent the right
 to re-pick its own settings inside stated bounds, and built the machinery for it: summaries,
 evidence, ranges, revisions, a review rule per term, and `validate_agent` as the test of whether a
 revision is legitimate. All of it went in the kernel, because at the time there was one way to do
@@ -66,7 +66,7 @@ there is only one fact.
 This follows the shape sensing already had — a capability that is a strict function of
 something already stated, so it is `derived` and not `deduced`, and it lands in
 `graph/world/derived` like every other conclusion. See
-[who-put-the-fact-there](who-put-the-fact-there.md).
+[who-put-the-fact-there](/decisions/who-put-the-fact-there.md).
 
 ## Which meant the mandate had to become public
 
@@ -84,7 +84,7 @@ private.** `review:commits` moved to `world.ttl`; `ag:sleepS` and the rest staye
 | source | what it is |
 |---|---|
 | constitution | what the society allows any agent — figures on the capability family |
-| hardware | what the equipment can do — an `ssn-system:Frequency` a device states, carried to the agent that polls it as `review:limitedTo`; see [a-board-says-what-it-can-honour](a-board-says-what-it-can-honour.md), which is where this row stopped being aspiration |
+| hardware | what the equipment can do — an `ssn-system:Frequency` a device states, carried to the agent that polls it as `review:limitedTo`; see [a-board-says-what-it-can-honour](/decisions/a-board-says-what-it-can-honour.md), which is where this row stopped being aspiration |
 | mandate | what *this* agent's world allows it — `review:commits` |
 
 Two things fell out of that which were not available before:

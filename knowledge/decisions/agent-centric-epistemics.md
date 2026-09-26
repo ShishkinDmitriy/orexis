@@ -19,12 +19,12 @@ succulent shrugs, a fern is parched. So the band is **desire-relative interpreta
 ground truth**, and belongs to the agent, from the attested measurement + its charter
 target. Attesting `hasCurrentMoisture :LOW` into a shared graph was asserting a *judgment as
 testimony* — it broke "no shared knowledge, only testimony + private belief." The
-[gateway](/domain/gateway.md) attests the measurement; each [agent](/domain/agent.md)
+gateway attests the measurement; each [agent](/domain/kernel/agent.md)
 computes its own band. (The old "threshold is the gateway's one authority" reasoning in
 [two-store-beliefs](/decisions/two-store-beliefs.md) conflated measurement with judgment.)
 
 Keep separate: the **comfort band** (desire-relative → the agent's) vs the **rot limit**
-(objective physical harm → the [constitution](/domain/constitution.md)'s). Agents own what
+(objective physical harm → the constitution's). Agents own what
 they *want*; the constitution owns what's *physically forbidden*.
 
 # 2. Minimal disclosure — the measurement is private-but-attested
@@ -33,7 +33,7 @@ Nobody needs fern's moisture; the market needs fern's **bid**. A market *aggrega
 information into a price without exposing it* — so moisture and value curve stay private.
 Private ≠ unattested: the gateway still signs the reading (honest), it is just **scoped
 private and disclosed need-to-know** (like a tax return — not published, but the auditor can
-demand it). The [constitution](/domain/constitution.md)'s rot check gets a plant's
+demand it). The constitution's rot check gets a plant's
 measurement on need-to-know; peers never do.
 
 - **Shared** = market moves (bids), trades, and the rules (structure, ontology, constitution).
@@ -74,7 +74,7 @@ The agent authors only what it cannot gain by faking. Its self-metrics are welco
 **untrusted** — solvency is checked against the mint's own record, never against a self-report.
 Provenance and write-scope distinguish them. (This said *like `:claims`*, naming a graph for
 untrusted peer assertions that was never built and never needed: a bid is a message on the bus,
-weighed and discarded — see [belief-base](/domain/belief-base.md).)
+weighed and discarded — see [belief-base](/domain/belief/belief-base.md).)
 
 # The economy is a clearing-authored time series
 
@@ -120,7 +120,7 @@ Recorded ahead of the code; the code has since caught up in part.
 firmware is a `sense`/`sleep` service, and the *agent* now drives it — it sets the cadence
 from its own urgency and nudges for a reading before it bids. The guard that pull requires
 came with it: a bid must cite a **fresh-enough** reading or the agent sits the round out, and
-the cadence floor is clamped on both sides of the wire. See [sensing](/domain/sensing.md).
+the cadence floor is clamped on both sides of the wire. See [sensing](/domain/sensing/sensing.md).
 
 **Not yet.** Sensing is *initiated* by the agent but not **priced** — no wallet debit per
 `sense`, so "how much to observe" is not yet the economic decision §3 promises; that waits on

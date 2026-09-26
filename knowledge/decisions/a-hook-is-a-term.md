@@ -29,7 +29,7 @@ The choir grew hook by hook, each a method name on `Module` or, since
 `Agent.ask` and resolved with `getattr`. It worked, and it had the failure every string
 registry has: `ask("anotate", …)` returns an empty list, a module that spelled its method
 `on_reading_recorded` where the asker said `reading_recorded` is never told, and nothing in
-the T-Box says what questions exist — the [choir](/domain/choir.md) page had to keep a roster
+the T-Box says what questions exist — the choir page had to keep a roster
 by hand.
 
 # What is decided

@@ -20,7 +20,7 @@ walked every sensor and reported the pairs it had never read or had let go cold.
 
 Its consumer was the deliberator. It stopped asking when freshness became a **want** — a
 `sensing:Freshness` desire derived per instrument, `orexis:violationIs orexis:Stale`, which the
-[deliberator](/domain/deliberator.md)'s tick hands to the [executor](/domain/executor.md) like anything
+[deliberator](/domain/belief/deliberator.md)'s tick hands to the [executor](/domain/execution/executor.md) like anything
 else the agent pursues. The hook was left computing the same judgment, one layer earlier,
 answerable to nothing.
 
@@ -31,7 +31,7 @@ was a report, and a want is pursued — planned over, committed to, and resolved
 ways to say the same thing where one of them cannot act on it is not a choice worth keeping.
 
 Gone together: the term, the constant, the base method, sensing's override, the test, and the
-paragraph in [gap](/domain/gap.md) that was built on it. That page now answers *who notices a
+paragraph in gap that was built on it. That page now answers *who notices a
 gap* with **nobody** — being unmet is a fact about the world rather than an opinion a module
 holds.
 

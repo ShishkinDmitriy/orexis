@@ -145,7 +145,7 @@ planning:ScopeGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:lab
     orexis:arrivedBy orexis:Derived .
 
 planning:Scope a owl:Class ; rdfs:label "Scope" ;
-    rdfs:comment "A set of predicates joined wherever one action or one derivation reads or writes both, and separate where nothing does — a bulkhead in the vocabulary (knowledge/domain/scope.md). Two wants in different scopes cannot contradict, because no action of one writes a fact the other reads. Named for the graph it is written in and its place in the partition, largest first." .
+    rdfs:comment "A set of predicates joined wherever one action or one derivation reads or writes both, and separate where nothing does — a bulkhead in the vocabulary (knowledge/domain/planning/scope.md). Two wants in different scopes cannot contradict, because no action of one writes a fact the other reads. Named for the graph it is written in and its place in the partition, largest first." .
 planning:inScope a owl:ObjectProperty ; rdfs:range planning:Scope ; rdfs:label "in scope" ;
     rdfs:comment "The scope a predicate is in, and the scope an action's reads and writes lie in — by construction one, since an action touching two would have joined them. No domain: said of a property and of an action alike. An action stating no effect is in no scope, as no world admits it; one whose effect cannot be read is in the one scope that joins everything." .
 
@@ -201,7 +201,7 @@ NOT A SUBCLASS OF planning:Desire, and it was one until the axis was measured. T
 
 HOW IT CAME TO BE IS NOT THE AXIS. Most wants are derived — `prov:wasDerivedFrom` names the desire — but a world may ratify one directly, and three do: hanoi's every disk home, the courier's every parcel delivered, the tower's. Those are wants, authored rather than deduced, and they are handed to a search like any other. Standing versus occasioned is the axis; who wrote it is provenance.
 
-NOT a second modality and not a second store. Both live in the desire modality; what differs is which graph class holds them — `planning:DesireGraph` for the desires, holding at every instant, and `planning:WantGraph` for one graph per want, each with its period (#618, #645). See knowledge/domain/desire.md.""" .
+NOT a second modality and not a second store. Both live in the desire modality; what differs is which graph class holds them — `planning:DesireGraph` for the desires, holding at every instant, and `planning:WantGraph` for one graph per want, each with its period (#618, #645). See knowledge/domain/planning/desire.md.""" .
 
 
 planning:WantGraph
@@ -299,7 +299,7 @@ planning:precondition
     rdfs:domain orexis:Action ;
     rdfs:range xsd:string ;
     rdfs:label "precondition" ;
-    rdfs:comment "When an action may be taken, as a SELECT over the world binding one variable per parameter the action `orexis:takes`, named for the parameter's local part; `$me` is substituted by whoever asks. A row is a step the world admits: it exists only where every hop of the walk holds, which is why chaining needs no `requires` of its own. The facts a step's precondition read in the world it was planned from are the step's precondition too (knowledge/domain/precondition.md)." .
+    rdfs:comment "When an action may be taken, as a SELECT over the world binding one variable per parameter the action `orexis:takes`, named for the parameter's local part; `$me` is substituted by whoever asks. A row is a step the world admits: it exists only where every hop of the walk holds, which is why chaining needs no `requires` of its own. The facts a step's precondition read in the world it was planned from are the step's precondition too (knowledge/domain/planning/precondition.md)." .
 
 
 planning:effect

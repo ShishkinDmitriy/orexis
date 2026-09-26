@@ -95,7 +95,7 @@ The trigger is `hosting.py:on_participant_event`, whose own comment is *"A parti
 in trouble. Scarcity is what condenses an auction."* Two properties of it are deliberate: a
 **band and never a number** crosses the wire, so the host learns that a participant is in trouble
 and not how wet it is; and a cooldown means a flapping participant cannot spam the market. See
-[round](/domain/round.md).
+[round](/domain/market/round.md).
 
 # One range is one regime, and SSN cannot say which condition is the qualifier
 

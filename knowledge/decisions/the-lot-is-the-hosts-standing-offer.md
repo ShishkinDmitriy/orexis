@@ -86,10 +86,10 @@ scarce.
 
 The rule is now one member of a family rather than the only thing there is, so *"pay-as-bid
 versus uniform price is a separate argument"* has somewhere to happen — see
-[bid-matching-is-a-capability](bid-matching-is-a-capability.md). That does not fix the
+[bid-matching-is-a-capability](/decisions/bid-matching-is-a-capability.md). That does not fix the
 gap below, which is a defect **in** pay-as-bid rather than a reason to prefer another rule.
 
-[market](../domain/market.md) says the supplier should simply **dispense** in that case. Nothing
+[market](/domain/market/market.md) says the supplier should simply **dispense** in that case. Nothing
 implements it, and nothing can implement it *before* a round, for the reason above: demand is
 unknown until bids are in. It could be implemented *after* — the bids are in hand and the total
 is known at `close()`. That is a real and closable gap, filed as [#50](https://github.com/ShishkinDmitriy/orexis/issues/50) rather than argued here.

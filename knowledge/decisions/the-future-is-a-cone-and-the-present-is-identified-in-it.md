@@ -32,29 +32,29 @@ tree it built itself.
 
 - **Present.** The belief store's graphs, observed. Never predicted, never written by a search.
 - **Future.** A tree of possible worlds under the present, in the
-  [imaginarium](/domain/imaginarium.md). A node is its parent plus a **diff**, and the diff is
+  [imaginarium](/domain/planning/imaginarium.md). A node is its parent plus a **diff**, and the diff is
   the node: graphs are materialised while the rules run and along the path being executed,
   and dropped otherwise. The search weights and filters the tree; a want's
   urgency and estimate pick where to expand.
 - **Desired future.** One path in the tree ending where the want is met — the
-  [intention](/domain/intention.md), whose steps already carry their diffs as canonical facts.
+  [intention](/domain/execution/intention.md), whose steps already carry their diffs as canonical facts.
 - **Past.** The chain of presents left behind, each with the act taken and the diff that
-  actually happened — [history](/domain/history.md), kept as diffs and bounded.
+  actually happened — history, kept as diffs and bounded.
 
 **Execution is identification.** After an action, and whenever the present changes for any
 other reason, progression asks *which child of the root is the present in?* — by the child's
-predicted [interval](/domain/interval.md) and by whether the next step's
-[precondition](/domain/precondition.md) holds. The match becomes the root; its siblings and
+predicted interval and by whether the next step's
+[precondition](/domain/planning/precondition.md) holds. The match becomes the root; its siblings and
 their subtrees are dropped; the old root goes to the Past. If the world landed in a sibling the
 search had already explored — an action's other outcome — the continuation is already there and
 no search runs. If no child matches, the cone is dead and a fresh search starts from the present.
-The name for this is [identification](/domain/identification.md), and the page says what
+The name for this is identification, and the page says what
 distinguishes it from asserting a prediction.
 
 **A diff carries its precondition.** The instantiated facts its effect rule's WHERE read,
 obtained from the rule's bindings once along the winning path at adoption — depth queries,
 never per fork. A chain's precondition is the *regression* of its steps': step n's minus what
-steps 1 to n−1 produce. A [method](/domain/method.md) is the pair of regressed precondition and
+steps 1 to n−1 produce. A method is the pair of regressed precondition and
 diff chain, lifted to variables at promotion, applicable wherever those facts hold whatever
 else the present says. The check is an ASK over the present; a shape gives the same verdict
 with a report saying which fact is missing.
@@ -68,7 +68,7 @@ the interval this child predicted".
 
 # What the code already is, and where it differs
 
-Most of the model exists in diff form. Every [step](/domain/step.md) carries its diff as
+Most of the model exists in diff form. Every [step](/domain/execution/step.md) carries its diff as
 canonical facts on the ledger, so the diff chain half of a method exists. A node's diff is
 already relative to the root and the algebra to re-base it exists. The keeper already holds one
 committed step to a band computed from the actuator's pick, so the primitive that identification

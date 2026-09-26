@@ -35,11 +35,11 @@ and that the how could differ — is about the met-test, which is still minted f
 **Only a child is built from a state at a time, and it says so with a period.** Everything
 sourced at a time is a graph holding during its period
 ([a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md)): a
-[pursued](/domain/desire.md) child from its derivation to the instant it must hold at; an
-[obligation](/domain/obligation.md) from its issue to its expiry; a [call](/domain/call.md)
+[pursued](/domain/planning/desire.md) child from its derivation to the instant it must hold at; an
+obligation from its issue to its expiry; a [call](/domain/market/call.md)
 until its round opens; a promise until the step above resolves; a
-[prediction](/domain/prediction.md) during its window; a [round](/domain/round.md) during its
-offer; a cooling row until its horizon; a held [claim](/domain/claim.md) until its window
+[prediction](/domain/prediction/prediction.md) during its window; a [round](/domain/market/round.md) during its
+offer; a cooling row until its horizon; a held [claim](/domain/market/claim.md) until its window
 closes. The rebuild of the desire modality then runs no rule: it is a projection of the roots
 graph and the records, and nothing is deduced at runtime.
 

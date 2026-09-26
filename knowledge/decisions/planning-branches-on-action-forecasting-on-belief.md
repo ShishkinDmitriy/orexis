@@ -18,13 +18,13 @@ description: >-
 # The claim
 
 **One tree of possible worlds, and two kinds of edge.** Every node of both cones is a
-[possible world](/domain/imaginarium.md) at an instant, and that is the substance the two cones
+[possible world](/domain/planning/imaginarium.md) at an instant, and that is the substance the two cones
 share: a prediction is about possible worlds, and what an agent's actions do is move it among
 them. What differs is not the nodes. It is WHO CHOOSES THE EDGE.
 
 ![one tree of possible worlds, its nodes labelled by the bands their readings are in, its chosen edges labelled with actions and its happening edges with what the world does](../diagrams/time-two-cones.svg)
 
-The picture labels every node with the [bands](/domain/band.md) its readings are in, and every
+The picture labels every node with the bands its readings are in, and every
 edge with what takes it: an action on a chosen one, a thing the world does on a happening one.
 Two paths reach a world where the want is met, and on one ground that is one world — the search
 keeps the cheaper path and discards the other as somewhere already reached. What would make
@@ -99,7 +99,7 @@ names a happening edge the search never drew, which is exactly what an exogenous
 
 **Execution walks one kind of edge and settles the other.** Acting takes a chosen edge.
 Observing settles which happening edge was taken while it was. The present is where both are
-known, which is why [identification](/domain/identification.md) is doing two jobs at once:
+known, which is why identification is doing two jobs at once:
 deciding which path the agent is on, and which of the world's branches the real one landed in.
 
 # What it explains that we had been working around
@@ -174,8 +174,8 @@ What was missing was a place for it to have consequences.
 
    It does NOT close the vent's seam, and that is the honest half: a rule can now ask what time
    its act happens at, and has nothing to read about what the outside will be then, because
-   nothing states a future reading. That is item 3 ([effect](/domain/effect.md)).
-3. **Exogenous uncertainty is a narrowing set of [bands](/domain/band.md)** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)), and it is where
+   nothing states a future reading. That is item 3 ([effect](/domain/planning/effect.md)).
+3. **Exogenous uncertainty is a narrowing set of bands** ([#589](https://github.com/ShishkinDmitriy/orexis/issues/589)), and it is where
    [a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md) is
    built first: a forecast is facts valid over a FUTURE interval, which is the one horizon in
    this project with no mechanism at all, and a graph that says how long it speaks for is the

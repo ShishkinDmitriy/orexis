@@ -8,7 +8,7 @@ timestamp: 2026-08-02T00:00:00Z
 
 # Context
 
-The [gateway](/domain/gateway.md) exists for one irreducible reason: a self-interested agent
+The gateway exists for one irreducible reason: a self-interested agent
 must not author its own measurement (a thirsty plant would report bone-dry). That threat is
 real only in an **adversarial** society. For a **single-operator, non-adversarial**
 deployment (you run all the agents; they may err but won't maliciously lie to flood

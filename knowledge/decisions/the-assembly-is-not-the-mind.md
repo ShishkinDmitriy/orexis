@@ -20,7 +20,7 @@ timestamp: 2026-08-27T12:00:00Z
 A package contributed *knowledge* by naming files the way the kernel expected —
 `ontology.ttl`, `shapes.ttl`, `rules.ru`, `desires.ru`, `actions.ttl`, `review.rq`, six literals
 in the loader reached through seven call sites. A package contributed *behaviour* through
-the [choir](/domain/choir.md): `orexis:Hook` terms, `@hook(term)` on a method,
+the choir: `orexis:Hook` terms, `@hook(term)` on a method,
 `Agent.ask`/`Agent.tell`.
 
 The consequences were asymmetric and both wrong:

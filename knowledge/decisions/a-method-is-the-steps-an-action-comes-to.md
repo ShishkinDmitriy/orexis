@@ -23,7 +23,7 @@ through them as it steps through any plan (#510). Each step's action declares wh
 for — `orexis:readyWhen`, `orexis:doneWhen`, `orexis:lapsesAt` — as SELECT templates bound with
 the rules' own tokens, and the keeper holds the step on them through the primitive it already
 had (#512, #514). The claim a round clears to the bidder is a fact in its own graph, which is
-what a step can wait on. See [method](/domain/method.md).
+what a step can wait on. See method.
 
 # What was refused
 

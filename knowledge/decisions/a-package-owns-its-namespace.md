@@ -6,7 +6,7 @@ status: accepted
 timestamp: 2026-08-10T00:00:00Z
 ---
 
-> **Current statement: [package](/domain/package.md).** This record is how the model got
+> **Current statement: [package](/domain/kernel/package.md).** This record is how the model got
 > there and why; the domain concept is what it is now. Four records amend each other on
 > this subject, so read the concept first unless you want the argument.
 
@@ -18,7 +18,7 @@ Two things were true at once and should not have been.
 `<http://example.org/orexis/market> a owl:Ontology`, and so does every other package — review,
 sensing, actuation, the mqtt transport. The trees under `vocabulary/` went further and put their
 *terms* there too: `mc:`, `onewire:`, `i2c:`, `probe:`, since
-[pins-and-wires](pins-and-wires.md). So the convention existed, was in use, and was documented.
+[pins-and-wires](/decisions/pins-and-wires.md). So the convention existed, was in use, and was documented.
 
 **And every capability put its terms in `orexis:` anyway.** `ag:Hosting`, `ag:matchesBy`,
 `review:reviewIntervalS` — declared by a package, spelled as though the kernel owned them. An ontology
@@ -36,7 +36,7 @@ because rdflib pre-binds prefixes Fuseki does not and a query naming an undeclar
 test and 400s in production. A package wanting a namespace had to edit the kernel to be nameable.
 
 That is a registry, in the tree whose entire claim is that
-[adding a package edits nothing](capability-packages.md).
+[adding a package edits nothing](/decisions/capability-packages.md).
 
 # Decision — three of them, and the first is what made the others possible
 
@@ -55,10 +55,10 @@ before any capability's Python.
 `rdf:`, `rdfs:`, `owl:`, `xsd:`, `sh:`, `prov:` are standardised, stable, and the language the
 kernel's own structure is written in; a package that could rebind `rdfs:` could make
 `rdfs:subClassOf` mean what it liked — the walk
-[one-graph-both-engines-read](one-graph-both-engines-read.md) materialises and every shape leans
+[one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) materialises and every shape leans
 on. Every other external vocabulary — `sosa:`, `ssn-system:`, `unit:`, `schema:`, `dcterms:` — is
 READ off whichever ontology declares it, exactly as a package's own namespace is, since
-[the-region-want-is-sensings-want](the-region-want-is-sensings-want.md)'s third step: the kernel speaks no
+[the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)'s third step: the kernel speaks no
 reading, so it does not declare the vocabulary readings are written in. What the old "not a
 package's to bind" argument needed is the loader's refusal of one label bound to two IRIs, and
 that holds without the kernel naming the vocabulary. (This said `sosa:` was the kernel's; it was,
@@ -88,7 +88,7 @@ ontology, shapes and rules — and the family is unchanged. `hosting.py` still a
 `agent.provider(BID_MATCHING)` and still never learns which member answered.
 
 **The claim #66 proved needs restating, not withdrawing.**
-[uniform-price-dissolves-the-uncontested-round](uniform-price-dissolves-the-uncontested-round.md)
+[uniform-price-dissolves-the-uncontested-round](/decisions/uniform-price-dissolves-the-uncontested-round.md)
 demonstrated that a second member landed without `hosting.py` moving. That was `PROVIDES` doing the
 work, not the directory: the module registers a term, the protocol asks for a family, and neither
 knows where the other's Python sits. Folding removes nothing from that argument.
@@ -117,7 +117,7 @@ everything under it is the domain's answer to what water is worth to a plant.
 
 Only market converted. The other packages could, and the criterion for when it is worth it is
 below — **superseded**: all five converted in
-[every-term-in-its-own-house](every-term-in-its-own-house.md), and the reasoning below turned
+[every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md), and the reasoning below turned
 out to weigh the wrong thing.
 
 # Three couplings that were bugs, not costs
@@ -166,7 +166,7 @@ than assumed.
   the benefit was not legibility but a bounded kernel: the kernel vocabulary (`agent/ontology.py`
   then, `packages/orexis-agent-progression/ontology.py` since #452) claims everything in it
   is true of every agent, and 102 terms were making that false. See
-  [every-term-in-its-own-house](every-term-in-its-own-house.md).
+  [every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md).
 - ~~**`vocabulary/` packages ship no Python**, so they have no `terms.py` to hold an `NS` and
   their namespaces stay as constants in `agent/ontology.py`.~~ Closed: nothing in the kernel
   ever read those constants — only the sovereign's generators — so they are
