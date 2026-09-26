@@ -21,7 +21,7 @@ world removed from disk simply stops having one.
 Vocabulary: nothing new. The panels are built from `sensing:monitors`/`sensing:polls`, and the bucket name
 comes from `onboarding.influx`, so the dashboard cannot disagree with what the agent writes to.
 
-See knowledge/domain/onboarding.md.
+See knowledge/domain/onboarding/onboarding.md.
 """
 
 from __future__ import annotations

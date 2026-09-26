@@ -40,7 +40,7 @@ network       broker, TCP, wifi
 The classic name for the whole of axis 2 below the mind is the agent's **perceptual and
 effectoric interface** — Jason calls it the environment, JADE the message transport service —
 and in both it is deliberately outside the interpreter. It is outside ours too: the
-[transport](/domain/transport.md) is a capability the fact of a bus grants
+[transport](/domain/transport/transport.md) is a capability the fact of a bus grants
 ([the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md)), and the kernel never
 learns what a channel is carried over.
 
@@ -71,8 +71,8 @@ through translation, and keeping them distinct is cheap now and painful to undo 
   (subject, property) — validate, timestamp, dedupe, in that order, exactly the row's job.
 - **The two paths are already distinct, in fact if not in name.** Sensing's path ends in a
   `sosa:Observation` in the state graph. The market's path ends in a `market:Round` in the
-  agent's own beliefs, a claim satisfying an [intention](/domain/intention.md), or an
-  [obligation](/domain/obligation.md) on the ledger — never an observation. A bid's sender is
+  agent's own beliefs, a claim satisfying an [intention](/domain/execution/intention.md), or an
+  obligation on the ledger — never an observation. A bid's sender is
   the topic segment it arrived on and its signature, checked before anything is believed.
 - **One projection exists and is deliberate**: a sensor that stops delivering does not raise —
   its freshness want goes cold, which is a belief the agent can plan about
@@ -98,7 +98,7 @@ infrastructure rather than with the code.
   want there and the pass runs on the mind's own thread (#392). What it DECIDES is still thin —
   dedupe by want, and nothing else — but where it decides is one place now. In Agent 0.2.0 the
   row is `agent/belief/`: a change is written as any belief is, and the rules conclude its
-  [revisions](/domain/revision.md) beside it. What it decides is
+  [revisions](/domain/belief/revision.md) beside it. What it decides is
   nothing — any belief is accepted — and that is the decision.
 - **`sensor_unreachable(...)` is not modelled.** The freshness want covers not-knowing, which is
   what a planner can act on; whether the DISTINCTION between a quiet board and a dead link is

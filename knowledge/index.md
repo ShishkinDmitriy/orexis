@@ -4,44 +4,35 @@ okf_version: "0.1"
 
 # Orexis — Agent Society
 
-A multi-agent resource-allocation system: self-interested agents bid in an iterative
-auction for a scarce resource from a limited supply, under a hard trust/constitution
-boundary, grounded in real sensor data on a Raspberry Pi. Conversation sets valuations;
-the auction settles allocation. The domain is a plug-in — the **v1 example is plant
-watering** (agents bid for water), so plant/water language throughout is the concrete
-instance, not the architecture. This bundle records the architecture *decisions* and the
-*domain model* — the durable "what and why", not the live sensed state (that lives in the
-runtime belief base).
-
-# Decisions
-
-* [decisions/](decisions/) - Architecture decisions with rationale and the seams left open for later stages.
+Self-interested agents that plan for what they want and trade for what they lack, on real
+sensors on a Raspberry Pi. Each agent is Agent 0.2.0: one process, one store, one world. Bytes
+from its instruments become observations, rules revise them, the future is predicted, wants are
+derived from its desires and searched over possible worlds, and the plans are carried out and
+held to what they predicted. The domain is a plug-in: plant watering is the example — a grower
+buying water on a supplier's venue — and hanoi, a courier grid and a tower of the two are the
+others. This bundle is the durable what and why; the live state is in each agent's store.
 
 # Domain
 
-* [domain/](domain/) - The shared contract: what each component is, its responsibilities, and its invariants.
+* [domain/](domain/) - The dictionary, filed by the package that owns each word, in the order a pass runs: kernel, sensing, belief, prediction, planning, execution.
+
+# Decisions
+
+* [decisions/](decisions/) - Why the code is as it is, and the seams left open; 0.1.0's records are filed apart.
 
 # Runbooks
 
-* [runbooks/](runbooks/) - How to operate a society: genesis a world, run it, and take it apart — and why stopping it is not one command.
+* [runbooks/](runbooks/) - Author a world, add a domain, run it, measure the search, and take it apart.
 
 # How to use this bundle
 
-* Building a component? Read its [domain](domain/) concept, then any [decision](decisions/) it links.
-* **Want to know what is true NOW, not how it got that way?** The domain concept is the current
-  statement; a decision record is the argument that produced it, and several may amend one
-  another. Where that has happened the records carry a banner pointing at the concept — see
-  [domain/package](/domain/package.md) and [domain/model-and-unit](/domain/model-and-unit.md),
-  which each stand in for four records.
-* Trying to *operate* one? Start at [runbooks](runbooks/) — the domain says what things are, the runbooks say what to type.
-* Tempted to change something? Check whether a decision pins it — several choices exist to keep v2/v3 open and must not be welded shut.
-* Runtime testimony (attested sensor triples — the witness of record, not "shared knowledge") is NOT here — see [domain/belief-base](/domain/belief-base.md).
-* Adding a document? Concept files carry frontmatter with a non-empty `type` — one of `Decision` (why the code is as it is), `Domain Concept` (a thing in the model), `Process` (something that happens, with phases and an end), `Capability` (a named ability with interchangeable implementations), `Role` (a kind of principal), `Service` (a part of the implementation that holds logic), `Repository` (a part that passively holds data) or `Runbook` (how to operate it) — plus `title` and `description` — and a domain page whose word the T-Box carries also binds it with `term:` (see [the-dictionary-names-its-terms](/decisions/the-dictionary-names-its-terms.md)). An `index.md` carries **none** — it is navigation, and its title is its heading. Only this root file may declare `okf_version`.
-
-# Format
-
-This is an [Open Knowledge Format](https://okf.md) v0.1 bundle — markdown with YAML
-frontmatter, readable by any OKF consumer rather than only by this repo's conventions.
-Conformance is three rules: every non-reserved `.md` has frontmatter, every frontmatter has a
-non-empty `type`, and reserved files (`index.md`, `log.md`) follow their structures. Validate
-with the OKF skill's `scripts/validate.sh`, or `okflint` if you have it.
+* **What is a word?** Its page in [domain](/domain/index.md), in the folder of the package that
+  owns it. A domain page is the current statement, and the gates hold it to live terms.
+* **Why is it so?** The [decision](/decisions/index.md) a domain page links. A record argues and
+  refuses; several may amend one another, and a superseded one says what superseded it.
+* **Operating one?** Start at [runbooks](runbooks/).
+* **Changing something?** Check whether a record pins it — its seams are what you are checking for.
+* **Adding a document?** Frontmatter with a `type` — `Decision`, `Domain Concept`, `Process`,
+  `Capability`, `Role`, `Service`, `Repository` or `Runbook` — a `title` and a `description`; a
+  decision adds `status` and `timestamp`; a domain page whose word the T-Box carries binds it with
+  `term:`. An `index.md` carries none; only this file declares `okf_version`.

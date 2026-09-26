@@ -13,7 +13,7 @@ timestamp: 2026-08-23T22:05:00Z
 
 # The sentinel alarms on movement, not on range
 
-[the-alarm-answers-to-the-last-report](/decisions/the-alarm-answers-to-the-last-report.md) gave
+[the-alarm-answers-to-the-last-report](/decisions/0.1.0/the-alarm-answers-to-the-last-report.md) gave
 the alarm two halves and a clean division of labour: the deviation limit catches the
 between-reports event, and **the band catches what creeps** — HI/LO fixed in world terms, never
 re-anchoring, so a month-long dry-down still alarms at the edge however gently it got there. The

@@ -39,7 +39,7 @@ be in by then, a centre where the package has one. The rate, the spread the worl
 beside it and the instrument's noise are inside the package's text; what leaves the text is
 bands. A world stating no spread and no noise predicts the one band the rate reaches; the
 far horizon predicts every band, which is not knowing said honestly
-([a-prediction-is-a-set-of-bands-that-widens-with-the-horizon](/decisions/a-prediction-is-a-set-of-bands-that-widens-with-the-horizon.md)).
+([a-prediction-is-a-set-of-bands-that-widens-with-the-horizon](/decisions/0.1.0/a-prediction-is-a-set-of-bands-that-widens-with-the-horizon.md)).
 A standing step enters the predictions through the keeper — `orexis:predicted`, told when a
 watch opens and closes: the step, its band, its landing — and sensing predicts from the
 landing on from that band; when the watch closes the do-nothing branch returns.
@@ -190,4 +190,4 @@ observe and say when a sensor has gone silent and predict nothing. What `predict
 is the calculation of when the reading changes range — every crossing of a range bound bisected
 between the ladder's rungs — and one prediction per stretch, carrying a number rather than a
 set of bands. The rules sensing registers conclude the side of each stretch. See
-[prediction](/domain/prediction.md).
+[prediction](/domain/prediction/prediction.md).

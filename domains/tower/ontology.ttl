@@ -13,6 +13,6 @@
 #  and this one says only how their facts relate — a disk is a parcel the van can carry, and what
 #  a disk is ON follows from where the disks stand (rules.ttl). Nothing here says how to plan or
 #  when to plan below: the core bridges a Move by itself, because a rule here concludes the fact
-#  a Move predicts (knowledge/domain/refinement.md).
+#  a Move predicts (knowledge/domain/planning/refinement.md).
 
 hanoi:Disk rdfs:subClassOf courier:Parcel .

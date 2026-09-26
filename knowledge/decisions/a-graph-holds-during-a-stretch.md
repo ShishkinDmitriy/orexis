@@ -72,7 +72,7 @@ must not be read as one, and the graph it is said in is the natural place to say
 
 There is a fold here that is worth noticing rather than assuming: the GROUND a possible world
 stands on
-([planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md))
+([planning-branches-on-action-forecasting-on-belief](/decisions/0.1.0/planning-branches-on-action-forecasting-on-belief.md))
 is which of the world's own branches the agent is assuming, and under this model a branch is a
 graph valid over an interval the agent has not reached yet. Whether the ground IS that set of
 graphs, or stays a name beside them, is a seam below rather than a claim here.
@@ -156,7 +156,7 @@ A temperature for an hour is a third thing again, being an average over it.
   forecast of demand made at noon may be worth believing for an hour and be about five minutes
   of it.
 
-**And the third case is why [bands](/domain/band.md) carry the weather honestly.** A number over
+**And the third case is why bands carry the weather honestly.** A number over
 an interval is an average, which is not true at any particular instant and therefore not a
 fluent; the BAND is. *Two degrees at three in the morning* is a summary; *below the bed's
 region, all night* holds at every instant inside. Stating the forecast as the band makes the
@@ -289,7 +289,7 @@ per pair, and the cost of a query tracks the number of VALID graphs plus whateve
 charges per graph in a merge. `world/simulation`, the runbook's own bench, and the number that
 matters is what `_begin` and one fork cost with tens of valid graphs against nine.
 
-**The round moved on 2026-09-12** ([a-claim-is-water-at-a-time](/decisions/a-claim-is-water-at-a-time.md)):
+**The round moved on 2026-09-12** ([a-claim-is-water-at-a-time](/decisions/0.1.0/a-claim-is-water-at-a-time.md)):
 measured first, on #620 — a round row with no period was still open to a search standing
 hours ahead, and a bid was placed into a round that had closed. A round is a graph holding
 from the offer to its close now; readings and the cooldown stay as they are.

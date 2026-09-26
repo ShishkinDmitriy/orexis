@@ -51,8 +51,8 @@ witnessing are one query per desire, which is why neither needs a rule of its ow
 **Cluster by scope, mint one want per cluster.** Two troubled instances some action can move
 together belong in one want — a plan for soil and air in one cone, which is what the greenhouse
 already has as one want about two properties (#566). Two in different scopes are two wants, two
-cones, plans concatenated. So a [scope](/domain/scope.md) is what decides the GRAIN of the wants
-under a desire, and a [cone](/domain/cone.md) is the search each want gets; `cone.md` already
+cones, plans concatenated. So a [scope](/domain/planning/scope.md) is what decides the GRAIN of the wants
+under a desire, and a [cone](/domain/planning/cone.md) is the search each want gets; `cone.md` already
 says a scope *counts cones without being one*, and this is the mechanism that count exists for.
 Every shipped world is one scope, so every desire today mints at most one want covering all its
 troubled instances — which is the greenhouse's want, generalised.
@@ -93,7 +93,7 @@ universal's instances is a read, not a re-derivation, and the scar stands.
 
 # The forest stands, and it is a forest of wants
 
-[a-desire-is-a-forest-of-derived-roots](/decisions/a-desire-is-a-forest-of-derived-roots.md)
+[a-desire-is-a-forest-of-derived-roots](/decisions/0.1.0/a-desire-is-a-forest-of-derived-roots.md)
 settled that an agent's desires are several trees, a root per premise, decomposed per instance,
 per property and per side. What this record changes is what the nodes below a root ARE: not
 derived desires, but WANTS. A root is a desire; everything under it is minted by the function above

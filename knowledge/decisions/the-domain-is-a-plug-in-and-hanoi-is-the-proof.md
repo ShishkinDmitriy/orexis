@@ -115,7 +115,7 @@ the tree; the optimum is the deontic sitting's two-stage ranking doing what it s
 # Seams left open
 
 - **Depth is the engine's, and a world cannot ask for more.** *Taken since, by
-  [a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md) — in worlds rather
+  [a-pass-is-budgeted-in-worlds](/decisions/0.1.0/a-pass-is-budgeted-in-worlds.md) — in worlds rather
   than depth: `world/hanoi` states `deliberation:budgetWorlds 64` and the tests raise nothing.* As
   written: the tests raised `MAX_DEPTH` on their own Planner instance; the constant stayed 2
   for every running agent, per its own comment — an agent that could revise it could spend an
@@ -137,7 +137,7 @@ a named seam.
 
 The claim stands and the place moved. A vocabulary specific to one world belongs with that world,
 so `world/hanoi/` carries its own `ontology.ttl` beside `actions.ttl`, `world.ttl`, `desires.ttl` and
-`state.ttl`, each saying which graph it is, and the [runtime](/domain/runtime.md) boots from them, plans, takes the
+`state.ttl`, each saying which graph it is, and the [runtime](/domain/kernel/runtime.md) boots from them, plans, takes the
 fictive moves itself and stops when every disk is home. The tool package under `packages/` is the
 0.1.0 tree's and stays until `world/tower` migrates, since tower's genesis still loads the puzzle's
 words from it. The desire's met-test and estimate sit in `desires.ttl` rather than in the ontology,
@@ -146,7 +146,7 @@ because the 0.2.0 planner reads a shape off the graph of desires. The world's te
 
 The same day the puzzle moved again, since the tower poses Hanoi on the courier's grid and a
 vocabulary two worlds speak cannot belong to either: the words, the Move and what solving means
-are the [domain](/domain/domain.md) `domains/hanoi/`, and `world/hanoi/` imports it and keeps
+are the [domain](/domain/kernel/domain.md) `domains/hanoi/`, and `world/hanoi/` imports it and keeps
 the mover, the disks, the tower as posed and a WANT rather than a desire: a desire is
 universal and would ask for the tower at every instant for ever, while the puzzle is one-shot,
 so the mover stops once the want is reached.

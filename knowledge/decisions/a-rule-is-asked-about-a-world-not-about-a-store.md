@@ -43,7 +43,7 @@ deterministic observation node, and the reader takes whichever it finds. The sec
 computed correctly and thrown away by cycle detection as somewhere already seen.
 
 **Depth beyond 1 is therefore nominal for any goal about a measured value**, which is most of
-them. `domain/deliberator.md` says so, and `a-plan-is-a-path-of-graph-diffs` recorded it as one
+them. `domain/belief/deliberator.md` says so, and `a-plan-is-a-path-of-graph-diffs` recorded it as one
 of the two limits found by building.
 
 # What the rules actually read, which is what decides it
@@ -105,7 +105,7 @@ to restore because nothing was disturbed.
 
 The tree is bounded and small: `MAX_DEPTH` was 2 when this was written and a plant's menu
 offers two rows, so the worst case was seven live worlds; the bound is a budget of worlds now
-([a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md)), 32 by default.
+([a-pass-is-budgeted-in-worlds](/decisions/0.1.0/a-pass-is-budgeted-in-worlds.md)), 32 by default.
 That bound is the search's, not this design's.
 
 ## How the tree is held: paths, which are already there
@@ -351,7 +351,7 @@ test that design owed is not owed by this one. The hazard was self-inflicted.
   doing, did — and the types do not overlap. A store per type makes that structural: the store
   answers *what modality is this* and the named graphs inside it keep answering *whose is it
   and how did it arrive*, which is the two-axis split
-  [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md) already draws.
+  [the-mind-is-six-graphs](/decisions/0.1.0/the-mind-is-six-graphs.md) already draws.
 
   It is violated today, in exactly one place, and it is already filed as
   [#264](https://github.com/ShishkinDmitriy/orexis/issues/264): `sensing:aims` is a WANT and it lives

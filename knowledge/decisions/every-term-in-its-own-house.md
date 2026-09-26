@@ -14,7 +14,7 @@ timestamp: 2026-08-11T00:00:00Z
 
 # Context
 
-[a-package-owns-its-namespace](a-package-owns-its-namespace.md) gave `capabilities/market` a
+[a-package-owns-its-namespace](/decisions/0.1.0/a-package-owns-its-namespace.md) gave `capabilities/market` a
 namespace of its own and made `store.PREFIXES` assembled from each package's `ontology.ttl`, so
 the kernel no longer had to be edited for a package to be nameable in SPARQL. That removed the
 only reason the rest were still `orexis:`. Five packages stayed anyway — 102 terms across
@@ -23,7 +23,7 @@ only reason the rest were still `orexis:`. Five packages stayed anyway — 102 t
 `agent/ontology.py` — the kernel vocabulary, `packages/orexis-agent-progression/ontology.py` since
 #452 — opens by saying everything in the kernel is true of *every* capability.
 That has been false the whole time, and
-[self-review-is-a-capability](self-review-is-a-capability.md) already found it: ~24 of the
+[self-review-is-a-capability](/decisions/0.1.0/self-review-is-a-capability.md) already found it: ~24 of the
 kernel's terms belonged to self-review. It moved the **file** into `capabilities/review/` and
 left the **name** behind, so `orexis:` went on claiming universality for summaries, revisions and
 mandates that only an agent with room to move holds. This is the other half of that.
@@ -114,9 +114,9 @@ the next person does not re-derive it:
 | `sensing:Sensor` | `sosa:Sensor` | already `rdfs:subClassOf` it, and an **intersection** with `orexis:Device` rather than a synonym — keep |
 | `actuation:Actuator` | `sosa:Actuator` | the same alignment, and it is **not** declared. An asymmetry: we aligned Sensor and not Actuator |
 | `sensing:monitors` | — | SOSA puts feature-of-interest on the **Observation**, not the Sensor. Nothing to defer to |
-| `sensing:senseMode` values | `sosa:Procedure` | Pull, Push and Scheduled are procedures by SOSA's own definition. A cheap alignment, untaken — it belongs with whatever next touches [who-holds-the-clock](who-holds-the-clock.md) |
+| `sensing:senseMode` values | `sosa:Procedure` | Pull, Push and Scheduled are procedures by SOSA's own definition. A cheap alignment, untaken — it belongs with whatever next touches [who-holds-the-clock](/decisions/0.1.0/who-holds-the-clock.md) |
 | `review:Revision`, `fromValue`, `atTime` | `prov:wasRevisionOf`, `prov:atTime` | PROV models a revision as provenance. Real overlap, not a synonym, and unexamined |
-| `review:Commitment` | `vf:Commitment` | **a name collision, not an alignment.** Ours is a governance mandate — the room an agent may move in. REA's is a promised economic flow. Same word, different concept. Acted on since: the class is renamed `review:Mandate` — see [a-mandate-is-not-a-commitment](a-mandate-is-not-a-commitment.md) |
+| `review:Commitment` | `vf:Commitment` | **a name collision, not an alignment.** Ours is a governance mandate — the room an agent may move in. REA's is a promised economic flow. Same word, different concept. Acted on since: the class is renamed `review:Mandate` — see [a-mandate-is-not-a-commitment](/decisions/0.1.0/a-mandate-is-not-a-commitment.md) |
 | `actuation:mlPerSecond`, `maxDoseMl` | `ssn-system:ActuationRange` | [#84](https://github.com/ShishkinDmitriy/orexis/issues/84) |
 | the wire — topics, codec, channel, principal | — | ours by decision; the SSN spec has no guidance on transmission |
 
@@ -130,7 +130,7 @@ and **eleven are not true of every agent**:
   went time-based and the weather arrived)*. (AMENDED, and this paragraph's own closing line is what
   happened: **the simulation package exists.** Every term here is `sim:` now, in
   `domains/sim/`, and shed the `model` prefix it wore to fake a namespace inside `orexis:` —
-  see [the-substrate-is-not-the-minds](/decisions/the-substrate-is-not-the-minds.md) for why it
+  see [the-substrate-is-not-the-minds](/decisions/0.1.0/the-substrate-is-not-the-minds.md) for why it
   left the kernel and [a-stand-in-is-not-a-device](/decisions/a-stand-in-is-not-a-device.md) for
   why it is not filed with the hardware.)
   `orexis:DeviceModel`, `orexis:simulatedBy`,
@@ -151,7 +151,7 @@ and **eleven are not true of every agent**:
   above assumed *a capability is what only some agents have*, which conflates two questions:
   rule 2 asks whether the HOW could differ, not who holds it. It is a package now,
   `packages/orexis-capability-reporting/`, granted to every agent by a rule and insisted on by a shape. See
-  [telemetry-is-a-mandatory-capability](telemetry-is-a-mandatory-capability.md).
+  [telemetry-is-a-mandatory-capability](/decisions/0.1.0/telemetry-is-a-mandatory-capability.md).
 
 Moving the remaining ten was out of scope: the seven need a package to exist, and the deployment
 three need someone to decide whether stating *where* an agent runs belongs in a world at all.

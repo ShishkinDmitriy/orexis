@@ -27,7 +27,7 @@ endowed on amendment — a never-held root arrives, a held one stays
 ([an-amendment-endows-what-it-grants](/decisions/an-amendment-endows-what-it-grants.md)) — and a
 rebuild never touches it. Foresight leaves the root and is read by the child's derivation at the
 instant it derives. The argument of
-[desire-is-deduced-from-the-ranges-the-world-states](/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
+[desire-is-deduced-from-the-ranges-the-world-states](/decisions/0.1.0/desire-is-deduced-from-the-ranges-the-world-states.md)
 survives untouched: the sovereign's ranges are the source, genesis receives the root from them,
 and an agent never authors one. What that record decided about the region — who works it out,
 and that the how could differ — is about the met-test, which is still minted from the ranges.
@@ -35,11 +35,11 @@ and that the how could differ — is about the met-test, which is still minted f
 **Only a child is built from a state at a time, and it says so with a period.** Everything
 sourced at a time is a graph holding during its period
 ([a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md)): a
-[pursued](/domain/desire.md) child from its derivation to the instant it must hold at; an
-[obligation](/domain/obligation.md) from its issue to its expiry; a [call](/domain/call.md)
+[pursued](/domain/planning/desire.md) child from its derivation to the instant it must hold at; an
+obligation from its issue to its expiry; a [call](/domain/market/call.md)
 until its round opens; a promise until the step above resolves; a
-[prediction](/domain/prediction.md) during its window; a [round](/domain/round.md) during its
-offer; a cooling row until its horizon; a held [claim](/domain/claim.md) until its window
+[prediction](/domain/prediction/prediction.md) during its window; a [round](/domain/market/round.md) during its
+offer; a cooling row until its horizon; a held [claim](/domain/market/claim.md) until its window
 closes. The rebuild of the desire modality then runs no rule: it is a projection of the roots
 graph and the records, and nothing is deduced at runtime.
 

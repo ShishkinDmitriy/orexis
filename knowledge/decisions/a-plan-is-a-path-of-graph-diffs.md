@@ -90,7 +90,7 @@ machinery clicks in: gap, affordance rows, lever or plan.
 
 **A desire answers to something public.** The region is deduced from stated ranges precisely
 so an agent cannot want less and call itself satisfied
-([the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/the-range-is-the-plants-and-the-pick-is-the-agents.md)).
+([the-range-is-the-plants-and-the-pick-is-the-agents](/decisions/0.1.0/the-range-is-the-plants-and-the-pick-is-the-agents.md)).
 A desired GRAPH must come from the same discipline — deduced or ratified patterns, never
 privately authored goals — or the self-satisfaction loophole returns at graph scale.
 
@@ -409,7 +409,7 @@ unchanged — a look still extends the frontier nowhere, no plan chains past one
 observation still canonicalises to its upsert key and its value. What would have broken it is the
 tempting fix: a fresher `resultTime` counted as somewhere new makes "look, then look, then look"
 a three-step plan. See
-[a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md).
+[a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/0.1.0/a-lever-an-agent-cannot-pull-is-not-a-lever.md).
 
 ### `plan.rq` is a narrative, not a path to a goal
 
@@ -515,7 +515,7 @@ Two hardcoded things must DISAPPEAR, not survive beside it:
    became sensing's, said what it wanted positively, and stopped being pruned by cycle
    detection before its merits were considered. It is exactly what this bullet predicted:
    a goal, unmet, and Observe the lever whose effect repairs it. See
-   [a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/a-lever-an-agent-cannot-pull-is-not-a-lever.md).
+   [a-lever-an-agent-cannot-pull-is-not-a-lever](/decisions/0.1.0/a-lever-an-agent-cannot-pull-is-not-a-lever.md).
 2. ~~The dealer's hand-written `plan.rq`~~ — **mis-specified, and building it is what showed
    why; see "a narrative, not a path to a goal" below.** Acquire-then-offer should be derived from effects and
    the re-run menu, not stated as a two-step in a file.
@@ -594,7 +594,7 @@ edges taken to reach it, where a step is a chosen one — and `signature.where` 
 step inherits its parent's ground, because taking a lever never changes which branch of the
 world you are in; extending a ground is a happening edge's to do, and nothing draws one yet. The
 model is
-[planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md).
+[planning-branches-on-action-forecasting-on-belief](/decisions/0.1.0/planning-branches-on-action-forecasting-on-belief.md).
 
 **Not an instant, which this carried for a day.** #587 asked for the node's TIME in the key —
 the path's own `orexis:landsAfter` summed — and asked for the granularity to be measured. It
@@ -644,7 +644,7 @@ the argument.
 - **The convening gap is the planner's ceiling.** A dealer may want stock the upstream will
   not yet sell: the city convenes on LOW alone, so a planner pursuing serveability at
   stock 1.5 has no round to bid in until the region floor is crossed. That is
-  [the-lot-is-the-hosts-standing-offer](/decisions/the-lot-is-the-hosts-standing-offer.md)'s
+  [the-lot-is-the-hosts-standing-offer](/decisions/0.1.0/the-lot-is-the-hosts-standing-offer.md)'s
   recorded seam ("half the lot can be wanted by agents none of whom can convene a round"),
   reached now from the buy side — the fix is a convening shock beyond the demand shock
   (market.md names four), not a deeper planner.

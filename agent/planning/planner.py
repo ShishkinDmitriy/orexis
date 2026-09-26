@@ -57,7 +57,7 @@ WHAT THE PREDECESSOR'S SEARCH HAD AND THIS DOES NOT, each an absence rather than
 weighings are what a search itself needs back; and the A* key. The re-root it has, as
 `reroot`, and by hash alone.
 
-See knowledge/domain/planner.md.
+See knowledge/domain/planning/planner.md.
 """
 
 from __future__ import annotations

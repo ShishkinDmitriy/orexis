@@ -29,7 +29,7 @@ socket, a fresh TLS session, a fresh subscribe. What was missing was not a remed
 # Decision
 
 **The agent notices, and resigns.** `packages/orexis-transport-mqtt/watchdog.py` (it was `agent/watchdog.py`, in the kernel, until the kernel lost its mailbox) runs on a `Timer` of its
-own — not a capability, by [upkeep's](self-review-is-a-capability.md) argument: every agent has
+own — not a capability, by [upkeep's](/decisions/0.1.0/self-review-is-a-capability.md) argument: every agent has
 one connection whatever else it can do, and noticing you are dead is not an ability whose *how*
 could differ. Not on paho's thread, because that thread is one of the things being watched.
 
@@ -76,10 +76,10 @@ failure used to cost.
   `infra/tests/` as a contract with paho the way the existing ones are contracts with mosquitto
   and InfluxDB. The watchdog makes the answer matter less: whichever way paho behaves, the
   bound holds.
-- **`_thread` is paho's private attribute** — read by the transport module's `alive()`, since the watchdog is the [transport](/domain/transport.md)'s own ([the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md)). The deliberate price of watching a thing that
+- **`_thread` is paho's private attribute** — read by the transport module's `alive()`, since the watchdog is the [transport](/domain/transport/transport.md)'s own ([the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md)). The deliberate price of watching a thing that
   offers no public pulse; if a future paho renames it, the check degrades to never-true and the
   disconnection bound still stands guard behind it.
 - **The quiet() sweep informs and does not act.** A sensor gone silent is the *board's* fault
   or the wire's, and restarting the agent would cure neither — the sibling
-  [freshness-follows-the-cadence](freshness-follows-the-cadence.md) records from the other
+  [freshness-follows-the-cadence](/decisions/0.1.0/freshness-follows-the-cadence.md) records from the other
   side: nothing nudges a returning sensor either.

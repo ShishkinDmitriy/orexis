@@ -27,7 +27,7 @@ ALLOWED_TREES = {"agent", "domains", "simulation"}
 
 #  Never in an agent image. `orexis-influx` reads the admin token, which opens every bucket in the
 #  store and which no agent may ever hold; the surest guarantee is that the code using it is
-#  absent. See knowledge/domain/onboarding.md.
+#  absent. See knowledge/domain/onboarding/onboarding.md.
 FORBIDDEN_TREES = {"onboarding"}
 
 

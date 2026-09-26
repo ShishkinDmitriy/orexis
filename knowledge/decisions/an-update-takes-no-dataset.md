@@ -34,11 +34,11 @@ update. That is a few milliseconds and a few dozen lines, and nothing here defen
 Python that matters does not copy, it CHOOSES: which graphs are the world at the
 instant a witness is read (the door,
 [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md)),
-which witnesses one action could move together (the [scope](/domain/scope.md) partition,
+which witnesses one action could move together (the [scope](/domain/planning/scope.md) partition,
 a union-find in `relevance.scopes` memoised on the agent), what the choir answers for
 `orexis:foresight` — a question since deleted — and what time it is. A repository is not what the question is about; a
 repository is a NAME for a collection
-([a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md)),
+([a-repository-is-named-for-what-it-holds](/decisions/0.1.0/a-repository-is-named-for-what-it-holds.md)),
 not a claim that an object must exist between a read and a write.
 
 # What an update can do, and the one thing it cannot
@@ -85,15 +85,15 @@ as well be a belief the update reads.
 # What was refused: the search as updates
 
 A fork is copy-graph-and-apply-diff in the store already, and the effect is a rule
-([planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md)).
-What is Python in the [imaginarium](/domain/imaginarium.md)'s pass is not the fork, it is the
+([planning-branches-on-action-forecasting-on-belief](/decisions/0.1.0/planning-branches-on-action-forecasting-on-belief.md)).
+What is Python in the [imaginarium](/domain/planning/imaginarium.md)'s pass is not the fork, it is the
 CHOICE around it: which node to expand next, when the budget is spent, which worlds have been
 seen by signature, which levers the closure keeps. An update is one fixpoint step — every row
 at once, no order among them, no budget, no stop. Breadth-first would fit that shape, one update
 per depth expanding every frontier world by every action; and breadth-first is the order under
 which an admissible estimate refused nothing, because the first achiever came last, and
 best-first is what a pass is budgeted under
-([a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md)). The measurement
+([a-pass-is-budgeted-in-worlds](/decisions/0.1.0/a-pass-is-budgeted-in-worlds.md)). The measurement
 closes it from the other side: a real pass forks for a tenth of a percent of its time and reads
 for fifteen, so the round-trip is not where the cost is, and the reads are SPARQL already.
 
@@ -115,7 +115,7 @@ package's `rules.ru`, `desires.ru`, the effect and precondition texts in `action
 Turning a repository into an executor would not move that line, only rename the thing on
 the Python side of it; and turning the deciding Python into rules is the search-as-updates
 refused above. The repository stays what it was named for
-([a-repository-is-not-a-service](/decisions/a-repository-is-not-a-service.md)), and its `save`
+([a-repository-is-not-a-service](/decisions/0.1.0/a-repository-is-not-a-service.md)), and its `save`
 is the update it always was.
 
 # The cost a rule carries, and how a derivation written as rules pays it

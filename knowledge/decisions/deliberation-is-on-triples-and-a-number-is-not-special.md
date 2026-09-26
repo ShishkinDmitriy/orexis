@@ -30,8 +30,8 @@ We are just deliberating on triples. We do not handle numbers differently.*
 
 # The claim
 
-**The core deliberates on triples and interprets no literal.** A [step](/domain/step.md)'s
-[precondition](/domain/precondition.md) and its [effect](/domain/effect.md) are triples in
+**The core deliberates on triples and interprets no literal.** A [step](/domain/execution/step.md)'s
+[precondition](/domain/planning/precondition.md) and its [effect](/domain/planning/effect.md) are triples in
 whatever vocabulary the domain describes its world in; the signature states a world as the
 triples it holds; identification, cycle detection, met and the regression are triple equality;
 the keeper's verdict is whether the promised triples are there. Nothing in the core knows a
@@ -44,7 +44,7 @@ places on every literal, goes with the build, and a rule writes the number it me
 
 **The plant domain chooses classes over its ranges.** `orexis-plant-water` declares what a
 reading of its properties can be — dry, in region, wet, and the butt's empty, low, full — as OWL
-classes with datatype restrictions on the value they classify — the [bands](/domain/band.md),
+classes with datatype restrictions on the value they classify — the bands,
 which the domain already had as a word. Dry is relative to the plant, and a restriction takes a
 fixed literal, so the MEMBER classes are minted per (subject, property) that states a range, at
 GENESIS by sensing's `rules.ru` from the same narrowing of ranges `desires.ru` computes for

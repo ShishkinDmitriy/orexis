@@ -135,7 +135,7 @@ def test_a_superseded_record_says_what_superseded_it():
         successor = meta.get("superseded-by")
         if not successor:
             wrong.append(f"{path.name}: status is {meta['status']} with no superseded-by")
-        elif not (BUNDLE / "decisions" / f"{successor}.md").exists():
+        elif not any((BUNDLE / "decisions").rglob(f"{successor}.md")):
             wrong.append(f"{path.name}: superseded-by {successor} — no such record")
     assert decisions, "no decision records found — the glob stopped matching"
     assert not wrong, "supersession:\n  " + "\n  ".join(wrong)
@@ -474,7 +474,7 @@ def test_no_document_names_a_path_that_is_not_there():
 # that exists. `decisions/` is deliberately not checked: a record narrates the vocabulary of its
 # own moment, and half the value of one is the rejected name it argues against.
 #
-# This found #275. `domain/desire.md` cited `desire:UnwatchedDesireShape` for a constraint that
+# This found #275. `domain/planning/desire.md` cited `desire:UnwatchedDesireShape` for a constraint that
 # is real and fires — but the term does not exist, because the constraint has no shape of its
 # own and sits inside one named for something else. The page had reached for the name the
 # constraint deserves. Nothing could see that: SHACL does not care what a shape is called, and
@@ -490,13 +490,14 @@ _TERM = re.compile(r"\b([a-z][a-z0-9]*):([A-Za-z]\w*)\b")
 RETIRED = REPO_ROOT / "tests" / "fixtures" / "retired"
 
 
-def _vocabulary_files(*names: str) -> list[Path]:
+def _vocabulary_files(*names: str, retired: bool = True) -> list[Path]:
     """Every project Turtle file a word may be declared in: the agent's packages, the domains,
     the worlds, the firmware and the retired 0.1.0 vocabulary — or, given `names`, only the
     files so named."""
     found = [*sorted(p for p in (REPO_ROOT / "agent").rglob("*.ttl") if "tests" not in p.parts),
              *sorted((REPO_ROOT / "domains").rglob("*.ttl")), *sorted((REPO_ROOT / "world").rglob("*.ttl")),
-             *sorted((REPO_ROOT / "firmware").glob("*/ontology.ttl")), *sorted(RETIRED.rglob("*.ttl"))]
+             *sorted((REPO_ROOT / "firmware").glob("*/ontology.ttl")),
+             *(sorted(RETIRED.rglob("*.ttl")) if retired else [])]
     return [p for p in found if not names or p.name in names]
 
 
@@ -511,7 +512,7 @@ def _project_prefixes() -> dict[str, str]:
     return out
 
 
-def _declared() -> set[str]:
+def _declared(retired: bool = True) -> set[str]:
     """Every local name any project TTL declares — the kernel, the packages, and the ratified
     worlds.
 
@@ -524,31 +525,84 @@ def _declared() -> set[str]:
     since every `orexis:` term a page names would read as undeclared.
     """
     names: set[str] = set()
-    for ttl in _vocabulary_files():
+    for ttl in _vocabulary_files(retired=retired):
         text = ttl.read_text()
         names |= set(re.findall(r"^:(\w+)\b", text, re.M))
         names |= {local for _, local in _TERM.findall(text)}
     return names
 
 
+# --- the dictionary is filed by the package that owns each word ---------------------------------
+
+#  A TERM LIVES IN THE NAMESPACE OF THE PACKAGE THAT OWNS THE CONCEPT, and its page lives in the
+#  folder of that package — the same rule, applied to the prose. Each folder says which
+#  namespaces a page in it may bind; a folder with none binds nothing. The retired vocabulary is
+#  no namespace any folder may bind: a domain page is the CURRENT statement, and the day a term is
+#  retired its page fails here until it is rewritten or retired with it. 38 pages went on
+#  describing Agent 0.1.0 in the present tense after it was deleted, and nothing was looking.
+_O = "http://example.org/orexis"
+FOLDERS = {
+    "kernel": (f"{_O}#",),
+    "sensing": (f"{_O}/sensing#", "http://www.w3.org/ns/sosa/", "http://www.w3.org/ns/ssn/"),
+    "transport": ("https://www.w3id.org/MQTT4SSN-Ontology#",),
+    "belief": (f"{_O}/belief#",),
+    "prediction": (f"{_O}/prediction#",),
+    "planning": (f"{_O}/planning#",),
+    "execution": (f"{_O}/execution#",),
+    "speech": (),
+    "market": (f"{_O}/market#",),
+    "actuation": (f"{_O}/actuation#", f"{_O}/climate#"),
+    "onboarding": (),
+}
+
+
+def dictionary() -> list[Path]:
+    """Every domain page, in whichever package's folder it sits."""
+    return sorted(p for p in (BUNDLE / "domain").rglob("*.md") if p.name != "index.md")
+
+
+def test_every_domain_page_is_filed_under_the_package_that_owns_it():
+    pages = dictionary()
+    wrong = []
+    for page in pages:
+        rel = page.relative_to(BUNDLE / "domain")
+        if len(rel.parts) != 2 or rel.parts[0] not in FOLDERS:
+            wrong.append(f"{rel}: a page sits in one of {sorted(FOLDERS)}")
+            continue
+        for iri in _bound_terms(frontmatter(page)):
+            if not str(iri).startswith(FOLDERS[rel.parts[0]]):
+                wrong.append(f"{rel}: binds {iri}, which is not {rel.parts[0]}'s to own")
+    assert pages, "no domain pages found — the glob stopped matching"
+    assert not wrong, "the dictionary's filing:\n  " + "\n  ".join(wrong)
+
+
+def test_a_domain_page_names_no_retired_tree():
+    """A record narrates 0.1.0's paths; the dictionary says where things ARE."""
+    pages = dictionary()
+    wrong = [f"{p.relative_to(BUNDLE)}: `{spec}`" for p in pages
+             for spec in set(_PATH.findall(p.read_text())) if spec.startswith(_RETIRED_TREES)]
+    assert pages, "no domain pages found — the glob stopped matching"
+    assert not wrong, "a domain page names a retired tree:\n  " + "\n  ".join(sorted(wrong))
+
+
 def test_a_domain_page_names_only_terms_that_exist():
     # Terms the pages state do NOT exist. Each is a sentence saying so, which is a legitimate and
     # useful thing for a page to say — and is exactly why this cannot be a bare existence check.
     said_not_to_exist = {
-        # domain/auction.md: "no `orexis:Auction` anywhere", "There is no `orexis:Auction` to point at."
+        # domain/market/auction.md: "no `orexis:Auction` anywhere", "There is no `orexis:Auction` to point at."
         "orexis:Auction",
         # domain/genesis-process.md: "There is no `orexis:worldKind`".
         "orexis:worldKind",
-        # domain/desire.md names this to say it is NOT a name that exists — it is what an earlier
+        # domain/planning/desire.md names this to say it is NOT a name that exists — it is what an earlier
         # version of the page invented for a constraint that has no shape of its own (#275).
         # When #275 lands and gives that constraint a real name, this entry comes out.
         "desire:UnwatchedDesireShape",
     }
 
     project = set(_project_prefixes())        # found by looking, never listed — as the code does
-    declared = _declared()
+    declared = _declared(retired=False)      # the dictionary is current: no retired word
 
-    pages = sorted((BUNDLE / "domain").glob("*.md"))
+    pages = dictionary()
     undeclared = []
     for page in pages:
         for prefix, local in set(_TERM.findall(page.read_text())):
@@ -601,7 +655,7 @@ def test_no_two_domain_pages_state_the_same_claim():
         # Same example, opposite halves of one argument — changing one should change both.
         frozenset({"market.md", "good.md"}),
     }
-    pages = sorted((BUNDLE / "domain").glob("*.md"))
+    pages = dictionary()
     runs = {p.name: _runs(p) for p in pages}
 
     offenders = []
@@ -664,7 +718,7 @@ def test_a_dictionary_term_is_a_declared_one():
 
     #  Every ontology a word may be declared in: the agent's packages', the domains', the
     #  firmware's and the retired 0.1.0 vocabulary a page not yet refreshed still binds.
-    ontologies = _vocabulary_files("ontology.ttl")
+    ontologies = _vocabulary_files("ontology.ttl", retired=False)
     project = rdflib.Graph()
     for ttl in ontologies:
         project.parse(ttl)
@@ -695,7 +749,7 @@ def test_a_dictionary_term_is_a_declared_one():
         rel = str(page.relative_to(REPO_ROOT))
         meta = frontmatter(page)
         terms = _bound_terms(meta)
-        if terms and page.parent.name != "domain":
+        if terms and page.relative_to(BUNDLE).parts[0] != "domain":
             wrong.append(f"{rel}: only the dictionary binds terms — a {meta.get('type')} is not a word's owner")
             continue
         for iri in terms:
@@ -721,20 +775,12 @@ def test_a_dictionary_term_is_a_declared_one():
         if len(holders) > 1:
             wrong.append(f"{iri} is bound by {len(holders)} pages ({', '.join(sorted(holders))}) — one term, one owner")
 
-    # The reverse direction, scoped to what rule 2 calls its unit: every capability FAMILY the
-    # ontologies declare is a word someone answers for. Members and single abilities typed
-    # `a orexis:Capability` directly are deliberately out of scope — a member is the family's page's
-    # to describe, not a second owner.
-    RDFS = rdflib.RDFS
-    ag_capability = rdflib.URIRef(str(namespaces["orexis"]) + "Capability")
-    families = {str(s) for s in project.subjects(RDFS.subClassOf, ag_capability)}
-    for family in sorted(families - set(owners)):
-        wrong.append(f"{family} is a capability family no dictionary page binds")
+    #  THE REVERSE DIRECTION stood here — every capability family a page — and went with the
+    #  families: Agent 0.2.0 grants no capability, so a live ontology declares none.
 
     assert pages, "no concept documents found — the glob stopped matching"
     assert ontologies, "no ontologies found — the globs stopped matching"
     assert declared, "no declared terms found — the ontology parse yielded nothing"
-    assert families, "no capability families found — the subclass pattern stopped matching"
     assert owners, "no page binds any term — the term: field stopped being read"
     assert not wrong, "the dictionary and the T-Box disagree:\n  " + "\n  ".join(wrong)
 
@@ -812,7 +858,7 @@ def test_no_document_names_a_graph_the_store_has_never_had():
         ":ledger",
         ":exp/<agent>",
         # Untrusted peer assertions. Never built and never needed — a bid is a message on the
-        # bus, weighed and discarded — which `domain/belief-base.md` says in those words, and
+        # bus, weighed and discarded — which `domain/belief/belief-base.md` says in those words, and
         # which is why the name survives only inside sentences denying it.
         ":claims",
         # PROPOSALS, not drift: three documents name a per-subject or per-witness split of

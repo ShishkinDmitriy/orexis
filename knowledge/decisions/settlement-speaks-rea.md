@@ -9,8 +9,8 @@ timestamp: 2026-08-10T00:00:00Z
 # Context
 
 Two vocabulary passes in a row found this project using a word two ways
-([bid-matching-is-the-word](bid-matching-is-the-word.md),
-[a-round-is-an-iteration-not-the-auction](a-round-is-an-iteration-not-the-auction.md)), and both
+([bid-matching-is-the-word](/decisions/0.1.0/bid-matching-is-the-word.md),
+[a-round-is-an-iteration-not-the-auction](/decisions/0.1.0/a-round-is-an-iteration-not-the-auction.md)), and both
 were found by a reader rather than by a gate. The obvious next move is to stop inventing terms
 where a standard already has one, and check the ones we have against it.
 
@@ -31,7 +31,7 @@ The bundle uses REA's terms where they fit, and cites ValueFlows for their defin
 imports `vf:` and no `world.ttl` gains a prefix.**
 
 That is not timidity, it is the local cost. `agent_old/inference.py` materialises RDFS closure **by
-hand**, and [one-graph-both-engines-read](one-graph-both-engines-read.md) exists because shapes
+hand**, and [one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) exists because shapes
 inferring while the runtime did not let a world validate against a relationship no code would ever
 observe. Every imported vocabulary's subclass axioms have to be covered or that trap reopens. SOSA
 and PROV are safe because a dozen terms of each are used; importing an accounting ontology to gain
@@ -55,7 +55,7 @@ checked against a standard and the deviations are stated.
 
 ## Which corrects us: a claim is a commitment
 
-`domain/claim.md` has always called a claim *"a co-signed, single-use **claim** on the
+`domain/market/claim.md` has always called a claim *"a co-signed, single-use **claim** on the
 supplier for N litres"*. That is the loose English word, and REA has a precise one that means
 something else.
 
@@ -90,10 +90,10 @@ against the **supplier**, not a command naming a valve. Only the noun changes.
 
 # Consequences
 
-- **`domain/claim.md` says commitment** and explains why the REA claim is a different thing we
+- **`domain/market/claim.md` says commitment** and explains why the REA claim is a different thing we
   do not have.
 - **The absence of `vf:Claim` is documented rather than incidental.** If futures land — a claim
-  held and spent later, which [roadmap](roadmap.md) has — delivery and payment come apart in time
+  held and spent later, which [roadmap](/decisions/roadmap.md) has — delivery and payment come apart in time
   and a claim may become real. That is the trigger for revisiting.
 - **A standard vocabulary is a check, not just a source.** The value here was not a term we lacked;
   it was finding a term we were using for the wrong thing. That is the second time in three

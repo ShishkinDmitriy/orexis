@@ -16,7 +16,7 @@ timestamp: 2026-08-22T18:30:00Z
 
 # A store is a modality, and a graph is who put the fact there
 
-Ruled by the sovereign, refining [the-mind-is-six-graphs](/decisions/the-mind-is-six-graphs.md)
+Ruled by the sovereign, refining [the-mind-is-six-graphs](/decisions/0.1.0/the-mind-is-six-graphs.md)
 rather than repealing it. That record found the organising principle — *the graph is the
 modality* — and classified every graph on three axes: modality, visibility, arrival. This one
 moves the first axis down a level: **a modality is a STORE, and within each store the graphs
@@ -42,7 +42,7 @@ the runtime holds a read-only handle. Three standing rules stop being rules:
 - *an asserted want is written from files and never by the agent*
   ([#264](https://github.com/ShishkinDmitriy/orexis/issues/264)) — the self-satisfaction
   loophole closes because there is no handle to open it with;
-- the violation [aim](/domain/aim.md) files — a want living among settings, excused because
+- the violation aim files — a want living among settings, excused because
   one dataset made it merely untidy — becomes unwritable instead of filed.
 
 **Each modality chooses its own persistence, and two already had.** The imaginarium is this
@@ -51,7 +51,7 @@ hypothesis must not survive the pass, where an intention must survive a restart 
 lifecycle argument, already decided in
 [a-rule-is-asked-about-a-world-not-about-a-store](/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md).
 The series store behind history is the second
-([two-store-beliefs](/decisions/two-store-beliefs.md)). Store-per-modality is those two
+([two-store-beliefs](/decisions/0.1.0/two-store-beliefs.md)). Store-per-modality is those two
 precedents generalised, because modality *determines* lifecycle:
 
 | store | persists | written by | reset by |
@@ -61,7 +61,7 @@ precedents generalised, because modality *determines* lifecycle:
 | menu | memory | its rebuild alone, from premises | every rebuild — a conclusion is recomputed, never edited |
 | intentions | volume | the keeper | nothing — a commitment survives a restart |
 | history | volume ring | the runtime, append-only | the ring's own bound; Influx keeps the rest |
-| the [imaginarium](/domain/imaginarium.md) | memory, per pass | the planner | the end of the pass |
+| the [imaginarium](/domain/planning/imaginarium.md) | memory, per pass | the planner | the end of the pass |
 
 **The modality graph classes are retired — ALL of them, by
 [#312](https://github.com/ShishkinDmitriy/orexis/issues/312)**: `orexis:BeliefsGraph` first, then
@@ -206,7 +206,7 @@ Two consequences, for [#298](https://github.com/ShishkinDmitriy/orexis/issues/29
   capability's never-held terms — and under the split, each lands in the store its row above
   names, not uniformly in beliefs.
 - **No local name changes**, so the by-local-name migration mapping
-  ([a-volume-can-be-older-than-the-vocabulary](/decisions/a-volume-can-be-older-than-the-vocabulary.md))
+  ([a-volume-can-be-older-than-the-vocabulary](/decisions/0.1.0/a-volume-can-be-older-than-the-vocabulary.md))
   has nothing to carry for the sort itself; what moves is which store a volume's triples are
   loaded into at boot, which is #298's build to write.
 

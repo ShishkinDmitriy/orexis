@@ -24,7 +24,7 @@ triples it had merely never been given.
 ## The unit of novelty is the term
 
 A belief the agent HOLDS is the agent's, revisions included — that is
-[a-belief-is-a-pick-within-a-range](/decisions/a-belief-is-a-pick-within-a-range.md)'s whole
+[a-belief-is-a-pick-within-a-range](/decisions/0.1.0/a-belief-is-a-pick-within-a-range.md)'s whole
 point, and an amendment that overwrote a re-picked value would be the sovereign grabbing the
 walking-controls. A pair the volume has never held is different in kind: the agent never
 picked it, never revised it, and cannot miss it — it is a GRANT in the same sense the mandate
@@ -46,7 +46,7 @@ says nothing; the boot after an amendment logs what arrived, by name.
 - **Not value migration**: a CHANGED authored value for a held term does not travel — the
   held value is the agent's, and if a sovereign needs to move one, that is review's mandate
   machinery or an explicit rebirth, chosen knowingly. Spelling migration is
-  [a-volume-can-be-older-than-the-vocabulary](/decisions/a-volume-can-be-older-than-the-vocabulary.md)'s
+  [a-volume-can-be-older-than-the-vocabulary](/decisions/0.1.0/a-volume-can-be-older-than-the-vocabulary.md)'s
   flag and stays orthogonal.
 
 # Seams left open

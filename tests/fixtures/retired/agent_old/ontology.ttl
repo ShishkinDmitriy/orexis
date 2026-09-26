@@ -603,7 +603,7 @@ NOT A SUBCLASS OF orexis:Desire, and it was one until the axis was measured. The
 
 HOW IT CAME TO BE IS NOT THE AXIS. Most wants are derived — `prov:wasDerivedFrom` names the desire — but a world may ratify one directly, and three do: hanoi's every disk home, the courier's every parcel delivered, the tower's. Those are wants, authored rather than deduced, and they are handed to a search like any other. Standing versus occasioned is the axis; who wrote it is provenance.
 
-NOT a second modality and not a second store. Both live in the desire modality; what differs is which graph class holds them — `orexis:DesireGraph` for the desires, holding at every instant, and `orexis:WantGraph` for one graph per want, each with its period (#618, #645). See knowledge/domain/desire.md.""" .
+NOT a second modality and not a second store. Both live in the desire modality; what differs is which graph class holds them — `orexis:DesireGraph` for the desires, holding at every instant, and `orexis:WantGraph` for one graph per want, each with its period (#618, #645). See knowledge/domain/planning/desire.md.""" .
 
 orexis:metWhen a owl:ObjectProperty ; rdfs:domain orexis:Desire ; rdfs:range sh:NodeShape ;
     rdfs:label "met when" ;
@@ -798,7 +798,7 @@ orexis:Action a owl:Class ; rdfs:label "Action" ;
     #  hook every module implemented with an if-chain on the action inside. The gates hold a
     #  family to its actions — in the repo, at onboarding and at boot.
     assembly:signature "(act, judgment, intention) -> bool" ; orexis:row orexis:Progression ;
-    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `orexis:retracts` are its effect, with `orexis:landsAfter` and `orexis:confirmedBy` beside them; who carries it out is the code's to say, by `@contributes`. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
+    rdfs:comment """One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/kernel/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `orexis:retracts` are its effect, with `orexis:landsAfter` and `orexis:confirmedBy` beside them; who carries it out is the code's to say, by `@contributes`. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing.""" .
 
 
 #  AN ACTION STATES BOTH TEXTS OR NEITHER (#506). One a plan may CHOOSE — the menu's kind —

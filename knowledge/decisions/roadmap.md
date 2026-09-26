@@ -11,27 +11,27 @@ timestamp: 2026-08-01T00:00:00Z
 Three plant agents (Fern, Tomato, Succulent), one strategic supplier hosting one iterative
 auction, grounded in real sensors on a Raspberry Pi.
 
-The pipeline: [gateway](/domain/gateway.md) → [belief base](/domain/belief-base.md) →
-[clearing](/domain/clearing.md) inside the [supplier](/domain/supplier.md) →
-[plant agents](/domain/plant-agent.md). Build order: gateway first (most settled, most
+The pipeline: gateway → [belief base](/domain/belief/belief-base.md) →
+clearing inside the [supplier](/domain/market/supplier.md) →
+plant agents. Build order: gateway first (most settled, most
 trusted), then clearing (pure code, fully unit-testable with scripted bids), then agents
 (the only LLM part, stubbed against a working clearing).
 
-Supplier cost is a **fixed constant** with a reserve price. See [strategic-supplier](/decisions/strategic-supplier.md).
-- **Progression steps through a plan** — [#510](https://github.com/ShishkinDmitriy/orexis/issues/510), the build of [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md): one search per delivery, re-plan on surprise.
+Supplier cost is a **fixed constant** with a reserve price. See [strategic-supplier](/decisions/0.1.0/strategic-supplier.md).
+- **Progression steps through a plan** — [#510](https://github.com/ShishkinDmitriy/orexis/issues/510), the build of [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/0.1.0/progression-steps-through-a-plan-on-confirmed-feedback.md): one search per delivery, re-plan on surprise.
 
 # Parked, with the seam that unlocks each
 
 - **Nested markets** (supplier is a buyer upstream; scarcity propagates down as price) —
-  unlocked by [strategic-supplier](/decisions/strategic-supplier.md) leaving cost as a
+  unlocked by [strategic-supplier](/decisions/0.1.0/strategic-supplier.md) leaving cost as a
   replaceable input. (v2)
 - **Multi-source / N-to-N** (many suppliers, reverse auctions, exchange) — unlocked by
-  [standalone-clearing](/decisions/standalone-clearing.md) + [bids-as-unmet-demand](/decisions/bids-as-unmet-demand.md). (v2/v3)
+  [standalone-clearing](/decisions/0.1.0/standalone-clearing.md) + [bids-as-unmet-demand](/decisions/0.1.0/bids-as-unmet-demand.md). (v2/v3)
 - **Decentralized decomposition** (local auctions coupled by price, no global view) —
   the real thesis; sequential decomposition is the honest stepping-stone. (v3)
 - **Self-organization** (elected/rotating chair, borrowed or spawned mediator) — chair gets
   procedural authority only; the privileged powers never transfer to a borrowed chair (see
-  [trust-boundary](/decisions/trust-boundary.md) / [thin-trusted-infra](/decisions/thin-trusted-infra.md)). (v2)
+  [trust-boundary](/decisions/0.1.0/trust-boundary.md) / [thin-trusted-infra](/decisions/0.1.0/thin-trusted-infra.md)). (v2)
 - **Sybil / open-system** (naturalize + endow, currency minted not seized, reputation on
   identity). (v2)
 - **World genesis tool** (sovereign narrates → LLM drafts topology + charters → ratify →
@@ -44,7 +44,7 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
   reservation. Unlocked by the claim's `exp` seam
   ([authn-authz-capabilities](/decisions/authn-authz-capabilities.md)). (v2/v3)
 - **Domain-as-plugin** (swap ontology → electricity instead of plants) — unlocked by
-  [llm-heavy-deliberation](/decisions/llm-heavy-deliberation.md) (agents read the T-Box
+  [llm-heavy-deliberation](/decisions/0.1.0/llm-heavy-deliberation.md) (agents read the T-Box
   from context). Extract seams from watering *first*, don't abstract prematurely. (v3)
 
 - **Enforced bus privacy — DONE**, by
@@ -65,15 +65,15 @@ Supplier cost is a **fixed constant** with a reserve price. See [strategic-suppl
 
 - **Planning in time** — the cone the agent builds is the shape the search already has, and the
   direction now is to give it an axis and a twin:
-  [planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md),
+  [planning-branches-on-action-forecasting-on-belief](/decisions/0.1.0/planning-branches-on-action-forecasting-on-belief.md),
   five items from a node that carries a time to a plan that is a partial order. The first of
   them is the one everything waits on, and the fourth retires the workaround that keeps looking
   alive today. Where such a pass BEGINS is the sovereign's split of 2026-09-12:
-  [an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md)
+  [an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/0.1.0/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md)
   — an Always want is a root never pursued, what is pursued is derived from it, and its binding
   roots the search at the present or at a predicted crossing — #618, #619, #620 in that order.
   The belief cone's own future is next:
-  [a-prediction-is-a-set-of-bands-that-widens-with-the-horizon](/decisions/a-prediction-is-a-set-of-bands-that-widens-with-the-horizon.md),
+  [a-prediction-is-a-set-of-bands-that-widens-with-the-horizon](/decisions/0.1.0/a-prediction-is-a-set-of-bands-that-widens-with-the-horizon.md),
   a prediction as a set of bands widening with the horizon, an observation as an event
   expected in a window, and the reviser waking on a surprise rather than on a reading —
   #631, #632, #633. Groomed once the first stood beside the keeper's watch:

@@ -23,7 +23,7 @@ was `packages/orexis-capability-sensing/module.py` or one of the pipeline's own 
 also read the result back: `agent/readings.rq`, run by `regions.py` to give the desire
 modality each reading's value, instant and horizon — and to do that it named
 `sensing:staleAfterS` and `sensing:monitors`, a kernel file reading a package's words that
-[the-kernel-names-no-package-word](/decisions/the-kernel-names-no-package-word.md) could
+[the-kernel-names-no-package-word](/decisions/0.1.0/the-kernel-names-no-package-word.md) could
 only list as debt.
 
 # What is decided

@@ -21,7 +21,7 @@ a means "the joint" — the one term an affordance row offered, an effect rule a
 that knew nothing of each other could be joined without storing a correspondence. That was
 true and useful while the three were three files.
 
-[an-action-is-one-node](/decisions/an-action-is-one-node.md) folded them: one `orexis:Action`
+[an-action-is-one-node](/decisions/0.1.0/an-action-is-one-node.md) folded them: one `orexis:Action`
 node carries the precondition, the effect and the taker. From then on every shipped means
 pointed at exactly one action and every action named exactly one means — `orexis:means` was a
 one-to-one edge whose two ends could never differ. The sovereign asked what `orexis:Means` was
@@ -31,7 +31,7 @@ restated by another node is a second owner of that content.
 
 # What is decided
 
-**The [action](/domain/action.md) is the kind.** What a row carries (`Affordance.action`),
+**The [action](/domain/kernel/action.md) is the kind.** What a row carries (`Affordance.action`),
 what an intention commits to (`progression:by`), what a trace weighs (`deliberation:wouldTake`) and what the
 keeper keys patience and suspicion on is the action node: `sensing:Observing`,
 `actuation:Dosing`, `market:Acquiring`, `market:Offering`, `market:Serving` — and
@@ -58,7 +58,7 @@ A rename across every consumer and every test that read a local name (`"Acquire"
 `"Acquiring"` now), and one more paragraph in the #334 allowlist for the migration
 destinations. `means.md` folds into `action.md`; `lever.md` (retired when an action came to
 declare what it takes) and
-[effect](/domain/effect.md) stay as parts of an action.
+[effect](/domain/planning/effect.md) stay as parts of an action.
 
 # Seams left open
 

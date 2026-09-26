@@ -1,151 +1,86 @@
 # Domain
 
-The shared contract — what each component is, what it's responsible for, and its
-invariants. This is the layer agents read for context (in an LLM-heavy design, from the
-T-Box). It describes the design; it is NOT the live sensed state.
+The shared dictionary: what each word MEANS, one page per concept, filed in the folder of the
+package that owns the word — the same package whose namespace declares its term. The sections run
+in the order a pass does: a world is booted, bytes become observations, the rules revise them, the
+future is predicted, wants are derived and searched, and the plans are carried out.
 
-# Agents (the tier with a region want)
+# Kernel — what every package meets at
 
-* [agent](/domain/agent.md) - The general principal: certified identity, wallet, region want. Plant agent and supplier specialise it.
-* [judgment](/domain/judgment.md) - Running a desire's met-test against the world, and how badly the thing is wanted: both made fresh and written down nowhere.
-* [plant-agent](/domain/plant-agent.md) - A self-interested plant: desire, wallet, a stance of its own. Judges its own band, asserts its own readings.
-* [supplier](/domain/supplier.md) - Strategic seller downstream, genuine buyer upstream, the barrel between. Actuates its own valves; cannot mint.
-* [host](/domain/host.md) - Whoever convenes a venue and runs its rounds. A role a supplier or a dealer plays; which side hosts is structural, never measured.
+* [agent](/domain/kernel/agent.md) - One process, one store, one world, told its local id; acts for a subject and holds its desires. Nothing is granted.
+* [world](/domain/kernel/world.md) - A directory of documents, each saying which graph it is; imports its domains, and its tests live beside it.
+* [domain](/domain/kernel/domain.md) - A vocabulary, its actions, shapes and rules as documents in `domains/<name>/`, imported by the worlds that speak it.
+* [action](/domain/kernel/action.md) - One way of acting as one node: what it takes, its precondition, its effect, its implementation, its cost.
+* [runtime](/domain/kernel/runtime.md) - Boots a world into a store, then runs pass by pass, and stops when nothing is held or wanted.
+* [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind on the catalogue.
+* [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
+* [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
+* [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
 
-* [sovereign](/domain/sovereign.md) - Whoever ratified a world. A role, not an identity, and outside the society: it may ask a running agent, never reach into one.
+# Sensing — bytes become observations
 
-* [dealer](/domain/dealer.md) - An intermediary that buys from the N and sells to the M, holds stock and earns the spread. The stock decouples its two markets.
+* [sensing](/domain/sensing/sensing.md) - A transport's bytes become one observation per key, holding until the next is due; says when a sensor falls silent.
+* [observation](/domain/sensing/observation.md) - One act of observing in SOSA's words, one per key, replaced whole by the next; the premise everything else derives from.
+* [reading](/domain/sensing/reading.md) - The number an observation carries: what a side is concluded of, what a drift predicts, what a dose is sized from.
+* [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; the rules say which side a reading is on.
 
-# Market
+# Transport — reaching the society
 
-* [good](/domain/good.md) - What a lot is a quantity OF. One good has a valuation per kind of recipient, and every denomination join closes through it.
-* [lot](/domain/lot.md) - What one auction sells — a quantity of the venue's good at a reserve, both the host's own beliefs, sized by nothing anyone needs.
-* [market](/domain/market.md) - The standing structure — who supplies a resource, who consumes it. In 0.2.0 a domain of files: documents, rules and actions.
-* [venue](/domain/venue.md) - One market, as a node in the graph — minted from stock plus consent, keyed by its source, so one owner with two goods holds two.
-* [auction](/domain/auction.md) - The process, not a place: it condenses out of scarcity, announces terms, collects bids, matches, is co-signed, and dissolves.
-* [round](/domain/round.md) - One pass of bidding inside an auction. Exactly one is built, so today the two coincide.
-* [call](/domain/call.md) - A round is wanted on a venue because a participant said LOW — a want the host did not source, planned like any other.
-* [bid matching](/domain/bid-matching.md) - A lot and a set of bids become an allocation with prices — an allocation rule and a payment rule together.
-* [clearing](/domain/clearing.md) - A thin region-want-free notary: checks a proposed trade and co-signs the claim. The host computes the match.
-* [commitment](/domain/commitment.md) - REA's promised flow, as the kernel's shape: what a valve fulfils, what a claim embodies. Not BDI's, which is an intention.
-* [claim](/domain/claim.md) - What you win — co-signed, single-use, held until the winner's watch is live, then presented on the redeem channel.
-* [actuation](/domain/actuation.md) - The supplier's actuation arm: verifies the claim and drives its own valve, bounded by clearing and the device fail-safe.
+* [transport](/domain/transport/transport.md) - The contract the container holds of any member; MQTT is the one that ships, speaking MQTT4SSN and declaring nothing.
 
-# Ends
+# Belief — what follows from what was written
 
-* [region](/domain/region.md) - The range a subject needs a property to stay inside, deduced by intersection. Beside it, the envelope outside which the subject ends.
+* [belief-base](/domain/belief/belief-base.md) - One store per agent, and a catalogue describing every graph: its kind, owner, arrival and period.
+* [revision](/domain/belief/revision.md) - A belief derived from beliefs by SHACL 1.2's rules, adopted as they stand, into a graph of the source's own, on the present only.
+* [deliberator](/domain/belief/deliberator.md) - The revision pass over what changed, within a budget of rule executions; a cut is continued, across a restart too.
 
-* [budget](/domain/budget.md) - How many worlds one pass may imagine: the sovereign's pick in the agent's beliefs, bounded by shape, defaulted by the engine. Not a depth.
-* [aim](/domain/aim.md) - The point an agent picks inside its region. Its own, and a first pick rather than a bound — so constrain well, do not guess well.
+# Prediction — the stretches ahead
 
-* [pick](/domain/pick.md) - A point chosen inside room the agent did not choose. Unfalsifiable, so a want; the aim is one, the cadences and patience the rest.
+* [prediction](/domain/prediction/prediction.md) - One graph per stretch between range crossings, a drift's number in each; the planner lays a ground per stretch.
 
+# Planning — what is wanted, and how to get there
 
+* [desire](/domain/planning/desire.md) - A desire stands and is never searched; a want is minted where it bites, searched, and withdrawn once met.
+* [shape](/domain/planning/shape.md) - A met-test is a SHACL shape a domain declares, compiled to the select whose rows are its violations.
+* [planner](/domain/planning/planner.md) - One pass: grounds laid, wants derived, each searched best-first within a budget, the plans handed down.
+* [imaginarium](/domain/planning/imaginarium.md) - The in-memory store a search forks worlds in, one per scope, kept from pass to pass.
+* [cone](/domain/planning/cone.md) - The worlds and weighings a search leaves; the next pass finds the present among them by hash, or drops them.
+* [scope](/domain/planning/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.
+* [footprint](/domain/planning/footprint.md) - What one text reads and what it writes, as predicates, taken from the text; unreadable is anything.
+* [precondition](/domain/planning/precondition.md) - The select whose rows in a world are the steps it admits; a step keeps what its rules read.
+* [effect](/domain/planning/effect.md) - Rules run on the possible world a step makes, a delete among them; the one declaration the world is held to.
+* [plan](/domain/planning/plan.md) - One want's steps on the winning path, what they spent, and why the search ended — an empty plan is an answer.
+* [budget](/domain/planning/budget.md) - A ceiling each call states in the unit it spends: candidates for a search, rule executions for revision.
+* [bridge](/domain/planning/bridge.md) - A rule concluding one domain's fact from another's, authored by the world combining them; run forwards over beliefs, backwards to refine a step.
+* [refinement](/domain/planning/refinement.md) - A step whose predicted fact a bridge concludes is kept below, as a want whose met-test is the landing world regressed.
 
-* [obligation](/domain/obligation.md) - A desire the agent did not source. Whom it may owe is topology; what it owes now is private runtime state.
+# Execution — carrying a plan out
 
+* [executor](/domain/execution/executor.md) - Commits plans as intentions, takes each step when due, moves on only when the world answers.
+* [intention](/domain/execution/intention.md) - One plan committed to for one want, standing at a step until done, failed or abandoned.
+* [step](/domain/execution/step.md) - An action picked with its values: what it predicts, what it read, when it may be taken and lands.
+* [act](/domain/execution/act.md) - The record that a step was taken, and when; the world, not the act, says whether it landed.
+* [implementation](/domain/execution/implementation.md) - How an action is carried out when a step is taken: operations grouped by order, sized from the present, never read by a search.
+* [operation](/domain/execution/operation.md) - One thing taking a step does — a command, a saying, or the fictive write. Not an act, which is the record.
 
-* [considering](/domain/considering.md) - One pass of the mind: derive what is wanted, weigh it, mark what may be acted on. Pursuing is what happens next.
-* [desire](/domain/desire.md) - Two kinds: a desire stands and is never pursued; a want is deduced from one when the world makes it bite, and carries a period.
+# Speech — what peers say
 
+* [speech](/domain/speech/speech.md) - A peer's word is a document: heard where it is state and replaces only a peer's word, and what the agent said, believed as said.
 
-* [intention](/domain/intention.md) - A commitment to reduce a named gap by a named action, kept in a private ledger. Granted by a region want AND an action.
+# Market — a domain of documents
 
-* [deliberation](/domain/deliberator.md) - In 0.1.0 the whether, the search; in 0.2.0 the belief package's pass, revising what was written within a budget and continuing a cut.
+* [market](/domain/market/market.md) - A venue: one place a scarce good is traded, hosted by its holder, bid in by those who want it.
+* [auction](/domain/market/auction.md) - Six actions, each saying a document; nobody runs it, each side plans its part for its own desires.
+* [call](/domain/market/call.md) - A bidder in trouble asks for a round; to the host it is a want arriving.
+* [round](/domain/market/round.md) - One allocation of the lot, open until it closes, then cleared pay-as-bid.
+* [claim](/domain/market/claim.md) - What a winner holds and the host owes: issued, presented when needed, served and said discharged.
+* [host](/domain/market/host.md) - Whoever holds the good: two desires, no call unanswered and no presented claim unserved.
+* [supplier](/domain/market/supplier.md) - The allotment's host, acting for the water and holding the valves; the only agent able to pour.
 
+# Actuation — touching the world
 
-# Means — actions, steps, and what taking one comes to
+* [actuation](/domain/actuation/actuation.md) - Devices an agent holds change its subject; an action predicts the side, its command sizes the act when taken.
 
-* [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, implementation.
-* [step](/domain/step.md) - One action filled in: its parameters bound, whom it serves. A world's are derived; a plan's are written down.
-* [plan](/domain/plan.md) - What one pass returns for one want: steps in order, an outcome, a cost, the candidate it came through. Never executed, never stored.
-* [precondition](/domain/precondition.md) - The facts a step's rule read, instantiated; a plan's is their regression; checked by asking the present, never by re-running the rule.
-* [tolerance](/domain/tolerance.md) - How close the world must land to a step's predicted value: a fraction of the movement, a bounded revisable pick, never a kernel constant.
-* [act](/domain/act.md) - The record that a step was taken: which step, when, whether anyone took it. History, and only history.
-* [history](/domain/history.md) - The chain of presents left behind, each an act and the diff that happened, kept as diffs, bounded as a ring.
+# Onboarding — from a world to a society
 
-* [footprint](/domain/footprint.md) - What one text reads and what it writes, as predicates, taken from the text; unreadable is anything, and only a VALUES block bounds a variable predicate.
-* [relevance](/domain/relevance.md) - Which actions could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every action.
-* [scope](/domain/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.
-
-* [implementation](/domain/implementation.md) - How an action is carried out when a step is taken: operations grouped by order, sized from the present, never read by a search.
-* [operation](/domain/operation.md) - One thing taking a step does — a command, a saying, or the fictive write. Not an act, which is the record.
-* [speech](/domain/speech.md) - A peer's word is a document: heard where it is state and replaces only a peer's word, and what the agent said, believed as said.
-* [transport](/domain/transport.md) - How an agent reaches its society: a capability the bus grants, holding the connection and three choir hooks. Not a driver.
-
-* [effect](/domain/effect.md) - What taking an action would make true and false: rules in SHACL's shape, grouped by order, run on a possible world, deletes included.
-
-* [gap](/domain/gap.md) - The signed, normalised distance from what is sensed to what is wanted. A verdict, computed always and stored never; no reading yields no row.
-
-* [imaginarium](/domain/imaginarium.md) - The store a plan thinks in: a graph per search node, kept as diffs across passes, re-rooted where the present is a kept world.
-* [cone](/domain/cone.md) - The tree of possible worlds a pass builds under the present for one want; kept across passes, re-rooted where the present is one of them.
-* [identification](/domain/identification.md) - Which child of the root the present is in; the match becomes the root and its siblings die. Never asserting a prediction.
-
-* [executor](/domain/executor.md) - Plan, commit the head as an intention, hand it to its actor. One path for every trigger; a standing step is taken, not re-decided.
-
-* [actor](/domain/actor.md) - The module a step is linked to: whichever contributes its action. Takes a step; never decides one.
-
-# Levels — what a step comes to beneath it
-
-* [remembered plan](/domain/remembered-plan.md) - A plan that worked, kept on its want and keyed by what its steps read: adopted where that holds, forgotten when it fails.
-* [bridge](/domain/bridge.md) - A rule concluding one domain's fact from another's, authored by the world combining them; run forwards over beliefs, backwards to refine a step.
-* [refinement](/domain/refinement.md) - A step whose predicted fact a bridge concludes is kept below, as a want whose met-test is the landing world regressed.
-* [method](/domain/method.md) - The steps an action comes to, declared by its package: expanded at adoption, walked on feedback, never searched; each step says what it waits for.
-
-# Doing
-
-* [actuation](/domain/actuation.md) - The power to touch the physical world, held by whoever owns the hardware. Bounded by a claim and by the device's own cap.
-
-* [review](/domain/review.md) - An agent re-picking its own settings inside the room its world left it. Granted by latitude; a mandate whose ends meet grants nothing.
-* [reviser](/domain/reviser.md) - The seam where a change becomes a reason to deliberate: marks a want, drains them on the agent's own clock, and answers the marker nothing.
-* [row](/domain/row.md) - One of three cognitive layers — reactive, progression, deliberative — declared on the hook a module answers, because one module answers in several.
-
-# Sensing
-
-* [band](/domain/band.md) - A zone a region divides a property into, as a class of readings the domain declares; asserted on a reading by entailment, never a stored number.
-* [prediction](/domain/prediction.md) - What an agent expects at a horizon: in 0.2.0 a predicted observation per stretch between the instants the reading changes range.
-
-* [observation](/domain/observation.md) - The node recording one act of observing. One per subject and property, and it replaces rather than accumulates.
-
-* [reading](/domain/reading.md) - The value an observation carries, and the only fact in a belief base that is somebody else's word. It ages; it never expires.
-* [interval](/domain/interval.md) - A number with two ends. Not the core's: built into it as PR #575 and refused; a package's own tool for sizing, inside progression.
-
-* [channel](/domain/channel.md) - One named message flow on a bus, as a node — derived per distinct topic, discovered never authored, and the bearer of the encoding.
-* [sensing](/domain/sensing.md) - Split by who holds the clock. In 0.2.0 the translation row: bytes to an observation, predictions of when it changes range, no transport word.
-
-# Structure — how the project is put together
-
-* [service](/domain/service.md) - Something a package offers for others to use, reached by term. Unlike a capability, no premise grants it. Not built.
-* [modality](/domain/modality.md) - What a fact asserts, as opposed to what it is about. The mind's axis: one class per modality, each owning its store.
-
-* [capability](/domain/capability.md) - A named ability with interchangeable implementations. Granted by its own premise, deduced at genesis, and never hand-declared.
-
-* [choir](/domain/choir.md) - The kernel asks every module, whoever holds an opinion answers, and the asker never learns who — provider's complement, and silence is not zero.
-
-* [shape](/domain/shape.md) - SHACL, saying both "you may not" and "I want". Severity is the only difference, and the split is ours rather than the spec's.
-
-* [package](/domain/package.md) - The one unit the loader knows: one directory, five optional files, the family read off the path, PROVIDES as the only registration.
-* [model-and-unit](/domain/model-and-unit.md) - A part, a species and a firmware are MODELS; the things in a world are UNITS, and inherit the model's facts by entailment.
-
-# Genesis and worlds
-
-* [genesis-process](/domain/genesis-process.md) - The LLM-assisted session that turns a description into a living society: what is elicited, and what a world's kind changes.
-* [agent-metrics](/domain/agent-metrics.md) - What an agent says about itself: belief base size, seconds since a sensor delivered, and the write failures.
-* [onboarding](/domain/onboarding.md) - The phase between genesis and a running society: a bucket, a token, a credential, an ACL, a compose file — all derived.
-* [world](/domain/world.md) - What a ratified world is made of, the rules for authoring one, and what genesis DERIVES rather than accepts.
-* [domain](/domain/domain.md) - What several worlds pose: its words, its actions, what its words mean when wanted. A world imports it.
-
-# Rules and resources
-
-* [constitution](/domain/constitution.md) - Hard, non-negotiable constraints enforced by code, not persuasion.
-* [wallet](/domain/wallet.md) - The single budget for water and thinking. Solvency is checked against a balance the bidder self-reports; the ledger, the allowance and metering are designed, not built.
-* [belief-base](/domain/belief-base.md) - One belief base per agent, not one shared store: named-graph layout, SOSA shape, provenance, structural isolation.
-* [gateway](/domain/gateway.md) - Decommissioned in v1: the measurement-witness role, folded into the self-asserting plant edge.
-* [planner](/domain/planner.md) - Runs planning: a bounded search over simulated worlds, writing one possible world per node.
-* [runtime](/domain/runtime.md) - The 0.2.0 process: boots a world from its files, plans and walks pass by pass, stops when every desire is met.
-* [menu](/domain/menu.md) - The alethic modality, what I COULD do: actions are written into it, the steps they afford derived out.
-* [keeper](/domain/keeper.md) - Runs keeping, the patience and the verification arc; the intention graph's only writer.
-* [ower](/domain/ower.md) - Runs owing: one row per claim issued against this agent, durable across a restart.
-* [inference](/domain/inference.md) - Materialises what the vocabulary entails, so both engines read one graph.
-* [revision](/domain/revision.md) - A belief derived from beliefs by SHACL 1.2's rules, adopted as they stand, into a graph of the source's own, on the present only.
-* [deducer](/domain/deducer.md) - Runs deducing: derives what an agent pursues; the desires repository's only writer, and inside it.
+* [onboarding](/domain/onboarding/onboarding.md) - Buckets, credentials, the ACL, compose and dashboards, each read off the world; decides nothing, so re-running is safe.

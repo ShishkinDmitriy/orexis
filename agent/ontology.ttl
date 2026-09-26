@@ -29,7 +29,7 @@
 orexis:Action
     a owl:Class ;
     rdfs:label "Action" ;
-    rdfs:comment "One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `planning:precondition` is a SELECT whose rows are the steps a world admits; `planning:effect` is what taking one makes true and false, as rules; `execution:implementation` is what goes out when one is taken, as operations; `planning:costs` and `planning:landsAfter` sit beside them. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing." .
+    rdfs:comment "One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/kernel/action.md), and the KIND of act itself, which an intention commits to and a row carries: `planning:precondition` is a SELECT whose rows are the steps a world admits; `planning:effect` is what taking one makes true and false, as rules; `execution:implementation` is what goes out when one is taken, as operations; `planning:costs` and `planning:landsAfter` sit beside them. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing." .
 
 orexis:Agent
     a owl:Class ;

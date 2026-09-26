@@ -8,7 +8,7 @@ timestamp: 2026-08-02T00:00:00Z
 
 # Context
 
-The [gateway](/domain/gateway.md) exists for one irreducible reason: a self-interested agent
+The gateway exists for one irreducible reason: a self-interested agent
 must not author its own measurement (a thirsty plant would report bone-dry). That threat is
 real only in an **adversarial** society. For a **single-operator, non-adversarial**
 deployment (you run all the agents; they may err but won't maliciously lie to flood
@@ -18,7 +18,7 @@ themselves), the witness is defending against a threat that isn't there.
 
 Under an explicit **trusted-agent assumption**, drop the gateway/witness and let each agent
 **state its own current-state as its own opinion** — self-asserted belief, not witnessed
-truth. This deliberately relaxes [trust-boundary](/decisions/trust-boundary.md)'s first
+truth. This deliberately relaxes [trust-boundary](/decisions/0.1.0/trust-boundary.md)'s first
 power ("agents cite but never author facts"): an agent may now author facts **about itself**.
 It still may **not** author facts about *others*, mint currency, or actuate hardware — those
 stay in trusted infrastructure.

@@ -17,7 +17,7 @@ timestamp: 2026-09-21T22:00:00Z
 
 # What the convention bought, and what it cost
 
-[a-repository-is-named-for-what-it-holds](/decisions/a-repository-is-named-for-what-it-holds.md)
+[a-repository-is-named-for-what-it-holds](/decisions/0.1.0/a-repository-is-named-for-what-it-holds.md)
 set out a DDD repository: a collection of domain objects, backed by a store and owning none,
 named for the plural of its element, with Spring Data's `find_all` / `find_all_by_x` /
 `find_first_by_x`. Two things were built to it. Both are gone.

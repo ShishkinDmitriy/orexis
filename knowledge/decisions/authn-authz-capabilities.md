@@ -9,7 +9,7 @@ timestamp: 2026-08-01T00:00:00Z
 # Context
 
 Agents are self-interested and may lie or be injected, yet the system must stay correct
-([trust-boundary](/decisions/trust-boundary.md)). We want the honesty guarantees without
+([trust-boundary](/decisions/0.1.0/trust-boundary.md)). We want the honesty guarantees without
 leaning on mandatory, always-on central infrastructure. The unlock: express both *who an
 agent is* and *what it may do* as **signed artifacts an agent carries**, so verification is
 local and needs no hot-path lookup.
@@ -25,8 +25,8 @@ static device binding and a per-round entitlement differ on every axis.
   [genesis](/decisions/genesis.md); binds an agent ↔ a device (its sensor / its valve).
   Long-lived. "Is this Fern's valve/sensor?"
 - **Claim = *what you may do right now*.** Dynamic, **won** in the auction — issued per
-  round by the host + [clearing](/domain/clearing.md) after the
-  [constitution](/domain/constitution.md) check, co-signed, single-use (`jti`), expiring.
+  round by the host + clearing after the
+  constitution check, co-signed, single-use (`jti`), expiring.
   "Did Fern win *this* 2 L dispense?"
 
 The distinction that matters: an **access grant is *granted*** (standing, who your devices
@@ -42,7 +42,7 @@ registry; the artifact carries its own proof.
 # Certificates (identity)
 
 - **Provisioned before, in v1.** The system is closed — three sovereign-chartered agents.
-  The certificate is part of the [charter](/domain/agent.md): creating an agent atomically
+  The certificate is part of the [charter](/domain/kernel/agent.md): creating an agent atomically
   issues its cert (signs its public key + plant URI) and its endowment. There is no open
   registration desk in v1.
 - **Registry tracks existence + validity, never liveness.** Two states only: *issued* and
@@ -62,11 +62,11 @@ registry; the artifact carries its own proof.
   [trusted-agent-mode](/decisions/trusted-agent-mode.md) dropped before it was built), bidding
   above wallet, flooding the bus. Never on *judged intent*: bluffing and
   aggressive-but-legal strategy are undecidable to tell from malice, and a judge that revokes
-  on them reintroduces the adjudicator [trust-boundary](/decisions/trust-boundary.md)
+  on them reintroduces the adjudicator [trust-boundary](/decisions/0.1.0/trust-boundary.md)
   forbids.
 - **You already have two judge-free revocations.** The *leash* revokes a specific claim
-  per-message (uncitable → rejected; see [belief-base](/domain/belief-base.md)); *insolvency*
-  revokes an agent economically (broke → can't bid; see [wallet](/domain/wallet.md)). Both
+  per-message (uncitable → rejected; see [belief-base](/domain/belief/belief-base.md)); *insolvency*
+  revokes an agent economically (broke → can't bid; see wallet). Both
   are per-action and preventive, strictly better than reactive cert-revocation for the powers
   that matter.
 - **Grants self-expire; only certs need a list.** Round-scoped grants die at round end, so
@@ -110,7 +110,7 @@ signed capability — concretely a **JWT (JWS)**:
   (the scarce side proposing the trade), and clearing's **val_sig** (integrity notarization).
   The executor honors only a fully-signed token. This is what stops a host fabricating a
   counterparty's obligation or shill-bidding — it can neither sign as another agent nor
-  out-mint its wallet. See [clearing-as-validator](/decisions/clearing-as-validator.md).
+  out-mint its wallet. See [clearing-as-validator](/decisions/0.1.0/clearing-as-validator.md).
 
 # Connection determines authorization — the trust boundary is the network boundary
 

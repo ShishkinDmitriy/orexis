@@ -26,15 +26,15 @@ in step, because there is no list.
 **It is not birth.** Onboarding gives an agent what it needs from the outside world;
 birth is the agent authoring its own beliefs, once, on its first start — inside its own
 container, from the files mounted beside it, with nobody watching. One is done TO an agent and
-is repeatable; the other is done BY it and is not. See knowledge/domain/onboarding.md and the
-lifecycle table in knowledge/domain/agent.md.
+is repeatable; the other is done BY it and is not. See knowledge/domain/onboarding/onboarding.md and the
+lifecycle table in knowledge/domain/kernel/agent.md.
 
 **Order matters, and only in one place.** Validation comes first because onboarding a world that
 does not hold together mints credentials for agents that will refuse to start. The other three
 are independent — but `orexis-mqtt` reloads the broker at the end, so it is last among the two
 provisioners, and compose is written last because it is the thing you then run.
 
-See knowledge/domain/onboarding.md.
+See knowledge/domain/onboarding/onboarding.md.
 """
 
 from __future__ import annotations

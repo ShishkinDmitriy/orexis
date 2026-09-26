@@ -19,7 +19,7 @@ description: >-
 # The claim
 
 **Amended 2026-09-10 by
-[planning-branches-on-action-forecasting-on-belief](/decisions/planning-branches-on-action-forecasting-on-belief.md).**
+[planning-branches-on-action-forecasting-on-belief](/decisions/0.1.0/planning-branches-on-action-forecasting-on-belief.md).**
 Nothing below becomes false; the tree gains an axis and a twin. Every node carries a TIME, so
 two nodes holding the same facts at different instants are different worlds — the world moves
 whether or not the agent does — and beside this cone, which branches on what the agent may DO,
@@ -32,35 +32,35 @@ tree it built itself.
 
 - **Present.** The belief store's graphs, observed. Never predicted, never written by a search.
 - **Future.** A tree of possible worlds under the present, in the
-  [imaginarium](/domain/imaginarium.md). A node is its parent plus a **diff**, and the diff is
+  [imaginarium](/domain/planning/imaginarium.md). A node is its parent plus a **diff**, and the diff is
   the node: graphs are materialised while the rules run and along the path being executed,
   and dropped otherwise. The search weights and filters the tree; a want's
   urgency and estimate pick where to expand.
 - **Desired future.** One path in the tree ending where the want is met — the
-  [intention](/domain/intention.md), whose steps already carry their diffs as canonical facts.
+  [intention](/domain/execution/intention.md), whose steps already carry their diffs as canonical facts.
 - **Past.** The chain of presents left behind, each with the act taken and the diff that
-  actually happened — [history](/domain/history.md), kept as diffs and bounded.
+  actually happened — history, kept as diffs and bounded.
 
 **Execution is identification.** After an action, and whenever the present changes for any
 other reason, progression asks *which child of the root is the present in?* — by the child's
-predicted [interval](/domain/interval.md) and by whether the next step's
-[precondition](/domain/precondition.md) holds. The match becomes the root; its siblings and
+predicted interval and by whether the next step's
+[precondition](/domain/planning/precondition.md) holds. The match becomes the root; its siblings and
 their subtrees are dropped; the old root goes to the Past. If the world landed in a sibling the
 search had already explored — an action's other outcome — the continuation is already there and
 no search runs. If no child matches, the cone is dead and a fresh search starts from the present.
-The name for this is [identification](/domain/identification.md), and the page says what
+The name for this is identification, and the page says what
 distinguishes it from asserting a prediction.
 
 **A diff carries its precondition.** The instantiated facts its effect rule's WHERE read,
 obtained from the rule's bindings once along the winning path at adoption — depth queries,
 never per fork. A chain's precondition is the *regression* of its steps': step n's minus what
-steps 1 to n−1 produce. A [method](/domain/method.md) is the pair of regressed precondition and
+steps 1 to n−1 produce. A method is the pair of regressed precondition and
 diff chain, lifted to variables at promotion, applicable wherever those facts hold whatever
 else the present says. The check is an ASK over the present; a shape gives the same verdict
 with a report saying which fact is missing.
 
 **Numbers are intervals.** The companion record
-[a-predicted-number-is-an-interval](/decisions/a-predicted-number-is-an-interval.md) carries that
+[a-predicted-number-is-an-interval](/decisions/0.1.0/a-predicted-number-is-an-interval.md) carries that
 half: a reading widened by staleness and by the actuator's learned tolerance, an effect
 declaring two bounds, met meaning the interval lies inside the region. It is what makes
 identification need no tolerance of its own — "am I in this child" is "is the reading inside
@@ -68,7 +68,7 @@ the interval this child predicted".
 
 # What the code already is, and where it differs
 
-Most of the model exists in diff form. Every [step](/domain/step.md) carries its diff as
+Most of the model exists in diff form. Every [step](/domain/execution/step.md) carries its diff as
 canonical facts on the ledger, so the diff chain half of a method exists. A node's diff is
 already relative to the root and the algebra to re-base it exists. The keeper already holds one
 committed step to a band computed from the actuator's pick, so the primitive that identification
@@ -127,19 +127,19 @@ refused on the way.
   about — a rule is asked about a world, one named graph per node, the fork rather than the
   replay, the isolation from the ledger. The Future is still a store of its own and still never
   written back; what changes is how long it lives and that it is re-rooted rather than rebuilt.
-- [there-is-no-bdi-ontology](/decisions/there-is-no-bdi-ontology.md) is superseded **in part**:
+- [there-is-no-bdi-ontology](/decisions/0.1.0/there-is-no-bdi-ontology.md) is superseded **in part**:
   its premise that "our plan is required to be lost" narrows to *a plan the world has moved away
   from is lost*. Its conclusion — no import, because a mind crosses no trust boundary — stands
   untouched, and nothing here makes a plan an entity anything cites.
-- [a-remembered-plan-is-a-method-on-the-want](/decisions/a-remembered-plan-is-a-method-on-the-want.md)
+- [a-remembered-plan-is-a-method-on-the-want](/decisions/0.1.0/a-remembered-plan-is-a-method-on-the-want.md)
   keeps its refusals and loses its keying: the whole-world signature gives way to the regressed
   precondition, which its own seams named. Amended with
   [#551](https://github.com/ShishkinDmitriy/orexis/issues/551).
-- [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/progression-steps-through-a-plan-on-confirmed-feedback.md)
+- [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/0.1.0/progression-steps-through-a-plan-on-confirmed-feedback.md)
   keeps its refusals — no re-simulation before taking a step, no unconditional tail — and its
   seam "what matches means" closes with
   [#554](https://github.com/ShishkinDmitriy/orexis/issues/554): matching is identification.
-- [a-pass-is-budgeted-in-worlds](/decisions/a-pass-is-budgeted-in-worlds.md) is amended with
+- [a-pass-is-budgeted-in-worlds](/decisions/0.1.0/a-pass-is-budgeted-in-worlds.md) is amended with
   [#553](https://github.com/ShishkinDmitriy/orexis/issues/553): the budget counts new forks,
   and a pass that re-rooted spent none.
 

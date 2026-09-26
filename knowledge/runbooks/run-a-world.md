@@ -27,16 +27,14 @@ world and stays up across them.
 cp infra/.env.example infra/.env             # where the series store is — URL and org, no secret
 cp infra/admin.env.example infra/secrets/admin.env   # the admin token. Fill it in; never committed
 cd infra && podman compose up -d influxdb grafana    # the broker needs its ACL first, below
-orexis-keygen <world>          # that world's host + clearing signing keys, once
 ```
 
 `infra/.env` holds **only** the URL and the org, because the generated compose files hand that
 file to every agent container. The admin token opens every bucket and lives apart from it, read
 by the infra containers and the two provisioning tools and by nothing else.
 
-Keys are **per world**, in `world/<name>/secrets/` and gitignored. Two worlds are two
-societies: the host that runs a market and the clearing authority that co-signs its claims
-belong to that society, and must not be able to sign for another.
+An agent's credentials are **per world**, in `world/<name>/secrets/` and gitignored, and nothing
+is signed in 0.2.0: the broker's ACL admits an agent only to its own topics.
 
 The MQTT broker is part of `infra/compose.yaml`, built from `infra/mosquitto/Containerfile`
 with a config that listens on `0.0.0.0` — mosquitto binds loopback only without one, and every
@@ -99,15 +97,16 @@ being evidence of anything — check by connecting, not by reading the log.
 # Deploy a world
 
 ```bash
-orexis-onboard simulation      # validate, then all three below
+orexis-onboard greenhouse      # all four below
 
 # or separately, when you want only one of them:
-#   orexis-influx simulation     # a bucket per agent, and a token that opens only it
-#   orexis-mqtt simulation       # a credential per principal, and the broker ACL, derived
-#   orexis-compose simulation    # writes world/simulation/compose.yaml FROM the world.ttl beside it
+#   orexis-influx greenhouse     # a bucket per agent, and a token that opens only it
+#   orexis-mqtt greenhouse       # a credential per principal, and the broker ACL, derived
+#   orexis-compose greenhouse    # writes world/greenhouse/compose.yaml from the world beside it
+#   orexis-dashboards greenhouse # a Grafana folder for the world
 ```
 
-All three read the same `world.ttl` and grant exactly what its wiring implies, so adding an
+All four read the world as an agent boots it and grant exactly what its wiring implies, so adding an
 agent to the world and re-running is the whole of deploying one — there is no list to keep in
 step. They are idempotent: an agent that already holds a bucket and a credential keeps them.
 
@@ -131,24 +130,18 @@ If no broker is running it says that instead, and the files are simply read when
 A world with a **new device** in it does still mint a credential that has to be flashed into that
 board before it can connect.
 
-```
-agent-fern       Bidding, Subscribing
-agent-supplier   Actuation, Hosting  +signing keys
-```
-
-The file is **generated, never hand-edited**. Adding an agent is adding it to `world.ttl` and
-regenerating; a hand-edit is a second roster waiting to drift from the model. Only the agent
-that derived `actuation:Actuation` is given signing keys, and each container mounts exactly one store
-credential — its own. That is the boundary, not packaging taste
-([world](/domain/world.md) §Deployment).
+The compose file is **generated, never hand-edited**: one service per agent, named for its id,
+plus a `simulation` service where the world marks systems `sim:simulatedBy`. Adding an agent is
+adding it to the world and regenerating; a hand-edit is a second roster waiting to drift from the
+documents. Each container mounts exactly one store credential — its own.
 
 # Up, down, and watch
 
 ```bash
-cd world/simulation
+cd world/greenhouse
 podman compose up -d            # each agent builds its own belief base
 podman compose logs -f          # all of them, interleaved
-podman compose logs -f agent-fern
+podman compose logs -f grower
 podman compose ps
 podman compose down             # stop and remove THIS world's containers
 ```
@@ -156,11 +149,11 @@ podman compose down             # stop and remove THIS world's containers
 A world is self-contained: its topology, its agents' opening beliefs and the compose file that
 runs it are one directory. There is no separate deploy tree to keep in step.
 
-`up` is **start**, not birth. An agent is born the first time it runs — it writes its opening
-beliefs once, and logs `born`. Every start after that refreshes the public world from the files
-and leaves beliefs alone, so a restart cannot reset who an agent became. Beliefs live in a
-named volume per agent and survive `up`, `down` and `restart` alike — see
-[agent](/domain/agent.md) §Lifecycle.
+`up` is **start**, not birth. The first boot builds the agent's store from the documents; every
+boot after that logs `booted from … (a volume lived in: its own graphs kept)`, reads the public
+documents again and leaves the agent's own graphs alone, so a restart cannot reset what it
+believes. The store lives in a named volume per agent and survives `up`, `down` and `restart`
+alike — see [belief-base](/domain/belief/belief-base.md).
 
 `down` removes only what *this* file declares. It is not a way to stop everything; for that see
 [tear-down](/runbooks/tear-down.md).
@@ -177,7 +170,7 @@ Rebuild only when a **dependency** changes (`pyproject.toml`) or you added a fil
 image copies rather than mounts:
 
 ```bash
-podman build -t ag:local .
+podman build -t orexis:local .
 podman compose up -d --force-recreate
 ```
 
@@ -217,21 +210,15 @@ flashed into a board that may not be in front of you.
 Each world has its own dataset, so switching destroys nothing and you can switch back:
 
 ```bash
-podman compose -f world/simulation/compose.yaml down
+podman compose -f world/greenhouse/compose.yaml down
 podman compose -f world/sensing/compose.yaml up -d
 ```
 
 Nothing to seed, and nothing shared to overwrite: each agent's belief base is its own volume,
 so worlds cannot touch each other at all.
 
-```bash
-orexis-validate simulation && orexis-validate sensing   # checked from the files, no store needed
-```
-
-**Two worlds may run at once only if their devices differ.** `simulation` and `sensing` share
-device ids on purpose — that is what lets one flashed board run in either — so both up
-together puts two agents on `sensors/fern/moisture` and both ingest every reading. Nothing
-prevents this; it is your job to know.
+**Two worlds may run at once only if their topics differ.** Two worlds naming the same topic put
+two agents on it and both ingest every reading. Nothing prevents this; it is your job to know.
 
 # Unattended, across reboots
 
@@ -256,35 +243,20 @@ Mosquitto used to be the exception, running as a **system** service. It is now i
 `infra/compose.yaml` like everything else, so there is again only one way to run each thing —
 `sudo systemctl disable --now mosquitto` if a host one survives from before.
 
-# Sensor-only until a pump is wired
-
-commands. Watch the supplier decide against real moisture first. When a pump is wired and
-
-Valve *calibration* is not a deployment toggle: it lives on the valve in `world.ttl`, because
-it is a fact about the hardware rather than about this installation.
-
 # No hardware?
 
-Not by running a simulator beside the agents and telling it which subjects to pretend to be —
-getting that wrong put two publishers on one topic with both readings ingested.
-
-**A simulation is a world.** The model already says what every device is and how it is driven;
-a device that is simulated is a *kind of device*, so an agent derives its capability from one
-exactly as it derives any other. Nothing is toggled, nothing is passed a flag, and a world
-cannot disagree with how it is actually running.
-
-**That world is `simulation`, and it is now the one to reach for.** Every device in it is stood
-in for by a container that reads its own model out of the world, so `podman compose up` in it
-needs no hardware at all. `sensing` and `terrace` are the worlds with a real board. See
-[world](/domain/world.md) §Simulation and
-[two-worlds-were-one](/decisions/two-worlds-were-one.md).
+**A simulation is part of a world.** The simulator (`simulation/`) is a process of its own that
+reads the world as an agent boots it and plays every system marked `sim:simulatedBy` from the
+world's own words — the topics, the cadence, the drying, a dose, a heating — so nothing is told
+by hand which subjects to pretend to be. `greenhouse` and `allotment` run whole without a board;
+`sensing` and `terrace` have a real one.
 
 # It went wrong
 
 | symptom | cause |
 |---|---|
-| agent refuses to start, `BeliefsInvalid` | its opening beliefs do not satisfy the shapes for the capabilities the world derived for it. The report names the shape; fix `world/<name>/beliefs/<agent>.ttl` |
-| agent logs `born` on every start | it is not keeping its volume — check the `orexis-<world>-<agent>` volume is mounted at `/app/state` |
+| agent refuses to start, `DocumentRefused` | a document states no kind, claims to be the catalogue, or states an arrival or an owner. The message names the file |
+| agent never logs `a volume lived in` | it is not keeping its volume — check the `orexis-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |
-| agent cannot reach the broker | the world says `mqtt:brokerHost "localhost"`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |
+| agent cannot reach the broker | the world's `mqtt4ssn:Broker` says `schema:url` on `localhost`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |
