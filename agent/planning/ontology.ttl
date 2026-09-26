@@ -150,7 +150,7 @@ planning:inScope a owl:ObjectProperty ; rdfs:range planning:Scope ; rdfs:label "
     rdfs:comment "The scope a predicate is in, and the scope an action's reads and writes lie in — by construction one, since an action touching two would have joined them. No domain: said of a property and of an action alike. An action stating no effect is in no scope, as no world admits it; one whose effect cannot be read is in the one scope that joins everything." .
 
 planning:Plan a owl:Class ; rdfs:label "Plan" ;
-    rdfs:comment "WHAT ONE PASS FOUND, written down: the steps it would take, in order, and how long they come to. It lived only as a Python object handed to the keeper and was then discarded, so nothing outside the process could see what had been decided. One per want, named for it and replaced whole, in the imaginarium, which dies with the pass because a plan about a world that has moved is stale. ITS STEPS ARE HELD IN THE WORDS OF WHOEVER READS THEM: `execution:Step`, chained by `execution:then` and held together by `execution:partOf`, because execution reads membership and order — the same shape an intention's steps have, so committing to a plan is copying what is already there rather than being handed a Python object across a layer. What each step FILLS and which candidate it came from are the SEARCH's facts about it and carry the search's prefix, and execution reads neither." .
+    rdfs:comment "WHAT ONE PASS FOUND, written down: the steps it would take, in order, and what they spent. One per want, named for it and replaced whole, in the imaginarium beside the worlds it was decided among. ITS STEPS ARE HELD IN THE WORDS OF WHOEVER READS THEM: `execution:Step`, chained by `execution:then` and held together by `execution:partOf`, because the executor adopts membership and order as they stand. What each step FILLS and which candidate it came from are the search's facts about it and carry the search's prefix." .
 
 planning:outcome a owl:ObjectProperty ; rdfs:domain planning:Plan ; rdfs:range planning:Outcome ;
     rdfs:label "outcome" ;
@@ -163,7 +163,7 @@ planning:Satisfied a planning:Outcome ; rdfs:label "satisfied" ;
     rdfs:comment "A world was reached where the want's met-test passes. The steps are the way there, and there are none where the want was already met at the root." .
 
 planning:NoCandidate a planning:Outcome ; rdfs:label "no candidate" ;
-    rdfs:comment "No lever this agent holds points at this want: the search was offered no step at all. EQUIP ME, and it is not the same finding as Exhausted — a planner reporting the two alike would send somebody to buy a pump when the problem is the dose." .
+    rdfs:comment "No action this agent holds points at this want: the search was offered no candidate at all. EQUIP ME, and it is not the same finding as Exhausted — a planner reporting the two alike would send somebody to buy a pump when the problem is the budget." .
 
 planning:Exhausted a planning:Outcome ; rdfs:label "exhausted" ;
     rdfs:comment "Levers exist and no bounded sequence of them lands inside the region: the budget in worlds ran out, or the frontier emptied. MY DOSES ARE TOO COARSE, or my region is too tight for them." .
@@ -188,7 +188,7 @@ planning:DesireGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Desire graph" ;
-    rdfs:comment "A graph of `planning:Desire` rows — named for what it HOLDS, as every graph class is since a-graph-class-is-named-for-what-it-holds, and NOT the modality class of the same spelling that #312 retired (a-store-is-a-modality): a modality is a store now, and this says only which kind of row a graph carries. The roots graph is one, `roots/<agent>` for eyes: ONE agent's desires, every `planning:Desire` it holds for its whole life: the region want per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source. The promises are another (`progression:PromisesGraph`), desires the bridge raised. Called `orexis:RootsGraph` until the class was named for the derivation's role instead of the rows, a synonym in the T-Box." .
+    rdfs:comment "A graph of `planning:Desire` rows — named for what it HOLDS, as every graph class is (a-graph-class-is-named-for-what-it-holds). A world authors one per agent, `<> a planning:DesireGraph`, with no period, so it holds at every instant as the T-Box does." .
 
 
 
@@ -208,20 +208,20 @@ planning:WantGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Want graph" ;
-    rdfs:comment "A graph of `planning:Want` rows — what a desire came to when a situation made it bite (planning:Want). The derivation's are these, one per want it minted, each holding during its period and `orexis:arrivedBy orexis:Derived`; the world's asserted graph is one too where a world ratifies a standing want directly, and it is `orexis:Asserted`. Which of the two a reader means is the ARRIVAL axis and never a subclass of this one — `deliberation:PursuedGraph` was that subclass and is retired. Named for what it holds, like `planning:DesireGraph` beside it, and no subclass of it: a want is not a desire (planning:Want)." .
+    rdfs:comment "A graph of `planning:Want` rows. The derivation's are these, one per want it minted, each holding during its period and `orexis:arrivedBy orexis:Derived`; a world that states a want directly writes one `orexis:Asserted`, and a refinement's is the agent's own, `orexis:Recorded`. Which a reader means is the ARRIVAL axis, never a subclass. A want is not a desire, so this is no subclass of `planning:DesireGraph`." .
 
 
 planning:WantState
     a owl:Class ;
     rdfs:label "Want state" ;
-    rdfs:comment "Where a want has got to. Seven values and no eighth: it has been recognised, it is being planned for, a plan was found, the plan is being carried out, it is finished, it failed, or nothing can reach it." .
+    rdfs:comment "Where a want has got to. `planning:Recognized` is the one value written: the want was minted and nothing has been planned yet. Where a plan stands is the plan's outcome and the intention's, and a met want is withdrawn rather than marked." .
 
 
 planning:about
     a owl:ObjectProperty ;
     rdfs:domain planning:Desire ;
     rdfs:label "about" ;
-    rdfs:comment "What a want is ABOUT — the one node an action query may join a lever to. Stated by whoever derived the want, and opaque to the kernel: sensing says a region want and a freshness want are about an observable property, and its own action queries walk from there; a want that is about nothing (a debt, a call) states none and is joined to its rows another way. The kernel carries it from the want to the row to the rule (`VALUES (?want ?about)` in a precondition, `$about` in an effect) and never reads it. It replaced the ledger's and the row's `ssn:forProperty`, which was the kernel naming a sensing notion (the-region-want-is-sensings-want)." .
+    rdfs:comment "What a want is ABOUT — the property a violation's constraint is about, carried from the met-test's report onto the want the derivation mints, and opaque to the kernel. A want about nothing in particular (a debt, a call) states none." .
 
 
 planning:estimates
@@ -243,7 +243,7 @@ planning:holdsAt
     rdfs:domain planning:Desire ;
     rdfs:range xsd:dateTime ;
     rdfs:label "holds at" ;
-    rdfs:comment "The instant an `orexis:At` want must hold at — a predicted crossing — the start of the earliest prediction at which the root reads unmet (#643). The keeper holds the plan's first step `progression:notBefore` this instant less the plan's own duration, so acting early is placed rather than immediate (#619)." .
+    rdfs:comment "The instant a want must hold at — a predicted crossing: the start of the earliest ground at which its desire reads unmet. A want unmet in the present too is minted at none, since the present outranks the instant." .
 
 
 planning:metWhen
@@ -259,7 +259,7 @@ planning:state
     rdfs:domain planning:Want ;
     rdfs:range planning:WantState ;
     rdfs:label "state" ;
-    rdfs:comment "Where this want has got to. On a WANT and never on a desire, because a desire has nowhere to get to — it stands for the agent's life and is either met or not at that instant. Exactly one value at a time: whoever moves the want to a stage removes the stage it was in. `planning:Done` is TERMINAL — nothing moves a want out of it, so that the writers stay independent of each other and of the order they happen to run in; what clears it is the want being collected." .
+    rdfs:comment "Where this want has got to. On a WANT and never on a desire, because a desire has nowhere to get to — it stands for the agent's life and is either met or not at that instant." .
 
 
 planning:unmetWhen
@@ -268,17 +268,12 @@ planning:unmetWhen
     rdfs:label "unmet when" ;
     rdfs:comment """The met-test's negative twin (#468): a want met by ABSENCE points here at the AVOIDED state — a node carrying one `sh:select`, the pattern whose rows mean the want is unmet. Ruled by the sovereign when the first build routed avoidance through `planning:metWhen`: a met-test pointing at the bad state evaluates right and READS inverted — 'met when dry-and-hot' — and a term that reads wrong to every skimmer is the flag-that-eventually-disagrees, in the reader's head.
 
-The contract of the pattern: `$this` is the agent and `$state` names the graph the readings live in, both substituted exactly as a measure's parameters are — in the PATTERN, never the projection, where a substituted IRI is a parse error — and everything else is an unqualified pattern over public knowledge. Run by the STORE'S OWN ENGINE against whichever world is judged, live or a candidate node, so entered-or-held is one text on one engine; a pattern that fails to run reads as unmet, the loud direction. Its urgency is binary — met 0, unmet 1 — which the four-measures table calls sufficiency where no intermediate worlds exist, and the kernel judges it with no capability in the room: a want that is pure ratified data has no behaviour to grant, and where nothing could differ there is a function, not a capability.""" .
+The contract of the pattern: `$this` is the agent and `$state` names the graph the readings live in, both substituted exactly as a measure's parameters are — in the PATTERN, never the projection, where a substituted IRI is a parse error — and everything else is an unqualified pattern over public knowledge. Run by the STORE'S OWN ENGINE against whichever world is judged, live or a candidate node, so entered-or-held is one text on one engine; a pattern that fails to run reads as unmet, the loud direction. Judged like any met-test: met or not, and nothing in between.""" .
 
 
 
 #################  Individuals  #################
 
-
-planning:Done
-    a planning:WantState ;
-    rdfs:label "done" ;
-    rdfs:comment "The plan finished, or a search found the want already reached in no steps. What is wanted has happened, and `forget_wants` collects it — the want is not deleted where it is finished, because deciding and collecting are two acts and one sweep is easier to reason about than a delete at every decision point." .
 
 
 planning:Recognized

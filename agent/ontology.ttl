@@ -29,13 +29,12 @@
 orexis:Action
     a owl:Class ;
     rdfs:label "Action" ;
-    rdfs:comment "One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/kernel/action.md), and the KIND of act itself, which an intention commits to and a row carries: `planning:precondition` is a SELECT whose rows are the steps a world admits; `planning:effect` is what taking one makes true and false, as rules; `execution:implementation` is what goes out when one is taken, as operations; `planning:costs` and `planning:landsAfter` sit beside them. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing." .
+    rdfs:comment "One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/kernel/action.md), and the KIND of act itself, which an intention commits to and a row carries: `planning:precondition` is a SELECT whose rows are the steps a world admits; `planning:effect` is what taking one makes true and false, as rules; `execution:implementation` is what goes out when one is taken, as operations; `planning:costs` and `planning:landsAfter` sit beside them. Stated by the domain that owns the acting, in its `actions.ttl`, a graph that says it is an `orexis:ActionGraph`, so an author adds a way of acting by adding one node." .
 
 orexis:Agent
     a owl:Class ;
     rdfs:label "Agent" ;
-    rdfs:comment "A self-interested principal with a region want. What an agent can DO is not its class — it is the set of capabilities composed onto it, so two agents of the same kind may run different modules." ;
-    orexis:resignAfterS "600"^^xsd:integer .
+    rdfs:comment "A self-interested principal: one process, told its own `orexis:localId`, holding one store and acting for a subject (`orexis:actsFor`). What it can do is the actions its world's domains ship; nothing is granted to it (knowledge/domain/kernel/agent.md)." .
 
 orexis:Arrival
     a owl:Class ;
@@ -46,7 +45,7 @@ orexis:BeliefGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Belief graph" ;
-    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments report. NOT the graph historically called `beliefs` — `picks/<agent>` now — which holds picks and no beliefs at all; that misnaming is what naming the axis exposed." .
+    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments and peers report." .
 
 orexis:CatalogueGraph
     a owl:Class ;
@@ -92,13 +91,13 @@ orexis:WorkingGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Working graph" ;
-    rdfs:comment "ONE agent's own graph that nothing outside its package reads: a reviewer's scratch, a running summary, a record of decisions. Classified like any per-agent graph, so a volume knows it from litter — and left out of what a plan carries into a possible world and what a validation reads beside the state, since none of it is a fact about the world a shape is written against. What is carried is asked of `store.recorded_graphs()`; this class is how a package says: mine, and not that." .
+    rdfs:comment "ONE agent's own graph that nothing outside its package reads — the scopes, a package's scratch. Classified like any per-agent graph, so a volume knows it from litter, and never carried into a possible world, since none of it is a fact about the world a met-test reads." .
 
 orexis:WorldGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph , orexis:PublicGraph ;
     rdfs:label "World graph" ;
-    rdfs:comment "Topology and composed capabilities: who is wired to what, and who can do what. Public, sovereign-authored. Covers what the sovereign ratified AND what the rules and the closure made of it — those are three graphs and one role, because what a graph holds and who put it there are different questions. The second is answered in PROV-O; see orexis/provenance.py." .
+    rdfs:comment "Topology: the agents and what each acts for, the subjects, the devices and sensors and how they are wired, the venues. Public and sovereign-authored, importing the domains the world speaks (knowledge/domain/kernel/world.md)." .
 
 #################  Properties  #################
 
@@ -106,7 +105,7 @@ orexis:actsFor
     a owl:ObjectProperty ;
     rdfs:domain orexis:Agent ;
     rdfs:label "acts for" ;
-    rdfs:comment "The subject whose interest this agent advances. Generic; a domain narrows the range (in the water domain, a Plant)." .
+    rdfs:comment "The subject whose interest this agent advances. Generic; a domain narrows the range — a plant, a tank, a tower." .
 
 orexis:arrivedBy
     a owl:ObjectProperty ;
@@ -119,7 +118,7 @@ orexis:beliefsOf
     rdfs:domain orexis:Graph ;
     rdfs:range orexis:Agent ;
     rdfs:label "beliefs of" ;
-    rdfs:comment "Which agent owns this graph — said by the owner in the classification it writes when it creates the graph, beside what the graph is and how it arrived, so a reader that means its OWN graphs of a kind asks by owner as well as by class. In a deployed volume every graph is the one agent's; the world-wide validation and the tests stand several agents in one store, and this is what keeps one agent's roots and picks apart from the next's there — the name used to, and a name is for eyes." .
+    rdfs:comment "Which agent owns this graph — said by the owner in the classification it writes when it creates the graph, beside what the graph is and how it arrived, so a reader that means its OWN graphs of a kind asks by owner as well as by class. In a deployed volume every graph is the one agent's; a test standing several agents in one store is kept apart by this, never by a graph's name." .
 
 orexis:end
     a owl:DatatypeProperty ;
@@ -178,7 +177,7 @@ orexis:PredictionGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Prediction graph" ;
-    rdfs:comment "A PREDICTION: a graph holding during the window it predicts for, carrying what a package expects a reading to be by then — the predicted reading keyed exactly as the present's is, typed with every band it may be in, a centre where the package has one — written by sensing from the drifts after every reading, one graph per horizon (the-drift-is-sensings-and-its-result-is-predictions, #642). A KIND OF ITS OWN to the doors: `query_at` hands a reader the predictions holding at the instant asked about beside public knowledge and the records holding then; the agent's own records never list them, no validation reads them, and no plan carries them into its imaginarium until the search reads predictions (#643). The first is the one the next reading is held to, its window the next reading's; the window closing with no reading is staleness. Typed in the classification when written, with a period in the periods table, as a round is." .
+    rdfs:comment "A PREDICTION: a graph holding during the stretch it predicts for, carrying a predicted `sosa:Observation` with the number a drift gives there — one graph per stretch between the instants the reading changes range, written by the prediction package (knowledge/domain/prediction/prediction.md). Its side is a revision the rules conclude as of a real reading. The planner lays a ground per stretch, applying the prediction to the present; the agent's own records never list it, and the executor answers a step over the readings, never over what was foreseen." .
 
 orexis:retracts
     a owl:DatatypeProperty ;
