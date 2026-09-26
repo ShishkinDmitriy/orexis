@@ -1,8 +1,8 @@
 """`says`: what taking a step tells a peer, as documents, made from the present.
 
-An action whose taking tells somebody something carries `execution:says`, a CONSTRUCT over the
-beliefs as they stand when the step is taken, with the step's parameters as `$tokens`, `$me`
-and `$now`. Its result is read as documents, the shape a world's files and a peer's messages
+An action whose taking tells somebody something has an `execution:Saying` among its operations,
+an `sh:construct` over the beliefs as they stand when the step is taken, with the step's
+parameters as `$tokens`, `$me` and `$now`. Its result is read as documents, the shape a world's files and a peer's messages
 share: an IRI the result says is `execution:to` an agent is a graph, what is said of it and of
 the blank nodes hanging off it is its content, and its kind, its period and whom it is to are
 the rows about it — `rdf:type` of a class the vocabulary puts beneath `orexis:Graph`,
@@ -21,13 +21,12 @@ from agent import clock
 from agent.ontology import ACTION, KNOWN, OREXIS, local_of
 from agent.store import bind, closed, construct, graphs_of, instant, rows
 
+from .implementation import SAYING, operations
 from .ontology import EXECUTION
 
 log = logging.getLogger("says")
 
-_SAYS_Q = """
-SELECT ?text (GROUP_CONCAT(STR(?takes); separator=" ") AS ?params) WHERE {
-  $action execution:says ?text . OPTIONAL { $action orexis:takes ?takes } } GROUP BY ?text"""
+_TAKES_Q = """SELECT ?takes WHERE { $action orexis:takes ?takes }"""
 
 _TO = EXECUTION + "to"
 _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
@@ -35,21 +34,26 @@ _TEMPORAL = "http://purl.org/dc/terms/temporal"
 _GRAPH = OREXIS + "Graph"
 
 
-def says(store, said: dict, me: str) -> list[tuple[list[str], ox.Store]]:
+def says(store, said: dict, me: str, *, order: float | None = None) -> list[tuple[list[str], ox.Store]]:
     """Every document the step `said` tells, with the agents it is to — the executor's rows for
     the step, keyed by local part as `Executor.step_of` answers them — made over the beliefs
-    holding now. Empty where the action says nothing or its texts construct no graph."""
+    holding now: every saying of the action's implementation, or those of one `order`. Empty
+    where it has none or its texts construct no graph."""
     action = said.get("fills")
     if not action:
         return []
+    texts = [op.text for op in operations(store, action)
+             if op.kind == SAYING and op.text and (order is None or op.order == order)]
+    if not texts:
+        return []
     now = clock.now()
+    tokens = {"me": me, "now": instant(now)}
+    for r in rows(store, _TAKES_Q, graphs_of(store, ACTION), action=action):
+        if local_of(r["takes"]) in said:
+            tokens[local_of(r["takes"])] = said[local_of(r["takes"])]
     triples: list = []
-    for found in rows(store, _SAYS_Q, graphs_of(store, ACTION), action=action):
-        tokens = {"me": me, "now": instant(now)}
-        for param in (found.get("params") or "").split():
-            if local_of(param) in said:
-                tokens[local_of(param)] = said[local_of(param)]
-        triples += construct(store, bind(found["text"], **tokens), graphs_of(store, *KNOWN, at=now, now=now))
+    for text in texts:
+        triples += construct(store, bind(text, **tokens), graphs_of(store, *KNOWN, at=now, now=now))
     return _documents(store, triples, action)
 
 

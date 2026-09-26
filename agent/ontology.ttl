@@ -27,7 +27,7 @@
 orexis:Action
     a owl:Class ;
     rdfs:label "Action" ;
-    rdfs:comment "One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:available` is its precondition, a SELECT whose rows are the affordances it puts on an agent's menu now; `sh:construct` and `orexis:retracts` are its effect, with `orexis:landsAfter` and `orexis:confirmedBy` beside them; who carries it out is the code's to say, by `@contributes`. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing." ;
+    rdfs:comment "One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `orexis:precondition` is a SELECT whose rows are the steps a world admits; `orexis:effect` is what taking one makes true and false, as rules; `orexis:implementation` is what goes out when one is taken, as operations; `orexis:costs` and `orexis:landsAfter` sit beside them. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing." ;
     <http://example.org/orexis/assembly#signature> "(act, judgment, intention) -> bool" .
 
 orexis:Agent
@@ -159,7 +159,7 @@ orexis:about
     a owl:ObjectProperty ;
     rdfs:domain orexis:Desire ;
     rdfs:label "about" ;
-    rdfs:comment "What a want is ABOUT — the one node an action query may join a lever to. Stated by whoever derived the want, and opaque to the kernel: sensing says a region want and a freshness want are about an observable property, and its own action queries walk from there; a want that is about nothing (a debt, a call) states none and is joined to its rows another way. The kernel carries it from the want to the row to the rule (`VALUES (?want ?about)` in orexis:available, `$about` in an effect) and never reads it. It replaced the ledger's and the row's `ssn:forProperty`, which was the kernel naming a sensing notion (the-region-want-is-sensings-want)." .
+    rdfs:comment "What a want is ABOUT — the one node an action query may join a lever to. Stated by whoever derived the want, and opaque to the kernel: sensing says a region want and a freshness want are about an observable property, and its own action queries walk from there; a want that is about nothing (a debt, a call) states none and is joined to its rows another way. The kernel carries it from the want to the row to the rule (`VALUES (?want ?about)` in a precondition, `$about` in an effect) and never reads it. It replaced the ledger's and the row's `ssn:forProperty`, which was the kernel naming a sensing notion (the-region-want-is-sensings-want)." .
 
 orexis:actsFor
     a owl:ObjectProperty ;
@@ -173,12 +173,53 @@ orexis:arrivedBy
     rdfs:range orexis:Arrival ;
     rdfs:label "arrived by" .
 
-orexis:available
+orexis:precondition
     a owl:DatatypeProperty ;
     rdfs:domain orexis:Action ;
     rdfs:range xsd:string ;
-    rdfs:label "available" ;
-    rdfs:comment "The precondition, as a SELECT over the world binding one variable per parameter the action `orexis:takes` — named for the parameter's local part — and, where the row is owed to someone rather than the agent's own option, `?for_agent`; a row that serves one want binds `?want` too. `$me`, `$wants` and `$picks` are substituted by the collector; prefixes are the store's. A row exists only where every hop of the walk holds, which is why the menu is the precondition language and chaining needs no `requires` of its own." .
+    rdfs:label "precondition" ;
+    rdfs:comment "When an action may be taken, as a SELECT over the world binding one variable per parameter the action `orexis:takes`, named for the parameter's local part; `$me` is substituted by whoever asks. A row is a step the world admits: it exists only where every hop of the walk holds, which is why chaining needs no `requires` of its own. The facts a step's precondition read in the world it was planned from are the step's precondition too (knowledge/domain/precondition.md)." .
+
+orexis:effect
+    a owl:ObjectProperty ;
+    rdfs:domain orexis:Action ;
+    rdfs:range orexis:Effect ;
+    rdfs:label "effect" ;
+    rdfs:comment "What taking an action makes true and false of the world it is taken in: the one declaration a search plans on and the world is held to (an-effect-is-one-declaration)." .
+
+orexis:Effect
+    a owl:Class ;
+    rdfs:label "Effect" ;
+    rdfs:comment "An action's effect as rules, `sh:rule` to each, run by a search on the possible world a step makes and never on beliefs — which is why an effect may delete, where a revision only concludes. A rule is a `sh:SPARQLRule` with an `sh:construct`, whose result is ADDED, or with an `orexis:update`, a `DELETE … WHERE` naming no graph, which is run against the new world with the world's graphs as its dataset. Rules are grouped by `sh:order` as SHACL groups them: every rule of one order reads the same world, its deletions are applied before its additions, and a later order reads what the earlier ones made." .
+
+orexis:update
+    a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "update" ;
+    rdfs:comment "On an effect's `sh:SPARQLRule`, where SHACL has only `sh:construct`: a `DELETE … WHERE` taking out of the world a step makes whatever stands in the place the step changes, which nobody can name in advance. It names no graph; the search runs it `WITH` the new world and `USING` every graph of it." .
+
+orexis:implementation
+    a owl:ObjectProperty ;
+    rdfs:domain orexis:Action ;
+    rdfs:range orexis:Implementation ;
+    rdfs:label "implementation" ;
+    rdfs:comment "How an action is carried out when a step filling it is taken — what actually goes out, sized from the present. The search never reads it: it plans on the effect, and the world is held to the effect whichever operations carried it out." .
+
+orexis:Implementation
+    a owl:Class ;
+    rdfs:label "Implementation" ;
+    rdfs:comment "An action's operations, `orexis:operation` to each, grouped by `sh:order` as an effect's rules are: every operation of one order is made from the same present, and a later order's from the present after what the earlier ones said was believed and revised." .
+
+orexis:operation
+    a owl:ObjectProperty ;
+    rdfs:domain orexis:Implementation ;
+    rdfs:range orexis:Operation ;
+    rdfs:label "operation" .
+
+orexis:Operation
+    a owl:Class ;
+    rdfs:label "Operation" ;
+    rdfs:comment "One thing taking a step does: a command to a device, a document to a peer, or writing the effect itself for a world with nothing to report it. The kinds are execution's (`execution:Command`, `execution:Saying`, `execution:Fictive`)." .
 
 orexis:beliefsOf
     a owl:ObjectProperty ;
@@ -277,12 +318,9 @@ orexis:resignAfterS
 
 orexis:retracts
     a owl:DatatypeProperty ;
-    rdfs:domain orexis:Action ;
     rdfs:range xsd:string ;
     rdfs:label "retracts" ;
-    rdfs:comment """A CONSTRUCT whose result is the triples this effect REMOVES. Ours, because SHACL-AF has none: its rules exist to add entailments, so the standard has no way to say a thing stops being true. A simulator computes `(beliefs - retracts) + adds`, which keeps the whole operation side-effect free — nothing is deleted anywhere, two graphs are subtracted.
-
-It is not optional, and the reason is arithmetic rather than taste. `sensed_writer` does DELETE-then-INSERT on ONE deterministic observation node per (subject, property), so a reading REPLACES its predecessor rather than joining it. An effect that predicts a new reading without retracting the node it replaces leaves that node carrying two `sosa:hasSimpleResult` values — and the survival envelope is `sh:qualifiedMaxCount 0` over readings past its edge, so a stale bad reading makes a possible world report a catastrophe in a world the plan has just fixed, and the planner rejects the plan that works. It fails the other way too: a stale GOOD reading satisfies a region goal the predicted value misses.""" .
+    rdfs:comment """On a PREDICTION's catalogue row: the `DELETE … WHERE` naming `GRAPH $state` that takes out of a ground what the prediction's graph replaces — the reading it predicts is no longer the reading that stood — when a boundary applies it. A prediction is an action nobody takes, and this is the half of its effect its graph cannot hold; an action states its own as an `orexis:update` rule of its `orexis:effect`.""" .
 
 orexis:start
     a owl:DatatypeProperty ;

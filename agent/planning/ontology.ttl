@@ -112,7 +112,7 @@ planning:repeats a owl:ObjectProperty ; rdfs:domain planning:Weighing ; rdfs:ran
     rdfs:comment "Said of a weighing of a CANDIDATE that reached no new world: the world its fork came to holds exactly what this one already held, by hash — its parent's, where the effect changed nothing, or an earlier world's, where the path went round. A cycle is a world already seen, and this is where the search says it saw one." .
 
 planning:Candidate a owl:Class ; rdfs:label "Candidate" ;
-    rdfs:comment """A MOVE A WORLD ADMITS — one action and one filling of it, off the action's own `orexis:available`, whose rows ARE the fillings. A search walks possible worlds and forks on a candidate at a time; the ones it PICKS become the plan's steps, and that is the whole difference between the two words. They were one Python class until the fields that would have told them apart turned out to be set by nothing.
+    rdfs:comment """A MOVE A WORLD ADMITS — one action and one filling of it, off the action's own `orexis:precondition`, whose rows ARE the fillings. A search walks possible worlds and forks on a candidate at a time; the ones it PICKS become the plan's steps, and that is the whole difference between the two words. They were one Python class until the fields that would have told them apart turned out to be set by nothing.
 
 ONE PER POSSIBLE WORLD, written beside the world's row when the fork is made, so the chain a search walked is in the store rather than in a tuple a node happened to carry. `extract_plan` reads it back.""" .
 

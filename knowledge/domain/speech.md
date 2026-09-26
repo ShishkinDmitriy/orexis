@@ -28,8 +28,9 @@ says what each one is. So there is no pipeline, only a door.
 
 # Where documents come from and go
 
-An [action](/domain/action.md) that tells somebody something carries `execution:says`, a CONSTRUCT
-run over the present when a [step](/domain/step.md) filling it is taken; an IRI its result says is
+An [action](/domain/action.md) that tells somebody something has an `execution:Saying` among the
+operations of its [implementation](/domain/implementation.md), a CONSTRUCT run over the present
+when a [step](/domain/step.md) filling it is taken; an IRI its result says is
 `execution:to` an agent is a graph, what it says of that IRI is the graph's content, and its kind
 and period are the rows. The runtime believes each document as said, revises it, and hands it to
 the [transport](/domain/transport.md), which publishes it on the topic the peer listens to.

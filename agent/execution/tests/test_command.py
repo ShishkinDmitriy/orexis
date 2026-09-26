@@ -23,10 +23,10 @@ def store(monkeypatch):
     update(st, f"""INSERT DATA {{
   GRAPH <{T}actions> {{
     <{T}Dose> a orexis:Action ; orexis:takes <{T}valve> , <{T}reading> ;
-      execution:command \"\"\"SELECT ?actuator ?payload WHERE {{
+      orexis:implementation [ orexis:operation [ a execution:Command ; sh:select \"\"\"SELECT ?actuator ?payload WHERE {{
           $reading sosa:hasSimpleResult ?value . $valve <{T}cap> ?cap .
           BIND($valve AS ?actuator)
-          BIND(CONCAT('{{"dose_ml": ', STR(xsd:integer(ROUND((0.45 - ?value) * 2000.0))), '}}') AS ?payload) }}\"\"\" .
+          BIND(CONCAT('{{"dose_ml": ', STR(xsd:integer(ROUND((0.45 - ?value) * 2000.0))), '}}') AS ?payload) }}\"\"\" ] ] .
     <{T}Look> a orexis:Action ; orexis:takes <{T}valve> . }}
   GRAPH <{T}world> {{ <{T}pump> <{T}cap> 500 }}
   GRAPH <{T}sensed> {{ <{T}soil> sosa:hasSimpleResult 0.35 }}
@@ -43,5 +43,5 @@ def test_a_step_is_sized_from_the_reading_in_hand(store):
     assert command(store, said, T + "me") == [(T + "pump", {"dose_ml": 200})], "0.10 short, at two litres a fraction"
 
 
-def test_a_step_whose_action_carries_no_command_sends_nothing(store):
+def test_a_step_whose_action_has_no_command_sends_nothing(store):
     assert command(store, {"step": T + "step", "fills": T + "Look", "valve": T + "pump"}, T + "me") == []

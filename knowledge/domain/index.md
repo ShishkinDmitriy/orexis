@@ -56,7 +56,7 @@ T-Box). It describes the design; it is NOT the live sensed state.
 
 # Means — actions, steps, and what taking one comes to
 
-* [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, taker. A package adds one node and one `take()`.
+* [action](/domain/action.md) - One way of acting as one node — and the kind of act itself: precondition, effect, implementation.
 * [step](/domain/step.md) - One action filled in: its parameters bound, whom it serves. A world's are derived; a plan's are written down.
 * [plan](/domain/plan.md) - What one pass returns for one want: steps in order, an outcome, a cost, the candidate it came through. Never executed, never stored.
 * [precondition](/domain/precondition.md) - The facts a step's rule read, instantiated; a plan's is their regression; checked by asking the present, never by re-running the rule.
@@ -68,13 +68,15 @@ T-Box). It describes the design; it is NOT the live sensed state.
 * [relevance](/domain/relevance.md) - Which actions could serve a want: read off the actions, closed backward through preconditions, never declared; unreadable keeps every action.
 * [scope](/domain/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.
 
+* [implementation](/domain/implementation.md) - How an action is carried out when a step is taken: operations grouped by order, sized from the present, never read by a search.
+* [operation](/domain/operation.md) - One thing taking a step does — a command, a saying, or the fictive write. Not an act, which is the record.
 * [speech](/domain/speech.md) - A peer's word is a document: heard where it is state and replaces only a peer's word, and what the agent said, believed as said.
 * [transport](/domain/transport.md) - How an agent reaches its society: a capability the bus grants, holding the connection and three choir hooks. Not a driver.
 
 * [remembered plan](/domain/remembered-plan.md) - A plan that worked, kept on its want and keyed by what its steps read: adopted where that holds, forgotten when it fails.
 * [bridge](/domain/bridge.md) - Joins an abstract action to the vocabulary beneath: translates its promised facts down and its verdict back, with the lower level's estimate. Never a method.
 * [method](/domain/method.md) - The steps an action comes to, declared by its package: expanded at adoption, walked on feedback, never searched; each step says what it waits for.
-* [effect](/domain/effect.md) - What taking an action would make true: a package's SHACL rule, with its timing and the route by which anyone would learn it landed.
+* [effect](/domain/effect.md) - What taking an action would make true and false: rules in SHACL's shape, grouped by order, run on a possible world, deletes included.
 
 * [gap](/domain/gap.md) - The signed, normalised distance from what is sensed to what is wanted. A verdict, computed always and stored never; no reading yields no row.
 

@@ -94,7 +94,7 @@ costs one validation; trusting a declaration that turns out to be wrong costs a 
 # Each package ships its own
 
 There is no menu file. Each package that owns a way of acting ships its
-[actions](/domain/action.md), and `Steps.find_all` runs every action's `orexis:available` it is
+[actions](/domain/action.md), and `Steps.find_all` runs every action's precondition it is
 handed — sensing contributes Observe, actuation Actuate, the market Acquire and the host's Apply.
 
 It began as one `menu.rq` in the deliberation package, which made the KINDS of action a registry

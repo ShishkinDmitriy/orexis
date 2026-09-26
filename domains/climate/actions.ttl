@@ -15,7 +15,7 @@
 climate:Heating a orexis:Action ;
     rdfs:label "heat a subject until its reading is inside its range" ;
     orexis:takes climate:heater , actuation:reading ;
-    orexis:available """PREFIX climate: <http://example.org/orexis/climate#>
+    orexis:precondition """PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT DISTINCT ?heater ?reading WHERE {
@@ -25,12 +25,14 @@ climate:Heating a orexis:Action ;
                      sensing:below ?range .
         }""" ;
     orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:retracts """PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { GRAPH $state { $reading sensing:below ?range } }
-        WHERE  { GRAPH $state { $reading sensing:below ?range } }""" ;
-    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
-        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ;
-    execution:command """PREFIX climate: <http://example.org/orexis/climate#>
+    orexis:effect [ a orexis:Effect ;
+        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range  }
+        WHERE  { $reading sensing:below ?range  }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] ;
+    orexis:implementation [ a orexis:Implementation ;
+        orexis:operation [ a execution:Command ; sh:select """PREFIX climate: <http://example.org/orexis/climate#>
         SELECT ?actuator ?payload WHERE {
             $reading sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value ;
                      sosa:observedProperty ?property .
@@ -42,4 +44,4 @@ climate:Heating a orexis:Action ;
             BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), IF(?wanted < 0.0, 0.0, ?wanted)) AS ?seconds)
             BIND($heater AS ?actuator)
             BIND(CONCAT('{"heat_s": ', STR(xsd:integer(ROUND(?seconds))), '}') AS ?payload)
-        }""" .
+        }""" ] ] .

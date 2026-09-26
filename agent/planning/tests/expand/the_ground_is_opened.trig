@@ -38,20 +38,19 @@ GRAPH :world {
 
 GRAPH :actions {
   :fill a orexis:Action .
-  :fill orexis:available """PREFIX : <http://example.org/test#>
+  :fill orexis:costs """PREFIX : <http://example.org/test#>
+      SELECT (1 AS ?cost) WHERE { }""" .
+  :fill orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX : <http://example.org/test#>
+      DELETE { $tank :level ?l  }
+      WHERE  { $tank :level ?l  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?tank :level ?next } WHERE {
+      $tank :level ?l .
+      BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
+  :fill orexis:precondition """PREFIX : <http://example.org/test#>
       SELECT ?tank WHERE {
       ?tank a :Tank ; :level ?l .
       FILTER(?l < 10) }""" .
-  :fill orexis:costs """PREFIX : <http://example.org/test#>
-      SELECT (1 AS ?cost) WHERE { }""" .
-  :fill orexis:retracts """PREFIX : <http://example.org/test#>
-      DELETE { GRAPH $state { $tank :level ?l } }
-      WHERE  { GRAPH $state { $tank :level ?l } }""" .
   :fill orexis:takes :tank .
-  :fill sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT { ?tank :level ?next } WHERE {
-      $tank :level ?l .
-      BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" .
   :tank a orexis:Parameter .
 }
 

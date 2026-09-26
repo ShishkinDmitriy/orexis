@@ -25,9 +25,9 @@ def store(monkeypatch):
   GRAPH <{T}vocabulary> {{ <{T}NoteGraph> rdfs:subClassOf orexis:StateGraph , orexis:Graph . }}
   GRAPH <{T}actions> {{
     <{T}Noting> a orexis:Action ; orexis:takes <{T}topic> ;
-      execution:says \"\"\"CONSTRUCT {{ ?note a <{T}Note> , <{T}NoteGraph> ; <{T}about> $topic ; <{T}at> $now ;
+      orexis:implementation [ orexis:operation [ a execution:Saying ; sh:construct \"\"\"CONSTRUCT {{ ?note a <{T}Note> , <{T}NoteGraph> ; <{T}about> $topic ; <{T}at> $now ;
                                               execution:to ?peer }}
-          WHERE {{ ?peer <{T}reads> $topic . BIND(IRI(CONCAT(STR($topic), "-note")) AS ?note) }}\"\"\" .
+          WHERE {{ ?peer <{T}reads> $topic . BIND(IRI(CONCAT(STR($topic), "-note")) AS ?note) }}\"\"\" ] ] .
     <{T}Looking> a orexis:Action ; orexis:takes <{T}topic> . }}
   GRAPH <{T}world> {{ <{T}ann> <{T}reads> <{T}rain> . <{T}bob> <{T}reads> <{T}rain> . }}
   GRAPH <{T}catalogue> {{

@@ -58,21 +58,21 @@ execution:takenAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:rang
     rdfs:label "taken at" ;
     rdfs:comment "When the executor handed the step to its taker — the record, against the step's `execution:notBefore`, which is the requirement." .
 
-execution:fictive a owl:DatatypeProperty ; rdfs:range xsd:boolean ;
-    rdfs:label "fictive" ;
-    rdfs:comment "Said of an ACTION whose effect is its own physics: no instrument reports what taking it did, so the executor applies the step's prediction to the readings itself and the present answers because nothing else could have — a hanoi move, a courier's drive. The plan's extraction carries it onto every step that fills such an action, which is where the executor reads it; an executor built `fictive` treats every step so, which is the shorthand for a world that exists only in the store." .
+execution:Command a owl:Class ; rdfs:subClassOf orexis:Operation ;
+    rdfs:label "Command" ;
+    rdfs:comment "An operation sending a device a command: an `sh:select` run over the present beliefs when the step is taken, with the step's parameters as `$tokens`, `$me` and `$now`, answering `?actuator` and `?payload`, the JSON document the device is sent. How much to pour or how long to heat is sized here from the situation as it is, never by the search, and the container sends each answer through the transport that reaches the actuator." .
 
-execution:command a owl:DatatypeProperty ;
-    rdfs:label "command" ;
-    rdfs:comment "Said of an ACTION a device takes: a SELECT run over the present beliefs when a step filling the action is taken, with the step's parameters as `$tokens` and `$me`, answering `?actuator` and `?payload`, the JSON document the device is sent. The executor decides nothing of the search's here: how much to pour or how long to heat is sized from the situation as it is when the step is taken, by the text the domain declares, and the container sends each answer through the transport that reaches the actuator." .
+execution:Saying a owl:Class ; rdfs:subClassOf orexis:Operation ;
+    rdfs:label "Saying" ;
+    rdfs:comment "An operation telling a peer something: an `sh:construct` run over the present beliefs when the step is taken, with the step's parameters as `$tokens`, `$me` and `$now`, whose result is one or more DOCUMENTS. A graph is an IRI the result says is `execution:to` an agent; what the result says of that IRI and what hangs off it through blank nodes is the graph's content, but for its kind (an `rdf:type` the vocabulary puts beneath `orexis:Graph`), its period (`dcterms:temporal`) and the agents it is to, which are the rows about it. The agent believes what it said, and the container sends each document to each agent it is to through the transport; several sayings of one order are merged by graph." .
 
-execution:says a owl:DatatypeProperty ;
-    rdfs:label "says" ;
-    rdfs:comment "Said of an ACTION whose taking tells a peer something: a CONSTRUCT run over the present beliefs when a step filling the action is taken, with the step's parameters as `$tokens`, `$me` and `$now`, whose result is one or more DOCUMENTS. A graph is an IRI the result says is `execution:to` an agent; what the result says of that IRI and what hangs off it through blank nodes is the graph's content, but for its kind (an `rdf:type` the vocabulary puts beneath `orexis:Graph`), its period (`dcterms:temporal`) and the agents it is to, which are the rows about it. So a round, a bid or a claim is a graph named for itself, and a document is what a world's own files are. The agent believes what it said, and the container sends each document to each agent it is to through the transport; an action may carry several, and their documents are merged by graph." .
+execution:Fictive a owl:Class ; rdfs:subClassOf orexis:Operation ;
+    rdfs:label "Fictive" ;
+    rdfs:comment "An operation writing the step's own prediction into the agent's readings: the implementation of an action whose effect is its own physics, where no instrument reports what taking it did — a hanoi move, a courier's drive — so the present answers because nothing else could have. An executor built `fictive` takes every step so, the shorthand for a world that exists only in the store." .
 
 execution:to a owl:ObjectProperty ; rdfs:range orexis:Agent ;
     rdfs:label "to" ;
-    rdfs:comment "Whom a document an action says is for — written in the result of `execution:says`, read by the container to address it, and never part of the document itself." .
+    rdfs:comment "Whom a document a saying is for — written in the result of an `execution:Saying`, read by the container to address it, and never part of the document itself." .
 
 execution:doneAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:range xsd:dateTime ;
     rdfs:label "done at" ;

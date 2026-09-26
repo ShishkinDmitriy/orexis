@@ -14,8 +14,9 @@
 courier:Drive a orexis:Action ;
     rdfs:label "drive the van to a neighbouring cell" ;
     orexis:takes courier:van , courier:to ;
-    execution:fictive true ;
-    orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+    orexis:implementation [ a orexis:Implementation ;
+        orexis:operation [ a execution:Fictive ] ] ;
+    orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?van ?to WHERE {
             ?van courier:at ?here .
             ?van a courier:Van .
@@ -24,43 +25,48 @@ courier:Drive a orexis:Action ;
             FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
         }""" ;
     orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
-        DELETE { GRAPH $state { $van courier:at ?old } }
-        WHERE  { GRAPH $state { $van courier:at ?old } }""" ;
-    sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
-        CONSTRUCT { $van courier:at $to } WHERE { }""" .
+    orexis:effect [ a orexis:Effect ;
+        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { $van courier:at ?old  }
+        WHERE  { $van courier:at ?old  }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { $van courier:at $to } WHERE { }""" ] ] .
 
 #  THE PICK DELETES: it removes where the parcel stood and puts it aboard, a different pair, so
 #  nothing replaces the fact that goes.
 courier:Pick a orexis:Action ;
     rdfs:label "load a parcel standing where the van stands" ;
     orexis:takes courier:parcel , courier:van ;
-    execution:fictive true ;
-    orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+    orexis:implementation [ a orexis:Implementation ;
+        orexis:operation [ a execution:Fictive ] ] ;
+    orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?parcel ?van WHERE {
             ?van courier:at ?cell . ?parcel courier:at ?cell .
             ?parcel a courier:Parcel .
             ?van a courier:Van .
         }""" ;
     orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
-        DELETE { GRAPH $state { $parcel courier:at ?cell } }
-        WHERE  { GRAPH $state { $parcel courier:at ?cell } }""" ;
-    sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
-        CONSTRUCT { $parcel courier:carriedBy $van } WHERE { }""" .
+    orexis:effect [ a orexis:Effect ;
+        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { $parcel courier:at ?cell  }
+        WHERE  { $parcel courier:at ?cell  }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { $parcel courier:carriedBy $van } WHERE { }""" ] ] .
 
 courier:Drop a orexis:Action ;
     rdfs:label "set a carried parcel down where the van stands" ;
     orexis:takes courier:parcel , courier:to ;
-    execution:fictive true ;
-    orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+    orexis:implementation [ a orexis:Implementation ;
+        orexis:operation [ a execution:Fictive ] ] ;
+    orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?parcel ?to WHERE {
             ?parcel courier:carriedBy ?van . ?van courier:at ?to .
             ?parcel a courier:Parcel .
         }""" ;
     orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
-        DELETE { GRAPH $state { $parcel courier:carriedBy ?van } }
-        WHERE  { GRAPH $state { $parcel courier:carriedBy ?van } }""" ;
-    sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
-        CONSTRUCT { $parcel courier:at $to } WHERE { }""" .
+    orexis:effect [ a orexis:Effect ;
+        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { $parcel courier:carriedBy ?van  }
+        WHERE  { $parcel courier:carriedBy ?van  }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { $parcel courier:at $to } WHERE { }""" ] ] .

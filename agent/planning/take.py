@@ -14,15 +14,17 @@ identifier a process is handed. False where the action's rules say nothing about
 — no effect stated, or a construct and a retraction that both come to nothing — which is not
 a move, and the caller's weighing then says the candidate repeats the world it left.
 
-An action states its effect in two halves that are not the same KIND of thing. `sh:construct`
-is SHACL-AF's and holds a query yielding the triples applying it would ADD, asked of the world
-the candidate is taken in. `orexis:retracts` is ours, because the standard has none, and holds
-a `DELETE … WHERE` naming `GRAPH $state` — an ACT, run against the world the candidate MAKES.
-The asymmetry is the domain's: what an effect adds is concrete, and what it takes away is
-whatever is standing in that place, which nobody can name in advance. The order the halves go
-in is `fork.py`'s, shared with the boundary a prediction makes.
+AN EFFECT IS RULES, GROUPED BY ORDER. An action's `orexis:effect` holds `sh:rule`s, each a
+`sh:SPARQLRule` whose `sh:construct` yields what applying it ADDS, or whose `orexis:update` is a
+`DELETE … WHERE` taking away whatever stands in the place the step changes, which nobody can name
+in advance. Every rule of one `sh:order` reads the same world — the construct is asked, and the
+delete's WHERE matched, before any of that order is applied — its deletions go first and its
+additions after, and a later order reads the world the earlier ones made. A delete names no
+graph: it is run `WITH` the new world and `USING` every graph of it (`store.scoped`). What
+SHACL runs over beliefs only ever concludes; this runs over a possible world, where taking
+something away is the point.
 
-**The vocabulary is SHACL-AF's; the engine is not.** pySHACL will execute `sh:SPARQLRule`, but
+**The vocabulary is SHACL's; the engine is not.** pySHACL will execute `sh:SPARQLRule`, but
 only as forward-chaining inference to a fixpoint; a plan step is one rule against one
 hypothesis, the opposite shape. A stored `sh:construct` is just a query, and this project has
 an engine that runs queries. See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md.
@@ -39,8 +41,10 @@ from datetime import datetime, timedelta
 
 from agent.hash_named_graph import digest_of
 from agent.ontology import ACTION, PUBLIC, local_of
-from agent.store import (Raw, bind, bindings, catalogue_of, closed, construct, fork,
-                                graphs_of, instant, query, remember, render, rows, update)
+import pyoxigraph as ox
+
+from agent.store import (Raw, add_quads, bind, bindings, catalogue_of, closed, construct, fork,
+                                graphs_of, instant, query, remember, render, rows, scoped, update)
 
 from .ontology import POSSIBLE_GRAPH
 from .world_at import world_at
@@ -55,18 +59,24 @@ from .world_at import world_at
 log = logging.getLogger("take")
 
 #  THE ACTION'S TEXTS, read off public knowledge like everything else. `?rule` is bound by
-#  SUBSTITUTION (#500), the engine's own parameter, projected. An action with no construct
-#  states no effect and is not returned. `STR(?takes)` because GROUP_CONCAT over an IRI binds
-#  nothing in this engine.
+#  SUBSTITUTION (#500), the engine's own parameter, projected. `STR(?takes)` because
+#  GROUP_CONCAT over an IRI binds nothing in this engine.
 _RULE_Q = """
-SELECT ?rule ?construct ?available ?retracts ?lands ?costs (GROUP_CONCAT(DISTINCT STR(?p); separator=" ") AS ?takes) WHERE {
-  ?rule a orexis:Action ; sh:construct ?construct .
+SELECT ?rule ?lands ?costs (GROUP_CONCAT(DISTINCT STR(?p); separator=" ") AS ?takes) WHERE {
+  ?rule a orexis:Action .
   OPTIONAL { ?rule orexis:takes ?p }
-  OPTIONAL { ?rule orexis:available ?available }
-  OPTIONAL { ?rule orexis:retracts ?retracts }
   OPTIONAL { ?rule orexis:landsAfter ?lands }
   OPTIONAL { ?rule orexis:costs ?costs }
-} GROUP BY ?rule ?construct ?available ?retracts ?lands ?costs LIMIT 1"""
+} GROUP BY ?rule ?lands ?costs LIMIT 1"""
+
+#  ITS EFFECT'S RULES, by order — an absent order is 0, as SHACL says. `?rule` projected, since
+#  the engine substitutes only a variable the query projects.
+_EFFECT_Q = """
+SELECT ?rule ?order ?construct ?update WHERE {
+  ?rule orexis:effect/sh:rule ?r .
+  OPTIONAL { ?r sh:order ?o } OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r orexis:update ?update }
+  BIND(COALESCE(?o, 0) AS ?order) }
+ORDER BY ?order"""
 
 #  THE CANDIDATE'S ROW: the world it is taken in, when that world is, the action it fills,
 #  and every parameter it is filled with — the parameter's IRI and the value, one row each.
@@ -146,44 +156,54 @@ def take(store, cand: str, me: str, *, memo=None) -> bool:
 
 
 def _apply(store, cand: str, into: str, me: str, memo) -> bool:
-    """Make `into` out of the world `cand` is taken in, with the action's effect applied: what
-    it makes true added, what it replaces deleted. False, and no graph made, where the
-    action's rules say NOTHING about this world — no effect stated, or a construct and a
-    retraction that both come to nothing — which is not a move.
+    """Make `into` out of the world `cand` is taken in, with the action's effect applied, order
+    by order. False, and no graph made, where the effect says NOTHING about this world — no rule
+    stated, or every rule coming to nothing — which is not a move.
 
-    The construct is asked BEFORE the fork exists, of the world the candidate leaves, so it
-    never sees the deletion; **the retraction is re-bound to `into`**, because that is what
-    it deletes from — the one place the two halves differ.
-    """
+    THE FORK IS MADE AT THE FIRST ORDER THAT CHANGES SOMETHING: until then a construct is asked
+    of the world the candidate leaves, which is the world it would read anyway, so a candidate
+    changing nothing costs no copy. A delete is taken as a change, since what it matches is not
+    known until it runs."""
     binding = _binding(store, cand, me, memo)
     rule = _rule(store, binding["action"], memo)
     if rule is None:
         return False
     tokens = {k: v for k, v in binding.items() if k not in ("action", "from", "at", "spent")}
-    added = _run(store, rule.get("construct"), tokens, world_at(store, binding["from"], memo=memo))
-    retract = _retraction(rule.get("retracts"), into, tokens)
-    if not added and retract is None:
-        return False
-    fork(store, binding["from"], into, added, [retract] if retract is not None else [])
-    return True
+    leaves = world_at(store, binding["from"], memo=memo)
+    forked = False
+    for order in sorted({r["order"] for r in rule["rules"]}):
+        rules = [r for r in rule["rules"] if r["order"] == order]
+        graphs = [into if g == binding["from"] else g for g in leaves] if forked else leaves
+        added = [t for r in rules for t in _run(store, r.get("construct"), tokens, graphs)]
+        texts = [r["update"] for r in rules if r.get("update")]
+        if not forked and not added and not texts:
+            continue
+        scope = [into if g == binding["from"] else g for g in leaves]
+        deletes = [d for d in (_delete(text, into, tokens, scope) for text in texts) if d is not None]
+        if not forked:
+            fork(store, binding["from"], into, added, deletes)
+            forked = True
+            continue
+        for text in deletes:
+            try:
+                update(store, text)
+            except Exception as exc:                                # noqa: BLE001
+                log.error("an effect's delete would not run, so it deletes nothing: %s", exc)
+        add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(into)) for t in added))
+    return forked
 
 
-def _retraction(text: str | None, into: str, tokens: dict) -> str | None:
-    """One action's `orexis:retracts`, bound to the graph it deletes from — or None.
+def _delete(text: str, into: str, tokens: dict, graphs) -> str | None:
+    """One `orexis:update` rule, bound and scoped to the world it deletes from — or None, said in
+    the log, where it will not bind or names graphs of its own.
 
-    IT READS THE WORLD AND NOT THE DATASET: an UPDATE's WHERE reads the unnamed default graph
-    unless `USING` says otherwise, and `Store.update` takes no dataset — so a retraction names
-    `GRAPH $state` in both halves and sees only the world it deletes from. `orexis:retracts`
-    exists because SHACL-AF has no deletion, and it is not optional: the sensed graph upserts
-    one observation node per (subject, property), so an effect predicting a reading that did
-    not retract the node it replaces would leave two results on one node.
-    """
-    if not text:
-        return None
+    It is not optional where a node is replaced: the sensed graph upserts one observation node
+    per (subject, property), so an effect predicting a reading that did not delete the side it
+    replaces would leave two on one node."""
     try:
-        return bind(text, **{**tokens, "state": Raw(f"<{into}>")})
+        return scoped(bind(text, **tokens), into, graphs)
     except Exception as exc:                                        # noqa: BLE001
-        log.error("an effect's retraction would not bind, so it retracts nothing: %s", exc)
+        log.error("an effect's delete would not bind, so it deletes nothing: %s", exc)
         return None
 
 
@@ -227,19 +247,17 @@ def _binding(store, cand: str, me: str, memo) -> dict:
 
 
 def _rule(store, action: str, memo) -> dict | None:
-    """The effect rule an action carries, or None for an action an event adopts.
-
-    None is the answer for an action that states neither text — the market's Presenting,
-    adopted by an event and admitted by no world — and for nothing else: an action with a
-    precondition states an effect, or the gate (`deliberable`, in `onboarding/validate.py`)
-    refuses the world before an agent runs (#506).
+    """What an action carries for a search: its texts, and its effect's rules in order — or None
+    for an action that states no effect, which no world is made by.
 
     REMEMBERED FOR THE PASS (#552): the text is public knowledge and only a write can
     change it, yet it was fetched on every fork by three callers each.
     """
     def fetch():
         found = bindings(query(store, _RULE_Q, graphs_of(store, ACTION), {"rule": action}))
-        return found[0] if found else None
+        rules = [{"order": float(r["order"]), "construct": r.get("construct"), "update": r.get("update")}
+                 for r in bindings(query(store, _EFFECT_Q, graphs_of(store, ACTION), {"rule": action}))]
+        return {**found[0], "rules": rules} if found and rules else None
     return remember(memo, ("rule", action), fetch)
 
 

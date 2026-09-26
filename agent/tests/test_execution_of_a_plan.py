@@ -62,16 +62,15 @@ def test_a_world_that_does_what_the_plan_said_walks_the_intention_to_done(monkey
 
 
 def test_a_fictive_action_is_walked_by_a_plain_executor(monkeypatch, snapshots):
-    """The world says the move is fictive; the extraction carries it onto every step, and an
-    executor that holds other steps to the world takes these itself."""
+    """The world says the move is fictive — its implementation is one `execution:Fictive`
+    operation — and an executor that holds other steps to the world takes these itself."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     beliefs = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
-    beliefs.update("INSERT { GRAPH ?g { ?a <http://example.org/orexis/execution#fictive> true } } "
+    beliefs.update("INSERT { GRAPH ?g { ?a <http://example.org/orexis#implementation> [ "
+                   "<http://example.org/orexis#operation> [ a <http://example.org/orexis/execution#Fictive> ] ] } } "
                    "WHERE { GRAPH ?g { ?a a <http://example.org/orexis#Action> } }")
     x = Executor(beliefs, snapshots.AGENT)
     Planner(beliefs, snapshots.AGENT, executor=x).plan(snapshots.NOW)
-    (marked,) = rows(x.intentions, "SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a execution:Step ; execution:fictive true } }", ())
-    assert int(marked["n"]) == 3, "every step carries its action's word"
     for _ in range(3):
         assert x.tick(snapshots.NOW) and x.drain() == 1
         x.tick(snapshots.NOW)

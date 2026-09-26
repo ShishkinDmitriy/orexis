@@ -284,12 +284,18 @@ def test_a_step_predicting_a_side_is_answered_by_the_readings_revision():
 
 
 def test_a_step_of_a_fictive_action_is_taken_by_the_executor_itself():
-    """The action's row says fictive and the step carries it; a plain executor writes the
-    prediction into the readings for that step and holds every other step to the world."""
+    """The action the step fills is fictive — its implementation says so — and a plain executor
+    writes the prediction into the readings for that step and holds every other step to the
+    world."""
     beliefs = _beliefs(PEG_A)
+    move = "http://example.org/test#Move"
+    update(beliefs, f"""INSERT DATA {{
+  GRAPH <http://example.org/test#actions> {{ <{move}> a orexis:Action ;
+      orexis:implementation [ orexis:operation [ a execution:Fictive ] ] }}
+  GRAPH <http://example.org/test#catalogue> {{ <http://example.org/test#actions> a orexis:ActionGraph }} }}""")
     x = Executor(beliefs, AGENT, ox.Store())
     source = _predicting(1)
-    update(source, f"INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:fictive true }} }}")
+    update(source, f"INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> <http://example.org/orexis/planning#fills> <{move}> }} }}")
     intention = x.commit(source, PLAN, WANT)
     x.tick(NOW)
     x.drain()

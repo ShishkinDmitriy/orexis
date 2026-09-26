@@ -2,7 +2,7 @@
 that leave it.
 
 **ONE PER ACTION PER LEGAL FILLING**, and the filling is the point: an action's
-`orexis:available` is a SELECT projecting the parameters the action declares it takes, so its
+`orexis:precondition` is a SELECT projecting the parameters the action declares it takes, so its
 ROWS are the candidates. It is not a filter the search applies to a list it already had — it is
 where the list comes from, and where `$tank = tank1` comes from.
 
@@ -41,10 +41,10 @@ POSSIBLE = GRAPH_PREFIX + "possible/"
 #  `STR(?takes)` because GROUP_CONCAT over an IRI binds NOTHING in this engine — no column at
 #  all, measured. An action declaring no parameter yields the empty string, which is a legal
 #  answer: it is filled with nothing and affords at most one row.
-_ACTIONS_Q = """SELECT ?action ?available (GROUP_CONCAT(DISTINCT STR(?takes); separator=" ") AS ?takes_) WHERE {
-  ?action a orexis:Action ; orexis:available ?available .
+_ACTIONS_Q = """SELECT ?action ?precondition (GROUP_CONCAT(DISTINCT STR(?takes); separator=" ") AS ?takes_) WHERE {
+  ?action a orexis:Action ; orexis:precondition ?precondition .
   OPTIONAL { ?action orexis:takes ?takes }
-} GROUP BY ?action ?available"""
+} GROUP BY ?action ?precondition"""
 
 _ADMIT_U = """
 INSERT { GRAPH ?cat { $edges } } WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"""
@@ -88,7 +88,7 @@ def admit(store, world: str, me: str, *, memo=None) -> None:
         #  A precondition carrying a token nobody binds REFUSES rather than reaching the engine
         #  as a free variable (#500), so what is offered is what a premise may read: `$me`.
         params = {local_of(p): p for p in (action.get("takes_") or "").split()}
-        for row in bindings(query(store, bind(action["available"], me=me), graphs)):
+        for row in bindings(query(store, bind(action["precondition"], me=me), graphs)):
             filling = sorted((iri, row[local]) for local, iri in params.items() if row.get(local))
             if (action["action"], frozenset(filling)) in already:
                 continue
