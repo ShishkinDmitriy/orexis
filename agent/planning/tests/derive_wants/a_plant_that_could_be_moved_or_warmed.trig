@@ -56,8 +56,8 @@ GRAPH :desires {
   :keeper.warm_enough planning:metWhen :warm_where_it_stands .
   :keeper.warm_enough rdfs:label "every plant stands where the air is inside the range it wants" .
   :warm_where_it_stands a sh:NodeShape .
-  :warm_where_it_stands sh:property [ planning:about water:AirTemperature ; planning:violationIs planning:Above ; sh:message "the air where this plant stands reads above the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
-  :warm_where_it_stands sh:property [ planning:about water:AirTemperature ; planning:violationIs planning:Below ; sh:message "the air where this plant stands reads below the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
+  :warm_where_it_stands sh:property [ planning:about water:AirTemperature ; planning:violationIs sensing:Above ; sh:message "the air where this plant stands reads above the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
+  :warm_where_it_stands sh:property [ planning:about water:AirTemperature ; planning:violationIs sensing:Below ; sh:message "the air where this plant stands reads below the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
   :warm_where_it_stands sh:targetClass water:Plant .
 }
 

@@ -832,7 +832,9 @@ it is a record wearing a bullet.
 
 - **A term belongs to the package that owns the concept, and the kernel keeps what packages meet
   at** — ownership and not touch: desires, wants, the met-test's words and the searched half of an
-  action are `planning:`, an action's implementation and its operations `execution:`, while
+  action are `planning:`, which way a reading broke (`sensing:Side`) is sensing's since it is a
+  side of a range a sensor's subject states, an action's implementation and its operations
+  `execution:`, while
   `orexis:Action` and `orexis:takes`, where planning and execution meet, and
   `orexis:PredictionGraph`, which planning reads by kind and must not import prediction to name,
   stay the kernel's; a plan's scored total became `planning:spent`, since `planning:costs` now

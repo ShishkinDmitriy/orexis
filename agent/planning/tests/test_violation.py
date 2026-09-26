@@ -1,6 +1,6 @@
 """The met-test compiler: a shape, authored positive, compiled into the one select whose rows are
 its violations — planning's, since a met-test and the words it reads (`planning:about`,
-`planning:violationIs`) are the search's."""
+`planning:violationIs`) are the search's; which way a reading broke is sensing's word."""
 
 from __future__ import annotations
 
@@ -14,9 +14,10 @@ T = "http://example.org/test#"
 SHAPE = f"""
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 <{T}full> a sh:NodeShape ; sh:targetClass <{T}Tank> ;
     sh:property [ sh:path <{T}level> ; sh:minInclusive 10 ;
-                  planning:about <{T}level> ; planning:violationIs planning:Below ] .
+                  planning:about <{T}level> ; planning:violationIs sensing:Below ] .
 """
 
 
@@ -38,4 +39,4 @@ def test_the_report_says_what_a_violation_is_about_and_which_way_it_broke():
     (row,) = list(_world().query(violation.report_select(shapes, rdflib.URIRef(T + "full")), prefixes=NAMESPACES))
     assert row["this"].value == T + "low"
     assert row["_about"].value == T + "level"
-    assert row["_side"].value == "http://example.org/orexis/planning#Below"
+    assert row["_side"].value == "http://example.org/orexis/sensing#Below"

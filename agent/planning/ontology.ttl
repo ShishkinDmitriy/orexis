@@ -9,6 +9,7 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix : <http://example.org/orexis/planning#> .
 @prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -191,11 +192,6 @@ planning:DesireGraph
     rdfs:comment "A graph of `planning:Desire` rows — named for what it HOLDS, as every graph class is since a-graph-class-is-named-for-what-it-holds, and NOT the modality class of the same spelling that #312 retired (a-store-is-a-modality): a modality is a store now, and this says only which kind of row a graph carries. The roots graph is one, `roots/<agent>` for eyes: ONE agent's desires, every `planning:Desire` it holds for its whole life: the region want per property, the freshness desire per sensor, with their met-tests — DECLARED once at genesis from the ranges and the wiring the world states, by the packages' desire rules run at birth, and endowed on amendment: a never-held root arrives, a held one stays (a-root-holds-always-and-an-outdated-graph-is-dropped). NO PERIOD, so it holds at every instant as the T-Box does, and no rebuild of the desire modality touches it; the modality projects it beside the records. Received, never authored by the agent: the sovereign's ranges are the source. The promises are another (`progression:PromisesGraph`), desires the bridge raised. Called `orexis:RootsGraph` until the class was named for the derivation's role instead of the rows, a synonym in the T-Box." .
 
 
-planning:Side
-    a owl:Class ;
-    rdfs:label "Side" ;
-    rdfs:comment "Which way a want is unmet. Three values and not two, because not having looked is its own answer rather than a point on the number line." .
-
 
 planning:Want
     a owl:Class ;
@@ -279,7 +275,7 @@ The contract of the pattern: `$this` is the agent and `$state` names the graph t
 planning:violationIs
     a owl:ObjectProperty ;
     rdfs:domain sh:PropertyShape ;
-    rdfs:range planning:Side ;
+    rdfs:range sensing:Side ;
     rdfs:label "violation is" ;
     rdfs:comment "What it MEANS when this property shape is violated. On the shape, so the answer travels with the constraint that produced the result and cannot be recomputed differently by two readers. The alternative was for every consumer to compare the value against the bounds again — which is what the module, the query and the dashboard each did separately, and which is how a fern above its region came to be reported as one unmet want indistinguishable from a fern dying of thirst." .
 
@@ -357,11 +353,3 @@ ZERO is a real answer and the honest one for a look. Observing changes nothing a
 
 WHAT IT DOES NOT INCLUDE, said here because the name could be read as promising it: SETTLING. This is delivery — when the valve stops — and not when the world has reached a steady state a reading would report. Three terms separate an act from its evidence: delivery (here, from the device's own calibration), absorption (the pot's, and stated in NO world today), and the next reading (the cadence the agent commanded plus its grace). Only the first and third are facts anyone has written down, and the sensor's cadence has been covering for the second by coincidence — a plant in trouble reads every thirty seconds, which is longer than a small pot takes to absorb a dose. A planner that wants to know when its work would become visible is wrong by exactly the missing term, and the honest first step is that somebody must say what these pots do, not that the code should pick a number.""" .
 
-planning:Below a planning:Side ; rdfs:label "below" ;
-    rdfs:comment "The reading is under the floor of a range its subject states." .
-planning:Above a planning:Side ; rdfs:label "above" ;
-    rdfs:comment "The reading is over the ceiling of a range its subject states." .
-planning:Unmeasured a planning:Side ; rdfs:label "unmeasured" ;
-    rdfs:comment "Nothing has been read: a look answers it, and no act of any other kind does." .
-planning:Stale a planning:Side ; rdfs:label "stale" ;
-    rdfs:comment "What was read is older than the reading's cadence allows." .

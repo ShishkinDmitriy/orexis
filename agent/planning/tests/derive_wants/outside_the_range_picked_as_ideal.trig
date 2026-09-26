@@ -121,9 +121,9 @@ GRAPH :world {
 
 GRAPH :desires {
   :inside_the_picked_range a sh:NodeShape .
-  :inside_the_picked_range sh:property [ planning:about sh:this ; planning:violationIs planning:Above ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
-  :inside_the_picked_range sh:property [ planning:about sh:this ; planning:violationIs planning:Below ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
-  :inside_the_picked_range sh:property [ planning:about sh:this ; planning:violationIs planning:Unmeasured ; sh:message "a watched property has never been read" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ] [ sh:class sensing:AboveRegion ] ) ] ] .
+  :inside_the_picked_range sh:property [ planning:about sh:this ; planning:violationIs sensing:Above ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
+  :inside_the_picked_range sh:property [ planning:about sh:this ; planning:violationIs sensing:Below ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
+  :inside_the_picked_range sh:property [ planning:about sh:this ; planning:violationIs sensing:Unmeasured ; sh:message "a watched property has never been read" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMinCount 1 ; sh:qualifiedValueShape [ sh:or ( [ sh:class sensing:BelowRegion ] [ sh:class sensing:InRegion ] [ sh:class sensing:AboveRegion ] ) ] ] .
   :inside_the_picked_range sh:targetClass sosa:ObservableProperty .
   :keeper planning:holds :keeper.ideal .
   :keeper.ideal a planning:Desire .

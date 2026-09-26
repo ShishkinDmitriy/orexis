@@ -11,7 +11,7 @@
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:for :keeper.warm_enough .
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:met false .
-+  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:violation [ planning:about water:AirTemperature ; planning:constraint 1 ; planning:instance :fern ; planning:violationIs planning:Below ] .
++  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:violation [ planning:about water:AirTemperature ; planning:constraint 1 ; planning:instance :fern ; planning:violationIs sensing:Below ] .
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
@@ -39,12 +39,12 @@
 +  :keeper.warm_enough.pursued.fern a planning:Want .
 +  :keeper.warm_enough.pursued.fern planning:metWhen :keeper.warm_enough.pursued.fern.met .
 +  :keeper.warm_enough.pursued.fern planning:state planning:Recognized .
-+  :keeper.warm_enough.pursued.fern planning:violationIs planning:Below .
++  :keeper.warm_enough.pursued.fern planning:violationIs sensing:Below .
 +  :keeper.warm_enough.pursued.fern prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  :keeper.warm_enough.pursued.fern prov:wasDerivedFrom :keeper.warm_enough .
 +  :keeper.warm_enough.pursued.fern rdfs:label "pursued: every plant stands where the air is inside the range it wants" .
 +  :keeper.warm_enough.pursued.fern.met a sh:NodeShape .
-+  :keeper.warm_enough.pursued.fern.met sh:property [ planning:about water:AirTemperature ; planning:violationIs planning:Above ; sh:message "the air where this plant stands reads above the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
-+  :keeper.warm_enough.pursued.fern.met sh:property [ planning:about water:AirTemperature ; planning:violationIs planning:Below ; sh:message "the air where this plant stands reads below the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
++  :keeper.warm_enough.pursued.fern.met sh:property [ planning:about water:AirTemperature ; planning:violationIs sensing:Above ; sh:message "the air where this plant stands reads above the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
++  :keeper.warm_enough.pursued.fern.met sh:property [ planning:about water:AirTemperature ; planning:violationIs sensing:Below ; sh:message "the air where this plant stands reads below the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
 +  :keeper.warm_enough.pursued.fern.met sh:targetNode :fern .
 +}

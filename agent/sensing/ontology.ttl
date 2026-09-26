@@ -109,3 +109,21 @@
     rdfs:domain sosa:Observation ;
     rdfs:label "above" ;
     rdfs:comment "The observation's result lies over the ceiling of this range." .
+
+#  WHICH WAY A READING BROKE, as a want of the mind carries it: a side of a range
+#  the sensed subject states, as a value, and the two ways of not knowing, which only sensing
+#  can tell apart.
+:Side
+    a owl:Class ;
+    rdfs:label "Side" ;
+    rdfs:comment "Which way a want is unmet. Three values and not two, because not having looked is its own answer rather than a point on the number line." .
+
+
+:Below a :Side ; rdfs:label "below" ;
+    rdfs:comment "The reading is under the floor of a range its subject states." .
+:Above a :Side ; rdfs:label "above" ;
+    rdfs:comment "The reading is over the ceiling of a range its subject states." .
+:Unmeasured a :Side ; rdfs:label "unmeasured" ;
+    rdfs:comment "Nothing has been read: a look answers it, and no act of any other kind does." .
+:Stale a :Side ; rdfs:label "stale" ;
+    rdfs:comment "What was read is older than the reading's cadence allows." .

@@ -26,7 +26,7 @@
     sh:targetNode :grower ;
     sh:property [
         sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-        planning:violationIs planning:Below ;
+        planning:violationIs sensing:Below ;
         planning:about climate:SoilMoisture ;
         sh:qualifiedMaxCount 0 ;
         sh:qualifiedValueShape [
@@ -35,7 +35,7 @@
         sh:message "the bed's soil is below a range the bed states" ] ;
     sh:property [
         sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-        planning:violationIs planning:Below ;
+        planning:violationIs sensing:Below ;
         planning:about climate:AirTemperature ;
         sh:qualifiedMaxCount 0 ;
         sh:qualifiedValueShape [
