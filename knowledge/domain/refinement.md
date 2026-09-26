@@ -2,19 +2,21 @@
 type: Process
 title: Refinement
 description: >-
-  A step kept one level down: before the executor takes a step, the Planner asks whether some
-  bridge concludes a fact the step predicts, and if one does, mints a want — the agent's own —
+  A step kept one level down: where a step would be taken fictively, the Planner is asked whether
+  some bridge concludes a fact the step predicts, and if one does, mints a want — the agent's own —
   whose met-test is the world the step lands in, regressed through the bridges. The step waits
   on that want's intention and fails when it does.
 ---
 
 # What happens
 
-The [executor](/domain/executor.md) reaches a [step](/domain/step.md) and, before anything else,
-asks the Planner to `refine` it. The Planner reads what the step predicts and looks for a
-[bridge](/domain/bridge.md) whose head concludes any fact the step adds. None does — a dose, a
-drive, a bid — and the step is taken the ordinary way: a command, a saying, or, for a world with
-nothing to report it, fictively. One does, and the step is not the level's to take:
+The [executor](/domain/executor.md) reaches a [step](/domain/step.md). An action whose
+implementation reaches the world — a command, a saying — is taken as it always was, whatever its
+effect speaks: a dose predicts the soil inside its range, which sensing's rules conclude, and is
+still a command. Only a step that would be taken fictively is handed to the Planner's `refine`,
+which reads what the step predicts and looks for a [bridge](/domain/bridge.md) whose head
+concludes any fact the step adds. None does — a drive, a pick — and the step is fictive. One
+does, and the step is not the level's to take:
 
 1. **The goal is the world the step lands in.** Every fact of a concluded predicate the present
    holds, less what the step retracts, plus what it adds — so the moved disk's new place AND
