@@ -37,6 +37,11 @@ pass that moved nothing sleeps the poll before the next.
 brought up and handed `deliver`; each pass drains what it queued — sensing writes, the rules
 conclude sides, prediction writes the stretches ahead — before the planner's pass, and a step
 whose action carries `execution:command` is taken by sending what the command answers.
+
+**A PEER IS TOLD, AND HEARD, THROUGH THE SAME TRANSPORT.** A step whose action carries
+`execution:says` makes documents of the present; the agent believes what it said, the rules
+conclude of it at once, and each is sent to the agents it is to. A document a peer says arrives
+on the topic the agent listens to and is believed by speech's `heard`, then revised like a reading.
 """
 
 from __future__ import annotations
@@ -55,8 +60,10 @@ from agent import clock
 from agent.belief.deliberator import Deliberator
 from agent.execution.command import command
 from agent.execution.executor import Executor
+from agent.execution.says import says
 from agent.prediction.predict import predict
 from agent.sensing.missed import missed
+from agent.speech.said import said as believe_said
 from agent.series import Series
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, local_of
 from agent.planning.planner import Planner
@@ -76,6 +83,7 @@ DESIRES = OREXIS + "DesireGraph"
 MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
 
 DOCUMENTS = (".ttl", ".trig")
+BELIEFS = "beliefs"
 
 #  WHO THIS PROCESS IS: the AGENT with the id it was told. The id alone is not enough — the
 #  sensing world's fern and the agent acting for it share one — so the kind is asked too.
@@ -93,14 +101,20 @@ INSERT {{ GRAPH <{closure}> {{ ?a rdfs:subClassOf ?c }} }}
 WHERE  {{ ?a rdfs:subClassOf+ ?c FILTER(isIRI(?a) && isIRI(?c) && ?a != ?c) }}"""
 
 
-def documents(world: Path) -> list[Path]:
+def documents(world: Path, agent_id: str | None = None) -> list[Path]:
     """What a boot reads: the kernel's T-Box first, then every package's documents, then every
-    document in the world's directory. Found by looking, never listed, and never a test's."""
+    document in the world's directory, then the agent's own under `beliefs/`, named for its id.
+    Found by looking, never listed, and never a test's.
+
+    AN AGENT'S OWN FILE IS ITS OWN AND NOBODY ELSE'S. A world of several agents states each one's
+    desires apart, because the derivation mints a want under every desire a store holds: read by
+    all of them, a bidder's desire would stand in its host's store as well."""
     kernel = KERNEL / "ontology.ttl"
     packages = sorted(p for p in KERNEL.rglob("*") if p.suffix in DOCUMENTS and p != kernel
                       and "tests" not in p.relative_to(KERNEL).parts)
     own = sorted(p for p in Path(world).iterdir() if p.is_file() and p.suffix in DOCUMENTS)
-    return [kernel, *packages, *own]
+    mine = sorted(p for p in (Path(world) / BELIEFS).glob(f"{agent_id}.*") if p.suffix in DOCUMENTS) if agent_id else []
+    return [kernel, *packages, *own, *mine]
 
 
 def _read_with_imports(paths: list[Path]) -> list[tuple[Path, ox.Store]]:
@@ -139,12 +153,12 @@ def _close_vocabulary(store: ox.Store) -> None:
     classify(store, CLOSURE_GRAPH, ONTOLOGY, DERIVED)
 
 
-def _put_public(store: ox.Store, world: Path) -> list[tuple[ox.Store, str]]:
+def _put_public(store: ox.Store, world: Path, agent_id: str | None = None) -> list[tuple[ox.Store, str]]:
     """Read every document and put in the vocabulary, closed, and every public graph; answer the
     world's other graphs — the agent's own — as (document, graph), for the caller to put or not.
 
     THE VOCABULARY FIRST, since whether a graph is public is the vocabulary's to say."""
-    read = _read_with_imports(documents(world))
+    read = _read_with_imports(documents(world, agent_id))
     vocabulary = {path for path, doc in read if any(ONTOLOGY in k for k in kinds_in(doc).values())}
     for path, doc in read:
         if path in vocabulary:
@@ -187,7 +201,7 @@ def boot(world: Path, agent_id: str, store: ox.Store | None = None) -> ox.Store:
         _forget_the_files(store)
     else:
         update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
-    own = _put_public(store, world)
+    own = _put_public(store, world, agent_id)
     me = _identity(store, agent_id)
     if not lived_in:
         for doc, graph in own:
@@ -238,8 +252,16 @@ class Runtime:
         self.inbox.put((channel, payload, at))
 
     def sense(self, now) -> list[str]:
-        """Take every message queued since the last pass: each written by sensing, revised, and
-        predicted from; then ask again for every reading fallen due. The graphs written."""
+        """Take every message queued since the last pass: a peer's document believed and revised,
+        a reading written by sensing, revised, and predicted from; then ask again for every
+        reading fallen due. The graphs written.
+
+        EACH GRAPH IS REVISED BESIDE PUBLIC KNOWLEDGE ALONE. Every rule shipped reads one graph
+        and what the world states — a reading and its subject's ranges, a round and nothing
+        else — and a revision is replaced only when its own source is written again. Revised
+        beside everything believed, the first of two readings arriving together took the
+        second's side into its own revision, where the second's next reading never reached it:
+        a soil read inside stayed below in the thermometer's revision."""
         written, sensors = [], []
         while self.transport is not None:
             try:
@@ -248,31 +270,50 @@ class Runtime:
                 break
             for sensor, graph in self.transport.handle(self.beliefs, channel, payload, at):
                 written.append(graph)
+                if sensor is None:
+                    continue                                    # a peer's document
                 sensors.append(sensor)
-                self.deliberator.changed(graph)
                 if self.series is not None:
                     self.series.record(self.beliefs, graph)     # what a person watches
         if not written:
             return []
-        self.deliberator.deliberate(now)
-        for sensor in dict.fromkeys(sensors):
-            for graph in predict(self.beliefs, self.me, sensor, now=now):
-                written.append(graph)
-                self.deliberator.changed(graph)
-        self.deliberator.deliberate(now)
+        self._revise(written, now)
+        predicted = [graph for sensor in dict.fromkeys(sensors)
+                     for graph in predict(self.beliefs, self.me, sensor, now=now)]
+        self._revise(predicted, now)
         for sensor in missed(self.beliefs, self.me, now):
             self.transport.sense_now(self.beliefs, sensor)
-        return written
+        return written + predicted
+
+    def _revise(self, graphs: list[str], now) -> None:
+        """What the rules conclude of each graph written, beside what the world states and
+        nothing else, at once."""
+        if not graphs:
+            return
+        public = graphs_of(self.beliefs, PUBLIC)
+        for graph in graphs:
+            self.deliberator.changed(graph, read=public)
+        self.deliberator.deliberate(now)
 
     def _take(self, said: dict, intention: str) -> None:
-        """Take a step by sending what its action's command answers, sized from the present; a
-        step whose action carries none is said in the log, as the executor would."""
+        """Take a step by sending what its action's command answers, sized from the present, and
+        telling what its action says: each document believed as said, revised at once — the
+        step's own landing reads what the rules conclude of it — and sent to every agent it is
+        to. A step whose action carries neither is said in the log, as the executor would."""
         sent = command(self.beliefs, said, self.me)
-        if not sent:
+        told = says(self.beliefs, said, self.me)
+        if not sent and not told:
             self.executor.say(said, intention)
             return
         for actuator, payload in sent:
             self.transport.actuate(self.beliefs, actuator, payload)
+        written = []
+        for agents, doc in told:
+            written += believe_said(self.beliefs, self.me, doc)
+            payload = doc.dump(format=ox.RdfFormat.TRIG)
+            for agent in agents:
+                self.transport.tell(self.beliefs, agent, payload)
+        self._revise(written, clock.now())
 
     def run(self, *, passes: int | None = None, poll_s: float = 1.0) -> str:
         """Pass after pass until nothing is left to pursue (`met`), or nothing this agent holds
@@ -334,13 +375,14 @@ class Runtime:
         return taken
 
 
-def _transport_of(beliefs: ox.Store):
-    """The transport member the world says the agent's sensors are reached through, or None for
-    a world nothing is sensed in. MQTT is the one member that ships; its library is imported by
-    its own `connect`, so a world with no sensors never loads it."""
+def _transport_of(beliefs: ox.Store, me: str):
+    """The transport member the world says the agent's sensors are reached through, or its peers
+    tell it things on, or None for a world where neither is so. MQTT is the one member that
+    ships; its library is imported by its own `connect`, so such a world never loads it."""
     from agent.transport.mqtt.driver import Mqtt
     sensors = rows(beliefs, "SELECT ?s WHERE { ?s a sosa:Sensor }", graphs_of(beliefs, PUBLIC))
-    return Mqtt if any(Mqtt.claims(beliefs, r["s"]) for r in sensors) else None
+    listens = rows(beliefs, "SELECT ?t WHERE { $me mqtt4ssn:listensToTopic ?t }", graphs_of(beliefs, PUBLIC), me=me)
+    return Mqtt if listens or any(Mqtt.claims(beliefs, r["s"]) for r in sensors) else None
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -354,7 +396,7 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     store = ox.Store(str(args.volume)) if args.volume else None
     beliefs = boot(args.world, args.agent, store)
-    outcome = Runtime(beliefs, args.agent, budget=args.budget, connect=_transport_of(beliefs),
+    outcome = Runtime(beliefs, args.agent, budget=args.budget, connect=_transport_of(beliefs, _identity(beliefs, args.agent)),
                       series=Series.from_environment()).run(passes=args.passes)
     return {MET: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
 

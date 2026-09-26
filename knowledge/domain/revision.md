@@ -27,7 +27,12 @@ standing beside the source, the source itself, and what has been concluded of it
 Within a layer one iteration runs the run-once rules first, then the iterating rules are run
 again while an iteration concludes something new; within an iteration the rules run in order,
 and rules of one order see none of each other's inferences until they have all run. What is
-inferred is what the base graph does not already hold. All of that is section 8 of the draft,
+inferred is what the base graph does not already hold. The runtime hands public knowledge alone
+as what stands beside a graph it wrote — a reading, a prediction, a peer's document — because every
+rule shipped reads one graph and what the world states, and a revision is replaced only when its
+own source is written again: handed everything believed, the first of two readings arriving
+together took the second's side into its own revision, where the second's next reading never
+reached it. All of that is section 8 of the draft,
 within a **budget** of rule executions, the unit revision spends, which the
 [deliberator](/domain/deliberator.md) states per pass. A source the budget cuts short keeps what was concluded, its row saying the rules
 did not settle, and the next pass continues it; a rule minting new content every iteration,

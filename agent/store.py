@@ -521,6 +521,23 @@ def document(path) -> ox.Store:
         for q in about:
             doc.remove(q)
             doc.add(ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()))
+    return checked(doc, path.name)
+
+
+def document_of(data: bytes) -> ox.Store:
+    """A document handed as TriG bytes — what a peer says, as the transport received it — read
+    and refused as a file is."""
+    doc = ox.Store()
+    try:
+        doc.load(data, format=ox.RdfFormat.TRIG)
+    except (SyntaxError, ValueError) as exc:
+        raise DocumentRefused(f"a document that is no TriG: {exc}") from exc
+    return checked(doc, "a document")
+
+
+def checked(doc: ox.Store, name: str) -> ox.Store:
+    """`doc`, where it says what each of its graphs is and nothing only the loader may say;
+    refused otherwise."""
     graphs = {g.value for g in doc.named_graphs()}
     rows_ = list(doc.quads_for_pattern(None, None, None, ox.DefaultGraph()))
     kinds = {q.subject.value: q.object.value for q in rows_
@@ -532,17 +549,17 @@ def document(path) -> ox.Store:
         reachable |= frontier
     stray = sorted({str(q.subject) for q in rows_ if q.subject not in reachable})
     if stray:
-        raise DocumentRefused(f"{path.name} states rows about {', '.join(stray)}, which is no graph it holds")
+        raise DocumentRefused(f"{name} states rows about {', '.join(stray)}, which is no graph it holds")
     if not graphs:
-        raise DocumentRefused(f"{path.name} holds no graph")
+        raise DocumentRefused(f"{name} holds no graph")
     unkinded = sorted(g for g in graphs if g not in kinds)
     if unkinded:
-        raise DocumentRefused(f"{path.name} says of {', '.join(unkinded)} no kind — `<> a <a graph kind>` says it")
+        raise DocumentRefused(f"{name} says of {', '.join(unkinded)} no kind — `<> a <a graph kind>` says it")
     for q in rows_:
         if q.predicate.value in _LOADERS_OWN:
-            raise DocumentRefused(f"{path.name} says {q.predicate.value} of a graph, which only the loader says")
+            raise DocumentRefused(f"{name} says {q.predicate.value} of a graph, which only the loader says")
         if q.predicate.value == _RDF_TYPE_IRI and q.object.value == CATALOGUE:
-            raise DocumentRefused(f"{path.name} says a graph is the catalogue, which is created and never loaded")
+            raise DocumentRefused(f"{name} says a graph is the catalogue, which is created and never loaded")
     return doc
 
 
@@ -566,11 +583,14 @@ def imports_of(doc: ox.Store) -> list[str]:
                    if isinstance(q.object, ox.NamedNode)})
 
 
-def put_document(store, doc: ox.Store, owner: str | None = None, graphs=None) -> list[str]:
+def put_document(store, doc: ox.Store, owner: str | None = None, graphs=None, *,
+                 arrival: str = OREXIS + "Asserted", close: bool = False) -> list[str]:
     """Put a document's graphs in the store, each replacing any graph of its name, and its rows
-    in the catalogue with the arrival and, where `owner` is given, whose it is. `graphs`, where
-    given, puts only those. The names put, sorted. The kinds each row says are closed by
-    `close_catalogue`, which the caller runs once when every document is in."""
+    in the catalogue with the arrival — asserted, for a file — and, where `owner` is given, whose
+    it is. `graphs`, where given, puts only those. The names put, sorted. The kinds each row says
+    are closed by `close_catalogue`, which a boot runs once when every document is in; a writer
+    putting one document while the agent runs says `close`, and the row carries every kind its
+    class is beneath at once."""
     catalogue = catalogue_of(store)
     if catalogue is None:
         raise RuntimeError("no graph describes itself as the catalogue — nothing has said what the graphs are")
@@ -589,9 +609,13 @@ def put_document(store, doc: ox.Store, owner: str | None = None, graphs=None) ->
                 store.add(ox.Quad(q.subject, q.predicate, q.object, cat))
             reached |= frontier
             frontier = {q.object for q in mine if isinstance(q.object, ox.BlankNode)} - reached
-        store.add(ox.Quad(node, ox.NamedNode(OREXIS + "arrivedBy"), ox.NamedNode(OREXIS + "Asserted"), cat))
+        store.add(ox.Quad(node, ox.NamedNode(OREXIS + "arrivedBy"), ox.NamedNode(arrival), cat))
         if owner is not None:
             store.add(ox.Quad(node, ox.NamedNode(OREXIS + "beliefsOf"), ox.NamedNode(owner), cat))
+        if close:
+            for kind in [q.object.value for q in rows_ if q.subject == node and q.predicate.value == _RDF_TYPE_IRI]:
+                for beneath in closed(store, kind):
+                    store.add(ox.Quad(node, _RDF_TYPE, ox.NamedNode(beneath), cat))
     return names
 
 

@@ -11,8 +11,8 @@ answered as the sensor and the graph written), and the two commands a device may
 (`set_cadence`, `sense_now`), and the command a step sends an actuator (`actuate`). What differs is the member's: how a channel is named in the
 world, in the vocabulary it adopts, what a device publishes on, and what its library is.
 
-THE ARROW POINTS ONE WAY. A member imports this contract and sensing's `received`, the callback
-it calls; sensing imports nothing of any transport and speaks no word of one, so a transport's
+THE ARROW POINTS ONE WAY. A member imports this contract, sensing's `received` and speech's
+`heard`, the callbacks it calls; sensing imports nothing of any transport and speaks no word of one, so a transport's
 whole vocabulary stays the member's and the observation sensing writes never says how its bytes
 arrived. The thread a message arrives on is the member's client's, and a write belongs on the
 one executing thread, so `connect` is handed the container's `deliver` and a message goes there
@@ -44,13 +44,21 @@ class Transport:
         return False
 
     def open(self, store) -> list[str]:
-        """Listen on every channel the world implies for the agent's sensors; the channels."""
+        """Listen on every channel the world implies for the agent's sensors, and on the one
+        its peers tell it things on; the channels."""
         return []
 
-    def handle(self, store, channel: str, payload: bytes, at: datetime, *, memo=None) -> list[tuple[str, str]]:
-        """A message on a channel at an instant, handed to sensing once per sensor of the
-        agent's it is for: the sensor and the graph written, and none where it is nobody's."""
+    def handle(self, store, channel: str, payload: bytes, at: datetime, *, memo=None) -> list[tuple[str | None, str]]:
+        """A message on a channel at an instant: on the agent's own channel a peer's document,
+        handed to speech's `heard` and answered with no sensor; otherwise handed to sensing once
+        per sensor of the agent's it is for, the sensor and the graph written. None where it is
+        nobody's."""
         return []
+
+    def tell(self, store, to: str, document: bytes) -> bool:
+        """Send a peer a document this agent said — TriG, as `execution:says` made it — on the
+        channel the peer listens to. Whether anything was SENT."""
+        return False
 
     def set_cadence(self, store, sensor: str, sleep_s: int) -> bool:
         """Standing policy, where the device accepts instruction. Whether anything was SENT."""

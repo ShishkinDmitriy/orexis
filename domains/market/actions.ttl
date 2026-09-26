@@ -1,0 +1,211 @@
+@prefix market: <http://example.org/orexis/market#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:ActionGraph .    # this document is one graph, and this is what it is
+
+#  THE MARKET'S SIX ACTIONS, three a bidder takes and three a host takes. Each one's EFFECT is in
+#  the facts the rules conclude of the documents (rules.ttl) — a venue open, a call answered, a
+#  claim held — because the search runs no rules and the executor answers a step when a document
+#  arrives and is revised to what the step predicted. Each one's taking SAYS a document to a peer
+#  (`execution:says`), made from the present when the step is taken: the bid's size and price,
+#  the round's closing instant and the clearing's matching are decided there and never searched.
+#
+#  A bidder in trouble plans call, tender, present: presenting is the one act that brings its
+#  reading inside, it needs a claim held, a tender makes one, and a tender needs an open venue,
+#  which a call makes. A host with an unanswered call plans offer, clear: the offer lands when
+#  its window closes, so the clearing is not taken before. A presented claim it plans to serve.
+
+#################  The bidder's  #################
+
+market:Calling a orexis:Action ;
+    rdfs:label "call for a round on a venue I bid in" ;
+    orexis:takes market:venue ;
+    orexis:available """PREFIX market: <http://example.org/orexis/market#>
+        SELECT DISTINCT ?venue WHERE {
+            $me market:bidsIn ?venue .
+            FILTER NOT EXISTS { ?venue market:open true }
+            FILTER NOT EXISTS { ?call market:calledBy $me ; market:calledOn ?venue .
+                                FILTER NOT EXISTS { ?call market:answered true } }
+        }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { $venue market:open true } WHERE {}""" ;
+    execution:says """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?call a market:Call , market:CallGraph ; market:calledOn $venue ; market:calledBy $me ;
+                          market:calledAt $now ; execution:to ?host }
+        WHERE { ?host market:hosts $venue .
+                BIND(IRI(CONCAT(STR($me), "-call-", REPLACE(STR($now), "[^0-9]", ""))) AS ?call) }""" .
+
+market:Tendering a orexis:Action ;
+    rdfs:label "tender a bid into the round open on a venue" ;
+    orexis:takes market:venue ;
+    orexis:available """PREFIX market: <http://example.org/orexis/market#>
+        SELECT DISTINCT ?venue WHERE {
+            $me market:bidsIn ?venue . ?venue market:open true .
+            FILTER NOT EXISTS { ?bid market:bidder $me ; market:inRound ?round .
+                                ?round market:onVenue ?venue .
+                                FILTER NOT EXISTS { ?round market:clearedAt ?at } }
+        }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    #  IT LANDS WHEN THE ROUND CLOSES, at the latest: the window after the tender is taken.
+    orexis:landsAfter """PREFIX market: <http://example.org/orexis/market#>
+        SELECT ?seconds WHERE { $venue market:bidWindowS ?seconds }""" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { $me market:holdsClaimOn $venue } WHERE {}""" ;
+    orexis:retracts """PREFIX market: <http://example.org/orexis/market#>
+        DELETE { GRAPH $state { $venue market:open true } }
+        WHERE  { GRAPH $state { $venue market:open true } }""" ;
+    #  THE BID, SIZED FROM THE PRESENT: as many litres as bring the reading to the middle of its
+    #  range by the subject's litres per fraction, at the price a litre is worth to me.
+    execution:says """PREFIX market: <http://example.org/orexis/market#>
+        PREFIX climate: <http://example.org/orexis/climate#>
+        CONSTRUCT { ?bid a market:Bid , market:BidGraph ; market:inRound ?round ; market:bidder $me ;
+                         market:litres ?litres ; market:pricePerL ?price ; execution:to ?host }
+        WHERE {
+            ?host market:hosts $venue .
+            ?round a market:Round ; market:onVenue $venue . FILTER NOT EXISTS { ?round market:clearedAt ?at }
+            $me orexis:actsFor ?subject ; market:valuePerL ?price .
+            $venue market:aboutProperty ?property .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
+            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition ; climate:litresPerFraction ?perFraction .
+            ?condition ssn:forProperty ?property ; schema:minValue ?lo ; schema:maxValue ?hi .
+            BIND((((xsd:double(?lo) + xsd:double(?hi)) / 2.0) - xsd:double(?value)) * xsd:double(?perFraction) AS ?wanted)
+            FILTER(?wanted > 0.0)
+            BIND(xsd:decimal(ROUND(?wanted * 1000.0) / 1000.0) AS ?litres)
+            BIND(IRI(CONCAT(STR(?round), "-bid-", REPLACE(STR($me), "^.*[#/]", ""))) AS ?bid)
+        }""" .
+
+market:Presenting a orexis:Action ;
+    rdfs:label "present a claim I hold on a venue for my reading below its range" ;
+    orexis:takes market:venue , actuation:reading ;
+    orexis:available """PREFIX market: <http://example.org/orexis/market#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        SELECT DISTINCT ?venue ?reading WHERE {
+            $me market:holdsClaimOn ?venue ; orexis:actsFor ?subject .
+            ?venue market:aboutProperty ?property .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range .
+        }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ;
+    orexis:retracts """PREFIX market: <http://example.org/orexis/market#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { GRAPH $state { $reading sensing:below ?range . $me market:holdsClaimOn $venue } }
+        WHERE  { GRAPH $state { $reading sensing:below ?range . $me market:holdsClaimOn $venue } }""" ;
+    execution:says """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?presentation a market:Presentation , market:PresentationGraph ; market:presents ?claim ;
+                                  execution:to ?host }
+        WHERE { ?host market:hosts $venue .
+                ?claim a market:Claim ; market:heldBy $me ; market:onVenue $venue .
+                FILTER NOT EXISTS { ?claim market:discharged true }
+                BIND(IRI(CONCAT(STR(?claim), "-presented")) AS ?presentation) }""" .
+
+#################  The host's  #################
+
+market:Offering a orexis:Action ;
+    rdfs:label "open a round on a venue I host, for the calls on it" ;
+    orexis:takes market:venue ;
+    orexis:available """PREFIX market: <http://example.org/orexis/market#>
+        SELECT DISTINCT ?venue WHERE {
+            $me market:hosts ?venue .
+            FILTER NOT EXISTS { ?venue market:open true }
+            ?call market:calledOn ?venue . FILTER NOT EXISTS { ?call market:answered true }
+        }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    #  IT LANDS WHEN THE WINDOW CLOSES, so the clearing after it is not taken before.
+    orexis:landsAfter """PREFIX market: <http://example.org/orexis/market#>
+        SELECT ?seconds WHERE { $venue market:bidWindowS ?seconds }""" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { $venue market:open true . ?call market:offered true }
+        WHERE { ?call market:calledOn $venue . FILTER NOT EXISTS { ?call market:answered true } }""" ;
+    execution:says """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?round a market:Round , market:RoundGraph ; market:onVenue $venue ; market:lotL ?lot ;
+                           market:reservePerL ?reserve ; market:openedAt $now ; market:closesAt ?closes ;
+                           market:answers ?call ; execution:to ?bidder }
+        WHERE { $venue market:lotL ?lot ; market:reservePerL ?reserve ; market:bidWindowS ?window .
+                ?bidder market:bidsIn $venue .
+                ?call market:calledOn $venue . FILTER NOT EXISTS { ?call market:answered true }
+                BIND(xsd:dateTime($now) + xsd:dayTimeDuration(CONCAT("PT", STR(?window), "S")) AS ?closes)
+                BIND(IRI(CONCAT(STR($venue), "-round-", REPLACE(STR($now), "[^0-9]", ""))) AS ?round) }""" .
+
+market:Clearing a orexis:Action ;
+    rdfs:label "clear the round open on a venue I host" ;
+    orexis:takes market:venue ;
+    orexis:available """PREFIX market: <http://example.org/orexis/market#>
+        SELECT DISTINCT ?venue WHERE { $me market:hosts ?venue . ?venue market:open true }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?call market:answered true } WHERE { ?call market:calledOn $venue ; market:offered true }""" ;
+    orexis:retracts """PREFIX market: <http://example.org/orexis/market#>
+        DELETE { GRAPH $state { $venue market:open true . ?call market:offered true } }
+        WHERE  { GRAPH $state { $venue market:open true .
+                                OPTIONAL { ?call market:calledOn $venue ; market:offered true } } }""" ;
+    #  THE ROUND, SAID AGAIN CLEARED, to everybody it was said to.
+    execution:says """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?round a market:Round , market:RoundGraph ; market:onVenue $venue ; market:lotL ?lot ;
+                           market:reservePerL ?reserve ; market:openedAt ?opened ; market:closesAt ?closes ;
+                           market:clearedAt $now ; market:answers ?call ; execution:to ?bidder }
+        WHERE { ?round a market:Round ; market:onVenue $venue ; market:lotL ?lot ; market:reservePerL ?reserve ;
+                       market:openedAt ?opened ; market:closesAt ?closes .
+                FILTER NOT EXISTS { ?round market:clearedAt ?at }
+                ?bidder market:bidsIn $venue .
+                OPTIONAL { ?round market:answers ?call } }""" ,
+    #  THE CLAIMS, BY PAY-AS-BID: the bids ranked by price, the dearest first and a tie by the
+    #  bidder's name, each awarded what it asked or what is left of the lot, whichever is less,
+    #  and paying what it bid; a bid under the reserve is not matched.
+    """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?claim a market:Claim , market:ClaimGraph ; market:inRound ?round ; market:onVenue $venue ;
+                           market:heldBy ?bidder ; market:amountL ?amount ; market:pricePerL ?price ;
+                           execution:to ?bidder }
+        WHERE {
+            ?round a market:Round ; market:onVenue $venue ; market:lotL ?lot ; market:reservePerL ?reserve .
+            FILTER NOT EXISTS { ?round market:clearedAt ?at }
+            { SELECT ?round ?bidder ?litres ?price (SUM(COALESCE(?otherL, 0.0)) AS ?ahead) WHERE {
+                ?bid a market:Bid ; market:inRound ?round ; market:bidder ?bidder ;
+                     market:litres ?litres ; market:pricePerL ?price .
+                OPTIONAL { ?other a market:Bid ; market:inRound ?round ; market:bidder ?otherBidder ;
+                                  market:litres ?otherL ; market:pricePerL ?otherPrice .
+                           FILTER(?otherPrice > ?price || (?otherPrice = ?price && STR(?otherBidder) < STR(?bidder))) } }
+              GROUP BY ?round ?bidder ?litres ?price }
+            FILTER(?price >= ?reserve)
+            BIND(xsd:double(?lot) - xsd:double(?ahead) AS ?left)
+            BIND(IF(xsd:double(?litres) < ?left, xsd:double(?litres), ?left) AS ?award)
+            FILTER(?award > 0.0)
+            BIND(xsd:decimal(ROUND(?award * 1000.0) / 1000.0) AS ?amount)
+            BIND(IRI(CONCAT(STR(?round), "-claim-", REPLACE(STR(?bidder), "^.*[#/]", ""))) AS ?claim)
+        }""" .
+
+market:Serving a orexis:Action ;
+    rdfs:label "serve a presented claim through the device that reaches its holder's subject" ;
+    orexis:takes market:claim ;
+    orexis:available """PREFIX market: <http://example.org/orexis/market#>
+        SELECT DISTINCT ?claim WHERE {
+            $me market:hosts ?venue .
+            ?claim a market:Claim ; market:onVenue ?venue ; market:presented true .
+            FILTER NOT EXISTS { ?claim market:discharged true }
+        }""" ;
+    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { $claim market:discharged true } WHERE {}""" ;
+    #  THE DOSE, the claim's amount at most the device's cap.
+    execution:command """PREFIX market: <http://example.org/orexis/market#>
+        PREFIX actuation: <http://example.org/orexis/actuation#>
+        SELECT ?actuator ?payload WHERE {
+            $claim market:heldBy ?holder ; market:amountL ?litres .
+            ?holder orexis:actsFor ?subject .
+            $me actuation:hasActuator ?actuator . ?actuator actuation:actuates ?subject ; actuation:maxDoseMl ?cap .
+            BIND(xsd:double(?litres) * 1000.0 AS ?wanted)
+            BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), ?wanted) AS ?ml)
+            BIND(CONCAT('{"dose_ml": ', STR(xsd:integer(ROUND(?ml))), '}') AS ?payload)
+        }""" ;
+    #  THE CLAIM, SAID AGAIN DISCHARGED, to its holder.
+    execution:says """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { $claim a market:Claim , market:ClaimGraph ; market:inRound ?round ; market:onVenue ?venue ;
+                           market:heldBy ?holder ; market:amountL ?litres ; market:pricePerL ?price ;
+                           market:discharged true ; market:dischargedAt $now ; execution:to ?holder }
+        WHERE { $claim market:inRound ?round ; market:onVenue ?venue ; market:heldBy ?holder ;
+                       market:amountL ?litres ; market:pricePerL ?price }""" .

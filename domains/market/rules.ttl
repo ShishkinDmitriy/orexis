@@ -1,0 +1,54 @@
+@prefix : <http://example.org/orexis/market#> .
+@prefix market: <http://example.org/orexis/market#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a sh:RulesGraph .    # this document is one graph, and this is what it is
+
+#  WHAT THE MARKET'S DOCUMENTS MEAN, as the facts a plan speaks. Each rule reads ONE document —
+#  a round, a claim, a presentation — so what it concludes is replaced when that document is said
+#  again: a round said cleared stops its venue being open, a claim said discharged stops its
+#  holder holding it. The search runs no rules, so an action's effect writes these conclusions
+#  itself, and the executor answers the step when the document arrives and is revised to them.
+
+:market a sh:RuleSet ;
+    rdfs:label "what the market's documents say, as the facts a plan speaks" ;
+    sh:hasRule :openRule , :offeredRule , :answeredRule , :holdsRule , :presentedRule .
+
+:openRule a sh:SPARQLRule ;
+    rdfs:label "a venue is open while a round stands on it uncleared" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?venue market:open true } WHERE {
+            ?round a market:Round ; market:onVenue ?venue .
+            FILTER NOT EXISTS { ?round market:clearedAt ?at }
+        }""" .
+
+:offeredRule a sh:SPARQLRule ;
+    rdfs:label "a call is offered while a round answering it stands open" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?call market:offered true } WHERE {
+            ?round a market:Round ; market:answers ?call .
+            FILTER NOT EXISTS { ?round market:clearedAt ?at }
+        }""" .
+
+:answeredRule a sh:SPARQLRule ;
+    rdfs:label "a call is answered once a round answering it has cleared" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?call market:answered true } WHERE {
+            ?round a market:Round ; market:answers ?call ; market:clearedAt ?at .
+        }""" .
+
+:holdsRule a sh:SPARQLRule ;
+    rdfs:label "an agent holds a claim on a venue until the claim is discharged" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?holder market:holdsClaimOn ?venue } WHERE {
+            ?claim a market:Claim ; market:heldBy ?holder ; market:onVenue ?venue .
+            FILTER NOT EXISTS { ?claim market:discharged true }
+        }""" .
+
+:presentedRule a sh:SPARQLRule ;
+    rdfs:label "a claim is presented once its holder says so" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?claim market:presented true } WHERE {
+            ?presentation a market:Presentation ; market:presents ?claim .
+        }""" .

@@ -176,3 +176,40 @@ def test_an_actuator_that_listens_nowhere_is_sent_nothing(bus, caplog):
     with caplog.at_level("WARNING", logger="mqtt"):
         assert driver.actuate(store, PROBE, {"dose_ml": 250}) is False
     assert client.published == [] and "listens on no topic" in caplog.text
+
+
+#  THE KEEPER AND A PEER, each listening on a topic of its own for what the other says.
+_PEERS = """
+GRAPH :ontology { :NoteGraph rdfs:subClassOf orexis:StateGraph , orexis:BeliefGraph , orexis:Graph . }
+GRAPH :world {
+  :keeper mqtt4ssn:listensToTopic :keeper_inbox .
+  :keeper_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:hasFilterPattern "agents/keeper/inbox" ; mqtt4ssn:matchesTopic :keeper_inbox .
+  :peer a orexis:Agent , mqtt4ssn:Client ; mqtt4ssn:listensToTopic :peer_inbox .
+  :peer_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:hasFilterPattern "agents/peer/inbox" ; mqtt4ssn:matchesTopic :peer_inbox .
+}
+"""
+
+
+@pytest.fixture
+def peers(monkeypatch, snapshots):
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    client = Client()
+    return snapshots.stand_in(WORLD, WORLD.read_text() + _PEERS), Mqtt(snapshots.ME, client), client
+
+
+def test_the_driver_listens_on_the_agents_own_topic_too(peers):
+    store, mqtt, client = peers
+    assert "agents/keeper/inbox" in mqtt.open(store)
+
+
+def test_a_document_is_told_on_the_topic_the_peer_listens_to_and_is_not_retained(peers):
+    store, mqtt, client = peers
+    assert mqtt.tell(store, TEST + "peer", b"<urn:g> { }") is True
+    assert client.published == [("agents/peer/inbox", b"<urn:g> { }", False)]
+    assert mqtt.tell(store, TEST + "fern", b"") is False, "a thing that listens nowhere is told nothing"
+
+
+def test_a_document_on_the_agents_own_topic_is_heard_and_answered_with_no_sensor(peers, snapshots):
+    store, mqtt, client = peers
+    document = f"<{TEST}note> {{ <{TEST}note> <{TEST}says> \"hello\" }}\n<{TEST}note> a <{TEST}NoteGraph> .".encode()
+    assert mqtt.handle(store, "agents/keeper/inbox", document, snapshots.NOW) == [(None, TEST + "note")]

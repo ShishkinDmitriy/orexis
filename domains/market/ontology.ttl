@@ -1,0 +1,121 @@
+@prefix : <http://example.org/orexis/market#> .
+@prefix market: <http://example.org/orexis/market#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
+    owl:imports <actions.ttl> , <rules.ttl> .
+
+#  THE MARKET, A DOMAIN.
+#  How agents that want a scarce good get it from an agent that holds it: a bidder CALLS for a
+#  round on a venue, the host OFFERS one to everybody who bids there, each bidder TENDERS a bid,
+#  the host CLEARS the round by matching and tells each winner its CLAIM, the holder PRESENTS the
+#  claim when it needs the good, and the host SERVES it through its own device. Every one of those
+#  is an action (actions.ttl) whose taking says a DOCUMENT to a peer — a call, a round, a bid, a
+#  claim, a presentation, each a graph named for itself — and every fact a plan speaks about the
+#  market is a revision the rules (rules.ttl) conclude of those documents: a venue is open while
+#  a round stands on it uncleared, a call is answered once a round answering it has cleared, an
+#  agent holds a claim on a venue until the claim is discharged. The host's two desires and the
+#  bidder's own are a world's to state. No Python: the protocol is the documents and the actions.
+
+#################  The standing structure, as a world states it  #################
+
+:Market a owl:Class ; rdfs:label "Market" ;
+    rdfs:comment "A venue: one place a good is traded, hosted by one agent and bid in by others." .
+
+:hosts a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Market ; rdfs:label "hosts" ;
+    rdfs:comment "The agent that holds the good, runs the rounds on the venue and serves the claims." .
+
+:bidsIn a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Market ; rdfs:label "bids in" ;
+    rdfs:comment "An agent that may call for a round on the venue and tender into it." .
+
+:aboutProperty a owl:ObjectProperty ; rdfs:domain :Market ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "about property" ;
+    rdfs:comment "Which property of a bidder's subject the good moves: the soil's moisture for water. A reading of it below its range is what a claim is presented to answer." .
+
+:lotL a owl:DatatypeProperty ; rdfs:domain :Market ; rdfs:range xsd:decimal ; rdfs:label "lot" ;
+    rdfs:comment "How many litres one round on the venue sells — the host's choice, never what anyone needs." .
+
+:reservePerL a owl:DatatypeProperty ; rdfs:domain :Market ; rdfs:range xsd:decimal ; rdfs:label "reserve per litre" ;
+    rdfs:comment "The least price per litre a bid on the venue must offer to be matched." .
+
+:bidWindowS a owl:DatatypeProperty ; rdfs:domain :Market ; rdfs:range xsd:decimal ; rdfs:label "bid window" ;
+    rdfs:comment "How many seconds a round on the venue stands open for bids before it is cleared." .
+
+:valuePerL a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:decimal ; rdfs:label "value per litre" ;
+    rdfs:comment "What a litre of the good is worth to a bidder, and so what it bids per litre: the agent's own belief, picked by the world and never by the search." .
+
+#################  What the documents are  #################
+
+:CallGraph a owl:Class ; rdfs:subClassOf orexis:StateGraph ; rdfs:label "Call graph" ;
+    rdfs:comment "A bidder's call for a round, said to the venue's host." .
+:RoundGraph a owl:Class ; rdfs:subClassOf orexis:StateGraph ; rdfs:label "Round graph" ;
+    rdfs:comment "A round as its host tells it to every bidder: open, and said again once cleared." .
+:BidGraph a owl:Class ; rdfs:subClassOf orexis:StateGraph ; rdfs:label "Bid graph" ;
+    rdfs:comment "One bidder's bid into one round, said to the host alone." .
+:ClaimGraph a owl:Class ; rdfs:subClassOf orexis:StateGraph ; rdfs:label "Claim graph" ;
+    rdfs:comment "A claim as its host tells it to the winner: issued at a clearing, said again once discharged. The host's own copy is its debt." .
+:PresentationGraph a owl:Class ; rdfs:subClassOf orexis:StateGraph ; rdfs:label "Presentation graph" ;
+    rdfs:comment "A holder presenting its claim, said to the host." .
+
+:Call a owl:Class ; rdfs:label "Call" ;
+    rdfs:comment "A round is wanted on a venue, because a bidder is in trouble." .
+:Round a owl:Class ; rdfs:label "Round" ;
+    rdfs:comment "One allocation of a lot on a venue: open for bids until it closes, then cleared." .
+:Bid a owl:Class ; rdfs:label "Bid" ;
+    rdfs:comment "How many litres a bidder asks for in a round, at what price per litre." .
+:Claim a owl:Class ; rdfs:label "Claim" ;
+    rdfs:comment "What a winner holds after a clearing: an amount of the good at a price, owed by the host until it is served." .
+:Presentation a owl:Class ; rdfs:label "Presentation" ;
+    rdfs:comment "A holder asking for its claim to be served now." .
+
+:calledOn a owl:ObjectProperty ; rdfs:domain :Call ; rdfs:range :Market ; rdfs:label "called on" .
+:calledBy a owl:ObjectProperty ; rdfs:domain :Call ; rdfs:range orexis:Agent ; rdfs:label "called by" .
+:calledAt a owl:DatatypeProperty ; rdfs:domain :Call ; rdfs:range xsd:dateTime ; rdfs:label "called at" .
+
+:onVenue a owl:ObjectProperty ; rdfs:range :Market ; rdfs:label "on venue" ;
+    rdfs:comment "The venue a round or a claim is on." .
+:openedAt a owl:DatatypeProperty ; rdfs:domain :Round ; rdfs:range xsd:dateTime ; rdfs:label "opened at" .
+:closesAt a owl:DatatypeProperty ; rdfs:domain :Round ; rdfs:range xsd:dateTime ; rdfs:label "closes at" .
+:clearedAt a owl:DatatypeProperty ; rdfs:domain :Round ; rdfs:range xsd:dateTime ; rdfs:label "cleared at" ;
+    rdfs:comment "Present once the host has matched the round's bids; a round saying it is cleared." .
+:answers a owl:ObjectProperty ; rdfs:domain :Round ; rdfs:range :Call ; rdfs:label "answers" ;
+    rdfs:comment "A call the round was opened for." .
+
+:inRound a owl:ObjectProperty ; rdfs:range :Round ; rdfs:label "in round" .
+:bidder a owl:ObjectProperty ; rdfs:domain :Bid ; rdfs:range orexis:Agent ; rdfs:label "bidder" .
+:litres a owl:DatatypeProperty ; rdfs:domain :Bid ; rdfs:range xsd:decimal ; rdfs:label "litres" .
+:pricePerL a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "price per litre" ;
+    rdfs:comment "What a bid offers per litre, and what a claim costs per litre: under pay-as-bid, the one it won with." .
+
+:heldBy a owl:ObjectProperty ; rdfs:domain :Claim ; rdfs:range orexis:Agent ; rdfs:label "held by" .
+:amountL a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:decimal ; rdfs:label "amount" ;
+    rdfs:comment "How many litres the claim is for." .
+:discharged a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:boolean ; rdfs:label "discharged" ;
+    rdfs:comment "The host served the claim; said by the host when it says the claim again." .
+:dischargedAt a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:dateTime ; rdfs:label "discharged at" .
+
+:presents a owl:ObjectProperty ; rdfs:domain :Presentation ; rdfs:range :Claim ; rdfs:label "presents" .
+
+#################  What the rules conclude, and what a plan speaks  #################
+
+:open a owl:DatatypeProperty ; rdfs:domain :Market ; rdfs:range xsd:boolean ; rdfs:label "open" ;
+    rdfs:comment "A round stands on the venue and has not been cleared: bids may be tendered." .
+:offered a owl:DatatypeProperty ; rdfs:domain :Call ; rdfs:range xsd:boolean ; rdfs:label "offered" ;
+    rdfs:comment "A round answering the call stands open." .
+:answered a owl:DatatypeProperty ; rdfs:domain :Call ; rdfs:range xsd:boolean ; rdfs:label "answered" ;
+    rdfs:comment "A round answering the call has been cleared." .
+:holdsClaimOn a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Market ; rdfs:label "holds a claim on" ;
+    rdfs:comment "The agent holds a claim on the venue that has not been discharged." .
+:presented a owl:DatatypeProperty ; rdfs:domain :Claim ; rdfs:range xsd:boolean ; rdfs:label "presented" ;
+    rdfs:comment "The holder has presented the claim." .
+
+#################  What an action is filled with  #################
+
+:venue a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "venue" ;
+    rdfs:comment "The venue a call, an offer, a bid, a clearing or a presentation is on." .
+:claim a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "claim" ;
+    rdfs:comment "The claim a serving discharges." .
