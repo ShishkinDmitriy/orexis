@@ -33,9 +33,7 @@ import uuid
 
 import pytest
 
-from agent_old import ratified
 from onboarding import mqtt as mqtt_admin
-from orexis_agent_progression.ontology import AG, WORLD_GRAPH
 
 paho = pytest.importorskip("paho.mqtt.client")
 
@@ -49,13 +47,10 @@ READY_S = 20.0       # how long the broker gets to finish a reload
 
 
 def _bus() -> tuple[str, int]:
-    """Discovered, not hardcoded — the world states where the broker is, as it does for agents."""
-    rows = ratified.rows(ratified.dataset(WORLD), f"""SELECT ?host ?port WHERE {{
-        GRAPH <{WORLD_GRAPH}> {{
-          ?b a <{AG}MessageBus> ; <{AG}brokerHost> ?host ; <{AG}brokerPort> ?port . }} }}""")
-    if not rows:
-        pytest.skip(f"world {WORLD} states no message bus")
-    return rows[0]["host"], int(rows[0]["port"])
+    """Discovered, not hardcoded — the world states where its broker listens, `schema:url` on its
+    `mqtt4ssn:Broker`, as the operator's tools read it."""
+    host, plain, _tls = mqtt_admin.broker(WORLD)
+    return host, plain
 
 
 def _reachable(host: str, port: int) -> bool:

@@ -1,27 +1,16 @@
-"""The namespaces onboarding interpolates and the kernel does not speak.
+"""The namespaces onboarding interpolates and the agent does not speak.
 
-Onboarding legitimately knows packages and their vocabularies: it reads the ratified files
-directly, to mint a credential per sensor, a dashboard per observed property, a config.h per
-board. The kernel does not — it is a BDI engine, and what a reading looks like is sensing's
-(the-region-want-is-sensings-want). So a namespace the generators need and the kernel has no use for
-is declared here, where it is consumed, rather than in the kernel vocabulary (`packages/orexis-agent-progression/ontology.py`), where it read as
-the kernel's word. `SOSA` moved first (#378); the twelve package namespaces followed, which
-closed the ratchet's KIND 3.
-
-These are NOT a prefix registry — `agent.loader` reads those off each ontology, and a package
-listed here still owns its own vocabulary. They are the handful of namespaces the sovereign's
-tooling builds full IRIs in, by interpolation rather than by prefix, because it queries the
-ratified files directly and not through a `Store` carrying `store.PREFIXES`. That is a way to
-name a term a rename cannot see — an interpolated `bidsIn` went on compiling and matching
-nothing for four merged PRs once market owned `market:bidsIn` — which is why
-`tests/test_kernel_namespaces.py` resolves every term the kernel names, and why onboarding's
-should get the same guard one day.
+Onboarding reads the world's documents to mint a credential per principal, a dashboard per
+observed property and a config.h per board, and some of what it reads — a board's pins, a part's
+bus — is vocabulary no agent has a use for. Those namespaces are declared here, where they are
+consumed, as the handful of IRIs the sovereign's tooling builds full terms in by interpolation.
+A term interpolated this way is one a rename cannot see, which is why each is kept to what a
+generator actually reads.
 """
 
 SOSA = "http://www.w3.org/ns/sosa/"
 
-# The hardware: `packages/part/` and `packages/bus/` ship no Python, so there is no `terms.py`
-# of their own to hold these — a knowledge-only package being knowledge.
+# The hardware, as a world's hardware.ttl states it.
 MC = "http://example.org/orexis/microcontroller#"
 ONEWIRE = "http://example.org/orexis/onewire#"
 I2C = "http://example.org/orexis/i2c#"
@@ -38,8 +27,5 @@ SENSING = "http://example.org/orexis/sensing#"
 ACTUATION = "http://example.org/orexis/actuation#"
 REVIEW = "http://example.org/orexis/review#"
 
-# What stands in for hardware nobody built — `packages/orexis-sim-standin/`, which the generators read
-# to give a stand-in a container and a credential (a-stand-in-is-not-a-device). The SUBSTRATE
-# vocabulary beside it, `device:`, is not here: the generators build an inventory and a harness
-# from `mc:`, and never ask what anything is made of.
+# What the simulator plays, which a generator gives a container and a credential.
 SIM = "http://example.org/orexis/sim#"

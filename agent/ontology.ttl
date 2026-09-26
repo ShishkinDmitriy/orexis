@@ -29,8 +29,7 @@
 orexis:Action
     a owl:Class ;
     rdfs:label "Action" ;
-    rdfs:comment "One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `planning:precondition` is a SELECT whose rows are the steps a world admits; `planning:effect` is what taking one makes true and false, as rules; `execution:implementation` is what goes out when one is taken, as operations; `planning:costs` and `planning:landsAfter` sit beside them. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing." ;
-    <http://example.org/orexis/assembly#signature> "(act, judgment, intention) -> bool" .
+    rdfs:comment "One way of acting, WHOLE — the STRIPS operator as one node (knowledge/domain/action.md), and the KIND of act itself, which an intention commits to and a row carries: `planning:precondition` is a SELECT whose rows are the steps a world admits; `planning:effect` is what taking one makes true and false, as rules; `execution:implementation` is what goes out when one is taken, as operations; `planning:costs` and `planning:landsAfter` sit beside them. Stated by the package that owns the acting, in its `actions.ttl`, and loaded into the action graph at genesis, so a planner, a sovereign or a model reads the whole tool list in one place and an author adds a way of acting by adding one node. It replaced three files (affordances.rq, honoured.rq, effects.ttl) and a fourth surface for what was always one thing." .
 
 orexis:Agent
     a owl:Class ;
@@ -122,13 +121,6 @@ orexis:beliefsOf
     rdfs:label "beliefs of" ;
     rdfs:comment "Which agent owns this graph — said by the owner in the classification it writes when it creates the graph, beside what the graph is and how it arrived, so a reader that means its OWN graphs of a kind asks by owner as well as by class. In a deployed volume every graph is the one agent's; the world-wide validation and the tests stand several agents in one store, and this is what keeps one agent's roots and picks apart from the next's there — the name used to, and a name is for eyes." .
 
-orexis:carries
-    a owl:ObjectProperty ;
-    rdfs:domain owl:Class ;
-    rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
-    rdfs:label "carries" ;
-    rdfs:comment "The predicate a keyed node STATES — the value that makes two worlds different. Everything else on the node (an instant, who made it) is not where a plan stands: a look that predicts the value it already holds nets to nothing, which is what keeps looking from being a new world every time." .
-
 orexis:end
     a owl:DatatypeProperty ;
     rdfs:domain dcterms:PeriodOfTime ;
@@ -143,24 +135,11 @@ orexis:hash
     rdfs:label "hash" ;
     rdfs:comment "The canonical digest of what a graph holds, on its catalogue row beside what it is — written by whoever lays or forks the graph (a ground, a possible world) and replaced when the graph is re-hashed, since a graph has one content. Two graphs with one hash hold the same facts whatever their names, which is how a search knows a fork repeated a world it had seen, and how the pass after identifies the present among the worlds the last one imagined: the ground just laid is the world whose hash it repeats, never the one it is named like (the-future-is-a-cone-and-the-present-is-identified-in-it)." .
 
-orexis:keyedBy
-    a owl:ObjectProperty ;
-    rdfs:domain owl:Class ;
-    rdfs:range <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> ;
-    rdfs:label "keyed by" ;
-    rdfs:comment "A predicate that IDENTIFIES a node of this class — the writer upserts one node per key. Declared by the package that writes such nodes (sensing: an observation is keyed by what it observes of what), and read by the planner's cycle detection, which canonicalises a keyed node to its class, its key values and what it carries — never its identity. The kernel used to spell sosa here by hand." .
-
 orexis:localId
     a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:label "local id" ;
     rdfs:comment "The short name a resource is known by outside RDF. Stated here so nothing has to infer it from the shape of a URI. The ONE instance identifier a process is given is an agent's localId; everything else it discovers." .
-
-orexis:resignAfterS
-    a owl:DatatypeProperty ;
-    rdfs:range xsd:integer ;
-    rdfs:label "resign after seconds" ;
-    rdfs:comment "How long an agent endures a dead bus before it resigns and lets its container bring it back fresh (#53). The fault this bounds is the one that cost two days: a session that ends and never returns, inside a container that looks perfectly healthy, on a bus whose broker never restarted. Ten minutes is far past any reconnect paho would ever achieve — a link that flaps recovers in seconds and never meets this — and far under the hours a quiet failure used to cost. Stated here rather than compiled in, like the compaction ratio above: it is what this society tolerates, not how the code happens to be written." .
 
 orexis:start
     a owl:DatatypeProperty ;
@@ -185,12 +164,6 @@ orexis:Derived
     rdfs:label "derived" ;
     rdfs:comment "A package's rule concluded it from given facts. Policy: another society could rule otherwise with the same vocabulary." .
 
-orexis:desires
-    a <http://example.org/orexis/assembly#Extension> ;
-    rdfs:label "desires" ;
-    rdfs:comment "What do you contribute to what this agent pursues? Answers are ranked together, one want per node." ;
-    <http://example.org/orexis/assembly#signature> "(now=…) -> list['Judgment']" .
-
 orexis:Received
     a orexis:Arrival ;
     rdfs:label "received" ;
@@ -201,31 +174,11 @@ orexis:Recorded
     rdfs:label "recorded" ;
     rdfs:comment "This agent's own act, at runtime. Its word about itself." .
 
-orexis:reports
-    a <http://example.org/orexis/assembly#Extension> ;
-    rdfs:label "reports" ;
-    rdfs:comment "Which fields go on this agent's health point? Merged by the sink; a later answer wins a collision, and it is said." ;
-    <http://example.org/orexis/assembly#signature> "() -> dict" .
-
-orexis:series
-    a <http://example.org/orexis/assembly#Extension> ;
-    rdfs:label "series" ;
-    rdfs:comment "Which tagged rows go into this agent's own bucket? Concatenated by the sink." ;
-    <http://example.org/orexis/assembly#signature> "() -> list[tuple[str, dict, dict]]" .
-
-orexis:stepDone
-    a <http://example.org/orexis/assembly#Extension> ;
-    rdfs:label "step done" ;
-    rdfs:comment "Progression handed a committed act to its actors and this is the answer: took, or not now. Told on the executing thread, to whoever above cares — a lower layer says this upward as an event, never as an import (#452)." ;
-    <http://example.org/orexis/assembly#signature> "(act, intention, took) -> None" .
-
-
 orexis:PredictionGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Prediction graph" ;
     rdfs:comment "A PREDICTION: a graph holding during the window it predicts for, carrying what a package expects a reading to be by then — the predicted reading keyed exactly as the present's is, typed with every band it may be in, a centre where the package has one — written by sensing from the drifts after every reading, one graph per horizon (the-drift-is-sensings-and-its-result-is-predictions, #642). A KIND OF ITS OWN to the doors: `query_at` hands a reader the predictions holding at the instant asked about beside public knowledge and the records holding then; the agent's own records never list them, no validation reads them, and no plan carries them into its imaginarium until the search reads predictions (#643). The first is the one the next reading is held to, its window the next reading's; the window closing with no reading is staleness. Typed in the classification when written, with a period in the periods table, as a round is." .
-
 
 orexis:retracts
     a owl:DatatypeProperty ;

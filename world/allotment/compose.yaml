@@ -91,9 +91,6 @@ services:
       - ../../agent:/app/agent:ro
       - ../../domains:/app/domains:ro
       - ../../simulation:/app/simulation:ro
-      - ../../assembly:/app/assembly:ro
-      - ../../agent_old:/app/agent_old:ro
-      - ../../packages:/app/packages:ro
 
   agent-rose_grower:
     image: orexis:local
@@ -132,9 +129,6 @@ services:
       - ../../agent:/app/agent:ro
       - ../../domains:/app/domains:ro
       - ../../simulation:/app/simulation:ro
-      - ../../assembly:/app/assembly:ro
-      - ../../agent_old:/app/agent_old:ro
-      - ../../packages:/app/packages:ro
 
   agent-supplier:
     image: orexis:local
@@ -173,9 +167,6 @@ services:
       - ../../agent:/app/agent:ro
       - ../../domains:/app/domains:ro
       - ../../simulation:/app/simulation:ro
-      - ../../assembly:/app/assembly:ro
-      - ../../agent_old:/app/agent_old:ro
-      - ../../packages:/app/packages:ro
 
 volumes:
   orexis-allotment-mosquitto:

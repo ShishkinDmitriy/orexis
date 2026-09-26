@@ -1,51 +1,21 @@
 [project]
 name = "orexis"
-version = "0.1.0"
+version = "0.2.0"
 license = "MIT"
 license-files = ["LICENSE"]
 description = "Orexis — a market society of agents that bid for a scarce resource"
 requires-python = ">=3.10"
 
-# `orexis` is ASSEMBLY, the KERNEL and the OPERATOR'S TOOLS — the three trees at the repo root.
-# Every package under `packages/` is its own project with its own dependencies, and this one
-# depends on exactly ONE of them: the kernel loads packages and never needs a GRANTED one, but
-# the mind's stores are a package beneath the layers now, and the kernel imports the layers
-# itself, so its own declared dependency is what carries them — #455's pull derives the load
-# set for SERVICE providers, and the layers will follow it only when the kernel's imports
-# become need-declarations (a-layer-is-a-package-and-need-loads-it). See
-# knowledge/decisions/every-package-is-a-project.md.
-#
-# What did NOT come back is the boundary two pyprojects used to pretend to draw. `onboarding/`
-# still ships in this distribution beside `agent/`, because packaging never kept the operator's
-# tools out of an agent — the Containerfile not naming the tree does, and lint-imports holds
-# the direction. Twenty-two distributions are not a boundary either; they are a dependency
-# graph, which is a different thing and the thing that was missing.
-#
-# Every name below is imported by `agent/` or `onboarding/`. Nothing else is listed, and
-# tests/test_layout.py holds this list to exactly what those two trees import.
+# `orexis` is the agent, the operator's tools and the simulator — the three trees at the repo
+# root — and one distribution. Every name below is imported by one of them, and
+# tests/test_projects.py holds this list to exactly what those trees import, both ways.
 dependencies = [
-    #  The kernel's three LAYERS, packages in the one tree (a-layer-is-a-package-and-need-loads-it,
-    #  #452): `agent/` assembles them and the operator's tools import them, so the arrows are
-    #  declared. A knowing metadata CYCLE — each layer depends back on `orexis` for `assembly`
-    #  — belonging to the shared root distribution, not to the layering (the imports are
-    #  acyclic: assembly < reactive < progression < deliberation < agent), dissolving when
-    #  assembly becomes a distribution of its own. It is why the Containerfile installs the
-    #  four editables in one pip call. The pull (#455) is built and governs service
-    #  providers; these lines are still what LOAD the layers, because the kernel imports
-    #  them directly — the record's legitimate intermediate state, bounded now by the
-    #  kernel's own imports rather than by a missing mechanism.
-    "orexis-agent-reactive",
-    "orexis-agent-progression",
-    "orexis-agent-deliberation",
-    #  The engine `agent/` — Agent 2.0, in this distribution since it left `orexis/` — reads
-    #  and writes directly; the 1.0 container reaches it through progression.
+    #  the store's engine, and rdflib where a shape is compiled or a graph compared
     "pyoxigraph",
-    #  assembly/ and agent/ — rdflib is DIRECT (nine imports across the three trees) and used
-    #  to arrive only as a transitive of pyshacl, which is free to drop or re-pin it.
     "rdflib>=7",
     "python-dotenv>=1.0",
     "cryptography>=42",
-    #  onboarding/ and agent/ — the operator's tools and the runtime reach both services
+    #  the series store and the bus, reached by the runtime and the operator's tools
     "influxdb-client>=1.40",
     "paho-mqtt>=2.0",
 ]
@@ -79,73 +49,18 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-# Three roots at the repo top: what assembles a build, the kernel it assembles onto, and the
-# operator's tools. `packages*` is NOT among them — every package installs itself, claiming its
-# own leaf and leaving `packages/` and `packages/<family>/` unclaimed as PEP 420 namespace
-# portions. That is what lets a twenty-second package be installed from another repository and
-# land in the same namespace as these twenty-one.
+# The three roots at the repo top, and nothing else: the agent, the operator's tools and the
+# simulator. A domain and a world are documents, read from where they are and never installed.
 where = ["."]
-include = ["assembly*", "agent*", "agent_old*", "onboarding*", "simulation*"]
-
-# ---------------------------------------------------------------------------------------------
-# THE WORKSPACE. Twenty-one packages and this root are one resolution, so a checkout is set up
-# with `uv sync --all-packages` and a package's dependency on a sibling resolves to the
-# directory rather than to an index that has never heard of it.
-#
-# uv is the ergonomics, not the mechanism: every member is an ordinary PEP 621 project, so
-# `pip install -e . $(ls -d packages/*/)` is the same install and is what the Containerfile
-# does — ONE level, since a package's directory is its distribution name and has no family
-# directory above it. Nothing here requires uv to run an agent.
-[tool.uv.workspace]
-members = ["packages/*"]
-
-# An entry here answers ONE question: when a member declares a dependency on this NAME, does it
-# come from the workspace or from an index? So a name that nothing depends on needs no entry —
-# `[tool.uv.workspace]` above is what makes all twenty-one members, and it is a glob.
-#
-# There were twenty-two entries and twenty of them answered a question nobody asked. Measured
-# before removing them: locking the workspace with two entries and with twenty-two produces a
-# BYTE-IDENTICAL `uv.lock`, and every package still resolves to `editable = "packages/<name>"`.
-#
-# They are gone because inert or not, twenty-one sibling names in a list is a REGISTRY — the
-# next person adds a twenty-second by imitation, forgets on the one after that, and nothing
-# fails, because the entry never did anything. That is the same failure the contracts above
-# were moved out of this file to avoid. ADD A NAME HERE ONLY when a member actually depends on
-# it; otherwise adding a package stays what the README claims it is — adding a directory.
-[tool.uv.sources]
-orexis = { workspace = true }                    # every package: `from assembly import contributes`
-orexis-agent-reactive = { workspace = true }     # progression: the loop a timer lands on
-orexis-agent-progression = { workspace = true }   # the root, deliberation and four packages
-orexis-agent-deliberation = { workspace = true }    # the root, market and actuation
-orexis-capability-sensing = { workspace = true } # codec-json, scaling-identity, transport-mqtt
+include = ["agent*", "onboarding*", "simulation*"]
 
 [tool.pytest.ini_options]
-# BOTH roots. `tests/` is the integration suite — most of what this project asserts is about the
-# merged graph, and a shape or a rules.ru cannot be exercised without every package's T-Box. A
-# package may also carry its OWN tests, as plain `test_*.py` files beside the code they cover,
-# for the rare thing that means something alone: `packages/orexis-capability-market/test_auction.py`
-# is pay-as-bid and uniform-price arithmetic, and needs no world at all.
-#
-# `packages` must be named here or those files are invisible. Measured: with `testpaths =
-# ["tests"]`, neither `pytest tests` NOR a bare `pytest` collects a test file inside a package —
-# it runs only when named by path, so the suite would have gone green while skipping it.
-#  AGENT 2.0 ONLY, while the repackaging branch runs. The 1.0 suite is not deleted and not
-#  broken — it is not this tree's, and a bare `pytest` that ran both would be red for reasons
-#  none of this work is about. A path comes back by being added here, one at a time, and the
-#  list widens to `["tests", "packages", "orexis"]` before the branch merges.
-testpaths = ["agent", "packages", "world"]
+# The agent's own suites and each world's, which live beside what they test. `tests/` holds the
+# four files that read the whole tree, run by the gates by name.
+testpaths = ["agent", "world"]
 
-# A PACKAGE DIRECTORY IS ITS DISTRIBUTION NAME, and a distribution name has hyphens in it.
-# pytest's default `prepend` import mode derives a module name from the path — it walks up from
-# a test file while it keeps finding `__init__.py`, and every package has one — so a test inside
-# `packages/orexis-capability-market/` was imported as `orexis-capability-market.test_auction`,
-# which is not an identifier. All twenty-one of the market's own tests failed to collect, and
-# COLLECTION errors are the dangerous kind: a test that cannot be imported is a test that is not
-# run, and a suite can be green while a file of it never executed.
-#
-# `importlib` is the mode pytest recommends and the one that does not derive names from paths.
-# It also stops inserting directories into sys.path, which is why `pythonpath` is here: the
-# layering test reads the AST helpers out of `test_projects`, and nothing else would find it.
+# `importlib` is the mode pytest recommends and the one that does not derive a module name from
+# a path; it stops inserting directories into sys.path, which is why `pythonpath` is here.
 addopts = "-n auto --import-mode=importlib"
 pythonpath = ["tests"]
 
@@ -189,30 +104,15 @@ pythonpath = ["tests"]
 #
 #   .venv/bin/lint-imports
 [tool.importlinter]
-# THREE root packages, not four. `packages` used to be one, and it stopped being a module the
-# day a package became a top-level distribution of its own: there is no shared import root left
-# to name, and `orexis_*` is NOT a valid module expression — grimp rejects a wildcard that
-# matches part of a segment, measured before this was rewritten rather than after.
+# The one direction a directory cannot state: the operator's tools read the model an agent runs
+# on, and nothing an agent runs may reach for them — the tool that mints a society's keys or
+# holds the series store's admin token must be absent from what an agent can import.
 #
-# So the three contracts that mentioned packages moved to `tests/test_layering.py`, which finds
-# them by looking exactly as the loader does. That is stricter than what it replaced, not looser:
-# listing twenty-one modules here would have been a registry, and a registry goes stale the
-# first time somebody adds a package and forgets this file. The two contracts left are between
-# the three trees of the root distribution, which are fixed and few.
-root_packages = ["assembly", "agent_old", "onboarding", "agent", "simulation"]
-
-[[tool.importlinter.contracts]]
-# ASSEMBLY IS UNDER EVERYTHING. It finds packages and owns the extension mechanism; the kernel
-# is one of the things it assembles, so it must not know the kernel exists. It names `agent/` by
-# PATH — a directory it merges first — and never by import (the-assembly-is-not-the-mind).
-# That it imports no PACKAGE either is asserted in tests/test_layering.py.
-name = "What assembles a build does not import what it assembles"
-type = "forbidden"
-source_modules = ["assembly"]
-forbidden_modules = ["agent_old", "onboarding"]
+#   .venv/bin/lint-imports
+root_packages = ["onboarding", "agent", "simulation"]
 
 [[tool.importlinter.contracts]]
 name = "The agent never reaches for the operator's tools"
 type = "forbidden"
-source_modules = ["agent_old", "agent", "simulation"]
+source_modules = ["agent", "simulation"]
 forbidden_modules = ["onboarding"]

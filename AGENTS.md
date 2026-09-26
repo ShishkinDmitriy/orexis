@@ -215,8 +215,8 @@ it is a record wearing a bullet.
   values were refused where a set of possibilities would do.
 - **A row whose presence is meant to BE a fact is named for the state, not for the instant it
   ends** — a cooldown row saying when the host may convene again was true the whole time it was
-  written, so its presence said nothing and every reader did the arithmetic; `market:coolingUntil`
-  is present while the venue cools, and the instant it carries is the horizon a sweep reads
+  written, so its presence said nothing and every reader did the arithmetic; the 0.1.0 market's cooling
+  row was made present while the venue cools, and the instant it carries is the horizon a sweep reads
   rather than a number to compare.
 - **A base class is an import and an annotation is not** — a layer contract named in a
   signature costs nothing at assembly; subclassed, it loads the layer, which is why sensing's
@@ -283,7 +283,7 @@ it is a record wearing a bullet.
   sweeps each knew its kind and each was a copy, a cooling row kept a timer a restart lost, and
   a claim past its window was let go by hand; a reader asking at an instant is handed no ended graph,
   upkeep drops whatever has ended on its tick and at boot, and what the ending MEANS stays
-  the owner's, told `orexis:outdated` before the drop — which is where a debt's verdict is
+  the owner's, told the graph is outdated before the drop — which is where a debt's verdict is
   written, since the ledger keeps the verdict and not the want (#645).
 - **The mind wakes on contradiction, not on time, and a set of bands is what a reading
   contradicts** — the actuator marked the region want on every reading and the dwell (#615) was
@@ -642,9 +642,10 @@ it is a record wearing a bullet.
   answered when the next reading is revised to it (`store.revisions_of`) — a revision is a
   belief and a drift's prediction, derived from the same observation, is not, which is what
   keeps the foreseen reading out of the present.
-- **0.1.0 is not started any more, so it is amended, not copied** — a package 0.2.0 needs moves
-  into a domain and changes there, and the 0.1.0 suite that built on it is switched off in the
-  gates rather than propped up; the four files in `tests/` that read the whole tree still run.
+- **0.1.0 was amended into 0.2.0, not copied, and then retired whole** — a package 0.2.0 needed
+  moved into a domain and changed there, and once the market had moved too, the old kernel, its
+  assembly, its packages and its suite were deleted (2026-09-26); its vocabulary stays under
+  `tests/fixtures/retired/` only so that the bundle's history still resolves, and nothing loads it.
 - **A step is sized when it is taken, from the present, and the search only says the side it
   reaches** — a dose's effect is the soil coming to be inside its range; the `execution:Command` of
   the action's implementation is run over the beliefs as they stand when the step is taken and answers the actuator and
@@ -841,100 +842,20 @@ it is a record wearing a bullet.
 
 ## The rules the code lives by
 
-1. **Code may reference T-Box terms; never an instance.** `term("Subscribing")` is fine;
-   `"supplier"`, `"sensors/fern/moisture"`, a world's `:world` node are not. The single exception is the one
-   identifier a process is handed at boot: its own agent id. Everything else is discovered from
-   the graph. See [capability-packages](knowledge/decisions/capability-packages.md).
-2. **A capability is a named ability with interchangeable implementations. A DIRECTORY IS A
-   PACKAGE, and a package may hold several.** The ability is a **family** — the slot; the
-   implementations are its members. `sensing:SensingCapability` is a family and `sensing:Subscribing`
-   and `sensing:Listening` are two ways of having it, chosen by what the hardware can do. That is the
-   shape to reach for: a capability worth naming is one where the *how* could differ. Reviewing
-   your own settings by strict rules or by asking a model is one ability with two
-   implementations; pay-as-bid and uniform-price are one auction with two. Where nothing could
-   differ, you have a function, not a capability.
-
-   The two are not the same axis, and saying "a capability is a directory" hid that.
-   `packages/orexis-capability-market/` provides three — bidding, hosting, and the matching family — and it is
-   one package. **What isolates a capability is `PROVIDES` and its term, never the directory
-   boundary**: `hosting.py` asks `agent.provider(BID_MATCHING)` and never learns which member
-   answered, so uniform price landed without touching a line of it. A directory is how a package
-   is FOUND and how one is deleted. See
-   [a-package-owns-its-namespace](knowledge/decisions/a-package-owns-its-namespace.md).
-
-   **There is ONE package tree and one mechanic.** `packages/orexis-<family>-<name>/` holds whichever
-   of `ontology.ttl`, `shapes.ttl`, `rules.ru`, `actions.ttl`, `review.rq` and Python it wants — every one
-   optional, and an omission is a statement. Two files are NOT optional: a `pyproject.toml`,
-   because **every package is its own distribution with its own dependencies**
-   (`orexis-<family>-<name>`), and the `__init__.py` manifest. A dependency is declared by
-   whoever imports it and `tests/test_projects.py` holds each list to the imports in both
-   directions — a missing one and an unused one both fail. `packages/` and `packages/<family>/`
-   are PEP 420 namespace portions belonging to no distribution, which is what lets a package
-   from another repository join the same import root. See
-   [every-package-is-a-project](knowledge/decisions/every-package-is-a-project.md). `packages/orexis-part-esp32/` is an ontology and nothing
-   else because a board has no behaviour a runtime could load; `packages/orexis-capability-market/` has
-   all of it. Neither is more of a package than the other, and that is the point: a plant, a
-   part and a capability are the same kind of thing to the loader.
-
-   A package may declare **its own namespace**, in its `ontology.ttl` and mirrored in
-   `terms.py`. `agent.loader` reads every project namespace off the ontology that declares it,
-   so `market:` reaches a query without `store.PREFIXES` learning the package exists. Nothing
-   lists them — `agent.loader` finds them one level down, and the FAMILY is the second segment of
-   the package's own NAME — which is also its distribution name and, with underscores, its
-   module — so `kind` distinguishes a plant from a part without a registry and without a second
-   place to state it. `PROVIDES` in `__init__.py` is how an implementation registers, and its absence
-   is what makes a package knowledge-only. A package implements the terms IT declares —
-   which is what lets imports follow grants: a runtime imports only the packages its own
-   capabilities name (#216) — and, beneath the grants, a REQUIRED injection pulls the package
-   providing its key into the load set, needs after needs, while a soft one (`X | None`)
-   injects only what is already there and loads nothing (#455). Adding one is adding a directory. Packages never
-   import each other's Python ACROSS a layer: ask `agent.provider(family)` or contribute via
-   the choir's extension points (`desires`, every ACTION, `notices`, `series`, `quiet` — and, in sensing's
-   words through `agent.ask`, `annotate`, `bounds`).
-   The one ordinary import is DOWNWARD, of the contract of the layer beneath: a family's plug-ins
-   import the family's contract — `packages/orexis-codec-*`, `packages/orexis-scaling-*` and
-   `packages/orexis-transport-*` import sensing's `Codec`, `Scaling` and `pointer`, because those
-   are the contracts they exist to implement (see
-   [sensing-owns-the-reading-pipeline](knowledge/decisions/sensing-owns-the-reading-pipeline.md))
-   — and THE KERNEL IS THREE LAYER PACKAGES in the same tree, each importing only the layers
-   beneath it: the reactive loop (`packages/orexis-agent-reactive/`, importing nothing of
-   ours), progression (`packages/orexis-agent-progression/`, the ledger and the store
-   engine, the lowest layer that persists) and deliberation
-   (`packages/orexis-agent-deliberation/`, the belief base, the desires and the search). There
-   is no floor beneath them: what a lower layer has to say upward it says as an EVENT through
-   the choir. `agent/` is the CONTAINER that assembles them and may import all three; nothing
-   imports it from below, and a capability may import any layer's contract (see
-   [a-layer-is-a-package-and-need-loads-it](knowledge/decisions/a-layer-is-a-package-and-need-loads-it.md)).
-   The order is spelled once, `LAYERS` in `tests/test_projects.py`, and the 0.1.0 suite's layering test
-   holds every arrow, finding each layer by its family.
-   **A layer with words of its own owns a namespace** (#529) — `progression:` for the ledger,
-   `deliberation:` for the trace and the budget, each declared in the layer package's own
-   `ontology.ttl`; the reactive layer has no vocabulary — and a term one layer reads and writes
-   carries its prefix, so a query says which layer it speaks for. What every layer and every
-   package writes in — `orexis:Agent`, `orexis:Action`, a want's grammar, the choir's extension
-   points — stays `orexis:`, and a file naming a HIGHER layer's prefix fails
-   the layering test as an upward import would.
-   A transport is also a capability the fact of its bus grants — how the agent reaches its
-   society, connection, delivery loop and watchdog in the transport's module, reached through
-   the choir (`subscriptions`, `handle`, `send`) — and the kernel has no mailbox (see
-   [the-kernel-has-no-mailbox](knowledge/decisions/the-kernel-has-no-mailbox.md)).
-
-   **TWO KERNEL TREES, FOR NOW.** `agent/` is Agent 0.2.0 — the store over the engine, the
-   belief, sensing, prediction, planning and execution packages and the MQTT transport — and
-   is what `pytest` runs and, since 2026-09-25, what `orexis-agent` and the image run; `agent_old/`
-   is the 0.1.0 container this section describes and the loader's kernel (`assembly/loader.py`
-   names it by path); it is not started any more, its
-   suite in `tests/` is switched off in the gates, and its packages are amended into 0.2.0's
-   domains rather than copied. Every `agent_old/<file>`
-   below is that container's; the two trees meet only through the packages' ontologies,
-   which both read.
-
-   **`agent/` is the kernel that loads them, not their home.** Capability Python used to live
-   under it, so the tree itself showed which of it a runtime loads — it does not show that now.
-   `packages/orexis-capability-market/` and `packages/orexis-part-dht11/` look identical, so the CONTRACTS
-   carry the boundary alone: `lint-imports` holds `packages` away from `onboarding`, and the
-   `Containerfile` decides what reaches an image by naming two trees and not a third. Both were
-   always the real enforcement; the layout was a reminder, and the reminder is gone.
+1. **Code may reference T-Box terms; never an instance.** `planning:Desire` is fine;
+   `"supplier"`, `"sensors/fern/moisture"`, a world's `:world` node are not. The single exception
+   is the one identifier a process is handed at boot: its own agent id. Everything else is
+   discovered from the documents. See [capability-packages](knowledge/decisions/capability-packages.md).
+2. **A package is a directory of `agent/`, and a term lives in the namespace of the package that
+   owns the concept.** belief, sensing, prediction, planning, execution, speech and the MQTT
+   transport each declare their words in their own `ontology.ttl`, beside the code that reads
+   them; the kernel's `orexis:` keeps only what packages meet at. A package imports what lies
+   beneath it and never above — the mind imports nothing of prediction, and outside planning the
+   one name imported is `Planner` — and each package's layout test holds it to that.
+   `agent/runtime.py` is the container that assembles them all. **A domain is documents and no
+   code**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
+   with `owl:imports`. Adding a way of acting is a node in a domain's `actions.ttl` — a
+   precondition, an effect and an implementation — and nothing else.
 3. **Nothing in `infra/` is world-specific.** It holds the services and what is true of the
    installation: the broker image, the installation CA, Grafana's material, the admin token. A
    world's broker config, its ACL, its certificates and its device credentials live with the
@@ -945,92 +866,46 @@ it is a record wearing a bullet.
    `world/<name>/secrets/` and mounted into that container alone. The admin token lives apart
    from both, in `infra/secrets/`, and no agent ever holds it. See
    [series-and-bus-isolation](knowledge/decisions/series-and-bus-isolation.md).
-4. **There is no shared store.** The world is TTL files; each agent builds its own belief base
-   at boot and holds it in a volume of its own, so isolation is structural rather than
+4. **There is no shared store.** A world is documents; each agent builds its own belief base
+   from them at boot and holds it in a volume of its own, so isolation is structural rather than
    enforced. An agent is told its id and given one world, mounted — it never learns that other
    worlds exist. See [where-the-belief-base-lives](knowledge/decisions/where-the-belief-base-lives.md).
-5. **There is no config file for the model.** Topology lives in the world graph, desire and
-   limits in each agent's own beliefs, both authored in `world/<world>/`. Deployment facts
+5. **There is no config file for the model.** Topology lives in the world's documents, desires
+   in each agent's own `beliefs/<id>.ttl`, both authored in `world/<world>/`. Deployment facts
    (service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 
 **What an agent BELIEVES about all of that is settled by one test: model it only if a belief
 about it would change which plan gets selected.** Everything else is telemetry — logged and
-reported, never believed. Infrastructure reaches belief only through a named projection; anything
-the interpreter already knows is COMPUTED (what stands, what I can do, how stale this is) and
-never asserted; what comes from outside is stored; self-telemetry gets bands, not raw values;
-reflection caps at one level; and beliefs about other agents stay first-order — what they DID,
-never what they believe. See
+reported, never believed. Anything the interpreter already knows is COMPUTED and never
+asserted; what comes from outside is stored; and beliefs about other agents stay first-order —
+what they SAID, never what they believe. See
 [model-it-only-if-a-plan-would-branch-on-it](knowledge/decisions/model-it-only-if-a-plan-would-branch-on-it.md).
 
 **And a SECOND axis, orthogonal to that one: the agent stack** — network, transport,
 translation, the belief-revision seam, mind — sliced by representation rather than by timescale.
 The transport has no position on the cognitive axis at all; an infrastructure failure becomes a
 belief only by explicit modelling; and a peer's message is a speech act, not an observation, so
-it takes a different path through translation. See
+it takes a different path through translation — sensing for an instrument's bytes, speech for a
+peer's document. See
 [the-agent-stack-is-a-second-axis](knowledge/decisions/the-agent-stack-is-a-second-axis.md).
 
-**Three layers, split by how long a thing may take and whether it may be interrupted** —
-reactive handlers (ms, atomic, no search: classify and write — `packages/orexis-agent-reactive/`,
-a queue and the ONE executing thread that drains it), intention progression (seconds to
-minutes, suspends rather than blocks, searches nothing — `packages/orexis-agent-progression/`,
-the ledger, the patience, the scheduler thread that keeps time and runs nothing, and a timer
-whose landing is an enqueue), deliberation (the search — `packages/orexis-agent-deliberation/`,
-on a worker thread of its own, only its result crossing onto the loop). The rule:
-**anything that blocks belongs in progression, anything that searches belongs in deliberation,
-anything that must never block belongs in a handler** — and the belief base is the INTERFACE
-between them, which is why staleness, a dead sensor and event thinning all settled there rather
-than in either neighbour. See
-[layered-by-timescale-and-interruptibility](knowledge/decisions/layered-by-timescale-and-interruptibility.md).
+**A pass senses, revises, plans and walks, on one thread.** The runtime drains what the
+transport queued, writes it, has the rules conclude of each graph beside public knowledge,
+predicts, then asks the Planner for a pass and ticks and drains the executor until nothing is
+due; a search is bounded by a budget in the unit it spends and continued by the next pass. The
+executor's two doors, `tick` and `drain`, are what a test drives and what a thread would call.
 
 **One principle explains most of the shapes above: control the derivative, not the value.**
-Nothing here dictates an act — a cadence not a reading, a region not an aim, a mandate not a
-belief, what is available not the act taken. When a change you are making reaches DOWN a level (a
-deliberator setting a price, a world file pinning an aim, a model emitting an action), stop:
-that is the one move this architecture refuses everywhere. See
+Nothing here dictates an act — a cadence not a reading, a range not an aim, what is available
+not the act taken, the step's effect and not its size. When a change you are making reaches DOWN
+a level (a search setting a price, a world file pinning an aim, a model emitting an action),
+stop: that is the one move this architecture refuses everywhere. See
 [control-the-derivative-not-the-value](knowledge/decisions/control-the-derivative-not-the-value.md).
 
-And two that catch people out. **There is no default world** — every command takes one as a
-required argument and `current_world()` refuses rather than guessing, because a fallback puts a
-misconfigured agent on the same topics as the real one. Also: **capabilities are worked out at
-genesis, never hand-declared.** `world.ttl` must not contain `orexis:hasCapability`.
-
-**Wiring is one input, not the definition.** Sensing's are a strict function of the hardware —
-a board that keeps an interval gives its agent `sensing:Subscribing`, and nothing could have decided
-otherwise. Others have no wiring to follow and are *deduced*: someone at genesis judged that this
-agent should have them, and could have judged differently. Both end up in the world graph and
-neither is hand-written, but they are not the same kind of fact — the first is `derived`, the
-second `deduced`, and since the provenance split they are distinguishable rather than merely
-distinct. So "deduced at genesis" is the rule; "computed from the wiring" is how it happens to
-work for the one family whose hardware forces the answer.
-
-**Each capability is granted by whatever fact makes it meaningful, and that fact is its own.** The
-premise lives in the capability's `rules.ru`, and there is no pattern to fit a new one into. What
-is left after the mind came home is two kinds of premise and no third. **Equipment or a position
-in a market**: `actuation:hasActuator`, `market:bidsIn`/`market:hosts`, `sensing:polls` and a
-sense mode. **Latitude**: `review:Reckoning`, because revising your own settings means nothing
-without settings you are permitted to move, so an `review:commits` mandate whose ends differ is
-its premise. When you add one, ask what makes *yours* meaningful rather than which of these it
-resembles.
-
-**A region want is NOT a premise for a capability, and neither is one with a lever beside it.** Three
-capabilities were granted that way — wanting, committing, deciding — and all three are gone:
-they were the mind, every agent has one, and the STORES they read were already built for every
-agent unconditionally. A modality nobody may write is not a modality. What a region want still decides
-is which SHAPES apply — `orexis:KeeperShape` targets a want that is not merely about knowing, and
-sensing's region want shapes target `orexis:actsFor` a subject that states what it needs — so
-`world/sensing`'s agent still holds no region and states no patience, by the fact rather than
-by a grant. See
-[the-mind-is-not-a-package](knowledge/decisions/the-mind-is-not-a-package.md),
-[self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md),
-[desire-is-deduced-from-the-ranges-the-world-states](knowledge/decisions/desire-is-deduced-from-the-ranges-the-world-states.md)
-and [an-intention-is-an-amortised-deliberation](knowledge/decisions/an-intention-is-an-amortised-deliberation.md).
-
-**What the prohibition is actually against** is a capability nobody is answerable for. That was
-unenforceable while a declared one and a derived one looked identical in the graph — which is why
-the rule had to be absolute. It no longer is: a derivation writes to `graph/world/derived`, the
-ratified graph is exactly what the files say, and every graph says who put it there. See
-[who-put-the-fact-there](knowledge/decisions/who-put-the-fact-there.md).
+And one that catches people out: **there is no default world** — every command takes one as a
+required argument and refuses rather than guessing, because a fallback puts a misconfigured
+agent on the same topics as the real one.
 
 ## Start by reading the open issues
 
@@ -1095,7 +970,7 @@ stops being theoretical.
 
 ```bash
 source .venv/bin/activate
-pip install -e . $(ls -d packages/*/)   # 25 distributions; or `uv sync --all-packages`
+pip install -e ".[dev]"
 
 orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, then grant everything below.
   orexis-influx <world>      #   a bucket per agent, and a token that opens only it
@@ -1106,21 +981,18 @@ orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 cd world/<world> && podman compose up -d      # one container per agent
 podman build -t orexis:local .                 # only when a dependency changes
-pytest -q              # what testpaths names: agent/, packages/ and world/. No infra needed.
-                       # NOT `pytest tests` — that is the 0.1.0 suite, switched off in the gates
-                       # since 2026-09-25; its four files that read the whole tree (knowledge,
-                       # layout, store, projects) still gate.
+pytest -q              # what testpaths names: agent/ and world/. No infra needed.
+pytest -q tests        # the four files that read the whole tree: knowledge, layout, store, projects
 pytest infra -q -n0    # 8 more, against the RUNNING broker and store — see below.
                        # -n0 is REQUIRED: they rewrite one acl.conf in place. It refuses without it.
-lint-imports           # the layering: onboarding may import agent, never the reverse
+lint-imports           # onboarding may import agent, never the reverse
 ```
 
-`pytest` and `lint-imports` are the gates, and both must pass before a change is done; a world is
-held to what it does by the tests beside it, and `orexis-onboard` refuses one whose documents will
-not load.
-`pytest infra` is a third thing, run deliberately, and it is not part of them — and it must
-be run `-n0`, because `addopts` carries `-n auto` for everything else and those eight tests
-cannot share a broker. They refuse rather than letting you find out: see
+`pytest`, `pytest tests` and `lint-imports` are the gates, and all must pass before a change is
+done; a world is held to what it does by the tests beside it, and `orexis-onboard` refuses one
+whose documents will not load. `pytest infra` is a third thing, run deliberately, and it is not
+part of them — and it must be run `-n0`, because `addopts` carries `-n auto` for everything else
+and those eight tests cannot share a broker. They refuse rather than letting you find out: see
 `infra/tests/conftest.py`.
 
 **`infra/tests/` is a contract with the infrastructure, not with the code.** It holds mosquitto
@@ -1133,60 +1005,34 @@ change. Both files report the version they ran against and assert nothing about 
 `infra/compose.yaml`, rebuild, and re-run `pytest infra -q -n0`.
 
 **Onboarding is the phase between a ratified world and a running society** — see
-[onboarding](knowledge/domain/onboarding.md). Its three generators all read the same `world.ttl`
-and grant exactly what its wiring implies, so adding an agent and re-running `orexis-onboard` is
-the whole of deploying one. They stay separately callable because rotating one service's
+[onboarding](knowledge/domain/onboarding.md). Its generators all read the world as an agent boots
+it and grant exactly what its wiring implies, so adding an agent and re-running `orexis-onboard`
+is the whole of deploying one. They stay separately callable because rotating one service's
 credentials should not touch the other's.
 
-**Its code is in `onboarding/`, beside `agent/` and outside it.** The line is drawn by **who
-calls a function**, not by file: `validate_agent` stays in `agent` because an agent checks
-itself at boot, while `validate_world` moved because only the sovereign asks it; `sign` and
-`verify_command` stay because an actuator co-signs, while `create_keypair` moved — an agent that
-could mint a society's keys could sign for it. `orexis-influx` reads the admin token, which opens
-every bucket and which no agent may ever hold, so the surest guarantee is that the code using it
-is absent from the image.
-
-**That absence is asserted, not implied.** There is ONE distribution now. What keeps onboarding
+**Its code is in `onboarding/`, beside `agent/` and outside it, and that absence is asserted.**
+`orexis-influx` reads the admin token, which opens every bucket and which no agent may ever hold,
+so the surest guarantee is that the code using it is absent from the image. What keeps onboarding
 out of an agent image is the `Containerfile` not naming it — `tests/test_layout.py` fails if a
-`COPY onboarding/` appears — and `lint-imports` holds the direction: onboarding may import
-agent, agent may never import onboarding. Two pyprojects used to look like that boundary while
-enforcing none of it. `orexis-influx` and `orexis-mqtt`
-need infra up; `orexis-mqtt` must run before the broker will start at all, since its ACL is
-generated and mosquitto now refuses anonymous clients. It then **reloads** the broker itself
-(SIGHUP, not a restart — connected agents keep their sessions), so adding an agent or a world
-still interrupts nothing.
+`COPY onboarding/` appears — and `lint-imports` holds the direction: onboarding may import agent,
+agent may never import onboarding. `orexis-influx` and `orexis-mqtt` need infra up;
+`orexis-mqtt` must run before the broker will start at all, since its ACL is generated and
+mosquitto refuses anonymous clients. It then **reloads** the broker itself (SIGHUP, not a
+restart — connected agents keep their sessions), so adding an agent or a world still interrupts
+nothing.
 
-Beliefs are the agent's: **authored** once at birth, never touched by start or stop — and so are
-its ROOT desires, authored at birth into a graph with no period by the packages' desire rules
-and projected, never rebuilt (#644). Anything
-that would reset them on a restart is a bug, not a convenience. One addition is not a reset:
-an amendment that grants a capability may author terms an existing volume has NEVER held, and
-boot **endows** those — never-held terms arrive with their structures, held terms stay the
-agent's whatever their value. `rebirth` remains the explicit discard. See
-[an-amendment-endows-what-it-grants](knowledge/decisions/an-amendment-endows-what-it-grants.md).
-
-But a belief is a **point chosen inside a range**, not a constant, and what genesis wrote is the
-first pick rather than a bound. An agent whose **world gives it room to move** — `review:commits`, in
-`world.ttl` — re-picks on its own clock inside that room, so the author's job is to constrain
-well, not to guess well. **The mandate is also the grant**: `packages/orexis-capability-review/` derives its
-capability from exactly those triples, so an agent given no room has no review module, keeps no
-summaries and never arises. Which terms may move is one triple in the owning package's
-`ontology.ttl`; a review rule is `packages/orexis-capability-<name>/review.rq`, SPARQL and never Python; and a
-revision is legitimate exactly when `validate_agent` still passes, which is the same call the
-agent makes at boot. **Compaction is not part of this** — it is not a choice, so it stayed in the
-kernel on a clock of its own. See
-[self-review-is-a-capability](knowledge/decisions/self-review-is-a-capability.md).
+Beliefs are the agent's: **authored** once at birth from the world's documents, never touched by
+start or stop. A volume lived in keeps the agent's own graphs and reads again only what a
+document put in and nobody owns — the ontologies, the domains, the world's public graphs — which
+is how an updated ontology reaches a running agent. Anything that would reset an agent's own
+beliefs on a restart is a bug, not a convenience.
 
 ## Traps worth knowing, and one that is closed
 
-**Closed: the two engines used to disagree about what the vocabulary says.** Shapes ran with RDFS
-inference and the runtime ran none, so a world could validate against a relationship the code
-would never observe — and six queries carried `rdfs:subClassOf*` by hand to compensate, for
-twenty-five declared axioms. The entailments are now materialised into the store at genesis, and
-validation runs with inference off against that same graph. **Ask what a thing IS; do not walk a
-subclass path.** If the closure does not cover your case, widen `agent_old/inference.py` rather than
-working around it — the 0.1.0 suite's inference test refused a seventh hand-rolled walk, and separately
-failed if pyshacl ever entailed something the closure did not. See
+**Ask what a thing IS; do not walk a subclass path.** The boot derives the `rdfs:subClassOf`
+closure of every ontology graph into a graph of its own, and every catalogue row carries every
+kind its class is beneath, so a text asks `?g a planning:WantGraph` and walks nothing. A seventh
+hand-rolled walk was once refused for exactly that reason. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
 - **Name the graph CLASS, never an instance — and scope by MODALITY when you leave belief.**
@@ -1241,18 +1087,12 @@ failed if pyshacl ever entailed something the closure did not. See
   and walks no path.
 - **SPARQL prefixes.** Only what `store.NAMESPACES` declares may be used. rdflib silently
   pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
-  production. `tests/test_store.py` checks this by scanning the source text — and asserts each
-  source tree is still *found*, because moving files has twice emptied one of its globs and taken
-  cases off the guard without failing anything. **A `sh:select` inside a shape is the same
-  query** (#508): it uses the same names, says `sh:prefixes orexis:` on the node that carries
-  it, and the store's `DECLARATION` — the dictionary in SHACL's words, assembled and never
-  authored — travels with every shapes graph either engine is handed. A select spelling an
-  IRI in full that the store has a name for fails the same test. **A select speaking words the
-  store never loaded declares them itself**, `PREFIX name: <iri>` above its `SELECT` as SPARQL
-  says it, and the compiler writes them at the head of the query it produces; a name the store
-  already spells differently, or two selects spelling one name two ways, is refused. No shape
-  shipped here needs one — a package's namespace is one the store discovered from that
-  package's own ontology — and a test case speaking its own words does.
+  production. `tests/test_store.py` checks this by scanning the source text of the agent, the
+  operator's tools, the simulator, the domains and the worlds — and asserts each source tree is
+  still *found*, because moving files has twice emptied one of its globs and taken cases off the
+  guard without failing anything. **A text speaking words the store never loaded declares them
+  itself**, `PREFIX name: <iri>` at its head as SPARQL says it: a domain's namespace is not the
+  store's, so every action text, rule and desire select in `domains/` and `world/` carries its own.
 - **A test that asserts inside a loop can assert nothing.** An empty result set is not an error,
   so the body never runs and the test is green. The repo-root `conftest.py` traces the at-risk
   tests — an `assert` inside a loop over something that could be empty — and fails the run if a
@@ -1260,12 +1100,6 @@ failed if pyshacl ever entailed something the closure did not. See
   that generated zero cases, nor a glob that still matches but no longer covers what it is named
   for; both have happened, and both are still found by hand. See
   [a-test-that-asserted-nothing](knowledge/decisions/a-test-that-asserted-nothing.md).
-- **A premise may not rest on another package's CONCLUSIONS.** Derivations run once, in
-  package-directory order, so a rule in `desire/` cannot see what `market/` derives — the
-  pattern matches nothing, the grant does not happen, and nothing says so. Premises use
-  AUTHORED or ENTAILED facts, which every cross-package grant here already does: entailment is
-  materialised before any rule runs, so `market:offeredBy` is available where `market:hosts`
-  is not.
 - **The engine's own query parameters reach only a variable the query PROJECTS at its top
   level.** pyoxigraph's `substitutions=` (SEP-0007) was measured refusing a subquery that does
   not project the variable and every aggregate that does not group it — which is the shape of
@@ -1280,7 +1114,7 @@ failed if pyshacl ever entailed something the closure did not. See
   filters cost what one did. Measure a query you reshape, not only one you write.
 - **A pattern under `FILTER NOT EXISTS` is left untranslated by rdflib's algebra** — it sits
   in the parse tree as a triples block, not a BGP, so a walk that reads BGPs alone reads
-  nothing from a want that says "unmet while this fact is absent"; `relevance.py` reads both.
+  nothing from a want that says "unmet while this fact is absent"; `footprint` reads both.
 - **A `BIND` inside a `UNION` branch cannot see a variable bound outside the union.** The
   branches are evaluated on their own and joined with the surrounding pattern afterwards, so
   the tidy form — state the preamble once, then `{ … } UNION { … }` — leaves every outer
@@ -1303,14 +1137,8 @@ failed if pyshacl ever entailed something the closure did not. See
   over an IRI binds nothing — no column at all, measured — where `GROUP_CONCAT(STR(?x))`
   binds; `find_wants` reads a want's several abouts that way and `test_wants.py` pins it. It is the
   same family as the empty-result trap above, arriving through arithmetic and aggregation: measure an unfamiliar operation on a
-  literal before building a column on it, and pin what you measured — the 0.1.0 suite's desires test
-  does, so the day the engine grows the operation the guard says so.
-- **`build_agent` does not run the boot gate.** The fixture patches `validate_agent` out of
-  the boot unless a test passes `validating=True`: the gate raises or passes and changes
-  nothing else, it cost two seconds of every boot, and it was paid about 250 times a run to
-  say the same thing about a store built from the ratified files. A test that expects
-  `BeliefsInvalid` from a built agent gets none — say `validating=True`, or build the
-  `Agent` yourself as `test_shapes` and `test_hanoi` do.
+  literal before building a column on it, and pin what you measured, so the day the engine grows
+  the operation the guard says so.
 - **Stray host processes are the usual cause of doubled data.** A leaked publisher from an
   earlier run keeps writing to the same topic, and both readings get ingested. `podman compose
   down` removes a society deterministically, which is half of why deployment is containers.

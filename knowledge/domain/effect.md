@@ -161,7 +161,7 @@ minted it with, over the rate the world states. Nothing new is written down for 
 re-ranges its bed or re-states its physics changes the answer by changing what it already says.
 
 **A second package drifts the same way.** The climate package moves a bed's air toward what
-surrounds it — one `climate:Diffusion` node per property, naming what it follows and how
+surrounds it — one diffusion node per property, naming what it follows and how
 fast — in the water package's two forms, reading the surroundings from whatever holds at the
 instant the prediction is for
 ([a-drift-toward-the-surroundings-is-one-link-and-no-physics](/decisions/a-drift-toward-the-surroundings-is-one-link-and-no-physics.md)).

@@ -6,9 +6,8 @@ motion. Its species there are *epithymia* (appetite), *thymos* (spirit) and **bo
 (reasoned wish) — the last of which gives modal logic its word for desire, *bouletic*, which is
 [what a want asserts here](knowledge/domain/modality.md).
 
-The name points at the kernel rather than the shop floor: the market is one capability among
-several and the architecture's own showpiece of a replaceable implementation, while the desiring
-mind is the part nothing swaps out. The project was called Agora and the rename says why —
+The name points at the kernel rather than the shop floor: the market is one domain among several,
+while the desiring mind is the part nothing swaps out. The project was called Agora and the rename says why —
 [the-society-is-named-for-its-appetite](knowledge/decisions/the-society-is-named-for-its-appetite.md).
 
 A society of self-interested agents that bid for a scarce resource, each one a BDI mind —
@@ -18,90 +17,52 @@ architecture. Architecture and rationale live in [`knowledge/`](knowledge/), an
 [OKF](https://okf.md) bundle — start at
 [`knowledge/decisions/index.md`](knowledge/decisions/index.md) §Start here.
 
-**One process per agent.** Each is told only its own id and reads the rest from the belief
-base — what it is wired to, what it can therefore do, and what it privately wants:
+**One process per agent.** Each is told only its own id and reads the rest from the documents
+of the world it is given — what it acts for, which sensors are mounted there, which topics reach
+them, what it wants — and each keeps its beliefs in a store of its own. A reading arrives, the
+rules conclude which side of its subject's ranges it is on, a desire that reads unmet mints a
+want, the search finds a plan of steps, and each step is taken by commanding a device or telling
+a peer:
 
 ```
-  agent asks its board      -> mqtt:commandTopic   {"sense":true} | {"sleep_s":N} retained
-  board answers             -> mqtt:readingTopic   {"value":0.183,...}
-  agent records + announces -> :sensed + Influx, then mqtt:eventTopic {"band":"LOW"}
-  host opens a round        -> market:offerTopic   quantity, reserve, deadline
-  each bidder answers       -> market:bidTopic/<id>   a number only it can compute
-  host clears, claims go -> market:claimTopic/<id> -> owner opens its own valve
+  board publishes            -> sensors/<probe>/reading     {"value": 0.18}
+  agent believes, concludes  -> the reading, and that it is below its plot's range
+  agent calls for water      -> agents/<host>/inbox         a call, as a document
+  host offers a round        -> agents/<bidder>/inbox       a round, as a document
+  bidder tenders, host clears, holder presents, host serves
+                             -> actuators/<valve>/command   {"dose_ml": 500}
 ```
 
-Nothing above is a name in the code. Every channel, every device, every limit is read from
-the graph; the one instance identifier a process gets is its own agent id.
-
-Agents are configured by **belief, not by file**. `:world` holds the public wiring — and from
-that wiring genesis *derives* what each agent can do, so a scheduled sensor gives its agent a
-cadence to own and a push-mode one does not. `:picks/<agent>` holds what each privately
-wants. See [`capability-packages`](knowledge/decisions/capability-packages.md) and
-[`world-graph`](knowledge/decisions/world-graph.md).
-
-Trusted-agent mode: there is no gateway — each plant asserts its own reading. See
-[`knowledge/decisions/trusted-agent-mode.md`](knowledge/decisions/trusted-agent-mode.md).
-
-Sensing is **agent-timed**: the board only senses and sleeps; the *agent* decides how often to
-look, and bids only on a fresh reading. See
-[`knowledge/domain/sensing.md`](knowledge/domain/sensing.md).
+Nothing above is a name in the code. Every topic, every device and every limit is read from the
+world's documents, in MQTT4SSN's and SOSA's words; the one instance identifier a process gets is
+its own agent id. See [`world-graph`](knowledge/decisions/world-graph.md).
 
 ## Layout
 
 ```
-packages/      EVERY package there is, one mechanic: packages/<family>/<name>/
-  bus/  part/    protocols, and the physical things — dht11, esp32, the probe, device
-  plant/         what this society is about: the domain, and a species
-  sim/           what stands in for hardware nobody built, and the physics it computes
-  tool/          vocabularies a generator reads, not the society
-  capability/    what an agent can DO — sensing, market, actuation, review, reporting
-  transport/     how a device is REACHED — mqtt. Deliberately not a capability
-  codec/  scaling/   how bytes become a document, and a document a quantity
-  reactive/  progression/  deliberation/
-                 the KERNEL, as three layers: a queue and the one thread that drains it;
-                 the store engine, the intention ledger, the scheduler and the timer; the
-                 belief base, the desires and the search. Each imports only the layers
-                 beneath it, and speaks upward only as an event
-agent/         the CONTAINER that assembles them: genesis, runtime, inference, validate, the
-               Module contract. A BDI engine and nothing else — it holds no vocabulary for
-               hardware, no mailbox, and no word for any domain
-onboarding/    the sovereign's tools: what turns a ratified world into a running society
-tests/         the two gates, plus the layering the image depends on
-world/         ratified worlds — one directory each: topology, beliefs, and its compose file
-firmware/      ESP32 edge — moisture sensors and pump/valve
-infra/         how it runs: the infra compose, grafana and mosquitto configs
+agent/         Agent 0.2.0 — the store and the runtime, and the packages beside them: belief
+               (revision by SHACL rules), sensing (bytes to an observation), prediction (when
+               a reading changes range), planning (desires, wants, the search), execution
+               (intentions and how a step is taken), speech (a peer's document) and the MQTT
+               transport. No vocabulary for hardware and no word of any domain
+domains/       vocabularies several worlds share — climate, actuation, market, hanoi, courier,
+               sim — each an ontology, its actions and its rules, and no code
+world/         the worlds — one directory each: its documents, each agent's own beliefs, its
+               tests and its compose file
+simulation/    the process a world runs to play the systems it says no one built
+onboarding/    the sovereign's tools: what turns a world into a running society
+firmware/      the ESP32 edge — what a board is flashed with
+infra/         how it runs: the series store, grafana, and the broker image a world builds
+tests/         the gates that read the whole tree
 knowledge/     OKF knowledge bundle (architecture decisions + domain model)
 ```
 
-**A directory is a PACKAGE** — not a capability. The two are not the same axis, and saying it
-the other way hid that: `packages/orexis-capability-market/` provides three capabilities, and
-`packages/orexis-part-esp32/` provides none. What isolates a capability is `PROVIDES` and its term.
-Inside a package the same names mean the same things every time:
-
-```
-packages/orexis-capability-sensing/
-  ontology.ttl   the vocabulary — what its terms mean
-  shapes.ttl     the rules — what an agent must believe to hold it
-  rules.ru       the derivation — what wiring GIVES an agent it
-  terms.py       the terms it implements, and the families it asks others for
-  beliefs.py     its Blocks — the private parameters it reads
-  module.py      the code, which reads only that vocabulary
-  __init__.py    the manifest: PROVIDES = (SubscribingModule, ListeningModule)
-```
-
-Every one of them is optional, and an omission is a statement: `domains/climate/` has no code,
-`packages/orexis-transport-mqtt/` has no `rules.ru` because a transport grants no capability, and
-`domains/actuation/` has no `beliefs.py` because it decides nothing.
-
-Nothing lists these — `assembly.loader` finds them by looking, one level down, and the
-FAMILY is the second segment of the package's own NAME rather than a directory above it or
-anything declared. So **adding a capability is adding a directory**: drop in
-`packages/orexis-capability-forecast/`, and agents load its vocabulary, run its
-derivation, and boot with it if the wiring qualifies them. No registry line, no
-term constant, no edit to any existing file — and deleting the directory removes it just as
-completely, because capabilities reach each other through T-Box terms and never through
-Python imports. See
-[`capability-packages`](knowledge/decisions/capability-packages.md).
+**A world is documents, and each says which graph it is.** A Turtle file is one graph, and
+`<> a orexis:WorldGraph` in it says what; a world imports the domains it speaks with
+`owl:imports`, and an agent's desires are its own file under `beliefs/`. Adding a way of acting
+is a node in a domain's `actions.ttl` — a precondition, an effect and an implementation — and a
+world that imports the domain has it. See [`domain/world`](knowledge/domain/world.md) and
+[`domain/action`](knowledge/domain/action.md).
 
 ## Prerequisites
 
@@ -176,12 +137,12 @@ pip install -e .
 than guessing, because a fallback puts a misconfigured agent on the same topics as the real one.
 
 [`world/`](world/) holds one directory per world, each complete on its own, and each a directory
-of documents that say which graph they are. On Agent 0.2.0: `hanoi` and `courier`, puzzles an agent
+of documents that say which graph they are: `hanoi` and `courier`, puzzles an agent
 solves and then stops; `greenhouse`, a heated bed the grower keeps comfortable by dosing and
 heating it, played by the simulator; and `terrace`, a planter bed outdoors watched through a
 FireBeetle 2 ESP32-E running `firmware/outdoor-sentinel`, a real board; and `sensing`, a fern
-on a windowsill watched through a governed ESP32 that takes a cadence. `tower` is still 0.1.0's,
-waiting for planning on two levels. [`domain/world`](knowledge/domain/world.md) says what a world is made of, and
+on a windowsill watched through a governed ESP32 that takes a cadence; and `allotment`, two
+growers buying water from a supplier on a market. `tower` waits for planning on two levels. [`domain/world`](knowledge/domain/world.md) says what a world is made of, and
 [`domain/domain`](knowledge/domain/domain.md) where the vocabulary several worlds share lives.
 
 **There is nothing to seed and no store to provision.** A world is Turtle; each agent builds its
@@ -239,16 +200,10 @@ second code path, and a second code path is what a simulation exists to avoid.
 - **The wire** — `mosquitto_sub -t '#' -v -p <that world's port>`, which is the one place a
   society is visible from outside without asking anybody.
 
-  The modality is required — `beliefs` or `desires` — as the world is, because there is no
-  default for either. See
-  [`the-sovereign-may-ask`](knowledge/decisions/the-sovereign-may-ask.md).
-
 ## Bringing a real board up
 
-Seed the **smallest world**. `world/sensing` has one subject, one
-board and one agent, plumbed into no market — so derivation gives that agent `sensing:Subscribing`
-and nothing else. It reads, records, and stops. Nothing in that world declares it sensor-only;
-there is simply no market for a market capability to come from.
+Start with the **smallest world**. `world/sensing` has one subject, one board and one agent,
+which holds no desire: it reads, records and predicts, and wants nothing of the readings.
 
 ```bash
 orexis-firmware sensing                # that board's config.h, from the world it belongs to
@@ -257,56 +212,33 @@ cd world/sensing && podman compose up -d
 mosquitto_sub -t 'sensors/#' -v -p 1884       # or just watch the wire
 ```
 
-`sensing` and `simulation` model the same probe identically — same id, same channels — so moving
-a board between them is a credential swap and a reflash and **nothing else**: it is not
-re-modelled, re-identified or re-granted. The model changed, not the firmware.
-
 A scheduled board is asleep almost all the time, so silence usually means it is working —
 wait one interval. The interval is retained and therefore reliable; `{"sense":true}` is
 best-effort and lands only if the board happens to be awake.
 
 ## Real hardware
 
-A real ESP32 speaks the same protocol as a virtual plant — an agent can't tell them apart, so
-you can mix them freely:
+A real ESP32 speaks the same protocol as the simulator — an agent can't tell them apart, so you
+can mix them freely. A sensor `mqtt4ssn:observesTopic` the topic it publishes on and a board
+`mqtt4ssn:listensToTopic` the one it takes commands on, each named by the filter that matches it;
+both are whatever `world/<name>/world.ttl` says they are, and nothing is derived from an id. How
+often a sensor reports is its `ssn-system:Frequency`, and the agent asks again for a reading fallen
+due.
 
-- publishes on its `mqtt:readingTopic` — `{"value": 0.18, "sensor": "moisture_sensor_fern"}`
-- subscribes to its `mqtt:commandTopic` — `{"sleep_s": 300}` (retained) and/or `{"sense": true}`
-
-Both topics are whatever `world/<name>/world.ttl` says they are; nothing is derived from the id.
-
-Declare the board's nature with `sensing:senseMode`, and the capability follows from it — the axis
-is **who holds the clock**:
-
-| `sensing:senseMode` | capability | who runs the timer |
-|---|---|---|
-| `sensing:PolledProcedure` | `sensing:Polling` — *reserved, not built* | the agent asks for each reading |
-| `sensing:ScheduledProcedure` | `sensing:Subscribing` | the agent sets an interval, the board keeps it |
-| `sensing:PushProcedure` | `sensing:Listening` | the board, alone |
-
-`sensing:Polling` is the simplest exchange and what the word ought to mean, but it needs a board
-reachable at any moment — one that deep-sleeps cannot hear the request. So it is declared in
-the vocabulary with no rule granting it and no module providing it. The room is kept on
-purpose; adding it is a class and one line of `PROVIDES`.
-
-The ESP32 firmware is `sensing:ScheduledProcedure`. Change the firmware, edit `sensing:senseMode`, restart the
-agent, and the capability changes with it — the agent is never edited.
-
-The board holds no policy. Bands, cadence, and prices are the agent's own beliefs
-(`world/<name>/beliefs/<agent>.ttl`); the wiring and the valve calibration are the
-world's ([`world/`](world/)). Edit the files and restart the agent — no reflash.
-The one thing firmware *does* enforce is the constitutional cadence clamp
-(`MIN_SLEEP_S`/`MAX_SLEEP_S` in `config.h`) — a buggy agent must not be able to talk a board
-into sleeping through a drought.
+The board holds no policy. Ranges, what an agent wants and what a litre is worth to it are the
+world's documents; edit them and restart the agent — no reflash. The one thing firmware *does*
+enforce is the constitutional cadence clamp (`MIN_SLEEP_S`/`MAX_SLEEP_S` in `config.h`) — a buggy
+agent must not be able to talk a board into sleeping through a drought.
 
 ## Tests
 
-**Two gates, and both must pass before a change is done.**
+**The gates, and all must pass before a change is done.**
 
 ```bash
 pip install -e ".[dev]"
-pytest -q                    # agent/, packages/ and world/ — each world's own tests among them
-lint-imports                 # the layering: onboarding may import agent, never the reverse
+pytest -q                    # agent/ and world/ — each world's own tests among them
+pytest -q tests              # the four files that read the whole tree
+lint-imports                 # onboarding may import agent, never the reverse
 ```
 
 A world is held to what it does by the tests beside it, in `world/<name>/tests/`.
@@ -324,23 +256,12 @@ or computed by anything here, so it is worth re-proving whenever those two chang
 
 ## What's next
 
-**The loop closes: sensor-in → water-out.** A plant reads its own soil, decides for itself that
-it is short, bids a number nobody else can compute, and the winner's valve opens — deterministic,
-no model in the path.
+**The loop closes: sensor-in → water-out,** and across agents: a plot reads dry, its grower buys
+a claim on the supplier's water in a round it called for, and the supplier's valve opens — every
+step a document one agent says to another, no model in the path.
 
-Built since that sentence was first written, and worth knowing before you read the code: a
-**desire is a SHACL shape** and its force is a severity, so pursuing is validating; an
-**intention is the head of a plan committed to**, re-derived every pass because the world moves;
-**deliberation searches possible worlds** as graph diffs; an agent given room to move
-**re-picks its own settings** on its own clock; a **round is a fact** on both sides, so buying
-has a real precondition; and the market is one package among several, replaceable, reached only
-through T-Box terms.
-
-Next: the **LLM stance** layer — justification and coalition on top of the deterministic number,
-on a leash — wallet debiting and metabolic cost, which is also what makes *sensing* a priced
-action, and the constitution as SHACL over the trade. Direction lives in
-[`roadmap`](knowledge/decisions/roadmap.md); what is known to be wrong lives in the issue
-tracker, and what was deliberately left open lives in each record's *seams* section.
+Direction lives in [`roadmap`](knowledge/decisions/roadmap.md); what is known to be wrong lives in
+the issue tracker, and what was deliberately left open lives in each record's *seams* section.
 
 ## License
 

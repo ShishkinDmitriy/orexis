@@ -275,6 +275,11 @@ def _concrete(spec: str) -> str:
     return re.sub(r"<[^>]+>", "placeholder", spec).replace("**", "placeholder")
 
 
+#  THE TREES AGENT 0.1.0 WAS, retired on 2026-09-26: a record narrating them names a path that
+#  existed when it was written, and every one of them is history now, not a stale rename.
+_RETIRED_TREES = ("agent_old/", "packages/", "assembly/")
+
+
 def test_no_document_names_a_path_that_is_not_there():
     """`one-tree-and-one-mechanic` moved the capability tree and 27 documents went on naming the
     old path in the present tense. Nothing failed, because nothing was looking.
@@ -283,6 +288,8 @@ def test_no_document_names_a_path_that_is_not_there():
     each one is a sentence that says "was" or "at the time" or draws a before/after.
     """
     absent_on_purpose = {
+        # THE 0.1.0 SUITE'S FIXTURES, retired with its kernel (2026-09-26).
+        "tests/conftest.py",
         # THE 0.1.0 ONBOARDING COMMANDS, retired with it (2026-09-25): validation, its link step,
         # the key generator and the sovereign's question channel, narrated by the records.
         "onboarding/ask.py",
@@ -429,7 +436,7 @@ def test_no_document_names_a_path_that_is_not_there():
     unresolved = {}
     for path in docs:
         for spec in set(_PATH.findall(path.read_text())):
-            if spec in absent_on_purpose or _is_tracked(spec, known):
+            if spec in absent_on_purpose or spec.startswith(_RETIRED_TREES) or _is_tracked(spec, known):
                 continue
             where = (path.relative_to(BUNDLE) if BUNDLE in path.parents
                      else path.relative_to(REPO_ROOT))
@@ -475,6 +482,34 @@ def test_no_document_names_a_path_that_is_not_there():
 
 _TERM = re.compile(r"\b([a-z][a-z0-9]*):([A-Za-z]\w*)\b")
 
+#  THE RETIRED VOCABULARY. Agent 0.1.0 was retired on 2026-09-26 with its kernel and packages, and
+#  the bundle still narrates it in its own words — a decision record says what was true when it
+#  was written, and a domain page not yet refreshed says what 0.1.0 meant by a word. Its
+#  ontologies and shapes are kept here, as a vocabulary is vendored, so that history resolves;
+#  nothing loads them.
+RETIRED = REPO_ROOT / "tests" / "fixtures" / "retired"
+
+
+def _vocabulary_files(*names: str) -> list[Path]:
+    """Every project Turtle file a word may be declared in: the agent's packages, the domains,
+    the worlds, the firmware and the retired 0.1.0 vocabulary — or, given `names`, only the
+    files so named."""
+    found = [*sorted(p for p in (REPO_ROOT / "agent").rglob("*.ttl") if "tests" not in p.parts),
+             *sorted((REPO_ROOT / "domains").rglob("*.ttl")), *sorted((REPO_ROOT / "world").rglob("*.ttl")),
+             *sorted((REPO_ROOT / "firmware").glob("*/ontology.ttl")), *sorted(RETIRED.rglob("*.ttl"))]
+    return [p for p in found if not names or p.name in names]
+
+
+def _project_prefixes() -> dict[str, str]:
+    """Every label a project file binds, and to what — a bare `:` under its namespace's last
+    segment, since a binding needs a label and the file gives none."""
+    out: dict[str, str] = {}
+    for path in _vocabulary_files():
+        for label, iri in re.findall(r"^@prefix\s+([A-Za-z][\w.-]*)?:\s*<([^>]*)>", path.read_text(), re.M):
+            if iri.startswith("http://example.org/orexis"):
+                out.setdefault(label or iri.rstrip("#/").rsplit("/", 1)[-1], iri)
+    return out
+
 
 def _declared() -> set[str]:
     """Every local name any project TTL declares — the kernel, the packages, and the ratified
@@ -488,17 +523,8 @@ def _declared() -> set[str]:
     covering it — silently as far as this function is concerned, and loudly one line later,
     since every `orexis:` term a page names would read as undeclared.
     """
-    from assembly import loader
-
-    #  ALL of the kernel's TTL, not just its ontology. A SHAPE is declared in `shapes.ttl` and a
-    #  page may legitimately name one — `orexis:KeeperShape` does — and while the shapes lived in
-    #  packages the `packages/**` glob swept them up for free. It does not any more.
-    #  AND THE 0.2.0 TREE'S OWN ONTOLOGIES, which the 0.1.0 loader never walks: a layer's
-    #  `agent/<layer>/ontology.ttl` (and a rule set beside it) declares words a page names.
     names: set[str] = set()
-    for ttl in (list(loader.sources("*.ttl")) + list((REPO_ROOT / "world").rglob("*.ttl"))
-                + sorted(p for p in (REPO_ROOT / "agent").rglob("*.ttl") if "tests" not in p.parts)
-                + sorted((REPO_ROOT / "domains").rglob("*.ttl"))):
+    for ttl in _vocabulary_files():
         text = ttl.read_text()
         names |= set(re.findall(r"^:(\w+)\b", text, re.M))
         names |= {local for _, local in _TERM.findall(text)}
@@ -519,8 +545,7 @@ def test_a_domain_page_names_only_terms_that_exist():
         "desire:UnwatchedDesireShape",
     }
 
-    from assembly import loader
-    project = set(loader.prefixes())          # found by looking, never listed — as the code does
+    project = set(_project_prefixes())        # found by looking, never listed — as the code does
     declared = _declared()
 
     pages = sorted((BUNDLE / "domain").glob("*.md"))
@@ -533,7 +558,7 @@ def test_a_domain_page_names_only_terms_that_exist():
             undeclared.append(f"{page.name}: {term}")
 
     assert pages, "no domain pages found — the glob stopped matching"
-    assert project, "no project prefixes discovered — loader.prefixes() stopped finding them"
+    assert project, "no project prefixes discovered — the vocabulary globs stopped matching"
     assert declared, "no terms discovered — the TTL globs stopped matching"
     assert not undeclared, (
         "a domain page names a term no TTL declares — either the term was renamed and the page "
@@ -635,21 +660,11 @@ def test_a_dictionary_term_is_a_declared_one():
 
     import rdflib
 
-    from assembly import loader
-    from orexis_agent_progression.store import NAMESPACES
+    from agent.store import NAMESPACES
 
-    #  Asked of the loader, not globbed. This was `packages/**/ontology.ttl` plus a firmware
-    #  glob — the same list the loader already assembles, maintained twice — and when the kernel
-    #  left `packages/core/orexis/` for `agent/` the glob went on matching twenty files while
-    #  covering none of `orexis:`. Non-empty is not complete, and the two asserts at the foot of this
-    #  function would both have passed.
-    #  AND THE 0.2.0 TREE'S, which the 0.1.0 loader never walks: `agent/<layer>/ontology.ttl`
-    #  is where a layer or the belief package declares its words, and a dictionary page that
-    #  binds one of them binds a term this guard would otherwise call undeclared. Their
-    #  prefixes are read off their own `@prefix` lines, as `agent.store` reads them.
-    ontologies = list(loader.ontology_files()) + sorted(
-        p for p in (REPO_ROOT / "agent").rglob("ontology.ttl") if "tests" not in p.parts) + sorted(
-        (REPO_ROOT / "domains").glob("*/ontology.ttl"))     # and the domains 0.2.0's worlds import
+    #  Every ontology a word may be declared in: the agent's packages', the domains', the
+    #  firmware's and the retired 0.1.0 vocabulary a page not yet refreshed still binds.
+    ontologies = _vocabulary_files("ontology.ttl")
     project = rdflib.Graph()
     for ttl in ontologies:
         project.parse(ttl)
@@ -746,28 +761,25 @@ _SHORTHAND = re.compile(r"`(:[A-Za-z][\w/<>-]*)`")
 
 def _graphs() -> tuple[set[str], set[str]]:
     """Every graph the project declares: fixed names, and the prefixes per-agent ones grow from."""
-    from assembly import loader
-
     fixed, prefixes = set(), set()
-    for ttl in loader.sources("*.ttl"):
+    for ttl in _vocabulary_files():
         text = ttl.read_text()
         fixed |= {iri[len(_GRAPH_BASE):]
                   for iri in re.findall(rf"<({re.escape(_GRAPH_BASE)}[^>]*)>", text)}
-    #  THE PER-AGENT PREFIXES ARE THE WRITERS' CONVENTIONS — a graph's name is for eyes and
-    #  code asks the class, so no ontology declares one; the helpers that spell them are the
-    #  source, asked with a marker id.
-    from orexis_agent_deliberation.ontology import pursued_graph, remembered_graph
-    from orexis_agent_progression.graphs import intentions_graph
-    from orexis_agent_progression.ontology import picks_graph, obligations_graph, promises_graph, desires_graph
-    from orexis_capability_review.graphs import evidence_graph, revisions_graph, summaries_graph
-    for helper in (picks_graph, desires_graph, promises_graph, obligations_graph, intentions_graph,
-                   pursued_graph, remembered_graph, evidence_graph, revisions_graph, summaries_graph):
+    #  THE PER-AGENT PREFIXES ARE THE WRITERS' CONVENTIONS — a graph's name is for eyes and code
+    #  asks the class, so no ontology declares one; the helpers that spell them are the source,
+    #  asked with a marker id. And the retired kernel's, spelled once here, since the records
+    #  narrating 0.1.0 name its graphs and its helpers are gone with it.
+    from agent.execution.ontology import intentions_graph
+    for helper in (intentions_graph,):
         name = helper("x")
         assert name.startswith(_GRAPH_BASE) and name.endswith("x")
         prefixes.add(name[len(_GRAPH_BASE):-1])
+    prefixes |= {"picks/", "roots/", "promises/", "obligations/", "intentions/", "pursued/",
+                 "remembered/", "evidence/", "revisions/", "summaries/"}
     #  THE CATALOGUE IS THE ONE FIXED NAME NO ONTOLOGY DECLARES: it describes itself, and the
-    #  only spelling is genesis's, which creates it (one-catalogue-describes-every-graph-and-itself).
-    from orexis_agent_progression.ontology import CATALOGUE_GRAPH
+    #  only spelling is the boot's, which creates it (one-catalogue-describes-every-graph-and-itself).
+    from agent.ontology import CATALOGUE_GRAPH
     assert CATALOGUE_GRAPH.startswith(_GRAPH_BASE)
     fixed.add(CATALOGUE_GRAPH[len(_GRAPH_BASE):])
     return {f for f in fixed if f}, prefixes
@@ -908,43 +920,3 @@ def test_a_committed_diagram_is_not_stale():
             wrong.append(f"{svg.name}: stale — {src.name} changed since it was rendered")
     assert not wrong, ("committed diagrams are out of step with their sources. Run "
                        "`./tools/render-diagrams.sh`:\n  " + "\n  ".join(wrong))
-
-
-def test_every_declared_hook_has_an_asker():
-    """A hook nobody asks is a contract every module must honour and nothing consumes.
-
-    `orexis:notices` was exactly that for two releases — declared, given a base method and a real
-    override in sensing, and asked by NOBODY once the deliberator stopped: freshness had become
-    a want, and the hook was left computing the same judgment on request that nobody made
-    (#413). Deleting it is only half the fix; this is the half that keeps it deleted.
-
-    An asker is `agent.ask(CONST, …)` or `agent.tell(CONST, …)` for the kernel's own points, or
-    a direct call on whoever provides it — `size` and `take` are reached through
-    `agent.provider(family)` rather than the choir, which is a different door to the same
-    contract and counts.
-    """
-    import re
-
-    sources = [REPO_ROOT / "agent_old" / "ontology.ttl"]
-    sources += sorted((REPO_ROOT / "packages").glob("*/ontology.ttl"))
-    declared = []
-    for f in sources:
-        declared += [(f, n) for n in
-                     re.findall(r"^\w*:(\w+) a assembly:Extension", f.read_text(), re.M)]
-    #  BOTH prefix forms, and the count is pinned: the kernel writes `orexis:handle` and a package
-    #  writes `:record` against its own base. A pattern that caught only one silently checked a
-    #  third of the hooks and passed — which is the empty-glob failure wearing a regex.
-    assert len(declared) >= 16, (
-        f"only {len(declared)} hook declarations found across {len(sources)} ontologies — "
-        "the pattern stopped matching one of the two prefix forms")
-
-    code = "\n".join(p.read_text() for tree in ("agent", "packages")
-                     for p in (REPO_ROOT / tree).rglob("*.py"))
-    orphans = []
-    for f, local in declared:
-        const = re.sub(r"(?<!^)(?=[A-Z])", "_", local).upper()
-        if re.search(rf"\.(ask|tell)\(\s*{const}\b", code) or re.search(rf"\.{local}\(", code):
-            continue
-        orphans.append(f"{f.relative_to(REPO_ROOT)}: {local} is declared and asked by nobody")
-    assert not orphans, ("a hook every module must honour and nothing consumes — wire it or "
-                         "retire it (#413):\n  " + "\n  ".join(orphans))

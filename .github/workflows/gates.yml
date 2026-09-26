@@ -1,10 +1,9 @@
 # The gates, run on a machine that is not the Pi.
 #
-# These are the four checks AGENTS.md calls the gates, and they were being run by hand on every
-# change — on a Raspberry Pi, where the suite takes the better part of a minute and the person or
-# agent running it pays for reading the output. None of them need hardware, a broker, or a store:
-# `orexis-validate` builds a world in memory, the tests build their belief bases in memory, and the
-# other two read files. So they belong here.
+# These are the checks AGENTS.md calls the gates, and they were being run by hand on every change —
+# on a Raspberry Pi, where the suite takes the better part of a minute and the person or agent
+# running it pays for reading the output. None of them need hardware, a broker, or a store: the
+# tests build their belief bases in memory, and the rest read files. So they belong here.
 #
 # What is deliberately NOT here, and still has to be done by hand on the bench:
 #
@@ -36,12 +35,10 @@ concurrency:
   cancel-in-progress: true
 
 #
-# IN PARALLEL JOBS, since the sovereign asked whether the packages' tests could run apart from
-# the rest: the worlds and the two file gates in one job, the repo's four gates in another, the
-# packages' own tests in a third and Agent 0.2.0's suite in a fourth. Each job installs on a
-# runner of its own — a minute, cached — and the wall time is the slowest job's rather than the
-# sum; the minutes are free on a public repository. The 0.1.0 suite ran here too, `tests/` in
-# four shards dealt round-robin, until 2026-09-25 — the `repo` job says why it is off.
+# IN PARALLEL JOBS: the two file gates in one, the repo's four whole-tree tests in another and the
+# agent's and the worlds' suites in a third. Each job installs on a runner of its own — a minute,
+# cached — and the wall time is the slowest job's rather than the sum. Agent 0.1.0, its suite and
+# its packages' job were retired on 2026-09-26.
 
 jobs:
   worlds:
@@ -53,21 +50,16 @@ jobs:
         with:
           python-version: "3.13"      # what the agent image runs; see Containerfile
           cache: pip
-      # Every package is its own distribution (every-package-is-a-project), so every one is
-      # installed, found by looking as the loader finds them.
       - name: install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]" $(ls -d packages/*/)
+          pip install -e ".[dev]"
 
-      # THE 0.1.0 WORLDS ARE NOT VALIDATED HERE ANY MORE. `orexis-validate` built every world
-      # with 0.1.0 genesis and held it to the packages' shapes; 0.1.0 is not started since
-      # 2026-09-25, its packages are amended into Agent 0.2.0's domains, and a 0.2.0 world is
-      # held to what it does by the tests beside it, which the `agent` job runs.
+      # A world is held to what it does by the tests beside it, which the `agent` job runs.
 
-      # The layering the flat layout gave up a packaging split to assert: onboarding may import
-      # agent, agent may never import onboarding, and no capability or transport may touch
-      # onboarding at all. See knowledge/decisions/repository-layout.md.
+      # The one direction a directory cannot state: onboarding may import agent, and neither
+      # the agent nor the simulator may import onboarding. See
+      # knowledge/decisions/repository-layout.md.
       - name: import contracts
         run: lint-imports
 
@@ -77,13 +69,10 @@ jobs:
         run: ./tools/validate-okf.sh knowledge
 
   repo:
-    # THE REPO'S OWN GATES: the four files in `tests/` that read the whole tree rather than the
-    # 0.1.0 kernel — the bundle (`test_knowledge`), the layout of both trees (`test_layout`),
-    # the prefixes every query speaks (`test_store`) and each distribution's dependencies
-    # against its imports (`test_projects`). The rest of `tests/` is the 0.1.0 suite, SWITCHED
-    # OFF here since 2026-09-25 by the sovereign's decision: 0.1.0 is not started any more, and
-    # its packages are amended into Agent 0.2.0's domains rather than copied, which breaks what
-    # the old suite built on. `pytest tests` still runs it by hand.
+    # THE REPO'S OWN GATES: the four files in `tests/` that read the whole tree — the bundle
+    # (`test_knowledge`), what an agent image and an agent are given (`test_layout`), the prefixes
+    # every query speaks (`test_store`) and the distribution's dependencies against its imports
+    # (`test_projects`).
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -95,32 +84,13 @@ jobs:
       - name: install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]" $(ls -d packages/*/)
+          pip install -e ".[dev]"
       - name: pytest, the repo's gates
-        run: pytest -q -n auto tests/test_knowledge.py tests/test_layout.py tests/test_store.py tests/test_projects.py
+        run: pytest -q -n auto tests
 
-  packages:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-          cache: pip
-      - name: install
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]" $(ls -d packages/*/)
-      # The packages' own tests are named, not reached through `pytest tests`: a package
-      # carries its own beside its code, and the `repo` job above names four files of the
-      # root tree alone.
-      - name: pytest, the packages' own
-        run: pytest -q -n auto packages
   agent:
-    # Agent 0.2.0: `agent/` at the repo root and the worlds migrated to it under `world/`, two
-    # of the trees `testpaths` names — its own suite, its bench's asserted plans included. The
-    # jobs name the trees apart so that a red says which.
+    # The agent's own suites and every world's, the two trees `testpaths` names — the bench's
+    # asserted plans included. The jobs name the trees apart so that a red says which.
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -132,6 +102,6 @@ jobs:
       - name: install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]" $(ls -d packages/*/)
-      - name: pytest, agent 0.2.0
+          pip install -e ".[dev]"
+      - name: pytest, the agent and the worlds
         run: pytest -q -n auto agent world

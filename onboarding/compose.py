@@ -152,9 +152,6 @@ def _service(agent_id: str, world: str, host: str, plain: int, tls: int | None) 
       - ../../agent:/app/agent:ro
       - ../../domains:/app/domains:ro
       - ../../simulation:/app/simulation:ro
-      - ../../assembly:/app/assembly:ro
-      - ../../agent_old:/app/agent_old:ro
-      - ../../packages:/app/packages:ro
 """
 
 

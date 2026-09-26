@@ -25,7 +25,7 @@ This is the same move in four places, which is why it is worth stating once:
 |---|---|---|
 | a **part** — `dht11:Dht11` | the probes wired into a world | [a-part-is-described-once-and-fitted-many-times](/decisions/a-part-is-described-once-and-fitted-many-times.md) |
 | a part's **datasheet facts** | the same, and this is where the mechanism was settled | [what-is-true-of-a-part-is-true-of-every-one-of-them](/decisions/what-is-true-of-a-part-is-true-of-every-one-of-them.md) |
-| a **species** — `zamioculcas:Zamioculcas` | the pots planted with it | [a-species-is-described-once-and-planted-many-times](/decisions/a-species-is-described-once-and-planted-many-times.md) |
+| a **species** — `zamioculcas:ZamioculcasZamiifolia` | the pots planted with it | [a-species-is-described-once-and-planted-many-times](/decisions/a-species-is-described-once-and-planted-many-times.md) |
 | a **firmware** image | the boards flashed with it | [a-firmware-describes-itself](/decisions/a-firmware-describes-itself.md) |
 
 # The three ways to say it, and only one of them works
