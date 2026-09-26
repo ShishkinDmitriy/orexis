@@ -459,6 +459,7 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
     """
     first = (sorted(set(scopes.values())) or [UNSCOPED])[0]
     mine = []
+    written = footprint.written(store, at)       # at the pass's instant: a read of the clock is a tick
     for want in find_wants(store, at, holder=holder):
         #  WHAT ITS MET-TEST READS, off the shape it is met when — the want node itself is no
         #  shape and reads nothing, which placed every want in the first scope and went unseen
@@ -475,7 +476,6 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
         #  PLACED BY WHAT IT READS THAT SOME ACTION CAN CHANGE. A disk's size and what a peg is
         #  are read by a want refined below and changed by nothing, so they say nothing about
         #  which world could repair it — counted, they pulled a courier goal into hanoi's scope.
-        written = footprint.written(store)
         changeable = [p for p in reads if str(p) in written] or list(reads)
         reached = sorted({scopes[str(p)] for p in changeable if str(p) in scopes})
         if reached[:1] == [scope] or (not reached and scope == first):

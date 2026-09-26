@@ -473,9 +473,15 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         taken_at = clock.now()
         refined = None
         try:
-            refined = self.refine(said, intention) if self.refine is not None else None
+            #  THE ORDER THE CORE DECIDES IN: an implementation that reaches the world is taken —
+            #  a dose predicts the soil inside its range, which sensing's rules conclude, and is
+            #  still a command; only a step that would be taken fictively is asked whether a
+            #  level beneath keeps it, and is fictive where none does.
+            taker = self._taker_for(step)
+            if taker == self.fictive and self.refine is not None:
+                refined = self.refine(said, intention)
             if refined is None:
-                self._taker_for(step)(said, intention)
+                taker(said, intention)
             taken = True
         except Exception as exc:                                        # noqa: BLE001
             log.error("%s: step %s could not be taken: %s", self.id, local_of(step), exc)

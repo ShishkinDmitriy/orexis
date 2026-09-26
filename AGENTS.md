@@ -814,6 +814,12 @@ it is a record wearing a bullet.
   counted pulled a courier goal into the puzzle's scope.
 - **A plan whose want is gone is nobody's** — the imaginarium outlives the pass, so a plan
   kept in one after its want was reached in another was handed down and walked again.
+- **A step is refined only where it would be fictive** — a dose predicts the soil inside its
+  range, which sensing's rules conclude, so asked first every command became a want below and
+  no pump ran; an implementation that reaches the world is taken, and a bridge is asked next.
+- **A read of the clock is a tick in a test** — `footprint.written` read the clock once per
+  want, and the allotment's clock, which advances per read, sized a dose five hundred where it
+  was four; a pass hands its own instant down.
 
 - **A peer's word is a document, and it is believed as it stands where it is state** — a
   message between agents arrives as TriG naming its graphs and saying what each is, as a world's
