@@ -35,5 +35,5 @@ The projection is a class inside `packages/orexis-agent-deliberation/desires.py`
 nothing the runtime holds can write a want, so an agent cannot satisfy itself by attrition — but
 it is kept true by hiding the writer inside rather than by the layering everything else follows.
 
-**The roots graph has a class** — `orexis:DesireGraph`, per agent, holding at every instant — since
+**The roots graph has a class** — `planning:DesireGraph`, per agent, holding at every instant — since
 #644; the asserted wants stay the world's public graph.

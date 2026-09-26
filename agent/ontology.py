@@ -104,16 +104,11 @@ BELIEF = OREXIS + "BeliefGraph"          # what IS: the state, the instruments, 
 STATE = OREXIS + "StateGraph"            # the readings — what a plan forks and an effect rewrites
 PREDICTION = OREXIS + "PredictionGraph"  # what is expected, holding during its window
 RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period
-DESIRE = OREXIS + "DesireGraph"          # desires
-WANT = OREXIS + "WantGraph"              # wants
-SHAPES = OREXIS + "ShapesGraph"          # what a met-test and an estimate point at
 ACTION = OREXIS + "ActionGraph"          # actions
-#  What a RULE is answered over — a met-test, a precondition, an availability select, an
-#  effect: everyone's knowledge, what is, the records, the desires and the wants. Stated once
-#  here and named at every runner, so a runner says what it hands a text.
-KNOWN = (PUBLIC, BELIEF, RECORD, DESIRE, WANT)
-#  ...and, for a reader standing at an instant, what is expected to hold then.
-FORESEEN = (*KNOWN, PREDICTION)
+#  What a text is answered over: everyone's knowledge, what is, and the records. Stated once
+#  here and named at every runner, so a runner says what it hands a text; a package that owns
+#  more kinds a text of its reads — planning's desires and wants — adds them to its own list.
+KNOWN = (PUBLIC, BELIEF, RECORD)
 
 #  A GRAPH'S NAME IS FOR EYES. The builders below spell a readable convention for the graphs
 #  the kernel writes — `intentions/<agent>` — and nothing in code depends on

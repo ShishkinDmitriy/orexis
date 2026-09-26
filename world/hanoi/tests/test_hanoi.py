@@ -7,7 +7,9 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent import clock
-from agent.ontology import STATE, WANT
+from agent.ontology import STATE
+
+WANT = "http://example.org/orexis/planning#WantGraph"   # planning's word; the Planner is all planning exports
 from agent.runtime import MET, Runtime, boot
 from agent.store import graphs_of, rows
 

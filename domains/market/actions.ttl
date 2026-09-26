@@ -4,6 +4,7 @@
 @prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
 <> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
@@ -24,19 +25,19 @@
 market:Calling a orexis:Action ;
     rdfs:label "call for a round on a venue I bid in" ;
     orexis:takes market:venue ;
-    orexis:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE {
             $me market:bidsIn ?venue .
             FILTER NOT EXISTS { ?venue market:open true }
             FILTER NOT EXISTS { ?call market:calledBy $me ; market:calledOn ?venue .
                                 FILTER NOT EXISTS { ?call market:answered true } }
         }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:effect [ a orexis:Effect ;
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { $venue market:open true } WHERE {}""" ] ] ;
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?call a market:Call , market:CallGraph ; market:calledOn $venue ; market:calledBy $me ;
                           market:calledAt $now ; execution:to ?host }
         WHERE { ?host market:hosts $venue .
@@ -45,27 +46,27 @@ market:Calling a orexis:Action ;
 market:Tendering a orexis:Action ;
     rdfs:label "tender a bid into the round open on a venue" ;
     orexis:takes market:venue ;
-    orexis:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE {
             $me market:bidsIn ?venue . ?venue market:open true .
             FILTER NOT EXISTS { ?bid market:bidder $me ; market:inRound ?round .
                                 ?round market:onVenue ?venue .
                                 FILTER NOT EXISTS { ?round market:clearedAt ?at } }
         }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  IT LANDS WHEN THE ROUND CLOSES, at the latest: the window after the tender is taken.
-    orexis:landsAfter """PREFIX market: <http://example.org/orexis/market#>
+    planning:landsAfter """PREFIX market: <http://example.org/orexis/market#>
         SELECT ?seconds WHERE { $venue market:bidWindowS ?seconds }""" ;
-    orexis:effect [ a orexis:Effect ;
-        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX market: <http://example.org/orexis/market#>
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX market: <http://example.org/orexis/market#>
         DELETE { $venue market:open true  }
         WHERE  { $venue market:open true  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { $me market:holdsClaimOn $venue } WHERE {}""" ] ] ;
     #  THE BID, SIZED FROM THE PRESENT: as many litres as bring the reading to the middle of its
     #  range by the subject's litres per fraction, at the price a litre is worth to me.
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         PREFIX climate: <http://example.org/orexis/climate#>
         CONSTRUCT { ?bid a market:Bid , market:BidGraph ; market:inRound ?round ; market:bidder $me ;
                          market:litres ?litres ; market:pricePerL ?price ; execution:to ?host }
@@ -86,23 +87,23 @@ market:Tendering a orexis:Action ;
 market:Presenting a orexis:Action ;
     rdfs:label "present a claim I hold on a venue for my reading below its range" ;
     orexis:takes market:venue , actuation:reading ;
-    orexis:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT DISTINCT ?venue ?reading WHERE {
             $me market:holdsClaimOn ?venue ; orexis:actsFor ?subject .
             ?venue market:aboutProperty ?property .
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range .
         }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:effect [ a orexis:Effect ;
-        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX market: <http://example.org/orexis/market#>
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX market: <http://example.org/orexis/market#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         DELETE { $reading sensing:below ?range . $me market:holdsClaimOn $venue  }
         WHERE  { $reading sensing:below ?range . $me market:holdsClaimOn $venue  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
         CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] ;
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?presentation a market:Presentation , market:PresentationGraph ; market:presents ?claim ;
                                   execution:to ?host }
         WHERE { ?host market:hosts $venue .
@@ -115,22 +116,22 @@ market:Presenting a orexis:Action ;
 market:Offering a orexis:Action ;
     rdfs:label "open a round on a venue I host, for the calls on it" ;
     orexis:takes market:venue ;
-    orexis:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE {
             $me market:hosts ?venue .
             FILTER NOT EXISTS { ?venue market:open true }
             ?call market:calledOn ?venue . FILTER NOT EXISTS { ?call market:answered true }
         }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  IT LANDS WHEN THE WINDOW CLOSES, so the clearing after it is not taken before.
-    orexis:landsAfter """PREFIX market: <http://example.org/orexis/market#>
+    planning:landsAfter """PREFIX market: <http://example.org/orexis/market#>
         SELECT ?seconds WHERE { $venue market:bidWindowS ?seconds }""" ;
-    orexis:effect [ a orexis:Effect ;
+    planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { $venue market:open true . ?call market:offered true }
         WHERE { ?call market:calledOn $venue . FILTER NOT EXISTS { ?call market:answered true } }""" ] ] ;
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?round a market:Round , market:RoundGraph ; market:onVenue $venue ; market:lotL ?lot ;
                            market:reservePerL ?reserve ; market:openedAt $now ; market:closesAt ?closes ;
                            market:answers ?call ; execution:to ?bidder }
@@ -143,19 +144,19 @@ market:Offering a orexis:Action ;
 market:Clearing a orexis:Action ;
     rdfs:label "clear the round open on a venue I host" ;
     orexis:takes market:venue ;
-    orexis:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE { $me market:hosts ?venue . ?venue market:open true }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:effect [ a orexis:Effect ;
-        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX market: <http://example.org/orexis/market#>
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX market: <http://example.org/orexis/market#>
         DELETE { $venue market:open true . ?call market:offered true  }
         WHERE  { $venue market:open true .
                                 OPTIONAL { ?call market:calledOn $venue ; market:offered true }  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?call market:answered true } WHERE { ?call market:calledOn $venue ; market:offered true }""" ] ] ;
     #  THE ROUND, SAID AGAIN CLEARED, to everybody it was said to.
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?round a market:Round , market:RoundGraph ; market:onVenue $venue ; market:lotL ?lot ;
                            market:reservePerL ?reserve ; market:openedAt ?opened ; market:closesAt ?closes ;
                            market:clearedAt $now ; market:answers ?call ; execution:to ?bidder }
@@ -192,19 +193,19 @@ market:Clearing a orexis:Action ;
 market:Serving a orexis:Action ;
     rdfs:label "serve a presented claim through the device that reaches its holder's subject" ;
     orexis:takes market:claim ;
-    orexis:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?claim WHERE {
             $me market:hosts ?venue .
             ?claim a market:Claim ; market:onVenue ?venue ; market:presented true .
             FILTER NOT EXISTS { ?claim market:discharged true }
         }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:effect [ a orexis:Effect ;
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { $claim market:discharged true } WHERE {}""" ] ] ;
     #  THE DOSE, the claim's amount at most the device's cap.
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Command ; sh:select """PREFIX market: <http://example.org/orexis/market#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Command ; sh:select """PREFIX market: <http://example.org/orexis/market#>
         PREFIX actuation: <http://example.org/orexis/actuation#>
         SELECT ?actuator ?payload WHERE {
             $claim market:heldBy ?holder ; market:amountL ?litres .

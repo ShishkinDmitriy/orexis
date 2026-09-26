@@ -2,11 +2,12 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
-<> a orexis:ShapesGraph .    # this document is one graph, and this is what it is
+<> a planning:ShapesGraph .    # this document is one graph, and this is what it is
 
 #  WHAT SOLVING MEANS AND HOW FAR IT IS, the domain's: a world's desire points here with
-#  `orexis:metWhen` and `orexis:estimates`. Solved is the shape — on every disk in play, following
+#  `planning:metWhen` and `planning:estimates`. Solved is the shape — on every disk in play, following
 #  hanoi:on one or more times reaches peg C — and the estimate counts the disks astray, which never
 #  overstates the moves left, a promise about this domain's own move that no world could keep.
 

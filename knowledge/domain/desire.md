@@ -41,12 +41,12 @@ the distinction is this:
 | | a **desire** | a **want** |
 |---|---|---|
 | when it holds | at every instant; its graph states no period | on an occasion, during a period of its own, swept when that ends |
-| what says when | its type, and a graph with no period | its graph's period, and `orexis:holdsAt` where it must hold AT an instant |
+| what says when | its type, and a graph with no period | its graph's period, and `planning:holdsAt` where it must hold AT an instant |
 | what it is bound to | a class, usually — or an instance a world ratified | one instance, with the binding the situation gives it |
 | is it pursued | never | it is the only thing a search is ever handed |
 
-**Standing versus occasioned is the whole of it, and the TYPE carries it.** `orexis:Desire` and
-`orexis:Want` are disjoint classes, so a reader says which it means and no reader infers a kind
+**Standing versus occasioned is the whole of it, and the TYPE carries it.** `planning:Desire` and
+`planning:Want` are disjoint classes, so a reader says which it means and no reader infers a kind
 from a binding — which is what let a node be one by type and the other by binding at once, in
 three shipped worlds, until [a-kind-is-a-type-not-a-binding](/decisions/a-kind-is-a-type-not-a-binding.md)
 took the ambiguity out.
@@ -76,12 +76,12 @@ while, a second deriver reaching the same family by a different door, and stoppe
 deadline became a prediction like any other.
 
 The two live in two graph classes, and the names already said so before this page did:
-`orexis:DesireGraph` holds the desires, authored at genesis and holding at every instant;
-`orexis:WantGraph` holds one graph per want, each with its period. Whether a world or the
+`planning:DesireGraph` holds the desires, authored at genesis and holding at every instant;
+`planning:WantGraph` holds one graph per want, each with its period. Whether a world or the
 derivation wrote either is the arrival axis, `orexis:arrivedBy`, and no class of its own.
 
-**The kind is the TYPE, and the two types are disjoint.** `orexis:Want` was a subclass of
-`orexis:Desire` for a while, so `?d a orexis:Desire` matched both and a reader meaning the
+**The kind is the TYPE, and the two types are disjoint.** `planning:Want` was a subclass of
+`planning:Desire` for a while, so `?d a planning:Desire` matched both and a reader meaning the
 standing kind had to filter on a binding to find its own contents. It is not one now: the
 closure is materialised at genesis and a want is minted long after, so the entailment never
 reached one and every writer hand-wrote both types anyway.
@@ -100,8 +100,8 @@ states in `ssn-system`, an instrument this agent polls and the horizon it keeps.
 kernel's is the mind — what a want is, when one is met, how wants rank — and it has no reading
 in it ([the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md)).
 
-What the derivation mints is a NODE (`orexis:Desire`) carrying the met-test as a SHACL shape
-(`orexis:metWhen`) and a label a dashboard or the ask channel can print — reified so a want can
+What the derivation mints is a NODE (`planning:Desire`) carrying the met-test as a SHACL shape
+(`planning:metWhen`) and a label a dashboard or the ask channel can print — reified so a want can
 say how badly it is unmet, not only whether it is. The measure is deliberately NOT the
 kernel's in any part: whoever needs the number asks the choir (`Module.desire_urgency`), and
 the capability that owns the question answers from its own declaration —
@@ -153,7 +153,7 @@ something is done about it, and it is taken away when that is over. A desire has
 all: it stands for the agent's life and is either good or bad — met or unmet — at the instant
 it is asked about, computed from its met-test and stored nowhere.
 
-The stages are `orexis:state` on the want, seven values and no eighth:
+The stages are `planning:state` on the want, seven values and no eighth:
 
 | | |
 |---|---|
@@ -303,7 +303,7 @@ Three deliberate differences from the diff above:
   uncomfortable, which is the answer `urgency(None)` has always given.
 - **`side` says which way out a region want sits.** For moisture only the low side has an action, so a
   drowning plant and a dying one are both `unmet` at urgency 1.00 and mean opposite things. The
-  shape says the same thing in `orexis:violationIs` now; the query still reaches it by comparing the
+  shape says the same thing in `planning:violationIs` now; the query still reaches it by comparing the
   value to the bounds, which is the same answer, and reading it off a validation report waits for
   something that produces one in the hot path.
 - **A count is about wanting, not about distance.** `unmet` means the reading sits outside the
@@ -377,13 +377,13 @@ themselves.
 
 # A want met by absence
 
-A desire may state its met-test NEGATIVELY: `orexis:unmetWhen` points at the avoided state —
+A desire may state its met-test NEGATIVELY: `planning:unmetWhen` points at the avoided state —
 a node carrying one `sh:select` whose rows mean the want is unmet — the twin of
-`orexis:metWhen`, one of the two and never both (`orexis:MetTestShape`). Such a want is pure
+`planning:metWhen`, one of the two and never both (`orexis:MetTestShape`). Such a want is pure
 ratified data, authored directly in the asserted block, and NO capability is in the room:
 there is nothing to grant, so the kernel lifts it into pursuit and judges it — binary, by
 running the pattern with `$this` and `$state` substituted against whichever world is asked,
-the store's engine live and candidate alike. It usually states no `orexis:about`, and so
+the store's engine live and candidate alike. It usually states no `planning:about`, and so
 ranges over every step as a call does: any action might exit a state. Its hard twin is
 not a desire at all — a ratified violation shape, pruned in the search at every step. See
 [a-want-met-by-absence](/decisions/a-want-met-by-absence.md).
@@ -398,7 +398,7 @@ pass, as `deliberation:judgedBy` in the [trace](/domain/deliberator.md) (#502). 
 worlds author their goals positively — `courier:delivered`, `hanoi:solved` — and nobody writes
 "a parcel astray" by hand. Coverage is the fragment the derivations emit and a shape outside it
 refuses, named, never compiling to something quiet; `tests/test_violation.py` holds every
-compiled select to the judge on the same world. An authored `orexis:unmetWhen` stays the way
+compiled select to the judge on the same world. An authored `planning:unmetWhen` stays the way
 for an aversion, whose content IS the avoided state — and since #499 it too may be a shape,
 compiled to its conformance select, so both polarities read either form. The two terms are
 not folded: `unmetWhen S` is `metWhen [sh:not S]` in logic, and an author made to write "met
@@ -415,8 +415,8 @@ direction is never ambiguous.
 
 # A want that can say how far it still is
 
-A desire may also carry `orexis:estimates`: a node with one `sh:select` binding `?estimate`,
-the cost still to pay before the want is met, in the unit the actions' `orexis:costs` are
+A desire may also carry `planning:estimates`: a node with one `sh:select` binding `?estimate`,
+the cost still to pay before the want is met, in the unit the actions' `planning:costs` are
 stated in, run with `$state` naming whichever world is being judged. Urgency is the want's,
 cost is the action's, and an estimate is the want speaking about cost — which is why it hangs
 off the desire and not off any action. A want that declares none is not zero away; every
@@ -432,7 +432,7 @@ exists, and nothing would go red.
 package's own actions and their costs, and only their declarer can keep it, so the node a
 want points at — the estimate's and the avoided pattern's alike — is declared in the domain
 package's ontology beside the actions, and a world asserts the want and points at it
-(the courier's asserted want says `orexis:estimates courier:drivesOwed`). In Agent 0.2.0 the
+(the courier's asserted want says `planning:estimates courier:drivesOwed`). In Agent 0.2.0 the
 package is a [domain](/domain/domain.md): the courier's shape and estimate are in
 `domains/courier/shapes.ttl`, and `world/courier/wants.ttl` asserts the want that points at them. A world may still
 write a select inline beside an asserted want, as the avoidance tests do, and the kernel
@@ -470,7 +470,7 @@ the same shape, targeting the one instance in trouble, with the blocks about wha
 about, so *all properties in range* becomes *this tank's level from 10* and the want is judged
 on its own instance — POINTING at the desire's avoided state and estimate, one owner each, and
 restating the root's address, what it is about, which is what the steps join a want by. It is minted by the derivation the first time the desire
-reads unmet, into a graph of wants of its own (`orexis:WantGraph`, `orexis:arrivedBy
+reads unmet, into a graph of wants of its own (`planning:WantGraph`, `orexis:arrivedBy
 orexis:Derived`, projected into the desire modality like the promises), and named for the
 desire with a suffix, so a second episode
 of the same desire pursues the same node and everything keyed by it finds what it kept. While it

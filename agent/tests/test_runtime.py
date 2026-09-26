@@ -22,7 +22,7 @@ def _as_a_desire(tmp_path: Path) -> Path:
     (world / "world.ttl").write_text((HANOI / "world.ttl").read_text().replace("<../../domains/hanoi/ontology.ttl>", f"<{domain}>"))
     (world / "state.ttl").write_text((HANOI / "state.ttl").read_text())
     (world / "desires.ttl").write_text((HANOI / "wants.ttl").read_text()
-                                       .replace("orexis:WantGraph", "orexis:DesireGraph").replace("a orexis:Want ;", "a orexis:Desire ;"))
+                                       .replace("planning:WantGraph", "planning:DesireGraph").replace("a planning:Want ;", "a planning:Desire ;"))
     return world
 
 

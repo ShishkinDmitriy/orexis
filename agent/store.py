@@ -139,7 +139,7 @@ _KERNEL = {
 #  `orexis:` IS DECLARED BY THE LAYERS RATHER THAN BY ITS OWN FILE, and that is a gap rather
 #  than a design: `agent/` has no `.ttl`, because the one that sat there turned out to
 #  declare twenty-seven `execution:` terms and not one `orexis:` one, and went to the layer
-#  whose words they are. The kernel's own T-Box — what `orexis:WantGraph` IS, what it is
+#  whose words they are. The kernel's own T-Box — what `planning:WantGraph` IS, what it is
 #  beneath — is not in this tree at all yet; it arrives with genesis, and until then a case
 #  declares the axioms it needs. So the label survives here only because both layers' files
 #  bind it in their own `@prefix` lines. True today, and nothing would say so if a layer
@@ -440,7 +440,7 @@ def entry(store, graph: str, graph_class: str, arrival: str, owner: str | None =
                          for k, v in (("start", start), ("end", end)) if v is not None)
         when = f" ; dcterms:temporal [ a dcterms:PeriodOfTime{bounds} ]"
     #  EVERY KIND THE GRAPH IS, on the row, so a text that joins the catalogue asks
-    #  `?g a orexis:WantGraph` and walks no path across two graphs. This is what lets every
+    #  `?g a planning:WantGraph` and walks no path across two graphs. This is what lets every
     #  read above be one query instead of an index.
     kinds = " , ".join(f"<{c}>" for c in closed(store, graph_class))
     return (f"GRAPH <{catalogue}> {{ <{graph}> a {kinds} ; orexis:arrivedBy <{arrival}>"
@@ -484,7 +484,7 @@ WHERE  {{ GRAPH <{catalogue}> {{ }}
 #  default graph, as a nanopublication's head does. Both are read into one shape, a dataset
 #  whose named graphs are the content and whose default graph is the rows, and the rows go to
 #  the catalogue when the document is put: a rule reading the graph would otherwise read
-#  `<> a orexis:DesireGraph` as a fact about the world.
+#  `<> a planning:DesireGraph` as a fact about the world.
 #
 #  WHAT A DOCUMENT MAY NOT SAY is how it arrived and whose it is — the loader writes
 #  `orexis:arrivedBy orexis:Asserted` and, where the caller says so, `orexis:beliefsOf` — and
@@ -649,7 +649,7 @@ def close_catalogue(store) -> None:
     class, a case written by hand. Idempotent, and a write like any other.
 
     What it makes true is the thing every read above depends on: a text that joins the
-    catalogue asks `?g a orexis:WantGraph` and walks no subclass path to get an answer.
+    catalogue asks `?g a planning:WantGraph` and walks no subclass path to get an answer.
     """
     catalogue = catalogue_of(store)
     if catalogue is None:

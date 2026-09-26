@@ -18,9 +18,10 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 @prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
 
 GRAPH :ontology {
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -29,12 +30,12 @@ GRAPH :world {
 
 GRAPH :desires {
   :in_range a sh:NodeShape .
-  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
   :in_range sh:targetClass :Tank .
-  :keeper orexis:holds :keeper.in_range .
-  :keeper.in_range a orexis:Desire .
-  :keeper.in_range orexis:about :level .
-  :keeper.in_range orexis:metWhen :in_range .
+  :keeper planning:holds :keeper.in_range .
+  :keeper.in_range a planning:Desire .
+  :keeper.in_range planning:about :level .
+  :keeper.in_range planning:metWhen :in_range .
   :keeper.in_range rdfs:label "every tank in range" .
 }
 
@@ -51,8 +52,8 @@ GRAPH :scopes {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a orexis:DesireGraph .
   :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .
@@ -80,7 +81,7 @@ GRAPH :catalogue {
   ground:2026-01-01T130000p0000 orexis:hash "sha256:668afcf475ee2319100f725c49c2b6daf3ec7f5131fb575c8a3765daaea6bcb0" .
   ground:2026-01-01T130000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
   pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 a orexis:Graph .
-  pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 a orexis:WantGraph .
+  pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 a planning:WantGraph .
   pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 orexis:arrivedBy orexis:Derived .
   pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 orexis:beliefsOf :keeper .
@@ -95,15 +96,15 @@ GRAPH ground:2026-01-01T130000p0000 {
 }
 
 GRAPH pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 {
-  :keeper orexis:holds :keeper.in_range.pursued.tank1 .
-  :keeper.in_range.pursued.tank1 a orexis:Want .
-  :keeper.in_range.pursued.tank1 orexis:metWhen :keeper.in_range.pursued.tank1.met .
-  :keeper.in_range.pursued.tank1 orexis:state orexis:Recognized .
+  :keeper planning:holds :keeper.in_range.pursued.tank1 .
+  :keeper.in_range.pursued.tank1 a planning:Want .
+  :keeper.in_range.pursued.tank1 planning:metWhen :keeper.in_range.pursued.tank1.met .
+  :keeper.in_range.pursued.tank1 planning:state planning:Recognized .
   :keeper.in_range.pursued.tank1 prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
   :keeper.in_range.pursued.tank1 prov:wasDerivedFrom :keeper.in_range .
   :keeper.in_range.pursued.tank1 rdfs:label "pursued: every tank in range" .
   :keeper.in_range.pursued.tank1.met a sh:NodeShape .
-  :keeper.in_range.pursued.tank1.met sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :keeper.in_range.pursued.tank1.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
   :keeper.in_range.pursued.tank1.met sh:targetNode :tank1 .
 }
 

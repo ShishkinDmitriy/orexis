@@ -14,8 +14,8 @@ identifier a process is handed. False where the action's rules say nothing about
 — no effect stated, or a construct and a retraction that both come to nothing — which is not
 a move, and the caller's weighing then says the candidate repeats the world it left.
 
-AN EFFECT IS RULES, GROUPED BY ORDER. An action's `orexis:effect` holds `sh:rule`s, each a
-`sh:SPARQLRule` whose `sh:construct` yields what applying it ADDS, or whose `orexis:update` is a
+AN EFFECT IS RULES, GROUPED BY ORDER. An action's `planning:effect` holds `sh:rule`s, each a
+`sh:SPARQLRule` whose `sh:construct` yields what applying it ADDS, or whose `planning:update` is a
 `DELETE … WHERE` taking away whatever stands in the place the step changes, which nobody can name
 in advance. Every rule of one `sh:order` reads the same world — the construct is asked, and the
 delete's WHERE matched, before any of that order is applied — its deletions go first and its
@@ -65,16 +65,16 @@ _RULE_Q = """
 SELECT ?rule ?lands ?costs (GROUP_CONCAT(DISTINCT STR(?p); separator=" ") AS ?takes) WHERE {
   ?rule a orexis:Action .
   OPTIONAL { ?rule orexis:takes ?p }
-  OPTIONAL { ?rule orexis:landsAfter ?lands }
-  OPTIONAL { ?rule orexis:costs ?costs }
+  OPTIONAL { ?rule planning:landsAfter ?lands }
+  OPTIONAL { ?rule planning:costs ?costs }
 } GROUP BY ?rule ?lands ?costs LIMIT 1"""
 
 #  ITS EFFECT'S RULES, by order — an absent order is 0, as SHACL says. `?rule` projected, since
 #  the engine substitutes only a variable the query projects.
 _EFFECT_Q = """
 SELECT ?rule ?order ?construct ?update WHERE {
-  ?rule orexis:effect/sh:rule ?r .
-  OPTIONAL { ?r sh:order ?o } OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r orexis:update ?update }
+  ?rule planning:effect/sh:rule ?r .
+  OPTIONAL { ?r sh:order ?o } OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r planning:update ?update }
   BIND(COALESCE(?o, 0) AS ?order) }
 ORDER BY ?order"""
 
@@ -194,7 +194,7 @@ def _apply(store, cand: str, into: str, me: str, memo) -> bool:
 
 
 def _delete(text: str, into: str, tokens: dict, graphs) -> str | None:
-    """One `orexis:update` rule, bound and scoped to the world it deletes from — or None, said in
+    """One `planning:update` rule, bound and scoped to the world it deletes from — or None, said in
     the log, where it will not bind or names graphs of its own.
 
     It is not optional where a node is replaced: the sensed graph upserts one observation node

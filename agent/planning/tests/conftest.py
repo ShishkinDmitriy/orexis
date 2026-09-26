@@ -72,18 +72,18 @@ def _derived(store, uri="urn:test:want", desire=_W_DESIRE, *, at=_W_NOW, until=N
     snapshot cases in `tests/derive_wants/` are what say so.
     """
     graph = _graph_of(at, until)
-    broke = f" ; orexis:violationIs <{side}>" if side else ""
+    broke = f" ; planning:violationIs <{side}>" if side else ""
     period = f' ; orexis:start "{at.isoformat()}"^^xsd:dateTime' + (
         f' ; orexis:end "{until.isoformat()}"^^xsd:dateTime' if until else "")
     update(store, f"""INSERT DATA {{
   GRAPH <{graph}> {{
-    <{_W_HOLDER}> orexis:holds <{uri}> .
-    <{uri}> a orexis:Want{broke} ;
+    <{_W_HOLDER}> planning:holds <{uri}> .
+    <{uri}> a planning:Want{broke} ;
         prov:generatedAtTime "{_W_NOW.isoformat()}"^^xsd:dateTime ;
         prov:wasDerivedFrom <{desire}> ;
         rdfs:label "a want under test" . }}
   GRAPH <{catalogue_of(store)}> {{
-    <{graph}> a orexis:WantGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
+    <{graph}> a planning:WantGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
         orexis:beliefsOf <{_W_HOLDER}> . }} }}""")
     #  THE PERIOD ONCE PER GRAPH, and this guard is the writer's own. A period is a BLANK NODE
     #  and a blank node in an `INSERT` is a new node every time it runs; several wants share a
@@ -109,7 +109,7 @@ def _owe(store, uri):
     and that is the point of the case below."""
     graph = f"http://example.org/orexis/market#obligations/gardener/{uri.rsplit(':', 1)[-1]}"
     update(store, f"""INSERT DATA {{
-  GRAPH <{graph}> {{ <{uri}> a orexis:Want ; prov:wasDerivedFrom <{_W_DESIRE}> ;
+  GRAPH <{graph}> {{ <{uri}> a planning:Want ; prov:wasDerivedFrom <{_W_DESIRE}> ;
       rdfs:label "a debt under test" . }}
   GRAPH <{catalogue_of(store)}> {{ <{graph}> a <urn:test:ObligationsGraph> , orexis:RecordGraph . }} }}""")
 

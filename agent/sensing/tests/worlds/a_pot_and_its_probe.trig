@@ -19,6 +19,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix unit: <http://qudt.org/vocab/unit/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
 
 GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .

@@ -2,11 +2,12 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
-<> a orexis:ShapesGraph .    # this document is one graph, and this is what it is
+<> a planning:ShapesGraph .    # this document is one graph, and this is what it is
 
 #  WHAT DELIVERED MEANS AND HOW FAR IT IS, the domain's: a world's desire points here with
-#  `orexis:metWhen` and `orexis:estimates`. Delivered is the shape — on every parcel, the cell it
+#  `planning:metWhen` and `planning:estimates`. Delivered is the shape — on every parcel, the cell it
 #  is at equals the cell it is owed at, so a carried parcel, at no cell, is not delivered — and the
 #  estimate is the drives still owed, which never overstates what this domain's own actions cost.
 

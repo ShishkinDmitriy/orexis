@@ -2,19 +2,20 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
-<> a orexis:DesireGraph .    # this document is one graph, and this is what it is
+<> a planning:DesireGraph .    # this document is one graph, and this is what it is
 
 #  THE SUPPLIER'S TWO DESIRES, and they are all it does: no call on a venue it hosts goes
 #  unanswered, and no claim presented to it goes unserved. A call is answered by a round offered
 #  and cleared; a presented claim by a serving. Asked by SPARQL, since each is about documents
 #  its peers said beside documents it said itself.
 
-:supplier orexis:holds :no_unanswered_call , :no_unserved_claim .
+:supplier planning:holds :no_unanswered_call , :no_unserved_claim .
 
-:no_unanswered_call a orexis:Desire ;
+:no_unanswered_call a planning:Desire ;
     rdfs:label "no call on a venue I host is left unanswered" ;
-    orexis:metWhen :calls_answered .
+    planning:metWhen :calls_answered .
 
 :calls_answered a sh:NodeShape ;
     sh:targetNode :supplier ;
@@ -25,9 +26,9 @@
                 $this market:hosts ?venue . ?call market:calledOn ?venue .
                 FILTER NOT EXISTS { ?call market:answered true } }""" ] .
 
-:no_unserved_claim a orexis:Desire ;
+:no_unserved_claim a planning:Desire ;
     rdfs:label "no claim presented to me is left unserved" ;
-    orexis:metWhen :claims_served .
+    planning:metWhen :claims_served .
 
 :claims_served a sh:NodeShape ;
     sh:targetNode :supplier ;

@@ -4,7 +4,7 @@ and run, pass by pass, until nothing is left to pursue.
 **A WORLD IS A DIRECTORY OF DOCUMENTS, AND EACH SAYS WHAT IT IS.** `boot` reads every document
 the kernel ships — its T-Box (`agent/ontology.ttl`), every package's ontology and rule set — and
 every `.ttl` and `.trig` file in the world's directory, whatever it is called. A Turtle file is
-one graph named by its own IRI, and `<> a orexis:DesireGraph` in it says what that graph is; a
+one graph named by its own IRI, and `<> a planning:DesireGraph` in it says what that graph is; a
 TriG file names its graphs and states their kinds in its default graph. `store.document` reads
 either, and `store.put_document` puts the graphs in and moves the rows about them into the
 catalogue, where every reader asks; a document stating no kind, or claiming to be the
@@ -79,7 +79,6 @@ DERIVED = OREXIS + "Derived"
 ONTOLOGY = OREXIS + "OntologyGraph"
 WORLD = OREXIS + "WorldGraph"
 PUBLIC = OREXIS + "PublicGraph"
-DESIRES = OREXIS + "DesireGraph"
 
 MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
 
@@ -89,7 +88,6 @@ BELIEFS = "beliefs"
 #  WHO THIS PROCESS IS: the AGENT with the id it was told. The id alone is not enough — the
 #  sensing world's fern and the agent acting for it share one — so the kind is asked too.
 _ME_Q = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }"
-_DESIRES_Q = "SELECT ?d WHERE { ?d a orexis:Desire } LIMIT 1"
 #  WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner — the kernel's,
 #  the packages' and the world's public graphs — and the closure derived from them.
 _FILES_Q = """
@@ -339,7 +337,7 @@ class Runtime:
             #  WHAT KEEPS AN AGENT RUNNING: a desire, which asks at every instant, or a transport,
             #  since an agent that senses has readings to keep writing whether or not it wants
             #  anything of them — the terrace watches and pursues nothing.
-            lasting = self.transport is not None or self._holds_a_desire()
+            lasting = self.transport is not None or self.planner.holds_a_desire()
             if not standing and not walking:
                 if not lasting:
                     log.info("%s: every want is reached and no desire is held, after %d pass(es)", self.id, n)
@@ -359,8 +357,6 @@ class Runtime:
                 time.sleep(poll_s)
         return UNFINISHED
 
-    def _holds_a_desire(self) -> bool:
-        return bool(rows(self.beliefs, _DESIRES_Q, graphs_of(self.beliefs, DESIRES)))
 
     def _walk(self, now) -> int:
         """Tick and drain until nothing more happens at this instant: how many steps were taken.

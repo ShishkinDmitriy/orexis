@@ -170,7 +170,7 @@ def extract_plan(store: ox.Store, want: str) -> str:
     update(store, bind(_PLAN_U, plan=Raw(f"<{graph}>"), want=Raw(f"<{want}>"),
                        outcome=Raw(f"<{outcome}>"), world=Raw(f"<{world}>"),
                        predicted=Raw(predicted),
-                       costs=Raw(f' ; planning:costs "{cost}"^^xsd:decimal'
+                       costs=Raw(f' ; planning:spent "{cost}"^^xsd:decimal'
                                  if cost is not None else "")))
     return graph
 

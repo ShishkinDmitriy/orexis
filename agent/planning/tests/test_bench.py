@@ -49,7 +49,7 @@ RUNS = 5
 
 _PLAN_Q = """
 SELECT ?outcome ?costs (COUNT(?step) AS ?steps) WHERE {
-  GRAPH $plan { $plan planning:outcome ?outcome . OPTIONAL { $plan planning:costs ?costs }
+  GRAPH $plan { $plan planning:outcome ?outcome . OPTIONAL { $plan planning:spent ?costs }
                 OPTIONAL { ?step a execution:Step ; execution:partOf $plan } } }
 GROUP BY ?outcome ?costs"""
 

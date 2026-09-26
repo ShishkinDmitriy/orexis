@@ -38,7 +38,7 @@ from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
-from agent.ontology import BELIEF, DESIRE, PREDICTION, PUBLIC, RECORD, WANT, local_of
+from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD, local_of
 from agent.store import (Raw, bind, catalogue_of, construct, entry, forget_graph, graphs_of,
                          instant, quads, remember, rows, update)
 
@@ -174,7 +174,7 @@ def _run(store, drifts, tokens: dict, graph: str, feature: str, observed_propert
     its period, since the observation in hand is what the drift is about."""
     lands = taken + timedelta(seconds=elapsed)
     known = remember(memo, ("known", lands), lambda: graphs_of(
-        store, PUBLIC, BELIEF, RECORD, DESIRE, WANT, at=lands, now=now or taken))
+        store, PUBLIC, BELIEF, RECORD, at=lands, now=now or taken))
     graphs = list(dict.fromkeys([*known, graph]))
     out = []
     for drift in drifts:

@@ -1,6 +1,6 @@
 """An action's implementation: the operations taking a step does, read off the action's row.
 
-An action's `orexis:implementation` holds `orexis:operation`s, each of a kind execution knows — an
+An action's `execution:implementation` holds `execution:operation`s, each of a kind execution knows — an
 `execution:Command` to a device (an `sh:select`), an `execution:Saying` to a peer (an
 `sh:construct`), an `execution:Fictive` writing the step's own effect — grouped by `sh:order`, an
 absent order being 0 as SHACL says. A noun: the one read `operations` answers, which `command`,
@@ -22,7 +22,7 @@ FICTIVE = EXECUTION + "Fictive"
 
 _OPERATIONS_Q = """
 SELECT ?kind ?order ?text WHERE {
-  $action orexis:implementation/orexis:operation ?op .
+  $action execution:implementation/execution:operation ?op .
   ?op a ?kind . VALUES ?kind { execution:Command execution:Saying execution:Fictive }
   OPTIONAL { ?op sh:order ?o } OPTIONAL { ?op sh:select ?select } OPTIONAL { ?op sh:construct ?construct }
   BIND(COALESCE(?o, 0) AS ?order) BIND(COALESCE(?select, ?construct) AS ?text) }

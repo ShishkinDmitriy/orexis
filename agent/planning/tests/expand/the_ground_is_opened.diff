@@ -1,14 +1,14 @@
 --- case
 +++ expected
 @@ -95,11 +95,28 @@
-   ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:expanded true .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:met false .
 -  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:open true .
-   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
 +  possible:fill-tank1 a planning:PossibleGraph .
 +  possible:fill-tank1 orexis:arrivedBy orexis:Derived .
@@ -25,13 +25,13 @@
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:met false .
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:open true .
-+  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank1 .
    pursued:2026-01-01T120000p0000--open a orexis:Graph .
-   pursued:2026-01-01T120000p0000--open a orexis:WantGraph .
+   pursued:2026-01-01T120000p0000--open a planning:WantGraph .
    pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 @@ -123,3 +140,8 @@
-   :keeper.in_range.pursued.tank1.met sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+   :keeper.in_range.pursued.tank1.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
    :keeper.in_range.pursued.tank1.met sh:targetNode :tank1 .
  }
 +

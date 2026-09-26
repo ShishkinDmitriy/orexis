@@ -11,7 +11,7 @@ import pytest
 from agent.ontology import CATALOGUE_GRAPH, OREXIS
 from agent.store import DocumentRefused, document, graphs_of, imports_of, kinds_in, put_document, rows, update
 
-PREFIXES = "@prefix orexis: <http://example.org/orexis#> .\n@prefix dcterms: <http://purl.org/dc/terms/> .\n"
+PREFIXES = "@prefix orexis: <http://example.org/orexis#> .\n@prefix planning: <http://example.org/orexis/planning#> .\n@prefix dcterms: <http://purl.org/dc/terms/> .\n"
 _ROWS_Q = "SELECT ?p ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g ?p ?o } }"
 
 
@@ -55,14 +55,14 @@ def test_a_period_stated_of_the_document_goes_with_its_row(store, tmp_path):
 
 
 def test_a_trig_file_names_its_graphs_and_states_their_kinds_in_its_default_graph(store, tmp_path):
-    path = _write(tmp_path, "two.trig", """<#desires> a orexis:DesireGraph .
+    path = _write(tmp_path, "two.trig", """<#desires> a planning:DesireGraph .
 <#state> a orexis:StateGraph .
-<#desires> { <urn:me> orexis:holds <urn:home> . }
+<#desires> { <urn:me> planning:holds <urn:home> . }
 <#state> { <urn:disk> <urn:on> <urn:peg> . }
 """)
     doc = document(path)
     base = path.resolve().as_uri()
-    assert kinds_in(doc) == {base + "#desires": {OREXIS + "DesireGraph"}, base + "#state": {OREXIS + "StateGraph"}}
+    assert kinds_in(doc) == {base + "#desires": {"http://example.org/orexis/planning#DesireGraph"}, base + "#state": {OREXIS + "StateGraph"}}
     assert put_document(store, doc, owner="urn:me") == sorted([base + "#desires", base + "#state"])
     assert ("beliefsOf", "urn:me") in _said(store, base + "#state")
 

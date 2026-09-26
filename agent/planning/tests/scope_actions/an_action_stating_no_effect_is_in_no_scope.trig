@@ -21,7 +21,7 @@ GRAPH :ontology {
 
 GRAPH :actions {
   :fill a orexis:Action .
-  :fill orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+  :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
         CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" ] ] .
   :look a orexis:Action .
 }

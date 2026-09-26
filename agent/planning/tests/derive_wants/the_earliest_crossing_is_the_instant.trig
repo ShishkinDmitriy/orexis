@@ -14,10 +14,11 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
 @prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
 
 
 GRAPH :ontology {
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -27,14 +28,14 @@ GRAPH :world {
 
 GRAPH :desires {
   :in_range a sh:NodeShape .
-  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
-  :in_range sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
+  :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ planning:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
   :in_range sh:targetClass :Tank .
-  :keeper orexis:holds :keeper.in_range .
-  :keeper.in_range a orexis:Desire .
-  :keeper.in_range orexis:about :level .
-  :keeper.in_range orexis:about :temperature .
-  :keeper.in_range orexis:metWhen :in_range .
+  :keeper planning:holds :keeper.in_range .
+  :keeper.in_range a planning:Desire .
+  :keeper.in_range planning:about :level .
+  :keeper.in_range planning:about :temperature .
+  :keeper.in_range planning:metWhen :in_range .
   :keeper.in_range rdfs:label "every tank in range" .
 }
 
@@ -65,8 +66,8 @@ GRAPH :scopes {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a orexis:DesireGraph .
   :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .

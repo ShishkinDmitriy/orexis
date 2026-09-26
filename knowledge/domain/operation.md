@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Operation
-term: http://example.org/orexis#Operation
+term: http://example.org/orexis/execution#Operation
 description: >-
   One thing taking a step does — a command to a device, a document to a peer, or writing the
   step's own effect for a world nothing reports on. The parts of an implementation; the kinds are

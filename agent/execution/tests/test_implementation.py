@@ -20,7 +20,7 @@ def _store(implementation: str) -> ox.Store:
 
 
 def test_every_operation_is_read_in_order_with_its_kind_and_text():
-    st = _store("""; orexis:implementation [ orexis:operation
+    st = _store("""; execution:implementation [ execution:operation
         [ a execution:Saying ; sh:order 1 ; sh:construct "CONSTRUCT {} WHERE {}" ] ,
         [ a execution:Command ; sh:select "SELECT ?actuator ?payload WHERE {}" ] ]""")
     assert operations(st, T + "Serve") == [
@@ -29,6 +29,6 @@ def test_every_operation_is_read_in_order_with_its_kind_and_text():
 
 
 def test_a_fictive_operation_has_no_text_and_an_action_with_no_implementation_has_none():
-    assert operations(_store("; orexis:implementation [ orexis:operation [ a execution:Fictive ] ]"), T + "Serve") \
+    assert operations(_store("; execution:implementation [ execution:operation [ a execution:Fictive ] ]"), T + "Serve") \
         == [Operation(FICTIVE, 0.0, None)]
     assert operations(_store(""), T + "Serve") == []

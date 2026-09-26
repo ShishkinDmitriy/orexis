@@ -2,13 +2,13 @@
 +++ expected
 @@ -103,6 +103,12 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:met false .
-   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:for :keeper.in_range.pursued.tank2 .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:met false .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:open true .
-+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank2 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank2 ] .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:weighs ground:2026-01-01T120000p0000 .
    possible:fill-tank1 a planning:PossibleGraph .
    possible:fill-tank1 orexis:arrivedBy orexis:Derived .
@@ -32,7 +32,7 @@
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:met false .
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:open true .
-+  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank2.fill-tank2 .
    possible:fill-tank2.for.keeper.in_range.pursued.tank1 a planning:Weighing .
    possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .

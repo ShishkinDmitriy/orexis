@@ -3,6 +3,7 @@
 @prefix execution: <http://example.org/orexis/execution#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
 <> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
@@ -14,9 +15,9 @@
 courier:Drive a orexis:Action ;
     rdfs:label "drive the van to a neighbouring cell" ;
     orexis:takes courier:van , courier:to ;
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Fictive ] ] ;
-    orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Fictive ] ] ;
+    planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?van ?to WHERE {
             ?van courier:at ?here .
             ?van a courier:Van .
@@ -24,9 +25,9 @@ courier:Drive a orexis:Action ;
             ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
             FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
         }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:effect [ a orexis:Effect ;
-        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $van courier:at ?old  }
         WHERE  { $van courier:at ?old  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
@@ -37,17 +38,17 @@ courier:Drive a orexis:Action ;
 courier:Pick a orexis:Action ;
     rdfs:label "load a parcel standing where the van stands" ;
     orexis:takes courier:parcel , courier:van ;
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Fictive ] ] ;
-    orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Fictive ] ] ;
+    planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?parcel ?van WHERE {
             ?van courier:at ?cell . ?parcel courier:at ?cell .
             ?parcel a courier:Parcel .
             ?van a courier:Van .
         }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:effect [ a orexis:Effect ;
-        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $parcel courier:at ?cell  }
         WHERE  { $parcel courier:at ?cell  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
@@ -56,16 +57,16 @@ courier:Pick a orexis:Action ;
 courier:Drop a orexis:Action ;
     rdfs:label "set a carried parcel down where the van stands" ;
     orexis:takes courier:parcel , courier:to ;
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Fictive ] ] ;
-    orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Fictive ] ] ;
+    planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?parcel ?to WHERE {
             ?parcel courier:carriedBy ?van . ?van courier:at ?to .
             ?parcel a courier:Parcel .
         }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:effect [ a orexis:Effect ;
-        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $parcel courier:carriedBy ?van  }
         WHERE  { $parcel courier:carriedBy ?van  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>

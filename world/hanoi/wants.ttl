@@ -2,17 +2,18 @@
 @prefix hanoi: <http://example.org/orexis/hanoi#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
-<> a orexis:WantGraph .    # this document is one graph, and this is what it is
+<> a planning:WantGraph .    # this document is one graph, and this is what it is
 
 #  THE GOAL, as a WANT: every disk home on peg C. A want is one-shot — met once, it is reached, withdrawn,
 #  and the agent holding no desire stops — where a desire is universal and would ask for it at
 #  every instant for ever. What it means and how far it is are the domain's
 #  (`domains/hanoi/shapes.ttl`), which the want points at.
 
-:hanoi orexis:holds :every_disk_home .
+:hanoi planning:holds :every_disk_home .
 
-:every_disk_home a orexis:Want ;
+:every_disk_home a planning:Want ;
     rdfs:label "every disk home on peg C" ;
-    orexis:metWhen hanoi:solved ;
-    orexis:estimates hanoi:disksAstray .
+    planning:metWhen hanoi:solved ;
+    planning:estimates hanoi:disksAstray .

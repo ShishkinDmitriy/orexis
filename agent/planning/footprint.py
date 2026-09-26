@@ -3,7 +3,7 @@
 Two sets per action, both derived and neither declared (#488):
 
 - what it WRITES — the predicates of its effect's rules, the construct templates and the deletes;
-- what it READS — the predicates of its `orexis:precondition`.
+- what it READS — the predicates of its `planning:precondition`.
 
 A derivation rule is the same pair read off one INSERT: its template writes, its WHERE reads.
 Nothing here is declared — a stated `orexis:touches` would be a second statement of what the
@@ -259,8 +259,8 @@ def _values_in(node) -> dict:
 _ACTIONS_Q = """
 SELECT ?action ?precondition ?construct ?update WHERE {
   ?action a orexis:Action .
-  OPTIONAL { ?action orexis:precondition ?precondition }
-  OPTIONAL { ?action orexis:effect/sh:rule ?r . OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r orexis:update ?update } }
+  OPTIONAL { ?action planning:precondition ?precondition }
+  OPTIONAL { ?action planning:effect/sh:rule ?r . OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r planning:update ?update } }
 }"""
 
 def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:

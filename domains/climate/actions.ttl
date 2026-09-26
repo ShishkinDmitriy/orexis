@@ -4,6 +4,7 @@
 @prefix execution: <http://example.org/orexis/execution#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
 <> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
@@ -15,7 +16,7 @@
 climate:Heating a orexis:Action ;
     rdfs:label "heat a subject until its reading is inside its range" ;
     orexis:takes climate:heater , actuation:reading ;
-    orexis:precondition """PREFIX climate: <http://example.org/orexis/climate#>
+    planning:precondition """PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT DISTINCT ?heater ?reading WHERE {
@@ -24,15 +25,15 @@ climate:Heating a orexis:Action ;
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ;
                      sensing:below ?range .
         }""" ;
-    orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:effect [ a orexis:Effect ;
-        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
         DELETE { $reading sensing:below ?range  }
         WHERE  { $reading sensing:below ?range  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
         CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] ;
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Command ; sh:select """PREFIX climate: <http://example.org/orexis/climate#>
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Command ; sh:select """PREFIX climate: <http://example.org/orexis/climate#>
         SELECT ?actuator ?payload WHERE {
             $reading sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value ;
                      sosa:observedProperty ?property .

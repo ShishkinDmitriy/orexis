@@ -20,15 +20,17 @@ from agent.store import NAMESPACES, Raw, bind, forget_graph, rows, update
 
 log = logging.getLogger("withdraw")
 
-WANT_GRAPH = OREXIS + "WantGraph"
+from .ontology import WANT
+
+WANT_GRAPH = WANT
 
 #  WHERE A WANT IS: the graph of wants — or the record, for a debt — that holds this one, and
 #  how many wants are in it, since that is what decides whether taking this one takes the graph.
 _HOME_Q = """
 SELECT ?g ?kind (COUNT(DISTINCT ?w) AS ?wants) WHERE {
-  GRAPH ?g { $want a orexis:Want . ?w a orexis:Want }
+  GRAPH ?g { $want a planning:Want . ?w a planning:Want }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
-               VALUES ?kind { orexis:WantGraph orexis:RecordGraph } } }
+               VALUES ?kind { planning:WantGraph orexis:RecordGraph } } }
 GROUP BY ?g ?kind"""
 
 
@@ -41,7 +43,7 @@ GROUP BY ?g ?kind"""
 #  shape, the shape at a blank property node, the property node at the band. A pattern that
 #  took the want's own rows left the shape standing, which the snapshot caught.
 #
-#  And the rows that point AT it, which is the holder's `orexis:holds`. Nothing else in this
+#  And the rows that point AT it, which is the holder's `planning:holds`. Nothing else in this
 #  repo points at a want from inside its own graph.
 FORGET_ONE_U = """DELETE { GRAPH $graph { ?s ?p ?o } }
 WHERE  { GRAPH $graph { $want (<urn:x>|!<urn:x>)* ?s . ?s ?p ?o } } ;
@@ -61,9 +63,9 @@ WHERE  { GRAPH $graph { ?s ?p $want } }"""
 #  pass until its trouble arrives and invisible again once it has lifted.
 _DERIVED_Q = """
 SELECT ?w WHERE {
-  GRAPH ?g { ?w a orexis:Want }
+  GRAPH ?g { ?w a planning:Want }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?g a orexis:WantGraph ; orexis:arrivedBy orexis:Derived } }"""
+               ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }"""
 
 
 def withdraw(store, wanted, now: datetime, *, reached=()) -> list[str]:

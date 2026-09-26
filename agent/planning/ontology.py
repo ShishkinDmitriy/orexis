@@ -13,7 +13,19 @@ writer, which is why `test_layout.py` refuses a reader that imports one.
 """
 from __future__ import annotations
 
+from agent.ontology import KNOWN as _KERNEL_KNOWN, PREDICTION
+
 PLANNING = "http://example.org/orexis/planning#"
+
+#  PLANNING'S GRAPH KINDS: desires, the wants derived from them, and the shapes a met-test and an
+#  estimate point at.
+DESIRE = PLANNING + "DesireGraph"
+WANT = PLANNING + "WantGraph"
+SHAPES = PLANNING + "ShapesGraph"
+#  WHAT A PLANNING TEXT IS ANSWERED OVER — a met-test, a precondition, an effect: the kernel's
+#  kinds and the desires and wants — and, standing at an instant, what is expected then.
+KNOWN = (*_KERNEL_KNOWN, DESIRE, WANT)
+FORESEEN = (*KNOWN, PREDICTION)
 
 #  WHAT A PASS FINDS, per want: a graph of its own in the imaginarium, holding the steps in
 #  execution's own words. Named by `imaginarium.plan_graph` and copied out by the execution
@@ -29,9 +41,6 @@ OUTCOME = PLANNING + "outcome"
 SATISFIED = PLANNING + "Satisfied"
 NO_CANDIDATE = PLANNING + "NoCandidate"
 EXHAUSTED = PLANNING + "Exhausted"
-#  WHAT THE PASS SCORED THE PLAN TO SPEND, summed from each step's own `orexis:costs`. The
-#  unit is the domain's and the kernel interprets no literal.
-COSTS = PLANNING + "costs"
 
 
 #  A DERIVATION (scope-actions): one INSERT of one loaded rule, as the edge it makes. Written

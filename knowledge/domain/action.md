@@ -5,9 +5,9 @@ term: http://example.org/orexis#Action
 description: >-
   One way of acting, whole — the STRIPS operator as a single node a package ships in its
   `actions.ttl` — and the KIND of act itself, which a row carries and an intention commits to:
-  when it may be taken (`orexis:precondition`, a SELECT whose rows are the steps a world
-  admits), what taking it makes true and false (`orexis:effect`, rules grouped by order), and
-  what goes out when a step is taken (`orexis:implementation`, operations grouped the same
+  when it may be taken (`planning:precondition`, a SELECT whose rows are the steps a world
+  admits), what taking it makes true and false (`planning:effect`, rules grouped by order), and
+  what goes out when a step is taken (`execution:implementation`, operations grouped the same
   way), with its cost and timing beside them. Loaded into the action graph at genesis so a planner, a sovereign or a
   model reads the whole tool list in one place. Adding a way of acting is one node and one
   `take()`.
@@ -25,13 +25,13 @@ there is no separate word for what a row offers, an intention commits to and a t
 ```turtle
 market:Presenting a orexis:Action ;
     orexis:takes market:venue , actuation:reading ;
-    orexis:precondition """SELECT ?venue ?reading WHERE { … }""" ;
-    orexis:effect [ a orexis:Effect ;
-        sh:rule [ a sh:SPARQLRule ; orexis:update """DELETE { … } WHERE { … }""" ] ,
+    planning:precondition """SELECT ?venue ?reading WHERE { … }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """DELETE { … } WHERE { … }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """CONSTRUCT { … } WHERE { … }""" ] ] ;
-    orexis:implementation [ a orexis:Implementation ;
-        orexis:operation [ a execution:Saying ; sh:construct """CONSTRUCT { … } WHERE { … }""" ] ] ;
-    orexis:costs """SELECT ?cost WHERE { … }""" .
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Saying ; sh:construct """CONSTRUCT { … } WHERE { … }""" ] ] ;
+    planning:costs """SELECT ?cost WHERE { … }""" .
 ```
 
 In Agent 0.2.0 an action is these three parts: the [precondition](/domain/precondition.md), the

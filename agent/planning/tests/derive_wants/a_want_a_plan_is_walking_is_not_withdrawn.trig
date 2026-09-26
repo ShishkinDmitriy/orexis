@@ -21,7 +21,7 @@
 
 
 GRAPH :ontology {
-  orexis:WantGraph rdfs:subClassOf orexis:Graph .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -31,14 +31,14 @@ GRAPH :world {
 
 GRAPH :desires {
   :in_range a sh:NodeShape .
-  :in_range sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
-  :in_range sh:property [ orexis:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
+  :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ planning:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
   :in_range sh:targetClass :Tank .
-  :keeper orexis:holds :keeper.in_range .
-  :keeper.in_range a orexis:Desire .
-  :keeper.in_range orexis:about :level .
-  :keeper.in_range orexis:about :temperature .
-  :keeper.in_range orexis:metWhen :in_range .
+  :keeper planning:holds :keeper.in_range .
+  :keeper.in_range a planning:Desire .
+  :keeper.in_range planning:about :level .
+  :keeper.in_range planning:about :temperature .
+  :keeper.in_range planning:metWhen :in_range .
   :keeper.in_range rdfs:label "every tank in range" .
 }
 
@@ -50,10 +50,10 @@ GRAPH :sensed {
 }
 
 GRAPH pursued:keeper.in_range.pursued.tank1.level {
-  :keeper orexis:holds :keeper.in_range.pursued.tank1.level .
-  :keeper.in_range.pursued.tank1.level a orexis:Want .
-  :keeper.in_range.pursued.tank1.level orexis:about :level .
-  :keeper.in_range.pursued.tank1.level orexis:metWhen :keeper.in_range.pursued.tank1.level.met .
+  :keeper planning:holds :keeper.in_range.pursued.tank1.level .
+  :keeper.in_range.pursued.tank1.level a planning:Want .
+  :keeper.in_range.pursued.tank1.level planning:about :level .
+  :keeper.in_range.pursued.tank1.level planning:metWhen :keeper.in_range.pursued.tank1.level.met .
   :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
   :keeper.in_range.pursued.tank1.level rdfs:label "pursued: every tank in range" .
   :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
@@ -79,8 +79,8 @@ GRAPH :scopes {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a orexis:DesireGraph .
   :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .
@@ -98,7 +98,7 @@ GRAPH :catalogue {
   intentions:keeper a orexis:Graph .
   intentions:keeper orexis:beliefsOf :keeper .
   pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
-  pursued:keeper.in_range.pursued.tank1.level a orexis:WantGraph .
+  pursued:keeper.in_range.pursued.tank1.level a planning:WantGraph .
   pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
   pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
 }

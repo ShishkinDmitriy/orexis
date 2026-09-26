@@ -36,10 +36,10 @@ from agent.store import Raw, catalogue_of, remember, rows
 
 _IN_GROUNDS_Q = """
 SELECT ?for ?about WHERE {
-  { GRAPH $cat { ?d a orexis:DesireGraph } GRAPH ?d { ?holder orexis:holds ?for . ?for a orexis:Desire $narrow }
+  { GRAPH $cat { ?d a planning:DesireGraph } GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Desire $narrow }
     GRAPH $cat { ?about a planning:GroundGraph } }
   UNION
-  { GRAPH $cat { ?d a orexis:WantGraph } GRAPH ?d { ?holder orexis:holds ?for . ?for a orexis:Want $narrow }
+  { GRAPH $cat { ?d a planning:WantGraph } GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Want $narrow }
     { SELECT ?about WHERE {
         GRAPH ?c1 { ?c1 a orexis:CatalogueGraph . ?about a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
       ORDER BY ?start LIMIT 1 } }
@@ -54,8 +54,8 @@ ORDER BY ?for ?about"""
 #  given up.
 _CANDIDATES_Q = """
 SELECT ?for ?about ?from ?child WHERE {
-  GRAPH $cat { ?d a orexis:WantGraph }
-  GRAPH ?d { ?holder orexis:holds ?for . ?for a orexis:Want $narrow }
+  GRAPH $cat { ?d a planning:WantGraph }
+  GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Want $narrow }
   GRAPH $cat {
     ?about a planning:Candidate ; planning:from ?from $leaving .
     ?y planning:weighs ?from ; planning:for ?for ; a planning:Weighing .

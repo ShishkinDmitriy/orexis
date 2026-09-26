@@ -2,17 +2,18 @@
 @prefix courier: <http://example.org/orexis/courier#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
 
-<> a orexis:WantGraph .    # this document is one graph, and this is what it is
+<> a planning:WantGraph .    # this document is one graph, and this is what it is
 
 #  THE GOAL, as a WANT: every parcel standing where it is owed. A want is one-shot — met once, it is reached, withdrawn,
 #  and the agent holding no desire stops — where a desire is universal and would ask for it at
 #  every instant for ever. What it means and how far it is are the domain's
 #  (`domains/courier/shapes.ttl`), which the want points at.
 
-:courier orexis:holds :every_parcel_delivered .
+:courier planning:holds :every_parcel_delivered .
 
-:every_parcel_delivered a orexis:Want ;
+:every_parcel_delivered a planning:Want ;
     rdfs:label "every parcel where it is owed" ;
-    orexis:metWhen courier:delivered ;
-    orexis:estimates courier:drivesOwed .
+    planning:metWhen courier:delivered ;
+    planning:estimates courier:drivesOwed .

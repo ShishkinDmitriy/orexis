@@ -24,7 +24,7 @@ concept outranks a niche one: a commitment's token now says what it `permits`, i
 rather than JWT's, and what a want sits on was the BINDING axis — a property named for the
 name this page took over. The axis has since gone the way the name did: what a want sits on is
 its graph's period, and `orexis:bindsWhen` said in a fourth place what the type, the period and
-`orexis:holdsAt` were already saying (#681).
+`planning:holdsAt` were already saying (#681).
 
 The consequence is about [wants](/domain/desire.md). A want's view is what it reads plus what
 the actions [relevant](/domain/relevance.md) to it read and write. Two wants whose views lie in
