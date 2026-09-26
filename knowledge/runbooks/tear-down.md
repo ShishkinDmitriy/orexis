@@ -148,4 +148,4 @@ volume belonging to that agent alone.
 | swap worlds | `down`, `orexis-onboard <other>`, `up` — see [run-a-world](/runbooks/run-a-world.md) |
 | stop everything | all worlds down, then `pkill`, then infra down |
 | a device is obeying a world that is gone | clear its retained `cmd` topic |
-| start completely fresh | the above, then `cd infra && podman compose down -v`, then genesis from scratch |
+| start completely fresh | the above, then `cd infra && podman compose down -v`, then onboard the world again |

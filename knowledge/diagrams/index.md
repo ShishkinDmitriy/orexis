@@ -1,7 +1,8 @@
 # Diagrams
 
-One picture per service, plus the mind as a whole. Each is PlantUML source with a rendered SVG
-beside it, and the pages embed the SVG.
+Agent 0.1.0's pictures: one per service of the retired kernel, the mind as a whole, and the cone.
+The [0.1.0 records](/decisions/0.1.0/index.md) embed them; nothing current does, and none depicts
+Agent 0.2.0. Each is PlantUML source with a rendered SVG beside it.
 
 * [agent-structure](./agent-structure.puml) - Six modalities, one repository each, and the services beside them — the target, with the delta from today marked.
 * [service-planner](./service-planner.puml) - The search: what it reads to simulate, and the two possible-modality graphs it writes.

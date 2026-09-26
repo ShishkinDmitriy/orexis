@@ -5,10 +5,10 @@ How to actually operate a society: bring one into existence, run it, and take it
 
 # Lifecycle
 
-* [genesis-a-world](/runbooks/genesis-a-world.md) - Author a new world and seed it: what to write, what genesis derives, and the four checks.
+* [author-a-world](/runbooks/author-a-world.md) - The documents a world is, each saying which graph it is, and the test beside it that proves it.
 * [run-a-world](/runbooks/run-a-world.md) - Deploy, up, down, logs, and what to do after a code change. One container per agent, generated from the world.
-* [add-a-package](/runbooks/add-a-package.md) - Create one: what is mandatory and which gate refuses you, what is merely recommended, and what an omission states.
-* [measure-the-search](/runbooks/measure-the-search.md) - Time and profile the planner on world/hanoi: the tracked numbers, and what a faster judge must prove first.
+* [add-a-domain](/runbooks/add-a-domain.md) - A directory of documents under `domains/`: its words, actions, shapes and rules, each text declaring its prefixes.
+* [measure-the-search](/runbooks/measure-the-search.md) - Time the planner on its bench, record a row in the ledger, and alternate A/B in one session.
 * [move-a-world-to-agent-0-2-0](/runbooks/move-a-world-to-agent-0-2-0.md) - Take a running 0.1.0 world onto the 0.2.0 image: rebuild, clear 0.1.0's leftovers, replace the belief volume. The board is untouched.
 * [tear-down](/runbooks/tear-down.md) - Stopping a society is not one command. What survives `down`, why each survives on purpose, and how to remove it.
 
@@ -19,7 +19,7 @@ There is no `orexis-up`, no `orexis-down`, no `orexis-restart`. Running a societ
 that behaves the same here as everywhere else.
 
 The only orexis-specific commands are the ones that **produce** something from the world:
-`orexis-onboard`, and `orexis-validate` to check the result. Once they have run, you are holding
+`orexis-onboard` and `orexis-firmware`. Once they have run, you are holding
 an ordinary compose project. There is still nothing to **seed** — an agent builds its own belief
 base at boot — but there is something to **provision**, and that is what onboarding is: a bucket
 and a token per agent, a bus credential and an ACL per principal, every one of them derived from
