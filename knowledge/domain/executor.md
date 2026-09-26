@@ -100,11 +100,11 @@ gone, over the agent's readings, and moves `execution:by` along the chain when i
 last step resolves the intention `done`; the landing passed by the patience with no answer
 resolves it `failed`, and so does a taker that raises. The executor never replans: it says
 what happened, and the planner's next pass stands in the present that surprised it. A pure
-simulation has no instrument to answer, so an action may be FICTIVE, its row saying so and
-the extraction carrying it onto its steps: the executor writes such a step's prediction into
+simulation has no instrument to answer, so an action may be FICTIVE, an `execution:Fictive`
+operation its implementation, read off the action a step fills when the step is taken: the executor writes such a step's prediction into
 the readings itself, and the present answers because nothing else could have. An executor
 built fictive takes every step so. The taker is one callable handed the step's rows. An action a
-device takes carries `execution:command`, a select run over the beliefs as they stand when the
+device takes has an `execution:Command` among its operations, a select run over the beliefs as they stand when the
 step is taken, which answers the actuator and the payload: how much to pour or how long to heat is
 sized there, from the reading in hand, and never by the search, whose effect says only the side a
 step reaches. The runtime sends what it answers through the transport; a step whose action carries

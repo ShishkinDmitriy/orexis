@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -105,9 +105,9 @@
+@@ -104,9 +104,9 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 a planning:Weighing .
@@ -11,7 +11,7 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank2 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank2 planning:weighs ground:2026-01-01T120000p0000 .
    plan:keeper.in_range.pursued.tank1 a planning:PlanGraph .
-@@ -161,6 +161,12 @@
+@@ -160,6 +160,12 @@
    possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:met false .
    possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank1 .
@@ -24,7 +24,7 @@
    possible:fill-tank2 a planning:PossibleGraph .
    possible:fill-tank2 orexis:arrivedBy orexis:Derived .
    possible:fill-tank2 orexis:hash "sha256:b925a49cc433542befaf03149f9d7f1e92e07473431966218677da6fae49dc78" .
-@@ -210,6 +216,12 @@
+@@ -209,6 +215,12 @@
    possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:met false .
    possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank2 .

@@ -21,14 +21,14 @@ GRAPH :ontology {
 
 GRAPH :actions {
   :fill a orexis:Action .
-  :fill sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" .
+  :fill orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" ] ] .
   :heat a orexis:Action .
-  :heat sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
+  :heat orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" ] ] .
   :tweak a orexis:Action .
-  :tweak sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t ?p ?x . } WHERE { ?t a :Tank ; ?p ?x }""" .
+  :tweak orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t ?p ?x . } WHERE { ?t a :Tank ; ?p ?x }""" ] ] .
 }
 
 GRAPH :catalogue {

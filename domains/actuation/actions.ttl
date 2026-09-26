@@ -9,14 +9,14 @@
 #  THE DOSE, stated in the concepts the rules conclude: a reading of what a valve moves, below a
 #  range of the subject the valve acts on, comes to be inside it. The search runs no rules, so the
 #  effect writes the side and not a number; the executor answers the step when the next reading is
-#  revised inside. How much to pour is not the search's: `execution:command` is run over the
+#  revised inside. How much to pour is not the search's: its `execution:Command` is run over the
 #  present when the step is taken, and sizes the dose from how far the reading is below the middle
 #  of the range, by the subject's litres per fraction, at most the valve's cap.
 
 actuation:Dosing a orexis:Action ;
     rdfs:label "dose a subject from a valve until its reading is inside its range" ;
     orexis:takes actuation:valve , actuation:reading ;
-    orexis:available """PREFIX actuation: <http://example.org/orexis/actuation#>
+    orexis:precondition """PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT DISTINCT ?valve ?reading WHERE {
             $me actuation:hasActuator ?valve ; orexis:actsFor ?subject .
@@ -25,12 +25,14 @@ actuation:Dosing a orexis:Action ;
                      sensing:below ?range .
         }""" ;
     orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:retracts """PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { GRAPH $state { $reading sensing:below ?range } }
-        WHERE  { GRAPH $state { $reading sensing:below ?range } }""" ;
-    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
-        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ;
-    execution:command """PREFIX actuation: <http://example.org/orexis/actuation#>
+    orexis:effect [ a orexis:Effect ;
+        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range  }
+        WHERE  { $reading sensing:below ?range  }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] ;
+    orexis:implementation [ a orexis:Implementation ;
+        orexis:operation [ a execution:Command ; sh:select """PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX climate: <http://example.org/orexis/climate#>
         SELECT ?actuator ?payload WHERE {
             $reading sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value ;
@@ -44,4 +46,4 @@ actuation:Dosing a orexis:Action ;
             BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), IF(?wanted < 0.0, 0.0, ?wanted)) AS ?ml)
             BIND($valve AS ?actuator)
             BIND(CONCAT('{"dose_ml": ', STR(xsd:integer(ROUND(?ml))), '}') AS ?payload)
-        }""" .
+        }""" ] ] .

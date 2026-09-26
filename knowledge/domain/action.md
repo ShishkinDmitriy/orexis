@@ -5,10 +5,10 @@ term: http://example.org/orexis#Action
 description: >-
   One way of acting, whole — the STRIPS operator as a single node a package ships in its
   `actions.ttl` — and the KIND of act itself, which a row carries and an intention commits to:
-  when it is available (`orexis:available`, a SELECT whose rows are the steps it puts on the
-  menu now), what it makes true
-  (`sh:construct` and `orexis:retracts`, with timing and confirmation route); who carries it out
-  is the code's to say, by `@contributes`. Loaded into the action graph at genesis so a planner, a sovereign or a
+  when it may be taken (`orexis:precondition`, a SELECT whose rows are the steps a world
+  admits), what taking it makes true and false (`orexis:effect`, rules grouped by order), and
+  what goes out when a step is taken (`orexis:implementation`, operations grouped the same
+  way), with its cost and timing beside them. Loaded into the action graph at genesis so a planner, a sovereign or a
   model reads the whole tool list in one place. Adding a way of acting is one node and one
   `take()`.
 ---
@@ -23,12 +23,21 @@ the KIND of act too, since [the-action-is-the-kind](/decisions/the-action-is-the
 there is no separate word for what a row offers, an intention commits to and a trace weighs.
 
 ```turtle
-market:Acquiring a orexis:Action ;
-    orexis:available  """SELECT ?property ?via ?direction WHERE { … }""" ;
-    sh:construct  """CONSTRUCT { … } WHERE { … }""" ;
-    orexis:retracts   """CONSTRUCT { … } WHERE { … }""" ;
-    orexis:landsAfter """SELECT ?seconds WHERE { … }""" .
+market:Presenting a orexis:Action ;
+    orexis:takes market:venue , actuation:reading ;
+    orexis:precondition """SELECT ?venue ?reading WHERE { … }""" ;
+    orexis:effect [ a orexis:Effect ;
+        sh:rule [ a sh:SPARQLRule ; orexis:update """DELETE { … } WHERE { … }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """CONSTRUCT { … } WHERE { … }""" ] ] ;
+    orexis:implementation [ a orexis:Implementation ;
+        orexis:operation [ a execution:Saying ; sh:construct """CONSTRUCT { … } WHERE { … }""" ] ] ;
+    orexis:costs """SELECT ?cost WHERE { … }""" .
 ```
+
+In Agent 0.2.0 an action is these three parts: the [precondition](/domain/precondition.md), the
+[effect](/domain/effect.md) and the [implementation](/domain/implementation.md). The search reads
+the first two and never the third; the executor carries out the third and holds the world to the
+second.
 
 Six ship: `sensing:Observing`, `actuation:Dosing`, `market:Acquiring`, `market:Offering`,
 `market:Serving` — an obligation's, whose availability binds `?for_agent` — and `market:Presenting`,
@@ -44,7 +53,7 @@ world and not in this one).
 `loader.action_files()` finds every package's `actions.ttl`; genesis loads them into the action
 graph beside the T-Box. Three readers, one join:
 
-- `Steps.offered` runs every action's `orexis:available` with `$me` and the desired `$properties` filled
+- `Steps.offered` runs every action's precondition with `$me` and the desired `$properties` filled
   in, and each row it returns is a step carrying the action;
 - `effects.rule_for(action)` reads the node's construct and retraction and runs them against
   the [imaginarium](/domain/imaginarium.md);
@@ -75,7 +84,7 @@ is real and unbuilt; the day it is wanted, the slot is there.
 
 A node here, a `orexis:takes` triple per parameter it is filled with, and a
 `@contributes(<the action>)` method on the module that takes it. Nothing else — no registry, no
-edit to the kernel, no second file. An action without `sh:construct` is legal to ship and
+edit to the kernel, no second file. An action stating no effect is legal to ship and
 refused at the gate the moment it puts a row on some agent's menu, because an act the search
 cannot simulate is one it must not conclude about.
 

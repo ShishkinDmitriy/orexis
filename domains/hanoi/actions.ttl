@@ -15,8 +15,9 @@
 hanoi:Move a orexis:Action ;
     rdfs:label "move a movable disk onto a legal peg" ;
     orexis:takes hanoi:disk , hanoi:onto ;
-    execution:fictive true ;
-    orexis:available """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+    orexis:implementation [ a orexis:Implementation ;
+        orexis:operation [ a execution:Fictive ] ] ;
+    orexis:precondition """PREFIX hanoi: <http://example.org/orexis/hanoi#>
         SELECT ?disk ?onto WHERE {
             ?disk hanoi:on ?below .
             FILTER NOT EXISTS { ?x hanoi:on ?disk }
@@ -28,11 +29,12 @@ hanoi:Move a orexis:Action ;
                 ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
         }""" ;
     orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    orexis:retracts """PREFIX hanoi: <http://example.org/orexis/hanoi#>
-        DELETE { GRAPH $state { $disk hanoi:on ?old } }
-        WHERE  { GRAPH $state { $disk hanoi:on ?old } }""" ;
-    sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+    orexis:effect [ a orexis:Effect ;
+        sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+        DELETE { $disk hanoi:on ?old  }
+        WHERE  { $disk hanoi:on ?old  }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
         CONSTRUCT { $disk hanoi:on ?dest } WHERE {
             OPTIONAL { ?t (hanoi:on)+ $onto . FILTER NOT EXISTS { ?z hanoi:on ?t } }
             BIND(COALESCE(?t, $onto) AS ?dest)
-        }""" .
+        }""" ] ] .

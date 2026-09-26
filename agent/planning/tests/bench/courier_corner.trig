@@ -94,9 +94,12 @@ GRAPH :world {
 # out, not declared: |dx| + |dy| = 1 over the cells' own coordinates.
 GRAPH :actions {
   courier:Drive a orexis:Action .
-  courier:Drive orexis:takes courier:van .
-  courier:Drive orexis:takes courier:to .
-  courier:Drive orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Drive orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  courier:Drive orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { $van courier:at ?old  }
+      WHERE  { $van courier:at ?old  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+      CONSTRUCT { $van courier:at $to } WHERE { }""" ] ] .
+  courier:Drive orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?van ?to WHERE {
           ?van courier:at ?here .
           ?van a courier:Van .
@@ -104,44 +107,38 @@ GRAPH :actions {
           ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
           FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
       }""" .
-  courier:Drive orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" .
-  courier:Drive orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
-      DELETE { GRAPH $state { $van courier:at ?old } }
-      WHERE  { GRAPH $state { $van courier:at ?old } }""" .
-  courier:Drive sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
-      CONSTRUCT { $van courier:at $to } WHERE { }""" .
+  courier:Drive orexis:takes courier:to .
+  courier:Drive orexis:takes courier:van .
+  courier:Drop a orexis:Action .
+  courier:Drop orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  courier:Drop orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { $parcel courier:carriedBy ?van  }
+      WHERE  { $parcel courier:carriedBy ?van  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+      CONSTRUCT { $parcel courier:at $to } WHERE { }""" ] ] .
+  courier:Drop orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT ?parcel ?to WHERE {
+          ?parcel courier:carriedBy ?van . ?van courier:at ?to .
+          ?parcel a courier:Parcel .
+      }""" .
+  courier:Drop orexis:takes courier:parcel .
+  courier:Drop orexis:takes courier:to .
   courier:Pick a orexis:Action .
-  courier:Pick orexis:takes courier:parcel .
-  courier:Pick orexis:takes courier:van .
-  courier:Pick orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Pick orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  courier:Pick orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { $parcel courier:at ?cell  }
+      WHERE  { $parcel courier:at ?cell  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+      CONSTRUCT { $parcel courier:carriedBy $van } WHERE { }""" ] ] .
+  courier:Pick orexis:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?parcel ?van WHERE {
           ?van courier:at ?cell . ?parcel courier:at ?cell .
           ?parcel a courier:Parcel .
           ?van a courier:Van .
       }""" .
-  courier:Pick orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" .
-  courier:Pick orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
-      DELETE { GRAPH $state { $parcel courier:at ?cell } }
-      WHERE  { GRAPH $state { $parcel courier:at ?cell } }""" .
-  courier:Pick sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
-      CONSTRUCT { $parcel courier:carriedBy $van } WHERE { }""" .
-  courier:Drop a orexis:Action .
-  courier:Drop orexis:takes courier:parcel .
-  courier:Drop orexis:takes courier:to .
-  courier:Drop orexis:available """PREFIX courier: <http://example.org/orexis/courier#>
-      SELECT ?parcel ?to WHERE {
-          ?parcel courier:carriedBy ?van . ?van courier:at ?to .
-          ?parcel a courier:Parcel .
-      }""" .
-  courier:Drop orexis:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" .
-  courier:Drop orexis:retracts """PREFIX courier: <http://example.org/orexis/courier#>
-      DELETE { GRAPH $state { $parcel courier:carriedBy ?van } }
-      WHERE  { GRAPH $state { $parcel courier:carriedBy ?van } }""" .
-  courier:Drop sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
-      CONSTRUCT { $parcel courier:at $to } WHERE { }""" .
-  courier:van a orexis:Parameter .
-  courier:to a orexis:Parameter .
+  courier:Pick orexis:takes courier:parcel .
+  courier:Pick orexis:takes courier:van .
   courier:parcel a orexis:Parameter .
+  courier:to a orexis:Parameter .
+  courier:van a orexis:Parameter .
 }
 
 # THE DESIRE, AND THE PACKAGE'S MEASURE OF IT: every parcel where it is owed, and how far

@@ -61,8 +61,8 @@ hands it `deliver`: a message arrives on the member's thread and is queued, and 
 the queue on the one executing thread — [sensing](/domain/sensing.md) writes the observation,
 the [deliberator](/domain/deliberator.md) runs the rules that conclude its side, the
 [prediction](/domain/prediction.md) package writes the stretches ahead and the rules conclude
-theirs, and a reading fallen due is asked for again. A step whose action carries
-`execution:command` is taken by sending what the command answers, sized from the present, through
+theirs, and a reading fallen due is asked for again. A step whose action's implementation
+holds an `execution:Command` is taken by sending what the command answers, sized from the present, through
 the transport's `actuate`; the [greenhouse](/domain/domain.md)'s pump and heater are taken so.
 
 **A world's tests live with the world.** `world/hanoi/tests/` boots the world from the files

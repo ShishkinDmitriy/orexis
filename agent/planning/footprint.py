@@ -2,8 +2,8 @@
 
 Two sets per action, both derived and neither declared (#488):
 
-- what it WRITES — the predicates of its `sh:construct` template and its `orexis:retracts`;
-- what it READS — the predicates of its `orexis:available` precondition.
+- what it WRITES — the predicates of its effect's rules, the construct templates and the deletes;
+- what it READS — the predicates of its `orexis:precondition`.
 
 A derivation rule is the same pair read off one INSERT: its template writes, its WHERE reads.
 Nothing here is declared — a stated `orexis:touches` would be a second statement of what the
@@ -255,12 +255,12 @@ def _values_in(node) -> dict:
 
 # --- the footprint of each action and each derivation -----------------------------------------------
 
+#  ONE ROW PER RULE OF AN ACTION'S EFFECT, with the action's precondition on each.
 _ACTIONS_Q = """
-SELECT ?action ?available ?construct ?retracts WHERE {
+SELECT ?action ?precondition ?construct ?update WHERE {
   ?action a orexis:Action .
-  OPTIONAL { ?action orexis:available ?available }
-  OPTIONAL { ?action sh:construct ?construct }
-  OPTIONAL { ?action orexis:retracts ?retracts }
+  OPTIONAL { ?action orexis:precondition ?precondition }
+  OPTIONAL { ?action orexis:effect/sh:rule ?r . OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r orexis:update ?update } }
 }"""
 
 def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
@@ -272,8 +272,15 @@ def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
     which is this module's to ask for, as `stored_edges` beside it already asks.
     """
     out = {}
+    effects: dict[str, dict] = {}
     for row in rows(store, _ACTIONS_Q, graphs_of(store, ACTION, at=at or clock.now())):
-        if not row.get("construct"):
+        held = effects.setdefault(row["action"], {"precondition": row.get("precondition"), "constructs": [], "updates": []})
+        if row.get("construct"):
+            held["constructs"].append(row["construct"])
+        if row.get("update"):
+            held["updates"].append(row["update"])
+    for action, effect in effects.items():
+        if not effect["constructs"]:
             #  AN ACTION STATING NO EFFECT is an action an event adopts (#506) — never on a
             #  admitted by any world, never simulated — and has no place in a closure that
             #  simulated. Reading it as ANYTHING-writes-ANYTHING collapsed every want's
@@ -281,21 +288,21 @@ def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
             continue
         #  No precondition text is a lever with nothing to widen the want by — a world
         #  yields it no rows, but a construct it does carry says what it would write.
-        reads = reads_of_select(row["available"]) if row.get("available") else frozenset()
-        writes = writes_of_construct(row["construct"])
-        if writes is not ANYTHING and row.get("retracts"):
-            part = writes_of_construct(row["retracts"])
+        reads = reads_of_select(effect["precondition"]) if effect["precondition"] else frozenset()
+        writes = frozenset()
+        for text in effect["constructs"]:
+            part = writes_of_construct(text)
+            writes = ANYTHING if part is ANYTHING or writes is ANYTHING else frozenset(writes | part)
+        for text in effect["updates"] if writes is not ANYTHING else ():
+            part = writes_of_construct(text)
             if part is not ANYTHING:
                 writes = frozenset(writes | part)
-            elif not writes:
-                #  A retract with a variable predicate and NO construct beside it removes
-                #  something the text does not name: unreadable, and said so.
-                writes = ANYTHING
-            #  else: A RETRACT WITH A VARIABLE PREDICATE beside a construct — `?standing ?p
+            #  else: A DELETE WITH A VARIABLE PREDICATE beside a construct — `?standing ?p
             #  ?o`, every shipped reading-replacing lever — removes the node the construct
             #  replaces, the readings graph's upsert, and so writes what the construct
             #  writes. Read as ANYTHING it made every such lever relevant to every want, and
             #  every want's view the whole world (#554, #565).
+        row = {"action": action}
         out[row["action"]] = (reads, writes)
     return out
 

@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -95,6 +95,13 @@
+@@ -94,6 +94,13 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ orexis:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
@@ -14,7 +14,7 @@
    possible:fill-tank1.by :tank :tank1 .
    possible:fill-tank1.by a planning:Candidate .
    possible:fill-tank1.by planning:fills :fill .
-@@ -122,3 +129,8 @@
+@@ -121,3 +128,8 @@
    :keeper.in_range.pursued.tank1.met sh:property [ orexis:about :level ; sh:minInclusive 10 ; sh:path :level ] .
    :keeper.in_range.pursued.tank1.met sh:targetNode :tank1 .
  }

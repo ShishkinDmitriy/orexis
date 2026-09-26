@@ -645,8 +645,8 @@ it is a record wearing a bullet.
   into a domain and changes there, and the 0.1.0 suite that built on it is switched off in the
   gates rather than propped up; the four files in `tests/` that read the whole tree still run.
 - **A step is sized when it is taken, from the present, and the search only says the side it
-  reaches** — a dose's effect is the soil coming to be inside its range; `execution:command` on the
-  action is run over the beliefs as they stand when the step is taken and answers the actuator and
+  reaches** — a dose's effect is the soil coming to be inside its range; the `execution:Command` of
+  the action's implementation is run over the beliefs as they stand when the step is taken and answers the actuator and
   the payload, the dose's size from how far the reading is below the middle of the range, and the
   runtime sends it through the transport's `actuate`.
 - **A world speaks for its readings' revisions** — `world_at` hands a rule every known graph but
@@ -786,7 +786,7 @@ it is a record wearing a bullet.
   hold every addition and none of the retractions, over the readings; then `execution:by`
   moves, and past the landing by the patience with no answer the intention is `failed` and
   the want is the search's again. A pure simulation has nothing to answer with, so an action may
-  be FICTIVE (`execution:fictive` on its row, carried onto its steps) and the executor writes
+  be FICTIVE (an `execution:Fictive` operation in its implementation) and the executor writes
   its prediction into the readings itself — hanoi's physics is its own effect — and that is
   the feedback a plan promoted to a method would be judged by.
 - **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes
@@ -806,7 +806,7 @@ it is a record wearing a bullet.
   peer's word, `said` believes what the agent told, and neither concludes anything.
 - **The market is files** — calls, rounds, bids, claims and presentations are documents one agent
   says to another, what they mean is five rules, and the protocol is six actions whose effects
-  speak those conclusions and whose `execution:says` makes the documents at take time; the kernel
+  speak those conclusions and whose `execution:Saying` operations make the documents at take time; the kernel
   learned to tell a peer something and nothing of what a bid is (`domains/market/`).
 - **A graph is revised beside what the world states and nothing else** — every rule shipped reads
   one graph and public knowledge, and a revision is replaced only when its source is written
@@ -821,6 +821,14 @@ it is a record wearing a bullet.
 - **An agent's own documents are under `beliefs/<id>`** — the derivation mints a want under every
   desire a store holds, so a world of several agents states each one's desires apart, and a boot
   and a compose file read only the agent's own.
+
+- **An action is a precondition, an effect and an implementation, and the effect is rules** — the
+  precondition is the select whose rows are the steps a world admits, the effect is `sh:rule`s run
+  on the possible world a step makes, grouped by `sh:order` as SHACL groups them, a delete being
+  an `orexis:update` the runner scopes `WITH` the new world, and the implementation is the
+  operations that go out when the step is taken, grouped the same way; the never-delete rule is
+  belief revision's, and an effect deletes because a possible world is where taking something
+  away is the point. `orexis:retracts` survives on a prediction's catalogue row alone.
 
 ## The rules the code lives by
 

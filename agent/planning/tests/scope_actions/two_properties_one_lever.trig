@@ -20,8 +20,8 @@ GRAPH :ontology {
 
 GRAPH :actions {
   :fix a orexis:Action .
-  :fix sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t :level ?x . ?t :temperature ?x . } WHERE { ?t a :Tank }""" .
+  :fix orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?t :level ?x . ?t :temperature ?x . } WHERE { ?t a :Tank }""" ] ] .
 }
 
 GRAPH :catalogue {

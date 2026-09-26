@@ -140,7 +140,15 @@ GRAPH pursued:2026-01-01T120000p0000--open {
 
 GRAPH :actions {
   hanoi:Move a orexis:Action .
-  hanoi:Move orexis:available """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+  hanoi:Move orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  hanoi:Move orexis:effect [ a orexis:Effect ; sh:rule [ a sh:SPARQLRule ; orexis:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      DELETE { $disk hanoi:on ?old  }
+      WHERE  { $disk hanoi:on ?old  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+      CONSTRUCT { $disk hanoi:on ?dest } WHERE {
+          OPTIONAL { ?t (hanoi:on)+ $onto . FILTER NOT EXISTS { ?z hanoi:on ?t } }
+          BIND(COALESCE(?t, $onto) AS ?dest)
+      }""" ] ] .
+  hanoi:Move orexis:precondition """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       SELECT ?disk ?onto WHERE {
           ?disk hanoi:on ?below .
           FILTER NOT EXISTS { ?x hanoi:on ?disk }
@@ -151,17 +159,8 @@ GRAPH :actions {
               ?s (hanoi:on)+ ?onto .
               ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
       }""" .
-  hanoi:Move orexis:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  hanoi:Move orexis:retracts """PREFIX hanoi: <http://example.org/orexis/hanoi#>
-      DELETE { GRAPH $state { $disk hanoi:on ?old } }
-      WHERE  { GRAPH $state { $disk hanoi:on ?old } }""" .
   hanoi:Move orexis:takes hanoi:disk .
   hanoi:Move orexis:takes hanoi:onto .
-  hanoi:Move sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
-      CONSTRUCT { $disk hanoi:on ?dest } WHERE {
-          OPTIONAL { ?t (hanoi:on)+ $onto . FILTER NOT EXISTS { ?z hanoi:on ?t } }
-          BIND(COALESCE(?t, $onto) AS ?dest)
-      }""" .
   hanoi:disk a orexis:Parameter .
   hanoi:onto a orexis:Parameter .
 }

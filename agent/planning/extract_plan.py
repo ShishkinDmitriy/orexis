@@ -64,9 +64,6 @@ from .ontology import EXHAUSTED, NO_CANDIDATE, SATISFIED
 #  5. EVERY KIND THE VOCABULARY PUTS A PLAN GRAPH BENEATH, from one `rdfs:subClassOf` step —
 #     the closure is materialised at genesis, so one step is every step. Its own operation,
 #     because a vocabulary that says nothing of plan graphs must not take the row with it.
-#  A STEP SAYS WHETHER ITS ACTION IS FICTIVE, `execution:fictive` copied off the action's own
-#  row, because the executor reads a step and not an action: what taking a step is depends on
-#  the action, and the action's word for it is the one the step carries.
 #  A STEP SAYS WHAT IT PREDICTS: the diff of the world it reaches against the one it leaves, the
 #  canonical facts a world's digest is made of, as one JSON literal of two lists (`adds`,
 #  `retracts`) under `execution:predicts` — one declaration, the effect the search planned on,
@@ -88,7 +85,7 @@ WHERE  {} ;
 INSERT { GRAPH $plan { ?step a execution:Step ; execution:partOf $plan ;
                        planning:fills ?action ; planning:of ?by ;
                        execution:notBefore ?since ; execution:landsAt ?lands ;
-                       execution:predicts ?predicts ; execution:fictive ?fictive . ?step ?p ?v } }
+                       execution:predicts ?predicts . ?step ?p ?v } }
 WHERE  { VALUES (?w ?predicts) { $predicted }
          GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
@@ -96,7 +93,6 @@ WHERE  { VALUES (?w ?predicts) { $predicted }
                       OPTIONAL { ?in planning:atInstant ?a0 } OPTIONAL { ?in dcterms:temporal/orexis:start ?s0 }
                       OPTIONAL { ?w planning:atInstant ?lands }
                       OPTIONAL { ?by ?p ?v . FILTER(?p NOT IN (planning:fills, planning:from, rdf:type)) } }
-         OPTIONAL { GRAPH ?declared { ?action execution:fictive ?fictive } }
          BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step)
          BIND(COALESCE(?a0, ?s0) AS ?since) } ;
 INSERT { GRAPH $plan { ?prev execution:then ?step } }

@@ -56,7 +56,7 @@ class Transport:
         return []
 
     def tell(self, store, to: str, document: bytes) -> bool:
-        """Send a peer a document this agent said — TriG, as `execution:says` made it — on the
+        """Send a peer a document this agent said — TriG, as an `execution:Saying` made it — on the
         channel the peer listens to. Whether anything was SENT."""
         return False
 
@@ -68,7 +68,7 @@ class Transport:
         """Ask for a reading now, best-effort."""
 
     def actuate(self, store, actuator: str, payload: dict) -> bool:
-        """Send a device the command a step was sized to — the payload `execution:command`
+        """Send a device the command a step was sized to — the payload an `execution:Command`
         answered when the step was taken. Whether anything was SENT: a member that does not
         reach the actuator sends nothing, and the executor's patience says what that costs."""
         return False

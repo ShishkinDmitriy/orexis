@@ -36,10 +36,10 @@ pass that moved nothing sleeps the poll before the next.
 **A SENSED WORLD RUNS THROUGH ITS TRANSPORT.** Where a sensor is reached over one, the member is
 brought up and handed `deliver`; each pass drains what it queued — sensing writes, the rules
 conclude sides, prediction writes the stretches ahead — before the planner's pass, and a step
-whose action carries `execution:command` is taken by sending what the command answers.
+whose action's implementation holds an `execution:Command` is taken by sending what it answers.
 
-**A PEER IS TOLD, AND HEARD, THROUGH THE SAME TRANSPORT.** A step whose action carries
-`execution:says` makes documents of the present; the agent believes what it said, the rules
+**A PEER IS TOLD, AND HEARD, THROUGH THE SAME TRANSPORT.** A step whose action's implementation
+holds an `execution:Saying` makes documents of the present; the agent believes what it said, the rules
 conclude of it at once, and each is sent to the agents it is to. A document a peer says arrives
 on the topic the agent listens to and is believed by speech's `heard`, then revised like a reading.
 """
@@ -60,6 +60,7 @@ from agent import clock
 from agent.belief.deliberator import Deliberator
 from agent.execution.command import command
 from agent.execution.executor import Executor
+from agent.execution.implementation import COMMAND, SAYING, operations
 from agent.execution.says import says
 from agent.prediction.predict import predict
 from agent.sensing.missed import missed
@@ -228,7 +229,7 @@ class Runtime:
     arrives on the member's thread and is queued; the pass drains the queue on this one: sensing
     writes the observation, the rules conclude its side, prediction writes the stretches ahead and
     the rules conclude theirs, and the readings fallen due are asked for again. A step whose
-    action carries `execution:command` is taken by sending what the command answers, sized from
+    action's implementation holds an `execution:Command` is taken by sending what it answers, sized from
     the present, through the transport; a world with no transport takes steps as the executor
     does alone."""
 
@@ -296,24 +297,26 @@ class Runtime:
         self.deliberator.deliberate(now)
 
     def _take(self, said: dict, intention: str) -> None:
-        """Take a step by sending what its action's command answers, sized from the present, and
-        telling what its action says: each document believed as said, revised at once — the
-        step's own landing reads what the rules conclude of it — and sent to every agent it is
-        to. A step whose action carries neither is said in the log, as the executor would."""
-        sent = command(self.beliefs, said, self.me)
-        told = says(self.beliefs, said, self.me)
-        if not sent and not told:
+        """Take a step by its action's implementation, order by order: every command of an order
+        sent, sized from the present, and every saying's documents believed as said, revised
+        and sent to every agent they are to — so a later order is made from the present the
+        earlier ones left. A step whose action has no operation is said in the log, as the
+        executor would."""
+        orders = sorted({op.order for op in operations(self.beliefs, said.get("fills") or "")
+                         if op.kind in (COMMAND, SAYING)})
+        if not orders:
             self.executor.say(said, intention)
             return
-        for actuator, payload in sent:
-            self.transport.actuate(self.beliefs, actuator, payload)
-        written = []
-        for agents, doc in told:
-            written += believe_said(self.beliefs, self.me, doc)
-            payload = doc.dump(format=ox.RdfFormat.TRIG)
-            for agent in agents:
-                self.transport.tell(self.beliefs, agent, payload)
-        self._revise(written, clock.now())
+        for order in orders:
+            for actuator, payload in command(self.beliefs, said, self.me, order=order):
+                self.transport.actuate(self.beliefs, actuator, payload)
+            written = []
+            for agents, doc in says(self.beliefs, said, self.me, order=order):
+                written += believe_said(self.beliefs, self.me, doc)
+                payload = doc.dump(format=ox.RdfFormat.TRIG)
+                for agent in agents:
+                    self.transport.tell(self.beliefs, agent, payload)
+            self._revise(written, clock.now())
 
     def run(self, *, passes: int | None = None, poll_s: float = 1.0) -> str:
         """Pass after pass until nothing is left to pursue (`met`), or nothing this agent holds

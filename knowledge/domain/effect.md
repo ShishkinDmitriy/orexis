@@ -1,10 +1,11 @@
 ---
 type: Domain Concept
 title: Effect
+term: http://example.org/orexis#effect
 description: >-
-  What taking an action would MAKE TRUE, stated on the action's own node in SHACL-AF's words
-  — a construct for what it adds, and `orexis:retracts` for what it
-  removes, which is ours because the standard has no deletion. It is what turns a step
+  What taking an action would MAKE TRUE and false — `orexis:effect` on the action's own node, rules
+  in SHACL's shape grouped by `sh:order`: a construct for what a rule adds, an `orexis:update`
+  for what one deletes, run on the possible world a step makes and never on beliefs. It is what turns a step
   row from "this is available" into something a planner can reason about, and it carries the
   timing (`orexis:landsAfter`) so that
   the number a planner predicts and the number a keeper later verifies cannot be two numbers.
@@ -17,11 +18,13 @@ An [step](/domain/step.md) row says an action is available, filled. It does
 not say what pulling it would achieve — and a desire that is a shape needs exactly that, because
 matching a desire to an action means asking what taking it would make true.
 
-So the effect sits on the [action](/domain/action.md) node itself, beside the availability
-query and the taker, loaded into the action graph at genesis. The vocabulary is SHACL Advanced Features' — `sh:construct` for the query yielding
-the triples applying it would add. One
-term is ours, `orexis:retracts`, because the standard has none: SHACL rules exist to add entailments,
-so nothing in it can say a thing stops being true.
+So the effect sits on the [action](/domain/action.md) node itself, beside the precondition and
+the implementation, loaded into the action graph at genesis. Its shape is SHACL's rules': an
+`orexis:Effect` holding `sh:rule`s, each a `sh:SPARQLRule` whose `sh:construct` yields the triples
+applying it adds, or whose `orexis:update` is a `DELETE … WHERE` naming no graph, which the
+search runs `WITH` the new world and `USING` every graph of it. The update is ours because
+SHACL's rules only conclude — rightly, over beliefs, which a [revision](/domain/revision.md) only
+enriches. An effect runs over a possible world, where taking something away is the point.
 
 **The engine is not SHACL's.** pySHACL will execute a `sh:SPARQLRule`, but only forward-chaining
 to a fixpoint, mutating the graph — and a plan step is one rule against one hypothesis, which is
@@ -35,9 +38,12 @@ The sensed graph **upserts** — one observation node per (subject, property), D
 node. A shape asking whether ANY reading sits past an edge would then answer about the reading
 the dose just replaced, and a planner would reject the plan that works.
 
-Order matters for the same reason: retract, then add. Observe's construct reuses the very node its
-retraction names, so done the other way round the addition is removed by the retraction meant to
-precede it and the possible world comes back holding neither reading.
+Order matters for the same reason: delete, then add. A construct reuses the very node its
+delete names, so done the other way round the addition is removed by the delete meant to
+precede it and the possible world comes back holding neither reading. `sh:order` says it as
+SHACL does: every rule of one order reads the same world, its deletions are applied before its
+additions, and a later order reads the world the earlier ones made; every shipped effect is one
+order, so each construct reads the world the step leaves.
 
 # Two rules ship, and the pair is instructive
 

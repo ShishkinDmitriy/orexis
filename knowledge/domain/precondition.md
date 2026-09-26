@@ -1,7 +1,7 @@
 ---
 type: Domain Concept
 title: Precondition
-term: http://example.org/orexis/progression#precondition
+term: http://example.org/orexis#precondition
 description: >-
   What must be true of a world for a step's diff to apply — the instantiated facts the step's
   effect rule read when it produced the diff. A plan's precondition is the regression of its
@@ -14,8 +14,8 @@ description: >-
 A step's diff was produced by an effect rule whose WHERE read some facts of the world it ran
 in. Those facts, instantiated with the bindings the rule found, are the step's precondition:
 the world in which the diff is what the rule says. An [action](/domain/action.md) states its
-applicability as a query, and that query is the template; the precondition is one binding of it,
-taken at the moment the step was planned.
+applicability as a query, `orexis:precondition` — the template — and a step's precondition is
+one binding of it, taken at the moment the step was planned.
 
 A plan has a precondition too, and it is not the union. Step two's precondition includes
 what step one produced, and those are not asked of the present because the plan supplies them.

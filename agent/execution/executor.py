@@ -32,8 +32,7 @@ and then the WORLD moves the intention: a step that predicts something waits at 
 retraction gone over the agent's readings, and `execution:by` moves to the next step when it
 does, the last step resolving the intention `done`; past the landing by the patience with no
 answer, the intention resolves `failed`. A step that predicts nothing moves as soon as it is
-taken. A FICTIVE ACTION — its row says `execution:fictive`, and the plan's extraction carries
-that onto its steps — is taken by writing the step's own prediction into the readings, so the
+taken. A FICTIVE ACTION — an `execution:Fictive` operation in its implementation — is taken by writing the step's own prediction into the readings, so the
 present answers because nothing else could have; an executor built `fictive` takes every
 step so, the shorthand for a pure simulation. The one seam is `take`, a callable handed the step's rows: it is where a step will reach real
 code — an actuator, a message on the bus — and how an action names its taker is not
@@ -63,6 +62,7 @@ from agent.hash_named_graph import facts_of
 from agent.ontology import OREXIS, STATE, local_of
 from agent.store import Raw, add_quads, bind, revisions_of, graphs_of, instant, quads, rows, update
 
+from .implementation import FICTIVE, operations
 from .ontology import EXECUTION, intentions_graph
 
 log = logging.getLogger("executor")
@@ -130,7 +130,6 @@ ORDER BY ?due ?intention"""
 
 _PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH $intentions { $step execution:predicts ?predicts } }"""
 
-_FICTIVE_Q = """SELECT ?f WHERE { GRAPH $intentions { $step execution:fictive ?f } }"""
 
 #  WHAT A STEP SAYS OF ITSELF IN WORDS OTHER THAN THIS LAYER'S: the action and the filling are
 #  the layer above's and the package's to spell, and this layer repeats them without reading.
@@ -465,8 +464,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         executor is fictive throughout; otherwise `take`, the seam to real code."""
         if self.all_fictive:
             return self.fictive
-        said = rows(self.intentions, bind(_FICTIVE_Q, intentions=Raw(f"<{self.graph}>"), step=step))
-        return self.fictive if said and said[0]["f"] == "true" else self.take
+        action = self.step_of(step).get("fills")
+        fictive = action is not None and any(op.kind == FICTIVE for op in operations(self.beliefs, action))
+        return self.fictive if fictive else self.take
 
     def step_of(self, step: str) -> dict:
         """A step's rows in words other than this layer's, keyed by the local part of each
@@ -488,8 +488,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         it predicted into the agent's readings, so the present answers because the executor
         was the world.
 
-        AN ACTION IS FICTIVE, and its row says so (`execution:fictive`), carried onto every
-        step that fills it: a hanoi move and a courier's drive have no instrument to report
+        AN ACTION IS FICTIVE where its implementation says so (`execution:Fictive`), read off
+        the action a step fills when the step is taken: a hanoi move and a courier's drive have no instrument to report
         what taking them did, so a step held to the world would wait out the patience and
         fail for ever. Its world is the belief base, and the step's own prediction is the
         physics. An executor built `fictive` takes every step so, the shorthand for a world

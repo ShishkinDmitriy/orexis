@@ -890,6 +890,44 @@ def fork(store, parent: str, name: str, added, retracts: list[str]) -> str:
     return name
 
 
+def scoped(text: str, into: str, graphs) -> str:
+    """An update naming no graph, scoped to a world: `WITH <into>` before its operation, so what
+    it deletes or inserts is the world's, and a `USING` per graph before its `WHERE`, so what it
+    reads is the whole world — the new one and every graph beside it. What a rule does not say,
+    the runner says (a-rule-does-not-say-which-world-it-reads). Refused where the text has no
+    `WHERE` at the top level or already says `WITH` or `USING` itself."""
+    body = _PREFIX_LINE.sub("", text)
+    head = text[:len(text) - len(body)] if text.endswith(body) else "".join(
+        m.group(0) for m in _PREFIX_LINE.finditer(text))
+    body = body.strip()
+    if re.match(r"(?i)(WITH|USING)\b", body) or re.search(r"(?i)\bUSING\s*<", body):
+        raise ValueError("an effect's update says its own graphs; the runner says them")
+    depth, i, quote = 0, 0, None
+    where = None
+    while i < len(body):
+        c = body[i]
+        if quote:
+            if c == "\\":
+                i += 2
+                continue
+            if c == quote:
+                quote = None
+        elif c in "\"'":
+            quote = c
+        elif c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+        elif depth == 0 and body[i:i + 5].upper() == "WHERE" and (i == 0 or not body[i - 1].isalnum()):
+            where = i
+            break
+        i += 1
+    if where is None:
+        raise ValueError("an effect's update has no WHERE at its top level")
+    using = "".join(f"USING <{g}>\n" for g in graphs)
+    return f"{head}WITH <{into}>\n{body[:where]}{using}{body[where:]}"
+
+
 def _joined(*texts: str) -> list[str]:
     """The update texts as ONE text where they can be, in order — their `PREFIX` lines hoisted
     to the head, since the engine takes a prologue only there and refuses one after a `;`,
