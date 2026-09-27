@@ -114,6 +114,11 @@ WHERE  { GRAPH $cat {
   ?x ?p ?o . OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"""
 
 
+#  WHETHER THE MATCH IS A WORLD A STEP REACHED, asked of its row: a ground matching the last
+#  ground is nothing happening.
+_POSSIBLE_Q = """SELECT ?m WHERE { GRAPH $cat { $match a planning:PossibleGraph } BIND($match AS ?m) }"""
+
+
 def reroot(store, ground: str) -> str | None:
     """Find the world the last pass imagined that `ground` — the present just laid — landed
     in, hand its cone to the ground, and drop everything else the last pass made. The world
@@ -139,9 +144,14 @@ def reroot(store, ground: str) -> str | None:
     if gone:
         update(store, bind(_DROP_GRAPHS_U, cat=cat, graphs=Raw(" ".join(f"<{g}>" for g in gone))))
         update(store, bind(_DROP_ROWS_U, cat=cat))
+    #  SAID AT INFO ONLY WHERE SOMETHING HAPPENED: a step landed as a world predicted, or a surprise
+    #  took the cone. The present repeating the last ground is every idle pass — once a second on
+    #  the terrace, which watches and plans nothing — and said at INFO it was the whole log.
+    landed = match is not None and bool(rows(store, _POSSIBLE_Q, (), match=match, cat=cat))
     if match is None and not gone:
         log.debug("nothing imagined yet: the present is the ground")
     else:
-        log.info("the present is %s; %d world(s) kept, %d dropped",
-                 "a surprise" if match is None else match.rsplit("/", 1)[-1], len(kept), len(gone))
+        (log.info if landed or match is None else log.debug)(
+            "the present is %s; %d world(s) kept, %d dropped",
+            "a surprise" if match is None else match.rsplit("/", 1)[-1], len(kept), len(gone))
     return match
