@@ -288,6 +288,9 @@ def test_no_document_names_a_path_that_is_not_there():
     each one is a sentence that says "was" or "at the time" or draws a before/after.
     """
     absent_on_purpose = {
+        # A FIRMWARE'S SELF-DESCRIPTION, deleted when hardware became the firmware generator's
+        # input alone (2026-09-27): a-firmware-describes-itself narrates the files it introduced.
+        "firmware/<name>/ontology.ttl",
         # THE 0.1.0 SUITE'S FIXTURES, retired with its kernel (2026-09-26).
         "tests/conftest.py",
         # THE 0.1.0 ONBOARDING COMMANDS, retired with it (2026-09-25): validation, its link step,
@@ -492,11 +495,10 @@ RETIRED = REPO_ROOT / "tests" / "fixtures" / "retired"
 
 def _vocabulary_files(*names: str, retired: bool = True) -> list[Path]:
     """Every project Turtle file a word may be declared in: the agent's packages, the domains,
-    the worlds, the firmware and the retired 0.1.0 vocabulary — or, given `names`, only the
+    the worlds and the retired 0.1.0 vocabulary — or, given `names`, only the
     files so named."""
     found = [*sorted(p for p in (REPO_ROOT / "agent").rglob("*.ttl") if "tests" not in p.parts),
              *sorted((REPO_ROOT / "domains").rglob("*.ttl")), *sorted((REPO_ROOT / "world").rglob("*.ttl")),
-             *sorted((REPO_ROOT / "firmware").glob("*/ontology.ttl")),
              *(sorted(RETIRED.rglob("*.ttl")) if retired else [])]
     return [p for p in found if not names or p.name in names]
 
@@ -716,8 +718,7 @@ def test_a_dictionary_term_is_a_declared_one():
 
     from agent.store import NAMESPACES
 
-    #  Every ontology a word may be declared in: the agent's packages', the domains', the
-    #  firmware's and the retired 0.1.0 vocabulary a page not yet refreshed still binds.
+    #  Every ontology a word may be declared in: the agent's packages', the domains' and the retired 0.1.0 vocabulary a page not yet refreshed still binds.
     ontologies = _vocabulary_files("ontology.ttl", retired=False)
     project = rdflib.Graph()
     for ttl in ontologies:

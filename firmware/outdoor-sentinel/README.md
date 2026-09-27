@@ -10,8 +10,7 @@ handling and retry budget. Its agent derives `sensing:Listening`.
 
 **This is a copy, and the copy is the cost.** `src/ulp_watch.cpp` and `include/ulp_watch.h`
 are byte-for-byte the sentinel's, kept in step by hand; `src/main.cpp` is the sentinel's with
-the BME280 and WS2812 blocks added; `ontology.ttl` restates the sentinel's three promises under
-a namespace of its own, because a world's device is typed with one firmware class. A fix to
+the BME280 and WS2812 blocks added. A fix to
 the ULP program in one directory does not reach the other, and nothing checks they agree. The
 author asked for exactly this — "for now, just copy, will solve it later" — and the debt is
 filed as [#461](https://github.com/ShishkinDmitriy/orexis/issues/461), beside
@@ -55,10 +54,9 @@ it at the same time, so `setup()` stops the ULP before reading and hands the uni
 explicitly before sleeping. Getting that wrong is silent — the ULP reads full scale forever —
 and it needs ESP-IDF 5.x, which is why this project pins its own platform in
 [`platformio.ini`](platformio.ini). See
-[two-owners-of-one-peripheral](../../knowledge/decisions/two-owners-of-one-peripheral.md).
+[two-owners-of-one-peripheral](../../knowledge/decisions/0.1.0/two-owners-of-one-peripheral.md).
 
-Type a board's connecting device `outdoor:Node` (this directory's `ontology.ttl` entails the
-firmware name, the push mode and the alarm promise), give its subject an
+Say `mc:firmware "outdoor-sentinel"` on the board in the world's `hardware.ttl`, give its subject an
 `ssn-system:hasOperatingRange` for what it watches, run `orexis-firmware <world>`, and flash.
 `world/terrace` does exactly that: a FireBeetle 2 ESP32-E on a planter bed, outdoors, the
 probe on GPIO 34 (A2) and a BME280 on I2C (SDA 21, SCL 22, 0x76).
@@ -122,7 +120,7 @@ three-month cell. So `WATCH_PATROL_S` is chosen for detection latency alone, and
 What a faster patrol *can* cost is indirect — it notices more transients, and each extra alarm is a
 full 0.25 mAh wake, about 1.7 hours of standing vigil. If it ever hurts, that is the mechanism, and
 `WAKE_DELTA` is the knob rather than the period. The derivation is in
-[the-vigil-costs-standing-not-looking](../../knowledge/decisions/the-vigil-costs-standing-not-looking.md),
+[the-vigil-costs-standing-not-looking](../../knowledge/decisions/0.1.0/the-vigil-costs-standing-not-looking.md),
 including which of these numbers are measured and which are estimated.
 
 **The battery is spent by the agent's epistemology, not by the firmware.** The sentinel's

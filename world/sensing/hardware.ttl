@@ -1,6 +1,5 @@
 @prefix : <http://example.org/orexis/world/sensing#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
-@prefix mqtt: <http://example.org/orexis/mqtt#> .
 @prefix orexis:   <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
@@ -9,7 +8,6 @@
 @prefix probe: <http://example.org/orexis/moisture-probe#> .
 @prefix rgbled: <http://example.org/orexis/rgb-led#> .
 @prefix mc: <http://example.org/orexis/microcontroller#> .
-@prefix governed: <http://example.org/orexis/firmware/moisture-sensor#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn:  <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
@@ -43,7 +41,7 @@
     # .126, then .130, then .133 — and the third cost a day: the board went on opening TCP to
     # .130, failed with a bare "connection failed", and the broker logged nothing at all because
     # nothing arrived. Every other participant was unaffected, since agents reach the broker on
-    # loopback via mqtt:brokerHost and only a board off-host uses this.
+    # loopback, off the localhost `schema:url` compose hands them, and only a board off-host uses this.
     #
     # Answered by the avahi already running on this Pi, and resolvable from the board because
     # ESP32's lwIP is built with CONFIG_LWIP_DNS_SUPPORT_MDNS_QUERIES. `raspberry.speedport.ip`
