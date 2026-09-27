@@ -625,6 +625,10 @@ it is a record wearing a bullet.
   names and one vocabulary graph before, and now every ontology and rule set is a graph of its
   own that a lived-in volume reads again at boot, so updating one is editing its file; and no
   `owl:Ontology` header, since nothing read one — a package's prose about itself is a comment.
+- **A document's kind says who reads it, and every reader loads only the kinds it reads** — the
+  agent's boot included, so what an agent is not given is a kind its T-Box never declared, not a
+  file name compose leaves unmounted; packages, brokers, series stores and the deployment itself
+  follow from it (a-documents-kind-says-who-reads-it).
 - **A pass weighs its grounds, and a candidate is weighed where it is taken** — the pass's own
   loop weighed every unweighed pair, so the candidates a budget cut left untaken were weighed
   and never offered to the expansion that takes them; the courier's corner at sixteen a pass
@@ -669,6 +673,9 @@ it is a record wearing a bullet.
   broker and no port, so the world says `schema:url` on its `mqtt4ssn:Broker` and the operator's
   tools read it to run the broker and write each agent's environment; the agent reads only its
   environment, as the transport's principle has it, and `orexis-agent` runs the 0.2.0 runtime.
+  The address belongs in a deployment graph, a kind no agent loads, so being told becomes
+  structure rather than discipline, and an agent is told one per broker it shares with something
+  it needs (a-documents-kind-says-who-reads-it).
 - **Signing is between agents, and an agent trusts itself** — a signature proves to a device that
   the agent asking for an act was authorised by another; an agent dosing its own bed through its
   own pump has no second party to convince, and the broker's ACL already admits only the holder to
@@ -681,11 +688,14 @@ it is a record wearing a bullet.
   heating from the climate and actuation domains; so `domains/sim/` says only what the world
   lacks, a system's model, starting reading and bounds, and the 0.1.0 stand-ins, told everything
   as environment like a board, went with the physics they duplicated (`simulation/`).
-- **A series is watched and never believed, and it keeps the shape the panels draw** — the 0.2.0
-  runtime writes each observation it receives to the agent's bucket as the 0.1.0 agent did,
-  `soil_moisture` tagged plant, sensor and property at the reading's own time, so the terrace's
-  panels drew across the switch unchanged; a store that refuses is said in the log and costs the
-  agent nothing, and 0.2.0 reports none of its own health, so the health dashboard went with 0.1.0.
+- **A series is watched and never believed, and the package that decides a thing writes its
+  history** — the 0.2.0 runtime writes each observation it receives as the 0.1.0 agent did,
+  `soil_moisture` tagged plant, sensor and property, which carried the terrace's panels across the
+  switch and was one property's shape: the terrace's air temperature lands as soil moisture. A
+  store that refuses is said in the log and costs the agent nothing. Decided and not yet built:
+  history measured per property and contributed by sensing and execution, metrics as each
+  package's selects, and a store told per purpose (a-documents-kind-says-who-reads-it; #822,
+  #825, #826).
 - **A process is the AGENT with the id it was told, never whatever carries that id** — the sensing
   world's fern and the agent acting for it are both `localId "fern"`, and the runtime's identity
   read found two and refused to boot; it asks for an `orexis:Agent` now.
@@ -819,7 +829,9 @@ it is a record wearing a bullet.
   counted pulled a courier goal into the puzzle's scope.
 - **Hardware is the firmware generator's input, and no vocabulary types it** — `hardware.ttl`'s
   pins, parts and boards are read by `orexis-firmware` alone, which interpolates their IRIs into a
-  `config.h`, and no agent is given them; bringing the parts back as a domain was weighed and
+  `config.h`, and no agent should hold them — a container is kept from the file by its name
+  alone, and an agent booted from the directory holds it as public until the graph has a kind
+  of onboarding's (#820); bringing the parts back as a domain was weighed and
   refused, since a vocabulary one string-filling reader uses checks nothing, and the firmware
   ontologies nothing loaded were deleted with the `config.h` they fed unchanged byte for byte.
 - **A dictionary that nothing holds to the code rots in the present tense** — 38 of 88 pages

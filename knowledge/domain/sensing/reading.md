@@ -27,5 +27,5 @@ is fictive and the executor, being the world, writes what the step predicted.
 
 # What it is not
 
-Not a series point. The runtime also writes each reading to the agent's bucket for the panels
+Not a [series](/domain/kernel/series.md) point. The runtime also writes each reading to the agent's bucket for the panels
 to draw, and that series is watched and never believed.
