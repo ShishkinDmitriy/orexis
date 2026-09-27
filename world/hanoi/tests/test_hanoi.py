@@ -78,6 +78,35 @@ def test_a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after(mon
     assert _acts(runtime) == 7
 
 
+def test_each_pass_writes_the_minds_metrics_and_the_runtimes_own(monkeypatch):
+    """What the metrics store is handed, pass by pass, at twenty candidates a pass (#826). The mind's
+    packages count what they wrote — the first pass's search cut short, `exhausted`, with the cone
+    it left: twenty worlds, twenty-one weighings, three still on the frontier; the last pass's
+    intention done after seven acts — and the runtime adds its own three. Sensing is not loaded, so
+    no silence is counted: a package's metrics are where the package is."""
+    from agent.series import METRICS, Sink, install
+
+    ticks = iter(range(1, 10_000))
+    monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=next(ticks)))
+    passes = []
+    install(METRICS, Sink(METRICS, "hanoi-hanoi-metrics", lambda bucket, record: passes.append(
+        {p["measurement"]: p["fields"] for p in record})))
+    try:
+        runtime = Runtime(boot(WORLD, "hanoi"), "hanoi", budget=20)
+        assert runtime.run(passes=12) == MET
+    finally:
+        install(METRICS, None)
+    first, last = passes[0], passes[-1]
+    assert set(first) == {"pass", "plans", "cone", "intentions", "acts", "revisions"}
+    assert first["plans"] == {"satisfied": 0, "exhausted": 1, "noCandidate": 0}
+    assert first["cone"] == {"worlds": 20, "weighings": 21, "open": 3, "met": 0}
+    assert first["intentions"]["standing"] == 0 and first["acts"] == {"taken": 0, "notTaken": 0}
+    assert last["intentions"] == {"standing": 0, "done": 1, "failed": 0, "superseded": 0, "abandoned": 0}
+    assert last["acts"] == {"taken": 7, "notTaken": 0}
+    assert set(last["pass"]) == {"duration_s", "quads", "uptime_s"} and last["pass"]["quads"] == len(runtime.beliefs)
+    assert all(p["pass"]["duration_s"] > 0 for p in passes) and len(passes) >= 3
+
+
 def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW)
     beliefs = boot(WORLD, "hanoi")

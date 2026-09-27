@@ -108,3 +108,31 @@ def test_every_point_the_agent_writes_is_drawn_by_one_terrace_panel(monkeypatch,
              [q for q in queries if f'r._measurement == "{p["measurement"]}"' in q
               and f'r.sensor == "{p["tags"]["sensor"]}"' in q] for p in history}
     assert len(drawn) == 4 and all(len(panels) == 1 for panels in drawn.values()), drawn
+
+
+def test_every_metric_the_agent_writes_is_drawn_by_one_health_panel_on_its_bucket(monkeypatch):
+    """The health dashboard is held to what a pass writes (#826): each metric point's measurement is
+    drawn by exactly one panel, the runtime's own `pass` once per field, all on the agent's metrics
+    bucket — and the panels are the terrace's own packages', so a silence panel is here because
+    sensing is loaded, and a metric no pass writes has no panel."""
+    from agent.series import METRICS
+    from onboarding.dashboards import render_health
+
+    written = []
+    install(METRICS, Sink(METRICS, "terrace-terrace-metrics", lambda bucket, record: written.extend(record)))
+    try:
+        runtime, _ = _terrace(monkeypatch)
+        runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
+        runtime.run(passes=1, poll_s=0)
+    finally:
+        install(METRICS, None)
+    panels = [p for p in render_health("terrace")["panels"] if p["type"] != "row"]
+    queries = [t["query"] for p in panels for t in p["targets"]]
+    assert queries and all('from(bucket: "terrace-terrace-metrics")' in q for q in queries)
+    wanted = {(p["measurement"], f if p["measurement"] == "pass" else None) for p in written for f in p["fields"]}
+    assert ("silence", None) in wanted, "sensing is loaded, so silence is counted"
+    for measurement, field in wanted:
+        hits = [q for q in queries if f'r._measurement == "{measurement}"' in q
+                and (field is None or f'r._field == "{field}"' in q)]
+        assert len(hits) == 1, (measurement, field, hits)
+    assert len(queries) == len(wanted), "a panel draws a measurement no pass writes"

@@ -3,21 +3,24 @@ their purpose — and nothing about what the points are.
 
 A SERIES IS WATCHED AND NEVER BELIEVED (knowledge/domain/kernel/series.md). What a person draws
 of an agent lives in InfluxDB, in a bucket of the agent's own; nothing written there reaches a
-plan. It has purposes — HISTORY, what happened, is the one built; metrics is #826 — and the agent
-is told of a store for each apart, in environment keyed by the purpose:
-`INFLUX_HISTORY_URL`, `INFLUX_HISTORY_ORG`, `INFLUX_HISTORY_BUCKET`, `INFLUX_HISTORY_TOKEN`. Two
-purposes may name one instance, by coincidence and not by design.
+plan. It has two purposes — HISTORY, what happened, and METRICS, how the agent is doing — and the
+agent is told of a store for each apart, in environment keyed by the purpose:
+`INFLUX_HISTORY_URL`, `INFLUX_HISTORY_ORG`, `INFLUX_HISTORY_BUCKET`, `INFLUX_HISTORY_TOKEN`, and
+the same four under `INFLUX_METRICS_`. Two purposes may name one instance, by coincidence and not
+by design; they name two buckets of it, one a record kept for good and the other a pass's figures.
 
 A SINK IS LOADED WHERE THE ENVIRONMENT NAMES A STORE FOR ITS PURPOSE. `load` is the premise, read
 off the environment rather than the world because a store is deployment; the runtime's `main`
-calls it once, and it is the only thing the runtime does with a sink — it hands a sink no point.
-A purpose the environment does not name has no sink, and the client library is imported where a
-sink is made and nowhere else, so an agent with no store never loads it.
+calls it once. A purpose the environment does not name has no sink, and the client library is
+imported where a sink is made and nowhere else, so an agent with no store never loads it.
 
 THE PACKAGE THAT DECIDES A THING CONTRIBUTES IT (a-documents-kind-says-who-reads-it, §5). Sensing
 writes an observation and contributes its point; execution records an act and a landing verdict
 and contributes theirs. Each asks `sink(HISTORY)` and writes where one is loaded, and what a
 point is — its measurement, its tags, its fields, its instant — is the contributing package's.
+Metrics come the same way from the one place a pass ends: the runtime asks `sink(METRICS)` after
+each pass, and writes the figures every loaded package's selects answer (`agent/metrics.py`) beside
+its own three — how long the pass took, how large the store is, how long the process has run.
 This module sits beneath them all and imports nothing of theirs, nor anything of `agent`: a point
 is the client's own dict, handed through.
 
@@ -39,7 +42,8 @@ import os
 log = logging.getLogger("series")
 
 HISTORY = "HISTORY"
-PURPOSES = (HISTORY,)
+METRICS = "METRICS"
+PURPOSES = (HISTORY, METRICS)
 
 #  WHAT NAMES A STORE FOR A PURPOSE: all four, under `INFLUX_<PURPOSE>_`.
 _KEYS = ("URL", "ORG", "BUCKET", "TOKEN")

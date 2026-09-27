@@ -16,11 +16,10 @@ See knowledge/decisions/where-the-belief-base-lives.md.
 world mounted at `/app/world/<name>` beside `/app/domains`, so a world's `owl:imports` of its
 domains resolve, and the broker's address and the series store's handed in as environment —
 the `schema:url`s the world asserts on its `mqtt4ssn:Broker` or the installation allocated it
-(`onboarding.mqtt.broker`), and the series store's url and organisation from the installation
-(`infra/installation.ttl`), told under the purpose it is for — `INFLUX_HISTORY_URL` and
-`INFLUX_HISTORY_ORG`, beside the history credential `orexis-influx` minted. The installation states
-one series store and it serves every purpose; stating a store per purpose waits on a second purpose
-being written (#826). All of it is deployment graphs, a kind the agent's vocabulary does not
+(`onboarding.mqtt.broker`), and for each purpose — history and metrics — the url and organisation
+of the series store the installation says `onboarding:serves` it (`infra/installation.ttl`), told
+under the purpose's keys, `INFLUX_HISTORY_URL` and `_ORG`, `INFLUX_METRICS_URL` and `_ORG`, beside
+the credential `orexis-influx` minted for each. All of it is deployment graphs, a kind the agent's vocabulary does not
 declare, so no container is handed one and the agent cannot read where anything is. An agent that
 holds a device writes its command topic, which the ACL admits it and nobody else to — an agent
 trusts itself, so nothing is signed until the market brings a second agent to ask.
@@ -40,7 +39,7 @@ import logging
 from pathlib import Path
 
 from agent.runtime import known, world_of
-from agent.series import HISTORY
+from agent.series import HISTORY, PURPOSES
 from agent.store import document, graphs_of, kinds_in, rows
 from . import installation, reading
 from .worlds import REPO_ROOT
@@ -140,9 +139,11 @@ def _documents(world: str, read: set[Path], agent_id: str | None = None) -> str:
 
 
 def _service(agent_id: str, world: str, read: set[Path], host: str, plain: int, tls: int | None,
-             series: tuple[str, str]) -> str:
+             series: dict[str, tuple[str, str]]) -> str:
     tls_env = f'\n      MQTT_TLS_PORT: "{tls}"' if tls else ""
-    url, organisation = series
+    stores = "".join(f'\n      INFLUX_{purpose}_URL: "{url}"\n      INFLUX_{purpose}_ORG: "{organisation}"'
+                     for purpose, (url, organisation) in series.items())
+    credentials = "".join(f"\n      - ./secrets/{series_credential(agent_id, purpose)}" for purpose in series)
     return f"""
   agent-{agent_id}:
     image: {IMAGE}
@@ -154,13 +155,11 @@ def _service(agent_id: str, world: str, read: set[Path], host: str, plain: int, 
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where its history is written, and the org — the installation's series store, safe for every agent to hold
-      INFLUX_{HISTORY}_URL: "{url}"
-      INFLUX_{HISTORY}_ORG: "{organisation}"
+      # where its history and its metrics are written, and the org — the series store the installation
+      # says serves each purpose, safe for every agent to hold{stores}
     env_file:
-      # its own {HISTORY.lower()} bucket and a token that opens only it, minted by `orexis-influx {world}`, and its
-      # own broker credential, minted by `orexis-mqtt {world}`; mounted into THIS container alone
-      - ./secrets/{series_credential(agent_id)}
+      # its own bucket per purpose and a token that opens only it, minted by `orexis-influx {world}`, and
+      # its own broker credential, minted by `orexis-mqtt {world}`; mounted into THIS container alone{credentials}
       - ./secrets/mqtt-{agent_id}.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
@@ -222,7 +221,7 @@ def render(world: str) -> str:
     if not who:
         raise SystemExit(f"orexis-compose: world {world!r} declares no agents")
     host, plain, tls = broker(world)
-    series = installation.series()
+    series = {purpose: installation.series(purpose) for purpose in PURPOSES}
     client = simulated_client(world)
     read = read_by_an_agent(world)
     services = _broker(world, plain, tls) + (_simulator(world, read, client, host, plain) if client else "") + "".join(

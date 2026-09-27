@@ -307,7 +307,47 @@ predicting nothing moves on as it is taken and has no verdict to write.
 
 **One series store serves every purpose, until a second is written.** The installation states one
 `onboarding:SeriesStore`, and `orexis-compose` tells it under history's keys. A word tying a store
-to a purpose would be read for one purpose today; metrics (#826) is the trigger for it.
+to a purpose would be read for one purpose today; metrics (#826) is the trigger for it — and was,
+in the amendment below.
+
+## Amended 2026-09-27: which store a metric is run over, and where metrics are kept (#826)
+
+§6 is built as written — a package's `metrics.ttl` is an `orexis:MetricGraph`, beneath
+`orexis:Graph` alone, found by that kind each pass, loaded where its package is — and the
+[series](/domain/kernel/series.md) page lists what ships. Four things it left open were settled on
+the way.
+
+**A metric names the repository it is run over, `orexis:over`.** The rows §6 names live in three
+stores, not one: a plan and a weighing in the Planner's imaginaria, one per scope; an intention in
+the executor's intentions store; a silence and a revision's `belief:settled` in the belief base. So
+the runtime, which holds all three, hands the metrics module each repository class's stores, and a
+select's answers over several are summed — which is why a figure is a count. **Refused: running
+every select over every store**, which needs no word: the imaginaria copy the belief base's readings
+and its catalogue, so on the greenhouse a silent probe would have been counted once in the beliefs
+and again per scope, and a revision once per scope too. **Refused: the belief base by default**,
+a metric saying nothing run there — one metric read two ways, by whoever wrote it and by whoever
+reads it, which "a kind said by absence" already refuses.
+
+**Metrics are a bucket of their own, `<world>-<agent>-metrics`**, in whichever store serves the
+purpose. **Refused: a measurement in the history bucket**, which one credential would have covered.
+Three things differ by bucket and cannot be had inside one. History is the record and is kept for
+good, while metrics come every pass — about once a second for an agent with nothing to do — so their
+bucket lets a point go after the installation's `onboarding:retentionDays`, thirty. The agent reads
+its own history and never its metrics, so the metrics token writes and nothing else. And a metric's
+local name and a property's cannot collide once they are measured in two buckets.
+
+**The installation ties a store to a purpose with `onboarding:serves`**, the word the amendment
+above deferred: `:series onboarding:serves onboarding:History , onboarding:Metrics`, each purpose a
+`onboarding:SeriesPurpose` of onboarding's vocabulary, and each served by exactly one store or
+refused. The purposes are IRIs because the retention is said of one; the agent spells them as its
+environment's keys, and `PURPOSE_OF` in `onboarding/installation.py` is the one table between.
+
+**Two selects were wrong as first written, and the engine said nothing.** An outcome compared while
+unbound — `SUM(IF(?outcome = "failed", 1, 0))` over a standing intention — left the whole column
+unbound, so a pass with one intention standing wrote no `failed` at all; it is coalesced first. And
+an `EXISTS` inside a projected aggregate is evaluated against the default graph, which a metric is
+handed empty, so it counted no met weighing on a greenhouse imaginarium holding one; the cone counts
+OPTIONAL rows inside the catalogue instead. The greenhouse's own test holds both, and fails on each.
 
 # What this supersedes, and what it amends
 

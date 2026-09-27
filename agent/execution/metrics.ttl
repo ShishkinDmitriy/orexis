@@ -1,0 +1,35 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+<> a orexis:MetricGraph .    # this document is one graph, and this is what it is
+
+#  WHAT EXECUTION COUNTS OF ITSELF: the intentions and the acts the executor writes anyway, counted
+#  in the store it owns (knowledge/domain/kernel/series.md). A resolved intention stays with its
+#  outcome, so these are totals since the store was made — which, where the runtime makes it, is the
+#  process's start.
+
+#  THE INTENTIONS: standing, and how each resolved one ended. `failed` is the one to watch — the
+#  world did not answer a step within the patience, or a step kept below could not be kept.
+#
+#  AN OUTCOME IS COALESCED BEFORE IT IS COMPARED. A standing intention has none, and `?outcome =
+#  "failed"` over an unbound outcome is an error that left the whole column unbound — no `failed`
+#  at all while one intention stood — measured on the greenhouse's first pass, 2026-09-27.
+<#intentions> a orexis:Metric ;
+    orexis:over execution:IntentionsStore ;
+    sh:select """
+SELECT (SUM(IF(BOUND(?resolved), 0, 1)) AS ?standing)
+       (SUM(IF(COALESCE(?outcome, "") = "done", 1, 0)) AS ?done)
+       (SUM(IF(COALESCE(?outcome, "") = "failed", 1, 0)) AS ?failed)
+       (SUM(IF(COALESCE(?outcome, "") = "superseded", 1, 0)) AS ?superseded)
+       (SUM(IF(COALESCE(?outcome, "") = "abandoned", 1, 0)) AS ?abandoned)
+WHERE { GRAPH ?g { ?i a execution:Intention .
+                   OPTIONAL { ?i execution:resolvedAt ?resolved }
+                   OPTIONAL { ?i execution:outcome ?outcome } } }""" .
+
+#  THE ACTS: steps taken, and steps whose taking raised (knowledge/domain/execution/act.md).
+<#acts> a orexis:Metric ;
+    orexis:over execution:IntentionsStore ;
+    sh:select """
+SELECT (SUM(IF(?taken, 1, 0)) AS ?taken) (SUM(IF(?taken, 0, 1)) AS ?notTaken)
+WHERE { GRAPH ?g { ?act a execution:Act ; execution:taken ?taken } }""" .

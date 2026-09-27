@@ -1,0 +1,15 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+<> a orexis:MetricGraph .    # this document is one graph, and this is what it is
+
+#  WHAT REVISION COUNTS OF ITSELF, off the catalogue of the belief base, where `revise` describes
+#  every revision graph it writes (knowledge/domain/kernel/series.md): how many there are, and how
+#  many a budget cut short — `belief:settled false`, which the next pass continues. A revision that
+#  stays unsettled pass after pass is a rule set that never settles.
+<#revisions> a orexis:Metric ;
+    orexis:over orexis:BeliefBase ;
+    sh:select """
+SELECT (COUNT(?g) AS ?revisions) (SUM(IF(?settled, 0, 1)) AS ?unsettled)
+WHERE { GRAPH $cat { ?g a belief:RevisionGraph ; belief:settled ?settled } }""" .

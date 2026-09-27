@@ -29,6 +29,12 @@ be keyed on the actions an agent may take — read off the world's action graphs
 here — and draw `taken` and `landed` as events rather than a line, which is a panel type and a
 query shape this module does not build.
 
+**A second dashboard draws each agent's health** (`health.json`), from its metrics bucket: a panel
+per metric the agent's loaded packages declare, found as the agent finds them — by booting it and
+asking `agent.metrics` for every metric its store holds, so an agent that loads no sensing gets no
+silence panel — and one per figure of the runtime's own. A metric's panel draws every field its
+select answers; the figures are counts, so they share an axis.
+
 See knowledge/domain/onboarding/onboarding.md.
 """
 
@@ -38,7 +44,10 @@ import argparse
 import json
 import logging
 
+from agent import metrics
+from agent.runtime import PASS, PASS_FIELDS, boot
 from agent.sensing.history import FIELD, measurement_of
+from agent.series import METRICS
 from agent.store import graphs_of, rows
 from . import reading
 from .worlds import REPO_ROOT
@@ -253,12 +262,82 @@ def render(world: str) -> dict:
     }
 
 
+#  HOW THE RUNTIME'S OWN FIGURES ARE DRAWN: each alone, since a duration, a count of quads and an
+#  uptime share no axis.
+_PASS_UNITS = {"duration_s": "s", "quads": "none", "uptime_s": "s"}
+
+
+def _metric_flux(bucket: str, measurement: str, field: str | None = None) -> str:
+    """One metric's figures, every field its select answers — or one, for the runtime's own."""
+    only = f'\n  |> filter(fn: (r) => r._field == "{field}")' if field else ""
+    return (f'from(bucket: "{bucket}")\n'
+            "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
+            f'  |> filter(fn: (r) => r._measurement == "{measurement}"){only}\n'
+            "  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)")
+
+
+def _health_panel(title: str, query: str, unit: str, x: int, y: int, panel_id: int, desc: str) -> dict:
+    return {
+        "id": panel_id, "type": "timeseries", "title": title, "description": desc,
+        "datasource": {"type": "influxdb", "uid": "influxdb"},
+        "gridPos": {"h": 7, "w": 12, "x": x, "y": y},
+        "targets": [{"refId": "A", "query": query}],
+        "fieldConfig": {"defaults": {"unit": unit, **({"decimals": 0} if unit == "none" else {})}, "overrides": []},
+        "options": {"legend": {"showLegend": True, "displayMode": "table", "placement": "bottom",
+                               "calcs": ["lastNotNull"]},
+                    "tooltip": {"mode": "multi", "sort": "none"}},
+    }
+
+
+def render_health(world: str) -> dict:
+    """Each agent's health, from its metrics bucket: a panel per metric the packages it loads
+    declare, read off its own boot, and one per figure of the runtime's own — two to a row, one row
+    heading per agent."""
+    from .compose import roster
+
+    here = world_dir(world)
+    panels, y, pid = [], 0, 1
+    for agent_id in roster(world):
+        bucket = bucket_name(world, agent_id, METRICS)
+        panels.append({"id": pid, "type": "row", "title": agent_id, "collapsed": False,
+                       "gridPos": {"h": 1, "w": 24, "x": 0, "y": y}, "panels": []})
+        pid, y = pid + 1, y + 1
+        drawn = [(f"{agent_id} — {PASS} {field}", _metric_flux(bucket, PASS, field), _PASS_UNITS[field],
+                  f"The runtime's own figure, `{field}` of `{PASS}`, written each pass.") for field in PASS_FIELDS]
+        for metric in metrics.declared(boot(here, agent_id)):
+            name = metrics.measurement_of(metric["metric"])
+            drawn.append((f"{agent_id} — {name}", _metric_flux(bucket, name), "none",
+                          f"Every figure the select {metric['metric']} answers, over {metrics.measurement_of(metric['over'])}; "
+                          "declared by the package that writes the rows it counts, never by this file."))
+        for i, (title, query, unit, desc) in enumerate(drawn):
+            panels.append(_health_panel(title, query, unit, x=12 * (i % 2), y=y + 7 * (i // 2), panel_id=pid, desc=desc))
+            pid += 1
+        y += 7 * ((len(drawn) + 1) // 2)
+    return {
+        "uid": f"orexis-{world}-health"[:40],
+        "title": f"Orexis — {world} — health",
+        "tags": ["orexis", world, "health"],
+        "timezone": "browser",
+        "schemaVersion": 39,
+        "refresh": "30s",
+        "time": {"from": "now-6h", "to": "now"},
+        "panels": panels,
+    }
+
+
 def generate(world: str) -> None:
     out_dir = DASHBOARD_ROOT / world
     out_dir.mkdir(parents=True, exist_ok=True)
-    # What the plants are doing. The 0.1.0 agent also reported its own health, drawn in a second
-    # dashboard; Agent 0.2.0 reports readings alone, so there is nothing for one to draw.
-    for name, doc in (("orexis.json", render(world)),):
+    # How each agent is doing, and what the plants are doing where anything observes them: a world
+    # whose agents observe nothing — the allotment's, or a greenhouse whose sensors #833 leaves
+    # unread — still has agents to draw the health of.
+    docs = [("health.json", render_health(world))]
+    store = reading.world(world_dir(world))
+    if rows(store, _SENSORS_Q, graphs_of(store, PUBLIC)):
+        docs.insert(0, ("orexis.json", render(world)))
+    else:
+        log.info("  nothing in %s observes anything — no readings dashboard", world)
+    for name, doc in docs:
         out = out_dir / name
         out.write_text(json.dumps(doc, indent=2) + "\n")
         out.chmod(0o644)

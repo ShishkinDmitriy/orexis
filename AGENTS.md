@@ -713,12 +713,18 @@ it is a record wearing a bullet.
   as environment like a board, went with the physics they duplicated (`simulation/`).
 - **A series is watched and never believed, and the package that decides a thing writes its
   history** — the runtime handed the sink each observation graph and so decided history was
-  observations; now it only loads a sink per purpose the environment names (`INFLUX_HISTORY_*`),
-  sensing contributes an observation under its property's local name as `received` writes it
-  (#822), and execution a step taken and, where the world answers or does not, landed or failed
-  (#825). A contributor asks for the sink rather than being handed one, since sensing's caller is
-  the transport, which has no business carrying history. A store that refuses is said in the log
-  and costs the agent nothing. Metrics as each package's selects are #826.
+  observations; now it only loads a sink per purpose the environment names (`INFLUX_HISTORY_*`,
+  `INFLUX_METRICS_*`), sensing contributes an observation under its property's local name as
+  `received` writes it (#822), and execution a step taken and, where the world answers or does
+  not, landed or failed (#825). A contributor asks for the sink rather than being handed one, since
+  sensing's caller is the transport, which has no business carrying history. A store that refuses
+  is said in the log and costs the agent nothing.
+- **A metric is a select over rows its package writes anyway, and says which store it counts in**
+  — each package's `metrics.ttl` is an `orexis:MetricGraph`, neither public nor a belief, found by
+  that kind at the end of every pass and loaded only where its package is; `orexis:over` names the
+  belief base, the imaginaria or the intentions store, because the imaginaria copy the beliefs and a
+  select run everywhere counted one silent probe per scope; and the answers are summed across a
+  repository's stores, so a figure is a count (#826).
 - **A process is the AGENT with the id it was told, never whatever carries that id** — the sensing
   world's fern and the agent acting for it are both `localId "fern"`, and the runtime's identity
   read found two and refused to boot; it asks for an `orexis:Agent` now.
@@ -1047,10 +1053,10 @@ pip install -e ".[dev]"
 orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, derive what the documents
                              #   leave out (a broker's port, into infra/installation.derived.ttl),
                              #   then grant everything below.
-  orexis-influx <world>      #   a history bucket per agent, and a token that opens only it
+  orexis-influx <world>      #   a history and a metrics bucket per agent, each with a token that opens only it
   orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
-  orexis-dashboards <world>  #   a Grafana folder per world, from what its agents observe
+  orexis-dashboards <world>  #   a Grafana folder per world: what its agents observe, and each one's health
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 orexis-infra-compose         # INFRA — infra/compose.yaml, from infra/installation.ttl
@@ -1210,7 +1216,11 @@ hand-rolled walk was once refused for exactly that reason. See
   And `a / b * c` is evaluated as `a / (b * c)` — measured, `0.02 / 0.375 * 1000000` gave
   five hundred-millionths — so parenthesise every chain of two operators. And `GROUP_CONCAT`
   over an IRI binds nothing — no column at all, measured — where `GROUP_CONCAT(STR(?x))`
-  binds; `find_wants` reads a want's several abouts that way and `test_wants.py` pins it. It is the
+  binds; `find_wants` reads a want's several abouts that way and `test_wants.py` pins it. And a
+  `SUM(IF(?o = "failed", 1, 0))` over a row whose `?o` is unbound binds nothing for the WHOLE
+  column, not nought for the row — coalesce first — while an `EXISTS` inside a projected aggregate
+  is evaluated against the default graph, not the `GRAPH` block the rows came from; both measured
+  on a metric select (#826), and the greenhouse's test pins them. It is the
   same family as the empty-result trap above, arriving through arithmetic and aggregation: measure an unfamiliar operation on a
   literal before building a column on it, and pin what you measured, so the day the engine grows
   the operation the guard says so.

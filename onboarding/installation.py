@@ -4,8 +4,10 @@
 
 **The installation is the deployment graph of what every world shares**
 (knowledge/domain/onboarding/deployment.md), asserted in `infra/installation.ttl`: the series
-store — its url, its organisation, its image — the series view that draws it, and where a broker
-is allocated ports when its world asserts none. It lives under `infra/`, and rule 3 holds of it
+store — its url, its organisation, its image, and the purposes it `onboarding:serves`, history and
+metrics, each served by one store and kept as many days as `onboarding:retentionDays` says of it,
+or for ever — the series view that draws it, and where a broker is allocated ports when its world
+asserts none. It lives under `infra/`, and rule 3 holds of it
 in the only way it can: nothing in it is true of one world.
 
 **Asserted wins, derived completes** (`onboarding.derived`). A world may assert its broker's urls
@@ -49,6 +51,8 @@ from urllib.parse import urlparse
 
 import pyoxigraph as ox
 
+from agent.ontology import local_of as local
+from agent.series import HISTORY, METRICS
 from agent.store import DocumentRefused, graphs_of, rows
 
 from . import derived, reading
@@ -76,6 +80,13 @@ SELECT ?s ?url ?image ?organisation WHERE {{ ?s a <$kind> .
   OPTIONAL {{ ?s <{_SCHEMA_URL}> ?url }} OPTIONAL {{ ?s <{ONBOARDING}image> ?image }}
   OPTIONAL {{ ?s <{ONBOARDING}organisation> ?organisation }} }}"""
 _POOL_Q = f"SELECT ?s ?url WHERE {{ ?s <{ONBOARDING}allocatesFrom> ?url }}"
+
+#  WHICH STORE SERVES A PURPOSE, and how long the installation keeps the purpose's points. A purpose
+#  is a concept the code names (`agent.series`), so the word for each is onboarding's vocabulary's,
+#  and this is the one table from the agent's spelling of a purpose to it.
+PURPOSE_OF = {HISTORY: ONBOARDING + "History", METRICS: ONBOARDING + "Metrics"}
+_SERVES_Q = f"SELECT ?s WHERE {{ ?s a <{ONBOARDING}SeriesStore> ; <{ONBOARDING}serves> <$purpose> }}"
+_RETENTION_Q = f"SELECT ?days WHERE {{ <$purpose> <{ONBOARDING}retentionDays> ?days }}"
 _URLS_Q = f"SELECT ?s ?url WHERE {{ ?s <{_SCHEMA_URL}> ?url }}"
 
 #  A WORLD'S BROKER, as its society names it, and the urls its own documents assert on it — over
@@ -124,11 +135,11 @@ def _parsed(owner: str, text: str):
 # ---------------------------------------------------------------- the services
 
 
-def _service(kind: str, label: str) -> dict:
-    """The installation's one service of `kind`: its url, and its image and organisation where
-    stated. One, because each is handed to its readers as one address."""
+def _service(kind: str, label: str, iri: str | None = None) -> dict:
+    """The installation's one service of `kind` — or the one named `iri` — its url, and its image
+    and organisation where stated. One, because each is handed to its readers as one address."""
     s = _store(with_derivation=False)
-    found = _asserted(s, _SERVICE_Q.replace("$kind", kind))
+    found = [r for r in _asserted(s, _SERVICE_Q.replace("$kind", kind)) if iri is None or r["s"] == iri]
     named = sorted({r["s"] for r in found})
     if len(named) != 1:
         raise SystemExit(f"the installation states {len(named)} {label}s"
@@ -143,13 +154,31 @@ def _service(kind: str, label: str) -> dict:
     return {"iri": named[0], **{key: (stated[0] if stated else None) for key, stated in values.items()}}
 
 
-def series() -> tuple[str, str]:
-    """(url, organisation) of the series store — what `orexis-influx` mints buckets in and what
-    `orexis-compose` tells every agent."""
-    store = _service(SERIES_STORE, "onboarding:SeriesStore")
+def series(purpose: str) -> tuple[str, str]:
+    """(url, organisation) of the series store that `onboarding:serves` `purpose` — what
+    `orexis-influx` mints the purpose's buckets in and what `orexis-compose` tells every agent under
+    the purpose's keys. One, since an agent is told one store per purpose, and none is refused: a
+    purpose the installation serves nowhere would be a sink every agent is told of and none has."""
+    s = _store(with_derivation=False)
+    found = _asserted(s, _SERVES_Q.replace("$purpose", PURPOSE_OF[purpose]))
+    named = sorted({r["s"] for r in found})
+    if len(named) != 1:
+        raise SystemExit(f"the installation states {len(named)} onboarding:SeriesStores serving "
+                         f"{local(PURPOSE_OF[purpose])}" + (f" ({', '.join(named)})" if named else "")
+                         + " — an agent is told one store per purpose")
+    store = _service(SERIES_STORE, "onboarding:SeriesStore", named[0])
     if not store["organisation"]:
         raise SystemExit(f"the installation states no onboarding:organisation for {store['iri']}")
     return store["url"], store["organisation"]
+
+
+def retention(purpose: str) -> int | None:
+    """How many days the installation keeps `purpose`'s points, `onboarding:retentionDays` on the
+    purpose — or None where it states none, and the purpose's buckets keep everything."""
+    days = {int(r["days"]) for r in _asserted(_store(with_derivation=False), _RETENTION_Q.replace("$purpose", PURPOSE_OF[purpose]))}
+    if len(days) > 1:
+        raise SystemExit(f"the installation states {len(days)} retentions for {local(PURPOSE_OF[purpose])}")
+    return next(iter(days), None)
 
 
 def view() -> dict:
@@ -320,7 +349,8 @@ def render() -> str:
     for service in (store, shown):
         if not service["image"]:
             raise SystemExit(f"the installation states no onboarding:image for {service['iri']}")
-    _, organisation = series()
+    if not (organisation := store["organisation"]):
+        raise SystemExit(f"the installation states no onboarding:organisation for {store['iri']}")
     store_port = _published(store["url"], "series store", ("http",))
     view_port = _published(shown["url"], "series view", ("https",))
     return f"""# GENERATED by `orexis-infra-compose` from infra/installation.ttl beside it — do not edit.

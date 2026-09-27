@@ -19,9 +19,10 @@ named in the society graph every agent reads ([world](/domain/kernel/world.md));
 it listens on is deployment.
 
 The **installation** is the deployment graph of what every world on a host shares, asserted in
-`infra/installation.ttl`: the **series store**, with its url, its organisation and its image; the
-**series view**, where a person draws the series — Grafana, with its url and image; and the pool
-a broker's ports are allocated from.
+`infra/installation.ttl`: the **series store**, with its url, its organisation, its image and the
+purposes it serves (`onboarding:serves`, history and metrics, each served by one store), and how
+many days a purpose is kept where not for ever; the **series view**, where a person draws the
+series — Grafana, with its url and image; and the pool a broker's ports are allocated from.
 
 **Asserted wins, derived completes.** A world may assert where its broker listens, in a
 `deployment.ttl` of its own, and is told exactly that — the terrace does, since a board is flashed
@@ -51,7 +52,8 @@ into `world/<name>/secrets/` and mounted into one container.
 
 `onboarding:DeploymentGraph` is declared in onboarding's vocabulary (`onboarding/ontology.ttl`)
 beside the installation's words — `onboarding:SeriesStore`, `onboarding:SeriesView`,
-`onboarding:organisation`, `onboarding:image`, `onboarding:allocatesFrom` — so an agent's boot
+`onboarding:organisation`, `onboarding:image`, `onboarding:allocatesFrom`, `onboarding:serves`
+and `onboarding:retentionDays`, and the two `onboarding:SeriesPurpose`s — so an agent's boot
 passes over a graph of it. The terrace, the greenhouse and the allotment assert their brokers'
 urls; the sensing world asserts none and is allocated the 1884 and 8884 it once asserted.
 
@@ -61,11 +63,13 @@ broker left the lowest slot of the pool free of all of them — Python, since it
 remembers, where a join would be a rule (`onboarding/derived.py` writes either and reads it back
 with `orexis:arrivedBy orexis:Derived`). Then every renderer only formats: `broker` in
 `onboarding/mqtt.py` answers the asserted url or the allocated one, for the compose file, the
-broker's config and a board's `config.h`; `orexis-compose` writes the series store's url and
-organisation into every agent's environment, under the purpose it is told for; `orexis-influx` mints buckets in that store; and
-`orexis-infra-compose` writes `infra/compose.yaml`, the images and ports the document's and the
-rest the template's. `tests/test_layout.py` holds both committed documents to a fresh rendering and
-refuses a collision, a hand-edited allocation, a url carrying a credential, and an installation
-saying anything but a type, a url, an organisation, an image or a pool. The kind is decided in
+broker's config and a board's `config.h`; `orexis-compose` writes, for each purpose, the url and
+organisation of the store serving it into every agent's environment under the purpose's keys;
+`orexis-influx` mints each purpose's buckets in that store, kept as long as the purpose's retention
+says; and `orexis-infra-compose` writes `infra/compose.yaml`, the images and ports the document's
+and the rest the template's. `tests/test_layout.py` holds both committed documents to a fresh
+rendering and refuses a collision, a hand-edited allocation, a url carrying a credential, a purpose
+no store serves, and an installation saying anything but a type, a url, an organisation, an image,
+a purpose served, a retention or a pool. The kind is decided in
 [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md), and the
 allocation in its amendment.

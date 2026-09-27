@@ -129,6 +129,39 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     assert len(broker.published) == 1
 
 
+def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_counted(monkeypatch):
+    """The metrics of two passes (#826). The first doses the dry bed: one intention standing and
+    none failed — `failed` written as nought and not left out, which is what an outcome compared
+    while unbound did — and the plan's world met its want, which an `EXISTS` read against the
+    default graph never saw. A day later the thermometer reports and the probe has not: the dose
+    was never answered, so the intention failed, and the probe is past its cadences, so it is
+    silent. Sensing is loaded here, so silence is counted beside the mind's figures."""
+    from agent.series import METRICS
+
+    passes = []
+    install(METRICS, Sink(METRICS, "greenhouse-grower-metrics", lambda bucket, record: passes.append(
+        {p["measurement"]: p["fields"] for p in record})))
+    try:
+        runtime, broker = _grower(monkeypatch)
+        runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
+        runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+        runtime.run(passes=1, poll_s=0)
+        runtime.time.at = NOW + timedelta(days=1)
+        runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', runtime.time.at)
+        runtime.run(passes=1, poll_s=0)
+    finally:
+        install(METRICS, None)
+    dosed, a_day_later = passes
+    assert set(dosed) == {"pass", "plans", "cone", "intentions", "acts", "revisions", "silence"}
+    assert dosed["intentions"] == {"standing": 1, "done": 0, "failed": 0, "superseded": 0, "abandoned": 0}
+    assert dosed["acts"] == {"taken": 1, "notTaken": 0} and dosed["silence"] == {"silent": 0}
+    assert dosed["plans"]["satisfied"] == 1 and dosed["cone"]["met"] == 1
+    assert dosed["revisions"]["unsettled"] == 0 < dosed["revisions"]["revisions"]
+    assert a_day_later["intentions"]["failed"] == 1 and a_day_later["intentions"]["standing"] == 0
+    assert a_day_later["silence"] == {"silent": 1}, "the probe, and not the thermometer that reported"
+    assert len(broker.published) == 1
+
+
 def test_a_cold_bed_is_heated_for_as_long_as_the_gap_takes(monkeypatch):
     """16 degrees against 18 to 24: the middle is 21, five degrees at two an hour is two and a half
     hours, and the heater runs at most an hour a command."""

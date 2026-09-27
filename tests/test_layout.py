@@ -296,32 +296,54 @@ def test_the_tools_told_the_address_inherit_the_refusal(tmp_path, monkeypatch, t
         compose.render("sensing") if tool == "compose" else firmware.generate("sensing")
 
 
-def test_what_onboarding_tells_an_agent_of_its_history_store_is_what_the_sink_loads(tmp_path):
-    """A series store is told by purpose (#825): `orexis-compose` writes where the history store is
-    under `INFLUX_HISTORY_*` and mounts the file `orexis-influx` mints, which says the bucket and the
-    token under the same purpose. Put together as the container has them, they load the history
-    sink; the environment naming one bucket with no purpose is gone from every compose file."""
+def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_load(tmp_path):
+    """A series store is told by purpose (#825, #826): for history and for metrics, `orexis-compose`
+    writes where the store serving the purpose is under `INFLUX_<PURPOSE>_*` and mounts the file
+    `orexis-influx` mints, which says the bucket and the token under the same purpose. Put together
+    as the container has them, they load both sinks, each on a bucket of its own; the environment
+    naming one bucket with no purpose is gone from every compose file."""
     import yaml
     from dotenv import dotenv_values
 
-    from agent.series import HISTORY, install, load
+    from agent.series import HISTORY, METRICS, PURPOSES, install, load, sink
     from onboarding import compose, influx
 
     service = yaml.safe_load(compose.render("terrace"))["services"]["agent-terrace"]
-    minted = influx.credential_file("terrace", "terrace")
-    assert minted.name == "influx-history-terrace.env"
-    assert f"./secrets/{minted.name}" in service["env_file"], "compose mounts what influx mints"
-    credential = tmp_path / minted.name
-    influx._write_credential(credential, "terrace", HISTORY, influx.bucket_name("terrace", "terrace"), "a-token")
+    environment = dict(service["environment"])
+    for purpose in PURPOSES:
+        minted = influx.credential_file("terrace", "terrace", purpose)
+        assert minted.name == f"influx-{purpose.lower()}-terrace.env"
+        assert f"./secrets/{minted.name}" in service["env_file"], "compose mounts what influx mints"
+        credential = tmp_path / minted.name
+        influx._write_credential(credential, "terrace", purpose, influx.bucket_name("terrace", "terrace", purpose), "a-token")
+        environment.update(dotenv_values(credential))
     try:
-        assert load({**service["environment"], **dotenv_values(credential)}) == (HISTORY,)
+        assert load(environment) == (HISTORY, METRICS)
+        assert (sink(HISTORY).bucket, sink(METRICS).bucket) == ("terrace-terrace", "terrace-terrace-metrics")
     finally:
-        install(HISTORY, None)
+        for purpose in PURPOSES:
+            install(purpose, None)
     composed = sorted((REPO_ROOT / "world").glob("*/compose.yaml"))
     assert composed, "the glob stopped matching"
     for path in composed:
         text = path.read_text()
-        assert "INFLUX_HISTORY_URL" in text and not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
+        assert all(f"INFLUX_{p}_URL" in text for p in PURPOSES), path
+        assert not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
+
+
+def test_each_purpose_is_served_by_one_store_and_only_metrics_let_a_point_go(tmp_path, monkeypatch):
+    """The installation ties a store to a purpose by `onboarding:serves` (#826): every purpose the
+    agent names is served by exactly one store, and a purpose served by none is refused rather
+    than told to every agent as a store nobody has. History is kept for ever; metrics for as long
+    as the installation says."""
+    from agent.series import HISTORY, METRICS, PURPOSES
+    from onboarding import installation
+
+    assert {p: installation.series(p) for p in PURPOSES} == {p: ("http://localhost:8086", "orexis") for p in PURPOSES}
+    assert installation.retention(HISTORY) is None and installation.retention(METRICS) == 30
+    _installed(tmp_path, monkeypatch, installation=lambda text: text.replace(" , onboarding:Metrics .", " ."))
+    with pytest.raises(SystemExit, match=r"0 onboarding:SeriesStores serving Metrics"):
+        installation.series(METRICS)
 
 
 # --- asserted wins, derived completes: a port no world asserts is the installation's (#827) ------
@@ -476,7 +498,7 @@ def test_a_credential_in_a_url_is_refused(tmp_path, monkeypatch, where):
 
     if where == "installation":
         _installed(tmp_path, monkeypatch, installation=lambda text: text.replace("http://localhost:8086", "http://admin:secret@localhost:8086"))
-        ask = installation.series
+        ask = lambda: installation.series("METRICS")
     else:
         _installed(tmp_path, monkeypatch, {("terrace", "deployment.ttl"): lambda text: text.replace("mqtt://localhost", "mqtt://terrace:secret@localhost")})
         ask = installation.derive
@@ -489,11 +511,12 @@ def test_a_credential_in_a_url_is_refused(tmp_path, monkeypatch, where):
 _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 _ONBOARDING = "http://example.org/orexis/onboarding#"
 _INSTALLATION_SAYS = {_RDF_TYPE, "https://schema.org/url", _ONBOARDING + "organisation", _ONBOARDING + "image",
-                      _ONBOARDING + "allocatesFrom"}
+                      _ONBOARDING + "allocatesFrom", _ONBOARDING + "serves", _ONBOARDING + "retentionDays"}
 
 
 def test_the_installation_and_its_derivation_say_where_and_nothing_else():
-    """The installation states its services and its pool in five words, and what was derived from
+    """The installation states its services, the purposes each store serves and how long a purpose
+    is kept, and its pool, in seven words, and what was derived from
     it states urls alone, each on a broker some world's society names and whose world asserts none —
     so an allocation left behind by a world that has gone, or made under a misspelled IRI, is caught."""
     import pyoxigraph as ox

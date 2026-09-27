@@ -4,9 +4,9 @@ title: Intention
 term: http://example.org/orexis/execution#Intention
 description: >-
   A commitment to one plan for one want - adopted at an instant, standing at a step, resolved at
-  another instant as done, failed or abandoned. Rows in the executor's intentions graph, so a
-  restart finds every intention where it stood; the I of BDI, and the only thing a pass leaves
-  that outlives it.
+  another instant as done, failed or abandoned. Rows in the executor's intentions store, which the
+  runtime makes in memory, so a restart does not yet find them (#842); the I of BDI, and the only
+  thing a pass leaves that outlives it.
 ---
 
 # What it is

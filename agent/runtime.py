@@ -60,10 +60,16 @@ conclude of it at once, and each is sent to the agents it is to. A document a pe
 on the topic the agent listens to and is believed by speech's `heard`, then revised like a reading.
 
 **WHAT HAPPENED IS NOT THE RUNTIME'S TO SAY.** `main` loads a series sink for every purpose the
-environment names a store for (`agent/series.py`), and that is all it does with one: sensing
-contributes an observation as it writes it, and execution a step taken and how it ended, because
-each decides the thing it says. The runtime once handed the sink each observation graph, and so
-decided what history was — observations only (a-documents-kind-says-who-reads-it, §5).
+environment names a store for (`agent/series.py`), and hands history nothing: sensing contributes
+an observation as it writes it, and execution a step taken and how it ended, because each decides
+the thing it says. The runtime once handed the sink each observation graph, and so decided what
+history was — observations only (a-documents-kind-says-who-reads-it, §5).
+
+**HOW THE AGENT IS DOING IS MOSTLY THE PACKAGES' TO SAY TOO** (§6). After every pass, where a
+metrics store is named, the runtime writes what every metric select the loaded packages ship
+answers over the store it names (`agent/metrics.py`) — it holds the stores, so it hands them over,
+and it lists no metric — and three figures of its own, measured `pass`: how long the pass took, how
+many quads the belief base holds, how long the process has run.
 """
 
 from __future__ import annotations
@@ -83,8 +89,9 @@ from agent.belief.deliberator import Deliberator
 from agent.execution.command import command
 from agent.execution.executor import Executor
 from agent.execution.implementation import COMMAND, SAYING, operations
+from agent.execution.ontology import EXECUTION
 from agent.execution.says import says
-from agent import series
+from agent import metrics, series
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, STATE, local_of
 from agent.planning.planner import Planner
 from agent.store import (answer, catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of,
@@ -102,6 +109,17 @@ PUBLIC = OREXIS + "PublicGraph"
 GRAPH = OREXIS + "Graph"
 
 MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
+
+#  THE STORES A METRIC IS RUN OVER, by the repository class it names (`orexis:over`): the runtime
+#  holds all three, so it is the one that hands them over. Planning's word is spelled, since the
+#  Planner is all that planning exports.
+BELIEF_BASE = OREXIS + "BeliefBase"
+IMAGINARIUM = "http://example.org/orexis/planning#Imaginarium"
+INTENTIONS_STORE = EXECUTION + "IntentionsStore"
+#  THE RUNTIME'S OWN FIGURES are measured `pass`, and they are the only ones it has.
+PASS = "pass"
+PASS_FIELDS = ("duration_s", "quads", "uptime_s")
+_STARTED = time.monotonic()
 
 DOCUMENTS = (".ttl", ".trig")
 BELIEFS = "beliefs"
@@ -451,32 +469,57 @@ class Runtime:
         n = 0
         while passes is None or n < passes:
             n += 1
-            now = clock.now()
-            self.sense(now)
-            self.planner.plan(now)
-            standing, walking = self.planner.standing(now), self.executor.walking()
-            #  WHAT KEEPS AN AGENT RUNNING: a desire, which asks at every instant, or a transport,
-            #  since an agent that senses has readings to keep writing whether or not it wants
-            #  anything of them — the terrace watches and pursues nothing.
-            lasting = self.transport is not None or self.planner.holds_a_desire()
-            if not standing and not walking:
-                if not lasting:
-                    log.info("%s: every want is reached and no desire is held, after %d pass(es)", self.id, n)
-                    return MET
-                time.sleep(poll_s)
-                continue
-            if not walking:
-                if self.planner.exhausted():
-                    continue                    # the budget cut a search short; the next pass continues it
-                log.error("%s: %d want(s) stand and nothing this agent holds reaches them: %s",
-                          self.id, len(standing), ", ".join(local_of(w) for w in standing))
-                if not lasting:
-                    return UNREACHABLE
-                time.sleep(poll_s)
-                continue
-            if not self._walk(now):
+            now, started = clock.now(), time.monotonic()
+            outcome, wait = self._pass(now, n)
+            self._measure(now, time.monotonic() - started)
+            if outcome is not None:
+                return outcome
+            if wait:
                 time.sleep(poll_s)
         return UNFINISHED
+
+    def _pass(self, now, n: int) -> tuple[str | None, bool]:
+        """One pass: sense, plan, and walk what is due. How the run ends, where this pass ends it,
+        and whether to wait the poll before the next."""
+        self.sense(now)
+        self.planner.plan(now)
+        standing, walking = self.planner.standing(now), self.executor.walking()
+        #  WHAT KEEPS AN AGENT RUNNING: a desire, which asks at every instant, or a transport,
+        #  since an agent that senses has readings to keep writing whether or not it wants
+        #  anything of them — the terrace watches and pursues nothing.
+        lasting = self.transport is not None or self.planner.holds_a_desire()
+        if not standing and not walking:
+            if not lasting:
+                log.info("%s: every want is reached and no desire is held, after %d pass(es)", self.id, n)
+                return MET, False
+            return None, True
+        if not walking:
+            if self.planner.exhausted():
+                return None, False              # the budget cut a search short; the next pass continues it
+            log.error("%s: %d want(s) stand and nothing this agent holds reaches them: %s",
+                      self.id, len(standing), ", ".join(local_of(w) for w in standing))
+            return (None, True) if lasting else (UNREACHABLE, False)
+        return None, not self._walk(now)
+
+    def _measure(self, now, took: float) -> None:
+        """The pass's metrics, where a metrics store is named: every select the loaded packages
+        ship, each run over the stores of the repository it names (`agent/metrics.py`), and the
+        runtime's own three — how long the pass took, how many quads the belief base holds and how
+        long the process has run, in real seconds, since they are what the process spent and not
+        the world's time. Nothing is built where no store is named."""
+        to = series.sink(series.METRICS)
+        if to is None:
+            return
+        points = metrics.measure(self.beliefs, self.repositories(), now)
+        points.append({"measurement": PASS, "tags": {}, "time": now, "fields": dict(zip(PASS_FIELDS, (
+            round(took, 6), len(self.beliefs), round(time.monotonic() - _STARTED, 3))))})
+        to.write(points)
+
+    def repositories(self) -> dict[str, list[ox.Store]]:
+        """The stores this agent holds, by the repository class a metric is run `orexis:over`: its
+        belief base, the Planner's imaginaria — one per scope — and the executor's intentions."""
+        return {BELIEF_BASE: [self.beliefs], IMAGINARIUM: list(self.planner.imaginaria.values()),
+                INTENTIONS_STORE: [self.executor.intentions]}
 
 
     def _walk(self, now) -> int:
@@ -532,8 +575,8 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     store = ox.Store(str(args.volume)) if args.volume else None
     beliefs = boot(args.world, args.agent, store)
-    #  A SINK PER PURPOSE THE ENVIRONMENT NAMES A STORE FOR, and nothing more of one here: the
-    #  packages that decide what happened contribute it, and the runtime hands a sink no point.
+    #  A SINK PER PURPOSE THE ENVIRONMENT NAMES A STORE FOR: the packages that decide what happened
+    #  contribute history, and a pass's metrics are written where a pass ends (`Runtime._measure`).
     told = series.load()
     log.info("%s writes %s", args.agent, ", ".join(p.lower() for p in told) + " to a series store" if told else "no series")
     outcome = Runtime(beliefs, args.agent, budget=args.budget,
