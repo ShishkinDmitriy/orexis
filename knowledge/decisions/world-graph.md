@@ -94,6 +94,12 @@ That is the whole configuration story now.
   the bus are not one society. What is left in the environment is the bootstrap pair — which
   agent this process is, and where the belief base lives — plus deployment toggles.
 
+  > **Amended twice since.** Agent 0.2.0 stopped reading the address off the world: onboarding
+  > reads it and the agent is told it as environment. And
+  > [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md) splits
+  > the two halves this bullet joined: the broker as a rendezvous stays public, in the society
+  > graph, and its address goes to a deployment graph no agent loads.
+
 # The same term in two graphs, meaning two different things
 
 `ag:litresPerFraction` appears on a *plant* in `:world` (how much water that pot actually

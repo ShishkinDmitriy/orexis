@@ -33,6 +33,17 @@ connect — which is the point of deriving it. The roster is the world's `orexis
 read as the [runtime](/domain/kernel/runtime.md) boots it, so onboarding refuses a world whose documents
 will not load.
 
+# What it reads that no agent does
+
+Onboarding reads a world as the runtime boots it, and then the kinds no agent reads, declared in
+a vocabulary of onboarding's own so that the agent never names them and the import direction
+holds. The [deployment](/domain/onboarding/deployment.md) graph is one. The **hardware graph** is
+the other: the boards, pins, parts and wire colours `orexis-firmware` interpolates into a
+`config.h`. The graph gets a kind; the parts inside it stay untyped, since a vocabulary one
+string-filling reader uses checks nothing. Neither kind is declared yet. `hardware.ttl` says it
+is public, so every agent booted from its world's directory holds it, and a container is kept
+from it only because `orexis-compose` leaves that file name unmounted (#820).
+
 # Why it lives outside the agent
 
 `orexis-influx` holds the admin token that opens every bucket, which no agent may ever hold. The

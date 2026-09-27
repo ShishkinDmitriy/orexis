@@ -10,9 +10,15 @@ description: >-
   reach it by being told (`record`); the kernel's `Metrics` contributes the mind's own figures
   the same way. The driver contract and the sovereign's channel left the kernel in the same
   change, for the same reason.
-status: accepted
+status: superseded
+superseded-by: a-documents-kind-says-who-reads-it
 timestamp: 2026-08-26T10:00:00Z
 ---
+
+> **Superseded 2026-09-27 by [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md).**
+> Its middle premise, the choir as registry, went with 0.1.0, and every measurement it lists
+> with it; 0.2.0 wrote no metrics until then. Each package counting its own and one sink survive,
+> as metric selects a package ships and a sink per purpose.
 
 # What was true before
 

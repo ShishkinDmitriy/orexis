@@ -113,7 +113,7 @@ What the store holds, which engine reads it, and how a fact says who put it ther
 
 * [who-put-the-fact-there](/decisions/who-put-the-fact-there.md) - Public knowledge is graphs split by who put the fact there. A SELECT that names one reads only part, silently.
 * [one-graph-both-engines-read](/decisions/one-graph-both-engines-read.md) - Entailments are materialised into the store at genesis, so shapes and the runtime cannot disagree about the vocabulary.
-* [metrics-are-an-aspect](/decisions/metrics-are-an-aspect.md) - Every package counts its own and answers `reports()`/`series()`; the choir is the registry; reporting is the sink; the kernel counts only the mind's.
+* [metrics-are-an-aspect](/decisions/metrics-are-an-aspect.md) - SUPERSEDED — every package counted its own through the choir, which went with 0.1.0; metrics are package selects now.
 * [the-kernel-has-no-mailbox](/decisions/the-kernel-has-no-mailbox.md) - Reaching the society is a capability the fact of a bus grants; the transport's module holds the connection, the loop and the watchdog.
 
 # Packages and layout
@@ -170,6 +170,7 @@ Authoring a world, ratifying it, and what an amendment may do to a running agent
 * [two-worlds-were-one](/decisions/two-worlds-were-one.md) - Two worlds differed by 45 lines with identical beliefs, so the one that needs no hardware stayed.
 * [an-amendment-endows-what-it-grants](/decisions/an-amendment-endows-what-it-grants.md) - Never-held terms arrive with their structures; held terms stay the agent's whatever their value.
 * [a-dead-session-is-resigned-not-endured](/decisions/a-dead-session-is-resigned-not-endured.md) - An agent cut off from its bus sends itself SIGTERM; the container's restart policy is the recovery.
+* [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md) - Every reader, the boot included, loads only the kinds it reads; packages, brokers, series and deployment follow.
 
 # Gates and guards
 
