@@ -14,10 +14,17 @@ graph it is, and its tracked `compose.yaml`. Nothing below touches a board. The 
 keeps its topic, its payload and its credential, so it goes on publishing through the switch, and
 what it publishes while the agent is down is simply not read.
 
-The history is safe where it is. The readings live in the agent's Influx bucket, which the 0.2.0
-agent keeps writing to in the same shape, so the Grafana panels draw across the switch. The belief
+The history is safe where it is, and it does not continue on the same panels. The readings live in
+the agent's Influx bucket, which the 0.2.0 agent keeps writing to, but under each property's own
+name (`SoilMoisture`, `AirTemperature`) where 0.1.0 wrote every property as `soil_moisture`; the
+regenerated panels draw the new names, so they start at the switch, and the old points stay in
+the bucket under `soil_moisture`, each still tagged with its sensor and its property. The belief
 volume is the one thing replaced: it holds a 0.1.0 belief base, which the 0.2.0 runtime would take
 for one it had lived in.
+
+A world already moved before the measurement followed the property (#822) — the terrace — needs
+only `orexis-dashboards <world>` once the image is rebuilt: until then its panels query
+`soil_moisture`, which the new image no longer writes.
 
 # The steps
 
@@ -54,8 +61,8 @@ podman compose logs -f agent-terrace
 # What you should see
 
 The agent's log says it booted from `/app/world/terrace` and is listening on
-`sensors/moisture_sensor_terrace/reading`. At the next heartbeat or crossing, it logs the four readings, and a point per reading lands in the bucket:
-the terrace panels go on drawing. The agent sends nothing — it holds no desire, it watches — and
+`sensors/moisture_sensor_terrace/reading`. At the next heartbeat or crossing, it logs the four readings, and a point per reading lands in the bucket,
+under its property's name: each terrace panel draws from there. The agent sends nothing — it holds no desire, it watches — and
 it does not exit: a transport keeps it running.
 
 # If it goes wrong

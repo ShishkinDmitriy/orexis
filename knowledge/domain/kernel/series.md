@@ -40,8 +40,11 @@ other testimony.
 
 # What is built
 
-History's observations alone, in 0.1.0's shape: the runtime hands the sink each observation graph
-sensing wrote (`agent/series.py`), and every point is measurement `soil_moisture`, whatever
-property it observes. The purposes, the contributions and the metrics are decided in
+History's observations alone: the runtime hands the sink each observation graph sensing wrote
+(`agent/series.py`), and each point is measured under the local name of the property it observes,
+field `value`, tagged with the subject's and the sensor's `orexis:localId`. The dashboards ask the
+sink for the name (`measurement_of`) rather than spelling one, so a panel draws what is written.
+Points 0.1.0's shape wrote, every property as `soil_moisture`, stay under that name in a bucket
+that had them. The purposes, the contributions and the metrics are decided in
 [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md) and not
-yet built (#822, #825, #826).
+yet built (#825, #826).

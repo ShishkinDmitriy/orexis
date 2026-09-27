@@ -18,8 +18,9 @@ So the generated files are published into the shared service's directory, gitign
 subdirectory per world. With `foldersFromFilesStructure`, Grafana shows a folder per world, and a
 world removed from disk simply stops having one.
 
-Vocabulary: nothing new. The panels are built from `sensing:monitors`/`sensing:polls`, and the bucket name
-comes from `onboarding.influx`, so the dashboard cannot disagree with what the agent writes to.
+Vocabulary: nothing new. The panels are built from what each sensor `sosa:observes`, the bucket
+name comes from `onboarding.influx` and the measurement from `agent.series`, so the dashboard
+cannot disagree with where the agent writes or under what name.
 
 See knowledge/domain/onboarding/onboarding.md.
 """
@@ -30,6 +31,7 @@ import argparse
 import json
 import logging
 
+from agent.series import FIELD, measurement_of
 from agent.store import graphs_of, rows
 from . import reading
 from .worlds import REPO_ROOT
@@ -75,10 +77,6 @@ SELECT DISTINCT ?subjectId ?kind ?property ?lo ?hi WHERE {{
              <{SCHEMA}minValue> ?lo ; <{SCHEMA}maxValue> ?hi .
  }}"""
 
-# Written by agent.influx_writer — named here so a change there fails visibly rather than
-# producing a dashboard that queries nothing.
-MEASUREMENT = "soil_moisture"
-FIELD = "value"
 # QUDT unit IRI -> what Grafana calls it. Only what this project actually states; an unknown
 # unit gets "none" rather than a guess, because guessing is how a temperature came to be drawn
 # as 2390%.
@@ -101,9 +99,11 @@ def _unit_of(unit_iri: str | None) -> str:
     return _GRAFANA_UNIT.get(unit_iri.rsplit("/", 1)[-1], "none")
 
 
-def _flux(bucket: str, sensor_id: str) -> str:
+def _flux(bucket: str, sensor_id: str, measurement: str) -> str:
     """One sensor's series, and nothing else in the bucket.
 
+    The measurement is the observed property's, asked of `agent.series` — the writer — so the
+    panel and the point cannot name it two ways; the terrace's test holds the two together.
     Filtered on the `sensor` tag rather than grouped by it. A bucket holds every property its
     agent records — a board sending soil moisture and air humidity sends two fractions in the
     same 0-1 range and nothing in either says which it is — so one panel per sensor is what lets
@@ -112,7 +112,7 @@ def _flux(bucket: str, sensor_id: str) -> str:
     """
     return (f'from(bucket: "{bucket}")\n'
             "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
-            f'  |> filter(fn: (r) => r._measurement == "{MEASUREMENT}")\n'
+            f'  |> filter(fn: (r) => r._measurement == "{measurement}")\n'
             f'  |> filter(fn: (r) => r._field == "{FIELD}")\n'
             f'  |> filter(fn: (r) => r.sensor == "{sensor_id}")\n'
             "  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)")
@@ -146,8 +146,8 @@ def _steps(ranges: dict) -> list[dict]:
     return steps
 
 
-def _sensor_panel(title: str, bucket: str, sensor_id: str, unit: str, ranges: dict,
-                  y: int, h: int, panel_id: int, desc: str = ""):
+def _sensor_panel(title: str, bucket: str, sensor_id: str, measurement: str, unit: str,
+                  ranges: dict, y: int, h: int, panel_id: int, desc: str = ""):
     """One panel per sensor: the history, with the latest value in its legend.
 
     There is no second panel showing the current value. A stat beside the curve repeats what the
@@ -180,7 +180,7 @@ def _sensor_panel(title: str, bucket: str, sensor_id: str, unit: str, ranges: di
         "description": desc,
         "datasource": {"type": "influxdb", "uid": "influxdb"},
         "gridPos": {"h": h, "w": 24, "x": 0, "y": y},
-        "targets": [{"refId": "A", "query": _flux(bucket, sensor_id)}],
+        "targets": [{"refId": "A", "query": _flux(bucket, sensor_id, measurement)}],
         "fieldConfig": {"defaults": defaults, "overrides": []},
         "options": {
             "legend": {"showLegend": True, "displayMode": "table", "placement": "bottom",
@@ -229,7 +229,8 @@ def render(world: str) -> dict:
                 f"Bands: {told}. Both come from the world, never from this file.")
 
         panels.append(_sensor_panel(f"{row['subjectId']} — {prop}", bucket, row["sensorId"],
-                                    unit, stated, y=y, h=8, panel_id=pid, desc=desc))
+                                    measurement_of(row["property"]), unit, stated,
+                                    y=y, h=8, panel_id=pid, desc=desc))
         pid += 1
         y += 8
 

@@ -71,14 +71,29 @@ def test_one_message_is_four_observations_and_the_soil_is_below_the_beds_range(m
     assert broker.published == [], "nothing is wanted, so nothing is sent"
 
 
-def test_each_reading_reaches_the_series_as_the_terrace_panels_draw_it(monkeypatch):
-    """The Grafana terrace folder filters on the `sensor` tag of `soil_moisture`; the four values of
-    one message are four points, tagged as the 0.1.0 agent tagged them."""
+def test_each_reading_reaches_the_series_under_its_own_property(monkeypatch):
+    """The four values of one message are four points, each measured under the property it
+    observes — the air's temperature is not soil moisture (#822)."""
     runtime, broker = _terrace(monkeypatch)
     runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
     runtime.sense(NOW)
-    assert sorted((p["tags"]["sensor"], p["fields"]["value"]) for p in broker.points) == [
-        ("air_humidity_terrace", 0.8), ("air_pressure_terrace", 1012.0),
-        ("air_temp_terrace", 14.5), ("moisture_sensor_terrace", 0.2)]
-    assert {p["measurement"] for p in broker.points} == {"soil_moisture"}
+    assert sorted((p["measurement"], p["tags"]["sensor"], p["fields"]["value"]) for p in broker.points) == [
+        ("AirHumidity", "air_humidity_terrace", 0.8), ("AirPressure", "air_pressure_terrace", 1012.0),
+        ("AirTemperature", "air_temp_terrace", 14.5), ("SoilMoisture", "moisture_sensor_terrace", 0.2)]
     assert {p["tags"]["plant"] for p in broker.points} == {"terrace_bed"}
+
+
+def test_every_point_the_agent_writes_is_drawn_by_one_terrace_panel(monkeypatch):
+    """What `orexis-dashboards terrace` generates is held to what the agent writes: each point's
+    measurement and sensor are filtered for by exactly one panel, so a panel querying a
+    measurement nobody writes, which is what an unshared constant would drift into, fails here."""
+    from onboarding.dashboards import render
+
+    runtime, broker = _terrace(monkeypatch)
+    runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
+    runtime.sense(NOW)
+    queries = [t["query"] for panel in render("terrace")["panels"] for t in panel["targets"]]
+    drawn = {(p["measurement"], p["tags"]["sensor"]):
+             [q for q in queries if f'r._measurement == "{p["measurement"]}"' in q
+              and f'r.sensor == "{p["tags"]["sensor"]}"' in q] for p in broker.points}
+    assert len(drawn) == 4 and all(len(panels) == 1 for panels in drawn.values()), drawn
