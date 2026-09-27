@@ -40,11 +40,28 @@ other testimony.
 
 # What is built
 
-History's observations alone: the runtime hands the sink each observation graph sensing wrote
-(`agent/series.py`), and each point is measured under the local name of the property it observes,
-field `value`, tagged with the subject's and the sensor's `orexis:localId`. The dashboards ask the
-sink for the name (`measurement_of`) rather than spelling one, so a panel draws what is written.
-Points 0.1.0's shape wrote, every property as `soil_moisture`, stay under that name in a bucket
-that had them. The purposes, the contributions and the metrics are decided in
-[a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md) and not
-yet built (#825, #826).
+History, told by purpose and contributed (#825). The sink is `agent/series.py`: it imports nothing
+of the agent, and a sink per purpose is loaded where `INFLUX_HISTORY_URL`, `_ORG`, `_BUCKET` and
+`_TOKEN` are all set — none set is no sink, some set is none too, said in the log. The runtime's
+`main` loads it and hands it no point. A contributor asks `sink(HISTORY)` and builds nothing where
+the answer is None, the way a module logs without knowing where its log goes; handing a sink down
+instead would have sent it through the transport, which calls sensing and has no business with
+history.
+
+- **Sensing's** point (`agent/sensing/history.py`), written by `received`: measured under the local
+  name of the property observed, field `value`, tagged with the subject's and the sensor's
+  `orexis:localId`, at the reading's `sosa:resultTime`. The dashboards ask sensing for the name
+  (`measurement_of`), so a panel draws what is written. The subject's tag is still called `plant`,
+  a domain word #834 renames. Points 0.1.0 wrote as `soil_moisture` stay under that name.
+- **Execution's** points (`agent/execution/history.py`), measured `Step`: field `taken` when the
+  executor records the [act](/domain/execution/act.md), and field `landed` at the verdict — true
+  where the present came to hold what the step predicted, false where the patience ran out or the
+  want it was kept below as ended undone. A step predicting nothing has no verdict, nor has one not
+  taken. Tagged `action`, `want` and one tag per parameter the action takes, all read off the step,
+  so the executor spells no domain word. No panel draws steps yet.
+
+`orexis-influx` mints `secrets/influx-history-<agent>.env` saying the bucket and token under the
+purpose, and `orexis-compose` mounts it beside the url and organisation of the installation's one
+series store. The history bucket keeps the name the one bucket had, so a history begun before
+purposes goes on in it. Metrics are #826; the installation states one store until a second purpose
+is written.

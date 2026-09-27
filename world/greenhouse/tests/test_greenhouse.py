@@ -9,9 +9,12 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
 from agent import clock
 from agent.ontology import OREXIS
 from agent.runtime import UNFINISHED, Runtime, boot
+from agent.series import HISTORY, Sink, install
 from agent.store import graphs_of, rows
 from agent.transport.mqtt.driver import Mqtt
 
@@ -90,6 +93,40 @@ def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
     assert runtime.executor.walking() == [], "the reading was revised inside and answered the dose"
     assert ("SoilMoisture", "inside") in _sides(runtime.beliefs)
     assert len(broker.published) == 1, "one dose, and nothing more once the bed is comfortable"
+
+
+@pytest.fixture
+def history():
+    written = []
+    install(HISTORY, Sink(HISTORY, "greenhouse-grower", lambda bucket, record: written.extend(record)))
+    yield written
+    install(HISTORY, None)
+
+
+def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, history):
+    """Both kinds of point, each from the package that decided it (#825): sensing's three readings,
+    measured under their properties, and execution's dose — taken when the command went out, and
+    landed when the next reading was revised inside — tagged with the action, the want it was for
+    and the values the action takes."""
+    runtime, broker = _grower(monkeypatch)
+    runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
+    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    runtime.run(passes=1, poll_s=0)
+    runtime.time.at = NOW + timedelta(minutes=5)
+    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
+    runtime.run(passes=2, poll_s=0)
+    assert runtime.executor.walking() == [], "the dose landed"
+    observed = [(p["measurement"], p["fields"]["value"], p["time"]) for p in history if p["measurement"] != "Step"]
+    assert observed == [("AirTemperature", 21.0, NOW), ("SoilMoisture", 0.2, NOW),
+                        ("SoilMoisture", 0.45, NOW + timedelta(minutes=5))]
+    steps = [p for p in history if p["measurement"] == "Step"]
+    assert [p["fields"] for p in steps] == [{"taken": True}, {"landed": True}]
+    (taken, landed) = steps
+    assert taken["tags"] == landed["tags"], "one step, said twice"
+    assert taken["tags"]["action"] == "Dosing" and set(taken["tags"]) == {"action", "want", "valve", "reading"}
+    assert taken["tags"]["valve"] == "pump"
+    assert taken["time"] < landed["time"], "taken, then answered"
+    assert len(broker.published) == 1
 
 
 def test_a_cold_bed_is_heated_for_as_long_as_the_gap_takes(monkeypatch):

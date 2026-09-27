@@ -1,62 +1,90 @@
-"""The series store: an observation written as a point measured under its property's own name —
-field `value`, tagged plant and sensor, at the reading's own time — and a refusal said in the log,
-never raised."""
+"""The series sink: loaded for a purpose where the environment names a store for it, writing what it
+is handed and knowing nothing of what that is — and a refusal said in the log, never raised. What a
+point IS is the contributing package's, held by sensing's and execution's own tests."""
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import ast
+from pathlib import Path
 
-import pyoxigraph as ox
+import pytest
 
-from agent.series import Series
-from agent.store import update
+from agent.series import HISTORY, PURPOSES, Sink, install, load, sink
 
-T = "http://example.org/test#"
-
-
-def _store():
-    st = ox.Store()
-    update(st, f"""INSERT DATA {{
-  GRAPH <{T}world> {{ <{T}bed> orexis:localId "terrace_bed" . <{T}probe> orexis:localId "moisture_sensor_terrace" .
-                      <{T}thermometer> orexis:localId "air_temp_terrace" . }}
-  GRAPH <{T}observed> {{ <{T}o> sosa:hasSimpleResult 0.2 ; sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
-      sosa:observedProperty <http://example.org/orexis/climate#SoilMoisture> ; sosa:hasFeatureOfInterest <{T}bed> ;
-      sosa:madeBySensor <{T}probe> }}
-  GRAPH <{T}warm> {{ <{T}t> sosa:hasSimpleResult 14.5 ; sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime ;
-      sosa:observedProperty <http://example.org/orexis/climate#AirTemperature> ; sosa:hasFeatureOfInterest <{T}bed> ;
-      sosa:madeBySensor <{T}thermometer> }}
-  GRAPH <{T}catalogue> {{ <{T}catalogue> a orexis:CatalogueGraph . <{T}world> a orexis:PublicGraph . }} }}""")
-    return st
+AGENT = Path(__file__).resolve().parents[1]
+NAMED = {"INFLUX_HISTORY_URL": "http://localhost:8086", "INFLUX_HISTORY_ORG": "orexis",
+         "INFLUX_HISTORY_BUCKET": "terrace-terrace", "INFLUX_HISTORY_TOKEN": "t"}
 
 
-def test_an_observation_is_measured_under_its_propertys_name():
+@pytest.fixture(autouse=True)
+def _no_sink_outlives_a_test():
+    yield
+    install(HISTORY, None)
+
+
+def test_a_sink_writes_what_it_is_handed_to_its_bucket():
     written = []
-    series = Series("terrace-terrace", lambda bucket, record: written.append((bucket, record)))
-    assert series.record(_store(), T + "observed") == 1
-    (bucket, (point,)), = written
-    assert bucket == "terrace-terrace"
-    assert point == {"measurement": "SoilMoisture", "fields": {"value": 0.2},
-                     "tags": {"plant": "terrace_bed", "sensor": "moisture_sensor_terrace"},
-                     "time": datetime(2026, 1, 1, 12, tzinfo=timezone.utc)}
+    point = {"measurement": "anything", "tags": {}, "fields": {"x": 1.0}}
+    assert Sink(HISTORY, "b", lambda bucket, record: written.append((bucket, record))).write([point]) == 1
+    assert written == [("b", [point])]
 
 
-def test_a_temperature_is_not_measured_as_soil_moisture():
-    """The 0.1.0 shape wrote every property as `soil_moisture`; one measurement per property now."""
+def test_nothing_handed_is_nothing_written():
     written = []
-    series = Series("b", lambda bucket, record: written.extend(record))
-    store = _store()
-    series.record(store, T + "observed")
-    series.record(store, T + "warm")
-    assert sorted((p["measurement"], p["fields"]["value"]) for p in written) == [
-        ("AirTemperature", 14.5), ("SoilMoisture", 0.2)]
+    assert Sink(HISTORY, "b", lambda bucket, record: written.append(record)).write([]) == 0
+    assert written == []
 
 
 def test_a_store_that_refuses_costs_the_agent_nothing(caplog):
     def refuse(bucket, record):
         raise ConnectionError("down")
-    assert Series("b", refuse).record(_store(), T + "observed") == 0
+    assert Sink(HISTORY, "b", refuse).write([{"measurement": "m", "fields": {"x": 1}}]) == 0
     assert "refused" in caplog.text
 
 
-def test_no_store_named_is_no_series():
-    assert Series.from_environment({}) is None
+def test_no_store_named_for_a_purpose_is_no_sink():
+    assert Sink.from_environment(HISTORY, {}) is None
+    assert load({}) == () and sink(HISTORY) is None
+
+
+def test_a_store_named_without_a_purpose_is_no_sink():
+    """The environment 0.2.0 used to hand an agent named one bucket with no purpose to it; a store
+    is named for a purpose now, and the old keys name nothing."""
+    assert load({"INFLUX_URL": "http://localhost:8086", "INFLUX_ORG": "orexis",
+                 "INFLUX_BUCKET": "terrace-terrace", "INFLUX_TOKEN": "t"}) == ()
+
+
+def test_a_store_half_named_is_no_sink_and_says_what_is_missing(caplog):
+    half = {k: v for k, v in NAMED.items() if k != "INFLUX_HISTORY_TOKEN"}
+    assert Sink.from_environment(HISTORY, half) is None
+    assert "INFLUX_HISTORY_TOKEN" in caplog.text
+
+
+def test_a_store_named_for_history_is_the_history_sink():
+    assert load(NAMED) == (HISTORY,)
+    assert sink(HISTORY).bucket == "terrace-terrace"
+    install(HISTORY, None)
+    assert sink(HISTORY) is None
+
+
+def test_the_sink_imports_nothing_of_the_agent():
+    """Beneath every contributor: it may be imported by sensing and execution, and imports none of
+    them — nor anything of `agent`, since a point is the client's own dict, handed through."""
+    tree = ast.parse((AGENT / "series.py").read_text())
+    reaching = [n.lineno for n in ast.walk(tree)
+                if (isinstance(n, ast.ImportFrom) and (n.module or "").startswith("agent"))
+                or (isinstance(n, ast.Import) and any(a.name.startswith("agent") for a in n.names))]
+    assert not reaching, f"agent/series.py imports the agent at lines {reaching}"
+
+
+def test_the_runtime_loads_a_sink_and_hands_it_nothing():
+    """What history holds is decided by the packages that decide each thing; the runtime's only
+    word to the sink module is `load`."""
+    tree = ast.parse((AGENT / "runtime.py").read_text())
+    said = {n.attr for n in ast.walk(tree)
+            if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "series"}
+    assert said == {"load"}, f"the runtime asks the sink module for {sorted(said)}"
+    names = {a.name for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module == "agent.series"
+             for a in n.names}
+    assert not names, f"the runtime imports {sorted(names)} from the sink"
+    assert PURPOSES == (HISTORY,), "metrics is #826; a new purpose is a new case here"

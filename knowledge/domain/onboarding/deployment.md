@@ -62,7 +62,7 @@ remembers, where a join would be a rule (`onboarding/derived.py` writes either a
 with `orexis:arrivedBy orexis:Derived`). Then every renderer only formats: `broker` in
 `onboarding/mqtt.py` answers the asserted url or the allocated one, for the compose file, the
 broker's config and a board's `config.h`; `orexis-compose` writes the series store's url and
-organisation into every agent's environment; `orexis-influx` mints buckets in that store; and
+organisation into every agent's environment, under the purpose it is told for; `orexis-influx` mints buckets in that store; and
 `orexis-infra-compose` writes `infra/compose.yaml`, the images and ports the document's and the
 rest the template's. `tests/test_layout.py` holds both committed documents to a fresh rendering and
 refuses a collision, a hand-edited allocation, a url carrying a credential, and an installation

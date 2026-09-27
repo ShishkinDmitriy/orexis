@@ -44,6 +44,10 @@ already standing is absorbed inside the patience and supersedes past it, which i
 amortisation (an-intention-is-an-amortised-deliberation). The planner does not go through
 this door — it never plans for a want being walked — but a caller that wants the absorption
 asks here.
+
+**AND WHAT HAPPENED GOES TO HISTORY**, where a history sink is loaded: a step taken when its act
+is recorded, and landed or failed at the verdict, each as a point `history.py` shapes. The
+executor decides both, so it is the executor that says them; the runtime hands the sink nothing.
 """
 
 from __future__ import annotations
@@ -60,8 +64,10 @@ import pyoxigraph as ox
 from agent import clock
 from agent.hash_named_graph import facts_of
 from agent.ontology import OREXIS, STATE, local_of
+from agent.series import HISTORY, sink
 from agent.store import Raw, add_quads, bind, revisions_of, graphs_of, instant, quads, rows, update
 
+from .history import step_point
 from .implementation import FICTIVE, operations
 from .ontology import EXECUTION, intentions_graph
 
@@ -129,6 +135,8 @@ SELECT ?intention ?step ?due ?act ?taken ?lands ?predicts WHERE {
 ORDER BY ?due ?intention"""
 
 _PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH $intentions { $step execution:predicts ?predicts } }"""
+
+_PURSUES_Q = """SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }"""
 
 #  WHAT A STEP KEPT BELOW WAITS ON: the intentions walking the want it was refined into — standing,
 #  or ended and how.
@@ -394,16 +402,19 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             if now < lands:
                 wake_at(lands)
             elif self._answered(r["predicts"]):
+                self._history(intention, step, now, landed=True)
                 self._advance(intention, step)
             elif None in below:
                 continue                        # kept below: a plan for it stands, and waits on no clock
             elif below and "done" not in below:
                 log.warning("%s: %s could not be kept below — %s fails", self.id, local_of(step),
                             intention.rsplit("#", 1)[-1])
+                self._history(intention, step, now, landed=False)
                 self.resolve(intention, "failed")
             elif now >= lands + timedelta(seconds=self.patience_s):
                 log.warning("%s: the world did not answer %s by %s — %s fails",
                             self.id, local_of(step), lands.isoformat(), intention.rsplit("#", 1)[-1])
+                self._history(intention, step, now, landed=False)
                 self.resolve(intention, "failed")
             else:
                 wake_at(lands + timedelta(seconds=self.patience_s))
@@ -494,6 +505,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         if refined is not None:
             #  KEPT BELOW: the act says which want, and the step waits on it and not on the clock.
             update(self.intentions, f"INSERT DATA {{ GRAPH <{self.graph}> {{ <{act}> <{EXECUTION}refinedBy> <{refined}> }} }}")
+        self._history(intention, step, taken_at, taken=taken)
         #  THE INTENTION MOVES BEFORE THE STEP LEAVES FLIGHT: a tick between the two would
         #  find the old head and hand it over twice. A step that predicts something does not
         #  move here at all — the act on record is what the next tick reads, and the world's
@@ -521,6 +533,16 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         for r in rows(self.intentions, bind(_STEP_Q, intentions=Raw(f"<{self.graph}>"), step=step)):
             said[local_of(r["p"])] = r["o"]
         return said
+
+    def _history(self, intention: str, step: str, at: datetime, **fields) -> None:
+        """What happened to `step` at `at`, contributed to history where a sink is loaded: taken
+        when its act is recorded, landed or not at the verdict (`history.py`). Nothing is read to
+        build the point where no sink is."""
+        if (history := sink(HISTORY)) is None:
+            return
+        pursued = rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))
+        history.write([step_point(self.beliefs, self.step_of(step), pursued[0]["want"] if pursued else None,
+                                  at, fields)])
 
     def say(self, said: dict, intention: str) -> None:
         """The default taking: the step's name, and what fills it, in the log."""

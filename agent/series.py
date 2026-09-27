@@ -1,87 +1,105 @@
-"""The series store: every observation the agent receives, written where the dashboards draw it.
+"""The series sink: points a package contributes, written to the store the agent is told of for
+their purpose — and nothing about what the points are.
 
-What an agent believes lives in its store; what a person watches lives in InfluxDB, in the agent's
-own bucket, granted by `orexis-influx`. The runtime hands this each observation graph sensing just
-wrote, and it writes one point per observation, measured under the observed property's own name —
-its local name, read off `sosa:observedProperty`, so a temperature is `AirTemperature` and this
-module names no property — with field `value`, tagged `plant` (the subject's `orexis:localId`) and
-`sensor` (the sensor's), and stamped with the reading's own `sosa:resultTime`, so the series and
-the belief agree on when. Only readings: 0.2.0 reports nothing of its own health.
+A SERIES IS WATCHED AND NEVER BELIEVED (knowledge/domain/kernel/series.md). What a person draws
+of an agent lives in InfluxDB, in a bucket of the agent's own; nothing written there reaches a
+plan. It has purposes — HISTORY, what happened, is the one built; metrics is #826 — and the agent
+is told of a store for each apart, in environment keyed by the purpose:
+`INFLUX_HISTORY_URL`, `INFLUX_HISTORY_ORG`, `INFLUX_HISTORY_BUCKET`, `INFLUX_HISTORY_TOKEN`. Two
+purposes may name one instance, by coincidence and not by design.
 
-0.1.0 wrote every point as `soil_moisture`, whatever it observed, with the property in a tag; the
-shape was one property's, and the terrace's air temperature landed as soil moisture (#822). The
-tag went with it, since it said what the measurement now says.
+A SINK IS LOADED WHERE THE ENVIRONMENT NAMES A STORE FOR ITS PURPOSE. `load` is the premise, read
+off the environment rather than the world because a store is deployment; the runtime's `main`
+calls it once, and it is the only thing the runtime does with a sink — it hands a sink no point.
+A purpose the environment does not name has no sink, and the client library is imported where a
+sink is made and nowhere else, so an agent with no store never loads it.
 
-The client library is imported where the writer is brought up from the environment, and nowhere
-else, so an agent with no series store never loads it.
+THE PACKAGE THAT DECIDES A THING CONTRIBUTES IT (a-documents-kind-says-who-reads-it, §5). Sensing
+writes an observation and contributes its point; execution records an act and a landing verdict
+and contributes theirs. Each asks `sink(HISTORY)` and writes where one is loaded, and what a
+point is — its measurement, its tags, its fields, its instant — is the contributing package's.
+This module sits beneath them all and imports nothing of theirs, nor anything of `agent`: a point
+is the client's own dict, handed through.
+
+WHY A SINK IS FOUND HERE AND NOT HANDED DOWN. Sensing's `received` is called by the transport's
+driver, so a sink handed to sensing would have to be handed to the transport first, a layer
+beneath sensing that has no business carrying history; the executor would take a third
+collaborator beside `take` and `refine`. The shape this has is logging's, which every module here
+already speaks: a contributor says what happened, and whoever runs the process decides once where
+it goes.
+
+A STORE THAT REFUSES a point is said in the log and costs the agent nothing.
 """
 
 from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime
-
-from agent.ontology import PUBLIC, local_of
-from agent.store import graphs_of, rows
 
 log = logging.getLogger("series")
 
-FIELD = "value"
+HISTORY = "HISTORY"
+PURPOSES = (HISTORY,)
+
+#  WHAT NAMES A STORE FOR A PURPOSE: all four, under `INFLUX_<PURPOSE>_`.
+_KEYS = ("URL", "ORG", "BUCKET", "TOKEN")
+
+_sinks: dict[str, "Sink"] = {}
 
 
-def measurement_of(prop: str) -> str:
-    """The measurement an observation of `prop` is written under: the property's local name.
-    `orexis-dashboards` asks this too, so a panel cannot query a name the agent does not write."""
-    return local_of(prop)
+class Sink:
+    """One purpose's bucket, and how a point reaches it: `write(bucket, record)`, the client's own
+    call, handed the points as they were contributed."""
 
-_READING_Q = """
-SELECT ?value ?at ?property ?subject ?sensor WHERE {
-  GRAPH $graph { ?o sosa:hasSimpleResult ?value ; sosa:resultTime ?at ;
-                    sosa:observedProperty ?property ; sosa:hasFeatureOfInterest ?feature .
-                 OPTIONAL { ?o sosa:madeBySensor ?by } }
-  OPTIONAL { ?feature orexis:localId ?subject }
-  OPTIONAL { ?by orexis:localId ?sensor } }"""
-
-
-class Series:
-    """One bucket, and how a point reaches it: `write(bucket, record)`, the client's own call."""
-
-    def __init__(self, bucket: str, write):
-        self.bucket, self._write = bucket, write
+    def __init__(self, purpose: str, bucket: str, write):
+        self.purpose, self.bucket, self._write = purpose, bucket, write
 
     @classmethod
-    def from_environment(cls, environ=None) -> "Series | None":
-        """The agent's bucket and token, and where the store is — `INFLUX_URL`, `INFLUX_ORG`,
-        `INFLUX_BUCKET`, `INFLUX_TOKEN` — or None where the environment names no store."""
+    def from_environment(cls, purpose: str, environ=None) -> "Sink | None":
+        """The store the environment names for `purpose`, or None where it names none. Where it
+        names some of the four and not all, None too, said in the log: a store half-named is a
+        deployment mistake, and a series is not worth an agent that will not start."""
         env = os.environ if environ is None else environ
-        if not env.get("INFLUX_TOKEN") or not env.get("INFLUX_BUCKET"):
+        named = {key: env.get(f"INFLUX_{purpose}_{key}") for key in _KEYS}
+        if not any(named.values()):
+            return None
+        if missing := [f"INFLUX_{purpose}_{key}" for key, value in named.items() if not value]:
+            log.warning("a %s store is named without %s — nothing is written for it", purpose.lower(), ", ".join(missing))
             return None
         from influxdb_client import InfluxDBClient
         from influxdb_client.client.write_api import SYNCHRONOUS
 
-        client = InfluxDBClient(url=env.get("INFLUX_URL", "http://localhost:8086"),
-                                token=env["INFLUX_TOKEN"], org=env.get("INFLUX_ORG", "orexis"))
-        return cls(env["INFLUX_BUCKET"], client.write_api(write_options=SYNCHRONOUS).write)
+        client = InfluxDBClient(url=named["URL"], token=named["TOKEN"], org=named["ORG"])
+        return cls(purpose, named["BUCKET"], client.write_api(write_options=SYNCHRONOUS).write)
 
-    def record(self, store, graph: str) -> int:
-        """Write the observation `graph` holds; how many points. A store that refuses the write is
-        said in the log and costs the agent nothing — a series is watched, never believed."""
-        points = []
-        for r in rows(store, _READING_Q, graphs_of(store, PUBLIC), graph=graph):
-            tags = {}
-            if r.get("subject"):
-                tags["plant"] = r["subject"]
-            if r.get("sensor"):
-                tags["sensor"] = r["sensor"]
-            points.append({"measurement": measurement_of(r["property"]), "tags": tags,
-                           "fields": {FIELD: float(r["value"])},
-                           "time": datetime.fromisoformat(r["at"])})
+    def write(self, points: list[dict]) -> int:
+        """Write `points`; how many. A store that refuses is said in the log, never raised."""
         if not points:
             return 0
         try:
             self._write(bucket=self.bucket, record=points)
         except Exception as exc:                                   # noqa: BLE001
-            log.warning("the series store refused %d point(s): %s", len(points), exc)
+            log.warning("the %s store refused %d point(s): %s", self.purpose.lower(), len(points), exc)
             return 0
         return len(points)
+
+
+def load(environ=None) -> tuple[str, ...]:
+    """A sink for every purpose the environment names a store for; the purposes loaded."""
+    for purpose in PURPOSES:
+        install(purpose, Sink.from_environment(purpose, environ))
+    return tuple(purpose for purpose in PURPOSES if purpose in _sinks)
+
+
+def install(purpose: str, sink: "Sink | None") -> None:
+    """Make `sink` the one points of `purpose` go to — or none, where `sink` is None."""
+    if sink is None:
+        _sinks.pop(purpose, None)
+    else:
+        _sinks[purpose] = sink
+
+
+def sink(purpose: str) -> "Sink | None":
+    """The sink points of `purpose` go to, or None where none is loaded — and then a contributor
+    builds no point at all."""
+    return _sinks.get(purpose)

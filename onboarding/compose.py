@@ -17,7 +17,10 @@ world mounted at `/app/world/<name>` beside `/app/domains`, so a world's `owl:im
 domains resolve, and the broker's address and the series store's handed in as environment —
 the `schema:url`s the world asserts on its `mqtt4ssn:Broker` or the installation allocated it
 (`onboarding.mqtt.broker`), and the series store's url and organisation from the installation
-(`infra/installation.ttl`). All of it is deployment graphs, a kind the agent's vocabulary does not
+(`infra/installation.ttl`), told under the purpose it is for — `INFLUX_HISTORY_URL` and
+`INFLUX_HISTORY_ORG`, beside the history credential `orexis-influx` minted. The installation states
+one series store and it serves every purpose; stating a store per purpose waits on a second purpose
+being written (#826). All of it is deployment graphs, a kind the agent's vocabulary does not
 declare, so no container is handed one and the agent cannot read where anything is. An agent that
 holds a device writes its command topic, which the ACL admits it and nobody else to — an agent
 trusts itself, so nothing is signed until the market brings a second agent to ask.
@@ -37,6 +40,7 @@ import logging
 from pathlib import Path
 
 from agent.runtime import known, world_of
+from agent.series import HISTORY
 from agent.store import document, graphs_of, kinds_in, rows
 from . import installation, reading
 from .worlds import REPO_ROOT
@@ -85,6 +89,12 @@ def read_by_an_agent(world: str) -> set[Path]:
 
 def agent_ids(world: str) -> list[str]:
     return roster(world)
+
+
+def series_credential(agent_id: str, purpose: str = HISTORY) -> str:
+    """The name of the file under a world's `secrets/` holding the agent's credential for the series
+    store it is told of for `purpose` — minted there by `orexis-influx`, mounted here."""
+    return f"influx-{purpose.lower()}-{agent_id}.env"
 
 
 def simulated_client(world: str) -> str | None:
@@ -144,13 +154,13 @@ def _service(agent_id: str, world: str, read: set[Path], host: str, plain: int, 
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where the series store is, and the org — the installation's, and safe for every agent to hold
-      INFLUX_URL: "{url}"
-      INFLUX_ORG: "{organisation}"
+      # where its history is written, and the org — the installation's series store, safe for every agent to hold
+      INFLUX_{HISTORY}_URL: "{url}"
+      INFLUX_{HISTORY}_ORG: "{organisation}"
     env_file:
-      # its own bucket and a token that opens only it, minted by `orexis-influx {world}`, and its
+      # its own {HISTORY.lower()} bucket and a token that opens only it, minted by `orexis-influx {world}`, and its
       # own broker credential, minted by `orexis-mqtt {world}`; mounted into THIS container alone
-      - ./secrets/influx-{agent_id}.env
+      - ./secrets/{series_credential(agent_id)}
       - ./secrets/mqtt-{agent_id}.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent

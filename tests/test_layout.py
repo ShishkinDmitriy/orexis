@@ -296,6 +296,34 @@ def test_the_tools_told_the_address_inherit_the_refusal(tmp_path, monkeypatch, t
         compose.render("sensing") if tool == "compose" else firmware.generate("sensing")
 
 
+def test_what_onboarding_tells_an_agent_of_its_history_store_is_what_the_sink_loads(tmp_path):
+    """A series store is told by purpose (#825): `orexis-compose` writes where the history store is
+    under `INFLUX_HISTORY_*` and mounts the file `orexis-influx` mints, which says the bucket and the
+    token under the same purpose. Put together as the container has them, they load the history
+    sink; the environment naming one bucket with no purpose is gone from every compose file."""
+    import yaml
+    from dotenv import dotenv_values
+
+    from agent.series import HISTORY, install, load
+    from onboarding import compose, influx
+
+    service = yaml.safe_load(compose.render("terrace"))["services"]["agent-terrace"]
+    minted = influx.credential_file("terrace", "terrace")
+    assert minted.name == "influx-history-terrace.env"
+    assert f"./secrets/{minted.name}" in service["env_file"], "compose mounts what influx mints"
+    credential = tmp_path / minted.name
+    influx._write_credential(credential, "terrace", HISTORY, influx.bucket_name("terrace", "terrace"), "a-token")
+    try:
+        assert load({**service["environment"], **dotenv_values(credential)}) == (HISTORY,)
+    finally:
+        install(HISTORY, None)
+    composed = sorted((REPO_ROOT / "world").glob("*/compose.yaml"))
+    assert composed, "the glob stopped matching"
+    for path in composed:
+        text = path.read_text()
+        assert "INFLUX_HISTORY_URL" in text and not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
+
+
 # --- asserted wins, derived completes: a port no world asserts is the installation's (#827) ------
 
 def test_an_asserted_url_wins_and_a_broker_asserting_none_is_allocated_one():

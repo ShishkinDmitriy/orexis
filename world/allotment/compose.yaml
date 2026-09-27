@@ -66,13 +66,13 @@ services:
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where the series store is, and the org — the installation's, and safe for every agent to hold
-      INFLUX_URL: "http://localhost:8086"
-      INFLUX_ORG: "orexis"
+      # where its history is written, and the org — the installation's series store, safe for every agent to hold
+      INFLUX_HISTORY_URL: "http://localhost:8086"
+      INFLUX_HISTORY_ORG: "orexis"
     env_file:
-      # its own bucket and a token that opens only it, minted by `orexis-influx allotment`, and its
+      # its own history bucket and a token that opens only it, minted by `orexis-influx allotment`, and its
       # own broker credential, minted by `orexis-mqtt allotment`; mounted into THIS container alone
-      - ./secrets/influx-fern_grower.env
+      - ./secrets/influx-history-fern_grower.env
       - ./secrets/mqtt-fern_grower.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
@@ -106,13 +106,13 @@ services:
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where the series store is, and the org — the installation's, and safe for every agent to hold
-      INFLUX_URL: "http://localhost:8086"
-      INFLUX_ORG: "orexis"
+      # where its history is written, and the org — the installation's series store, safe for every agent to hold
+      INFLUX_HISTORY_URL: "http://localhost:8086"
+      INFLUX_HISTORY_ORG: "orexis"
     env_file:
-      # its own bucket and a token that opens only it, minted by `orexis-influx allotment`, and its
+      # its own history bucket and a token that opens only it, minted by `orexis-influx allotment`, and its
       # own broker credential, minted by `orexis-mqtt allotment`; mounted into THIS container alone
-      - ./secrets/influx-rose_grower.env
+      - ./secrets/influx-history-rose_grower.env
       - ./secrets/mqtt-rose_grower.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
@@ -146,13 +146,13 @@ services:
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where the series store is, and the org — the installation's, and safe for every agent to hold
-      INFLUX_URL: "http://localhost:8086"
-      INFLUX_ORG: "orexis"
+      # where its history is written, and the org — the installation's series store, safe for every agent to hold
+      INFLUX_HISTORY_URL: "http://localhost:8086"
+      INFLUX_HISTORY_ORG: "orexis"
     env_file:
-      # its own bucket and a token that opens only it, minted by `orexis-influx allotment`, and its
+      # its own history bucket and a token that opens only it, minted by `orexis-influx allotment`, and its
       # own broker credential, minted by `orexis-mqtt allotment`; mounted into THIS container alone
-      - ./secrets/influx-supplier.env
+      - ./secrets/influx-history-supplier.env
       - ./secrets/mqtt-supplier.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
