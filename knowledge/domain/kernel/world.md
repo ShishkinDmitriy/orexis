@@ -6,8 +6,8 @@ description: >-
   A directory of documents under `world/<name>/`, each saying which graph it is and so who reads
   it: the world graph with its subjects, sensors and systems, importing the domains it speaks; the
   society of its principals and their wiring; the state it starts from; the desires or wants each
-  agent holds; and, apart, the hardware and the deployment, which onboarding reads and no agent
-  needs. One world per agent, mounted; its tests live beside it.
+  agent holds; and, apart, the hardware and — where the world pins it — where its broker listens,
+  which onboarding reads and no agent needs. One world per agent, mounted; its tests live beside it.
 ---
 
 # What it is
@@ -20,7 +20,7 @@ what it is with `<> a <a graph kind>` on its own IRI, or, in TriG, of each graph
 |---|---|---|---|
 | `world.ttl` | `orexis:WorldGraph` | the subjects and their ranges, the sensors, devices and systems, the venues — and `owl:imports` of the domains it speaks; in a world with no bus, its agent too | every agent, the simulator, and onboarding |
 | `society.ttl` | `orexis:SocietyGraph` | the agents and what each acts for, the client each is, the broker as what clients connect to, the topics, their filters, and which device speaks on which | every agent, the simulator, and onboarding |
-| `deployment.ttl` | `onboarding:DeploymentGraph` | where the broker listens, its `schema:url`s | onboarding alone |
+| `deployment.ttl` | `onboarding:DeploymentGraph` | where the broker listens, its `schema:url`s — only where the world pins them | onboarding alone |
 | `state.ttl` | `orexis:StateGraph` | where things stand at the start, for a world nothing senses | the agent |
 | `wants.ttl`, `desires.ttl` | `planning:WantGraph`, `planning:DesireGraph` | what an agent is to bring about, once or for good | the agent |
 | `beliefs/<id>.ttl` | any agent-owned kind | one agent's own documents, in a world of several | that agent alone |
@@ -45,8 +45,9 @@ and so does the simulator, which plays the devices on their topics; `orexis-mqtt
 from it. It is the kernel's kind: the boot finds who the agent is there, and a package loaded by a
 premise (#824) would be read off it before that package is. A broker is named here only as what
 clients are connected to. Where it listens is a [deployment](/domain/onboarding/deployment.md)
-graph, onboarding's kind, which the agent's T-Box cannot name, so no agent's boot holds its
-address and no container mounts the document.
+graph, onboarding's kind, which the agent's T-Box cannot name, so no agent's boot holds its address
+and no container mounts the document. A world may assert it there, and a world that does not is
+allocated a port by the installation, which alone sees which ports every world holds.
 
 A world with no bus — hanoi, courier, tower — has no society graph, and its one agent stays in the
 world graph beside what it acts on.

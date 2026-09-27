@@ -44,7 +44,7 @@ import logging
 
 from agent.store import DocumentRefused
 
-from . import certs, compose, dashboards, influx, mqtt, reading
+from . import certs, compose, dashboards, influx, installation, mqtt, reading
 from .worlds import world_dir, worlds
 
 log = logging.getLogger("onboard")
@@ -72,6 +72,10 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
                              f"{'; '.join(unread)}; nothing granted")
 
     log.info("onboarding %s", world)
+    # What the documents leave out is derived before anything is rendered from them: a broker whose
+    # world asserts no url is allocated one here, beside every other world's, and every tool below
+    # only reads what was asserted or allocated (onboarding.derived).
+    installation.write_derivation()
     influx.provision(world, rotate=rotate)
     mqtt.provision(world, rotate=rotate)
     if not mqtt.reload_broker(world):

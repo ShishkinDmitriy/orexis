@@ -18,7 +18,9 @@ datasources:
     isDefault: true
     jsonData:
       version: Flux
-      organization: orexis
+      # the installation's organisation, stated once in infra/installation.ttl and handed to the
+      # container by the infra/compose.yaml generated from it — interpolated as the token is
+      organization: $INFLUX_ORG
       defaultBucket: genesis
     secureJsonData:
       token: $INFLUX_ADMIN_TOKEN

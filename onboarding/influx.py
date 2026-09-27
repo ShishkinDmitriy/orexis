@@ -35,8 +35,8 @@ from dotenv import dotenv_values
 from influxdb_client import Authorization, BucketRetentionRules, InfluxDBClient, Permission, \
     PermissionResource
 
-from . import compose
-from .worlds import REPO_ROOT, env
+from . import compose, installation
+from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
 
 log = logging.getLogger("influx")
@@ -66,8 +66,9 @@ def credential_file(world: str, agent_id: str) -> Path:
 def _admin_token() -> str:
     """The one credential that opens every bucket, read from its own file.
 
-    Deliberately not from `infra/.env`: that file is handed to every agent container as an
-    `env_file`, so anything in it is held by every agent, and scoped tokens would be theatre.
+    Deliberately not from any document, nor from anything handed to every agent container: a
+    token held by every agent would make scoped tokens theatre, and one in a graph would persist
+    wherever the graph is copied.
     """
     if not ADMIN_ENV.exists():
         raise AdminError(
@@ -98,9 +99,9 @@ def _write_credential(path: Path, bucket: str, token: str) -> None:
 
 
 def provision(world: str, rotate: bool = False) -> None:
-    """Bring the store into line with the world: a bucket and a scoped token per agent."""
-    url = env("INFLUX_URL", "http://localhost:8086")
-    org = env("INFLUX_ORG", "orexis")
+    """Bring the store into line with the world: a bucket and a scoped token per agent, in the
+    series store the installation states (`infra/installation.ttl`)."""
+    url, org = installation.series()
     agents = compose.agent_ids(world)
     if not agents:
         raise SystemExit(f"orexis-influx: world {world!r} declares no agents")

@@ -23,9 +23,12 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
    what each `mqtt4ssn:hosts`, the one `mqtt4ssn:Broker` every client `mqtt4ssn:isConnectedToBroker`,
    and the topics, their filters, and which sensor `mqtt4ssn:observesTopic` and which device
    `mqtt4ssn:listensToTopic` each one.
-3. **`deployment.ttl`**, beside it — `<> a onboarding:DeploymentGraph`, then the broker's
-   `schema:url`s, `mqtt://` and `mqtts://`, one host. Onboarding reads it to run the broker and
-   to write each agent's environment; no agent loads it and no container mounts it.
+3. **`deployment.ttl`, only to pin the broker's port** — `<> a onboarding:DeploymentGraph`, then
+   the broker's `schema:url`s, `mqtt://` and `mqtts://`, one host. Leave it out and `orexis-onboard`
+   allocates the broker a port free of every other world's, into `infra/installation.derived.ttl`;
+   write it when something is flashed with the port, as the terrace's board is. A port another
+   world holds is refused. Onboarding reads either to run the broker and to write each agent's
+   environment; no agent loads them and no container mounts them.
 4. **`state.ttl`** — `<> a orexis:StateGraph`, where things stand, for a world nothing senses.
 5. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or
    `<> a planning:WantGraph` for a want that is met once; in a world of several agents, one

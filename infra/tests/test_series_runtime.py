@@ -10,7 +10,8 @@ infrastructure, and it says nothing at all without a store running.
 The claim under test is the one in the decision record: an agent may read and write its own
 history and is refused its neighbour's. That is a property of Influx's permission model, not of
 anything Orexis computes, so it belongs here and it is worth re-proving whenever the store is
-upgraded — change the image in `infra/compose.yaml`, re-run this file, and see.
+upgraded — change the image in `infra/installation.ttl`, regenerate `infra/compose.yaml` with
+`orexis-infra-compose`, re-run this file, and see.
 
 Run it deliberately, with infra up:
 
@@ -30,7 +31,7 @@ import uuid
 import pytest
 
 from onboarding import influx as influx_admin
-from onboarding.worlds import env
+from onboarding import installation
 
 influxdb_client = pytest.importorskip("influxdb_client")
 
@@ -45,7 +46,7 @@ def admin():
         token = influx_admin._admin_token()
     except influx_admin.AdminError as exc:
         pytest.skip(str(exc))
-    url, org = env("INFLUX_URL", "http://localhost:8086"), env("INFLUX_ORG", "orexis")
+    url, org = installation.series()     # where the installation says the store is, as onboarding reads it
     client = InfluxDBClient(url=url, token=token, org=org)
     try:
         if not client.ping():
@@ -74,7 +75,7 @@ def grants(admin):
     """Two of them, so 'its own' and 'a neighbour's' are both real and neither is an agent's."""
     client, organisation, org = admin
     buckets_api, auth_api = client.buckets_api(), client.authorizations_api()
-    made, url = [], env("INFLUX_URL", "http://localhost:8086")
+    made, url = [], installation.series()[0]
 
     def mint() -> Grant:
         name = f"orexis-test-{uuid.uuid4().hex[:10]}"

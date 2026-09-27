@@ -1,0 +1,38 @@
+@prefix : <http://example.org/orexis/installation#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix schema: <https://schema.org/> .
+
+<> a onboarding:DeploymentGraph .    # this document is one graph, and this is what it is
+
+#  THE INSTALLATION: what every world on this host shares, and where each thing answers. Read by
+#  onboarding alone — `orexis-influx` and `orexis-compose` for the series store, `orexis-onboard`
+#  to allocate a broker the ports no world asserts, and `orexis-infra-compose`, which writes
+#  `infra/compose.yaml` from this file. No agent loads it and no container is handed it: what an
+#  agent needs of it reaches the agent as environment.
+#
+#  NEVER A CREDENTIAL. This says where, never what may be done there. The admin token is in
+#  `infra/secrets/admin.env`, and what each agent may do arrives as its own credentials, minted
+#  into `world/<name>/secrets/` (knowledge/domain/onboarding/deployment.md).
+
+#  THE SERIES STORE every agent writes its history to, a bucket of its own in the organisation
+#  below. PINNED, and load-bearing: docker.io's `latest` is InfluxDB 3 Core, whose tokens are
+#  admin-only, so an accidental upgrade would remove the mechanism per-agent isolation is built
+#  on (knowledge/decisions/series-and-bus-isolation.md).
+:series a onboarding:SeriesStore ;
+    schema:url "http://localhost:8086" ;
+    onboarding:organisation "orexis" ;
+    onboarding:image "docker.io/library/influxdb:2.7" .
+
+#  WHERE THE SERIES IS DRAWN: the operator's view of every world at once, over TLS.
+:view a onboarding:SeriesView ;
+    schema:url "https://localhost:3000" ;
+    onboarding:image "docker.io/grafana/grafana:11.2.0" .
+
+#  WHERE A WORLD'S BROKER LISTENS WHEN THE WORLD DOES NOT SAY. A world may assert its broker's urls
+#  in a deployment graph of its own, and an asserted url wins. A broker no world asserts a url for
+#  is allocated one here: the lowest slot n at which every url below, its port raised by n, is
+#  free on its host — free of every url a world asserts, of every one already allocated, and of
+#  the services above. What is allocated is written to `installation.derived.ttl` beside this
+#  file, and an allocation made there is kept, so a world added later never moves another's port.
+#  A collision is refused: two brokers on one port, or a broker on a service's.
+:brokers onboarding:allocatesFrom "mqtt://localhost:1884" , "mqtts://localhost:8884" .

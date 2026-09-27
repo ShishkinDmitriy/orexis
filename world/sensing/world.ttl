@@ -23,8 +23,8 @@
 #  of them.
 #
 #  This graph is the fern and the board's parts. The agent, the board as a client and the topics
-#  are society.ttl; where the broker listens is deployment.ttl; the parts' pins and calibration
-#  are hardware.ttl.
+#  are society.ttl; where the broker listens is the installation's to allocate, since this world
+#  asserts none; the parts' pins and calibration are hardware.ttl.
 
 :fern a sosa:FeatureOfInterest ;
     orexis:localId "fern" .

@@ -70,9 +70,11 @@ had them.
 > **Amended 2026-09-27 ([a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md)).**
 > The rendezvous argument stands; the place does not. Topics, their filters and the broker as
 > what clients connect to belong in the world's SOCIETY graph, which agents and `orexis-mqtt`
-> read, and the broker's address in its DEPLOYMENT graph, which onboarding alone reads. Built by
-> #823: every world with a bus states them in `society.ttl` and `deployment.ttl` beside its
-> `world.ttl`, and no agent's boot holds the address. The bucket argument below
+> read, and the broker's address in a DEPLOYMENT graph, which onboarding alone reads. Built by
+> #823 and #827: every world with a bus states the society in `society.ttl` beside its
+> `world.ttl`, and its broker's address in a `deployment.ttl` or not at all — the installation
+> allocates one a world leaves out, since a port is unique across the host and a world may not
+> know the others' — and no agent's boot holds the address. The bucket argument below
 > is what that record extends to a store per purpose, history and metrics.
 
 A **bucket has exactly one writer and nobody to agree with**. That makes it deployment, like the
@@ -97,7 +99,7 @@ at a fixed path in the container, so the agent reads a path and never constructs
 | agent's bucket + token | `world/<w>/secrets/influx-<agent>.env` | mounted into that one container |
 | agent's broker credential | `world/<w>/secrets/mqtt-<agent>.env` | same |
 | device's broker credential | `world/<w>/secrets/mqtt-<id>.env` | world-scoped, since a broker is — see below |
-| `infra/.env` | committed template | now only `INFLUX_URL` and `INFLUX_ORG` |
+| `infra/installation.ttl` | committed document | where the series store is and its org, and where a broker's ports are allocated from — no credential; `infra/.env` went with #827 |
 
 **Both are world-scoped, though devices were not at first.** An agent runs in a container
 belonging to one world, so its credential obviously belongs to that world. A board was argued to
@@ -127,7 +129,8 @@ Influx 2.x is not end-of-life, and its per-bucket tokens do the job — verified
 wrote and read its own bucket, and was refused its neighbour's with 403 on write and 404 on read.
 The 404 is the better answer: the token cannot establish that the other bucket exists.
 
-So the version pin in `infra/compose.yaml` is now **load-bearing**, not tidiness. Docker's
+So the version pin — the image in `infra/installation.ttl`, from which `infra/compose.yaml` is
+generated — is now **load-bearing**, not tidiness. Docker's
 `latest` tag points at InfluxDB 3 Core, and drifting onto it would remove the mechanism this
 decision is built on.
 

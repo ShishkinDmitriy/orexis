@@ -6,8 +6,9 @@
 
 #  THE SENSING WORLD'S SOCIETY: one agent and one board, each a client of the world's one broker,
 #  and the two topics between them — the board's readings and its commands — named by the filters
-#  that match them. The broker is here as what the clients are connected to; where it listens is
-#  deployment.ttl's, which onboarding reads and no agent does.
+#  that match them. The broker is here as what the clients are connected to; where it listens this
+#  world does not assert, so the installation allocates it (infra/installation.derived.ttl), which
+#  onboarding reads and no agent does.
 
 :broker a mqtt4ssn:Broker .
 

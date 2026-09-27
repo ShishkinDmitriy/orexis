@@ -76,16 +76,18 @@ world that imports the domain has it. See [`domain/world`](knowledge/domain/kern
 ## 1. Infra
 
 ```bash
-cp infra/.env.example infra/.env                      # where the series store is (no secret)
 cp infra/admin.env.example infra/secrets/admin.env    # the admin token — fill it in
 orexis-infra-certs                                    # the services' certs and whom they trust
 cd infra && podman compose up -d                      # or: docker compose up -d
 ```
 
-Brings up **InfluxDB (`:8086`) and Grafana (`:3000`), and nothing else.** No triplestore — each
+Brings up **InfluxDB (`:8086`) and Grafana (`:3000`), and nothing else.** Where each answers, its
+image and the series store's organisation are stated in `infra/installation.ttl`, and
+`infra/compose.yaml` is generated from it by `orexis-infra-compose` — edit the document and
+regenerate, never the compose file. No triplestore — each
 agent holds its own belief base inside its own container. **No broker either:** a broker belongs
-to a world, not to the installation, so each world runs its own on its own port and neither can
-hear the other. Grafana is pre-wired to InfluxDB over a **read-only** token, requires a login,
+to a world, not to the installation, so each world runs its own, on the ports it asserts or, if it
+asserts none, the ports `orexis-onboard` allocates it, and neither can hear the other. Grafana is pre-wired to InfluxDB over a **read-only** token, requires a login,
 and serves HTTPS with a certificate from the installation CA — so your browser will warn until
 you trust `infra/secrets/ca.crt`.
 

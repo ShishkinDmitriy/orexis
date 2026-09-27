@@ -30,8 +30,9 @@ arrives on the client's network thread, and a write belongs on the one executing
 and the container's thread calls `handle`. A test hands a client of its own with paho's shape —
 `subscribe`, `publish`, `connect`, `loop_start` and the two setters. Nothing here reads a host
 or a port off the world, and nothing could: a world names its broker in its society graph, as
-what clients connect to, and states where it listens in a deployment graph, a kind the agent's
-vocabulary does not declare and its boot passes over (a-documents-kind-says-who-reads-it).
+what clients connect to, and where it listens is in a deployment graph — the world's own, or the
+installation's allocation — a kind the agent's vocabulary does not declare and its boot passes
+over (a-documents-kind-says-who-reads-it).
 """
 
 from __future__ import annotations

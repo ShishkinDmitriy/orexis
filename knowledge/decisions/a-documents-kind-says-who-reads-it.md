@@ -183,7 +183,8 @@ figures.
 The shared series store lives in `infra/compose.yaml` and `infra/.env` today. By rule 3 — nothing
 in `infra/` is world-specific, and no world may know that the others exist — the shared services
 are described by an installation document under `infra/` whose kind is deployment, and each
-world's broker by that world's own deployment graph. `orexis-compose` already derives the agents'
+world's broker by that world's own deployment graph — amended below: a world may, and one that
+does not is allocated its port by the installation. `orexis-compose` already derives the agents'
 services from the roster (`onboarding/compose.py`); with brokers, stores and images in documents,
 the rest of a compose file is derivable too.
 
@@ -191,6 +192,55 @@ the rest of a compose file is derivable too.
 copies every public graph, and speech builds the documents it sends a peer from the store; a
 secret in any of them is a secret one select from leaving. A deployment graph says where, never
 what may be done there.
+
+## Amended 2026-09-27: a port no world asserts is the installation's to allocate (#827)
+
+Each of the four worlds with a bus stated its own broker's urls, on 1884, 1888, 1889 and 1890, and
+they missed each other only because whoever wrote each world knew which ports the others had
+taken — coordination a world is not allowed to have, since it may not know that the others exist.
+A port is unique across the host, and only the installation sees the host.
+
+**Asserted wins, derived completes.** A world may still assert its broker's urls, and is told
+exactly those; the terrace does, since its board is flashed with 1888. A world that asserts none
+is allocated them by the installation: `infra/installation.ttl` states a pool
+(`onboarding:allocatesFrom`), and a broker is given the lowest slot at which every url of the pool,
+raised by the slot, is free of everything asserted, everything allocated and the installation's
+own services. What was allocated is a derived deployment graph, `infra/installation.derived.ttl`,
+committed and read back with `orexis:arrivedBy orexis:Derived`. The sensing world asserts nothing
+now and is allocated the 1884 and 8884 it asserted before, so its board needs no reflashing.
+
+**Derived TTL is the middle layer.** The compose file, the broker's config, an agent's
+environment and a board's `config.h` only format what the asserted and derived graphs say; none
+computes a port, and every allocation is a line a reviewer reads in a diff. A test holds the
+committed derivation to a fresh one. `onboarding/derived.py` writes and reads such graphs and knows
+nothing of ports, since #836 derives topic names into the same layer. The allocation is Python and
+not a SPARQL rule, because it is a search that remembers, which a rule over this engine does badly;
+a derivation that is a join would be a rule, writing the same kind of graph.
+
+**What is refused is a collision**, never resolved: two brokers on one host and port, asserted or
+allocated, or a broker on a service's port — named, and nothing written. A world asserting the port
+already allocated to another is refused rather than moving the other, which may be a board in a pot.
+
+**Refused: a world stating its own port, always** — this change's first cut, and the extended
+issue's wording. It would move the terrace's pinned port into the installation, and make the
+installation a list of every world to keep in step with the worlds. **Refused: allocating afresh
+each run**, by a world's position among the rest: a world whose name sorts first would take
+1884 and move the sensing world's board. So the derivation remembers — an allocation kept for as
+long as its broker exists and asserts nothing — and, since its own output is then one of its
+inputs, a kept allocation must be one slot of the pool, or the document was edited and is refused.
+
+This is how rule 3 and the installation naming worlds stand together. The derived graph names
+every broker it allocates, because the installation is the one reader that sees every world
+anyway; a world names nothing of the installation, and `broker` asks it about the one broker the
+world's own society names, so no world is told another's address.
+
+**The host stays in the url.** Every address is a `schema:url` — asserted, allocated, or the
+pool's — the one address word every reader reads, so an installation split over two machines needs
+no second word, and a clash is one host and one port, never the port alone.
+
+**`infra/compose.yaml` is derived** from the installation by `orexis-infra-compose`: the images,
+the ports and the organisation are the document's, how each service runs is the template's, and a
+test holds the committed file to the rendering. The seam this record left for it is closed.
 
 # What this supersedes, and what it amends
 
@@ -208,7 +258,8 @@ answers) went with the hooks they were about.
 
 - *A broker's address is the world's to state and the agent's to be told* — still true, and now
   structural: the world states it in a deployment graph the agent does not load, and an agent may
-  be told several, one per broker it shares with something it needs.
+  be told several, one per broker it shares with something it needs. Amended in turn (§7): a world
+  may state it, and the installation allocates one the world leaves out.
 - *A series is watched and never believed, and it keeps the shape the panels draw* — the first
   half stands; the second falls. The shape was 0.1.0's, kept so the terrace's panels drew across
   the switch, and it was the shape of one property: every other lands as soil moisture. History is
@@ -236,7 +287,6 @@ rendezvous stays public, its address does not.
   ([model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)).
 - **A wrong world is not caught by derivation.** A premise misstated loads the wrong packages as
   confidently as a right one loads the right ones; what would catch it is a world's own tests.
-- **`infra/compose.yaml` derived whole** from the installation document, after the document exists.
 
 # Verified, and assumed
 
