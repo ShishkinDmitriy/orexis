@@ -673,18 +673,27 @@ it is a record wearing a bullet.
 - **The plant's surroundings are one domain** — water and climate were two 0.1.0 packages, and the
   soil's moisture, the air's temperature, the source and the heater are one `climate:` vocabulary
   in `domains/climate/`; actuation is the other, the devices and the dose.
-- **A broker's address is the world's to state and the agent's to be told** — MQTT4SSN names a
-  broker and no port, so the world says `schema:url` on its `mqtt4ssn:Broker` and the operator's
-  tools read it to run the broker and write each agent's environment; the agent reads only its
-  environment, as the transport's principle has it, and `orexis-agent` runs the 0.2.0 runtime.
-  The address is stated in a deployment graph, a kind no agent loads, so being told is
-  structure rather than discipline (#823), and an agent would be told one per broker it shares with something
-  it needs (a-documents-kind-says-who-reads-it).
+- **A broker's address is the world's to assert or the installation's to allocate, and the
+  agent's to be told** — MQTT4SSN names a broker and no port, so a world may say `schema:url` on
+  its `mqtt4ssn:Broker` in a `deployment.ttl` of its own, and one that does not is allocated a url
+  by the installation, which alone sees which ports every world holds; the operator's tools read
+  the asserted url or the allocated one to run the broker and write each agent's environment.
+  Asserted wins, derived completes, and a collision is refused, never resolved (#827). The address
+  is in a deployment graph, a kind no agent loads, so being told is structure rather than
+  discipline (#823), and an agent would be told one per broker it shares with something it needs
+  (a-documents-kind-says-who-reads-it); the installation may name a world's broker, and a world
+  names nothing of the installation.
+- **What the documents leave out is derived into a document, and a renderer only formats** — an
+  allocated port is a line in `infra/installation.derived.ttl`, committed, read back as
+  `orexis:Derived` and held to a fresh derivation, so no compose file, broker config or `config.h`
+  computes one; a derivation that remembers what it allocated moves no world's port when another is
+  added, and checks what it remembers, since its own output is then one of its inputs (#827).
 - **A world's wiring is its society, and its world graph speaks no MQTT4SSN** — the agents, the
   clients, the broker as a rendezvous, the topics, the filters and which device speaks on which are
-  `society.ttl`, the broker's address `deployment.ttl`, so a sensor is stated in two graphs, what
-  it observes in the world and where it publishes in the society; the layout test holds every
-  MQTT4SSN word to a society graph and every `schema:url` to a deployment graph (#823).
+  `society.ttl`, the broker's address, where the world asserts one, `deployment.ttl`, so a sensor is
+  stated in two graphs, what it observes in the world and where it publishes in the society; the
+  layout test holds every MQTT4SSN word to a society graph and every `schema:url` to a deployment
+  graph (#823).
 - **Signing is between agents, and an agent trusts itself** — a signature proves to a device that
   the agent asking for an act was authorised by another; an agent dosing its own bed through its
   own pump has no second party to convince, and the broker's ACL already admits only the holder to
@@ -913,8 +922,12 @@ it is a record wearing a bullet.
    installation: the broker image, the installation CA, Grafana's material, the admin token. A
    world's broker config, its ACL, its certificates and its device credentials live with the
    world. Also: **no `.env` at the repo root, because nothing there is true of every world at
-   once.** `infra/.env` says where the shared series store is — the URL and the org, and nothing
-   secret, because that file is handed to every agent container. What an agent may *do* with
+   once.** `infra/installation.ttl` says where the shared services are — the series store's URL
+   and org, the images, and the pool a broker's ports are allocated from — and nothing secret;
+   onboarding writes what an agent needs of it into that agent's environment, and derives
+   `infra/compose.yaml` from it. What it allocated, `infra/installation.derived.ttl`, is the one
+   document that names worlds, because a port is unique across the host and only the installation
+   sees the host; a world names none of it and never learns what the others were given. What an agent may *do* with
    the store and the bus arrives as its own credentials, minted per agent into
    `world/<name>/secrets/` and mounted into that container alone. The admin token lives apart
    from both, in `infra/secrets/`, and no agent ever holds it. See
@@ -1025,13 +1038,16 @@ stops being theoretical.
 source .venv/bin/activate
 pip install -e ".[dev]"
 
-orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, then grant everything below.
+orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, derive what the documents
+                             #   leave out (a broker's port, into infra/installation.derived.ttl),
+                             #   then grant everything below.
   orexis-influx <world>      #   a bucket per agent, and a token that opens only it
   orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
   orexis-dashboards <world>  #   a Grafana folder per world, from what its agents observe
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
+orexis-infra-compose         # INFRA — infra/compose.yaml, from infra/installation.ttl
 cd world/<world> && podman compose up -d      # one container per agent
 podman build -t orexis:local .                 # only when a dependency changes
 pytest -q              # what testpaths names: agent/ and world/. No infra needed.
@@ -1055,7 +1071,7 @@ token cannot reach another's bucket. None of that is guaranteed by MQTT or compu
 here; it is how those two services happen to behave, so it is worth re-proving whenever they
 change. Both files report the version they ran against and assert nothing about it: bump
 `MOSQUITTO_VERSION` in `infra/mosquitto/Containerfile` or the Influx image in
-`infra/compose.yaml`, rebuild, and re-run `pytest infra -q -n0`.
+`infra/installation.ttl` (then `orexis-infra-compose`), rebuild, and re-run `pytest infra -q -n0`.
 
 **Onboarding is the phase between a ratified world and a running society** — see
 [onboarding](knowledge/domain/onboarding/onboarding.md). Its generators all read the world as an agent boots

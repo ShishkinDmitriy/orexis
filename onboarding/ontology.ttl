@@ -18,3 +18,23 @@ onboarding:HardwareGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label
 
 onboarding:DeploymentGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Deployment graph" ;
     rdfs:comment "What must be running for a world to be a society and where each thing answers - a broker's address, a series store, a container's image - read by onboarding alone and handed to an agent as environment. Never a credential (knowledge/domain/onboarding/deployment.md)." .
+
+#  THE INSTALLATION'S WORDS (knowledge/domain/onboarding/deployment.md). The installation is the
+#  deployment graph of what every world shares, `infra/installation.ttl`; these are what it says
+#  of each shared service. An address is `schema:url`, as a broker's already was.
+
+onboarding:SeriesStore a owl:Class ; rdfs:label "Series store" ;
+    rdfs:comment "Where every agent's series is written, a bucket of its own in the store's organisation - InfluxDB 2 today. `orexis-influx` mints buckets and tokens in it and `orexis-compose` tells each agent where it is (knowledge/domain/kernel/series.md)." .
+
+onboarding:SeriesView a owl:Class ; rdfs:label "Series view" ;
+    rdfs:comment "Where the series is drawn for a person - the operator's view of every world at once, Grafana today. `orexis-infra-compose` runs it on the port its url states." .
+
+onboarding:organisation a owl:DatatypeProperty ; rdfs:label "organisation" ;
+    rdfs:domain onboarding:SeriesStore ;
+    rdfs:comment "The organisation on a series store that every bucket is minted in and every agent is told of. Where, not what may be done there: the token is a credential and is in no graph." .
+
+onboarding:image a owl:DatatypeProperty ; rdfs:label "image" ;
+    rdfs:comment "The container image a shared service runs, pinned where a newer one would change what the service guarantees - read by `orexis-infra-compose`." .
+
+onboarding:allocatesFrom a owl:DatatypeProperty ; rdfs:label "allocates from" ;
+    rdfs:comment "Where the installation allocates a broker the urls no world asserts for it: one url per scheme, each at the first port of its run, and a broker is given the lowest slot n at which every one of them, its port raised by n, is free on its host. What is allocated is a derived deployment graph, `infra/installation.derived.ttl`, and an allocation made is kept, so adding a world moves no other's port. An asserted url always wins (knowledge/decisions/a-documents-kind-says-who-reads-it.md, its amendment)." .

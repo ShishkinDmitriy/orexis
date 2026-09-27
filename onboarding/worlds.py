@@ -9,7 +9,6 @@ where it is.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -34,8 +33,3 @@ def world_dir(name: str) -> Path:
     if not _documents(path):
         raise SystemExit(f"no world called {name!r} in world/ — there is {', '.join(worlds()) or 'nothing'}")
     return path
-
-
-def env(name: str, default: str | None = None) -> str | None:
-    """A deployment fact from the environment, never a belief."""
-    return os.environ.get(name, default)

@@ -47,8 +47,9 @@ READY_S = 20.0       # how long the broker gets to finish a reload
 
 
 def _bus() -> tuple[str, int]:
-    """Discovered, not hardcoded — the world states where its broker listens, `schema:url` on its
-    `mqtt4ssn:Broker`, as the operator's tools read it."""
+    """Discovered, not hardcoded — where the world's broker listens, `schema:url` on its
+    `mqtt4ssn:Broker`, asserted by the world or allocated by the installation, as the operator's
+    tools read it."""
     host, plain, _tls = mqtt_admin.broker(WORLD)
     return host, plain
 

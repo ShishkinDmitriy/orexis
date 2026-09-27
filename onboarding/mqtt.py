@@ -50,7 +50,7 @@ import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import certs, reading
+from . import certs, installation, reading
 from agent.store import graphs_of, rows
 from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
@@ -153,11 +153,11 @@ SELECT ?id ?pattern WHERE {{
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
 #  WHERE THE BROKER LISTENS: `schema:url` on the world's `mqtt4ssn:Broker`, plain and TLS. The
-#  broker is named in the society graph, as what clients connect to, and its urls are stated in
-#  the deployment graph, a kind only onboarding reads — so the agent, told this through its
-#  environment, generated from here, cannot read it off the world. Asked over both at once.
-#  Every broker is asked for, url or none, so a second one is seen whatever it states.
-_BROKER_Q = f"SELECT ?b ?url WHERE {{ ?b a <{MQTT4SSN}Broker> OPTIONAL {{ ?b schema:url ?url }} }}"
+#  broker is named in the world's society graph, as what clients connect to; its urls are what the
+#  world asserts in a deployment graph of its own, or, where it asserts none, what the installation
+#  allocated it in the derived deployment graph (`infra/installation.derived.ttl`) — a kind only
+#  onboarding reads, so the agent, told this through its environment, cannot read it off the world.
+#  Asserted wins, derived completes, and this only reads which it is (onboarding.installation).
 _DEFAULT_PORTS = {"mqtt": 1883, "mqtts": 8883}
 
 
@@ -181,35 +181,42 @@ def broker(world: str) -> tuple[str, int, int | None]:
     (knowledge/decisions/a-documents-kind-says-who-reads-it.md, its first seam). One broker whose
     urls disagree — two hosts, or two ports for one scheme — is refused for the same reason: a
     board is flashed with one of them, and nothing here can say which is right.
+
+    The urls are the world's own where it asserts them, and otherwise the ones the installation
+    allocated, asked for by the IRI the world's society names its broker by and nothing else — so a
+    world is told its own broker's address and never another's. Nothing here computes a port.
     """
     from urllib.parse import urlparse
     store = _world(world)
-    found = rows(store, _BROKER_Q, graphs_of(store, PUBLIC, reading.DEPLOYMENT))
-    brokers = sorted({row["b"] for row in found})
+    brokers = installation.brokers_of(store)
+    if not brokers:
+        raise SystemExit(f"orexis-mqtt: world {world!r} states no mqtt4ssn:Broker — it has no bus")
     if len(brokers) > 1:
         raise SystemExit(
             f"orexis-mqtt: world {world!r} states {len(brokers)} mqtt4ssn:Brokers ({', '.join(brokers)}); "
             "onboarding tells an agent one broker's address, and how several would reach it is not "
             "decided — see knowledge/decisions/a-documents-kind-says-who-reads-it.md")
+    where = f"its mqtt4ssn:Broker {brokers[0]}"
+    urls = installation.asserted_on(store, brokers[0]) or installation.allocated(brokers[0])
     hosts: set[str] = set()
     ports: dict[str, set[int]] = {scheme: set() for scheme in _DEFAULT_PORTS}
-    for row in found:
-        url = urlparse(row.get("url") or "")
+    for text in urls:
+        url = urlparse(text)
         if url.scheme not in ports:
             continue
         if url.hostname:
             hosts.add(url.hostname)
         ports[url.scheme].add(url.port or _DEFAULT_PORTS[url.scheme])
-    where = f"its mqtt4ssn:Broker {brokers[0]}" if brokers else "an mqtt4ssn:Broker"
     if len(hosts) > 1:
-        raise SystemExit(f"orexis-mqtt: world {world!r} states two hosts for {where}: "
+        raise SystemExit(f"orexis-mqtt: world {world!r} has two hosts for {where}: "
                          f"{', '.join(sorted(hosts))}")
     for scheme, stated in ports.items():
         if len(stated) > 1:
-            raise SystemExit(f"orexis-mqtt: world {world!r} states two {scheme}:// ports for {where}: "
+            raise SystemExit(f"orexis-mqtt: world {world!r} has two {scheme}:// ports for {where}: "
                              f"{', '.join(map(str, sorted(stated)))}")
     if not ports["mqtt"]:
-        raise SystemExit(f"orexis-mqtt: world {world!r} states no mqtt:// url on {where}")
+        raise SystemExit(f"orexis-mqtt: world {world!r} asserts no mqtt:// url on {where}, and the installation "
+                         "has allocated it none — `orexis-onboard` allocates one")
     (plain,), tls = ports["mqtt"], next(iter(ports["mqtts"]), None)
     return next(iter(hosts), "localhost"), plain, tls
 
@@ -358,11 +365,13 @@ def provision(world: str, rotate: bool = False) -> None:
 
 
 def write_config(world: str) -> None:
-    """This world's broker configuration, from the ports the world itself states.
+    """This world's broker configuration, on the ports its world asserts or the installation
+    allocated it.
 
-    Generated rather than baked, because the ports are a fact about THIS world and two brokers on
-    one host must not collide. Everything else is the same in every world, and is here rather
-    than in the image so that changing it is regenerating rather than rebuilding.
+    Generated rather than baked, because the ports differ per world and two brokers on one host
+    must not collide — which the installation, seeing the host, answers for. Everything else is
+    the same in every world, and is here rather than in the image so that changing it is
+    regenerating rather than rebuilding.
     """
     _, plain, tls = broker(world)
 

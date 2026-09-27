@@ -43,6 +43,8 @@ orexis-firmware = "onboarding.firmware:main"
 # INFRA, not onboarding: the services' own identities and whom the broker trusts. Its lifecycle
 # is the infrastructure's — possibly another host, certainly another schedule.
 orexis-infra-certs = "onboarding.infra_certs:main"
+# INFRA too: infra/compose.yaml, written from the installation document beside it.
+orexis-infra-compose = "onboarding.installation:main"
 
 [build-system]
 requires = ["setuptools>=68"]

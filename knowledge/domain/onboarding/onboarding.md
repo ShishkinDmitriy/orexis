@@ -17,18 +17,25 @@ since rotating one service's credentials should not touch another's.
 |---|---|
 | `orexis-influx` | a bucket per agent on the series store, and a token that opens only it |
 | `orexis-mqtt` | a credential per principal on the broker, and the ACL derived from the wiring — then reloads the broker, so connected agents keep their sessions |
-| `orexis-compose` | `world/<name>/compose.yaml`: one container per agent, the world mounted beside the domains, the broker's address as environment |
+| `orexis-compose` | `world/<name>/compose.yaml`: one container per agent, the world mounted beside the domains, the broker's address and the series store's as environment |
 | `orexis-dashboards` | a Grafana folder for the world, from what its agents observe |
 
 `orexis-firmware <world>` writes a board's `config.h` from the same documents: the broker's port off
-the `schema:url` on the world's `mqtt4ssn:Broker` in its deployment graph, the topics in the
+the `schema:url` on the world's `mqtt4ssn:Broker`, asserted or allocated, the topics in the
 society graph's MQTT4SSN words, the pins from the world's hardware graph, the credential
 `orexis-mqtt` minted.
 
+**Derived before it is rendered.** `orexis-onboard` first completes what the documents leave out:
+a broker whose world asserts no url is allocated one by the installation, into a derived
+[deployment](/domain/onboarding/deployment.md) graph, and the four above only format what is
+asserted and derived — none computes a port. The series store's address comes from the
+installation (`infra/installation.ttl`) too, and `orexis-infra-compose` writes the shared services'
+own compose file from it, alongside `orexis-infra-certs` and apart from onboarding.
+
 **One broker, one address.** The compose file and the config are each handed a single address, so
 a world stating a second `mqtt4ssn:Broker`, or one broker whose urls disagree on a host or on a
-scheme's port, is refused and named rather than merged (`broker` in `onboarding/mqtt.py`). How
-several would reach an agent is the first seam of
+scheme's port, is refused and named rather than merged (`broker` in `onboarding/mqtt.py`).
+How several would reach an agent is the first seam of
 [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md).
 
 # Nothing here decides
@@ -36,7 +43,9 @@ several would reach an agent is the first seam of
 The ACL is the wiring: an agent reads the topics of every sensor hosted by what it acts for and
 writes the topic its devices listen to; a board writes what its sensors publish on. That is the
 same set the MQTT member subscribes to and publishes on, so if the two ever differ an agent fails to
-connect — which is the point of deriving it. The roster is the world's `orexis:Agent`s. The world is
+connect — which is the point of deriving it. The roster is the world's `orexis:Agent`s. The one
+choice made here is a port no world asserted, and it is made once: the allocation is kept, so
+re-running changes nothing, and a sovereign who cares asserts the port instead. The world is
 read as the [runtime](/domain/kernel/runtime.md) boots it, so onboarding refuses a world whose documents
 will not load.
 

@@ -202,27 +202,57 @@ def test_the_firmware_generator_reads_the_hardware_beside_the_society():
 
 # --- one broker, one address: onboarding refuses what it would otherwise merge ---------------
 
-def _sensing_world_stating(tmp_path, monkeypatch, society=lambda text: text, deployment=lambda text: text) -> str:
-    """The sensing world, its society and deployment graphs edited, as the world every onboarding
-    tool is handed."""
-    from onboarding import compose, firmware, mqtt
+_BUS_WORLDS = ("allotment", "greenhouse", "sensing", "terrace")
+_DOMAINS = (REPO_ROOT / "domains").as_uri()
 
-    world = tmp_path / "sensing"
-    world.mkdir()
-    climate = (REPO_ROOT / "domains" / "climate" / "ontology.ttl").as_uri()
-    here = REPO_ROOT / "world" / "sensing"
-    (world / "world.ttl").write_text((here / "world.ttl").read_text().replace("<../../domains/climate/ontology.ttl>", f"<{climate}>"))
-    (world / "society.ttl").write_text(society((here / "society.ttl").read_text()))
-    (world / "deployment.ttl").write_text(deployment((here / "deployment.ttl").read_text()))
-    for module in (mqtt, compose, firmware):
-        monkeypatch.setattr(module, "world_dir", lambda name: world)
-    return "sensing"
 
+def _installed(tmp_path, monkeypatch, edit=None, installation=lambda text: text, derivation=True) -> Path:
+    """The worlds with a bus, copied, each document `edit[(world, file)]` changes rewritten (a file
+    it names that is not there is written from nothing, and one it answers None for is dropped),
+    beside a copy of the installation and — `derivation` — of what was derived from it: every
+    onboarding tool redirected to the copy. Answers the copy's `world/`."""
+    from onboarding import compose, firmware, installation as installed, mqtt
+
+    edit = edit or {}
+    root = tmp_path / "world"
+    names = sorted({*_BUS_WORLDS, *(w for w, _ in edit)})
+    for name in names:
+        here, there = REPO_ROOT / "world" / name, root / name
+        there.mkdir(parents=True)
+        files = {p.name: p.read_text() for p in (here.glob("*.ttl") if here.is_dir() else [])}
+        for (w, file), change in edit.items():
+            if w == name:
+                files[file] = change(files.get(file, ""))
+        for file, text in files.items():
+            if text is not None:
+                (there / file).write_text(text.replace("<../../domains/", f"<{_DOMAINS}/"))
+    infra = tmp_path / "infra"
+    infra.mkdir()
+    (infra / "installation.ttl").write_text(installation((REPO_ROOT / "infra" / "installation.ttl").read_text()))
+    if derivation:
+        (infra / "installation.derived.ttl").write_text((REPO_ROOT / "infra" / "installation.derived.ttl").read_text())
+    monkeypatch.setattr(installed, "INSTALLATION", infra / "installation.ttl")
+    monkeypatch.setattr(installed, "DERIVATION", infra / "installation.derived.ttl")
+    monkeypatch.setattr(installed, "worlds", lambda: names)
+    for module in (installed, mqtt, compose, firmware):
+        monkeypatch.setattr(module, "world_dir", lambda name: root / name)
+    return root
+
+
+def _asserting(*urls: str, world: str = "sensing") -> str:
+    """A deployment graph a world asserts of its own broker."""
+    said = " , ".join(f'"{u}"' for u in urls)
+    return (f"@prefix : <http://example.org/orexis/world/{world}#> .\n@prefix onboarding: <http://example.org/orexis/onboarding#> .\n"
+            f"@prefix schema: <https://schema.org/> .\n<> a onboarding:DeploymentGraph .\n:broker schema:url {said} .\n")
+
+
+_SENSING_BROKER = "http://example.org/orexis/world/sensing#broker"
 
 #  A SECOND BROKER, stated as a first one is: named in the society as what a client could connect
-#  to, and its address in the deployment.
-_TWO_BROKERS = {"society": lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n",
-                "deployment": lambda text: text + '\n:elsewhere schema:url "mqtt://elsewhere:1999" , "mqtts://elsewhere:8999" .\n'}
+#  to, and its address asserted in a deployment graph of the world's own.
+_TWO_BROKERS = {("sensing", "society.ttl"): lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n",
+                ("sensing", "deployment.ttl"): lambda _: _asserting("mqtt://elsewhere:1999", "mqtts://elsewhere:8999")
+                .replace(":broker schema:url", ":elsewhere schema:url")}
 
 
 def test_a_world_stating_two_brokers_is_refused_naming_both(tmp_path, monkeypatch):
@@ -232,27 +262,27 @@ def test_a_world_stating_two_brokers_is_refused_naming_both(tmp_path, monkeypatc
     agent is an open seam (a-documents-kind-says-who-reads-it), so onboarding refuses instead."""
     from onboarding import mqtt
 
-    world = _sensing_world_stating(tmp_path, monkeypatch, **_TWO_BROKERS)
+    _installed(tmp_path, monkeypatch, _TWO_BROKERS)
     with pytest.raises(SystemExit, match=r"2 mqtt4ssn:Brokers") as refused:
-        mqtt.broker(world)
+        mqtt.broker("sensing")
     assert "sensing#broker" in str(refused.value) and "sensing#elsewhere" in str(refused.value)
 
 
 @pytest.mark.parametrize("edit, contradiction", [
-    (lambda text: text.replace('"mqtts://localhost:8884"', '"mqtts://elsewhere:8884"'), "two hosts"),
-    (lambda text: text.replace('"mqtts://localhost:8884"', '"mqtt://localhost:1999"'), "two mqtt:// ports"),
-    (lambda text: text.replace('"mqtt://localhost:1884"', '"mqtt://localhost:1884" , "mqtts://localhost:8999"'),
+    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtts://elsewhere:8888"'), "two hosts"),
+    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtt://localhost:1999"'), "two mqtt:// ports"),
+    (lambda text: text.replace('"mqtt://localhost:1888"', '"mqtt://localhost:1888" , "mqtts://localhost:8999"'),
      "two mqtts:// ports"),
 ], ids=["hosts", "plain", "tls"])
-def test_one_broker_stating_two_addresses_is_refused(tmp_path, monkeypatch, edit, contradiction):
+def test_one_broker_given_two_addresses_is_refused(tmp_path, monkeypatch, edit, contradiction):
     """One broker whose urls disagree — two hosts, or two ports for one scheme — was answered with
     whichever sorted first or last. A board is flashed with one host and one port, so one of them
-    is simply wrong, and onboarding cannot tell which."""
+    is simply wrong, and onboarding cannot tell which. The terrace asserts its urls."""
     from onboarding import mqtt
 
-    world = _sensing_world_stating(tmp_path, monkeypatch, deployment=edit)
+    _installed(tmp_path, monkeypatch, {("terrace", "deployment.ttl"): edit})
     with pytest.raises(SystemExit, match=contradiction):
-        mqtt.broker(world)
+        mqtt.broker("terrace")
 
 
 @pytest.mark.parametrize("tool", ["compose", "firmware"])
@@ -261,9 +291,207 @@ def test_the_tools_told_the_address_inherit_the_refusal(tmp_path, monkeypatch, t
     into every board's config.h; both ask `broker`, so neither writes a merged address."""
     from onboarding import compose, firmware
 
-    world = _sensing_world_stating(tmp_path, monkeypatch, **_TWO_BROKERS)
+    _installed(tmp_path, monkeypatch, _TWO_BROKERS)
     with pytest.raises(SystemExit, match=r"2 mqtt4ssn:Brokers"):
-        compose.render(world) if tool == "compose" else firmware.generate(world)
+        compose.render("sensing") if tool == "compose" else firmware.generate("sensing")
+
+
+# --- asserted wins, derived completes: a port no world asserts is the installation's (#827) ------
+
+def test_an_asserted_url_wins_and_a_broker_asserting_none_is_allocated_one():
+    """The terrace asserts where its broker listens and is told exactly that; the sensing world
+    asserts nothing, and is told what the installation allocated it — and the allocation names no
+    broker that asserts."""
+    from onboarding import installation, mqtt
+
+    assert mqtt.broker("terrace") == ("localhost", 1888, 8888)
+    assert mqtt.broker("sensing") == ("localhost", 1884, 8884)
+    assert installation.allocated(_SENSING_BROKER) == ["mqtt://localhost:1884", "mqtts://localhost:8884"]
+    assert installation.allocated("http://example.org/orexis/world/terrace#broker") == []
+
+
+def test_an_assertion_wins_over_an_allocation_already_made(tmp_path, monkeypatch):
+    """A world that comes to assert a url is told its assertion at once, whatever the derived
+    document still says, and the next derivation lets the allocation go."""
+    from onboarding import installation, mqtt
+
+    _installed(tmp_path, monkeypatch, {("sensing", "deployment.ttl"): lambda _: _asserting("mqtt://localhost:1885", "mqtts://localhost:8885")})
+    assert mqtt.broker("sensing") == ("localhost", 1885, 8885)
+    assert _SENSING_BROKER not in installation.derive()
+
+
+def test_the_allocation_gives_the_sensing_world_the_port_it_used_to_assert():
+    """Nothing to reflash: the sensing world asserted 1884 and 8884 until #827, its board is flashed
+    with 1884, and the lowest free slot of the installation's pool — derived from nothing
+    remembered — is exactly that."""
+    from onboarding import installation
+
+    assert installation.derive(remember=False) == {_SENSING_BROKER: ["mqtt://localhost:1884", "mqtts://localhost:8884"]}
+
+
+def test_the_committed_derived_document_is_a_fresh_derivation():
+    """`infra/installation.derived.ttl` says GENERATED — do not edit, and it is what every renderer
+    reads a port from, so one left behind by a change to the documents tells a world a port nobody
+    allocated. Held to what a derivation writes now, as a committed compose file is."""
+    from onboarding import installation
+
+    assert installation.DERIVATION.read_text() == installation.derivation_text(), \
+        "infra/installation.derived.ttl is not what a derivation writes now — run `orexis-onboard`"
+
+
+def test_a_derived_document_edited_by_hand_is_refused(tmp_path, monkeypatch):
+    """The derivation keeps what it allocated before, so its own output is one of its inputs, and a
+    hand edit would be kept as if allocated — the fresh-derivation test above passing on it. A kept
+    allocation must be one slot of the pool, both urls raised alike, or it is refused."""
+    from onboarding import installation
+
+    _installed(tmp_path, monkeypatch)
+    installation.DERIVATION.write_text(installation.DERIVATION.read_text().replace('localhost:1884"', 'localhost:1885"'))
+    with pytest.raises(SystemExit, match="no slot of the installation's pool"):
+        installation.derive()
+
+
+def test_the_derived_document_arrives_derived_and_the_installation_asserted():
+    """How a graph arrived is the loader's to say, as the boot says it of its closure: onboarding
+    reads the installation as asserted and what it derived as derived, and asks by both."""
+    from onboarding import derived, installation
+    from onboarding.reading import DEPLOYMENT
+
+    s = installation._store()
+    assert derived.graphs(s, DEPLOYMENT, derived.ASSERTED) == [installation.INSTALLATION.resolve().as_uri()]
+    assert derived.graphs(s, DEPLOYMENT, derived.DERIVED) == [installation.DERIVATION.resolve().as_uri()]
+
+
+def test_no_renderer_computes_a_port(tmp_path, monkeypatch):
+    """With nothing derived, a world asserting no url has no address, and every renderer says so
+    rather than working one out — the allocation is the derivation's alone."""
+    from onboarding import compose, mqtt
+
+    _installed(tmp_path, monkeypatch, derivation=False)
+    for render in (lambda: mqtt.broker("sensing"), lambda: compose.render("sensing")):
+        with pytest.raises(SystemExit, match="has allocated it none"):
+            render()
+    assert mqtt.broker("terrace") == ("localhost", 1888, 8888)
+
+
+def _a_world_before_sensing(text: str) -> str:
+    return text.replace("/world/sensing#", "/world/aaa#")
+
+
+def test_a_world_added_later_moves_no_other_port(tmp_path, monkeypatch):
+    """A world whose name sorts before every other, asserting nothing, is allocated the lowest slot
+    left, and the sensing world keeps the port its board is flashed with. Forgetting what was
+    allocated would have handed the newcomer 1884 and moved the sensing world — which is why the
+    derivation remembers."""
+    from onboarding import installation
+
+    aaa = {("aaa", "world.ttl"): lambda _: _a_world_before_sensing((REPO_ROOT / "world/sensing/world.ttl").read_text()),
+           ("aaa", "society.ttl"): lambda _: _a_world_before_sensing((REPO_ROOT / "world/sensing/society.ttl").read_text())}
+    _installed(tmp_path, monkeypatch, aaa)
+    newcomer = "http://example.org/orexis/world/aaa#broker"
+    assert installation.derive() == {newcomer: ["mqtt://localhost:1885", "mqtts://localhost:8885"],
+                                     _SENSING_BROKER: ["mqtt://localhost:1884", "mqtts://localhost:8884"]}
+    assert installation.derive(remember=False)[_SENSING_BROKER] == ["mqtt://localhost:1885", "mqtts://localhost:8885"]
+
+
+@pytest.mark.parametrize("edit, slot", [
+    ({("terrace", "deployment.ttl"): lambda _: _asserting("mqtt://localhost:1884", "mqtts://localhost:8884", world="terrace")}, 1885),
+    ({("terrace", "deployment.ttl"): lambda _: _asserting("mqtt://localhost:1884", "mqtts://localhost:8885", world="terrace")}, 1886),
+], ids=["both-taken", "one-of-the-pair-taken"])
+def test_an_allocation_avoids_every_port_held(tmp_path, monkeypatch, edit, slot):
+    """A slot is taken only where every url of the pool, raised by it, is free: the terrace
+    asserting the pool's first plain and TLS ports pushes the sensing world one slot on, and
+    asserting the first plain and the second TLS pushes it two."""
+    from onboarding import installation
+
+    _installed(tmp_path, monkeypatch, edit)
+    assert installation.derive(remember=False)[_SENSING_BROKER] == [f"mqtt://localhost:{slot}", f"mqtts://localhost:{slot + 7000}"]
+
+
+@pytest.mark.parametrize("edit, clash", [
+    ({("greenhouse", "deployment.ttl"): lambda text: text.replace("1889", "1888")}, "localhost:1888"),
+    ({("allotment", "deployment.ttl"): lambda text: text.replace("8890", "8086")}, "localhost:8086"),
+    ({("greenhouse", "deployment.ttl"): lambda text: text.replace("1889", "1884")}, "localhost:1884"),
+    ({("greenhouse", "deployment.ttl"): lambda text: text.replace("mqtt://localhost:1889", "mqtt://localhost"),
+      ("allotment", "deployment.ttl"): lambda text: text.replace("1890", "1883")}, "localhost:1883"),
+], ids=["two-worlds-assert-one-port", "a-world-asserts-a-service-port", "a-world-asserts-an-allocated-port",
+        "a-default-port"])
+def test_a_collision_is_refused(tmp_path, monkeypatch, edit, clash):
+    """What no world can see and the installation can: two brokers on one port, or a broker on the
+    series store's. Refused and named, never resolved — a world asserting the port already
+    allocated to the sensing world is refused rather than moving it, since its board is flashed
+    with that port. A url stating no port takes its scheme's, so a clash cannot hide behind an
+    omission."""
+    from onboarding import installation
+
+    _installed(tmp_path, monkeypatch, edit)
+    with pytest.raises(SystemExit, match=rf"{clash} is held by .* and by "):
+        installation.derive()
+
+
+def test_one_port_on_two_hosts_is_no_clash(tmp_path, monkeypatch):
+    """A port is unique per HOST, and the host is in the url, so an installation split over two
+    machines may give two brokers one port."""
+    from onboarding import installation, mqtt
+
+    _installed(tmp_path, monkeypatch, {("greenhouse", "deployment.ttl"): lambda text: text.replace("localhost:1889", "elsewhere:1888")
+                                       .replace("localhost:8889", "elsewhere:8889")})
+    installation.derive()
+    assert mqtt.broker("greenhouse") == ("elsewhere", 1888, 8889)
+
+
+@pytest.mark.parametrize("where", ["installation", "world"])
+def test_a_credential_in_a_url_is_refused(tmp_path, monkeypatch, where):
+    """A deployment graph says where, never what may be done there: a password in a url would be in
+    every compose file and config.h written from it, one careless copy from leaving."""
+    from onboarding import installation
+
+    if where == "installation":
+        _installed(tmp_path, monkeypatch, installation=lambda text: text.replace("http://localhost:8086", "http://admin:secret@localhost:8086"))
+        ask = installation.series
+    else:
+        _installed(tmp_path, monkeypatch, {("terrace", "deployment.ttl"): lambda text: text.replace("mqtt://localhost", "mqtt://terrace:secret@localhost")})
+        ask = installation.derive
+    with pytest.raises(SystemExit, match="credential"):
+        ask()
+
+
+#  WHAT THE INSTALLATION MAY SAY. A token is refused as a url's userinfo above; this is the other
+#  half — no predicate but these, so a credential cannot arrive under a new name either.
+_RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+_ONBOARDING = "http://example.org/orexis/onboarding#"
+_INSTALLATION_SAYS = {_RDF_TYPE, "https://schema.org/url", _ONBOARDING + "organisation", _ONBOARDING + "image",
+                      _ONBOARDING + "allocatesFrom"}
+
+
+def test_the_installation_and_its_derivation_say_where_and_nothing_else():
+    """The installation states its services and its pool in five words, and what was derived from
+    it states urls alone, each on a broker some world's society names and whose world asserts none —
+    so an allocation left behind by a world that has gone, or made under a misspelled IRI, is caught."""
+    import pyoxigraph as ox
+
+    from agent.store import document
+    from onboarding import installation
+    from onboarding.reading import world as read
+
+    said = {q.predicate.value for q in document(REPO_ROOT / "infra" / "installation.ttl") if not isinstance(q.graph_name, ox.DefaultGraph)}
+    assert said and said <= _INSTALLATION_SAYS, f"the installation says {sorted(said - _INSTALLATION_SAYS)}"
+    derivation = [q for q in document(REPO_ROOT / "infra" / "installation.derived.ttl") if not isinstance(q.graph_name, ox.DefaultGraph)]
+    assert derivation and {q.predicate.value for q in derivation} == {_URL}
+    unasserted = set()
+    for w in _worlds():
+        store = read(REPO_ROOT / "world" / w)
+        unasserted |= {b for b in installation.brokers_of(store) if not installation.asserted_on(store, b)}
+    assert unasserted, "no world leaves its broker's url to the installation — the allocation checks nothing"
+    assert {q.subject.value for q in derivation} == unasserted
+
+
+def test_the_committed_infra_compose_is_what_the_installation_renders():
+    """`infra/compose.yaml` says GENERATED — do not edit; held to it as a world's compose file is."""
+    from onboarding import installation
+
+    assert (REPO_ROOT / "infra" / "compose.yaml").read_text() == installation.render(), \
+        "infra/compose.yaml is not what `orexis-infra-compose` renders — regenerate it"
 
 
 # --- a society the agents read, a deployment only onboarding reads (#823) -----------------------
@@ -274,10 +502,11 @@ _URL = "https://schema.org/url"
 
 def test_no_agent_holds_where_its_broker_listens():
     """The broker is two things and goes to two graphs: the rendezvous every client is connected to
-    is in the society, which an agent reads, and the `schema:url` it listens on is in the
-    deployment, a kind no agent's vocabulary declares. Booted from its directory, as a container
-    boots, every agent of every world with a bus holds the broker and not one url on it — it is
-    told where through its environment, and cannot read it off the world."""
+    is in the society, which an agent reads, and the `schema:url` it listens on is in a deployment
+    graph — the world's own, or the installation's derivation — a kind no agent's vocabulary
+    declares. Booted from its directory, as a container boots, every agent of every world with a
+    bus holds the broker and not one url on it — it is told where through its environment, and
+    cannot read it off the world."""
     import pyoxigraph as ox
 
     from agent.runtime import boot
@@ -309,7 +538,7 @@ def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address()
 
     from agent.store import document, kinds_in
 
-    society, deployment = "http://example.org/orexis#SocietyGraph", "http://example.org/orexis/onboarding#DeploymentGraph"
+    society, deployment = "http://example.org/orexis#SocietyGraph", _ONBOARDING + "DeploymentGraph"
     seen, wrong = {"society": 0, "deployment": 0}, []
     for world in _worlds():
         here = REPO_ROOT / "world" / world
@@ -326,7 +555,7 @@ def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address()
                     wrong.append(f"{world}/{path.name} speaks MQTT4SSN in a graph of {sorted(kinds)}")
                 if addresses and deployment not in kinds:
                     wrong.append(f"{world}/{path.name} states a schema:url in a graph of {sorted(kinds)}")
-    assert seen["society"] >= 4 and seen["deployment"] >= 4, f"the guard found {seen} — it would check nothing"
+    assert seen["society"] >= 4 and seen["deployment"] >= 3, f"the guard found {seen} — it would check nothing"
     assert not wrong, "\n".join(wrong)
 
 
@@ -353,7 +582,7 @@ def test_every_shipped_world_with_a_bus_states_one_broker_address():
         try:
             host, plain, _tls = mqtt.broker(world)
         except SystemExit as refused:
-            assert "states no mqtt:// url" in str(refused), f"{world}: {refused}"
+            assert "states no mqtt4ssn:Broker" in str(refused), f"{world}: {refused}"
             continue
         assert host and plain, f"{world}: no address"
         answered.append(world)

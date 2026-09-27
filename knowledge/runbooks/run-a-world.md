@@ -24,14 +24,15 @@ agent's belief base lives inside that agent. Infra is a separate compose project
 world and stays up across them.
 
 ```bash
-cp infra/.env.example infra/.env             # where the series store is — URL and org, no secret
 cp infra/admin.env.example infra/secrets/admin.env   # the admin token. Fill it in; never committed
 cd infra && podman compose up -d influxdb grafana    # the broker needs its ACL first, below
 ```
 
-`infra/.env` holds **only** the URL and the org, because the generated compose files hand that
-file to every agent container. The admin token opens every bucket and lives apart from it, read
-by the infra containers and the two provisioning tools and by nothing else.
+Where the series store is — its URL and org — and where a broker's ports are allocated from are
+stated in `infra/installation.ttl`, which says nothing secret; `infra/compose.yaml` is
+generated from it (`orexis-infra-compose`), and each world's compose file hands every agent the
+URL and org as environment. The admin token opens every bucket and lives apart from both, read by
+the infra containers and the two provisioning tools and by nothing else.
 
 An agent's credentials are **per world**, in `world/<name>/secrets/` and gitignored, and nothing
 is signed in 0.2.0: the broker's ACL admits an agent only to its own topics.
@@ -259,4 +260,4 @@ by hand which subjects to pretend to be. `greenhouse` and `allotment` run whole 
 | agent never logs `a volume lived in` | it is not keeping its volume — check the `orexis-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |
-| agent cannot reach the broker | the world's deployment graph says its `mqtt4ssn:Broker`'s `schema:url` is on `localhost`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |
+| agent cannot reach the broker | the world's `mqtt4ssn:Broker` is on `localhost`, asserted in its `deployment.ttl` or allocated in `infra/installation.derived.ttl`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |
