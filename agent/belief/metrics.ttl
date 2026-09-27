@@ -13,3 +13,8 @@
     sh:select """
 SELECT (COUNT(?g) AS ?revisions) (SUM(IF(?settled, 0, 1)) AS ?unsettled)
 WHERE { GRAPH $cat { ?g a belief:RevisionGraph ; belief:settled ?settled } }""" .
+
+#  AND EACH REVISION PASS, by the deliberator: the sources it was handed, the rule executions it
+#  spent, how many it left for the next pass, and its real seconds.
+<#revise> a orexis:Event ;
+    orexis:field "sources" , "executions" , "cut" , "duration_s" .

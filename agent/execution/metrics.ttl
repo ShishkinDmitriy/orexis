@@ -33,3 +33,10 @@ WHERE { GRAPH ?g { ?i a execution:Intention .
     sh:select """
 SELECT (SUM(IF(?taken, 1, 0)) AS ?taken) (SUM(IF(?taken, 0, 1)) AS ?notTaken)
 WHERE { GRAPH ?g { ?act a execution:Act ; execution:taken ?taken } }""" .
+
+#  AND WHAT EXECUTION SAW HAPPEN, contributed by the executor at the verdict on a step: how late
+#  the world answered it in the agent's seconds — the instant it was seen to, less the `landsAt` the
+#  plan placed — or that the patience ran out, tagged by the action and the desire. Whether it
+#  landed is history's; this is the lateness.
+<#landing> a orexis:Event ;
+    orexis:field "late_s" , "timed_out" .

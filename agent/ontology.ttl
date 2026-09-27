@@ -204,6 +204,18 @@ orexis:over
     rdfs:label "over" ;
     rdfs:comment "The repository a metric's select is run over — the belief base, the imaginaria, the intentions store — as a CLASS, whose stores the runtime hands the metrics module, since the runtime is what holds them. Said and never defaulted: the imaginaria copy the belief base's readings and its catalogue, so a select run over every store would count a silent sensor once per scope, and a metric saying no store would be read two ways." .
 
+orexis:Event
+    a owl:Class ;
+    rdfs:label "Event" ;
+    rdfs:comment "What happened and how long it took, which no select can answer and no row may hold, since no plan branches on it: contributed to the metrics store by the package that does the work, as it happens, the way history is (knowledge/domain/kernel/series.md). The node in a package's metric graph DECLARES one — its local name is the measurement the package's code writes, and `orexis:field` the figures it carries — so the dashboards draw the events the agent's loaded packages declare, and a test holds every event the tree writes to a declaration." .
+
+orexis:field
+    a owl:DatatypeProperty ;
+    rdfs:domain orexis:Event ;
+    rdfs:range xsd:string ;
+    rdfs:label "field" ;
+    rdfs:comment "A numeric figure an event carries, by the name it is written under — a duration ends `_s`; anything else is a count or a flag. A panel is drawn per field, of its mean over a window, which makes a flag a rate. A want's name rides on an event as a field too, and is not declared here, since no panel draws it." .
+
 orexis:BeliefBase
     a owl:Class ;
     rdfs:label "Belief base" ;

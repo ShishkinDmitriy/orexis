@@ -18,12 +18,15 @@ two purposes may name one instance, by coincidence and not by design:
   own name, and every step taken and how it ended, landed or failed, with its action, its want
   and its values. Each is contributed by the package that decides it: sensing when it writes the
   observation, execution when it records the act and when the world answers.
-- **Metrics** — how the agent is doing, figure by figure, each pass. Most of these are rows a
-  package already writes — a search the budget cut short, an intention that failed, a sensor gone
-  silent, a revision the budget cut — so a package ships a select over its own rows, and every
-  such select is found by its graph's kind and run at the end of each pass; no registry lists
-  them. How long a pass took, how large the store is and how long the process has run are the
-  runtime's own.
+- **Metrics** — how the agent is doing, in two shapes. A **gauge** says what state the stores are
+  in: most are rows a package already writes — a search the budget cut short, an intention that
+  failed, a sensor gone silent, a revision the budget cut — so a package ships a select over its
+  own rows, and every such select is found by its graph's kind and run at the end of each pass; no
+  registry lists them. An **event** says what happened and how long it took, which no select can
+  answer and no row may hold, since no plan branches on it: the package that does the work
+  contributes it as it happens, the way history is contributed, and declares it beside its
+  selects so a dashboard can draw it. How long a pass and each of its parts took, how large the
+  store is and how long the process has run are the runtime's own.
 
 The **sink** sits beneath every contributor and knows nothing of what it writes. A store that
 refuses a point is said in the log and costs the agent nothing.
@@ -86,10 +89,38 @@ intentions store is made at the process's start. A metric saying no repository i
 the belief base — the imaginaria copy its readings, so a select run everywhere counts one silence per
 scope.
 
+Events, as contributions (#826). The code doing the work calls `metrics.event` as it happens, and
+asks `metrics.recording()` first, so with no metrics sink loaded nothing is timed or read. Each is
+declared in its package's `metrics.ttl` as an `orexis:Event` with the `orexis:field`s it carries, and
+a test holds every event the tree writes to a declaration:
+
+| package | event | when | fields; tags beyond world and agent |
+|---|---|---|---|
+| planning | `planner` | each pass | `ground_s`, `weigh_s`, `derive_s`, `search_s`, `publish_s`, `wants` |
+| planning | `search` | each want, each pass | `duration_s`, `budget`, `weighed`, `want`; `desire`, `scope`, `outcome` |
+| planning | `adopted` | a plan committed | `passes`, `weighed`, `wall_s`, `estimate`, `cost`, `replan`, `want`; `desire`, `scope` |
+| planning | `reroot` | each scope, each pass | `kept`, `dropped`; `present` — first, ground, child or surprise |
+| execution | `landing` | a verdict on a step | `late_s`, `timed_out`, `want`; `action`, `desire` |
+| sensing | `received` | a reading replacing one | `interval_s`, `cadence_s`; `sensor` |
+| belief | `revise` | a revision pass | `sources`, `executions`, `cut`, `duration_s` |
+| the runtime | `phases` | each pass | `sense_s`, `revise_s`, `predict_s`, `plan_s`, `execute_s` |
+| the runtime | `unreachable` | a want nothing reaches | `want`; `desire` |
+
+**A compute time is real seconds by `time.perf_counter`, never the agent's clock**, which runs fast
+in a simulation and ticks per read in a test; a lateness or an interval is the agent's seconds,
+between two instants it already holds. An event is stamped at the pass's instant, which the
+runtime says once, moved on by the real seconds since — so no event reads the clock, and two of
+one pass are two points. **Every point is tagged `world` and `agent`**: the agent's id is what the
+process is told, and the world's name is the name of the directory it is handed, which the
+buckets, the compose project and the dashboards already go by. An event about a want is tagged
+with the `desire` it was derived under, so a desire reads across worlds and agents; the want's own
+name is a field, since a want is minted per instance and a tag's values must stay few.
+
 `orexis-influx` mints `secrets/influx-<purpose>-<agent>.env` for each purpose, saying the bucket and
 token under it, and `orexis-compose` mounts both beside the url and organisation of the store the
 installation says `onboarding:serves` the purpose ([deployment](/domain/onboarding/deployment.md)).
 The history bucket keeps the name the one bucket had, so a history begun before purposes goes on
 in it; the metrics bucket is `<world>-<agent>-metrics`, written to and never read by the agent,
 and kept as many days as the installation's `onboarding:retentionDays` says. `orexis-dashboards`
-draws a health dashboard per world from it, a panel per metric the agent's own boot declares.
+draws a health dashboard per world from it, off the agent's own boot: a panel per gauge it
+declares, per field of each event it declares, and the runtime's own.

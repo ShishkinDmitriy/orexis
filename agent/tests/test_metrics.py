@@ -11,10 +11,12 @@ from pathlib import Path
 
 import pyoxigraph as ox
 
-from agent import clock
-from agent.metrics import METRIC_GRAPH, declared, measure, measurement_of
+from agent import clock, metrics
+from agent.metrics import METRIC_GRAPH, begin, declared, events, measure, measurement_of
 from agent.ontology import BELIEF, PUBLIC
-from agent.runtime import BELIEF_BASE, IMAGINARIUM, INTENTIONS_STORE, PASS, Runtime, boot, world_of
+from agent.runtime import (BELIEF_BASE, IMAGINARIUM, INTENTIONS_STORE, PASS, PHASES, UNREACHABLE, Runtime, boot,
+                           world_of)
+from agent.series import METRICS, Sink, install
 from agent.store import close_catalogue, closed, document, graphs_of, put_document
 
 AGENT = Path(__file__).resolve().parents[1]
@@ -62,12 +64,79 @@ def test_no_select_crosses_into_a_possible_world(monkeypatch):
         assert not crossed, f"a possible world's store holds {crossed}"
 
 
-def test_a_metric_is_named_once_and_never_as_the_runtimes_own():
-    """A point is measured under its metric's local name, so two metrics of one name would write
-    one measurement with two meanings, and one named like the runtime's would share its fields."""
-    names = [measurement_of(m["metric"]) for m in declared(_every_package())]
+def test_a_metric_or_an_event_is_named_once_and_never_as_the_runtimes_own():
+    """A point is measured under its metric's or its event's local name, so two of one name would
+    write one measurement with two meanings, and one named like the runtime's would share its fields."""
+    store = _every_package()
+    names = [measurement_of(m["metric"]) for m in declared(store)] + list(events(store))
     assert names and len(names) == len(set(names)), names
-    assert PASS not in names
+    assert not {PASS, PHASES, UNREACHABLE} & set(names)
+
+
+def test_every_event_the_tree_writes_is_declared_by_a_package():
+    """An event is written by the code that does the work and declared, with the fields it carries,
+    in its package's metric graph — which is what the dashboards draw. Held over every `metrics.event`
+    the tree calls: its measurement is declared, or it is the runtime's own; and every figure a
+    declaration names is one the code writes, since a declared field nobody writes is a panel of
+    nothing."""
+    declared_events = events(_every_package())
+    called = {}
+    for path in sorted(AGENT.rglob("*.py")):
+        if "tests" in path.parts:
+            continue
+        for n in ast.walk(ast.parse(path.read_text())):
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == "event" \
+                    and isinstance(n.func.value, ast.Name) and n.func.value.id == "metrics":
+                called.setdefault(n.args[0].value if isinstance(n.args[0], ast.Constant) else n.args[0].id,
+                                  set()).add(path.relative_to(ROOT).as_posix())
+    assert len(called) >= 7, f"the scan found {sorted(called)} — the pattern stopped matching"
+    assert set(called) - {"UNREACHABLE"} == set(declared_events), called
+    source = "\n".join(p.read_text() for p in AGENT.rglob("*.py") if "tests" not in p.parts)
+    written = lambda f: f'"{f}"' in source or (f.endswith("_s") and f'lap("{f[:-2]}")' in source)   # a lap writes `<part>_s`
+    unwritten = {(e, f) for e, fields in declared_events.items() for f in fields if not written(f)}
+    assert not unwritten, f"declared and written by nothing: {sorted(unwritten)}"
+
+
+def test_an_event_is_stamped_from_the_pass_and_reads_no_clock(monkeypatch):
+    """Stamped at the pass's instant moved on by real seconds, so two events of one pass are two
+    points, and the agent's clock — which a test ticks per read — is never read."""
+    def read():
+        raise AssertionError("an event read the agent's clock")
+    written = []
+    install(METRICS, Sink(METRICS, "m", lambda bucket, record: written.extend(record)))
+    try:
+        begin(NOW)
+        monkeypatch.setattr(clock, "now", read)
+        metrics.event("search", {"duration_s": 0.1})
+        metrics.event("search", {"duration_s": 0.2})
+    finally:
+        install(METRICS, None)
+    first, second = (p["time"] for p in written)
+    assert NOW <= first < second < NOW + timedelta(seconds=1)
+
+
+def test_a_timing_never_reads_the_agents_clock(monkeypatch):
+    """COMPUTE TIME IS `perf_counter`. The same hanoi run, with a metrics sink and without, on a clock
+    that ticks per read as the allotment's does: the clock is read as often either way and the tower
+    is solved the same, so no timing, stamp or event read the agent's timeline — where one had, the
+    counts differ, and on a ticking clock the run itself would too."""
+    def run(sink_loaded: bool) -> tuple[int, int, str]:
+        reads = [0]
+        def tick():
+            reads[0] += 1
+            return NOW + timedelta(seconds=reads[0])
+        monkeypatch.setattr(clock, "now", tick)
+        written = []
+        if sink_loaded:
+            install(METRICS, Sink(METRICS, "m", lambda bucket, record: written.extend(record)))
+        try:
+            outcome = Runtime(boot(HANOI, "hanoi"), "hanoi", budget=20).run(passes=12, poll_s=0)
+        finally:
+            install(METRICS, None)
+        return reads[0], len(written), outcome
+    without, with_ = run(False), run(True)
+    assert with_[1] > 0 and without[1] == 0, "the sink was loaded for one run and not the other"
+    assert (with_[0], with_[2]) == (without[0], without[2]), f"clock reads {with_[0]} with a sink, {without[0]} without"
 
 
 def test_no_list_of_metrics_exists():

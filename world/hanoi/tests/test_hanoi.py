@@ -84,20 +84,9 @@ def test_each_pass_writes_the_minds_metrics_and_the_runtimes_own(monkeypatch):
     it left: twenty worlds, twenty-one weighings, three still on the frontier; the last pass's
     intention done after seven acts — and the runtime adds its own three. Sensing is not loaded, so
     no silence is counted: a package's metrics are where the package is."""
-    from agent.series import METRICS, Sink, install
-
-    ticks = iter(range(1, 10_000))
-    monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=next(ticks)))
-    passes = []
-    install(METRICS, Sink(METRICS, "hanoi-hanoi-metrics", lambda bucket, record: passes.append(
-        {p["measurement"]: p["fields"] for p in record})))
-    try:
-        runtime = Runtime(boot(WORLD, "hanoi"), "hanoi", budget=20)
-        assert runtime.run(passes=12) == MET
-    finally:
-        install(METRICS, None)
+    runtime, passes, events, _ = _metered(monkeypatch)
     first, last = passes[0], passes[-1]
-    assert set(first) == {"pass", "plans", "cone", "intentions", "acts", "revisions"}
+    assert set(first) == {"pass", "phases", "plans", "cone", "intentions", "acts", "revisions"}
     assert first["plans"] == {"satisfied": 0, "exhausted": 1, "noCandidate": 0}
     assert first["cone"] == {"worlds": 20, "weighings": 21, "open": 3, "met": 0}
     assert first["intentions"]["standing"] == 0 and first["acts"] == {"taken": 0, "notTaken": 0}
@@ -105,6 +94,57 @@ def test_each_pass_writes_the_minds_metrics_and_the_runtimes_own(monkeypatch):
     assert last["acts"] == {"taken": 7, "notTaken": 0}
     assert set(last["pass"]) == {"duration_s", "quads", "uptime_s"} and last["pass"]["quads"] == len(runtime.beliefs)
     assert all(p["pass"]["duration_s"] > 0 for p in passes) and len(passes) >= 3
+    assert all(sum(p["phases"].values()) <= p["pass"]["duration_s"] for p in passes), "the parts are of the pass"
+
+
+def _metered(monkeypatch):
+    """Three disks at twenty candidates a pass, with a metrics sink loaded and who speaks said as
+    `main` says it: the runtime, each pass's gauges as {measurement: fields}, and every event."""
+    from agent import metrics
+    from agent.runtime import world_name
+    from agent.series import METRICS, Sink, install
+
+    ticks = iter(range(1, 10_000))
+    monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=next(ticks)))
+    writes = []
+    install(METRICS, Sink(METRICS, "hanoi-hanoi-metrics", lambda bucket, record: writes.append(list(record))))
+    metrics.identify(world=world_name(WORLD), agent="hanoi")
+    try:
+        runtime = Runtime(boot(WORLD, "hanoi"), "hanoi", budget=20)
+        assert runtime.run(passes=12) == MET
+    finally:
+        install(METRICS, None)
+        metrics.identify()
+    gauges = [w for w in writes if any(p["measurement"] == "pass" for p in w)]
+    return (runtime, [{p["measurement"]: p["fields"] for p in w} for w in gauges],
+            [p for w in writes if w not in gauges for p in w], [p for w in writes for p in w])
+
+
+def test_each_search_and_the_adoption_are_said_as_they_happen_tagged_and_never_by_the_want(monkeypatch):
+    """The events of the same run (#826): a search a pass, each weighing its twenty candidates until
+    the third finds the seven moves; one adoption, after three passes of searching, whose plan cost
+    what the estimate at the ground said or more; a reroot and a planner pass each pass. Every point
+    is tagged with the world and the agent, and the want — minted per instance — is a field, never
+    a tag. Hanoi's want is authored, so no desire tags it."""
+    runtime, passes, events, points = _metered(monkeypatch)
+    by = {}
+    for e in events:
+        by.setdefault(e["measurement"], []).append(e)
+    searches, (adopted,) = by["search"], by["adopted"]
+    assert [s["tags"]["outcome"] for s in searches] == ["Exhausted", "Exhausted", "Satisfied"]
+    assert [s["fields"]["weighed"] for s in searches[:2]] == [20, 20] and all(s["fields"]["budget"] == 20 for s in searches)
+    assert {s["fields"]["want"] for s in searches} == {adopted["fields"]["want"]} == {"every_disk_home"}
+    assert adopted["fields"]["passes"] == 3 and adopted["fields"]["replan"] == 0
+    assert adopted["fields"]["cost"] == 7 and 0 <= adopted["fields"]["estimate"] <= adopted["fields"]["cost"]
+    assert adopted["fields"]["wall_s"] >= sum(s["fields"]["duration_s"] for s in searches) > 0
+    assert len(by["reroot"]) == len(by["planner"]) == len(passes)
+    assert "desire" not in adopted["tags"], "an authored want was derived under no desire"
+    for p in points:                                       # the gauges as well as the events
+        assert p["tags"]["world"] == "hanoi" and p["tags"]["agent"] == "hanoi", p
+        assert "every_disk_home" not in p["tags"].values() and "want" not in p["tags"], p
+    #  COST: an event per search and per pass, never one per weighing — sixty-odd weighings, a
+    #  handful of points.
+    assert len(events) < sum(s["fields"]["weighed"] for s in searches)
 
 
 def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeypatch):

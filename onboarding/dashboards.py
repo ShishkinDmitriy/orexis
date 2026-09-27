@@ -45,7 +45,7 @@ import json
 import logging
 
 from agent import metrics
-from agent.runtime import PASS, PASS_FIELDS, boot
+from agent.runtime import PASS, PASS_FIELDS, PHASES, UNREACHABLE, boot
 from agent.sensing.history import FIELD, measurement_of
 from agent.series import METRICS
 from agent.store import graphs_of, rows
@@ -267,13 +267,15 @@ def render(world: str) -> dict:
 _PASS_UNITS = {"duration_s": "s", "quads": "none", "uptime_s": "s"}
 
 
-def _metric_flux(bucket: str, measurement: str, field: str | None = None) -> str:
-    """One metric's figures, every field its select answers — or one, for the runtime's own."""
+def _metric_flux(bucket: str, measurement: str, field: str | None = None, fn: str = "last") -> str:
+    """One measurement's figures — every field, or one — aggregated per window by `fn`: the last of
+    a gauge, the mean of an event, which makes a flag a rate. Every tag stays in the group, so a
+    search is drawn a line per outcome and per desire."""
     only = f'\n  |> filter(fn: (r) => r._field == "{field}")' if field else ""
     return (f'from(bucket: "{bucket}")\n'
             "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
             f'  |> filter(fn: (r) => r._measurement == "{measurement}"){only}\n'
-            "  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)")
+            f"  |> aggregateWindow(every: v.windowPeriod, fn: {fn}, createEmpty: false)")
 
 
 def _health_panel(title: str, query: str, unit: str, x: int, y: int, panel_id: int, desc: str) -> dict:
@@ -302,13 +304,25 @@ def render_health(world: str) -> dict:
         panels.append({"id": pid, "type": "row", "title": agent_id, "collapsed": False,
                        "gridPos": {"h": 1, "w": 24, "x": 0, "y": y}, "panels": []})
         pid, y = pid + 1, y + 1
+        beliefs = boot(here, agent_id)
         drawn = [(f"{agent_id} — {PASS} {field}", _metric_flux(bucket, PASS, field), _PASS_UNITS[field],
                   f"The runtime's own figure, `{field}` of `{PASS}`, written each pass.") for field in PASS_FIELDS]
-        for metric in metrics.declared(boot(here, agent_id)):
+        drawn.append((f"{agent_id} — {PHASES}", _metric_flux(bucket, PHASES, fn="mean"), "s",
+                      "Real seconds per part of a pass — the queue handed to sensing, revision, prediction, "
+                      "planning, walking — the runtime's own; the planner's parts are its own event."))
+        drawn.append((f"{agent_id} — {UNREACHABLE}", _metric_flux(bucket, UNREACHABLE, "want", fn="count"), "none",
+                      "Wants the runtime judged nothing this agent holds reaches, per window, by desire."))
+        for metric in metrics.declared(beliefs):
             name = metrics.measurement_of(metric["metric"])
             drawn.append((f"{agent_id} — {name}", _metric_flux(bucket, name), "none",
                           f"Every figure the select {metric['metric']} answers, over {metrics.measurement_of(metric['over'])}; "
                           "declared by the package that writes the rows it counts, never by this file."))
+        for name, fields in metrics.events(beliefs).items():
+            for field in fields:
+                drawn.append((f"{agent_id} — {name} {field}", _metric_flux(bucket, name, field, fn="mean"),
+                              "s" if field.endswith("_s") else "none",
+                              f"The mean of `{field}` over each window, of the event `{name}` its package declares "
+                              "and contributes as it happens; a flag's mean is its rate."))
         for i, (title, query, unit, desc) in enumerate(drawn):
             panels.append(_health_panel(title, query, unit, x=12 * (i % 2), y=y + 7 * (i // 2), panel_id=pid, desc=desc))
             pid += 1

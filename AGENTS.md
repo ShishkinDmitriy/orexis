@@ -725,6 +725,13 @@ it is a record wearing a bullet.
   belief base, the imaginaria or the intentions store, because the imaginaria copy the beliefs and a
   select run everywhere counted one silent probe per scope; and the answers are summed across a
   repository's stores, so a figure is a count (#826).
+- **What happened and how long it took is an event, contributed and never a row** — no select can
+  answer how long a search ran and no plan branches on it, so the code doing the work calls
+  `metrics.event` as history's contributors do, having asked `metrics.recording()`, and declares it
+  in its package's `metrics.ttl`; compute time is `perf_counter`, an event is stamped from the pass's
+  instant and reads no clock, since a test's clock ticks per read; every point is tagged `world` and
+  `agent`, an event about a want `desire`, and the want's own name is a field, since per-instance tag
+  values break the store's index (#826).
 - **A process is the AGENT with the id it was told, never whatever carries that id** — the sensing
   world's fern and the agent acting for it are both `localId "fern"`, and the runtime's identity
   read found two and refused to boot; it asks for an `orexis:Agent` now.
