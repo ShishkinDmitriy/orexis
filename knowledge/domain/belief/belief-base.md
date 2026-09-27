@@ -32,8 +32,9 @@ a caller, and a graph's NAME is for eyes: code relies on its row alone.
 
 # What lives beside it
 
-Each reading also goes to the agent's bucket as a series point, for the panels to draw. The
-series is watched, never believed: nothing reads it back into the store.
+Each reading, and each step taken and how it ended, also goes to the agent's history bucket as a
+series point, for the panels to draw. The series is watched, never believed: nothing reads it back
+into the store.
 
 # What a restart keeps
 

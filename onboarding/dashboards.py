@@ -19,8 +19,15 @@ subdirectory per world. With `foldersFromFilesStructure`, Grafana shows a folder
 world removed from disk simply stops having one.
 
 Vocabulary: nothing new. The panels are built from what each sensor `sosa:observes`, the bucket
-name comes from `onboarding.influx` and the measurement from `agent.series`, so the dashboard
-cannot disagree with where the agent writes or under what name.
+name comes from `onboarding.influx` and the measurement from `agent.sensing.history` — sensing's,
+since sensing contributes the observation — so the dashboard cannot disagree with where the agent
+writes or under what name.
+
+**Steps have no panel yet.** Execution writes a step taken and how it ended under
+`agent.execution.history.MEASUREMENT`, tagged by action, want and parameter. A panel for them would
+be keyed on the actions an agent may take — read off the world's action graphs, as sensors are
+here — and draw `taken` and `landed` as events rather than a line, which is a panel type and a
+query shape this module does not build.
 
 See knowledge/domain/onboarding/onboarding.md.
 """
@@ -31,7 +38,7 @@ import argparse
 import json
 import logging
 
-from agent.series import FIELD, measurement_of
+from agent.sensing.history import FIELD, measurement_of
 from agent.store import graphs_of, rows
 from . import reading
 from .worlds import REPO_ROOT
@@ -102,7 +109,7 @@ def _unit_of(unit_iri: str | None) -> str:
 def _flux(bucket: str, sensor_id: str, measurement: str) -> str:
     """One sensor's series, and nothing else in the bucket.
 
-    The measurement is the observed property's, asked of `agent.series` — the writer — so the
+    The measurement is the observed property's, asked of `agent.sensing.history` — the writer — so the
     panel and the point cannot name it two ways; the terrace's test holds the two together.
     Filtered on the `sensor` tag rather than grouped by it. A bucket holds every property its
     agent records — a board sending soil moisture and air humidity sends two fractions in the

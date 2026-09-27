@@ -287,6 +287,28 @@ were imported at boot, and the MQTT driver by `main`, and none of the four is no
 fresh process — beside the allotment's fern grower, which imports all four, so the probe is seen
 to see them.
 
+## Amended 2026-09-27: how a contributor reaches the sink, and what a step's history is (#825)
+
+§4 and §5 are built as written; three things they left open were settled on the way, and the
+[series](/domain/kernel/series.md) page says what each point holds.
+
+**A contributor finds the sink; nobody hands it one.** The runtime's `main` loads a sink per
+purpose the environment names, and a contributor asks for the purpose's sink where it decides
+something, building no point where there is none — logging's shape. **Refused: handing the sink
+down**, to the executor beside `take` and `refine`, and to sensing through its caller. Sensing's
+caller is the transport's driver, a layer beneath sensing, so the transport would have carried
+history it has no business with; and a sink carried through constructors is the runtime choosing,
+once more, which package gets to write it.
+
+**A verdict is had only by a step held to the world.** The taken point is written as the act is,
+whether taken or not; the landed point only where the executor waits on the world — true where the
+present answers, false where the patience runs out or the want below ends undone. A step
+predicting nothing moves on as it is taken and has no verdict to write.
+
+**One series store serves every purpose, until a second is written.** The installation states one
+`onboarding:SeriesStore`, and `orexis-compose` tells it under history's keys. A word tying a store
+to a purpose would be read for one purpose today; metrics (#826) is the trigger for it.
+
 # What this supersedes, and what it amends
 
 **[metrics-are-an-aspect](/decisions/metrics-are-an-aspect.md) is superseded.** It stood on three

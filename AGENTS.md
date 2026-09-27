@@ -712,12 +712,13 @@ it is a record wearing a bullet.
   lacks, a system's model, starting reading and bounds, and the 0.1.0 stand-ins, told everything
   as environment like a board, went with the physics they duplicated (`simulation/`).
 - **A series is watched and never believed, and the package that decides a thing writes its
-  history** — the 0.2.0 runtime writes each observation it receives under its property's local
-  name, since 0.1.0's `soil_moisture` for every property was one property's shape and put the
-  terrace's air temperature in as soil moisture (#822); the dashboards ask the writer for the
-  name. A store that refuses is said in the log and costs the agent nothing. Decided and not yet
-  built: history contributed by sensing and execution, metrics as each package's selects, and a
-  store told per purpose (a-documents-kind-says-who-reads-it; #825, #826).
+  history** — the runtime handed the sink each observation graph and so decided history was
+  observations; now it only loads a sink per purpose the environment names (`INFLUX_HISTORY_*`),
+  sensing contributes an observation under its property's local name as `received` writes it
+  (#822), and execution a step taken and, where the world answers or does not, landed or failed
+  (#825). A contributor asks for the sink rather than being handed one, since sensing's caller is
+  the transport, which has no business carrying history. A store that refuses is said in the log
+  and costs the agent nothing. Metrics as each package's selects are #826.
 - **A process is the AGENT with the id it was told, never whatever carries that id** — the sensing
   world's fern and the agent acting for it are both `localId "fern"`, and the runtime's identity
   read found two and refused to boot; it asks for an `orexis:Agent` now.
@@ -1046,7 +1047,7 @@ pip install -e ".[dev]"
 orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, derive what the documents
                              #   leave out (a broker's port, into infra/installation.derived.ttl),
                              #   then grant everything below.
-  orexis-influx <world>      #   a bucket per agent, and a token that opens only it
+  orexis-influx <world>      #   a history bucket per agent, and a token that opens only it
   orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
   orexis-dashboards <world>  #   a Grafana folder per world, from what its agents observe

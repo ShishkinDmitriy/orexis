@@ -19,6 +19,10 @@ clock, `missed` says so on the container's tick, and nothing here keeps a timer.
 **A READING ENDS A SILENCE.** A sensor `missed` had said silent is silent no longer: the graph
 saying so goes before the observation is written, found by the row's content and never by name.
 
+**AND HISTORY IS TOLD.** Where a history sink is loaded, the observation written is contributed
+to it as one point (`history.py`): sensing decides what an observation is, so sensing says what
+happened, and the runtime hands the sink nothing.
+
 **NOTHING ELSE.** No side is drawn here: which side of its subject's ranges the number lies on
 is a revision, concluded by the rules this layer ships and run by the deliberator when the
 container says this graph changed. No prediction: that is the prediction package's, over the
@@ -36,9 +40,11 @@ import logging
 from datetime import datetime, timedelta
 
 from agent.ontology import PUBLIC, local_of
+from agent.series import HISTORY, sink
 from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
 from .cadence import cadence_of
+from .history import observation_point
 from .ontology import OBSERVATION_GRAPH, RECEIVED, observation_graph, observation_of
 from .pipeline import decode
 
@@ -96,4 +102,6 @@ INSERT DATA {{
   GRAPH <{graph}> {{ {' . '.join(said)} . }}
   {entry(store, graph, OBSERVATION_GRAPH, RECEIVED, me, start=at, end=until)} }}""")
     log.info("%s: %s of %s reads %s", local_of(me), local_of(observed_property), local_of(feature), value)
+    if (history := sink(HISTORY)) is not None:
+        history.write([observation_point(store, feature, observed_property, sensor, round(float(value), 6), at)])
     return graph

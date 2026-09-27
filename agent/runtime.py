@@ -58,6 +58,12 @@ whose action's implementation holds an `execution:Command` is taken by sending w
 holds an `execution:Saying` makes documents of the present; the agent believes what it said, the rules
 conclude of it at once, and each is sent to the agents it is to. A document a peer says arrives
 on the topic the agent listens to and is believed by speech's `heard`, then revised like a reading.
+
+**WHAT HAPPENED IS NOT THE RUNTIME'S TO SAY.** `main` loads a series sink for every purpose the
+environment names a store for (`agent/series.py`), and that is all it does with one: sensing
+contributes an observation as it writes it, and execution a step taken and how it ended, because
+each decides the thing it says. The runtime once handed the sink each observation graph, and so
+decided what history was — observations only (a-documents-kind-says-who-reads-it, §5).
 """
 
 from __future__ import annotations
@@ -78,7 +84,7 @@ from agent.execution.command import command
 from agent.execution.executor import Executor
 from agent.execution.implementation import COMMAND, SAYING, operations
 from agent.execution.says import says
-from agent.series import Series
+from agent import series
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, STATE, local_of
 from agent.planning.planner import Planner
 from agent.store import (answer, catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of,
@@ -341,9 +347,8 @@ class Runtime:
     does alone."""
 
     def __init__(self, beliefs: ox.Store, agent_id: str, *, budget: int | None = None,
-                 intentions: ox.Store | None = None, transport=None, connect=None, series=None):
+                 intentions: ox.Store | None = None, transport=None, connect=None):
         self.beliefs, self.id = beliefs, agent_id
-        self.series = series
         self.me = _identity(beliefs, agent_id)
         self.packages = packages_of(beliefs, self.me)
         self._missed, self._predict, self._said = _imported(self.packages)
@@ -388,11 +393,8 @@ class Runtime:
                 break
             for sensor, graph in self.transport.handle(self.beliefs, channel, payload, at):
                 written.append(graph)
-                if sensor is None:
-                    continue                                    # a peer's document
-                sensors.append(sensor)
-                if self.series is not None:
-                    self.series.record(self.beliefs, graph)     # what a person watches
+                if sensor is not None:                          # None: a peer's document
+                    sensors.append(sensor)
         if not written:
             return []
         self._revise(written, now)
@@ -530,8 +532,12 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     store = ox.Store(str(args.volume)) if args.volume else None
     beliefs = boot(args.world, args.agent, store)
-    outcome = Runtime(beliefs, args.agent, budget=args.budget, connect=_transport_of(beliefs, _identity(beliefs, args.agent)),
-                      series=Series.from_environment()).run(passes=args.passes)
+    #  A SINK PER PURPOSE THE ENVIRONMENT NAMES A STORE FOR, and nothing more of one here: the
+    #  packages that decide what happened contribute it, and the runtime hands a sink no point.
+    told = series.load()
+    log.info("%s writes %s", args.agent, ", ".join(p.lower() for p in told) + " to a series store" if told else "no series")
+    outcome = Runtime(beliefs, args.agent, budget=args.budget,
+                      connect=_transport_of(beliefs, _identity(beliefs, args.agent))).run(passes=args.passes)
     return {MET: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
 
 

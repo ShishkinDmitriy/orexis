@@ -19,7 +19,9 @@ description: >-
 Written by the [executor](/domain/execution/executor.md) in the intentions graph as the step leaves
 flight. `execution:taken false` is an attempt no taker could carry out — the command raised — and
 the intention fails with it. A step kept one level down carries `execution:refinedBy` the want it
-became, and waits on that want's intention.
+became, and waits on that want's intention. Where a history sink is loaded, the executor also
+contributes the act to the [series](/domain/kernel/series.md), and the step's verdict when the
+world gives one.
 
 # What it is not
 
