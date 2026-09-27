@@ -185,6 +185,42 @@ orexis:PredictionGraph
     rdfs:label "Prediction graph" ;
     rdfs:comment "A PREDICTION: a graph holding during the stretch it predicts for, carrying a predicted `sosa:Observation` with the number a drift gives there — one graph per stretch between the instants the reading changes range, written by the prediction package (knowledge/domain/prediction/prediction.md). Its side is a revision the rules conclude as of a real reading. The planner lays a ground per stretch, applying the prediction to the present; the agent's own records never list it, and the executor answers a step over the readings, never over what was foreseen." .
 
+#################  Metrics  #################
+
+orexis:MetricGraph
+    a owl:Class ;
+    rdfs:subClassOf orexis:Graph ;
+    rdfs:label "Metric graph" ;
+    rdfs:comment "A package's METRICS: `orexis:Metric` nodes, each a select over rows the package already writes, shipped in the package's own `metrics.ttl` and so loaded where the package is (knowledge/domain/kernel/series.md). Read by `agent/metrics.py` alone, each pass, by this kind and never by a list. Beneath `orexis:Graph` and NOTHING ELSE, and the absence is the design: not public, so no rule, met-test or peer's document reads a select as a fact of the world, and not a belief, so `prepare_ground` copies none into a possible world (a-documents-kind-says-who-reads-it, §6)." .
+
+orexis:Metric
+    a owl:Class ;
+    rdfs:label "Metric" ;
+    rdfs:comment "One figure of how the agent is doing, stated by the package whose rows it counts: an `sh:select` whose columns are the figures, run each pass over every store of the repository `orexis:over` names and summed across them, and written to the metrics store under the node's local name. A figure is therefore a COUNT, since only a count sums across stores; the node is its document's own (`<#cone>`), named for eyes and never by code." .
+
+orexis:over
+    a owl:ObjectProperty ;
+    rdfs:domain orexis:Metric ;
+    rdfs:label "over" ;
+    rdfs:comment "The repository a metric's select is run over — the belief base, the imaginaria, the intentions store — as a CLASS, whose stores the runtime hands the metrics module, since the runtime is what holds them. Said and never defaulted: the imaginaria copy the belief base's readings and its catalogue, so a select run over every store would count a silent sensor once per scope, and a metric saying no store would be read two ways." .
+
+orexis:Event
+    a owl:Class ;
+    rdfs:label "Event" ;
+    rdfs:comment "What happened and how long it took, which no select can answer and no row may hold, since no plan branches on it: contributed to the metrics store by the package that does the work, as it happens, the way history is (knowledge/domain/kernel/series.md). The node in a package's metric graph DECLARES one — its local name is the measurement the package's code writes, and `orexis:field` the figures it carries — so the dashboards draw the events the agent's loaded packages declare, and a test holds every event the tree writes to a declaration." .
+
+orexis:field
+    a owl:DatatypeProperty ;
+    rdfs:domain orexis:Event ;
+    rdfs:range xsd:string ;
+    rdfs:label "field" ;
+    rdfs:comment "A numeric figure an event carries, by the name it is written under — a duration ends `_s`; anything else is a count or a flag. A panel is drawn per field, of its mean over a window, which makes a flag a rate. A want's name rides on an event as a field too, and is not declared here, since no panel draws it." .
+
+orexis:BeliefBase
+    a owl:Class ;
+    rdfs:label "Belief base" ;
+    rdfs:comment "The agent's one store of what it holds, in a volume of its own (knowledge/domain/belief/belief-base.md) — named here as what an `orexis:Metric` is run `orexis:over`. The kernel's word and not belief's, because sensing counts in it too and speaks no word of the layer above it." .
+
 orexis:retracts
     a owl:DatatypeProperty ;
     rdfs:range xsd:string ;

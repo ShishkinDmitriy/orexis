@@ -1,0 +1,20 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+<> a orexis:MetricGraph .    # this document is one graph, and this is what it is
+
+#  WHAT SENSING COUNTS OF ITSELF, in the belief base where it writes (knowledge/domain/kernel/series.md):
+#  the sensors said silent, `sensing:silentSince` in a state graph of the agent's, which `missed`
+#  writes once a sensor is past its limit of cadences and `received` takes back when a reading ends
+#  it. So this is how many are silent NOW.
+<#silence> a orexis:Metric ;
+    orexis:over orexis:BeliefBase ;
+    sh:select """
+SELECT (COUNT(DISTINCT ?sensor) AS ?silent)
+WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { ?sensor sensing:silentSince ?since } }""" .
+
+#  AND EACH READING AS IT IS WRITTEN, by `received`: how long after the reading it replaces it came,
+#  in the agent's seconds, beside the cadence the world states, tagged by the sensor.
+<#received> a orexis:Event ;
+    orexis:field "interval_s" , "cadence_s" .

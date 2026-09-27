@@ -19,6 +19,9 @@
 execution:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
     rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
 
+execution:IntentionsStore a owl:Class ; rdfs:label "Intentions store" ;
+    rdfs:comment "The store the executor owns and alone writes, holding every intention, its steps and its acts — its own and not the belief base, and in memory where the runtime makes it. Named as what execution's metrics are run `orexis:over` (agent/execution/metrics.ttl)." .
+
 execution:Intention a owl:Class ; rdfs:label "Intention" ;
     rdfs:comment """One commitment: one plan for one want, adopted at a moment, standing at a step, resolved at another moment or still standing. The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` (knowledge/domain/execution/intention.md).""" .
 

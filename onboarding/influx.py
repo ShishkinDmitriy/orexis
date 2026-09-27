@@ -1,20 +1,30 @@
 """orexis-influx — give each agent a bucket of its own per purpose, and a token that opens only it.
 
-  orexis-influx society        -> a history bucket and a scoped token per agent in world/society
+  orexis-influx society        -> per agent in world/society, a history bucket and a metrics bucket,
+                                  and a token scoped to each
 
 The operator's half of the series store; `agent/series.py`, the sink, is the agent's half. They
-are separate modules because they are separate privileges: the sink holds one token for one
+are separate modules because they are separate privileges: a sink holds one token for one
 bucket, this holds the admin token that opens every bucket, and nothing that runs inside an
 agent may import this.
 
 **Per purpose** (knowledge/domain/kernel/series.md). A series store is told to an agent for a
-purpose — history is the one built — so the credential file names its purpose,
-`secrets/influx-history-<agent>.env`, and says `INFLUX_HISTORY_BUCKET` and `INFLUX_HISTORY_TOKEN`;
-`orexis-compose` adds where the store is under the same purpose. The history bucket keeps the name
-the one bucket had, `<world>-<agent>`, so a history begun before purposes continues in it. A grant
-made before purposes — its authorization described without one, its file `influx-<agent>.env` —
-is replaced by the history grant and its file removed, since its token opens the same bucket and
-an orphaned token is a grant nobody holds on purpose.
+purpose — history and metrics — in the store the installation says `onboarding:serves` it, so the
+credential file names its purpose, `secrets/influx-<purpose>-<agent>.env`, and says
+`INFLUX_<PURPOSE>_BUCKET` and `INFLUX_<PURPOSE>_TOKEN`; `orexis-compose` adds where the store is
+under the same purpose. The history bucket keeps the name the one bucket had, `<world>-<agent>`, so
+a history begun before purposes continues in it. A grant made before purposes — its authorization
+described without one, its file `influx-<agent>.env` — is replaced by the history grant and its
+file removed, since its token opens the same bucket and an orphaned token is a grant nobody holds
+on purpose.
+
+**Metrics are a bucket of their own, `<world>-<agent>-metrics`**, and not a measurement in the
+history bucket. Three things differ, each by the bucket: how long a point is kept — history is the
+record and keeps everything, while metrics come every pass, about once a second for an agent with
+nothing to do, and the installation lets them go after `onboarding:retentionDays`; what the agent
+may do there — it reads its own past and never its metrics, so the metrics token writes and nothing
+else; and the measurement names, which are a property's local name in history and a metric's in
+metrics, and could not collide once they were in two buckets.
 
 **Why per agent.** Before this, one bucket and one admin token were handed to every container,
 so `fern` could not read `tomato`'s beliefs but could read its entire moisture history — the
@@ -44,7 +54,7 @@ from dotenv import dotenv_values
 from influxdb_client import Authorization, BucketRetentionRules, InfluxDBClient, Permission, \
     PermissionResource
 
-from agent.series import HISTORY
+from agent.series import HISTORY, METRICS, PURPOSES
 
 from . import compose, installation
 from .worlds import REPO_ROOT
@@ -59,15 +69,18 @@ class AdminError(RuntimeError):
     """The operator's environment is not set up. Not an agent's problem — nothing is running."""
 
 
-def bucket_name(world: str, agent_id: str) -> str:
+def bucket_name(world: str, agent_id: str, purpose: str = HISTORY) -> str:
     """The convention, and the only place it is written down.
 
     Qualified by world because bucket names are org-global: two worlds each holding a `fern`
     would otherwise share one history, and a simulation would write into the record of a real
     plant. A world cannot check this for itself — it is not allowed to know other worlds exist
     — so the convention has to make the collision impossible rather than detectable.
+
+    History keeps the name the one bucket had, so a record begun before purposes goes on in it;
+    every other purpose is suffixed with its own name.
     """
-    return f"{world}-{agent_id}"
+    return f"{world}-{agent_id}" if purpose == HISTORY else f"{world}-{agent_id}-{purpose.lower()}"
 
 
 def credential_file(world: str, agent_id: str, purpose: str = HISTORY) -> Path:
@@ -115,14 +128,26 @@ def _write_credential(path: Path, agent_id: str, purpose: str, bucket: str, toke
     path.chmod(0o600)
 
 
+#  WHAT AN AGENT MAY DO WITH EACH PURPOSE'S BUCKET. History is read as well as written: an agent that
+#  forecasts reads its OWN past, and it is the neighbour's past this exists to deny, which the
+#  resource id does. Metrics are written and never read by the agent — Grafana reads them with a
+#  token of its own — so their grant is write alone.
+ACTIONS = {HISTORY: ("read", "write"), METRICS: ("write",)}
+
+
 def provision(world: str, rotate: bool = False) -> None:
-    """Bring the store into line with the world: a bucket and a scoped token per agent, in the
-    series store the installation states (`infra/installation.ttl`)."""
-    url, org = installation.series()
+    """Bring the store into line with the world: for every purpose, a bucket and a scoped token per
+    agent, in the series store the installation says serves it (`infra/installation.ttl`)."""
     agents = compose.agent_ids(world)
     if not agents:
         raise SystemExit(f"orexis-influx: world {world!r} declares no agents")
+    for purpose in PURPOSES:
+        _provision(world, agents, purpose, rotate)
 
+
+def _provision(world: str, agents: list[str], purpose: str, rotate: bool) -> None:
+    url, org = installation.series(purpose)
+    days = installation.retention(purpose)
     with InfluxDBClient(url=url, token=_admin_token(), org=org) as client:
         organisation = next(
             (o for o in client.organizations_api().find_organizations() if o.name == org), None)
@@ -134,53 +159,55 @@ def provision(world: str, rotate: bool = False) -> None:
         auth_api = client.authorizations_api()
         existing = {a.description: a for a in auth_api.find_authorizations() or []
                     if a.description}
+        #  KEPT AS LONG AS THE INSTALLATION SAYS for the purpose, and for ever where it says nothing:
+        #  history is the record, and retention is an operator's decision, not a default.
+        kept = BucketRetentionRules(type="expire", every_seconds=(days or 0) * 86400)
 
         for agent_id in agents:
-            name = bucket_name(world, agent_id)
+            name = bucket_name(world, agent_id, purpose)
             bucket = buckets_api.find_bucket_by_name(name)
             if bucket is None:
-                bucket = buckets_api.create_bucket(
-                    bucket_name=name, org_id=organisation.id,
-                    # Keep everything: the history IS the record, and an agent that forecasts
-                    # reads its own past. Retention is an operator's decision, not a default.
-                    retention_rules=BucketRetentionRules(type="expire", every_seconds=0))
-                log.info("  bucket %-24s created", name)
+                bucket = buckets_api.create_bucket(bucket_name=name, org_id=organisation.id,
+                                                   retention_rules=kept)
+                log.info("  bucket %-32s created", name)
+            elif days is not None and [r.every_seconds for r in bucket.retention_rules or []] != [kept.every_seconds]:
+                bucket.retention_rules = [kept]
+                buckets_api.update_bucket(bucket=bucket)
+                log.info("  bucket %-32s kept %d days, as the installation says", name, days)
 
-            path = credential_file(world, agent_id, HISTORY)
-            description = f"orexis {world}/{agent_id} {HISTORY.lower()}"
+            path = credential_file(world, agent_id, purpose)
+            description = f"orexis {world}/{agent_id} {purpose.lower()}"
             held = existing.get(description)
-            #  A GRANT MADE BEFORE PURPOSES opens this same bucket under a description naming none;
-            #  the history grant replaces it, and its file goes with its token.
-            unpurposed = existing.get(f"orexis {world}/{agent_id}")
+            #  A GRANT MADE BEFORE PURPOSES opens the history bucket under a description naming
+            #  none; the history grant replaces it, and its file goes with its token.
+            unpurposed = existing.get(f"orexis {world}/{agent_id}") if purpose == HISTORY else None
             if unpurposed:
                 auth_api.delete_authorization(unpurposed)
                 _unpurposed_file(world, agent_id).unlink(missing_ok=True)
-                log.info("  bucket %-24s the grant naming no purpose is replaced by history's", name)
+                log.info("  bucket %-32s the grant naming no purpose is replaced by history's", name)
 
             if held and path.exists() and not rotate:
-                log.info("  bucket %-24s already granted", name)
+                log.info("  bucket %-32s already granted", name)
                 continue
             if held:
                 # Influx returns a token's secret only when it is created, so an authorization
                 # whose credential file has gone is unrecoverable rather than re-readable. The
                 # honest repair is to replace it.
                 auth_api.delete_authorization(held)
-                log.info("  bucket %-24s token %s", name,
+                log.info("  bucket %-32s token %s", name,
                          "rotated" if rotate else "replaced (credential file was missing)")
 
             resource = PermissionResource(id=bucket.id, org_id=organisation.id, type="buckets")
             auth = auth_api.create_authorization(authorization=Authorization(
-                org_id=organisation.id,
-                description=description,
-                # read as well as write: an agent that forecasts reads its OWN past. It is the
-                # neighbour's past this exists to deny, and the resource id is what denies it.
-                permissions=[Permission(action="read", resource=resource),
-                             Permission(action="write", resource=resource)]))
-            _write_credential(path, agent_id, HISTORY, name, auth.token)
+                org_id=organisation.id, description=description,
+                permissions=[Permission(action=action, resource=resource) for action in ACTIONS[purpose]]))
+            _write_credential(path, agent_id, purpose, name, auth.token)
             if not held:
-                log.info("  bucket %-24s granted to agent-%s", name, agent_id)
+                log.info("  bucket %-32s granted to agent-%s (%s)", name, agent_id, ", ".join(ACTIONS[purpose]))
 
-        _grafana_token(auth_api, organisation, existing, rotate)
+        #  GRAFANA'S TOKEN is org-wide, so it is minted once, in the store history is written to.
+        if purpose == HISTORY:
+            _grafana_token(auth_api, organisation, existing, rotate)
 
 
 GRAFANA_ENV = REPO_ROOT / "infra" / "secrets" / "grafana.env"

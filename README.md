@@ -157,8 +157,8 @@ dashboards and its compose file are all generated from it:
 
 ```bash
 orexis-mqtt greenhouse          # a credential per principal and the ACL, from the MQTT4SSN wiring
-orexis-influx greenhouse        # a bucket per agent, and a token that opens only it
-orexis-dashboards greenhouse    # a panel per sensor on what each agent acts for
+orexis-influx greenhouse        # a history and a metrics bucket per agent, each with a token that opens only it
+orexis-dashboards greenhouse    # a panel per sensor on what each agent acts for, and each agent's health
 orexis-compose greenhouse       # the broker, the simulator and one container per agent
 cd world/greenhouse && podman compose up -d
 ```

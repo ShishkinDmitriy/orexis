@@ -15,10 +15,10 @@ since rotating one service's credentials should not touch another's.
 
 | command | grants |
 |---|---|
-| `orexis-influx` | a history bucket per agent on the series store, and a token that opens only it, in a credential file named for its purpose |
+| `orexis-influx` | per agent, a history bucket and a metrics bucket in the store serving each purpose, each with a token that opens only it, in a credential file named for its purpose |
 | `orexis-mqtt` | a credential per principal on the broker, and the ACL derived from the wiring — then reloads the broker, so connected agents keep their sessions |
 | `orexis-compose` | `world/<name>/compose.yaml`: one container per agent, the world mounted beside the domains, the broker's address and the series store's as environment, the store's keyed by purpose |
-| `orexis-dashboards` | a Grafana folder for the world, from what its agents observe |
+| `orexis-dashboards` | a Grafana folder for the world: what its agents observe, and a health dashboard drawing each agent's metrics |
 
 `orexis-firmware <world>` writes a board's `config.h` from the same documents: the broker's port off
 the `schema:url` on the world's `mqtt4ssn:Broker`, asserted or allocated, the topics in the

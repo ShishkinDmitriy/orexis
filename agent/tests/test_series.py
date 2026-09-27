@@ -9,17 +9,20 @@ from pathlib import Path
 
 import pytest
 
-from agent.series import HISTORY, PURPOSES, Sink, install, load, sink
+from agent.series import HISTORY, METRICS, PURPOSES, Sink, install, load, sink
 
 AGENT = Path(__file__).resolve().parents[1]
 NAMED = {"INFLUX_HISTORY_URL": "http://localhost:8086", "INFLUX_HISTORY_ORG": "orexis",
          "INFLUX_HISTORY_BUCKET": "terrace-terrace", "INFLUX_HISTORY_TOKEN": "t"}
+METRICS_NAMED = {"INFLUX_METRICS_URL": "http://localhost:8086", "INFLUX_METRICS_ORG": "orexis",
+                 "INFLUX_METRICS_BUCKET": "terrace-terrace-metrics", "INFLUX_METRICS_TOKEN": "m"}
 
 
 @pytest.fixture(autouse=True)
 def _no_sink_outlives_a_test():
     yield
-    install(HISTORY, None)
+    for purpose in PURPOSES:
+        install(purpose, None)
 
 
 def test_a_sink_writes_what_it_is_handed_to_its_bucket():
@@ -62,9 +65,18 @@ def test_a_store_half_named_is_no_sink_and_says_what_is_missing(caplog):
 
 def test_a_store_named_for_history_is_the_history_sink():
     assert load(NAMED) == (HISTORY,)
-    assert sink(HISTORY).bucket == "terrace-terrace"
+    assert sink(HISTORY).bucket == "terrace-terrace" and sink(METRICS) is None
     install(HISTORY, None)
     assert sink(HISTORY) is None
+
+
+def test_each_purpose_is_told_its_own_store_and_one_names_nothing_of_the_other():
+    """Metrics are named under their own keys, to a bucket of their own; the one environment holding
+    both loads both, and holding metrics alone loads no history."""
+    assert load(METRICS_NAMED) == (METRICS,)
+    assert sink(METRICS).bucket == "terrace-terrace-metrics" and sink(HISTORY) is None
+    assert load({**NAMED, **METRICS_NAMED}) == (HISTORY, METRICS)
+    assert (sink(HISTORY).bucket, sink(METRICS).bucket) == ("terrace-terrace", "terrace-terrace-metrics")
 
 
 def test_the_sink_imports_nothing_of_the_agent():
@@ -77,14 +89,15 @@ def test_the_sink_imports_nothing_of_the_agent():
     assert not reaching, f"agent/series.py imports the agent at lines {reaching}"
 
 
-def test_the_runtime_loads_a_sink_and_hands_it_nothing():
-    """What history holds is decided by the packages that decide each thing; the runtime's only
-    word to the sink module is `load`."""
+def test_the_runtime_loads_the_sinks_and_writes_metrics_and_never_history():
+    """What history holds is decided by the packages that decide each thing, so the runtime never
+    names it; what it asks of the sink module is to `load`, and the metrics sink, which it writes
+    at the end of a pass."""
     tree = ast.parse((AGENT / "runtime.py").read_text())
     said = {n.attr for n in ast.walk(tree)
             if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "series"}
-    assert said == {"load"}, f"the runtime asks the sink module for {sorted(said)}"
+    assert said == {"load", "sink", "METRICS"}, f"the runtime asks the sink module for {sorted(said)}"
     names = {a.name for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module == "agent.series"
              for a in n.names}
     assert not names, f"the runtime imports {sorted(names)} from the sink"
-    assert PURPOSES == (HISTORY,), "metrics is #826; a new purpose is a new case here"
+    assert PURPOSES == (HISTORY, METRICS), "a new purpose is a new case here"

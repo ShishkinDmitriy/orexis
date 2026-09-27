@@ -307,7 +307,97 @@ predicting nothing moves on as it is taken and has no verdict to write.
 
 **One series store serves every purpose, until a second is written.** The installation states one
 `onboarding:SeriesStore`, and `orexis-compose` tells it under history's keys. A word tying a store
-to a purpose would be read for one purpose today; metrics (#826) is the trigger for it.
+to a purpose would be read for one purpose today; metrics (#826) is the trigger for it — and was,
+in the amendment below.
+
+## Amended 2026-09-27: which store a metric is run over, and where metrics are kept (#826)
+
+§6 is built as written — a package's `metrics.ttl` is an `orexis:MetricGraph`, beneath
+`orexis:Graph` alone, found by that kind each pass, loaded where its package is — and the
+[series](/domain/kernel/series.md) page lists what ships. Four things it left open were settled on
+the way.
+
+**A metric names the repository it is run over, `orexis:over`.** The rows §6 names live in three
+stores, not one: a plan and a weighing in the Planner's imaginaria, one per scope; an intention in
+the executor's intentions store; a silence and a revision's `belief:settled` in the belief base. So
+the runtime, which holds all three, hands the metrics module each repository class's stores, and a
+select's answers over several are summed — which is why a figure is a count. **Refused: running
+every select over every store**, which needs no word: the imaginaria copy the belief base's readings
+and its catalogue, so on the greenhouse a silent probe would have been counted once in the beliefs
+and again per scope, and a revision once per scope too. **Refused: the belief base by default**,
+a metric saying nothing run there — one metric read two ways, by whoever wrote it and by whoever
+reads it, which "a kind said by absence" already refuses.
+
+**Metrics are a bucket of their own, `<world>-<agent>-metrics`**, in whichever store serves the
+purpose. **Refused: a measurement in the history bucket**, which one credential would have covered.
+Three things differ by bucket and cannot be had inside one. History is the record and is kept for
+good, while metrics come every pass — about once a second for an agent with nothing to do — so their
+bucket lets a point go after the installation's `onboarding:retentionDays`, thirty. The agent reads
+its own history and never its metrics, so the metrics token writes and nothing else. And a metric's
+local name and a property's cannot collide once they are measured in two buckets.
+
+**The installation ties a store to a purpose with `onboarding:serves`**, the word the amendment
+above deferred: `:series onboarding:serves onboarding:History , onboarding:Metrics`, each purpose a
+`onboarding:SeriesPurpose` of onboarding's vocabulary, and each served by exactly one store or
+refused. The purposes are IRIs because the retention is said of one; the agent spells them as its
+environment's keys, and `PURPOSE_OF` in `onboarding/installation.py` is the one table between.
+
+**Two selects were wrong as first written, and the engine said nothing.** An outcome compared while
+unbound — `SUM(IF(?outcome = "failed", 1, 0))` over a standing intention — left the whole column
+unbound, so a pass with one intention standing wrote no `failed` at all; it is coalesced first. And
+an `EXISTS` inside a projected aggregate is evaluated against the default graph, which a metric is
+handed empty, so it counted no met weighing on a greenhouse imaginarium holding one; the cone counts
+OPTIONAL rows inside the catalogue instead. The greenhouse's own test holds both, and fails on each.
+
+## Amended 2026-09-27: gauges are selects, events are contributions (#826)
+
+§6 answered what state the stores are in. The sovereign asked as well for what happened and how
+long it took — how long a search ran, how many passes a want waited, how late a dose landed — and
+no select can answer that, since nothing of it is a row, and none of it may become one: no plan
+branches on how long a search took, which is the test for what an agent believes
+([model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)).
+
+**So an event is contributed, as history is (§5).** The package that does the work calls
+`metrics.event` as it happens — the Planner per search and per adoption, `reroot` per scope, the
+executor at a verdict, `received` per reading, the deliberator per revision pass, the runtime per
+pass — and asks `metrics.recording()` first, so with no metrics sink loaded nothing is timed or read.
+Nothing is handed down. What an event needs to remember between passes — when a want was first
+searched, in how many passes, which desire an adopted plan came from — is memory in the object that
+decides it, never a row. **Each is declared** in its package's `metrics.ttl`, an `orexis:Event` with
+the `orexis:field`s it carries, which is how the dashboards draw an agent's events off its own boot
+without a list; a test holds every `metrics.event` in the tree to a declaration and every declared
+field to code that writes it. The [series](/domain/kernel/series.md) page lists them.
+
+**A compute time is `perf_counter`, and no event reads the agent's clock.** The clock runs fast in a
+simulation and ticks per read in a test, where a read changes what a run does. An event is stamped
+at the pass's instant, said once by the runtime (`metrics.begin`), moved on by the real seconds
+since at the clock's pace — which also keeps two events of one pass two points, where the store
+would merge a measurement, a tag set and an instant into one. A test runs hanoi on a ticking clock
+with a sink and without and holds the reads equal; stamping from `clock.now()` fails it.
+
+**Tags are the sovereign's: `world` and `agent` on every point, `desire` on an event about a want**,
+so a desire reads across worlds and agents, and the want's own name a field, since a want is minted
+per instance and a tag of unbounded values breaks the store's index. Scope, outcome, action and
+sensor are tags, being few. **The world's name is the name of the directory the process is handed**
+(`world_name`, told by `main` with the agent's id): the process is told its agent id and given one
+world, and the directory's name is what the buckets, the compose project and the dashboards' folder
+already go by. **Refused: a world IRI read off its own documents** — the worlds do not state one
+node for themselves, and a name that differed from the bucket's would draw one world under two
+names. **Refused: an `OREXIS_WORLD` in the environment compose writes** — a second source beside the
+directory mounted, with nothing to say which is right when they disagree.
+
+**Two asked for were not built as asked.** The *derive* phase is the Planner's, inside `plan`, which
+the runtime may not look into; it is in the Planner's own `planner` event beside the ground, weigh,
+search and publish parts, and the runtime's `phases` has `plan` whole. And *a reading outside its
+predicted bands* is compared nowhere in 0.2.0 — the one surprise a pass names is `reroot` finding
+no imagined world the present repeats, so that is the surprise the metrics carry (`reroot`, tagged
+`present=surprise`). It fires on nearly every new reading, because a reading's number is in a
+world's hash; a band comparison would be new logic, not telemetry.
+
+**What it costs**, alternated within one session on the Pi, a greenhouse agent with a sink writing
+nowhere against none: about 2 to 5 ms on a pass of 50 to 75 ms, most of it the gauges' selects, with
+the events under a millisecond — per search and per pass, never per weighing, which the hanoi test
+holds by counting.
 
 # What this supersedes, and what it amends
 

@@ -61,7 +61,7 @@ from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
-from agent import clock
+from agent import clock, metrics
 from agent.hash_named_graph import facts_of
 from agent.ontology import OREXIS, STATE, local_of
 from agent.series import HISTORY, sink
@@ -137,6 +137,10 @@ ORDER BY ?due ?intention"""
 _PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH $intentions { $step execution:predicts ?predicts } }"""
 
 _PURSUES_Q = """SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }"""
+
+#  WHAT A PURSUED THING WAS DERIVED FROM, in PROV's words — read off the store a plan came from,
+#  for the metrics alone, and in no word of the layer above.
+_DERIVED_FROM_Q = """SELECT ?d WHERE { GRAPH ?g { $want prov:wasDerivedFrom ?d } } LIMIT 1"""
 
 #  WHAT A STEP KEPT BELOW WAITS ON: the intentions walking the want it was refined into — standing,
 #  or ended and how.
@@ -241,6 +245,10 @@ class Executor:
         #  rules conclude of it is concluded.
         self.refine = refine
         self.on_write = on_write
+        #  TELEMETRY AND NOT A ROW: the desire each adopted plan's want was derived under, read
+        #  off the store the plan came from where a metrics sink is loaded, so a landing can be
+        #  told by desire. The intentions keep commitments, not the reasoning behind them.
+        self._desires: dict[str, str] = {}
         self._work: queue.SimpleQueue = queue.SimpleQueue()
         self._inflight: set[str] = set()
         self._next_due: datetime | None = None
@@ -269,6 +277,10 @@ class Executor:
             self.resolve(held.uri, "superseded")
         intention = self._adopt(source, graph, want)
         if intention is not None:
+            if metrics.recording():
+                found = rows(source, _DERIVED_FROM_Q, (), want=want)
+                if found:
+                    self._desires[want] = local_of(found[0]["d"])
             self.wake()
         return intention
 
@@ -403,6 +415,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 wake_at(lands)
             elif self._answered(r["predicts"]):
                 self._history(intention, step, now, landed=True)
+                self._landing_event(intention, step, r, now, timed_out=False)
                 self._advance(intention, step)
             elif None in below:
                 continue                        # kept below: a plan for it stands, and waits on no clock
@@ -415,6 +428,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 log.warning("%s: the world did not answer %s by %s — %s fails",
                             self.id, local_of(step), lands.isoformat(), intention.rsplit("#", 1)[-1])
                 self._history(intention, step, now, landed=False)
+                self._landing_event(intention, step, r, now, timed_out=True)
                 self.resolve(intention, "failed")
             else:
                 wake_at(lands + timedelta(seconds=self.patience_s))
@@ -543,6 +557,21 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         pursued = rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))
         history.write([step_point(self.beliefs, self.step_of(step), pursued[0]["want"] if pursued else None,
                                   at, fields)])
+
+    def _landing_event(self, intention: str, step: str, head: dict, now: datetime, *, timed_out: bool) -> None:
+        """How late the world answered `step` — `now`, when it was seen to, less the `landsAt` the
+        plan placed — or that the patience ran out on it, contributed to the metrics sink where
+        one is loaded. The verdict itself is history's; what metrics carries is the lateness, in
+        the agent's own seconds, since both instants are its timeline's and neither is read here."""
+        if not metrics.recording() or not head.get("lands"):
+            return
+        pursued = rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))
+        want = pursued[0]["want"] if pursued else None
+        action = self.step_of(step).get("fills")
+        metrics.event("landing", {"want": local_of(want) if want else "",
+                                  "late_s": round((now - datetime.fromisoformat(head["lands"])).total_seconds(), 3),
+                                  "timed_out": int(timed_out)},
+                      action=local_of(action) if action else None, desire=self._desires.get(want))
 
     def say(self, said: dict, intention: str) -> None:
         """The default taking: the step's name, and what fills it, in the log."""

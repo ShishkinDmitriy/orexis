@@ -30,6 +30,7 @@ import uuid
 
 import pytest
 
+from agent.series import HISTORY
 from onboarding import influx as influx_admin
 from onboarding import installation
 
@@ -46,7 +47,7 @@ def admin():
         token = influx_admin._admin_token()
     except influx_admin.AdminError as exc:
         pytest.skip(str(exc))
-    url, org = installation.series()     # where the installation says the store is, as onboarding reads it
+    url, org = installation.series(HISTORY)     # where the installation says history is, as onboarding reads it
     client = InfluxDBClient(url=url, token=token, org=org)
     try:
         if not client.ping():
@@ -75,7 +76,7 @@ def grants(admin):
     """Two of them, so 'its own' and 'a neighbour's' are both real and neither is an agent's."""
     client, organisation, org = admin
     buckets_api, auth_api = client.buckets_api(), client.authorizations_api()
-    made, url = [], installation.series()[0]
+    made, url = [], installation.series(HISTORY)[0]
 
     def mint() -> Grant:
         name = f"orexis-test-{uuid.uuid4().hex[:10]}"

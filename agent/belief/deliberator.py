@@ -22,11 +22,12 @@ search, and `knowledge/domain/belief/deliberator.md` says which is which.
 from __future__ import annotations
 
 import logging
+import time
 from datetime import datetime
 
 import pyoxigraph as ox
 
-from agent import clock
+from agent import clock, metrics
 from agent.ontology import KNOWN
 from agent.store import Raw, catalogue_of, graphs_of, rows
 
@@ -73,6 +74,8 @@ class Deliberator:
         at = now or clock.now()
         left = self.budget
         spent = 0
+        started = time.perf_counter() if self.queue and metrics.recording() else None
+        revised = len(self.queue)
         for source in list(self.queue):
             if left <= 0:
                 break
@@ -89,6 +92,11 @@ class Deliberator:
         if spent:
             log.debug("%s: %d execution(s) over %d source(s), %d pending", self.id, spent,
                       len(self.queue), len(self.queue))
+        #  WHAT THE PASS SPENT, where a metrics sink is loaded: the sources it was handed, the rule
+        #  executions, how many were left cut short for the next pass, and the real seconds.
+        if started is not None:
+            metrics.event("revise", {"sources": revised, "executions": spent, "cut": len(self.queue),
+                                     "duration_s": round(time.perf_counter() - started, 6)})
         return spent
 
     def _unsettled(self) -> list[str]:

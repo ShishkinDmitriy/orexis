@@ -12,7 +12,8 @@ description: >-
 
 A quad store, and in it named graphs: the vocabulary and the closure, the world's public
 documents, the state the agent observes and what the rules conclude of it, the predictions, the
-desires and wants, the records, the intentions. **There is no shared store.** Each agent's is a
+desires and wants, the records, and the metric selects of the packages it loads, a kind no reader
+of the world is handed. **There is no shared store.** Each agent's is a
 file in its own volume, built from the ratified documents of `world/<world>/`, so isolation is
 structural: nothing needs enforcing because nothing else can open it.
 
@@ -32,9 +33,14 @@ a caller, and a graph's NAME is for eyes: code relies on its row alone.
 
 # What lives beside it
 
+Two more stores, each the runtime's to hold: the [imaginaria](/domain/planning/imaginarium.md), one
+per scope, and the executor's intentions store, where every [intention](/domain/execution/intention.md)
+and its acts are — made in memory by the runtime. A metric says which of the three it counts in.
+
 Each reading, and each step taken and how it ended, also goes to the agent's history bucket as a
-series point, for the panels to draw. The series is watched, never believed: nothing reads it back
-into the store.
+series point, for the panels to draw, and what the metric selects answer goes to its metrics
+bucket after every pass. The series is watched, never believed: nothing reads it back into the
+store.
 
 # What a restart keeps
 

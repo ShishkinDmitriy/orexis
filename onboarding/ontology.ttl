@@ -26,6 +26,23 @@ onboarding:DeploymentGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:lab
 onboarding:SeriesStore a owl:Class ; rdfs:label "Series store" ;
     rdfs:comment "Where every agent's series is written, a bucket of its own in the store's organisation - InfluxDB 2 today. `orexis-influx` mints buckets and tokens in it and `orexis-compose` tells each agent where it is (knowledge/domain/kernel/series.md)." .
 
+onboarding:serves a owl:ObjectProperty ; rdfs:label "serves" ;
+    rdfs:domain onboarding:SeriesStore ; rdfs:range onboarding:SeriesPurpose ;
+    rdfs:comment "A purpose a series store is told to every agent for: each purpose is served by exactly one store, and `orexis-compose` tells an agent that store's url and organisation under the purpose's keys, `INFLUX_<PURPOSE>_URL` and `_ORG`. Two purposes may name one store, by coincidence and not by design (knowledge/domain/kernel/series.md)." .
+
+onboarding:SeriesPurpose a owl:Class ; rdfs:label "Series purpose" ;
+    rdfs:comment "What a series is written for, which decides the bucket it goes to, the credential that opens it and how long it keeps a point. Two, and the agent's code names each (`agent.series`): history and metrics." .
+
+onboarding:History a onboarding:SeriesPurpose ; rdfs:label "history" ;
+    rdfs:comment "What happened: every observation and every step taken and how it ended, contributed by the package that decides each. The record, kept for good, in the bucket the one series had before purposes." .
+
+onboarding:Metrics a onboarding:SeriesPurpose ; rdfs:label "metrics" ;
+    rdfs:comment "How the agent is doing, written every pass: what each loaded package's metric selects answer and the runtime's own three figures. A bucket of its own, opened for writing alone, and kept as long as `onboarding:retentionDays` says." .
+
+onboarding:retentionDays a owl:DatatypeProperty ; rdfs:label "retention days" ;
+    rdfs:domain onboarding:SeriesPurpose ;
+    rdfs:comment "How many days a purpose's buckets keep a point, stated by the installation; absent is for ever. `orexis-influx` sets it on a bucket it makes and puts it right on one it finds kept otherwise." .
+
 onboarding:SeriesView a owl:Class ; rdfs:label "Series view" ;
     rdfs:comment "Where the series is drawn for a person - the operator's view of every world at once, Grafana today. `orexis-infra-compose` runs it on the port its url states." .
 

@@ -80,7 +80,8 @@ had them.
 A **bucket has exactly one writer and nobody to agree with**. That makes it deployment, like the
 store's URL — so it gets no ontology term. It is named `<world>-<agent>` by convention, and the
 convention lives in one function, `bucket_name` in `onboarding/influx.py`; a store told by purpose
-(#825) left it as it was for history, so a terrace's history went on in the bucket it had. The agent is never told it: it reads the
+(#825) left it as it was for history, so a terrace's history went on in the bucket it had, and
+metrics (#826) are `<world>-<agent>-metrics` beside it. The agent is never told it: it reads the
 name out of the credential file mounted for it, so no process builds a destination from a naming
 rule, and the [three rules the code lives by](/decisions/capability-packages.md) hold unchanged.
 
@@ -97,7 +98,7 @@ at a fixed path in the container, so the agent reads a path and never constructs
 | | where | why |
 |---|---|---|
 | admin token | `infra/secrets/admin.env` | opens every bucket; no agent may hold it |
-| agent's bucket + token, per purpose | `world/<w>/secrets/influx-<purpose>-<agent>.env` — history's, today | mounted into that one container |
+| agent's bucket + token, per purpose | `world/<w>/secrets/influx-<purpose>-<agent>.env` — history's and metrics' | mounted into that one container |
 | agent's broker credential | `world/<w>/secrets/mqtt-<agent>.env` | same |
 | device's broker credential | `world/<w>/secrets/mqtt-<id>.env` | world-scoped, since a broker is — see below |
 | `infra/installation.ttl` | committed document | where the series store is and its org, and where a broker's ports are allocated from — no credential; `infra/.env` went with #827 |

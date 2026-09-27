@@ -39,6 +39,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
+from agent import metrics
 from agent.ontology import PUBLIC, local_of
 from agent.series import HISTORY, sink
 from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
@@ -56,6 +57,18 @@ _KEY_Q = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; so
 #  THE SILENCE SAID OF THIS SENSOR, if any — the graph holding the row, found by its content.
 _SILENCE_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { $sensor sensing:silentSince ?since } }"""
+
+
+#  WHEN THE READING BEFORE WAS MADE, off the graph of the key, which this writer names.
+_BEFORE_Q = """SELECT ?t WHERE { GRAPH $graph { ?o sosa:resultTime ?t } } LIMIT 1"""
+_ID_Q = """SELECT ?id WHERE { $sensor orexis:localId ?id } LIMIT 1"""
+
+
+def _local_id(store, sensor: str) -> str:
+    """The sensor's `orexis:localId`, which is the tag history already carries — its IRI's local
+    name where it states none."""
+    found = rows(store, _ID_Q, graphs_of(store, PUBLIC), sensor=sensor)
+    return found[0]["id"] if found else local_of(sensor)
 
 
 def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
@@ -80,11 +93,19 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     feature, observed_property = keys[0]["feature"], keys[0]["property"]
     node = observation_of(feature, observed_property)
     graph = observation_graph(local_of(me), feature, observed_property)
+    #  THE READING THIS ONE REPLACES, read before it goes, where a metrics sink is loaded: how long
+    #  after it this one came is the sensor's cadence as kept, beside the one the world states.
+    before = rows(store, _BEFORE_Q, (), graph=graph) if metrics.recording() else []
     forget_graph(store, graph)
     cat = Raw(f"<{catalogue_of(store)}>")
     for silence in rows(store, _SILENCE_Q, (), cat=cat, sensor=sensor):
         forget_graph(store, silence["g"])
     cadence = cadence_of(store, sensor, memo)
+    if before:
+        interval = (at - datetime.fromisoformat(before[0]["t"])).total_seconds()
+        metrics.event("received", {"interval_s": round(interval, 3),
+                                   **({"cadence_s": float(cadence)} if cadence is not None else {})},
+                      sensor=_local_id(store, sensor))
     until = at + timedelta(seconds=cadence) if cadence is not None else None
     said = [f'<{node}> a sosa:Observation',
             f'<{node}> sosa:hasFeatureOfInterest <{feature}>',

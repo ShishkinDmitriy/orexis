@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import logging
 
+from agent import metrics
 from agent.store import Raw, bind, catalogue_of, clear_graph, rows, update
 
 log = logging.getLogger("reroot")
@@ -154,4 +155,11 @@ def reroot(store, ground: str) -> str | None:
         (log.info if landed or match is None else log.debug)(
             "the present is %s; %d world(s) kept, %d dropped",
             "a surprise" if match is None else match.rsplit("/", 1)[-1], len(kept), len(gone))
+    #  AND WHERE A METRICS SINK IS LOADED, which of the four it was — the first pass; one of the
+    #  last pass's grounds repeated, the old present where nothing happened; a child the last pass
+    #  imagined, where a step landed as predicted; or a surprise, the one a pass names — with what
+    #  was kept and dropped. Once per scope per pass.
+    metrics.event("reroot", {"kept": len(kept), "dropped": len(gone)},
+                  present="first" if match is None and not gone else "surprise" if match is None
+                  else "child" if landed else "ground")
     return match

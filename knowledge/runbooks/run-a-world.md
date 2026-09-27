@@ -101,7 +101,7 @@ being evidence of anything — check by connecting, not by reading the log.
 orexis-onboard greenhouse      # all four below
 
 # or separately, when you want only one of them:
-#   orexis-influx greenhouse     # a bucket per agent, and a token that opens only it
+#   orexis-influx greenhouse     # a history and a metrics bucket per agent, each with a token that opens only it
 #   orexis-mqtt greenhouse       # a credential per principal, and the broker ACL, derived
 #   orexis-compose greenhouse    # writes world/greenhouse/compose.yaml from the world beside it
 #   orexis-dashboards greenhouse # a Grafana folder for the world
