@@ -693,13 +693,12 @@ it is a record wearing a bullet.
   lacks, a system's model, starting reading and bounds, and the 0.1.0 stand-ins, told everything
   as environment like a board, went with the physics they duplicated (`simulation/`).
 - **A series is watched and never believed, and the package that decides a thing writes its
-  history** — the 0.2.0 runtime writes each observation it receives as the 0.1.0 agent did,
-  `soil_moisture` tagged plant, sensor and property, which carried the terrace's panels across the
-  switch and was one property's shape: the terrace's air temperature lands as soil moisture. A
-  store that refuses is said in the log and costs the agent nothing. Decided and not yet built:
-  history measured per property and contributed by sensing and execution, metrics as each
-  package's selects, and a store told per purpose (a-documents-kind-says-who-reads-it; #822,
-  #825, #826).
+  history** — the 0.2.0 runtime writes each observation it receives under its property's local
+  name, since 0.1.0's `soil_moisture` for every property was one property's shape and put the
+  terrace's air temperature in as soil moisture (#822); the dashboards ask the writer for the
+  name. A store that refuses is said in the log and costs the agent nothing. Decided and not yet
+  built: history contributed by sensing and execution, metrics as each package's selects, and a
+  store told per purpose (a-documents-kind-says-who-reads-it; #825, #826).
 - **A process is the AGENT with the id it was told, never whatever carries that id** — the sensing
   world's fern and the agent acting for it are both `localId "fern"`, and the runtime's identity
   read found two and refused to boot; it asks for an `orexis:Agent` now.
