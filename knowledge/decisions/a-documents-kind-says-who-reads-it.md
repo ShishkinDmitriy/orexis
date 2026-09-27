@@ -141,7 +141,7 @@ reading its own broker's address off the world is no longer a discipline to keep
 cannot do. What is left open is only how several addresses are TOLD — the first seam below.
 
 **Nothing is filed to build this yet.** All four worlds with a bus state one broker; the latent
-defect is `broker()` merging several without a word, and that is filed to refuse (#821).
+defect was `broker()` merging several without a word, and it refuses them now (#821).
 
 ## 4. A series store per purpose: history and metrics
 

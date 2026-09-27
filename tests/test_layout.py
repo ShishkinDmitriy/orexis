@@ -200,6 +200,83 @@ def test_the_firmware_generator_reads_the_hardware_beside_the_society():
         assert board in found, f"{world}: the firmware generator finds {sorted(found)}"
 
 
+# --- one broker, one address: onboarding refuses what it would otherwise merge ---------------
+
+def _sensing_world_stating(tmp_path, monkeypatch, edit) -> str:
+    """The sensing world, its world graph edited, as the world every onboarding tool is handed."""
+    from onboarding import compose, firmware, mqtt
+
+    world = tmp_path / "sensing"
+    world.mkdir()
+    climate = (REPO_ROOT / "domains" / "climate" / "ontology.ttl").as_uri()
+    text = (REPO_ROOT / "world" / "sensing" / "world.ttl").read_text()
+    (world / "world.ttl").write_text(edit(text.replace("<../../domains/climate/ontology.ttl>", f"<{climate}>")))
+    for module in (mqtt, compose, firmware):
+        monkeypatch.setattr(module, "world_dir", lambda name: world)
+    return "sensing"
+
+
+_TWO_BROKERS = '\n:elsewhere a mqtt4ssn:Broker ;\n    schema:url "mqtt://elsewhere:1999" , "mqtts://elsewhere:8999" .\n'
+
+
+def test_a_world_stating_two_brokers_is_refused_naming_both(tmp_path, monkeypatch):
+    """Broken on purpose: the sensing world with a second broker. `broker` kept the first host it
+    met and a port per scheme from whichever url sorted last, so this world was handed
+    `elsewhere` with the sensing broker's ports and nothing said so. How several brokers reach an
+    agent is an open seam (a-documents-kind-says-who-reads-it), so onboarding refuses instead."""
+    from onboarding import mqtt
+
+    world = _sensing_world_stating(tmp_path, monkeypatch, lambda text: text + _TWO_BROKERS)
+    with pytest.raises(SystemExit, match=r"2 mqtt4ssn:Brokers") as refused:
+        mqtt.broker(world)
+    assert "sensing#broker" in str(refused.value) and "sensing#elsewhere" in str(refused.value)
+
+
+@pytest.mark.parametrize("edit, contradiction", [
+    (lambda text: text.replace('"mqtts://localhost:8884"', '"mqtts://elsewhere:8884"'), "two hosts"),
+    (lambda text: text.replace('"mqtts://localhost:8884"', '"mqtt://localhost:1999"'), "two mqtt:// ports"),
+    (lambda text: text.replace('"mqtt://localhost:1884"', '"mqtt://localhost:1884" , "mqtts://localhost:8999"'),
+     "two mqtts:// ports"),
+], ids=["hosts", "plain", "tls"])
+def test_one_broker_stating_two_addresses_is_refused(tmp_path, monkeypatch, edit, contradiction):
+    """One broker whose urls disagree — two hosts, or two ports for one scheme — was answered with
+    whichever sorted first or last. A board is flashed with one host and one port, so one of them
+    is simply wrong, and onboarding cannot tell which."""
+    from onboarding import mqtt
+
+    world = _sensing_world_stating(tmp_path, monkeypatch, edit)
+    with pytest.raises(SystemExit, match=contradiction):
+        mqtt.broker(world)
+
+
+@pytest.mark.parametrize("tool", ["compose", "firmware"])
+def test_the_tools_told_the_address_inherit_the_refusal(tmp_path, monkeypatch, tool):
+    """`orexis-compose` writes the address into every agent's environment and `orexis-firmware`
+    into every board's config.h; both ask `broker`, so neither writes a merged address."""
+    from onboarding import compose, firmware
+
+    world = _sensing_world_stating(tmp_path, monkeypatch, lambda text: text + _TWO_BROKERS)
+    with pytest.raises(SystemExit, match=r"2 mqtt4ssn:Brokers"):
+        compose.render(world) if tool == "compose" else firmware.generate(world)
+
+
+def test_every_shipped_world_with_a_bus_states_one_broker_address():
+    """The other direction: the refusal must not fire on a world that is right. A world with no bus
+    — hanoi — states no broker and is refused for that, as before."""
+    from onboarding import mqtt
+
+    answered = []
+    for world in _worlds():
+        try:
+            host, plain, _tls = mqtt.broker(world)
+        except SystemExit as refused:
+            assert "states no mqtt:// url" in str(refused), f"{world}: {refused}"
+            continue
+        assert host and plain, f"{world}: no address"
+        answered.append(world)
+    assert len(answered) >= 4, f"only {answered} state a broker — the guard would check nothing"
+
+
 # --- the entry documents name only what exists --------------------------------------------------
 
 #  Instances AGENTS.md names on purpose, as the thing rule 1 forbids. They are not terms and must

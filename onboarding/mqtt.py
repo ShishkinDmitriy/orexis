@@ -153,7 +153,9 @@ SELECT ?id ?pattern WHERE {{
 
 #  WHERE THE BROKER LISTENS: `schema:url` on the world's `mqtt4ssn:Broker`, plain and TLS. The
 #  agent is told this through its environment, generated from here; it never reads it off the world.
-_BROKER_Q = f"SELECT ?url WHERE {{ ?b a <{MQTT4SSN}Broker> ; schema:url ?url }} ORDER BY ?url"
+#  Every broker is asked for, url or none, so a second one is seen whatever it states.
+_BROKER_Q = f"SELECT ?b ?url WHERE {{ ?b a <{MQTT4SSN}Broker> OPTIONAL {{ ?b schema:url ?url }} }}"
+_DEFAULT_PORTS = {"mqtt": 1883, "mqtts": 8883}
 
 
 def _world(world: str):
@@ -165,19 +167,46 @@ def _rows(store, text: str) -> list[dict]:
 
 
 def broker(world: str) -> tuple[str, int, int | None]:
-    """(host, plain port, TLS port or None), off the broker's `schema:url`s."""
+    """(host, plain port, TLS port or None), off the `schema:url`s of the world's ONE broker.
+
+    One broker, because this answer is one address: `orexis-compose` writes it into every agent's
+    environment and `orexis-firmware` into every board's config.h, and both ask here. A world
+    stating two is refused rather than merged — this kept the first host it met and a port per
+    scheme from whichever url came last, so two brokers became one address belonging to neither.
+    How several addresses reach an agent is left open until a world needs it
+    (knowledge/decisions/a-documents-kind-says-who-reads-it.md, its first seam). One broker whose
+    urls disagree — two hosts, or two ports for one scheme — is refused for the same reason: a
+    board is flashed with one of them, and nothing here can say which is right.
+    """
     from urllib.parse import urlparse
-    plain = tls = host = None
-    for row in _rows(_world(world), _BROKER_Q):
-        url = urlparse(row["url"])
-        host = host or url.hostname
-        if url.scheme == "mqtts":
-            tls = url.port or 8883
-        elif url.scheme == "mqtt":
-            plain = url.port or 1883
-    if plain is None:
-        raise SystemExit(f"orexis-mqtt: world {world!r} states no mqtt:// url on its mqtt4ssn:Broker")
-    return host or "localhost", plain, tls
+    found = _rows(_world(world), _BROKER_Q)
+    brokers = sorted({row["b"] for row in found})
+    if len(brokers) > 1:
+        raise SystemExit(
+            f"orexis-mqtt: world {world!r} states {len(brokers)} mqtt4ssn:Brokers ({', '.join(brokers)}); "
+            "onboarding tells an agent one broker's address, and how several would reach it is not "
+            "decided — see knowledge/decisions/a-documents-kind-says-who-reads-it.md")
+    hosts: set[str] = set()
+    ports: dict[str, set[int]] = {scheme: set() for scheme in _DEFAULT_PORTS}
+    for row in found:
+        url = urlparse(row.get("url") or "")
+        if url.scheme not in ports:
+            continue
+        if url.hostname:
+            hosts.add(url.hostname)
+        ports[url.scheme].add(url.port or _DEFAULT_PORTS[url.scheme])
+    where = f"its mqtt4ssn:Broker {brokers[0]}" if brokers else "an mqtt4ssn:Broker"
+    if len(hosts) > 1:
+        raise SystemExit(f"orexis-mqtt: world {world!r} states two hosts for {where}: "
+                         f"{', '.join(sorted(hosts))}")
+    for scheme, stated in ports.items():
+        if len(stated) > 1:
+            raise SystemExit(f"orexis-mqtt: world {world!r} states two {scheme}:// ports for {where}: "
+                             f"{', '.join(map(str, sorted(stated)))}")
+    if not ports["mqtt"]:
+        raise SystemExit(f"orexis-mqtt: world {world!r} states no mqtt:// url on {where}")
+    (plain,), tls = ports["mqtt"], next(iter(ports["mqtts"]), None)
+    return next(iter(hosts), "localhost"), plain, tls
 
 
 def broker_host(world: str) -> str:
