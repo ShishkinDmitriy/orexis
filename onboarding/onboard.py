@@ -72,6 +72,11 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
                              f"{'; '.join(unread)}; nothing granted")
 
     log.info("onboarding %s", world)
+    # A world asking to be monitored where the installation serves metrics nowhere is refused before
+    # anything is granted, as a world that will not load is: every tool below would refuse it anyway,
+    # one of them after the credentials were minted.
+    told = installation.purposes(world)
+    log.info("  its agents write %s", " and ".join(p.lower() for p in told))
     # What the documents leave out is derived before anything is rendered from them: a broker whose
     # world asserts no url is allocated one here, beside every other world's, and every tool below
     # only reads what was asserted or allocated (onboarding.derived).

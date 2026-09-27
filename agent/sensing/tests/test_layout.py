@@ -24,7 +24,7 @@ CODE = sorted(p for p in SENSING.glob("*.py"))
 VOCABULARY = sorted(SENSING.glob("*.ttl"))
 
 #  A MODULE NAMED FOR A THING, which may export several reads of it.
-NOUNS = {"ontology", "pipeline", "cadence", "history"}
+NOUNS = {"ontology", "pipeline", "cadence", "history", "metrics"}
 
 ABOVE = ("prediction", "planning", "execution", "belief")
 

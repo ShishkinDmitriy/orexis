@@ -40,7 +40,7 @@ def test_the_namespace_portions_stay_unclaimed():
 
 #  A MODULE NAMED FOR A THING, which may export several reads of it. Every other module in
 #  the package is named for an ACT and exports that act alone.
-NOUNS = {"footprint", "ontology", "planner", "violation"}
+NOUNS = {"footprint", "metrics", "ontology", "planner", "violation"}
 
 
 def test_a_module_named_for_an_act_exports_that_act_and_nothing_else():

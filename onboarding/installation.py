@@ -5,10 +5,17 @@
 **The installation is the deployment graph of what every world shares**
 (knowledge/domain/onboarding/deployment.md), asserted in `infra/installation.ttl`: the series
 store — its url, its organisation, its image, and the purposes it `onboarding:serves`, history and
-metrics, each served by one store and kept as many days as `onboarding:retentionDays` says of it,
-or for ever — the series view that draws it, and where a broker is allocated ports when its world
-asserts none. It lives under `infra/`, and rule 3 holds of it
-in the only way it can: nothing in it is true of one world.
+metrics, each kept as many days as `onboarding:retentionDays` says of it, or for ever — the series
+view that draws it, and where a broker is allocated ports when its world asserts none. It lives
+under `infra/`, and rule 3 holds of it in the only way it can: nothing in it is true of one world.
+
+**History is served by one store, and metrics by one or by none.** Every agent writes its history,
+so a purpose served nowhere would be a sink every agent is told of and none has: refused. Metrics
+are the admins' instrumentation and optional at every level — a world is monitored only where its
+own deployment graph says `<> onboarding:monitored true`, and an installation serving metrics
+nowhere monitors no world, refusing the one that asks. `purposes` is that answer, and every tool
+asks it: which purposes a world's agents are told a store for. How long a metrics window is,
+`onboarding:intervalSeconds` on the purpose, reaches each agent as its environment.
 
 **Asserted wins, derived completes** (`onboarding.derived`). A world may assert its broker's urls
 in a deployment graph of its own, and an asserted url is what every tool is told. A broker no world
@@ -53,7 +60,7 @@ import pyoxigraph as ox
 
 from agent.ontology import local_of as local
 from agent.series import HISTORY, METRICS
-from agent.store import DocumentRefused, graphs_of, rows
+from agent.store import DocumentRefused, Raw, answer, catalogue_of, graphs_of, rows
 
 from . import derived, reading
 from .reading import DEPLOYMENT, ONBOARDING
@@ -87,6 +94,7 @@ _POOL_Q = f"SELECT ?s ?url WHERE {{ ?s <{ONBOARDING}allocatesFrom> ?url }}"
 PURPOSE_OF = {HISTORY: ONBOARDING + "History", METRICS: ONBOARDING + "Metrics"}
 _SERVES_Q = f"SELECT ?s WHERE {{ ?s a <{ONBOARDING}SeriesStore> ; <{ONBOARDING}serves> <$purpose> }}"
 _RETENTION_Q = f"SELECT ?days WHERE {{ <$purpose> <{ONBOARDING}retentionDays> ?days }}"
+_INTERVAL_Q = f"SELECT ?s WHERE {{ <$purpose> <{ONBOARDING}intervalSeconds> ?s }}"
 _URLS_Q = f"SELECT ?s ?url WHERE {{ ?s <{_SCHEMA_URL}> ?url }}"
 
 #  A WORLD'S BROKER, as its society names it, and the urls its own documents assert on it — over
@@ -154,22 +162,66 @@ def _service(kind: str, label: str, iri: str | None = None) -> dict:
     return {"iri": named[0], **{key: (stated[0] if stated else None) for key, stated in values.items()}}
 
 
-def series(purpose: str) -> tuple[str, str]:
-    """(url, organisation) of the series store that `onboarding:serves` `purpose` — what
-    `orexis-influx` mints the purpose's buckets in and what `orexis-compose` tells every agent under
-    the purpose's keys. One, since an agent is told one store per purpose, and none is refused: a
-    purpose the installation serves nowhere would be a sink every agent is told of and none has."""
+def served(purpose: str) -> tuple[str, str] | None:
+    """(url, organisation) of the series store that `onboarding:serves` `purpose`, or None where no
+    store serves it. Two are refused, since an agent is told one store per purpose."""
     s = _store(with_derivation=False)
     found = _asserted(s, _SERVES_Q.replace("$purpose", PURPOSE_OF[purpose]))
     named = sorted({r["s"] for r in found})
-    if len(named) != 1:
+    if not named:
+        return None
+    if len(named) > 1:
         raise SystemExit(f"the installation states {len(named)} onboarding:SeriesStores serving "
-                         f"{local(PURPOSE_OF[purpose])}" + (f" ({', '.join(named)})" if named else "")
-                         + " — an agent is told one store per purpose")
+                         f"{local(PURPOSE_OF[purpose])} ({', '.join(named)}) — an agent is told one store per purpose")
     store = _service(SERIES_STORE, "onboarding:SeriesStore", named[0])
     if not store["organisation"]:
         raise SystemExit(f"the installation states no onboarding:organisation for {store['iri']}")
     return store["url"], store["organisation"]
+
+
+def series(purpose: str) -> tuple[str, str]:
+    """(url, organisation) of the series store that serves `purpose` — what `orexis-influx` mints the
+    purpose's buckets in and what `orexis-compose` tells an agent under the purpose's keys — refused
+    where none does: asked only for a purpose some agent is to be told of (`purposes`)."""
+    found = served(purpose)
+    if found is None:
+        raise SystemExit(f"the installation states 0 onboarding:SeriesStores serving {local(PURPOSE_OF[purpose])}"
+                         " — an agent told of the purpose would be told of a store nobody has")
+    return found
+
+
+#  WHETHER A WORLD IS MONITORED: its deployment graph says so of itself, a row the loader keeps in
+#  the catalogue beside the graph's kind.
+_MONITORED_Q = f"""ASK {{ GRAPH $cat {{ ?g a <{ONBOARDING}DeploymentGraph> ; <{ONBOARDING}monitored> true }} }}"""
+
+
+def monitored(world: str) -> bool:
+    """Whether `world`'s own deployment graph says it is monitored — absent is no."""
+    store = reading.world(world_dir(world))
+    return bool(answer(store, _MONITORED_Q, (), cat=Raw(f"<{catalogue_of(store)}>"))["boolean"])
+
+
+def purposes(world: str) -> tuple[str, ...]:
+    """The purposes `world`'s agents are told a series store for, in the agent's spelling: history
+    always, and metrics where the world is monitored. A monitored world is refused where the
+    installation serves metrics nowhere — it asked for something this host does not run — and an
+    unmonitored one is told of no metrics store whatever the installation serves."""
+    if not monitored(world):
+        return (HISTORY,)
+    if served(METRICS) is None:
+        raise SystemExit(f"world {world!r} says it is monitored (onboarding:monitored) and the installation serves "
+                         f"{local(PURPOSE_OF[METRICS])} from no store — serve it from one in "
+                         f"{_where(INSTALLATION)}, or stop monitoring the world")
+    return HISTORY, METRICS
+
+
+def interval(purpose: str) -> float | None:
+    """How many seconds a window of `purpose`'s points is, `onboarding:intervalSeconds` on the
+    purpose — or None where the installation states none, and the agent keeps its own sixty."""
+    said = {float(r["s"]) for r in _asserted(_store(with_derivation=False), _INTERVAL_Q.replace("$purpose", PURPOSE_OF[purpose]))}
+    if len(said) > 1:
+        raise SystemExit(f"the installation states {len(said)} intervals for {local(PURPOSE_OF[purpose])}")
+    return next(iter(said), None)
 
 
 def retention(purpose: str) -> int | None:

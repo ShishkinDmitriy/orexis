@@ -19,6 +19,10 @@ onboarding:HardwareGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label
 onboarding:DeploymentGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Deployment graph" ;
     rdfs:comment "What must be running for a world to be a society and where each thing answers - a broker's address, a series store, a container's image - read by onboarding alone and handed to an agent as environment. Never a credential (knowledge/domain/onboarding/deployment.md)." .
 
+onboarding:monitored a owl:DatatypeProperty ; rdfs:label "monitored" ;
+    rdfs:domain onboarding:DeploymentGraph ;
+    rdfs:comment "Said by a world's own deployment graph of itself, `<> onboarding:monitored true`: the world's agents write their metrics, so each is minted a metrics bucket and told of it, and the world gets a health dashboard. Absent is no - metrics are the admins' instrumentation and a world opts in - and a world saying it where the installation serves metrics from no store is refused at onboarding (knowledge/domain/onboarding/deployment.md)." .
+
 #  THE INSTALLATION'S WORDS (knowledge/domain/onboarding/deployment.md). The installation is the
 #  deployment graph of what every world shares, `infra/installation.ttl`; these are what it says
 #  of each shared service. An address is `schema:url`, as a broker's already was.
@@ -28,7 +32,7 @@ onboarding:SeriesStore a owl:Class ; rdfs:label "Series store" ;
 
 onboarding:serves a owl:ObjectProperty ; rdfs:label "serves" ;
     rdfs:domain onboarding:SeriesStore ; rdfs:range onboarding:SeriesPurpose ;
-    rdfs:comment "A purpose a series store is told to every agent for: each purpose is served by exactly one store, and `orexis-compose` tells an agent that store's url and organisation under the purpose's keys, `INFLUX_<PURPOSE>_URL` and `_ORG`. Two purposes may name one store, by coincidence and not by design (knowledge/domain/kernel/series.md)." .
+    rdfs:comment "A purpose a series store is told to an agent for: history is served by exactly one store, metrics by one or none, and `orexis-compose` tells an agent the store's url and organisation under the purpose's keys, `INFLUX_<PURPOSE>_URL` and `_ORG` - metrics' only where the agent's world is `onboarding:monitored`. Two purposes may name one store, by coincidence and not by design (knowledge/domain/kernel/series.md)." .
 
 onboarding:SeriesPurpose a owl:Class ; rdfs:label "Series purpose" ;
     rdfs:comment "What a series is written for, which decides the bucket it goes to, the credential that opens it and how long it keeps a point. Two, and the agent's code names each (`agent.series`): history and metrics." .
@@ -37,7 +41,11 @@ onboarding:History a onboarding:SeriesPurpose ; rdfs:label "history" ;
     rdfs:comment "What happened: every observation and every step taken and how it ended, contributed by the package that decides each. The record, kept for good, in the bucket the one series had before purposes." .
 
 onboarding:Metrics a onboarding:SeriesPurpose ; rdfs:label "metrics" ;
-    rdfs:comment "How the agent is doing, written every pass: what each loaded package's metric selects answer and the runtime's own three figures. A bucket of its own, opened for writing alone, and kept as long as `onboarding:retentionDays` says." .
+    rdfs:comment "How the agent is doing, for whoever administers it: each loaded package's gauges and tallied events and the runtime's own, written once a window of `onboarding:intervalSeconds`. Written only by the agents of a world that is `onboarding:monitored`, to a bucket of their own opened for writing alone, and kept as long as `onboarding:retentionDays` says." .
+
+onboarding:intervalSeconds a owl:DatatypeProperty ; rdfs:label "interval seconds" ;
+    rdfs:domain onboarding:SeriesPurpose ;
+    rdfs:comment "How many seconds of real time one window of a purpose's points covers, stated by the installation of metrics: an agent tallies its events in memory and writes the window, with every gauge sampled once, at its end. `orexis-compose` tells it to each agent of a monitored world as `METRICS_INTERVAL_S`; absent, the agent keeps sixty (agent/metrics.py)." .
 
 onboarding:retentionDays a owl:DatatypeProperty ; rdfs:label "retention days" ;
     rdfs:domain onboarding:SeriesPurpose ;

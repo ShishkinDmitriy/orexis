@@ -89,14 +89,14 @@ def test_the_sink_imports_nothing_of_the_agent():
     assert not reaching, f"agent/series.py imports the agent at lines {reaching}"
 
 
-def test_the_runtime_loads_the_sinks_and_writes_metrics_and_never_history():
+def test_the_runtime_loads_the_sinks_and_writes_through_neither():
     """What history holds is decided by the packages that decide each thing, so the runtime never
-    names it; what it asks of the sink module is to `load`, and the metrics sink, which it writes
-    at the end of a pass."""
+    names it; and a window of metrics goes through `agent.metrics`, which asks for its own sink. What
+    the runtime asks of the sink module is to `load`, and nothing else."""
     tree = ast.parse((AGENT / "runtime.py").read_text())
     said = {n.attr for n in ast.walk(tree)
             if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "series"}
-    assert said == {"load", "sink", "METRICS"}, f"the runtime asks the sink module for {sorted(said)}"
+    assert said == {"load"}, f"the runtime asks the sink module for {sorted(said)}"
     names = {a.name for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module == "agent.series"
              for a in n.names}
     assert not names, f"the runtime imports {sorted(names)} from the sink"

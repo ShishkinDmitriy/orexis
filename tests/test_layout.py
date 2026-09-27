@@ -297,16 +297,19 @@ def test_the_tools_told_the_address_inherit_the_refusal(tmp_path, monkeypatch, t
 
 
 def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_load(tmp_path):
-    """A series store is told by purpose (#825, #826): for history and for metrics, `orexis-compose`
-    writes where the store serving the purpose is under `INFLUX_<PURPOSE>_*` and mounts the file
-    `orexis-influx` mints, which says the bucket and the token under the same purpose. Put together
-    as the container has them, they load both sinks, each on a bucket of its own; the environment
-    naming one bucket with no purpose is gone from every compose file."""
+    """A series store is told by purpose (#825, #826): for history, and for metrics where the world is
+    monitored, `orexis-compose` writes where the store serving the purpose is under
+    `INFLUX_<PURPOSE>_*` and mounts the file `orexis-influx` mints, which says the bucket and the token
+    under the same purpose, and for metrics the window. Put together as the terrace's container has
+    them, they load both sinks, each on a bucket of its own, and the installation's window. In every
+    compose file history is told, metrics exactly where the world is monitored, and the environment
+    naming one bucket with no purpose is gone."""
     import yaml
     from dotenv import dotenv_values
 
+    from agent import metrics
     from agent.series import HISTORY, METRICS, PURPOSES, install, load, sink
-    from onboarding import compose, influx
+    from onboarding import compose, influx, installation
 
     service = yaml.safe_load(compose.render("terrace"))["services"]["agent-terrace"]
     environment = dict(service["environment"])
@@ -320,30 +323,56 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
     try:
         assert load(environment) == (HISTORY, METRICS)
         assert (sink(HISTORY).bucket, sink(METRICS).bucket) == ("terrace-terrace", "terrace-terrace-metrics")
+        assert metrics.load(environment) == installation.interval(METRICS) == 60
     finally:
         for purpose in PURPOSES:
             install(purpose, None)
+        metrics.reset()
     composed = sorted((REPO_ROOT / "world").glob("*/compose.yaml"))
     assert composed, "the glob stopped matching"
+    told = {path.parent.name: installation.purposes(path.parent.name) for path in composed}
+    assert {w for w, p in told.items() if METRICS in p} == {"greenhouse", "terrace"}, told
+    assert {w for w, p in told.items() if METRICS not in p}, "every world is monitored — the guard checks one side"
     for path in composed:
         text = path.read_text()
-        assert all(f"INFLUX_{p}_URL" in text for p in PURPOSES), path
+        assert "INFLUX_HISTORY_URL" in text, path
+        monitored = METRICS in told[path.parent.name]
+        assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics-" in text) == (metrics.INTERVAL_KEY in text) == monitored, path
         assert not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
 
 
-def test_each_purpose_is_served_by_one_store_and_only_metrics_let_a_point_go(tmp_path, monkeypatch):
-    """The installation ties a store to a purpose by `onboarding:serves` (#826): every purpose the
-    agent names is served by exactly one store, and a purpose served by none is refused rather
-    than told to every agent as a store nobody has. History is kept for ever; metrics for as long
-    as the installation says."""
+def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, monkeypatch):
+    """The installation ties a store to a purpose by `onboarding:serves` (#826). History is served
+    by exactly one and kept for ever, and served by none it is refused, since every agent writes it.
+    Metrics are optional (amended): served by none, a world that does not ask is told of history
+    alone, and one that says it is `onboarding:monitored` is refused — by `purposes`, which every
+    tool asks, so the compose file refuses it too."""
     from agent.series import HISTORY, METRICS, PURPOSES
-    from onboarding import installation
+    from onboarding import compose, installation
 
     assert {p: installation.series(p) for p in PURPOSES} == {p: ("http://localhost:8086", "orexis") for p in PURPOSES}
     assert installation.retention(HISTORY) is None and installation.retention(METRICS) == 30
+    assert installation.interval(HISTORY) is None and installation.interval(METRICS) == 60
     _installed(tmp_path, monkeypatch, installation=lambda text: text.replace(" , onboarding:Metrics .", " ."))
-    with pytest.raises(SystemExit, match=r"0 onboarding:SeriesStores serving Metrics"):
-        installation.series(METRICS)
+    assert installation.served(METRICS) is None
+    assert installation.purposes("allotment") == (HISTORY,)
+    for ask in (lambda: installation.purposes("terrace"), lambda: compose.render("greenhouse")):
+        with pytest.raises(SystemExit, match=r"monitored.*Metrics from no store"):
+            ask()
+    _installed(tmp_path / "again", monkeypatch, installation=lambda text: text.replace("onboarding:History , ", ""))
+    with pytest.raises(SystemExit, match=r"0 onboarding:SeriesStores serving History"):
+        installation.series(HISTORY)
+
+
+def test_a_world_is_monitored_only_where_its_own_deployment_says_so(tmp_path, monkeypatch):
+    """Opt-in, one statement: the terrace says it and is monitored; take the statement out and it is
+    not, whatever the installation serves."""
+    from agent.series import HISTORY, METRICS
+    from onboarding import installation
+
+    assert installation.purposes("terrace") == (HISTORY, METRICS)
+    _installed(tmp_path, monkeypatch, {("terrace", "deployment.ttl"): lambda text: text.replace("<> onboarding:monitored true .", "")})
+    assert not installation.monitored("terrace") and installation.purposes("terrace") == (HISTORY,)
 
 
 # --- asserted wins, derived completes: a port no world asserts is the installation's (#827) ------
@@ -511,12 +540,13 @@ def test_a_credential_in_a_url_is_refused(tmp_path, monkeypatch, where):
 _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 _ONBOARDING = "http://example.org/orexis/onboarding#"
 _INSTALLATION_SAYS = {_RDF_TYPE, "https://schema.org/url", _ONBOARDING + "organisation", _ONBOARDING + "image",
-                      _ONBOARDING + "allocatesFrom", _ONBOARDING + "serves", _ONBOARDING + "retentionDays"}
+                      _ONBOARDING + "allocatesFrom", _ONBOARDING + "serves", _ONBOARDING + "retentionDays",
+                      _ONBOARDING + "intervalSeconds"}
 
 
 def test_the_installation_and_its_derivation_say_where_and_nothing_else():
-    """The installation states its services, the purposes each store serves and how long a purpose
-    is kept, and its pool, in seven words, and what was derived from
+    """The installation states its services, the purposes each store serves, how long a purpose is
+    kept and how long a window of metrics is, and its pool, in eight words, and what was derived from
     it states urls alone, each on a broker some world's society names and whose world asserts none —
     so an allocation left behind by a world that has gone, or made under a misspelled IRI, is caught."""
     import pyoxigraph as ox

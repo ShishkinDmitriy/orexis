@@ -110,16 +110,16 @@ def test_every_point_the_agent_writes_is_drawn_by_one_terrace_panel(monkeypatch,
     assert len(drawn) == 4 and all(len(panels) == 1 for panels in drawn.values()), drawn
 
 
-def test_every_metric_the_agent_writes_is_drawn_by_one_health_panel_on_its_bucket(monkeypatch):
-    """The health dashboard is held to what two passes write (#826, gauges and events): a gauge — a
-    select's point, or the pass's phases — is drawn whole by exactly one panel; the runtime's own
-    `pass` and every event once per numeric field; all on the agent's metrics bucket. The panels are
-    the terrace's own packages', so silence is drawn because sensing is loaded and a reading's
-    interval because sensing declares it, and no panel draws a measurement nothing declares."""
+def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
+    """The health dashboard is held to what two passes write, flushed as a stop flushes (#826,
+    amended): every field of every point is drawn by exactly one panel — a gauge whole, an event's
+    count and flags together and each value's mean, max and sum together — and every panel reads the
+    bucket of the agent the dashboard's variable picks. A row per package that reports, the runtime's
+    first: sensing's because the terrace loads it, so its silence and its readings are drawn, and no
+    panel draws a measurement nothing writes."""
     from agent import metrics
-    from agent.runtime import PASS, PHASES, UNREACHABLE
     from agent.series import METRICS
-    from onboarding.dashboards import render_health
+    from onboarding.dashboards import AGENT_VARIABLE, render_health
 
     written = []
     install(METRICS, Sink(METRICS, "terrace-terrace-metrics", lambda bucket, record: written.extend(record)))
@@ -128,18 +128,24 @@ def test_every_metric_the_agent_writes_is_drawn_by_one_health_panel_on_its_bucke
         for _ in range(2):
             runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
             runtime.run(passes=1, poll_s=0)
+        runtime.report()
     finally:
         install(METRICS, None)
-    whole = {metrics.measurement_of(m["metric"]) for m in metrics.declared(runtime.beliefs)} | {PHASES}
-    panels = [p for p in render_health("terrace")["panels"] if p["type"] != "row"]
-    queries = [t["query"] for p in panels for t in p["targets"]]
-    assert queries and all('from(bucket: "terrace-terrace-metrics")' in q for q in queries)
-    wanted = {(p["measurement"], None if p["measurement"] in whole else f) for p in written
-              for f, v in p["fields"].items() if isinstance(v, (int, float))}
-    assert {("silence", None), ("received", "interval_s"), ("reroot", "kept")} <= wanted, wanted
+        metrics.reset()
+    health = render_health("terrace")
+    (variable,) = health["templating"]["list"]
+    assert variable["name"] == AGENT_VARIABLE and variable["query"] == "terrace"
+    rows_ = [p["title"] for p in health["panels"] if p["type"] == "row"]
+    assert rows_[0] == "runtime" and {"planning", "execution", "sensing", "belief"} <= set(rows_[1:]), rows_
+    panels = [p for p in health["panels"] if p["type"] != "row"]
+    queries = [[t["query"] for t in p["targets"]] for p in panels]
+    assert queries and all('from(bucket: "terrace-${agent}-metrics")' in q for qs in queries for q in qs)
+    wanted = {(p["measurement"], f) for p in written for f in p["fields"]}
+    assert {("silence", "silent"), ("received", "interval_s_mean"), ("reroot", "count"), ("pass", "plan_s_max")} <= wanted, wanted
     for measurement, field in wanted:
-        hits = [q for q in queries if f'r._measurement == "{measurement}"' in q
-                and (f'r._field == "{field}"' in q if field else "r._field ==" not in q)]
-        assert len(hits) == 1, (measurement, field, hits)
-    drawable = whole | set(metrics.events(runtime.beliefs)) | {PASS, UNREACHABLE}
-    assert {q.split('r._measurement == "')[1].split('"')[0] for q in queries} <= drawable
+        hits = [i for i, qs in enumerate(queries) if any(
+            f'r._measurement == "{measurement}"' in q and (f'r._field == "{field}"' in q or "r._field ==" not in q)
+            for q in qs)]
+        assert len(hits) == 1, (measurement, field, [panels[i]["title"] for i in hits])
+    drawn = {q.split('r._measurement == "')[1].split('"')[0] for qs in queries for q in qs}
+    assert {p["measurement"] for p in written} <= drawn

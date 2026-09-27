@@ -71,10 +71,11 @@ import pyoxigraph as ox
 import rdflib
 
 from agent import clock, metrics
-from agent.ontology import PUBLIC, RECORD, local_of
+from agent.ontology import PUBLIC, RECORD
 from agent.store import Memo, Raw, forget_graph, bind, bindings, catalogue_of, graphs_of, query, rdflib_view, remember, rows, update
 
 from . import footprint
+from . import metrics as reported
 from .admit import admit
 from .derive_wants import derive_wants
 from .extract_plan import extract_plan
@@ -317,7 +318,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                     self._adopted(store, minted, present, _scope, memo)
                     lap("publish")
         if lap:
-            metrics.event("planner", {**lap.spent, "wants": len(searched)})
+            reported.PLANNER({**lap.spent, "wants": len(searched)})
             #  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
             self._searches = {w: s for w, s in self._searches.items() if w in searched}
 
@@ -416,45 +417,32 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             pass
         extract_plan(store, want)
         if started is not None:
-            took = time.perf_counter() - started
             tally = self._searches.setdefault(want, [started, 0])
             tally[1] += 1
-            plan = next(iter(rows(store, _PLAN_OF_Q, (), want=want)), {})
-            metrics.event("search", {"want": local_of(want), "duration_s": round(took, 6), "budget": budget,
-                                     "weighed": _spent(store, want, memo) - (ceiling - budget)},
-                          desire=_desire_of(store, want), scope=local_of(scope) if scope else None,
-                          outcome=local_of(plan["outcome"]) if plan.get("outcome") else None)
+            reported.report_search(store, want, took=time.perf_counter() - started, budget=budget,
+                                   weighed=_spent(store, want, memo) - (ceiling - budget), scope=scope)
 
     def _adopted(self, store: ox.Store, intentions: list[str], present: str, scope: str, memo: Memo) -> None:
-        """Say each plan the executor adopted from `store` this pass: how many passes its want was
-        searched in and what they weighed, the real seconds since it was first searched, what the
-        want's estimate said was left at the present ground against what the plan spent — the
-        estimate's honesty — and whether an intention pursued the want before, a replan."""
-        cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
+        """Say each plan the executor adopted from `store` this pass (`metrics.report_adoption`),
+        with the tally of its want's searches, which goes with it."""
         for intention in intentions:
-            found = rows(self.executor.intentions, _PURSUES_Q, (), intention=intention)
-            if not found:
+            want = reported.pursued_by(self.executor.intentions, intention)
+            if want is None:
                 continue
-            want = found[0]["want"]
             first, passes = self._searches.pop(want, (None, 0))
-            plan = next(iter(rows(store, _PLAN_OF_Q, (), want=want)), {})
-            root = next(iter(rows(store, _ESTIMATE_Q, (), want=want, ground=present, cat=cat)), {})
-            pursued = int(rows(self.executor.intentions, _PURSUERS_Q, (), want=want)[0]["n"])
-            fields = {"want": local_of(want), "passes": passes, "weighed": _spent(store, want, memo),
-                      "replan": int(pursued > 1)}
-            if first is not None:
-                fields["wall_s"] = round(time.perf_counter() - first, 6)
-            if plan.get("spent") is not None:
-                fields["cost"] = float(plan["spent"])
-            if root.get("remaining") is not None:
-                fields["estimate"] = float(root["remaining"])
-            metrics.event("adopted", fields, desire=_desire_of(store, want), scope=local_of(scope))
+            reported.report_adoption(store, self.executor.intentions, want, first=first, passes=passes,
+                                     weighed=_spent(store, want, memo), present=present, scope=scope)
 
     def desire_of(self, want: str) -> str | None:
         """The local name of the desire `want` was derived under, off whichever imaginarium holds
         it — or None, for a want the world authored or a step kept below — for the runtime's
         events about a want."""
-        return next((d for store in self.imaginaria.values() if (d := _desire_of(store, want))), None)
+        return next((d for store in self.imaginaria.values() if (d := reported.desire_of(store, want))), None)
+
+    def gauges(self) -> list:
+        """Planning's gauges, sampled over the imaginaria this Planner keeps — the one store a plan,
+        a world and a weighing are written in — for the runtime's flush (`metrics.py` beside this)."""
+        return reported.gauges(self.imaginaria.values())
 
     # --- one iteration -------------------------------------------------------------------
 
@@ -506,25 +494,6 @@ SELECT (COUNT(?x) AS ?used) WHERE {
 def _spent(store: ox.Store, want: str, memo: Memo) -> int:
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
     return int(next(iter(rows(store, _SPENT_Q, (), want=want, cat=cat)), {}).get("used") or 0)
-
-
-#  WHAT THE METRICS OF A SEARCH READ, asked only where a metrics sink is loaded: the want's plan
-#  and how it ended, the desire it was derived under, what its estimate said at the present ground,
-#  and — off the intentions — which want an intention pursues and how many have pursued it.
-_PLAN_OF_Q = """
-SELECT ?outcome ?spent WHERE { GRAPH ?g { ?p a planning:Plan ; planning:for $want ; planning:outcome ?outcome .
-  OPTIONAL { ?p planning:spent ?spent } } } LIMIT 1"""
-_DESIRE_OF_Q = """SELECT ?d WHERE { GRAPH ?g { $want a planning:Want ; prov:wasDerivedFrom ?d } } LIMIT 1"""
-_ESTIMATE_Q = """
-SELECT ?remaining WHERE { GRAPH $cat { ?x planning:weighs $ground ; planning:for $want ; planning:remaining ?remaining } } LIMIT 1"""
-_PURSUES_Q = """SELECT ?want WHERE { GRAPH ?g { $intention execution:pursues ?want } } LIMIT 1"""
-_PURSUERS_Q = """SELECT (COUNT(DISTINCT ?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention ; execution:pursues $want } }"""
-
-
-def _desire_of(store: ox.Store, want: str) -> str | None:
-    """The local name of the desire `want` was derived under in `store`, or None."""
-    found = rows(store, _DESIRE_OF_Q, (), want=want)
-    return local_of(found[0]["d"]) if found else None
 
 
 def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, scopes: dict,

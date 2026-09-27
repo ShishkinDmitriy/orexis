@@ -67,6 +67,7 @@ from agent.ontology import OREXIS, STATE, local_of
 from agent.series import HISTORY, sink
 from agent.store import Raw, add_quads, bind, revisions_of, graphs_of, instant, quads, rows, update
 
+from . import metrics as reported
 from .history import step_point
 from .implementation import FICTIVE, operations
 from .ontology import EXECUTION, intentions_graph
@@ -137,10 +138,6 @@ ORDER BY ?due ?intention"""
 _PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH $intentions { $step execution:predicts ?predicts } }"""
 
 _PURSUES_Q = """SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }"""
-
-#  WHAT A PURSUED THING WAS DERIVED FROM, in PROV's words — read off the store a plan came from,
-#  for the metrics alone, and in no word of the layer above.
-_DERIVED_FROM_Q = """SELECT ?d WHERE { GRAPH ?g { $want prov:wasDerivedFrom ?d } } LIMIT 1"""
 
 #  WHAT A STEP KEPT BELOW WAITS ON: the intentions walking the want it was refined into — standing,
 #  or ended and how.
@@ -277,10 +274,8 @@ class Executor:
             self.resolve(held.uri, "superseded")
         intention = self._adopt(source, graph, want)
         if intention is not None:
-            if metrics.recording():
-                found = rows(source, _DERIVED_FROM_Q, (), want=want)
-                if found:
-                    self._desires[want] = local_of(found[0]["d"])
+            if metrics.recording() and (desire := reported.derived_from(source, want)) is not None:
+                self._desires[want] = desire
             self.wake()
         return intention
 
@@ -568,10 +563,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         pursued = rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))
         want = pursued[0]["want"] if pursued else None
         action = self.step_of(step).get("fills")
-        metrics.event("landing", {"want": local_of(want) if want else "",
-                                  "late_s": round((now - datetime.fromisoformat(head["lands"])).total_seconds(), 3),
-                                  "timed_out": int(timed_out)},
-                      action=local_of(action) if action else None, desire=self._desires.get(want))
+        reported.LANDING({"late_s": round((now - datetime.fromisoformat(head["lands"])).total_seconds(), 3),
+                          "timed_out": timed_out},
+                         action=local_of(action) if action else None, desire=self._desires.get(want))
 
     def say(self, said: dict, intention: str) -> None:
         """The default taking: the step's name, and what fills it, in the log."""

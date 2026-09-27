@@ -101,7 +101,7 @@ being evidence of anything — check by connecting, not by reading the log.
 orexis-onboard greenhouse      # all four below
 
 # or separately, when you want only one of them:
-#   orexis-influx greenhouse     # a history and a metrics bucket per agent, each with a token that opens only it
+#   orexis-influx greenhouse     # a history bucket per agent, a metrics one where monitored, each with a token that opens only it
 #   orexis-mqtt greenhouse       # a credential per principal, and the broker ACL, derived
 #   orexis-compose greenhouse    # writes world/greenhouse/compose.yaml from the world beside it
 #   orexis-dashboards greenhouse # a Grafana folder for the world
@@ -134,7 +134,31 @@ board before it can connect.
 The compose file is **generated, never hand-edited**: one service per agent, named for its id,
 plus a `simulation` service where the world marks systems `sim:simulatedBy`. Adding an agent is
 adding it to the world and regenerating; a hand-edit is a second roster waiting to drift from the
-documents. Each container mounts exactly one store credential — its own.
+documents. Each container mounts exactly one store credential per purpose — its own.
+
+# Monitor a world, or stop
+
+Metrics — how each agent is doing, a point a minute — are written only by a world whose own
+`deployment.ttl` says so ([deployment](/domain/onboarding/deployment.md)):
+
+```turtle
+<> onboarding:monitored true .
+```
+
+Then re-run the tools that read it, and restart the agents so they are told the metrics store:
+
+```bash
+orexis-influx greenhouse       # mints each agent a metrics bucket and a write-only token
+orexis-compose greenhouse      # adds INFLUX_METRICS_* and METRICS_INTERVAL_S to each agent
+orexis-dashboards greenhouse   # writes infra/grafana/dashboards/greenhouse/health.json
+cd world/greenhouse && podman compose up -d    # recreates the agents whose environment changed
+```
+
+Taking the statement out and running the same four stops it: `orexis-influx` revokes the metrics
+tokens and removes their files, the compose file stops telling the agents, and the health
+dashboard is removed; the bucket is left for its retention to empty. The window's length is the
+installation's `onboarding:intervalSeconds`, sixty; an installation serving metrics from no store
+refuses a world that asks.
 
 # Up, down, and watch
 
