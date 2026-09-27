@@ -1,7 +1,6 @@
 @prefix : <http://example.org/orexis/world/terrace#> .
 @prefix climate: <http://example.org/orexis/climate#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
-@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -22,18 +21,11 @@
 #  soil for movement while everything sleeps, and a heartbeat every twenty minutes keeps silence
 #  distinguishable from death. It publishes ONE document with four values on one topic, and each
 #  sensor reads its own by pointer; nothing here changed on the wire, so the flashed board goes on
-#  as it is. Its parts, pins and calibration are in hardware.ttl.
-
-#  THE BROKER, this world's own, and where it listens — read by the operator's tools, told to the
-#  agent through its environment.
-:broker a mqtt4ssn:Broker ;
-    schema:url "mqtt://localhost:1888" , "mqtts://localhost:8888" .
-
-:terrace_agent a orexis:Agent , mqtt4ssn:Client ;
-    orexis:localId "terrace" ;
-    mqtt4ssn:hasClientID "terrace" ;
-    mqtt4ssn:isConnectedToBroker :broker ;
-    orexis:actsFor :terrace_bed .
+#  as it is.
+#
+#  This graph is the bed and the sensors. The agent, the board as a client and its topic are
+#  society.ttl; where the broker listens is deployment.ttl; the parts' pins and calibration are
+#  hardware.ttl.
 
 :terrace_bed a sosa:FeatureOfInterest ;
     orexis:localId "terrace_bed" ;
@@ -43,24 +35,12 @@
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
                              schema:minValue 0.25 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] .
 
-#  THE BOARD, as the bus knows it: one client, one credential — flashed as `moisture_sensor_terrace`
-#  and kept, so the board needs no reflash — hosting the probe and the BME280.
-:esp32_terrace a mqtt4ssn:Client ;
-    mqtt4ssn:hasClientID "moisture_sensor_terrace" ;
-    mqtt4ssn:isConnectedToBroker :broker ;
-    mqtt4ssn:hosts :moisture_sensor_terrace , :air_sensor_terrace .
-
-:terrace_readings a mqtt4ssn:Topic .
-:terrace_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/moisture_sensor_terrace/reading" ; mqtt4ssn:matchesTopic :terrace_readings .
-
 #  THE FOUR VALUES of one message, one sensor each, every one reporting at the board's heartbeat.
 :moisture_sensor_terrace a sosa:Sensor ;
     orexis:localId "moisture_sensor_terrace" ;
     schema:unitCode unit:UNITLESS ;
     sosa:isHostedBy :terrace_bed ;
     sosa:observes climate:SoilMoisture ;
-    mqtt4ssn:observesTopic :terrace_readings ;
     sensing:readingPointer "/moisture" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 20 ; schema:unitCode unit:MIN ] ] .
@@ -75,7 +55,6 @@
     schema:unitCode unit:DEG_C ;
     sosa:isHostedBy :terrace_bed ;
     sosa:observes climate:AirTemperature ;
-    mqtt4ssn:observesTopic :terrace_readings ;
     sensing:readingPointer "/temperature" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 20 ; schema:unitCode unit:MIN ] ] .
@@ -85,7 +64,6 @@
     schema:unitCode unit:UNITLESS ;
     sosa:isHostedBy :terrace_bed ;
     sosa:observes climate:AirHumidity ;
-    mqtt4ssn:observesTopic :terrace_readings ;
     sensing:readingPointer "/humidity" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 20 ; schema:unitCode unit:MIN ] ] .
@@ -95,7 +73,6 @@
     schema:unitCode unit:HectoPA ;
     sosa:isHostedBy :terrace_bed ;
     sosa:observes climate:AirPressure ;
-    mqtt4ssn:observesTopic :terrace_readings ;
     sensing:readingPointer "/pressure" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 20 ; schema:unitCode unit:MIN ] ] .

@@ -1,7 +1,6 @@
 @prefix : <http://example.org/orexis/world/sensing#> .
 @prefix climate: <http://example.org/orexis/climate#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
-@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -21,35 +20,18 @@
 #  retained on the broker. It publishes ONE document with three values on one topic, and each
 #  sensor reads its own by pointer; nothing on the wire changed, so the flashed board goes on as it
 #  is. The fern states no range yet: its readings are written and predicted, and nothing is wanted
-#  of them. Its parts, pins and calibration are in hardware.ttl.
-
-:broker a mqtt4ssn:Broker ;
-    schema:url "mqtt://localhost:1884" , "mqtts://localhost:8884" .
-
-:fern_agent a orexis:Agent , mqtt4ssn:Client ;
-    orexis:localId "fern" ;
-    mqtt4ssn:hasClientID "fern" ;
-    mqtt4ssn:isConnectedToBroker :broker ;
-    orexis:actsFor :fern .
+#  of them.
+#
+#  This graph is the fern and the board's parts. The agent, the board as a client and the topics
+#  are society.ttl; where the broker listens is deployment.ttl; the parts' pins and calibration
+#  are hardware.ttl.
 
 :fern a sosa:FeatureOfInterest ;
     orexis:localId "fern" .
 
-#  THE BOARD, as the bus knows it: one client, flashed as `moisture_sensor_fern` and kept, hosting
-#  the probe and the KY-015, listening for commands on its own topic.
-:esp32_fern a mqtt4ssn:Client , ssn:System ;
-    mqtt4ssn:hasClientID "moisture_sensor_fern" ;
-    mqtt4ssn:isConnectedToBroker :broker ;
-    mqtt4ssn:hosts :moisture_sensor_fern , :air_sensor_fern , :status_led_fern ;
-    ssn:hasSubSystem :moisture_sensor_fern , :air_temp_fern , :air_humidity_fern ;
-    mqtt4ssn:listensToTopic :fern_commands .
-
-:fern_readings a mqtt4ssn:Topic .
-:fern_readings_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/moisture_sensor_fern/reading" ; mqtt4ssn:matchesTopic :fern_readings .
-:fern_commands a mqtt4ssn:Topic .
-:fern_commands_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/moisture_sensor_fern/command" ; mqtt4ssn:matchesTopic :fern_commands .
+#  THE BOARD, as a system: the probe and the KY-015's two sensors are its parts.
+:esp32_fern a ssn:System ;
+    ssn:hasSubSystem :moisture_sensor_fern , :air_temp_fern , :air_humidity_fern .
 
 :air_sensor_fern a ssn:System ;
     orexis:localId "air_sensor_fern" ;
@@ -63,7 +45,6 @@
     schema:unitCode unit:UNITLESS ;
     sosa:isHostedBy :fern ;
     sosa:observes climate:SoilMoisture ;
-    mqtt4ssn:observesTopic :fern_readings ;
     sensing:readingPointer "/moisture" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
@@ -73,7 +54,6 @@
     schema:unitCode unit:DEG_C ;
     sosa:isHostedBy :fern ;
     sosa:observes climate:AirTemperature ;
-    mqtt4ssn:observesTopic :fern_readings ;
     sensing:readingPointer "/temperature" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
@@ -83,7 +63,6 @@
     schema:unitCode unit:UNITLESS ;
     sosa:isHostedBy :fern ;
     sosa:observes climate:AirHumidity ;
-    mqtt4ssn:observesTopic :fern_readings ;
     sensing:readingPointer "/humidity" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .

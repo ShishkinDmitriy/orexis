@@ -56,7 +56,8 @@ model-driven claim reduced to something you can check by re-seeding.
 
 Nothing lists the agents to run. `orexis-compose <world>` reads `?a a orexis:Agent` out of the world
 and writes one container per answer, each told the single thing an agent is ever told: its own
-id. The roster *is* the ratified world, so adding an agent is adding it to `world.ttl` — no
+id. The roster *is* the ratified world, so adding an agent is adding it to the world's documents
+— its society graph, where the world has a bus — no
 unit file, no launcher edit, and no place for a list to drift from the model. The compose file
 is generated for the same reason the store's access list is: a second roster is a second thing
 to keep in step.

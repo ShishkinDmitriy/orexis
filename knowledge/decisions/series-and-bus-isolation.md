@@ -70,8 +70,9 @@ had them.
 > **Amended 2026-09-27 ([a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md)).**
 > The rendezvous argument stands; the place does not. Topics, their filters and the broker as
 > what clients connect to belong in the world's SOCIETY graph, which agents and `orexis-mqtt`
-> read, and the broker's address in its DEPLOYMENT graph, which onboarding alone reads. Not yet
-> built: every world with a bus still states all of it in `world.ttl`. The bucket argument below
+> read, and the broker's address in its DEPLOYMENT graph, which onboarding alone reads. Built by
+> #823: every world with a bus states them in `society.ttl` and `deployment.ttl` beside its
+> `world.ttl`, and no agent's boot holds the address. The bucket argument below
 > is what that record extends to a store per purpose, history and metrics.
 
 A **bucket has exactly one writer and nobody to agree with**. That makes it deployment, like the

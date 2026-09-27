@@ -12,9 +12,10 @@ catalogue, is refused. The vocabulary goes first, since what a graph is depends 
 document that says it is an `orexis:OntologyGraph`, then the closure over `rdfs:subClassOf`,
 written into a graph of its own and derived, so that a kind is every kind it is beneath. **A
 GRAPH OF A KIND THE VOCABULARY DOES NOT DECLARE IS PASSED OVER**: the kind says who reads a
-document, and a world's hardware is onboarding's to read and not the agent's (#820). Then
-the world's public graphs, then who the agent is — off the world graph, by the one identifier
-the process is told — then the world's other graphs, the agent's own, owned by it. The
+document, and a world's hardware and where its broker listens are onboarding's to read and not
+the agent's (#820, #823). Then the world's public graphs, then who the agent is — off the
+society graph, or the world graph of a world with no society, by the one identifier the
+process is told — then the world's other graphs, the agent's own, owned by it. The
 catalogue is closed and the Planner's `scope` writes the scopes.
 
 **A VOLUME LIVED IN** — a store that already holds a catalogue — forgets every graph a document
@@ -80,6 +81,7 @@ ASSERTED = OREXIS + "Asserted"
 DERIVED = OREXIS + "Derived"
 ONTOLOGY = OREXIS + "OntologyGraph"
 WORLD = OREXIS + "WorldGraph"
+SOCIETY = OREXIS + "SocietyGraph"
 PUBLIC = OREXIS + "PublicGraph"
 GRAPH = OREXIS + "Graph"
 
@@ -89,7 +91,9 @@ DOCUMENTS = (".ttl", ".trig")
 BELIEFS = "beliefs"
 
 #  WHO THIS PROCESS IS: the AGENT with the id it was told. The id alone is not enough — the
-#  sensing world's fern and the agent acting for it share one — so the kind is asked too.
+#  sensing world's fern and the agent acting for it share one — so the kind is asked too. Asked
+#  of the society graph, where a world with a bus states its principals, and of the world graph,
+#  where a world with none states its one agent beside what it acts on.
 _ME_Q = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }"
 #  WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner — the kernel's,
 #  the packages' and the world's public graphs — and the closure derived from them.
@@ -199,7 +203,8 @@ def _put_public(store: ox.Store, world: Path, agent_id: str | None = None) -> li
 def world_of(world: Path) -> ox.Store:
     """What a world says publicly, read as a boot reads it and closed, with no agent in it — what
     the simulator reads, and what the operator's tools read before the kinds they read and no
-    agent does: its agents, its devices, its topics and where its broker listens."""
+    agent does: its agents, its devices, its topics — and never where its broker listens, which
+    is a deployment graph, a kind only onboarding reads."""
     store = ox.Store()
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
     _put_public(store, Path(world).resolve())
@@ -230,7 +235,7 @@ def boot(world: Path, agent_id: str, store: ox.Store | None = None) -> ox.Store:
 
 
 def _identity(store: ox.Store, agent_id: str) -> str:
-    found = rows(store, _ME_Q, graphs_of(store, WORLD), id=ox.Literal(agent_id))   # a str binds as an IRI; the id is a literal
+    found = rows(store, _ME_Q, graphs_of(store, SOCIETY, WORLD), id=ox.Literal(agent_id))   # a str binds as an IRI; the id is a literal
     if len(found) != 1:
         raise RuntimeError(f"the world says {'nobody' if not found else 'several agents'} is {agent_id!r}")
     return found[0]["me"]

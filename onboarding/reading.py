@@ -30,6 +30,7 @@ from .worlds import DOCUMENTS
 VOCABULARY = Path(__file__).resolve().parent / "ontology.ttl"
 ONBOARDING = "http://example.org/orexis/onboarding#"
 HARDWARE = ONBOARDING + "HardwareGraph"
+DEPLOYMENT = ONBOARDING + "DeploymentGraph"
 
 _CLASS = ox.NamedNode("http://www.w3.org/2002/07/owl#Class")
 _TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")

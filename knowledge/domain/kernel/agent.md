@@ -19,8 +19,8 @@ An `orexis:Agent` in a world's documents, with the one identifier a process is h
 
 `orexis:actsFor` names the subject whose interest it advances — a plant, a tank, a tower. The
 [runtime](/domain/kernel/runtime.md) finds the agent by that id among the `orexis:Agent`s of the
-world graph and nowhere else: a plant and the agent acting for it may share a local id, and only
-one of them is an agent.
+society graph — or of the world graph, in a world with no society — and nowhere else: a plant and
+the agent acting for it may share a local id, and only one of them is an agent.
 
 # What is its own
 

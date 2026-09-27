@@ -1,0 +1,10 @@
+@prefix : <http://example.org/orexis/world/allotment#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix schema: <https://schema.org/> .
+
+<> a onboarding:DeploymentGraph .    # this document is one graph, and this is what it is
+
+#  WHERE THE ALLOTMENT'S BROKER LISTENS: the world's own, on ports no other world's broker uses.
+#  Onboarding reads this to run the broker and to tell each agent through its environment; the
+#  kind is onboarding's, so an agent's boot passes over it and no container is handed it.
+:broker schema:url "mqtt://localhost:1890" , "mqtts://localhost:8890" .

@@ -5,7 +5,8 @@
 
 **Everything in a `config.h` is a per-instance deployment fact**, and every one of them was
 already written down somewhere else. The broker's port is the `schema:url` on the world's
-`mqtt4ssn:Broker`; the ids and topics are the world's, in MQTT4SSN's words; the pins and the
+`mqtt4ssn:Broker`, in its deployment graph; the ids and topics are the society graph's, in
+MQTT4SSN's words; the pins and the
 calibration are the hardware's; the credential was minted by `orexis-mqtt`; a sentinel's heartbeat
 is its sensor's stated `ssn-system:Frequency`. The world is read as an Agent 0.2.0 boot reads it
 and then its hardware graph, a kind no agent reads (`onboarding.reading.world`). Keeping a second

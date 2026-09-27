@@ -21,8 +21,9 @@ since rotating one service's credentials should not touch another's.
 | `orexis-dashboards` | a Grafana folder for the world, from what its agents observe |
 
 `orexis-firmware <world>` writes a board's `config.h` from the same documents: the broker's port off
-the `schema:url` on the world's `mqtt4ssn:Broker`, the topics in MQTT4SSN's words, the pins from
-the world's hardware graph, the credential `orexis-mqtt` minted.
+the `schema:url` on the world's `mqtt4ssn:Broker` in its deployment graph, the topics in the
+society graph's MQTT4SSN words, the pins from the world's hardware graph, the credential
+`orexis-mqtt` minted.
 
 **One broker, one address.** The compose file and the config are each handed a single address, so
 a world stating a second `mqtt4ssn:Broker`, or one broker whose urls disagree on a host or on a

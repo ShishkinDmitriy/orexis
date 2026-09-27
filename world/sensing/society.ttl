@@ -1,0 +1,38 @@
+@prefix : <http://example.org/orexis/world/sensing#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
+
+#  THE SENSING WORLD'S SOCIETY: one agent and one board, each a client of the world's one broker,
+#  and the two topics between them — the board's readings and its commands — named by the filters
+#  that match them. The broker is here as what the clients are connected to; where it listens is
+#  deployment.ttl's, which onboarding reads and no agent does.
+
+:broker a mqtt4ssn:Broker .
+
+:fern_agent a orexis:Agent , mqtt4ssn:Client ;
+    orexis:localId "fern" ;
+    mqtt4ssn:hasClientID "fern" ;
+    mqtt4ssn:isConnectedToBroker :broker ;
+    orexis:actsFor :fern .
+
+#  THE BOARD, as the bus knows it: one client, flashed as `moisture_sensor_fern` and kept, hosting
+#  the probe and the KY-015, listening for commands on its own topic.
+:esp32_fern a mqtt4ssn:Client ;
+    mqtt4ssn:hasClientID "moisture_sensor_fern" ;
+    mqtt4ssn:isConnectedToBroker :broker ;
+    mqtt4ssn:hosts :moisture_sensor_fern , :air_sensor_fern , :status_led_fern ;
+    mqtt4ssn:listensToTopic :fern_commands .
+
+:fern_readings a mqtt4ssn:Topic .
+:fern_readings_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "sensors/moisture_sensor_fern/reading" ; mqtt4ssn:matchesTopic :fern_readings .
+:fern_commands a mqtt4ssn:Topic .
+:fern_commands_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "sensors/moisture_sensor_fern/command" ; mqtt4ssn:matchesTopic :fern_commands .
+
+#  ONE MESSAGE, THREE SENSORS: each reads its own value of the board's one document by pointer.
+:moisture_sensor_fern mqtt4ssn:observesTopic :fern_readings .
+:air_temp_fern mqtt4ssn:observesTopic :fern_readings .
+:air_humidity_fern mqtt4ssn:observesTopic :fern_readings .

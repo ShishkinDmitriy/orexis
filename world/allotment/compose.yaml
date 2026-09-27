@@ -49,6 +49,7 @@ services:
     userns_mode: "keep-id:uid=10001,gid=10001"
     restart: unless-stopped
     volumes:
+      - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro
       - ../../agent:/app/agent:ro
       - ../../domains:/app/domains:ro
@@ -81,6 +82,7 @@ services:
       # its own belief base, and nobody else can name it
       - orexis-allotment-fern_grower:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro
       - ./beliefs/fern_grower.ttl:/app/world/allotment/beliefs/fern_grower.ttl:ro
       - ./secrets/fern_grower.crt:/app/secrets/agent.crt:ro
@@ -119,6 +121,7 @@ services:
       # its own belief base, and nobody else can name it
       - orexis-allotment-rose_grower:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro
       - ./beliefs/rose_grower.ttl:/app/world/allotment/beliefs/rose_grower.ttl:ro
       - ./secrets/rose_grower.crt:/app/secrets/agent.crt:ro
@@ -157,6 +160,7 @@ services:
       # its own belief base, and nobody else can name it
       - orexis-allotment-supplier:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro
       - ./beliefs/supplier.ttl:/app/world/allotment/beliefs/supplier.ttl:ro
       - ./secrets/supplier.crt:/app/secrets/agent.crt:ro

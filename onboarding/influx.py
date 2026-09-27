@@ -19,7 +19,7 @@ and the two would drift. A bucket nobody writes to grants nobody anything, so un
 simpler and safer than clever.
 
 **Why the name is not in the world.** A topic is a rendezvous — two parties must name the same
-string or they never meet — so topics are ratified in `world.ttl`. A bucket has exactly one
+string or they never meet — so topics are ratified in the world's society graph. A bucket has exactly one
 writer and nobody to agree with, which makes it deployment, like the store's URL. The agent is
 never told the convention: it reads the name out of the credential file mounted for it, so no
 process builds a destination from a naming rule.

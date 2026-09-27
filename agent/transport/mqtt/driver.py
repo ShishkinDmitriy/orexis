@@ -29,9 +29,9 @@ arrives on the client's network thread, and a write belongs on the one executing
 `connect` hands every message to the container's `deliver(topic, payload, at)`, which enqueues,
 and the container's thread calls `handle`. A test hands a client of its own with paho's shape —
 `subscribe`, `publish`, `connect`, `loop_start` and the two setters. Nothing here reads a host
-or a port off the world; 0.1.0 read the bus's off the world as the one piece of infrastructure
-everyone must agree on, and MQTT4SSN has `hasHostAddress` on a Broker, so that is a choice the
-sovereign may reverse.
+or a port off the world, and nothing could: a world names its broker in its society graph, as
+what clients connect to, and states where it listens in a deployment graph, a kind the agent's
+vocabulary does not declare and its boot passes over (a-documents-kind-says-who-reads-it).
 """
 
 from __future__ import annotations

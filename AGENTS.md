@@ -677,9 +677,14 @@ it is a record wearing a bullet.
   broker and no port, so the world says `schema:url` on its `mqtt4ssn:Broker` and the operator's
   tools read it to run the broker and write each agent's environment; the agent reads only its
   environment, as the transport's principle has it, and `orexis-agent` runs the 0.2.0 runtime.
-  The address belongs in a deployment graph, a kind no agent loads, so being told becomes
-  structure rather than discipline, and an agent is told one per broker it shares with something
+  The address is stated in a deployment graph, a kind no agent loads, so being told is
+  structure rather than discipline (#823), and an agent would be told one per broker it shares with something
   it needs (a-documents-kind-says-who-reads-it).
+- **A world's wiring is its society, and its world graph speaks no MQTT4SSN** — the agents, the
+  clients, the broker as a rendezvous, the topics, the filters and which device speaks on which are
+  `society.ttl`, the broker's address `deployment.ttl`, so a sensor is stated in two graphs, what
+  it observes in the world and where it publishes in the society; the layout test holds every
+  MQTT4SSN word to a society graph and every `schema:url` to a deployment graph (#823).
 - **Signing is between agents, and an agent trusts itself** — a signature proves to a device that
   the agent asking for an act was authorised by another; an agent dosing its own bed through its
   own pump has no second party to convince, and the broker's ACL already admits only the holder to

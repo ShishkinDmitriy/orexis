@@ -2,7 +2,6 @@
 @prefix climate: <http://example.org/orexis/climate#> .
 @prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix market: <http://example.org/orexis/market#> .
-@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix sim: <http://example.org/orexis/sim#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -27,9 +26,10 @@
 #  for the supplier to serve through the valve over its plot. Every one of those is a document one
 #  agent says to another on the topic the other listens to (domains/market). The growers' desires
 #  and the supplier's are each agent's own, under beliefs/.
-
-:broker a mqtt4ssn:Broker ;
-    schema:url "mqtt://localhost:1890" , "mqtts://localhost:8890" .
+#
+#  This graph is the allotment itself — the plots, the tap, the venue, the probes and the valves.
+#  Who acts in it and how they reach one another is society.ttl; where the broker listens is
+#  deployment.ttl.
 
 #  THE VENUE: half a litre a round, at least a unit a litre, bids open for thirty seconds.
 :water a market:Market ;
@@ -38,42 +38,6 @@
     market:lotL 0.5 ;
     market:reservePerL 1.0 ;
     market:bidWindowS 30 .
-
-#  THE AGENTS, each a client of the broker listening on a topic of its own for what its peers say.
-:supplier a orexis:Agent , mqtt4ssn:Client ;
-    orexis:localId "supplier" ;
-    mqtt4ssn:hasClientID "supplier" ;
-    mqtt4ssn:isConnectedToBroker :broker ;
-    market:hosts :water ;
-    actuation:hasActuator :rose_valve , :fern_valve ;
-    mqtt4ssn:listensToTopic :supplier_inbox .
-:supplier_inbox a mqtt4ssn:Topic .
-:supplier_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "agents/supplier/inbox" ; mqtt4ssn:matchesTopic :supplier_inbox .
-
-:rose_grower a orexis:Agent , mqtt4ssn:Client ;
-    orexis:localId "rose_grower" ;
-    mqtt4ssn:hasClientID "rose_grower" ;
-    mqtt4ssn:isConnectedToBroker :broker ;
-    orexis:actsFor :rose_plot ;
-    market:bidsIn :water ;
-    market:valuePerL 3.0 ;
-    mqtt4ssn:listensToTopic :rose_grower_inbox .
-:rose_grower_inbox a mqtt4ssn:Topic .
-:rose_grower_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "agents/rose_grower/inbox" ; mqtt4ssn:matchesTopic :rose_grower_inbox .
-
-:fern_grower a orexis:Agent , mqtt4ssn:Client ;
-    orexis:localId "fern_grower" ;
-    mqtt4ssn:hasClientID "fern_grower" ;
-    mqtt4ssn:isConnectedToBroker :broker ;
-    orexis:actsFor :fern_plot ;
-    market:bidsIn :water ;
-    market:valuePerL 2.0 ;
-    mqtt4ssn:listensToTopic :fern_grower_inbox .
-:fern_grower_inbox a mqtt4ssn:Topic .
-:fern_grower_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "agents/fern_grower/inbox" ; mqtt4ssn:matchesTopic :fern_grower_inbox .
 
 #  THE PLOTS, comfortable between 0.30 and 0.60 and surviving between 0.10 and 0.85.
 :rose_plot a sosa:FeatureOfInterest ;
@@ -100,33 +64,21 @@
 
 :tap a climate:WaterSource ; rdfs:label "the supplier's tap" ; climate:capacityL 50.0 .
 
-#  THE BOARD IN THE BEDS: one client hosting both probes and both valves, as a real board hosts its
-#  peripherals — and one connection for the simulator that plays them.
-:plot_board a mqtt4ssn:Client ; mqtt4ssn:hasClientID "plot_board" ;
-    mqtt4ssn:isConnectedToBroker :broker ;
-    mqtt4ssn:hosts :rose_probe , :fern_probe , :rose_valve , :fern_valve .
-
+#  THE PROBES, one in each plot, reporting every ten minutes. Neither exists: the simulator plays
+#  them, from where each reading starts.
 :rose_probe a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:initialValue 0.40 ; sim:minValue 0.0 ; sim:maxValue 1.0 ] ;
     sosa:isHostedBy :rose_plot ;
     sosa:observes climate:SoilMoisture ;
-    mqtt4ssn:observesTopic :rose_readings ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:MIN ] ] .
-:rose_readings a mqtt4ssn:Topic .
-:rose_readings_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/rose_probe/reading" ; mqtt4ssn:matchesTopic :rose_readings .
 
 :fern_probe a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:initialValue 0.40 ; sim:minValue 0.0 ; sim:maxValue 1.0 ] ;
     sosa:isHostedBy :fern_plot ;
     sosa:observes climate:SoilMoisture ;
-    mqtt4ssn:observesTopic :fern_readings ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:MIN ] ] .
-:fern_readings a mqtt4ssn:Topic .
-:fern_readings_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/fern_probe/reading" ; mqtt4ssn:matchesTopic :fern_readings .
 
 #  THE VALVES, the supplier's, each over one plot: ten millilitres a second, half a litre a command.
 :rose_valve a actuation:Valve ;
@@ -136,11 +88,7 @@
     actuation:actuatesProperty climate:SoilMoisture ;
     actuation:drawsFrom :tap ;
     actuation:mlPerSecond 10.0 ;
-    actuation:maxDoseMl 500.0 ;
-    mqtt4ssn:listensToTopic :rose_valve_commands .
-:rose_valve_commands a mqtt4ssn:Topic .
-:rose_valve_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "actuators/rose_valve/command" ; mqtt4ssn:matchesTopic :rose_valve_commands .
+    actuation:maxDoseMl 500.0 .
 
 :fern_valve a actuation:Valve ;
     sim:simulatedBy [ a sim:Model ] ;
@@ -149,8 +97,4 @@
     actuation:actuatesProperty climate:SoilMoisture ;
     actuation:drawsFrom :tap ;
     actuation:mlPerSecond 10.0 ;
-    actuation:maxDoseMl 500.0 ;
-    mqtt4ssn:listensToTopic :fern_valve_commands .
-:fern_valve_commands a mqtt4ssn:Topic .
-:fern_valve_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "actuators/fern_valve/command" ; mqtt4ssn:matchesTopic :fern_valve_commands .
+    actuation:maxDoseMl 500.0 .

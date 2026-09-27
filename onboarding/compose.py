@@ -15,7 +15,8 @@ See knowledge/decisions/where-the-belief-base-lives.md.
 **Agent 0.2.0 runs here.** Each service runs `orexis-agent <world> <id> --volume /app/state`: the
 world mounted at `/app/world/<name>` beside `/app/domains`, so a world's `owl:imports` of its
 domains resolve, and the broker's address handed in as environment, generated from the `schema:url`
-on the world's `mqtt4ssn:Broker` — the agent itself never reads where its broker is. An agent that
+on the world's `mqtt4ssn:Broker` in its deployment graph — a kind the agent's vocabulary does not
+declare, so it is not mounted and the agent cannot read where its broker is. An agent that
 holds a device writes its command topic, which the ACL admits it and nobody else to — an agent
 trusts itself, so nothing is signed until the market brings a second agent to ask.
 

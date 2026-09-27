@@ -1,0 +1,35 @@
+@prefix : <http://example.org/orexis/world/terrace#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
+
+#  THE TERRACE'S SOCIETY: one agent and one board, each a client of the world's one broker, and
+#  the board's one topic, named by the filter that matches it. The broker is here as what the
+#  clients are connected to; where it listens is deployment.ttl's, which onboarding reads and no
+#  agent does.
+
+:broker a mqtt4ssn:Broker .
+
+:terrace_agent a orexis:Agent , mqtt4ssn:Client ;
+    orexis:localId "terrace" ;
+    mqtt4ssn:hasClientID "terrace" ;
+    mqtt4ssn:isConnectedToBroker :broker ;
+    orexis:actsFor :terrace_bed .
+
+#  THE BOARD, as the bus knows it: one client, one credential — flashed as `moisture_sensor_terrace`
+#  and kept, so the board needs no reflash — hosting the probe and the BME280.
+:esp32_terrace a mqtt4ssn:Client ;
+    mqtt4ssn:hasClientID "moisture_sensor_terrace" ;
+    mqtt4ssn:isConnectedToBroker :broker ;
+    mqtt4ssn:hosts :moisture_sensor_terrace , :air_sensor_terrace .
+
+:terrace_readings a mqtt4ssn:Topic .
+:terrace_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "sensors/moisture_sensor_terrace/reading" ; mqtt4ssn:matchesTopic :terrace_readings .
+
+#  ONE MESSAGE, FOUR SENSORS: each reads its own value of the board's one document by pointer.
+:moisture_sensor_terrace mqtt4ssn:observesTopic :terrace_readings .
+:air_temp_terrace mqtt4ssn:observesTopic :terrace_readings .
+:air_humidity_terrace mqtt4ssn:observesTopic :terrace_readings .
+:air_pressure_terrace mqtt4ssn:observesTopic :terrace_readings .

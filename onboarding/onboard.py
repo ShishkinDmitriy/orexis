@@ -5,7 +5,7 @@
 **Genesis ends with a world; it does not end with a society.** A world says what exists and how
 it is wired, and that is a complete description of nothing running. Between it and a first
 `podman compose up` there is a phase with no name until now, made of three tools that each read
-the same `world.ttl` and grant exactly what its wiring implies:
+the same world's documents and grant exactly what its wiring implies:
 
   orexis-influx <world>    a bucket per agent, and a token that opens only it
   orexis-mqtt <world>      a credential per principal, and the broker ACL, derived

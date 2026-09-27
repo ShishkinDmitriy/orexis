@@ -35,7 +35,7 @@ is every kind it is beneath. A graph whose kind that closure does not put beneat
 is passed over, neither its quads nor its row read in: a kind says who reads a document, and one
 the agent's vocabulary does not declare is another reader's, such as the hardware
 [onboarding](/domain/onboarding/onboarding.md) reads. Then the world's public graphs, then the agent's identity, read off
-`orexis:localId` in the world graph, then the world's other graphs — the desires with their
+`orexis:localId` in the society graph, or in the world graph of a world with no society, then the world's other graphs — the desires with their
 met-tests and estimates, the first state — owned by the agent. The catalogue is closed and
 `scope_actions` writes the scopes. A store that already holds a catalogue is a volume the agent
 has lived in: every graph a document put in and nobody owns is forgotten and read again, with the

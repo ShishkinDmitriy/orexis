@@ -81,6 +81,12 @@ orexis:RecordGraph
     rdfs:label "Record graph" ;
     rdfs:comment "ONE agent's own graph whose period says how long what it states is WORTH BELIEVING, not when it holds (#645): a record of a commitment — a debt, from its issue to the claim's expiry. A reader standing at a later instant is handed such a graph as it stands NOW, since the arrival a standing debt predicts is an arrival at every later instant though the debt's own window will have closed by then; a graph holding DURING its period — a round, a claim, a cooling row, a forecast, a prediction — is handed as of the instant asked about. The class is the door's to read; a package says which of its graphs are records by subclassing it." .
 
+orexis:SocietyGraph
+    a owl:Class ;
+    rdfs:subClassOf orexis:BeliefGraph , orexis:PublicGraph ;
+    rdfs:label "Society graph" ;
+    rdfs:comment "Who a world's principals are and how they reach one another: the agents and the client each is, the brokers as what clients are connected to, the topics and the filters that name them, and which device speaks on which. Public and sovereign-authored, beside the world graph and apart from it, and read by the agents, the simulator and `orexis-mqtt`, which derives the ACL from it. The KERNEL'S kind, since the boot finds who the agent is on it, and a package loaded by a premise (#824) would be read off it before that package is loaded. Where a broker listens is not here: that is a deployment graph, onboarding's kind, which no agent loads (knowledge/decisions/a-documents-kind-says-who-reads-it.md)." .
+
 orexis:StateGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph , orexis:Graph ;
@@ -97,7 +103,7 @@ orexis:WorldGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph , orexis:PublicGraph ;
     rdfs:label "World graph" ;
-    rdfs:comment "Topology: the agents and what each acts for, the subjects, the devices and sensors and how they are wired, the venues. Public and sovereign-authored, importing the domains the world speaks (knowledge/domain/kernel/world.md)." .
+    rdfs:comment "The world agents act in: the subjects and their ranges, the sensors, devices and systems, the venues — and, in a world with no society graph beside it, the agents and what each acts for. Public and sovereign-authored, importing the domains the world speaks (knowledge/domain/kernel/world.md)." .
 
 #################  Properties  #################
 

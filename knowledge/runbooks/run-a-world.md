@@ -183,8 +183,8 @@ version upgrade changes any of it.
 
 |  | the bus (mosquitto) | the series store (InfluxDB) |
 |---|---|---|
-| **grant** more | edit `world.ttl`, `orexis-mqtt <w>` — reaches a connected agent that subscribed *before* the grant existed; no reconnect | `orexis-influx <w>` mints the bucket and token; the agent must be recreated to be handed them |
-| **revoke** | edit `world.ttl`, `orexis-mqtt <w>` — delivery stops at once, and the agent is **not** disconnected | delete the token; refused on its very next request |
+| **grant** more | edit `society.ttl`, `orexis-mqtt <w>` — reaches a connected agent that subscribed *before* the grant existed; no reconnect | `orexis-influx <w>` mints the bucket and token; the agent must be recreated to be handed them |
+| **revoke** | edit `society.ttl`, `orexis-mqtt <w>` — delivery stops at once, and the agent is **not** disconnected | delete the token; refused on its very next request |
 | **rotate** credential | `orexis-mqtt <w> --rotate` — **evicts** the session it invalidates | `orexis-influx <w> --rotate` — old token refused at once |
 
 **Revoking is immediate on both, and neither needs a restart.** Mosquitto re-checks the ACL on
@@ -259,4 +259,4 @@ by hand which subjects to pretend to be. `greenhouse` and `allotment` run whole 
 | agent never logs `a volume lived in` | it is not keeping its volume — check the `orexis-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |
-| agent cannot reach the broker | the world's `mqtt4ssn:Broker` says `schema:url` on `localhost`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |
+| agent cannot reach the broker | the world's deployment graph says its `mqtt4ssn:Broker`'s `schema:url` is on `localhost`, so the containers use `network_mode: host`. On a bridge network that address is wrong for them |

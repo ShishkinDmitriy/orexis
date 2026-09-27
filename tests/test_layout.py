@@ -202,21 +202,27 @@ def test_the_firmware_generator_reads_the_hardware_beside_the_society():
 
 # --- one broker, one address: onboarding refuses what it would otherwise merge ---------------
 
-def _sensing_world_stating(tmp_path, monkeypatch, edit) -> str:
-    """The sensing world, its world graph edited, as the world every onboarding tool is handed."""
+def _sensing_world_stating(tmp_path, monkeypatch, society=lambda text: text, deployment=lambda text: text) -> str:
+    """The sensing world, its society and deployment graphs edited, as the world every onboarding
+    tool is handed."""
     from onboarding import compose, firmware, mqtt
 
     world = tmp_path / "sensing"
     world.mkdir()
     climate = (REPO_ROOT / "domains" / "climate" / "ontology.ttl").as_uri()
-    text = (REPO_ROOT / "world" / "sensing" / "world.ttl").read_text()
-    (world / "world.ttl").write_text(edit(text.replace("<../../domains/climate/ontology.ttl>", f"<{climate}>")))
+    here = REPO_ROOT / "world" / "sensing"
+    (world / "world.ttl").write_text((here / "world.ttl").read_text().replace("<../../domains/climate/ontology.ttl>", f"<{climate}>"))
+    (world / "society.ttl").write_text(society((here / "society.ttl").read_text()))
+    (world / "deployment.ttl").write_text(deployment((here / "deployment.ttl").read_text()))
     for module in (mqtt, compose, firmware):
         monkeypatch.setattr(module, "world_dir", lambda name: world)
     return "sensing"
 
 
-_TWO_BROKERS = '\n:elsewhere a mqtt4ssn:Broker ;\n    schema:url "mqtt://elsewhere:1999" , "mqtts://elsewhere:8999" .\n'
+#  A SECOND BROKER, stated as a first one is: named in the society as what a client could connect
+#  to, and its address in the deployment.
+_TWO_BROKERS = {"society": lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n",
+                "deployment": lambda text: text + '\n:elsewhere schema:url "mqtt://elsewhere:1999" , "mqtts://elsewhere:8999" .\n'}
 
 
 def test_a_world_stating_two_brokers_is_refused_naming_both(tmp_path, monkeypatch):
@@ -226,7 +232,7 @@ def test_a_world_stating_two_brokers_is_refused_naming_both(tmp_path, monkeypatc
     agent is an open seam (a-documents-kind-says-who-reads-it), so onboarding refuses instead."""
     from onboarding import mqtt
 
-    world = _sensing_world_stating(tmp_path, monkeypatch, lambda text: text + _TWO_BROKERS)
+    world = _sensing_world_stating(tmp_path, monkeypatch, **_TWO_BROKERS)
     with pytest.raises(SystemExit, match=r"2 mqtt4ssn:Brokers") as refused:
         mqtt.broker(world)
     assert "sensing#broker" in str(refused.value) and "sensing#elsewhere" in str(refused.value)
@@ -244,7 +250,7 @@ def test_one_broker_stating_two_addresses_is_refused(tmp_path, monkeypatch, edit
     is simply wrong, and onboarding cannot tell which."""
     from onboarding import mqtt
 
-    world = _sensing_world_stating(tmp_path, monkeypatch, edit)
+    world = _sensing_world_stating(tmp_path, monkeypatch, deployment=edit)
     with pytest.raises(SystemExit, match=contradiction):
         mqtt.broker(world)
 
@@ -255,9 +261,86 @@ def test_the_tools_told_the_address_inherit_the_refusal(tmp_path, monkeypatch, t
     into every board's config.h; both ask `broker`, so neither writes a merged address."""
     from onboarding import compose, firmware
 
-    world = _sensing_world_stating(tmp_path, monkeypatch, lambda text: text + _TWO_BROKERS)
+    world = _sensing_world_stating(tmp_path, monkeypatch, **_TWO_BROKERS)
     with pytest.raises(SystemExit, match=r"2 mqtt4ssn:Brokers"):
         compose.render(world) if tool == "compose" else firmware.generate(world)
+
+
+# --- a society the agents read, a deployment only onboarding reads (#823) -----------------------
+
+_MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
+_URL = "https://schema.org/url"
+
+
+def test_no_agent_holds_where_its_broker_listens():
+    """The broker is two things and goes to two graphs: the rendezvous every client is connected to
+    is in the society, which an agent reads, and the `schema:url` it listens on is in the
+    deployment, a kind no agent's vocabulary declares. Booted from its directory, as a container
+    boots, every agent of every world with a bus holds the broker and not one url on it — it is
+    told where through its environment, and cannot read it off the world."""
+    import pyoxigraph as ox
+
+    from agent.runtime import boot
+    from onboarding.compose import roster
+
+    rdf_type, broker_class, url = (ox.NamedNode(i) for i in (
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", _MQTT4SSN + "Broker", _URL))
+    booted = []
+    for world in _worlds():
+        here = REPO_ROOT / "world" / world
+        for agent in roster(world):
+            store = boot(here, agent)
+            brokers = {q.subject for q in store.quads_for_pattern(None, rdf_type, broker_class, None)}
+            if not brokers:
+                continue                     # a world with no bus
+            held = sorted(f"{q.subject.value} {q.object.value}" for b in brokers
+                          for q in store.quads_for_pattern(b, url, None, None))
+            assert not held, f"{world}/{agent} holds where its broker listens: {held}"
+            booted.append(f"{world}/{agent}")
+    assert len(booted) >= 6, f"only {booted} hold a broker — the guard would check almost nothing"
+
+
+def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address():
+    """What keeps the split from eroding: every MQTT4SSN word a world states — a client, a topic,
+    a filter, which device speaks on which — is in its society graph, so its world graph holds the
+    subjects, sensors and systems alone; and a `schema:url` is stated in a deployment graph or
+    nowhere, since in any other kind some agent would load it."""
+    import pyoxigraph as ox
+
+    from agent.store import document, kinds_in
+
+    society, deployment = "http://example.org/orexis#SocietyGraph", "http://example.org/orexis/onboarding#DeploymentGraph"
+    seen, wrong = {"society": 0, "deployment": 0}, []
+    for world in _worlds():
+        here = REPO_ROOT / "world" / world
+        for path in sorted([*here.glob("*.ttl"), *here.glob("*.trig"), *here.glob("beliefs/*.ttl")]):
+            doc = document(path)
+            for graph, kinds in kinds_in(doc).items():
+                quads = list(doc.quads_for_pattern(None, None, None, ox.NamedNode(graph)))
+                speaks = any(isinstance(t, ox.NamedNode) and t.value.startswith(_MQTT4SSN)
+                             for q in quads for t in (q.predicate, q.object))
+                addresses = any(q.predicate.value == _URL for q in quads)
+                seen["society"] += society in kinds and speaks
+                seen["deployment"] += deployment in kinds and addresses
+                if speaks and society not in kinds:
+                    wrong.append(f"{world}/{path.name} speaks MQTT4SSN in a graph of {sorted(kinds)}")
+                if addresses and deployment not in kinds:
+                    wrong.append(f"{world}/{path.name} states a schema:url in a graph of {sorted(kinds)}")
+    assert seen["society"] >= 4 and seen["deployment"] >= 4, f"the guard found {seen} — it would check nothing"
+    assert not wrong, "\n".join(wrong)
+
+
+def test_a_committed_compose_file_is_what_onboarding_renders():
+    """A compose file says GENERATED — do not edit, and nothing held it to that. It is what hands a
+    container its documents, so one left behind by a change to the documents boots an agent that
+    cannot find itself: a society graph unmounted is an agent the world says nothing about."""
+    from onboarding import compose
+
+    composed = sorted(p.parent.name for p in (REPO_ROOT / "world").glob("*/compose.yaml"))
+    assert composed, "no world has a compose file — the guard would compare nothing"
+    for world in composed:
+        assert (REPO_ROOT / "world" / world / "compose.yaml").read_text() == compose.render(world), \
+            f"world/{world}/compose.yaml is not what `orexis-compose {world}` renders — regenerate it"
 
 
 def test_every_shipped_world_with_a_bus_states_one_broker_address():
