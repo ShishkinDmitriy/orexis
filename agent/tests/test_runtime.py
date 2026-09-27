@@ -36,6 +36,23 @@ def test_an_agent_holding_a_desire_keeps_running_once_it_is_met(tmp_path, monkey
     assert runtime.planner.standing() == [] and runtime.executor.walking() == [], "met, and waiting"
 
 
+def test_a_graph_of_a_kind_the_agent_does_not_declare_is_passed_over(tmp_path):
+    """A kind says who reads a document, and the agent reads only the kinds its vocabulary puts
+    beneath `orexis:Graph`: a document of another reader's kind — or of a kind misspelled — puts
+    neither its quads nor a row about it into the store, where it once went in as the agent's own."""
+    import pyoxigraph as ox
+
+    world = _as_a_desire(tmp_path)
+    (world / "elsewhere.ttl").write_text("<> a <http://example.org/elsewhere#SomeoneElsesGraph> .\n"
+                                         "<http://example.org/elsewhere#pin> <http://example.org/elsewhere#gpio> 34 .\n")
+    store = boot(world, "hanoi")
+    name = ox.NamedNode((world / "elsewhere.ttl").resolve().as_uri())
+    assert list(store.quads_for_pattern(None, None, None, name)) == []
+    assert list(store.quads_for_pattern(name, None, None)) == [], "no row says the graph exists"
+    assert list(store.quads_for_pattern(None, None, None, ox.NamedNode((world / "state.ttl").resolve().as_uri()))), \
+        "a graph of a kind it does declare is read beside it"
+
+
 def test_an_agent_reads_its_own_beliefs_file_and_no_other_agents(tmp_path):
     """A world of several agents states each one's desires under `beliefs/<id>`: the boot reads the
     world's own files and the agent's, never a peer's."""

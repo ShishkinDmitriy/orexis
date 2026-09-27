@@ -7,6 +7,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pyoxigraph as ox
+
 from agent import clock
 from agent.ontology import STATE
 from agent.runtime import UNFINISHED, Runtime, boot
@@ -34,6 +36,15 @@ def _fern(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW)
     broker = Broker()
     return Runtime(boot(WORLD, "fern"), "fern", transport=Mqtt(W + "fern_agent", broker)), broker
+
+
+def test_booted_from_its_directory_the_agent_holds_no_hardware():
+    """The hardware is onboarding's kind and not the agent's, so the boot passes over it (#820)."""
+    store = boot(WORLD, "fern")
+    hardware = (WORLD / "hardware.ttl").resolve().as_uri()
+    held = sum(1 for _ in store.quads_for_pattern(None, None, None, ox.NamedNode(hardware)))
+    rowed = sum(1 for _ in store.quads_for_pattern(ox.NamedNode(hardware), None, None))
+    assert (held, rowed) == (0, 0), f"the fern agent holds {held} hardware quads and {rowed} rows about the graph"
 
 
 def test_one_message_is_three_observations_and_the_agent_watches(monkeypatch):

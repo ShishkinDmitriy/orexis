@@ -42,10 +42,9 @@ from __future__ import annotations
 import argparse
 import logging
 
-from agent.runtime import world_of
 from agent.store import DocumentRefused
 
-from . import certs, compose, dashboards, influx, mqtt
+from . import certs, compose, dashboards, influx, mqtt, reading
 from .worlds import world_dir, worlds
 
 log = logging.getLogger("onboard")
@@ -61,11 +60,16 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     if check:
         # Onboarding a world whose documents will not load is worse than refusing: it mints real
         # credentials for agents that will refuse to boot, and leaves them lying around. So the
-        # world is read as an agent boots it first.
+        # world is read as onboarding reads it first — as an agent boots it, and then onboarding's
+        # own kinds — and a graph of a kind no reader declares is refused with it: every reader
+        # passes over such a graph in silence, so a misspelled kind is caught here or nowhere.
         try:
-            world_of(world_dir(world))
+            unread = reading.unread(world_dir(world))
         except DocumentRefused as refused:
             raise SystemExit(f"orexis-onboard: world {world!r} does not load — {refused}; nothing granted")
+        if unread:
+            raise SystemExit(f"orexis-onboard: world {world!r} holds graphs of a kind no reader declares — "
+                             f"{'; '.join(unread)}; nothing granted")
 
     log.info("onboarding %s", world)
     influx.provision(world, rotate=rotate)

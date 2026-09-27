@@ -30,8 +30,8 @@ import argparse
 import json
 import logging
 
-from agent.runtime import world_of
 from agent.store import graphs_of, rows
+from . import reading
 from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
 
@@ -211,7 +211,7 @@ def render(world: str) -> dict:
     property, states ONE unit, and its subject states the range that property should sit in, so
     a panel keyed on the sensor can be right about all three.
     """
-    store = world_of(world_dir(world))
+    store = reading.world(world_dir(world))
     sensors = rows(store, _SENSORS_Q, graphs_of(store, PUBLIC))
     if not sensors:
         raise SystemExit(f"orexis-dashboards: nothing in world {world!r} observes anything")

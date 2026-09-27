@@ -494,10 +494,11 @@ RETIRED = REPO_ROOT / "tests" / "fixtures" / "retired"
 
 
 def _vocabulary_files(*names: str, retired: bool = True) -> list[Path]:
-    """Every project Turtle file a word may be declared in: the agent's packages, the domains,
-    the worlds and the retired 0.1.0 vocabulary — or, given `names`, only the
+    """Every project Turtle file a word may be declared in: the agent's packages, onboarding's
+    kinds, the domains, the worlds and the retired 0.1.0 vocabulary — or, given `names`, only the
     files so named."""
     found = [*sorted(p for p in (REPO_ROOT / "agent").rglob("*.ttl") if "tests" not in p.parts),
+             *sorted((REPO_ROOT / "onboarding").glob("*.ttl")),
              *sorted((REPO_ROOT / "domains").rglob("*.ttl")), *sorted((REPO_ROOT / "world").rglob("*.ttl")),
              *(sorted(RETIRED.rglob("*.ttl")) if retired else [])]
     return [p for p in found if not names or p.name in names]
@@ -554,7 +555,7 @@ FOLDERS = {
     "speech": (),
     "market": (f"{_O}/market#",),
     "actuation": (f"{_O}/actuation#", f"{_O}/climate#"),
-    "onboarding": (),
+    "onboarding": (f"{_O}/onboarding#",),
 }
 
 

@@ -105,42 +105,99 @@ HARDWARE_NAMESPACES = (
 )
 
 
+def _worlds() -> list[str]:
+    return sorted(p.parent.name for p in (REPO_ROOT / "world").glob("*/world.ttl"))
+
+
 def test_an_agent_is_given_the_society_and_not_the_hardware():
     """It never asks which pin a probe is on. Pins, wires, part models and firmware are the
     sovereign's: they decide what CAN be built and what a board is flashed with, and once it is
-    built the agent talks to topics. Asserted on the CONTENT of what an agent boots from — every
-    document of a world but its hardware, and every agent's own beliefs — so a pin put into
-    world.ttl is caught where nothing about the file name would warn anyone."""
+    built the agent talks to topics. Asserted on the CONTENT of every document of a kind an agent
+    reads — the world's own and every agent's beliefs — so a pin put into world.ttl is caught
+    where nothing about the kind would warn anyone; and the other way, every document speaking
+    hardware is of a kind no agent reads."""
     import rdflib
 
-    from onboarding.compose import HARDWARE_FILES
+    from onboarding.compose import read_by_an_agent
 
-    worlds = sorted(p.parent for p in (REPO_ROOT / "world").glob("*/world.ttl"))
+    worlds, withheld = _worlds(), []
     assert worlds, "no world found — the guard would check nothing"
     for world in worlds:
-        files = [p for p in [*world.glob("*.ttl"), *world.glob("*.trig"), *world.glob("beliefs/*.ttl")]
-                 if p.name not in HARDWARE_FILES and p.name != "keys.ttl"]
-        g = rdflib.Dataset()
-        for path in files:
+        read = read_by_an_agent(world)
+        assert read, f"{world}: an agent reads none of its documents — the guard would check nothing"
+        here = REPO_ROOT / "world" / world
+        for path in sorted([*here.glob("*.ttl"), *here.glob("*.trig"), *here.glob("beliefs/*.ttl")]):
+            g = rdflib.Dataset()
             g.parse(path, format="trig")          # a Turtle file is TriG, and a want file holds a GRAPH
-        leaked = {str(t) for quad in g.quads() for t in quad[:3] if str(t).startswith(HARDWARE_NAMESPACES)}
-        assert not leaked, (f"{world.name}: an agent would be handed hardware vocabulary it never "
-                            f"queries: {sorted(leaked)[:5]}")
+            spoken = {str(t) for quad in g.quads() for t in quad[:3] if str(t).startswith(HARDWARE_NAMESPACES)}
+            if path.resolve() in read:
+                assert not spoken, (f"{world}/{path.name}: an agent would be handed hardware vocabulary "
+                                    f"it never queries: {sorted(spoken)[:5]}")
+            elif spoken:
+                withheld.append(path)
+    assert withheld, "no world holds hardware an agent is not given — the guard checks one direction only"
 
 
-def test_the_compose_file_does_not_mount_hardware_at_an_agent():
+def test_a_compose_file_mounts_a_document_because_an_agent_reads_its_kind():
     """The other half, and the one that enforces it: a rule the agent is trusted to follow is not
-    a boundary. What keeps the wiring out of an agent is that the file is not in its filesystem."""
-    from onboarding.compose import HARDWARE_FILES
+    a boundary. A container is handed the documents of a kind an agent reads and no other, so the
+    hardware is not in its filesystem — decided by the kind the document states, never its name."""
+    from onboarding.compose import read_by_an_agent
 
     composed = sorted(p.parent.name for p in (REPO_ROOT / "world").glob("*/compose.yaml"))
     assert composed, "no world has a compose file — the guard would compare nothing"
+    unmounted = []
     for world in composed:
-        compose = (REPO_ROOT / "world" / world / "compose.yaml").read_text()
-        for name in HARDWARE_FILES:
-            assert f"/{name}:" not in compose, (
-                f"{world}/compose.yaml mounts {name} into an agent — regenerate with "
-                f"`orexis-compose {world}`")
+        here = (REPO_ROOT / "world" / world).resolve()
+        compose = (here / "compose.yaml").read_text()
+        mounted = {(here / m).resolve() for m in re.findall(rf"- \./([^:]+):/app/world/{world}/", compose)}
+        assert mounted, f"{world}/compose.yaml mounts no document — the pattern stopped matching"
+        read = read_by_an_agent(world)
+        assert mounted <= read, (f"{world}/compose.yaml mounts {sorted(p.name for p in mounted - read)}, of a "
+                                 f"kind no agent reads — regenerate with `orexis-compose {world}`")
+        unmounted += sorted(p for p in here.glob("*.ttl") if p.resolve() not in read)
+    assert unmounted, "every document of every composed world is read by an agent — the guard withholds nothing"
+
+
+# --- a document's kind says who reads it, and a kind nobody reads is refused ------------------
+
+def test_every_graph_a_world_holds_is_of_a_kind_somebody_reads():
+    """Every reader passes over a kind it does not declare, so a misspelled kind would be lost in
+    silence; `orexis-onboard` refuses one, and no shipped world may hold one."""
+    from onboarding.reading import unread
+
+    worlds = _worlds()
+    assert worlds, "no world found — the guard would check nothing"
+    for world in worlds:
+        assert unread(REPO_ROOT / "world" / world) == [], f"{world} holds graphs of a kind no reader declares"
+
+
+def test_onboarding_refuses_a_world_holding_a_kind_no_reader_declares(tmp_path, monkeypatch):
+    """Broken on purpose: the hanoi world with its state's kind misspelled. The agent's boot would
+    pass over the state and start from nothing; onboarding names the graph and grants nothing."""
+    from onboarding import onboard, reading
+
+    world = tmp_path / "hanoi"
+    world.mkdir()
+    domain = (REPO_ROOT / "domains" / "hanoi" / "ontology.ttl").as_uri()
+    hanoi = REPO_ROOT / "world" / "hanoi"
+    (world / "world.ttl").write_text((hanoi / "world.ttl").read_text().replace("<../../domains/hanoi/ontology.ttl>", f"<{domain}>"))
+    (world / "wants.ttl").write_text((hanoi / "wants.ttl").read_text())
+    (world / "state.ttl").write_text((hanoi / "state.ttl").read_text().replace("orexis:StateGraph", "orexis:StateGrpah"))
+    assert [line.split(":", 1)[0] for line in reading.unread(world)] == ["state.ttl"]
+    monkeypatch.setattr(onboard, "world_dir", lambda name: world)
+    with pytest.raises(SystemExit, match="StateGrpah"):
+        onboard.onboard("hanoi")
+
+
+def test_the_firmware_generator_reads_the_hardware_beside_the_society():
+    """What the agent is not handed, onboarding still reads: a board's pins join the topics its
+    sensors publish on, so the generator finds every board a hardware graph states."""
+    from onboarding import firmware
+
+    for world, board in (("terrace", "esp32_terrace"), ("sensing", "esp32_fern")):
+        found = {r["boardId"] for r in firmware._rows(firmware._world(world), firmware._BOARDS_Q)}
+        assert board in found, f"{world}: the firmware generator finds {sorted(found)}"
 
 
 # --- the entry documents name only what exists --------------------------------------------------
@@ -159,8 +216,8 @@ def test_the_docs_only_name_terms_that_exist(doc):
     leaves no dangling reference for a reader to trip over."""
     import rdflib
 
-    sources = sorted(p for p in [*REPO_ROOT.glob("agent/**/*.ttl"), *REPO_ROOT.glob("domains/*/*.ttl"),
-                                 *REPO_ROOT.glob("tests/fixtures/vocabularies/*.ttl")]
+    sources = sorted(p for p in [*REPO_ROOT.glob("agent/**/*.ttl"), *REPO_ROOT.glob("onboarding/*.ttl"),
+                                 *REPO_ROOT.glob("domains/*/*.ttl"), *REPO_ROOT.glob("tests/fixtures/vocabularies/*.ttl")]
                      if not (p.is_relative_to(REPO_ROOT / "agent") and "tests" in p.parts))
     #  THE PROJECT'S NAMESPACES AND THE VENDORED ONES: a standard no file here declares — schema,
     #  SSN-System — is not this census's to check, and a term of it is not held.

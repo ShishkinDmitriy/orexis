@@ -22,7 +22,7 @@ since rotating one service's credentials should not touch another's.
 
 `orexis-firmware <world>` writes a board's `config.h` from the same documents: the broker's port off
 the `schema:url` on the world's `mqtt4ssn:Broker`, the topics in MQTT4SSN's words, the pins from
-`hardware.ttl`, the credential `orexis-mqtt` minted.
+the world's hardware graph, the credential `orexis-mqtt` minted.
 
 # Nothing here decides
 
@@ -36,13 +36,19 @@ will not load.
 # What it reads that no agent does
 
 Onboarding reads a world as the runtime boots it, and then the kinds no agent reads, declared in
-a vocabulary of onboarding's own so that the agent never names them and the import direction
-holds. The [deployment](/domain/onboarding/deployment.md) graph is one. The **hardware graph** is
-the other: the boards, pins, parts and wire colours `orexis-firmware` interpolates into a
-`config.h`. The graph gets a kind; the parts inside it stay untyped, since a vocabulary one
-string-filling reader uses checks nothing. Neither kind is declared yet. `hardware.ttl` says it
-is public, so every agent booted from its world's directory holds it, and a container is kept
-from it only because `orexis-compose` leaves that file name unmounted (#820).
+a vocabulary of onboarding's own (`onboarding/ontology.ttl`, read by `onboarding/reading.py`) so
+that the agent never names them and the import direction holds. The
+[deployment](/domain/onboarding/deployment.md) graph is one. The **hardware graph** is the other:
+the boards, pins, parts and wire colours `orexis-firmware` interpolates into a `config.h`, which
+`hardware.ttl` says it is. The graph has a kind; the parts inside it stay untyped, since a
+vocabulary one string-filling reader uses checks nothing.
+
+An agent's boot passes over both, and `orexis-compose` mounts a document into a container only
+where the agent's own vocabulary declares its kind — so the hardware is in no agent's store and
+no container's filesystem, and nothing names the file. Every reader passing over what it does not
+declare makes a misspelled kind silent everywhere, so `orexis-onboard` checks every graph a world
+holds against every reader's vocabulary first, and grants nothing to a world holding one no
+reader declares.
 
 # Why it lives outside the agent
 

@@ -1,0 +1,20 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS ONBOARDING.
+#  THE KINDS OF DOCUMENT ONBOARDING READS AND NO AGENT DOES (a-documents-kind-says-who-reads-it).
+#  A kind says who reads a document, and every reader loads only the kinds it reads: the agent's
+#  boot passes over a graph whose kind its T-Box does not declare. These are declared here, beside
+#  the code that reads them and outside `agent/`, which the image does not copy — so no agent's
+#  vocabulary can say what they are, and its ignorance of them is structural rather than a list of
+#  file names kept out of its filesystem.
+
+onboarding:HardwareGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Hardware graph" ;
+    rdfs:comment "The boards, pins, parts and wire colours a world is built from, read by `orexis-firmware` alone to write a board's config.h. The GRAPH has a kind and the parts inside it stay untyped, since a vocabulary one string-filling reader uses checks nothing (knowledge/domain/onboarding/onboarding.md)." .
+
+onboarding:DeploymentGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Deployment graph" ;
+    rdfs:comment "What must be running for a world to be a society and where each thing answers - a broker's address, a series store, a container's image - read by onboarding alone and handed to an agent as environment. Never a credential (knowledge/domain/onboarding/deployment.md)." .

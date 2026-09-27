@@ -49,8 +49,7 @@ import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import certs
-from agent.runtime import world_of
+from . import certs, reading
 from agent.store import graphs_of, rows
 from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
@@ -158,7 +157,7 @@ _BROKER_Q = f"SELECT ?url WHERE {{ ?b a <{MQTT4SSN}Broker> ; schema:url ?url }} 
 
 
 def _world(world: str):
-    return world_of(world_dir(world))
+    return reading.world(world_dir(world))
 
 
 def _rows(store, text: str) -> list[dict]:

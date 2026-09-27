@@ -2,6 +2,7 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
@@ -25,6 +26,13 @@
 #  from the base graph, never deleting. The draft names that graph as a role and not a class, so
 #  the one word here is the class of it. The engine is the store's own, not SHACL's. Classes only:
 #  which graph is an agent's is genesis's to create and the catalogue's to say.
+#
+#  ONE AXIOM ON THE DRAFT'S TERM, AND NO WORD: a rules graph is a graph. A boot reads a document
+#  only where the vocabulary puts its kind beneath `orexis:Graph` — a kind says who reads the
+#  document (a-documents-kind-says-who-reads-it) — and this package is the reader of rules graphs,
+#  so it is the one to say so. Without it every package's and domain's rules were passed over.
+
+sh:RulesGraph rdfs:subClassOf orexis:Graph .
 
 :RevisionGraph a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph ;

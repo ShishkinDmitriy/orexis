@@ -10,7 +10,9 @@ either, and `store.put_document` puts the graphs in and moves the rows about the
 catalogue, where every reader asks; a document stating no kind, or claiming to be the
 catalogue, is refused. The vocabulary goes first, since what a graph is depends on it: every
 document that says it is an `orexis:OntologyGraph`, then the closure over `rdfs:subClassOf`,
-written into a graph of its own and derived, so that a kind is every kind it is beneath. Then
+written into a graph of its own and derived, so that a kind is every kind it is beneath. **A
+GRAPH OF A KIND THE VOCABULARY DOES NOT DECLARE IS PASSED OVER**: the kind says who reads a
+document, and a world's hardware is onboarding's to read and not the agent's (#820). Then
 the world's public graphs, then who the agent is — off the world graph, by the one identifier
 the process is told — then the world's other graphs, the agent's own, owned by it. The
 catalogue is closed and the Planner's `scope` writes the scopes.
@@ -79,6 +81,7 @@ DERIVED = OREXIS + "Derived"
 ONTOLOGY = OREXIS + "OntologyGraph"
 WORLD = OREXIS + "WorldGraph"
 PUBLIC = OREXIS + "PublicGraph"
+GRAPH = OREXIS + "Graph"
 
 MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
 
@@ -116,7 +119,14 @@ def documents(world: Path, agent_id: str | None = None) -> list[Path]:
     return [kernel, *packages, *own, *mine]
 
 
-def _read_with_imports(paths: list[Path]) -> list[tuple[Path, ox.Store]]:
+def known(store: ox.Store, kinds) -> bool:
+    """Whether the vocabulary in `store` declares one of `kinds` a kind of graph — whether a reader
+    holding that vocabulary reads the graph. A kind is declared where the closure puts it beneath
+    `orexis:Graph`; anything else, a kind another reader declares or a kind misspelled, is not."""
+    return any(GRAPH in closed(store, kind) for kind in kinds)
+
+
+def read_with_imports(paths: list[Path]) -> list[tuple[Path, ox.Store]]:
     """Every document `paths` names and every one they import, each read once, in the order
     met: a world imports the domains it speaks, and a domain its own documents. An import that
     is no `file:` IRI names nothing a boot can read, and stays a row in the catalogue."""
@@ -156,8 +166,13 @@ def _put_public(store: ox.Store, world: Path, agent_id: str | None = None) -> li
     """Read every document and put in the vocabulary, closed, and every public graph; answer the
     world's other graphs — the agent's own — as (document, graph), for the caller to put or not.
 
-    THE VOCABULARY FIRST, since whether a graph is public is the vocabulary's to say."""
-    read = _read_with_imports(documents(world, agent_id))
+    THE VOCABULARY FIRST, since whether a graph is public is the vocabulary's to say — and so is
+    whether it is read at all. A graph whose kind the vocabulary does not declare is passed over:
+    a document of a kind another reader reads, onboarding's hardware, is not this agent's to hold,
+    and what keeps it out is that nothing it loads says what the kind is
+    (a-documents-kind-says-who-reads-it). A misspelled kind is passed over the same way, which is
+    why onboarding, knowing every reader's vocabulary, refuses a world that holds one."""
+    read = read_with_imports(documents(world, agent_id))
     vocabulary = {path for path, doc in read if any(ONTOLOGY in k for k in kinds_in(doc).values())}
     for path, doc in read:
         if path in vocabulary:
@@ -168,6 +183,9 @@ def _put_public(store: ox.Store, world: Path, agent_id: str | None = None) -> li
         if path in vocabulary:
             continue
         for graph, kinds in kinds_in(doc).items():
+            if not known(store, kinds):
+                log.info("passed over %s: %s is no kind this agent reads", graph, ", ".join(sorted(kinds)))
+                continue
             beneath = {k for kind in kinds for k in closed(store, kind)}
             if world not in path.parents or PUBLIC in beneath:
                 public.append((doc, graph))
@@ -180,8 +198,8 @@ def _put_public(store: ox.Store, world: Path, agent_id: str | None = None) -> li
 
 def world_of(world: Path) -> ox.Store:
     """What a world says publicly, read as a boot reads it and closed, with no agent in it — what
-    the operator's tools read to derive a deployment from the world: its agents, its devices, its
-    topics and where its broker listens."""
+    the simulator reads, and what the operator's tools read before the kinds they read and no
+    agent does: its agents, its devices, its topics and where its broker listens."""
     store = ox.Store()
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
     _put_public(store, Path(world).resolve())
