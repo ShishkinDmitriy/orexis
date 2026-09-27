@@ -1,5 +1,5 @@
-"""The MQTT driver over a board on a bus and a stand-in client with paho's shape: what a sensor
-claims, what the agent subscribes to, whose a message is, where a command goes and as what, how
+"""The MQTT driver over a board on a bus and a stand-in client with paho's shape: what the agent
+subscribes to, whose a message is, where a command goes and as what, how
 a message becomes observations through sensing — and MQTT's own filter matching."""
 
 from __future__ import annotations
@@ -75,11 +75,9 @@ def _results(store):
     return [(r["p"].rsplit("#", 1)[-1], float(r["v"])) for r in rows(store, _RESULTS_Q, ())]
 
 
-def test_a_sensor_that_publishes_on_a_topic_speaks_mqtt_and_one_that_does_not_does_not(bus):
-    store, driver, _ = bus
-    assert isinstance(driver, Transport), "the family's contract, answered"
-    assert Mqtt.claims(store, THERMO) and Mqtt.claims(store, PHOTOMETER)
-    assert not Mqtt.claims(store, PROBE), "the probe is in the pot and on no bus"
+def test_the_driver_answers_the_familys_contract(bus):
+    _, driver, _ = bus
+    assert isinstance(driver, Transport)
 
 
 def test_the_driver_listens_where_the_agents_sensors_publish(bus):

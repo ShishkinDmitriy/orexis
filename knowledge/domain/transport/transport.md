@@ -11,11 +11,16 @@ description: >-
 # The contract
 
 What the container asks of any member: bring itself up from the environment (`connect`, handed
-the container's `deliver`), say whether it reaches a sensor (`claims`), subscribe to the agent's
+the container's `deliver`), subscribe to the agent's
 channels (`open`), turn a message into observations by calling sensing's `received` once per
 sensor it is for (`handle`), and send what a device may be told — a cadence, a sense-now, and the
 payload a step's command answers (`actuate`). A message arrives on the member's thread and is
 queued; the container's one thread handles it.
+
+Whether a member is loaded at all is not asked of it, since asking would import it: it is the
+member's premise, read off the world before anything of the member is
+([package](/domain/kernel/package.md)). A member imports sensing's `received` and speech's `heard`
+only where a message is for one of them, so an agent that only listens never loads sensing.
 
 # The member that ships: MQTT
 

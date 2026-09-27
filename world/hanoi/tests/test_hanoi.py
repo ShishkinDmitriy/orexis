@@ -37,6 +37,27 @@ def test_the_boot_says_what_each_graph_is():
     assert int(scopes["n"]) >= 1, "scope_actions ran at boot"
 
 
+def test_the_mover_loads_the_mind_and_nothing_else():
+    """No sensor, no drift, no topic, no saying: no premise holds, so neither sensing's ontology nor
+    its three rules, nor prediction's ontology, nor the MQTT transport's is in the store (#824);
+    that none of their modules is imported either is asked of a whole process, in
+    agent/tests/test_premises.py."""
+    import pyoxigraph as ox
+
+    from agent.runtime import MIND, packages_of
+
+    beliefs = boot(WORLD, "hanoi")
+    assert packages_of(beliefs, "http://example.org/orexis/world/hanoi#hanoi") == MIND
+    agent = WORLD.parents[1] / "agent"
+    absent = [agent / "sensing" / "ontology.ttl", agent / "sensing" / "rules.ttl",
+              agent / "prediction" / "ontology.ttl", agent / "transport" / "mqtt" / "ontology.ttl"]
+    present = [agent / "ontology.ttl", agent / "planning" / "ontology.ttl"]
+    assert all(p.exists() for p in absent + present), "a document this test names has moved"
+    held = {p: bool(list(beliefs.quads_for_pattern(ox.NamedNode(p.as_uri()), None, None))) for p in absent + present}
+    assert not any(held[p] for p in absent), [p.name for p in absent if held[p]]
+    assert all(held[p] for p in present), "the probe sees a document the mover does read"
+
+
 def test_the_tower_is_solved_in_seven_moves_and_the_runtime_stops(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW)
     runtime = Runtime(boot(WORLD, "hanoi"), "hanoi", budget=64)

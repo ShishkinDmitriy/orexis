@@ -28,6 +28,35 @@ exports that act alone.
 `agent/runtime.py` is the container that assembles them, and the kernel's `orexis:` vocabulary
 (`agent/ontology.ttl`) keeps only what packages meet at: an action, an agent, the graph kinds.
 
+# How a package is loaded
+
+**Belief, planning and execution are the mind, and every agent has them.** Any other package is
+loaded — its documents put in the store, its modules imported — only where its **premise** holds:
+an ASK over the world's public graphs with `$me` bound to the agent, written in `PREMISES` in
+`agent/runtime.py`. A premise answers in advance what the package's callers will read, so it is
+in their words:
+
+| package | its premise holds where |
+|---|---|
+| sensing | a sensor is hosted by what the agent acts for, or by a sample of it |
+| prediction | such a sensor exists and a `prediction:Drift` is declared |
+| speech | the agent `mqtt4ssn:listensToTopic` a topic, or an action holds an `execution:Saying` |
+| the MQTT transport | the agent listens to a topic, or a sensor of its `mqtt4ssn:observesTopic` one |
+
+The premise is the runtime's to state and not the package's, because speech's is spoken in the
+transport's words and in execution's, which speech's layout test forbids it as a layer above, and
+because what a premise decides is an `import` the runtime or the transport makes. Nothing is declared by the
+agent: its own file naming its packages was refused as a second source beside the world
+([a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md)).
+
+**A premise is read before its package is.** The boot puts in the kernel, the mind and the world,
+finds the agent, asks each premise, and only then reads the documents of the packages that
+held — so a premise may read nothing but the kernel's and the mind's kinds, and a word it names
+(`prediction:Drift`) is matched as the IRI it is, with no vocabulary behind it yet. A domain that
+speaks a package's words, as climate's drifts speak prediction's, is read whether the package
+is loaded or not. A package directory that is neither the mind nor listed with a premise is read
+by no agent, and `agent/tests/test_premises.py` fails on one.
+
 # Whose a word is
 
 **A term lives in the namespace of the package that owns the concept, not of the one that happens

@@ -106,6 +106,9 @@ premise read off the world holds:
 | speech | the agent `mqtt4ssn:listensToTopic` a topic, or an action it may take has an `execution:Saying` operation |
 | transport | as today: a sensor it claims, or a topic the agent listens to |
 
+*Two rows were narrowed when the premises were built, and where a premise is stated was settled
+then too: see the amendment below (#824).*
+
 **Refused: the agent's own file declaring its packages.** It is a second source of truth beside
 the world, and it can be wrong in the other direction — a sensor stated with no package to read it,
 or a package declared for a sensor since removed — with nothing to say which of the two is right.
@@ -241,6 +244,48 @@ no second word, and a clash is one host and one port, never the port alone.
 **`infra/compose.yaml` is derived** from the installation by `orexis-infra-compose`: the images,
 the ports and the organisation are the document's, how each service runs is the template's, and a
 test holds the committed file to the rendering. The seam this record left for it is closed.
+
+## Amended 2026-09-27: the premises as built, and where they are stated (#824)
+
+Each premise was checked against what its package's callers read, and two rows of §2's table
+changed:
+
+- **Prediction needs a sensor of the agent's as well as a drift.** `predict` is asked of a sensor
+  that has just reported, and moves nothing without one; on a drift alone, the allotment's
+  supplier — which senses nothing, in a world importing climate — would have loaded it for nothing.
+- **The transport's sensor is the agent's own**, hosted by what it acts for, which is what the
+  member subscribes to; "a sensor it claims" was any sensor in the world that published on a
+  topic. `claims` itself is gone: its one caller imported the member to ask it, which is the
+  import a premise exists to decide.
+
+Sensing and speech stand as written. Speech reads nothing of the world — `heard` reads a peer's
+document and `said` the agent's own — so its premise is its callers' needs, the transport's
+listening and execution's saying.
+
+**Where a premise is stated: the runtime, as an ASK per package** (`PREMISES` in
+`agent/runtime.py`), over the world's public graphs with the agent bound, T-Box terms only, so
+rule 1 holds. **Refused: each package's own document stating its premise**, read before the
+package is. It reads as the more self-describing choice, and it fails on speech first: speech's
+premise is in execution's words, which its layout test refuses it as the layer above, and in the
+transport's, whose imports the same test refuses. A premise is about who CALLS a package, and the
+caller — the runtime, the one file every layout test exempts as the container — is where its
+words may all be spoken. It fails a second time on the Python: what a premise decides is an
+`import` the runtime makes, so a premise in a document would have the runtime identify which
+package held, by an instance in a document or by a path, to decide what to import.
+
+**The order problem is met by reading the premises of the kernel's and the mind's kinds alone.**
+The boot puts the kernel, the mind and the world in, closes the catalogue, finds the agent, asks
+the premises, and only then reads the documents of the packages that held, closing the vocabulary
+again and taking a second look at a world graph passed over for a kind only such a package
+declares. A premise naming a package's word — `prediction:Drift` — matches the IRI with no
+vocabulary behind it, so climate's drifts are read whether prediction is loaded or not. With no
+agent, `world_of` reads every package, since the operator's tools read every reader's vocabulary.
+
+Measured on Hanoi's mover, before and after: sensing's ontology and its three rules, prediction's
+ontology and the MQTT transport's were in its store and are not; prediction, sensing and speech
+were imported at boot, and the MQTT driver by `main`, and none of the four is now, run to met in a
+fresh process — beside the allotment's fern grower, which imports all four, so the probe is seen
+to see them.
 
 # What this supersedes, and what it amends
 

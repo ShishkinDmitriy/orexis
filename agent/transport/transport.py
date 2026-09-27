@@ -4,15 +4,21 @@ kept at the family's level so that sensing knows no transport at all.
 A transport is how an agent's sensors reach it and how its commands reach them: over a broker,
 a serial line, a socket. What is the same of every one is what the container asks — how a
 member is brought up from the environment (`connect`, which imports the member's own library
-and nothing else does), whether a sensor is reached through this member (`claims`), the
+and nothing else does), the
 channels to listen on for the agent's sensors (`open`), what a message on a channel becomes
 (`handle`: one call of sensing's `received` per sensor of the agent's the message is for,
 answered as the sensor and the graph written), and the two commands a device may take
 (`set_cadence`, `sense_now`), and the command a step sends an actuator (`actuate`). What differs is the member's: how a channel is named in the
 world, in the vocabulary it adopts, what a device publishes on, and what its library is.
 
+WHETHER A MEMBER IS LOADED AT ALL is not asked of the member, since asking would import it: it is
+the member's premise, which the runtime reads off the world before anything of the member is
+imported (`agent.runtime.PREMISES`, #824). It was `claims`, a question the member answered of a
+sensor, and its one caller imported the member to ask it.
+
 THE ARROW POINTS ONE WAY. A member imports this contract, sensing's `received` and speech's
-`heard`, the callbacks it calls; sensing imports nothing of any transport and speaks no word of one, so a transport's
+`heard`, the callbacks it calls, each where a message is for it, so a member loads no package
+its agent was not given; sensing imports nothing of any transport and speaks no word of one, so a transport's
 whole vocabulary stays the member's and the observation sensing writes never says how its bytes
 arrived. The thread a message arrives on is the member's client's, and a write belongs on the
 one executing thread, so `connect` is handed the container's `deliver` and a message goes there
@@ -36,12 +42,6 @@ class Transport:
         security in the member's own variables — with every message handed to `deliver(channel,
         payload, at)`, the container's. A test hands a `client` of its own; nothing else does."""
         raise NotImplementedError("a member brings itself up; the contract cannot")
-
-    @classmethod
-    def claims(cls, store, sensor: str) -> bool:
-        """Whether this member is how the world says the sensor is reached — answered from what
-        the world declares, in the member's own vocabulary."""
-        return False
 
     def open(self, store) -> list[str]:
         """Listen on every channel the world implies for the agent's sensors, and on the one
