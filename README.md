@@ -221,7 +221,7 @@ best-effort and lands only if the board happens to be awake.
 A real ESP32 speaks the same protocol as the simulator — an agent can't tell them apart, so you
 can mix them freely. A sensor `mqtt4ssn:observesTopic` the topic it publishes on and a board
 `mqtt4ssn:listensToTopic` the one it takes commands on, each named by the filter that matches it;
-both are whatever `world/<name>/world.ttl` says they are, and nothing is derived from an id. How
+both are whatever `world/<name>/society.ttl` says they are, and nothing is derived from an id. How
 often a sensor reports is its `ssn-system:Frequency`, and the agent asks again for a reading fallen
 due.
 

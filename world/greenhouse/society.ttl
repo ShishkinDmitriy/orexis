@@ -1,0 +1,49 @@
+@prefix : <http://example.org/orexis/world/greenhouse#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
+
+#  THE GREENHOUSE'S SOCIETY: one grower and the bed's board, each a client of the world's one
+#  broker, and the topics the board's devices publish and listen on, named by the filters that
+#  match them. The broker is here as what the clients are connected to; where it listens is
+#  deployment.ttl's, which onboarding reads and no agent does.
+
+:broker a mqtt4ssn:Broker .
+
+:grower a orexis:Agent , mqtt4ssn:Client ;
+    orexis:localId "grower" ;
+    mqtt4ssn:hasClientID "grower" ;
+    mqtt4ssn:isConnectedToBroker :broker ;
+    orexis:actsFor :bed ;
+    actuation:hasActuator :pump , :heater .
+
+#  THE BED'S BOARD: one client hosting the bed's four devices, as a real board hosts its
+#  peripherals — and one connection for the simulator that plays them.
+:bed_board a mqtt4ssn:Client ; mqtt4ssn:hosts :moisture_probe , :thermometer , :pump , :heater ;
+    mqtt4ssn:hasClientID "bed_board" ;
+    mqtt4ssn:isConnectedToBroker :broker .
+
+#  WHERE EACH DEVICE SPEAKS: the probe and the thermometer publish on topics the grower subscribes
+#  to because it acts for the bed they are hosted by; the pump and the heater listen on topics of
+#  their own for the command a step is sized to when it is taken.
+:moisture_probe mqtt4ssn:observesTopic :moisture_readings .
+:moisture_readings a mqtt4ssn:Topic .
+:moisture_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "sensors/moisture_probe/reading" ; mqtt4ssn:matchesTopic :moisture_readings .
+
+:thermometer mqtt4ssn:observesTopic :thermometer_readings .
+:thermometer_readings a mqtt4ssn:Topic .
+:thermometer_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "sensors/thermometer/reading" ; mqtt4ssn:matchesTopic :thermometer_readings .
+
+:pump mqtt4ssn:listensToTopic :pump_commands .
+:pump_commands a mqtt4ssn:Topic .
+:pump_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "actuators/pump/command" ; mqtt4ssn:matchesTopic :pump_commands .
+
+:heater mqtt4ssn:listensToTopic :heater_commands .
+:heater_commands a mqtt4ssn:Topic .
+:heater_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "actuators/heater/command" ; mqtt4ssn:matchesTopic :heater_commands .

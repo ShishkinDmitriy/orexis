@@ -50,6 +50,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./desires.ttl:/app/world/greenhouse/desires.ttl:ro
+      - ./society.ttl:/app/world/greenhouse/society.ttl:ro
       - ./world.ttl:/app/world/greenhouse/world.ttl:ro
       - ../../agent:/app/agent:ro
       - ../../domains:/app/domains:ro
@@ -83,6 +84,7 @@ services:
       - orexis-greenhouse-grower:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./desires.ttl:/app/world/greenhouse/desires.ttl:ro
+      - ./society.ttl:/app/world/greenhouse/society.ttl:ro
       - ./world.ttl:/app/world/greenhouse/world.ttl:ro
       - ./secrets/grower.crt:/app/secrets/agent.crt:ro
       - ./secrets/grower.key:/app/secrets/agent.key:ro

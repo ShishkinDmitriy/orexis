@@ -1,7 +1,6 @@
 @prefix : <http://example.org/orexis/world/greenhouse#> .
 @prefix climate: <http://example.org/orexis/climate#> .
 @prefix actuation: <http://example.org/orexis/actuation#> .
-@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix sim: <http://example.org/orexis/sim#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -20,30 +19,12 @@
 #
 #  The grower holds one desire — the bed is comfortable — about the soil AND the air, and no single
 #  device serves it: the pump moves the first, the heater the second. The ranges are the bed's own
-#  and NAMED, since a step's effect says which range a reading comes to be inside. The probe and
-#  the thermometer publish on MQTT4SSN topics the grower subscribes to because it acts for the bed
-#  they are hosted by; the pump and the heater listen on topics of their own for the command a
-#  step is sized to when it is taken. The vent and the outdoor thermometer of the 0.1.0 world wait
-#  until an agent can listen to a feature it does not act for.
-
-#  THE BROKER, and where it listens: the world's own, on ports no other world's broker uses. The
-#  operator's tools read these to run it and to tell each agent through its environment; an agent
-#  never reads them off the world.
-:broker a mqtt4ssn:Broker ;
-    schema:url "mqtt://localhost:1889" , "mqtts://localhost:8889" .
-
-#  THE BED'S BOARD: one client hosting the bed's four devices, as a real board hosts its
-#  peripherals — and one connection for the simulator that plays them.
-:bed_board a mqtt4ssn:Client ; mqtt4ssn:hasClientID "bed_board" ;
-    mqtt4ssn:isConnectedToBroker :broker ;
-    mqtt4ssn:hosts :moisture_probe , :thermometer , :pump , :heater .
-
-:grower a orexis:Agent , mqtt4ssn:Client ;
-    orexis:localId "grower" ;
-    mqtt4ssn:hasClientID "grower" ;
-    mqtt4ssn:isConnectedToBroker :broker ;
-    orexis:actsFor :bed ;
-    actuation:hasActuator :pump , :heater .
+#  and NAMED, since a step's effect says which range a reading comes to be inside. The vent and the
+#  outdoor thermometer of the 0.1.0 world wait until an agent can listen to a feature it does not
+#  act for.
+#
+#  This graph is the bed and its devices. Who acts for it and the topics its devices speak on are
+#  society.ttl; where the broker listens is deployment.ttl.
 
 #  THE BED. The soil is comfortable between 0.30 and 0.60 and survives between 0.10 and 0.85; the
 #  air is comfortable between 18 and 24 degrees and survives between 5 and 35.
@@ -68,29 +49,21 @@
 
 :water_butt a climate:WaterSource ; rdfs:label "the water butt" ; climate:capacityL 20.0 .
 
-#  THE INSTRUMENTS, each reporting every ten minutes on a topic of its own.
+#  THE INSTRUMENTS, each reporting every ten minutes.
 #  None of the four exists: the simulator plays them, from where each reading starts.
 :moisture_probe a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:initialValue 0.40 ; sim:minValue 0.0 ; sim:maxValue 1.0 ] ;
     sosa:isHostedBy :bed ;
     sosa:observes climate:SoilMoisture ;
-    mqtt4ssn:observesTopic :moisture_readings ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:MIN ] ] .
-:moisture_readings a mqtt4ssn:Topic .
-:moisture_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/moisture_probe/reading" ; mqtt4ssn:matchesTopic :moisture_readings .
 
 :thermometer a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:initialValue 21.0 ; sim:minValue -10.0 ; sim:maxValue 45.0 ] ;
     sosa:isHostedBy :bed ;
     sosa:observes climate:AirTemperature ;
-    mqtt4ssn:observesTopic :thermometer_readings ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:MIN ] ] .
-:thermometer_readings a mqtt4ssn:Topic .
-:thermometer_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/thermometer/reading" ; mqtt4ssn:matchesTopic :thermometer_readings .
 
 #  THE DEVICES. The pump pours ten millilitres a second and at most half a litre a command; the
 #  heater warms the bed two degrees an hour and runs at most an hour a command.
@@ -101,11 +74,7 @@
     actuation:actuatesProperty climate:SoilMoisture ;
     actuation:drawsFrom :water_butt ;
     actuation:mlPerSecond 10.0 ;
-    actuation:maxDoseMl 500.0 ;
-    mqtt4ssn:listensToTopic :pump_commands .
-:pump_commands a mqtt4ssn:Topic .
-:pump_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "actuators/pump/command" ; mqtt4ssn:matchesTopic :pump_commands .
+    actuation:maxDoseMl 500.0 .
 
 :heater a climate:Heater ;
     sim:simulatedBy [ a sim:Model ] ;
@@ -113,8 +82,4 @@
     climate:warms :bed ;
     climate:warmsProperty climate:AirTemperature ;
     climate:degreesPerHour 2.0 ;
-    climate:maxHeatS 3600.0 ;
-    mqtt4ssn:listensToTopic :heater_commands .
-:heater_commands a mqtt4ssn:Topic .
-:heater_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "actuators/heater/command" ; mqtt4ssn:matchesTopic :heater_commands .
+    climate:maxHeatS 3600.0 .

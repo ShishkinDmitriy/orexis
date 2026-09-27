@@ -2,13 +2,15 @@
 
 It is NOT a pretend board. A board is told its topics and knows nothing else; the simulator is the
 environment the agents act in — the bed drying, the pump pouring, the heater warming — so it reads
-the world as an agent boots it (`agent.runtime.world_of`) and takes every fact from there:
+the world as an agent boots it (`agent.runtime.world_of`) and takes every fact from there — the
+world graph and the society graph, both public, and never the deployment graph, since the broker's
+address reaches it as environment, as an agent's does:
 
 - which systems to play: every one marked `sim:simulatedBy`, and a sensor's starting reading and
-  bounds from its `sim:Model`;
+  bounds from its `sim:Model` (the world graph);
 - where each speaks: the topic a sensor publishes on and the topic an actuator listens to, by the
-  patterns of the MQTT4SSN filters that match them; how often a sensor reports, from its
-  `ssn-system:Frequency`;
+  patterns of the MQTT4SSN filters that match them (the society graph); how often a sensor
+  reports, from its `ssn-system:Frequency`;
 - the physics: a subject's soil dries `climate:driesPerDay`; a dose of `dose_ml` on a valve that
   `actuation:actuates` a subject raises the property it `actuation:actuatesProperty` by the litres
   over the subject's `climate:litresPerFraction`; a heating of `heat_s` on a heater that

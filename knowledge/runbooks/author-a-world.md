@@ -3,7 +3,8 @@ type: Runbook
 title: Author a world
 description: >-
   What to write in `world/<name>/` for a world an agent can boot - the world graph importing its
-  domains, the state it starts from, each agent's desires or wants - and the test beside it that
+  domains, the society and deployment of a world with a bus, the state it starts from, each
+  agent's desires or wants - and the test beside it that
   proves it does what it was written for. Onboarding and compose come after, for a world that
   runs in containers.
 ---
@@ -14,14 +15,22 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
 ([world](/domain/kernel/world.md)):
 
 1. **`world.ttl`** — `<> a orexis:WorldGraph ; owl:imports <../../domains/…/ontology.ttl>`, then
-   the agents (`a orexis:Agent ; orexis:localId "…" ; orexis:actsFor …`), the subjects, their
-   [regions](/domain/sensing/region.md), the devices each agent `actuation:hasActuator`, the sensors
-   and the topics in MQTT4SSN's words, and the venues who hosts and bids in.
-2. **`state.ttl`** — `<> a orexis:StateGraph`, where things stand, for a world nothing senses.
-3. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or
+   the subjects, their [regions](/domain/sensing/region.md), the sensors, devices and systems, and
+   the venues. It speaks no MQTT4SSN. In a world with no bus, the one agent goes here too.
+2. **`society.ttl`**, for a world with a bus — `<> a orexis:SocietyGraph`, then the agents
+   (`a orexis:Agent , mqtt4ssn:Client ; orexis:localId "…" ; orexis:actsFor …`) with the devices
+   each `actuation:hasActuator` and the venues each hosts or bids in, the boards as clients and
+   what each `mqtt4ssn:hosts`, the one `mqtt4ssn:Broker` every client `mqtt4ssn:isConnectedToBroker`,
+   and the topics, their filters, and which sensor `mqtt4ssn:observesTopic` and which device
+   `mqtt4ssn:listensToTopic` each one.
+3. **`deployment.ttl`**, beside it — `<> a onboarding:DeploymentGraph`, then the broker's
+   `schema:url`s, `mqtt://` and `mqtts://`, one host. Onboarding reads it to run the broker and
+   to write each agent's environment; no agent loads it and no container mounts it.
+4. **`state.ttl`** — `<> a orexis:StateGraph`, where things stand, for a world nothing senses.
+5. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or
    `<> a planning:WantGraph` for a want that is met once; in a world of several agents, one
    document per agent under `beliefs/<id>.ttl`, since every desire a store holds is derived for.
-4. **`hardware.ttl`** — `<> a onboarding:HardwareGraph`, pins and boards, if there are any: read
+6. **`hardware.ttl`** — `<> a onboarding:HardwareGraph`, pins and boards, if there are any: read
    by `orexis-firmware`, and a kind no agent declares, so a boot passes over it and no container
    mounts it. A document of a kind no reader declares is refused by `orexis-onboard`.
 

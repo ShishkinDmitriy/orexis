@@ -36,10 +36,12 @@ into `world/<name>/secrets/` and mounted into one container.
 
 # What is built
 
-The kind and nothing that states it. `onboarding:DeploymentGraph` is declared in onboarding's
-vocabulary (`onboarding/ontology.ttl`), so an agent's boot passes over a graph of it and
-onboarding reads one beside the world; no world states one yet. The four worlds with a broker
-state its address in their world graph, where every agent loads it and none reads it, and the
-series store's address is in `infra/.env`. The kind is decided in
-[a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md); #823 and
-#827 write the graphs.
+A world's broker, and nothing of the installation yet. `onboarding:DeploymentGraph` is declared
+in onboarding's vocabulary (`onboarding/ontology.ttl`), so an agent's boot passes over a graph of
+it and onboarding reads one beside the world. Each of the four worlds with a broker states its
+`schema:url`s in a `deployment.ttl` of that kind, and `broker` in `onboarding/mqtt.py` reads them
+over the public graphs and the deployment together, the broker's type coming from the society;
+no agent booted from any of the four holds a url on its broker, which `tests/test_layout.py`
+asserts. The series store's address is still in `infra/.env`, and #827 writes the installation.
+The kind is decided in
+[a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md).
