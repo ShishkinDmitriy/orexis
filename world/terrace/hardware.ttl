@@ -54,11 +54,10 @@
 #  The ENVELOPE (#111) is what makes this file the terrace's rather than a copy of the
 #  windowsill's. Outdoors in Berlin, unheated and unshaded: a hard winter night reaches -20 °C
 #  and a summer afternoon on stone 40 °C; humidity runs from a dry frosty morning to
-#  saturation in fog and rain, and a sensor in a shield will still see 100 %RH. The shape
-#  holds every deployed sensor's stated MeasurementRange to CONTAIN this — which the BME280
-#  does (-40..85 °C, 0..100 %RH) and a DHT11 (0..50 °C, 20..90 %RH) does not. Type the air
-#  part dht11:Dht11 here and orexis-validate refuses this world, from the datasheet figures,
-#  before the first frost does.
+#  saturation in fog and rain, and a sensor in a shield will still see 100 %RH. Every deployed
+#  sensor's stated MeasurementRange should CONTAIN this — which the BME280 does (-40..85 °C,
+#  0..100 %RH) and a DHT11 (0..50 °C, 20..90 %RH) does not. Stated for whoever picks the part:
+#  nothing checks it since 0.1.0's shapes were retired, and hardware is untyped input now.
 :terrace_deployment a ssn:Deployment ;
     ssn:deployedOnPlatform :esp32_terrace ;
     ssn:deployedSystem :moisture_sensor_terrace , :air_sensor_terrace ;
@@ -130,7 +129,7 @@
 :w_probe_gnd a mc:Wire ; mc:joins :probe_gnd , :pin_gnd    ; mc:colour "black" .
 
 # SDA is bidirectional and SCL is driven, so neither may sit on 34-39 — 21 and 22 are the
-# ESP32's default I2C pair and both can drive. The wiring shape checks that, not this comment.
+# ESP32's default I2C pair and both can drive. Nothing checks that but this comment.
 :w_bme_sda a mc:Wire ; mc:joins :bme_sda , :pin_gpio21 ; mc:colour "blue" .
 :w_bme_scl a mc:Wire ; mc:joins :bme_scl , :pin_gpio22 ; mc:colour "yellow" .
 :w_bme_pwr a mc:Wire ; mc:joins :bme_vcc , :pin_3v3    ; mc:colour "red" .

@@ -28,9 +28,8 @@
 # `orexis:moisture_sensor_fern` is declared in world.ttl as a sensor and given its wiring here,
 # rather than being described twice.
 #
-# What this is FOR, beyond documentation: the shapes in kernel/shapes.ttl hold it to the
-# ESP32's actual rules, so `orexis-validate` refuses a pin that cannot work before anything is
-# soldered or flashed.
+# What this is FOR: `orexis-firmware` reads the pins and the parts to write the board's config.h.
+# Nothing checks a pin against the ESP32's rules since 0.1.0's shapes were retired.
 
 ##########  What runs the society  ##########
 
@@ -56,11 +55,8 @@
 
 ##########  The board at the edge  ##########
 
-# BOTH, spelled out rather than inferred. esp32:DevKitC is rdfs:subClassOf
-# mc:Microcontroller and RDFS would derive the second from the first — but the
-# shapes run with inference and the runtime does not (issue #27), so a query for
-# a Microcontroller found nothing and the firmware generator reported that this
-# world states no boards at all. Third time that gap has cost something.
+# BOTH, spelled out rather than inferred: hardware is untyped input, no ontology relates the
+# two classes, and the firmware generator finds a board by `mc:Microcontroller`.
 :esp32_fern a mc:Microcontroller , esp32:DevKitC ;
     orexis:localId "esp32_fern" ;
     mc:model "ESP32-WROOM-32D" ;
@@ -87,11 +83,9 @@
     prov:startedAtTime "2026-08-05T17:00:00Z"^^xsd:dateTime ;
     #  What this SITE does to an instrument (#111): the ambient envelope a deployment commits
     #  its systems to witnessing, in the same Condition idiom the plants and the parts already
-    #  speak. A Berlin windowsill, indoors: mild and heated. The shape holds every deployed
-    #  sensor's stated MeasurementRange to CONTAIN this envelope — which is exactly the check
-    #  the terrace question exposed as missing: a DHT11 (0..50 °C, 20..90 %RH) passes here and
-    #  would refuse an outdoor envelope, from its own datasheet figures, at orexis-validate
-    #  time instead of at the first frost.
+    #  speak. A Berlin windowsill, indoors: mild and heated. Every deployed sensor's stated
+    #  MeasurementRange should CONTAIN this envelope: a DHT11 (0..50 °C, 20..90 %RH)
+    #  fits here and would not outdoors. Stated for whoever picks the part; nothing checks it.
     ssn-system:inCondition
         [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:AirTemperature ;
           schema:minValue 15.0 ; schema:maxValue 32.0 ; schema:unitCode unit:DEG_C ] ,

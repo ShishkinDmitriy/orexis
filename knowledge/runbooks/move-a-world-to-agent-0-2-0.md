@@ -25,7 +25,7 @@ The terrace is the example; put another world's name and its agent's id in their
 
 ```bash
 cd ~/projects/orexis && git pull
-source .venv/bin/activate && pip install -e . $(ls -d packages/*/)
+source .venv/bin/activate && pip install -e ".[dev]"
 
 # 1. The image: `orexis-agent` is the 0.2.0 runtime now, and the image carries agent/ and domains/.
 podman build -t orexis:local .
@@ -43,8 +43,8 @@ orexis-compose terrace && git diff --exit-code world/terrace/compose.yaml   # th
 # 4. Stop the 0.1.0 agent, keep its belief base as a file, and give the 0.2.0 agent a fresh volume.
 cd world/terrace
 podman compose stop agent-terrace && podman compose rm -f agent-terrace
-podman volume export orexis-terrace-terrace > ~/orexis-terrace-0.1.0-beliefs.tar
-podman volume rm orexis-terrace-terrace
+podman volume export orexis-terrace_orexis-terrace-terrace > ~/orexis-terrace-0.1.0-beliefs.tar
+podman volume rm orexis-terrace_orexis-terrace-terrace   # compose prefixes the project's name
 
 # 5. Up, and watch it.
 podman compose up -d
@@ -62,5 +62,5 @@ it does not exit: a transport keeps it running.
 
 `podman compose logs agent-terrace` names the document a boot refused and why; a stray generated
 file beside the world is the usual cause. To go back, stop the agent, `podman volume import` the
-exported belief base into a fresh `orexis-terrace-terrace`, check out the 0.1.0 world's files and
+exported belief base into a fresh `orexis-terrace_orexis-terrace-terrace`, check out the 0.1.0 world's files and
 the last 0.1.0 image, and bring it up as before.
