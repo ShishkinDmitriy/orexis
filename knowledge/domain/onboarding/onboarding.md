@@ -24,6 +24,12 @@ since rotating one service's credentials should not touch another's.
 the `schema:url` on the world's `mqtt4ssn:Broker`, the topics in MQTT4SSN's words, the pins from
 the world's hardware graph, the credential `orexis-mqtt` minted.
 
+**One broker, one address.** The compose file and the config are each handed a single address, so
+a world stating a second `mqtt4ssn:Broker`, or one broker whose urls disagree on a host or on a
+scheme's port, is refused and named rather than merged (`broker` in `onboarding/mqtt.py`). How
+several would reach an agent is the first seam of
+[a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md).
+
 # Nothing here decides
 
 The ACL is the wiring: an agent reads the topics of every sensor hosted by what it acts for and
