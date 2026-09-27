@@ -1,9 +1,9 @@
 """The runtime of Agent 0.2.0: one process, one agent, one world — booted from the world's files
 and run, pass by pass, until nothing is left to pursue.
 
-**A WORLD IS A DIRECTORY OF DOCUMENTS, AND EACH SAYS WHAT IT IS.** `boot` reads every document
-the kernel ships — its T-Box (`agent/ontology.ttl`), every package's ontology and rule set — and
-every `.ttl` and `.trig` file in the world's directory, whatever it is called. A Turtle file is
+**A WORLD IS A DIRECTORY OF DOCUMENTS, AND EACH SAYS WHAT IT IS.** `boot` reads the kernel's
+T-Box (`agent/ontology.ttl`), the documents of the packages it loads, and every `.ttl` and `.trig`
+file in the world's directory, whatever it is called. A Turtle file is
 one graph named by its own IRI, and `<> a planning:DesireGraph` in it says what that graph is; a
 TriG file names its graphs and states their kinds in its default graph. `store.document` reads
 either, and `store.put_document` puts the graphs in and moves the rows about them into the
@@ -18,10 +18,23 @@ society graph, or the world graph of a world with no society, by the one identif
 process is told — then the world's other graphs, the agent's own, owned by it. The
 catalogue is closed and the Planner's `scope` writes the scopes.
 
+**A PACKAGE IS LOADED WHERE THE WORLD NEEDS IT (#824).** Belief, planning and execution are the
+mind and every agent has them. Every other package — sensing, prediction, speech, the MQTT
+transport — has its documents read and its modules imported only where its PREMISE holds: an
+ASK in `PREMISES`, read off the world's public graphs with `$me` the agent. So the boot reads
+the kernel, the mind and the world first, finds who the agent is, asks each premise, and only
+then reads the documents of the packages whose premise held — closing the vocabulary again, and
+taking a second look at any graph of the world passed over for a kind only such a package
+declares. A premise is stated here, in the words of whoever CALLS the package, and not in the
+package: speech's is in the transport's words and in execution's, the layer above it, whose words
+speech may not speak; and what a premise decides is an `import` this file makes. Hanoi's mover
+loads the mind and nothing else.
+
 **A VOLUME LIVED IN** — a store that already holds a catalogue — forgets every graph a document
 put in and nobody owns, and the closure, and reads the documents again: the kernel's, the
 packages' and the world's public ones are asserted and replaced at every boot, which is how an
-updated ontology reaches a running agent. The agent's own are left as they are, because they
+updated ontology reaches a running agent, and the premises are asked again, so a world that
+stops needing a package stops loading it. The agent's own are left as they are, because they
 are its beliefs from the first boot on (an-amendment-endows-what-it-grants).
 
 **A PASS PLANS, THEN WALKS WHAT IS DUE.** `Runtime.run` calls the planner's pass, which derives
@@ -65,14 +78,11 @@ from agent.execution.command import command
 from agent.execution.executor import Executor
 from agent.execution.implementation import COMMAND, SAYING, operations
 from agent.execution.says import says
-from agent.prediction.predict import predict
-from agent.sensing.missed import missed
-from agent.speech.said import said as believe_said
 from agent.series import Series
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, STATE, local_of
 from agent.planning.planner import Planner
-from agent.store import (catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of, kinds_in,
-                         put_document, revisions_of, rows, update)
+from agent.store import (answer, catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of,
+                         kinds_in, put_document, revisions_of, rows, update)
 
 log = logging.getLogger("runtime")
 
@@ -89,6 +99,43 @@ MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
 
 DOCUMENTS = (".ttl", ".trig")
 BELIEFS = "beliefs"
+
+#  THE MIND: belief, planning and execution, which every agent has, since the container builds the
+#  mind whatever the world (a-layer-is-a-package-and-need-loads-it). A package is named by its
+#  directory under `agent/`, which is what rule 2 says a package is.
+MIND = ("belief", "planning", "execution")
+SENSING, PREDICTION, SPEECH, MQTT = "sensing", "prediction", "speech", "transport/mqtt"
+
+#  A SENSOR OF THE AGENT'S: hosted by what it acts for, or by a sample of it — the one relation
+#  sensing's callers read a sensor as the agent's by (the MQTT driver's `open` and `handle`).
+_MINE = "$me orexis:actsFor ?subject . ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?subject ."
+
+#  EVERY OTHER PACKAGE, AND WHAT IN THE WORLD MAKES THE AGENT NEED IT: an ASK over the world's
+#  public graphs, `$me` the agent, which is each package's callers' reads answered in advance.
+#  - SENSING, where a sensor is the agent's: `received` is called for such a sensor's message and
+#    `missed` asks after its readings, and nothing else writes the observations its rules read;
+#  - PREDICTION, where a sensor is the agent's AND a drift is declared: `predict` is asked of a
+#    sensor that has just reported, and moves a reading only by a drift — the record's table said a
+#    drift alone, and a market agent in a world importing climate would have loaded it for nothing;
+#  - SPEECH, where the agent listens to a topic — a peer's document arrives there for `heard` — or
+#    an action holds an `execution:Saying`, whose documents `said` believes when a step is taken.
+#    Speech reads nothing of the world itself, so its premise is its callers' and in their words;
+#  - THE MQTT TRANSPORT, where the agent listens to a topic or a sensor of its publishes on one —
+#    `_transport_of` as it was, narrowed from any sensor in the world to the agent's own, which is
+#    what the member subscribes to. Where the agent commands an actuator and neither holds, no
+#    member is loaded: which actuators are the agent's is a domain's word, and no world has one.
+#  Every word here is a T-Box term and the world's things are variables, so a premise names no
+#  instance (rule 1); a new package under `agent/` loads nowhere until it is listed here or in
+#  MIND, which `agent/tests/test_premises.py` holds the tree to.
+PREMISES = {
+    SENSING: f"ASK {{ {_MINE} }}",
+    PREDICTION: f"ASK {{ {_MINE} ?drift a prediction:Drift }}",
+    SPEECH: """ASK { { $me mqtt4ssn:listensToTopic ?topic }
+                     UNION { ?action execution:implementation/execution:operation ?op . ?op a execution:Saying } }""",
+    MQTT: f"""ASK {{ {{ $me mqtt4ssn:listensToTopic ?topic }}
+                     UNION {{ {_MINE} ?sensor mqtt4ssn:observesTopic ?topic }} }}""",
+}
+EVERY = (*MIND, *PREMISES)
 
 #  WHO THIS PROCESS IS: the AGENT with the id it was told. The id alone is not enough — the
 #  sensing world's fern and the agent acting for it share one — so the kind is asked too. Asked
@@ -107,20 +154,32 @@ INSERT {{ GRAPH <{closure}> {{ ?a rdfs:subClassOf ?c }} }}
 WHERE  {{ ?a rdfs:subClassOf+ ?c FILTER(isIRI(?a) && isIRI(?c) && ?a != ?c) }}"""
 
 
-def documents(world: Path, agent_id: str | None = None) -> list[Path]:
-    """What a boot reads: the kernel's T-Box first, then every package's documents, then every
-    document in the world's directory, then the agent's own under `beliefs/`, named for its id.
-    Found by looking, never listed, and never a test's.
+def documents(world: Path, agent_id: str | None = None, packages=EVERY) -> list[Path]:
+    """What a boot reads: the kernel's T-Box first, then the documents of `packages` — every
+    package by default, which is what the operator's tools read — then every document in the
+    world's directory, then the agent's own under `beliefs/`, named for its id. Found by looking,
+    never listed, and never a test's.
 
     AN AGENT'S OWN FILE IS ITS OWN AND NOBODY ELSE'S. A world of several agents states each one's
     desires apart, because the derivation mints a want under every desire a store holds: read by
     all of them, a bidder's desire would stand in its host's store as well."""
-    kernel = KERNEL / "ontology.ttl"
-    packages = sorted(p for p in KERNEL.rglob("*") if p.suffix in DOCUMENTS and p != kernel
-                      and "tests" not in p.relative_to(KERNEL).parts)
     own = sorted(p for p in Path(world).iterdir() if p.is_file() and p.suffix in DOCUMENTS)
     mine = sorted(p for p in (Path(world) / BELIEFS).glob(f"{agent_id}.*") if p.suffix in DOCUMENTS) if agent_id else []
-    return [kernel, *packages, *own, *mine]
+    return [KERNEL / "ontology.ttl", *_documents_of(packages), *own, *mine]
+
+
+def _documents_of(packages) -> list[Path]:
+    """Every document in the directories of `packages`, their tests' cases apart."""
+    return [p for package in packages for p in sorted((KERNEL / package).rglob("*"))
+            if p.suffix in DOCUMENTS and "tests" not in p.relative_to(KERNEL / package).parts]
+
+
+def packages_of(store: ox.Store, me: str) -> tuple[str, ...]:
+    """Every package the agent `me` loads, read off the world `store` holds: the mind, and each
+    whose premise holds over the world's public graphs, in `PREMISES`' order."""
+    public = graphs_of(store, PUBLIC)
+    return (*MIND, *(package for package, premise in PREMISES.items()
+                     if answer(store, premise, public, me=me)["boolean"]))
 
 
 def known(store: ox.Store, kinds) -> bool:
@@ -167,7 +226,7 @@ def _close_vocabulary(store: ox.Store) -> None:
 
 
 def _put_public(store: ox.Store, world: Path, agent_id: str | None = None) -> list[tuple[ox.Store, str]]:
-    """Read every document and put in the vocabulary, closed, and every public graph; answer the
+    """Read the documents and put in the vocabulary, closed, and every public graph; answer the
     world's other graphs — the agent's own — as (document, graph), for the caller to put or not.
 
     THE VOCABULARY FIRST, since whether a graph is public is the vocabulary's to say — and so is
@@ -175,36 +234,63 @@ def _put_public(store: ox.Store, world: Path, agent_id: str | None = None) -> li
     a document of a kind another reader reads, onboarding's hardware, is not this agent's to hold,
     and what keeps it out is that nothing it loads says what the kind is
     (a-documents-kind-says-who-reads-it). A misspelled kind is passed over the same way, which is
-    why onboarding, knowing every reader's vocabulary, refuses a world that holds one."""
-    read = read_with_imports(documents(world, agent_id))
+    why onboarding, knowing every reader's vocabulary, refuses a world that holds one.
+
+    THE MIND FIRST, AND A PACKAGE WHERE ITS PREMISE HOLDS. For an agent, the kernel, the mind and
+    the world go in first, and the premises are asked of what that put in — the world's public
+    graphs, which are the kernel's and the mind's kinds, so no premise waits on the package it
+    decides. The documents of the packages whose premise held go in next, and a world graph passed
+    over for a kind only such a package declares is looked at again. With no agent, every package
+    is read at once: the operator's tools read every reader's vocabulary."""
+    read = read_with_imports(documents(world, agent_id, MIND if agent_id else EVERY))
+    own, passed = _put(store, world, read, [])
+    if agent_id:
+        close_catalogue(store)          # the rows say every kind they are beneath, so a premise reads the public graphs
+        loaded = packages_of(store, _identity(store, agent_id))
+        seen = {path for path, _ in read}
+        more = [(path, doc) for path, doc in read_with_imports(_documents_of(p for p in loaded if p not in MIND))
+                if path not in seen]
+        if more:
+            also, passed = _put(store, world, more, passed)
+            own += also
+        log.info("%s loads %s", agent_id, ", ".join(loaded))
+    for _path, _doc, graph, kinds in passed:
+        log.info("passed over %s: %s is no kind this agent reads", graph, ", ".join(sorted(kinds)))
+    return own
+
+
+def _put(store: ox.Store, world: Path, read, passed) -> tuple[list, list]:
+    """Put the vocabulary `read` holds and close it, then every public graph of `read`, and of
+    what was `passed` over before, whose kind the vocabulary now declares. The agent's own graphs
+    as (document, graph), and what is passed over still as (path, document, graph, kinds)."""
     vocabulary = {path for path, doc in read if any(ONTOLOGY in k for k in kinds_in(doc).values())}
     for path, doc in read:
         if path in vocabulary:
             put_document(store, doc)
     _close_vocabulary(store)
-    public, own = [], []
-    for path, doc in read:
-        if path in vocabulary:
+    candidates = [(path, doc, graph, kinds) for path, doc in read if path not in vocabulary
+                  for graph, kinds in kinds_in(doc).items()]
+    public, own, still = [], [], []
+    for path, doc, graph, kinds in [*passed, *candidates]:
+        if not known(store, kinds):
+            still.append((path, doc, graph, kinds))
             continue
-        for graph, kinds in kinds_in(doc).items():
-            if not known(store, kinds):
-                log.info("passed over %s: %s is no kind this agent reads", graph, ", ".join(sorted(kinds)))
-                continue
-            beneath = {k for kind in kinds for k in closed(store, kind)}
-            if world not in path.parents or PUBLIC in beneath:
-                public.append((doc, graph))
-            else:
-                own.append((doc, graph))
+        beneath = {k for kind in kinds for k in closed(store, kind)}
+        if world not in path.parents or PUBLIC in beneath:
+            public.append((doc, graph))
+        else:
+            own.append((doc, graph))
     for doc, graph in public:
         put_document(store, doc, graphs={graph})
-    return own
+    return own, still
 
 
 def world_of(world: Path) -> ox.Store:
     """What a world says publicly, read as a boot reads it and closed, with no agent in it — what
     the simulator reads, and what the operator's tools read before the kinds they read and no
     agent does: its agents, its devices, its topics — and never where its broker listens, which
-    is a deployment graph, a kind only onboarding reads."""
+    is a deployment graph, a kind only onboarding reads. With no agent there is no premise to
+    ask, so every package's documents are read: this is every reader's world, not one agent's."""
     store = ox.Store()
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
     _put_public(store, Path(world).resolve())
@@ -259,6 +345,8 @@ class Runtime:
         self.beliefs, self.id = beliefs, agent_id
         self.series = series
         self.me = _identity(beliefs, agent_id)
+        self.packages = packages_of(beliefs, self.me)
+        self._missed, self._predict, self._said = _imported(self.packages)
         self.inbox: queue.SimpleQueue = queue.SimpleQueue()
         self.transport = transport if transport is not None else (
             connect.connect(self.me, self.deliver) if connect is not None else None)
@@ -309,9 +397,9 @@ class Runtime:
             return []
         self._revise(written, now)
         predicted = [graph for sensor in dict.fromkeys(sensors)
-                     for graph in predict(self.beliefs, self.me, sensor, now=now)]
+                     for graph in self._predict(self.beliefs, self.me, sensor, now=now)] if self._predict else []
         self._revise(predicted, now)
-        for sensor in missed(self.beliefs, self.me, now):
+        for sensor in (self._missed(self.beliefs, self.me, now) if self._missed else []):
             self.transport.sense_now(self.beliefs, sensor)
         return written + predicted
 
@@ -341,7 +429,7 @@ class Runtime:
                 self.transport.actuate(self.beliefs, actuator, payload)
             written = []
             for agents, doc in says(self.beliefs, said, self.me, order=order):
-                written += believe_said(self.beliefs, self.me, doc)
+                written += self._said(self.beliefs, self.me, doc)      # a Saying is speech's premise
                 payload = doc.dump(format=ox.RdfFormat.TRIG)
                 for agent in agents:
                     self.transport.tell(self.beliefs, agent, payload)
@@ -405,14 +493,30 @@ class Runtime:
         return taken
 
 
+def _imported(packages):
+    """What the runtime calls of a package beyond the mind — sensing's `missed`, prediction's
+    `predict`, speech's `said` — imported here, where the package is loaded, and None where it is
+    not. The only place the runtime imports them, so a world whose premise does not hold never
+    loads their modules; the layout tests see these imports as they see any other."""
+    missed = predict = said = None
+    if SENSING in packages:
+        from agent.sensing.missed import missed
+    if PREDICTION in packages:
+        from agent.prediction.predict import predict
+    if SPEECH in packages:
+        from agent.speech.said import said
+    return missed, predict, said
+
+
 def _transport_of(beliefs: ox.Store, me: str):
-    """The transport member the world says the agent's sensors are reached through, or its peers
-    tell it things on, or None for a world where neither is so. MQTT is the one member that
-    ships; its library is imported by its own `connect`, so such a world never loads it."""
+    """The transport member the agent is loaded with, or None where no member's premise holds —
+    and then the member's module is never imported. MQTT is the one member that ships; its
+    library is imported by its own `connect`, so even a world that loads it is not handed paho
+    until it connects."""
+    if MQTT not in packages_of(beliefs, me):
+        return None
     from agent.transport.mqtt.driver import Mqtt
-    sensors = rows(beliefs, "SELECT ?s WHERE { ?s a sosa:Sensor }", graphs_of(beliefs, PUBLIC))
-    listens = rows(beliefs, "SELECT ?t WHERE { $me mqtt4ssn:listensToTopic ?t }", graphs_of(beliefs, PUBLIC), me=me)
-    return Mqtt if listens or any(Mqtt.claims(beliefs, r["s"]) for r in sensors) else None
+    return Mqtt
 
 
 def main(argv: list[str] | None = None) -> int:

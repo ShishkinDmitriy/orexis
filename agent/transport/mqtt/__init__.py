@@ -17,7 +17,7 @@ topics' filters are its subscriptions. The world never says "the agent polls thi
 the family's `Transport` contract, kept at `agent/transport/` so that sensing knows no transport:
 `connect` brings it up from the environment — the broker's address, the agent's credential and
 its certificate in this transport's own variables, paho imported there and nowhere else in the
-agent — `claims` says whether a sensor is reached this way, `open` subscribes what the world
+agent — `open` subscribes what the world
 implies, and `handle` is the listener, a message's topic and bytes at an instant becoming one call
 of sensing's `received` per sensor of the agent's whose filter matches; `received` reads the codec,
 the pointer and the scaling off the sensor's own binding, so the transport knows no codec. The

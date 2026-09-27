@@ -606,8 +606,13 @@ it is a record wearing a bullet.
 - **A world's words are its own or a domain's it imports, and the runtime boots from its files** — Hanoi's puzzle was a
   tool package with an ontology and one action; in 0.2.0 the puzzle is the domain
   `domains/hanoi/` and `world/hanoi/` imports it beside its desires and state, `agent/runtime.py` reads the kernel's
-  T-Box, every package's and the world's as graphs of their own and derives the closure into
+  T-Box, the loaded packages' and the world's as graphs of their own and derives the closure into
   one more, and the world's tests live with the world, since the target state is no global tests.
+- **A package beyond the mind is loaded where its premise, read off the world, holds, and the
+  runtime states the premise** — Hanoi's mover read sensing's three rules and imported speech for
+  no fact of its world; a premise is an ASK in the words of whoever calls the package, since
+  speech's is in the transport's words and execution's, which speech may not speak, and it reads
+  only the kernel's and the mind's kinds, since it is asked before the package it decides is read (#824).
 - **The runtime stops when no desire is held, no transport reaches it and every want is reached** —
   a transport keeps an agent running whatever it wants, since what it senses goes on arriving and
   the terrace watches and pursues nothing; a desire is universal

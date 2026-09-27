@@ -42,8 +42,9 @@ just as quietly, so `orexis-onboard` refuses a world holding a graph no reader d
 A **society graph** holds the principals and how they reach one another, in MQTT4SSN's words —
 every one of them a world with a bus states, since its world graph speaks none. The agents read it
 and so does the simulator, which plays the devices on their topics; `orexis-mqtt` derives the ACL
-from it. It is the kernel's kind: the boot finds who the agent is there, and a package loaded by a
-premise (#824) would be read off it before that package is. A broker is named here only as what
+from it. It is the kernel's kind: the boot finds who the agent is there, and reads off it — and
+off the world graph — the premises that decide which [packages](/domain/kernel/package.md) the
+agent loads, before any of them is. A broker is named here only as what
 clients are connected to. Where it listens is a [deployment](/domain/onboarding/deployment.md)
 graph, onboarding's kind, which the agent's T-Box cannot name, so no agent's boot holds its address
 and no container mounts the document. A world may assert it there, and a world that does not is

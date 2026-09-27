@@ -44,8 +44,6 @@ from datetime import datetime
 
 from agent import clock
 from agent.ontology import PUBLIC, local_of
-from agent.sensing.received import received
-from agent.speech.heard import heard
 from agent.store import graphs_of, rows
 from agent.transport.transport import Transport
 
@@ -134,12 +132,6 @@ class Mqtt(Transport):
         log.info("%s on %s:%s%s", local_of(me), host, port, " with a certificate" if ca and cert and key else "")
         return cls(me, client)
 
-    @classmethod
-    def claims(cls, store, sensor: str) -> bool:
-        """A sensor that publishes on a topic speaks MQTT, whether or not a filter names it yet."""
-        return bool(rows(store, "SELECT ?topic WHERE { $sensor mqtt4ssn:observesTopic ?topic }",
-                         graphs_of(store, PUBLIC), sensor=sensor))
-
     def set_cadence(self, store, sensor: str, sleep_s: int) -> bool:
         topic = self._command_topic(store, sensor)
         if topic is None:
@@ -192,20 +184,26 @@ class Mqtt(Transport):
         speech's `heard`, each graph answered with no sensor; otherwise to sensing — for every
         sensor of the agent's whose topic's filter matches `topic`, the observation `received`
         writes of `payload` at `at`. The sensor and the graph written, first sensor first, and
-        none where the topic is nobody's of the agent's."""
+        none where the topic is nobody's of the agent's.
+
+        EACH CALLBACK IS IMPORTED WHERE A MESSAGE IS FOR IT. A message on the agent's own topic
+        comes only where speech's premise holds, and one for a sensor of its only where sensing's
+        does, so an agent that only listens never loads sensing and one that only senses never
+        loads speech (#824)."""
         if any(matches(r["pattern"], topic) for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=self.me)):
+            from agent.speech.heard import heard
             return [(None, graph) for graph in heard(store, self.me, payload)]
-        written, seen = [], set()
-        for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me):
-            sensor = r["sensor"]
-            if sensor in seen or not matches(r["pattern"], topic):
-                continue
-            seen.add(sensor)
+        mine = list(dict.fromkeys(r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me)
+                                  if matches(r["pattern"], topic)))
+        if not mine:
+            log.debug("%s: a message on %s is nobody's of mine", local_of(self.me), topic)
+            return []
+        from agent.sensing.received import received
+        written = []
+        for sensor in mine:
             graph = received(store, self.me, sensor, payload, at, memo=memo)
             if graph:
                 written.append((sensor, graph))
-        if not seen:
-            log.debug("%s: a message on %s is nobody's of mine", local_of(self.me), topic)
         return written
 
     def publish(self, topic: str, payload: dict, retain: bool) -> None:

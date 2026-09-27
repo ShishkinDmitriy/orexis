@@ -14,7 +14,7 @@ The runtime is what a container runs: `python -m agent.runtime world/<name> <age
 process told one identifier and given one world. It has two acts.
 
 **`boot` reads documents, and each says what graph it is.** The kernel's T-Box
-(`agent/ontology.ttl`), every package's ontology and rule set, and every `.ttl` and `.trig` file
+(`agent/ontology.ttl`), the ontologies and rule sets of the packages the agent loads, and every `.ttl` and `.trig` file
 in the world's directory, whatever it is called, are read the same way. A Turtle file is one graph
 named by its own IRI, and `<> a planning:DesireGraph` in it says what that graph is — the Linked
 Data reading, where a document describes itself. A TriG file names its graphs and states their
@@ -35,7 +35,11 @@ is every kind it is beneath. A graph whose kind that closure does not put beneat
 is passed over, neither its quads nor its row read in: a kind says who reads a document, and one
 the agent's vocabulary does not declare is another reader's, such as the hardware
 [onboarding](/domain/onboarding/onboarding.md) reads. Then the world's public graphs, then the agent's identity, read off
-`orexis:localId` in the society graph, or in the world graph of a world with no society, then the world's other graphs — the desires with their
+`orexis:localId` in the society graph, or in the world graph of a world with no society. That is
+the first half, read with the mind's documents alone; the premises are asked of it, and the
+documents of each [package](/domain/kernel/package.md) whose premise held go in after, the
+closure taken again and any world graph passed over for a kind only such a package declares
+looked at a second time. Hanoi's mover loads the mind and nothing else. Then the world's other graphs — the desires with their
 met-tests and estimates, the first state — owned by the agent. The catalogue is closed and
 `scope_actions` writes the scopes. A store that already holds a catalogue is a volume the agent
 has lived in: every graph a document put in and nobody owns is forgotten and read again, with the
@@ -58,13 +62,16 @@ one of two things, told apart by the plan's `planning:outcome`: a search the bud
 `planning:Exhausted`, which the next pass continues, or nothing this agent holds reaching the
 want, which such an agent exits as unreachable rather than looping on.
 
-**A sensed world runs through its transport.** Where the world says a sensor is reached over a
-[transport](/domain/transport/transport.md), the runtime brings the member up from the environment and
+**A sensed world runs through its transport.** Where the member's premise holds — the agent
+listens to a topic, or a sensor of its publishes on one — the
+[transport](/domain/transport/transport.md) is imported and the runtime brings the member up from the environment and
 hands it `deliver`: a message arrives on the member's thread and is queued, and each pass drains
 the queue on the one executing thread — [sensing](/domain/sensing/sensing.md) writes the observation,
 the [deliberator](/domain/belief/deliberator.md) runs the rules that conclude its side, the
 [prediction](/domain/prediction/prediction.md) package writes the stretches ahead and the rules conclude
-theirs, and a reading fallen due is asked for again. A step whose action's implementation
+theirs, and a reading fallen due is asked for again — each of those three only where its package
+was loaded, the runtime importing sensing's `missed`, prediction's `predict` and speech's `said`
+when it is built and not before. A step whose action's implementation
 holds an `execution:Command` is taken by sending what the command answers, sized from the present, through
 the transport's `actuate`; the [greenhouse](/domain/kernel/domain.md)'s pump and heater are taken so.
 
