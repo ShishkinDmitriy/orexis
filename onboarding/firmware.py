@@ -8,7 +8,8 @@ already written down somewhere else. The broker's port is the `schema:url` on th
 `mqtt4ssn:Broker`; the ids and topics are the world's, in MQTT4SSN's words; the pins and the
 calibration are the hardware's; the credential was minted by `orexis-mqtt`; a sentinel's heartbeat
 is its sensor's stated `ssn-system:Frequency`. The world is read as an Agent 0.2.0 boot reads it
-(`agent.runtime.world_of`). Keeping a second copy in a C header is the
+and then its hardware graph, a kind no agent reads (`onboarding.reading.world`). Keeping a second
+copy in a C header is the
 same second list this project refuses everywhere else — and it is the expensive kind, because
 correcting it means physically retrieving a board.
 
@@ -37,8 +38,9 @@ import argparse
 import logging
 from pathlib import Path
 
-from agent.runtime import world_of
 from agent.store import graphs_of, rows as _rows_of
+from . import reading
+from .reading import HARDWARE
 from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
 from .mqtt import broker
@@ -60,11 +62,13 @@ SLEEP_BOUNDS_S = (10, 900)
 
 
 def _world(world: str):
-    return world_of(world_dir(world))
+    return reading.world(world_dir(world))
 
 
 def _rows(store, text: str) -> list[dict]:
-    return _rows_of(store, text, graphs_of(store, PUBLIC))
+    """Over the world's public graphs and its hardware at once — a board's pins join the topics
+    its sensors publish on, and the hardware is the one kind here no agent reads."""
+    return _rows_of(store, text, graphs_of(store, PUBLIC, HARDWARE))
 
 
 

@@ -31,7 +31,10 @@ once each, so a world brings the [domains](/domain/kernel/domain.md) it speaks a
 actions and shapes. The vocabulary goes first, since whether a graph is public is the vocabulary's to say: every
 document that says it is an ontology graph, each a graph of its own, then the closure over
 `rdfs:subClassOf` across all of them, written into one graph the runtime derives, so that a kind
-is every kind it is beneath. Then the world's public graphs, then the agent's identity, read off
+is every kind it is beneath. A graph whose kind that closure does not put beneath `orexis:Graph`
+is passed over, neither its quads nor its row read in: a kind says who reads a document, and one
+the agent's vocabulary does not declare is another reader's, such as the hardware
+[onboarding](/domain/onboarding/onboarding.md) reads. Then the world's public graphs, then the agent's identity, read off
 `orexis:localId` in the world graph, then the world's other graphs — the desires with their
 met-tests and estimates, the first state — owned by the agent. The catalogue is closed and
 `scope_actions` writes the scopes. A store that already holds a catalogue is a volume the agent

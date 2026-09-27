@@ -3,7 +3,8 @@
 A world is a directory under `world/` holding the documents it is written in. The tools are handed
 a world's name and refuse rather than guess: there is no default world, because a fallback puts a
 misconfigured agent on the same topics as the real one. What a world SAYS is read as an agent boots
-it (`agent.runtime.world_of`); this module only says where it is.
+it and then in the kinds only onboarding reads (`onboarding.reading.world`); this module only says
+where it is.
 """
 
 from __future__ import annotations

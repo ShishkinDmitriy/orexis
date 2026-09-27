@@ -17,19 +17,23 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix esp32: <http://example.org/orexis/esp32#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
 
-<> a orexis:PublicGraph .    # this document is one graph, and this is what it is
+<> a onboarding:HardwareGraph .    # this document is one graph, and this is what it is
 
 # The hardware this world runs on: what is physically here and how it is wired.
 #
 # Separate from the society beside it because they change for different reasons and are read by
 # different people. A plant is added by editing the society; a probe is moved to another pin by
-# editing this. Both are loaded into the one world graph, so every query sees them together —
-# `orexis:moisture_sensor_fern` is declared in world.ttl as a sensor and given its wiring here,
-# rather than being described twice.
+# editing this. Onboarding reads the world as an agent does and then this, so every query it
+# asks sees them together — `:moisture_sensor_fern` is declared in world.ttl as a sensor and
+# given its wiring here, rather than being described twice.
 #
 # What this is FOR: `orexis-firmware` reads the pins and the parts to write the board's config.h.
-# Nothing checks a pin against the ESP32's rules since 0.1.0's shapes were retired.
+# Its kind is onboarding's, which no agent's vocabulary declares, so no agent holds it: a boot
+# passes over it and `orexis-compose` does not mount it. The graph has a kind; the classes of the
+# parts inside it are declared by no vocabulary, and nothing checks a pin against the ESP32's
+# rules since 0.1.0's shapes were retired.
 
 ##########  What runs the society  ##########
 

@@ -15,12 +15,14 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix esp32: <http://example.org/orexis/esp32#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
 
-<> a orexis:PublicGraph .    # this document is one graph, and this is what it is
+<> a onboarding:HardwareGraph .    # this document is one graph, and this is what it is
 
 # The hardware the terrace runs on: what is physically there and how it is wired. Separate
 # from the society beside it because it changes for different reasons and is read by different
-# people, and because an agent is never given this file (agent/genesis.py, HARDWARE_FILES).
+# people. Its kind is onboarding's, which no agent's vocabulary declares, so an agent's boot
+# passes over it and `orexis-compose` does not mount it; `orexis-firmware` reads it on the host.
 # See world/sensing/hardware.ttl for the long form of every convention used here.
 
 ##########  What runs the society  ##########

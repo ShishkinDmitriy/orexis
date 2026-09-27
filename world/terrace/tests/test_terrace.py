@@ -8,6 +8,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pyoxigraph as ox
+
 from agent import clock
 from agent.ontology import OREXIS, STATE
 from agent.runtime import UNFINISHED, Runtime, boot
@@ -38,6 +40,17 @@ def _terrace(monkeypatch):
     series = Series("terrace-terrace", lambda bucket, record: broker.points.extend(record))
     broker.points = []
     return Runtime(boot(WORLD, "terrace"), "terrace", transport=Mqtt(AGENT, broker), series=series), broker
+
+
+def test_booted_from_its_directory_the_agent_holds_no_hardware():
+    """The hardware is onboarding's kind, which the agent's T-Box does not declare, so a boot from
+    the world's directory passes over it: not one of its quads, and no row saying it exists. A
+    container used to be spared only because the file was left unmounted by its name (#820)."""
+    store = boot(WORLD, "terrace")
+    hardware = (WORLD / "hardware.ttl").resolve().as_uri()
+    held = sum(1 for _ in store.quads_for_pattern(None, None, None, ox.NamedNode(hardware)))
+    rowed = sum(1 for _ in store.quads_for_pattern(ox.NamedNode(hardware), None, None))
+    assert (held, rowed) == (0, 0), f"the terrace agent holds {held} hardware quads and {rowed} rows about the graph"
 
 
 def test_the_agent_listens_on_the_boards_one_topic(monkeypatch):

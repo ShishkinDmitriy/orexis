@@ -13,8 +13,9 @@ description: >-
 
 A **revision** is a belief derived from beliefs: *this reading is Below*, *this pot is dry*,
 *this observation is a kind of sample*, concluded by a rule from what a graph says beside what
-stands. The rules are SHACL 1.2 Inference Rules' and nothing of ours is added: a graph in the
-role of a rules graph is typed `sh:RulesGraph`; a package ships its rules as a `sh:RuleSet`,
+stands. The rules are SHACL 1.2 Inference Rules' and no word of ours is added: a graph in the
+role of a rules graph is typed `sh:RulesGraph`, which the belief package puts beneath
+`orexis:Graph` so that a boot reads it as a kind it knows; a package ships its rules as a `sh:RuleSet`,
 an IRI with `sh:hasRule` and `sh:includesRuleSet`; a rule is a `sh:SPARQLRule` with one
 `sh:construct`, placed by `sh:layer` and `sh:order`, taken out by `sh:deactivated`, run once
 by `sh:runOnce`. An [action](/domain/kernel/action.md) carries a construct too and is no rule: an

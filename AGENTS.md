@@ -555,7 +555,8 @@ it is a record wearing a bullet.
   rewritten** — SHACL 1.2 Inference Rules and the sovereign's instinct agree; the revisions
   of a graph live in a graph of their own, derived from it, and go when it goes, so no rule
   ever names what it takes away; the rules are the draft's, adopted as they stand — a rules
-  graph, a rule set, SPARQL rules by layer and order — with nothing of ours on them
+  graph, a rule set, SPARQL rules by layer and order — with no word of ours on them, and one
+  axiom: that a rules graph is an `orexis:Graph`, which is how a boot knows to read one
   (`agent/belief/revise.py`).
 - **Any belief is accepted, and revised; validation was built beside revision and struck the
   same day** — every new graph held to the packages' shapes and forgotten whole on a
@@ -628,7 +629,10 @@ it is a record wearing a bullet.
 - **A document's kind says who reads it, and every reader loads only the kinds it reads** — the
   agent's boot included, so what an agent is not given is a kind its T-Box never declared, not a
   file name compose leaves unmounted; packages, brokers, series stores and the deployment itself
-  follow from it (a-documents-kind-says-who-reads-it).
+  follow from it (a-documents-kind-says-who-reads-it). A kind is declared where the vocabulary
+  puts it beneath `orexis:Graph` — the belief package says it of `sh:RulesGraph`, without which
+  every rule set was passed over — and `orexis-onboard` refuses a graph no reader declares, since
+  every reader passes over a misspelled kind in silence.
 - **A pass weighs its grounds, and a candidate is weighed where it is taken** — the pass's own
   loop weighed every unweighed pair, so the candidates a budget cut left untaken were weighed
   and never offered to the expansion that takes them; the courier's corner at sixteen a pass
@@ -829,9 +833,10 @@ it is a record wearing a bullet.
   counted pulled a courier goal into the puzzle's scope.
 - **Hardware is the firmware generator's input, and no vocabulary types it** — `hardware.ttl`'s
   pins, parts and boards are read by `orexis-firmware` alone, which interpolates their IRIs into a
-  `config.h`, and no agent should hold them — a container is kept from the file by its name
-  alone, and an agent booted from the directory holds it as public until the graph has a kind
-  of onboarding's (#820); bringing the parts back as a domain was weighed and
+  `config.h`, and no agent holds them — the graph is an `onboarding:HardwareGraph`, a kind no
+  agent's T-Box declares, so a boot passes over it and compose mounts it nowhere, where a
+  directory boot once held 116 and 147 of its quads as public (#820); the parts inside stay
+  untyped, and bringing them back as a domain was weighed and
   refused, since a vocabulary one string-filling reader uses checks nothing, and the firmware
   ontologies nothing loaded were deleted with the `config.h` they fed unchanged byte for byte.
 - **A dictionary that nothing holds to the code rots in the present tense** — 38 of 88 pages

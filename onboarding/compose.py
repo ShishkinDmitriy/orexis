@@ -3,8 +3,8 @@
   orexis-compose greenhouse     -> world/greenhouse/compose.yaml
 
 A world is self-contained: its documents and the compose file that runs them live in one
-directory. The roster is not typed here and not typed by you: it is read from the world as an
-agent boots it (`agent.runtime.world_of`), so adding an agent to the world and regenerating is the
+directory. The roster is not typed here and not typed by you: it is read from the world as
+onboarding reads it (`onboarding.reading.world`), so adding an agent to the world and regenerating is the
 whole of deploying one — derived, never hand-maintained, because a second list is a second thing
 to drift.
 
@@ -33,8 +33,9 @@ import argparse
 import logging
 from pathlib import Path
 
-from agent.runtime import world_of
-from agent.store import graphs_of, rows
+from agent.runtime import known, world_of
+from agent.store import document, graphs_of, kinds_in, rows
+from . import reading
 from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
 
@@ -54,18 +55,29 @@ SELECT DISTINCT ?id WHERE {
           <https://www.w3id.org/MQTT4SSN-Ontology#hosts> ?system .
   ?system <http://example.org/orexis/sim#simulatedBy> ?model } ORDER BY ?id"""
 
-#  WHAT A WORLD IS MOUNTED AS: its documents, file by file — never its secrets, and never its
-#  wiring. An agent is not handed the hardware: only the sovereign loads both, and what keeps the
-#  wiring out of an agent is that the file is not in its filesystem. `orexis-firmware` reads it, on
-#  the host.
+#  WHAT A WORLD IS MOUNTED AS: its documents, file by file, each because an agent reads its kind —
+#  never its secrets, and never a document of a kind no agent's vocabulary declares, which is the
+#  hardware `orexis-firmware` reads on the host. The boot would pass over such a document anyway;
+#  not mounting it keeps it out of the container's filesystem as well, and it is the kind that
+#  decides, never the file's name (a-documents-kind-says-who-reads-it).
 DOCUMENTS = (".ttl", ".trig")
-HARDWARE_FILES = ("hardware.ttl",)
 
 
 def roster(world: str) -> list[str]:
     """Every agent the world states, by id."""
-    store = world_of(world_dir(world))
+    store = reading.world(world_dir(world))
     return [r["id"] for r in rows(store, _ROSTER_Q, graphs_of(store, PUBLIC))]
+
+
+def read_by_an_agent(world: str) -> set[Path]:
+    """Every document in the world's directory and under `beliefs/` holding a graph of a kind an
+    agent reads — asked of the agent's own vocabulary as its boot has it, and not of onboarding's,
+    whose kinds are exactly the ones an agent is not to be handed."""
+    here = world_dir(world).resolve()
+    store = world_of(here)
+    candidates = [*here.iterdir(), *((here / "beliefs").iterdir() if (here / "beliefs").is_dir() else [])]
+    return {p for p in candidates if p.is_file() and p.suffix in DOCUMENTS
+            and any(known(store, kinds) for kinds in kinds_in(document(p)).values())}
 
 
 def agent_ids(world: str) -> list[str]:
@@ -75,7 +87,7 @@ def agent_ids(world: str) -> list[str]:
 def simulated_client(world: str) -> str | None:
     """The client the world's simulator connects as, or None where nothing is simulated. One
     simulator plays every simulated system, so they must share one client."""
-    store = world_of(world_dir(world))
+    store = reading.world(world_dir(world))
     found = [r["id"] for r in rows(store, _SIMULATED_Q, graphs_of(store, PUBLIC))]
     if len(found) > 1:
         raise SystemExit(f"orexis-compose: {world!r} hosts simulated systems on {found}; one simulator plays "
@@ -83,7 +95,7 @@ def simulated_client(world: str) -> str | None:
     return found[0] if found else None
 
 
-def _simulator(world: str, client: str, host: str, plain: int) -> str:
+def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) -> str:
     return f"""
   simulation:
     image: {IMAGE}
@@ -97,25 +109,24 @@ def _simulator(world: str, client: str, host: str, plain: int) -> str:
     network_mode: host
     userns_mode: "keep-id:uid=10001,gid=10001"
     restart: unless-stopped
-    volumes:{_documents(world)}
+    volumes:{_documents(world, read)}
       - ../../agent:/app/agent:ro
       - ../../domains:/app/domains:ro
       - ../../simulation:/app/simulation:ro
 """
 
 
-def _documents(world: str, agent_id: str | None = None) -> str:
-    """The world's documents, file by file, and an agent's own beliefs file where it has one —
-    never another agent's."""
-    here = world_dir(world)
-    files = [p for p in sorted(here.iterdir())
-             if p.is_file() and p.suffix in DOCUMENTS and p.name not in HARDWARE_FILES]
+def _documents(world: str, read: set[Path], agent_id: str | None = None) -> str:
+    """The world's documents an agent reads, file by file, and an agent's own beliefs file where
+    it has one — never another agent's."""
+    here = world_dir(world).resolve()
+    files = [p for p in sorted(here.iterdir()) if p in read]
     if agent_id is not None:
-        files += [p for p in sorted((here / "beliefs").glob(f"{agent_id}.*")) if p.suffix in DOCUMENTS]
+        files += [p for p in sorted((here / "beliefs").glob(f"{agent_id}.*")) if p in read]
     return "".join(f"\n      - ./{p.relative_to(here)}:/app/world/{world}/{p.relative_to(here)}:ro" for p in files)
 
 
-def _service(agent_id: str, world: str, host: str, plain: int, tls: int | None) -> str:
+def _service(agent_id: str, world: str, read: set[Path], host: str, plain: int, tls: int | None) -> str:
     tls_env = f'\n      MQTT_TLS_PORT: "{tls}"' if tls else ""
     return f"""
   agent-{agent_id}:
@@ -143,7 +154,7 @@ def _service(agent_id: str, world: str, host: str, plain: int, tls: int | None) 
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-{world}-{agent_id}:/app/state
-      # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world, agent_id)}
+      # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world, read, agent_id)}
       - ./secrets/{agent_id}.crt:/app/secrets/agent.crt:ro
       - ./secrets/{agent_id}.key:/app/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
@@ -196,8 +207,9 @@ def render(world: str) -> str:
         raise SystemExit(f"orexis-compose: world {world!r} declares no agents")
     host, plain, tls = broker(world)
     client = simulated_client(world)
-    services = _broker(world, plain, tls) + (_simulator(world, client, host, plain) if client else "") + "".join(
-        _service(a, world, host, plain, tls) for a in who)
+    read = read_by_an_agent(world)
+    services = _broker(world, plain, tls) + (_simulator(world, read, client, host, plain) if client else "") + "".join(
+        _service(a, world, read, host, plain, tls) for a in who)
     volumes = f"  orexis-{world}-mosquitto:\n" + "".join(f"  orexis-{world}-{a}:\n" for a in who)
     return f"""# GENERATED by `orexis-compose {world}` from the world beside it — do not edit.
 #

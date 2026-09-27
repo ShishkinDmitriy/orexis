@@ -21,8 +21,9 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
 3. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or
    `<> a planning:WantGraph` for a want that is met once; in a world of several agents, one
    document per agent under `beliefs/<id>.ttl`, since every desire a store holds is derived for.
-4. **`hardware.ttl`** — pins and boards, if there are any: read by `orexis-firmware`, never
-   mounted into an agent.
+4. **`hardware.ttl`** — `<> a onboarding:HardwareGraph`, pins and boards, if there are any: read
+   by `orexis-firmware`, and a kind no agent declares, so a boot passes over it and no container
+   mounts it. A document of a kind no reader declares is refused by `orexis-onboard`.
 
 State ranges, values and lots — picks. Never state a step, a dose or a price paid: those are
 the agents' to find.
