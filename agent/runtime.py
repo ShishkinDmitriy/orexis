@@ -65,11 +65,14 @@ an observation as it writes it, and execution a step taken and how it ended, bec
 the thing it says. The runtime once handed the sink each observation graph, and so decided what
 history was — observations only (a-documents-kind-says-who-reads-it, §5).
 
-**HOW THE AGENT IS DOING IS MOSTLY THE PACKAGES' TO SAY TOO** (§6). After every pass, where a
-metrics store is named, the runtime writes what every metric select the loaded packages ship
-answers over the store it names (`agent/metrics.py`) — it holds the stores, so it hands them over,
-and it lists no metric — and three figures of its own, measured `pass`: how long the pass took, how
-many quads the belief base holds, how long the process has run.
+**HOW THE AGENT IS DOING IS EACH PACKAGE'S TO SAY, AND THE ADMINS' TO READ** (`agent/metrics.py`).
+Where a metrics sink is loaded, a package tallies its events as its acts happen, and once a window
+— real time, sixty seconds unless the environment says — the runtime samples every gauge of what it
+loads, each over the store its package reads: the belief base for belief and sensing, the
+imaginaria for planning (through the Planner), the intentions store for execution. It holds the
+stores, so it hands them over; what each figure IS is the package's `metrics.py`. Its own are
+below: the pass, the store's size, the process's uptime, and a want nothing reaches. The last
+window is written as the process stops.
 """
 
 from __future__ import annotations
@@ -77,6 +80,7 @@ from __future__ import annotations
 import argparse
 import logging
 import queue
+import signal
 import sys
 import time
 from pathlib import Path
@@ -85,13 +89,15 @@ from urllib.parse import unquote, urlparse
 import pyoxigraph as ox
 
 from agent import clock
+from agent.belief import metrics as belief_metrics
 from agent.belief.deliberator import Deliberator
+from agent.execution import metrics as execution_metrics
 from agent.execution.command import command
 from agent.execution.executor import Executor
 from agent.execution.implementation import COMMAND, SAYING, operations
-from agent.execution.ontology import EXECUTION
 from agent.execution.says import says
 from agent import metrics, series
+from agent.metrics import Event, Gauge
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, STATE, local_of
 from agent.planning.planner import Planner
 from agent.store import (answer, catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of,
@@ -110,20 +116,18 @@ GRAPH = OREXIS + "Graph"
 
 MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
 
-#  THE STORES A METRIC IS RUN OVER, by the repository class it names (`orexis:over`): the runtime
-#  holds all three, so it is the one that hands them over. Planning's word is spelled, since the
-#  Planner is all that planning exports.
-BELIEF_BASE = OREXIS + "BeliefBase"
-IMAGINARIUM = "http://example.org/orexis/planning#Imaginarium"
-INTENTIONS_STORE = EXECUTION + "IntentionsStore"
-#  THE RUNTIME'S OWN FIGURES are measured `pass`, and they are the only ones it has.
-PASS = "pass"
-PASS_FIELDS = ("duration_s", "quads", "uptime_s")
-#  AND WHAT ITS PASS'S PARTS TOOK, a measurement of its own since the parts one pass reaches are not
-#  every pass's: the transport's queue handed to sensing, revision, prediction, planning, walking.
-PHASES = "phases"
-PHASE_FIELDS = ("sense_s", "revise_s", "predict_s", "plan_s", "execute_s")
+#  WHAT THE RUNTIME REPORTS OF ITSELF — its metrics, as a package's `metrics.py` holds a package's.
+#  A PASS, in real seconds, whole and by part: the transport's queue handed to sensing, revision,
+#  prediction, planning, walking. A part a pass does not reach is not in its tally; the planner's
+#  own parts are its event.
+PASS = Event("pass", values=("duration_s", "sense_s", "revise_s", "predict_s", "plan_s", "execute_s"))
+#  A WANT NOTHING THIS AGENT HOLDS REACHES — standing, walked by nothing, no search cut short — the
+#  runtime's own judgement, by the desire it came from. Which want is the log's to say.
+UNREACHED = Event("unreachable", tags=("desire",))
+#  HOW LARGE THE BELIEF BASE IS, in quads, and HOW LONG THE PROCESS HAS RUN, in real seconds.
 _STARTED = time.perf_counter()
+STORE = Gauge("store", read=lambda stores: {"quads": sum(len(s) for s in stores)})
+PROCESS = Gauge("process", read=lambda stores: {"uptime_s": round(time.perf_counter() - _STARTED, 3)}, unit="s")
 
 DOCUMENTS = (".ttl", ".trig")
 BELIEFS = "beliefs"
@@ -373,7 +377,7 @@ class Runtime:
         self.beliefs, self.id = beliefs, agent_id
         self.me = _identity(beliefs, agent_id)
         self.packages = packages_of(beliefs, self.me)
-        self._missed, self._predict, self._said = _imported(self.packages)
+        self._missed, self._predict, self._said, self._sensing_metrics = _imported(self.packages)
         self.inbox: queue.SimpleQueue = queue.SimpleQueue()
         self._laps: metrics.Laps | None = None          # the parts of the pass in progress, where timed
         self.transport = transport if transport is not None else (
@@ -480,13 +484,12 @@ class Runtime:
         while passes is None or n < passes:
             n += 1
             now = clock.now()
-            #  THE PASS'S INSTANT, which every event of the pass is stamped from, and its parts'
-            #  real seconds, kept where a metrics sink is loaded — by `perf_counter`, never the clock.
-            metrics.begin(now)
+            #  THE PASS'S PARTS, in real seconds, kept where a metrics sink is loaded — by
+            #  `perf_counter`, never the clock.
             self._laps = metrics.Laps() if metrics.recording() else None
             started = time.perf_counter()
             outcome, wait = self._pass(now, n)
-            self._measure(now, time.perf_counter() - started)
+            self._passed(time.perf_counter() - started)
             if outcome is not None:
                 return outcome
             if wait:
@@ -522,33 +525,37 @@ class Runtime:
             #  cut short — so the runtime says it, per want and by the desire it came from.
             if metrics.recording():
                 for want in standing:
-                    metrics.event(UNREACHABLE, {"want": local_of(want)}, desire=self.planner.desire_of(want))
+                    UNREACHED(desire=self.planner.desire_of(want))
             return (None, True) if lasting else (UNREACHABLE, False)
         moved = self._walk(now)
         self._lap("execute")
         return None, not moved
 
-    def _measure(self, now, took: float) -> None:
-        """The pass's metrics, where a metrics store is named: every select the loaded packages
-        ship, each run over the stores of the repository it names (`agent/metrics.py`), and the
-        runtime's own three — how long the pass took, how many quads the belief base holds and how
-        long the process has run, in real seconds, since they are what the process spent and not
-        the world's time. Nothing is built where no store is named."""
-        to = series.sink(series.METRICS)
-        if to is None:
+    def _passed(self, took: float) -> None:
+        """Tally the pass, where a metrics sink is loaded, and write the window where it is over."""
+        if self._laps is None:
             return
-        points = metrics.measure(self.beliefs, self.repositories(), now)
-        own = dict(zip(PASS_FIELDS, (round(took, 6), len(self.beliefs), round(time.perf_counter() - _STARTED, 3))))
-        points.append(metrics.point(PASS, own, now))
-        if self._laps is not None and self._laps.spent:
-            points.append(metrics.point(PHASES, self._laps.spent, now))
-        to.write(points)
+        PASS({"duration_s": round(took, 6), **self._laps.spent})
+        if metrics.due():
+            self.report()
 
-    def repositories(self) -> dict[str, list[ox.Store]]:
-        """The stores this agent holds, by the repository class a metric is run `orexis:over`: its
-        belief base, the Planner's imaginaria — one per scope — and the executor's intentions."""
-        return {BELIEF_BASE: [self.beliefs], IMAGINARIUM: list(self.planner.imaginaria.values()),
-                INTENTIONS_STORE: [self.executor.intentions]}
+    def report(self) -> list[dict]:
+        """Write the metrics window now: every gauge sampled once, over the store its package reads,
+        beside the events tallied since the last — the end of a window, and the process's last.
+        The points written; none where no metrics sink is loaded, and then nothing is read."""
+        if not metrics.recording():
+            return []
+        return metrics.flush(self.gauges())
+
+    def gauges(self) -> list:
+        """Every gauge of what this agent loads, each sampled over the store its package reads —
+        said here, since the runtime holds them all: the runtime's own and belief's and sensing's
+        over the belief base, planning's over its imaginaria, execution's over the intentions."""
+        return [*metrics.sample(__name__, [self.beliefs]),
+                *belief_metrics.gauges(self.beliefs),
+                *(self._sensing_metrics.gauges(self.beliefs) if self._sensing_metrics else ()),
+                *self.planner.gauges(),
+                *execution_metrics.gauges(self.executor.intentions)]
 
 
     def _walk(self, now) -> int:
@@ -568,18 +575,20 @@ class Runtime:
 
 
 def _imported(packages):
-    """What the runtime calls of a package beyond the mind — sensing's `missed`, prediction's
-    `predict`, speech's `said` — imported here, where the package is loaded, and None where it is
-    not. The only place the runtime imports them, so a world whose premise does not hold never
-    loads their modules; the layout tests see these imports as they see any other."""
-    missed = predict = said = None
+    """What the runtime calls of a package beyond the mind — sensing's `missed` and its metrics,
+    prediction's `predict`, speech's `said` — imported here, where the package is loaded, and None
+    where it is not. The only place the runtime imports them, so a world whose premise does not hold
+    never loads their modules, nor reports their metrics; the layout tests see these imports as they
+    see any other."""
+    missed = predict = said = sensing_metrics = None
     if SENSING in packages:
+        from agent.sensing import metrics as sensing_metrics
         from agent.sensing.missed import missed
     if PREDICTION in packages:
         from agent.prediction.predict import predict
     if SPEECH in packages:
         from agent.speech.said import said
-    return missed, predict, said
+    return missed, predict, said, sensing_metrics
 
 
 def _transport_of(beliefs: ox.Store, me: str):
@@ -610,16 +619,31 @@ def main(argv: list[str] | None = None) -> int:
     store = ox.Store(str(args.volume)) if args.volume else None
     beliefs = boot(args.world, args.agent, store)
     #  A SINK PER PURPOSE THE ENVIRONMENT NAMES A STORE FOR: the packages that decide what happened
-    #  contribute history, and a pass's metrics are written where a pass ends (`Runtime._measure`).
+    #  contribute history and tally their metrics, and a window of metrics is written where one ends
+    #  (`Runtime.report`), as long as the environment says.
     told = series.load()
+    window = metrics.load()
     log.info("%s writes %s", args.agent, ", ".join(p.lower() for p in told) + " to a series store" if told else "no series")
+    if metrics.recording():
+        log.info("%s writes its metrics every %gs", args.agent, window)
     #  WHO SPEAKS, on every metric point: the agent's id, which the process is told, and the name of
     #  the world's directory, which it is handed — the name its buckets, its compose project and its
     #  dashboards' folder go by. Neither is an instance the code names: both arrive as arguments.
     metrics.identify(world=world_name(args.world), agent=args.agent)
-    outcome = Runtime(beliefs, args.agent, budget=args.budget,
-                      connect=_transport_of(beliefs, _identity(beliefs, args.agent))).run(passes=args.passes)
+    runtime = Runtime(beliefs, args.agent, budget=args.budget,
+                      connect=_transport_of(beliefs, _identity(beliefs, args.agent)))
+    #  A STOP IS AN EXIT, so the last window is written: `podman stop` sends SIGTERM, whose default
+    #  ends the process where it stands and would lose up to a window of metrics.
+    signal.signal(signal.SIGTERM, _stopped)
+    try:
+        outcome = runtime.run(passes=args.passes)
+    finally:
+        runtime.report()
     return {MET: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
+
+
+def _stopped(signum, frame) -> None:
+    raise SystemExit(128 + signum)
 
 
 if __name__ == "__main__":

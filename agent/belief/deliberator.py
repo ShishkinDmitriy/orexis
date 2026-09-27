@@ -31,6 +31,7 @@ from agent import clock, metrics
 from agent.ontology import KNOWN
 from agent.store import Raw, catalogue_of, graphs_of, rows
 
+from .metrics import REVISE
 from .ontology import SETTLED
 from .revise import BUDGET as PER_SOURCE, revise
 
@@ -95,8 +96,8 @@ class Deliberator:
         #  WHAT THE PASS SPENT, where a metrics sink is loaded: the sources it was handed, the rule
         #  executions, how many were left cut short for the next pass, and the real seconds.
         if started is not None:
-            metrics.event("revise", {"sources": revised, "executions": spent, "cut": len(self.queue),
-                                     "duration_s": round(time.perf_counter() - started, 6)})
+            REVISE({"sources": revised, "executions": spent, "cut": len(self.queue),
+                    "duration_s": round(time.perf_counter() - started, 6)})
         return spent
 
     def _unsettled(self) -> list[str]:

@@ -9,3 +9,7 @@
 #  flash the board's port into its config.h; the kind is onboarding's, so an agent's boot passes
 #  over it and no container is handed it.
 :broker schema:url "mqtt://localhost:1888" , "mqtts://localhost:8888" .
+
+#  AND THE TERRACE IS MONITORED: its agent writes its metrics to a bucket of its own, and the world
+#  gets a health dashboard. Opted into; a world saying nothing writes none.
+<> onboarding:monitored true .

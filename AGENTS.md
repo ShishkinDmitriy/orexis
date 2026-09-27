@@ -719,19 +719,17 @@ it is a record wearing a bullet.
   not, landed or failed (#825). A contributor asks for the sink rather than being handed one, since
   sensing's caller is the transport, which has no business carrying history. A store that refuses
   is said in the log and costs the agent nothing.
-- **A metric is a select over rows its package writes anyway, and says which store it counts in**
-  — each package's `metrics.ttl` is an `orexis:MetricGraph`, neither public nor a belief, found by
-  that kind at the end of every pass and loaded only where its package is; `orexis:over` names the
-  belief base, the imaginaria or the intentions store, because the imaginaria copy the beliefs and a
-  select run everywhere counted one silent probe per scope; and the answers are summed across a
-  repository's stores, so a figure is a count (#826).
-- **What happened and how long it took is an event, contributed and never a row** — no select can
-  answer how long a search ran and no plan branches on it, so the code doing the work calls
-  `metrics.event` as history's contributors do, having asked `metrics.recording()`, and declares it
-  in its package's `metrics.ttl`; compute time is `perf_counter`, an event is stamped from the pass's
-  instant and reads no clock, since a test's clock ticks per read; every point is tagged `world` and
-  `agent`, an event about a want `desire`, and the want's own name is a field, since per-instance tag
-  values break the store's index (#826).
+- **Metrics are the admins' instrumentation, so they are code and not model** — each package keeps
+  everything it reports in one `metrics.py`, its gauges and its events, and the runtime its own; a
+  document declaring them was ceremony nobody but the dashboards read, and adding a metric is
+  editing one module. A gauge still says which store it reads, since the imaginaria copy the
+  beliefs and a select run everywhere counted one silent probe per scope (#826, amended).
+- **A metric is optional at every level and aggregated where it happens** — no sink, nothing is
+  timed or read; a world is monitored only where its deployment says `onboarding:monitored`, and an
+  installation may serve metrics from no store; events are tallied in memory and written once a
+  minute of REAL time with every gauge sampled once, stamped by the wall and never by the agent's
+  clock, which a test ticks per read; `world`, `agent` and `desire` are tags, and a want's name is on
+  no point, since it neither aggregates nor stays few.
 - **A process is the AGENT with the id it was told, never whatever carries that id** — the sensing
   world's fern and the agent acting for it are both `localId "fern"`, and the runtime's identity
   read found two and refused to boot; it asks for an `orexis:Agent` now.
@@ -1060,10 +1058,10 @@ pip install -e ".[dev]"
 orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, derive what the documents
                              #   leave out (a broker's port, into infra/installation.derived.ttl),
                              #   then grant everything below.
-  orexis-influx <world>      #   a history and a metrics bucket per agent, each with a token that opens only it
+  orexis-influx <world>      #   a history bucket per agent, a metrics one where the world is monitored, each with a token that opens only it
   orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
-  orexis-dashboards <world>  #   a Grafana folder per world: what its agents observe, and each one's health
+  orexis-dashboards <world>  #   a Grafana folder per world: what its agents observe, and their health where monitored
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 orexis-infra-compose         # INFRA — infra/compose.yaml, from infra/installation.ttl
@@ -1227,7 +1225,7 @@ hand-rolled walk was once refused for exactly that reason. See
   `SUM(IF(?o = "failed", 1, 0))` over a row whose `?o` is unbound binds nothing for the WHOLE
   column, not nought for the row — coalesce first — while an `EXISTS` inside a projected aggregate
   is evaluated against the default graph, not the `GRAPH` block the rows came from; both measured
-  on a metric select (#826), and the greenhouse's test pins them. It is the
+  on a gauge's select (#826), and the greenhouse's test pins them. It is the
   same family as the empty-result trap above, arriving through arithmetic and aggregation: measure an unfamiliar operation on a
   literal before building a column on it, and pin what you measured, so the day the engine grows
   the operation the guard says so.

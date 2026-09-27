@@ -1,7 +1,7 @@
 """orexis-influx — give each agent a bucket of its own per purpose, and a token that opens only it.
 
-  orexis-influx society        -> per agent in world/society, a history bucket and a metrics bucket,
-                                  and a token scoped to each
+  orexis-influx society        -> per agent in world/society, a history bucket, a metrics bucket where
+                                  the world is monitored, and a token scoped to each
 
 The operator's half of the series store; `agent/series.py`, the sink, is the agent's half. They
 are separate modules because they are separate privileges: a sink holds one token for one
@@ -20,11 +20,16 @@ on purpose.
 
 **Metrics are a bucket of their own, `<world>-<agent>-metrics`**, and not a measurement in the
 history bucket. Three things differ, each by the bucket: how long a point is kept — history is the
-record and keeps everything, while metrics come every pass, about once a second for an agent with
-nothing to do, and the installation lets them go after `onboarding:retentionDays`; what the agent
-may do there — it reads its own past and never its metrics, so the metrics token writes and nothing
-else; and the measurement names, which are a property's local name in history and a metric's in
-metrics, and could not collide once they were in two buckets.
+record and keeps everything, while metrics are the admins' figures, read over hours and days, and
+the installation lets them go after `onboarding:retentionDays`; what the agent may do there — it
+reads its own past and never its metrics, so the metrics token writes and nothing else; and the
+measurement names, which are a property's local name in history and a metric's in metrics, and
+could not collide once they were in two buckets.
+
+**Metrics are minted only where the world is monitored** (`installation.purposes`): its own
+deployment graph says `onboarding:monitored true`. A world that stops saying it has its agents'
+metrics grants revoked and their credential files removed on the next run, since a grant nobody is
+told of is a grant nobody holds on purpose; the bucket is left for its retention to empty.
 
 **Why per agent.** Before this, one bucket and one admin token were handed to every container,
 so `fern` could not read `tomato`'s beliefs but could read its entire moisture history — the
@@ -136,13 +141,41 @@ ACTIONS = {HISTORY: ("read", "write"), METRICS: ("write",)}
 
 
 def provision(world: str, rotate: bool = False) -> None:
-    """Bring the store into line with the world: for every purpose, a bucket and a scoped token per
-    agent, in the series store the installation says serves it (`infra/installation.ttl`)."""
+    """Bring the store into line with the world: for every purpose its agents are told of, a bucket
+    and a scoped token per agent, in the series store the installation says serves it
+    (`infra/installation.ttl`); and for a purpose they are not told of, no grant left standing."""
     agents = compose.agent_ids(world)
     if not agents:
         raise SystemExit(f"orexis-influx: world {world!r} declares no agents")
+    told = installation.purposes(world)
     for purpose in PURPOSES:
-        _provision(world, agents, purpose, rotate)
+        if purpose in told:
+            _provision(world, agents, purpose, rotate)
+        else:
+            _withdraw(world, agents, purpose)
+
+
+def _withdraw(world: str, agents: list[str], purpose: str) -> None:
+    """No grant for `purpose` to any of `agents`: each credential file removed, and each token revoked
+    in the store serving the purpose, where one does. The buckets stay, for their retention to empty."""
+    for agent_id in agents:
+        path = credential_file(world, agent_id, purpose)
+        if path.exists():
+            path.unlink()
+            log.info("  %s credential of agent-%s removed — the world is told of no %s store",
+                     purpose.lower(), agent_id, purpose.lower())
+    if (where := installation.served(purpose)) is None:
+        return
+    url, org = where
+    with InfluxDBClient(url=url, token=_admin_token(), org=org) as client:
+        auth_api = client.authorizations_api()
+        existing = {a.description: a for a in auth_api.find_authorizations() or [] if a.description}
+        for agent_id in agents:
+            held = existing.get(f"orexis {world}/{agent_id} {purpose.lower()}")
+            if held:
+                auth_api.delete_authorization(held)
+                log.info("  bucket %-32s grant revoked — the world is not %s", bucket_name(world, agent_id, purpose),
+                         "monitored" if purpose == METRICS else f"told of {purpose.lower()}")
 
 
 def _provision(world: str, agents: list[str], purpose: str, rotate: bool) -> None:

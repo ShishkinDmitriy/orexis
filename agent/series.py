@@ -7,7 +7,7 @@ plan. It has two purposes — HISTORY, what happened, and METRICS, how the agent
 agent is told of a store for each apart, in environment keyed by the purpose:
 `INFLUX_HISTORY_URL`, `INFLUX_HISTORY_ORG`, `INFLUX_HISTORY_BUCKET`, `INFLUX_HISTORY_TOKEN`, and
 the same four under `INFLUX_METRICS_`. Two purposes may name one instance, by coincidence and not
-by design; they name two buckets of it, one a record kept for good and the other a pass's figures.
+by design; they name two buckets of it, one a record kept for good and the other the admins' figures.
 
 A SINK IS LOADED WHERE THE ENVIRONMENT NAMES A STORE FOR ITS PURPOSE. `load` is the premise, read
 off the environment rather than the world because a store is deployment; the runtime's `main`
@@ -18,10 +18,9 @@ THE PACKAGE THAT DECIDES A THING CONTRIBUTES IT (a-documents-kind-says-who-reads
 writes an observation and contributes its point; execution records an act and a landing verdict
 and contributes theirs. Each asks `sink(HISTORY)` and writes where one is loaded, and what a
 point is — its measurement, its tags, its fields, its instant — is the contributing package's.
-Metrics come the same way from the one place a pass ends: the runtime asks `sink(METRICS)` after
-each pass, and writes the figures every loaded package's selects answer (`agent/metrics.py`) beside
-its own three — how long the pass took, how large the store is, how long the process has run.
-This module sits beneath them all and imports nothing of theirs, nor anything of `agent`: a point
+Metrics go through `agent/metrics.py`, which asks `sink(METRICS)` for the window it writes once a
+minute — each package's gauges and tallied events, and the runtime's own. This module sits
+beneath them all and imports nothing of theirs, nor anything of `agent`: a point
 is the client's own dict, handed through.
 
 WHY A SINK IS FOUND HERE AND NOT HANDED DOWN. Sensing's `received` is called by the transport's

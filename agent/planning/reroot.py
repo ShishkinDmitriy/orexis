@@ -42,8 +42,9 @@ from __future__ import annotations
 
 import logging
 
-from agent import metrics
 from agent.store import Raw, bind, catalogue_of, clear_graph, rows, update
+
+from .metrics import REROOT
 
 log = logging.getLogger("reroot")
 
@@ -159,7 +160,7 @@ def reroot(store, ground: str) -> str | None:
     #  last pass's grounds repeated, the old present where nothing happened; a child the last pass
     #  imagined, where a step landed as predicted; or a surprise, the one a pass names — with what
     #  was kept and dropped. Once per scope per pass.
-    metrics.event("reroot", {"kept": len(kept), "dropped": len(gone)},
-                  present="first" if match is None and not gone else "surprise" if match is None
-                  else "child" if landed else "ground")
+    REROOT({"kept": len(kept), "dropped": len(gone)},
+           present="first" if match is None and not gone else "surprise" if match is None
+           else "child" if landed else "ground")
     return match

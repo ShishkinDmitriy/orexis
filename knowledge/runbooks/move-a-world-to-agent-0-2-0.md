@@ -39,7 +39,7 @@ podman build -t orexis:local .
 
 # 2. What 0.1.0 generated and 0.2.0 refuses or no longer draws.
 rm world/terrace/keys.ttl                               # a 0.2.0 boot refuses a document stating no kind
-rm -f infra/grafana/dashboards/terrace/health.json      # 0.1.0's; `orexis-dashboards` writes 0.2.0's from its metrics (#826)
+rm -f infra/grafana/dashboards/terrace/health.json      # 0.1.0's; `orexis-dashboards` writes 0.2.0's where the world is monitored
 
 # 3. The broker's ACL and passwords, from the world's MQTT4SSN words; reloads the running broker.
 orexis-mqtt terrace

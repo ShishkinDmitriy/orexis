@@ -7,8 +7,9 @@ description: >-
   and passes over the rest, the agent's boot included, so need-to-know is structural rather than a
   list of file names kept out. Seven consequences follow from the one idea - packages loaded by a
   premise read off the world, a transport connection per broker, a series store per purpose,
-  history contributed by the package that decides each thing, metrics as each package's selects,
-  and the shared services stated in an installation document. Supersedes metrics-are-an-aspect.
+  history contributed by the package that decides each thing, metrics as each package's selects -
+  amended since to each package's code, opted into per world and written once a minute - and the
+  shared services stated in an installation document. Supersedes metrics-are-an-aspect.
 status: accepted
 timestamp: 2026-09-27T12:00:00Z
 ---
@@ -172,6 +173,9 @@ counts as history, which is a decision it does not own, and it decided observati
 
 ## 6. Metrics come back as each package's selects
 
+*Superseded by the last amendment below, "metrics are code each package owns": the selects stay
+and the documents holding them go.*
+
 0.2.0's health is mostly rows already: a plan's `planning:Exhausted`, the weighings a pass wrote,
 an intention whose `execution:outcome` is failed, `sensing:silentSince`, a revision whose
 `belief:settled` is false. A package ships its metric selects in its own documents, in a kind of
@@ -312,6 +316,9 @@ in the amendment below.
 
 ## Amended 2026-09-27: which store a metric is run over, and where metrics are kept (#826)
 
+*The graph kind and `orexis:over` below are superseded by the last amendment; which store a gauge
+reads, the bucket of its own and `onboarding:serves` stand.*
+
 §6 is built as written — a package's `metrics.ttl` is an `orexis:MetricGraph`, beneath
 `orexis:Graph` alone, found by that kind each pass, loaded where its package is — and the
 [series](/domain/kernel/series.md) page lists what ships. Four things it left open were settled on
@@ -350,6 +357,9 @@ handed empty, so it counted no met weighing on a greenhouse imaginarium holding 
 OPTIONAL rows inside the catalogue instead. The greenhouse's own test holds both, and fails on each.
 
 ## Amended 2026-09-27: gauges are selects, events are contributions (#826)
+
+*The declarations, the stamp and the per-event point below are superseded by the last amendment;
+what an event is, who contributes it, `perf_counter` and the tags stand.*
 
 §6 answered what state the stores are in. The sovereign asked as well for what happened and how
 long it took — how long a search ran, how many passes a want waited, how late a dose landed — and
@@ -398,6 +408,71 @@ world's hash; a band comparison would be new logic, not telemetry.
 nowhere against none: about 2 to 5 ms on a pass of 50 to 75 ms, most of it the gauges' selects, with
 the events under a millisecond — per search and per pass, never per weighing, which the hanoi test
 holds by counting.
+
+## Amended 2026-09-27: metrics are code each package owns, optional, and a point a minute (#826)
+
+The sovereign's, after #844 merged. **Metrics are the admins' instrumentation of the agent — code
+watching code, not a description of anything — so they are relaxed out of the model.** This
+supersedes §6 and the two amendments above wherever they make a metric a document; history (§5,
+#825) is untouched.
+
+**Refused: metric declarations as documents.** Each package's `metrics.ttl` — an
+`orexis:MetricGraph` of `orexis:Metric` selects run `orexis:over` a repository class, and of
+`orexis:Event`s with their `orexis:field`s — was loaded, closed and catalogued by every boot, three
+classes (`orexis:BeliefBase`, `planning:Imaginarium`, `execution:IntentionsStore`) existed only to
+be `orexis:over`'s objects, and a figure lived in two places, the declaration and the code writing
+it, held together by a test that parsed the tree for `metrics.event` calls. No plan reads any of
+it, which is the test for what an agent believes
+([model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)),
+and the one reader the documents had was the dashboards. **Refused with it: metrics as a telemetry
+store of rows** that selects would count — the same figures, moved into the model instead of out.
+Every term above is gone, and the files.
+
+**What stands: one module per package.** A `metrics.py` in the package's directory holds everything the package
+reports — its gauges, each a select over a store it owns, and its events, called from its acts —
+and the runtime's own are in `agent/runtime.py`; adding a metric is editing that module. The
+dashboards learn what exists by importing the modules, since onboarding may import the agent and
+never the reverse. A package's module is imported where the package is loaded (#824). **A gauge
+still says which store it reads** — the lesson §6's amendment paid for: the imaginaria copy the
+beliefs' readings, so each package's `gauges` takes the store it reads and the runtime, holding
+them all, hands each over. The selects are the ones §6's amendment measured, in their fixed form:
+the outcome coalesced, the cone counted by OPTIONAL rows.
+
+**Optional at every level.** An agent with no metrics sink computes nothing. A world is monitored
+only where its own deployment graph says `<> onboarding:monitored true` — one statement, said of
+the graph itself, since a world states no node for itself (the argument the tags made against a
+world IRI); an unmonitored world's agents get no metrics bucket or credential, no environment for
+it, and no health dashboard, and a world that stops saying it has its grants revoked. An
+installation may serve metrics from no store, and then monitors no world; a world asking there is
+refused by `purposes`, which every onboarding tool asks, before anything is granted. The
+greenhouse and the terrace say it.
+
+**Aggregated in memory, written once a minute.** An event is tallied per measurement and tag set —
+a count, each value's sum, mean and max, each flag's count — and a window writes one point per
+tally, with every gauge sampled once, so the gauges' selects cost about 2 ms a minute rather than
+a pass. The window is REAL time on a monotonic clock, the stamp the wall's at the flush, and a stop
+writes the last window: the agent's clock runs fast in a simulation and ticks per read in a test,
+and an admin's minute is neither. So the stamp #844 built — the pass's instant in the agent's
+timeline, moved on by real seconds at the clock's pace — goes, and with it the reason for it, two
+events of one pass being two points: a window is one point per tag set by construction. Metrics now
+live in real time while history lives in the agent's; a simulated world's metrics are drawn when
+its process ran. The window's length is the installation's `onboarding:intervalSeconds`, told to
+each agent as `METRICS_INTERVAL_S`, sixty where nothing says.
+
+**The want's name is on no point.** A name cannot be aggregated, and a tag of it breaks the store's
+index. The sovereign allowed it on a rare event, `unreachable` for one; it is not rare — an agent
+holding a desire judges the same want unreachable every pass for as long as it stands — so it is
+dropped there too, and the log names the want as before. `world`, `agent` and `desire` stand.
+
+**The dashboard is a row per package**, the runtime's first and then each package some agent of the
+world loads, with the agent a variable choosing whose bucket every panel reads; the terrace's test
+holds every field the agent writes to exactly one panel.
+
+**What it costs**, alternated within one session on the Pi, three sessions, a greenhouse grower with
+a sink writing nowhere against none: an idle pass moved by +0.3 to +0.8 ms at its fastest and by
++0.5, +1.7 and +7.2 ms at its median, and a dosing pass by −5.6 to +9.6 ms, which is the bench's
+noise and not a figure; a flush costs 2.2 ms, once a minute. #844 measured 2 to 5 ms a pass, most of
+it the gauges.
 
 # What this supersedes, and what it amends
 

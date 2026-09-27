@@ -78,28 +78,32 @@ def test_a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after(mon
     assert _acts(runtime) == 7
 
 
-def test_each_pass_writes_the_minds_metrics_and_the_runtimes_own(monkeypatch):
-    """What the metrics store is handed, pass by pass, at twenty candidates a pass (#826). The mind's
-    packages count what they wrote — the first pass's search cut short, `exhausted`, with the cone
-    it left: twenty worlds, twenty-one weighings, three still on the frontier; the last pass's
-    intention done after seven acts — and the runtime adds its own three. Sensing is not loaded, so
-    no silence is counted: a package's metrics are where the package is."""
-    runtime, passes, events, _ = _metered(monkeypatch)
-    first, last = passes[0], passes[-1]
-    assert set(first) == {"pass", "phases", "plans", "cone", "intentions", "acts", "revisions"}
+def test_a_window_a_pass_writes_the_minds_gauges_and_the_runtimes_own(monkeypatch):
+    """The gauges, sampled once a window and here a window a pass (#826, amended). The mind's packages
+    count what they wrote — the first pass's search cut short, `exhausted`, with the cone it left:
+    twenty worlds, twenty-one weighings, three still on the frontier; the last pass's intention done
+    after seven acts — and the runtime adds its own. Sensing is not loaded, so no silence is
+    counted: a package's metrics are where the package is."""
+    runtime, windows = _metered(monkeypatch, interval_s=0)
+    first, last = ({p["measurement"]: p["fields"] for p in w} for w in (windows[0], windows[-1]))
+    assert {"store", "process", "plans", "cone", "intentions", "acts", "revisions", "pass"} <= set(first)
+    assert "silence" not in first
     assert first["plans"] == {"satisfied": 0, "exhausted": 1, "noCandidate": 0}
     assert first["cone"] == {"worlds": 20, "weighings": 21, "open": 3, "met": 0}
     assert first["intentions"]["standing"] == 0 and first["acts"] == {"taken": 0, "notTaken": 0}
     assert last["intentions"] == {"standing": 0, "done": 1, "failed": 0, "superseded": 0, "abandoned": 0}
-    assert last["acts"] == {"taken": 7, "notTaken": 0}
-    assert set(last["pass"]) == {"duration_s", "quads", "uptime_s"} and last["pass"]["quads"] == len(runtime.beliefs)
-    assert all(p["pass"]["duration_s"] > 0 for p in passes) and len(passes) >= 3
-    assert all(sum(p["phases"].values()) <= p["pass"]["duration_s"] for p in passes), "the parts are of the pass"
+    assert last["acts"] == {"taken": 7, "notTaken": 0} and last["store"]["quads"] == len(runtime.beliefs)
+    passes = [p["fields"] for w in windows for p in w if p["measurement"] == "pass"]
+    assert len(passes) >= 3 and all(p["count"] == 1 and p["duration_s_max"] > 0 for p in passes)
+    phases = [k for k in passes[0] if k.endswith("_s_sum") and k != "duration_s_sum"]
+    assert phases and all(sum(p.get(k, 0) for k in phases) <= p["duration_s_sum"] for p in passes), \
+        "the parts are of the pass"
 
 
-def _metered(monkeypatch):
+def _metered(monkeypatch, *, interval_s: float):
     """Three disks at twenty candidates a pass, with a metrics sink loaded and who speaks said as
-    `main` says it: the runtime, each pass's gauges as {measurement: fields}, and every event."""
+    `main` says it, the window `interval_s` long — nought writes one a pass, and anything longer
+    than the run writes one at the end, as a stop does: the runtime, and every window written."""
     from agent import metrics
     from agent.runtime import world_name
     from agent.series import METRICS, Sink, install
@@ -108,43 +112,48 @@ def _metered(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=next(ticks)))
     writes = []
     install(METRICS, Sink(METRICS, "hanoi-hanoi-metrics", lambda bucket, record: writes.append(list(record))))
+    metrics.configure(interval_s=interval_s)
     metrics.identify(world=world_name(WORLD), agent="hanoi")
     try:
         runtime = Runtime(boot(WORLD, "hanoi"), "hanoi", budget=20)
         assert runtime.run(passes=12) == MET
+        runtime.report()
     finally:
         install(METRICS, None)
+        metrics.reset()
         metrics.identify()
-    gauges = [w for w in writes if any(p["measurement"] == "pass" for p in w)]
-    return (runtime, [{p["measurement"]: p["fields"] for p in w} for w in gauges],
-            [p for w in writes if w not in gauges for p in w], [p for w in writes for p in w])
+    return runtime, [w for w in writes if w]
 
 
-def test_each_search_and_the_adoption_are_said_as_they_happen_tagged_and_never_by_the_want(monkeypatch):
-    """The events of the same run (#826): a search a pass, each weighing its twenty candidates until
-    the third finds the seven moves; one adoption, after three passes of searching, whose plan cost
-    what the estimate at the ground said or more; a reroot and a planner pass each pass. Every point
-    is tagged with the world and the agent, and the want — minted per instance — is a field, never
-    a tag. Hanoi's want is authored, so no desire tags it."""
-    runtime, passes, events, points = _metered(monkeypatch)
+def test_every_search_and_the_adoption_are_tallied_into_one_window_and_never_by_the_want(monkeypatch):
+    """The events of the same run, in the one window a stop writes (#826, amended): two searches that
+    each weighed their twenty candidates and gave up, and a third that found the seven moves, kept
+    apart by how they ended; one adoption, after three passes of searching, whose plan cost what the
+    estimate at the ground said or more; a reroot and a planner pass each pass. Every point is tagged
+    with the world and the agent, and the want — minted per instance — is on none of them. Hanoi's
+    want is authored, so no desire tags it."""
+    runtime, (window,) = _metered(monkeypatch, interval_s=3600)
     by = {}
-    for e in events:
-        by.setdefault(e["measurement"], []).append(e)
-    searches, (adopted,) = by["search"], by["adopted"]
-    assert [s["tags"]["outcome"] for s in searches] == ["Exhausted", "Exhausted", "Satisfied"]
-    assert [s["fields"]["weighed"] for s in searches[:2]] == [20, 20] and all(s["fields"]["budget"] == 20 for s in searches)
-    assert {s["fields"]["want"] for s in searches} == {adopted["fields"]["want"]} == {"every_disk_home"}
-    assert adopted["fields"]["passes"] == 3 and adopted["fields"]["replan"] == 0
-    assert adopted["fields"]["cost"] == 7 and 0 <= adopted["fields"]["estimate"] <= adopted["fields"]["cost"]
-    assert adopted["fields"]["wall_s"] >= sum(s["fields"]["duration_s"] for s in searches) > 0
-    assert len(by["reroot"]) == len(by["planner"]) == len(passes)
+    for p in window:
+        by.setdefault(p["measurement"], []).append(p)
+    searches = {s["tags"]["outcome"]: s["fields"] for s in by["search"]}
+    (adopted,) = by["adopted"]
+    assert searches["Exhausted"]["count"] == 2 and searches["Exhausted"]["weighed_sum"] == 40.0
+    assert searches["Satisfied"]["count"] == 1 and searches["Exhausted"]["budget_max"] == 20.0
+    fields = adopted["fields"]
+    assert fields["count"] == 1 and fields["passes_max"] == 3.0 and fields["replan"] == 0
+    assert fields["cost_max"] == 7.0 and 0 <= fields["estimate_max"] <= fields["cost_max"]
+    assert fields["wall_s_max"] >= sum(s["duration_s_sum"] for s in searches.values()) > 0
+    (passed,) = by["pass"]
+    assert passed["fields"]["count"] >= 3
+    assert sum(p["fields"]["count"] for p in by["reroot"]) == by["planner"][0]["fields"]["count"] == passed["fields"]["count"]
     assert "desire" not in adopted["tags"], "an authored want was derived under no desire"
-    for p in points:                                       # the gauges as well as the events
+    for p in window:                                       # the gauges as well as the events
         assert p["tags"]["world"] == "hanoi" and p["tags"]["agent"] == "hanoi", p
-        assert "every_disk_home" not in p["tags"].values() and "want" not in p["tags"], p
-    #  COST: an event per search and per pass, never one per weighing — sixty-odd weighings, a
-    #  handful of points.
-    assert len(events) < sum(s["fields"]["weighed"] for s in searches)
+        assert "every_disk_home" not in {*p["tags"].values(), *map(str, p["fields"].values())}, p
+        assert "want" not in p["tags"] and "want" not in p["fields"], p
+    #  COST: a point per measurement and tag set a window, never one per weighing or per pass.
+    assert len(window) < 20
 
 
 def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeypatch):

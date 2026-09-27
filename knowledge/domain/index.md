@@ -16,7 +16,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
-* [series](/domain/kernel/series.md) - What a person watches and the agent never reads: history contributed by the package that decides it, metrics as selects. Told by purpose.
+* [series](/domain/kernel/series.md) - What a person watches and the agent never reads: history contributed by the package that decides it, metrics as each package's code, a point a minute.
 
 # Sensing — bytes become observations
 

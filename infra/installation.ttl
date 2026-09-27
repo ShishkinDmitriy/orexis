@@ -21,7 +21,9 @@
 #
 #  One store serves both purposes here, by coincidence and not by design. An agent is told a store
 #  per purpose, under the purpose's keys; a second store for one of them is a second node saying
-#  `onboarding:serves` it, and a purpose served by none or by two is refused.
+#  `onboarding:serves` it, and a purpose served by two is refused. History served by none is refused
+#  too. Metrics served by none is an installation that monitors no world: take `onboarding:Metrics`
+#  off this line and every world saying it is `onboarding:monitored` is refused at onboarding.
 :series a onboarding:SeriesStore ;
     schema:url "http://localhost:8086" ;
     onboarding:organisation "orexis" ;
@@ -29,9 +31,12 @@
     onboarding:serves onboarding:History , onboarding:Metrics .
 
 #  HOW LONG A PURPOSE'S POINTS ARE KEPT, where not for ever. History is the record and keeps
-#  everything. Metrics are a pass's figures, written every pass — about once a second by an agent
-#  with nothing to do — and read over hours and days, so a metrics bucket lets a point go after this.
-onboarding:Metrics onboarding:retentionDays 30 .
+#  everything. Metrics are a window's figures, read over hours and days, so a metrics bucket lets a
+#  point go after this. And HOW LONG A WINDOW OF METRICS IS, in real seconds: an agent tallies what
+#  happened in memory and writes it, with every gauge sampled once, at the window's end — told to
+#  each agent of a monitored world as its environment.
+onboarding:Metrics onboarding:retentionDays 30 ;
+    onboarding:intervalSeconds 60 .
 
 #  WHERE THE SERIES IS DRAWN: the operator's view of every world at once, over TLS.
 :view a onboarding:SeriesView ;

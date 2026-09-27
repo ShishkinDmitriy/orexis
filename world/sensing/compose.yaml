@@ -47,17 +47,14 @@ services:
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where its history and its metrics are written, and the org — the series store the installation
-      # says serves each purpose, safe for every agent to hold
+      # where each series it writes goes, and the org — the store the installation says serves each
+      # purpose, its metrics only where the world is monitored — safe for every agent to hold
       INFLUX_HISTORY_URL: "http://localhost:8086"
       INFLUX_HISTORY_ORG: "orexis"
-      INFLUX_METRICS_URL: "http://localhost:8086"
-      INFLUX_METRICS_ORG: "orexis"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx sensing`, and
       # its own broker credential, minted by `orexis-mqtt sensing`; mounted into THIS container alone
       - ./secrets/influx-history-fern.env
-      - ./secrets/influx-metrics-fern.env
       - ./secrets/mqtt-fern.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent

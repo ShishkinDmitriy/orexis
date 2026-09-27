@@ -130,15 +130,15 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
 
 
 def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_counted(monkeypatch):
-    """The metrics of two passes (#826). The first doses the dry bed: one intention standing and
-    none failed — `failed` written as nought and not left out, which is what an outcome compared
-    while unbound did — and the plan's world met its want, which an `EXISTS` read against the
-    default graph never saw. A day later the thermometer reports and the probe has not: the dose
-    was never answered, so the intention failed, and the probe is past its cadences, so it is
-    silent. Sensing is loaded here, so silence is counted beside the mind's figures."""
-    runtime, broker, passes, _ = _unanswered(monkeypatch)
-    dosed, a_day_later = passes
-    assert set(dosed) == {"pass", "phases", "plans", "cone", "intentions", "acts", "revisions", "silence"}
+    """The gauges of two passes, a window each (#826, amended). The first doses the dry bed: one
+    intention standing and none failed — `failed` written as nought and not left out, which is what
+    an outcome compared while unbound did — and the plan's world met its want, which an `EXISTS` read
+    against the default graph never saw. A day later the thermometer reports and the probe has not:
+    the dose was never answered, so the intention failed, and the probe is past its cadences, so it
+    is silent. Sensing is loaded here, so silence is counted beside the mind's figures."""
+    runtime, broker, windows = _unanswered(monkeypatch, interval_s=0)
+    dosed, a_day_later = ({p["measurement"]: p["fields"] for p in w} for w in windows[:2])
+    assert {"store", "process", "plans", "cone", "intentions", "acts", "revisions", "silence", "pass"} <= set(dosed)
     assert dosed["intentions"] == {"standing": 1, "done": 0, "failed": 0, "superseded": 0, "abandoned": 0}
     assert dosed["acts"] == {"taken": 1, "notTaken": 0} and dosed["silence"] == {"silent": 0}
     assert dosed["plans"]["satisfied"] == 1 and dosed["cone"]["met"] == 1
@@ -148,16 +148,17 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     assert len(broker.published) == 1
 
 
-def _unanswered(monkeypatch):
+def _unanswered(monkeypatch, *, interval_s: float):
     """The dry bed dosed, and a day later the thermometer alone — with a metrics sink loaded and who
-    speaks said as `main` says it: the runtime, the broker, each pass's gauges as {measurement:
-    fields}, and every event."""
+    speaks said as `main` says it, the window `interval_s` long, and the last written as a stop
+    writes it: the runtime, the broker, and every window written."""
     from agent import metrics
     from agent.runtime import world_name
     from agent.series import METRICS
 
     writes = []
     install(METRICS, Sink(METRICS, "greenhouse-grower-metrics", lambda bucket, record: writes.append(list(record))))
+    metrics.configure(interval_s=interval_s)
     metrics.identify(world=world_name(WORLD), agent="grower")
     try:
         runtime, broker = _grower(monkeypatch)
@@ -167,36 +168,37 @@ def _unanswered(monkeypatch):
         runtime.time.at = NOW + timedelta(days=1)
         runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', runtime.time.at)
         runtime.run(passes=1, poll_s=0)
+        runtime.report()
     finally:
         install(METRICS, None)
+        metrics.reset()
         metrics.identify()
-    gauges = [w for w in writes if any(p["measurement"] == "pass" for p in w)]
-    return (runtime, broker, [{p["measurement"]: p["fields"] for p in w} for w in gauges],
-            [p for w in writes if w not in gauges for p in w])
+    return runtime, broker, [w for w in writes if w]
 
 
 def test_a_want_derived_under_a_desire_is_told_by_the_desire_and_the_dose_by_how_late_it_was(monkeypatch):
-    """The events of the same two passes (#826). The dry bed's want is searched and adopted, each
-    tagged with the desire it was derived under — the bed's comfort, which reads across worlds and
-    agents — and never with the want, which is a field. The dose's landing, never answered, is said
-    as timed out, late by the patience past the landing the plan placed, tagged by its action. The
-    thermometer's second reading came a day after its first, against the minute the world states."""
-    runtime, broker, passes, events = _unanswered(monkeypatch)
+    """The events of the same two passes, in the one window a stop writes (#826, amended). The dry
+    bed's want is searched and adopted, each tallied under the desire it was derived under — the
+    bed's comfort, which reads across worlds and agents — and never under the want, which is on no
+    point. The dose's landing, never answered, is tallied as timed out, late by the patience past the
+    landing the plan placed, tagged by its action. The thermometer's second reading came a day after
+    its first, against the minute the world states."""
+    runtime, broker, (window,) = _unanswered(monkeypatch, interval_s=3600)
+    desire = "the_bed_is_comfortable"
     by = {}
-    for e in events:
-        by.setdefault(e["measurement"], []).append(e)
-    (search,), (adopted,), (landing,) = by["search"][:1], by["adopted"], by["landing"]
-    assert search["tags"]["desire"] == adopted["tags"]["desire"] == landing["tags"]["desire"] == "the_bed_is_comfortable"
-    assert search["tags"]["outcome"] == "Satisfied" and search["fields"]["want"].startswith("the_bed_is_comfortable")
-    assert adopted["fields"]["passes"] == 1 and adopted["fields"]["replan"] == 0
-    assert landing["tags"]["action"] == "Dosing" and landing["fields"]["timed_out"] == 1 and landing["fields"]["late_s"] > 0
-    (received,) = [e for e in by["received"] if e["tags"]["sensor"] == "thermometer"]
-    assert received["fields"]["interval_s"] == 86400.0 and received["fields"]["cadence_s"] > 0
-    wants = {e["fields"]["want"] for e in events if "want" in e["fields"]}
-    assert wants, "no event said a want — the guard would compare nothing"
-    for e in events:
-        assert e["tags"]["world"] == "greenhouse" and e["tags"]["agent"] == "grower", e
-        assert not wants & set(e["tags"].values()) and "want" not in e["tags"], e
+    for p in window:
+        by.setdefault(p["measurement"], []).append(p)
+    (search,), (adopted,), (landing,) = [s for s in by["search"] if s["tags"]["outcome"] == "Satisfied"], by["adopted"], by["landing"]
+    assert search["tags"]["desire"] == adopted["tags"]["desire"] == landing["tags"]["desire"] == desire
+    assert adopted["fields"]["passes_max"] == 1.0 and adopted["fields"]["replan"] == 0
+    assert landing["tags"]["action"] == "Dosing" and landing["fields"]["timed_out"] == 1 == landing["fields"]["count"]
+    assert landing["fields"]["late_s_max"] > 0
+    (received,) = [p for p in by["received"] if p["tags"]["sensor"] == "thermometer"]
+    assert received["fields"]["interval_s_max"] == 86400.0 and received["fields"]["cadence_s_max"] > 0
+    for p in window:
+        assert p["tags"]["world"] == "greenhouse" and p["tags"]["agent"] == "grower", p
+        said = {*p["tags"].values(), *p["tags"], *p["fields"], *map(str, p["fields"].values())}
+        assert not {s for s in said if s.startswith(desire) and s != desire} and "want" not in said, p
 
 
 def test_a_cold_bed_is_heated_for_as_long_as_the_gap_takes(monkeypatch):

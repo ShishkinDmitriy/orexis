@@ -29,11 +29,15 @@ be keyed on the actions an agent may take — read off the world's action graphs
 here — and draw `taken` and `landed` as events rather than a line, which is a panel type and a
 query shape this module does not build.
 
-**A second dashboard draws each agent's health** (`health.json`), from its metrics bucket: a panel
-per metric the agent's loaded packages declare, found as the agent finds them — by booting it and
-asking `agent.metrics` for every metric its store holds, so an agent that loads no sensing gets no
-silence panel — and one per figure of the runtime's own. A metric's panel draws every field its
-select answers; the figures are counts, so they share an axis.
+**A second dashboard draws the agents' health** (`health.json`), for a world that is
+`onboarding:monitored` and for no other: what each package reports, learnt by importing the
+packages' `metrics.py` — and the runtime's own, in `agent.runtime` — so no list of metrics is kept
+here and adding one to a package's module draws it. A ROW PER PACKAGE, the runtime's first and then
+each package some agent of the world loads, in the order the agent loads them; the AGENT is the
+dashboard's variable, picking whose bucket every panel reads, rather than a row per agent. A gauge
+is one panel of every field it answers, its last per window; an event is a panel of how many and
+of each flag, summed per window, and one per value, drawing its mean, its max and its sum — each
+field of a point the agent writes drawn by exactly one panel, which the terrace's test holds.
 
 See knowledge/domain/onboarding/onboarding.md.
 """
@@ -41,15 +45,17 @@ See knowledge/domain/onboarding/onboarding.md.
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import logging
 
-from agent import metrics
-from agent.runtime import PASS, PASS_FIELDS, PHASES, UNREACHABLE, boot
+from agent import runtime as the_runtime
+from agent.metrics import Event, Gauge, declared
+from agent.runtime import EVERY, KERNEL, packages_of
 from agent.sensing.history import FIELD, measurement_of
 from agent.series import METRICS
 from agent.store import graphs_of, rows
-from . import reading
+from . import installation, reading
 from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
 
@@ -262,28 +268,62 @@ def render(world: str) -> dict:
     }
 
 
-#  HOW THE RUNTIME'S OWN FIGURES ARE DRAWN: each alone, since a duration, a count of quads and an
-#  uptime share no axis.
-_PASS_UNITS = {"duration_s": "s", "quads": "none", "uptime_s": "s"}
+#  EVERY AGENT OF A WORLD, as the node a premise is asked of and the id its bucket is named by.
+_AGENTS_Q = f"SELECT ?a ?id WHERE {{ ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id }} ORDER BY ?id"
+
+#  THE DASHBOARD'S ONE VARIABLE: whose metrics bucket every panel reads.
+AGENT_VARIABLE = "agent"
 
 
-def _metric_flux(bucket: str, measurement: str, field: str | None = None, fn: str = "last") -> str:
-    """One measurement's figures — every field, or one — aggregated per window by `fn`: the last of
-    a gauge, the mean of an event, which makes a flag a rate. Every tag stays in the group, so a
-    search is drawn a line per outcome and per desire."""
-    only = f'\n  |> filter(fn: (r) => r._field == "{field}")' if field else ""
+def reporting(world: str) -> list[tuple[str, list[Gauge | Event]]]:
+    """What the agents of `world` report, by who reports it: the runtime's own, then each package
+    some agent of the world loads and that keeps a `metrics.py`, in the order an agent loads them —
+    read off the modules themselves, so this file names no metric."""
+    store = reading.world(world_dir(world))
+    loaded = {p for r in rows(store, _AGENTS_Q, graphs_of(store, PUBLIC)) for p in packages_of(store, r["a"])}
+    out = [("runtime", [m for m in declared(the_runtime.__name__)])]
+    for package in EVERY:
+        if package in loaded and (KERNEL / package / "metrics.py").exists():
+            module = importlib.import_module("agent." + package.replace("/", ".") + ".metrics")
+            out.append((package, declared(module.__name__)))
+    return out
+
+
+def _metric_flux(bucket: str, measurement: str, fields: tuple[str, ...] = (), fn: str = "last") -> str:
+    """One measurement's figures — every field, or those named — aggregated per window by `fn`. Every
+    tag stays in the group, so a search is drawn a line per outcome and per desire."""
+    only = ("\n  |> filter(fn: (r) => " + " or ".join(f'r._field == "{f}"' for f in fields) + ")") if fields else ""
     return (f'from(bucket: "{bucket}")\n'
             "  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n"
             f'  |> filter(fn: (r) => r._measurement == "{measurement}"){only}\n'
             f"  |> aggregateWindow(every: v.windowPeriod, fn: {fn}, createEmpty: false)")
 
 
-def _health_panel(title: str, query: str, unit: str, x: int, y: int, panel_id: int, desc: str) -> dict:
+def _drawn(bucket: str, reported: Gauge | Event) -> list[tuple[str, list[str], str, str]]:
+    """The panels one gauge or event is drawn in, as (title, queries, unit, description)."""
+    if isinstance(reported, Gauge):
+        return [(reported.name, [_metric_flux(bucket, reported.name)], reported.unit,
+                 f"The gauge `{reported.name}`, every field it answers, sampled once a window — its last per window.")]
+    name = reported.name
+    out = [(f"{name} — how many", [_metric_flux(bucket, name, ("count", *reported.flags), fn="sum")], "none",
+            f"How many `{name}` happened per window" + (f", and of them how many were {', '.join(reported.flags)}"
+                                                        if reported.flags else "") + ".")]
+    for value in reported.values:
+        out.append((f"{name} — {value}",
+                    [_metric_flux(bucket, name, (f"{value}_mean",), fn="mean"),
+                     _metric_flux(bucket, name, (f"{value}_max",), fn="max"),
+                     _metric_flux(bucket, name, (f"{value}_sum",), fn="sum")],
+                    "s" if value.endswith("_s") else "none",
+                    f"`{value}` of `{name}`: its mean and its max over each window, and its sum."))
+    return out
+
+
+def _health_panel(title: str, queries: list[str], unit: str, x: int, y: int, panel_id: int, desc: str) -> dict:
     return {
         "id": panel_id, "type": "timeseries", "title": title, "description": desc,
         "datasource": {"type": "influxdb", "uid": "influxdb"},
         "gridPos": {"h": 7, "w": 12, "x": x, "y": y},
-        "targets": [{"refId": "A", "query": query}],
+        "targets": [{"refId": chr(ord("A") + i), "query": q} for i, q in enumerate(queries)],
         "fieldConfig": {"defaults": {"unit": unit, **({"decimals": 0} if unit == "none" else {})}, "overrides": []},
         "options": {"legend": {"showLegend": True, "displayMode": "table", "placement": "bottom",
                                "calcs": ["lastNotNull"]},
@@ -292,49 +332,37 @@ def _health_panel(title: str, query: str, unit: str, x: int, y: int, panel_id: i
 
 
 def render_health(world: str) -> dict:
-    """Each agent's health, from its metrics bucket: a panel per metric the packages it loads
-    declare, read off its own boot, and one per figure of the runtime's own — two to a row, one row
-    heading per agent."""
+    """What the world's agents report of how they are doing, a row per package that reports and the
+    agent a variable: every panel reads `<world>-${agent}-metrics`."""
     from .compose import roster
 
-    here = world_dir(world)
+    agents = roster(world)
+    bucket = bucket_name(world, "${" + AGENT_VARIABLE + "}", METRICS)
     panels, y, pid = [], 0, 1
-    for agent_id in roster(world):
-        bucket = bucket_name(world, agent_id, METRICS)
-        panels.append({"id": pid, "type": "row", "title": agent_id, "collapsed": False,
+    for package, reported in reporting(world):
+        panels.append({"id": pid, "type": "row", "title": package, "collapsed": False,
                        "gridPos": {"h": 1, "w": 24, "x": 0, "y": y}, "panels": []})
         pid, y = pid + 1, y + 1
-        beliefs = boot(here, agent_id)
-        drawn = [(f"{agent_id} — {PASS} {field}", _metric_flux(bucket, PASS, field), _PASS_UNITS[field],
-                  f"The runtime's own figure, `{field}` of `{PASS}`, written each pass.") for field in PASS_FIELDS]
-        drawn.append((f"{agent_id} — {PHASES}", _metric_flux(bucket, PHASES, fn="mean"), "s",
-                      "Real seconds per part of a pass — the queue handed to sensing, revision, prediction, "
-                      "planning, walking — the runtime's own; the planner's parts are its own event."))
-        drawn.append((f"{agent_id} — {UNREACHABLE}", _metric_flux(bucket, UNREACHABLE, "want", fn="count"), "none",
-                      "Wants the runtime judged nothing this agent holds reaches, per window, by desire."))
-        for metric in metrics.declared(beliefs):
-            name = metrics.measurement_of(metric["metric"])
-            drawn.append((f"{agent_id} — {name}", _metric_flux(bucket, name), "none",
-                          f"Every figure the select {metric['metric']} answers, over {metrics.measurement_of(metric['over'])}; "
-                          "declared by the package that writes the rows it counts, never by this file."))
-        for name, fields in metrics.events(beliefs).items():
-            for field in fields:
-                drawn.append((f"{agent_id} — {name} {field}", _metric_flux(bucket, name, field, fn="mean"),
-                              "s" if field.endswith("_s") else "none",
-                              f"The mean of `{field}` over each window, of the event `{name}` its package declares "
-                              "and contributes as it happens; a flag's mean is its rate."))
-        for i, (title, query, unit, desc) in enumerate(drawn):
-            panels.append(_health_panel(title, query, unit, x=12 * (i % 2), y=y + 7 * (i // 2), panel_id=pid, desc=desc))
+        drawn = [panel for r in reported for panel in _drawn(bucket, r)]
+        for i, (title, queries, unit, desc) in enumerate(drawn):
+            panels.append(_health_panel(f"{package} — {title}", queries, unit, x=12 * (i % 2), y=y + 7 * (i // 2),
+                                        panel_id=pid, desc=desc + f" Written by {package}'s own metrics, never by this file."))
             pid += 1
         y += 7 * ((len(drawn) + 1) // 2)
+    first = agents[0] if agents else ""
     return {
         "uid": f"orexis-{world}-health"[:40],
         "title": f"Orexis — {world} — health",
         "tags": ["orexis", world, "health"],
         "timezone": "browser",
         "schemaVersion": 39,
-        "refresh": "30s",
+        "refresh": "1m",
         "time": {"from": "now-6h", "to": "now"},
+        "templating": {"list": [{
+            "name": AGENT_VARIABLE, "label": "agent", "type": "custom", "query": ",".join(agents),
+            "current": {"text": first, "value": first},
+            "options": [{"text": a, "value": a, "selected": a == first} for a in agents],
+            "multi": False, "includeAll": False, "hide": 0}]},
         "panels": panels,
     }
 
@@ -342,15 +370,20 @@ def render_health(world: str) -> dict:
 def generate(world: str) -> None:
     out_dir = DASHBOARD_ROOT / world
     out_dir.mkdir(parents=True, exist_ok=True)
-    # How each agent is doing, and what the plants are doing where anything observes them: a world
-    # whose agents observe nothing — the allotment's, or a greenhouse whose sensors #833 leaves
-    # unread — still has agents to draw the health of.
-    docs = [("health.json", render_health(world))]
+    # What the plants are doing where anything observes them, and how the agents are doing where the
+    # world is monitored — a world whose agents observe nothing, the allotment's, may still be; one
+    # that is not monitored has no health dashboard, and a stale one from before is taken away.
+    docs = []
     store = reading.world(world_dir(world))
     if rows(store, _SENSORS_Q, graphs_of(store, PUBLIC)):
-        docs.insert(0, ("orexis.json", render(world)))
+        docs.append(("orexis.json", render(world)))
     else:
         log.info("  nothing in %s observes anything — no readings dashboard", world)
+    if METRICS in installation.purposes(world):
+        docs.append(("health.json", render_health(world)))
+    elif (stale := out_dir / "health.json").exists():
+        stale.unlink()
+        log.info("  %s is not monitored — its health dashboard is removed", world)
     for name, doc in docs:
         out = out_dir / name
         out.write_text(json.dumps(doc, indent=2) + "\n")

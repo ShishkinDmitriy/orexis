@@ -20,7 +20,7 @@ FILES = sorted(p for p in BELIEF.rglob("*.py") if "__pycache__" not in str(p))
 VOCABULARY = sorted(BELIEF.rglob("*.ttl"))
 
 #  A MODULE NAMED FOR A THING, which may export several reads of it.
-NOUNS = {"ontology", "deliberator"}
+NOUNS = {"ontology", "deliberator", "metrics"}
 
 def test_the_package_imports_nothing_above_it():
     assert FILES, "the glob stopped matching"
