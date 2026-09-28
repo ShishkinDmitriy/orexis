@@ -19,6 +19,13 @@ kind makes a misspelled one silent in every reader; onboarding knows every reade
 a world, as the runtime's do of an agent (#824): the broker's credentials and its ACL, the agents'
 certificates and the broker in a compose file are granted to a world whose society names a
 broker, and a world naming none is onboarded without them.
+
+**Whether an agent lasts is read off the agent, as its boot reads it.** `lasts` boots the agent
+from the world's documents and asks the two things the runtime's own stop rule asks
+(`Runtime._pass`): a desire it holds, which asks at every instant, and a transport, whose
+readings go on arriving. Holding neither, it exits once every want is reached, or as
+unreachable, and its compose service is not restarted — a restart would only boot, find nothing
+to pursue and exit again. Per agent and not per world, since a desire is in an agent's own graphs.
 """
 
 from __future__ import annotations
@@ -28,7 +35,8 @@ from pathlib import Path
 
 import pyoxigraph as ox
 
-from agent.runtime import documents, known, read_with_imports, world_of
+from agent.planning.planner import Planner
+from agent.runtime import MQTT, boot, documents, known, packages_of, read_with_imports, world_of
 from agent.store import answer, close_catalogue, closed, document, graphs_of, kinds_in, put_document
 
 from .worlds import DOCUMENTS
@@ -87,6 +95,17 @@ def premises(here: Path) -> frozenset[str]:
     store = world(here)
     public = graphs_of(store, PUBLIC)
     return frozenset(premise for premise, ask in PREMISES.items() if answer(store, ask, public)["boolean"])
+
+
+def lasts(here: Path, agent_id: str) -> bool:
+    """Whether the agent `agent_id` of the world in `here` runs for as long as its process does —
+    booted from the documents as its container boots it, into a store of its own in memory: it
+    holds a desire, or the MQTT transport is among the packages it loads, which is what brings a
+    transport up (`_transport_of`). False for an agent holding wants alone and reached by no
+    transport, which the runtime lets finish."""
+    beliefs = boot(Path(here).resolve(), agent_id, others=ours())
+    planner = Planner(beliefs, agent_id)
+    return planner.holds_a_desire() or MQTT in packages_of(beliefs, planner.uri)
 
 
 def unread(here: Path) -> list[str]:

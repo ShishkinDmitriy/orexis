@@ -31,7 +31,9 @@ services:
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
     # can write its own belief-base volume.
     userns_mode: "keep-id:uid=10001,gid=10001"
-    restart: unless-stopped
+    # it holds no desire and no transport reaches it, so it exits once every want is reached,
+    # or as unreachable — restarted, it would only exit again
+    restart: "no"
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-courier-courier:/app/state

@@ -338,10 +338,12 @@ def world_of(world: Path, others=frozenset()) -> ox.Store:
     return store
 
 
-def boot(world: Path, agent_id: str, store: ox.Store | None = None) -> ox.Store:
+def boot(world: Path, agent_id: str, store: ox.Store | None = None, others=frozenset()) -> ox.Store:
     """The agent's store from the documents: every graph classified by the document that holds
     it, the vocabulary closed, the catalogue closed, the scopes written. Handed a store that
-    already holds a catalogue, read again every graph nobody owns and leave the agent's own."""
+    already holds a catalogue, read again every graph nobody owns and leave the agent's own.
+    A graph of a kind in `others` is passed over at DEBUG, as `world_of` does: a caller booting
+    an agent to ask what it holds, onboarding, reads those kinds itself."""
     world = Path(world).resolve()
     store = store if store is not None else ox.Store()
     lived_in = catalogue_of(store) is not None
@@ -349,7 +351,7 @@ def boot(world: Path, agent_id: str, store: ox.Store | None = None) -> ox.Store:
         _forget_the_files(store)
     else:
         update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
-    own = _put_public(store, world, agent_id)
+    own = _put_public(store, world, agent_id, others=frozenset(others))
     me = _identity(store, agent_id)
     if not lived_in:
         for doc, graph in own:

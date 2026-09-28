@@ -18,7 +18,7 @@ touch another's.
 |---|---|
 | `orexis-influx` | per agent, a history bucket, and a metrics bucket where the world is monitored, in the store serving each purpose, each with a token that opens only it, in a credential file named for its purpose |
 | `orexis-mqtt` | where the world has a bus, a credential per principal on the broker, a certificate per agent, and the ACL derived from the wiring — then reloads the broker, so connected agents keep their sessions |
-| `orexis-compose` | `world/<name>/compose.yaml`: one container per agent, the world mounted beside the domains, the series store's address as environment keyed by purpose, and where the world has a bus the broker's service, its address, and each agent's broker credential and certificate |
+| `orexis-compose` | `world/<name>/compose.yaml`: one container per agent, the world mounted beside the domains, the series store's address as environment keyed by purpose, and where the world has a bus the broker's service, its address, and each agent's broker credential and certificate; an agent that finishes is not restarted |
 | `orexis-dashboards` | a Grafana folder for the world: what its agents observe, and where the world is monitored a health dashboard, a row per package that reports and the agent a variable |
 
 `orexis-firmware <world>` writes a board's `config.h` from the same documents: the broker's port off
@@ -35,6 +35,14 @@ skipped, and its compose file holds its agents and nothing of a bus; `orexis-mqt
 nothing and says so. `broker` still refuses an address such a world does not have, so the tools ask
 the premise and never it. Until they did, every tool asked `broker`, and a world with no bus could
 be neither onboarded nor run in a container.
+
+**Whether an agent is restarted is read off the agent.** The [runtime](/domain/kernel/runtime.md)
+lets an agent finish that holds no desire and that no transport reaches, so `orexis-compose` boots
+each agent from the documents as its container would (`lasts` in `onboarding/reading.py`) and asks
+the runtime's two questions of it. One that lasts is written `restart: unless-stopped`; one that
+finishes — hanoi's, the courier's, the tower's mover — `restart: "no"`, since restarted it would
+find nothing to pursue and exit again, over and over. Per agent and not per world, because a
+desire is in an agent's own graphs.
 
 **Derived before it is rendered.** `orexis-onboard` first completes what the documents leave out:
 a broker whose world asserts no url is allocated one by the installation, into a derived
