@@ -831,6 +831,51 @@ def test_onboarding_passes_over_its_own_kinds_quietly_and_an_unknown_kind_aloud(
     assert len(aloud) == 1 and "StateGrpah" in aloud[0].getMessage(), [r.getMessage() for r in aloud]
 
 
+# --- an agent that finishes is not restarted ---------------------------------------------------
+
+#  Every shipped agent holding wants alone and reached by no transport: the runtime lets each exit.
+_FINISHING = {("courier", "courier"), ("hanoi", "hanoi"), ("tower", "mover")}
+
+
+def test_an_agent_that_finishes_is_not_restarted():
+    """The runtime stops an agent holding no desire and reached by no transport once every want is
+    reached, so `unless-stopped` would boot it again for ever to find nothing and exit. Rendered for
+    every world: `restart: "no"` for exactly those agents, and `unless-stopped` for every other —
+    those holding a desire, and the sensing world's and the terrace's, which hold none and are kept
+    running by their transport alone."""
+    import yaml
+
+    from onboarding import compose
+
+    policies = {(world, name.removeprefix("agent-")): service["restart"]
+                for world in _worlds()
+                for name, service in yaml.safe_load(compose.render(world))["services"].items()
+                if name.startswith("agent-")}
+    assert {agent for agent, policy in policies.items() if policy == "no"} == _FINISHING, policies
+    assert {policy for agent, policy in policies.items() if agent not in _FINISHING} == {"unless-stopped"}, policies
+    assert {("sensing", "fern"), ("terrace", "terrace")} <= set(policies), "no agent lasts by its transport alone"
+
+
+def test_an_agent_holding_a_desire_is_restarted_with_no_transport(tmp_path, monkeypatch):
+    """The other premise alone: every shipped agent holding a desire is reached by a transport too,
+    so the desire could go unread and the test above stay green. Hanoi's mover, given a desire
+    beside its want, holds one and no transport, and lasts."""
+    import yaml
+
+    from onboarding import compose, reading
+
+    desire = ("@prefix : <http://example.org/orexis/world/hanoi#> .\n"
+              "@prefix hanoi: <http://example.org/orexis/hanoi#> .\n"
+              "@prefix planning: <http://example.org/orexis/planning#> .\n"
+              "<> a planning:DesireGraph .\n"
+              ":hanoi planning:holds :the_tower_stands .\n"
+              ":the_tower_stands a planning:Desire ; planning:metWhen hanoi:solved .\n")
+    root = _installed(tmp_path, monkeypatch, {("hanoi", "desires.ttl"): lambda _text: desire})
+    assert reading.lasts(root / "hanoi", "hanoi")
+    assert not reading.lasts(REPO_ROOT / "world" / "hanoi", "hanoi"), "the shipped mover was to finish"
+    assert yaml.safe_load(compose.render("hanoi"))["services"]["agent-hanoi"]["restart"] == "unless-stopped"
+
+
 # --- the entry documents name only what exists --------------------------------------------------
 
 #  Instances AGENTS.md names on purpose, as the thing rule 1 forbids. They are not terms and must

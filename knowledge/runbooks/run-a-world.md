@@ -114,11 +114,13 @@ step. They are idempotent: an agent that already holds a bucket and a credential
 A world with no bus — hanoi, the courier, the tower — is onboarded the same way. It has no broker,
 so `orexis-onboard` skips the MQTT step and says so in one line, and its compose file is its
 agents alone, each with its history credential; `orexis-influx <world>` is the one thing to run
-before `podman compose up`. **Watch it once it is up:** such a world's agent holds wants and no
-desire, so it exits 0 when they are reached, and `restart: unless-stopped` starts it again — on
-its lived-in volume it finds nothing left and exits after one pass (measured on hanoi, about a
-second), over and over. Which restart policy a one-shot agent gets is not decided; until it is,
-`podman compose down` it once it has finished.
+before `podman compose up`. **It finishes, and stays finished:** such a world's agent holds wants
+and no desire and no transport reaches it, so it exits when they are reached — 0, or 1 when
+nothing it holds reaches one — and its service says `restart: "no"`, so the container stays
+exited. `orexis-compose` decides that per agent ([onboarding](/domain/onboarding/onboarding.md));
+under `unless-stopped`, as before, it was started again on its lived-in volume, found nothing
+left and exited after one pass (measured on hanoi, about a second), over and over. Bringing it
+up again does the same once: the wants it reached are gone from its volume.
 
 Still no store to prepare, and **no agent and no world is disturbed** — existing containers keep
 running, keep their beliefs and keep their credentials, because every grant is per principal and
@@ -256,15 +258,16 @@ two agents on it and both ingest every reading. Nothing prevents this; it is you
 
 # Unattended, across reboots
 
-There are no orexis services. Every agent already declares `restart: unless-stopped`, so the
-only thing missing after a reboot is something to start them again — and podman ships that:
+There are no orexis services. Every agent that lasts already declares `restart: unless-stopped`
+— one that finishes says `"no"`, and a reboot has nothing to bring back for it — so the only
+thing missing after a reboot is something to start them again, and podman ships that:
 
 ```bash
 loginctl enable-linger $USER                 # user services run without a login session
 systemctl --user enable podman-restart.service
 ```
 
-`podman-restart` brings back every container that has a restart policy, which is exactly the
+`podman-restart` brings back every container whose policy restarts it, which is exactly the
 set you want and nothing else. Bring each world up once by hand and reboots take care of
 themselves.
 
