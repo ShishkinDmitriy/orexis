@@ -1,33 +1,42 @@
-"""`predict`: when the reading will change range — the domain's drifts run over the observation
-in hand, and a prediction written for each stretch between crossings.
+"""`predict`: when the reading will change range — the rates of the drifts moving what it
+observes, accumulated from the observation in hand, and a prediction written for each stretch
+between crossings.
 
 **A PREDICTION IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** Every `prediction:Drift`
-the domain declares — a package's rule over `$elapsed`, what the world does to a reading while
-nobody acts — is run over the observation at the instants of the LADDER, `LADDER_S`, each rung
-past the observation's own horizon; the ladder is the scan, not the answer, and it is this
-layer's: a drift declares no horizon, since the bisection places a crossing wherever it falls
-and a rung only bounds how far the scan looks. Against every range that applies to what the
-sensor observes (SSN-System's operating and survival ranges, `ranges_of`),
-wherever the drift's number lies on one side of a bound at one rung and the other side at the
-next, the crossing is bisected between them, within a minute or a sixty-fourth of the rung, and
-the scan goes on from it — so a rung that crosses two bounds yields two crossings. A comparison
-to a bound is arithmetic this package does on numbers; the SIDE as a fact the mind reads is
-the sensing layer's rules', concluded over what is written here as over the observation.
+that `prediction:moves` the observed property answers a RATE for the subject at an instant —
+per second of the one timeline, a package's select over whatever holds then — and the drifts
+ADD: drying and rain are two drifts and the value moves by their sum, which is PDDL+'s
+trajectory semantics, a drift being a process (a-prediction-accumulates-rates-between-happenings).
+The sum is accumulated from the observation for `HORIZON_S`, split at every HAPPENING — the
+start or end of a public or belief graph holding in that stretch, since only there can what a
+drift reads change, which is how a forecast hour becomes one without this package learning the
+word — and held for at most `SEGMENT_S` between, so a rate that depends on the value is asked
+again. Within a segment the value is a straight line, and a crossing of a bound of every range
+that applies to what the sensor observes (SSN-System's, `ranges_of`) is placed exactly, by
+division: no scan looks for it, so a value that dips below a floor and comes back inside an hour
+later is seen. A drift answering `?until` contributes nothing past it, and a segment is split
+where the value reaches it, so the soil dries to nothing and not below.
 
-**WHAT IS WRITTEN IS ONE PREDICTION PER STRETCH**: from the horizon to the first crossing,
-crossing to crossing, and from the last to the ladder's end — each an `orexis:PredictionGraph`
-holding during its stretch, carrying a predicted `sosa:Observation` in SOSA's words with the
-number the drift gives at the last instant of that stretch the bisection knows to lie on its
-side, so the rules classify every stretch as the side it is. Each says which observation it
-was derived from, so the next observation of the key drops the whole ladder before its own is
-written, and its row carries `orexis:retracts`, the `DELETE … WHERE` naming `GRAPH $state` that
-takes the key's standing node out of whatever ground the boundary is laid over — in the form
-`lay_ground` reads today.
+**A RATE KNOWN AS A RANGE GIVES A CORRIDOR.** A drift may answer `?low` and `?high` instead of
+`?rate`, and ranges add as rates do; two trajectories are accumulated, the low one by every
+drift's lowest rate and the high one by every drift's highest, each asking the drifts at its own
+value. The side of an instant is the corridor's worst, range by range — below where the low
+trajectory is under the floor, above where the high one is over the ceiling — and the number
+written is the trajectory that side was read from, so the rules conclude of it the side the
+corridor has.
 
-**A KEY NO DRIFT MOVES** — a store declaring no drift at all is the same case — is predicted
-to stay as it reads for the first rung alone: a package that declares no drift has made no
-claim about the world past that, and this package invents no persistence. A key that crosses
-nothing has one prediction to the ladder's end.
+**WHAT IS WRITTEN IS ONE PREDICTION PER STRETCH**: from the observation's horizon to the first
+crossing, crossing to crossing, and from the last to the horizon's end — each an
+`orexis:PredictionGraph` holding during its stretch, carrying a predicted `sosa:Observation` in
+SOSA's words with the number at the last instant of the stretch known to lie on its side. Each
+says which observation it was derived from, so the next observation of the key drops them all
+before its own are written, and its row carries `orexis:retracts`, the `DELETE … WHERE` naming
+`GRAPH $state` that takes the key's standing node out of whatever ground the boundary is laid
+over — in the form `lay_ground` reads today.
+
+**A KEY NO DRIFT MOVES** — a store declaring no drift at all is the same case — is predicted to
+stay as it reads for `CARRIED_S` past the observation alone: a package that declares no drift
+has made no claim about the world past that, and this package invents no persistence.
 """
 
 from __future__ import annotations
@@ -39,15 +48,31 @@ from datetime import datetime, timedelta
 import pyoxigraph as ox
 
 from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD, local_of
-from agent.store import (Raw, bind, catalogue_of, construct, entry, forget_graph, graphs_of,
-                         instant, quads, remember, rows, update)
+from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
+                         remember, rows, update)
 
-from .ontology import DRIFT, FEATURE, PROPERTY, RECORDED, RESULT, prediction_graph
+from .ontology import DRIFT, FEATURE, MOVES, PROPERTY, RATE, RECORDED, RESULT, prediction_graph
 from .ranges import ranges_of, side
 
 log = logging.getLogger("predict")
 
-_RESULT = ox.NamedNode(RESULT)
+_XSD = "http://www.w3.org/2001/XMLSchema#"
+_SOSA = "http://www.w3.org/ns/sosa/"
+_RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+
+#  HOW FAR PAST THE OBSERVATION THE AGENT LOOKS, in the timeline's seconds: a day.
+HORIZON_S = 86400.0
+
+#  THE LONGEST A RATE IS HELD before the drifts are asked again: an hour, so a rate that
+#  depends on the value it moves is read off a value no more than an hour old.
+SEGMENT_S = 3600.0
+
+#  HOW LONG A KEY NO DRIFT MOVES IS CARRIED FORWARD as it reads: an hour past the observation.
+CARRIED_S = 3600.0
+
+#  WHERE A STRETCH'S NUMBER IS READ when its end lies across a bound: this long before the end,
+#  or half the stretch where that is shorter.
+_EDGE_S = 60.0
 
 #  THE OBSERVATION IN HAND: the graph holding the node this sensor last made, its key, the
 #  stretch it stands for and its number — asked by the kernel's kind and by SOSA's pattern,
@@ -61,33 +86,32 @@ SELECT ?graph ?node ?feature ?property ?value ?taken ?from ?until WHERE {
                  OPTIONAL { ?node sosa:resultTime ?taken } } }
 ORDER BY DESC(?from) LIMIT 1"""
 
-#  EVERY DRIFT THE STORE HOLDS — the class spliced as the term it is, since no file of this
-#  package binds a label for its namespace and a query needs none.
-_DRIFTS_Q = "SELECT ?drift ?construct WHERE { ?drift a $drift ; sh:construct ?construct } ORDER BY ?drift"
+#  EVERY DRIFT MOVING THE PROPERTY — the terms spliced as the terms they are, since no file of
+#  this package binds a label for its namespace and a query needs none.
+_DRIFTS_Q = "SELECT ?drift ?rate WHERE { ?drift a $drift ; $moves $property ; $rate_of ?rate } ORDER BY ?drift"
 
-#  THE LADDER: how far past the observation's horizon the drifts are asked, in the timeline's
-#  seconds — an hour, five and a day. The scan, not the answer: a crossing inside a rung is
-#  bisected to the minute, and a rung only says how far ahead the agent looks.
-LADDER_S = (3600.0, 18000.0, 86400.0)
-
-#  THE LADDER WRITTEN FOR THIS KEY BEFORE: every prediction derived from the observation's graph.
-_LADDER_Q = """
+#  THE PREDICTIONS WRITTEN FOR THIS KEY BEFORE: every one derived from the observation's graph.
+_WRITTEN_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:PredictionGraph ; prov:wasDerivedFrom $graph } }"""
+
+#  THE HAPPENINGS: every instant inside the horizon at which a public or belief graph begins or
+#  stops holding — the only instants at which what a drift reads can change.
+_HAPPENINGS_Q = """
+SELECT DISTINCT ?t WHERE {
+  GRAPH $cat { VALUES ?kind { $kinds } ?g a ?kind ; dcterms:temporal ?p .
+               { ?p orexis:start ?t } UNION { ?p orexis:end ?t } }
+  FILTER(?t > $from && ?t < $to) }"""
 
 #  THE DIFF A PREDICTION MAKES: the key's standing node goes, whole.
 _RETRACTS = ("DELETE { GRAPH $state { ?o ?p ?v } } "
              "WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <%s> ; sosa:observedProperty <%s> ; ?p ?v } }")
 
-#  HOW CLOSE THE CROSSING IS PLACED: within a minute, or a sixty-fourth of the rung it falls
-#  in where that is coarser — a plant's day is bisected to twenty minutes, its hour to one.
-_RESOLUTION_S = 60.0
-
 
 def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=None) -> list[str]:
     """Rewrite the predictions of the key `sensor` last observed, from the observation in hand:
-    one per stretch between the instants the drifts say the reading changes range. The graphs
-    written, first stretch first; none where no observation by the sensor stands or the ladder
-    does not reach past its horizon.
+    one per stretch between the instants the drifts' summed rates carry the reading across a
+    bound. The graphs written, first stretch first; none where no observation by the sensor
+    stands or the horizon does not reach past its own.
 
     `me` is who holds the observation, `now` the present the records are read at — the
     observation's own instant where none is given.
@@ -101,57 +125,49 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
     reading = float(found["value"])
     taken = datetime.fromisoformat(found["taken"] if found.get("taken") else found["from"])
     opens = datetime.fromisoformat(found["until"]) if found.get("until") else taken
-    for old in rows(store, _LADDER_Q, (), cat=cat, graph=graph):
+    for old in rows(store, _WRITTEN_Q, (), cat=cat, graph=graph):
         forget_graph(store, old["g"])
-    drifts = remember(memo, ("drifts",), lambda: rows(store, _DRIFTS_Q, graphs_of(store, PUBLIC), drift=Raw(f"<{DRIFT}>")))
-    ladder = [h for h in LADDER_S if taken + timedelta(seconds=h) > opens]
-    if not ladder:
-        return []
-    ranges = ranges_of(store, sensor, observed_property, memo)
-    tokens = {"me": me, "about": observed_property}
-    own = [ox.Triple(q.subject, q.predicate, q.object) for q in quads(store, graph)]
     base = (opens - taken).total_seconds()
+    if base >= HORIZON_S:
+        return []
+    drifts = remember(memo, ("drifts", observed_property), lambda: rows(
+        store, _DRIFTS_Q, graphs_of(store, PUBLIC), drift=Raw(f"<{DRIFT}>"), moves=Raw(f"<{MOVES}>"),
+        rate_of=Raw(f"<{RATE}>"), property=observed_property))
+    ranges = ranges_of(store, sensor, observed_property, memo)
 
-    def at(elapsed: float) -> list:
-        """The drifts' triples about the key at `elapsed` seconds past the observation — the
-        observation's own where the drifts say nothing, which at the horizon they may not."""
-        said = _run(store, drifts, tokens, graph, feature, observed_property, taken, elapsed, now, memo)
-        return said if said else (own if elapsed <= base else [])
+    def rates(elapsed: float, value: float) -> list[tuple[float, float, float | None]]:
+        """Every contribution the drifts answer at `elapsed` seconds past the observation, for
+        the subject holding `value`: (lowest rate, highest rate, the value it stops at)."""
+        at = taken + timedelta(seconds=elapsed)
+        known = remember(memo, ("known", at), lambda: graphs_of(store, PUBLIC, BELIEF, RECORD, at=at, now=now or taken))
+        graphs = list(dict.fromkeys([*known, graph]))
+        said = []
+        for drift in drifts:
+            try:
+                answered = rows(store, drift["rate"], graphs, feature=feature, at=instant(at),
+                                value=ox.Literal(repr(float(value)), datatype=ox.NamedNode(_XSD + "double")))
+            except Exception as exc:                                    # noqa: BLE001
+                log.error("drift %s would not run for a prediction: %s", local_of(drift["drift"]), exc)
+                continue
+            for row in answered:
+                low, high = row.get("low", row.get("rate")), row.get("high", row.get("rate"))
+                if low is None or high is None:
+                    continue
+                low, high = float(low), float(high)
+                said.append((min(low, high), max(low, high), float(row["until"]) if row.get("until") else None))
+        return said
 
-    def sides(elapsed: float):
-        value = _value(at(elapsed), node)
-        return None if value is None else tuple(side(low, high, value) for low, high in ranges)
-
-    #  THE SCAN, rung by rung, and every crossing within a rung bisected in turn.
-    crossings: list[tuple[float, float]] = []       # (last elapsed on the old side, first on the new)
-    rungs = [base, *ladder]
-    for lo_end, hi_end in zip(rungs, rungs[1:]):
-        start, far = lo_end, sides(hi_end)
-        if far is None:
-            continue
-        while sides(start) is not None and sides(start) != far:
-            lo, hi, before = start, hi_end, sides(start)
-            tolerance = max(_RESOLUTION_S, (hi_end - lo_end) / 64)
-            while hi - lo > tolerance:
-                mid = (lo + hi) / 2
-                if sides(mid) in (None, before):
-                    lo = mid
-                else:
-                    hi = mid
-            crossings.append((math.floor(lo), math.ceil(hi)))
-            start = hi
-
-    #  THE STRETCHES: the horizon to the first crossing, crossing to crossing, the last to the
-    #  ladder's end — each carrying the number at the last instant known to lie on its side.
-    ends = [*(hi for _, hi in crossings), ladder[-1]]
-    knowns = [*(lo for lo, _ in crossings), ladder[-1]]
-    starts = [base, *(hi for _, hi in crossings)]
-    if not any(_run(store, drifts, tokens, graph, feature, observed_property, taken, h, now, memo) for h in ladder):
-        #  NO DRIFT MOVES THIS KEY: it is predicted to stay as it reads, for the first rung alone.
-        ends, knowns, starts = [ladder[0]], [base], [base]
+    knots, moved = _accumulate(rates, reading, _happenings(store, cat, taken), memo)
+    if not moved:
+        #  NO DRIFT MOVES THIS KEY: it is predicted to stay as it reads, for an hour alone.
+        if CARRIED_S <= base:
+            return []
+        stretches = [(base, CARRIED_S, None)]
+    else:
+        stretches = _stretches(knots, ranges, base)
+    own = [ox.Triple(q.subject, q.predicate, q.object) for q in quads(store, graph)]
     written = []
-    for n, (begins, closes, known) in enumerate(zip(starts, ends, knowns)):
-        triples = at(known) or own
+    for n, (begins, closes, value) in enumerate(stretches):
         graph_n = prediction_graph(local_of(me), feature, observed_property, n)
         update(store, f"""
 INSERT DATA {{
@@ -159,50 +175,139 @@ INSERT DATA {{
   GRAPH <{catalogue_of(store)}> {{
     <{graph_n}> prov:wasDerivedFrom <{graph}> ;
                 orexis:retracts {_literal(_RETRACTS % (feature, observed_property))} . }} }}""")
+        triples = own if value is None else _observation(own, node, value[1], taken + timedelta(seconds=value[0]))
         store.extend(ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(graph_n)) for t in triples)
         written.append(graph_n)
     log.info("predicted %s of %s in %d stretch(es) from %s%s", local_of(observed_property), local_of(feature),
-             len(written), (taken + timedelta(seconds=base)).isoformat(timespec="seconds"),
-             "".join(f", crossing at {(taken + timedelta(seconds=hi)).isoformat(timespec='seconds')}" for _, hi in crossings))
+             len(written), opens.isoformat(timespec="seconds"),
+             "".join(f", crossing at {(taken + timedelta(seconds=b)).isoformat(timespec='seconds')}"
+                     for b, _, _ in stretches[1:]))
     return written
 
 
-def _run(store, drifts, tokens: dict, graph: str, feature: str, observed_property: str,
-         taken: datetime, elapsed: float, now: datetime | None, memo) -> list:
-    """Every drift over the observation in hand at `elapsed` seconds past it, as the triples
-    about this key's node — the world at the instant reached, and the observation whatever
-    its period, since the observation in hand is what the drift is about."""
-    lands = taken + timedelta(seconds=elapsed)
-    known = remember(memo, ("known", lands), lambda: graphs_of(
-        store, PUBLIC, BELIEF, RECORD, at=lands, now=now or taken))
-    graphs = list(dict.fromkeys([*known, graph]))
+def _happenings(store, cat, taken: datetime) -> list[float]:
+    """The seconds past the observation at which a public or belief graph begins or stops
+    holding inside the horizon, earliest first, with the horizon's end."""
+    found = rows(store, _HAPPENINGS_Q, (), cat=cat, kinds=Raw(f"<{PUBLIC}> <{BELIEF}>"),
+                 **{"from": instant(taken), "to": instant(taken + timedelta(seconds=HORIZON_S))})
+    return sorted({*((datetime.fromisoformat(r["t"]) - taken).total_seconds() for r in found), HORIZON_S})
+
+
+def _accumulate(rates, reading: float, happenings: list[float], memo) -> tuple[list[tuple[float, float, float]], bool]:
+    """The corridor from the observation to the horizon, as knots (elapsed, low, high) the two
+    trajectories are straight between, and whether any drift moved the value at all.
+
+    Each trajectory asks the drifts at its own value and moves by the sum of their lowest rates
+    (the low one) or highest (the high one); a drift at or past its `until` in the direction it
+    pushes contributes nothing, and a segment ends where the value reaches one, so the next
+    asking sees the drift stopped."""
+    t, lo, hi = 0.0, reading, reading
+    knots, moved = [(t, lo, hi)], False
+    for happening in happenings:
+        while t < happening - 1e-9:
+            said_lo = rates(t, lo)
+            said_hi = said_lo if hi == lo else rates(t, hi)
+            r_lo, stops_lo = _net(said_lo, lo, 0)
+            r_hi, stops_hi = _net(said_hi, hi, 1)
+            moved = moved or bool(said_lo or said_hi)
+            step = min(happening - t, SEGMENT_S)
+            step = min(step, _reach(lo, r_lo, stops_lo), _reach(hi, r_hi, stops_hi))
+            lo, hi = _move(lo, r_lo, step, stops_lo), _move(hi, r_hi, step, stops_hi)
+            t += step
+            knots.append((t, min(lo, hi), max(lo, hi)))
+            lo, hi = min(lo, hi), max(lo, hi)
+    return knots, moved
+
+
+def _net(said, value: float, end: int) -> tuple[float, list[float]]:
+    """The summed rate of one trajectory — every contribution's lowest (`end` 0) or highest
+    (`end` 1) — and the `until` values the contributing drifts push toward."""
+    total, stops = 0.0, []
+    for contribution in said:
+        rate, until = contribution[end], contribution[2]
+        if until is not None and ((rate < 0 and value <= until) or (rate > 0 and value >= until)):
+            continue                                        # stopped where it stops
+        total += rate
+        if until is not None and rate != 0:
+            stops.append(until)
+    return total, stops
+
+
+def _reach(value: float, rate: float, stops: list[float]) -> float:
+    """How long until the value, moving at `rate`, reaches the nearest stop ahead of it."""
+    ahead = [(s - value) / rate for s in stops if rate and (s - value) / rate > 1e-9]
+    return min(ahead, default=math.inf)
+
+
+def _move(value: float, rate: float, step: float, stops: list[float]) -> float:
+    """The value `step` seconds on, landing on a stop exactly where it reaches one."""
+    moved = value + rate * step
+    for s in stops:
+        if abs(moved - s) < 1e-9 or (value < s < moved) or (moved < s < value):
+            return s
+    return moved
+
+
+def _stretches(knots, ranges, base: float) -> list[tuple[float, float, tuple[float, float]]]:
+    """The stretches from `base` to the horizon between the instants the corridor's side
+    changes, each with the instant its number is read at and the number: the last instant of
+    the stretch whose number, as written, lies on its side — its end, a minute before where the
+    end lies across a bound or rounding carries it there, or its middle."""
+    crossings = sorted({c for (t0, lo0, hi0), (t1, lo1, hi1) in zip(knots, knots[1:])
+                        for c in _crossed(t0, lo0, hi0, t1, lo1, hi1, ranges) if base < c < HORIZON_S})
+    starts, ends = [base, *crossings], [*crossings, HORIZON_S]
     out = []
-    for drift in drifts:
-        try:
-            added = construct(store, bind(drift["construct"], lands=instant(lands), elapsed=float(elapsed), **tokens), graphs)
-        except Exception as exc:                                    # noqa: BLE001
-            log.error("drift %s would not run for a prediction: %s", local_of(drift["drift"]), exc)
-            continue
-        by_node: dict = {}
-        for t in added:
-            by_node.setdefault(t.subject, []).append(t)
-        for subject, ts in by_node.items():
-            facts = {t.predicate.value: t.object for t in ts}
-            if (getattr(facts.get(FEATURE), "value", None) == feature
-                    and getattr(facts.get(PROPERTY), "value", None) == observed_property):
-                out.extend(ts)
+    for begins, closes in zip(starts, ends):
+        sides = _sides(knots, ranges, (begins + closes) / 2)
+        for at in (closes, closes - min(_EDGE_S, (closes - begins) / 2), (begins + closes) / 2):
+            lo, hi = _at(knots, at)
+            value = round(hi if 1 in sides and -1 not in sides else lo, PLACES)
+            if tuple(side(low, high, value) for low, high in ranges) == sides:
+                break                                   # the number as written reads the stretch's side
+        out.append((begins, closes, (at, value)))
     return out
 
 
-def _value(triples, node: str) -> float | None:
-    """The number a set of triples gives `node`, or None where it gives none."""
-    for t in triples:
-        if t.predicate == _RESULT and t.subject.value == node:
-            try:
-                return float(t.object.value)
-            except (TypeError, ValueError):
-                return None
-    return None
+def _crossed(t0, lo0, hi0, t1, lo1, hi1, ranges) -> list[float]:
+    """Every instant in one straight segment at which the low trajectory crosses a floor or the
+    high one crosses a ceiling, to the whole second after it."""
+    out = []
+    for low, high in ranges:
+        if (lo0 < low) != (lo1 < low):
+            out.append(float(math.ceil(t0 + (low - lo0) / (lo1 - lo0) * (t1 - t0))))
+        if (hi0 > high) != (hi1 > high):
+            out.append(float(math.ceil(t0 + (high - hi0) / (hi1 - hi0) * (t1 - t0))))
+    return out
+
+
+def _sides(knots, ranges, elapsed: float) -> tuple[int, ...]:
+    """The corridor's worst side of every range at `elapsed`: below where the low trajectory is
+    under the floor, above where the high one is over the ceiling."""
+    lo, hi = _at(knots, elapsed)
+    return tuple(-1 if side(low, high, lo) < 0 else 1 if side(low, high, hi) > 0 else 0 for low, high in ranges)
+
+
+def _at(knots, elapsed: float) -> tuple[float, float]:
+    """The two trajectories at `elapsed`, straight between the knots."""
+    for (t0, lo0, hi0), (t1, lo1, hi1) in zip(knots, knots[1:]):
+        if t0 <= elapsed <= t1:
+            f = 0.0 if t1 == t0 else (elapsed - t0) / (t1 - t0)
+            return lo0 + (lo1 - lo0) * f, hi0 + (hi1 - hi0) * f
+    return knots[-1][1], knots[-1][2]
+
+
+def _observation(own, node: str, value: float, at: datetime) -> list:
+    """The predicted observation: the one in hand's key and sensor, with `value` at `at`."""
+    subject = ox.NamedNode(node)
+    kept = {FEATURE, PROPERTY, _SOSA + "madeBySensor"}
+    out = [ox.Triple(subject, _RDF_TYPE, ox.NamedNode(_SOSA + "Observation"))]
+    out += [t for t in own if t.subject == subject and t.predicate.value in kept]
+    number = f"{round(value, PLACES) + 0.0:.{PLACES}f}".rstrip("0")
+    out.append(ox.Triple(subject, ox.NamedNode(RESULT), ox.Literal(number + ("0" if number.endswith(".") else ""),
+                                                                  datatype=ox.NamedNode(_XSD + "decimal"))))
+    out.append(ox.Triple(subject, ox.NamedNode(_SOSA + "resultTime"),
+                         ox.Literal(at.isoformat(), datatype=ox.NamedNode(_XSD + "dateTime"))))
+    return out
 
 
 def _literal(text: str) -> str:

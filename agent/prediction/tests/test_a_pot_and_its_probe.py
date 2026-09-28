@@ -77,5 +77,5 @@ def test_a_second_reading_replaces_the_first_and_its_predictions(pot, snapshots)
     _, first = _reading(store, snapshots, probe, 0.25)
     graph, second = _reading(store, snapshots, probe, 0.09, minutes=16)
     standing = [r["g"] for r in rows(store, _PREDICTIONS_Q, ())]
-    assert standing == second and len(first) == 3 and first[2] not in standing, "the first ladder went whole"
+    assert standing == second and len(first) == 3 and first[2] not in standing, "the first stretches went whole"
     assert _sides(store, graph) >= {("below", "zamioculcas.operating"), ("inside", "zamioculcas.survival")}

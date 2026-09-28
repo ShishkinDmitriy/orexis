@@ -3,7 +3,7 @@
 ONE READER FOR THE SEARCH AND THE DERIVATION, because a list built for the wrong instant
 returns an EMPTY RESULT rather than an error (#666). The search built this for its nodes and
 the derivation built its own for its boundaries, and the derivation's read the state graph
-beside the prediction holding then — so a tank low now with a forecast refilling it read
+beside the prediction holding then — so a tank low now with a prediction refilling it read
 unmet for ever, the exact failure the grounds were laid to close. Measured before it was
 believed: the grounds were right and the want was open-ended.
 

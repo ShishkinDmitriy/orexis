@@ -36,7 +36,7 @@ _HEAD = """@prefix : <http://example.org/test#> .
 """
 _AGENT = ':me a orexis:Agent ; orexis:localId "me" ; orexis:actsFor :pot .\n'
 _PROBE = ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n"
-_DRIFT = ':Drying a prediction:Drift ; sh:construct "CONSTRUCT {} WHERE {}" .\n'
+_DRIFT = ':Drying a prediction:Drift ; prediction:moves :moisture ; prediction:rate "SELECT ?rate WHERE {}" .\n'
 _SAYING = (':Telling a orexis:Action ; execution:implementation [ a execution:Implementation ;\n'
            '    execution:operation [ a execution:Saying ; sh:construct "CONSTRUCT {} WHERE {}" ] ] .\n')
 

@@ -2,9 +2,9 @@
 graph per period, in the store a pass stands in.
 
 **A PREDICTION IS AN ACTION NOBODY TAKES.** What it makes true is its graph's own contents —
-concrete, because a forecast is a value at an instant — and what it takes away is
+concrete, because a prediction is a value at an instant — and what it takes away is
 `orexis:retracts` on its catalogue row, a `DELETE … WHERE` naming `GRAPH $state`, because what
-is standing in that place is not something a forecast can name in advance. Its period says
+is standing in that place is not something a prediction can name in advance. Its period says
 WHEN it applies rather than a precondition saying whether it may. So the timeline is laid by
 exactly the machinery the search walks: fork the period before, run the retraction against the
 fork, add what the prediction holds.
@@ -12,16 +12,16 @@ fork, add what the prediction holds.
 WHY IT HAD TO BECOME A DIFF. A prediction used to be a STATE — a graph holding the reading it
 foretold — and a door handed a reader every graph holding at an instant, so a met-test asked at
 a foreseen instant saw the reading AND the prediction of it. A shape holds over EVERY value, so
-the stale one still violated: measured, a tank low now and a forecast refilling it read *unmet
-from twelve, lifts NEVER*, because the present's 5 outlived the forecast's 20. Nothing was
-wrong with the forecast; there was no place in the pass where it REPLACED anything.
+the stale one still violated: measured, a tank low now and a prediction refilling it read *unmet
+from twelve, lifts NEVER*, because the present's 5 outlived the prediction's 20. Nothing was
+wrong with the prediction; there was no place in the pass where it REPLACED anything.
 
 **AND THE PERIODS COLLAPSE.** Each ground is hashed as a possible world is, and where two
 neighbouring periods reach the same facts the second is not a period at all: nothing a met-test
 can read moved, so nothing it could answer differs there. Measured on three boundaries whose
 middle prediction restated the present — three boundaries, two grounds. That is what bounds the
 judging: a desire is asked once per DISTINCT ground rather than once per boundary, so a store
-thick with forecasts that say nothing new costs a pass nothing.
+thick with predictions that say nothing new costs a pass nothing.
 
 **WHAT IS BUILT IS CLASSIFIED, NOT RETURNED.** Each ground is a graph with the stretch it holds
 over, `planning:GroundGraph`, so a reader asks `graphs_of(store, GROUND_GRAPH, at=T)` and is
@@ -58,7 +58,7 @@ def _foreseen(store: ox.Store) -> list[tuple[datetime, str, str | None]]:
     kind of statement about it.
 
     THE RETRACT IS A PATTERN AND THE ADDS ARE NOT, which is the whole shape of this. What a
-    forecast says is concrete — a value at an instant; what it TAKES AWAY is whatever is
+    prediction says is concrete — a value at an instant; what it TAKES AWAY is whatever is
     standing in that place, which nobody can name in advance. So one is data and the other is a
     CONSTRUCT over `$state`, and a keyed reading falls out of it for free: the pattern matches
     the old observation node by its key and takes it whole.
@@ -66,7 +66,7 @@ def _foreseen(store: ox.Store) -> list[tuple[datetime, str, str | None]]:
     NO HOLDER. One agent, one volume (rule 4), so the store IS the scope and a prediction in it
     is this agent's by construction.
 
-    A PREDICTION THAT RETRACTS NOTHING is legal and means it: a forecast of something the world
+    A PREDICTION THAT RETRACTS NOTHING is legal and means it: a prediction of something the world
     does not yet say at all — a round opening, a claim arriving — adds without superseding.
     """
     said = """
@@ -100,10 +100,10 @@ def lay_ground(store: ox.Store, now: datetime) -> list[str]:
     opened = [now]
     for at, group in _by_instant(ahead):
         if at <= now:
-            continue                    # a forecast already reached is the present's, not ahead
+            continue                    # a prediction already reached is the present's, not ahead
         #  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE. A boundary is an instant,
-        #  not a forecast: two drifts that both start at one o'clock describe ONE world, and
-        #  forking once per forecast made two grounds with the same name and a period from the
+        #  not a prediction: two drifts that both start at one o'clock describe ONE world, and
+        #  forking once per prediction made two grounds with the same name and a period from the
         #  instant to itself — which holds at no instant at all, so a reader standing after it
         #  was handed NO ground and the agent went blind past the boundary. Each retract is
         #  read against the ground standing BEFORE the instant, so they supersede in parallel
@@ -115,7 +115,7 @@ def lay_ground(store: ox.Store, now: datetime) -> list[str]:
             if supersedes:
                 retracts.append(supersedes)
         if not added and not retracts:
-            #  A forecast that changes nothing is not a period — an early-out, not a guard:
+            #  A prediction that changes nothing is not a period — an early-out, not a guard:
             #  the hash below reaches the same answer, having laid the graph first.
             continue
         there = _fork(store, here, _name(at), added, retracts)
@@ -157,7 +157,7 @@ def _present(store: ox.Store, now: datetime) -> str:
 
 def _by_instant(predictions) -> list[tuple[datetime, list[tuple[str, str | None]]]]:
     """The predictions grouped by the instant they apply, earliest first — one entry per
-    BOUNDARY rather than one per forecast."""
+    BOUNDARY rather than one per prediction."""
     out: dict = {}
     for at, prediction, supersedes in predictions:
         out.setdefault(at, []).append((prediction, supersedes))
@@ -197,7 +197,7 @@ def _relaid(store: ox.Store, name: str) -> None:
     facts, its row and every weighing of it.
 
     THE IMAGINARIUM OUTLIVES THE PASS, and a ground is named for its instant, so a boundary the
-    last pass's predictions reached too — a forecast at one o'clock, seen from noon and again
+    last pass's predictions reached too — a prediction at one o'clock, seen from noon and again
     from a minute past — is laid under the name it had. Laid on top, the old facts would stand
     beside the new; kept, its weighings would be verdicts about what it used to hold, and
     `unweighed` would not ask again. The ground of the last PRESENT keeps its name and its

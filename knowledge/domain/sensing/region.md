@@ -27,8 +27,8 @@ the subject or on an instrument that watches it; nothing derives or picks one.
   observation and range.
 - **A desire's met-test** reads that side: a plant wants its soil `inside` its operating range, and
   a dose's effect predicts it will be.
-- **The prediction package** bisects every crossing of a bound between the rungs of its ladder, so a
-  stretch begins where the side changes.
+- **The prediction package** places every crossing of a bound where its accumulated rates reach it,
+  so a stretch begins where the side changes.
 
 Membership is crisp: a reading is inside or it is not, and how far it is from a bound is the
 command's business when it sizes a dose, never the met-test's.

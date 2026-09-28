@@ -1,6 +1,6 @@
 """The words the prediction package reads and writes, and the names it spells for eyes.
 
-ONE WORD OF ITS OWN, the drift, declared in `ontology.ttl` beside this file; everything else
+ITS OWN WORDS, the drift and what it says, declared in `ontology.ttl` beside this file; everything else
 it speaks is the kernel's — the graph kinds and the arrival — and SOSA's, on the observation
 it reads and the one it predicts. Not one word of sensing's: the observation a sensor last
 made is found by the kernel's kind, `orexis:StateGraph`, and by `sosa:madeBySensor`.
@@ -20,8 +20,11 @@ from agent.ontology import GRAPH_PREFIX, OREXIS
 PREDICTION = "http://example.org/orexis/prediction#"
 SOSA = "http://www.w3.org/ns/sosa/"
 
-#  THIS PACKAGE'S OWN: what a value does by itself while nobody acts.
+#  THIS PACKAGE'S OWN: one thing that moves a value while nobody acts, the property it moves,
+#  and the select answering how fast.
 DRIFT = PREDICTION + "Drift"
+MOVES = PREDICTION + "moves"
+RATE = PREDICTION + "rate"
 
 #  SOSA'S, on an observation — the key a drift's answer is matched by, and the number.
 FEATURE = SOSA + "hasFeatureOfInterest"

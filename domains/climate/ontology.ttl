@@ -10,8 +10,9 @@
 
 #  CLIMATE, A DOMAIN.
 #  A planted thing's surroundings: the properties its instruments observe — the soil's moisture,
-#  the air's temperature, humidity and pressure — where its water comes from, how its soil dries
-#  while nobody waters it (drifts.ttl), and a heater that warms its air, taken through the heating
+#  the air's temperature, humidity and pressure — the rain a forecast says falls on its place, where
+#  its water comes from, how its soil dries and how rain wets it while nobody waters it (drifts.ttl),
+#  and a heater that warms its air, taken through the heating
 #  (actions.ttl). The ranges a subject should be in are SSN-System's, stated by a world; the side
 #  a reading is on is a revision sensing's rules conclude. It was two 0.1.0 packages, water and
 #  climate; the market good, the bands and the revisable conversion stayed behind, since the
@@ -28,6 +29,8 @@
 :AirHumidity a sosa:ObservableProperty ; rdfs:label "Air humidity" ;
     rdfs:comment "Relative humidity, as a fraction." .
 :AirPressure a sosa:ObservableProperty ; rdfs:label "Air pressure" .
+:Precipitation a sosa:ObservableProperty ; rdfs:label "Precipitation" ;
+    rdfs:comment "Rain falling on a place, in millimetres an hour: what a forecast hour says, of the place a subject is contained in (schema:containedInPlace)." .
 
 :WaterSource a owl:Class ; rdfs:label "Water source" ;
     rdfs:comment "Where a dose draws from: a butt, a tank." .
@@ -36,7 +39,10 @@
     rdfs:label "capacity in litres" .
 
 :driesPerDay a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "dries per day" ;
-    rdfs:comment "How much soil moisture a subject loses a day while nobody waters it, as a fraction: what the drying drift runs on." .
+    rdfs:comment "How much soil moisture a subject loses a day while nobody waters it, as a fraction: the rate the drying drift answers." .
+
+:wetsPerMm a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "wets per millimetre" ;
+    rdfs:comment "How much a millimetre of rain on its place raises a subject's soil moisture, as a fraction: what the rain drift runs on. A sheltered subject states none, and rain never reaches it." .
 
 :litresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "litres per fraction" ;
     rdfs:comment "How many litres raise a subject's soil moisture by a whole fraction: what a dose is sized by when it is taken." .

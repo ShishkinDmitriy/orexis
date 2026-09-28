@@ -1,7 +1,10 @@
-# a_reading_already_below_crosses_only_the_survival_floor
+# a_forecast_range_opens_a_corridor_on_its_dry_side
 #
-# Read at 0.05, already under the operating floor: the one change left is the survival floor, 0.03
-# away at half a fraction a day, 86 minutes out. Two stretches.
+# The shower's pot, and a forecast that says only nought to twenty millimetres. The high trajectory
+# is the shower; the low one never sees rain, and a stretch is the corridor's WORST side, so the pot
+# is below its operating floor from 12:28:48 for the rest of the day and below its survival floor
+# from 14:24 — the instant the dry end reaches it. Nothing is left unwatered on rain that may not
+# come. Three stretches, each carrying the low trajectory's number.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -37,8 +40,10 @@ GRAPH :world {
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :zamioculcas .
   :probe sosa:observes :moisture .
-  :zamioculcas :driesPerDay 0.5 .
+  :zamioculcas :driesPerDay 1.0 .
+  :zamioculcas :wetsPerMm 0.01 .
   :zamioculcas a :Pot .
+  :zamioculcas schema:containedInPlace :balcony .
   :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
   :zamioculcas ssn-system:hasSurvivalRange :zamioculcas.survival .
   :zamioculcas.operating a ssn-system:OperatingRange .
@@ -56,17 +61,40 @@ GRAPH :actions {
           BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
           BIND(0.0 AS ?until)
       }""" .
-  :Drying rdfs:label "what a pot loses while nobody waters it" .
+  :Raining a prediction:Drift .
+  :Raining prediction:moves :moisture .
+  :Raining prediction:rate """PREFIX : <http://example.org/test#>
+      SELECT ?low ?high ?until WHERE {
+          $feature :wetsPerMm ?perMm ; schema:containedInPlace ?place .
+          ?rain sosa:hasFeatureOfInterest ?place ; sosa:observedProperty :precipitation .
+          { ?rain sosa:hasSimpleResult ?least . BIND(?least AS ?most) }
+          UNION
+          { ?rain sosa:hasResult ?result . ?result schema:minValue ?least ; schema:maxValue ?most }
+          BIND(xsd:double(?perMm) * xsd:double(?least) / 3600.0 AS ?low)
+          BIND(xsd:double(?perMm) * xsd:double(?most) / 3600.0 AS ?high)
+          BIND(1.0 AS ?until)
+      }""" .
 }
 
 GRAPH observed:zamioculcas_moisture {
   orexis:obs_zamioculcas_moisture a sosa:Observation .
   orexis:obs_zamioculcas_moisture prov:wasGeneratedBy :keeper .
   orexis:obs_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
-  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.05 .
+  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.12 .
   orexis:obs_zamioculcas_moisture sosa:madeBySensor :probe .
   orexis:obs_zamioculcas_moisture sosa:observedProperty :moisture .
   orexis:obs_zamioculcas_moisture sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+}
+
+GRAPH :forecast_14 {
+  :rain_14 a sosa:Observation .
+  :rain_14 sosa:hasFeatureOfInterest :balcony .
+  :rain_14 sosa:hasResult :rain_14_amount .
+  :rain_14 sosa:madeBySensor :weather_service .
+  :rain_14 sosa:observedProperty :precipitation .
+  :rain_14 sosa:resultTime "2026-01-01T09:00:00+00:00"^^xsd:dateTime .
+  :rain_14_amount schema:maxValue 20 .
+  :rain_14_amount schema:minValue 0 .
 }
 
 GRAPH :catalogue {
@@ -74,6 +102,10 @@ GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :forecast_14 a orexis:BeliefGraph .
+  :forecast_14 a orexis:Graph .
+  :forecast_14 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
+  :forecast_14 orexis:arrivedBy orexis:Received .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .

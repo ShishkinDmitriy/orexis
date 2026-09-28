@@ -4,29 +4,40 @@ title: Prediction
 term: http://example.org/orexis/prediction#Drift
 description: >-
   What the agent expects a reading to be over a stretch it has not reached - one graph per stretch
-  between the instants the reading changes range, each holding a predicted observation with the
-  number a drift gives there and holding during its window. Its side is concluded by the same
-  rules as a real reading's; the planner lays a ground per stretch and searches from each.
+  between the instants the reading changes range. The drifts moving the property answer rates that
+  add, accumulated from the observation between happenings; each stretch holds a predicted
+  observation, its side concluded by the same rules as a real reading's, and the planner lays a
+  ground per stretch.
 ---
+
+# What a drift is
+
+A **drift**, `prediction:Drift`, is one thing that moves a value while nobody acts: a bed drying,
+rain wetting it, a barrel leaking. It says which property it `prediction:moves` and carries
+`prediction:rate`, a select answering `?rate` - how fast, per second of the one timeline - for the
+subject `$feature` whose value is `$value` at the instant `$at`. It may answer `?low` and `?high`
+instead, a rate known only as a range, and `?until`, the value past which it contributes nothing.
+A drift reads whatever holds at `$at`: the world's facts, such as `climate:driesPerDay`, and a
+[forecast](/domain/kernel/forecast.md) hour. Every drift moving one property ADDS: the value moves by
+the sum, and no drift knows another exists.
 
 # What is written
 
-`predict` (`agent/prediction/predict.py`) takes the observation a sensor last made — found by the
-kernel's kind and `sosa:madeBySensor`, so nothing of sensing is imported — and runs the domain's
-**drifts** over it. A drift, `prediction:Drift`, is what a value does by itself while nobody acts:
-a pot drying, a barrel draining. It carries a `sh:construct` answering the predicted observation
-`$elapsed` seconds past the one in hand.
+`predict` (`agent/prediction/predict.py`) takes the observation a sensor last made - found by the
+kernel's kind and `sosa:madeBySensor`, so nothing of sensing is imported - and accumulates the
+drifts' sum from it for a day. Time is split at every **happening**, the start or end of a public
+or belief graph holding inside that day, since only there can what a drift reads change; between
+two, the rates are asked once and held, at most for an hour. Within a segment the value is a
+straight line, so a crossing of a bound of every [region](/domain/sensing/region.md) that applies to
+what the sensor observes is placed exactly, by division.
 
-The drift is run at the rungs of a ladder — an hour, five and a day past the instant the reading
-falls due — and against every [region](/domain/sensing/region.md) that applies to what the sensor
-observes, each crossing of a bound between two rungs is bisected. What is written is one
-`orexis:PredictionGraph` per stretch: from the horizon to the first crossing, crossing to
-crossing, and from the last to the ladder's end. Each holds a predicted `sosa:Observation` with
-the number the drift gives at the last instant of the stretch known to lie on its side, and each
-carries on its catalogue row `orexis:retracts`, the text that takes out of a ground the reading
-it replaces. A key no drift moves is carried forward for the first rung alone.
-
-The ladder is the scan, not the answer: what is written is where the side changes.
+What is written is one `orexis:PredictionGraph` per stretch - from the observation's horizon to the
+first crossing, crossing to crossing, the last to the day's end - holding a predicted
+`sosa:Observation` with the number at the last instant of the stretch known to lie on its side,
+and carrying on its catalogue row `orexis:retracts`, the text that takes out of a ground the
+reading it replaces. Where a rate is a range the value is a [corridor](/domain/prediction/corridor.md),
+and each stretch is its worst side. A key no drift moves is carried forward an hour past the
+observation, and no further: a package that declares no drift has claimed nothing past that.
 
 # What is made of it
 
@@ -34,7 +45,7 @@ The ladder is the scan, not the answer: what is written is where the side change
   or `above` of a predicted observation exactly as of a real one, so a stretch reads as the side it
   is and no width is ever added to a number.
 - **A ground per stretch**, by the [planner](/domain/planning/planner.md)'s `lay_ground`: the present,
-  and the present with each prediction applied at its instant — a prediction is a diff, and only a
+  and the present with each prediction applied at its instant - a prediction is a diff, and only a
   ground has applied it. The derivation judges every desire in every ground, so a crossing
   foreseen at noon mints a want at noon.
 - **Nothing of the present.** A prediction and a revision are derived from the same observation,

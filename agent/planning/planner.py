@@ -229,7 +229,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         prediction applied in turn, one graph per period — and a ground exists only where
         `lay_ground` has laid one. Judged against the belief base instead, a desire sees the
         reading AND the prediction of it at once, and a shape holds over every value, so the
-        stale one still violates: a tank low now with a forecast refilling it reads unmet for
+        stale one still violates: a tank low now with a prediction refilling it reads unmet for
         ever.
 
         WHAT IS DERIVED IS KEPT, AND WITHDRAWN BY ITS OWN RULE. The imaginarium outlives the
