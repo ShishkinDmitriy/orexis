@@ -4,13 +4,18 @@
 
 **Genesis ends with a world; it does not end with a society.** A world says what exists and how
 it is wired, and that is a complete description of nothing running. Between it and a first
-`podman compose up` there is a phase with no name until now, made of three tools that each read
+`podman compose up` there is a phase with no name until now, made of four tools that each read
 the same world's documents and grant exactly what its wiring implies:
 
   orexis-influx <world>    a bucket per agent, and a token that opens only it
-  orexis-mqtt <world>      a credential per principal, and the broker ACL, derived
+  orexis-mqtt <world>      a credential per principal, and the broker ACL, derived — where it has a bus
   orexis-compose <world>   the roster, as services
   orexis-dashboards <w>    what this world observes, as a Grafana folder
+
+**A step runs where the world has what it serves.** History is every agent's, so every world is
+granted it; the bus is a broker the world's society names, so `orexis-mqtt` runs only where one is
+named (`reading.PREMISES`), and a world with none — Hanoi, the courier, the tower — is onboarded
+without it and told so in one line; metrics are where the world says it is monitored.
 
 Calling that phase **onboarding** is not decoration. It names the moment an agent stops being a
 description and acquires the means to act: an account of its own on the series store, a
@@ -30,9 +35,9 @@ is repeatable; the other is done BY it and is not. See knowledge/domain/onboardi
 lifecycle table in knowledge/domain/kernel/agent.md.
 
 **Order matters, and only in one place.** Validation comes first because onboarding a world that
-does not hold together mints credentials for agents that will refuse to start. The other three
-are independent — but `orexis-mqtt` reloads the broker at the end, so it is last among the two
-provisioners, and compose is written last because it is the thing you then run.
+does not hold together mints credentials for agents that will refuse to start. The others are
+independent — but `orexis-mqtt` reloads the broker at the end, so it is last among the two
+provisioners, and compose is written after them because it is the thing you then run.
 
 See knowledge/domain/onboarding/onboarding.md.
 """
@@ -82,15 +87,22 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     # only reads what was asserted or allocated (onboarding.derived).
     installation.write_derivation()
     influx.provision(world, rotate=rotate)
-    mqtt.provision(world, rotate=rotate)
-    if not mqtt.reload_broker(world):
-        # Not fatal, and not silent. A broker that never reloaded holds the OLD acl, and
-        # mosquitto accepts a SUBSCRIBE it will not honour — so this looks like an agent that
-        # went quiet rather than like an error.
-        log.warning("  ! the ACL on disk is ahead of the broker until it restarts or reloads")
+    # THE BUS, where the world's society names a broker: its credentials, its ACL, the agents'
+    # certificates and the reload all serve one, and a world naming none has nothing for them to
+    # serve — `broker` refuses to answer an address for it, so nothing below asks.
+    bus = reading.BUS in reading.premises(world_dir(world))
+    if bus:
+        mqtt.provision(world, rotate=rotate)
+        if not mqtt.reload_broker(world):
+            # Not fatal, and not silent. A broker that never reloaded holds the OLD acl, and
+            # mosquitto accepts a SUBSCRIBE it will not honour — so this looks like an agent that
+            # went quiet rather than like an error.
+            log.warning("  ! the ACL on disk is ahead of the broker until it restarts or reloads")
+    else:
+        log.info("  no bus — its society names no mqtt4ssn:Broker, so no broker credential, ACL or certificate")
     compose.generate(world)
     dashboards.generate(world)
-    if not certs.world_ca(world).exists():
+    if bus and not certs.world_ca(world).exists():
         log.warning("  ! no certificate authority for this world")
     log.info("onboarded %s — `cd world/%s && podman compose up -d` to start it", world, world)
 

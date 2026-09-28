@@ -369,7 +369,6 @@ def render_health(world: str) -> dict:
 
 def generate(world: str) -> None:
     out_dir = DASHBOARD_ROOT / world
-    out_dir.mkdir(parents=True, exist_ok=True)
     # What the plants are doing where anything observes them, and how the agents are doing where the
     # world is monitored — a world whose agents observe nothing, the allotment's, may still be; one
     # that is not monitored has no health dashboard, and a stale one from before is taken away.
@@ -384,6 +383,8 @@ def generate(world: str) -> None:
     elif (stale := out_dir / "health.json").exists():
         stale.unlink()
         log.info("  %s is not monitored — its health dashboard is removed", world)
+    if docs:
+        out_dir.mkdir(parents=True, exist_ok=True)      # a world with nothing to draw gets no folder
     for name, doc in docs:
         out = out_dir / name
         out.write_text(json.dumps(doc, indent=2) + "\n")

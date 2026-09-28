@@ -643,11 +643,13 @@ def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address()
 def test_a_committed_compose_file_is_what_onboarding_renders():
     """A compose file says GENERATED — do not edit, and nothing held it to that. It is what hands a
     container its documents, so one left behind by a change to the documents boots an agent that
-    cannot find itself: a society graph unmounted is an agent the world says nothing about."""
+    cannot find itself: a society graph unmounted is an agent the world says nothing about. Every
+    world has one, a world with no bus as well — onboarding writes it for every world, so a world
+    without one committed is a tree left dirty by the first `orexis-onboard`."""
     from onboarding import compose
 
     composed = sorted(p.parent.name for p in (REPO_ROOT / "world").glob("*/compose.yaml"))
-    assert composed, "no world has a compose file — the guard would compare nothing"
+    assert composed == _worlds(), f"a world with no committed compose file: {sorted(set(_worlds()) - set(composed))}"
     for world in composed:
         assert (REPO_ROOT / "world" / world / "compose.yaml").read_text() == compose.render(world), \
             f"world/{world}/compose.yaml is not what `orexis-compose {world}` renders — regenerate it"
@@ -655,7 +657,8 @@ def test_a_committed_compose_file_is_what_onboarding_renders():
 
 def test_every_shipped_world_with_a_bus_states_one_broker_address():
     """The other direction: the refusal must not fire on a world that is right. A world with no bus
-    — hanoi — states no broker and is refused for that, as before."""
+    — hanoi — states no broker and is refused for that, as before: `broker` is asked for an address
+    that does not exist, and the tools stop asking it for such a world (below)."""
     from onboarding import mqtt
 
     answered = []
@@ -668,6 +671,164 @@ def test_every_shipped_world_with_a_bus_states_one_broker_address():
         assert host and plain, f"{world}: no address"
         answered.append(world)
     assert len(answered) >= 4, f"only {answered} state a broker — the guard would check nothing"
+
+
+# --- a step runs where the world has what it serves: the bus is a premise -----------------------
+
+def test_the_bus_is_a_premise_that_holds_exactly_where_a_world_names_a_broker():
+    """`reading.PREMISES` answers the bus off the world, as the runtime's premises answer a package
+    (#824): it holds for every world whose society names a broker, and for no other — and there is
+    a world of each kind, or the steps it gates would be checked on one side alone."""
+    from onboarding import installation, reading
+
+    held = {w for w in _worlds() if reading.BUS in reading.premises(REPO_ROOT / "world" / w)}
+    named = {w for w in _worlds() if installation.brokers_of(reading.world(REPO_ROOT / "world" / w))}
+    assert held == named == set(_BUS_WORLDS), (held, named)
+    assert set(_worlds()) - held, "every world has a bus — nothing checks a world without one"
+
+
+def _onboarded(tmp_path, monkeypatch, world: str, caplog):
+    """`orexis-onboard <world>` run whole, in-process, on a copy of the world beside the worlds with
+    a bus and a copy of the installation: the series store answered by a stub that records what it
+    was asked, the broker never signalled, and everything minted written into the copy. Answers the
+    copy of the world, what the store was asked, and which brokers were to be reloaded."""
+    import logging
+
+    from onboarding import certs, compose, dashboards, influx, mqtt, onboard
+
+    root = _installed(tmp_path, monkeypatch, {(world, "world.ttl"): lambda text: text})
+    for module in (onboard, certs, dashboards, influx):
+        monkeypatch.setattr(module, "world_dir", lambda name: root / name)
+    for module in (compose, mqtt, dashboards):
+        monkeypatch.setattr(module, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(dashboards, "DASHBOARD_ROOT", tmp_path / "dashboards")
+    asked, reloaded = [], []
+    monkeypatch.setattr(influx, "_provision", lambda w, agents, purpose, rotate: asked.append(("grant", purpose, tuple(agents))))
+    monkeypatch.setattr(influx, "_withdraw", lambda w, agents, purpose: asked.append(("withdraw", purpose, tuple(agents))))
+    monkeypatch.setattr(mqtt, "reload_broker", lambda w: reloaded.append(w) or True)
+    with caplog.at_level(logging.DEBUG):
+        onboard.onboard(world)
+    #  WHAT ONBOARDING'S OWN READS PASS OVER is the kinds it reads next, and is not said at INFO.
+    passed = [r for r in caplog.records if r.getMessage().startswith("passed over")]
+    assert passed, "nothing was passed over — the guard below would check nothing"
+    assert not [r.getMessage() for r in passed if r.levelno >= logging.INFO]
+    return root / world, asked, reloaded
+
+
+@pytest.mark.parametrize("world", ["hanoi", "courier", "tower"])
+def test_a_world_with_no_bus_is_onboarded_without_one(tmp_path, monkeypatch, caplog, world):
+    """Hanoi, the courier and the tower name no broker, and `orexis-onboard` refused all three at the
+    first tool that asked for an address, so none could run in a container. Onboarded now: history
+    granted, metrics withdrawn since none is monitored, no broker credential, ACL or certificate, and
+    the one line saying so — and a compose file of its agents alone, which is the one committed."""
+    import yaml
+
+    from agent.series import HISTORY, METRICS
+    from onboarding.compose import roster
+
+    here, asked, reloaded = _onboarded(tmp_path, monkeypatch, world, caplog)
+    agents = tuple(roster(world))
+    assert agents, f"{world} has no agents — the grants below would check nothing"
+    assert asked == [("grant", HISTORY, agents), ("withdraw", METRICS, agents)]
+    assert reloaded == []
+    secrets = sorted(p.name for p in (here / "secrets").glob("*")) if (here / "secrets").exists() else []
+    assert not [s for s in secrets if s.startswith("mqtt-") or s.endswith((".crt", ".key"))], secrets
+    assert not (here / "mosquitto").exists()
+    said = [r.getMessage() for r in caplog.records if "no bus" in r.getMessage()]
+    assert len(said) == 1 and "mqtt4ssn:Broker" in said[0], said
+
+    written = (here / "compose.yaml").read_text()
+    assert written == (REPO_ROOT / "world" / world / "compose.yaml").read_text(), "not the committed compose file"
+    composed = yaml.safe_load(written)
+    assert set(composed["services"]) == {f"agent-{a}" for a in agents}, "a service that is not an agent"
+    assert set(composed["volumes"]) == {f"orexis-{world}-{a}" for a in agents}
+    for name, service in composed["services"].items():
+        assert not [k for k in service["environment"] if k.startswith("MQTT_")], name
+        assert service["env_file"] == [f"./secrets/influx-history-{name.removeprefix('agent-')}.env"], name
+        assert not [v for v in service["volumes"] if "/app/secrets/" in v], name
+
+
+def test_a_world_with_a_bus_is_onboarded_with_everything(tmp_path, monkeypatch, caplog):
+    """The other side: the sensing world names a broker, so it is granted the bus as before — a
+    credential per principal, the ACL and the broker's config, the authority and every agent's
+    certificate, the broker reloaded — and its compose file carries the broker, and its agent the
+    broker's address."""
+    import yaml
+
+    from agent.series import HISTORY, METRICS
+    from onboarding import mqtt
+    from onboarding.compose import roster
+
+    here, asked, reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
+    agents, _devices = mqtt.grants("sensing")
+    assert asked == [("grant", HISTORY, tuple(roster("sensing"))), ("withdraw", METRICS, tuple(roster("sensing")))]
+    assert reloaded == ["sensing"]
+    for agent in agents:
+        for minted in (f"mqtt-{agent}.env", f"{agent}.crt", f"{agent}.key"):
+            assert (here / "secrets" / minted).exists(), minted
+    for minted in ("secrets/ca.crt", "secrets/broker.crt", "mosquitto/acl.conf", "mosquitto/orexis.conf"):
+        assert (here / minted).exists(), minted
+    assert not [r for r in caplog.records if "no bus" in r.getMessage()]
+    written = (here / "compose.yaml").read_text()
+    assert written == (REPO_ROOT / "world" / "sensing" / "compose.yaml").read_text(), "not the committed compose file"
+    services = yaml.safe_load(written)["services"]
+    assert "mosquitto" in services and "MQTT_HOST" in services["agent-fern"]["environment"]
+
+
+def test_a_simulator_with_no_broker_to_connect_to_is_refused(tmp_path, monkeypatch):
+    """Broken on purpose: the allotment with its broker's type struck from the society. Its systems
+    are still simulated, by a client that connects to a broker, so a compose file of agents alone
+    would drop the simulator in silence; it is refused, and the world named."""
+    from onboarding import compose
+
+    _installed(tmp_path, monkeypatch, {("allotment", "society.ttl"): lambda text: text.replace(":broker a mqtt4ssn:Broker .", "")})
+    with pytest.raises(SystemExit, match="names no mqtt4ssn:Broker for its simulator"):
+        compose.render("allotment")
+
+
+def test_orexis_mqtt_grants_a_world_with_no_bus_nothing_and_says_so(tmp_path, monkeypatch, caplog):
+    """Run alone on a world with no bus, `orexis-mqtt` answers rather than refuses — nothing to grant,
+    as `orexis-onboard` says of the same world — and `provision`, asked directly, refuses before a
+    credential is minted for a bus that is not there: it asks the broker's address first."""
+    import logging
+
+    from onboarding import mqtt
+
+    root = _installed(tmp_path, monkeypatch, {("hanoi", "world.ttl"): lambda text: text})
+    monkeypatch.setattr(mqtt, "reload_broker", lambda w: pytest.fail("a world with no bus had its broker reloaded"))
+    with caplog.at_level(logging.INFO):
+        mqtt.main(["hanoi"])
+    assert [r for r in caplog.records if "no bus" in r.getMessage()]
+    with pytest.raises(SystemExit, match="states no mqtt4ssn:Broker"):
+        mqtt.provision("hanoi")
+    assert not (root / "hanoi" / "secrets").exists(), "credentials minted for a world with no bus"
+
+
+def test_onboarding_passes_over_its_own_kinds_quietly_and_an_unknown_kind_aloud(tmp_path, caplog):
+    """Onboarding reads a world as an agent boots it and then its own kinds, so the first half passes
+    over the deployment and the hardware every time — about ten lines a run, each for a graph the
+    second half reads. Those are DEBUG; a kind no reader declares is still said at INFO, since that
+    is the one `unread` refuses."""
+    import logging
+
+    from onboarding import reading
+
+    with caplog.at_level(logging.DEBUG, logger="runtime"):
+        reading.world(REPO_ROOT / "world" / "terrace")
+    passed = [r for r in caplog.records if r.getMessage().startswith("passed over")]
+    assert {r.levelno for r in passed} == {logging.DEBUG} and len(passed) >= 2, [(r.levelname, r.getMessage()) for r in passed]
+
+    caplog.clear()
+    world = tmp_path / "hanoi"
+    world.mkdir()
+    domain = (REPO_ROOT / "domains" / "hanoi" / "ontology.ttl").as_uri()
+    hanoi = REPO_ROOT / "world" / "hanoi"
+    (world / "world.ttl").write_text((hanoi / "world.ttl").read_text().replace("<../../domains/hanoi/ontology.ttl>", f"<{domain}>"))
+    (world / "state.ttl").write_text((hanoi / "state.ttl").read_text().replace("orexis:StateGraph", "orexis:StateGrpah"))
+    with caplog.at_level(logging.DEBUG, logger="runtime"):
+        reading.world(world)
+    aloud = [r for r in caplog.records if r.getMessage().startswith("passed over") and r.levelno >= logging.INFO]
+    assert len(aloud) == 1 and "StateGrpah" in aloud[0].getMessage(), [r.getMessage() for r in aloud]
 
 
 # --- the entry documents name only what exists --------------------------------------------------

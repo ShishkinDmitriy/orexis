@@ -323,17 +323,14 @@ def device_credential_file(world: str, device_id: str) -> Path:
     return world_dir(world) / "secrets" / f"mqtt-{device_id}.env"
 
 
-def provisioned_worlds() -> list[str]:
-    """Every world whose agents already hold credentials.
-
-    The broker is one process serving whatever is running, so its ACL has to span all of them —
-    and rebuilding it from only the world just provisioned would lock the others out. This is
-    the operator's view by necessity; see the note in `ratified.py`.
-    """
-    return [w for w in worlds() if any((world_dir(w) / "secrets").glob("mqtt-*.env"))]
-
-
 def provision(world: str, rotate: bool = False) -> None:
+    """Every principal's credential, the agents' certificates, and this world's broker files.
+
+    The broker's address is asked FIRST, so a world it refuses — one naming no broker, or two, or
+    one with no address asserted or allocated — is refused before a credential is minted for a bus
+    that is not there. The callers ask the premise (`reading.BUS`) and do not call this for a world
+    with no bus."""
+    host = broker_host(world)
     agents, devices = grants(world)
     if not agents:
         raise SystemExit(f"orexis-mqtt: world {world!r} declares no agents")
@@ -357,8 +354,7 @@ def provision(world: str, rotate: bool = False) -> None:
 
     # Agents also get a client certificate. Boards deliberately do not: a deep-sleeping board
     # would pay a TLS handshake on every wake, and the ACL below authorises both the same way.
-    certs.issue_for_world(world, agents.keys(), rotate=rotate,
-                          broker_host=broker_host(world))
+    certs.issue_for_world(world, agents.keys(), rotate=rotate, broker_host=host)
 
     rebuild(world)
     write_config(world)
@@ -534,11 +530,14 @@ def reload_broker(world: str) -> bool:
     return False
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    """A world with no bus is answered, not refused: there is nothing to grant it, which is what
+    `orexis-onboard` says of it too, and a loop running each step over every world goes on."""
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
         prog="orexis-mqtt",
-        description="Mint each principal's broker credential and derive the ACL from the world.")
+        description="Mint each principal's broker credential and derive the ACL from the world. "
+                    "A world whose society names no broker has no bus, and is granted nothing.")
     p.add_argument("world",
                    help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("--rotate", action="store_true",
@@ -547,8 +546,11 @@ def main() -> None:
     p.add_argument("--no-reload", action="store_true",
                    help="write the files but do not signal the broker. It will keep enforcing "
                         "the previous ACL until it is reloaded or restarted.")
-    args = p.parse_args()
+    args = p.parse_args(argv)
     log.info("world %s", args.world)
+    if reading.BUS not in reading.premises(world_dir(args.world)):
+        log.info("  no bus — its society names no mqtt4ssn:Broker, so there is nothing to grant")
+        return
     provision(args.world, rotate=args.rotate)
     if not args.no_reload:
         reload_broker(args.world)

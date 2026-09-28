@@ -49,6 +49,6 @@ and the reason.
 
 # Run it
 
-For a world of devices or several agents, [onboarding](/domain/onboarding/onboarding.md) grants the
-credentials and writes the compose file: `orexis-onboard <name>`, then
-[run-a-world](/runbooks/run-a-world.md).
+To run it in containers, [onboarding](/domain/onboarding/onboarding.md) grants the credentials and
+writes the compose file: `orexis-onboard <name>`, then [run-a-world](/runbooks/run-a-world.md). A
+world with no bus is onboarded too — its compose file is its agents and nothing of a broker.
