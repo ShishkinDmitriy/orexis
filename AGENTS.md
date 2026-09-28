@@ -931,6 +931,17 @@ it is a record wearing a bullet.
   and a rate known as a range is a corridor whose worst side each stretch is
   (a-prediction-accumulates-rates-between-happenings).
 
+- **A forecast is a series a sensor reads, and a public service's address is wiring** — a weather
+  service is a `sosa:Sensor` whose one response holds many stretches, so sensing writes a
+  `sensing:ForecastGraph` per stretch and `missed` says when it is due, since a series is pulled;
+  the HTTP member adopts the WoT Thing Description, its target a URI template the place's
+  `schema:geo` fills, and the location lives in the world's `secrets/`, which a boot reads and git
+  does not hold (a-forecast-is-a-series-a-sensor-reads).
+- **Several transport members are one to the container** — `Transports` hands a message back to the
+  member that queued it and a nudge or a command to the member that `reaches` the device, so a
+  world may reach its board over MQTT and its forecast over HTTP; and a sensor is the agent's where
+  it is hosted by what the agent acts for, a sample of it, or a place that contains it.
+
 ## The rules the code lives by
 
 1. **Code may reference T-Box terms; never an instance.** `planning:Desire` is fine;

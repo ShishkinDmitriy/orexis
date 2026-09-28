@@ -1,0 +1,63 @@
+--- case
++++ expected
+@@ -36,13 +36,7 @@
+   :zamioculcas schema:containedInPlace :balcony .
+ }
+ 
+-GRAPH forecast:weather_20260101T090000Z {
+-  orexis:obs_balcony_precipitation_20260101T090000Z a sosa:Observation .
+-  orexis:obs_balcony_precipitation_20260101T090000Z sosa:hasFeatureOfInterest :balcony .
+-  orexis:obs_balcony_precipitation_20260101T090000Z sosa:hasSimpleResult 2.0 .
+-  orexis:obs_balcony_precipitation_20260101T090000Z sosa:madeBySensor :weather .
+-  orexis:obs_balcony_precipitation_20260101T090000Z sosa:observedProperty :precipitation .
+-}
++
+ 
+ GRAPH :catalogue {
+   :catalogue a orexis:CatalogueGraph .
+@@ -52,10 +46,39 @@
+   :ontology a orexis:PublicGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
+-  forecast:weather_20260101T090000Z a orexis:BeliefGraph .
+-  forecast:weather_20260101T090000Z a orexis:Graph .
+-  forecast:weather_20260101T090000Z a sensing:ForecastGraph .
+-  forecast:weather_20260101T090000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+-  forecast:weather_20260101T090000Z orexis:arrivedBy orexis:Received .
+-  forecast:weather_20260101T090000Z orexis:beliefsOf :keeper .
++  forecast:weather_20260101T120000Z a orexis:BeliefGraph .
++  forecast:weather_20260101T120000Z a orexis:Graph .
++  forecast:weather_20260101T120000Z a sensing:ForecastGraph .
++  forecast:weather_20260101T120000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  forecast:weather_20260101T120000Z orexis:arrivedBy orexis:Received .
++  forecast:weather_20260101T120000Z orexis:beliefsOf :keeper .
++  forecast:weather_20260101T140000Z a orexis:BeliefGraph .
++  forecast:weather_20260101T140000Z a orexis:Graph .
++  forecast:weather_20260101T140000Z a sensing:ForecastGraph .
++  forecast:weather_20260101T140000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
++  forecast:weather_20260101T140000Z orexis:arrivedBy orexis:Received .
++  forecast:weather_20260101T140000Z orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH forecast:weather_20260101T120000Z {
++  orexis:obs_balcony_precipitation_20260101T120000Z a sosa:Observation .
++  orexis:obs_balcony_precipitation_20260101T120000Z prov:wasGeneratedBy :keeper .
++  orexis:obs_balcony_precipitation_20260101T120000Z sosa:hasFeatureOfInterest :balcony .
++  orexis:obs_balcony_precipitation_20260101T120000Z sosa:hasSimpleResult 1.2 .
++  orexis:obs_balcony_precipitation_20260101T120000Z sosa:madeBySensor :weather .
++  orexis:obs_balcony_precipitation_20260101T120000Z sosa:observedProperty :precipitation .
++  orexis:obs_balcony_precipitation_20260101T120000Z sosa:phenomenonTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  orexis:obs_balcony_precipitation_20260101T120000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++}
++
++GRAPH forecast:weather_20260101T140000Z {
++  orexis:obs_balcony_precipitation_20260101T140000Z a sosa:Observation .
++  orexis:obs_balcony_precipitation_20260101T140000Z prov:wasGeneratedBy :keeper .
++  orexis:obs_balcony_precipitation_20260101T140000Z sosa:hasFeatureOfInterest :balcony .
++  orexis:obs_balcony_precipitation_20260101T140000Z sosa:hasSimpleResult 0.3 .
++  orexis:obs_balcony_precipitation_20260101T140000Z sosa:madeBySensor :weather .
++  orexis:obs_balcony_precipitation_20260101T140000Z sosa:observedProperty :precipitation .
++  orexis:obs_balcony_precipitation_20260101T140000Z sosa:phenomenonTime "2026-01-01T14:00:00+00:00"^^xsd:dateTime .
++  orexis:obs_balcony_precipitation_20260101T140000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++}

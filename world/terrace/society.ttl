@@ -1,6 +1,8 @@
 @prefix : <http://example.org/orexis/world/terrace#> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix td: <https://www.w3.org/2019/wot/td#> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
@@ -33,3 +35,11 @@
 :air_temp_terrace mqtt4ssn:observesTopic :terrace_readings .
 :air_humidity_terrace mqtt4ssn:observesTopic :terrace_readings .
 :air_pressure_terrace mqtt4ssn:observesTopic :terrace_readings .
+
+#  THE FORECAST SERVICE, read over HTTP: a Thing whose form's target is a URI template, its latitude and
+#  longitude filled from the terrace's schema:geo, which secrets/place.ttl states and git does not hold.
+#  Open-Meteo asks no key; GMT keeps the instants it answers in UTC.
+:forecast_terrace a td:Thing ;
+    td:hasForm [ a hctl:Form ;
+        hctl:hasTarget "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=precipitation&timezone=GMT&forecast_days=2" ;
+        hctl:forContentType "application/json" ] .

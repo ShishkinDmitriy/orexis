@@ -18,7 +18,7 @@ rain wetting it, a barrel leaking. It says which property it `prediction:moves` 
 subject `$feature` whose value is `$value` at the instant `$at`. It may answer `?low` and `?high`
 instead, a rate known only as a range, and `?until`, the value past which it contributes nothing.
 A drift reads whatever holds at `$at`: the world's facts, such as `climate:driesPerDay`, and a
-[forecast](/domain/kernel/forecast.md) hour. Every drift moving one property ADDS: the value moves by
+[forecast](/domain/sensing/forecast.md) hour. Every drift moving one property ADDS: the value moves by
 the sum, and no drift knows another exists.
 
 # What is written

@@ -10,7 +10,8 @@ to the topic the sensor's board `mqtt4ssn:listensToTopic`, by a pattern with no 
 since a publish takes a topic name; the payloads are the ones the firmware has always read,
 `{"sleep_s": n}` retained so a board deep asleep finds it on waking, and `{"sense": true}` not
 retained. Which sensors are the agent's is never authored: they are the ones `sosa:isHostedBy`
-what it `orexis:actsFor`, or a sample of it, and `open` subscribes to their topics' patterns.
+what it `orexis:actsFor`, a sample of it, or a place that contains it (`schema:containedInPlace`),
+and `open` subscribes to their topics' patterns.
 
 **A MESSAGE BECOMES OBSERVATIONS THROUGH SENSING, AND THE TRANSPORT KNOWS NO CODEC.** `handle`
 takes a message's topic, bytes and instant and calls sensing's `received` once per sensor of the
@@ -44,7 +45,7 @@ from datetime import datetime
 
 from agent import clock
 from agent.ontology import PUBLIC, local_of
-from agent.store import graphs_of, rows
+from agent.store import answer, graphs_of, rows
 from agent.transport.transport import Transport
 
 log = logging.getLogger("mqtt")
@@ -67,11 +68,16 @@ ORDER BY ?pattern"""
 #  EVERY SENSOR OF THE AGENT'S THAT PUBLISHES ON A TOPIC, with each pattern that names it.
 _MINE_Q = """
 SELECT ?sensor ?pattern WHERE {
-  $me orexis:actsFor ?subject .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?subject ; mqtt4ssn:observesTopic ?topic .
+  $me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
+  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host ; mqtt4ssn:observesTopic ?topic .
   ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
 ORDER BY ?sensor ?pattern"""
 
+
+#  WHAT THIS MEMBER REACHES: a device that publishes on a topic, or listens on one, or whose board does.
+_REACHES_Q = """
+ASK { { $device mqtt4ssn:observesTopic ?topic } UNION { $device mqtt4ssn:listensToTopic ?topic }
+      UNION { ?board ssn:hasSubSystem $device ; mqtt4ssn:listensToTopic ?topic } }"""
 
 #  WHERE AN AGENT IS TOLD THINGS: the topic it listens to itself, as a board listens for
 #  commands. Its own is what it subscribes to; a peer's is where a document to it is published.
@@ -131,6 +137,9 @@ class Mqtt(Transport):
         client.loop_start()
         log.info("%s on %s:%s%s", local_of(me), host, port, " with a certificate" if ca and cert and key else "")
         return cls(me, client)
+
+    def reaches(self, store, device: str) -> bool:
+        return bool(answer(store, _REACHES_Q, graphs_of(store, PUBLIC), device=device)["boolean"])
 
     def set_cadence(self, store, sensor: str, sleep_s: int) -> bool:
         topic = self._command_topic(store, sensor)
@@ -201,9 +210,7 @@ class Mqtt(Transport):
         from agent.sensing.received import received
         written = []
         for sensor in mine:
-            graph = received(store, self.me, sensor, payload, at, memo=memo)
-            if graph:
-                written.append((sensor, graph))
+            written += [(sensor, graph) for graph in received(store, self.me, sensor, payload, at, memo=memo)]
         return written
 
     def publish(self, topic: str, payload: dict, retain: bool) -> None:

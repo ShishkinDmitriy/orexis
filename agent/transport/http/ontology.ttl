@@ -1,0 +1,14 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix td: <https://www.w3.org/2019/wot/td#> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS HTTP TRANSPORT, AGENT 0.2.0.
+#  The HTTP transport of Agent 0.2.0 declares no word of its own: it speaks the W3C Web of Things
+#  Thing Description and its hypermedia controls, and these are the terms it reads. A sensor reached
+#  over HTTP is a td:Thing whose td:hasForm is an hctl:Form, and the form's hctl:hasTarget is the
+#  URI template it is read at, its variables filled from the schema:geo of what the sensor is hosted
+#  by. The adoption is by prefix: this file names the two namespaces, and the vendored copies the
+#  tests read are tests/fixtures/vocabularies/wot-td.ttl and wot-hctl.ttl.

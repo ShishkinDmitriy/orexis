@@ -24,6 +24,12 @@ arrived. The thread a message arrives on is the member's client's, and a write b
 one executing thread, so `connect` is handed the container's `deliver` and a message goes there
 — to a queue — and never to `handle` directly.
 
+SEVERAL MEMBERS ARE ONE TRANSPORT TO THE CONTAINER. A world may reach its board over MQTT and a
+forecast service over HTTP, so the container connects every member whose premise holds and holds
+them behind `Transports`: each member is handed a `deliver` that tags its messages, so a message
+goes back to the member that queued it, and a nudge, a cadence or a command goes to the member
+that `reaches` the device — a question only a loaded member is asked, so it imports nothing.
+
 It was sensing's `Driver`, from 0.1.0, where the sensing module drove the transport; in 0.2.0
 sensing is called and never calling, and a contract nothing in sensing reads is not sensing's.
 """
@@ -67,8 +73,59 @@ class Transport:
     def sense_now(self, store, sensor: str) -> None:
         """Ask for a reading now, best-effort."""
 
+    def reaches(self, store, device: str) -> bool:
+        """Whether this member reaches `device` — a sensor it is read over, an actuator or a board
+        it commands — which is where the container sends a nudge, a cadence or a command."""
+        return False
+
     def actuate(self, store, actuator: str, payload: dict) -> bool:
         """Send a device the command a step was sized to — the payload an `execution:Command`
         answered when the step was taken. Whether anything was SENT: a member that does not
         reach the actuator sends nothing, and the executor's patience says what that costs."""
         return False
+
+
+class Transports(Transport):
+    """Several members as the one transport the container holds: a message handed back to the
+    member that queued it, and a device's nudge, cadence or command to the member reaching it."""
+
+    def __init__(self, members: list[Transport]):
+        self.members = list(members)
+
+    @classmethod
+    def connect(cls, me: str, deliver, *, members=(), environ=None, client=None) -> Transport:
+        """Every member of `members` brought up, each handed a `deliver` that tags its messages with
+        the member; one member is itself, and no member is nothing to hold."""
+        members = list(members)
+        if len(members) == 1:
+            return members[0].connect(me, deliver, environ=environ)
+        return cls([member.connect(me, lambda channel, payload, at, n=n: deliver((n, channel), payload, at),
+                                   environ=environ) for n, member in enumerate(members)])
+
+    def open(self, store) -> list[str]:
+        return [channel for member in self.members for channel in member.open(store)]
+
+    def handle(self, store, channel, payload: bytes, at: datetime, *, memo=None) -> list[tuple[str | None, str]]:
+        n, own = channel
+        return self.members[n].handle(store, own, payload, at, memo=memo)
+
+    def reaches(self, store, device: str) -> bool:
+        return self._reaching(store, device) is not None
+
+    def tell(self, store, to: str, document: bytes) -> bool:
+        return any(member.tell(store, to, document) for member in self.members)
+
+    def set_cadence(self, store, sensor: str, sleep_s: int) -> bool:
+        member = self._reaching(store, sensor)
+        return member is not None and member.set_cadence(store, sensor, sleep_s)
+
+    def sense_now(self, store, sensor: str) -> None:
+        if (member := self._reaching(store, sensor)) is not None:
+            member.sense_now(store, sensor)
+
+    def actuate(self, store, actuator: str, payload: dict) -> bool:
+        member = self._reaching(store, actuator)
+        return member is not None and member.actuate(store, actuator, payload)
+
+    def _reaching(self, store, device: str) -> Transport | None:
+        return next((member for member in self.members if member.reaches(store, device)), None)

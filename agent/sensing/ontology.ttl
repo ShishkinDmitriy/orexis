@@ -34,6 +34,15 @@
     orexis:StateGraph so that the readers of the present find it by that kind today; that parent
     goes when what a plan may change is the actions' footprint rather than a graph kind.""" .
 
+:ForecastGraph a owl:Class ;
+    rdfs:subClassOf orexis:BeliefGraph ;
+    rdfs:label "Forecast graph" ;
+    rdfs:comment """One stretch of a forecast: the sosa:Observation a sensor reading a series made of
+    one stretch ahead - of what, which property, the number, the instant it was issued, the sensor -
+    holding during that stretch, and forgotten with the rest of that sensor's forecast when the
+    next arrives. Named for what it holds. A belief and not a reading: not beneath
+    orexis:StateGraph, so no plan forks it and no prediction takes it for the observation in hand.""" .
+
 :Codec a owl:Class ;
     rdfs:label "Codec" ;
     rdfs:comment """A wire format, both ways: how a sensor's bytes are a document and a document is
@@ -80,6 +89,22 @@
     differ only here. The middle stage of the pipeline, document → raw value, and the one that
     is data rather than a member. Absent, the pointer is /value, which is what every
     single-property device here publishes.""" .
+
+:startsPointer a owl:DatatypeProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range xsd:string ;
+    rdfs:label "starts pointer" ;
+    rdfs:comment """Where a decoded document keeps the instants a SERIES' values are for, as a JSON
+    Pointer to an array of them, each the START of the stretch its value holds over, the next
+    instant its end. A sensor stating it reads a series, its reading pointer finding the array of
+    values, and writes a forecast graph per stretch rather than one observation.""" .
+
+:endsPointer a owl:DatatypeProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range xsd:string ;
+    rdfs:label "ends pointer" ;
+    rdfs:comment """As startsPointer, the instants each the END of the stretch its value holds over,
+    the one before its start: what a service summing the hour up to a time says of rain.""" .
 
 :silentSince a owl:DatatypeProperty ;
     rdfs:domain sosa:Sensor ;

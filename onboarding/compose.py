@@ -92,12 +92,13 @@ def roster(world: str) -> list[str]:
 
 
 def read_by_an_agent(world: str) -> set[Path]:
-    """Every document in the world's directory and under `beliefs/` holding a graph of a kind an
+    """Every document in the world's directory, under `beliefs/` and under `secrets/` holding a graph of a kind an
     agent reads — asked of the agent's own vocabulary as its boot has it, and not of onboarding's,
     whose kinds are exactly the ones an agent is not to be handed."""
     here = world_dir(world).resolve()
     store = world_of(here, others=reading.ours())
-    candidates = [*here.iterdir(), *((here / "beliefs").iterdir() if (here / "beliefs").is_dir() else [])]
+    candidates = [*here.iterdir(), *((here / "beliefs").iterdir() if (here / "beliefs").is_dir() else []),
+                  *((here / "secrets").iterdir() if (here / "secrets").is_dir() else [])]
     return {p for p in candidates if p.is_file() and p.suffix in DOCUMENTS
             and any(known(store, kinds) for kinds in kinds_in(document(p)).values())}
 
@@ -145,10 +146,12 @@ def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) 
 
 
 def _documents(world: str, read: set[Path], agent_id: str | None = None) -> str:
-    """The world's documents an agent reads, file by file, and an agent's own beliefs file where
-    it has one — never another agent's."""
+    """The world's documents an agent reads, file by file — those it keeps in `secrets/` among them,
+    which are not committed — and an agent's own beliefs file where it has one, never another
+    agent's."""
     here = world_dir(world).resolve()
     files = [p for p in sorted(here.iterdir()) if p in read]
+    files += [p for p in sorted((here / "secrets").glob("*")) if p in read]
     if agent_id is not None:
         files += [p for p in sorted((here / "beliefs").glob(f"{agent_id}.*")) if p in read]
     return "".join(f"\n      - ./{p.relative_to(here)}:/app/world/{world}/{p.relative_to(here)}:ro" for p in files)

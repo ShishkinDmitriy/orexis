@@ -702,6 +702,8 @@ _VENDORED_VOCABULARIES = {
     "dcterms": "dcterms.ttl",
     "sh": "shacl.ttl",
     "mqtt4ssn": "mqtt4ssn.ttl",
+    "td": "wot-td.ttl",
+    "hctl": "wot-hctl.ttl",
 }
 
 

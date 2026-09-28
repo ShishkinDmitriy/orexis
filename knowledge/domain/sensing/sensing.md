@@ -18,11 +18,14 @@ Pointer), and the scaling (`sensing:scaledBy`, identity where nothing says other
 [observation](/domain/sensing/observation.md) is written into the graph of that key, an
 `sensing:ObservationGraph` beneath `orexis:StateGraph`, classified `orexis:Received` and holding
 from its instant until the next is due by the sensor's `ssn-system:Frequency`. A payload that
-does not decode writes nothing and says so in the log.
+does not decode writes nothing and says so in the log. A sensor reading a SERIES - one stating
+`sensing:endsPointer` or `sensing:startsPointer` beside its reading pointer - writes one
+[forecast](/domain/sensing/forecast.md) per stretch still ahead instead, and replaces its last.
 
 **`missed`** is what the container's tick asks: which sensors' readings have fallen due with
 nothing arrived, for the container to ask again, and which have been silent past a limit of their
-cadences — said by `sensing:silentSince` until a reading ends it.
+cadences — said by `sensing:silentSince` until a reading ends it. A series sensor is due when no
+forecast of its stands or the standing one was issued a cadence ago.
 
 # What it leaves to others
 
@@ -37,6 +40,6 @@ one, so the contract points one way.
 # Its words
 
 SOSA's and SSN's wherever they have one — a sensor `sosa:observes` a property and
-`sosa:isHostedBy` what it is mounted in, and that pair is the key — and six of its own for what
-neither standard says: the observation graph's kind, the silence, the three sides and the
-pipeline's binding.
+`sosa:isHostedBy` what it is mounted in, and that pair is the key — and its own for what neither
+standard says: the observation graph's kind and the forecast's, the silence, the three sides, the
+pipeline's binding and the two pointers a series is read by.

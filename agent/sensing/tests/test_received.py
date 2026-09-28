@@ -3,7 +3,8 @@
 A case in `received/` is a belief base as bytes find it — the world with the pot's ranges and
 the probe's frequency, whatever observation of the key already stands — and the diff is what
 the bytes leave: the graph of the key holding one sosa:Observation with its number, and the
-catalogue's account of it, holding until the next reading is due. No side is written: that is
+catalogue's account of it, holding until the next reading is due — or, for a sensor reading a
+series, a forecast graph per stretch ahead. No side is written: that is
 the rules' to conclude.
 """
 
@@ -24,11 +25,17 @@ TEST = "http://example.org/test#"
 PROBE = TEST + "probe"
 OBSERVED = "http://example.org/orexis/graph/observed/keeper/"     # the writer's name, for eyes
 
-#  WHAT EACH CASE'S BYTES SAY, and which graph they land in.
+FORECAST = "http://example.org/orexis/graph/forecast/keeper/"     # the writer's name, for eyes
+
+#  WHAT EACH CASE'S BYTES SAY, and which graphs they land in.
 BYTES = {
-    "a_first_reading_becomes_an_observation": (b'{"value": 0.22}', "zamioculcas"),
-    "a_second_reading_replaces_the_first": (b'{"value": 0.08}', "zamioculcas"),
-    "a_probes_sample_keys_the_node": (b'{"value": 0.22}', "patch"),
+    "a_first_reading_becomes_an_observation": (b'{"value": 0.22}', [OBSERVED + "zamioculcas_moisture"]),
+    "a_second_reading_replaces_the_first": (b'{"value": 0.08}', [OBSERVED + "zamioculcas_moisture"]),
+    "a_probes_sample_keys_the_node": (b'{"value": 0.22}', [OBSERVED + "patch_moisture"]),
+    "a_forecast_is_a_graph_per_stretch_ahead": (
+        b'{"hourly": {"time": ["2026-01-01T11:00", "2026-01-01T12:00", "2026-01-01T13:00", "2026-01-01T14:00",'
+        b' "2026-01-01T15:00"], "precipitation": [0.5, 0.0, 1.2, null, 0.3]}}',
+        [FORECAST + "weather_20260101T120000Z", FORECAST + "weather_20260101T140000Z"]),
 }
 
 
@@ -36,9 +43,10 @@ BYTES = {
 def test_received_leaves_the_observation_the_patch_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
-    payload, feature = BYTES[case.stem]
-    graph = received(store, snapshots.ME, PROBE, payload, snapshots.NOW)
-    assert graph == f"{OBSERVED}{feature}_moisture"
+    payload, expected = BYTES[case.stem]
+    sensor = TEST + ("weather" if "forecast" in case.stem else "probe")
+    written = received(store, snapshots.ME, sensor, payload, snapshots.NOW)
+    assert written == expected
     snapshots.held_to_diff(case, request, "received", snapshots.snapshot_of(store))
 
 
@@ -47,7 +55,7 @@ def test_bytes_that_hold_no_reading_write_nothing(monkeypatch, snapshots, caplog
     store = snapshots.stand_in(CASES_DIR / "a_first_reading_becomes_an_observation.trig")
     before = set(snapshots.graph_names(store))
     with caplog.at_level("WARNING", logger="pipeline"):
-        assert received(store, snapshots.ME, PROBE, b'{"temperature": 21}', snapshots.NOW) is None
+        assert received(store, snapshots.ME, PROBE, b'{"temperature": 21}', snapshots.NOW) == []
     assert set(snapshots.graph_names(store)) == before
     assert "unread" in caplog.text
 
@@ -59,7 +67,7 @@ def test_a_sensor_with_no_host_has_no_key_and_writes_nothing(monkeypatch, snapsh
     store = snapshots.stand_in(BOARD)
     before = set(snapshots.graph_names(store))
     with caplog.at_level("WARNING", logger="received"):
-        assert received(store, snapshots.ME, TEST + "loose", b'{"value": 0.2}', snapshots.NOW) is None
+        assert received(store, snapshots.ME, TEST + "loose", b'{"value": 0.2}', snapshots.NOW) == []
     assert set(snapshots.graph_names(store)) == before
     assert "no key" in caplog.text
 
@@ -70,7 +78,7 @@ def test_one_message_for_two_sensors_is_two_observations(monkeypatch, snapshots)
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(BOARD)
     message = b'{"temperature": 21.5, "soil": {"moisture": 0.22}}'
-    written = [received(store, snapshots.ME, sensor, message, snapshots.NOW) for sensor in (PROBE, TEST + "thermo")]
+    written = [g for sensor in (PROBE, TEST + "thermo") for g in received(store, snapshots.ME, sensor, message, snapshots.NOW)]
     assert written == [OBSERVED + "zamioculcas_moisture", OBSERVED + "zamioculcas_warmth"]
     found = rows(store, "SELECT ?p ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:observedProperty ?p ; sosa:hasSimpleResult ?v } } ORDER BY ?p", ())
     assert [(r["p"].rsplit("#", 1)[-1], float(r["v"])) for r in found] == [("moisture", 0.22), ("warmth", 21.5)]
@@ -81,7 +89,7 @@ def test_a_sensor_stating_no_frequency_stands_until_replaced(monkeypatch, snapsh
     reading, so the observation has no end."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(BOARD)
-    graph = received(store, snapshots.ME, PROBE, b'{"soil": {"moisture": 0.2}}', snapshots.NOW)
+    [graph] = received(store, snapshots.ME, PROBE, b'{"soil": {"moisture": 0.2}}', snapshots.NOW)
     period = rows(store, "SELECT ?start ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g dcterms:temporal ?p . "
                          "?p orexis:start ?start . OPTIONAL { ?p orexis:end ?end } } }", (), g=graph)
     assert len(period) == 1 and period[0].get("end") is None, period

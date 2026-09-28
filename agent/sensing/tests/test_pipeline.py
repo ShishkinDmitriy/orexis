@@ -4,12 +4,13 @@ which is None and a warning, never a number."""
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
 from agent.sensing.pipeline import (CODECS, DEFAULT_POINTER, SCALINGS, Codec, CodecError, JsonCodec,
-                                    PointerError, Scaling, decode, resolve)
+                                    PointerError, Scaling, decode, decode_series, reads_series, resolve)
 
 WORLDS = Path(__file__).parent / "worlds"
 POT = WORLDS / "a_pot_and_its_probe.trig"
@@ -95,3 +96,37 @@ def test_the_json_codec_codes_both_ways():
     with pytest.raises(CodecError):
         JsonCodec().decode(b"{")
     assert DEFAULT_POINTER == "/value"
+
+
+SERIES = Path(__file__).parent / "received" / "a_forecast_is_a_graph_per_stretch_ahead.trig"
+
+
+def _at(hour: int) -> datetime:
+    return datetime(2026, 1, 1, hour, tzinfo=timezone.utc)
+
+
+def test_an_ends_pointer_makes_each_value_the_stretch_up_to_its_instant(snapshots):
+    """The weather service states an ends pointer: the amount at one o'clock is what falls from
+    noon to one, and the first stretch is as long as its neighbour."""
+    store = snapshots.stand_in(SERIES)
+    assert reads_series(store, TEST + "weather") and not reads_series(store, TEST + "probe")
+    got = decode_series(store, TEST + "weather", b'{"hourly": {"time": ["2026-01-01T13:00", "2026-01-01T14:00"],'
+                                                   b' "precipitation": [0.4, 0.0]}}')
+    assert got == [(_at(12), _at(13), 0.4), (_at(13), _at(14), 0.0)]
+
+
+def test_a_starts_pointer_and_epoch_instants_make_each_value_the_stretch_from_its_instant(snapshots):
+    store = snapshots.stand_in(SERIES)
+    store.update("""PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX : <http://example.org/test#>
+                    DELETE WHERE { GRAPH :world { :weather sensing:endsPointer ?p } } ;
+                    INSERT DATA { GRAPH :world { :weather sensing:startsPointer "/hourly/time" } }""")
+    noon = int(_at(12).timestamp())
+    got = decode_series(store, TEST + "weather", f'{{"hourly": {{"time": [{noon}, {noon + 3600}], "precipitation": [1, 2]}}}}'.encode())
+    assert got == [(_at(12), _at(13), 1.0), (_at(13), _at(14), 2.0)]
+
+
+def test_a_series_whose_arrays_disagree_is_unread(snapshots, caplog):
+    store = snapshots.stand_in(SERIES)
+    with caplog.at_level("WARNING", logger="pipeline"):
+        assert decode_series(store, TEST + "weather", b'{"hourly": {"time": ["2026-01-01T13:00"], "precipitation": [1, 2]}}') is None
+    assert "unread series" in caplog.text

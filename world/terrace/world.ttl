@@ -32,7 +32,7 @@
 #  history the agent already keeps; the rain drift reads a forecast hour for the terrace, and until
 #  one arrives the bed only dries.
 :terrace a schema:Place ;
-    rdfs:comment "The terrace: outdoors, open to the rain." .
+    rdfs:comment "The terrace: outdoors, open to the rain. Where it is — its schema:geo — is in secrets/place.ttl, which is not committed." .
 
 :terrace_bed a sosa:FeatureOfInterest ;
     orexis:localId "terrace_bed" ;
@@ -44,6 +44,20 @@
 :terrace_bed_operating a ssn-system:OperatingRange ;
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
                              schema:minValue 0.25 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] .
+
+#  THE FORECAST: a weather service's hourly rain on the terrace, a sensor that reads a SERIES — software,
+#  which SOSA admits as a sensor. Each amount is what falls in the hour up to its time, so its instants
+#  END their stretches. It is asked for hourly; where it is read is society.ttl, filled from the
+#  terrace's location in secrets/place.ttl.
+:forecast_terrace a sosa:Sensor ;
+    orexis:localId "forecast_terrace" ;
+    schema:unitCode unit:MilliM-PER-HR ;
+    sosa:isHostedBy :terrace ;
+    sosa:observes climate:Precipitation ;
+    sensing:readingPointer "/hourly/precipitation" ;
+    sensing:endsPointer "/hourly/time" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 60 ; schema:unitCode unit:MIN ] ] .
 
 #  THE FOUR VALUES of one message, one sensor each, every one reporting at the board's heartbeat.
 :moisture_sensor_terrace a sosa:Sensor ;
