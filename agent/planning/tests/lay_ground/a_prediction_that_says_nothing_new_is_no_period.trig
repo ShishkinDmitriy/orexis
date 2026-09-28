@@ -1,17 +1,17 @@
-# a_forecast_that_says_nothing_new_is_no_period
+# a_prediction_that_says_nothing_new_is_no_period
 #
-# TWO FORECASTS AND ONE NEW GROUND. `:dip` applies at 12:30 and restates what the readings
+# TWO PREDICTIONS AND ONE NEW GROUND. `:dip` applies at 12:30 and restates what the readings
 # already say; `:refill` applies at 13:00 and changes the level. Three boundaries in the
 # store, and the fill lays TWO grounds: the present, open until 13:00, and the refilled one
 # after it. The middle instant is not a period, because nothing a met-test could read moved
 # there and so nothing it could answer differs.
 #
 # A PREDICTION'S GRAPH IS WHAT IT ADDS, and its catalogue row says when it applies and what it
-# supersedes. The adds are CONCRETE — a value at an instant, which is what a forecast is — and
+# supersedes. The adds are CONCRETE — a value at an instant, which is what a prediction is — and
 # only the retract is a pattern, because what is standing in that place is not something a
-# forecast can name in advance. That is what lets one REPLACE a reading: as a state it was
+# prediction can name in advance. That is what lets one REPLACE a reading: as a state it was
 # merely handed alongside, so a shape holding over every value still saw the stale one, and a
-# tank low now with a forecast refilling it read unmet for ever.
+# tank low now with a prediction refilling it read unmet for ever.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 

@@ -16,6 +16,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
+* [forecast](/domain/kernel/forecast.md) - Another party's word about a period ahead, a graph holding during it; testimony, never the agent's own prediction.
 * [series](/domain/kernel/series.md) - What a person watches and the agent never reads: history contributed by the package that decides it, metrics as each package's code, a point a minute.
 
 # Sensing — bytes become observations
@@ -37,7 +38,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Prediction — the stretches ahead
 
-* [prediction](/domain/prediction/prediction.md) - One graph per stretch between range crossings, a drift's number in each; the planner lays a ground per stretch.
+* [prediction](/domain/prediction/prediction.md) - Drifts answer rates that add, accumulated between happenings; one graph per stretch between range crossings; a ground per stretch.
+* [corridor](/domain/prediction/corridor.md) - A rate known as a range gives the lowest and highest trajectory; a stretch is the corridor's worst side.
 
 # Planning — what is wanted, and how to get there
 

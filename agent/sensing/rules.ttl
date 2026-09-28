@@ -15,8 +15,8 @@
 #  A range is SSN-System's, stated by what hosts the sensor, by what that is a sample of — a sample
 #  stands for its subject — or by the sensor itself, whose condition is for the observed property
 #  and states a floor and a ceiling.
-#  The bounds are inclusive on the inside, so a result on a bound is inside — the bisection that
-#  places a crossing agrees.
+#  The bounds are inclusive on the inside, so a result on a bound is inside — and a prediction
+#  checks the number it writes against the same bounds, so a stretch reads the side it is.
 
 :sides a sh:RuleSet ;
     rdfs:label "which side of each of its subject's ranges an observation is on" ;

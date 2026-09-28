@@ -57,27 +57,14 @@ GRAPH :world {
 
 GRAPH :actions {
   :Drying a prediction:Drift .
-  :Drying rdfs:label "what a pot loses while nobody waters it" .
-  :Drying sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT {
-          ?obs a sosa:Observation ;
-               sosa:hasFeatureOfInterest ?pot ;
-               sosa:observedProperty :moisture ;
-               sosa:hasSimpleResult ?now ;
-               sosa:resultTime ?at ;
-               sosa:madeBySensor ?sensor .
-      } WHERE {
-          ?obs sosa:hasFeatureOfInterest ?pot ;
-               sosa:observedProperty :moisture ;
-               sosa:hasSimpleResult ?was .
-          OPTIONAL { ?obs sosa:madeBySensor ?sensor }
-          ?pot :driesPerDay ?rate .
-          FILTER(?rate > 0 && $elapsed > 0)
-          BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
-          BIND(?was - (?rate * ?days) AS ?fell)
-          BIND(IF(?fell < 0.0, 0.0, ?fell) AS ?now)
-          BIND($lands AS ?at)
+  :Drying prediction:moves :moisture .
+  :Drying prediction:rate """PREFIX : <http://example.org/test#>
+      SELECT ?rate ?until WHERE {
+          $feature :driesPerDay ?perDay .
+          BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
+          BIND(0.0 AS ?until)
       }""" .
+  :Drying rdfs:label "what a pot loses while nobody waters it" .
 }
 
 GRAPH :catalogue {

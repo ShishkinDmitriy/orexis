@@ -1,11 +1,8 @@
-# a_slow_dryer_crosses_later_than_the_ladders_rung
+# two_drifts_moving_one_property_add
 #
-# THE LADDER AND THE BISECTION DISAGREE, and this is the case that measures the refinement. A pot
-# drying half a fraction a day, read at 0.25 with an operating range from 0.10 and a survival range
-# from 0.02. The rung at five o'clock is still inside; the rung at noon next day is under both floors,
-# so the ladder alone would place the change at five. The bisection finds the operating floor met
-# 7.2 hours out, at 19:12, and scanning on from it the survival floor 11.04 hours out, at 23:02 —
-# three stretches, each carrying the number at the last instant known to lie on its side.
+# Drying at four fractions a day and a leak at two, each a drift of its own moving the pot's moisture;
+# neither knows the other, and the value moves by their sum, six a day. Read at 0.25: the operating
+# floor at 0.10 is met 36 minutes out and the survival floor at 0.02 at 55.2.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -41,7 +38,8 @@ GRAPH :world {
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :zamioculcas .
   :probe sosa:observes :moisture .
-  :zamioculcas :driesPerDay 0.5 .
+  :zamioculcas :driesPerDay 4.0 .
+  :zamioculcas :leaksPerDay 2.0 .
   :zamioculcas a :Pot .
   :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
   :zamioculcas ssn-system:hasSurvivalRange :zamioculcas.survival .
@@ -53,26 +51,20 @@ GRAPH :world {
 
 GRAPH :actions {
   :Drying a prediction:Drift .
-  :Drying rdfs:label "what a pot loses while nobody waters it" .
-  :Drying sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT {
-          ?obs a sosa:Observation ;
-               sosa:hasFeatureOfInterest ?pot ;
-               sosa:observedProperty :moisture ;
-               sosa:hasSimpleResult ?now ;
-               sosa:resultTime ?at ;
-               sosa:madeBySensor ?sensor .
-      } WHERE {
-          ?obs sosa:hasFeatureOfInterest ?pot ;
-               sosa:observedProperty :moisture ;
-               sosa:hasSimpleResult ?was .
-          OPTIONAL { ?obs sosa:madeBySensor ?sensor }
-          ?pot :driesPerDay ?rate .
-          FILTER(?rate > 0 && $elapsed > 0)
-          BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
-          BIND(?was - (?rate * ?days) AS ?fell)
-          BIND(IF(?fell < 0.0, 0.0, ?fell) AS ?now)
-          BIND($lands AS ?at)
+  :Drying prediction:moves :moisture .
+  :Drying prediction:rate """PREFIX : <http://example.org/test#>
+      SELECT ?rate ?until WHERE {
+          $feature :driesPerDay ?perDay .
+          BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
+          BIND(0.0 AS ?until)
+      }""" .
+  :Leaking a prediction:Drift .
+  :Leaking prediction:moves :moisture .
+  :Leaking prediction:rate """PREFIX : <http://example.org/test#>
+      SELECT ?rate ?until WHERE {
+          $feature :leaksPerDay ?perDay .
+          BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
+          BIND(0.0 AS ?until)
       }""" .
 }
 

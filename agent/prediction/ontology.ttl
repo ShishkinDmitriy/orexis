@@ -2,23 +2,37 @@
 @prefix : <http://example.org/orexis/prediction#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
 #  OREXIS PREDICTION, AGENT 0.2.0.
-#  What the prediction package of Agent 0.2.0 declares: one word. A prediction is the calculation
-#  of when a reading changes range — the domain's drifts run over the observation a sensor last
-#  made, at the rungs of a ladder that is this package's scan, every crossing of a range bound
-#  bisected, and one orexis:PredictionGraph written per stretch between crossings, holding a
+#  What the prediction package of Agent 0.2.0 declares: the drift and the two things it says. A
+#  prediction is the calculation of when a reading changes range — the rates of every drift moving
+#  the observed property, summed and accumulated from the observation a sensor last made, between
+#  the happenings at which what a drift reads may change, every crossing of a range bound placed
+#  exactly, and one orexis:PredictionGraph written per stretch between crossings, holding a
 #  predicted sosa:Observation with its number. The observation is found by the kernel's kind and
 #  SOSA's words, a range is SSN-System's, and which side a stretch is on is a revision the sensing
 #  layer's rules conclude of it; nothing of sensing is imported or spoken here.
 
 :Drift a owl:Class ;
     rdfs:label "Drift" ;
-    rdfs:comment """What a value does by itself while nobody acts — a pot drying, a barrel draining.
-    SOSA has no word for it: a sosa:Procedure is how an observation is MADE, and a drift is how the
-    world moves what was observed. A drift carries sh:construct, a rule over the observation in hand
-    answering the predicted observation $elapsed seconds past it, landing at $lands. It declares no
-    horizon: the ladder it is asked at is the scan's, and the bisection places a crossing wherever it
-    falls.""" .
+    rdfs:comment """One thing that moves a value while nobody acts — a bed drying, rain wetting it. SOSA
+    has no word for it: a sosa:Procedure is how an observation is MADE, and a drift is how the world
+    moves what was observed. PDDL+ calls it a process. It says which property it moves and how fast;
+    every drift moving one property adds, and none knows another exists.""" .
+
+:moves a owl:ObjectProperty ;
+    rdfs:domain :Drift ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "moves" ;
+    rdfs:comment "The property whose value the drift's rate changes: which drifts are asked for a key." .
+
+:rate a owl:DatatypeProperty ;
+    rdfs:domain :Drift ; rdfs:range xsd:string ;
+    rdfs:label "rate" ;
+    rdfs:comment """A select answering how fast the drift moves its property, per second of the one
+    timeline, for $feature holding $value at the instant $at: ?rate, or ?low and ?high where the rate
+    is known only as a range — the two ends of a corridor — and ?until, the value past which it
+    contributes nothing. Read over whatever holds at $at; one row per contribution, and rows add.""" .

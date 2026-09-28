@@ -1,12 +1,12 @@
 # a_tank_low_now_refilled_later
 #
-# A tank low NOW, and a forecast refilling it from one o'clock. The want is in trouble from
+# A tank low NOW, and a prediction refilling it from one o'clock. The want is in trouble from
 # now UNTIL one — its graph's period ends there — because the ground standing at one holds the
-# forecast's reading and not the present's.
+# prediction's reading and not the present's.
 #
 # WHAT THIS IS FOR. The derivation read the state graph beside the prediction holding at an
-# instant, so at one o'clock the met-test saw the present's 0 AND the forecast's 20, a shape
-# holds over every value, and the want was open-ended: a tank low now with a forecast refilling
+# instant, so at one o'clock the met-test saw the present's 0 AND the prediction's 20, a shape
+# holds over every value, and the want was open-ended: a tank low now with a prediction refilling
 # it read unmet for ever, which is the failure the grounds were laid to close and the
 # derivation never read them. The search read them; the derivation is held to the same world.
 #
@@ -48,7 +48,7 @@ GRAPH :sensed {
   :tank1 :level 0 .
 }
 
-#  REFILLED FROM ONE — and the forecast retracts the reading it supersedes, as a drift's does.
+#  REFILLED FROM ONE — and the prediction retracts the reading it supersedes, as a drift's does.
 GRAPH :refill {
   :tank1 :level 20 .
 }

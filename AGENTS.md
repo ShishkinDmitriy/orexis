@@ -578,8 +578,8 @@ it is a record wearing a bullet.
   due on the container's tick and says `sensing:silentSince` of a sensor silent past a limit of
   its cadences, and the side is a revision the three rules sensing ships conclude; no band,
   no side, no want, no verdict on a prediction is sensing's own write. `agent/prediction/`
-  bisects every crossing of a range bound between the ladder's rungs and writes one prediction
-  per stretch, finds the observation by the kernel's kind and `sosa:madeBySensor` and imports
+  accumulates the drifts' summed rates between happenings, places every crossing of a range
+  bound exactly and writes one prediction per stretch, finds the observation by the kernel's kind and `sosa:madeBySensor` and imports
   nothing of sensing — a stretch already says when a rule's result changes, and the planner's
   re-root tells a surprise — and a range is SSN-System's as the world states it, nothing minted.
 - **Sensing speaks SOSA and SSN, and declares only what they lack** — a sensor
@@ -742,7 +742,7 @@ it is a record wearing a bullet.
   bypasses it is what no rule reads as the world.
 - **A prediction is a diff, and only a ground has applied it** — the derivation judged a
   foreseen instant over the state graph beside the prediction holding then, so a tank low now
-  with a forecast refilling it read unmet for ever while the search beside it read the grounds
+  with a prediction refilling it read unmet for ever while the search beside it read the grounds
   laid for exactly that; one reader answers both now (`world_at`), refuses a store with no
   ground, and the case that would have caught it is in the suite.
 - **What a pass worked out about a world for a want is a WEIGHING, and the frontier is a
@@ -923,6 +923,13 @@ it is a record wearing a bullet.
   — every tool asked the broker for an address, so hanoi, the courier and the tower, naming none,
   could not be onboarded or run in a container at all; the bus is a premise read off the world
   now, as a package's is at boot (#824), and `broker` still refuses the question it cannot answer.
+
+- **A drift answers a rate, and a prediction accumulates them** — a drift answering the value it
+  reached could not be combined with a second, and a ladder of rungs found a crossing only where a
+  rung's two ends disagreed, so rain lifting a drying bed back inside one rung was never seen;
+  rates add, a happening is where one may change, a crossing between two is on a straight line,
+  and a rate known as a range is a corridor whose worst side each stretch is
+  (a-prediction-accumulates-rates-between-happenings).
 
 ## The rules the code lives by
 

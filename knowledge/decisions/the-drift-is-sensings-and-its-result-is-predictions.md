@@ -191,3 +191,10 @@ is the calculation of when the reading changes range — every crossing of a ran
 between the ladder's rungs — and one prediction per stretch, carrying a number rather than a
 set of bands. The rules sensing registers conclude the side of each stretch. See
 [prediction](/domain/prediction/prediction.md).
+
+# Amended 2026-09-28: a drift answers a rate, and the ladder is gone
+
+A drift answers the RATE of its property at an instant, the drifts moving one property add, and
+`predict` accumulates the sum between happenings and places each crossing exactly - no ladder and
+no bisection. A rate known as a range gives a corridor, whose worst side each stretch is written
+as. See [a-prediction-accumulates-rates-between-happenings](/decisions/a-prediction-accumulates-rates-between-happenings.md).

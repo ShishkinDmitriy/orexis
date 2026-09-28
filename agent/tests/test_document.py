@@ -43,7 +43,7 @@ def test_a_turtle_file_is_one_graph_named_by_the_file_and_its_rows_go_to_the_cat
 
 
 def test_a_period_stated_of_the_document_goes_with_its_row(store, tmp_path):
-    path = _write(tmp_path, "forecast.ttl", """<> a orexis:PredictionGraph ;
+    path = _write(tmp_path, "prediction.ttl", """<> a orexis:PredictionGraph ;
     dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T00:00:00Z" ] .
 <urn:a> <urn:b> <urn:c> .
 """)

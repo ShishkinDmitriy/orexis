@@ -15,7 +15,7 @@ A case is held to a pass as a pass stands: `lay_ground`, `weigh`, the derivation
 Laid in place rather than into a second store, because a case that declares a ledger declares
 it where the withdrawal reads it. The grounds show in the diff, under `ground:`, and so do the
 WEIGHINGS of every desire in every ground — the met-test's rows, which are what the wants are
-minted from — and every prediction's retraction: a prediction is a diff, and a forecast of a reading that did
+minted from — and every prediction's retraction: a prediction is a diff, and a prediction of a reading that did
 not retract the reading it supersedes would leave both standing in the ground.
 
 WHAT A CASE IS HELD TO IS A PASS — `derive_wants` and then `withdraw` against

@@ -29,15 +29,18 @@ SELECT ?g ?start ?end WHERE {
 ORDER BY ?start"""
 
 #  WHERE EACH STRETCH OPENS, in minutes past noon, with the minutes a crossing may be placed
-#  within: the horizon exactly, a crossing by the bisection's tolerance — a minute, or a
-#  sixty-fourth of the rung it fell in. The arithmetic is the drift's: 0.25 less the rate per
-#  day, so the operating floor at 0.10 is met 0.15 / rate days out and the survival floor at
-#  0.02 is met 0.23 / rate days out.
+#  within: a crossing is placed by division and rounded up to the whole second. The arithmetic is
+#  the drift's: 0.25 less the rate per day, so the operating floor at 0.10 is met 0.15 / rate days
+#  out and the survival floor at 0.02 is met 0.23 / rate days out. The shower and the corridor are
+#  read in their own files.
 OPENS = {
-    "a_slow_dryer_crosses_later_than_the_ladders_rung": [(15, 0), (432, 18), (662, 18)],
-    "a_fast_dryer_crosses_inside_the_first_rung": [(15, 0), (54, 1), (83, 4)],
-    "a_reading_already_below_crosses_only_the_survival_floor": [(15, 0), (86, 4)],
-    "a_key_no_drift_moves_is_carried_one_rung_forward": [(15, 0)],
+    "a_slow_dryer_crosses_the_floor_after_seven_hours": [(15, 0), (432, 0.02), (662.4, 0.02)],
+    "a_fast_dryer_crosses_both_floors_within_two_hours": [(15, 0), (54, 0.02), (82.8, 0.02)],
+    "a_reading_already_below_crosses_only_the_survival_floor": [(15, 0), (86.4, 0.02)],
+    "a_key_no_drift_moves_is_carried_an_hour_forward": [(15, 0)],
+    "two_drifts_moving_one_property_add": [(15, 0), (36, 0.02), (55.2, 0.02)],
+    "a_forecast_shower_lifts_the_reading_back_inside": [(15, 0), (28.8, 0.02), (144, 0.02), (316.8, 0.02), (432, 0.02)],
+    "a_forecast_range_opens_a_corridor_on_its_dry_side": [(15, 0), (28.8, 0.02), (144, 0.02)],
 }
 
 
@@ -54,11 +57,11 @@ def test_predict_writes_the_stretches_the_patch_says(case, monkeypatch, request,
     assert len(written) == len(opened)
 
 
-def test_the_ladder_is_rewritten_whole_by_the_next_prediction(monkeypatch, snapshots):
+def test_the_stretches_are_rewritten_whole_by_the_next_prediction(monkeypatch, snapshots):
     """Predicted twice from one observation, the store holds one set of stretches: every
     prediction derived from the observation's graph goes before its own is written."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    store = snapshots.stand_in(CASES_DIR / "a_fast_dryer_crosses_inside_the_first_rung.trig")
+    store = snapshots.stand_in(CASES_DIR / "a_fast_dryer_crosses_both_floors_within_two_hours.trig")
     first = predict(store, snapshots.ME, PROBE)
     again = predict(store, snapshots.ME, PROBE)
     assert first == again

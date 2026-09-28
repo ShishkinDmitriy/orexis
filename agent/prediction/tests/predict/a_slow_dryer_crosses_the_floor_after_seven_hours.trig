@@ -1,8 +1,9 @@
-# a_key_no_drift_moves_is_carried_one_rung_forward
+# a_slow_dryer_crosses_the_floor_after_seven_hours
 #
-# A drift is declared and reaches nothing: the pot states no rate, so the construct yields no row.
-# The reading is carried forward as it stands, for the first rung alone, and no further — a package
-# that declares no drift for a key has made no claim about it past that.
+# A pot drying half a fraction a day, read at 0.25 with an operating range from 0.10 and a survival
+# range from 0.02. The rate is held an hour at a time and the line is straight, so the operating
+# floor is met exactly 7.2 hours out, at 19:12, and the survival floor 11.04 hours out, at 23:02:24 —
+# three stretches, each carrying the number at the last instant known to lie on its side.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -38,6 +39,7 @@ GRAPH :world {
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :zamioculcas .
   :probe sosa:observes :moisture .
+  :zamioculcas :driesPerDay 0.5 .
   :zamioculcas a :Pot .
   :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
   :zamioculcas ssn-system:hasSurvivalRange :zamioculcas.survival .
@@ -49,27 +51,14 @@ GRAPH :world {
 
 GRAPH :actions {
   :Drying a prediction:Drift .
-  :Drying rdfs:label "what a pot loses while nobody waters it" .
-  :Drying sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT {
-          ?obs a sosa:Observation ;
-               sosa:hasFeatureOfInterest ?pot ;
-               sosa:observedProperty :moisture ;
-               sosa:hasSimpleResult ?now ;
-               sosa:resultTime ?at ;
-               sosa:madeBySensor ?sensor .
-      } WHERE {
-          ?obs sosa:hasFeatureOfInterest ?pot ;
-               sosa:observedProperty :moisture ;
-               sosa:hasSimpleResult ?was .
-          OPTIONAL { ?obs sosa:madeBySensor ?sensor }
-          ?pot :driesPerDay ?rate .
-          FILTER(?rate > 0 && $elapsed > 0)
-          BIND(ROUND(($elapsed / 86400.0) * 1000000) / 1000000 AS ?days)
-          BIND(?was - (?rate * ?days) AS ?fell)
-          BIND(IF(?fell < 0.0, 0.0, ?fell) AS ?now)
-          BIND($lands AS ?at)
+  :Drying prediction:moves :moisture .
+  :Drying prediction:rate """PREFIX : <http://example.org/test#>
+      SELECT ?rate ?until WHERE {
+          $feature :driesPerDay ?perDay .
+          BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
+          BIND(0.0 AS ?until)
       }""" .
+  :Drying rdfs:label "what a pot loses while nobody waters it" .
 }
 
 GRAPH observed:zamioculcas_moisture {

@@ -27,9 +27,19 @@
 #  society.ttl; where the broker listens is deployment.ttl; the parts' pins and calibration are
 #  hardware.ttl.
 
+#  THE TERRACE ITSELF, the place a forecast's rain falls on, and the bed in it. How fast the bed
+#  dries and how much a millimetre of rain wets it are guesses until they are fitted from the
+#  history the agent already keeps; the rain drift reads a forecast hour for the terrace, and until
+#  one arrives the bed only dries.
+:terrace a schema:Place ;
+    rdfs:comment "The terrace: outdoors, open to the rain." .
+
 :terrace_bed a sosa:FeatureOfInterest ;
     orexis:localId "terrace_bed" ;
     rdfs:comment "The planter bed on the terrace, outdoors. Watched, not yet cared for." ;
+    schema:containedInPlace :terrace ;
+    climate:driesPerDay 0.04 ;
+    climate:wetsPerMm 0.01 ;
     ssn-system:hasOperatingRange :terrace_bed_operating .
 :terrace_bed_operating a ssn-system:OperatingRange ;
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
