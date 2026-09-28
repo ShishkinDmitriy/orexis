@@ -98,11 +98,11 @@ being evidence of anything — check by connecting, not by reading the log.
 # Deploy a world
 
 ```bash
-orexis-onboard greenhouse      # all four below
+orexis-onboard greenhouse      # all four below, each where the world has what it serves
 
 # or separately, when you want only one of them:
 #   orexis-influx greenhouse     # a history bucket per agent, a metrics one where monitored, each with a token that opens only it
-#   orexis-mqtt greenhouse       # a credential per principal, and the broker ACL, derived
+#   orexis-mqtt greenhouse       # a credential per principal, and the broker ACL, derived — where the world has a bus
 #   orexis-compose greenhouse    # writes world/greenhouse/compose.yaml from the world beside it
 #   orexis-dashboards greenhouse # a Grafana folder for the world
 ```
@@ -110,6 +110,15 @@ orexis-onboard greenhouse      # all four below
 All four read the world as an agent boots it and grant exactly what its wiring implies, so adding an
 agent to the world and re-running is the whole of deploying one — there is no list to keep in
 step. They are idempotent: an agent that already holds a bucket and a credential keeps them.
+
+A world with no bus — hanoi, the courier, the tower — is onboarded the same way. It has no broker,
+so `orexis-onboard` skips the MQTT step and says so in one line, and its compose file is its
+agents alone, each with its history credential; `orexis-influx <world>` is the one thing to run
+before `podman compose up`. **Watch it once it is up:** such a world's agent holds wants and no
+desire, so it exits 0 when they are reached, and `restart: unless-stopped` starts it again — on
+its lived-in volume it finds nothing left and exits after one pass (measured on hanoi, about a
+second), over and over. Which restart policy a one-shot agent gets is not decided; until it is,
+`podman compose down` it once it has finished.
 
 Still no store to prepare, and **no agent and no world is disturbed** — existing containers keep
 running, keep their beliefs and keep their credentials, because every grant is per principal and

@@ -919,6 +919,11 @@ it is a record wearing a bullet.
   stay the kernel's; a plan's scored total became `planning:spent`, since `planning:costs` now
   names the action's cost select and one word is one concept.
 
+- **A step of onboarding runs where the world has what it serves, and says so where it does not**
+  — every tool asked the broker for an address, so hanoi, the courier and the tower, naming none,
+  could not be onboarded or run in a container at all; the bus is a premise read off the world
+  now, as a package's is at boot (#824), and `broker` still refuses the question it cannot answer.
+
 ## The rules the code lives by
 
 1. **Code may reference T-Box terms; never an instance.** `planning:Desire` is fine;
@@ -1057,10 +1062,10 @@ pip install -e ".[dev]"
 
 orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, derive what the documents
                              #   leave out (a broker's port, into infra/installation.derived.ttl),
-                             #   then grant everything below.
+                             #   then grant everything below the world has something for.
   orexis-influx <world>      #   a history bucket per agent, a metrics one where the world is monitored, each with a token that opens only it
-  orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived
-  orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster
+  orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived — where its society names a broker
+  orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster, the broker only with a bus
   orexis-dashboards <world>  #   a Grafana folder per world: what its agents observe, and their health where monitored
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust

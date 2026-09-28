@@ -400,13 +400,15 @@ def render_sentinel(world: str, row: dict, store) -> str:
 
 def generate(world: str, board: str | None = None) -> None:
     store = _world(world)
-    host, port, _ = broker(world)
-    rows = [{**r, "host": host, "port": port}
-            for r in _rows(store, _BOARDS_Q) if board is None or r["boardId"] == board]
-    if not rows:
+    #  THE BOARDS FIRST, and the broker's address only where there is one to flash: a world with no
+    #  board is told so, bus or none, and a board in a world naming no broker is refused by `broker`.
+    boards = [r for r in _rows(store, _BOARDS_Q) if board is None or r["boardId"] == board]
+    if not boards:
         raise SystemExit(
             f"orexis-firmware: no board in world {world!r}"
             + (f" called {board!r}" if board else " states mc:firmware and carries a probe"))
+    host, port, _ = broker(world)
+    rows = [{**r, "host": host, "port": port} for r in boards]
     bounds = SLEEP_BOUNDS_S
 
     for row in rows:

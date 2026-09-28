@@ -16,7 +16,7 @@ See knowledge/decisions/where-the-belief-base-lives.md.
 world mounted at `/app/world/<name>` beside `/app/domains`, so a world's `owl:imports` of its
 domains resolve, and the broker's address and the series store's handed in as environment —
 the `schema:url`s the world asserts on its `mqtt4ssn:Broker` or the installation allocated it
-(`onboarding.mqtt.broker`), and for each purpose the world's agents are told of
+(`onboarding.mqtt.broker`), where the world has a bus, and for each purpose the world's agents are told of
 (`installation.purposes`) — history always, metrics where the world is `onboarding:monitored` — the
 url and organisation of the series store the installation says `onboarding:serves` it, told under
 the purpose's keys, `INFLUX_HISTORY_URL` and `_ORG`, `INFLUX_METRICS_URL` and `_ORG`, beside the
@@ -27,8 +27,14 @@ declare, so no container is handed one and the agent cannot read where anything 
 holds a device writes its command topic, which the ACL admits it and nobody else to — an agent
 trusts itself, so nothing is signed until the market brings a second agent to ask.
 
+**The bus is the world's to have, and only a world that has one is given one** (`reading.BUS`, a
+broker its society names): the broker's service, its volume, an agent's `MQTT_*` environment, its
+broker credential and its certificates. A world with no bus — Hanoi, the courier, the tower — is
+its agents alone, each told of its series stores and nothing else, which is all its runtime asks.
+
 **`network_mode: host` is deliberate.** Every broker is on `localhost`, asserted or allocated,
-and every member — agents, stand-ins, a board on the LAN — must reach one bus by one name.
+and every member — agents, stand-ins, a board on the LAN — must reach one bus by one name; and a
+world with no bus reaches its series store the same way.
 
 **A world's simulated systems are played by its simulator**, one more service: `python -m
 simulation <world>`, connected as the one client that hosts every system the world marks
@@ -84,7 +90,7 @@ def read_by_an_agent(world: str) -> set[Path]:
     agent reads — asked of the agent's own vocabulary as its boot has it, and not of onboarding's,
     whose kinds are exactly the ones an agent is not to be handed."""
     here = world_dir(world).resolve()
-    store = world_of(here)
+    store = world_of(here, others=reading.ours())
     candidates = [*here.iterdir(), *((here / "beliefs").iterdir() if (here / "beliefs").is_dir() else [])]
     return {p for p in candidates if p.is_file() and p.suffix in DOCUMENTS
             and any(known(store, kinds) for kinds in kinds_in(document(p)).values())}
@@ -142,31 +148,45 @@ def _documents(world: str, read: set[Path], agent_id: str | None = None) -> str:
     return "".join(f"\n      - ./{p.relative_to(here)}:/app/world/{world}/{p.relative_to(here)}:ro" for p in files)
 
 
-def _service(agent_id: str, world: str, read: set[Path], host: str, plain: int, tls: int | None,
+def _service(agent_id: str, world: str, read: set[Path], bus: tuple[str, int, int | None] | None,
              series: dict[str, tuple[str, str]], window: float | None) -> str:
-    tls_env = f'\n      MQTT_TLS_PORT: "{tls}"' if tls else ""
+    """An agent's service. `bus` is the broker's (host, plain port, TLS port), or None where the
+    world has none — and then nothing of a bus is written: no `MQTT_*`, no broker credential, no
+    certificate."""
     stores = "".join(f'\n      INFLUX_{purpose}_URL: "{url}"\n      INFLUX_{purpose}_ORG: "{organisation}"'
                      for purpose, (url, organisation) in series.items())
     if METRICS in series and window is not None:
         stores += f'\n      {INTERVAL_KEY}: "{window:g}"'
     credentials = "".join(f"\n      - ./secrets/{series_credential(agent_id, purpose)}" for purpose in series)
-    return f"""
-  agent-{agent_id}:
-    image: {IMAGE}
-    command: ["orexis-agent", "/app/world/{world}", "{agent_id}", "--volume", "/app/state"]
-    environment:
+    if bus:
+        host, plain, tls = bus
+        tls_env = f'\n      MQTT_TLS_PORT: "{tls}"' if tls else ""
+        where = f"""
       # where this world's broker listens — asserted or allocated, generated here, never read off the world by the agent
       MQTT_HOST: "{host}"
       MQTT_PORT: "{plain}"{tls_env}
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
-      MQTT_CA: "/app/secrets/ca.crt"
+      MQTT_CA: "/app/secrets/ca.crt\""""
+        minted = (f"its own bucket per purpose and a token that opens only it, minted by `orexis-influx {world}`, and\n"
+                  f"      # its own broker credential, minted by `orexis-mqtt {world}`; mounted into THIS container alone"
+                  f"{credentials}\n      - ./secrets/mqtt-{agent_id}.env")
+        certificates = (f"\n      - ./secrets/{agent_id}.crt:/app/secrets/agent.crt:ro"
+                        f"\n      - ./secrets/{agent_id}.key:/app/secrets/agent.key:ro"
+                        "\n      - ./secrets/ca.crt:/app/secrets/ca.crt:ro")
+    else:
+        where, certificates = "", ""
+        minted = (f"its own bucket per purpose and a token that opens only it, minted by `orexis-influx {world}`;\n"
+                  f"      # mounted into THIS container alone — the world has no bus, so no broker credential{credentials}")
+    return f"""
+  agent-{agent_id}:
+    image: {IMAGE}
+    command: ["orexis-agent", "/app/world/{world}", "{agent_id}", "--volume", "/app/state"]
+    environment:{where}
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold{stores}
     env_file:
-      # its own bucket per purpose and a token that opens only it, minted by `orexis-influx {world}`, and
-      # its own broker credential, minted by `orexis-mqtt {world}`; mounted into THIS container alone{credentials}
-      - ./secrets/mqtt-{agent_id}.env
+      # {minted}
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
     # can write its own belief-base volume.
@@ -175,10 +195,7 @@ def _service(agent_id: str, world: str, read: set[Path], host: str, plain: int, 
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-{world}-{agent_id}:/app/state
-      # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world, read, agent_id)}
-      - ./secrets/{agent_id}.crt:/app/secrets/agent.crt:ro
-      - ./secrets/{agent_id}.key:/app/secrets/agent.key:ro
-      - ./secrets/ca.crt:/app/secrets/ca.crt:ro
+      # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world, read, agent_id)}{certificates}
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME ones
       # the Containerfile copies, which `tests/test_layout.py` holds the two lists to.
       - ../../agent:/app/agent:ro
@@ -226,18 +243,25 @@ def render(world: str) -> str:
     who = roster(world)
     if not who:
         raise SystemExit(f"orexis-compose: world {world!r} declares no agents")
-    host, plain, tls = broker(world)
+    #  THE BUS, where the world's society names a broker — and only then is `broker` asked for an
+    #  address, which it refuses for a world with none.
+    bus = broker(world) if reading.BUS in reading.premises(world_dir(world)) else None
     series = {purpose: installation.series(purpose) for purpose in installation.purposes(world)}
     window = installation.interval(METRICS) if METRICS in series else None
     client = simulated_client(world)
+    if client and not bus:
+        raise SystemExit(f"orexis-compose: {world!r} hosts simulated systems on {client!r} and names no "
+                         "mqtt4ssn:Broker for its simulator to connect to")
     read = read_by_an_agent(world)
-    services = _broker(world, plain, tls) + (_simulator(world, read, client, host, plain) if client else "") + "".join(
-        _service(a, world, read, host, plain, tls, series, window) for a in who)
-    volumes = f"  orexis-{world}-mosquitto:\n" + "".join(f"  orexis-{world}-{a}:\n" for a in who)
+    services = ((_broker(world, *bus[1:]) if bus else "")
+                + (_simulator(world, read, client, *bus[:2]) if client else "")
+                + "".join(_service(a, world, read, bus, series, window) for a in who))
+    volumes = (f"  orexis-{world}-mosquitto:\n" if bus else "") + "".join(f"  orexis-{world}-{a}:\n" for a in who)
+    first = f"orexis-mqtt {world}" if bus else f"orexis-influx {world}"
     return f"""# GENERATED by `orexis-compose {world}` from the world beside it — do not edit.
 #
 # The roster is the world. Add an agent there, regenerate, and it is deployed; there is no second
-# list to keep in step. Run `orexis-mqtt {world}` first, then from this directory:
+# list to keep in step. Run `{first}` first, then from this directory:
 #
 #   cd world/{world} && podman compose up -d
 #   cd world/{world} && podman compose logs -f

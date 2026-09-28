@@ -257,7 +257,8 @@ def _close_vocabulary(store: ox.Store) -> None:
     classify(store, CLOSURE_GRAPH, ONTOLOGY, DERIVED)
 
 
-def _put_public(store: ox.Store, world: Path, agent_id: str | None = None) -> list[tuple[ox.Store, str]]:
+def _put_public(store: ox.Store, world: Path, agent_id: str | None = None,
+                others: frozenset[str] = frozenset()) -> list[tuple[ox.Store, str]]:
     """Read the documents and put in the vocabulary, closed, and every public graph; answer the
     world's other graphs — the agent's own — as (document, graph), for the caller to put or not.
 
@@ -273,7 +274,12 @@ def _put_public(store: ox.Store, world: Path, agent_id: str | None = None) -> li
     graphs, which are the kernel's and the mind's kinds, so no premise waits on the package it
     decides. The documents of the packages whose premise held go in next, and a world graph passed
     over for a kind only such a package declares is looked at again. With no agent, every package
-    is read at once: the operator's tools read every reader's vocabulary."""
+    is read at once: the operator's tools read every reader's vocabulary.
+
+    WHAT IS PASSED OVER IS SAID, and quietly only for a kind in `others`: the kinds a caller
+    declares itself and reads next, onboarding's for a world it reads as the first half of its
+    own read. Anything else is a kind no reader declares, or one this reader cannot tell from
+    it, and that is logged where it is seen."""
     read = read_with_imports(documents(world, agent_id, MIND if agent_id else EVERY))
     own, passed = _put(store, world, read, [])
     if agent_id:
@@ -287,7 +293,8 @@ def _put_public(store: ox.Store, world: Path, agent_id: str | None = None) -> li
             own += also
         log.info("%s loads %s", agent_id, ", ".join(loaded))
     for _path, _doc, graph, kinds in passed:
-        log.info("passed over %s: %s is no kind this agent reads", graph, ", ".join(sorted(kinds)))
+        log.log(logging.DEBUG if others & set(kinds) else logging.INFO,
+                "passed over %s: %s is no kind this agent reads", graph, ", ".join(sorted(kinds)))
     return own
 
 
@@ -317,15 +324,16 @@ def _put(store: ox.Store, world: Path, read, passed) -> tuple[list, list]:
     return own, still
 
 
-def world_of(world: Path) -> ox.Store:
+def world_of(world: Path, others=frozenset()) -> ox.Store:
     """What a world says publicly, read as a boot reads it and closed, with no agent in it — what
     the simulator reads, and what the operator's tools read before the kinds they read and no
     agent does: its agents, its devices, its topics — and never where its broker listens, which
     is a deployment graph, a kind only onboarding reads. With no agent there is no premise to
-    ask, so every package's documents are read: this is every reader's world, not one agent's."""
+    ask, so every package's documents are read: this is every reader's world, not one agent's.
+    A graph of a kind in `others`, which the caller reads itself, is passed over at DEBUG."""
     store = ox.Store()
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
-    _put_public(store, Path(world).resolve())
+    _put_public(store, Path(world).resolve(), others=frozenset(others))
     close_catalogue(store)
     return store
 

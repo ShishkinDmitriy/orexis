@@ -59,7 +59,7 @@ An agent is told its id and given one world, mounted at `/app/world/<name>`; it 
 worlds exist. The [runtime](/domain/kernel/runtime.md) boots from the directory, following
 `owl:imports` into `domains/`, and a volume it has lived in reads the public documents again at
 every boot while keeping the agent's own. [Onboarding](/domain/onboarding/onboarding.md) reads the same
-documents to grant each agent its bucket, its broker credential and its container, and writes
+documents to grant each agent its bucket, its broker credential where there is a bus, and its container, and writes
 `compose.yaml` and `secrets/` beside them.
 
 **There is no default world**: every command takes one and refuses to guess, since a fallback puts
