@@ -81,5 +81,5 @@ def test_a_plot_that_dries_below_its_floor_is_watered_with_bought_water(monkeypa
     time["at"] += timedelta(minutes=10)
     bus.simulator.step(time["at"])
     run()
-    assert agents["rose_grower"].started["execution"].walking() == [], "the simulator's reading answered the presentation"
+    assert agents["rose_grower"].parts["execution"].executor.walking() == [], "the simulator's reading answered the presentation"
     assert bus.commands == ["actuators/rose_valve/command"]

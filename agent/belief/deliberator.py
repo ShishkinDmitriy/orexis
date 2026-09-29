@@ -28,6 +28,7 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent import clock, metrics
+from agent.lifecycle import Signal
 from agent.ontology import KNOWN
 from agent.store import Raw, catalogue_of, graphs_of, rows
 
@@ -57,6 +58,9 @@ class Deliberator:
         self.queue: dict[str, tuple | None] = {}
         for source in self._unsettled():
             self.queue[source] = None
+        #  WHAT IT SAYS HAPPENED: `revised(graphs=…)`, the sources a pass revised, for whoever is
+        #  interested in the present changing — the executor, whose steps the world answers there.
+        self.revised = Signal("revised")
 
     def changed(self, source: str, read=None) -> None:
         """A graph was written: revise it on the next pass, beside `read` where the writer
@@ -77,6 +81,7 @@ class Deliberator:
         spent = 0
         started = time.perf_counter() if self.queue and metrics.recording() else None
         revised = len(self.queue)
+        done = []
         for source in list(self.queue):
             if left <= 0:
                 break
@@ -84,6 +89,7 @@ class Deliberator:
             if read is None:
                 read = tuple(graphs_of(self.beliefs, *KNOWN, at=at, now=at))
             used = revise(self.beliefs, source, read=read, budget=min(left, PER_SOURCE))
+            done.append(source)
             spent += used
             left -= used
             if source in self._unsettled():
@@ -98,6 +104,8 @@ class Deliberator:
         if started is not None:
             REVISE({"sources": revised, "executions": spent, "cut": len(self.queue),
                     "duration_s": round(time.perf_counter() - started, 6)})
+        if done:
+            self.revised.emit(graphs=done)
         return spent
 
     def _unsettled(self) -> list[str]:

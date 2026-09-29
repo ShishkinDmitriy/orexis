@@ -76,6 +76,7 @@ import pyoxigraph as ox
 import rdflib
 
 from agent import clock, metrics
+from agent.lifecycle import Signal
 from agent.ontology import ACTION, PUBLIC, RECORD, local_of
 from agent.store import (Memo, Raw, forget_graph, bind, bindings, catalogue_of, graphs_of, instant, query, rdflib_view,
                          remember, rows, update)
@@ -252,6 +253,12 @@ class Planner:
         self.handed: list[tuple[str, str]] = []
         self.reached: set[str] = set()
         self.blocked: list[str] = []
+        #  WHAT THE PLANNER SAYS HAPPENED, its own words for whoever connects: a plan published, with
+        #  the want it pursues; a want an intention walks that the present meets; a step an intention
+        #  stands at that the present no longer admits.
+        self.plan_published = Signal("plan_published")
+        self.want_reached = Signal("want_reached")
+        self.step_blocked = Signal("step_blocked")
         #  TELEMETRY AND NOT A ROW: per want, when it was first searched and in how many passes,
         #  kept only where a metrics sink is loaded and said at its adoption. No plan branches
         #  on it, so it is memory and never a belief.
@@ -380,15 +387,22 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             handed = publish_plan(store, self.beliefs, self.uri, walking)
             self._mark_kept(handed)
             written += handed
-            self.handed += [(plan, reported.pursued_by(self.beliefs, plan)) for plan in handed]
-            walking = self.walking()        # a want published from one scope is walked in the next
             if lap:
-                self._adopted(store, handed, present, _scope, memo)
+                self._adopted(store, handed, present, _scope, memo)     # before anything adopts it
                 lap("publish")
+            for plan in handed:
+                want = reported.pursued_by(self.beliefs, plan)
+                self.handed.append((plan, want))
+                written += self.plan_published.emit(plan=plan, want=want)
+            walking = self.walking()        # a want published from one scope is walked in the next
         if lap:
             reported.PLANNER({**lap.spent, "wants": len(searched)})
             #  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
             self._searches = {w: s for w, s in self._searches.items() if w in searched}
+        for want in sorted(self.reached):
+            written += self.want_reached.emit(want=want)
+        for step in self.blocked:
+            written += self.step_blocked.emit(step=step)
         return written
 
     # --- a step kept one level down ----------------------------------------------------------

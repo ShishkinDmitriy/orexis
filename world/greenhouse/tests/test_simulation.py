@@ -52,10 +52,10 @@ def test_a_bed_that_dries_below_its_floor_is_dosed_and_the_next_reading_answers(
     bus.simulator.step(time["at"])
     bus.runtime.run(passes=1, poll_s=0)
     assert [t for t, _ in bus.commands] == ["actuators/pump/command"]
-    assert len(bus.runtime.started["execution"].walking()) == 1
+    assert len(bus.runtime.parts["execution"].executor.walking()) == 1
 
     time["at"] += timedelta(minutes=10)                             # the next reading: 0.53
     bus.simulator.step(time["at"])
     bus.runtime.run(passes=2, poll_s=0)
-    assert bus.runtime.started["execution"].walking() == [], "the simulator's reading answered the dose"
+    assert bus.runtime.parts["execution"].executor.walking() == [], "the simulator's reading answered the dose"
     assert len(bus.commands) == 1

@@ -66,6 +66,7 @@ from datetime import datetime, timedelta
 import pyoxigraph as ox
 
 from agent import clock, metrics
+from agent.lifecycle import Signal
 from agent.hash_named_graph import facts_of
 from agent.ontology import OREXIS, STATE, local_of
 from agent.series import HISTORY, sink
@@ -251,7 +252,7 @@ class Executor:
 
     def __init__(self, beliefs: ox.Store, agent_id: str, intentions: ox.Store | None = None,
                  holder: str | None = None, *, take=None, fictive: bool = False,
-                 poll_s: float = POLL_S, on_write=None, on_resolve=None):
+                 poll_s: float = POLL_S, on_write=None):
         self.intentions = intentions if intentions is not None else beliefs
         self.beliefs = beliefs
         self.id = agent_id
@@ -261,10 +262,14 @@ class Executor:
         self.all_fictive = fictive
         self.poll_s = poll_s
         #  `on_write(graph)`, told of every graph the executor writes as the world, so what the rules
-        #  conclude of it is concluded; `on_resolve(intention, want, outcome)`, told of every
-        #  intention that ends, so whoever plans hears it.
+        #  conclude of it is concluded.
         self.on_write = on_write
-        self.on_resolve = on_resolve
+        #  WHAT THE EXECUTOR SAYS HAPPENED, its own words for whoever connects: an intention ended,
+        #  with the want it pursued and how; a step's command, sized from the present, for whatever
+        #  reaches the device; a document a step said, and the agents it is to.
+        self.intention_resolved = Signal("intention_resolved")
+        self.commanded = Signal("commanded")
+        self.said = Signal("said")
 
         #  TELEMETRY AND NOT A ROW: the desire each adopted plan's want was derived under, read
         #  off the store the plan came from where a metrics sink is loaded, so a landing can be
@@ -417,9 +422,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
   <{intention}> <{RESOLVED_AT}> "{clock.now().isoformat()}"^^xsd:dateTime ;
                 <{OUTCOME}> "{outcome}" . }} }}""")
         log.info("%s: %s — %s", self.id, intention.rsplit("#", 1)[-1], outcome)
-        if self.on_resolve is not None:
-            want = next(iter(rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))), {})
-            self.on_resolve(intention, want.get("want"), outcome)
+        want = next(iter(rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))), {})
+        self.intention_resolved.emit(intention=intention, want=want.get("want"), outcome=outcome)
         if outcome not in ("done", "reached"):
             #  NOTHING HANGS BELOW WHAT ENDED UNDONE: an intention walking the want one of this
             #  intention's steps is kept below by is abandoned with it.

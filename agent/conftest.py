@@ -371,28 +371,19 @@ def pytest_addoption(parser):
 
 
 class StandInRuntime:
-    """What a package's `start` is handed, as a test hands it: the store, the agent, the instant a
-    job reads, and a record of everything the package asked the runtime for — jobs submitted, kinds
-    heard, timers, gauges and members attached — for the test to run by hand."""
+    """What a package's `create` and its part's `start` are handed, as a test hands it: the store,
+    the agent, the instant a job reads, and a record of everything the part asked the runtime for —
+    jobs submitted, kinds heard, graphs written, timers, gauges and members attached — for the test
+    to run by hand."""
 
     def __init__(self, beliefs, me: str, now, agent_id: str = "keeper", budget=None, intentions=None):
         self.beliefs, self.me, self.now, self.id = beliefs, me, now, agent_id
         self.budget, self.intentions = budget, intentions
         self.jobs, self.heard, self.timers, self.gauges, self.attached = [], [], [], [], []
-        self.listeners, self.emitted, self.held, self.outcome, self.pressed = {}, [], set(), None, False
-
-    def listen(self, event: str, handler) -> None:
-        self.listeners.setdefault(event, []).append(handler)
-
-    def listened(self, event: str) -> bool:
-        return bool(self.listeners.get(event))
-
-    def emit(self, event: str, **what) -> list:
-        self.emitted.append((event, what))
-        return [g for h in self.listeners.get(event, ()) for g in h(**what) or ()]
+        self.written, self.held, self.outcome, self.pressed = [], set(), None, False
 
     def wrote(self, graphs) -> None:
-        self.emitted += [("graph-written", {"graph": g}) for g in graphs]
+        self.written += list(graphs)
 
     def hold(self, who) -> None:
         self.held.add(who)

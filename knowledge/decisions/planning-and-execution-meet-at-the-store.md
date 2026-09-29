@@ -1,17 +1,18 @@
 ---
 type: Decision
-title: Planning and execution meet at the store, signal by events, and the mind starts itself
+title: Planning and execution meet at the store, signal each other, and the mind starts itself
 status: accepted
 timestamp: 2026-09-29T15:00:00Z
 description: >-
   The sovereign's choices of 2026-09-29, the mind's half of a-package-starts-itself. The Planner
   held the executor and the executor held the Planner's refine; now neither calls the other.
   Planning publishes a plan once, an orexis:PlanGraph it owns, and an intention adopts it by
-  reference; packages signal by events the runtime routes (a plan published, an intention ended);
-  belief, planning and execution start themselves; the intentions are a graph of the belief base,
+  reference; a package owns its signals (the Planner's plan published, the executor's intention
+  resolved) and its part connects them when all the parts are linked; belief, planning and
+  execution start themselves; the intentions are a graph of the belief base,
   so a restart finds them (#842). An intention ends early where planning says its want is reached
   before it began, or its next step is blocked. Refused - copying the plan into the intentions,
-  events as stored facts, planning holding the executor, and ending a begun plan when its want is met.
+  a kernel list of every package's events, events as stored facts, planning holding the executor, and ending a begun plan when its want is met.
 ---
 
 # The claim
@@ -24,17 +25,21 @@ its own rows: where it stands, its acts, its outcome. Every read of a step's fac
 it adopts. A second plan for one want never shares a step's name with the first, so the executor's
 renaming went with the copy.
 
-**Packages signal by events, and the runtime routes them.** An [event](/domain/kernel/event.md) —
-named in the kernel, since neither package may name the other's word — says something just happened:
-planning emits a plan published, and execution adopts it; execution emits an intention resolved, and
-planning plans again at once; a job's write is a graph written, and whoever hears its kind acts on it.
-The runtime calls every listener at once on its one thread and knows nothing of what an event means.
-An event is not stored: what it points at is, and a listener reads it there.
+**A package owns its signals, and they are connected when the parts are linked.** A
+[signal](/domain/kernel/signal.md) says something just happened, and it is an attribute of the
+object that says it: the Planner's `plan_published`, and the executor adopts the plan; the
+executor's `intention_resolved`, and the Planner plans again at once; the Planner's
+`want_reached` and `step_blocked`, and the executor ends an intention early; the deliberator's
+`revised`, and the executor walks, since what it waits on is the present. The runtime makes every
+[part](/domain/kernel/part.md) first, then links them, then starts them, so planning's part connects
+its Planner to the executor however the two were ordered; a connection points down, as an import
+does. The one signal the runtime owns is a graph written, heard by kind. A signal is not stored:
+what it points at is, and a handler reads it there.
 
 **The mind starts itself.** Belief revises every belief and prediction written; planning plans every
 pass and holds or lets go of the agent (met, unreachable); execution walks what is due every pass and
-takes a step by emitting its commands and its sayings, which the transport and speech hear. The
-runtime keeps what each start answered and no longer runs a pass of its own.
+takes a step by its commands and its sayings, which its part hands the transports and speech it
+was linked to. The runtime keeps the parts and no longer runs a pass of its own.
 
 **What is walked is read, not asked.** Planning reads the intentions by pattern: a want a standing
 intention pursues, or a plan published and adopted by no intention yet pursues, is walked — neither
@@ -49,7 +54,7 @@ writes `<step> execution:keptBy <want>`, which the executor records on the act a
 **An intention ends early, and only in two cases.** Both judgments are planning's, since the met-test
 and the precondition are its texts; both end with execution, which alone writes the intentions.
 
-- *Its want is reached before it began.* Planning emits a walked want the present meets; execution
+- *Its want is reached before it began.* Planning signals a walked want the present meets; execution
   ends the intention `reached` where none of its steps has been taken — rain before the dose.
 - *Its next step is blocked.* Planning asks the present ground, for every step an intention stands
   at, fallen due, not taken and not kept below, whether its action's precondition still admits the
@@ -69,6 +74,9 @@ intention where it stood (#842).
 
 - **Copying the plan into the intentions**, which #855 first did: the plan existed three times, and
   after the last copy nothing said which plan an intention walked or who found it.
+- **A kernel list of every package's events**, which #855 first had in a kernel module of events: the
+  kernel named a plan published and a want reached, words that are planning's, so a package's
+  vocabulary lived below it. The sovereign moved each onto the object that says it.
 - **Events as stored facts**, recommended and not chosen: a graph written by kind would survive a
   restart as an event; the sovereign chose a channel of signals, and what survives is the state the
   signals point at.

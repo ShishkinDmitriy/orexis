@@ -26,7 +26,7 @@ def _parcel_at(store) -> list[str]:
 
 
 def _acts(runtime) -> int:
-    return int(rows(runtime.started["execution"].intentions, _ACTS_Q, ())[0]["n"])
+    return int(rows(runtime.parts["execution"].executor.intentions, _ACTS_Q, ())[0]["n"])
 
 
 def test_the_boot_says_what_each_graph_is():

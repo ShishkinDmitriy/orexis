@@ -32,10 +32,11 @@ An [action](/domain/kernel/action.md) that tells somebody something has an `exec
 operations of its [implementation](/domain/execution/implementation.md), a CONSTRUCT run over the present
 when a [step](/domain/execution/step.md) filling it is taken; an IRI its result says is
 `execution:to` an agent is a graph, what it says of that IRI is the graph's content, and its kind
-and period are the rows. Taking the step emits each document as an [event](/domain/kernel/event.md);
-speech, started, hears it, believes it as said — belief revises it as it would any graph written —
-and emits it for each agent it is to, which the [transport](/domain/transport/transport.md) reaching the
-peer publishes on the topic the peer listens to.
+and period are the rows. Taking the step is the executor's `said` [signal](/domain/kernel/signal.md),
+which speech's part, linked to execution's, hears: it believes the document as said — belief revises it
+as it would any graph written — and hands it, for each agent it is to, to the
+[transport](/domain/transport/transport.md) reaching the peer, which publishes it on the topic the peer
+listens to.
 
 # What it does not do
 

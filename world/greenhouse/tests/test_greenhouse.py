@@ -86,11 +86,11 @@ def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     assert broker.published == [("actuators/pump/command", {"dose_ml": 500}, False)]
-    assert len(runtime.started["execution"].walking()) == 1, "the world has not answered yet"
+    assert len(runtime.parts["execution"].executor.walking()) == 1, "the world has not answered yet"
     runtime.time.at = NOW + timedelta(minutes=5)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
-    assert runtime.started["execution"].walking() == [], "the reading was revised inside and answered the dose"
+    assert runtime.parts["execution"].executor.walking() == [], "the reading was revised inside and answered the dose"
     assert ("SoilMoisture", "inside") in _sides(runtime.beliefs)
     assert len(broker.published) == 1, "one dose, and nothing more once the bed is comfortable"
 
@@ -115,7 +115,7 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     runtime.time.at = NOW + timedelta(minutes=5)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
-    assert runtime.started["execution"].walking() == [], "the dose landed"
+    assert runtime.parts["execution"].executor.walking() == [], "the dose landed"
     observed = [(p["measurement"], p["fields"]["value"], p["time"]) for p in history if p["measurement"] != "Step"]
     assert observed == [("AirTemperature", 21.0, NOW), ("SoilMoisture", 0.2, NOW),
                         ("SoilMoisture", 0.45, NOW + timedelta(minutes=5))]
@@ -134,8 +134,10 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     intention standing and none failed — `failed` written as nought and not left out, which is what
     an outcome compared while unbound did — and the plan's world met its want, which an `EXISTS` read
     against the default graph never saw. A day later the thermometer reports and the probe has not:
-    the dose was never answered, so the intention failed, and the probe is past its cadences, so it
-    is silent. Sensing is loaded here, so silence is counted beside the mind's figures."""
+    the reading sets the executor walking at once, the dose was never answered, so the intention
+    failed, and planning, hearing it end, plans a second dose in that same pass — standing, not yet
+    sent; and the probe is past its cadences, so it is silent. Sensing is loaded here, so silence is
+    counted beside the mind's figures."""
     runtime, broker, windows = _unanswered(monkeypatch, interval_s=0)
     dosed, a_day_later = ({p["measurement"]: p["fields"] for p in w} for w in windows[:2])
     assert {"store", "process", "plans", "cone", "intentions", "acts", "revisions", "silence", "pass"} <= set(dosed)
@@ -143,7 +145,7 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     assert dosed["acts"] == {"taken": 1, "notTaken": 0} and dosed["silence"] == {"silent": 0}
     assert dosed["plans"]["satisfied"] == 1 and dosed["cone"]["met"] == 1
     assert dosed["revisions"]["unsettled"] == 0 < dosed["revisions"]["revisions"]
-    assert a_day_later["intentions"]["failed"] == 1 and a_day_later["intentions"]["standing"] == 0
+    assert a_day_later["intentions"]["failed"] == 1 and a_day_later["intentions"]["standing"] == 1
     assert a_day_later["silence"] == {"silent": 1}, "the probe, and not the thermometer that reported"
     assert len(broker.published) == 1
 
@@ -190,7 +192,8 @@ def test_a_want_derived_under_a_desire_is_told_by_the_desire_and_the_dose_by_how
         by.setdefault(p["measurement"], []).append(p)
     (search,), (adopted,), (landing,) = [s for s in by["search"] if s["tags"]["outcome"] == "Satisfied"], by["adopted"], by["landing"]
     assert search["tags"]["desire"] == adopted["tags"]["desire"] == landing["tags"]["desire"] == desire
-    assert adopted["fields"]["passes_max"] == 1.0 and adopted["fields"]["replan"] == 0
+    assert adopted["fields"]["passes_max"] == 1.0 and adopted["fields"]["count"] == 2, "the dose, then its replan"
+    assert adopted["fields"]["replan"] == 1, "the second, planned the pass the first failed"
     assert landing["tags"]["action"] == "Dosing" and landing["fields"]["timed_out"] == 1 == landing["fields"]["count"]
     assert landing["fields"]["late_s_max"] > 0
     (received,) = [p for p in by["received"] if p["tags"]["sensor"] == "thermometer"]

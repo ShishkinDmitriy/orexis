@@ -91,12 +91,12 @@ def test_a_package_is_loaded_where_its_premise_holds_and_nowhere_else(tmp_path, 
             assert not any(documents), f"{package}'s documents are in the store, and nothing asked for them"
     runtime = Runtime(store, "me")
     assert runtime.packages == packages_of(store, ME)
-    #  WHAT STARTED ITSELF: the mind, and every loaded package with a `start` module but a transport,
-    #  which starts only where the runtime is told to connect; a transport package has its `start` all
-    #  the same.
-    assert list(runtime.started) == [p for p in (*MIND, *expected) if not p.startswith("transport/")]
+    #  WHAT HAS A PART: the mind, and every loaded package with a `create` module but a transport,
+    #  which is created only where the runtime is told to connect; a transport package has its `create`
+    #  all the same.
+    assert list(runtime.parts) == [p for p in (*MIND, *expected) if not p.startswith("transport/")]
     for package in (MQTT, HTTP):
-        assert (package in expected) <= (importlib.util.find_spec("agent." + package.replace("/", ".") + ".start") is not None)
+        assert (package in expected) <= (importlib.util.find_spec("agent." + package.replace("/", ".") + ".create") is not None)
 
 
 @pytest.mark.parametrize("facts, read", [(_PROBE, True), ("", False)], ids=["sensing loaded", "sensing not loaded"])
@@ -139,7 +139,7 @@ def test_every_document_the_agent_ships_is_the_kernels_or_a_packages_it_names():
 
 
 #  WHAT A PROCESS HOLDS: a fresh interpreter, the tree under test first on its path, boots a world,
-#  builds the runtime, imports its transport packages' `start` and runs `passes`; what of `agent.` it then
+#  builds the runtime, imports its transport packages' `create` and runs `passes`; what of `agent.` it then
 #  holds, by the package beneath `agent`.
 _PROBE_SCRIPT = """
 import json, sys
@@ -150,7 +150,7 @@ world, agent, passes = Path(sys.argv[1]), sys.argv[2], int(sys.argv[3])
 runtime = Runtime(boot(world, agent), agent, budget=64)
 for package in runtime.packages:
     if package.startswith('transport/'):
-        importlib.import_module('agent.' + package.replace('/', '.') + '.start')
+        importlib.import_module('agent.' + package.replace('/', '.') + '.create')
 outcome = runtime.run(passes=passes, poll_s=0) if passes else None
 print(json.dumps({"outcome": outcome, "held": sorted({m.split('.')[1] for m in sys.modules if m.startswith('agent.')})}))
 """

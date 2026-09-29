@@ -50,8 +50,8 @@ def test_a_revision_pass_is_tallied_with_what_it_spent(monkeypatch, written):
     monkeypatch.setattr(clock, "now", lambda: NOW)
     runtime = Runtime(boot(HANOI, "hanoi"), "hanoi")
     metrics.flush()                                  # the window the start of the runtime tallied
-    runtime.started["belief"].changed(graphs_of(runtime.beliefs, STATE)[0])
-    runtime.started["belief"].deliberate(NOW)
+    runtime.parts["belief"].deliberator.changed(graphs_of(runtime.beliefs, STATE)[0])
+    runtime.parts["belief"].deliberator.deliberate(NOW)
     (point,) = metrics.flush()
     assert point["measurement"] == "revise" and point["fields"]["count"] == 1
     assert point["fields"]["sources_sum"] == 1.0 and point["fields"]["cut_max"] == 0.0

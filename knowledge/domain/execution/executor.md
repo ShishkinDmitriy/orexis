@@ -26,9 +26,10 @@ description: >-
 
 In one order, read off the action's [implementation](/domain/execution/implementation.md):
 
-1. an operation that reaches the world is carried out by an [event](/domain/kernel/event.md): an
-   `execution:Command`'s payload emitted for the transport reaching the device, an `execution:Saying`'s
-   document emitted for speech to believe and tell — order by order, each answered before the next;
+1. an operation that reaches the world is carried out by a [signal](/domain/kernel/signal.md) of the
+   executor's: an `execution:Command`'s payload by `commanded`, which execution's part hands the
+   transport reaching the device, an `execution:Saying`'s document by `said`, for speech to believe and
+   tell — order by order, each answered before the next;
 2. a step marked `execution:keptBelow` is not taken fictively: it waits until planning has written
    the want that keeps it one level down, `execution:keptBy`, and is taken by recording that want
    `execution:refinedBy` on the act and waiting on it ([refinement](/domain/planning/refinement.md));

@@ -45,14 +45,13 @@ every want is reached and none is walked, and `unreachable` when some stand that
 holds reaches — so Hanoi's mover solves its tower and exits. Nothing here is threaded: a pass that
 moved nothing sleeps the poll before the next, unless a package asked to go again.
 
-**A PACKAGE STARTS ITSELF (a-package-starts-itself, planning-and-execution-meet-at-the-store).**
-Every package the agent loads, the mind's three among them, that has a `start` module is handed
-the runtime and says what it does, by jobs it `submit`s, timers it asks for (`every`) and events it
-`emit`s and `listen`s for (`agent.events`) — a graph written by kind being one; the runtime runs
-every job and every listener on this one thread and knows no package's words. A transport's listener
-submits each message; belief revises what is written; prediction answers an observation; planning
-publishes a plan and execution adopts it; a step's command and a said document are events the
-transport and speech hear, and a peer's document arriving is believed by speech's `heard`.
+**A PACKAGE HAS A PART, CREATED, LINKED AND STARTED (a-package-starts-itself,
+planning-and-execution-meet-at-the-store).** Every package the agent loads, the mind's three among
+them, that has a `create` module makes its part; the parts link, each connecting the signals it owns
+to what lies beneath it — the Planner's `plan_published` to the executor, the executor's `commanded`
+to the transports and `said` to speech, the deliberator's `revised` heard by the executor; then each
+starts, by jobs it `submit`s, timers it asks for (`every`) and graphs written it hears (`on`). The
+runtime runs every job and handler on this one thread and knows no package's words.
 
 **WHAT HAPPENED IS NOT THE RUNTIME'S TO SAY.** `main` loads a series sink for every purpose the
 environment names a store for (`agent/series.py`), and hands history nothing: sensing contributes
@@ -88,7 +87,7 @@ import pyoxigraph as ox
 
 from agent import clock
 from agent import metrics, series
-from agent.events import GRAPH_WRITTEN, MET, UNFINISHED, UNREACHABLE  # noqa: F401 — the outcomes, re-exported
+from agent.lifecycle import MET, UNFINISHED, UNREACHABLE, Signal  # noqa: F401 — the outcomes, re-exported
 from agent.metrics import Event, Gauge
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS
 from agent.planning.planner import Planner
@@ -138,8 +137,8 @@ _MINE = ("$me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host 
 #  EVERY OTHER PACKAGE, AND WHAT IN THE WORLD MAKES THE AGENT NEED IT: an ASK over the world's
 #  public graphs, `$me` the agent, which is each package's callers' reads answered in advance.
 #  - SENSING, where a sensor is the agent's: `received` is called for such a sensor's message and
-#    its `start` asks after its readings, and nothing else writes the observations its rules read;
-#  - PREDICTION, where a sensor is the agent's AND a drift is declared: its `start` answers every
+#    its part asks after its readings, and nothing else writes the observations its rules read;
+#  - PREDICTION, where a sensor is the agent's AND a drift is declared: its part answers every
 #    observation written, and moves a reading only by a drift — the record's table said a
 #    drift alone, and a market agent in a world importing climate would have loaded it for nothing;
 #  - SPEECH, where the agent listens to a topic — a peer's document arrives there for `heard` — or
@@ -372,18 +371,19 @@ def _identity(store: ox.Store, agent_id: str) -> str:
 class Runtime:
     """One agent's process: a lifecycle container for its packages, run pass by pass.
 
-    A PACKAGE STARTS ITSELF (a-package-starts-itself). Every package the agent loads — the mind's
-    three and each whose premise holds — that has a `start` module is handed this runtime and
-    says what it does: belief revises what is written, planning plans every pass, execution walks
-    what is due, a transport listens or polls, sensing asks after silence, prediction answers an
-    observation, speech believes what was said. What a package's `start` answers is kept in
-    `started`, by package, and the runtime knows no word of what any of them do.
+    A PACKAGE HAS A PART, CREATED, LINKED AND STARTED (a-package-starts-itself, `agent.lifecycle`).
+    Every package the agent loads — the mind's three and each whose premise holds — that has a
+    `create` module makes its part; then each part links to the others, connecting its own signals
+    to what lies beneath it; then each starts: belief revises what is written, planning plans every
+    pass, execution walks what is due, a transport listens or polls, sensing asks after silence,
+    prediction answers an observation. The parts are kept in `parts`, by package, and the runtime
+    knows no word of what any of them do.
 
-    WHAT IT OFFERS A PACKAGE. `submit` a job from any thread; `every` so many seconds of the one
-    timeline; `emit` an event (`agent.events`) and `listen` for one, `on` a kind of graph written
-    being one event among them; `wrote` graphs written outside a job; `hold` the agent alive or
-    `release` it with an outcome; `again`, to pass once more without waiting; `lap` a part of the
-    pass; and `gauge`. Every job and every listener runs on this one thread, one at a time.
+    WHAT IT OFFERS A PART. `submit` a job from any thread; `every` so many seconds of the one
+    timeline; `on` a kind of graph written — the one signal it owns — and `wrote`, for graphs written
+    outside a job; `hold` the agent alive or `release` it with an outcome; `again`, to pass once more
+    without waiting; `lap` a part of the pass; and `gauge`. Every job and every handler runs on this
+    one thread, one at a time.
 
     A transport package is started only where the runtime is told to `connect`, which is the
     process's `main`; a test hands a member brought up, and it is started the same way."""
@@ -396,7 +396,7 @@ class Runtime:
         self.budget, self.intentions = budget, intentions      # what planning and execution are handed
         self._laps: metrics.Laps | None = None          # the parts of the pass in progress, where timed
         self._jobs: queue.SimpleQueue = queue.SimpleQueue()
-        self._listeners: dict[str, list] = {}
+        self.written = Signal("written")                  # a graph written, and its kinds
         self._timers: list[list] = []                     # [seconds, next due or None, job]
         self._gauged: list = []                           # what the packages report, sampled at a window's end
         self._stops: list = []
@@ -405,8 +405,8 @@ class Runtime:
         self._outcome: str | None = None
         self._again = False
         self.now = None                                   # the instant the pass stands at, for a job to read
-        self.started: dict[str, object] = {}
-        self._start(transport, connect)
+        self.parts: dict[str, object] = {}
+        self._assemble(transport, connect)
 
     # ── what a package is offered ──────────────────────────────────────────────────────────────
 
@@ -421,31 +421,17 @@ class Runtime:
         what it waits for. Timers run after the jobs queued, in the order they were asked for."""
         self._timers.append([float(seconds), None, job])
 
-    def listen(self, event: str, handler) -> None:
-        """Call `handler(**what)` — answering the graphs it wrote — whenever `event` is emitted."""
-        self._listeners.setdefault(event, []).append(handler)
-
-    def listened(self, event: str) -> bool:
-        """Whether anything listens for `event`."""
-        return bool(self._listeners.get(event))
-
-    def emit(self, event: str, **what) -> list[str]:
-        """Signal `event` to every listener, at once and on this thread: the graphs they wrote, each
-        emitted as `GRAPH_WRITTEN` in its turn."""
-        written = [graph for handler in list(self._listeners.get(event, ())) for graph in handler(**what) or ()]
-        self.wrote(written)
-        return written
-
     def on(self, kind: str, handler) -> None:
-        """Run `handler(graph)` for every graph of `kind` written — how a package answers another's
-        work with neither naming the other, the belief base being the interface between them."""
-        self.listen(GRAPH_WRITTEN, lambda graph, kinds: handler(graph) if kind in kinds else ())
+        """Run `handler(graph)` — answering the graphs it wrote in turn — for every graph of `kind`
+        written: how a package answers another's work with neither naming the other, the belief base
+        being the interface between them. The one signal the runtime owns."""
+        self.written.connect(lambda graph, kinds: handler(graph) if kind in kinds else ())
 
     def wrote(self, graphs) -> None:
-        """Say that `graphs` were written — by a job, a listener, or a package mid-act — so that
-        whoever listens for their kinds hears it now."""
+        """Say that `graphs` were written — by a job, a handler, or a package mid-act — so that
+        whoever listens for their kinds hears it now, and what they write in turn."""
         for graph in graphs:
-            self.emit(GRAPH_WRITTEN, graph=graph, kinds=self._kinds(graph))
+            self.wrote(self.written.emit(graph=graph, kinds=self._kinds(graph)))
 
     def hold(self, who) -> None:
         """`who` keeps the agent running: a desire, a listening transport."""
@@ -538,24 +524,28 @@ class Runtime:
         while self._stops:
             self._stops.pop()()
 
-    def _start(self, transport, connect: bool) -> None:
-        """Start every package that has a `start` module, the mind first: a transport package only
-        where the runtime is told to `connect`, and a member handed in as its package would start it."""
+    def _assemble(self, transport, connect: bool) -> None:
+        """A package's life in three phases (`agent.lifecycle`): every package that has a `create`
+        module creates its part, the mind first — a transport package only where the runtime is told
+        to `connect`, a member handed in standing for it; then every part links to the others; then
+        every part starts, and its stop is kept for the end."""
         for package in self.packages:
-            name = "agent." + package.replace("/", ".") + ".start"
+            name = "agent." + package.replace("/", ".") + ".create"
             if package.startswith("transport/") and (transport is not None or not connect):
                 continue
             if importlib.util.find_spec(name) is None:
                 continue
-            started = importlib.import_module(name).start(self)
-            self.started[package] = started
-            if callable(getattr(started, "stop", None)):
-                self._stops.append(started.stop)
+            self.parts[package] = importlib.import_module(name).create(self)
         if transport is not None:
-            for member in getattr(transport, "members", [transport]):
-                member.start(self)
-                self._stops.append(member.stop)
-            self.started["transport"] = transport
+            self.parts["transport"] = transport
+        for part in self.parts.values():
+            if callable(getattr(part, "link", None)):
+                part.link(self.parts)
+        for part in self.parts.values():
+            if callable(getattr(part, "start", None)):
+                part.start(self)
+            if callable(getattr(part, "stop", None)):
+                self._stops.append(part.stop)
 
     def _kinds(self, graph: str) -> set[str]:
         cat = catalogue_of(self.beliefs)

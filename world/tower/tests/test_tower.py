@@ -62,5 +62,5 @@ def test_the_puzzle_is_planned_above_and_carried_out_by_the_van_below(monkeypatc
     assert at["disk_1"] == at["disk_2"] == "c1_2", "both disks on peg C's cell"
     on = {(_local(r["d"]), _local(r["below"])) for r in rows(runtime.beliefs, _ON_Q, ())}
     assert on == {("disk_1", "disk_2"), ("disk_2", "PegC")}, "and stacked in order"
-    refined = int(rows(runtime.started["execution"].intentions, _REFINED_Q, ())[0]["n"])
+    refined = int(rows(runtime.parts["execution"].executor.intentions, _REFINED_Q, ())[0]["n"])
     assert refined == 3, "each of the three moves was kept below, and none was taken as fictive"

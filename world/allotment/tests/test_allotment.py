@@ -128,7 +128,7 @@ def test_a_dry_plot_is_watered_by_a_claim_bought_on_the_supplier_s_venue(monkeyp
     time.at += timedelta(minutes=5)
     rose.deliver("sensors/rose_probe/reading", b'{"value": 0.45}', time.at)
     _run(agents)
-    assert rose.started["execution"].walking() == [], "the reading answered the presentation"
+    assert rose.parts["execution"].executor.walking() == [], "the reading answered the presentation"
     assert len(bus.commands()) == 1, "one dose, and nothing more once the plot is watered"
 
 

@@ -46,17 +46,19 @@ has lived in: every graph a document put in and nobody owns is forgotten and rea
 closure, which is how an updated ontology or rule set reaches an agent that has lived; the graphs
 the agent owns are left as they are, since they are its beliefs now.
 
-**A package starts itself.** Every package the agent loads — the mind's three and each whose premise
-holds — that has a `start` module is handed the runtime and says what it does: belief revises what
-is written, planning plans every pass, execution walks what is due, a transport listens or polls,
-sensing asks every minute what has fallen due, prediction answers every observation written. The
-runtime offers `submit` a job from any thread, `every` so many seconds of the one timeline, `emit`
-and `listen` for an [event](/domain/kernel/event.md) — a graph written by kind being one (`on`) —
-`hold` and `release` the agent, `again`, and a `gauge`; it runs every job and listener on its one
-thread and knows no package's words, keeping what each start answered in `started`
+**A package's part is created, linked and started.** Every package the agent loads — the mind's
+three and each whose premise holds — that has a `create` module makes a
+[part](/domain/kernel/part.md) of the runtime; when all exist, each links to the others, connecting
+its [signals](/domain/kernel/signal.md) to what lies beneath it; then each starts and says what it
+does: belief revises what is written, planning plans every pass, execution walks what is due and
+whenever the deliberator revises, a transport listens or polls, sensing asks every minute what has
+fallen due, prediction answers every observation written. The runtime offers `submit` a job from any
+thread, `every` so many seconds of the one timeline, `on` a kind of graph written — the one signal
+it owns — `hold` and `release` the agent, `again`, and a `gauge`; it runs every job and handler on
+its one thread, knows no package's words, keeps the parts in `parts` and stops them last-first
 ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
-A transport package is started only where the process is told to connect; a test hands a member it
+A transport package is created only where the process is told to connect; a test hands a member it
 brought up.
 
 **`run` is a loop of passes, and it stops when nobody holds the agent.** A pass drains the packages'
@@ -84,8 +86,8 @@ the one executing thread — [sensing](/domain/sensing/sensing.md) writes the ob
 [deliberator](/domain/belief/deliberator.md) runs the rules that conclude its side, the
 [prediction](/domain/prediction/prediction.md) package writes the stretches ahead and the rules conclude
 theirs — each hearing the graph written, where its package was loaded. A step whose action's
-implementation holds an `execution:Command` is taken by emitting what the command answers, sized from
-the present, for the transport reaching the device; the [greenhouse](/domain/kernel/domain.md)'s pump
+implementation holds an `execution:Command` is taken by handing what the command answers, sized from
+the present, to the transport reaching the device; the [greenhouse](/domain/kernel/domain.md)'s pump
 and heater are taken so.
 
 **A world's tests live with the world.** `world/hanoi/tests/` boots the world from the files

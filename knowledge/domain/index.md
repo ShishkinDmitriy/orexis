@@ -12,7 +12,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [domain](/domain/kernel/domain.md) - A vocabulary, its actions, shapes and rules as documents in `domains/<name>/`, imported by the worlds that speak it.
 * [action](/domain/kernel/action.md) - One way of acting as one node: what it takes, its precondition, its effect, its implementation, its cost.
 * [runtime](/domain/kernel/runtime.md) - Boots a world into a store, then runs pass by pass, and stops when nothing is held or wanted.
-* [event](/domain/kernel/event.md) - A signal one package gives the others through the runtime: routed at once, named in the kernel, never stored.
+* [part](/domain/kernel/part.md) - What a package contributes to a running agent: created, linked to the others, started, stopped last-first.
+* [signal](/domain/kernel/signal.md) - A package's own word for what just happened, on its object; connected when parts link, pointing down, never stored.
 * [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind on the catalogue.
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.

@@ -24,10 +24,11 @@ arrived. The thread a message arrives on is the member's client's, and a write b
 one executing thread, so `connect` is handed the container's `deliver` and a message goes there
 — to a queue — and never to `handle` directly.
 
-A MEMBER STARTS ITSELF (a-package-starts-itself). `start` is handed the runtime: every message
-the member's thread receives is submitted to it as a job that `handle`s it, the member opens what
-it listens on and schedules what it does of its own accord — MQTT asks after a board's missing
-reading, HTTP polls — and is attached, so a step's command goes out through it. `stop` ends it.
+A MEMBER IS A PART (a-package-starts-itself). The executor's `commanded` and speech's `told` are
+connected to its `command` and `tell_to` when the parts are linked; `start` is handed the runtime:
+every message the member's thread receives is submitted to it as a job that `handle`s it, the member
+opens what it listens on and schedules what it does of its own accord — MQTT asks after a board's
+missing reading, HTTP polls — and holds the agent running. `stop` ends it.
 
 SEVERAL MEMBERS ARE ONE TRANSPORT TO THE CONTAINER. A world may reach its board over MQTT and a
 forecast service over HTTP; the runtime holds every member it attached behind `Transports`, which
@@ -42,8 +43,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from agent.events import COMMANDED, TOLD
-
 
 class Transport:
     """What the container needs of any member. A member subclasses it and holds its client."""
@@ -57,19 +56,27 @@ class Transport:
 
     def start(self, runtime) -> None:
         """Begin: every message this member's thread receives submitted to the runtime as a job
-        that handles it, the agent's channels opened, a step's command and a said document heard
-        where this member reaches their recipient, and the agent held running."""
+        that handles it, the agent's channels opened, the member attached, and the agent held running."""
+        self.store = runtime.beliefs
         self.deliver = lambda channel, payload, at: runtime.submit(
             lambda: [graph for _, graph in self.handle(runtime.beliefs, channel, payload, at)])
         self.open(runtime.beliefs)
         runtime.attach(self)
-        #  WHAT A STEP SENDS: a command to a device this member reaches, a document to a peer it
-        #  reaches — heard as events, so nothing that takes a step names a transport.
-        runtime.listen(COMMANDED, lambda actuator, payload: (
-            self.reaches(runtime.beliefs, actuator) and self.actuate(runtime.beliefs, actuator, payload)) and ())
-        runtime.listen(TOLD, lambda to, document: self.tell(runtime.beliefs, to, document) and ())
         #  A MEMBER KEEPS THE AGENT RUNNING: what it senses goes on arriving whatever is wanted.
         runtime.hold(self)
+
+    def command(self, actuator: str, payload: dict) -> list[str]:
+        """A step's command, connected to the executor's `commanded` when the part is linked: sent
+        where this member reaches the actuator, and nothing written either way."""
+        if self.reaches(self.store, actuator):
+            self.actuate(self.store, actuator, payload)
+        return []
+
+    def tell_to(self, to: str, document: bytes) -> list[str]:
+        """A document for a peer, connected to speech's `told` when the part is linked: sent where this
+        member reaches the peer, and nothing written."""
+        self.tell(self.store, to, document)
+        return []
 
     def stop(self) -> None:
         """End: whatever the member holds open, closed."""
@@ -119,6 +126,24 @@ class Transports(Transport):
 
     def open(self, store) -> list[str]:
         return [channel for member in self.members for channel in member.open(store)]
+
+    def start(self, runtime) -> None:
+        for member in self.members:
+            member.start(runtime)
+
+    def stop(self) -> None:
+        for member in self.members:
+            member.stop()
+
+    def command(self, actuator: str, payload: dict) -> list[str]:
+        for member in self.members:
+            member.command(actuator, payload)
+        return []
+
+    def tell_to(self, to: str, document: bytes) -> list[str]:
+        for member in self.members:
+            member.tell_to(to, document)
+        return []
 
     def handle(self, store, channel, payload: bytes, at: datetime, *, memo=None) -> list[tuple[str | None, str]]:
         n, own = channel
