@@ -53,9 +53,12 @@ its [signals](/domain/kernel/signal.md) to what lies beneath it; then each start
 does: belief revises what is written, planning plans every pass, execution walks what is due and
 whenever the deliberator revises, a transport listens or polls, sensing asks every minute what has
 fallen due, prediction answers every observation written. The runtime offers `submit` a job from any
-thread, `every` so many seconds of the one timeline, `on` a kind of graph written — the one signal
-it owns — `hold` and `release` the agent, `again`, and a `gauge`; it runs every job and handler on
-its one thread, knows no package's words, keeps the parts in `parts` and stops them last-first
+thread, `every` so many seconds of the one timeline, `on` a kind of graph written — a signal it
+owns, beside a pass — `hold` and `release` the agent, `again`, and `lap`, a part of the pass; it runs
+every job and handler on its one thread, knows no package's words, keeps the parts in `parts` and
+stops them last-first. Where the environment names a series store it creates the part that writes
+it too, metrics or history, last, so it hears every other part
+([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md))
 ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 A transport package is created only where the process is told to connect; a test hands a member it

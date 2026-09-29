@@ -14,21 +14,19 @@ off the environment rather than the world because a store is deployment; the run
 calls it once. A purpose the environment does not name has no sink, and the client library is
 imported where a sink is made and nowhere else, so an agent with no store never loads it.
 
-THE PACKAGE THAT DECIDES A THING CONTRIBUTES IT (a-documents-kind-says-who-reads-it, §5). Sensing
-writes an observation and contributes its point; execution records an act and a landing verdict
-and contributes theirs. Each asks `sink(HISTORY)` and writes where one is loaded, and what a
-point is — its measurement, its tags, its fields, its instant — is the contributing package's.
-Metrics go through `agent/metrics.py`, which asks `sink(METRICS)` for the window it writes once a
-minute — each package's gauges and tallied events, and the runtime's own. This module sits
-beneath them all and imports nothing of theirs, nor anything of `agent`: a point
+THE PACKAGE THAT DECIDES A THING SHAPES IT, AND A PART WRITES IT
+(metrics-and-history-are-what-events-say). Sensing says an observation and execution a step taken
+and a landing verdict, each as an event answering its point — its measurement, its tags, its fields,
+its instant — and the history part (`agent/history/`), hearing every signal, writes each to
+`sink(HISTORY)`. The metrics part (`agent/metrics/`) tallies every reported event and writes the
+window once a minute to `sink(METRICS)`. The runtime creates each only where its sink is loaded.
+This module sits beneath them all and imports nothing of theirs, nor anything of `agent`: a point
 is the client's own dict, handed through.
 
-WHY A SINK IS FOUND HERE AND NOT HANDED DOWN. Sensing's `received` is called by the transport's
-driver, so a sink handed to sensing would have to be handed to the transport first, a layer
-beneath sensing that has no business carrying history; the executor would take a third
-collaborator beside `take` and `refine`. The shape this has is logging's, which every module here
-already speaks: a contributor says what happened, and whoever runs the process decides once where
-it goes.
+WHY A SINK IS FOUND HERE AND NOT HANDED DOWN. The two parts that write are created by the runtime
+like any package's, so a sink handed down would be the runtime choosing, once more, who writes it;
+the shape this has is logging's: whoever writes asks once where it goes, and whoever runs the
+process decided that when it loaded the sinks.
 
 A STORE THAT REFUSES a point is said in the log and costs the agent nothing.
 """

@@ -78,23 +78,28 @@ def test_a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after(mon
     assert _acts(runtime) == 7
 
 
-def test_a_window_a_pass_writes_the_minds_gauges_and_the_runtimes_own(monkeypatch):
-    """The gauges, sampled once a window and here a window a pass (#826, amended). The mind's packages
-    count what they wrote — the first pass's search cut short, `exhausted`, with the cone it left:
-    twenty worlds, twenty-one weighings, three still on the frontier; the last pass's intention done
-    after seven acts — and the runtime adds its own. Sensing is not loaded, so no silence is
-    counted: a package's metrics are where the package is."""
+def test_a_window_a_pass_writes_the_minds_levels_and_the_runtimes_own(monkeypatch):
+    """The levels, each as it last stood in a window, and here a window a pass (#826, amended). The
+    mind's packages say what they hold — the first pass's search cut short, `exhausted`, with the cone
+    it left in the imaginarium: twenty worlds, twenty-one weighings, three still on the frontier; no
+    intention standing yet — and across the run seven acts taken and one intention done; the runtime
+    adds its own, the store's size and the uptime on its pass. Sensing is not loaded, so no silence is
+    said: a package's metrics are where the package is."""
     runtime, windows = _metered(monkeypatch, interval_s=0)
-    first, last = ({p["measurement"]: p["fields"] for p in w} for w in (windows[0], windows[-1]))
-    assert {"store", "process", "plans", "cone", "intentions", "acts", "revisions", "pass"} <= set(first)
+    first = {p["measurement"]: p for p in windows[0]}
+    assert {"pass", "planner", "imaginarium", "search", "reroot", "intentions"} <= set(first), sorted(first)
     assert "silence" not in first
-    assert first["plans"] == {"satisfied": 0, "exhausted": 1, "noCandidate": 0}
-    assert first["cone"] == {"worlds": 20, "weighings": 21, "open": 3, "met": 0}
-    assert first["intentions"]["standing"] == 0 and first["acts"] == {"taken": 0, "notTaken": 0}
-    assert last["intentions"] == {"standing": 0, "done": 1, "failed": 0, "superseded": 0, "abandoned": 0}
-    assert last["acts"] == {"taken": 7, "notTaken": 0} and last["store"]["quads"] == len(runtime.beliefs)
-    passes = [p["fields"] for w in windows for p in w if p["measurement"] == "pass"]
+    assert first["imaginarium"]["fields"] == {"worlds": 20, "weighings": 21, "open": 3, "met": 0,
+                                              "satisfied": 0, "exhausted": 1, "no_candidate": 0}
+    assert first["imaginarium"]["tags"]["scope"] and first["intentions"]["fields"] == {"standing": 0}
+    every = [p for w in windows for p in w]
+    acts = [p["fields"] for p in every if p["measurement"] == "act"]
+    assert sum(a["count"] for a in acts) == sum(a["taken"] for a in acts) == 7
+    ended = [p for p in every if p["measurement"] == "intention"]
+    assert [(p["tags"]["outcome"], p["fields"]["count"]) for p in ended] == [("done", 1)]
+    passes = [p["fields"] for p in every if p["measurement"] == "pass"]
     assert len(passes) >= 3 and all(p["count"] == 1 and p["duration_s_max"] > 0 for p in passes)
+    assert all(0 < p["quads"] and p["uptime_s"] > 0 for p in passes)
     phases = [k for k in passes[0] if k.endswith("_s_sum") and k != "duration_s_sum"]
     assert phases and all(sum(p.get(k, 0) for k in phases) <= p["duration_s_sum"] for p in passes), \
         "the parts are of the pass"
@@ -104,7 +109,7 @@ def _metered(monkeypatch, *, interval_s: float):
     """Three disks at twenty candidates a pass, with a metrics sink loaded and who speaks said as
     `main` says it, the window `interval_s` long — nought writes one a pass, and anything longer
     than the run writes one at the end, as a stop does: the runtime, and every window written."""
-    from agent import metrics
+    from agent.metrics import window as metrics
     from agent.runtime import world_name
     from agent.series import METRICS, Sink, install
 
@@ -117,7 +122,7 @@ def _metered(monkeypatch, *, interval_s: float):
     try:
         runtime = Runtime(boot(WORLD, "hanoi"), "hanoi", budget=20)
         assert runtime.run(passes=12) == MET
-        runtime.report()
+        runtime.stop()                                   # as a stop does: the last window written
     finally:
         install(METRICS, None)
         metrics.reset()
@@ -137,7 +142,7 @@ def test_every_search_and_the_adoption_are_tallied_into_one_window_and_never_by_
     for p in window:
         by.setdefault(p["measurement"], []).append(p)
     searches = {s["tags"]["outcome"]: s["fields"] for s in by["search"]}
-    (adopted,) = by["adopted"]
+    (adopted,) = by["published"]
     assert searches["Exhausted"]["count"] == 2 and searches["Exhausted"]["weighed_sum"] == 40.0
     assert searches["Satisfied"]["count"] == 1 and searches["Exhausted"]["budget_max"] == 20.0
     fields = adopted["fields"]
@@ -148,7 +153,7 @@ def test_every_search_and_the_adoption_are_tallied_into_one_window_and_never_by_
     assert passed["fields"]["count"] >= 3
     assert sum(p["fields"]["count"] for p in by["reroot"]) == by["planner"][0]["fields"]["count"] == passed["fields"]["count"]
     assert "desire" not in adopted["tags"], "an authored want was derived under no desire"
-    for p in window:                                       # the gauges as well as the events
+    for p in window:                                       # the levels as well as the counts
         assert p["tags"]["world"] == "hanoi" and p["tags"]["agent"] == "hanoi", p
         assert "every_disk_home" not in {*p["tags"].values(), *map(str, p["fields"].values())}, p
         assert "want" not in p["tags"] and "want" not in p["fields"], p

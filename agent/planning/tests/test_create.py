@@ -20,7 +20,7 @@ class _Executor:
     def __init__(self):
         self.intention_resolved, self.heard = Signal("intention_resolved"), []
 
-    def adopt(self, plan, want):
+    def adopt(self, plan, want, desire=None):
         self.heard.append(("adopt", plan, want))
 
     def end_for(self, want, outcome):
@@ -43,13 +43,12 @@ def test_its_part_plans_every_pass_links_its_signals_down_and_holds_the_agent(mo
     assert isinstance(part.planner, Planner)
     part.link({"planning": part, "execution": execution})
     part.start(runtime)
-    assert len(runtime.gauges) == 1
     [(seconds, plan)] = runtime.timers
     assert seconds == 0, "every pass"
     written = plan()
     [(kind, published, want)] = execution.executor.heard
     assert kind == "adopt" and published in written and want in part.planner.walking()
     assert part.planner in runtime.held, "a want is walked, so the agent is held"
-    execution.executor.intention_resolved.emit(intention="urn:i", want=want, outcome="failed")
+    execution.executor.intention_resolved.emit(type("Resolved", (), {"want": want, "outcome": "failed"})())
     assert runtime.pressed, "an intention that ended asks for the next pass at once"
     assert runtime.outcome != MET

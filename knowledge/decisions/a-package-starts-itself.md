@@ -6,8 +6,8 @@ timestamp: 2026-09-29T12:00:00Z
 description: >-
   The sovereign's ruling of 2026-09-29, on reading #853. The runtime stops deciding what a
   package does: every package the agent loads beyond the mind that has a start module is handed
-  the runtime and says what it does, by four things the runtime offers - submit a job, hear a
-  kind a job writes, every so many seconds, and a gauge. A transport listens or polls, sensing
+  the runtime and says what it does, by what the runtime offers - submit a job, hear a
+  kind a job writes, every so many seconds, and at first a gauge. A transport listens or polls, sensing
   asks after what has fallen due, prediction answers an observation. Every job runs on one
   thread, one at a time, and packages meet at the store, never by calling each other. The mind
   starts itself next. Refused - the runtime orchestrating the order, packages running
@@ -37,7 +37,9 @@ the package's name and knows no word of what it does.
   the principle "the layer that waits does the waiting" kept rather than broken: MQTT asks
   after its sensors' missing readings every minute, HTTP polls each sensor at its
   `ssn-system:Frequency`, sensing asks after silence every minute.
-- `gauge(read)` reports what a package samples at a metrics window's end.
+- ~~`gauge(read)` reports what a package samples at a metrics window's end~~ — retired by
+  [metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md):
+  what a store holds is a level on an event its owner says.
 
 **Every job runs on one thread, one at a time.** A package owns when and what; the runtime owns
 where. `drain(now)` runs what is due, then every job queued and every job its writes set off,

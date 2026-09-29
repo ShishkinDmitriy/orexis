@@ -19,25 +19,26 @@ subdirectory per world. With `foldersFromFilesStructure`, Grafana shows a folder
 world removed from disk simply stops having one.
 
 Vocabulary: nothing new. The panels are built from what each sensor `sosa:observes`, the bucket
-name comes from `onboarding.influx` and the measurement from `agent.sensing.history` — sensing's,
+name comes from `onboarding.influx` and the measurement from `agent.sensing.events` — sensing's,
 since sensing contributes the observation — so the dashboard cannot disagree with where the agent
 writes or under what name.
 
 **Steps have no panel yet.** Execution writes a step taken and how it ended under
-`agent.execution.history.MEASUREMENT`, tagged by action, want and parameter. A panel for them would
+`agent.execution.events.MEASUREMENT`, tagged by action, want and parameter. A panel for them would
 be keyed on the actions an agent may take — read off the world's action graphs, as sensors are
 here — and draw `taken` and `landed` as events rather than a line, which is a panel type and a
 query shape this module does not build.
 
 **A second dashboard draws the agents' health** (`health.json`), for a world that is
 `onboarding:monitored` and for no other: what each package reports, learnt by importing the
-packages' `metrics.py` — and the runtime's own, in `agent.runtime` — so no list of metrics is kept
-here and adding one to a package's module draws it. A ROW PER PACKAGE, the runtime's first and then
-each package some agent of the world loads, in the order the agent loads them; the AGENT is the
-dashboard's variable, picking whose bucket every panel reads, rather than a row per agent. A gauge
-is one panel of every field it answers, its last per window; an event is a panel of how many and
-of each flag, summed per window, and one per value, drawing its mean, its max and its sum — each
-field of a point the agent writes drawn by exactly one panel, which the terrace's test holds.
+packages' `events.py` and reading every event class that names a measurement — and the runtime's
+own, in `agent.runtime` — so no list of metrics is kept here and adding an event that reports draws
+it. A ROW PER PACKAGE, the runtime's first and then each package some agent of the world loads, in
+the order the agent loads them; the AGENT is the dashboard's variable, picking whose bucket every
+panel reads, rather than a row per agent. A counted event is a panel of how many and of each flag,
+summed per window, and one per value, drawing its mean, its max and its sum; its levels are one
+panel, their last per window — each field of a point the agent writes drawn by exactly one panel,
+which the terrace's test holds.
 
 See knowledge/domain/onboarding/onboarding.md.
 """
@@ -50,9 +51,9 @@ import json
 import logging
 
 from agent import runtime as the_runtime
-from agent.metrics import Event, Gauge, declared
+from agent.metrics import FLAG, LEVEL, VALUE, counted, fields_of, measurement, reported
 from agent.runtime import EVERY, KERNEL, packages_of
-from agent.sensing.history import FIELD, measurement_of
+from agent.sensing.events import FIELD, measurement_of
 from agent.series import METRICS
 from agent.store import graphs_of, rows
 from . import installation, reading
@@ -275,17 +276,18 @@ _AGENTS_Q = f"SELECT ?a ?id WHERE {{ ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?i
 AGENT_VARIABLE = "agent"
 
 
-def reporting(world: str) -> list[tuple[str, list[Gauge | Event]]]:
+def reporting(world: str) -> list[tuple[str, list[type]]]:
     """What the agents of `world` report, by who reports it: the runtime's own, then each package
-    some agent of the world loads and that keeps a `metrics.py`, in the order an agent loads them —
-    read off the modules themselves, so this file names no metric."""
+    some agent of the world loads whose `events.py` has an event that reports, in the order an agent
+    loads them — read off the event classes themselves, so this file names no metric."""
     store = reading.world(world_dir(world))
     loaded = {p for r in rows(store, _AGENTS_Q, graphs_of(store, PUBLIC)) for p in packages_of(store, r["a"])}
-    out = [("runtime", [m for m in declared(the_runtime.__name__)])]
+    out = [("runtime", reported(the_runtime))]
     for package in EVERY:
-        if package in loaded and (KERNEL / package / "metrics.py").exists():
-            module = importlib.import_module("agent." + package.replace("/", ".") + ".metrics")
-            out.append((package, declared(module.__name__)))
+        if package in loaded and (KERNEL / package / "events.py").exists():
+            said = reported(importlib.import_module("agent." + package.replace("/", ".") + ".events"))
+            if said:
+                out.append((package, said))
     return out
 
 
@@ -299,16 +301,19 @@ def _metric_flux(bucket: str, measurement: str, fields: tuple[str, ...] = (), fn
             f"  |> aggregateWindow(every: v.windowPeriod, fn: {fn}, createEmpty: false)")
 
 
-def _drawn(bucket: str, reported: Gauge | Event) -> list[tuple[str, list[str], str, str]]:
-    """The panels one gauge or event is drawn in, as (title, queries, unit, description)."""
-    if isinstance(reported, Gauge):
-        return [(reported.name, [_metric_flux(bucket, reported.name)], reported.unit,
-                 f"The gauge `{reported.name}`, every field it answers, sampled once a window — its last per window.")]
-    name = reported.name
-    out = [(f"{name} — how many", [_metric_flux(bucket, name, ("count", *reported.flags), fn="sum")], "none",
-            f"How many `{name}` happened per window" + (f", and of them how many were {', '.join(reported.flags)}"
-                                                        if reported.flags else "") + ".")]
-    for value in reported.values:
+def _drawn(bucket: str, event: type) -> list[tuple[str, list[str], str, str]]:
+    """The panels one event class is drawn in, as (title, queries, unit, description)."""
+    name, out = measurement(event), []
+    flags, levels = fields_of(event, FLAG), fields_of(event, LEVEL)
+    if levels:
+        out.append((name, [_metric_flux(bucket, name, levels)], "s" if all(f.endswith("_s") for f in levels) else "none",
+                    f"`{name}`: {', '.join(levels)}, as each stood last in a window."))
+    if not counted(event):
+        return out
+    out.append((f"{name} — how many", [_metric_flux(bucket, name, ("count", *flags), fn="sum")], "none",
+                f"How many `{name}` happened per window" + (f", and of them how many were {', '.join(flags)}"
+                                                            if flags else "") + "."))
+    for value in fields_of(event, VALUE):
         out.append((f"{name} — {value}",
                     [_metric_flux(bucket, name, (f"{value}_mean",), fn="mean"),
                      _metric_flux(bucket, name, (f"{value}_max",), fn="max"),

@@ -38,7 +38,7 @@ def test_no_file_of_this_package_speaks_a_higher_layers_words(path):
 
 
 def test_a_module_named_for_an_act_exports_that_act_and_has_a_test_named_for_it():
-    acts = [p for p in FILES if p.stem != "__init__"]
+    acts = [p for p in FILES if p.stem not in ("__init__", "events")]      # `events` names a thing: what speech says
     assert acts, "the glob stopped matching"
     for path in acts:
         tree = ast.parse(path.read_text())

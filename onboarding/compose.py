@@ -54,7 +54,7 @@ import logging
 from pathlib import Path
 
 from agent.runtime import known, world_of
-from agent.metrics import INTERVAL_KEY
+from agent.metrics.window import INTERVAL_KEY
 from agent.series import HISTORY, METRICS
 from agent.store import document, graphs_of, kinds_in, rows
 from . import installation, reading

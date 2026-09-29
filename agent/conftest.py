@@ -373,13 +373,13 @@ def pytest_addoption(parser):
 class StandInRuntime:
     """What a package's `create` and its part's `start` are handed, as a test hands it: the store,
     the agent, the instant a job reads, and a record of everything the part asked the runtime for —
-    jobs submitted, kinds heard, graphs written, timers, gauges and members attached — for the test
+    jobs submitted, kinds heard, graphs written, timers and members attached — for the test
     to run by hand."""
 
     def __init__(self, beliefs, me: str, now, agent_id: str = "keeper", budget=None, intentions=None):
         self.beliefs, self.me, self.now, self.id = beliefs, me, now, agent_id
         self.budget, self.intentions = budget, intentions
-        self.jobs, self.heard, self.timers, self.gauges, self.attached = [], [], [], [], []
+        self.jobs, self.heard, self.timers, self.attached = [], [], [], []
         self.written, self.held, self.outcome, self.pressed = [], set(), None, False
 
     def wrote(self, graphs) -> None:
@@ -406,9 +406,6 @@ class StandInRuntime:
 
     def every(self, seconds: float, job) -> None:
         self.timers.append((seconds, job))
-
-    def gauge(self, read) -> None:
-        self.gauges.append(read)
 
     def attach(self, member) -> None:
         self.attached.append(member)

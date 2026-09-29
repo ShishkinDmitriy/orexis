@@ -63,7 +63,7 @@ def test_every_kept_world_is_re_stamped_and_none_loses_its_instant(snapshots):
     duration to an instant and taking one instant from another were measured to bind on
     0.5.9; this holds the engine to it, and to the rebased spent beside it."""
     store = snapshots.stand_in(CASES_DIR / "a_step_taken_as_predicted_keeps_its_cone.trig")
-    assert reroot(store, _present(store)) is not None, "the moved disk is a world the pass imagined"
+    assert reroot(store, _present(store)).match is not None, "the moved disk is a world the pass imagined"
     kept = rows(store, _WORLDS_Q, ())
     assert kept, "the cone beneath the match is kept"
     assert all(r.get("at") and r.get("spent") is not None for r in kept), kept
@@ -75,7 +75,7 @@ def test_every_kept_world_is_re_stamped_and_none_loses_its_instant(snapshots):
 
 def test_a_surprise_keeps_nothing(snapshots):
     store = snapshots.stand_in(CASES_DIR / "a_surprise_drops_everything.trig")
-    assert reroot(store, _present(store)) is None
+    assert reroot(store, _present(store)).match is None
     assert rows(store, _WORLDS_Q, ()) == []
 
 

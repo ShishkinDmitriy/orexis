@@ -1,9 +1,10 @@
 """`create`: the execution package's part (a-package-starts-itself) — its executor, which says what
-happened by its own signals: `intention_resolved`, `commanded`, `said`.
+happened by its own signals, each carrying an event of `events.py`: `intention_resolved`,
+`commanded`, `said`, and — made only where heard — `step_taken`, `step_answered`, `walked`.
 
 LINKED, it connects `commanded` to every transport — a part that takes a `command` — and `said` to speech — what lies beneath it — and
 hears the deliberator's `revised`: the present changed, so the world may have answered a step, and
-a walk is queued. STARTED, it walks what is due every pass, after planning, and reports its gauges.
+a walk is queued. STARTED, it walks what is due every pass, after planning.
 A step is taken by its action's implementation, order by order: each command emitted, each saying
 emitted, and what they wrote said before the next order is asked, so a later order is made from the
 present the earlier ones left.
@@ -11,8 +12,8 @@ present the earlier ones left.
 
 from __future__ import annotations
 
-from . import metrics
 from .command import command
+from .events import Commanded, Said
 from .executor import Executor
 from .implementation import COMMAND, SAYING, operations
 from .says import says
@@ -28,13 +29,13 @@ class _Execution:
     def link(self, parts) -> None:
         for part in parts.values():
             if callable(getattr(part, "command", None)):         # a transport: what sends a command
-                self.executor.commanded.connect(part.command)
+                self.executor.commanded.connect(lambda c, send=part.command: send(c.actuator, c.payload))
         speech = parts.get("speech")
         if speech is not None:
-            self.executor.said.connect(speech.say)
+            self.executor.said.connect(lambda said: speech.say(said.document, said.to))
         belief = parts.get("belief")
         if belief is not None:
-            belief.deliberator.revised.connect(lambda graphs: self._walk_soon())
+            belief.deliberator.revised.connect(lambda revised: self._walk_soon())
 
     def _walk_soon(self) -> None:
         """Queue a walk, once: the present changed, and however many revisions say so before it runs,
@@ -45,7 +46,6 @@ class _Execution:
 
     def start(self, runtime) -> None:
         runtime.every(0, self._pass)
-        runtime.gauge(lambda: metrics.gauges(self.executor.intentions))
 
     def _pass(self):
         """The walk a pass asks for, after planning: skipped where this pass walked already and nothing
@@ -73,9 +73,9 @@ class _Execution:
             return
         for order in orders:
             for actuator, payload in command(runtime.beliefs, said, runtime.me, order=order):
-                runtime.wrote(executor.commanded.emit(actuator=actuator, payload=payload))
+                runtime.wrote(executor.commanded.emit(Commanded(actuator, payload)))
             for agents, document in says(runtime.beliefs, said, runtime.me, order=order):
-                runtime.wrote(executor.said.emit(document=document, to=agents))
+                runtime.wrote(executor.said.emit(Said(document, tuple(agents))))
 
 
 def create(runtime) -> _Execution:

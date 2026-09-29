@@ -130,23 +130,26 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
 
 
 def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_counted(monkeypatch):
-    """The gauges of two passes, a window each (#826, amended). The first doses the dry bed: one
-    intention standing and none failed — `failed` written as nought and not left out, which is what
-    an outcome compared while unbound did — and the plan's world met its want, which an `EXISTS` read
-    against the default graph never saw. A day later the thermometer reports and the probe has not:
-    the reading sets the executor walking at once, the dose was never answered, so the intention
+    """The levels and counts of two passes, a window each (#826, amended). The first doses the dry
+    bed: one intention standing, one act taken, and the plan's world met its want, which an `EXISTS`
+    read against the default graph never saw. A day later the thermometer reports and the probe has
+    not: the reading sets the executor walking at once, the dose was never answered, so the intention
     failed, and planning, hearing it end, plans a second dose in that same pass — standing, not yet
     sent; and the probe is past its cadences, so it is silent. Sensing is loaded here, so silence is
-    counted beside the mind's figures."""
+    said beside the mind's figures."""
     runtime, broker, windows = _unanswered(monkeypatch, interval_s=0)
-    dosed, a_day_later = ({p["measurement"]: p["fields"] for p in w} for w in windows[:2])
-    assert {"store", "process", "plans", "cone", "intentions", "acts", "revisions", "silence", "pass"} <= set(dosed)
-    assert dosed["intentions"] == {"standing": 1, "done": 0, "failed": 0, "superseded": 0, "abandoned": 0}
-    assert dosed["acts"] == {"taken": 1, "notTaken": 0} and dosed["silence"] == {"silent": 0}
-    assert dosed["plans"]["satisfied"] == 1 and dosed["cone"]["met"] == 1
-    assert dosed["revisions"]["unsettled"] == 0 < dosed["revisions"]["revisions"]
-    assert a_day_later["intentions"]["failed"] == 1 and a_day_later["intentions"]["standing"] == 1
-    assert a_day_later["silence"] == {"silent": 1}, "the probe, and not the thermometer that reported"
+    dosed, a_day_later = windows[:2]
+    of = lambda window, name: [p for p in window if p["measurement"] == name]
+    one = lambda window, name: (lambda found: found[0]["fields"])(of(window, name))
+    assert {"pass", "imaginarium", "intentions", "act", "revisions", "silence"} <= {p["measurement"] for p in dosed}
+    assert one(dosed, "intentions") == {"standing": 1} and one(dosed, "silence") == {"silent": 0}
+    assert one(dosed, "act")["count"] == one(dosed, "act")["taken"] == 1
+    assert sum(p["fields"]["satisfied"] for p in of(dosed, "imaginarium")) == 1
+    assert sum(p["fields"]["met"] for p in of(dosed, "imaginarium")) == 1
+    assert one(dosed, "revisions")["unsettled"] == 0 < one(dosed, "revisions")["revisions"]
+    assert [(p["tags"]["outcome"], p["fields"]["count"]) for p in of(a_day_later, "intention")] == [("failed", 1)]
+    assert one(a_day_later, "intentions") == {"standing": 1}
+    assert one(a_day_later, "silence") == {"silent": 1}, "the probe, and not the thermometer that reported"
     assert len(broker.published) == 1
 
 
@@ -154,7 +157,7 @@ def _unanswered(monkeypatch, *, interval_s: float):
     """The dry bed dosed, and a day later the thermometer alone — with a metrics sink loaded and who
     speaks said as `main` says it, the window `interval_s` long, and the last written as a stop
     writes it: the runtime, the broker, and every window written."""
-    from agent import metrics
+    from agent.metrics import window as metrics
     from agent.runtime import world_name
     from agent.series import METRICS
 
@@ -170,7 +173,7 @@ def _unanswered(monkeypatch, *, interval_s: float):
         runtime.time.at = NOW + timedelta(days=1)
         runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', runtime.time.at)
         runtime.run(passes=1, poll_s=0)
-        runtime.report()
+        runtime.stop()                                   # as a stop does: the last window written
     finally:
         install(METRICS, None)
         metrics.reset()
@@ -190,7 +193,7 @@ def test_a_want_derived_under_a_desire_is_told_by_the_desire_and_the_dose_by_how
     by = {}
     for p in window:
         by.setdefault(p["measurement"], []).append(p)
-    (search,), (adopted,), (landing,) = [s for s in by["search"] if s["tags"]["outcome"] == "Satisfied"], by["adopted"], by["landing"]
+    (search,), (adopted,), (landing,) = [s for s in by["search"] if s["tags"]["outcome"] == "Satisfied"], by["published"], by["landing"]
     assert search["tags"]["desire"] == adopted["tags"]["desire"] == landing["tags"]["desire"] == desire
     assert adopted["fields"]["passes_max"] == 1.0 and adopted["fields"]["count"] == 2, "the dose, then its replan"
     assert adopted["fields"]["replan"] == 1, "the second, planned the pass the first failed"

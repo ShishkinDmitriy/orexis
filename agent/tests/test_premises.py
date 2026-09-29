@@ -21,7 +21,7 @@ from pathlib import Path
 import pyoxigraph as ox
 import pytest
 
-from agent.runtime import EVERY, HTTP, KERNEL, MIND, MQTT, PREDICTION, PREMISES, SENSING, SPEECH, Runtime, _documents_of, \
+from agent.runtime import EVERY, WATCHERS, HTTP, KERNEL, MIND, MQTT, PREDICTION, PREMISES, SENSING, SPEECH, Runtime, _documents_of, \
     boot, packages_of
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -128,14 +128,15 @@ def test_every_case_is_a_case_of_some_premise_both_ways():
 def test_every_document_the_agent_ships_is_the_kernels_or_a_packages_it_names():
     """A package is loaded because it is the mind or because it has a premise; a document under
     `agent/` in a directory that is neither would never be read by any agent, silently. And every
-    package directory — one with an `__init__.py` — is one or the other."""
+    package directory — one with an `__init__.py` — is one or the other, or watches the agent where
+    the environment names a store for it."""
     ships = sorted(p for p in KERNEL.rglob("*") if p.suffix in (".ttl", ".trig")
                    and "tests" not in p.relative_to(KERNEL).parts)
     named = {KERNEL / "ontology.ttl", *_documents_of(EVERY)}
     assert ships and set(ships) <= named, f"shipped and read by nobody: {sorted(set(ships) - named)}"
     packages = sorted(p.parent.relative_to(KERNEL).as_posix() for p in KERNEL.rglob("__init__.py")
                       if "tests" not in p.relative_to(KERNEL).parts)
-    assert packages and set(packages) == set(EVERY), f"packages {packages} against the mind and the premises {EVERY}"
+    assert packages and set(packages) == {*EVERY, *WATCHERS}, f"packages {packages} against the mind, the premises and the watchers"
 
 
 #  WHAT A PROCESS HOLDS: a fresh interpreter, the tree under test first on its path, boots a world,

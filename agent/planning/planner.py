@@ -75,17 +75,19 @@ from datetime import datetime
 import pyoxigraph as ox
 import rdflib
 
-from agent import clock, metrics
+from agent import clock
 from agent.lifecycle import Signal
+from agent.metrics import Laps
 from agent.ontology import ACTION, PUBLIC, RECORD, local_of
 from agent.store import (Memo, Raw, forget_graph, bind, bindings, catalogue_of, graphs_of, instant, query, rdflib_view,
                          remember, rows, update)
 
 from . import footprint
-from . import metrics as reported
 from .admit import admit
 from .bridge import keeps
 from .derive_wants import derive_wants
+from .events import (Imagined, Planned, PlanPublished, Rerooted, SearchEnded, StepBlocked,
+                     WantReached, WantUnreachable)
 from .extract_plan import extract_plan
 from .find_scopes import find_scopes
 from .refine import refine
@@ -203,6 +205,37 @@ SELECT DISTINCT ?for WHERE {
 
 _OUTCOMES_Q = "SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"
 
+#  WHAT THE EVENTS SAY OF A WANT, read where the event is made: the plan its search wrote and how it
+#  ended, the desire it was derived under, what its estimate said at the present ground, and how many
+#  intentions have pursued it — off the beliefs, where execution's rows are.
+_PLAN_OF_Q = """
+SELECT ?outcome ?spent WHERE { GRAPH ?g { ?p a planning:Plan ; planning:for $want ; planning:outcome ?outcome .
+  OPTIONAL { ?p planning:spent ?spent } } } LIMIT 1"""
+_DESIRE_OF_Q = """SELECT ?d WHERE { GRAPH ?g { $want a planning:Want ; prov:wasDerivedFrom ?d } } LIMIT 1"""
+_ESTIMATE_Q = """
+SELECT ?remaining WHERE { GRAPH $cat { ?x planning:weighs $ground ; planning:for $want ; planning:remaining ?remaining } } LIMIT 1"""
+_PURSUES_Q = """SELECT ?want WHERE { GRAPH ?g { $plan execution:pursues ?want } } LIMIT 1"""
+_PURSUERS_Q = """SELECT (COUNT(DISTINCT ?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention ; execution:pursues $want } }"""
+
+#  WHAT AN IMAGINARIUM HOLDS: its possible worlds and the weighings of them, of those how many are on
+#  a frontier and how many met their want; and its plans, by why each search ended.
+#
+#  Counted by OPTIONAL rows inside the catalogue and not by `EXISTS` in the aggregate: an EXISTS in
+#  a projected expression is evaluated against the DEFAULT graph, which this read is handed empty,
+#  and it answered no met weighing on a greenhouse imaginarium holding one — measured, 2026-09-27.
+_CONE_Q = """
+SELECT ?worlds ?weighings ?open ?met WHERE {
+  { SELECT (COUNT(?w) AS ?worlds) WHERE { GRAPH $cat { ?w a planning:PossibleGraph } } }
+  { SELECT (COUNT(?x) AS ?weighings) (COUNT(?o) AS ?open) (COUNT(?m) AS ?met) WHERE {
+      GRAPH $cat { ?x a planning:Weighing .
+                   OPTIONAL { ?x planning:open true BIND(?x AS ?o) }
+                   OPTIONAL { ?x planning:met true BIND(?x AS ?m) } } } } }"""
+_PLANS_HELD_Q = """
+SELECT (SUM(IF(?outcome = planning:Satisfied, 1, 0)) AS ?satisfied)
+       (SUM(IF(?outcome = planning:Exhausted, 1, 0)) AS ?exhausted)
+       (SUM(IF(?outcome = planning:NoCandidate, 1, 0)) AS ?noCandidate)
+WHERE { GRAPH ?plan { ?p a planning:Plan ; planning:outcome ?outcome } }"""
+
 _FRONTIER_Q = """
 SELECT ?w ?spent ?remaining ?minted ?weighing ?best ?used WHERE {
   GRAPH $cat { ?weighing a planning:Weighing ; planning:for $want ; planning:open true ; planning:weighs ?w .
@@ -253,15 +286,20 @@ class Planner:
         self.handed: list[tuple[str, str]] = []
         self.reached: set[str] = set()
         self.blocked: list[str] = []
-        #  WHAT THE PLANNER SAYS HAPPENED, its own words for whoever connects: a plan published, with
-        #  the want it pursues; a want an intention walks that the present meets; a step an intention
-        #  stands at that the present no longer admits.
+        #  WHAT THE PLANNER SAYS HAPPENED, its own words for whoever connects, each carrying an event
+        #  of `events.py`: a plan published; a want an intention walks that the present meets; a
+        #  step an intention stands at that the present no longer admits; a want nothing reaches;
+        #  and, made only where heard, a search ended, a pass, a re-root and what an imaginarium holds.
         self.plan_published = Signal("plan_published")
         self.want_reached = Signal("want_reached")
         self.step_blocked = Signal("step_blocked")
+        self.want_unreachable = Signal("want_unreachable")
+        self.searched = Signal("searched")
+        self.planned = Signal("planned")
+        self.rerooted = Signal("rerooted")
+        self.imagined = Signal("imagined")
         #  TELEMETRY AND NOT A ROW: per want, when it was first searched and in how many passes,
-        #  kept only where a metrics sink is loaded and said at its adoption. No plan branches
-        #  on it, so it is memory and never a belief.
+        #  said when its plan is published. No plan branches on it, so it is memory and never a belief.
         self._searches: dict[str, list] = {}
 
     def _identity(self, agent_id: str) -> str:
@@ -326,9 +364,9 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         #  WHAT THE PASS SAYS, for whoever runs it to signal: the plans it published with their wants,
         #  the wants an intention walks that the present meets, and the steps it can no longer take.
         self.handed, self.reached, self.blocked = [], set(), []
-        #  HOW LONG EACH PART OF THE PASS TOOK, where a metrics sink is loaded: in real seconds by
+        #  HOW LONG EACH PART OF THE PASS TOOK, where anybody hears the pass: in real seconds by
         #  `perf_counter`, since the agent's clock may run fast and a test's ticks per read.
-        lap = metrics.Laps() if metrics.recording() else None
+        lap = Laps() if self.planned.connected else None
         searched: set[str] = set()
         for _scope in sorted(set(scopes.values())) or [UNSCOPED]:
             store = self.imaginaria.setdefault(_scope, ox.Store())
@@ -338,7 +376,10 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  and can change only by a write the search does not make.
             memo = Memo()
             present, *_ = lay_ground(store, at)
-            reroot(store, present)
+            rerooting = reroot(store, present)
+            if self.rerooted.connected:
+                written += self.rerooted.emit(Rerooted(scope=local_of(_scope), present=rerooting.present,
+                                                       kept=len(rerooting.kept), dropped=len(rerooting.dropped)))
             if lap:
                 lap("ground")
             self.blocked += self._blocked(store, present, at, memo)
@@ -387,22 +428,25 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             handed = publish_plan(store, self.beliefs, self.uri, walking)
             self._mark_kept(handed)
             written += handed
+            #  SAID BEFORE ANYTHING ADOPTS IT, since whether an intention pursued the want before is
+            #  what makes a replan, and the executor adopts as it hears.
+            published = self._published(store, handed, present, _scope, memo)
             if lap:
-                self._adopted(store, handed, present, _scope, memo)     # before anything adopts it
                 lap("publish")
-            for plan in handed:
-                want = reported.pursued_by(self.beliefs, plan)
-                self.handed.append((plan, want))
-                written += self.plan_published.emit(plan=plan, want=want)
+            for event in published:
+                self.handed.append((event.plan, event.want))
+                written += self.plan_published.emit(event)
+            if self.imagined.connected:
+                written += self.imagined.emit(self._imagined(store, _scope))
             walking = self.walking()        # a want published from one scope is walked in the next
+        #  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
+        self._searches = {w: s for w, s in self._searches.items() if w in searched}
         if lap:
-            reported.PLANNER({**lap.spent, "wants": len(searched)})
-            #  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
-            self._searches = {w: s for w, s in self._searches.items() if w in searched}
+            written += self.planned.emit(Planned(wants=len(searched), **lap.spent))
         for want in sorted(self.reached):
-            written += self.want_reached.emit(want=want)
+            written += self.want_reached.emit(WantReached(want))
         for step in self.blocked:
-            written += self.step_blocked.emit(step=step)
+            written += self.step_blocked.emit(StepBlocked(step))
         return written
 
     # --- a step kept one level down ----------------------------------------------------------
@@ -520,12 +564,12 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         stands, and a want with forty weighings kept from yesterday is not refused its first
         fork today.
 
-        WHERE A METRICS SINK IS LOADED the search is said as it ends — how long it took in real
-        seconds, the budget, the candidates it weighed and how it ended — one event per want per
-        pass, never one per weighing, and the want's tally of searches is kept for its adoption.
+        THE SEARCH IS SAID AS IT ENDS, where anybody hears it — how long it took in real seconds,
+        the budget, the candidates it weighed and how it ended — one event per want per pass, never
+        one per weighing; and the want's tally of searches is kept for its plan's publishing.
         """
         memo = Memo() if memo is None else memo
-        started = time.perf_counter() if metrics.recording() else None
+        started = time.perf_counter()
         for pair in unweighed(store, for_=want, memo=memo):
             if not pair.get("from"):
                 weigh(store, want, pair["about"], memo=memo)             # the root: the present
@@ -534,33 +578,58 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 and spent < ceiling:
             pass
         extract_plan(store, want)
-        if started is not None:
-            tally = self._searches.setdefault(want, [started, 0])
-            tally[1] += 1
-            reported.report_search(store, want, took=time.perf_counter() - started, budget=budget,
-                                   weighed=_spent(store, want, memo) - (ceiling - budget), scope=scope)
+        tally = self._searches.setdefault(want, [started, 0])
+        tally[1] += 1
+        if self.searched.connected:
+            plan = next(iter(rows(store, _PLAN_OF_Q, (), want=want)), {})
+            self.searched.emit(SearchEnded(
+                want=want, desire=_desire_of(store, want), scope=local_of(scope) if scope else None,
+                outcome=local_of(plan["outcome"]) if plan.get("outcome") else None,
+                duration_s=round(time.perf_counter() - started, 6), budget=budget,
+                weighed=_spent(store, want, memo) - (ceiling - budget)))
 
-    def _adopted(self, store: ox.Store, handed: list[str], present: str, scope: str, memo: Memo) -> None:
-        """Say each plan this pass published from `store` (`metrics.report_adoption`), with the
-        tally of its want's searches, which goes with it."""
+    def _published(self, store: ox.Store, handed: list[str], present: str, scope: str,
+                   memo: Memo) -> list[PlanPublished]:
+        """What is said of each plan this pass published from `store`: the want it pursues, the tally
+        of the want's searches, which goes with it, what the want's estimate said was left at the
+        `present` ground against what the plan spent, and whether an intention pursued the want
+        before — a replan."""
+        out = []
         for plan in handed:
-            want = reported.pursued_by(self.beliefs, plan)
-            if want is None:
+            found = rows(self.beliefs, _PURSUES_Q, (), plan=plan)
+            if not found:
                 continue
+            want = found[0]["want"]
             first, passes = self._searches.pop(want, (None, 0))
-            reported.report_adoption(store, self.beliefs, want, first=first, passes=passes,
-                                     weighed=_spent(store, want, memo), present=present, scope=scope)
+            spent = next(iter(rows(store, _PLAN_OF_Q, (), want=want)), {}).get("spent")
+            root = next(iter(rows(store, _ESTIMATE_Q, (), want=want, ground=present,
+                                  cat=Raw(f"<{catalogue_of(store)}>"))), {})
+            pursued = int(rows(self.beliefs, _PURSUERS_Q, (), want=want)[0]["n"])
+            out.append(PlanPublished(
+                plan=plan, want=want, desire=_desire_of(store, want), scope=local_of(scope),
+                passes=passes, weighed=_spent(store, want, memo),
+                wall_s=round(time.perf_counter() - first, 6) if first is not None else None,
+                estimate=float(root["remaining"]) if root.get("remaining") is not None else None,
+                cost=float(spent) if spent is not None else None, replan=pursued > 0))
+        return out
 
-    def desire_of(self, want: str) -> str | None:
-        """The local name of the desire `want` was derived under, off whichever imaginarium holds
-        it — or None, for a want the world authored or a step kept below — for the runtime's
-        events about a want."""
-        return next((d for store in self.imaginaria.values() if (d := reported.desire_of(store, want))), None)
+    def _imagined(self, store: ox.Store, scope: str) -> Imagined:
+        """What the imaginarium of `scope` holds now: the one store a plan, a world and a weighing
+        are written in, and never the belief base, whose readings it copies."""
+        cone = rows(store, _CONE_Q, (), cat=Raw(f"<{catalogue_of(store)}>"))[0]
+        held = next(iter(rows(store, _PLANS_HELD_Q, ())), {})
+        number = lambda row, key: int(row[key]) if row.get(key) is not None else 0
+        return Imagined(scope=local_of(scope), worlds=number(cone, "worlds"), weighings=number(cone, "weighings"),
+                        open=number(cone, "open"), met=number(cone, "met"), satisfied=number(held, "satisfied"),
+                        exhausted=number(held, "exhausted"), no_candidate=number(held, "noCandidate"))
 
-    def gauges(self) -> list:
-        """Planning's gauges, sampled over the imaginaria this Planner keeps — the one store a plan,
-        a world and a weighing are written in — for the runtime's flush (`metrics.py` beside this)."""
-        return reported.gauges(self.imaginaria.values())
+    def unreachable(self, wants) -> list[str]:
+        """Say that nothing this agent holds reaches `wants`, each by the desire it was derived under."""
+        written = []
+        for want in wants:
+            desire = next((d for store in self.imaginaria.values() if (d := _desire_of(store, want))), None)
+            written += self.want_unreachable.emit(WantUnreachable(want, desire=desire))
+        return written
 
     # --- one iteration -------------------------------------------------------------------
 
@@ -603,6 +672,13 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
 
 #  WHAT A WANT'S SEARCH HAS SPENT — every weighing for it but a ground's — before this call.
+def _desire_of(store: ox.Store, want: str) -> str | None:
+    """The local name of the desire `want` was derived under in `store`, or None — for a want the
+    world authored, or a step kept below."""
+    found = rows(store, _DESIRE_OF_Q, (), want=want)
+    return local_of(found[0]["d"]) if found else None
+
+
 _SPENT_Q = """
 SELECT (COUNT(?x) AS ?used) WHERE {
   GRAPH $cat { ?x a planning:Weighing ; planning:for $want ; planning:weighs ?u .

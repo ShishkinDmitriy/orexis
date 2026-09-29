@@ -9,6 +9,7 @@ from pathlib import Path
 from agent import clock
 from agent.lifecycle import Signal
 from agent.execution.executor import Executor
+from agent.belief.events import Revised
 from agent.execution.create import create
 from agent.store import entry, update
 
@@ -37,7 +38,7 @@ def _part(monkeypatch, snapshots, stand_in_runtime):
     runtime = stand_in_runtime(store, None, snapshots.NOW, agent_id=snapshots.AGENT)
     part = create(runtime)
     ended = []
-    part.executor.intention_resolved.connect(lambda **what: ended.append(what["outcome"]))
+    part.executor.intention_resolved.connect(lambda resolved: ended.append(resolved.outcome))
     return store, runtime, part, ended
 
 
@@ -47,7 +48,7 @@ def test_its_part_adopts_what_is_published_and_ends_what_was_reached_untaken(mon
     part.link({"execution": part, "belief": belief})
     part.start(runtime)
     assert [seconds for seconds, _ in runtime.timers] == [0], "a walk every pass"
-    belief.deliberator.revised.emit(graphs=["urn:g"])
+    belief.deliberator.revised.emit(Revised(("urn:g",)))
     assert len(runtime.jobs) == 1, "the present changed, so a walk is queued"
     _hand_down(store)
     assert part.executor.adopt(PLAN, WANT) == [part.executor.graph]

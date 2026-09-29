@@ -1,6 +1,6 @@
-"""What execution contributes to history: a step taken when its act is recorded, and landed or
-failed at the verdict — each measured `Step`, tagged with the action, the want and the values the
-action takes — and nothing built where no sink is loaded."""
+"""What the executor says of a step: taken when its act is recorded, and landed or failed at the
+verdict — each history measured `Step`, tagged with the action, the want and the values the action
+takes — and nothing made where nobody hears."""
 
 from __future__ import annotations
 
@@ -11,11 +11,9 @@ import pyoxigraph as ox
 import pytest
 
 from agent import clock
-from agent.execution import executor as executing
+from agent.execution.events import MEASUREMENT, StepAnswered, StepTaken
 from agent.execution.executor import DEFAULT_PATIENCE_S, Executor
-from agent.execution.history import MEASUREMENT, step_point
 from agent.hash_named_graph import facts_of
-from agent.series import HISTORY, Sink, install
 from agent.store import put_graph, update
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -30,12 +28,13 @@ def stopped_clock(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW)
 
 
-@pytest.fixture
-def history():
-    written = []
-    install(HISTORY, Sink(HISTORY, "b", lambda bucket, record: written.extend(record)))
-    yield written
-    install(HISTORY, None)
+def _executor(beliefs, take) -> tuple[Executor, list]:
+    """An executor whose step events are heard, and the points they answer as they are said."""
+    x = Executor(beliefs, "keeper", ox.Store(), take=take)
+    history = []
+    x.step_taken.connect(lambda event: history.append(event.point()))
+    x.step_answered.connect(lambda event: history.append(event.point()))
+    return x, history
 
 
 def _beliefs(on: str) -> ox.Store:
@@ -70,15 +69,17 @@ TAGS = {"action": "Move", "want": "want_disk_1", "disk": "disk_1", "to": "PegB"}
 def test_a_step_is_tagged_with_its_action_its_want_and_the_values_the_action_takes():
     """What the step says beyond the parameters its action takes — here a figure the search wrote —
     is not a value of the step and is not tagged."""
-    said = {"step": PLAN + ".0", "fills": MOVE, "disk": DISK, "to": PEG_B, "spent": "1"}
-    assert step_point(_beliefs(PEG_A), said, WANT, NOW, {"taken": True}) == {
-        "measurement": MEASUREMENT, "tags": TAGS, "fields": {"taken": True}, "time": NOW}
+    x, history = _executor(_beliefs(PEG_A), lambda said, intention: None)
+    x.commit(_plan(), PLAN, WANT)
+    x.tick(NOW)
+    x.drain()
+    assert history == [{"measurement": MEASUREMENT, "tags": TAGS, "fields": {"taken": True}, "time": NOW}]
     assert MEASUREMENT == "Step"
 
 
-def test_a_step_taken_and_answered_is_a_taken_point_and_a_landed_one(history):
+def test_a_step_taken_and_answered_is_a_taken_point_and_a_landed_one():
     beliefs = _beliefs(PEG_A)
-    x = Executor(beliefs, "keeper", ox.Store(), take=lambda said, intention: None)
+    x, history = _executor(beliefs, lambda said, intention: None)
     x.commit(_plan(), PLAN, WANT)
     x.tick(NOW)
     x.drain()
@@ -90,8 +91,8 @@ def test_a_step_taken_and_answered_is_a_taken_point_and_a_landed_one(history):
     assert history[1:] == [{"measurement": "Step", "tags": TAGS, "fields": {"landed": True}, "time": later}]
 
 
-def test_a_step_the_world_does_not_answer_by_the_patience_has_failed(history):
-    x = Executor(_beliefs(PEG_A), "keeper", ox.Store(), take=lambda said, intention: None)
+def test_a_step_the_world_does_not_answer_by_the_patience_has_failed():
+    x, history = _executor(_beliefs(PEG_A), lambda said, intention: None)
     x.commit(_plan(), PLAN, WANT)
     x.tick(NOW)
     x.drain()
@@ -101,10 +102,23 @@ def test_a_step_the_world_does_not_answer_by_the_patience_has_failed(history):
     assert [p["fields"] for p in history] == [{"taken": True}, {"landed": False}]
 
 
-def test_a_step_that_could_not_be_taken_says_so_and_has_no_verdict(history):
+def test_a_verdict_says_how_late_the_world_answered_and_whether_the_patience_ran_out():
+    heard = []
+    x = Executor(_beliefs(PEG_A), "keeper", ox.Store(), take=lambda said, intention: None)
+    x.step_answered.connect(heard.append)
+    x.commit(_plan(), PLAN, WANT)
+    x.tick(NOW)
+    x.drain()
+    x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S))
+    (verdict,) = heard
+    assert isinstance(verdict, StepAnswered)
+    assert (verdict.landed, verdict.timed_out, verdict.late_s, verdict.action) == (False, True, DEFAULT_PATIENCE_S, "Move")
+
+
+def test_a_step_that_could_not_be_taken_says_so_and_has_no_verdict():
     def refuse(said, intention):
         raise RuntimeError("no valve answers")
-    x = Executor(_beliefs(PEG_A), "keeper", ox.Store(), take=refuse)
+    x, history = _executor(_beliefs(PEG_A), refuse)
     x.commit(_plan(), PLAN, WANT)
     x.tick(NOW)
     x.drain()
@@ -112,15 +126,13 @@ def test_a_step_that_could_not_be_taken_says_so_and_has_no_verdict(history):
     assert [p["fields"] for p in history] == [{"taken": False}]
 
 
-def test_no_sink_is_no_point_built(monkeypatch):
-    """Where no history sink is loaded the executor reads nothing to build one — hanoi's mover
-    takes thousands of steps in a bench and writes no series."""
-    def built(*args, **kw):
-        raise AssertionError("a point was built with no sink to write it")
-    monkeypatch.setattr(executing, "step_point", built)
-    install(HISTORY, None)
-    beliefs = _beliefs(PEG_A)
-    x = Executor(beliefs, "keeper", ox.Store(), take=lambda said, intention: None)
+def test_nobody_hearing_is_no_event_made(monkeypatch):
+    """Where nobody hears a step, the executor reads nothing to say one — hanoi's mover takes
+    thousands of steps in a bench and writes no series."""
+    def made(*args, **kw):
+        raise AssertionError("an event was made with nobody to hear it")
+    monkeypatch.setattr(StepTaken, "__init__", made)
+    x = Executor(_beliefs(PEG_A), "keeper", ox.Store(), take=lambda said, intention: None)
     x.commit(_plan(), PLAN, WANT)
     x.tick(NOW)
     assert x.drain() == 1

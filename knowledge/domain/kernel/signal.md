@@ -3,8 +3,9 @@ type: Domain Concept
 title: Signal
 description: >-
   A package's own word for something that just happened - the Planner's plan_published, the
-  executor's intention_resolved, the deliberator's revised - living on the package's object, emitted
-  at once on the one thread to whatever was connected when the parts were linked. Never stored.
+  executor's intention_resolved, the deliberator's revised - living on the package's object and
+  carrying one event, emitted at once on the one thread to whatever was connected when the parts
+  were linked. Never stored.
 ---
 
 # What it is
@@ -13,15 +14,18 @@ A signal says that something happened, so that whoever is connected can act now:
 a plan and the executor adopts it; the executor ends an intention and planning plans again; the
 deliberator revises the present and the executor walks. It is an attribute of the package's own object —
 `planner.plan_published`, `executor.intention_resolved`, `deliberator.revised` — so the package that
-says it owns the word, and the kernel holds only the mechanism (`agent/lifecycle.py`). Emitting one
-calls every connected handler at once, on the runtime's one thread, and answers what they wrote.
+says it owns the word, and the kernel holds only the mechanism (`agent/lifecycle.py`). What it carries
+is one [event](/domain/kernel/event.md). Emitting one calls every connected handler at once, on the
+runtime's one thread, and answers what they wrote.
 
 Signals are connected when the [parts](/domain/kernel/part.md) are linked, and a connection points down
 the stack as an import does: planning connects its Planner's signals to the executor, execution its
 executor's to the transports and speech, and each hears the signals of what lies beneath it.
 
-The runtime owns one of its own: a graph written, which a part hears by kind (`runtime.on`) — how
-belief revises what is written and prediction answers an observation.
+The runtime owns two of its own: a graph written, which a part hears by kind (`runtime.on`) — how
+belief revises what is written and prediction answers an observation — and a pass. And two parts
+hear every signal there is (`signals_of`): metrics and history, which is how neither imports a
+package nor any package them.
 
 # What it is not
 

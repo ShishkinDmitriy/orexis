@@ -1,27 +1,84 @@
 """`create`: sensing's part, and what it does of its own accord once started (a-package-starts-itself) —
 it asks, every `EVERY_S` of the one timeline, which readings have fallen due and says which
-sensors have gone silent (`missed`), whether or not anything arrived (#843); and it reports its
-gauge. What a transport hands it, `received` writes; nothing else here is called.
+sensors have gone silent (`missed`), whether or not anything arrived (#843). What a transport hands
+it, `received` writes; nothing else here is called.
+
+WHAT SENSING SAYS HAPPENED, by the part's own signals, each carrying an event of `events.py` and made
+only where heard: `observed`, an observation graph written — heard as it is written, whoever wrote
+it, and said with how long after the reading it replaced it came, which the part remembers per
+sensor since the reading replaced is gone by then — and `silence`, how many sensors are said silent
+after each ask.
 """
 
 from __future__ import annotations
 
-from . import metrics
+from datetime import datetime
+
+from agent.lifecycle import Signal
+from agent.ontology import PUBLIC, local_of
+from agent.store import Raw, catalogue_of, graphs_of, rows
+
+from .cadence import cadence_of
+from .events import Observed, Silence
 from .missed import missed
+from .ontology import OBSERVATION_GRAPH
 
 #  HOW OFTEN SENSING ASKS WHAT HAS FALLEN DUE, in seconds of the one timeline.
 EVERY_S = 60.0
 
+#  WHAT AN OBSERVATION GRAPH SAYS, and the ids its sensor and its subject go by.
+_OBSERVED_Q = """
+SELECT ?sensor ?feature ?property ?value ?t WHERE { GRAPH $graph {
+  ?o sosa:madeBySensor ?sensor ; sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property ;
+     sosa:hasSimpleResult ?value ; sosa:resultTime ?t } } LIMIT 1"""
+_IDS_Q = """
+SELECT ?subject ?sensor WHERE { OPTIONAL { $feature orexis:localId ?subject } OPTIONAL { $sensor orexis:localId ?sensor } }"""
+
+#  THE SENSORS SAID SILENT NOW: `sensing:silentSince` in a state graph of the agent's.
+_SILENT_Q = """
+SELECT (COUNT(DISTINCT ?sensor) AS ?silent)
+WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { ?sensor sensing:silentSince ?since } }"""
+
 
 class _Sensing:
+    def __init__(self, runtime):
+        self.runtime = runtime
+        self.observed = Signal("observed")
+        self.silence = Signal("silence")
+        self._last: dict[str, datetime] = {}          # sensor -> when its last reading was made
+
     def start(self, runtime) -> None:
         def ask():
             missed(runtime.beliefs, runtime.me, runtime.now)
-            return []
+            return self.silence.emit(self._silence()) if self.silence.connected else []
         runtime.every(EVERY_S, ask)
-        runtime.gauge(lambda: metrics.gauges(runtime.beliefs))
+        if self.observed.connected:
+            runtime.on(OBSERVATION_GRAPH, self._observation)
+
+    def _observation(self, graph: str) -> list[str]:
+        """Say the observation `graph` holds, with how long after the last of its sensor it came."""
+        beliefs = self.runtime.beliefs
+        found = rows(beliefs, _OBSERVED_Q, (), graph=graph)
+        if not found:
+            return []
+        o = found[0]
+        at = datetime.fromisoformat(o["t"])
+        before = self._last.get(o["sensor"])
+        self._last[o["sensor"]] = at
+        ids = (rows(beliefs, _IDS_Q, graphs_of(beliefs, PUBLIC), feature=o["feature"], sensor=o["sensor"]) or [{}])[0]
+        cadence = cadence_of(beliefs, o["sensor"])
+        return self.observed.emit(Observed(
+            observed_property=o["property"], value=round(float(o["value"]), 6), at=at,
+            sensor=ids.get("sensor") or local_of(o["sensor"]), sensor_id=ids.get("sensor"), subject_id=ids.get("subject"),
+            interval_s=round((at - before).total_seconds(), 3) if before is not None else None,
+            cadence_s=float(cadence) if cadence is not None else None))
+
+    def _silence(self) -> Silence:
+        found = rows(self.runtime.beliefs, _SILENT_Q, (), cat=Raw(f"<{catalogue_of(self.runtime.beliefs)}>"))
+        return Silence(silent=int(found[0].get("silent") or 0) if found else 0)
 
 
 def create(runtime) -> _Sensing:
-    """Sensing's part: once started, it asks after what has fallen due every `EVERY_S` and reports its gauge."""
-    return _Sensing()
+    """Sensing's part: once started, it asks after what has fallen due every `EVERY_S`, and says an
+    observation written and the silence, where heard."""
+    return _Sensing(runtime)
