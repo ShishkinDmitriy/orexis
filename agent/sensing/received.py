@@ -14,7 +14,7 @@ agent's, holding from its instant UNTIL THE NEXT IS DUE — the sensor's `ssn-sy
 past it (`cadence_of`), or with no end where the world states none — and replacing whole the
 observation of the key before (#669's invariant, kept at the writer). A reader asking at an
 instant past that is handed nothing: the observation's standing as the present ends by the
-clock, `missed` says so on the container's tick, and nothing here keeps a timer.
+clock, `missed` says so when sensing's `start` asks every minute, and nothing here keeps a timer.
 
 **A SERIES IS A FORECAST, ONE GRAPH PER STRETCH.** A sensor stating where the instants its values
 are for are kept (`reads_series`) is read as a series: each value still ahead is written as its own

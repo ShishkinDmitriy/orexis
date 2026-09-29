@@ -20,6 +20,10 @@ document, and each sensor takes its own value out of it — and `received` reads
 pointer and the scaling off the sensor's own binding in the world. What `handle` answers is the
 sensor and the graph written, for whoever runs the rest of a pass over them.
 
+**IT STARTS ITSELF.** `start` subscribes, attaches, and asks after its sensors' missing readings
+every `NUDGE_S` of the timeline — a board told to sense now while its reading is missing, which the
+runtime once did on its behalf.
+
 **THE MEMBER BRINGS ITSELF UP, AND THE THREAD IS THE CONTAINER'S.** `connect` makes the client
 from the environment, in this transport's own variables — `MQTT_HOST` and `MQTT_PORT`, the
 agent's `MQTT_USERNAME` and `MQTT_PASSWORD`, and `MQTT_CA`, `MQTT_CERT` and `MQTT_KEY` with
@@ -40,20 +44,25 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 import os
-import time
 from datetime import datetime
 
 from agent import clock
 from agent.ontology import PUBLIC, local_of
-from agent.store import answer, graphs_of, rows
+from agent.store import Raw, answer, catalogue_of, graphs_of, instant, rows
 from agent.transport.transport import Transport
 
 log = logging.getLogger("mqtt")
 
-#  HOW LONG BEFORE A MISSING READING IS ASKED FOR AGAIN, in real seconds.
-RETRY_S = 60.0
+#  HOW OFTEN THE MEMBER ASKS AFTER ITS SENSORS' MISSING READINGS, in seconds of the one timeline.
+NUDGE_S = 60.0
+
+#  EVERY OBSERVATION WHOSE STANDING HAS ENDED, by the kernel's kind and SOSA's words: a sensor whose
+#  reading has fallen due with nothing arrived since, since the next replaces its graph whole.
+_LAPSED_Q = """
+SELECT DISTINCT ?sensor WHERE {
+  GRAPH $cat { ?g a orexis:StateGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end < $now) }
+  GRAPH ?g { ?o sosa:madeBySensor ?sensor } }"""
 
 #  THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
 _COMMANDS_Q = """
@@ -112,12 +121,12 @@ class Mqtt(Transport):
     """One agent's side of the bus: what the container needs of this transport, answered from
     the world in MQTT4SSN's words, over a client the container connected."""
 
-    def __init__(self, me: str, client):
+    def __init__(self, me: str, client, deliver=None):
         self.me, self.client = me, client
-        self._asked: dict[str, float] = {}
+        self.deliver = deliver or (lambda *message: None)
 
     @classmethod
-    def connect(cls, me: str, deliver, *, environ=None, client=None) -> "Mqtt":
+    def connect(cls, me: str, deliver=None, *, environ=None, client=None) -> "Mqtt":
         """The agent's side of the bus, up: a client under the agent's credential, with a
         certificate where the environment holds one, connected to the broker the environment
         names, its loop running, and every message handed to `deliver(topic, payload, at)`."""
@@ -138,11 +147,34 @@ class Mqtt(Transport):
         else:
             port = int(env.get("MQTT_PORT", 1883))
         client.username_pw_set(username, env.get("MQTT_PASSWORD"))
-        client.on_message = lambda _client, _userdata, message: deliver(message.topic, message.payload, clock.now())
+        member = cls(me, client, deliver)
+        client.on_message = lambda _client, _userdata, message: member.deliver(message.topic, message.payload, clock.now())
         client.connect(host, port)
         client.loop_start()
         log.info("%s on %s:%s%s", local_of(me), host, port, " with a certificate" if ca and cert and key else "")
-        return cls(me, client)
+        return member
+
+    def start(self, runtime) -> None:
+        """Begin as every member does, and ask after the missing readings of this member's sensors
+        every `NUDGE_S`: a board is told to sense now once a minute while its reading is missing."""
+        super().start(runtime)
+        runtime.every(NUDGE_S, lambda: self.nudge(runtime.beliefs, runtime.now))
+
+    def stop(self) -> None:
+        loop_stop, disconnect = getattr(self.client, "loop_stop", None), getattr(self.client, "disconnect", None)
+        if loop_stop and disconnect:
+            loop_stop()
+            disconnect()
+
+    def nudge(self, store, now: datetime) -> list[str]:
+        """Tell the board of every sensor of this member's whose reading has fallen due to sense now;
+        the sensors asked. Writes nothing."""
+        mine = {r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me)}
+        lapsed = [r["sensor"] for r in rows(store, _LAPSED_Q, (), cat=Raw(f"<{catalogue_of(store)}>"), now=instant(now))]
+        asked = [sensor for sensor in lapsed if sensor in mine]
+        for sensor in asked:
+            self.sense_now(store, sensor)
+        return []
 
     def reaches(self, store, device: str) -> bool:
         return bool(answer(store, _REACHES_Q, graphs_of(store, PUBLIC), device=device)["boolean"])
@@ -168,13 +200,6 @@ class Mqtt(Transport):
         return True
 
     def sense_now(self, store, sensor: str) -> None:
-        """Ask the sensor's board for a reading now, at most once in `RETRY_S` real seconds: the
-        container asks on every pass while the reading is missing, and a board that is asleep or
-        gone is not to be told so every second."""
-        now = time.monotonic()
-        if now - self._asked.get(sensor, -math.inf) < RETRY_S:
-            return
-        self._asked[sensor] = now
         topic = self._command_topic(store, sensor)
         if topic is not None:
             self.publish(topic, {"sense": True}, False)

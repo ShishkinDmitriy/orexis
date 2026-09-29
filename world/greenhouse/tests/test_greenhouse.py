@@ -73,7 +73,7 @@ def test_the_grower_listens_to_the_instruments_of_the_bed_it_acts_for(monkeypatc
 def test_a_reading_is_written_and_its_side_concluded(monkeypatch):
     runtime, _ = _grower(monkeypatch)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
-    runtime.sense(NOW)
+    runtime.drain(NOW)
     assert ("SoilMoisture", "below") in _sides(runtime.beliefs), "under the bed's floor of 0.30"
 
 

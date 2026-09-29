@@ -26,10 +26,11 @@ other the values, and each value holds over the stretch between one instant and 
 `sensing:ForecastGraph` beneath `orexis:BeliefGraph`, holding during the stretch, and forgets
 every forecast graph the sensor wrote before, so the next forecast replaces the last.
 
-**Sensing asks for it when it falls due.** A pushed reading tells the agent it arrived; a series
-must be pulled. `missed` answers a series sensor of the agent's as due when no forecast of its
-stands, or when the one standing was issued a cadence ago, and the container nudges the
-transport, which is the one way anything is fetched: no member keeps a timer.
+**The member polls it.** A pushed reading tells the agent it arrived; a series must be pulled.
+*Amended by [a-package-starts-itself](/decisions/a-package-starts-itself.md)*: sensing's `missed`
+first answered a series sensor as due and the container nudged the transport; now the HTTP member,
+started, asks the runtime to fetch each of its sensors at once and every `ssn-system:Frequency`
+after, and the runtime does the waiting.
 
 **The service is reached by its Thing Description.** The HTTP member (`agent/transport/http/`)
 adopts the W3C WoT Thing Description as MQTT's adopts MQTT4SSN: it declares no word, the sensor
