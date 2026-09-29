@@ -86,11 +86,11 @@ def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     assert broker.published == [("actuators/pump/command", {"dose_ml": 500}, False)]
-    assert len(runtime.executor.walking()) == 1, "the world has not answered yet"
+    assert len(runtime.started["execution"].walking()) == 1, "the world has not answered yet"
     runtime.time.at = NOW + timedelta(minutes=5)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
-    assert runtime.executor.walking() == [], "the reading was revised inside and answered the dose"
+    assert runtime.started["execution"].walking() == [], "the reading was revised inside and answered the dose"
     assert ("SoilMoisture", "inside") in _sides(runtime.beliefs)
     assert len(broker.published) == 1, "one dose, and nothing more once the bed is comfortable"
 
@@ -115,7 +115,7 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     runtime.time.at = NOW + timedelta(minutes=5)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
-    assert runtime.executor.walking() == [], "the dose landed"
+    assert runtime.started["execution"].walking() == [], "the dose landed"
     observed = [(p["measurement"], p["fields"]["value"], p["time"]) for p in history if p["measurement"] != "Step"]
     assert observed == [("AirTemperature", 21.0, NOW), ("SoilMoisture", 0.2, NOW),
                         ("SoilMoisture", 0.45, NOW + timedelta(minutes=5))]

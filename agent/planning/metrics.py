@@ -51,6 +51,9 @@ SELECT ?worlds ?weighings ?open ?met WHERE {
 #  A PASS OF THE PLANNER, in real seconds per part — laying the ground and finding the present in
 #  it, weighing the desires, deriving and withdrawing the wants, searching, handing the plans down —
 #  and how many wants it searched.
+#  A WANT NOTHING THIS AGENT HOLDS REACHES — standing, walked by nothing, no search cut short — by the
+#  desire it came from. Which want is the log's to say.
+UNREACHED = Event("unreachable", tags=("desire",))
 PLANNER = Event("planner", values=("ground_s", "weigh_s", "derive_s", "search_s", "publish_s", "wants"))
 
 #  ONE WANT'S SEARCH IN ONE PASS, tagged by the desire, the scope and how it ended: its real

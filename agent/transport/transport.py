@@ -42,6 +42,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from agent.events import COMMANDED, TOLD
+
 
 class Transport:
     """What the container needs of any member. A member subclasses it and holds its client."""
@@ -55,11 +57,19 @@ class Transport:
 
     def start(self, runtime) -> None:
         """Begin: every message this member's thread receives submitted to the runtime as a job
-        that handles it, the agent's channels opened, and the member attached for commands."""
+        that handles it, the agent's channels opened, a step's command and a said document heard
+        where this member reaches their recipient, and the agent held running."""
         self.deliver = lambda channel, payload, at: runtime.submit(
             lambda: [graph for _, graph in self.handle(runtime.beliefs, channel, payload, at)])
         self.open(runtime.beliefs)
         runtime.attach(self)
+        #  WHAT A STEP SENDS: a command to a device this member reaches, a document to a peer it
+        #  reaches — heard as events, so nothing that takes a step names a transport.
+        runtime.listen(COMMANDED, lambda actuator, payload: (
+            self.reaches(runtime.beliefs, actuator) and self.actuate(runtime.beliefs, actuator, payload)) and ())
+        runtime.listen(TOLD, lambda to, document: self.tell(runtime.beliefs, to, document) and ())
+        #  A MEMBER KEEPS THE AGENT RUNNING: what it senses goes on arriving whatever is wanted.
+        runtime.hold(self)
 
     def stop(self) -> None:
         """End: whatever the member holds open, closed."""

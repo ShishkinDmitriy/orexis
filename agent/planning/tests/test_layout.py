@@ -118,8 +118,8 @@ def test_an_act_calls_no_other_act_and_the_planner_sequences_them():
     import ast
     package = ROOT / "agent" / "planning"
     for path in sorted(package.glob("*.py")):
-        if path.stem in ("planner", "__init__"):
-            continue
+        if path.stem in ("planner", "start", "__init__"):
+            continue                    # the Planner sequences the acts, and `start` sets the Planner going
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node, ast.ImportFrom) and node.level == 1:
                 sibling = node.module or ""

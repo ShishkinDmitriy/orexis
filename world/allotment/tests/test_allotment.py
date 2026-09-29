@@ -128,7 +128,7 @@ def test_a_dry_plot_is_watered_by_a_claim_bought_on_the_supplier_s_venue(monkeyp
     time.at += timedelta(minutes=5)
     rose.deliver("sensors/rose_probe/reading", b'{"value": 0.45}', time.at)
     _run(agents)
-    assert rose.executor.walking() == [], "the reading answered the presentation"
+    assert rose.started["execution"].walking() == [], "the reading answered the presentation"
     assert len(bus.commands()) == 1, "one dose, and nothing more once the plot is watered"
 
 
@@ -150,8 +150,14 @@ def test_one_lot_goes_to_the_dearer_bid_and_the_other_grower_calls_again(monkeyp
 
     time.at += timedelta(seconds=120)
     _run(agents)
-    time.at += timedelta(seconds=31)
-    _run(agents)
+    #  THE SECOND ROUND CLEARS WHEN ITS PERIOD ENDS, and where that falls on this clock depends on how
+    #  many times the agents read it — every read is a second — so the test waits for the round, a
+    #  round's length at a time, and not for a count of reads.
+    for _ in range(3):
+        time.at += timedelta(seconds=31)
+        _run(agents)
+        if len(bus.commands()) > 1:
+            break
     assert bus.commands() == [("actuators/rose_valve/command", {"dose_ml": 500}),
                               ("actuators/fern_valve/command", {"dose_ml": 400})], \
         "the fern called again, won the second round alone, and was served four tenths of a litre"

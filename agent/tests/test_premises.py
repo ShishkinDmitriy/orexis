@@ -91,10 +91,10 @@ def test_a_package_is_loaded_where_its_premise_holds_and_nowhere_else(tmp_path, 
             assert not any(documents), f"{package}'s documents are in the store, and nothing asked for them"
     runtime = Runtime(store, "me")
     assert runtime.packages == packages_of(store, ME)
-    #  WHAT STARTED ITSELF: every loaded package with a `start` module but a transport, which starts
-    #  only where the runtime is told to connect; a transport package has its `start` all the same.
-    assert runtime.started == [p for p in (SENSING, PREDICTION) if p in expected]
-    assert (runtime._said is not None) == (SPEECH in expected)
+    #  WHAT STARTED ITSELF: the mind, and every loaded package with a `start` module but a transport,
+    #  which starts only where the runtime is told to connect; a transport package has its `start` all
+    #  the same.
+    assert list(runtime.started) == [p for p in (*MIND, *expected) if not p.startswith("transport/")]
     for package in (MQTT, HTTP):
         assert (package in expected) <= (importlib.util.find_spec("agent." + package.replace("/", ".") + ".start") is not None)
 

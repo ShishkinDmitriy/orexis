@@ -95,19 +95,13 @@ from urllib.parse import unquote, urlparse
 import pyoxigraph as ox
 
 from agent import clock
-from agent.belief import metrics as belief_metrics
-from agent.belief.deliberator import Deliberator
-from agent.execution import metrics as execution_metrics
-from agent.execution.command import command
-from agent.execution.executor import Executor
-from agent.execution.implementation import COMMAND, SAYING, operations
-from agent.execution.says import says
 from agent import metrics, series
+from agent.events import GRAPH_WRITTEN, MET, UNFINISHED, UNREACHABLE  # noqa: F401 — the outcomes, re-exported
 from agent.metrics import Event, Gauge
-from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, STATE, local_of
+from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS
 from agent.planning.planner import Planner
 from agent.store import (answer, catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of,
-                         kinds_in, put_document, revisions_of, rows, update, Raw)
+                         kinds_in, put_document, rows, update, Raw)
 
 log = logging.getLogger("runtime")
 
@@ -120,16 +114,12 @@ SOCIETY = OREXIS + "SocietyGraph"
 PUBLIC = OREXIS + "PublicGraph"
 GRAPH = OREXIS + "Graph"
 
-MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
 
 #  WHAT THE RUNTIME REPORTS OF ITSELF — its metrics, as a package's `metrics.py` holds a package's.
 #  A PASS, in real seconds, whole and by part: the jobs the packages queued run to the last
 #  (`drain`), planning, walking. A part a pass does not reach is not in its tally; the planner's
 #  own parts are its event.
 PASS = Event("pass", values=("duration_s", "drain_s", "plan_s", "execute_s"))
-#  A WANT NOTHING THIS AGENT HOLDS REACHES — standing, walked by nothing, no search cut short — the
-#  runtime's own judgement, by the desire it came from. Which want is the log's to say.
-UNREACHED = Event("unreachable", tags=("desire",))
 #  HOW LARGE THE BELIEF BASE IS, in quads, and HOW LONG THE PROCESS HAS RUN, in real seconds.
 _STARTED = time.perf_counter()
 STORE = Gauge("store", read=lambda stores: {"quads": sum(len(s) for s in stores)})
@@ -388,49 +378,42 @@ def _identity(store: ox.Store, agent_id: str) -> str:
 
 
 class Runtime:
-    """One agent's process: what arrives sensed and revised, then the planner and the executor
-    over one store, run pass by pass.
+    """One agent's process: a lifecycle container for its packages, run pass by pass.
 
-    A PACKAGE STARTS ITSELF (a-package-starts-itself). Every package the agent loads beyond the
-    mind that has a `start` module is handed this runtime and says what it does — a transport
-    listens or polls, sensing asks after what has fallen due, prediction answers an observation —
-    by the four things the runtime offers: `submit` a job from any thread, `on` a kind a job
-    reports writing, `every` so many seconds of the one timeline, and the gauges it reports. The
-    runtime runs every job on this one thread, one at a time (`drain`), and knows no package's
-    words. A transport package is started only where the runtime is told to `connect`, which is
-    the process's `main`; a test hands a member brought up, and it is started the same way. A step
-    whose action's implementation holds an `execution:Command` is taken by sending what it
-    answers, sized from the present, through the transport; a world with no transport takes steps
-    as the executor does alone. The mind still runs its pass here: planning, then walking."""
+    A PACKAGE STARTS ITSELF (a-package-starts-itself). Every package the agent loads — the mind's
+    three and each whose premise holds — that has a `start` module is handed this runtime and
+    says what it does: belief revises what is written, planning plans every pass, execution walks
+    what is due, a transport listens or polls, sensing asks after silence, prediction answers an
+    observation, speech believes what was said. What a package's `start` answers is kept in
+    `started`, by package, and the runtime knows no word of what any of them do.
+
+    WHAT IT OFFERS A PACKAGE. `submit` a job from any thread; `every` so many seconds of the one
+    timeline; `emit` an event (`agent.events`) and `listen` for one, `on` a kind of graph written
+    being one event among them; `wrote` graphs written outside a job; `hold` the agent alive or
+    `release` it with an outcome; `again`, to pass once more without waiting; `lap` a part of the
+    pass; and `gauge`. Every job and every listener runs on this one thread, one at a time.
+
+    A transport package is started only where the runtime is told to `connect`, which is the
+    process's `main`; a test hands a member brought up, and it is started the same way."""
 
     def __init__(self, beliefs: ox.Store, agent_id: str, *, budget: int | None = None,
                  intentions: ox.Store | None = None, transport=None, connect: bool = False):
         self.beliefs, self.id = beliefs, agent_id
         self.me = _identity(beliefs, agent_id)
         self.packages = packages_of(beliefs, self.me)
-        self._said = _said_of(self.packages)
+        self.budget, self.intentions = budget, intentions      # what planning and execution are handed
         self._laps: metrics.Laps | None = None          # the parts of the pass in progress, where timed
         self._jobs: queue.SimpleQueue = queue.SimpleQueue()
-        self._heard: list[tuple[str, object]] = []        # (kind, handler) — what a job's writes are told to
+        self._listeners: dict[str, list] = {}
         self._timers: list[list] = []                     # [seconds, next due or None, job]
         self._gauged: list = []                           # what the packages report, sampled at a window's end
         self._stops: list = []
         self._members: list = []
+        self._held: dict = {}                             # who keeps the agent alive
+        self._outcome: str | None = None
+        self._again = False
         self.now = None                                   # the instant the pass stands at, for a job to read
-        self.started: list[str] = []
-        self.executor = Executor(beliefs, agent_id, intentions, take=self._take)
-        self.planner = Planner(beliefs, agent_id, **({"budget": budget} if budget else {}))
-        self.deliberator = Deliberator(beliefs, agent_id)
-        #  THE WORLD THE EXECUTOR MOVES is revised, so a fact the rules conclude of it — what a disk
-        #  is on — moves with it. The planner and the executor call each other nowhere: a plan goes
-        #  down, and a want that keeps a step below, through the belief base.
-        self.executor.on_write = lambda graph: self._revise([graph], clock.now())
-        #  AND WHAT THE WORLD AUTHORED: its state, revised once, so a fact concluded from where
-        #  things stand is believed from the first pass and not only after something moves.
-        self._revise([g for g in graphs_of(beliefs, STATE) if not revisions_of(beliefs, g)], clock.now())
-        #  EVERY GRAPH A JOB WRITES IS REVISED beside public knowledge — what belief will say of
-        #  itself when the mind starts itself too.
-        self.on(OREXIS + "Graph", lambda graph: self._revise([graph], self.now) or [])
+        self.started: dict[str, object] = {}
         self._start(transport, connect)
 
     # ── what a package is offered ──────────────────────────────────────────────────────────────
@@ -440,24 +423,65 @@ class Runtime:
         thread: a transport's listener hands its message on this way."""
         self._jobs.put(job)
 
-    def on(self, kind: str, handler) -> None:
-        """Run `handler(graph)` — answering the graphs it wrote in turn — for every graph of `kind`
-        a job reports writing: how a package answers another's work with neither naming the other,
-        the belief base being the interface between them."""
-        self._heard.append((kind, handler))
-
     def every(self, seconds: float, job) -> None:
-        """Run `job` at the first pass and again every `seconds` of the one timeline after: the
-        runtime does the waiting, and the package says only what it waits for."""
+        """Run `job` at the first pass and again every `seconds` of the one timeline after — every
+        pass where `seconds` is nought: the runtime does the waiting, and the package says only
+        what it waits for. Timers run after the jobs queued, in the order they were asked for."""
         self._timers.append([float(seconds), None, job])
+
+    def listen(self, event: str, handler) -> None:
+        """Call `handler(**what)` — answering the graphs it wrote — whenever `event` is emitted."""
+        self._listeners.setdefault(event, []).append(handler)
+
+    def listened(self, event: str) -> bool:
+        """Whether anything listens for `event`."""
+        return bool(self._listeners.get(event))
+
+    def emit(self, event: str, **what) -> list[str]:
+        """Signal `event` to every listener, at once and on this thread: the graphs they wrote, each
+        emitted as `GRAPH_WRITTEN` in its turn."""
+        written = [graph for handler in list(self._listeners.get(event, ())) for graph in handler(**what) or ()]
+        self.wrote(written)
+        return written
+
+    def on(self, kind: str, handler) -> None:
+        """Run `handler(graph)` for every graph of `kind` written — how a package answers another's
+        work with neither naming the other, the belief base being the interface between them."""
+        self.listen(GRAPH_WRITTEN, lambda graph, kinds: handler(graph) if kind in kinds else ())
+
+    def wrote(self, graphs) -> None:
+        """Say that `graphs` were written — by a job, a listener, or a package mid-act — so that
+        whoever listens for their kinds hears it now."""
+        for graph in graphs:
+            self.emit(GRAPH_WRITTEN, graph=graph, kinds=self._kinds(graph))
+
+    def hold(self, who) -> None:
+        """`who` keeps the agent running: a desire, a listening transport."""
+        self._held[who] = True
+
+    def release(self, who, outcome: str | None = None) -> None:
+        """`who` no longer keeps the agent running, and says how its part ended; the run ends when
+        nobody holds it."""
+        self._held.pop(who, None)
+        if outcome is not None:
+            self._outcome = outcome
+
+    def again(self) -> None:
+        """Pass once more at once, without waiting the poll: something moved, or a search was cut short."""
+        self._again = True
+
+    def lap(self, part: str) -> None:
+        """Mark the end of a part of the pass, for the pass's metric."""
+        if self._laps is not None:
+            self._laps(part)
 
     def gauge(self, read) -> None:
         """Report what `read()` samples — a list of points — at every metrics window's end."""
         self._gauged.append(read)
 
     def attach(self, member) -> None:
-        """A transport member brought up and started: the one a step's command and a said document
-        go out through, all of them behind the family's `Transports` where there are several."""
+        """A transport member brought up and started; held behind the family's `Transports` where
+        there are several, for a test that hands a message to it (`deliver`)."""
         self._members.append(member)
 
     @property
@@ -472,106 +496,33 @@ class Runtime:
         transport = self.transport
         self.submit(lambda: [graph for _, graph in transport.handle(self.beliefs, channel, payload, at)])
 
-    def drain(self, now) -> list[str]:
-        """Run what is due at `now` and every job queued, and the jobs their writes set off, until
-        none is left: the graphs written, in the order they were."""
+    # ── the lifecycle ────────────────────────────────────────────────────────────────────────
+
+    def drain(self, now) -> None:
+        """Run every job queued, and what their writes set off, until none is left; then what is
+        due at `now`, the same way."""
         self.now = now
+        self._run_jobs()
+        self.lap("drain")
         for timer in self._timers:
             seconds, due, job = timer
             if due is None or now >= due:
                 timer[1] = now + timedelta(seconds=seconds)
                 self.submit(job)
-        written = []
+        self._run_jobs()
+
+    def _run_jobs(self) -> None:
         while True:
             try:
                 job = self._jobs.get_nowait()
             except queue.Empty:
-                break
-            for graph in job() or []:
-                written.append(graph)
-                kinds = self._kinds(graph)
-                for kind, handler in self._heard:
-                    if kind in kinds:
-                        self.submit(lambda handler=handler, graph=graph: handler(graph))
-        self._lap("drain")
-        return written
-
-    def stop(self) -> None:
-        """Stop every package started, the last first."""
-        while self._stops:
-            self._stops.pop()()
-
-    def _start(self, transport, connect: bool) -> None:
-        """Start every package beyond the mind that has a `start` module, and the transport: a member
-        handed in is started as its package would start it, and a transport package is started from
-        the environment only where the runtime is told to `connect`."""
-        for package in self.packages:
-            if package in MIND:
-                continue
-            name = "agent." + package.replace("/", ".") + ".start"
-            if package.startswith("transport/") and (transport is not None or not connect):
-                continue
-            if importlib.util.find_spec(name) is None:
-                continue
-            stop = importlib.import_module(name).start(self)
-            self.started.append(package)
-            if stop is not None:
-                self._stops.append(stop)
-        if transport is not None:
-            members = getattr(transport, "members", [transport])
-            for member in members:
-                member.start(self)
-                self._stops.append(member.stop)
-            self.started.append("transport")
-
-    def _kinds(self, graph: str) -> set[str]:
-        cat = catalogue_of(self.beliefs)
-        return {r["k"] for r in rows(self.beliefs, "SELECT ?k WHERE { GRAPH $cat { $g a ?k } }", (),
-                                     cat=Raw(f"<{cat}>"), g=graph)}
-
-    def _revise(self, graphs: list[str], now) -> None:
-        """What the rules conclude of each graph written, beside what the world states and
-        nothing else, at once."""
-        if not graphs:
-            return
-        public = graphs_of(self.beliefs, PUBLIC)
-        for graph in graphs:
-            self.deliberator.changed(graph, read=public)
-        self.deliberator.deliberate(now)
-
-    def _take(self, said: dict, intention: str) -> None:
-        """Take a step by its action's implementation, order by order: every command of an order
-        sent, sized from the present, and every saying's documents believed as said, revised
-        and sent to every agent they are to — so a later order is made from the present the
-        earlier ones left. A step whose action has no operation is said in the log, as the
-        executor would."""
-        orders = sorted({op.order for op in operations(self.beliefs, said.get("fills") or "")
-                         if op.kind in (COMMAND, SAYING)})
-        if not orders or self.transport is None:          # no transport: as the executor would alone
-            self.executor.say(said, intention)
-            return
-        for order in orders:
-            for actuator, payload in command(self.beliefs, said, self.me, order=order):
-                self.transport.actuate(self.beliefs, actuator, payload)
-            written = []
-            for agents, doc in says(self.beliefs, said, self.me, order=order):
-                written += self._said(self.beliefs, self.me, doc)      # a Saying is speech's premise
-                payload = doc.dump(format=ox.RdfFormat.TRIG)
-                for agent in agents:
-                    self.transport.tell(self.beliefs, agent, payload)
-            self._revise(written, clock.now())
+                return
+            self.wrote(job() or ())
 
     def run(self, *, passes: int | None = None, poll_s: float = 1.0) -> str:
-        """Pass after pass until nothing is left to pursue (`met`), or nothing this agent holds
-        reaches a want that stands (`unreachable`), or `passes` ran out (`unfinished`).
-
-        A DESIRE NEVER ENDS AND A WANT DOES. A desire is universal — it asks that something hold
-        whenever it is asked — so an agent holding one runs for as long as the process does, and
-        a pass with nothing to do waits the poll for the world to move. A want is one-shot and is
-        withdrawn once reached, so an agent holding wants and no desire, Hanoi's mover, exits
-        when every want is reached and nothing walks. Unreachable is an exit only for such an
-        agent: one holding a desire keeps watching, since the world may yet open a way. An agent a
-        transport reaches runs for good too, desire or not: what it senses goes on arriving."""
+        """Pass after pass until nobody holds the agent — ending as the last to let go said, `met`
+        or `unreachable` — or `passes` ran out (`unfinished`). A pass that moved nothing waits the
+        poll before the next, unless a package asked to go `again`."""
         n = 0
         while passes is None or n < passes:
             n += 1
@@ -579,50 +530,45 @@ class Runtime:
             #  THE PASS'S PARTS, in real seconds, kept where a metrics sink is loaded — by
             #  `perf_counter`, never the clock.
             self._laps = metrics.Laps() if metrics.recording() else None
+            self._again = False
             started = time.perf_counter()
-            outcome, wait = self._pass(now, n)
+            self.drain(now)
             self._passed(time.perf_counter() - started)
-            if outcome is not None:
-                return outcome
-            if wait:
+            if not self._held:
+                log.info("%s: nothing holds it, after %d pass(es)", self.id, n)
+                return self._outcome or MET
+            if not self._again:
                 time.sleep(poll_s)
         return UNFINISHED
 
-    def _lap(self, part: str) -> None:
-        if self._laps is not None:
-            self._laps(part)
+    def stop(self) -> None:
+        """Stop every package started, the last first."""
+        while self._stops:
+            self._stops.pop()()
 
-    def _pass(self, now, n: int) -> tuple[str | None, bool]:
-        """One pass: sense, plan, and walk what is due. How the run ends, where this pass ends it,
-        and whether to wait the poll before the next."""
-        self.drain(now)
-        self.planner.plan(now)
-        self.executor.commit_plans()                    # the plans handed down, taken up
-        standing, walking = self.planner.standing(now), self.executor.walking()
-        self._lap("plan")
-        #  WHAT KEEPS AN AGENT RUNNING: a desire, which asks at every instant, or a transport,
-        #  since an agent that senses has readings to keep writing whether or not it wants
-        #  anything of them — the terrace watches and pursues nothing.
-        lasting = self.transport is not None or self.planner.holds_a_desire()
-        if not standing and not walking:
-            if not lasting:
-                log.info("%s: every want is reached and no desire is held, after %d pass(es)", self.id, n)
-                return MET, False
-            return None, True
-        if not walking:
-            if self.planner.exhausted():
-                return None, False              # the budget cut a search short; the next pass continues it
-            log.error("%s: %d want(s) stand and nothing this agent holds reaches them: %s",
-                      self.id, len(standing), ", ".join(local_of(w) for w in standing))
-            #  UNREACHABLE IS THE RUNTIME'S JUDGEMENT — standing, walked by nothing, and no search
-            #  cut short — so the runtime says it, per want and by the desire it came from.
-            if metrics.recording():
-                for want in standing:
-                    UNREACHED(desire=self.planner.desire_of(want))
-            return (None, True) if lasting else (UNREACHABLE, False)
-        moved = self._walk(now)
-        self._lap("execute")
-        return None, not moved
+    def _start(self, transport, connect: bool) -> None:
+        """Start every package that has a `start` module, the mind first: a transport package only
+        where the runtime is told to `connect`, and a member handed in as its package would start it."""
+        for package in self.packages:
+            name = "agent." + package.replace("/", ".") + ".start"
+            if package.startswith("transport/") and (transport is not None or not connect):
+                continue
+            if importlib.util.find_spec(name) is None:
+                continue
+            started = importlib.import_module(name).start(self)
+            self.started[package] = started
+            if callable(getattr(started, "stop", None)):
+                self._stops.append(started.stop)
+        if transport is not None:
+            for member in getattr(transport, "members", [transport]):
+                member.start(self)
+                self._stops.append(member.stop)
+            self.started["transport"] = transport
+
+    def _kinds(self, graph: str) -> set[str]:
+        cat = catalogue_of(self.beliefs)
+        return {r["k"] for r in rows(self.beliefs, "SELECT ?k WHERE { GRAPH $cat { $g a ?k } }", (),
+                                     cat=Raw(f"<{cat}>"), g=graph)}
 
     def _passed(self, took: float) -> None:
         """Tally the pass, where a metrics sink is loaded, and write the window where it is over."""
@@ -641,40 +587,8 @@ class Runtime:
         return metrics.flush(self.gauges())
 
     def gauges(self) -> list:
-        """Every gauge of what this agent loads, each sampled over the store its package reads —
-        said here, since the runtime holds them all: the runtime's own and belief's and sensing's
-        over the belief base, planning's over its imaginaria, execution's over the intentions."""
-        return [*metrics.sample(__name__, [self.beliefs]),
-                *belief_metrics.gauges(self.beliefs),
-                *(point for read in self._gauged for point in read()),
-                *self.planner.gauges(),
-                *execution_metrics.gauges(self.executor.intentions)]
-
-
-    def _walk(self, now) -> int:
-        """Tick and drain until nothing more happens at this instant: how many steps were taken.
-        One tick hands the due heads over and holds the taken ones to what they predicted, and a
-        head moved along in one tick is handed over only by the next, so the walk ends on two
-        ticks in a row that hand nothing over."""
-        taken, idle = 0, 0
-        while idle < 2:
-            if self.executor.tick(now):
-                taken += self.executor.drain()
-                idle = 0
-            else:
-                idle += 1
-            now = clock.now()
-        return taken
-
-
-def _said_of(packages):
-    """Speech's `said`, which taking a step that says something calls, imported where speech is
-    loaded and None where it is not — the one package function the runtime still names, until the
-    mind starts itself."""
-    if SPEECH in packages:
-        from agent.speech.said import said
-        return said
-    return None
+        """The runtime's own gauges over the belief base, and every gauge a package asked to report."""
+        return [*metrics.sample(__name__, [self.beliefs]), *(point for read in self._gauged for point in read())]
 
 
 def world_name(world: Path) -> str:

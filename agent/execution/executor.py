@@ -150,6 +150,10 @@ _PLANS_Q = """
 SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a execution:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want } }
 ORDER BY ?plan"""
 
+#  EVERY INTENTION ONE OF WHOSE STEPS HAS BEEN TAKEN.
+_BEGUN_Q = """SELECT DISTINCT ?intention WHERE { GRAPH $intentions {
+  ?intention a execution:Intention ; execution:step ?step . ?act execution:of ?step } }"""
+
 #  THE WANT THAT KEEPS A STEP BELOW, wherever planning wrote it, and the agent a store is told of.
 _KEPT_BY_Q = """SELECT ?want WHERE { GRAPH ?g { $step execution:keptBy ?want } } LIMIT 1"""
 _ME_Q = """SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id } LIMIT 1"""
@@ -244,7 +248,7 @@ class Executor:
 
     def __init__(self, beliefs: ox.Store, agent_id: str, intentions: ox.Store | None = None,
                  holder: str | None = None, *, take=None, fictive: bool = False,
-                 poll_s: float = POLL_S, on_write=None):
+                 poll_s: float = POLL_S, on_write=None, on_resolve=None):
         self.intentions = intentions if intentions is not None else beliefs
         self.beliefs = beliefs
         self.id = agent_id
@@ -254,8 +258,10 @@ class Executor:
         self.all_fictive = fictive
         self.poll_s = poll_s
         #  `on_write(graph)`, told of every graph the executor writes as the world, so what the rules
-        #  conclude of it is concluded.
+        #  conclude of it is concluded; `on_resolve(intention, want, outcome)`, told of every
+        #  intention that ends, so whoever plans hears it.
         self.on_write = on_write
+        self.on_resolve = on_resolve
 
         #  TELEMETRY AND NOT A ROW: the desire each adopted plan's want was derived under, read
         #  off the store the plan came from where a metrics sink is loaded, so a landing can be
@@ -280,6 +286,32 @@ class Executor:
             committed = self.commit(self.beliefs, r["plan"], r["want"]) is not None or committed
             forget_graph(self.beliefs, r["plan"])
         return [self.graph] if committed else []
+
+    def adopt(self, plan: str, want: str) -> list[str]:
+        """Adopt the plan `plan` published for `want`, as `commit_plans` takes one up. The
+        intentions graph where anything was committed."""
+        committed = self.commit(self.beliefs, plan, want) is not None
+        forget_graph(self.beliefs, plan)
+        return [self.graph] if committed else []
+
+    def end_for(self, want: str, outcome: str) -> list[str]:
+        """End every standing intention pursuing `want` that has taken no step yet, with `outcome` —
+        its want reached before its plan began: rain before the dose. A plan that has begun is walked
+        to its end, since a want met partway says nothing of what its later steps are for — a round
+        opened answers a call, and the round must still be cleared."""
+        begun = {r["intention"] for r in rows(self.intentions, bind(_BEGUN_Q, intentions=Raw(f"<{self.graph}>")))}
+        ended = [s.uri for s in self.standing() if s.want == want and s.uri not in begun]
+        for intention in ended:
+            self.resolve(intention, outcome)
+        return [self.graph] if ended else []
+
+    def end_at(self, step: str, outcome: str) -> list[str]:
+        """End the standing intention that stands at `step`, with `outcome` — its next step can no
+        longer be taken."""
+        ended = [s.uri for s in self.standing() if s.at == step]
+        for intention in ended:
+            self.resolve(intention, outcome)
+        return [self.graph] if ended else []
 
     def commit(self, source: ox.Store, graph: str, want: str) -> str | None:
         """Copy a found plan into the intentions — unless one for this want is already standing
@@ -391,7 +423,10 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
   <{intention}> <{RESOLVED_AT}> "{clock.now().isoformat()}"^^xsd:dateTime ;
                 <{OUTCOME}> "{outcome}" . }} }}""")
         log.info("%s: %s — %s", self.id, intention.rsplit("#", 1)[-1], outcome)
-        if outcome != "done":
+        if self.on_resolve is not None:
+            want = next(iter(rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))), {})
+            self.on_resolve(intention, want.get("want"), outcome)
+        if outcome not in ("done", "reached"):
             #  NOTHING HANGS BELOW WHAT ENDED UNDONE: an intention walking the want one of this
             #  intention's steps is kept below by is abandoned with it.
             for r in rows(self.intentions, bind(_BELOW_Q, intentions=Raw(f"<{self.graph}>"), intention=intention)):
@@ -499,6 +534,21 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             update(self.intentions, bind(_ADVANCE_U, intentions=Raw(f"<{self.graph}>"),
                                          intention=intention, step=step, next=following["next"]))
         self.wake()
+
+    def walk(self, now: datetime | None = None) -> int:
+        """Tick and drain until nothing more happens at this instant: how many steps were taken. One
+        tick hands the due heads over and holds the taken ones to what they predicted, and a head
+        moved along in one tick is handed over only by the next, so the walk ends on two ticks in a
+        row that hand nothing over."""
+        taken, idle = 0, 0
+        while idle < 2:
+            if self.tick(now):
+                taken += self.drain()
+                idle = 0
+            else:
+                idle += 1
+            now = clock.now()
+        return taken
 
     # --- executing: one pass ----------------------------------------------------------------------
 

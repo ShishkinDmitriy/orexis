@@ -33,7 +33,7 @@ def test_an_agent_holding_a_desire_keeps_running_once_it_is_met(tmp_path, monkey
     monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=next(ticks)))
     runtime = Runtime(boot(_as_a_desire(tmp_path), "hanoi"), "hanoi", budget=64)
     assert runtime.run(passes=6, poll_s=0) == UNFINISHED
-    assert runtime.planner.standing() == [] and runtime.executor.walking() == [], "met, and waiting"
+    assert runtime.started["planning"].standing() == [] and runtime.started["execution"].walking() == [], "met, and waiting"
 
 
 def test_a_graph_of_a_kind_the_agent_does_not_declare_is_passed_over(tmp_path):

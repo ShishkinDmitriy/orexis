@@ -231,6 +231,9 @@ class Planner:
         #  by-kind read as everywhere else. They are memory and die with the Planner; what
         #  outlives the Planner is the intentions, a graph of the beliefs.
         self.imaginaria: dict[str, ox.Store] = {}
+        self.handed: list[tuple[str, str]] = []
+        self.reached: set[str] = set()
+        self.blocked: list[str] = []
         #  TELEMETRY AND NOT A ROW: per want, when it was first searched and in how many passes,
         #  kept only where a metrics sink is loaded and said at its adoption. No plan branches
         #  on it, so it is memory and never a belief.
@@ -295,6 +298,9 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         walking = self.walking()
         self._withdraw_orphaned_refinements(walking)
         written = self._keep_below(at)
+        #  WHAT THE PASS SAYS, for whoever runs it to signal: the plans it published with their wants,
+        #  the wants an intention walks that the present meets, and the steps it can no longer take.
+        self.handed, self.reached, self.blocked = [], set(), []
         #  HOW LONG EACH PART OF THE PASS TOOK, where a metrics sink is loaded: in real seconds by
         #  `perf_counter`, since the agent's clock may run fast and a test's ticks per read.
         lap = metrics.Laps() if metrics.recording() else None
@@ -323,7 +329,9 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  A WANT MET IN THE PRESENT IS REACHED, and one-shot: it goes, from here and from the
             #  beliefs, where a want the world authored lives — unless a plan is still walking it,
             #  whose last step the executor has yet to see answered.
-            reached = {r["for"] for r in rows(store, _MET_NOW_Q, (), ground=present)} - walking
+            met_now = {r["for"] for r in rows(store, _MET_NOW_Q, (), ground=present)}
+            self.reached |= met_now & walking
+            reached = met_now - walking
             withdraw(store, derive_wants(store, at) | walking, at, reached=reached)
             if reached:
                 withdraw(self.beliefs, None, at, reached=reached)
@@ -353,6 +361,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             handed = publish_plan(store, self.beliefs, self.uri, walking)
             self._mark_kept(handed)
             written += handed
+            self.handed += [(plan, reported.pursued_by(self.beliefs, plan)) for plan in handed]
             walking = self.walking()        # a want handed down from one scope is walked in the next
             if lap:
                 self._adopted(store, handed, present, _scope, memo)
