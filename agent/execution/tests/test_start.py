@@ -42,3 +42,18 @@ def test_started_it_adopts_what_is_published_and_ends_what_was_reached_untaken(m
     reached(want=want)
     assert executor.walking() == [], "reached before any step was taken: ended"
     assert [what["outcome"] for event, what in runtime.emitted if event == INTENTION_RESOLVED] == ["reached"]
+
+
+def test_started_it_ends_an_intention_whose_next_step_is_blocked(monkeypatch, snapshots, stand_in_runtime):
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
+    runtime = stand_in_runtime(store, None, snapshots.NOW, agent_id=snapshots.AGENT)
+    executor = start(runtime)
+    _hand_down(store)
+    [adopt] = runtime.listeners[PLAN_PUBLISHED]
+    adopt(plan=PLAN, want=WANT)
+    (standing,) = executor.standing()
+    [blocked] = runtime.listeners[STEP_BLOCKED]
+    blocked(step=standing.at)
+    assert executor.walking() == []
+    assert [what["outcome"] for event, what in runtime.emitted if event == INTENTION_RESOLVED] == ["failed"]

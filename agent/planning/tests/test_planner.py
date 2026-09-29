@@ -292,3 +292,36 @@ def test_a_candidate_a_cut_left_untaken_is_taken_by_the_next_pass(monkeypatch, s
     assert _steps(planner) == 8
     (im,) = planner.imaginaria.values()
     assert int(rows(im, _WEIGHED_Q, ())[0]["n"]) == whole, "no candidate weighed twice, and none skipped"
+
+
+def test_a_step_the_present_no_longer_admits_is_blocked(monkeypatch, snapshots):
+    """A plan adopted and its first move not taken; the world moves the disks so that move cannot be
+    made — disk 2 lands on disk 1 — and the next pass says the step is blocked, for execution to end
+    the intention rather than take a move the world forbids."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store, held = _two_disks(snapshots, held=True)
+    held.plan(snapshots.NOW)
+    (standing,) = held.executor.standing()
+    (a_disk,) = rows(store, 'SELECT ?d WHERE { GRAPH ?g { ?d ?p ?o } FILTER(STRENDS(STR(?d), "disk_1") && STRENDS(STR(?p), "#on")) }')
+    _move(store, "disk_2", a_disk["d"])
+    later = snapshots.NOW + timedelta(minutes=1)
+    monkeypatch.setattr(clock, "now", lambda: later)
+    held.planner.plan(later)
+    assert held.planner.blocked == [standing.at]
+
+
+def test_a_want_the_world_meets_before_the_plan_begins_is_reached(monkeypatch, snapshots):
+    """A plan adopted and nothing taken; the world puts both disks home by itself, and the next pass
+    says the walked want is reached, for execution to end the intention with no move made."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store, held = _two_disks(snapshots, held=True)
+    held.plan(snapshots.NOW)
+    (standing,) = held.executor.standing()
+    hanoi = "http://example.org/orexis/hanoi#"
+    (disk_2,) = rows(store, 'SELECT ?d WHERE { GRAPH ?g { ?d ?p ?o } FILTER(STRENDS(STR(?d), "disk_2") && STRENDS(STR(?p), "#on")) }')
+    _move(store, "disk_2", hanoi + "PegC")
+    _move(store, "disk_1", disk_2["d"])
+    later = snapshots.NOW + timedelta(minutes=1)
+    monkeypatch.setattr(clock, "now", lambda: later)
+    held.planner.plan(later)
+    assert held.planner.reached == {standing.want}

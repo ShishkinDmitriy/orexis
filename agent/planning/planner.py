@@ -76,7 +76,7 @@ import pyoxigraph as ox
 import rdflib
 
 from agent import clock, metrics
-from agent.ontology import ACTION, PUBLIC, RECORD
+from agent.ontology import ACTION, PUBLIC, RECORD, local_of
 from agent.store import (Memo, Raw, forget_graph, bind, bindings, catalogue_of, graphs_of, instant, query, rdflib_view,
                          remember, rows, update)
 
@@ -99,6 +99,7 @@ from .take import take
 from .unweighed import unweighed
 from .weigh import weigh
 from .withdraw import withdraw
+from .world_at import world_at
 
 log = logging.getLogger("planner")
 
@@ -149,6 +150,22 @@ SELECT ?step ?predicts WHERE {
   FILTER(!BOUND(?due) || ?due <= $now)
   FILTER NOT EXISTS { GRAPH ?h { ?step execution:keptBy ?w } } }
 ORDER BY ?step"""
+
+#  EVERY STEP AN INTENTION STANDS AT THAT HAS FALLEN DUE, NOT BEEN TAKEN AND IS NOT KEPT BELOW, with
+#  the action it fills — what the present must still admit for it to be taken.
+_DUE_HEADS_Q = """
+SELECT ?step ?action WHERE {
+  GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
+             FILTER NOT EXISTS { ?i execution:resolvedAt ?done }
+             FILTER NOT EXISTS { ?act execution:of ?step } }
+  GRAPH ?plan { ?step planning:fills ?action . OPTIONAL { ?step execution:notBefore ?due }
+                FILTER NOT EXISTS { ?step execution:keptBelow true } }
+  FILTER(!BOUND(?due) || ?due <= $now) }
+ORDER BY ?step"""
+
+#  AN ACTION'S PRECONDITION AND THE PARAMETERS IT TAKES, and a step's value for each.
+_PRECONDITION_Q = """SELECT ?text ?takes WHERE { $action planning:precondition ?text . OPTIONAL { $action orexis:takes ?takes } }"""
+_FILLING_Q = """SELECT ?p ?v WHERE { GRAPH ?plan { $step ?p ?v } }"""
 
 #  EVERY STEP OF A PLAN PUBLISHED WHOSE ACTION IS TAKEN FICTIVELY, with what it predicts.
 _FICTIVE_STEPS_Q = """
@@ -317,6 +334,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             reroot(store, present)
             if lap:
                 lap("ground")
+            self.blocked += self._blocked(store, present, at, memo)
             for pair in unweighed(store, memo=memo):
                 #  GROUNDS ONLY. A candidate the budget left untaken in a world it cut is
                 #  unweighed too, and weighed here it would never be offered to the expansion
@@ -392,6 +410,28 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             if want is not None:
                 minted += [g["g"] for g in rows(self.beliefs, _REFINED_Q, ()) if g["want"] == want]
         return minted
+
+    def _blocked(self, store: ox.Store, present: str, at: datetime, memo: Memo) -> list[str]:
+        """Every step an intention stands at, fallen due and not yet taken, that the `present` ground
+        of `store` no longer admits: its action's precondition answers there with no row carrying
+        the step's own value for every parameter the action takes. Only an action this scope's
+        imaginarium holds is asked; a step of another scope's is that scope's to judge."""
+        blocked = []
+        actions = graphs_of(store, ACTION)
+        world = None
+        for head in rows(self.beliefs, _DUE_HEADS_Q, (), now=instant(at)):
+            found = rows(store, _PRECONDITION_Q, actions, action=head["action"])
+            if not found:
+                continue
+            world = world or world_at(store, present, memo=memo)
+            takes = {r["takes"] for r in found if r.get("takes")}
+            filling = {local_of(r["p"]): r["v"] for r in rows(self.beliefs, _FILLING_Q, (), step=head["step"])
+                       if r["p"] in takes}
+            answers = bindings(query(store, bind(found[0]["text"], me=self.uri), world))
+            if not any(all(row.get(k) == v for k, v in filling.items()) for row in answers):
+                log.info("%s: %s can no longer be taken — the present admits it no more", self.id, local_of(head["step"]))
+                blocked.append(head["step"])
+        return blocked
 
     def _mark_kept(self, handed: list[str]) -> None:
         """Say of every step of a plan handed down that a bridge keeps below — one taken
