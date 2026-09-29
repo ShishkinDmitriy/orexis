@@ -53,25 +53,21 @@ to the transports and `said` to speech, the deliberator's `revised` heard by the
 starts, by jobs it `submit`s, timers it asks for (`every`) and graphs written it hears (`on`). The
 runtime runs every job and handler on this one thread and knows no package's words.
 
-**WHAT HAPPENED IS NOT THE RUNTIME'S TO SAY.** `main` loads a series sink for every purpose the
-environment names a store for (`agent/series.py`), and hands history nothing: sensing contributes
-an observation as it writes it, and execution a step taken and how it ended, because each decides
-the thing it says. The runtime once handed the sink each observation graph, and so decided what
-history was — observations only (a-documents-kind-says-who-reads-it, §5).
-
-**HOW THE AGENT IS DOING IS EACH PACKAGE'S TO SAY, AND THE ADMINS' TO READ** (`agent/metrics.py`).
-Where a metrics sink is loaded, a package tallies its events as its acts happen, and once a window
-— real time, sixty seconds unless the environment says — the runtime samples every gauge of what it
-loads, each over the store its package reads: the belief base for belief and sensing, the
-imaginaria for planning (through the Planner), the belief base's intentions graph for execution. It holds the
-stores, so it hands them over; what each figure IS is the package's `metrics.py`. Its own are
-below: the pass, the store's size, the process's uptime, and a want nothing reaches. The last
-window is written as the process stops.
+**WHAT HAPPENED AND HOW THE AGENT IS DOING ARE HEARD, NOT HANDED.** `main` loads a series sink for
+every purpose the environment names a store for (`agent/series.py`), and where one is loaded the
+runtime creates the part that writes it, as it creates any package's: `agent/history/`, which
+writes every event that answers a point — sensing's observation, execution's step taken and how it
+ended, each shaped by the package that decides it — and `agent/metrics/`, which tallies every event
+whose class says it is reported and writes the window once a minute of real time. Both link to every
+part and to the runtime, and neither knows a package's word; the runtime's own events are below: a
+graph written, and a pass — its parts in real seconds, the store's size and the process's uptime.
+The last window is written as the metrics part stops.
 """
 
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import importlib
 import importlib.util
 import logging
@@ -86,9 +82,9 @@ from urllib.parse import unquote, urlparse
 import pyoxigraph as ox
 
 from agent import clock
-from agent import metrics, series
+from agent import series
 from agent.lifecycle import MET, UNFINISHED, UNREACHABLE, Signal  # noqa: F401 — the outcomes, re-exported
-from agent.metrics import Event, Gauge
+from agent.metrics import Laps, Level, Value, window
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS
 from agent.planning.planner import Planner
 from agent.store import (answer, catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of,
@@ -106,15 +102,32 @@ PUBLIC = OREXIS + "PublicGraph"
 GRAPH = OREXIS + "Graph"
 
 
-#  WHAT THE RUNTIME REPORTS OF ITSELF — its metrics, as a package's `metrics.py` holds a package's.
-#  A PASS, in real seconds, whole and by part: the jobs the packages queued run to the last
-#  (`drain`), planning, walking. A part a pass does not reach is not in its tally; the planner's
-#  own parts are its event.
-PASS = Event("pass", values=("duration_s", "drain_s", "plan_s", "execute_s"))
-#  HOW LARGE THE BELIEF BASE IS, in quads, and HOW LONG THE PROCESS HAS RUN, in real seconds.
+#  WHAT THE RUNTIME SAYS HAPPENED, its own two events.
+
+
+@dataclasses.dataclass(frozen=True)
+class Written:
+    """A graph written — by a job, a handler, or a package mid-act — and every kind it is."""
+    graph: str
+    kinds: frozenset
+
+
 _STARTED = time.perf_counter()
-STORE = Gauge("store", read=lambda stores: {"quads": sum(len(s) for s in stores)})
-PROCESS = Gauge("process", read=lambda stores: {"uptime_s": round(time.perf_counter() - _STARTED, 3)}, unit="s")
+
+
+@dataclasses.dataclass(frozen=True)
+class Passed:
+    """A pass, in real seconds, whole and by part — the jobs queued run to the last (`drain`),
+    planning, walking; a part a pass does not reach is not in it, and the planner's own parts are
+    its event — with how large the belief base is, in quads, and how long the process has run."""
+    metric = "pass"
+    duration_s: Value
+    drain_s: Value = None
+    plan_s: Value = None
+    execute_s: Value = None
+    quads: Level = None
+    uptime_s: Level = None
+
 
 DOCUMENTS = (".ttl", ".trig")
 
@@ -163,6 +176,9 @@ PREMISES = {
     HTTP: f"ASK {{ {_MINE} ?sensor td:hasForm ?form }}",
 }
 EVERY = (*MIND, *PREMISES)
+#  WHAT WATCHES THE AGENT: a package created where the environment names a store for it, which is a
+#  premise of deployment and not of the world, so no ASK decides it (`agent.series`).
+WATCHERS = ("history", "metrics")
 
 #  WHO THIS PROCESS IS: the AGENT with the id it was told. The id alone is not enough — the
 #  sensing world's fern and the agent acting for it share one — so the kind is asked too. Asked
@@ -382,7 +398,7 @@ class Runtime:
     WHAT IT OFFERS A PART. `submit` a job from any thread; `every` so many seconds of the one
     timeline; `on` a kind of graph written — the one signal it owns — and `wrote`, for graphs written
     outside a job; `hold` the agent alive or `release` it with an outcome; `again`, to pass once more
-    without waiting; `lap` a part of the pass; and `gauge`. Every job and every handler runs on this
+    without waiting; and `lap` a part of the pass. Every job and every handler runs on this
     one thread, one at a time.
 
     A transport package is started only where the runtime is told to `connect`, which is the
@@ -394,11 +410,11 @@ class Runtime:
         self.me = _identity(beliefs, agent_id)
         self.packages = packages_of(beliefs, self.me)
         self.budget, self.intentions = budget, intentions      # what planning and execution are handed
-        self._laps: metrics.Laps | None = None          # the parts of the pass in progress, where timed
+        self._laps: Laps | None = None                    # the parts of the pass in progress, where heard
         self._jobs: queue.SimpleQueue = queue.SimpleQueue()
         self.written = Signal("written")                  # a graph written, and its kinds
+        self.passed = Signal("passed")                    # a pass, where anybody hears it
         self._timers: list[list] = []                     # [seconds, next due or None, job]
-        self._gauged: list = []                           # what the packages report, sampled at a window's end
         self._stops: list = []
         self._members: list = []
         self._held: dict = {}                             # who keeps the agent alive
@@ -425,13 +441,13 @@ class Runtime:
         """Run `handler(graph)` — answering the graphs it wrote in turn — for every graph of `kind`
         written: how a package answers another's work with neither naming the other, the belief base
         being the interface between them. The one signal the runtime owns."""
-        self.written.connect(lambda graph, kinds: handler(graph) if kind in kinds else ())
+        self.written.connect(lambda written: handler(written.graph) if kind in written.kinds else ())
 
     def wrote(self, graphs) -> None:
         """Say that `graphs` were written — by a job, a handler, or a package mid-act — so that
         whoever listens for their kinds hears it now, and what they write in turn."""
         for graph in graphs:
-            self.wrote(self.written.emit(graph=graph, kinds=self._kinds(graph)))
+            self.wrote(self.written.emit(Written(graph, frozenset(self._kinds(graph)))))
 
     def hold(self, who) -> None:
         """`who` keeps the agent running: a desire, a listening transport."""
@@ -449,13 +465,9 @@ class Runtime:
         self._again = True
 
     def lap(self, part: str) -> None:
-        """Mark the end of a part of the pass, for the pass's metric."""
+        """Mark the end of a part of the pass, for the pass's event."""
         if self._laps is not None:
             self._laps(part)
-
-    def gauge(self, read) -> None:
-        """Report what `read()` samples — a list of points — at every metrics window's end."""
-        self._gauged.append(read)
 
     def attach(self, member) -> None:
         """A transport member brought up and started; held behind the family's `Transports` where
@@ -505,9 +517,9 @@ class Runtime:
         while passes is None or n < passes:
             n += 1
             now = clock.now()
-            #  THE PASS'S PARTS, in real seconds, kept where a metrics sink is loaded — by
+            #  THE PASS'S PARTS, in real seconds, kept where anybody hears the pass — by
             #  `perf_counter`, never the clock.
-            self._laps = metrics.Laps() if metrics.recording() else None
+            self._laps = Laps() if self.passed.connected else None
             self._again = False
             started = time.perf_counter()
             self.drain(now)
@@ -529,7 +541,11 @@ class Runtime:
         module creates its part, the mind first — a transport package only where the runtime is told
         to `connect`, a member handed in standing for it; then every part links to the others; then
         every part starts, and its stop is kept for the end."""
-        for package in self.packages:
+        #  WHAT WATCHES THE AGENT, where the environment names a store for it — last, so it is linked
+        #  to every part and stopped first, writing the last window.
+        watchers = [name for name, purpose in zip(WATCHERS, (series.HISTORY, series.METRICS))
+                    if series.sink(purpose) is not None]
+        for package in [*self.packages, *watchers]:
             name = "agent." + package.replace("/", ".") + ".create"
             if package.startswith("transport/") and (transport is not None or not connect):
                 continue
@@ -553,24 +569,11 @@ class Runtime:
                                      cat=Raw(f"<{cat}>"), g=graph)}
 
     def _passed(self, took: float) -> None:
-        """Tally the pass, where a metrics sink is loaded, and write the window where it is over."""
+        """Say the pass, where anybody hears it."""
         if self._laps is None:
             return
-        PASS({"duration_s": round(took, 6), **self._laps.spent})
-        if metrics.due():
-            self.report()
-
-    def report(self) -> list[dict]:
-        """Write the metrics window now: every gauge sampled once, over the store its package reads,
-        beside the events tallied since the last — the end of a window, and the process's last.
-        The points written; none where no metrics sink is loaded, and then nothing is read."""
-        if not metrics.recording():
-            return []
-        return metrics.flush(self.gauges())
-
-    def gauges(self) -> list:
-        """The runtime's own gauges over the belief base, and every gauge a package asked to report."""
-        return [*metrics.sample(__name__, [self.beliefs]), *(point for read in self._gauged for point in read())]
+        self.passed.emit(Passed(duration_s=round(took, 6), **self._laps.spent, quads=len(self.beliefs),
+                                uptime_s=round(time.perf_counter() - _STARTED, 3)))
 
 
 def world_name(world: Path) -> str:
@@ -589,27 +592,25 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     store = ox.Store(str(args.volume)) if args.volume else None
     beliefs = boot(args.world, args.agent, store)
-    #  A SINK PER PURPOSE THE ENVIRONMENT NAMES A STORE FOR: the packages that decide what happened
-    #  contribute history and tally their metrics, and a window of metrics is written where one ends
-    #  (`Runtime.report`), as long as the environment says.
+    #  A SINK PER PURPOSE THE ENVIRONMENT NAMES A STORE FOR, and the part that writes it created with
+    #  the rest: history as events happen, metrics once a window, as long as the environment says.
     told = series.load()
-    window = metrics.load()
+    interval = window.load()
     log.info("%s writes %s", args.agent, ", ".join(p.lower() for p in told) + " to a series store" if told else "no series")
-    if metrics.recording():
-        log.info("%s writes its metrics every %gs", args.agent, window)
+    if window.recording():
+        log.info("%s writes its metrics every %gs", args.agent, interval)
     #  WHO SPEAKS, on every metric point: the agent's id, which the process is told, and the name of
     #  the world's directory, which it is handed — the name its buckets, its compose project and its
     #  dashboards' folder go by. Neither is an instance the code names: both arrive as arguments.
-    metrics.identify(world=world_name(args.world), agent=args.agent)
+    window.identify(world=world_name(args.world), agent=args.agent)
     runtime = Runtime(beliefs, args.agent, budget=args.budget, connect=True)
-    #  A STOP IS AN EXIT, so the last window is written: `podman stop` sends SIGTERM, whose default
-    #  ends the process where it stands and would lose up to a window of metrics.
+    #  A STOP IS AN EXIT, so every part is stopped and the last window written: `podman stop` sends
+    #  SIGTERM, whose default ends the process where it stands and would lose up to a window of metrics.
     signal.signal(signal.SIGTERM, _stopped)
     try:
         outcome = runtime.run(passes=args.passes)
     finally:
         runtime.stop()
-        runtime.report()
     return {MET: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
 
 

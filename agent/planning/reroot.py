@@ -41,10 +41,10 @@ verdicts with the graph.
 from __future__ import annotations
 
 import logging
+from typing import NamedTuple
 
 from agent.store import Raw, bind, catalogue_of, clear_graph, rows, update
 
-from .metrics import REROOT
 
 log = logging.getLogger("reroot")
 
@@ -121,10 +121,21 @@ WHERE  { GRAPH $cat {
 _POSSIBLE_Q = """SELECT ?m WHERE { GRAPH $cat { $match a planning:PossibleGraph } BIND($match AS ?m) }"""
 
 
-def reroot(store, ground: str) -> str | None:
+class Rerooting(NamedTuple):
+    """What a re-root found: the world matched, or None; which of the four the present was —
+    `first`, the first pass; `ground`, one of the last pass's grounds repeated, the old present
+    where nothing happened; `child`, a world the last pass imagined, where a step landed as
+    predicted; or `surprise`, the one a pass names — and the worlds kept and dropped."""
+    match: str | None
+    present: str
+    kept: frozenset
+    dropped: tuple
+
+
+def reroot(store, ground: str) -> Rerooting:
     """Find the world the last pass imagined that `ground` — the present just laid — landed
-    in, hand its cone to the ground, and drop everything else the last pass made. The world
-    matched, or None where the present surprised the agent and nothing was kept.
+    in, hand its cone to the ground, and drop everything else the last pass made. What was
+    found, its `match` None where the present surprised the agent and nothing was kept.
 
     Handed the ground and nothing else: its hash is on its row, the worlds are in the store,
     and what is kept is what the rows reach.
@@ -156,11 +167,6 @@ def reroot(store, ground: str) -> str | None:
         (log.info if landed or match is None else log.debug)(
             "the present is %s; %d world(s) kept, %d dropped",
             "a surprise" if match is None else match.rsplit("/", 1)[-1], len(kept), len(gone))
-    #  AND WHERE A METRICS SINK IS LOADED, which of the four it was — the first pass; one of the
-    #  last pass's grounds repeated, the old present where nothing happened; a child the last pass
-    #  imagined, where a step landed as predicted; or a surprise, the one a pass names — with what
-    #  was kept and dropped. Once per scope per pass.
-    REROOT({"kept": len(kept), "dropped": len(gone)},
-           present="first" if match is None and not gone else "surprise" if match is None
-           else "child" if landed else "ground")
-    return match
+    present = ("first" if match is None and not gone else "surprise" if match is None
+               else "child" if landed else "ground")
+    return Rerooting(match, present, frozenset(kept), tuple(gone))

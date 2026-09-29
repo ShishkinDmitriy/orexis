@@ -310,7 +310,7 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
     import yaml
     from dotenv import dotenv_values
 
-    from agent import metrics
+    from agent.metrics import window as metrics
     from agent.series import HISTORY, METRICS, PURPOSES, install, load, sink
     from onboarding import compose, influx, installation
 

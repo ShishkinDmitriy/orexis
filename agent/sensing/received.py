@@ -22,14 +22,15 @@ are for are kept (`reads_series`) is read as a series: each value still ahead is
 of what, which property, the number, the instant the forecast was issued, the start of its
 stretch, the sensor — and every forecast graph the sensor wrote before is forgotten first, so the
 next forecast replaces the last. A stretch already over when the forecast arrives is not written.
-A forecast is a belief and not a reading, so it ends no silence and is told to no history.
+A forecast is a belief and not a reading, so it ends no silence and is said as no observation.
 
 **A READING ENDS A SILENCE.** A sensor `missed` had said silent is silent no longer: the graph
 saying so goes before the observation is written, found by the row's content and never by name.
 
-**AND HISTORY IS TOLD.** Where a history sink is loaded, the observation written is contributed
-to it as one point (`history.py`): sensing decides what an observation is, so sensing says what
-happened, and the runtime hands the sink nothing.
+**AND IT IS SAID.** The graph written is answered to whoever runs the transport, and sensing's
+part, hearing an observation graph written, says it as an `Observed` (`events.py`), which history
+writes as a point and metrics tallies: sensing decides what an observation is, so sensing says
+what happened, and `received` writes to no series.
 
 **NOTHING ELSE.** No side is drawn here: which side of its subject's ranges the number lies on
 is a revision, concluded by the rules this layer ships and run by the deliberator when the
@@ -47,14 +48,10 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
-from agent import metrics
 from agent.ontology import PUBLIC, local_of
-from agent.series import HISTORY, sink
 from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
-from . import metrics as reported
 from .cadence import cadence_of
-from .history import observation_point
 from .ontology import FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, forecast_graph, observation_graph, observation_of
 from .pipeline import decode, decode_series, reads_series
 
@@ -97,16 +94,11 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
         return []
     node = observation_of(feature, observed_property)
     graph = observation_graph(local_of(me), feature, observed_property)
-    #  THE READING THIS ONE REPLACES, read before it goes, where a metrics sink is loaded: how long
-    #  after it this one came is the sensor's cadence as kept, beside the one the world states.
-    before = reported.made_before(store, graph) if metrics.recording() else None
     forget_graph(store, graph)
     cat = Raw(f"<{catalogue_of(store)}>")
     for silence in rows(store, _SILENCE_Q, (), cat=cat, sensor=sensor):
         forget_graph(store, silence["g"])
     cadence = cadence_of(store, sensor, memo)
-    if before is not None:
-        reported.report_received(store, sensor, at=at, before=before, cadence=cadence)
     until = at + timedelta(seconds=cadence) if cadence is not None else None
     said = [f'<{node}> a sosa:Observation',
             f'<{node}> sosa:hasFeatureOfInterest <{feature}>',
@@ -124,8 +116,6 @@ INSERT DATA {{
   GRAPH <{graph}> {{ {' . '.join(said)} . }}
   {entry(store, graph, OBSERVATION_GRAPH, RECEIVED, me, start=at, end=until)} }}""")
     log.info("%s: %s of %s reads %s", local_of(me), local_of(observed_property), local_of(feature), value)
-    if (history := sink(HISTORY)) is not None:
-        history.write([observation_point(store, feature, observed_property, sensor, round(float(value), 6), at)])
     return [graph]
 
 

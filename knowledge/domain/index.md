@@ -13,12 +13,14 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [action](/domain/kernel/action.md) - One way of acting as one node: what it takes, its precondition, its effect, its implementation, its cost.
 * [runtime](/domain/kernel/runtime.md) - Boots a world into a store, then runs pass by pass, and stops when nothing is held or wanted.
 * [part](/domain/kernel/part.md) - What a package contributes to a running agent: created, linked to the others, started, stopped last-first.
-* [signal](/domain/kernel/signal.md) - A package's own word for what just happened, on its object; connected when parts link, pointing down, never stored.
+* [event](/domain/kernel/event.md) - What a signal carries: a class its package declares, said whole; it may mark what is reported and answer a history point.
+* [level](/domain/kernel/level.md) - A reported field that is the state now, read by its store's owner and written as it last stood in a window.
+* [signal](/domain/kernel/signal.md) - A package's own word for what just happened, on its object, carrying one event; connected when parts link, never stored.
 * [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind on the catalogue.
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
-* [series](/domain/kernel/series.md) - What a person watches and the agent never reads: history contributed by the package that decides it, metrics as each package's code, a point a minute.
+* [series](/domain/kernel/series.md) - What a person watches and the agent never reads: history and metrics, both what the packages' events say, written by a part hearing every signal.
 
 # Sensing — bytes become observations
 

@@ -130,12 +130,12 @@ def test_every_point_the_agent_writes_is_drawn_by_one_terrace_panel(monkeypatch,
 
 def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
     """The health dashboard is held to what two passes write, flushed as a stop flushes (#826,
-    amended): every field of every point is drawn by exactly one panel — a gauge whole, an event's
-    count and flags together and each value's mean, max and sum together — and every panel reads the
+    amended): every field of every point is drawn by exactly one panel — an event's levels together,
+    its count and flags together and each value's mean, max and sum together — and every panel reads the
     bucket of the agent the dashboard's variable picks. A row per package that reports, the runtime's
     first: sensing's because the terrace loads it, so its silence and its readings are drawn, and no
     panel draws a measurement nothing writes."""
-    from agent import metrics
+    from agent.metrics import window as metrics
     from agent.series import METRICS
     from onboarding.dashboards import AGENT_VARIABLE, render_health
 
@@ -146,7 +146,7 @@ def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
         for _ in range(2):
             runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
             runtime.run(passes=1, poll_s=0)
-        runtime.report()
+        metrics.flush()
     finally:
         install(METRICS, None)
         metrics.reset()

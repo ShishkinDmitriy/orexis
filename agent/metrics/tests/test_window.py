@@ -1,32 +1,49 @@
-"""The kernel of the metrics: an event tallied in memory and written once a window, a gauge sampled
-at the flush over the stores it is handed, every point at the flush's real instant — and nothing
-read, timed or written where no metrics sink is loaded. What each package's figures ARE on a real
-run is held by the worlds' own tests, hanoi's, the greenhouse's and the terrace's."""
+"""The window: an event tallied in memory by what its class marks and written once a window, a level
+written as it last stood, every point at the flush's real instant — and nothing tallied or written
+where no metrics sink is loaded. What each package's figures ARE on a real run is held by the worlds'
+own tests, hanoi's, the greenhouse's and the terrace's."""
 
 from __future__ import annotations
 
 import importlib
-import logging
 import signal
-import sys
-import types
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import pyoxigraph as ox
 import pytest
 
-from agent import clock, metrics, runtime as runtime_module
-from agent.metrics import Event, Gauge, counted, declared, due, flush, sample
+from agent import clock, runtime as runtime_module
+from agent.metrics import Flag, Level, Tag, Value, measurement, reported
+from agent.metrics import window as metrics
+from agent.metrics.window import due, flush
 from agent.runtime import EVERY, Runtime, boot
 from agent.series import METRICS, Sink, install
 
-AGENT = Path(__file__).resolve().parents[1]
+AGENT = Path(__file__).resolve().parents[2]
 HANOI = AGENT.parent / "world" / "hanoi"
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 WALL = datetime(2030, 6, 1, 8, 0, tzinfo=timezone.utc)
 
-TRIED = Event("tried", values=("duration_s", "weighed"), flags=("gave_up",), tags=("outcome",))
+@dataclass(frozen=True)
+class Tried:
+    metric = "tried"
+    want: str = "every_disk_home"
+    outcome: Tag = None
+    duration_s: Value = None
+    weighed: Value = None
+    gave_up: Flag = False
+
+
+@dataclass(frozen=True)
+class Held:
+    metric = "held"
+    scope: Tag = None
+    worlds: Level = None
+
+
+def TRIED(fields: dict, **tags) -> None:
+    metrics.tally(Tried(**fields, **tags))
 
 
 class Monotonic:
@@ -90,15 +107,24 @@ def test_every_aggregate_of_a_value_is_a_float_so_no_window_changes_a_fields_typ
     assert isinstance(point["fields"]["count"], int) and isinstance(point["fields"]["gave_up"], int)
 
 
-def test_a_field_or_tag_not_declared_is_left_out_and_said_once(written, caplog):
+def test_a_field_the_class_does_not_mark_is_not_written(written):
     """A want's name on a point would be a tag of unbounded values or a field nothing aggregates, so
-    an event carries what it declares and nothing else — and a mistake is said in the log, once."""
-    with caplog.at_level(logging.WARNING, logger="metrics"):
-        TRIED({"weighed": 1, "want": "every_disk_home"}, outcome="Satisfied", want="every_disk_home")
-        TRIED({"weighed": 1, "want": "every_disk_home"}, outcome="Satisfied", want="every_disk_home")
+    an event's unmarked fields are the event's and not the metric's."""
+    metrics.tally(Tried(want="every_disk_home", outcome="Satisfied", weighed=1))
     (point,) = flush()
     assert "every_disk_home" not in {*point["fields"], *map(str, point["fields"].values()), *point["tags"].values()}
-    assert caplog.text.count("carries want") == 1 and caplog.text.count("tagged want") == 1
+    assert "want" not in point["tags"]
+
+
+def test_a_level_is_written_as_it_last_stood_and_only_in_a_window_that_said_it(written):
+    """Two reports in a window: the last is written, per tag set, and no count beside it; the next
+    window, in which nobody said it, writes none."""
+    metrics.tally(Held(scope="hanoi", worlds=20))
+    metrics.tally(Held(scope="hanoi", worlds=7))
+    metrics.tally(Held(scope="courier", worlds=3))
+    points = {p["tags"]["scope"]: p for p in flush()}
+    assert points["hanoi"]["fields"] == {"worlds": 7.0} and points["courier"]["fields"] == {"worlds": 3.0}
+    assert flush() == []
 
 
 def test_with_no_sink_nothing_is_tallied_and_a_new_sink_starts_an_empty_window(written):
@@ -123,49 +149,25 @@ def test_the_window_is_the_environments_or_sixty_seconds():
     assert metrics.load({"METRICS_INTERVAL_S": "0"}) == 60.0, "a window of nothing is a test's, never a deployment's"
 
 
-def test_a_select_gauge_is_summed_across_the_stores_it_is_handed():
-    """A count over two stores is the two counts added — the imaginaria are one per scope — and an
-    integer stays one."""
-    one, two = ox.Store(), ox.Store()
-    for store, graphs in ((one, ["urn:g1"]), (two, ["urn:g2", "urn:g3"])):
-        for g in graphs:
-            store.add(ox.Quad(ox.NamedNode("urn:s"), ox.NamedNode("urn:p"), ox.NamedNode("urn:o"), ox.NamedNode(g)))
-    found = counted([one, two], "SELECT (COUNT(DISTINCT ?g) AS ?graphs) WHERE { GRAPH ?g { ?s ?p ?o } }")
-    assert found == {"graphs": 3} and isinstance(found["graphs"], int)
-
-
-def test_a_gauge_that_fails_costs_the_agent_nothing(monkeypatch, caplog):
-    """A select the engine refuses, and one reading the catalogue of a store that has none, are said
-    in the log; every other gauge of the module is sampled."""
-    module = types.ModuleType("a_package_metrics")
-    module.BROKEN = Gauge("broken", "SELECT nothing at all")
-    module.CATALOGUED = Gauge("catalogued", "SELECT (COUNT(?g) AS ?n) WHERE { GRAPH $cat { ?g a orexis:Graph } }")
-    module.FINE = Gauge("fine", read=lambda stores: {"stores": len(stores)})
-    monkeypatch.setitem(sys.modules, module.__name__, module)
-    with caplog.at_level(logging.WARNING, logger="metrics"):
-        sampled = {g.name: fields for g, fields in sample(module.__name__, [ox.Store()])}
-    assert sampled == {"fine": {"stores": 1}}
-    assert "broken could not be read" in caplog.text and "catalogued could not be read" in caplog.text
-
-
-def _every_module() -> dict[str, types.ModuleType]:
-    """The runtime's module and every package's `metrics.py`, by the package — what the dashboards
+def _every_module() -> dict:
+    """The runtime's module and every package's `events.py`, by the package — what the dashboards
     import. Importing sensing's here is a test's, not a boot's."""
     out = {"runtime": runtime_module}
     for package in EVERY:
-        if (AGENT / package / "metrics.py").exists():
-            out[package] = importlib.import_module("agent." + package.replace("/", ".") + ".metrics")
+        if (AGENT / package / "events.py").exists():
+            out[package] = importlib.import_module("agent." + package.replace("/", ".") + ".events")
     return out
 
 
-def test_every_package_that_reports_keeps_it_in_one_module_and_every_name_is_its_own():
-    """Planning, execution, sensing and belief each keep a `metrics.py`, and no measurement is named
+def test_every_package_that_reports_keeps_it_on_its_events_and_every_name_is_its_own():
+    """Planning, execution, sensing and belief each keep an `events.py`, and no measurement is named
     twice across them and the runtime — two of one name would be one measurement with two meanings."""
     modules = _every_module()
     assert {"planning", "execution", "sensing", "belief"} <= set(modules), sorted(modules)
-    names = [m.name for module in modules.values() for m in declared(module.__name__)]
+    names = [measurement(cls) for module in modules.values() for cls in reported(module)]
     assert len(names) >= 15 and len(names) == len(set(names)), names
     assert not list(AGENT.rglob("metrics.ttl")), "a metric is code, and no document declares one"
+    assert not [p for p in AGENT.rglob("metrics.py")], "a package reports by its events, and keeps no metrics module"
 
 
 def test_a_flush_reads_no_agent_clock(monkeypatch, written):
@@ -206,8 +208,9 @@ def test_a_timing_never_reads_the_agents_clock(monkeypatch):
 
 
 def test_the_last_window_is_written_as_the_process_stops(monkeypatch):
-    """A stop is an exit: SIGTERM raises, and whatever ends the run, `main` writes the window it was
-    in — the pass tallied, every gauge sampled once — rather than losing up to a minute of it."""
+    """A stop is an exit: SIGTERM raises, and whatever ends the run, `main` stops every part and the
+    metrics part writes the window it was in — the pass tallied, every level as it last stood — rather
+    than losing up to a minute of it."""
     written = []
     monkeypatch.setattr(runtime_module.series, "load",
                         lambda: install(METRICS, Sink(METRICS, "m", lambda bucket, record: written.extend(record))) or (METRICS,))
@@ -227,5 +230,6 @@ def test_the_last_window_is_written_as_the_process_stops(monkeypatch):
         signal.signal(signal.SIGTERM, before)
     by = {p["measurement"]: p for p in written}
     assert by["pass"]["fields"]["count"] == 1, "the one pass, tallied and written at the stop"
-    assert {"store", "process", "plans", "cone", "intentions", "acts", "revisions"} <= set(by), sorted(by)
+    assert by["pass"]["fields"]["quads"] > 0 and by["pass"]["fields"]["uptime_s"] > 0
+    assert {"planner", "imaginarium", "search", "revise", "revisions", "intentions"} <= set(by), sorted(by)
     assert {p["tags"]["world"] for p in written} == {"hanoi"}

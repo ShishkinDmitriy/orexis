@@ -8,9 +8,11 @@ description: >-
   list of file names kept out. Seven consequences follow from the one idea - packages loaded by a
   premise read off the world, a transport connection per broker, a series store per purpose,
   history contributed by the package that decides each thing, metrics as each package's selects -
-  amended since to each package's code, opted into per world and written once a minute - and the
-  shared services stated in an installation document. Supersedes metrics-are-an-aspect.
-status: accepted
+  amended since to each package's code, opted into per world and written once a minute, and in part
+  superseded since by events every package says and two parts hear - and the shared services stated
+  in an installation document. Supersedes metrics-are-an-aspect.
+status: superseded-in-part
+superseded-by: metrics-and-history-are-what-events-say
 timestamp: 2026-09-27T12:00:00Z
 ---
 
@@ -293,6 +295,10 @@ to see them.
 
 ## Amended 2026-09-27: how a contributor reaches the sink, and what a step's history is (#825)
 
+*Superseded in part by [metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md):
+no contributor asks for the sink any more — the package that decides a thing still shapes its point,
+on the event it says, and a history part hearing every signal writes it.*
+
 §4 and §5 are built as written; three things they left open were settled on the way, and the
 [series](/domain/kernel/series.md) page says what each point holds.
 
@@ -358,6 +364,9 @@ OPTIONAL rows inside the catalogue instead. The greenhouse's own test holds both
 
 ## Amended 2026-09-27: gauges are selects, events are contributions (#826)
 
+*Superseded in part by [metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md):
+an event is a class its package declares and a metrics part hears, and no package calls a metric.*
+
 *The declarations, the stamp and the per-event point below are superseded by the last amendment;
 what an event is, who contributes it, `perf_counter` and the tags stand.*
 
@@ -410,6 +419,11 @@ the events under a millisecond — per search and per pass, never per weighing, 
 holds by counting.
 
 ## Amended 2026-09-27: metrics are code each package owns, optional, and a point a minute (#826)
+
+*Superseded in part by [metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md):
+a package reports on its events and keeps no `metrics.py`, a gauge is a level on an event, and
+history is written by a part that hears the events. What is code and not model, optional, a point a
+minute of real time, and tagged, stands.*
 
 The sovereign's, after #844 merged. **Metrics are the admins' instrumentation of the agent — code
 watching code, not a description of anything — so they are relaxed out of the model.** This

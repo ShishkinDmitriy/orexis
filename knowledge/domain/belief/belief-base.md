@@ -34,7 +34,8 @@ a caller, and a graph's NAME is for eyes: code relies on its row alone.
 
 One more kind of store, the runtime's to hold: the [imaginaria](/domain/planning/imaginarium.md), one
 per scope. Every [intention](/domain/execution/intention.md) and its acts are a graph of the belief base
-itself, the agent's own and not public, so the volume keeps them. A gauge says which store it reads.
+itself, the agent's own and not public, so the volume keeps them. A [level](/domain/kernel/level.md)
+is read by the one object that holds its store.
 
 Each reading, and each step taken and how it ended, also goes to the agent's history bucket as a
 series point, for the panels to draw, and where the world is monitored a minute's metrics go to

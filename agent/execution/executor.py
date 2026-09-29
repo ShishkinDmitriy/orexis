@@ -49,9 +49,10 @@ amortisation (an-intention-is-an-amortised-deliberation). The planner does not g
 this door — it never plans for a want being walked — but a caller that wants the absorption
 asks here.
 
-**AND WHAT HAPPENED GOES TO HISTORY**, where a history sink is loaded: a step taken when its act
-is recorded, and landed or failed at the verdict, each as a point `history.py` shapes. The
-executor decides both, so it is the executor that says them; the runtime hands the sink nothing.
+**AND WHAT HAPPENED IS SAID**, by the executor's own signals, each carrying an event of
+`events.py`: an intention resolved, a command, a saying, and — made only where heard — a step taken
+when its act is recorded, the verdict on it, and how many stand after a walk. The executor decides
+each, so it says each; whoever writes history and metrics hears them.
 """
 
 from __future__ import annotations
@@ -65,16 +66,14 @@ from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
-from agent import clock, metrics
+from agent import clock
 from agent.lifecycle import Signal
 from agent.hash_named_graph import facts_of
-from agent.ontology import OREXIS, STATE, local_of
-from agent.series import HISTORY, sink
+from agent.ontology import ACTION, OREXIS, STATE, local_of
 from agent.store import (Raw, add_quads, bind, catalogue_of, entry, graphs_of, instant, quads,
                          revisions_of, rows, update)
 
-from . import metrics as reported
-from .history import step_point
+from .events import Commanded, IntentionResolved, Said, StepAnswered, StepTaken, Walked  # noqa: F401 — the events it says
 from .implementation import FICTIVE, operations
 from .ontology import EXECUTION, intentions_graph
 
@@ -94,6 +93,7 @@ PURSUES = EXECUTION + "pursues"
 ADOPTED_AT = EXECUTION + "adoptedAt"
 RESOLVED_AT = EXECUTION + "resolvedAt"
 OUTCOME = EXECUTION + "outcome"
+_TAKES_Q = """SELECT ?takes WHERE { $action orexis:takes ?takes }"""
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 #  HOW OFTEN THE TIMEKEEPER LOOKS WHEN NOTHING IS DUE, in the agent's seconds: a plan another
@@ -264,16 +264,20 @@ class Executor:
         #  `on_write(graph)`, told of every graph the executor writes as the world, so what the rules
         #  conclude of it is concluded.
         self.on_write = on_write
-        #  WHAT THE EXECUTOR SAYS HAPPENED, its own words for whoever connects: an intention ended,
-        #  with the want it pursued and how; a step's command, sized from the present, for whatever
-        #  reaches the device; a document a step said, and the agents it is to.
+        #  WHAT THE EXECUTOR SAYS HAPPENED, its own words for whoever connects, each carrying an event
+        #  of `events.py`: an intention ended, with the want it pursued and how; a step's command,
+        #  sized from the present, for whatever reaches the device; a document a step said, and the
+        #  agents it is to; and, made only where heard, a step taken, the verdict on one, a walk.
         self.intention_resolved = Signal("intention_resolved")
         self.commanded = Signal("commanded")
         self.said = Signal("said")
+        self.step_taken = Signal("step_taken")
+        self.step_answered = Signal("step_answered")
+        self.walked = Signal("walked")
 
-        #  TELEMETRY AND NOT A ROW: the desire each adopted plan's want was derived under, read
-        #  off the store the plan came from where a metrics sink is loaded, so a landing can be
-        #  told by desire. The intentions keep commitments, not the reasoning behind them.
+        #  TELEMETRY AND NOT A ROW: the desire each adopted plan's want was derived under, as
+        #  planning said it when it published the plan, so what happens to it can be told by
+        #  desire. The intentions keep commitments, not the reasoning behind them.
         self._desires: dict[str, str] = {}
         self._work: queue.SimpleQueue = queue.SimpleQueue()
         self._inflight: set[str] = set()
@@ -294,9 +298,12 @@ class Executor:
             committed = self.commit(self.beliefs, r["plan"], r["want"]) is not None or committed
         return [self.graph] if committed else []
 
-    def adopt(self, plan: str, want: str) -> list[str]:
-        """Adopt the plan `plan` published for `want`, heard as planning publishes it. The
-        intentions graph where anything was committed."""
+    def adopt(self, plan: str, want: str, *, desire: str | None = None) -> list[str]:
+        """Adopt the plan `plan` published for `want`, heard as planning publishes it, with the
+        `desire` the want was derived under where it says one. The intentions graph where anything
+        was committed."""
+        if desire is not None:
+            self._desires[want] = desire
         return [self.graph] if self.commit(self.beliefs, plan, want) is not None else []
 
     def end_for(self, want: str, outcome: str) -> list[str]:
@@ -337,8 +344,6 @@ class Executor:
             self.resolve(held.uri, "superseded")
         intention = self._adopt(source, graph, want)
         if intention is not None:
-            if metrics.recording() and (desire := reported.derived_from(source, want)) is not None:
-                self._desires[want] = desire
             self.wake()
         return intention
 
@@ -423,7 +428,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 <{OUTCOME}> "{outcome}" . }} }}""")
         log.info("%s: %s — %s", self.id, intention.rsplit("#", 1)[-1], outcome)
         want = next(iter(rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))), {})
-        self.intention_resolved.emit(intention=intention, want=want.get("want"), outcome=outcome)
+        self.intention_resolved.emit(IntentionResolved(intention, want.get("want"), outcome,
+                                                       desire=self._desires.get(want.get("want"))))
         if outcome not in ("done", "reached"):
             #  NOTHING HANGS BELOW WHAT ENDED UNDONE: an intention walking the want one of this
             #  intention's steps is kept below by is abandoned with it.
@@ -474,21 +480,19 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             if now < lands:
                 wake_at(lands)
             elif self._answered(r["predicts"]):
-                self._history(intention, step, now, landed=True)
-                self._landing_event(intention, step, r, now, timed_out=False)
+                self._verdict(intention, step, r, now, landed=True)
                 self._advance(intention, step)
             elif None in below:
                 continue                        # kept below: a plan for it stands, and waits on no clock
             elif below and "done" not in below:
                 log.warning("%s: %s could not be kept below — %s fails", self.id, local_of(step),
                             intention.rsplit("#", 1)[-1])
-                self._history(intention, step, now, landed=False)
+                self._verdict(intention, step, r, now, landed=False)
                 self.resolve(intention, "failed")
             elif now >= lands + timedelta(seconds=self.patience_s):
                 log.warning("%s: the world did not answer %s by %s — %s fails",
                             self.id, local_of(step), lands.isoformat(), intention.rsplit("#", 1)[-1])
-                self._history(intention, step, now, landed=False)
-                self._landing_event(intention, step, r, now, timed_out=True)
+                self._verdict(intention, step, r, now, landed=False, timed_out=True)
                 self.resolve(intention, "failed")
             else:
                 wake_at(lands + timedelta(seconds=self.patience_s))
@@ -546,6 +550,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             else:
                 idle += 1
             now = clock.now()
+        if self.walked.connected:
+            self.walked.emit(Walked(standing=len(self.walking())))
         return taken
 
     # --- executing: one pass ----------------------------------------------------------------------
@@ -592,7 +598,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         if refined is not None:
             #  KEPT BELOW: the act says which want, and the step waits on it and not on the clock.
             update(self.intentions, f"INSERT DATA {{ GRAPH <{self.graph}> {{ <{act}> <{EXECUTION}refinedBy> <{refined}> }} }}")
-        self._history(intention, step, taken_at, taken=taken)
+        if self.step_taken.connected:
+            self.step_taken.emit(StepTaken(step, taken_at, taken=taken, **self._about(intention, step)))
         #  THE INTENTION MOVES BEFORE THE STEP LEAVES FLIGHT: a tick between the two would
         #  find the old head and hand it over twice. A step that predicts something does not
         #  move here at all — the act on record is what the next tick reads, and the world's
@@ -626,29 +633,34 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             said[local_of(r["p"])] = r["o"]
         return said
 
-    def _history(self, intention: str, step: str, at: datetime, **fields) -> None:
-        """What happened to `step` at `at`, contributed to history where a sink is loaded: taken
-        when its act is recorded, landed or not at the verdict (`history.py`). Nothing is read to
-        build the point where no sink is."""
-        if (history := sink(HISTORY)) is None:
-            return
-        pursued = rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))
-        history.write([step_point(self.beliefs, self.step_of(step), pursued[0]["want"] if pursued else None,
-                                  at, fields)])
-
-    def _landing_event(self, intention: str, step: str, head: dict, now: datetime, *, timed_out: bool) -> None:
-        """How late the world answered `step` — `now`, when it was seen to, less the `landsAt` the
-        plan placed — or that the patience ran out on it, contributed to the metrics sink where
-        one is loaded. The verdict itself is history's; what metrics carries is the lateness, in
-        the agent's own seconds, since both instants are its timeline's and neither is read here."""
-        if not metrics.recording() or not head.get("lands"):
-            return
+    def _about(self, intention: str, step: str) -> dict:
+        """What an event about `step` of `intention` carries: the want the intention pursues, the
+        desire it was derived under, the action the step fills and the values it takes, by the local
+        name of each parameter — an IRI's local name, a literal's text."""
         pursued = rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))
         want = pursued[0]["want"] if pursued else None
-        action = self.step_of(step).get("fills")
-        reported.LANDING({"late_s": round((now - datetime.fromisoformat(head["lands"])).total_seconds(), 3),
-                          "timed_out": timed_out},
-                         action=local_of(action) if action else None, desire=self._desires.get(want))
+        said = self.step_of(step)
+        action, parameters = said.get("fills"), []
+        if action:
+            for r in rows(self.beliefs, _TAKES_Q, graphs_of(self.beliefs, ACTION), action=action):
+                parameter = local_of(r["takes"])
+                if parameter in said:
+                    value = said[parameter]
+                    parameters.append((parameter, local_of(value) if "://" in value else value))
+        return {"want": want, "desire": self._desires.get(want), "action": local_of(action) if action else None,
+                "parameters": tuple(parameters)}
+
+    def _verdict(self, intention: str, step: str, head: dict, now: datetime, *, landed: bool,
+                 timed_out: bool = False) -> None:
+        """Say the verdict on `step` at `now`, where anybody hears it: landed or not, and how late the
+        world answered it — `now`, when it was seen to, less the `landsAt` the plan placed — in the
+        agent's own seconds, since both instants are its timeline's."""
+        if not self.step_answered.connected:
+            return
+        late = (round((now - datetime.fromisoformat(head["lands"])).total_seconds(), 3)
+                if head.get("lands") and (landed or timed_out) else None)
+        self.step_answered.emit(StepAnswered(step, now, landed=landed, late_s=late, timed_out=timed_out,
+                                             **self._about(intention, step)))
 
     def say(self, said: dict, intention: str) -> None:
         """The default taking: the step's name, and what fills it, in the log."""

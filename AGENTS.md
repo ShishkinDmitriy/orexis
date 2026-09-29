@@ -711,23 +711,28 @@ it is a record wearing a bullet.
   heating from the climate and actuation domains; so `domains/sim/` says only what the world
   lacks, a system's model, starting reading and bounds, and the 0.1.0 stand-ins, told everything
   as environment like a board, went with the physics they duplicated (`simulation/`).
-- **A series is watched and never believed, and the package that decides a thing writes its
+- **A series is watched and never believed, and the package that decides a thing shapes its
   history** — the runtime handed the sink each observation graph and so decided history was
   observations; now it only loads a sink per purpose the environment names (`INFLUX_HISTORY_*`,
-  `INFLUX_METRICS_*`), sensing contributes an observation under its property's local name as
-  `received` writes it (#822), and execution a step taken and, where the world answers or does
-  not, landed or failed (#825). A contributor asks for the sink rather than being handed one, since
-  sensing's caller is the transport, which has no business carrying history. A store that refuses
+  `INFLUX_METRICS_*`), sensing shapes an observation's point under its property's local name
+  (#822), and execution a step taken and, where the world answers or does not, landed or failed
+  (#825), each on the event it says, which the history part hears and writes. A store that refuses
   is said in the log and costs the agent nothing.
-- **Metrics are the admins' instrumentation, so they are code and not model** — each package keeps
-  everything it reports in one `metrics.py`, its gauges and its events, and the runtime its own; a
-  document declaring them was ceremony nobody but the dashboards read, and adding a metric is
-  editing one module. A gauge still says which store it reads, since the imaginaria copy the
-  beliefs and a select run everywhere counted one silent probe per scope (#826, amended).
+- **Metrics are the admins' instrumentation, so they are code and not model** — a document
+  declaring them was ceremony nobody but the dashboards read (#826, amended); what a package
+  reports is marked on its own event classes, and a level is read by the one object holding its
+  store, since the imaginaria copy the beliefs and a read run everywhere counted one silent probe
+  per scope.
+- **Metrics and history are what events say, and no package imports either** — each package called
+  its metrics and wrote its history from its acts, the coupling the parts had just shed; a signal
+  carries an event its package declares, the class marks what is reported (`Tag`, `Value`, `Flag`,
+  `Level`) and an event that is history answers its point, and two parts hear every signal. Gauges
+  pulled per window, deltas totalled by metrics and a metrics table per event were each weighed and
+  refused (metrics-and-history-are-what-events-say).
 - **A metric is optional at every level and aggregated where it happens** — no sink, nothing is
-  timed or read; a world is monitored only where its deployment says `onboarding:monitored`, and an
+  made, timed or read; a world is monitored only where its deployment says `onboarding:monitored`, and an
   installation may serve metrics from no store; events are tallied in memory and written once a
-  minute of REAL time with every gauge sampled once, stamped by the wall and never by the agent's
+  minute of REAL time with every level as it last stood, stamped by the wall and never by the agent's
   clock, which a test ticks per read; `world`, `agent` and `desire` are tags, and a want's name is on
   no point, since it neither aggregates nor stays few.
 - **A process is the AGENT with the id it was told, never whatever carries that id** — the sensing
@@ -1267,7 +1272,7 @@ hand-rolled walk was once refused for exactly that reason. See
   `SUM(IF(?o = "failed", 1, 0))` over a row whose `?o` is unbound binds nothing for the WHOLE
   column, not nought for the row — coalesce first — while an `EXISTS` inside a projected aggregate
   is evaluated against the default graph, not the `GRAPH` block the rows came from; both measured
-  on a gauge's select (#826), and the greenhouse's test pins them. It is the
+  on a metric's select (#826), and the planner's cone read still counts OPTIONAL rows for it. It is the
   same family as the empty-result trap above, arriving through arithmetic and aggregation: measure an unfamiliar operation on a
   literal before building a column on it, and pin what you measured, so the day the engine grows
   the operation the guard says so.

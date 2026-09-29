@@ -1,6 +1,6 @@
-"""Belief's part: its deliberator, which says by its own `revised` which sources a pass revised; once
+"""Belief's part: its deliberator, which says by its own `revised` what a pass revised; once
 started, it revises every belief and every prediction written — hearing both kinds through the
-runtime — and reports its gauges."""
+runtime."""
 
 from __future__ import annotations
 
@@ -19,8 +19,8 @@ def test_its_part_revises_beliefs_and_predictions_as_they_are_written_and_says_s
     part = create(runtime)
     assert isinstance(part.deliberator, Deliberator)
     heard = []
-    part.deliberator.revised.connect(lambda graphs: heard.extend(graphs))
+    part.deliberator.revised.connect(lambda revised: heard.extend(revised.graphs))
     part.start(runtime)
-    assert [kind for kind, _ in runtime.heard] == [BELIEF, PREDICTION] and len(runtime.gauges) == 1
+    assert [kind for kind, _ in runtime.heard] == [BELIEF, PREDICTION]
     assert all(handler("urn:test:nothing") == [] for _, handler in runtime.heard)
     assert heard == ["urn:test:nothing", "urn:test:nothing"], "each pass says what it revised"
