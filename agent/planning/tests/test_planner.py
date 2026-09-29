@@ -27,7 +27,7 @@ from agent import clock
 from agent.execution.executor import Executor
 from agent.planning.ontology import PLAN_GRAPH, POSSIBLE_GRAPH
 from agent.planning.planner import Planner
-from agent.store import graphs_of, rows
+from agent.store import forget_graph, graphs_of, rows
 
 CASES_DIR = Path(__file__).parent / "plans"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -62,9 +62,28 @@ SELECT ?disk ?onto WHERE {
              FILTER(STRENDS(STR(?pd), "#disk") && STRENDS(STR(?po), "#onto")) } }"""
 
 
+class _Held:
+    """A planner and the executor it hands down to, meeting at the store as they do in a runtime: a
+    pass is the planner's, then the executor taking up what was handed down."""
+
+    def __init__(self, store, agent, **kw):
+        self.planner, self.executor = Planner(store, agent, **kw), Executor(store, agent)
+        self.imaginaria = self.planner.imaginaria
+
+    def plan(self, at):
+        self.planner.plan(at)
+        self.executor.commit_plans()
+
+    def standing(self, at):
+        return self.planner.standing(at)
+
+    def exhausted(self):
+        return self.planner.exhausted()
+
+
 def _two_disks(snapshots, held: bool):
     store = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
-    return store, Planner(store, snapshots.AGENT, executor=Executor(store, snapshots.AGENT) if held else None)
+    return store, (_Held(store, snapshots.AGENT) if held else Planner(store, snapshots.AGENT))
 
 
 def _worlds(planner) -> set[str]:
@@ -99,7 +118,7 @@ def test_a_pass_a_minute_later_hands_down_no_second_intention(monkeypatch, snaps
     monkeypatch.setattr(clock, "now", lambda: later)
     planner.plan(later)
     assert len(planner.executor.walking()) == 1, "the same commitment stands, and no second one beside it"
-    assert len(rows(planner.executor.intentions, "SELECT ?i WHERE { GRAPH ?g { ?i a execution:Intention } }")) == 1
+    assert len(rows(planner.executor.beliefs, "SELECT ?i WHERE { GRAPH ?g { ?i a execution:Intention } }")) == 1
     assert _worlds(planner) == imagined, "and nothing was forked for a want being walked"
 
 
@@ -124,11 +143,11 @@ def test_a_step_taken_as_predicted_is_planned_on_from_the_kept_cone(monkeypatch,
     store, planner = _two_disks(snapshots, held=True)
     planner.plan(snapshots.NOW)
     imagined = _worlds(planner)
-    (head,) = rows(planner.executor.intentions, _HEAD_Q, ())
+    (head,) = rows(planner.executor.beliefs, _HEAD_Q, ())
     _move(store, head["disk"].rsplit("#", 1)[-1], head["onto"])
     #  THE EXECUTOR ANSWERED: the step landed, so the commitment is resolved and the want is the
     #  search's again. (The keeper's door; a bare row here says the same thing.)
-    planner.executor.intentions.update("""INSERT { GRAPH ?g { ?i <http://example.org/orexis/execution#resolvedAt> "2026-01-01T12:00:30Z" } }
+    planner.executor.beliefs.update("""INSERT { GRAPH ?g { ?i <http://example.org/orexis/execution#resolvedAt> "2026-01-01T12:00:30Z" } }
                                  WHERE { GRAPH ?g { ?i a <http://example.org/orexis/execution#Intention> } }""")
     later = timedelta(minutes=1) + snapshots.NOW
     monkeypatch.setattr(clock, "now", lambda: later)
@@ -144,6 +163,10 @@ def test_a_surprise_starts_the_search_afresh(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store, planner = _two_disks(snapshots, held=False)
     planner.plan(snapshots.NOW)
+    #  NOBODY TOOK THE PLAN UP: with no executor the plan handed down would read as walked for ever,
+    #  and a want walked is not searched again.
+    for handed in graphs_of(store, "http://example.org/orexis/execution#PlanGraph"):
+        forget_graph(store, handed)
     (im,) = planner.imaginaria.values()
     before = set(graphs_of(im, POSSIBLE_GRAPH))
     (a_disk,) = rows(store, 'SELECT ?d WHERE { GRAPH ?g { ?d ?p ?o } FILTER(STRENDS(STR(?d), "disk_1") && STRENDS(STR(?p), "#on")) }')
@@ -207,7 +230,7 @@ def test_a_search_the_budget_cuts_short_is_finished_by_the_passes_after(monkeypa
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     whole, _ = _weighed(snapshots.stand_in(BENCH / "three_disk_hanoi.trig"), 128, estimate=True, snapshots=snapshots)
     store = snapshots.stand_in(BENCH / "three_disk_hanoi.trig")
-    planner = Planner(store, snapshots.AGENT, executor=Executor(store, snapshots.AGENT), budget=20)
+    planner = _Held(store, snapshots.AGENT, budget=20)
     passes = []
     for i in range(3):
         at = snapshots.NOW + timedelta(minutes=i)
@@ -225,7 +248,7 @@ def test_standing_and_exhausted_are_what_a_runtime_asks_after_a_pass(monkeypatch
     cut short from a want nothing reaches by `exhausted`; both are the Planner's to answer,
     since the wants stand in its imaginaria and the outcomes on its plans."""
     store = snapshots.stand_in(BENCH / "three_disk_hanoi.trig")
-    planner = Planner(store, snapshots.AGENT, executor=Executor(store, snapshots.AGENT), budget=20)
+    planner = _Held(store, snapshots.AGENT, budget=20)
     for i in range(3):
         at = snapshots.NOW + timedelta(minutes=i)
         monkeypatch.setattr(clock, "now", lambda at=at: at)
@@ -255,7 +278,7 @@ def test_a_candidate_a_cut_left_untaken_is_taken_by_the_next_pass(monkeypatch, s
     whole, steps = _weighed(snapshots.stand_in(BENCH / "courier_corner.trig"), 128, estimate=True, snapshots=snapshots)
     assert steps == 8
     store = snapshots.stand_in(BENCH / "courier_corner.trig")
-    planner = Planner(store, snapshots.AGENT, executor=Executor(store, snapshots.AGENT), budget=16)
+    planner = _Held(store, snapshots.AGENT, budget=16)
     outcomes = []
     for i in range(8):
         at = snapshots.NOW + timedelta(minutes=i)

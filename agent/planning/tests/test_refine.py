@@ -66,7 +66,7 @@ def test_a_step_whose_fact_a_rule_concludes_is_a_want_below():
     want = refine(store, ME, STEP, [[_iri(T + "d"), T + "on", _iri(T + "pegB")]], NOW,
                   retracts=[[_iri(T + "d"), T + "on", _iri(T + "pegA")]])
     assert want == STEP + ".below"
-    (row,) = rows(store, "SELECT ?step WHERE { ?w planning:refines ?step }", graphs_of(store, WANT))
+    (row,) = rows(store, "SELECT ?step WHERE { ?step execution:keptBy ?w }", graphs_of(store, WANT))
     assert row["step"] == STEP
     assert not _met(store, want, T + "state"), "the disk still stands on A's cell"
 

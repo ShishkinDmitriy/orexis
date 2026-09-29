@@ -32,9 +32,9 @@ a caller, and a graph's NAME is for eyes: code relies on its row alone.
 
 # What lives beside it
 
-Two more stores, each the runtime's to hold: the [imaginaria](/domain/planning/imaginarium.md), one
-per scope, and the executor's intentions store, where every [intention](/domain/execution/intention.md)
-and its acts are — made in memory by the runtime. A gauge says which of the three it reads.
+One more kind of store, the runtime's to hold: the [imaginaria](/domain/planning/imaginarium.md), one
+per scope. Every [intention](/domain/execution/intention.md) and its acts are a graph of the belief base
+itself, the agent's own and not public, so the volume keeps them. A gauge says which store it reads.
 
 Each reading, and each step taken and how it ended, also goes to the agent's history bucket as a
 series point, for the panels to draw, and where the world is monitored a minute's metrics go to

@@ -74,7 +74,7 @@ reports no silence. Where no metrics sink is loaded nothing is tallied, timed or
 |---|---|---|
 | the runtime | `store` (`quads`) and `process` (`uptime_s`) | `pass`, each pass: `duration_s` and each part's seconds; `unreachable`, a want nothing reaches: `desire` |
 | planning | `plans` (by outcome) and `cone` (worlds, weighings, open, met), over the [imaginaria](/domain/planning/imaginarium.md) | `planner`, each pass: each part's seconds and the wants searched; `search`, each want each pass: `duration_s`, `budget`, `weighed`; `desire`, `scope`, `outcome`; `adopted`, a plan committed: `passes`, `weighed`, `wall_s`, `estimate`, `cost`; `replan`; `desire`, `scope`; `reroot`, each scope each pass: `kept`, `dropped`; `present` |
-| execution | `intentions` (standing and by outcome) and `acts` (taken, not taken), over the intentions store | `landing`, a verdict on a step: `late_s`; `timed_out`; `action`, `desire` |
+| execution | `intentions` (standing and by outcome) and `acts` (taken, not taken), over the intentions | `landing`, a verdict on a step: `late_s`; `timed_out`; `action`, `desire` |
 | sensing | `silence` (`silent`), over the belief base | `received`, a reading replacing one: `interval_s`, `cadence_s`; `sensor` |
 | belief | `revisions` (`revisions`, `unsettled`), over the belief base | `revise`, a revision pass: `sources`, `executions`, `cut`, `duration_s` |
 

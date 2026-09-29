@@ -94,7 +94,7 @@ def desire_of(store: ox.Store, want: str) -> str | None:
 
 
 def pursued_by(intentions: ox.Store, intention: str) -> str | None:
-    """The want `intention` pursues, off the intentions store, or None."""
+    """The want `intention` — or a plan handed down — pursues, off the belief base, or None."""
     found = rows(intentions, _PURSUES_Q, (), intention=intention)
     return found[0]["want"] if found else None
 
@@ -111,15 +111,15 @@ def report_search(store: ox.Store, want: str, *, took: float, budget: int, weigh
 
 def report_adoption(store: ox.Store, intentions: ox.Store, want: str, *, first: float | None, passes: int,
                     weighed: int, present: str, scope: str) -> None:
-    """Say a plan the executor adopted for `want` from `store`: in how many passes it was searched
+    """Say a plan handed down for `want` from `store`: in how many passes it was searched
     and what they weighed, the real seconds since `first` — its first search, on `perf_counter` —
     what the want's estimate said was left at the `present` ground against what the plan spent, and
-    whether an intention pursued the want before, a replan."""
+    whether an intention pursued the want before, a replan — `intentions` being where execution's rows are."""
     plan = next(iter(rows(store, _PLAN_OF_Q, (), want=want)), {})
     root = next(iter(rows(store, _ESTIMATE_Q, (), want=want, ground=present,
                           cat=Raw(f"<{catalogue_of(store)}>"))), {})
     pursued = int(rows(intentions, _PURSUERS_Q, (), want=want)[0]["n"])
-    fields = {"passes": passes, "weighed": weighed, "replan": pursued > 1}
+    fields = {"passes": passes, "weighed": weighed, "replan": pursued > 0}
     if first is not None:
         fields["wall_s"] = round(time.perf_counter() - first, 6)
     if plan.get("spent") is not None:

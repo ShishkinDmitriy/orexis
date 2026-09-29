@@ -1,9 +1,12 @@
 """The executor: the intentions this agent is committed to, and the two threads that carry
 a commitment out.
 
-**IT OWNS THE INTENTIONS STORE, AND NOTHING ELSE WRITES THEM.** A plan found above is handed
-to `commit` — the planner's crossing hands every plan of a pass here — and from that moment
-it is the executor's: any plan among the intentions is scheduled, and every adoption wakes
+**IT OWNS THE INTENTIONS, AND NOTHING ELSE WRITES THEM.** They are a graph of the belief base, of
+its own kind (`execution:IntentionGraph`), the agent's and not public, so a restart on a lived-in
+volume finds them (#842) and planning reads what is walked there, by pattern. A plan found above
+is HANDED DOWN through the store — planning writes it into the beliefs as an
+`execution:PlanGraph` — and `commit_plans` takes each up and commits it; neither side calls the
+other (a-package-starts-itself). From that moment it is the executor's: any plan among the intentions is scheduled, and every adoption wakes
 the timekeeper. The intentions are rows — an intention adopted
 at an instant, standing at a step, resolved at another instant with an outcome — and every act
 here is a read of those rows and a write of a few more, so a restart finds the intentions where they
@@ -65,7 +68,8 @@ from agent import clock, metrics
 from agent.hash_named_graph import facts_of
 from agent.ontology import OREXIS, STATE, local_of
 from agent.series import HISTORY, sink
-from agent.store import Raw, add_quads, bind, revisions_of, graphs_of, instant, quads, rows, update
+from agent.store import (Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
+                         revisions_of, rows, update)
 
 from . import metrics as reported
 from .history import step_point
@@ -77,6 +81,8 @@ log = logging.getLogger("executor")
 DEFAULT_PATIENCE_S = 60.0
 
 INTENTION = EXECUTION + "Intention"
+INTENTION_GRAPH = EXECUTION + "IntentionGraph"
+RECORDED = OREXIS + "Recorded"
 #  The head a standing intention is AT — not the whole plan, which `execution:step` names, and
 #  not the first step for ever: what `by` points at moves as the world answers each step.
 BY = EXECUTION + "by"
@@ -125,17 +131,28 @@ ORDER BY ?adopted"""
 #  plan says, at once where it says nothing — whether it has been taken (an act saying so), and
 #  where it has, what it predicted and when that should show.
 _HEADS_Q = """
-SELECT ?intention ?step ?due ?act ?taken ?lands ?predicts WHERE {
+SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?predicts WHERE {
   GRAPH $intentions {
     ?intention a execution:Intention ; execution:by ?step .
     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
     OPTIONAL { ?step execution:notBefore ?due }
+    OPTIONAL { ?step execution:keptBelow ?kept }
     OPTIONAL { ?act execution:of ?step ; execution:taken true ; execution:takenAt ?taken }
     OPTIONAL { ?step execution:landsAt ?lands }
     OPTIONAL { ?step execution:predicts ?predicts } } }
 ORDER BY ?due ?intention"""
 
 _PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH $intentions { $step execution:predicts ?predicts } }"""
+
+#  WHETHER THE INTENTIONS GRAPH IS CLASSIFIED YET, and every plan handed down with its want.
+_CLASSIFIED_Q = """SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph a ?k } } LIMIT 1"""
+_PLANS_Q = """
+SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a execution:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want } }
+ORDER BY ?plan"""
+
+#  THE WANT THAT KEEPS A STEP BELOW, wherever planning wrote it, and the agent a store is told of.
+_KEPT_BY_Q = """SELECT ?want WHERE { GRAPH ?g { $step execution:keptBy ?want } } LIMIT 1"""
+_ME_Q = """SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id } LIMIT 1"""
 
 _PURSUES_Q = """SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }"""
 
@@ -218,17 +235,17 @@ class Standing:
 class Executor:
     """One agent's intentions, and what carries them out.
 
-    Handed the beliefs engine and the one identifier a process is told. The intentions store is
-    its own — made here where none is handed in, since this layer owns it — and `intentions` is
-    how a planner is told where a plan goes. It holds no beliefs of its own: the patience is a
+    Handed the beliefs engine and the one identifier a process is told. The intentions are a graph
+    of the belief base unless another store is handed in, as a case may; a plan arrives through
+    the beliefs, never through a call. It holds no beliefs of its own: the patience is a
     PICK, read off the beliefs store where the agent's picks are, because how stubborn to be is
     the agent's own belief and not the executor's constant.
     """
 
     def __init__(self, beliefs: ox.Store, agent_id: str, intentions: ox.Store | None = None,
                  holder: str | None = None, *, take=None, fictive: bool = False,
-                 poll_s: float = POLL_S, refine=None, on_write=None):
-        self.intentions = intentions if intentions is not None else ox.Store()
+                 poll_s: float = POLL_S, on_write=None):
+        self.intentions = intentions if intentions is not None else beliefs
         self.beliefs = beliefs
         self.id = agent_id
         self.holder = holder
@@ -236,12 +253,10 @@ class Executor:
         self.take = take if take is not None else self.say
         self.all_fictive = fictive
         self.poll_s = poll_s
-        #  THE LEVEL BENEATH, asked before a step is taken: `refine(said, intention)` answers the
-        #  want that keeps the step below, or None — the container hands the Planner's. And
-        #  `on_write(graph)`, told of every graph the executor writes as the world, so what the
-        #  rules conclude of it is concluded.
-        self.refine = refine
+        #  `on_write(graph)`, told of every graph the executor writes as the world, so what the rules
+        #  conclude of it is concluded.
         self.on_write = on_write
+
         #  TELEMETRY AND NOT A ROW: the desire each adopted plan's want was derived under, read
         #  off the store the plan came from where a metrics sink is loaded, so a landing can be
         #  told by desire. The intentions keep commitments, not the reasoning behind them.
@@ -254,6 +269,17 @@ class Executor:
         self._stopped = False
 
     # --- committing ---------------------------------------------------------------------------
+
+    def commit_plans(self) -> list[str]:
+        """Take up every plan handed down — an `execution:PlanGraph` in the beliefs, its root
+        saying the want it pursues — commit it, and forget the graph. The intentions graph where
+        anything was committed, for whoever hears what was written."""
+        committed = False
+        cat = Raw(f"<{catalogue_of(self.beliefs)}>")
+        for r in rows(self.beliefs, _PLANS_Q, (), cat=cat):
+            committed = self.commit(self.beliefs, r["plan"], r["want"]) is not None or committed
+            forget_graph(self.beliefs, r["plan"])
+        return [self.graph] if committed else []
 
     def commit(self, source: ox.Store, graph: str, want: str) -> str | None:
         """Copy a found plan into the intentions — unless one for this want is already standing
@@ -312,6 +338,10 @@ class Executor:
         held = {s for s in steps if next(self.intentions.quads_for_pattern(ox.NamedNode(s), None, None, node), None)}
         own_name = {s: ox.NamedNode(f"{s}.{tag}" if s in held else s) for s in steps}
         renamed = lambda t: own_name.get(t.value, t) if isinstance(t, ox.NamedNode) else t
+        #  THE INTENTIONS ARE A GRAPH OF THE AGENT'S OWN, classified when first kept, so a lived-in
+        #  volume keeps them and a reader asks for them by kind.
+        if catalogue_of(self.intentions) is not None and not rows(self.intentions, _CLASSIFIED_Q, (), graph=self.graph):
+            update(self.intentions, f"INSERT DATA {{ {entry(self.intentions, self.graph, INTENTION_GRAPH, RECORDED, self.holder or _me_of(self.beliefs, self.id))} }}")
         add_quads(self.intentions, (ox.Quad(renamed(q.subject), q.predicate, renamed(q.object), node)
                                     for q in quads(source, graph)))
         intention = ox.NamedNode(f"{OREXIS}intention_{self.id}_{tag}")
@@ -394,6 +424,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 continue
             if r.get("act") is None:
                 when = datetime.fromisoformat(r["due"]) if r.get("due") else None
+                if (when is None or when <= now) and r.get("kept") and not self._kept_by(step):
+                    continue                    # kept below: the want that keeps it is planning's to mint
                 if when is None or when <= now:
                     self._inflight.add(step)
                     self._work.put((intention, step))
@@ -497,11 +529,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             #  a dose predicts the soil inside its range, which sensing's rules conclude, and is
             #  still a command; only a step that would be taken fictively is asked whether a
             #  level beneath keeps it, and is fictive where none does.
-            taker = self._taker_for(step)
-            if taker == self.fictive and self.refine is not None:
-                refined = self.refine(said, intention)
+            refined = self._kept_by(step)
             if refined is None:
-                taker(said, intention)
+                self._taker_for(step)(said, intention)
             taken = True
         except Exception as exc:                                        # noqa: BLE001
             log.error("%s: step %s could not be taken: %s", self.id, local_of(step), exc)
@@ -525,6 +555,11 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             self._advance(intention, step)
         self._inflight.discard(step)
         self.wake()
+
+    def _kept_by(self, step: str) -> str | None:
+        """The want that keeps `step` one level down, where planning has minted one, or None."""
+        found = rows(self.beliefs, _KEPT_BY_Q, (), step=step)
+        return found[0]["want"] if found else None
 
     def _taker_for(self, step: str):
         """Who takes this step: the fictive taker where the step's action is fictive, or the
@@ -676,3 +711,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def __len__(self) -> int:
         return len(self.standing())
+
+
+def _me_of(beliefs: ox.Store, agent_id: str) -> str | None:
+    """The agent a belief base holds with the id it was told, off public knowledge, or None."""
+    found = rows(beliefs, _ME_Q, graphs_of(beliefs, OREXIS + "PublicGraph"), id=ox.Literal(agent_id))
+    return found[0]["me"] if found else None

@@ -1,7 +1,7 @@
 """A plan found by the planner is carried out by the executor, and the world moves it.
 
-The two layers meet here, above both: the planner hands its plan down to the executor's
-store, the executor takes the head step, and only the belief base saying what the step
+The two layers meet here, above both, and at the store: the planner hands its plan down into the
+belief base, the executor takes it up and takes the head step, and only the belief base saying what the step
 predicted — the disk on the peg the plan said — moves the intention to the next step. A
 world that does what the plan said walks the intention to `done`; a world that does not
 fails it. Two disks, three moves, the case the bench runs.
@@ -42,7 +42,8 @@ def _planned(snapshots, monkeypatch, **kw):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     beliefs = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
     executor = Executor(beliefs, snapshots.AGENT, **kw)
-    Planner(beliefs, snapshots.AGENT, executor=executor).plan(snapshots.NOW)
+    Planner(beliefs, snapshots.AGENT).plan(snapshots.NOW)
+    executor.commit_plans()                     # the plan handed down, taken up
     assert len(executor.walking()) == 1
     return beliefs, executor
 
@@ -70,7 +71,8 @@ def test_a_fictive_action_is_walked_by_a_plain_executor(monkeypatch, snapshots):
                    "<http://example.org/orexis/execution#operation> [ a <http://example.org/orexis/execution#Fictive> ] ] } } "
                    "WHERE { GRAPH ?g { ?a a <http://example.org/orexis#Action> } }")
     x = Executor(beliefs, snapshots.AGENT)
-    Planner(beliefs, snapshots.AGENT, executor=x).plan(snapshots.NOW)
+    Planner(beliefs, snapshots.AGENT).plan(snapshots.NOW)
+    x.commit_plans()
     for _ in range(3):
         assert x.tick(snapshots.NOW) and x.drain() == 1
         x.tick(snapshots.NOW)
@@ -98,3 +100,29 @@ def test_a_world_that_does_not_move_fails_the_intention_after_the_patience(monke
     assert x.walking() == []
     (outcome,) = rows(x.intentions, "SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }", ())
     assert outcome["o"] == "failed"
+
+
+def test_an_agent_restarted_mid_plan_finds_its_intention_where_it_stood(tmp_path, monkeypatch, snapshots):
+    """The intentions are a graph of the belief base, the agent's own (#842): a plan committed and
+    its head not yet taken, the process gone, and Hanoi booted again on the same volume — the
+    intention stands at the same step, and the executor would take it from there."""
+    import gc
+
+    from agent.runtime import boot
+
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    world, volume = Path(__file__).resolve().parents[2] / "world" / "hanoi", str(tmp_path / "volume")
+    beliefs = boot(world, "hanoi", ox.Store(volume))
+    Planner(beliefs, "hanoi", budget=256).plan(snapshots.NOW)
+    before = [(s.want, s.at) for s in _committed(beliefs)]
+    assert len(before) == 1, "one plan, committed, its head not taken"
+    del beliefs
+    gc.collect()
+    again = boot(world, "hanoi", ox.Store(volume))
+    assert [(s.want, s.at) for s in Executor(again, "hanoi").standing()] == before
+
+
+def _committed(beliefs):
+    x = Executor(beliefs, "hanoi")
+    x.commit_plans()
+    return x.standing()

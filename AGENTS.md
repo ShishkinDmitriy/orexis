@@ -948,6 +948,12 @@ it is a record wearing a bullet.
   hears and timers it asks for, one thread runs every job, and packages meet at the store and call
   no one (a-package-starts-itself).
 
+- **Planning and execution meet at the store, and the intentions are the belief base's** — the
+  Planner held the executor and the executor the Planner's refine; a plan goes down as an
+  `execution:PlanGraph`, what is walked is read off the intentions by pattern, a step a bridge
+  keeps below is marked at hand-off and answered by `execution:keptBy`, and the intentions, a
+  graph of the belief base, survive a restart (planning-and-execution-meet-at-the-store).
+
 ## The rules the code lives by
 
 1. **Code may reference T-Box terms; never an instance.** `planning:Desire` is fine;

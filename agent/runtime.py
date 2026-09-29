@@ -72,7 +72,7 @@ history was — observations only (a-documents-kind-says-who-reads-it, §5).
 Where a metrics sink is loaded, a package tallies its events as its acts happen, and once a window
 — real time, sixty seconds unless the environment says — the runtime samples every gauge of what it
 loads, each over the store its package reads: the belief base for belief and sensing, the
-imaginaria for planning (through the Planner), the intentions store for execution. It holds the
+imaginaria for planning (through the Planner), the belief base's intentions graph for execution. It holds the
 stores, so it hands them over; what each figure IS is the package's `metrics.py`. Its own are
 below: the pass, the store's size, the process's uptime, and a want nothing reaches. The last
 window is written as the process stops.
@@ -419,12 +419,11 @@ class Runtime:
         self.now = None                                   # the instant the pass stands at, for a job to read
         self.started: list[str] = []
         self.executor = Executor(beliefs, agent_id, intentions, take=self._take)
-        self.planner = Planner(beliefs, agent_id, executor=self.executor, **({"budget": budget} if budget else {}))
+        self.planner = Planner(beliefs, agent_id, **({"budget": budget} if budget else {}))
         self.deliberator = Deliberator(beliefs, agent_id)
-        #  A STEP KEPT BELOW, AND THE WORLD THE EXECUTOR MOVES: before a step is taken the Planner
-        #  says whether a rule keeps it one level down, and what the executor writes as the world
-        #  is revised, so a fact the rules conclude of it — what a disk is on — moves with it.
-        self.executor.refine = self.planner.refine
+        #  THE WORLD THE EXECUTOR MOVES is revised, so a fact the rules conclude of it — what a disk
+        #  is on — moves with it. The planner and the executor call each other nowhere: a plan goes
+        #  down, and a want that keeps a step below, through the belief base.
         self.executor.on_write = lambda graph: self._revise([graph], clock.now())
         #  AND WHAT THE WORLD AUTHORED: its state, revised once, so a fact concluded from where
         #  things stand is believed from the first pass and not only after something moves.
@@ -598,6 +597,7 @@ class Runtime:
         and whether to wait the poll before the next."""
         self.drain(now)
         self.planner.plan(now)
+        self.executor.commit_plans()                    # the plans handed down, taken up
         standing, walking = self.planner.standing(now), self.executor.walking()
         self._lap("plan")
         #  WHAT KEEPS AN AGENT RUNNING: a desire, which asks at every instant, or a transport,

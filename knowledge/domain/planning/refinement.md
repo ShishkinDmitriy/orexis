@@ -24,8 +24,8 @@ does, and the step is not the level's to take:
 2. **Each fact is regressed.** Its bridge's head is bound to the fact, and the bridge's WHERE,
    bound, is one way below to have it; where two bridges could conclude it, the ways are a
    UNION. The met-test is unmet while any fact has no way that holds.
-3. **The want is the agent's own** — `planning:refines` the step, in a graph that arrived
-   `orexis:Recorded` — and is placed in the [scope](/domain/planning/scope.md) of what its met-test
+3. **The want is the agent's own**, in a graph that arrived `orexis:Recorded`, beside
+   `<step> execution:keptBy <want>` in execution's words, since the executor reads it — and is placed in the [scope](/domain/planning/scope.md) of what its met-test
    reads, planned there like any want, and walked by an intention of its own.
 4. **The step waits on that intention**, recorded by `execution:refinedBy` on the act: while it
    stands, patience does not run. When it is done, the bridge concludes the step's fact of the
@@ -35,6 +35,9 @@ does, and the step is not the level's to take:
 5. **The want goes with its step.** Once no intention stands at the step it refines, the
    Planner forgets it, and what each imaginarium searched for it.
 
+Which steps may be kept below is said when the plan is handed down: a step taken fictively whose
+predicted fact a bridge's head binds is `execution:keptBelow`, and the executor waits for its want
+rather than take it ([planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 The whole plan above is found first, in the upper vocabulary alone, and each step is refined
 only when its turn comes — from wherever the van then stands, not where it stood when the
 puzzle was solved.

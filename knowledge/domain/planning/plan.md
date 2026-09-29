@@ -31,7 +31,8 @@ world it is taken in). `planning:spent` is what the path cost.
 
 # What happens to it
 
-`publish_plan` hands every plan of a pass to the [executor](/domain/execution/executor.md), which
-commits it as an [intention](/domain/execution/intention.md) — unless an intention already walks
-that want, or the want has gone. The plan graph stays in the imaginarium while the search's worlds
+`publish_plan` hands every plan of a pass down into the belief base as an `execution:PlanGraph`,
+which the [executor](/domain/execution/executor.md) takes up and commits as an
+[intention](/domain/execution/intention.md) — unless an intention, or a plan handed down, already
+walks that want, or the want has gone. The plan graph stays in the imaginarium while the search's worlds
 do.
