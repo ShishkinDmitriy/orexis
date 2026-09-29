@@ -4,9 +4,10 @@ a commitment out.
 **IT OWNS THE INTENTIONS, AND NOTHING ELSE WRITES THEM.** They are a graph of the belief base, of
 its own kind (`execution:IntentionGraph`), the agent's and not public, so a restart on a lived-in
 volume finds them (#842) and planning reads what is walked there, by pattern. A plan found above
-is HANDED DOWN through the store — planning writes it into the beliefs as an
-`execution:PlanGraph` — and `commit_plans` takes each up and commits it; neither side calls the
-other (a-package-starts-itself). From that moment it is the executor's: any plan among the intentions is scheduled, and every adoption wakes
+is PUBLISHED into the store — planning writes it into the beliefs once, as an `orexis:PlanGraph`
+it owns — and the executor adopts it BY REFERENCE, an intention that `execution:adopts` it and
+holds only its own rows; neither side calls the other (planning-and-execution-meet-at-the-store).
+From that moment the commitment is the executor's: any plan among the intentions is scheduled, and every adoption wakes
 the timekeeper. The intentions are rows — an intention adopted
 at an instant, standing at a step, resolved at another instant with an outcome — and every act
 here is a read of those rows and a write of a few more, so a restart finds the intentions where they
@@ -68,7 +69,7 @@ from agent import clock, metrics
 from agent.hash_named_graph import facts_of
 from agent.ontology import OREXIS, STATE, local_of
 from agent.series import HISTORY, sink
-from agent.store import (Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
+from agent.store import (Raw, add_quads, bind, catalogue_of, entry, graphs_of, instant, quads,
                          revisions_of, rows, update)
 
 from . import metrics as reported
@@ -81,6 +82,7 @@ log = logging.getLogger("executor")
 DEFAULT_PATIENCE_S = 60.0
 
 INTENTION = EXECUTION + "Intention"
+ADOPTS = EXECUTION + "adopts"
 INTENTION_GRAPH = EXECUTION + "IntentionGraph"
 RECORDED = OREXIS + "Recorded"
 #  The head a standing intention is AT — not the whole plan, which `execution:step` names, and
@@ -133,21 +135,22 @@ ORDER BY ?adopted"""
 _HEADS_Q = """
 SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?predicts WHERE {
   GRAPH $intentions {
-    ?intention a execution:Intention ; execution:by ?step .
+    ?intention a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
-    OPTIONAL { ?step execution:notBefore ?due }
-    OPTIONAL { ?step execution:keptBelow ?kept }
-    OPTIONAL { ?act execution:of ?step ; execution:taken true ; execution:takenAt ?taken }
-    OPTIONAL { ?step execution:landsAt ?lands }
-    OPTIONAL { ?step execution:predicts ?predicts } } }
+    OPTIONAL { ?act execution:of ?step ; execution:taken true ; execution:takenAt ?taken } }
+  OPTIONAL { GRAPH ?plan { ?step execution:notBefore ?due } }
+  OPTIONAL { GRAPH ?plan { ?step execution:keptBelow ?kept } }
+  OPTIONAL { GRAPH ?plan { ?step execution:landsAt ?lands } }
+  OPTIONAL { GRAPH ?plan { ?step execution:predicts ?predicts } } }
 ORDER BY ?due ?intention"""
 
-_PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH $intentions { $step execution:predicts ?predicts } }"""
+_PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH ?plan { $step execution:predicts ?predicts } } LIMIT 1"""
 
 #  WHETHER THE INTENTIONS GRAPH IS CLASSIFIED YET, and every plan handed down with its want.
 _CLASSIFIED_Q = """SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph a ?k } } LIMIT 1"""
 _PLANS_Q = """
-SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a execution:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want } }
+SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
+  FILTER NOT EXISTS { GRAPH ?g { ?i execution:adopts ?plan } } }
 ORDER BY ?plan"""
 
 #  EVERY INTENTION ONE OF WHOSE STEPS HAS BEEN TAKEN.
@@ -180,10 +183,10 @@ SELECT DISTINCT ?below WHERE { GRAPH $intentions {
 #  the layer above's and the package's to spell, and this layer repeats them without reading.
 _STEP_Q = """
 SELECT ?p ?o WHERE {
-  GRAPH $intentions { $step ?p ?o . FILTER(!STRSTARTS(STR(?p), STR(execution:)) && ?p != rdf:type) } }
+  GRAPH ?plan { $step ?p ?o . FILTER(!STRSTARTS(STR(?p), STR(execution:)) && ?p != rdf:type) } }
 ORDER BY ?p"""
 
-_NEXT_Q = """SELECT ?next WHERE { GRAPH $intentions { $step execution:then ?next } }"""
+_NEXT_Q = """SELECT ?next WHERE { GRAPH ?plan { $step execution:then ?next } } LIMIT 1"""
 
 #  THE RECORD THAT A STEP WAS TAKEN — history, and only history.
 _ACT_U = """
@@ -277,22 +280,19 @@ class Executor:
     # --- committing ---------------------------------------------------------------------------
 
     def commit_plans(self) -> list[str]:
-        """Take up every plan handed down — an `execution:PlanGraph` in the beliefs, its root
-        saying the want it pursues — commit it, and forget the graph. The intentions graph where
-        anything was committed, for whoever hears what was written."""
+        """Adopt every plan published and adopted by no intention yet — an `orexis:PlanGraph` in the
+        beliefs, its root saying the want it pursues — as a caller with no runtime to hear the
+        publishing would. The intentions graph where anything was committed."""
         committed = False
         cat = Raw(f"<{catalogue_of(self.beliefs)}>")
         for r in rows(self.beliefs, _PLANS_Q, (), cat=cat):
             committed = self.commit(self.beliefs, r["plan"], r["want"]) is not None or committed
-            forget_graph(self.beliefs, r["plan"])
         return [self.graph] if committed else []
 
     def adopt(self, plan: str, want: str) -> list[str]:
         """Adopt the plan `plan` published for `want`, as `commit_plans` takes one up. The
         intentions graph where anything was committed."""
-        committed = self.commit(self.beliefs, plan, want) is not None
-        forget_graph(self.beliefs, plan)
-        return [self.graph] if committed else []
+        return [self.graph] if self.commit(self.beliefs, plan, want) is not None else []
 
     def end_for(self, want: str, outcome: str) -> list[str]:
         """End every standing intention pursuing `want` that has taken no step yet, with `outcome` —
@@ -338,18 +338,18 @@ class Executor:
         return intention
 
     def _adopt(self, source: ox.Store, graph: str, want: str) -> str | None:
-        """Copy the plan in `graph` of `source` into the intentions. The intention, or None.
+        """Adopt the plan in `graph` as an intention. The intention, or None.
 
-        None for an empty plan, which is an answer and not a commitment: the search reached
-        the want's met state in no steps, so there is nothing to carry out and nothing to
-        stand. The intention is adopted at the clock's instant, stands at the plan's HEAD and
-        names the want it pursues. Nothing decides here — whoever found the plan decided,
-        and this keeps the record honest (an-intention-is-a-plan-committed-to).
+        None for an empty plan, which is an answer and not a commitment: the search reached the
+        want's met state in no steps, so there is nothing to carry out and nothing to stand. The
+        intention is adopted at the clock's instant, stands at the plan's HEAD, names the want it
+        pursues and the plan it ADOPTS, and lists the plan's steps. Nothing decides here — whoever
+        found the plan decided, and this keeps the record honest (an-intention-is-a-plan-committed-to).
 
-        A COPY AND NOT A REWRITE, which is why the search writes its steps in this layer's
-        words: a translation on the way would be a second place the two shapes could
-        disagree. What the search adds of its own crosses with the rest and is not read
-        here. QUADS AND NOT TEXT: a serialise-and-reparse relabels blank nodes.
+        BY REFERENCE, NOT BY COPY. The plan is planning's, published once under a name of its own, and
+        stays; what is written here is the intention's own rows (planning-and-execution-meet-at-the-store).
+        A plan found in another store — a case handing the executor one of its own — is brought in whole
+        first, under its own name, since a reference must reach it.
         """
         named = Raw(f"<{graph}>")
         node = ox.NamedNode(self.graph)
@@ -362,26 +362,20 @@ class Executor:
             raise RuntimeError(
                 f"the plan in <{graph}> has {len(head)} heads — a plan is a chain, and a chain "
                 "has one step nothing follows")
-        #  EVERY INTENTION'S STEPS ARE ITS OWN. A plan names its steps for the want and the worlds
-        #  it searched, so a second plan for one want — after the first failed — names its steps
-        #  as the first did, and the act the first recorded would read as the second's step taken.
-        #  A name an earlier intention holds is tagged with this one's; a fresh one is kept.
-        tag = uuid.uuid4().hex[:8]
-        held = {s for s in steps if next(self.intentions.quads_for_pattern(ox.NamedNode(s), None, None, node), None)}
-        own_name = {s: ox.NamedNode(f"{s}.{tag}" if s in held else s) for s in steps}
-        renamed = lambda t: own_name.get(t.value, t) if isinstance(t, ox.NamedNode) else t
+        if source is not self.intentions:
+            plan = ox.NamedNode(graph)
+            add_quads(self.intentions, (ox.Quad(q.subject, q.predicate, q.object, plan) for q in quads(source, graph)))
         #  THE INTENTIONS ARE A GRAPH OF THE AGENT'S OWN, classified when first kept, so a lived-in
         #  volume keeps them and a reader asks for them by kind.
         if catalogue_of(self.intentions) is not None and not rows(self.intentions, _CLASSIFIED_Q, (), graph=self.graph):
             update(self.intentions, f"INSERT DATA {{ {entry(self.intentions, self.graph, INTENTION_GRAPH, RECORDED, self.holder or _me_of(self.beliefs, self.id))} }}")
-        add_quads(self.intentions, (ox.Quad(renamed(q.subject), q.predicate, renamed(q.object), node)
-                                    for q in quads(source, graph)))
-        intention = ox.NamedNode(f"{OREXIS}intention_{self.id}_{tag}")
+        intention = ox.NamedNode(f"{OREXIS}intention_{self.id}_{uuid.uuid4().hex[:8]}")
         own = [ox.Quad(intention, _RDF_TYPE, ox.NamedNode(INTENTION), node),
                ox.Quad(intention, ox.NamedNode(PURSUES), ox.NamedNode(want), node),
                ox.Quad(intention, ox.NamedNode(ADOPTED_AT), instant(clock.now()), node),
-               ox.Quad(intention, ox.NamedNode(BY), own_name[head[0]], node)]
-        own += [ox.Quad(intention, ox.NamedNode(STEP), own_name[s], node) for s in sorted(steps)]
+               ox.Quad(intention, ox.NamedNode(ADOPTS), ox.NamedNode(graph), node),
+               ox.Quad(intention, ox.NamedNode(BY), ox.NamedNode(head[0]), node)]
+        own += [ox.Quad(intention, ox.NamedNode(STEP), ox.NamedNode(s), node) for s in sorted(steps)]
         add_quads(self.intentions, own)
         log.info("%s: committed a plan of %d step(s) for %s", self.id, len(steps),
                  want.rsplit("#", 1)[-1])

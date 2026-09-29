@@ -28,7 +28,7 @@ process is told:
    candidates, takes each and weighs what it reached; then `extract_plan` writes what the
    want's weighings come to;
 4. `publish_plan` hands every plan no intention is already walking DOWN, through the belief base:
-   an `execution:PlanGraph` in execution's words, each step a bridge may keep below marked so
+   an `orexis:PlanGraph` published once in execution's words, each step a bridge may keep below marked so
    (`bridge.keeps`), which the executor takes up and commits.
 
 And before any of it, every step an intention stands at that is kept below and has fallen due is
@@ -123,13 +123,14 @@ SELECT ?want ?g ?step WHERE { GRAPH ?g { ?step execution:keptBy ?want }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }"""
 
 #  WHAT THIS AGENT IS WALKING, off execution's rows in the belief base: every want a standing
-#  intention pursues, and every want a plan handed down and not yet taken up pursues.
+#  intention pursues, and every want a plan published and adopted by no intention yet pursues.
 _WALKING_Q = """
 SELECT DISTINCT ?want WHERE {
   { GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
                FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
   UNION
-  { GRAPH $cat { ?plan a execution:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want } } }
+  { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
+    FILTER NOT EXISTS { GRAPH ?h { ?i execution:adopts ?plan } } } }
 ORDER BY ?want"""
 
 #  THE STEP EVERY STANDING INTENTION STANDS AT.
@@ -141,15 +142,15 @@ SELECT DISTINCT ?step WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by
 #  YET, with what it predicts.
 _KEPT_DUE_Q = """
 SELECT ?step ?predicts WHERE {
-  GRAPH ?g { ?i a execution:Intention ; execution:by ?step .
-             FILTER NOT EXISTS { ?i execution:resolvedAt ?done }
-             ?step execution:keptBelow true ; execution:predicts ?predicts .
-             OPTIONAL { ?step execution:notBefore ?due } }
+  GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
+             FILTER NOT EXISTS { ?i execution:resolvedAt ?done } }
+  GRAPH ?plan { ?step execution:keptBelow true ; execution:predicts ?predicts .
+                OPTIONAL { ?step execution:notBefore ?due } }
   FILTER(!BOUND(?due) || ?due <= $now)
   FILTER NOT EXISTS { GRAPH ?h { ?step execution:keptBy ?w } } }
 ORDER BY ?step"""
 
-#  EVERY STEP OF A PLAN HANDED DOWN WHOSE ACTION IS TAKEN FICTIVELY, with what it predicts.
+#  EVERY STEP OF A PLAN PUBLISHED WHOSE ACTION IS TAKEN FICTIVELY, with what it predicts.
 _FICTIVE_STEPS_Q = """
 SELECT ?step ?predicts WHERE {
   GRAPH $plan { ?step a execution:Step ; planning:fills ?action ; execution:predicts ?predicts }
@@ -218,7 +219,7 @@ class Planner:
         Everything else is discovered from the graph, which is rule 1: the world says
         `?a orexis:localId "<id>"`, and who I am is the answer rather than an argument.
 
-        A plan goes down through the beliefs, as an `execution:PlanGraph`, and what is walked is
+        A plan is published into the beliefs, as an `orexis:PlanGraph`, and what is walked is
         read off the intentions there; the Planner holds no executor.
         """
         self.beliefs = beliefs

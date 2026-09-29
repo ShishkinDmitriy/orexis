@@ -42,21 +42,22 @@ def _held(intentions, what: str) -> list[dict]:
         intentions_graph(AGENT)))
 
 
-HANDED = EXECUTION + "PlanGraph"
+HANDED = "http://example.org/orexis#PlanGraph"
 
 
-def test_the_pass_hands_its_plan_down_and_the_executor_takes_it_up(beliefs):
+def test_the_pass_publishes_its_plan_and_the_executor_adopts_it_by_reference(beliefs):
     """The whole crossing, end to end, through the store: a want is derived, a plan is found and
-    handed down into the beliefs as execution's plan graph, pursuing the want; the executor takes it
-    up, and what survives is one intention pursuing that want and standing at the first step, the
-    plan graph gone. Neither called the other."""
+    published into the beliefs once, pursuing the want; the executor adopts it by reference, and one
+    intention pursues that want, adopts that plan and stands at its first step, the plan left where
+    planning wrote it. Neither called the other."""
     planner = Planner(beliefs, AGENT)
     written = planner.plan(NOW)
     assert graphs_of(beliefs, HANDED) == written and len(written) == 1, written
 
     x = Executor(beliefs, AGENT)
     assert x.commit_plans() == [intentions_graph(AGENT)]
-    assert graphs_of(beliefs, HANDED) == [], "taken up, and forgotten"
+    assert graphs_of(beliefs, HANDED) == written, "adopted by reference: the plan stays, planning's"
+    assert _held(beliefs, "adopts")[0]["o"] == written[0]
     pursues = _held(beliefs, "pursues")
     assert len(pursues) == 1, pursues
     assert pursues[0]["o"].endswith("keeper.in_range.pursued.tank1"), pursues

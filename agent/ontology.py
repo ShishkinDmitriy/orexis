@@ -103,6 +103,7 @@ PUBLIC = OREXIS + "PublicGraph"          # everyone's: the vocabulary, the world
 BELIEF = OREXIS + "BeliefGraph"          # what IS: the state, the instruments, a claim held
 STATE = OREXIS + "StateGraph"            # the readings — what a plan forks and an effect rewrites
 PREDICTION = OREXIS + "PredictionGraph"  # what is expected, holding during its window
+PLAN = OREXIS + "PlanGraph"              # a plan published, adopted by reference
 RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period
 ACTION = OREXIS + "ActionGraph"          # actions
 #  What a text is answered over: everyone's knowledge, what is, and the records. Stated once

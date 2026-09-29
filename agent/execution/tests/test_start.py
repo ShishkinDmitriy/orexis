@@ -22,7 +22,7 @@ def _hand_down(store) -> None:
   GRAPH <{PLAN}> {{ <{PLAN}> <http://example.org/orexis/execution#pursues> <{WANT}> .
                    <{PLAN}.s1> a <http://example.org/orexis/execution#Step> ;
                                <http://example.org/orexis/execution#partOf> <{PLAN}> . }}
-  {entry(store, PLAN, "http://example.org/orexis/execution#PlanGraph", "http://example.org/orexis#Recorded")} }}""")
+  {entry(store, PLAN, "http://example.org/orexis#PlanGraph", "http://example.org/orexis#Recorded")} }}""")
 
 
 def test_started_it_adopts_what_is_published_and_ends_what_was_reached_untaken(monkeypatch, snapshots, stand_in_runtime):

@@ -58,7 +58,8 @@ BENCH = Path(__file__).parent / "bench"
 _STEPS_Q = """SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?p { ?p a planning:Plan . ?s a execution:Step ; execution:partOf ?p } }"""
 _HEAD_Q = """
 SELECT ?disk ?onto WHERE {
-  GRAPH ?g { ?i a execution:Intention ; execution:by ?step . ?step ?pd ?disk ; ?po ?onto .
+  GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
+             } GRAPH ?plan { ?step ?pd ?disk ; ?po ?onto .
              FILTER(STRENDS(STR(?pd), "#disk") && STRENDS(STR(?po), "#onto")) } }"""
 
 
@@ -165,7 +166,7 @@ def test_a_surprise_starts_the_search_afresh(monkeypatch, snapshots):
     planner.plan(snapshots.NOW)
     #  NOBODY TOOK THE PLAN UP: with no executor the plan handed down would read as walked for ever,
     #  and a want walked is not searched again.
-    for handed in graphs_of(store, "http://example.org/orexis/execution#PlanGraph"):
+    for handed in graphs_of(store, "http://example.org/orexis#PlanGraph"):
         forget_graph(store, handed)
     (im,) = planner.imaginaria.values()
     before = set(graphs_of(im, POSSIBLE_GRAPH))

@@ -3,11 +3,16 @@ another layer: plans, into the belief base, in that layer's words.
 
 A pass writes what it found into the imaginarium it searched in: one `planning:PlanGraph` per
 want, holding the steps in EXECUTION's own words. That store outlives the pass and dies with the
-Planner. This is the crossing — every plan found for a want nothing is already walking, copied
-into the belief base as an `execution:PlanGraph`, its root saying which want it
-`execution:pursues`, and beside it what the want was derived from, which execution tells its
-landings by. The executor takes it up, commits it and forgets the graph: planning never calls it
-(a-package-starts-itself).
+Planner. This is the crossing — every plan found for a want nothing is already walking, PUBLISHED
+into the belief base once, as an `orexis:PlanGraph` under a name of its own, its root saying which
+want it `execution:pursues`, and beside it what the want was derived from, which execution tells
+its landings by. Planning owns it and it stays; the executor adopts it by reference, and planning
+never calls it (planning-and-execution-meet-at-the-store).
+
+**A NAME OF ITS OWN**, and its steps' with it: the imaginarium names a plan for its want and a step
+for its plan, so a second plan for one want would name its steps as the first did, and an act on
+record for the first would read as the second's. Published, the plan and every step move under a
+name minted for this plan.
 
 **IT IS A COPY AND NOT A REWRITE**, which is why the search writes a step as `execution:Step` in
 the first place: a translation on the way would be a second place the two shapes could disagree.
@@ -30,15 +35,16 @@ import logging
 
 import pyoxigraph as ox
 
-from agent.ontology import OREXIS
+import uuid
+
+from agent.ontology import GRAPH_PREFIX, OREXIS, PLAN, local_of
 from agent.store import Raw, add_quads, bind, entry, forget_graph, graphs_of, quads, rows, update
 
 from .ontology import PLAN_GRAPH, WANT
 
 log = logging.getLogger("publish_plan")
 
-#  WHAT A PLAN IS HANDED DOWN AS: execution's kind, which the executor takes up.
-HANDED = "http://example.org/orexis/execution#PlanGraph"
+
 
 #  WHICH WANT A PLAN IS FOR, off the plan's own root, and whether that want still stands.
 _STANDS_Q = """SELECT ?w WHERE { $want a planning:Want . BIND($want AS ?w) } LIMIT 1"""
@@ -72,12 +78,14 @@ def publish_plan(imaginarium: ox.Store, beliefs: ox.Store, me: str, walking: set
             continue
         if want in walking or not rows(imaginarium, bind(_STEPS_Q, plan=Raw(f"<{graph}>"))):
             continue
-        name = ox.NamedNode(graph)
-        forget_graph(beliefs, graph)
-        add_quads(beliefs, (ox.Quad(q.subject, q.predicate, q.object, name) for q in quads(imaginarium, graph)))
+        published = f"{GRAPH_PREFIX}plan/{local_of(me)}/{local_of(want)}.{uuid.uuid4().hex[:8]}"
+        moved = lambda term: (ox.NamedNode(published + term.value[len(graph):])
+                              if isinstance(term, ox.NamedNode) and term.value.startswith(graph) else term)
+        name = ox.NamedNode(published)
+        add_quads(beliefs, (ox.Quad(moved(q.subject), q.predicate, moved(q.object), name) for q in quads(imaginarium, graph)))
         derived = [f"<{want}> prov:wasDerivedFrom <{r['d']}> ." for r in rows(imaginarium, _DERIVED_Q, (), want=want)]
         update(beliefs, f"""INSERT DATA {{
-  GRAPH <{graph}> {{ <{graph}> execution:pursues <{want}> . {' '.join(derived)} }}
-  {entry(beliefs, graph, HANDED, OREXIS + "Recorded", me)} }}""")
-        handed.append(graph)
+  GRAPH <{published}> {{ <{published}> execution:pursues <{want}> . {' '.join(derived)} }}
+  {entry(beliefs, published, PLAN, OREXIS + "Recorded", me)} }}""")
+        handed.append(published)
     return handed

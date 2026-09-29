@@ -19,8 +19,9 @@
 execution:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
     rdfs:comment "What the agent is DOING: commitments adopted, standing and resolved, kept in the belief base's volume as a graph of the agent's own, not public, so a restart finds them and planning reads what is walked by this kind." .
 
-execution:PlanGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Plan graph" ;
-    rdfs:comment "A plan HANDED DOWN: the steps a search found for one want, written by planning into the belief base in this layer's words, its root saying which want it `execution:pursues`, and taken up by the executor, which commits it and forgets the graph. The one door between planning and execution: neither calls the other." .
+execution:adopts a owl:ObjectProperty ; rdfs:domain execution:Intention ;
+    rdfs:label "adopts" ;
+    rdfs:comment "The plan an intention commits to — an orexis:PlanGraph planning published and owns — referred to and never copied: the plan's steps are read where planning wrote them, and the intention holds only its own rows." .
 
 execution:keptBelow a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:boolean ;
     rdfs:label "kept below" ;

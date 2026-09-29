@@ -23,8 +23,9 @@ BENCH = Path(__file__).resolve().parents[1] / "planning" / "tests" / "bench"
 
 _HEAD_Q = """
 SELECT ?disk ?onto WHERE {
-  GRAPH ?g { ?i a execution:Intention ; execution:by ?step . ?step ?pd ?disk ; ?po ?onto .
+  GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
              FILTER NOT EXISTS { ?i execution:resolvedAt ?done }
+             } GRAPH ?plan { ?step ?pd ?disk ; ?po ?onto .
              FILTER(STRENDS(STR(?pd), "#disk") && STRENDS(STR(?po), "#onto")) } }"""
 
 
