@@ -95,3 +95,17 @@ def test_a_sensor_stating_no_frequency_is_never_missing(monkeypatch, snapshots):
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     assert CASES, "no case in missed/"
     assert not snapshots.orphans_in(CASES_DIR)
+
+
+def test_a_series_sensor_is_due_until_its_forecast_arrives_and_again_a_cadence_after(monkeypatch, snapshots):
+    """A forecast is pulled, not pushed: the weather service hosted by the balcony the pot is in is
+    the keeper's, due while no forecast of its stands — the one standing in the case was issued at no
+    stated instant — not due once one arrives, and due again an hour after it was issued."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(Path(__file__).parent / "received" / "a_forecast_is_a_graph_per_stretch_ahead.trig")
+    weather = "http://example.org/test#weather"
+    assert missed(store, snapshots.ME, snapshots.NOW) == [weather]
+    received(store, snapshots.ME, weather, b'{"hourly": {"time": ["2026-01-01T13:00", "2026-01-01T14:00"],'
+             b' "precipitation": [0.4, 0.0]}}', snapshots.NOW)
+    assert missed(store, snapshots.ME, snapshots.NOW + timedelta(minutes=30)) == []
+    assert missed(store, snapshots.ME, snapshots.NOW + timedelta(hours=1)) == [weather]

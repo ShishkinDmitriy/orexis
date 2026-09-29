@@ -1,0 +1,57 @@
+# a_forecast_for_a_balcony
+#
+# A keeper acting for a pot on a balcony, and a weather service hosted by the balcony: a sensor of
+# its rain that reads a series, and a Thing with a form whose target is a URI template. The
+# balcony's location is stated here, as a world's secrets/ would state it.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix td: <https://www.w3.org/2019/wot/td#> .
+@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+
+GRAPH :ontology {
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  sensing:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  sensing:ForecastGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :balcony a schema:Place .
+  :balcony schema:geo :balcony_geo .
+  :balcony_geo schema:latitude 52.52 .
+  :balcony_geo schema:longitude 13.4 .
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :pot .
+  :keeper orexis:localId "keeper" .
+  :pot schema:containedInPlace :balcony .
+  :probe a sosa:Sensor .
+  :probe sosa:isHostedBy :pot .
+  :probe sosa:observes :moisture .
+  :weather a sosa:Sensor , td:Thing .
+  :weather sensing:endsPointer "/hourly/time" .
+  :weather sensing:readingPointer "/hourly/precipitation" .
+  :weather sosa:isHostedBy :balcony .
+  :weather sosa:observes :precipitation .
+  :weather ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:MIN ; schema:value 60 ] ] .
+  :weather td:hasForm :weather_form .
+  :weather_form hctl:forContentType "application/json" .
+  :weather_form hctl:hasTarget "https://forecast.example/v1?latitude={latitude}&longitude={longitude}&hourly=precipitation" .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

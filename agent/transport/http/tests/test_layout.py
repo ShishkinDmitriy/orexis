@@ -1,10 +1,10 @@
 """What the transport tree's SHAPE promises, and the one direction its arrows may point.
 
-The transport is a member of a family: it imports the family's `Transport` contract, kept at
+The HTTP transport is a member of a family: it imports the family's `Transport` contract, kept at
 `agent/transport/`, and calls sensing's `received`, the two downward imports a member is allowed,
 and nothing else of sensing, nor of the mind, of prediction or of the belief package; nothing
-above imports it, since the container hands it a client and calls it. It declares no word of its own — every `mqtt4ssn:` word
-it speaks is one the vendored MQTT4SSN declares — and speaks no other package's words.
+above imports it, since the container hands it a client and calls it. It declares no word of its own — every `td:` and `hctl:` word
+it speaks is one the vendored Thing Description declares — and speaks no other package's words.
 """
 
 from __future__ import annotations
@@ -17,13 +17,14 @@ import pytest
 import rdflib
 
 ROOT = Path(__file__).resolve().parents[4]
-MQTT = ROOT / "agent" / "transport" / "mqtt"
-CODE = sorted(p for p in MQTT.glob("*.py"))
-VOCABULARY = sorted(MQTT.glob("*.ttl"))
-VENDORED = ROOT / "tests" / "fixtures" / "vocabularies" / "mqtt4ssn.ttl"
+HTTP = ROOT / "agent" / "transport" / "http"
+CODE = sorted(p for p in HTTP.glob("*.py"))
+VOCABULARY = sorted(HTTP.glob("*.ttl"))
+VENDORED_TD = ROOT / "tests" / "fixtures" / "vocabularies" / "wot-td.ttl"
+VENDORED_HCTL = ROOT / "tests" / "fixtures" / "vocabularies" / "wot-hctl.ttl"
 
 #  A MODULE NAMED FOR A THING, which may hold a class and several reads of it.
-NOUNS = {"ontology", "driver"}
+NOUNS = {"driver"}
 
 ABOVE = ("planning", "prediction", "execution", "belief")
 
@@ -79,28 +80,30 @@ def test_every_module_with_a_public_name_has_a_test_named_for_it():
         tree = ast.parse(path.read_text())
         if not any(isinstance(n, (ast.FunctionDef, ast.ClassDef)) and not n.name.startswith("_") for n in tree.body):
             continue
-        assert (MQTT / "tests" / f"test_{path.stem}.py").exists(), f"{path.name} has no test named for it"
+        assert (HTTP / "tests" / f"test_{path.stem}.py").exists(), f"{path.name} has no test named for it"
 
 
-def test_the_package_declares_nothing_and_every_word_it_speaks_is_mqtt4ssns():
-    """The ontology names MQTT4SSN's namespace and declares no term; every `mqtt4ssn:` word in the
-    code, a test or a world is one the vendored vocabulary declares."""
-    own = (MQTT / "ontology.ttl").read_text()
-    assert "@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> ." in own
+def test_the_package_declares_nothing_and_every_word_it_speaks_is_the_thing_descriptions():
+    """The ontology names the Thing Description's two namespaces and declares no term; every `td:`
+    and `hctl:` word in the code, a test or a world is one the vendored vocabularies declare."""
+    own = (HTTP / "ontology.ttl").read_text()
+    assert "@prefix td: <https://www.w3.org/2019/wot/td#> ." in own
+    assert "@prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> ." in own
     assert not re.search(r"^:\w+ a ", own, re.M), "the transport declares a word of its own"
-    vocabulary = rdflib.Graph(); vocabulary.parse(VENDORED, format="turtle")
-    ns = "https://www.w3id.org/MQTT4SSN-Ontology#"
-    declared = {str(s)[len(ns):] for s in vocabulary.subjects() if isinstance(s, rdflib.URIRef) and str(s).startswith(ns)}
-    assert declared, "the vendored vocabulary declares nothing"
-    spoken = {}
-    for path in sorted(p for p in MQTT.rglob("*") if p.suffix in (".py", ".ttl", ".trig")):
-        for word in re.findall(r"\bmqtt4ssn:(\w+)", path.read_text()) + re.findall(r'MQTT4SSN \+ "(\w+)"', path.read_text()):
-            spoken.setdefault(word, set()).add(path.name)
-    undeclared = {w: sorted(where) for w, where in spoken.items() if w not in declared}
-    assert not undeclared, f"spoken and not declared by MQTT4SSN: {undeclared}"
+    undeclared = {}
+    for prefix, ns, vendored in (("td", "https://www.w3.org/2019/wot/td#", VENDORED_TD),
+                                 ("hctl", "https://www.w3.org/2019/wot/hypermedia#", VENDORED_HCTL)):
+        vocabulary = rdflib.Graph(); vocabulary.parse(vendored, format="turtle")
+        declared = {str(s)[len(ns):] for s in vocabulary.subjects() if isinstance(s, rdflib.URIRef) and str(s).startswith(ns)}
+        assert declared, f"the vendored {prefix} vocabulary declares nothing"
+        for path in sorted(p for p in HTTP.rglob("*") if p.suffix in (".py", ".ttl", ".trig")):
+            for word in re.findall(rf"\b{prefix}:(\w+)", path.read_text()):
+                if word not in declared:
+                    undeclared.setdefault(f"{prefix}:{word}", set()).add(path.name)
+    assert not undeclared, f"spoken and not declared by the Thing Description: {undeclared}"
 
 
 def test_the_package_says_it_is_one():
-    assert (MQTT / "__init__.py").exists()
+    assert (HTTP / "__init__.py").exists()
     assert not (ROOT / "agent" / "__init__.py").exists() and not (ROOT / "agent" / "transport" / "__init__.py").exists(), \
         "agent/ and agent/transport/ are namespace portions"

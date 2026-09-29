@@ -16,6 +16,14 @@ observation of the key before (#669's invariant, kept at the writer). A reader a
 instant past that is handed nothing: the observation's standing as the present ends by the
 clock, `missed` says so on the container's tick, and nothing here keeps a timer.
 
+**A SERIES IS A FORECAST, ONE GRAPH PER STRETCH.** A sensor stating where the instants its values
+are for are kept (`reads_series`) is read as a series: each value still ahead is written as its own
+`sosa:Observation` into a graph of its own, `sensing:ForecastGraph`, holding during its stretch —
+of what, which property, the number, the instant the forecast was issued, the start of its
+stretch, the sensor — and every forecast graph the sensor wrote before is forgotten first, so the
+next forecast replaces the last. A stretch already over when the forecast arrives is not written.
+A forecast is a belief and not a reading, so it ends no silence and is told to no history.
+
 **A READING ENDS A SILENCE.** A sensor `missed` had said silent is silent no longer: the graph
 saying so goes before the observation is written, found by the row's content and never by name.
 
@@ -47,8 +55,8 @@ from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows,
 from . import metrics as reported
 from .cadence import cadence_of
 from .history import observation_point
-from .ontology import OBSERVATION_GRAPH, RECEIVED, observation_graph, observation_of
-from .pipeline import decode
+from .ontology import FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, forecast_graph, observation_graph, observation_of
+from .pipeline import decode, decode_series, reads_series
 
 log = logging.getLogger("received")
 
@@ -59,13 +67,18 @@ _KEY_Q = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; so
 _SILENCE_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { $sensor sensing:silentSince ?since } }"""
 
+#  THE FORECAST THIS SENSOR GAVE BEFORE: every graph of it, found by its content.
+_FORECAST_Q = """
+SELECT ?g WHERE { GRAPH $cat { ?g a sensing:ForecastGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }"""
+
 
 def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
-             procedure: str | None = None, phenomenon_at: datetime | None = None, memo=None) -> str | None:
+             procedure: str | None = None, phenomenon_at: datetime | None = None, memo=None) -> list[str]:
     """Write what `sensor` read, `payload` decoded by its binding: the observation of the
     property it observes, of what it is hosted by, standing as the present from `at` until
-    the next is due by the sensor's frequency — with no end where the world states none. The
-    graph's name, or None where the sensor has no key or the payload holds no reading.
+    the next is due by the sensor's frequency — with no end where the world states none — or,
+    for a sensor reading a series, one forecast per stretch still ahead. The graphs written,
+    none where the sensor has no key or the payload holds nothing it reads.
 
     `me` is who holds it — the one identifier a process is handed — and is written as the
     observation's author and the graph's owner. `procedure` is the instrument's word about
@@ -75,11 +88,13 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     keys = rows(store, _KEY_Q, graphs_of(store, PUBLIC), sensor=sensor)
     if len(keys) != 1:
         log.warning("%s has no key: one property observed of one host makes one, and the world states %d", local_of(sensor), len(keys))
-        return None
+        return []
+    feature, observed_property = keys[0]["feature"], keys[0]["property"]
+    if reads_series(store, sensor):
+        return _forecast(store, me, sensor, feature, observed_property, payload, at)
     value = decode(store, sensor, payload)
     if value is None:
-        return None
-    feature, observed_property = keys[0]["feature"], keys[0]["property"]
+        return []
     node = observation_of(feature, observed_property)
     graph = observation_graph(local_of(me), feature, observed_property)
     #  THE READING THIS ONE REPLACES, read before it goes, where a metrics sink is loaded: how long
@@ -111,4 +126,39 @@ INSERT DATA {{
     log.info("%s: %s of %s reads %s", local_of(me), local_of(observed_property), local_of(feature), value)
     if (history := sink(HISTORY)) is not None:
         history.write([observation_point(store, feature, observed_property, sensor, round(float(value), 6), at)])
-    return graph
+    return [graph]
+
+
+def _forecast(store, me: str, sensor: str, feature: str, observed_property: str, payload: bytes,
+              at: datetime) -> list[str]:
+    """One forecast graph per stretch of the series still ahead at `at`, the sensor's earlier
+    forecast forgotten first; the graphs, first stretch first."""
+    stretches = decode_series(store, sensor, payload)
+    if stretches is None:
+        return []
+    cat = Raw(f"<{catalogue_of(store)}>")
+    for old in rows(store, _FORECAST_Q, (), cat=cat, sensor=sensor):
+        forget_graph(store, old["g"])
+    written = []
+    for start, end, value in stretches:
+        if end <= at:
+            continue
+        graph = forecast_graph(local_of(me), sensor, start)
+        node = f"{observation_of(feature, observed_property)}_{start.strftime('%Y%m%dT%H%M%SZ')}"
+        number = f"{round(value, 6) + 0.0:.6f}".rstrip("0")
+        said = [f'<{node}> a sosa:Observation',
+                f'<{node}> sosa:hasFeatureOfInterest <{feature}>',
+                f'<{node}> sosa:observedProperty <{observed_property}>',
+                f'<{node}> sosa:hasSimpleResult "{number}{"0" if number.endswith(".") else ""}"^^xsd:decimal',
+                f'<{node}> sosa:resultTime "{at.isoformat()}"^^xsd:dateTime',
+                f'<{node}> sosa:phenomenonTime "{start.isoformat()}"^^xsd:dateTime',
+                f'<{node}> sosa:madeBySensor <{sensor}>',
+                f'<{node}> prov:wasGeneratedBy <{me}>']
+        update(store, f"""
+INSERT DATA {{
+  GRAPH <{graph}> {{ {' . '.join(said)} . }}
+  {entry(store, graph, FORECAST_GRAPH, RECEIVED, me, start=start, end=end)} }}""")
+        written.append(graph)
+    log.info("%s: %s of %s forecast for %d stretch(es)%s", local_of(me), local_of(observed_property),
+             local_of(feature), len(written), f" to {stretches[-1][1].isoformat(timespec='minutes')}" if written else "")
+    return written

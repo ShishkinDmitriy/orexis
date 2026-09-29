@@ -10,7 +10,7 @@ command to a pattern with no wildcard in it. The agent is a `mqtt4ssn:Client` to
 declares no word of its own; its ontology names MQTT4SSN's namespace and says which of its terms the code reads.
 
 **WHAT IS DERIVED, NOT AUTHORED.** Which topics the agent listens to follows from what it acts for:
-its sensors are those `sosa:isHostedBy` the subject it `orexis:actsFor`, or a sample of it, and their
+its sensors are those `sosa:isHostedBy` the subject it `orexis:actsFor`, a sample of it or a place containing it, and their
 topics' filters are its subscriptions. The world never says "the agent polls this sensor".
 
 **ONE CLASS, AND THE THREAD IS THE CONTAINER'S.** `Mqtt` is the agent's side of the bus, answering

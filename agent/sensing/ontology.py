@@ -4,9 +4,9 @@ THE VOCABULARY IS SOSA'S AND SSN'S, AND THIS LAYER'S WHERE THEY HAVE NONE. A sen
 `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, and that pair is the
 key an observation is written under; how often it reports is its `ssn-system:Frequency`, and
 a range is SSN-System's. What this layer declares is in `ontology.ttl` beside this file — the
-graph an observation is kept in, the silence, the three sides its rules conclude, and the
-pipeline's concepts: a codec and a scaling, the binding of a sensor to one of each, the JSON
-and identity members that ship, and the pointer — and nothing of the 0.1.0 packages' own: what an agent polled, what a sensor monitored or sampled,
+graph an observation is kept in and a forecast's, the silence, the three sides its rules
+conclude, and the pipeline's concepts: a codec and a scaling, the binding of a sensor to one of
+each, the JSON and identity members that ship, the pointer and the two a series is read by — and nothing of the 0.1.0 packages' own: what an agent polled, what a sensor monitored or sampled,
 a device's sense mode and a drift's horizons were SSN restated or read by nothing, and 0.2.0
 speaks none of them. The drift is the prediction package's. Not one word of any transport.
 
@@ -24,8 +24,9 @@ from agent.ontology import GRAPH_PREFIX, OREXIS
 
 SENSING = "http://example.org/orexis/sensing#"
 
-#  THIS LAYER'S OWN: the graph an observation is kept in, the silence, the sides.
+#  THIS LAYER'S OWN: the graph an observation is kept in and a forecast's, the silence, the sides.
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
+FORECAST_GRAPH = SENSING + "ForecastGraph"
 SILENT_SINCE = SENSING + "silentSince"
 BELOW = SENSING + "below"
 INSIDE = SENSING + "inside"
@@ -40,6 +41,8 @@ SCALING = SENSING + "Scaling"
 SCALED_BY = SENSING + "scaledBy"
 IDENTITY_SCALING = SENSING + "Identity"
 READING_POINTER = SENSING + "readingPointer"
+STARTS_POINTER = SENSING + "startsPointer"
+ENDS_POINTER = SENSING + "endsPointer"
 
 RECEIVED = OREXIS + "Received"
 DERIVED = OREXIS + "Derived"
@@ -67,3 +70,9 @@ def silent_graph(agent_id: str, sensor: str) -> str:
     """Where a sensor's silence is said, while it lasts."""
     return f"{GRAPH_PREFIX}silent/{agent_id}/{slug(sensor)}"
 
+
+
+def forecast_graph(agent_id: str, sensor: str, starts) -> str:
+    """Where one stretch of a sensor's forecast stands, named by the sensor and the stretch's
+    start."""
+    return f"{GRAPH_PREFIX}forecast/{agent_id}/{slug(sensor)}_{starts.strftime('%Y%m%dT%H%M%SZ')}"

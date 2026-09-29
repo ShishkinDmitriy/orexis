@@ -20,8 +20,8 @@ from pathlib import Path
 import pyoxigraph as ox
 import pytest
 
-from agent.runtime import EVERY, KERNEL, MIND, MQTT, PREDICTION, PREMISES, SENSING, SPEECH, Runtime, _documents_of, \
-    _transport_of, boot, packages_of
+from agent.runtime import EVERY, HTTP, KERNEL, MIND, MQTT, PREDICTION, PREMISES, SENSING, SPEECH, Runtime, _documents_of, \
+    _transports_of, boot, packages_of
 
 ROOT = Path(__file__).resolve().parents[2]
 ME = "http://example.org/test#me"
@@ -33,6 +33,8 @@ _HEAD = """@prefix : <http://example.org/test#> .
 @prefix prediction: <http://example.org/orexis/prediction#> .
 @prefix execution: <http://example.org/orexis/execution#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix td: <https://www.w3.org/2019/wot/td#> .
+@prefix schema: <https://schema.org/> .
 """
 _AGENT = ':me a orexis:Agent ; orexis:localId "me" ; orexis:actsFor :pot .\n'
 _PROBE = ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n"
@@ -53,6 +55,10 @@ CASES = {
     "a topic I listen to":       (":me mqtt4ssn:listensToTopic :inbox .\n", "", "", (SPEECH, MQTT)),
     "an action that says":       ("", "", _SAYING, (SPEECH,)),
     "a sensor on a topic":       (_PROBE + ":probe mqtt4ssn:observesTopic :readings .\n", "", "", (SENSING, MQTT)),
+    "a sensor of the place":     (":pot schema:containedInPlace :balcony . :gauge a sosa:Sensor ; sosa:isHostedBy :balcony .\n",
+                                  "", "", (SENSING,)),
+    "a service with a form":     (":pot schema:containedInPlace :balcony . :weather a sosa:Sensor ; sosa:isHostedBy :balcony ; "
+                                  "td:hasForm [] .\n", "", "", (SENSING, HTTP)),
 }
 
 
@@ -86,10 +92,9 @@ def test_a_package_is_loaded_where_its_premise_holds_and_nowhere_else(tmp_path, 
     assert runtime.packages == packages_of(store, ME)
     assert (runtime._missed is not None, runtime._predict is not None, runtime._said is not None) == \
         (SENSING in expected, PREDICTION in expected, SPEECH in expected)
-    member = _transport_of(store, ME)
-    assert (member is not None) == (MQTT in expected)
-    if member is not None:
-        assert member.__module__ == "agent.transport.mqtt.driver"
+    members = [m.__module__ for m in _transports_of(store, ME)]
+    assert members == [module for package, module in ((MQTT, "agent.transport.mqtt.driver"),
+                                                      (HTTP, "agent.transport.http.driver")) if package in expected]
 
 
 @pytest.mark.parametrize("facts, read", [(_PROBE, True), ("", False)], ids=["sensing loaded", "sensing not loaded"])
@@ -132,15 +137,15 @@ def test_every_document_the_agent_ships_is_the_kernels_or_a_packages_it_names():
 
 
 #  WHAT A PROCESS HOLDS: a fresh interpreter, the tree under test first on its path, boots a world,
-#  builds the runtime, asks for its transport member and runs `passes`; what of `agent.` it then
+#  builds the runtime, asks for its transport members and runs `passes`; what of `agent.` it then
 #  holds, by the package beneath `agent`.
 _PROBE_SCRIPT = """
 import json, sys
 from pathlib import Path
-from agent.runtime import Runtime, _transport_of, boot
+from agent.runtime import Runtime, _transports_of, boot
 world, agent, passes = Path(sys.argv[1]), sys.argv[2], int(sys.argv[3])
 runtime = Runtime(boot(world, agent), agent, budget=64)
-_transport_of(runtime.beliefs, runtime.me)
+_transports_of(runtime.beliefs, runtime.me)
 outcome = runtime.run(passes=passes, poll_s=0) if passes else None
 print(json.dumps({"outcome": outcome, "held": sorted({m.split('.')[1] for m in sys.modules if m.startswith('agent.')})}))
 """

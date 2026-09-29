@@ -49,7 +49,7 @@ def _reading(store, snapshots, probe, value, minutes=0):
     revised — the order a container would keep."""
     at = snapshots.NOW + timedelta(minutes=minutes)
     read = graphs_of(store, *KNOWN, at=at)
-    graph = received(store, snapshots.ME, probe, f'{{"value": {value}}}'.encode(), at)
+    [graph] = received(store, snapshots.ME, probe, f'{{"value": {value}}}'.encode(), at)
     written = predict(store, snapshots.ME, probe, now=at)
     for g in (graph, *written):
         revise(store, g, read=read)

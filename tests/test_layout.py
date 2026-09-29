@@ -150,7 +150,10 @@ def test_a_compose_file_mounts_a_document_because_an_agent_reads_its_kind():
     for world in composed:
         here = (REPO_ROOT / "world" / world).resolve()
         compose = (here / "compose.yaml").read_text()
-        mounted = {(here / m).resolve() for m in re.findall(rf"- \./([^:]+):/app/world/{world}/", compose)}
+        #  A document under `secrets/` is not committed, so a clone cannot say what it is: its mount is
+        #  held to its kind only where the checkout has it.
+        mounted = {(here / m).resolve() for m in re.findall(rf"- \./([^:]+):/app/world/{world}/", compose)
+                   if not m.startswith("secrets/") or (here / m).exists()}
         assert mounted, f"{world}/compose.yaml mounts no document — the pattern stopped matching"
         read = read_by_an_agent(world)
         assert mounted <= read, (f"{world}/compose.yaml mounts {sorted(p.name for p in mounted - read)}, of a "

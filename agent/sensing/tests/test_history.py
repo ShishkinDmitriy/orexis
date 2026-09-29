@@ -65,5 +65,5 @@ def test_received_contributes_the_observation_it_writes(monkeypatch, snapshots, 
 def test_bytes_that_hold_no_reading_contribute_nothing(monkeypatch, snapshots, history):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(CASE)
-    assert received(store, snapshots.ME, T + "probe", b'{"temperature": 21}', snapshots.NOW) is None
+    assert received(store, snapshots.ME, T + "probe", b'{"temperature": 21}', snapshots.NOW) == []
     assert history == []

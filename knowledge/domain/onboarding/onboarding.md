@@ -59,7 +59,8 @@ How several would reach an agent is the first seam of
 
 # Nothing here decides
 
-The ACL is the wiring: an agent reads the topics of every sensor hosted by what it acts for and
+The ACL is the wiring: an agent reads the topics of every sensor hosted by what it acts for, or by
+a place that contains it, and
 writes the topic its devices listen to; a board writes what its sensors publish on. That is the
 same set the MQTT member subscribes to and publishes on, so if the two ever differ an agent fails to
 connect — which is the point of deriving it. The roster is the world's `orexis:Agent`s. The one

@@ -112,14 +112,14 @@ _AGENTS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
 
 _HEARS_Q = f"""
 SELECT ?id ?pattern WHERE {{
-  ?a a orexis:Agent ; orexis:localId ?id ; orexis:actsFor ?subject .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?subject ; <{MQTT4SSN}observesTopic> ?topic .
+  ?a a orexis:Agent ; orexis:localId ?id ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
+  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host ; <{MQTT4SSN}observesTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
 _NUDGES_Q = f"""
 SELECT ?id ?pattern WHERE {{
-  ?a a orexis:Agent ; orexis:localId ?id ; orexis:actsFor ?subject .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?subject .
+  ?a a orexis:Agent ; orexis:localId ?id ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
+  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host .
   ?board ssn:hasSubSystem ?sensor ; <{MQTT4SSN}listensToTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 

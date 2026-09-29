@@ -1,0 +1,71 @@
+# a_forecast_is_a_graph_per_stretch_ahead
+#
+# A weather service is a sensor of the balcony's rain that reads a SERIES: its reading pointer finds
+# the hourly amounts and its ends pointer the instants each hour ENDS at. The forecast arriving at
+# noon covers eleven o'clock to three: the two hours already over are not written, the hour the
+# service has nothing for (a null) is no stretch, and each hour still ahead is a graph of its own,
+# holding during it, with the instant it was issued and the start of its stretch. The forecast the
+# service gave before is forgotten whole.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix forecast: <http://example.org/orexis/graph/forecast/keeper/> .
+@prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
+
+GRAPH :ontology {
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  sensing:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  sensing:ForecastGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :zamioculcas .
+  :keeper orexis:localId "keeper" .
+  :weather a sosa:Sensor .
+  :weather sensing:endsPointer "/hourly/time" .
+  :weather sensing:readingPointer "/hourly/precipitation" .
+  :weather sosa:isHostedBy :balcony .
+  :weather sosa:observes :precipitation .
+  :weather ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:SEC ; schema:value 3600 ] ] .
+  :zamioculcas schema:containedInPlace :balcony .
+}
+
+GRAPH forecast:weather_20260101T090000Z {
+  orexis:obs_balcony_precipitation_20260101T090000Z a sosa:Observation .
+  orexis:obs_balcony_precipitation_20260101T090000Z sosa:hasFeatureOfInterest :balcony .
+  orexis:obs_balcony_precipitation_20260101T090000Z sosa:hasSimpleResult 2.0 .
+  orexis:obs_balcony_precipitation_20260101T090000Z sosa:madeBySensor :weather .
+  orexis:obs_balcony_precipitation_20260101T090000Z sosa:observedProperty :precipitation .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  forecast:weather_20260101T090000Z a orexis:BeliefGraph .
+  forecast:weather_20260101T090000Z a orexis:Graph .
+  forecast:weather_20260101T090000Z a sensing:ForecastGraph .
+  forecast:weather_20260101T090000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  forecast:weather_20260101T090000Z orexis:arrivedBy orexis:Received .
+  forecast:weather_20260101T090000Z orexis:beliefsOf :keeper .
+}

@@ -130,17 +130,22 @@ STORE = Gauge("store", read=lambda stores: {"quads": sum(len(s) for s in stores)
 PROCESS = Gauge("process", read=lambda stores: {"uptime_s": round(time.perf_counter() - _STARTED, 3)}, unit="s")
 
 DOCUMENTS = (".ttl", ".trig")
+
+#  WHERE A WORLD KEEPS WHAT IS NOT COMMITTED — credentials, and a document such as where its place is.
+SECRETS = "secrets"
 BELIEFS = "beliefs"
 
 #  THE MIND: belief, planning and execution, which every agent has, since the container builds the
 #  mind whatever the world (a-layer-is-a-package-and-need-loads-it). A package is named by its
 #  directory under `agent/`, which is what rule 2 says a package is.
 MIND = ("belief", "planning", "execution")
-SENSING, PREDICTION, SPEECH, MQTT = "sensing", "prediction", "speech", "transport/mqtt"
+SENSING, PREDICTION, SPEECH, MQTT, HTTP = "sensing", "prediction", "speech", "transport/mqtt", "transport/http"
 
-#  A SENSOR OF THE AGENT'S: hosted by what it acts for, or by a sample of it — the one relation
-#  sensing's callers read a sensor as the agent's by (the MQTT driver's `open` and `handle`).
-_MINE = "$me orexis:actsFor ?subject . ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?subject ."
+#  A SENSOR OF THE AGENT'S: hosted by what it acts for, by a sample of it, or by a place that
+#  contains it — the one relation sensing's callers read a sensor as the agent's by (the MQTT
+#  driver's `open` and `handle`, the HTTP driver's, sensing's `missed` of a series).
+_MINE = ("$me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host . "
+         "?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host .")
 
 #  EVERY OTHER PACKAGE, AND WHAT IN THE WORLD MAKES THE AGENT NEED IT: an ASK over the world's
 #  public graphs, `$me` the agent, which is each package's callers' reads answered in advance.
@@ -153,9 +158,11 @@ _MINE = "$me orexis:actsFor ?subject . ?sensor sosa:isHostedBy/(sosa:isSampleOf)
 #    an action holds an `execution:Saying`, whose documents `said` believes when a step is taken.
 #    Speech reads nothing of the world itself, so its premise is its callers' and in their words;
 #  - THE MQTT TRANSPORT, where the agent listens to a topic or a sensor of its publishes on one —
-#    `_transport_of` as it was, narrowed from any sensor in the world to the agent's own, which is
+#    what `_transports_of` asked of MQTT, narrowed from any sensor in the world to the agent's own, which is
 #    what the member subscribes to. Where the agent commands an actuator and neither holds, no
-#    member is loaded: which actuators are the agent's is a domain's word, and no world has one.
+#    member is loaded: which actuators are the agent's is a domain's word, and no world has one;
+#  - THE HTTP TRANSPORT, where a sensor of the agent's is a thing with a form (WoT's `td:hasForm`)
+#    — a service it fetches, a forecast.
 #  Every word here is a T-Box term and the world's things are variables, so a premise names no
 #  instance (rule 1); a new package under `agent/` loads nowhere until it is listed here or in
 #  MIND, which `agent/tests/test_premises.py` holds the tree to.
@@ -166,6 +173,7 @@ PREMISES = {
                      UNION { ?action execution:implementation/execution:operation ?op . ?op a execution:Saying } }""",
     MQTT: f"""ASK {{ {{ $me mqtt4ssn:listensToTopic ?topic }}
                      UNION {{ {_MINE} ?sensor mqtt4ssn:observesTopic ?topic }} }}""",
+    HTTP: f"ASK {{ {_MINE} ?sensor td:hasForm ?form }}",
 }
 EVERY = (*MIND, *PREMISES)
 
@@ -192,12 +200,16 @@ def documents(world: Path, agent_id: str | None = None, packages=EVERY) -> list[
     world's directory, then the agent's own under `beliefs/`, named for its id. Found by looking,
     never listed, and never a test's.
 
+    A DOCUMENT IN THE WORLD'S `secrets/` IS READ LIKE ONE BESIDE IT: what the world keeps out of
+    the repository — where its place is — is still the world's, and a world without it boots.
+
     AN AGENT'S OWN FILE IS ITS OWN AND NOBODY ELSE'S. A world of several agents states each one's
     desires apart, because the derivation mints a want under every desire a store holds: read by
     all of them, a bidder's desire would stand in its host's store as well."""
     own = sorted(p for p in Path(world).iterdir() if p.is_file() and p.suffix in DOCUMENTS)
+    secret = sorted(p for p in (Path(world) / SECRETS).glob("*") if p.is_file() and p.suffix in DOCUMENTS)
     mine = sorted(p for p in (Path(world) / BELIEFS).glob(f"{agent_id}.*") if p.suffix in DOCUMENTS) if agent_id else []
-    return [KERNEL / "ontology.ttl", *_documents_of(packages), *own, *mine]
+    return [KERNEL / "ontology.ttl", *_documents_of(packages), *own, *secret, *mine]
 
 
 def _documents_of(packages) -> list[Path]:
@@ -374,7 +386,8 @@ class Runtime:
     over one store, run pass by pass.
 
     A SENSED WORLD'S TRANSPORT is handed in brought up, or brought up here from the environment
-    by `connect` — a `Transport` member's class, whose `connect` is handed `deliver`. A message
+    by `connect` — the `Transport` members' classes, each `connect`ed and handed `deliver`, held
+    behind the family's `Transports` where there is more than one. A message
     arrives on the member's thread and is queued; the pass drains the queue on this one: sensing
     writes the observation, the rules conclude its side, prediction writes the stretches ahead and
     the rules conclude theirs, and the readings fallen due are asked for again. A step whose
@@ -390,8 +403,11 @@ class Runtime:
         self._missed, self._predict, self._said, self._sensing_metrics = _imported(self.packages)
         self.inbox: queue.SimpleQueue = queue.SimpleQueue()
         self._laps: metrics.Laps | None = None          # the parts of the pass in progress, where timed
-        self.transport = transport if transport is not None else (
-            connect.connect(self.me, self.deliver) if connect is not None else None)
+        members = [] if connect is None else list(connect) if isinstance(connect, (list, tuple)) else [connect]
+        if transport is None and members:
+            from agent.transport.transport import Transports     # the family, only where a member is loaded
+            transport = Transports.connect(self.me, self.deliver, members=members)
+        self.transport = transport
         self.executor = Executor(beliefs, agent_id, intentions,
                                  take=self._take if self.transport is not None else None)
         self.planner = Planner(beliefs, agent_id, executor=self.executor, **({"budget": budget} if budget else {}))
@@ -601,15 +617,18 @@ def _imported(packages):
     return missed, predict, said, sensing_metrics
 
 
-def _transport_of(beliefs: ox.Store, me: str):
-    """The transport member the agent is loaded with, or None where no member's premise holds —
-    and then the member's module is never imported. MQTT is the one member that ships; its
-    library is imported by its own `connect`, so even a world that loads it is not handed paho
-    until it connects."""
-    if MQTT not in packages_of(beliefs, me):
-        return None
-    from agent.transport.mqtt.driver import Mqtt
-    return Mqtt
+def _transports_of(beliefs: ox.Store, me: str) -> list:
+    """The transport members the agent is loaded with, each where its premise holds — and a member
+    whose premise does not hold is never imported. A member's library is imported by its own
+    `connect`, so even a world that loads MQTT is not handed paho until it connects."""
+    packages, members = packages_of(beliefs, me), []
+    if MQTT in packages:
+        from agent.transport.mqtt.driver import Mqtt
+        members.append(Mqtt)
+    if HTTP in packages:
+        from agent.transport.http.driver import Http
+        members.append(Http)
+    return members
 
 
 def world_name(world: Path) -> str:
@@ -641,7 +660,7 @@ def main(argv: list[str] | None = None) -> int:
     #  dashboards' folder go by. Neither is an instance the code names: both arrive as arguments.
     metrics.identify(world=world_name(args.world), agent=args.agent)
     runtime = Runtime(beliefs, args.agent, budget=args.budget,
-                      connect=_transport_of(beliefs, _identity(beliefs, args.agent)))
+                      connect=_transports_of(beliefs, _identity(beliefs, args.agent)))
     #  A STOP IS AN EXIT, so the last window is written: `podman stop` sends SIGTERM, whose default
     #  ends the process where it stands and would lose up to a window of metrics.
     signal.signal(signal.SIGTERM, _stopped)

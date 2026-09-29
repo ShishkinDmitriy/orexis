@@ -16,7 +16,6 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
-* [forecast](/domain/kernel/forecast.md) - Another party's word about a period ahead, a graph holding during it; testimony, never the agent's own prediction.
 * [series](/domain/kernel/series.md) - What a person watches and the agent never reads: history contributed by the package that decides it, metrics as each package's code, a point a minute.
 
 # Sensing — bytes become observations
@@ -24,11 +23,12 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [sensing](/domain/sensing/sensing.md) - A transport's bytes become one observation per key, holding until the next is due; says when a sensor falls silent.
 * [observation](/domain/sensing/observation.md) - One act of observing in SOSA's words, one per key, replaced whole by the next; the premise everything else derives from.
 * [reading](/domain/sensing/reading.md) - The number an observation carries: what a side is concluded of, what a drift predicts, what a dose is sized from.
+* [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; the rules say which side a reading is on.
 
 # Transport — reaching the society
 
-* [transport](/domain/transport/transport.md) - The contract the container holds of any member; MQTT is the one that ships, speaking MQTT4SSN and declaring nothing.
+* [transport](/domain/transport/transport.md) - The contract the container holds of any member, several held as one; MQTT speaks MQTT4SSN, HTTP the Thing Description, neither declaring a word.
 
 # Belief — what follows from what was written
 

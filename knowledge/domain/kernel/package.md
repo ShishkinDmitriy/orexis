@@ -38,10 +38,11 @@ in their words:
 
 | package | its premise holds where |
 |---|---|
-| sensing | a sensor is hosted by what the agent acts for, or by a sample of it |
+| sensing | a sensor is hosted by what the agent acts for, by a sample of it, or by a place that contains it |
 | prediction | such a sensor exists and a `prediction:Drift` is declared |
 | speech | the agent `mqtt4ssn:listensToTopic` a topic, or an action holds an `execution:Saying` |
 | the MQTT transport | the agent listens to a topic, or a sensor of its `mqtt4ssn:observesTopic` one |
+| the HTTP transport | a sensor of its is a thing with a form, `td:hasForm` |
 
 The premise is the runtime's to state and not the package's, because speech's is spoken in the
 transport's words and in execution's, which speech's layout test forbids it as a layer above, and
