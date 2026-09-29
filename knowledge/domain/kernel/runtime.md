@@ -46,7 +46,16 @@ has lived in: every graph a document put in and nobody owns is forgotten and rea
 closure, which is how an updated ontology or rule set reaches an agent that has lived; the graphs
 the agent owns are left as they are, since they are its beliefs now.
 
-**`run` is a loop of passes, and it stops.** A pass is the [planner](/domain/planning/planner.md)'s — the
+**A package starts itself.** Every package beyond the mind that has a `start` module is handed the
+runtime and says what it does: a transport listens or polls, sensing asks every minute what has
+fallen due, prediction answers every observation written. The runtime offers four things — `submit`
+a job from any thread, hear a kind a job writes (`on`), `every` so many seconds of the one timeline,
+and a `gauge` — runs every job on its one thread, one at a time, and knows no package's words
+([a-package-starts-itself](/decisions/a-package-starts-itself.md)). A transport package is started
+only where the process is told to connect; a test hands a member it brought up.
+
+**`run` is a loop of passes, and it stops.** A pass first drains the packages' jobs — what is due,
+what was queued and what their writes set off — and then is the [planner](/domain/planning/planner.md)'s — the
 wants derived, each searched, the plans handed to the [executor](/domain/execution/executor.md) — and then
 the executor ticked and drained until nothing more happens at that instant, which for a fictive
 action is the whole plan and for a real one is up to the first landing the world has not

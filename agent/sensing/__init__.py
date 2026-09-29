@@ -4,7 +4,7 @@
 transport calls with the bytes it read for a sensor it owns: the pipeline — codec, pointer,
 scaling — makes a number of them, and one `sosa:Observation` is written into the graph of that
 key, holding from its instant until the next is due by the sensor's `ssn-system:Frequency`.
-`missed` is what the container's tick calls: which sensors' readings have fallen due with
+`missed` is what sensing's own `start` asks every minute: which sensors' readings have fallen due with
 nothing arrived, for the container to nudge, and which of them have been silent for a limit
 of their cadences, said so by `sensing:silentSince` until a reading ends it. Everything is
 SOSA's and SSN's words — a sensor `sosa:observes` a property and `sosa:isHostedBy` what it is

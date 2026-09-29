@@ -1,5 +1,5 @@
 """`missed`: which sensors' readings are missing at an instant, and which of them have gone
-silent — the one act the container's tick calls, since sensing keeps no timer of its own.
+silent — asked every minute of the timeline by sensing's own `start`, which the runtime waits for.
 
 **A READING IS MISSING WHEN ITS OBSERVATION'S PERIOD HAS ENDED AND NOTHING REPLACED IT.** The
 observation `received` writes holds from its instant until the next is due by the sensor's
@@ -18,12 +18,6 @@ reading drops it at the writer (`received`). Said once: a sensor already said si
 re-said on every tick. SOSA and SSN say how often a sensor reports and nothing about one that
 has stopped, so this is one of sensing's own words.
 
-**A SENSOR READING A SERIES IS ASKED FOR WHEN IT FALLS DUE.** A pushed reading says it arrived; a
-forecast must be pulled, so a series sensor of the agent's — one hosted by what it acts for, a
-sample of it, or a place that contains it — is answered due when no forecast of its stands, or
-when the newest standing was issued a cadence or more ago. That covers its first forecast and one
-lost to downtime, which is why the never-reported seam below is a pushed sensor's alone.
-
 **A SENSOR THAT HAS NEVER REPORTED IS NOT HERE.** Its absence is, in the store, the same as
 a sensor not yet due; that fault is the container's to count from boot, and is the seam this
 leaves open — as is the sweep: this reads the ended observation's row off the catalogue, so
@@ -35,8 +29,8 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
-from agent.ontology import PUBLIC, STATE, local_of
-from agent.store import Raw, catalogue_of, entry, graphs_of, instant, remember, rows, update
+from agent.ontology import STATE, local_of
+from agent.store import Raw, catalogue_of, entry, instant, remember, rows, update
 
 from .cadence import cadence_of
 from .ontology import DERIVED, silent_graph
@@ -55,20 +49,10 @@ SELECT ?sensor ?end ?since WHERE {
   OPTIONAL { GRAPH $cat { ?sg a orexis:StateGraph } GRAPH ?sg { ?sensor sensing:silentSince ?since } } }
 ORDER BY ?end ?sensor"""
 
-#  EVERY SERIES SENSOR OF THE AGENT'S, with the newest instant a standing forecast of its was issued.
-_SERIES_Q = """
-SELECT ?sensor (MAX(?issued) AS ?last) WHERE {
-  $me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host .
-  { ?sensor sensing:startsPointer ?pointer } UNION { ?sensor sensing:endsPointer ?pointer }
-  OPTIONAL { GRAPH $cat { ?g a sensing:ForecastGraph } GRAPH ?g { ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?issued } } }
-GROUP BY ?sensor ORDER BY ?sensor"""
-
 
 def missed(store, me: str, now: datetime, *, memo=None) -> list[str]:
     """The sensors whose reading is missing at `now` — observed once, and the observation
-    fallen due before now with nothing arrived since — earliest lapse first, then every series
-    sensor of `me`'s whose forecast is due; and any of the first
+    fallen due before now with nothing arrived since — earliest lapse first; and any of them
     silent for `SILENT_AFTER` cadences is said so, once, by `sensing:silentSince` in a graph
     of `me`'s own.
     """
@@ -92,9 +76,4 @@ INSERT DATA {{
   {entry(store, graph, STATE, DERIVED, me, start=fell_due)} }}""")
         log.warning("%s: %s silent since %s, %d cadences past", local_of(me), local_of(sensor),
                     fell_due.isoformat(timespec="seconds"), SILENT_AFTER)
-    for r in rows(store, _SERIES_Q, graphs_of(store, PUBLIC), cat=cat, me=me):
-        cadence = cadence_of(store, r["sensor"], memo)
-        last = datetime.fromisoformat(r["last"]) if r.get("last") else None
-        if last is None or (cadence is not None and now >= last + timedelta(seconds=cadence)):
-            out.append(r["sensor"])
     return out

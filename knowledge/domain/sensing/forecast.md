@@ -29,7 +29,7 @@ start and end of its stretch are happenings of the calculation.
 A sensor that reads a SERIES: one stating `sensing:endsPointer` or `sensing:startsPointer`
 beside its `sensing:readingPointer`, so that one response carries many values and the instants
 they are for. [Sensing](/domain/sensing/sensing.md)'s `received` writes one forecast per stretch
-still ahead and forgets the sensor's earlier ones; `missed` says the sensor is due when none
-stands or the standing one was issued a cadence ago. How the response arrives is the
+still ahead and forgets the sensor's earlier ones. How the response arrives, and how often it is
+asked for — the HTTP member polls at the sensor's frequency — is the
 [transport](/domain/transport/transport.md)'s - over HTTP, from a Thing Description
 ([a-forecast-is-a-series-a-sensor-reads](/decisions/a-forecast-is-a-series-a-sensor-reads.md)).

@@ -50,13 +50,14 @@ def test_no_file_of_this_layer_speaks_the_minds_words_or_a_transports(path):
 
 #  A TRANSPORT IS BENEATH SENSING AND IMPORTS ITS CALLBACK, `received`, and nothing else of it;
 #  the contract a transport answers is the transport family's own, not sensing's.
-CALLBACK = ("agent.sensing.received",)
+CALLBACK = ("agent.sensing.received", "agent.sensing.cadence")
 
 
 def test_nothing_above_imports_sensing():
     """The prediction package and the executor read observations by KIND: a graph classified
     `orexis:StateGraph` is theirs to read whoever wrote it. A transport, beneath, imports the
-    callback and nothing else of sensing's."""
+    callback and sensing's read of a sensor's frequency, which a polling member polls at, and
+    nothing else of sensing's."""
     for path in sorted((ROOT / "agent").rglob("*.py")):
         if SENSING in path.parents or "tests" in path.parts or path == ROOT / "agent" / "runtime.py":
             continue                  # the container assembles every layer and may import them all

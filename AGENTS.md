@@ -575,7 +575,7 @@ it is a record wearing a bullet.
 - **Sensing observes and says when a sensor has gone silent, and prediction is a package of
   its own** — `received` writes one `sosa:Observation` per key with its number, holding until
   the next is due by the sensor's `ssn-system:Frequency`, `missed` answers the readings fallen
-  due on the container's tick and says `sensing:silentSince` of a sensor silent past a limit of
+  due when sensing's own `start` asks each minute and says `sensing:silentSince` of a sensor silent past a limit of
   its cadences, and the side is a revision the three rules sensing ships conclude; no band,
   no side, no want, no verdict on a prediction is sensing's own write. `agent/prediction/`
   accumulates the drifts' summed rates between happenings, places every crossing of a range
@@ -933,7 +933,7 @@ it is a record wearing a bullet.
 
 - **A forecast is a series a sensor reads, and a public service's address is wiring** — a weather
   service is a `sosa:Sensor` whose one response holds many stretches, so sensing writes a
-  `sensing:ForecastGraph` per stretch and `missed` says when it is due, since a series is pulled;
+  `sensing:ForecastGraph` per stretch and the HTTP member polls at its frequency, since a series is pulled;
   the HTTP member adopts the WoT Thing Description, its target a URI template the place's
   `schema:geo` fills, and the location lives in the world's `secrets/`, which a boot reads and git
   does not hold (a-forecast-is-a-series-a-sensor-reads).
@@ -941,6 +941,12 @@ it is a record wearing a bullet.
   member that queued it and a nudge or a command to the member that `reaches` the device, so a
   world may reach its board over MQTT and its forecast over HTTP; and a sensor is the agent's where
   it is hosted by what the agent acts for, a sample of it, or a place that contains it.
+
+- **A package starts itself, and the runtime is a lifecycle container** — `Runtime.sense` wrote
+  every package's behaviour in one order, so silence was asked after only when some other message
+  came (#843); now each package's `start(runtime)` says what it does by jobs it submits, kinds it
+  hears and timers it asks for, one thread runs every job, and packages meet at the store and call
+  no one (a-package-starts-itself).
 
 ## The rules the code lives by
 
@@ -996,11 +1002,14 @@ it takes a different path through translation — sensing for an instrument's by
 peer's document. See
 [the-agent-stack-is-a-second-axis](knowledge/decisions/the-agent-stack-is-a-second-axis.md).
 
-**A pass senses, revises, plans and walks, on one thread.** The runtime drains what the
-transport queued, writes it, has the rules conclude of each graph beside public knowledge,
-predicts, then asks the Planner for a pass and ticks and drains the executor until nothing is
-due; a search is bounded by a budget in the unit it spends and continued by the next pass. The
-executor's two doors, `tick` and `drain`, are what a test drives and what a thread would call.
+**A package starts itself, and a pass drains, plans and walks, on one thread.** The runtime starts
+every loaded package that has a `start` module and knows no word of what it does: a transport
+listens or polls, sensing asks after what has fallen due, prediction answers an observation, each
+through jobs it submits, kinds it hears and timers it asks for (a-package-starts-itself). A pass
+drains every job due and queued, then asks the Planner for a pass and ticks and drains the executor
+until nothing is due; a search is bounded by a budget in the unit it spends and continued by the
+next pass. The executor's two doors, `tick` and `drain`, are what a test drives and what a thread
+would call.
 
 **One principle explains most of the shapes above: control the derivative, not the value.**
 Nothing here dictates an act — a cadence not a reading, a range not an aim, what is available

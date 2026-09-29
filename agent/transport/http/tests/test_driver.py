@@ -48,13 +48,15 @@ def test_a_nudge_fetches_the_target_filled_from_the_place_and_the_body_becomes_f
     assert [sensor for sensor, _ in written] == [WEATHER, WEATHER], "one graph per hour still ahead"
 
 
-def test_a_sensor_is_fetched_once_and_not_again_within_the_retry(web, monkeypatch):
+def test_a_sensor_being_fetched_is_not_fetched_again_until_it_answers(web):
     store, member, asked, _ = web
+    held = []
+    member.spawn = held.append                          # the fetch is started and has not answered
     member.sense_now(store, WEATHER)
     member.sense_now(store, WEATHER)
-    assert len(asked) == 1
-    real = driver.time.monotonic
-    monkeypatch.setattr(driver.time, "monotonic", lambda: real() + driver.RETRY_S + 1)
+    assert len(held) == 1
+    held[0]()
+    member.spawn = lambda work: work()
     member.sense_now(store, WEATHER)
     assert len(asked) == 2
 

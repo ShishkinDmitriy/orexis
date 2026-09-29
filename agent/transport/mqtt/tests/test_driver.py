@@ -94,6 +94,20 @@ def test_a_command_goes_to_the_topic_the_board_listens_on_as_the_firmwares_docum
                                 ("sensors/board/command", json.dumps({"sense": True}).encode(), False)]
 
 
+def test_a_board_is_asked_to_sense_where_its_readings_have_fallen_due(bus, snapshots):
+    """The member's own minute: the board's two sensors reported at noon, two minutes of cadence each;
+    at one minute past nothing has fallen due, and at five past both have, so the board is told."""
+    from datetime import timedelta
+
+    store, driver, client = bus
+    driver.handle(store, "sensors/board/reading", BOARD_MESSAGE, snapshots.NOW)
+    driver.nudge(store, snapshots.NOW + timedelta(minutes=1))
+    assert client.published == []
+    driver.nudge(store, snapshots.NOW + timedelta(minutes=5))
+    assert all(p == ("sensors/board/command", json.dumps({"sense": True}).encode(), False) for p in client.published)
+    assert len(client.published) >= 1
+
+
 def test_a_sensor_whose_board_listens_nowhere_takes_no_command(bus, caplog):
     store, driver, client = bus
     with caplog.at_level("WARNING", logger="mqtt"):

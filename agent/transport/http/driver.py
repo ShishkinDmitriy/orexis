@@ -11,31 +11,30 @@ says so: a world whose location is kept in its `secrets/` and was not given it s
 sensor as its channel and the body as bytes, and calls sensing's `received`, which reads the codec,
 the pointers and the scaling off the sensor's own binding — a forecast service's series among them.
 
-**NO TIMER.** `sense_now` is the one way anything is fetched: sensing's `missed` says a sensor is due
-and the container nudges. The fetch runs on a thread of its own and the body goes to the container's
-`deliver(sensor, body, at)`; a sensor is fetched once at a time, and not again within `RETRY_S` real
-seconds of the last attempt, so a pass asking every second does not hammer a service that is down.
+**IT POLLS.** `start` asks the runtime to fetch each of its sensors at once and then every
+`ssn-system:Frequency` the sensor states (sensing's `cadence_of`, the one read of SSN's word), once
+where it states none: the runtime does the waiting and the member says what it waits for
+(a-package-starts-itself). A fetch runs on a thread of its own, one at a time per sensor, and the
+body is submitted to the runtime as a job that `handle`s it.
 """
 
 from __future__ import annotations
 
 import logging
-import math
 import re
 import threading
-import time
 import urllib.parse
 import urllib.request
 
 from agent import clock
 from agent.ontology import PUBLIC, local_of
+from agent.sensing.cadence import cadence_of
 from agent.store import answer, graphs_of, rows
 from agent.transport.transport import Transport
 
 log = logging.getLogger("http")
 
-#  HOW LONG BEFORE A SENSOR IS FETCHED AGAIN, and how long one fetch may take, in real seconds.
-RETRY_S = 60.0
+#  HOW LONG ONE FETCH MAY TAKE, in real seconds.
 TIMEOUT_S = 30.0
 
 #  EVERY SENSOR OF THE AGENT'S THAT IS A THING WITH A FORM.
@@ -76,23 +75,35 @@ class Http(Transport):
     """One agent's side of the web: what the container needs of this transport, answered from the
     world in the Thing Description's words, over a `client` that fetches a URI's body."""
 
-    def __init__(self, me: str, deliver, client=None, spawn=None):
-        self.me, self.deliver = me, deliver
+    def __init__(self, me: str, deliver=None, client=None, spawn=None):
+        self.me = me
+        self.deliver = deliver or (lambda *message: None)
         self.client = client or _get
         self.spawn = spawn or (lambda work: threading.Thread(target=work, daemon=True).start())
         self._lock = threading.Lock()
         self._fetching: set[str] = set()
-        self._asked: dict[str, float] = {}
 
     @classmethod
-    def connect(cls, me: str, deliver, *, environ=None, client=None) -> "Http":
+    def connect(cls, me: str, deliver=None, *, environ=None, client=None) -> "Http":
         """The agent's side of the web, up: nothing to connect to until a sensor is due, and no
         credential, since what it reads is public."""
         log.info("%s reads the web", local_of(me))
         return cls(me, deliver, client)
 
+    def start(self, runtime) -> None:
+        """Begin as every member does, and poll each of its sensors: at once, then every frequency
+        the sensor states."""
+        super().start(runtime)
+        for sensor in self.open(runtime.beliefs):
+            every = cadence_of(runtime.beliefs, sensor)
+            poll = lambda sensor=sensor: self.sense_now(runtime.beliefs, sensor) or []
+            if every is None:
+                runtime.submit(poll)
+            else:
+                runtime.every(every, poll)
+
     def open(self, store) -> list[str]:
-        """The sensors of the agent's this member reads; nothing is fetched until one is due."""
+        """The sensors of the agent's this member reads."""
         sensors = [r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me)]
         log.info("%s reads %s over HTTP", local_of(self.me), [local_of(s) for s in sensors] or "nothing")
         return sensors
@@ -101,13 +112,10 @@ class Http(Transport):
         return bool(answer(store, _REACHES_Q, graphs_of(store, PUBLIC), device=device)["boolean"])
 
     def sense_now(self, store, sensor: str) -> None:
-        """Fetch what `sensor` reads, on a thread of its own, unless it is being fetched or was
-        asked for less than `RETRY_S` ago."""
-        now = time.monotonic()
+        """Fetch what `sensor` reads, on a thread of its own, unless it is being fetched already."""
         with self._lock:
-            if sensor in self._fetching or now - self._asked.get(sensor, -math.inf) < RETRY_S:
+            if sensor in self._fetching:
                 return
-            self._asked[sensor] = now
         public = graphs_of(store, PUBLIC)
         targets = [r["target"] for r in rows(store, _TARGET_Q, public, sensor=sensor)]
         values = {local_of(r["property"]): r["value"] for r in rows(store, _WHERE_Q, public, sensor=sensor)}

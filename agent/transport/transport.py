@@ -24,11 +24,15 @@ arrived. The thread a message arrives on is the member's client's, and a write b
 one executing thread, so `connect` is handed the container's `deliver` and a message goes there
 — to a queue — and never to `handle` directly.
 
+A MEMBER STARTS ITSELF (a-package-starts-itself). `start` is handed the runtime: every message
+the member's thread receives is submitted to it as a job that `handle`s it, the member opens what
+it listens on and schedules what it does of its own accord — MQTT asks after a board's missing
+reading, HTTP polls — and is attached, so a step's command goes out through it. `stop` ends it.
+
 SEVERAL MEMBERS ARE ONE TRANSPORT TO THE CONTAINER. A world may reach its board over MQTT and a
-forecast service over HTTP, so the container connects every member whose premise holds and holds
-them behind `Transports`: each member is handed a `deliver` that tags its messages, so a message
-goes back to the member that queued it, and a nudge, a cadence or a command goes to the member
-that `reaches` the device — a question only a loaded member is asked, so it imports nothing.
+forecast service over HTTP; the runtime holds every member it attached behind `Transports`, which
+sends a nudge, a cadence or a command to the member that `reaches` the device — a question only a
+loaded member is asked, so it imports nothing.
 
 It was sensing's `Driver`, from 0.1.0, where the sensing module drove the transport; in 0.2.0
 sensing is called and never calling, and a contract nothing in sensing reads is not sensing's.
@@ -48,6 +52,17 @@ class Transport:
         security in the member's own variables — with every message handed to `deliver(channel,
         payload, at)`, the container's. A test hands a `client` of its own; nothing else does."""
         raise NotImplementedError("a member brings itself up; the contract cannot")
+
+    def start(self, runtime) -> None:
+        """Begin: every message this member's thread receives submitted to the runtime as a job
+        that handles it, the agent's channels opened, and the member attached for commands."""
+        self.deliver = lambda channel, payload, at: runtime.submit(
+            lambda: [graph for _, graph in self.handle(runtime.beliefs, channel, payload, at)])
+        self.open(runtime.beliefs)
+        runtime.attach(self)
+
+    def stop(self) -> None:
+        """End: whatever the member holds open, closed."""
 
     def open(self, store) -> list[str]:
         """Listen on every channel the world implies for the agent's sensors, and on the one
@@ -86,21 +101,11 @@ class Transport:
 
 
 class Transports(Transport):
-    """Several members as the one transport the container holds: a message handed back to the
-    member that queued it, and a device's nudge, cadence or command to the member reaching it."""
+    """Several members as the one transport the container holds: a device's nudge, cadence or
+    command to the member reaching it, and a message named `(n, channel)` to the n-th member."""
 
     def __init__(self, members: list[Transport]):
         self.members = list(members)
-
-    @classmethod
-    def connect(cls, me: str, deliver, *, members=(), environ=None, client=None) -> Transport:
-        """Every member of `members` brought up, each handed a `deliver` that tags its messages with
-        the member; one member is itself, and no member is nothing to hold."""
-        members = list(members)
-        if len(members) == 1:
-            return members[0].connect(me, deliver, environ=environ)
-        return cls([member.connect(me, lambda channel, payload, at, n=n: deliver((n, channel), payload, at),
-                                   environ=environ) for n, member in enumerate(members)])
 
     def open(self, store) -> list[str]:
         return [channel for member in self.members for channel in member.open(store)]

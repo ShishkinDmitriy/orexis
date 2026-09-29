@@ -1,7 +1,7 @@
 """What the transport tree's SHAPE promises, and the one direction its arrows may point.
 
 The HTTP transport is a member of a family: it imports the family's `Transport` contract, kept at
-`agent/transport/`, and calls sensing's `received`, the two downward imports a member is allowed,
+`agent/transport/`, calls sensing's `received` and reads its `cadence_of`, the downward imports a member is allowed,
 and nothing else of sensing, nor of the mind, of prediction or of the belief package; nothing
 above imports it, since the container hands it a client and calls it. It declares no word of its own — every `td:` and `hctl:` word
 it speaks is one the vendored Thing Description declares — and speaks no other package's words.
@@ -38,7 +38,7 @@ def test_the_transport_imports_only_downward():
             names = [a.name for a in getattr(n, "names", [])] if isinstance(n, ast.Import) else []
             if any(w in mod for w in ABOVE) or any(any(w in a for w in ABOVE) for a in names):
                 reaching.append(f"{p.name}:{n.lineno}")
-            if mod.startswith("agent.sensing") and mod != "agent.sensing.received":
+            if mod.startswith("agent.sensing") and mod not in ("agent.sensing.received", "agent.sensing.cadence"):
                 reaching.append(f"{p.name}:{n.lineno} reaches into sensing past its callback")
     assert not reaching, reaching
 

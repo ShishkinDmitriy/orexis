@@ -42,7 +42,6 @@ GRAPH :world {
   :weather sosa:observes :precipitation .
   :weather ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:MIN ; schema:value 60 ] ] .
   :weather td:hasForm :weather_form .
-  :weather_form hctl:forContentType "application/json" .
   :weather_form hctl:hasTarget "https://forecast.example/v1?latitude={latitude}&longitude={longitude}&hourly=precipitation" .
 }
 
