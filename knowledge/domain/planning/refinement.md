@@ -35,7 +35,7 @@ does, and the step is not the level's to take:
 5. **The want goes with its step.** Once no intention stands at the step it refines, the
    Planner forgets it, and what each imaginarium searched for it.
 
-Which steps may be kept below is said when the plan is handed down: a step taken fictively whose
+Which steps may be kept below is said when the plan is published: a step taken fictively whose
 predicted fact a bridge's head binds is `execution:keptBelow`, and the executor waits for its want
 rather than take it ([planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 The whole plan above is found first, in the upper vocabulary alone, and each step is refined

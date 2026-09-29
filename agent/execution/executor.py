@@ -146,7 +146,7 @@ ORDER BY ?due ?intention"""
 
 _PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH ?plan { $step execution:predicts ?predicts } } LIMIT 1"""
 
-#  WHETHER THE INTENTIONS GRAPH IS CLASSIFIED YET, and every plan handed down with its want.
+#  WHETHER THE INTENTIONS GRAPH IS CLASSIFIED YET, and every plan published and adopted by none, with its want.
 _CLASSIFIED_Q = """SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph a ?k } } LIMIT 1"""
 _PLANS_Q = """
 SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
@@ -290,7 +290,7 @@ class Executor:
         return [self.graph] if committed else []
 
     def adopt(self, plan: str, want: str) -> list[str]:
-        """Adopt the plan `plan` published for `want`, as `commit_plans` takes one up. The
+        """Adopt the plan `plan` published for `want`, heard as planning publishes it. The
         intentions graph where anything was committed."""
         return [self.graph] if self.commit(self.beliefs, plan, want) is not None else []
 

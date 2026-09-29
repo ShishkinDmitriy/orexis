@@ -1,67 +1,85 @@
 ---
 type: Decision
-title: Planning and execution meet at the store, and the intentions are the belief base's
+title: Planning and execution meet at the store, signal by events, and the mind starts itself
 status: accepted
 timestamp: 2026-09-29T15:00:00Z
 description: >-
-  The sovereign's choice of 2026-09-29, the first half of the mind starting itself. The
-  Planner held the executor and the executor held the Planner's refine; now neither calls the
-  other. A plan goes down as an execution:PlanGraph in the belief base, which the executor takes
-  up and commits; planning reads what is walked and where each intention stands off the
-  intentions by pattern; a step a bridge keeps below is marked so when it is handed down, and
-  planning answers it with the want that keeps it, execution:keptBy, which the executor waits
-  on. The intentions become a graph of the belief base, the agent's own and not public, so a
-  restart finds them (#842). Refused - planning holding the executor, one start for the mind,
-  and refinement asked by a call.
+  The sovereign's choices of 2026-09-29, the mind's half of a-package-starts-itself. The Planner
+  held the executor and the executor held the Planner's refine; now neither calls the other.
+  Planning publishes a plan once, an orexis:PlanGraph it owns, and an intention adopts it by
+  reference; packages signal by events the runtime routes (a plan published, an intention ended);
+  belief, planning and execution start themselves; the intentions are a graph of the belief base,
+  so a restart finds them (#842). An intention ends early where planning says its want is reached
+  before it began, or its next step is blocked. Refused - copying the plan into the intentions,
+  events as stored facts, planning holding the executor, and ending a begun plan when its want is met.
 ---
 
 # The claim
 
-**A plan is handed down through the store.** `publish_plan` copies each plan a pass found for a
-want nothing walks into the belief base as an `execution:PlanGraph` — the steps in execution's
-words as the search wrote them, the root saying which want it `execution:pursues`, and beside it
-what the want was derived from. `Executor.commit_plans` takes each up, commits it as it always
-did, and forgets the graph. Planning is above execution, so it writes execution's words; execution
-reads nothing of planning's.
+**A plan is published once, and adopted by reference.** Planning writes each plan a pass found into
+the belief base as an `orexis:PlanGraph` — the kernel's, since planning writes it and execution
+reads it — under a name minted for that plan, its steps moved under it, the root saying which want it
+`execution:pursues`. Planning owns it and it stays. An intention `execution:adopts` it and holds only
+its own rows: where it stands, its acts, its outcome. Every read of a step's facts looks in the plan
+it adopts. A second plan for one want never shares a step's name with the first, so the executor's
+renaming went with the copy.
 
-**What is walked is read, not asked.** The intentions are rows, and planning reads them by
-pattern: a want a standing intention pursues, or a plan handed down and not yet taken up
-pursues, is walked — neither searched again nor withdrawn; the step each standing intention
-stands at is what a want kept below is for.
+**Packages signal by events, and the runtime routes them.** An [event](/domain/kernel/event.md) —
+named in the kernel, since neither package may name the other's word — says something just happened:
+planning emits a plan published, and execution adopts it; execution emits an intention resolved, and
+planning plans again at once; a job's write is a graph written, and whoever hears its kind acts on it.
+The runtime calls every listener at once on its one thread and knows nothing of what an event means.
+An event is not stored: what it points at is, and a listener reads it there.
 
-**A step kept below is marked, then answered.** Refinement asks, before a step would be taken
-fictively, whether a rule the store holds keeps it one level down. That was a call from the
-executor into the Planner. Now the Planner marks, when it hands a plan down, every step taken
-fictively whose predicted fact a bridge's head binds (`bridge.keeps`) as `execution:keptBelow`;
-the executor does not take such a step fictively, and waits. When it has fallen due, the
-Planner's next pass mints the want that keeps it (`refine`) and writes `<step> execution:keptBy
-<want>`, and the executor, finding it, records it on the act and waits on the want, as before.
-`planning:refines`, the inverse, is retired: one relation, in the words of the layer that must
-read it. A pass marks and answers before the walk, so a step waits at most one pass.
+**The mind starts itself.** Belief revises every belief and prediction written; planning plans every
+pass and holds or lets go of the agent (met, unreachable); execution walks what is due every pass and
+takes a step by emitting its commands and its sayings, which the transport and speech hear. The
+runtime keeps what each start answered and no longer runs a pass of its own.
 
-**The intentions are a graph of the belief base.** `execution:IntentionGraph`, beneath
-`orexis:Graph` and not public — so it never crosses into an imaginarium — classified as the
-agent's own when the first plan is committed. A lived-in volume keeps the agent's own graphs,
-so a restart finds every intention where it stood, and the executor takes the head of each
-from there (#842). Whether a step walking when the process stopped should survive is left to
-the world: the executor holds a taken step to its landing and its patience as it would anyway.
+**What is walked is read, not asked.** Planning reads the intentions by pattern: a want a standing
+intention pursues, or a plan published and adopted by no intention yet pursues, is walked — neither
+searched again nor withdrawn.
+
+**A step kept below is marked, then answered.** Planning marks, when it publishes a plan, every step
+taken fictively whose predicted fact a bridge's head binds (`bridge.keeps`) as `execution:keptBelow`;
+the executor does not take it and waits. When it falls due, planning mints the want that keeps it and
+writes `<step> execution:keptBy <want>`, which the executor records on the act and waits on.
+`planning:refines`, the inverse, is retired.
+
+**An intention ends early, and only in two cases.** Both judgments are planning's, since the met-test
+and the precondition are its texts; both end with execution, which alone writes the intentions.
+
+- *Its want is reached before it began.* Planning emits a walked want the present meets; execution
+  ends the intention `reached` where none of its steps has been taken — rain before the dose.
+- *Its next step is blocked.* Planning asks the present ground, for every step an intention stands
+  at, fallen due, not taken and not kept below, whether its action's precondition still admits the
+  step's own values; where it does not, execution ends the intention `failed`, and planning plans
+  again at once.
+
+Otherwise an intention stands until it is done or a taken step goes unanswered past its patience,
+and planning never replaces it on its own, even with a cheaper plan found. That is single-minded
+commitment in Rao and Georgeff's sense — kept until achieved or believed impossible — where the
+executor before noticed neither until a step timed out.
+
+**The intentions are a graph of the belief base.** `execution:IntentionGraph`, the agent's own and not
+public, classified at the first adoption, so a lived-in volume keeps them and a restart finds each
+intention where it stood (#842).
 
 # What was refused
 
-- **Planning holding the executor.** Execution lies beneath planning, and the Planner's pass
-  could have built and fed the executor it hands plans to. It kept the one pair of packages that
-  called each other, and the runtime could not start either without the other.
-- **One start for the mind.** Belief, planning and execution started together by one module
-  would be a start that is no package's own.
-- **Refinement asked by a call at take time.** A question from below to above is the call this
-  refuses; marking at hand-off and answering by a row keeps the arrow pointing down.
+- **Copying the plan into the intentions**, which #855 first did: the plan existed three times, and
+  after the last copy nothing said which plan an intention walked or who found it.
+- **Events as stored facts**, recommended and not chosen: a graph written by kind would survive a
+  restart as an event; the sovereign chose a channel of signals, and what survives is the state the
+  signals point at.
+- **Planning holding the executor.** It kept the one pair of packages that called each other.
+- **Ending a begun plan when its want is met.** The supplier's round, once opened, answers a call
+  and must still be cleared; ending it there left the fern unserved.
 
 # Seams left open
 
-- **A step whose own facts no bridge binds, and whose frame one does,** is taken fictively: the
-  mark asks of the facts a step adds, which is what makes a want certain, and the frame alone
-  once kept such a step below.
-- **A planner with no executor** leaves its plans handed down and untaken, and reads their wants
-  as walked; a test that plans without walking drops them.
-- **The mind still runs its pass in the runtime**, planning then taking up then walking; it starts
-  itself next ([a-package-starts-itself](/decisions/a-package-starts-itself.md)).
+- **A step whose own facts no bridge binds, and whose frame one does,** is taken fictively.
+- **A step becoming due within one walk** is taken before planning can say it is blocked; the next
+  pass sees only steps that stand.
+- **A plan whose intention is resolved stays**, as the history of what was committed.
+- **A planner with no executor** leaves its plans unadopted, and reads their wants as walked.

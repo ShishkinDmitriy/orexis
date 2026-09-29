@@ -45,9 +45,10 @@ in their words:
 | the HTTP transport | a sensor of its is a thing with a form, `td:hasForm` |
 
 Once loaded, a package **starts itself**: `agent/<package>/start.py` exports `start(runtime)`, which
-says what the package does by jobs, kinds heard and timers, and the runtime calls it knowing no word
-of what it does ([a-package-starts-itself](/decisions/a-package-starts-itself.md)). The mind's
-packages start themselves next; until then the runtime runs their pass.
+says what the package does by jobs, timers and events, and the runtime calls it knowing no word of
+what it does ([a-package-starts-itself](/decisions/a-package-starts-itself.md)). The mind's three start
+themselves the same way
+([planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 
 The premise is the runtime's to state and not the package's, because speech's is spoken in the
 transport's words and in execution's, which speech's layout test forbids it as a layer above, and

@@ -12,6 +12,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [domain](/domain/kernel/domain.md) - A vocabulary, its actions, shapes and rules as documents in `domains/<name>/`, imported by the worlds that speak it.
 * [action](/domain/kernel/action.md) - One way of acting as one node: what it takes, its precondition, its effect, its implementation, its cost.
 * [runtime](/domain/kernel/runtime.md) - Boots a world into a store, then runs pass by pass, and stops when nothing is held or wanted.
+* [event](/domain/kernel/event.md) - A signal one package gives the others through the runtime: routed at once, named in the kernel, never stored.
 * [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind on the catalogue.
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
@@ -45,7 +46,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 * [desire](/domain/planning/desire.md) - A desire stands and is never searched; a want is minted where it bites, searched, and withdrawn once met.
 * [shape](/domain/planning/shape.md) - A met-test is a SHACL shape a domain declares, compiled to the select whose rows are its violations.
-* [planner](/domain/planning/planner.md) - One pass: grounds laid, wants derived, each searched best-first within a budget, the plans handed down.
+* [planner](/domain/planning/planner.md) - One pass: grounds laid, wants derived, each searched best-first within a budget, the plans published down.
 * [imaginarium](/domain/planning/imaginarium.md) - The in-memory store a search forks worlds in, one per scope, kept from pass to pass.
 * [cone](/domain/planning/cone.md) - The worlds and weighings a search leaves; the next pass finds the present among them by hash, or drops them.
 * [scope](/domain/planning/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.

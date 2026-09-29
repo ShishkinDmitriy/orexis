@@ -16,8 +16,9 @@ channels (`open`), turn a message into observations by calling sensing's `receiv
 sensor it is for (`handle`), and send what a device may be told — a cadence, a sense-now, and the
 payload a step's command answers (`actuate`), say whether it `reaches` a sensor or an actuator,
 and **start itself** (`start`, handed the runtime): its thread's messages submitted as jobs the
-runtime's one thread runs, what it listens on opened, what it does of its own accord scheduled,
-and itself attached for commands. Several are held behind `Transports`, which sends a nudge or a
+runtime's one thread runs, what it listens on opened, what it does of its own accord scheduled, a
+step's command and a document told heard as [events](/domain/kernel/event.md) where it reaches the
+recipient, and the agent held running, since what it senses goes on arriving. Several are held behind `Transports`, which sends a nudge or a
 command to the member that reaches its device.
 
 Whether a member is loaded at all is not asked of it, since asking would import it: it is the

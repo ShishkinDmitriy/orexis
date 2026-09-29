@@ -948,11 +948,13 @@ it is a record wearing a bullet.
   hears and timers it asks for, one thread runs every job, and packages meet at the store and call
   no one (a-package-starts-itself).
 
-- **Planning and execution meet at the store, and the intentions are the belief base's** — the
-  Planner held the executor and the executor the Planner's refine; a plan goes down as an
-  `execution:PlanGraph`, what is walked is read off the intentions by pattern, a step a bridge
-  keeps below is marked at hand-off and answered by `execution:keptBy`, and the intentions, a
-  graph of the belief base, survive a restart (planning-and-execution-meet-at-the-store).
+- **Planning and execution meet at the store and signal by events, and the mind starts itself** —
+  the Planner held the executor and the executor the Planner's refine; a plan is published once as
+  an `orexis:PlanGraph` planning owns and an intention `execution:adopts` it by reference, packages
+  signal by events the runtime routes (`agent/events.py`), what is walked is read off the intentions,
+  and an intention ends early only where its want is met before it began or its next step is blocked
+  — a plan begun is walked to its end, since the supplier's round opened answers a call and must
+  still be cleared (planning-and-execution-meet-at-the-store).
 
 ## The rules the code lives by
 
@@ -1008,14 +1010,15 @@ it takes a different path through translation — sensing for an instrument's by
 peer's document. See
 [the-agent-stack-is-a-second-axis](knowledge/decisions/the-agent-stack-is-a-second-axis.md).
 
-**A package starts itself, and a pass drains, plans and walks, on one thread.** The runtime starts
-every loaded package that has a `start` module and knows no word of what it does: a transport
-listens or polls, sensing asks after what has fallen due, prediction answers an observation, each
-through jobs it submits, kinds it hears and timers it asks for (a-package-starts-itself). A pass
-drains every job due and queued, then asks the Planner for a pass and ticks and drains the executor
-until nothing is due; a search is bounded by a budget in the unit it spends and continued by the
-next pass. The executor's two doors, `tick` and `drain`, are what a test drives and what a thread
-would call.
+**A package starts itself, and a pass drains, on one thread.** The runtime starts every loaded
+package that has a `start` module, the mind's three among them, and knows no word of what it does:
+belief revises what is written, planning plans every pass and publishes, execution adopts and walks,
+a transport listens or polls, sensing asks after what has fallen due, prediction answers an
+observation — each through jobs it submits, timers it asks for and events it emits and listens for
+(a-package-starts-itself, planning-and-execution-meet-at-the-store). A pass drains every job queued,
+then what is due; the run ends when nothing holds the agent. A search is bounded by a budget in the
+unit it spends and continued by the next pass. The executor's two doors, `tick` and `drain`, are
+what its walk and a test call.
 
 **One principle explains most of the shapes above: control the derivative, not the value.**
 Nothing here dictates an act — a cadence not a reading, a range not an aim, what is available

@@ -24,7 +24,7 @@ below. QUADS AND NOT TEXT: a serialise-and-reparse relabels blank nodes.
 points at it, or none reached it inside the budget — and an answer is not a commitment.
 
 **A PLAN FOR A WANT BEING WALKED DOES NOT CROSS EITHER**: the plan graph of a want an intention
-pursues, or a plan handed down pursues, is still in the imaginarium, since that outlives the
+pursues, or a plan published and not yet adopted pursues, is still in the imaginarium, since that outlives the
 pass, and it is not the pass's to hand down twice. Absorbing a second plan by the agent's
 patience is the executor's, when it commits.
 """
@@ -66,7 +66,7 @@ def publish_plan(imaginarium: ox.Store, beliefs: ox.Store, me: str, walking: set
         found = rows(imaginarium, bind(_FOR_Q, plan=Raw(f"<{graph}>")))
         if not found:
             #  A PLAN GRAPH THAT NAMES NO WANT is one nobody can carry out on anyone's behalf.
-            log.error("a plan graph names no want, so it cannot be handed down: %s", graph)
+            log.error("a plan graph names no want, so it cannot be published: %s", graph)
             continue
         want = found[0]["want"]
         if not rows(imaginarium, _STANDS_Q, graphs_of(imaginarium, WANT), want=want):

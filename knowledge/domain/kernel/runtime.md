@@ -46,21 +46,26 @@ has lived in: every graph a document put in and nobody owns is forgotten and rea
 closure, which is how an updated ontology or rule set reaches an agent that has lived; the graphs
 the agent owns are left as they are, since they are its beliefs now.
 
-**A package starts itself.** Every package beyond the mind that has a `start` module is handed the
-runtime and says what it does: a transport listens or polls, sensing asks every minute what has
-fallen due, prediction answers every observation written. The runtime offers four things — `submit`
-a job from any thread, hear a kind a job writes (`on`), `every` so many seconds of the one timeline,
-and a `gauge` — runs every job on its one thread, one at a time, and knows no package's words
-([a-package-starts-itself](/decisions/a-package-starts-itself.md)). A transport package is started
-only where the process is told to connect; a test hands a member it brought up.
+**A package starts itself.** Every package the agent loads — the mind's three and each whose premise
+holds — that has a `start` module is handed the runtime and says what it does: belief revises what
+is written, planning plans every pass, execution walks what is due, a transport listens or polls,
+sensing asks every minute what has fallen due, prediction answers every observation written. The
+runtime offers `submit` a job from any thread, `every` so many seconds of the one timeline, `emit`
+and `listen` for an [event](/domain/kernel/event.md) — a graph written by kind being one (`on`) —
+`hold` and `release` the agent, `again`, and a `gauge`; it runs every job and listener on its one
+thread and knows no package's words, keeping what each start answered in `started`
+([a-package-starts-itself](/decisions/a-package-starts-itself.md),
+[planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
+A transport package is started only where the process is told to connect; a test hands a member it
+brought up.
 
-**`run` is a loop of passes, and it stops.** A pass first drains the packages' jobs — what is due,
-what was queued and what their writes set off — and then is the [planner](/domain/planning/planner.md)'s — the
-wants derived, each searched, the plans handed to the [executor](/domain/execution/executor.md) — and then
-the executor ticked and drained until nothing more happens at that instant, which for a fictive
-action is the whole plan and for a real one is up to the first landing the world has not
-answered. An agent a transport reaches is never done either: what it senses goes on arriving, and
-the terrace, which wants nothing, watches for good. A [desire](/domain/planning/desire.md) is universal, so an agent holding one is never done: a
+**`run` is a loop of passes, and it stops when nobody holds the agent.** A pass drains the packages'
+jobs — what was queued and what their writes set off — then what is due: the
+[planner](/domain/planning/planner.md)'s pass, which publishes its plans for the
+[executor](/domain/execution/executor.md) to adopt, then the executor's walk, which for a fictive action
+is the whole plan and for a real one is up to the first landing the world has not answered. A
+transport holds the agent, since what it senses goes on arriving: the terrace, which wants nothing,
+watches for good. Planning holds it while a desire is held or a want stands. A [desire](/domain/planning/desire.md) is universal, so an agent holding one is never done: a
 pass with nothing to do waits for the world to move, and so does one whose wants nothing
 reaches, since the world may yet open a way. A want is one-shot: a pass that weighs one met in
 the present ground withdraws it, from the planner's imaginaria and from the beliefs, where a want
@@ -74,15 +79,14 @@ want, which such an agent exits as unreachable rather than looping on.
 **A sensed world runs through its transport.** Where the member's premise holds — the agent
 listens to a topic, or a sensor of its publishes on one — the
 [transport](/domain/transport/transport.md) is imported and the runtime brings the member up from the environment and
-hands it `deliver`: a message arrives on the member's thread and is queued, and each pass drains
-the queue on the one executing thread — [sensing](/domain/sensing/sensing.md) writes the observation,
-the [deliberator](/domain/belief/deliberator.md) runs the rules that conclude its side, the
+starts it: a message arrives on the member's thread and is submitted, and each pass drains it on
+the one executing thread — [sensing](/domain/sensing/sensing.md) writes the observation, the
+[deliberator](/domain/belief/deliberator.md) runs the rules that conclude its side, the
 [prediction](/domain/prediction/prediction.md) package writes the stretches ahead and the rules conclude
-theirs, and a reading fallen due is asked for again — each of those three only where its package
-was loaded, the runtime importing sensing's `missed`, prediction's `predict` and speech's `said`
-when it is built and not before. A step whose action's implementation
-holds an `execution:Command` is taken by sending what the command answers, sized from the present, through
-the transport's `actuate`; the [greenhouse](/domain/kernel/domain.md)'s pump and heater are taken so.
+theirs — each hearing the graph written, where its package was loaded. A step whose action's
+implementation holds an `execution:Command` is taken by emitting what the command answers, sized from
+the present, for the transport reaching the device; the [greenhouse](/domain/kernel/domain.md)'s pump
+and heater are taken so.
 
 **A world's tests live with the world.** `world/hanoi/tests/` boots the world from the files
 beside it and runs it to met.

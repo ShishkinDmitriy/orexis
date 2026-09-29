@@ -29,7 +29,7 @@ process is told:
    want's weighings come to;
 4. `publish_plan` hands every plan no intention is already walking DOWN, through the belief base:
    an `orexis:PlanGraph` published once in execution's words, each step a bridge may keep below marked so
-   (`bridge.keeps`), which the executor takes up and commits.
+   (`bridge.keeps`), which the executor adopts by reference.
 
 And before any of it, every step an intention stands at that is kept below and has fallen due is
 given the want that keeps it (`refine`), which the executor then waits on.
@@ -279,8 +279,8 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
     def plan(self, now: datetime | None = None) -> list[str]:
         """One pass: an imaginarium per scope, every desire weighed in every ground, the wants
-        derived, each searched, and the plans handed down. The graphs written in the beliefs — the
-        plans handed down and the wants that keep a step below — for whoever hears what was written.
+        derived, each searched, and the plans published. The graphs written in the beliefs — the
+        plans published and the wants that keep a step below — for whoever hears what was written.
 
         THE IMAGINARIUM COMES FIRST, AND THE DERIVATION RUNS INSIDE IT. What a desire reads at
         a future instant is what the GROUND holding then says — the present with each
@@ -301,9 +301,9 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         each other by construction. The scopes are READ and never computed — `scope_actions`
         wrote them, and a store holding no scope graph is refused rather than guessed at.
 
-        AND THE LAST ACT IS `publish_plan`, handing each plan down into the beliefs: the
-        imaginarium is the Planner's and dies with it, so an intention, committed from what was
-        handed down, is the only thing a pass leaves the agent. A plan with no steps does not cross — an answer is not a
+        AND THE LAST ACT IS `publish_plan`, publishing each plan into the beliefs: the imaginarium is
+        the Planner's and dies with it, so a plan published, and the intention adopting it, are what a
+        pass leaves the agent. A plan with no steps does not cross — an answer is not a
         commitment — and neither does a plan for a want an intention is already walking.
         """
         at = now or clock.now()
@@ -381,7 +381,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             self._mark_kept(handed)
             written += handed
             self.handed += [(plan, reported.pursued_by(self.beliefs, plan)) for plan in handed]
-            walking = self.walking()        # a want handed down from one scope is walked in the next
+            walking = self.walking()        # a want published from one scope is walked in the next
             if lap:
                 self._adopted(store, handed, present, _scope, memo)
                 lap("publish")
@@ -395,7 +395,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
     def walking(self) -> set[str]:
         """Every want this agent is walking, off execution's rows in the belief base: pursued by a
-        standing intention, or by a plan handed down and not yet taken up. Neither searched again
+        standing intention, or by a plan published and not yet adopted. Neither searched again
         nor withdrawn, whatever its desire reads."""
         cat = Raw(f"<{catalogue_of(self.beliefs)}>")
         return {r["want"] for r in rows(self.beliefs, _WALKING_Q, (), cat=cat)}
@@ -434,7 +434,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         return blocked
 
     def _mark_kept(self, handed: list[str]) -> None:
-        """Say of every step of a plan handed down that a bridge keeps below — one taken
+        """Say of every step of a plan published that a bridge keeps below — one taken
         fictively whose predicted fact a rule the store holds concludes — that it is
         `execution:keptBelow`: not the executor's to take fictively."""
         actions = graphs_of(self.beliefs, ACTION)
@@ -527,7 +527,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                                    weighed=_spent(store, want, memo) - (ceiling - budget), scope=scope)
 
     def _adopted(self, store: ox.Store, handed: list[str], present: str, scope: str, memo: Memo) -> None:
-        """Say each plan this pass handed down from `store` (`metrics.report_adoption`), with the
+        """Say each plan this pass published from `store` (`metrics.report_adoption`), with the
         tally of its want's searches, which goes with it."""
         for plan in handed:
             want = reported.pursued_by(self.beliefs, plan)

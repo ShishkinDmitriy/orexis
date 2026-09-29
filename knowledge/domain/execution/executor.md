@@ -10,10 +10,12 @@ description: >-
 
 # What it does
 
-- **`commit_plans`** takes up every [plan](/domain/planning/plan.md) handed down into the belief base —
-  an `execution:PlanGraph` — and **`commit`** adopts each as an [intention](/domain/execution/intention.md),
-  standing at its first step, tagging the steps' names so a second plan for one want never reuses
-  the first's; the plan graph is forgotten. Nothing hands a plan over by a call
+- **`adopt`** — heard when planning publishes a [plan](/domain/planning/plan.md) — commits it as an
+  [intention](/domain/execution/intention.md) that `execution:adopts` the plan by reference, standing at
+  its first step; the plan stays planning's. A second plan for a want already standing is absorbed
+  inside the patience and supersedes past it. **`end_for`** ends an intention that has taken no step
+  `reached`, when planning says its want is met; **`end_at`** ends one `failed`, when planning says its
+  next step is blocked; every intention that ends is an event planning hears
   ([planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 - **`tick(now)`** hands every standing intention whose head [step](/domain/execution/step.md) is due
   — `execution:notBefore` past — to the queue, and for a head already taken asks whether the world
@@ -24,8 +26,9 @@ description: >-
 
 In one order, read off the action's [implementation](/domain/execution/implementation.md):
 
-1. an operation that reaches the world — an `execution:Command` sent to a device through the
-   transport, an `execution:Saying` told to a peer — is carried out;
+1. an operation that reaches the world is carried out by an [event](/domain/kernel/event.md): an
+   `execution:Command`'s payload emitted for the transport reaching the device, an `execution:Saying`'s
+   document emitted for speech to believe and tell — order by order, each answered before the next;
 2. a step marked `execution:keptBelow` is not taken fictively: it waits until planning has written
    the want that keeps it one level down, `execution:keptBy`, and is taken by recording that want
    `execution:refinedBy` on the act and waiting on it ([refinement](/domain/planning/refinement.md));

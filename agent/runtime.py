@@ -37,30 +37,22 @@ updated ontology reaches a running agent, and the premises are asked again, so a
 stops needing a package stops loading it. The agent's own are left as they are, because they
 are its beliefs from the first boot on (an-amendment-endows-what-it-grants).
 
-**A PASS PLANS, THEN WALKS WHAT IS DUE.** `Runtime.run` calls the planner's pass, which derives
-the wants, searches each and hands the plans to the executor; then ticks and drains the
-executor until nothing is due, which for a fictive action is the whole plan and for a real one
-is up to the first landing the world has not answered. **IT STOPS WHEN NO DESIRE IS HELD AND
-EVERY WANT IS REACHED.** A desire is universal and never ends, so an agent holding one runs for
-good; a want is one-shot and the pass withdraws it once met, so Hanoi's mover, holding one want
-and no desire, solves its tower and exits. Wants standing with nothing walking is one of two
-things: the budget cut the search short, which a plan's `planning:Exhausted` says and the next
-pass continues, or nothing this agent holds reaches the want, which such an agent exits as
-UNREACHABLE rather than looping on. Nothing here is threaded: the executor's two doors are called in turn on this thread, and a
-pass that moved nothing sleeps the poll before the next.
+**A PASS DRAINS, AND THE RUN ENDS WHEN NOBODY HOLDS THE AGENT.** A pass runs every job queued and
+what its writes set off, then what is due — planning's pass, execution's walk, a transport's poll,
+sensing's ask — each a job a package asked for when it started. A listening transport holds the
+agent, and planning holds it while a desire is held or a want stands; planning lets go `met` when
+every want is reached and none is walked, and `unreachable` when some stand that nothing this agent
+holds reaches — so Hanoi's mover solves its tower and exits. Nothing here is threaded: a pass that
+moved nothing sleeps the poll before the next, unless a package asked to go again.
 
-**A PACKAGE STARTS ITSELF (a-package-starts-itself).** Every package beyond the mind that has a
-`start` module is handed the runtime and says what it does, by jobs it `submit`s, kinds it hears
-(`on`) and timers it asks for (`every`); the runtime runs every job on this one thread, one at a
-time, and knows no package's words. A transport's listener submits each message, sensing's
-received writes what it holds, the rules conclude of every graph a job writes, and prediction
-answers every observation — all in the pass's `drain`, before the planner's pass; and a step whose
-action's implementation holds an `execution:Command` is taken by sending what it answers.
-
-**A PEER IS TOLD, AND HEARD, THROUGH THE SAME TRANSPORT.** A step whose action's implementation
-holds an `execution:Saying` makes documents of the present; the agent believes what it said, the rules
-conclude of it at once, and each is sent to the agents it is to. A document a peer says arrives
-on the topic the agent listens to and is believed by speech's `heard`, then revised like a reading.
+**A PACKAGE STARTS ITSELF (a-package-starts-itself, planning-and-execution-meet-at-the-store).**
+Every package the agent loads, the mind's three among them, that has a `start` module is handed
+the runtime and says what it does, by jobs it `submit`s, timers it asks for (`every`) and events it
+`emit`s and `listen`s for (`agent.events`) — a graph written by kind being one; the runtime runs
+every job and every listener on this one thread and knows no package's words. A transport's listener
+submits each message; belief revises what is written; prediction answers an observation; planning
+publishes a plan and execution adopts it; a step's command and a said document are events the
+transport and speech hear, and a peer's document arriving is believed by speech's `heard`.
 
 **WHAT HAPPENED IS NOT THE RUNTIME'S TO SAY.** `main` loads a series sink for every purpose the
 environment names a store for (`agent/series.py`), and hands history nothing: sensing contributes

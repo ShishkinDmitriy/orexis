@@ -36,5 +36,5 @@ over those rows — A\* by reading them — so a search called again takes up wh
 A star, not a chain: the Planner sequences the acts as its own methods, and no act calls another —
 what one needs of another's work it reads off the rows the other wrote. It calls the executor
 nowhere either: a plan goes down into the belief base, what is walked is read off the intentions
-there, and a step a bridge keeps below is marked when handed down and given its want when due
+there, and a step a bridge keeps below is marked when published and given its want when due
 ([refinement](/domain/planning/refinement.md)).
