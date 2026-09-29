@@ -40,7 +40,9 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
+import time
 from datetime import datetime
 
 from agent import clock
@@ -49,6 +51,9 @@ from agent.store import answer, graphs_of, rows
 from agent.transport.transport import Transport
 
 log = logging.getLogger("mqtt")
+
+#  HOW LONG BEFORE A MISSING READING IS ASKED FOR AGAIN, in real seconds.
+RETRY_S = 60.0
 
 #  THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
 _COMMANDS_Q = """
@@ -109,6 +114,7 @@ class Mqtt(Transport):
 
     def __init__(self, me: str, client):
         self.me, self.client = me, client
+        self._asked: dict[str, float] = {}
 
     @classmethod
     def connect(cls, me: str, deliver, *, environ=None, client=None) -> "Mqtt":
@@ -162,6 +168,13 @@ class Mqtt(Transport):
         return True
 
     def sense_now(self, store, sensor: str) -> None:
+        """Ask the sensor's board for a reading now, at most once in `RETRY_S` real seconds: the
+        container asks on every pass while the reading is missing, and a board that is asleep or
+        gone is not to be told so every second."""
+        now = time.monotonic()
+        if now - self._asked.get(sensor, -math.inf) < RETRY_S:
+            return
+        self._asked[sensor] = now
         topic = self._command_topic(store, sensor)
         if topic is not None:
             self.publish(topic, {"sense": True}, False)

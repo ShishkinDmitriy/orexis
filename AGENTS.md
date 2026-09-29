@@ -942,6 +942,12 @@ it is a record wearing a bullet.
   world may reach its board over MQTT and its forecast over HTTP; and a sensor is the agent's where
   it is hosted by what the agent acts for, a sample of it, or a place that contains it.
 
+- **What has fallen due is asked on every pass, and a member paces what goes out** — `missed` ran
+  only on a pass that received something, so an agent whose every sensor went quiet heard nothing
+  and never said so (#843), and a forecast was fetched only because a board happened to report;
+  the container asks each pass, and MQTT tells a board, as HTTP asks a service, at most once a
+  minute.
+
 ## The rules the code lives by
 
 1. **Code may reference T-Box terms; never an instance.** `planning:Desire` is fine;

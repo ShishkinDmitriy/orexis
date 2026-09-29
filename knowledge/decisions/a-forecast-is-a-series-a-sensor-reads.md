@@ -74,8 +74,6 @@ still boots; its forecast cannot be asked for, and the member says so.
 
 - **A forecast reaches the soil's prediction at the soil's next reading.** `predict` runs for a
   sensor that has just reported, and the forecast sensor has no stretch of its own to predict.
-- **A series sensor is asked only on a pass that received something**, since `missed` runs there;
-  that is [#843](https://github.com/ShishkinDmitriy/orexis/issues/843).
 - **A silent forecast service is not said silent**, and no forecast is told to history: a point
   stamped in the future is not what a series store is watched for.
 - **A time with no offset is UTC**, as a service asked in GMT answers.

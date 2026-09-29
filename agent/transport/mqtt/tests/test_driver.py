@@ -94,6 +94,21 @@ def test_a_command_goes_to_the_topic_the_board_listens_on_as_the_firmwares_docum
                                 ("sensors/board/command", json.dumps({"sense": True}).encode(), False)]
 
 
+def test_a_missing_reading_is_asked_for_at_most_once_a_minute(bus, monkeypatch):
+    """The container asks on every pass while a reading is missing; the board is told once, and
+    again only when a minute has passed."""
+    from agent.transport.mqtt import driver as member
+
+    store, driver, client = bus
+    driver.sense_now(store, HYGRO)
+    driver.sense_now(store, HYGRO)
+    assert len(client.published) == 1
+    real = member.time.monotonic
+    monkeypatch.setattr(member.time, "monotonic", lambda: real() + member.RETRY_S + 1)
+    driver.sense_now(store, HYGRO)
+    assert len(client.published) == 2
+
+
 def test_a_sensor_whose_board_listens_nowhere_takes_no_command(bus, caplog):
     store, driver, client = bus
     with caplog.at_level("WARNING", logger="mqtt"):

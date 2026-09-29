@@ -80,6 +80,24 @@ def test_one_message_is_four_observations_and_the_soil_is_below_the_beds_range(m
     assert broker.published == [], "nothing is wanted, so nothing is sent"
 
 
+def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monkeypatch):
+    """The terrace's one board reports once and then dies. Nothing arrives after, so no pass has
+    a message to take; the passes still ask what has fallen due, and once three cadences are gone
+    every sensor of the board is said silent (#843). The sentinel takes no orders, so nothing is sent."""
+    from datetime import timedelta
+
+    runtime, broker = _terrace(monkeypatch)
+    runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
+    runtime.run(passes=1, poll_s=0)
+    later = NOW + timedelta(minutes=90)
+    monkeypatch.setattr(clock, "now", lambda: later)
+    runtime.run(passes=1, poll_s=0)
+    silent = rows(runtime.beliefs, "SELECT ?s WHERE { ?s sensing:silentSince ?t } ORDER BY ?s", graphs_of(runtime.beliefs, STATE))
+    assert [r["s"].rsplit("#", 1)[-1] for r in silent] == [
+        "air_humidity_terrace", "air_pressure_terrace", "air_temp_terrace", "moisture_sensor_terrace"]
+    assert broker.published == []
+
+
 def test_each_reading_reaches_the_series_under_its_own_property(monkeypatch, history):
     """The four values of one message are four points, each measured under the property it
     observes — the air's temperature is not soil moisture (#822) — and contributed by sensing as

@@ -41,5 +41,4 @@
 #  Open-Meteo asks no key; GMT keeps the instants it answers in UTC.
 :forecast_terrace a td:Thing ;
     td:hasForm [ a hctl:Form ;
-        hctl:hasTarget "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=precipitation&timezone=GMT&forecast_days=2" ;
-        hctl:forContentType "application/json" ] .
+        hctl:hasTarget "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=precipitation&timezone=GMT&forecast_days=2" ] .

@@ -429,8 +429,8 @@ class Runtime:
 
     def sense(self, now) -> list[str]:
         """Take every message queued since the last pass: a peer's document believed and revised,
-        a reading written by sensing, revised, and predicted from; then ask again for every
-        reading fallen due. The graphs written.
+        a reading written by sensing, revised, and predicted from; then, on every pass whatever
+        arrived, ask again for every reading fallen due. The graphs written.
 
         EACH GRAPH IS REVISED BESIDE PUBLIC KNOWLEDGE ALONE. Every rule shipped reads one graph
         and what the world states — a reading and its subject's ranges, a round and nothing
@@ -449,17 +449,21 @@ class Runtime:
                 if sensor is not None:                          # None: a peer's document
                     sensors.append(sensor)
         self._lap("sense")
-        if not written:
-            return []
-        self._revise(written, now)
-        self._lap("revise")
-        predicted = [graph for sensor in dict.fromkeys(sensors)
-                     for graph in self._predict(self.beliefs, self.me, sensor, now=now)] if self._predict else []
-        self._lap("predict")
-        self._revise(predicted, now)
-        self._lap("revise")
+        predicted = []
+        if written:
+            self._revise(written, now)
+            self._lap("revise")
+            predicted = [graph for sensor in dict.fromkeys(sensors)
+                         for graph in self._predict(self.beliefs, self.me, sensor, now=now)] if self._predict else []
+            self._lap("predict")
+            self._revise(predicted, now)
+            self._lap("revise")
+        #  WHAT HAS FALLEN DUE IS ASKED ON EVERY PASS, whether or not anything arrived: an agent whose
+        #  every sensor went quiet heard nothing, and that is when a silence is to be said and a
+        #  reading asked for again (#843). How often a nudge goes OUT is the member's to pace.
         for sensor in (self._missed(self.beliefs, self.me, now) if self._missed else []):
-            self.transport.sense_now(self.beliefs, sensor)
+            if self.transport is not None:
+                self.transport.sense_now(self.beliefs, sensor)
         self._lap("sense")
         return written + predicted
 
