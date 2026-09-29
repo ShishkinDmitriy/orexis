@@ -4,9 +4,9 @@ title: Intention
 term: http://example.org/orexis/execution#Intention
 description: >-
   A commitment to one plan for one want - adopted at an instant, standing at a step, resolved at
-  another instant as done, failed or abandoned. Rows in the executor's intentions store, which the
-  runtime makes in memory, so a restart does not yet find them (#842); the I of BDI, and the only
-  thing a pass leaves that outlives it.
+  another instant as done, failed or abandoned. Rows in a graph of the belief base, the agent's own
+  and not public, so a restart finds them where they stood; the I of BDI, and the only thing a pass
+  leaves that outlives it.
 ---
 
 # What it is
@@ -19,22 +19,26 @@ description: >-
     execution:by :s2 .
 ```
 
-`execution:pursues` is the want, `execution:step` every step of the plan, `execution:then` their
-order and `execution:by` the one it stands at now. `execution:resolvedAt` and `execution:outcome`
+`execution:pursues` is the want, `execution:adopts` the [plan](/domain/planning/plan.md) it commits to —
+planning's, published once and referred to, never copied — `execution:step` every step of that plan,
+and `execution:by` the one it stands at now; the steps' order, `execution:then`, is read in the plan. `execution:resolvedAt` and `execution:outcome`
 are absent while it stands: their absence is the standing state.
 
 # How it moves
 
 The [executor](/domain/execution/executor.md) moves it and nothing else writes it: `by` advances when
 the world holds what the step predicted, and the intention resolves `done` at the last step,
-`failed` when the world did not answer within the patience or a step kept below could not be
-kept, and `abandoned` when the intention a step of it was kept below for ended undone.
+`failed` when the world did not answer within the patience, a step kept below could not be kept,
+or planning said its next step is blocked in the present, `reached` when planning said its want is
+met before any step was taken, and `abandoned` when the intention a step of it was kept below for
+ended undone. A plan that has begun is not ended because its want is met partway.
 
 # What it means for the search
 
 A want an intention walks is neither searched again nor handed a second plan: the world has not
 answered yet, and deciding again is the executor's verdict on a step, never the clock's. When it
-fails, the want is the search's again, from wherever the world then stands.
+ends, planning hears it and the want is the search's again at once, from wherever the world then
+stands.
 
 # Several at once
 

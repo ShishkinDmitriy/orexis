@@ -26,7 +26,7 @@ def test_the_gauges_count_the_imaginaria_and_nothing_of_the_beliefs(monkeypatch)
     """One pass at twenty candidates: a plan cut short and the cone it left, in the imaginaria; the
     belief base holds no plan and no world, so over it every figure is nought."""
     runtime = _one_pass(monkeypatch)
-    imagined = {g.name: f for g, f in gauges(runtime.planner.imaginaria.values())}
+    imagined = {g.name: f for g, f in gauges(runtime.parts["planning"].planner.imaginaria.values())}
     assert imagined["plans"]["exhausted"] == 1 and imagined["cone"]["worlds"] == 20
     believed = {g.name: f for g, f in gauges([runtime.beliefs])}
     assert believed["plans"] == {"satisfied": 0, "exhausted": 0, "noCandidate": 0}
@@ -35,7 +35,7 @@ def test_the_gauges_count_the_imaginaria_and_nothing_of_the_beliefs(monkeypatch)
 
 def test_an_authored_want_was_derived_under_no_desire_and_no_intention_pursues_it_yet(monkeypatch):
     runtime = _one_pass(monkeypatch)
-    (store,) = runtime.planner.imaginaria.values()
+    (store,) = runtime.parts["planning"].planner.imaginaria.values()
     want = "http://example.org/orexis/world/hanoi#every_disk_home"
     assert desire_of(store, want) is None
-    assert pursued_by(runtime.executor.intentions, "urn:no:intention") is None
+    assert pursued_by(runtime.parts["execution"].executor.intentions, "urn:no:intention") is None

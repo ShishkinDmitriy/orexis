@@ -1,8 +1,9 @@
 """The crossing: what a pass leaves behind after its imaginarium is gone.
 
-A plan lives in a store that is memory. An intention is the only thing that outlives the pass,
-so what these hold to is that the steps arrive whole, that an ANSWER does not become a
-commitment, and that a planner told no intentions store writes to none.
+A plan lives in a store that is memory. It is handed down into the belief base as execution's
+plan graph, and the executor takes it up; what these hold to is that the steps arrive whole,
+that a plan handed down is walked and not handed down again, and that an ANSWER is not handed
+down at all.
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ from agent.execution.executor import Executor
 from agent.execution.ontology import EXECUTION, intentions_graph
 from agent.planning.planner import Planner
 from agent.planning.scope_actions import scope_actions
-from agent.store import close_catalogue, put_graph, query_over, bindings
+from agent.store import close_catalogue, graphs_of, put_graph, query_over, bindings
 
 CASES = Path(__file__).parent / "plans"
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -41,48 +42,54 @@ def _held(intentions, what: str) -> list[dict]:
         intentions_graph(AGENT)))
 
 
-def test_the_pass_leaves_an_intention_standing_at_the_plans_head(beliefs):
-    """The whole crossing, end to end: a want is derived, a plan is found, and what survives
-    the imaginarium is one intention pursuing that want and standing at the first step."""
-    x = Executor(beliefs, AGENT)
-    intentions = x.intentions
-    Planner(beliefs, AGENT, x).plan(NOW)
+HANDED = "http://example.org/orexis#PlanGraph"
 
-    pursues = _held(intentions, "pursues")
+
+def test_the_pass_publishes_its_plan_and_the_executor_adopts_it_by_reference(beliefs):
+    """The whole crossing, end to end, through the store: a want is derived, a plan is found and
+    published into the beliefs once, pursuing the want; the executor adopts it by reference, and one
+    intention pursues that want, adopts that plan and stands at its first step, the plan left where
+    planning wrote it. Neither called the other."""
+    planner = Planner(beliefs, AGENT)
+    written = planner.plan(NOW)
+    assert graphs_of(beliefs, HANDED) == written and len(written) == 1, written
+
+    x = Executor(beliefs, AGENT)
+    assert x.commit_plans() == [intentions_graph(AGENT)]
+    assert graphs_of(beliefs, HANDED) == written, "adopted by reference: the plan stays, planning's"
+    assert _held(beliefs, "adopts")[0]["o"] == written[0]
+    pursues = _held(beliefs, "pursues")
     assert len(pursues) == 1, pursues
     assert pursues[0]["o"].endswith("keeper.in_range.pursued.tank1"), pursues
-
-    steps = _held(intentions, "step")
+    steps = _held(beliefs, "step")
     assert len(steps) == 2, "both steps of the plan crossed"
-    by = _held(intentions, "by")
+    by = _held(beliefs, "by")
     assert len(by) == 1 and by[0]["o"] in {s["o"] for s in steps}, \
         "and it stands at one of them — the head, which nothing points `then` at"
 
 
-def test_a_planner_given_no_intentions_store_writes_to_none(beliefs):
-    """A search that hands nothing down is still a search: the plan is in the imaginarium and
-    the pass simply ends there. It is what every case here does."""
+def test_a_plan_handed_down_is_walked_and_not_handed_down_again(beliefs):
+    """The next pass finds the want walked — by the plan handed down, before the executor has taken
+    it up — and hands nothing down a second time."""
     planner = Planner(beliefs, AGENT)
-    planner.plan(NOW)
-
-    from agent.planning.ontology import PLAN_GRAPH
-    from agent.store import graphs_of
-    assert any(graphs_of(im, PLAN_GRAPH) for im in planner.imaginaria.values()), "a plan was found"
+    [plan] = planner.plan(NOW)
+    assert planner.walking() == {_held_plan_want(beliefs, plan)}
+    assert planner.plan(NOW) == []
 
 
-def test_an_answer_is_not_a_commitment(beliefs):
-    """A want with no lever comes back `NoCandidate` and its plan graph holds no step. Nothing
-    stands among the intentions for a want nobody is doing anything about — an empty plan is an
-    ANSWER, and the plan graph keeps it where a reader of outcomes will look."""
+def test_an_answer_is_not_handed_down(beliefs):
+    """A want with no lever comes back `NoCandidate` and its plan graph holds no step. Nothing is
+    handed down for a want nobody is doing anything about — an empty plan is an ANSWER, and the
+    plan graph keeps it in the imaginarium where a reader of outcomes will look."""
     beliefs.update("DELETE WHERE { GRAPH <http://example.org/test#actions> { ?s ?p ?o } }")
     scope_actions(beliefs)
-    x = Executor(beliefs, AGENT)
-    intentions = x.intentions
-    planner = Planner(beliefs, AGENT, x)
-    planner.plan(NOW)
-
+    planner = Planner(beliefs, AGENT)
+    assert planner.plan(NOW) == []
     from agent.planning.ontology import PLAN_GRAPH
-    from agent.store import graphs_of
     assert any(graphs_of(im, PLAN_GRAPH) for im in planner.imaginaria.values()), \
         "the pass still wrote down what it concluded"
-    assert _held(intentions, "pursues") == [], "and committed to nothing"
+    assert graphs_of(beliefs, HANDED) == [] and _held(beliefs, "pursues") == [], "and handed down nothing"
+
+
+def _held_plan_want(beliefs, plan: str) -> str:
+    return bindings(query_over(beliefs, f"SELECT ?w WHERE {{ <{plan}> <{EXECUTION}pursues> ?w }}", plan))[0]["w"]

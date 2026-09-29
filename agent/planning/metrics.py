@@ -51,6 +51,9 @@ SELECT ?worlds ?weighings ?open ?met WHERE {
 #  A PASS OF THE PLANNER, in real seconds per part — laying the ground and finding the present in
 #  it, weighing the desires, deriving and withdrawing the wants, searching, handing the plans down —
 #  and how many wants it searched.
+#  A WANT NOTHING THIS AGENT HOLDS REACHES — standing, walked by nothing, no search cut short — by the
+#  desire it came from. Which want is the log's to say.
+UNREACHED = Event("unreachable", tags=("desire",))
 PLANNER = Event("planner", values=("ground_s", "weigh_s", "derive_s", "search_s", "publish_s", "wants"))
 
 #  ONE WANT'S SEARCH IN ONE PASS, tagged by the desire, the scope and how it ended: its real
@@ -94,7 +97,7 @@ def desire_of(store: ox.Store, want: str) -> str | None:
 
 
 def pursued_by(intentions: ox.Store, intention: str) -> str | None:
-    """The want `intention` pursues, off the intentions store, or None."""
+    """The want `intention` — or a plan handed down — pursues, off the belief base, or None."""
     found = rows(intentions, _PURSUES_Q, (), intention=intention)
     return found[0]["want"] if found else None
 
@@ -111,15 +114,15 @@ def report_search(store: ox.Store, want: str, *, took: float, budget: int, weigh
 
 def report_adoption(store: ox.Store, intentions: ox.Store, want: str, *, first: float | None, passes: int,
                     weighed: int, present: str, scope: str) -> None:
-    """Say a plan the executor adopted for `want` from `store`: in how many passes it was searched
+    """Say a plan handed down for `want` from `store`: in how many passes it was searched
     and what they weighed, the real seconds since `first` — its first search, on `perf_counter` —
     what the want's estimate said was left at the `present` ground against what the plan spent, and
-    whether an intention pursued the want before, a replan."""
+    whether an intention pursued the want before, a replan — `intentions` being where execution's rows are."""
     plan = next(iter(rows(store, _PLAN_OF_Q, (), want=want)), {})
     root = next(iter(rows(store, _ESTIMATE_Q, (), want=want, ground=present,
                           cat=Raw(f"<{catalogue_of(store)}>"))), {})
     pursued = int(rows(intentions, _PURSUERS_Q, (), want=want)[0]["n"])
-    fields = {"passes": passes, "weighed": weighed, "replan": pursued > 1}
+    fields = {"passes": passes, "weighed": weighed, "replan": pursued > 0}
     if first is not None:
         fields["wall_s"] = round(time.perf_counter() - first, 6)
     if plan.get("spent") is not None:

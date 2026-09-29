@@ -27,13 +27,18 @@ process is told:
    achiever refuses the top, or the budget is spent — an iteration admits the world's
    candidates, takes each and weighs what it reached; then `extract_plan` writes what the
    want's weighings come to;
-4. `publish_plan` hands every plan no intention is already walking down to the executor's
-   store, where a planner was given one.
+4. `publish_plan` hands every plan no intention is already walking DOWN, through the belief base:
+   an `orexis:PlanGraph` published once in execution's words, each step a bridge may keep below marked so
+   (`bridge.keeps`), which the executor adopts by reference.
 
-Nothing comes back: everything a pass finds it WRITES, and `self.imaginaria` is how a
-reader reaches it. Nothing here commits — copying a plan into the intentions is the execution
-layer's (the executor's adoption), because deciding a thing and remembering that it was decided
-are different acts.
+And before any of it, every step an intention stands at that is kept below and has fallen due is
+given the want that keeps it (`refine`), which the executor then waits on.
+
+Nothing comes back but the graphs written: everything a pass finds it WRITES, and
+`self.imaginaria` is how a reader reaches it. Nothing here commits and nothing here calls the
+executor: planning and execution meet at the store (a-package-starts-itself) — the plans handed
+down, the wants that keep a step below, and the intentions, which planning reads by pattern
+to know what is walked and where each stands.
 
 **THE IMAGINARIUM OUTLIVES THE PASS.** Called every minute, a planner that imagined afresh
 each time searched the same cone three times over and handed down three intentions for
@@ -71,12 +76,15 @@ import pyoxigraph as ox
 import rdflib
 
 from agent import clock, metrics
-from agent.ontology import PUBLIC, RECORD
-from agent.store import Memo, Raw, forget_graph, bind, bindings, catalogue_of, graphs_of, query, rdflib_view, remember, rows, update
+from agent.lifecycle import Signal
+from agent.ontology import ACTION, PUBLIC, RECORD, local_of
+from agent.store import (Memo, Raw, forget_graph, bind, bindings, catalogue_of, graphs_of, instant, query, rdflib_view,
+                         remember, rows, update)
 
 from . import footprint
 from . import metrics as reported
 from .admit import admit
+from .bridge import keeps
 from .derive_wants import derive_wants
 from .extract_plan import extract_plan
 from .find_scopes import find_scopes
@@ -92,6 +100,7 @@ from .take import take
 from .unweighed import unweighed
 from .weigh import weigh
 from .withdraw import withdraw
+from .world_at import world_at
 
 log = logging.getLogger("planner")
 
@@ -110,12 +119,61 @@ UNSCOPED = "unscoped"
 #  WHAT A STEP PREDICTS, off the intentions — execution's word, read from the layer beneath.
 _IN_SCOPE_Q = """SELECT ?a WHERE { ?a planning:inScope $scope }"""
 
-_PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH ?g { $step execution:predicts ?predicts } } LIMIT 1"""
-
 #  EVERY WANT KEPT BELOW FOR A STEP, with its graph and the step.
 _REFINED_Q = """
-SELECT ?want ?g ?step WHERE { GRAPH ?g { ?want planning:refines ?step }
+SELECT ?want ?g ?step WHERE { GRAPH ?g { ?step execution:keptBy ?want }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }"""
+
+#  WHAT THIS AGENT IS WALKING, off execution's rows in the belief base: every want a standing
+#  intention pursues, and every want a plan published and adopted by no intention yet pursues.
+_WALKING_Q = """
+SELECT DISTINCT ?want WHERE {
+  { GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
+               FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
+  UNION
+  { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
+    FILTER NOT EXISTS { GRAPH ?h { ?i execution:adopts ?plan } } } }
+ORDER BY ?want"""
+
+#  THE STEP EVERY STANDING INTENTION STANDS AT.
+_STANDING_AT_Q = """
+SELECT DISTINCT ?step WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step .
+                                         FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }"""
+
+#  EVERY STEP AN INTENTION STANDS AT THAT IS KEPT BELOW, HAS FALLEN DUE AND HAS NO WANT KEEPING IT
+#  YET, with what it predicts.
+_KEPT_DUE_Q = """
+SELECT ?step ?predicts WHERE {
+  GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
+             FILTER NOT EXISTS { ?i execution:resolvedAt ?done } }
+  GRAPH ?plan { ?step execution:keptBelow true ; execution:predicts ?predicts .
+                OPTIONAL { ?step execution:notBefore ?due } }
+  FILTER(!BOUND(?due) || ?due <= $now)
+  FILTER NOT EXISTS { GRAPH ?h { ?step execution:keptBy ?w } } }
+ORDER BY ?step"""
+
+#  EVERY STEP AN INTENTION STANDS AT THAT HAS FALLEN DUE, NOT BEEN TAKEN AND IS NOT KEPT BELOW, with
+#  the action it fills — what the present must still admit for it to be taken.
+_DUE_HEADS_Q = """
+SELECT ?step ?action WHERE {
+  GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
+             FILTER NOT EXISTS { ?i execution:resolvedAt ?done }
+             FILTER NOT EXISTS { ?act execution:of ?step } }
+  GRAPH ?plan { ?step planning:fills ?action . OPTIONAL { ?step execution:notBefore ?due }
+                FILTER NOT EXISTS { ?step execution:keptBelow true } }
+  FILTER(!BOUND(?due) || ?due <= $now) }
+ORDER BY ?step"""
+
+#  AN ACTION'S PRECONDITION AND THE PARAMETERS IT TAKES, and a step's value for each.
+_PRECONDITION_Q = """SELECT ?text ?takes WHERE { $action planning:precondition ?text . OPTIONAL { $action orexis:takes ?takes } }"""
+_FILLING_Q = """SELECT ?p ?v WHERE { GRAPH ?plan { $step ?p ?v } }"""
+
+#  EVERY STEP OF A PLAN PUBLISHED WHOSE ACTION IS TAKEN FICTIVELY, with what it predicts.
+_FICTIVE_STEPS_Q = """
+SELECT ?step ?predicts WHERE {
+  GRAPH $plan { ?step a execution:Step ; planning:fills ?action ; execution:predicts ?predicts }
+  ?action execution:implementation/execution:operation ?op . ?op a execution:Fictive }
+ORDER BY ?step"""
 
 #  THE CATALOGUE IS BOUND, NOT FOUND, IN THE HOT READS: `GRAPH ?cat { ?cat a
 #  orexis:CatalogueGraph . … }` makes the engine evaluate the group per named graph, and with
@@ -170,22 +228,19 @@ class Planner:
     """One agent's planning: the pass, one want's search, and one iteration of it, each a
     method that sequences the package's acts and reads the store between them."""
 
-    def __init__(self, beliefs: ox.Store, agent_id: str, executor=None, budget: int = BUDGET):
-        """The beliefs store, the one identifier a process is told, where a plan goes, and
-        how much a search may spend — a ceiling on compute in the unit the search spends,
+    def __init__(self, beliefs: ox.Store, agent_id: str, budget: int = BUDGET):
+        """The beliefs store, the one identifier a process is told, and how much a search may
+        spend — a ceiling on compute in the unit the search spends,
         which is a container's to size from a measured cost per candidate and not the
         agent's to revise.
 
         Everything else is discovered from the graph, which is rule 1: the world says
         `?a orexis:localId "<id>"`, and who I am is the answer rather than an argument.
 
-        `executor` is where a plan goes: a pass hands its plans to it as its last act, and it
-        alone writes the intentions. A planner given none searches and writes its findings
-        into the imaginarium and no further — which is what a case wants, and what the search
-        itself is.
+        A plan is published into the beliefs, as an `orexis:PlanGraph`, and what is walked is
+        read off the intentions there; the Planner holds no executor.
         """
         self.beliefs = beliefs
-        self.executor = executor
         self.id = agent_id
         self.budget = budget
         self.uri = self._identity(agent_id)
@@ -193,8 +248,17 @@ class Planner:
         #  every `plan`. They are where a pass wrote what it found, so this is how a caller
         #  reaches it — each is asked for its graphs of class `planning:PlanGraph`, the same
         #  by-kind read as everywhere else. They are memory and die with the Planner; what
-        #  outlives the Planner is the intentions store.
+        #  outlives the Planner is the intentions, a graph of the beliefs.
         self.imaginaria: dict[str, ox.Store] = {}
+        self.handed: list[tuple[str, str]] = []
+        self.reached: set[str] = set()
+        self.blocked: list[str] = []
+        #  WHAT THE PLANNER SAYS HAPPENED, its own words for whoever connects: a plan published, with
+        #  the want it pursues; a want an intention walks that the present meets; a step an intention
+        #  stands at that the present no longer admits.
+        self.plan_published = Signal("plan_published")
+        self.want_reached = Signal("want_reached")
+        self.step_blocked = Signal("step_blocked")
         #  TELEMETRY AND NOT A ROW: per want, when it was first searched and in how many passes,
         #  kept only where a metrics sink is loaded and said at its adoption. No plan branches
         #  on it, so it is memory and never a belief.
@@ -220,9 +284,10 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
     # --- the pass ------------------------------------------------------------------------
 
-    def plan(self, now: datetime | None = None) -> None:
+    def plan(self, now: datetime | None = None) -> list[str]:
         """One pass: an imaginarium per scope, every desire weighed in every ground, the wants
-        derived, each searched, and the plans handed down.
+        derived, each searched, and the plans published. The graphs written in the beliefs — the
+        plans published and the wants that keep a step below — for whoever hears what was written.
 
         THE IMAGINARIUM COMES FIRST, AND THE DERIVATION RUNS INSIDE IT. What a desire reads at
         a future instant is what the GROUND holding then says — the present with each
@@ -243,8 +308,8 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         each other by construction. The scopes are READ and never computed — `scope_actions`
         wrote them, and a store holding no scope graph is refused rather than guessed at.
 
-        AND THE LAST ACT IS `publish_plan`, where a planner was given an intentions store: the
-        imaginarium is the Planner's and dies with it, so an intention is the only thing a
+        AND THE LAST ACT IS `publish_plan`, publishing each plan into the beliefs: the imaginarium is
+        the Planner's and dies with it, so a plan published, and the intention adopting it, are what a
         pass leaves the agent. A plan with no steps does not cross — an answer is not a
         commitment — and neither does a plan for a want an intention is already walking.
         """
@@ -255,8 +320,12 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         #  A STORE WITH NO ACTION HAS ONE WORLD, not none: `scope_actions` writes the scope
         #  graph whatever it finds, and a desire in a scoped, empty store still has to be
         #  judged, to say that no lever points at it.
-        walking = set(self.executor.walking()) if self.executor is not None else set()
+        walking = self.walking()
         self._withdraw_orphaned_refinements(walking)
+        written = self._keep_below(at)
+        #  WHAT THE PASS SAYS, for whoever runs it to signal: the plans it published with their wants,
+        #  the wants an intention walks that the present meets, and the steps it can no longer take.
+        self.handed, self.reached, self.blocked = [], set(), []
         #  HOW LONG EACH PART OF THE PASS TOOK, where a metrics sink is loaded: in real seconds by
         #  `perf_counter`, since the agent's clock may run fast and a test's ticks per read.
         lap = metrics.Laps() if metrics.recording() else None
@@ -272,6 +341,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             reroot(store, present)
             if lap:
                 lap("ground")
+            self.blocked += self._blocked(store, present, at, memo)
             for pair in unweighed(store, memo=memo):
                 #  GROUNDS ONLY. A candidate the budget left untaken in a world it cut is
                 #  unweighed too, and weighed here it would never be offered to the expansion
@@ -285,7 +355,9 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  A WANT MET IN THE PRESENT IS REACHED, and one-shot: it goes, from here and from the
             #  beliefs, where a want the world authored lives — unless a plan is still walking it,
             #  whose last step the executor has yet to see answered.
-            reached = {r["for"] for r in rows(store, _MET_NOW_Q, (), ground=present)} - walking
+            met_now = {r["for"] for r in rows(store, _MET_NOW_Q, (), ground=present)}
+            self.reached |= met_now & walking
+            reached = met_now - walking
             withdraw(store, derive_wants(store, at) | walking, at, reached=reached)
             if reached:
                 withdraw(self.beliefs, None, at, reached=reached)
@@ -312,38 +384,84 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 searched.add(want)
             if lap:
                 lap("search")
-            if self.executor is not None:
-                minted = publish_plan(store, self.executor)
-                if lap:
-                    self._adopted(store, minted, present, _scope, memo)
-                    lap("publish")
+            handed = publish_plan(store, self.beliefs, self.uri, walking)
+            self._mark_kept(handed)
+            written += handed
+            if lap:
+                self._adopted(store, handed, present, _scope, memo)     # before anything adopts it
+                lap("publish")
+            for plan in handed:
+                want = reported.pursued_by(self.beliefs, plan)
+                self.handed.append((plan, want))
+                written += self.plan_published.emit(plan=plan, want=want)
+            walking = self.walking()        # a want published from one scope is walked in the next
         if lap:
             reported.PLANNER({**lap.spent, "wants": len(searched)})
             #  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
             self._searches = {w: s for w, s in self._searches.items() if w in searched}
+        for want in sorted(self.reached):
+            written += self.want_reached.emit(want=want)
+        for step in self.blocked:
+            written += self.step_blocked.emit(step=step)
+        return written
 
     # --- a step kept one level down ----------------------------------------------------------
 
-    def refine(self, said: dict, intention: str) -> str | None:
-        """The want that keeps the step `said` one level down, minted where a rule concludes a
-        fact the step predicts — or None, and the step is taken as it would be with no level
-        beneath (`refine`). The executor asks before it takes a step; `said` is its rows."""
-        if self.executor is None:
-            return None
-        step = said["step"]
-        found = rows(self.executor.intentions, _PREDICTS_Q, (), step=step)
-        if not found:
-            return None
-        said = json.loads(found[0]["predicts"])
-        adds = said.get("adds", ())
-        return refine(self.beliefs, self.uri, step, adds, clock.now(),
-                      said.get("retracts", ())) if adds else None
+    def walking(self) -> set[str]:
+        """Every want this agent is walking, off execution's rows in the belief base: pursued by a
+        standing intention, or by a plan published and not yet adopted. Neither searched again
+        nor withdrawn, whatever its desire reads."""
+        cat = Raw(f"<{catalogue_of(self.beliefs)}>")
+        return {r["want"] for r in rows(self.beliefs, _WALKING_Q, (), cat=cat)}
+
+    def _keep_below(self, at: datetime) -> list[str]:
+        """Give every step an intention stands at that is kept below and has fallen due the want
+        that keeps it, one level down (`refine`), which the executor waits on. The want graphs."""
+        minted = []
+        for r in rows(self.beliefs, _KEPT_DUE_Q, (), now=instant(at)):
+            predicted = json.loads(r["predicts"])
+            want = refine(self.beliefs, self.uri, r["step"], predicted.get("adds", ()), at, predicted.get("retracts", ()))
+            if want is not None:
+                minted += [g["g"] for g in rows(self.beliefs, _REFINED_Q, ()) if g["want"] == want]
+        return minted
+
+    def _blocked(self, store: ox.Store, present: str, at: datetime, memo: Memo) -> list[str]:
+        """Every step an intention stands at, fallen due and not yet taken, that the `present` ground
+        of `store` no longer admits: its action's precondition answers there with no row carrying
+        the step's own value for every parameter the action takes. Only an action this scope's
+        imaginarium holds is asked; a step of another scope's is that scope's to judge."""
+        blocked = []
+        actions = graphs_of(store, ACTION)
+        world = None
+        for head in rows(self.beliefs, _DUE_HEADS_Q, (), now=instant(at)):
+            found = rows(store, _PRECONDITION_Q, actions, action=head["action"])
+            if not found:
+                continue
+            world = world or world_at(store, present, memo=memo)
+            takes = {r["takes"] for r in found if r.get("takes")}
+            filling = {local_of(r["p"]): r["v"] for r in rows(self.beliefs, _FILLING_Q, (), step=head["step"])
+                       if r["p"] in takes}
+            answers = bindings(query(store, bind(found[0]["text"], me=self.uri), world))
+            if not any(all(row.get(k) == v for k, v in filling.items()) for row in answers):
+                log.info("%s: %s can no longer be taken — the present admits it no more", self.id, local_of(head["step"]))
+                blocked.append(head["step"])
+        return blocked
+
+    def _mark_kept(self, handed: list[str]) -> None:
+        """Say of every step of a plan published that a bridge keeps below — one taken
+        fictively whose predicted fact a rule the store holds concludes — that it is
+        `execution:keptBelow`: not the executor's to take fictively."""
+        actions = graphs_of(self.beliefs, ACTION)
+        for plan in handed:
+            for r in rows(self.beliefs, _FICTIVE_STEPS_Q, actions, plan=Raw(f"<{plan}>")):
+                if keeps(self.beliefs, json.loads(r["predicts"]).get("adds", ())):
+                    update(self.beliefs, f'INSERT DATA {{ GRAPH <{plan}> {{ <{r["step"]}> execution:keptBelow true }} }}')
 
     def _withdraw_orphaned_refinements(self, walking: set[str]) -> None:
         """A want kept below for a step no intention stands at any more — the step answered, or
         its intention failed or superseded — is nothing's: withdrawn, so a plan in flight never
         outlives what it was for."""
-        standing_at = {s.at for s in self.executor.standing()} if self.executor is not None else set()
+        standing_at = {r["step"] for r in rows(self.beliefs, _STANDING_AT_Q, ())}
         for r in rows(self.beliefs, _REFINED_Q, ()):
             if r["step"] not in standing_at and r["want"] not in walking:
                 forget_graph(self.beliefs, r["g"])
@@ -422,15 +540,15 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             reported.report_search(store, want, took=time.perf_counter() - started, budget=budget,
                                    weighed=_spent(store, want, memo) - (ceiling - budget), scope=scope)
 
-    def _adopted(self, store: ox.Store, intentions: list[str], present: str, scope: str, memo: Memo) -> None:
-        """Say each plan the executor adopted from `store` this pass (`metrics.report_adoption`),
-        with the tally of its want's searches, which goes with it."""
-        for intention in intentions:
-            want = reported.pursued_by(self.executor.intentions, intention)
+    def _adopted(self, store: ox.Store, handed: list[str], present: str, scope: str, memo: Memo) -> None:
+        """Say each plan this pass published from `store` (`metrics.report_adoption`), with the
+        tally of its want's searches, which goes with it."""
+        for plan in handed:
+            want = reported.pursued_by(self.beliefs, plan)
             if want is None:
                 continue
             first, passes = self._searches.pop(want, (None, 0))
-            reported.report_adoption(store, self.executor.intentions, want, first=first, passes=passes,
+            reported.report_adoption(store, self.beliefs, want, first=first, passes=passes,
                                      weighed=_spent(store, want, memo), present=present, scope=scope)
 
     def desire_of(self, want: str) -> str | None:

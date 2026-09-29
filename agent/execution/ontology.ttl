@@ -17,15 +17,27 @@
 #  returns with the thing that reads it and not before (a-term-nobody-reads-is-annotation).
 
 execution:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
-    rdfs:comment "What the agent is DOING: commitments adopted and not yet resolved. Small and live, because what is finished belongs to history." .
+    rdfs:comment "What the agent is DOING: commitments adopted, standing and resolved, kept in the belief base's volume as a graph of the agent's own, not public, so a restart finds them and planning reads what is walked by this kind." .
+
+execution:adopts a owl:ObjectProperty ; rdfs:domain execution:Intention ;
+    rdfs:label "adopts" ;
+    rdfs:comment "The plan an intention commits to — an orexis:PlanGraph planning published and owns — referred to and never copied: the plan's steps are read where planning wrote them, and the intention holds only its own rows." .
+
+execution:keptBelow a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:boolean ;
+    rdfs:label "kept below" ;
+    rdfs:comment "Said by planning of a step whose predicted fact a rule the store holds concludes: not the executor's to take fictively. When it falls due the executor waits for the want that keeps it one level down (execution:keptBy) and takes it by waiting on that want." .
+
+execution:keptBy a owl:ObjectProperty ; rdfs:domain execution:Step ;
+    rdfs:label "kept by" ;
+    rdfs:comment "The want that keeps a step one level down, written by planning beside the want it mints when the step falls due; the executor records it on the step's act (execution:refinedBy) and waits on it, and planning withdraws the want once nothing stands at the step." .
 
 execution:Intention a owl:Class ; rdfs:label "Intention" ;
     rdfs:comment """One commitment: one plan for one want, adopted at a moment, standing at a step, resolved at another moment or still standing. The lifecycle is two timestamps and an outcome, not a state machine: standing is `adoptedAt` without `resolvedAt`, and how it ended is `outcome` (knowledge/domain/execution/intention.md).""" .
 
 
-execution:pursues a owl:ObjectProperty ; rdfs:domain execution:Intention ;
+execution:pursues a owl:ObjectProperty ;
     rdfs:label "pursues" ;
-    rdfs:comment "The want this intention's plan was found for. A want an intention walks is neither searched nor handed a second plan until the intention resolves." .
+    rdfs:comment "The want an intention — or a plan handed down, on its root — was found for. A want an intention walks is neither searched nor handed a second plan until the intention resolves." .
 
 execution:by a owl:ObjectProperty ; rdfs:domain execution:Intention ; rdfs:range execution:Step ;
     rdfs:label "by" ;

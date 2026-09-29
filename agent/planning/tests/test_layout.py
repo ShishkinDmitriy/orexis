@@ -40,7 +40,7 @@ def test_the_namespace_portions_stay_unclaimed():
 
 #  A MODULE NAMED FOR A THING, which may export several reads of it. Every other module in
 #  the package is named for an ACT and exports that act alone.
-NOUNS = {"footprint", "metrics", "ontology", "planner", "violation"}
+NOUNS = {"bridge", "footprint", "metrics", "ontology", "planner", "violation"}
 
 
 def test_a_module_named_for_an_act_exports_that_act_and_nothing_else():
@@ -105,7 +105,7 @@ def test_outside_the_package_only_the_planner_is_imported():
 
 
 #  THE READS: modules that write nothing, which any act may ask.
-READS = {"ontology", "world_at", "find_wants", "find_scopes", "unweighed", "footprint", "violation"}
+READS = {"ontology", "world_at", "find_wants", "find_scopes", "unweighed", "footprint", "violation", "bridge"}
 
 
 def test_an_act_calls_no_other_act_and_the_planner_sequences_them():
@@ -118,8 +118,8 @@ def test_an_act_calls_no_other_act_and_the_planner_sequences_them():
     import ast
     package = ROOT / "agent" / "planning"
     for path in sorted(package.glob("*.py")):
-        if path.stem in ("planner", "__init__"):
-            continue
+        if path.stem in ("planner", "create", "__init__"):
+            continue                    # the Planner sequences the acts, and `create` makes the Planner
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node, ast.ImportFrom) and node.level == 1:
                 sibling = node.module or ""

@@ -371,13 +371,32 @@ def pytest_addoption(parser):
 
 
 class StandInRuntime:
-    """What a package's `start` is handed, as a test hands it: the store, the agent, the instant a
-    job reads, and a record of everything the package asked the runtime for — jobs submitted, kinds
-    heard, timers, gauges and members attached — for the test to run by hand."""
+    """What a package's `create` and its part's `start` are handed, as a test hands it: the store,
+    the agent, the instant a job reads, and a record of everything the part asked the runtime for —
+    jobs submitted, kinds heard, graphs written, timers, gauges and members attached — for the test
+    to run by hand."""
 
-    def __init__(self, beliefs, me: str, now):
-        self.beliefs, self.me, self.now = beliefs, me, now
+    def __init__(self, beliefs, me: str, now, agent_id: str = "keeper", budget=None, intentions=None):
+        self.beliefs, self.me, self.now, self.id = beliefs, me, now, agent_id
+        self.budget, self.intentions = budget, intentions
         self.jobs, self.heard, self.timers, self.gauges, self.attached = [], [], [], [], []
+        self.written, self.held, self.outcome, self.pressed = [], set(), None, False
+
+    def wrote(self, graphs) -> None:
+        self.written += list(graphs)
+
+    def hold(self, who) -> None:
+        self.held.add(who)
+
+    def release(self, who, outcome=None) -> None:
+        self.held.discard(who)
+        self.outcome = outcome or self.outcome
+
+    def again(self) -> None:
+        self.pressed = True
+
+    def lap(self, part: str) -> None:
+        pass
 
     def submit(self, job) -> None:
         self.jobs.append(job)

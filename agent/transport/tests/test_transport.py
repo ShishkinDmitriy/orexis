@@ -11,7 +11,8 @@ from agent.transport.transport import Transport, Transports
 
 def test_the_contract_is_connect_open_handle_cadence_nudge_and_tell_and_nothing_about_bytes():
     names = {n for n, v in vars(Transport).items() if not n.startswith("_") and (callable(v) or isinstance(v, classmethod))}
-    assert names == {"connect", "start", "stop", "open", "handle", "reaches", "set_cadence", "sense_now", "actuate", "tell"}
+    assert names == {"connect", "start", "stop", "open", "handle", "reaches", "set_cadence", "sense_now", "actuate", "tell",
+                     "command", "tell_to"}
     assert "parse" not in names, "bytes to number is sensing's pipeline"
     assert "claims" not in names, "whether a member is loaded is its premise, asked before it is imported"
     with pytest.raises(NotImplementedError):
@@ -45,15 +46,27 @@ class _Member(Transport):
         self.asked.append(("sense_now", sensor))
 
 
-def test_a_started_member_hands_every_message_to_the_runtime_as_a_job(stand_in_runtime):
+def test_a_started_member_hands_every_message_to_the_runtime_as_a_job_and_holds_the_agent(stand_in_runtime):
     """Its thread only queues: what a message means is handled when the runtime runs the job."""
     member = _Member("bus", set())
     runtime = stand_in_runtime(None, "me", None)
     member.start(runtime)
-    assert runtime.attached == [member] and member.asked == []
+    assert runtime.attached == [member] and member in runtime.held and member.asked == []
     member.deliver("topic", b"{}", None)
     [job] = runtime.jobs
     assert job() == ["bus:topic"] and member.asked == [("handle", "topic")]
+
+
+def test_a_command_is_sent_only_by_the_member_reaching_the_device(stand_in_runtime):
+    """Linked to the executor's `commanded`, every member hears a command, and only the one reaching
+    the actuator sends it."""
+    sent = []
+    bus, web = _Member("bus", {"urn:pump"}), _Member("web", set())
+    for member in (bus, web):
+        member.actuate = lambda store, actuator, payload, name=member.name: sent.append((name, actuator)) or True
+        member.start(stand_in_runtime(None, "me", None))
+    Transports([bus, web]).command("urn:pump", {"dose_ml": 100})
+    assert sent == [("bus", "urn:pump")]
 
 
 def test_several_members_are_one_transport_and_a_nudge_goes_to_the_member_reaching_it():

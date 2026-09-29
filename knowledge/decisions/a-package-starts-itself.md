@@ -17,10 +17,11 @@ description: >-
 # The claim
 
 **The runtime is a lifecycle container.** It boots, finds the packages whose premise holds,
-starts each, runs until the process is stopped, and stops each, the last first. What a package
-does once started is the package's to say: `agent/<package>/start.py` exports `start(runtime)`,
-answering how to stop it where there is anything to stop, and the runtime imports it by the
-package's name and knows no word of what it does.
+creates a [part](/domain/kernel/part.md) of each, links them, starts them, runs until the process is
+stopped, and stops each, the last first. What a package does once started is the package's to say:
+`agent/<package>/create.py` exports `create(runtime)`, and the part it answers links to the others
+where it hears them, starts, and stops where there is anything to stop; the runtime imports it by
+the package's name and knows no word of what it does.
 
 **A package is offered four things, and nothing else.**
 
@@ -45,9 +46,9 @@ before. No two jobs write at once, so a prediction never reads between an observ
 and its replacement written, and a test drains by hand rather than timing threads.
 
 **A transport starts where the runtime is told to connect.** `main` is; a test hands a member it
-brought up, and the runtime starts it the same way. A member's `start` binds its thread's
+brought up, and the runtime links and starts it the same way. A member's `start` binds its thread's
 messages to `submit`, opens what it listens on, schedules what it does of its own accord and is
-attached, so a step's command goes out through it; several are held behind `Transports`.
+attached; a step's command goes out through it because execution's part, linked to it, hands it on; several are held behind `Transports`.
 
 # What was refused
 
@@ -76,12 +77,11 @@ attached, so a step's command goes out through it; several are held behind `Tran
 
 # Seams left open
 
-- **The mind still runs its pass in the runtime.** Belief, planning and execution start
-  themselves next: revision hearing every graph, planning at what it reads changing and at the
-  instants it foresaw, execution at a step falling due. Until then the runtime stands in for
-  belief with `on(orexis:Graph)`, and still names speech's `said`, which taking a step calls.
-- **Who keeps the agent alive** is still the runtime's reading: a transport, or a desire. That
-  goes to the packages with the mind: a listening transport keeps it, a planner holding a desire
-  keeps it, Hanoi's lets go.
+- ~~The mind still runs its pass in the runtime~~ and ~~who keeps the agent alive is the
+  runtime's reading~~: both closed by
+  [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md).
+  Belief, planning and execution start themselves; a listening transport and a planner holding a
+  desire hold the agent, and Hanoi's lets go; a package's signals are its own object's, connected when
+  the parts are linked, and a graph written by kind is the runtime's one.
 - **A transport member reads sensing's `cadence_of`** to poll at a sensor's frequency, a second
   downward import beside the callback.

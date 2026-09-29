@@ -33,15 +33,15 @@ def stopped_clock(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW)
 
 
-def a_plan(steps: int = 2) -> ox.Store:
+def a_plan(steps: int = 2, plan: str = PLAN) -> ox.Store:
     """A plan of `steps` steps in execution's own words, chained — what the search writes."""
     st = ox.Store()
     chain = "\n".join(
-        f'  <{PLAN}.{n}> a execution:Step ; '
-        f'execution:partOf <{PLAN}> '
-        + (f'; execution:then <{PLAN}.{n + 1}> .' if n + 1 < steps else '.')
+        f'  <{plan}.{n}> a execution:Step ; '
+        f'execution:partOf <{plan}> '
+        + (f'; execution:then <{plan}.{n + 1}> .' if n + 1 < steps else '.')
         for n in range(steps))
-    update(st, f"INSERT DATA {{ GRAPH <{PLAN}> {{\n{chain}\n}} }}")
+    update(st, f"INSERT DATA {{ GRAPH <{plan}> {{\n{chain}\n}} }}")
     return st
 
 
@@ -60,13 +60,17 @@ def test_a_committed_plan_stands_at_its_head():
     assert standing.at == f"{PLAN}.0", "the intention stands at the head, not at the last step"
 
 
-def test_every_step_crosses_with_the_plan():
-    """A copy and not a rewrite: what execution does not read, it also does not drop."""
+def test_a_plan_from_another_store_is_brought_in_whole_and_adopted_by_reference():
+    """The intention refers to the plan and holds only its own rows; a plan found in a store of its
+    own — a case's — is brought in whole under its own name first, so the reference reaches it."""
     k = executor()
-    k.commit(a_plan(3), PLAN, WANT)
-    steps = bindings(query_over(
-        k.intentions, "SELECT ?s WHERE { ?s a execution:Step }", intentions_graph(AGENT)))
+    intention = k.commit(a_plan(3), PLAN, WANT)
+    steps = bindings(query_over(k.intentions, "SELECT ?s WHERE { ?s a execution:Step }", PLAN))
     assert len(steps) == 3, steps
+    own = bindings(query_over(k.intentions, "SELECT ?s WHERE { ?s a execution:Step }", intentions_graph(AGENT)))
+    assert own == [], "no step is copied into the intentions"
+    adopts = bindings(query_over(k.intentions, f"SELECT ?p WHERE {{ <{intention}> execution:adopts ?p }}", intentions_graph(AGENT)))
+    assert adopts == [{"p": PLAN}]
 
 
 def test_a_second_plan_inside_the_patience_is_absorbed():
@@ -223,14 +227,14 @@ GRAPH <http://example.org/test#catalogue> {{
     return st
 
 
-def _predicting(steps: int = 1) -> ox.Store:
+def _predicting(steps: int = 1, plan: str = PLAN) -> ox.Store:
     """A plan whose first step predicts the disk moving from A to B, in the canonical facts a
     world's digest is made of, and lands at NOW."""
-    source = a_plan(steps)
+    source = a_plan(steps, plan)
     (before,) = facts_of(_beliefs(PEG_A), STATE)
     (after,) = facts_of(_beliefs(PEG_B), STATE)
     predicts = json.dumps({"adds": [after], "retracts": [before]})
-    update(source, f"""INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:predicts {json.dumps(predicts)} ;
+    update(source, f"""INSERT DATA {{ GRAPH <{plan}> {{ <{plan}.0> execution:predicts {json.dumps(predicts)} ;
                                                        execution:landsAt "{NOW.isoformat()}"^^xsd:dateTime }} }}""")
     return source
 
@@ -369,15 +373,16 @@ def test_a_step_taken_late_lands_late_by_as_much(monkeypatch):
 
 
 def test_a_second_plan_for_a_want_is_walked_by_steps_of_its_own(monkeypatch):
-    """The first plan's step was taken and failed; the second, found for the same want, names its
-    steps as the first did. Its head is its own and due, not the first's taken step waiting."""
+    """The first plan's step was taken and failed; the second, found for the same want, is published
+    under a name of its own, as planning publishes every plan, and so are its steps. Its head is its
+    own and due, not the first's taken step waiting."""
     x = Executor(_beliefs(PEG_A), AGENT, ox.Store())
     first = x.commit(_predicting(1), PLAN, WANT)
     x.tick(NOW)
     x.drain()
     x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S))
     assert _resolved(x, first) == [{"o": "failed"}]
-    second = x.commit(_predicting(1), PLAN, WANT)
+    second = x.commit(_predicting(1, PLAN + "2"), PLAN + "2", WANT)
     (standing,) = x.standing()
-    assert standing.uri == second and standing.at != f"{PLAN}.0" and standing.at.startswith(f"{PLAN}.0.")
+    assert standing.uri == second and standing.at == f"{PLAN}2.0"
     assert x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S)) == [standing.at], "due, since it was never taken"

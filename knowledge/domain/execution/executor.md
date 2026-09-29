@@ -10,9 +10,13 @@ description: >-
 
 # What it does
 
-- **`commit`** adopts a [plan](/domain/planning/plan.md) as an [intention](/domain/execution/intention.md),
-  standing at its first step, and tags the steps' names so a second plan for one want never reuses
-  the first's.
+- **`adopt`** — heard when planning publishes a [plan](/domain/planning/plan.md) — commits it as an
+  [intention](/domain/execution/intention.md) that `execution:adopts` the plan by reference, standing at
+  its first step; the plan stays planning's. A second plan for a want already standing is absorbed
+  inside the patience and supersedes past it. **`end_for`** ends an intention that has taken no step
+  `reached`, when planning says its want is met; **`end_at`** ends one `failed`, when planning says its
+  next step is blocked; every intention that ends is an event planning hears
+  ([planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 - **`tick(now)`** hands every standing intention whose head [step](/domain/execution/step.md) is due
   — `execution:notBefore` past — to the queue, and for a head already taken asks whether the world
   answered.
@@ -22,11 +26,13 @@ description: >-
 
 In one order, read off the action's [implementation](/domain/execution/implementation.md):
 
-1. an operation that reaches the world — an `execution:Command` sent to a device through the
-   transport, an `execution:Saying` told to a peer — is carried out;
-2. a step that would otherwise be fictive is handed to the planner's `refine`, and where a bridge
-   concludes what it predicts it is kept one level down as a want, recorded `execution:refinedBy`
-   on the act ([refinement](/domain/planning/refinement.md));
+1. an operation that reaches the world is carried out by a [signal](/domain/kernel/signal.md) of the
+   executor's: an `execution:Command`'s payload by `commanded`, which execution's part hands the
+   transport reaching the device, an `execution:Saying`'s document by `said`, for speech to believe and
+   tell — order by order, each answered before the next;
+2. a step marked `execution:keptBelow` is not taken fictively: it waits until planning has written
+   the want that keeps it one level down, `execution:keptBy`, and is taken by recording that want
+   `execution:refinedBy` on the act and waiting on it ([refinement](/domain/planning/refinement.md));
 3. anything else is fictive: the executor writes the step's prediction into the state itself and
    the rules conclude of it, since nothing else would report it.
 
