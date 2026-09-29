@@ -22,10 +22,10 @@ does not decode writes nothing and says so in the log. A sensor reading a SERIES
 `sensing:endsPointer` or `sensing:startsPointer` beside its reading pointer - writes one
 [forecast](/domain/sensing/forecast.md) per stretch still ahead instead, and replaces its last.
 
-**`missed`** is what the container's tick asks: which sensors' readings have fallen due with
+**`missed`** is what sensing's own `start` asks every minute of the timeline, whether or not anything
+arrived ([a-package-starts-itself](/decisions/a-package-starts-itself.md)): which sensors' readings have fallen due with
 nothing arrived, for the container to ask again, and which have been silent past a limit of their
-cadences — said by `sensing:silentSince` until a reading ends it. A series sensor is due when no
-forecast of its stands or the standing one was issued a cadence ago.
+cadences — said by `sensing:silentSince` until a reading ends it.
 
 # What it leaves to others
 

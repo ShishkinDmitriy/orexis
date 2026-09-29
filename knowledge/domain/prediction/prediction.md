@@ -23,7 +23,9 @@ the sum, and no drift knows another exists.
 
 # What is written
 
-`predict` (`agent/prediction/predict.py`) takes the observation a sensor last made - found by the
+Started, the package answers every observation a job writes by rewriting that sensor's predictions
+([a-package-starts-itself](/decisions/a-package-starts-itself.md)). `predict`
+(`agent/prediction/predict.py`) takes the observation a sensor last made - found by the
 kernel's kind and `sosa:madeBySensor`, so nothing of sensing is imported - and accumulates the
 drifts' sum from it for a day. Time is split at every **happening**, the start or end of a public
 or belief graph holding inside that day, since only there can what a drift reads change; between

@@ -11,6 +11,7 @@ about a whole process, so it is asked of one: a fresh interpreter boots a world 
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import subprocess
@@ -21,7 +22,7 @@ import pyoxigraph as ox
 import pytest
 
 from agent.runtime import EVERY, HTTP, KERNEL, MIND, MQTT, PREDICTION, PREMISES, SENSING, SPEECH, Runtime, _documents_of, \
-    _transports_of, boot, packages_of
+    boot, packages_of
 
 ROOT = Path(__file__).resolve().parents[2]
 ME = "http://example.org/test#me"
@@ -90,11 +91,12 @@ def test_a_package_is_loaded_where_its_premise_holds_and_nowhere_else(tmp_path, 
             assert not any(documents), f"{package}'s documents are in the store, and nothing asked for them"
     runtime = Runtime(store, "me")
     assert runtime.packages == packages_of(store, ME)
-    assert (runtime._missed is not None, runtime._predict is not None, runtime._said is not None) == \
-        (SENSING in expected, PREDICTION in expected, SPEECH in expected)
-    members = [m.__module__ for m in _transports_of(store, ME)]
-    assert members == [module for package, module in ((MQTT, "agent.transport.mqtt.driver"),
-                                                      (HTTP, "agent.transport.http.driver")) if package in expected]
+    #  WHAT STARTED ITSELF: every loaded package with a `start` module but a transport, which starts
+    #  only where the runtime is told to connect; a transport package has its `start` all the same.
+    assert runtime.started == [p for p in (SENSING, PREDICTION) if p in expected]
+    assert (runtime._said is not None) == (SPEECH in expected)
+    for package in (MQTT, HTTP):
+        assert (package in expected) <= (importlib.util.find_spec("agent." + package.replace("/", ".") + ".start") is not None)
 
 
 @pytest.mark.parametrize("facts, read", [(_PROBE, True), ("", False)], ids=["sensing loaded", "sensing not loaded"])
@@ -137,15 +139,18 @@ def test_every_document_the_agent_ships_is_the_kernels_or_a_packages_it_names():
 
 
 #  WHAT A PROCESS HOLDS: a fresh interpreter, the tree under test first on its path, boots a world,
-#  builds the runtime, asks for its transport members and runs `passes`; what of `agent.` it then
+#  builds the runtime, imports its transport packages' `start` and runs `passes`; what of `agent.` it then
 #  holds, by the package beneath `agent`.
 _PROBE_SCRIPT = """
 import json, sys
 from pathlib import Path
-from agent.runtime import Runtime, _transports_of, boot
+import importlib
+from agent.runtime import Runtime, boot
 world, agent, passes = Path(sys.argv[1]), sys.argv[2], int(sys.argv[3])
 runtime = Runtime(boot(world, agent), agent, budget=64)
-_transports_of(runtime.beliefs, runtime.me)
+for package in runtime.packages:
+    if package.startswith('transport/'):
+        importlib.import_module('agent.' + package.replace('/', '.') + '.start')
 outcome = runtime.run(passes=passes, poll_s=0) if passes else None
 print(json.dumps({"outcome": outcome, "held": sorted({m.split('.')[1] for m in sys.modules if m.startswith('agent.')})}))
 """

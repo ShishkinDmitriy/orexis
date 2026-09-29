@@ -368,3 +368,34 @@ def pytest_addoption(parser):
                      help="rewrite the cases' snapshots from what each function left, then review the diff")
     parser.addoption("--bench-record", action="store_true", default=False,
                      help="append the bench's rows to tests/bench/results.tsv — commit, machine, median of the runs")
+
+
+class StandInRuntime:
+    """What a package's `start` is handed, as a test hands it: the store, the agent, the instant a
+    job reads, and a record of everything the package asked the runtime for — jobs submitted, kinds
+    heard, timers, gauges and members attached — for the test to run by hand."""
+
+    def __init__(self, beliefs, me: str, now):
+        self.beliefs, self.me, self.now = beliefs, me, now
+        self.jobs, self.heard, self.timers, self.gauges, self.attached = [], [], [], [], []
+
+    def submit(self, job) -> None:
+        self.jobs.append(job)
+
+    def on(self, kind: str, handler) -> None:
+        self.heard.append((kind, handler))
+
+    def every(self, seconds: float, job) -> None:
+        self.timers.append((seconds, job))
+
+    def gauge(self, read) -> None:
+        self.gauges.append(read)
+
+    def attach(self, member) -> None:
+        self.attached.append(member)
+
+
+@pytest.fixture
+def stand_in_runtime():
+    """The stand-in a package's `start` is handed: `stand_in_runtime(beliefs, me, now)`."""
+    return StandInRuntime

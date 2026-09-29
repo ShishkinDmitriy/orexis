@@ -14,11 +14,11 @@ What the container asks of any member: bring itself up from the environment (`co
 the container's `deliver`), subscribe to the agent's
 channels (`open`), turn a message into observations by calling sensing's `received` once per
 sensor it is for (`handle`), and send what a device may be told — a cadence, a sense-now, and the
-payload a step's command answers (`actuate`), and say whether it `reaches` a sensor or an
-actuator. A message arrives on the member's thread and is queued; the container's one thread
-handles it. Where more than one member is loaded, the container holds them behind `Transports`,
-which hands a message back to the member that queued it and a nudge or a command to the member
-that reaches its device.
+payload a step's command answers (`actuate`), say whether it `reaches` a sensor or an actuator,
+and **start itself** (`start`, handed the runtime): its thread's messages submitted as jobs the
+runtime's one thread runs, what it listens on opened, what it does of its own accord scheduled,
+and itself attached for commands. Several are held behind `Transports`, which sends a nudge or a
+command to the member that reaches its device.
 
 Whether a member is loaded at all is not asked of it, since asking would import it: it is the
 member's premise, read off the world before anything of the member is
@@ -34,7 +34,9 @@ pattern and publishes a command to a pattern with no wildcard. Which sensors are
 derived — those hosted by what it acts for, a sample of it, or a place that contains it — and
 never authored. The broker's address and the
 agent's credential come from the environment (`MQTT_HOST`, `MQTT_USERNAME` and the rest), which
-[onboarding](/domain/onboarding/onboarding.md) writes; the member refuses to guess one.
+[onboarding](/domain/onboarding/onboarding.md) writes; the member refuses to guess one. Started, it
+asks every minute of the timeline after its sensors' missing readings, telling each such board to
+sense now.
 
 A peer's document travels the same way: `tell` publishes it on the topic the recipient listens to,
 and one arriving is handed to [speech](/domain/speech/speech.md)'s `heard`.
@@ -44,8 +46,9 @@ and one arriving is handed to [speech](/domain/speech/speech.md)'s `heard`.
 It adopts the W3C WoT Thing Description as it stands and declares no word of its own. A sensor
 reached over HTTP is also a `td:Thing`, and its `td:hasForm` is a form whose `hctl:hasTarget` is a
 URI template; `{latitude}` and `{longitude}` are filled from the `schema:geo` of what the sensor is
-hosted by, variable by local name. `sense_now` fetches it on a thread of its own, once at a time
-and not again within a minute of the last attempt, and the response is queued like a message.
+hosted by, variable by local name. Started, it polls each sensor at once and then every
+`ssn-system:Frequency` the sensor states; a fetch runs on a thread of its own, one at a time per
+sensor, and the response is submitted like a message.
 The one sensor it serves today is a [forecast](/domain/sensing/forecast.md) service, whose
 address is public and is read off the world, not told
 ([a-forecast-is-a-series-a-sensor-reads](/decisions/a-forecast-is-a-series-a-sensor-reads.md)).

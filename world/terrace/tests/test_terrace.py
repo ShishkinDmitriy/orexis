@@ -104,7 +104,7 @@ def test_each_reading_reaches_the_series_under_its_own_property(monkeypatch, his
     it writes each observation (#825)."""
     runtime, broker = _terrace(monkeypatch)
     runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
-    runtime.sense(NOW)
+    runtime.drain(NOW)
     assert sorted((p["measurement"], p["tags"]["sensor"], p["fields"]["value"]) for p in history) == [
         ("AirHumidity", "air_humidity_terrace", 0.8), ("AirPressure", "air_pressure_terrace", 1012.0),
         ("AirTemperature", "air_temp_terrace", 14.5), ("SoilMoisture", "moisture_sensor_terrace", 0.2)]
@@ -120,7 +120,7 @@ def test_every_point_the_agent_writes_is_drawn_by_one_terrace_panel(monkeypatch,
 
     runtime, broker = _terrace(monkeypatch)
     runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
-    runtime.sense(NOW)
+    runtime.drain(NOW)
     queries = [t["query"] for panel in render("terrace")["panels"] for t in panel["targets"]]
     drawn = {(p["measurement"], p["tags"]["sensor"]):
              [q for q in queries if f'r._measurement == "{p["measurement"]}"' in q
@@ -194,8 +194,8 @@ def _with_a_place(tmp_path):
 
 
 def test_without_its_place_the_forecast_is_not_asked_for_and_the_terrace_still_boots(monkeypatch, caplog):
-    """A clone holds no secrets/: the terrace boots, loads the HTTP member for its forecast, and asks
-    for nothing, saying why."""
+    """A clone holds no secrets/: the terrace boots, loads the HTTP member for its forecast, and
+    fetches nothing, saying why."""
     from agent.transport.http.driver import Http
     from agent.runtime import HTTP
 
@@ -213,11 +213,10 @@ def test_without_its_place_the_forecast_is_not_asked_for_and_the_terrace_still_b
 
 
 def test_a_forecast_is_fetched_when_due_and_the_soils_next_prediction_carries_its_rain(monkeypatch, tmp_path):
-    """THE WHOLE PATH. The soil reads 0.2, under the bed's floor: the reading is written, and the
-    forecast, never asked for, is due, so the HTTP member fetches it for the terrace's place. The
-    next pass hands the body to sensing, which writes an hour of forecast per graph. The soil's next
-    reading is predicted with the rain: below until the shower lifts it back inside the bed's range,
-    which drying alone never would."""
+    """THE WHOLE PATH. Started, the HTTP member polls the forecast at once for the terrace's place,
+    and the body is a job the runtime hands to sensing, which writes an hour of forecast per graph.
+    The soil reads 0.2, under the bed's floor, and its next reading is predicted with the rain:
+    below until the shower lifts it back inside the bed's range, which drying alone never would."""
     from agent.transport.http.driver import Http
     from agent.transport.transport import Transports
 
@@ -227,7 +226,6 @@ def test_a_forecast_is_fetched_when_due_and_the_soils_next_prediction_carries_it
     asked = []
     web = Http(AGENT, None, lambda url: asked.append(url) or FORECAST, spawn=lambda work: work())
     runtime = Runtime(store, "terrace", transport=Transports([Mqtt(AGENT, Broker()), web]))
-    web.deliver = lambda channel, payload, at: runtime.deliver((1, channel), payload, at)
     runtime.deliver((0, "sensors/moisture_sensor_terrace/reading"), MESSAGE, NOW)
     runtime.run(passes=2, poll_s=0)
     assert asked == ["https://api.open-meteo.com/v1/forecast?latitude=50.12&longitude=10.34&hourly=precipitation"

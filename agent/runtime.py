@@ -49,10 +49,13 @@ pass continues, or nothing this agent holds reaches the want, which such an agen
 UNREACHABLE rather than looping on. Nothing here is threaded: the executor's two doors are called in turn on this thread, and a
 pass that moved nothing sleeps the poll before the next.
 
-**A SENSED WORLD RUNS THROUGH ITS TRANSPORT.** Where a sensor is reached over one, the member is
-brought up and handed `deliver`; each pass drains what it queued — sensing writes, the rules
-conclude sides, prediction writes the stretches ahead — before the planner's pass, and a step
-whose action's implementation holds an `execution:Command` is taken by sending what it answers.
+**A PACKAGE STARTS ITSELF (a-package-starts-itself).** Every package beyond the mind that has a
+`start` module is handed the runtime and says what it does, by jobs it `submit`s, kinds it hears
+(`on`) and timers it asks for (`every`); the runtime runs every job on this one thread, one at a
+time, and knows no package's words. A transport's listener submits each message, sensing's
+received writes what it holds, the rules conclude of every graph a job writes, and prediction
+answers every observation — all in the pass's `drain`, before the planner's pass; and a step whose
+action's implementation holds an `execution:Command` is taken by sending what it answers.
 
 **A PEER IS TOLD, AND HEARD, THROUGH THE SAME TRANSPORT.** A step whose action's implementation
 holds an `execution:Saying` makes documents of the present; the agent believes what it said, the rules
@@ -78,11 +81,14 @@ window is written as the process stops.
 from __future__ import annotations
 
 import argparse
+import importlib
+import importlib.util
 import logging
 import queue
 import signal
 import sys
 import time
+from datetime import timedelta
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -101,7 +107,7 @@ from agent.metrics import Event, Gauge
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, STATE, local_of
 from agent.planning.planner import Planner
 from agent.store import (answer, catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of,
-                         kinds_in, put_document, revisions_of, rows, update)
+                         kinds_in, put_document, revisions_of, rows, update, Raw)
 
 log = logging.getLogger("runtime")
 
@@ -117,10 +123,10 @@ GRAPH = OREXIS + "Graph"
 MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
 
 #  WHAT THE RUNTIME REPORTS OF ITSELF — its metrics, as a package's `metrics.py` holds a package's.
-#  A PASS, in real seconds, whole and by part: the transport's queue handed to sensing, revision,
-#  prediction, planning, walking. A part a pass does not reach is not in its tally; the planner's
+#  A PASS, in real seconds, whole and by part: the jobs the packages queued run to the last
+#  (`drain`), planning, walking. A part a pass does not reach is not in its tally; the planner's
 #  own parts are its event.
-PASS = Event("pass", values=("duration_s", "sense_s", "revise_s", "predict_s", "plan_s", "execute_s"))
+PASS = Event("pass", values=("duration_s", "drain_s", "plan_s", "execute_s"))
 #  A WANT NOTHING THIS AGENT HOLDS REACHES — standing, walked by nothing, no search cut short — the
 #  runtime's own judgement, by the desire it came from. Which want is the log's to say.
 UNREACHED = Event("unreachable", tags=("desire",))
@@ -150,9 +156,9 @@ _MINE = ("$me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host 
 #  EVERY OTHER PACKAGE, AND WHAT IN THE WORLD MAKES THE AGENT NEED IT: an ASK over the world's
 #  public graphs, `$me` the agent, which is each package's callers' reads answered in advance.
 #  - SENSING, where a sensor is the agent's: `received` is called for such a sensor's message and
-#    `missed` asks after its readings, and nothing else writes the observations its rules read;
-#  - PREDICTION, where a sensor is the agent's AND a drift is declared: `predict` is asked of a
-#    sensor that has just reported, and moves a reading only by a drift — the record's table said a
+#    its `start` asks after its readings, and nothing else writes the observations its rules read;
+#  - PREDICTION, where a sensor is the agent's AND a drift is declared: its `start` answers every
+#    observation written, and moves a reading only by a drift — the record's table said a
 #    drift alone, and a market agent in a world importing climate would have loaded it for nothing;
 #  - SPEECH, where the agent listens to a topic — a peer's document arrives there for `heard` — or
 #    an action holds an `execution:Saying`, whose documents `said` believes when a step is taken.
@@ -385,31 +391,34 @@ class Runtime:
     """One agent's process: what arrives sensed and revised, then the planner and the executor
     over one store, run pass by pass.
 
-    A SENSED WORLD'S TRANSPORT is handed in brought up, or brought up here from the environment
-    by `connect` — the `Transport` members' classes, each `connect`ed and handed `deliver`, held
-    behind the family's `Transports` where there is more than one. A message
-    arrives on the member's thread and is queued; the pass drains the queue on this one: sensing
-    writes the observation, the rules conclude its side, prediction writes the stretches ahead and
-    the rules conclude theirs, and the readings fallen due are asked for again. A step whose
-    action's implementation holds an `execution:Command` is taken by sending what it answers, sized from
-    the present, through the transport; a world with no transport takes steps as the executor
-    does alone."""
+    A PACKAGE STARTS ITSELF (a-package-starts-itself). Every package the agent loads beyond the
+    mind that has a `start` module is handed this runtime and says what it does — a transport
+    listens or polls, sensing asks after what has fallen due, prediction answers an observation —
+    by the four things the runtime offers: `submit` a job from any thread, `on` a kind a job
+    reports writing, `every` so many seconds of the one timeline, and the gauges it reports. The
+    runtime runs every job on this one thread, one at a time (`drain`), and knows no package's
+    words. A transport package is started only where the runtime is told to `connect`, which is
+    the process's `main`; a test hands a member brought up, and it is started the same way. A step
+    whose action's implementation holds an `execution:Command` is taken by sending what it
+    answers, sized from the present, through the transport; a world with no transport takes steps
+    as the executor does alone. The mind still runs its pass here: planning, then walking."""
 
     def __init__(self, beliefs: ox.Store, agent_id: str, *, budget: int | None = None,
-                 intentions: ox.Store | None = None, transport=None, connect=None):
+                 intentions: ox.Store | None = None, transport=None, connect: bool = False):
         self.beliefs, self.id = beliefs, agent_id
         self.me = _identity(beliefs, agent_id)
         self.packages = packages_of(beliefs, self.me)
-        self._missed, self._predict, self._said, self._sensing_metrics = _imported(self.packages)
-        self.inbox: queue.SimpleQueue = queue.SimpleQueue()
+        self._said = _said_of(self.packages)
         self._laps: metrics.Laps | None = None          # the parts of the pass in progress, where timed
-        members = [] if connect is None else list(connect) if isinstance(connect, (list, tuple)) else [connect]
-        if transport is None and members:
-            from agent.transport.transport import Transports     # the family, only where a member is loaded
-            transport = Transports.connect(self.me, self.deliver, members=members)
-        self.transport = transport
-        self.executor = Executor(beliefs, agent_id, intentions,
-                                 take=self._take if self.transport is not None else None)
+        self._jobs: queue.SimpleQueue = queue.SimpleQueue()
+        self._heard: list[tuple[str, object]] = []        # (kind, handler) — what a job's writes are told to
+        self._timers: list[list] = []                     # [seconds, next due or None, job]
+        self._gauged: list = []                           # what the packages report, sampled at a window's end
+        self._stops: list = []
+        self._members: list = []
+        self.now = None                                   # the instant the pass stands at, for a job to read
+        self.started: list[str] = []
+        self.executor = Executor(beliefs, agent_id, intentions, take=self._take)
         self.planner = Planner(beliefs, agent_id, executor=self.executor, **({"budget": budget} if budget else {}))
         self.deliberator = Deliberator(beliefs, agent_id)
         #  A STEP KEPT BELOW, AND THE WORLD THE EXECUTOR MOVES: before a step is taken the Planner
@@ -420,52 +429,106 @@ class Runtime:
         #  AND WHAT THE WORLD AUTHORED: its state, revised once, so a fact concluded from where
         #  things stand is believed from the first pass and not only after something moves.
         self._revise([g for g in graphs_of(beliefs, STATE) if not revisions_of(beliefs, g)], clock.now())
-        if self.transport is not None:
-            self.transport.open(beliefs)
+        #  EVERY GRAPH A JOB WRITES IS REVISED beside public knowledge — what belief will say of
+        #  itself when the mind starts itself too.
+        self.on(OREXIS + "Graph", lambda graph: self._revise([graph], self.now) or [])
+        self._start(transport, connect)
 
-    def deliver(self, channel: str, payload: bytes, at) -> None:
-        """What a transport's thread hands on: queued, for the pass to take on this thread."""
-        self.inbox.put((channel, payload, at))
+    # ── what a package is offered ──────────────────────────────────────────────────────────────
 
-    def sense(self, now) -> list[str]:
-        """Take every message queued since the last pass: a peer's document believed and revised,
-        a reading written by sensing, revised, and predicted from; then, on every pass whatever
-        arrived, ask again for every reading fallen due. The graphs written.
+    def submit(self, job) -> None:
+        """Queue `job` — a callable answering the graphs it wrote — to run on this thread, from any
+        thread: a transport's listener hands its message on this way."""
+        self._jobs.put(job)
 
-        EACH GRAPH IS REVISED BESIDE PUBLIC KNOWLEDGE ALONE. Every rule shipped reads one graph
-        and what the world states — a reading and its subject's ranges, a round and nothing
-        else — and a revision is replaced only when its own source is written again. Revised
-        beside everything believed, the first of two readings arriving together took the
-        second's side into its own revision, where the second's next reading never reached it:
-        a soil read inside stayed below in the thermometer's revision."""
-        written, sensors = [], []
-        while self.transport is not None:
+    def on(self, kind: str, handler) -> None:
+        """Run `handler(graph)` — answering the graphs it wrote in turn — for every graph of `kind`
+        a job reports writing: how a package answers another's work with neither naming the other,
+        the belief base being the interface between them."""
+        self._heard.append((kind, handler))
+
+    def every(self, seconds: float, job) -> None:
+        """Run `job` at the first pass and again every `seconds` of the one timeline after: the
+        runtime does the waiting, and the package says only what it waits for."""
+        self._timers.append([float(seconds), None, job])
+
+    def gauge(self, read) -> None:
+        """Report what `read()` samples — a list of points — at every metrics window's end."""
+        self._gauged.append(read)
+
+    def attach(self, member) -> None:
+        """A transport member brought up and started: the one a step's command and a said document
+        go out through, all of them behind the family's `Transports` where there are several."""
+        self._members.append(member)
+
+    @property
+    def transport(self):
+        if len(self._members) > 1:
+            from agent.transport.transport import Transports     # the family, only where a member is loaded
+            return Transports(self._members)
+        return self._members[0] if self._members else None
+
+    def deliver(self, channel, payload: bytes, at) -> None:
+        """A message for the transport, as its thread would hand it: queued, to be handled on this one."""
+        transport = self.transport
+        self.submit(lambda: [graph for _, graph in transport.handle(self.beliefs, channel, payload, at)])
+
+    def drain(self, now) -> list[str]:
+        """Run what is due at `now` and every job queued, and the jobs their writes set off, until
+        none is left: the graphs written, in the order they were."""
+        self.now = now
+        for timer in self._timers:
+            seconds, due, job = timer
+            if due is None or now >= due:
+                timer[1] = now + timedelta(seconds=seconds)
+                self.submit(job)
+        written = []
+        while True:
             try:
-                channel, payload, at = self.inbox.get_nowait()
+                job = self._jobs.get_nowait()
             except queue.Empty:
                 break
-            for sensor, graph in self.transport.handle(self.beliefs, channel, payload, at):
+            for graph in job() or []:
                 written.append(graph)
-                if sensor is not None:                          # None: a peer's document
-                    sensors.append(sensor)
-        self._lap("sense")
-        predicted = []
-        if written:
-            self._revise(written, now)
-            self._lap("revise")
-            predicted = [graph for sensor in dict.fromkeys(sensors)
-                         for graph in self._predict(self.beliefs, self.me, sensor, now=now)] if self._predict else []
-            self._lap("predict")
-            self._revise(predicted, now)
-            self._lap("revise")
-        #  WHAT HAS FALLEN DUE IS ASKED ON EVERY PASS, whether or not anything arrived: an agent whose
-        #  every sensor went quiet heard nothing, and that is when a silence is to be said and a
-        #  reading asked for again (#843). How often a nudge goes OUT is the member's to pace.
-        for sensor in (self._missed(self.beliefs, self.me, now) if self._missed else []):
-            if self.transport is not None:
-                self.transport.sense_now(self.beliefs, sensor)
-        self._lap("sense")
-        return written + predicted
+                kinds = self._kinds(graph)
+                for kind, handler in self._heard:
+                    if kind in kinds:
+                        self.submit(lambda handler=handler, graph=graph: handler(graph))
+        self._lap("drain")
+        return written
+
+    def stop(self) -> None:
+        """Stop every package started, the last first."""
+        while self._stops:
+            self._stops.pop()()
+
+    def _start(self, transport, connect: bool) -> None:
+        """Start every package beyond the mind that has a `start` module, and the transport: a member
+        handed in is started as its package would start it, and a transport package is started from
+        the environment only where the runtime is told to `connect`."""
+        for package in self.packages:
+            if package in MIND:
+                continue
+            name = "agent." + package.replace("/", ".") + ".start"
+            if package.startswith("transport/") and (transport is not None or not connect):
+                continue
+            if importlib.util.find_spec(name) is None:
+                continue
+            stop = importlib.import_module(name).start(self)
+            self.started.append(package)
+            if stop is not None:
+                self._stops.append(stop)
+        if transport is not None:
+            members = getattr(transport, "members", [transport])
+            for member in members:
+                member.start(self)
+                self._stops.append(member.stop)
+            self.started.append("transport")
+
+    def _kinds(self, graph: str) -> set[str]:
+        cat = catalogue_of(self.beliefs)
+        return {r["k"] for r in rows(self.beliefs, "SELECT ?k WHERE { GRAPH $cat { $g a ?k } }", (),
+                                     cat=Raw(f"<{cat}>"), g=graph)}
 
     def _revise(self, graphs: list[str], now) -> None:
         """What the rules conclude of each graph written, beside what the world states and
@@ -485,7 +548,7 @@ class Runtime:
         executor would."""
         orders = sorted({op.order for op in operations(self.beliefs, said.get("fills") or "")
                          if op.kind in (COMMAND, SAYING)})
-        if not orders:
+        if not orders or self.transport is None:          # no transport: as the executor would alone
             self.executor.say(said, intention)
             return
         for order in orders:
@@ -533,7 +596,7 @@ class Runtime:
     def _pass(self, now, n: int) -> tuple[str | None, bool]:
         """One pass: sense, plan, and walk what is due. How the run ends, where this pass ends it,
         and whether to wait the poll before the next."""
-        self.sense(now)
+        self.drain(now)
         self.planner.plan(now)
         standing, walking = self.planner.standing(now), self.executor.walking()
         self._lap("plan")
@@ -583,7 +646,7 @@ class Runtime:
         over the belief base, planning's over its imaginaria, execution's over the intentions."""
         return [*metrics.sample(__name__, [self.beliefs]),
                 *belief_metrics.gauges(self.beliefs),
-                *(self._sensing_metrics.gauges(self.beliefs) if self._sensing_metrics else ()),
+                *(point for read in self._gauged for point in read()),
                 *self.planner.gauges(),
                 *execution_metrics.gauges(self.executor.intentions)]
 
@@ -604,35 +667,14 @@ class Runtime:
         return taken
 
 
-def _imported(packages):
-    """What the runtime calls of a package beyond the mind — sensing's `missed` and its metrics,
-    prediction's `predict`, speech's `said` — imported here, where the package is loaded, and None
-    where it is not. The only place the runtime imports them, so a world whose premise does not hold
-    never loads their modules, nor reports their metrics; the layout tests see these imports as they
-    see any other."""
-    missed = predict = said = sensing_metrics = None
-    if SENSING in packages:
-        from agent.sensing import metrics as sensing_metrics
-        from agent.sensing.missed import missed
-    if PREDICTION in packages:
-        from agent.prediction.predict import predict
+def _said_of(packages):
+    """Speech's `said`, which taking a step that says something calls, imported where speech is
+    loaded and None where it is not — the one package function the runtime still names, until the
+    mind starts itself."""
     if SPEECH in packages:
         from agent.speech.said import said
-    return missed, predict, said, sensing_metrics
-
-
-def _transports_of(beliefs: ox.Store, me: str) -> list:
-    """The transport members the agent is loaded with, each where its premise holds — and a member
-    whose premise does not hold is never imported. A member's library is imported by its own
-    `connect`, so even a world that loads MQTT is not handed paho until it connects."""
-    packages, members = packages_of(beliefs, me), []
-    if MQTT in packages:
-        from agent.transport.mqtt.driver import Mqtt
-        members.append(Mqtt)
-    if HTTP in packages:
-        from agent.transport.http.driver import Http
-        members.append(Http)
-    return members
+        return said
+    return None
 
 
 def world_name(world: Path) -> str:
@@ -663,14 +705,14 @@ def main(argv: list[str] | None = None) -> int:
     #  the world's directory, which it is handed — the name its buckets, its compose project and its
     #  dashboards' folder go by. Neither is an instance the code names: both arrive as arguments.
     metrics.identify(world=world_name(args.world), agent=args.agent)
-    runtime = Runtime(beliefs, args.agent, budget=args.budget,
-                      connect=_transports_of(beliefs, _identity(beliefs, args.agent)))
+    runtime = Runtime(beliefs, args.agent, budget=args.budget, connect=True)
     #  A STOP IS AN EXIT, so the last window is written: `podman stop` sends SIGTERM, whose default
     #  ends the process where it stands and would lose up to a window of metrics.
     signal.signal(signal.SIGTERM, _stopped)
     try:
         outcome = runtime.run(passes=args.passes)
     finally:
+        runtime.stop()
         runtime.report()
     return {MET: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
 

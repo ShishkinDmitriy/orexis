@@ -12,10 +12,9 @@ reads.
 its sensors are those `sosa:isHostedBy` the subject it `orexis:actsFor`, a sample of it or a place
 containing it, and a sensor with a form is this member's.
 
-**ONE CLASS, AND THE THREAD IS ITS OWN.** `Http` answers the family's `Transport` contract. It
-keeps no timer: sensing's `missed` says when a sensor is due and the container nudges, and
-`sense_now` fetches on a thread of its own, once at a time and not again within `RETRY_S` of the
-last attempt, handing the response to the container's `deliver`, which enqueues it for the one
-executing thread to hand to `handle` and so to sensing's `received`. A public service needs no
-credential, so nothing is read from the environment.
+**ONE CLASS, AND IT POLLS.** `Http` answers the family's `Transport` contract. `start` asks the
+runtime to fetch each of its sensors at once and every frequency the sensor states after — the
+runtime does the waiting — and a fetch runs on a thread of its own, one at a time per sensor, the
+body submitted to the runtime as a job that hands it to sensing's `received`. A public service
+needs no credential, so nothing is read from the environment.
 """
