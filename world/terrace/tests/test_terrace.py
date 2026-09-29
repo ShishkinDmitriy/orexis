@@ -129,12 +129,13 @@ def test_every_point_the_agent_writes_is_drawn_by_one_terrace_panel(monkeypatch,
 
 
 def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
-    """The health dashboard is held to what two passes write, flushed as a stop flushes (#826,
-    amended): every field of every point is drawn by exactly one panel — an event's levels together,
-    its count and flags together and each value's mean, max and sum together — and every panel reads the
-    bucket of the agent the dashboard's variable picks. A row per package that reports, the runtime's
-    first: sensing's because the terrace loads it, so its silence and its readings are drawn, and no
-    panel draws a measurement nothing writes."""
+    """The health dashboards are held to what two passes write, flushed as a stop flushes (#826,
+    amended): every field of every point is drawn by exactly one panel of them all — an event's levels
+    of a unit together, its count and flags together and each value's mean, max and sum together — and
+    every panel reads the bucket of the agent the dashboards' variable picks. A dashboard per package
+    that reports, the runtime's first, each a row per measurement and linked to the rest: sensing's
+    because the terrace loads it, so its silence and its readings are drawn, and no panel draws a
+    measurement nothing writes."""
     from agent.metrics import window as metrics
     from agent.series import METRICS
     from onboarding.dashboards import AGENT_VARIABLE, render_health
@@ -151,11 +152,16 @@ def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
         install(METRICS, None)
         metrics.reset()
     health = render_health("terrace")
-    (variable,) = health["templating"]["list"]
-    assert variable["name"] == AGENT_VARIABLE and variable["query"] == "terrace"
-    rows_ = [p["title"] for p in health["panels"] if p["type"] == "row"]
-    assert rows_[0] == "runtime" and {"planning", "execution", "sensing", "belief"} <= set(rows_[1:]), rows_
-    panels = [p for p in health["panels"] if p["type"] != "row"]
+    files = [name for name, _ in health]
+    assert files[0] == "runtime.json" and {"planning.json", "execution.json", "sensing.json", "belief.json"} <= set(files), files
+    for name, dashboard in health:
+        (variable,) = dashboard["templating"]["list"]
+        assert variable["name"] == AGENT_VARIABLE and variable["query"] == "terrace"
+        assert dashboard["links"][0]["includeVars"] and "health" in dashboard["links"][0]["tags"]
+    (sensing,) = [d for name, d in health if name == "sensing.json"]
+    assert [p["title"] for p in sensing["panels"] if p["type"] == "row"] == ["received", "silence"]
+    assert len({d["uid"] for _, d in health}) == len(health)
+    panels = [p for _, d in health for p in d["panels"] if p["type"] != "row"]
     queries = [[t["query"] for t in p["targets"]] for p in panels]
     assert queries and all('from(bucket: "terrace-${agent}-metrics")' in q for qs in queries for q in qs)
     wanted = {(p["measurement"], f) for p in written for f in p["fields"]}

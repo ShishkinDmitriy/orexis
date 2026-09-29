@@ -161,13 +161,13 @@ Then re-run the tools that read it, and restart the agents so they are told the 
 ```bash
 orexis-influx greenhouse       # mints each agent a metrics bucket and a write-only token
 orexis-compose greenhouse      # adds INFLUX_METRICS_* and METRICS_INTERVAL_S to each agent
-orexis-dashboards greenhouse   # writes infra/grafana/dashboards/greenhouse/health.json
+orexis-dashboards greenhouse   # writes infra/grafana/dashboards/greenhouse/<package>.json, one per package that reports
 cd world/greenhouse && podman compose up -d    # recreates the agents whose environment changed
 ```
 
 Taking the statement out and running the same four stops it: `orexis-influx` revokes the metrics
 tokens and removes their files, the compose file stops telling the agents, and the health
-dashboard is removed; the bucket is left for its retention to empty. The window's length is the
+dashboards are removed; the bucket is left for its retention to empty. The window's length is the
 installation's `onboarding:intervalSeconds`, sixty; an installation serving metrics from no store
 refuses a world that asks.
 

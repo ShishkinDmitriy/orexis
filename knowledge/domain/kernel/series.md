@@ -106,8 +106,10 @@ only where its own deployment graph says `onboarding:monitored`
 ([deployment](/domain/onboarding/deployment.md)): only then does `orexis-influx` mint each agent a
 metrics bucket, `<world>-<agent>-metrics`, written to and never read by the agent and kept as many
 days as the installation's `onboarding:retentionDays` says; only then does `orexis-compose` tell it
-the store and the window; and only then does `orexis-dashboards` draw a health dashboard. That
-dashboard is learnt from the packages' event classes themselves: a row per package that reports,
-the runtime's first, and the agent a variable choosing whose bucket every panel reads; an event's
-levels are one panel, its count and flags another and each value one more. The history bucket keeps
+the store and the window; and only then does `orexis-dashboards` draw health, a dashboard per
+package that reports and the runtime's own, linked to one another. They are learnt from the
+packages' event classes themselves: a row per measurement, each panel described by its event's own
+docstring, and the agent a variable choosing whose bucket every panel reads, carried from one
+dashboard to the next; an event's levels are a panel per unit, its count and flags another and each
+value one more. A dashboard no package reports for any more is removed. The history bucket keeps
 the name the one bucket had, so a history begun before purposes goes on in it.

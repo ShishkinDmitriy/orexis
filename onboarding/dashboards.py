@@ -29,16 +29,17 @@ be keyed on the actions an agent may take — read off the world's action graphs
 here — and draw `taken` and `landed` as events rather than a line, which is a panel type and a
 query shape this module does not build.
 
-**A second dashboard draws the agents' health** (`health.json`), for a world that is
+**A DASHBOARD PER PACKAGE draws the agents' health** (`<package>.json`), for a world that is
 `onboarding:monitored` and for no other: what each package reports, learnt by importing the
 packages' `events.py` and reading every event class that names a measurement — and the runtime's
 own, in `agent.runtime` — so no list of metrics is kept here and adding an event that reports draws
-it. A ROW PER PACKAGE, the runtime's first and then each package some agent of the world loads, in
-the order the agent loads them; the AGENT is the dashboard's variable, picking whose bucket every
-panel reads, rather than a row per agent. A counted event is a panel of how many and of each flag,
-summed per window, and one per value, drawing its mean, its max and its sum; its levels are one
-panel, their last per window — each field of a point the agent writes drawn by exactly one panel,
-which the terrace's test holds.
+it. One for the runtime and one for each package some agent of the world loads that reports, each
+linked to the others by the tags they share; a ROW PER MEASUREMENT, in the order the package declares
+its events, each panel described by the event's own docstring; the AGENT is every dashboard's
+variable, picking whose bucket every panel reads, carried from one dashboard to the next. A counted
+event is a panel of how many and of each flag, summed per window, and one per value, drawing its
+mean, its max and its sum; its levels are a panel per unit, their last per window — each field of a
+point the agent writes drawn by exactly one panel, which the terrace's test holds.
 
 See knowledge/domain/onboarding/onboarding.md.
 """
@@ -302,24 +303,28 @@ def _metric_flux(bucket: str, measurement: str, fields: tuple[str, ...] = (), fn
 
 
 def _drawn(bucket: str, event: type) -> list[tuple[str, list[str], str, str]]:
-    """The panels one event class is drawn in, as (title, queries, unit, description)."""
+    """The panels one event class is drawn in, as (title, queries, unit, description): its levels, a
+    panel per unit; then, where it is counted, how many and its flags; then a panel per value."""
     name, out = measurement(event), []
+    about = " ".join((event.__doc__ or "").split())
     flags, levels = fields_of(event, FLAG), fields_of(event, LEVEL)
-    if levels:
-        out.append((name, [_metric_flux(bucket, name, levels)], "s" if all(f.endswith("_s") for f in levels) else "none",
-                    f"`{name}`: {', '.join(levels)}, as each stood last in a window."))
+    for unit, these in (("none", [f for f in levels if not f.endswith("_s")]), ("s", [f for f in levels if f.endswith("_s")])):
+        if these:
+            out.append((", ".join(these), [_metric_flux(bucket, name, tuple(these))], unit,
+                        f"{about} As each stood last in a window."))
     if not counted(event):
         return out
-    out.append((f"{name} — how many", [_metric_flux(bucket, name, ("count", *flags), fn="sum")], "none",
-                f"How many `{name}` happened per window" + (f", and of them how many were {', '.join(flags)}"
-                                                            if flags else "") + "."))
+    out.append(("how many" + (f", {', '.join(flags)}" if flags else ""),
+                [_metric_flux(bucket, name, ("count", *flags), fn="sum")], "none",
+                f"{about} How many happened per window" + (f", and of them how many were {', '.join(flags)}"
+                                                           if flags else "") + "."))
     for value in fields_of(event, VALUE):
-        out.append((f"{name} — {value}",
+        out.append((value,
                     [_metric_flux(bucket, name, (f"{value}_mean",), fn="mean"),
                      _metric_flux(bucket, name, (f"{value}_max",), fn="max"),
                      _metric_flux(bucket, name, (f"{value}_sum",), fn="sum")],
                     "s" if value.endswith("_s") else "none",
-                    f"`{value}` of `{name}`: its mean and its max over each window, and its sum."))
+                    f"{about} `{value}`: its mean and its max over each window, and its sum."))
     return out
 
 
@@ -327,7 +332,7 @@ def _health_panel(title: str, queries: list[str], unit: str, x: int, y: int, pan
     return {
         "id": panel_id, "type": "timeseries", "title": title, "description": desc,
         "datasource": {"type": "influxdb", "uid": "influxdb"},
-        "gridPos": {"h": 7, "w": 12, "x": x, "y": y},
+        "gridPos": {"h": 7, "w": 8, "x": x, "y": y},
         "targets": [{"refId": chr(ord("A") + i), "query": q} for i, q in enumerate(queries)],
         "fieldConfig": {"defaults": {"unit": unit, **({"decimals": 0} if unit == "none" else {})}, "overrides": []},
         "options": {"legend": {"showLegend": True, "displayMode": "table", "placement": "bottom",
@@ -336,40 +341,52 @@ def _health_panel(title: str, queries: list[str], unit: str, x: int, y: int, pan
     }
 
 
-def render_health(world: str) -> dict:
-    """What the world's agents report of how they are doing, a row per package that reports and the
-    agent a variable: every panel reads `<world>-${agent}-metrics`."""
+def health_file(package: str) -> str:
+    """The file a package's dashboard is written to: its name, a member's family and member joined."""
+    return package.replace("/", "-") + ".json"
+
+
+def render_health(world: str) -> list[tuple[str, dict]]:
+    """What the world's agents report of how they are doing, a dashboard per package that reports —
+    the runtime's first — as (file, dashboard): a row per measurement, and the agent a variable every
+    panel reads `<world>-${agent}-metrics` by."""
     from .compose import roster
 
     agents = roster(world)
     bucket = bucket_name(world, "${" + AGENT_VARIABLE + "}", METRICS)
-    panels, y, pid = [], 0, 1
-    for package, reported in reporting(world):
-        panels.append({"id": pid, "type": "row", "title": package, "collapsed": False,
-                       "gridPos": {"h": 1, "w": 24, "x": 0, "y": y}, "panels": []})
-        pid, y = pid + 1, y + 1
-        drawn = [panel for r in reported for panel in _drawn(bucket, r)]
-        for i, (title, queries, unit, desc) in enumerate(drawn):
-            panels.append(_health_panel(f"{package} — {title}", queries, unit, x=12 * (i % 2), y=y + 7 * (i // 2),
-                                        panel_id=pid, desc=desc + f" Written by {package}'s own metrics, never by this file."))
-            pid += 1
-        y += 7 * ((len(drawn) + 1) // 2)
     first = agents[0] if agents else ""
-    return {
-        "uid": f"orexis-{world}-health"[:40],
-        "title": f"Orexis — {world} — health",
-        "tags": ["orexis", world, "health"],
-        "timezone": "browser",
-        "schemaVersion": 39,
-        "refresh": "1m",
-        "time": {"from": "now-6h", "to": "now"},
-        "templating": {"list": [{
-            "name": AGENT_VARIABLE, "label": "agent", "type": "custom", "query": ",".join(agents),
-            "current": {"text": first, "value": first},
-            "options": [{"text": a, "value": a, "selected": a == first} for a in agents],
-            "multi": False, "includeAll": False, "hide": 0}]},
-        "panels": panels,
-    }
+    variable = {"name": AGENT_VARIABLE, "label": "agent", "type": "custom", "query": ",".join(agents),
+                "current": {"text": first, "value": first},
+                "options": [{"text": a, "value": a, "selected": a == first} for a in agents],
+                "multi": False, "includeAll": False, "hide": 0}
+    out = []
+    for package, reported in reporting(world):
+        panels, y, pid = [], 0, 1
+        for event in reported:
+            panels.append({"id": pid, "type": "row", "title": measurement(event), "collapsed": False,
+                           "gridPos": {"h": 1, "w": 24, "x": 0, "y": y}, "panels": []})
+            pid, y = pid + 1, y + 1
+            drawn = _drawn(bucket, event)
+            for i, (title, queries, unit, desc) in enumerate(drawn):
+                panels.append(_health_panel(f"{measurement(event)} — {title}", queries, unit, x=8 * (i % 3),
+                                            y=y + 7 * (i // 3), panel_id=pid,
+                                            desc=desc + f" Said by {package}'s own events, never by this file."))
+                pid += 1
+            y += 7 * ((len(drawn) + 2) // 3)
+        out.append((health_file(package), {
+            "uid": f"orexis-{world}-{package.replace('/', '-')}"[:40],
+            "title": f"Orexis — {world} — {package}",
+            "tags": ["orexis", world, "health"],
+            "timezone": "browser",
+            "schemaVersion": 39,
+            "refresh": "1m",
+            "time": {"from": "now-6h", "to": "now"},
+            "links": [{"type": "dashboards", "title": "packages", "tags": ["orexis", world, "health"],
+                       "asDropdown": True, "includeVars": True, "keepTime": True}],
+            "templating": {"list": [dict(variable)]},
+            "panels": panels,
+        }))
+    return out
 
 
 def generate(world: str) -> None:
@@ -384,10 +401,16 @@ def generate(world: str) -> None:
     else:
         log.info("  nothing in %s observes anything — no readings dashboard", world)
     if METRICS in installation.purposes(world):
-        docs.append(("health.json", render_health(world)))
-    elif (stale := out_dir / "health.json").exists():
-        stale.unlink()
-        log.info("  %s is not monitored — its health dashboard is removed", world)
+        docs += render_health(world)
+    else:
+        log.info("  %s is not monitored — no health dashboards", world)
+    #  A HEALTH DASHBOARD NOT WRITTEN NOW IS STALE — a package no longer loaded, a world no longer
+    #  monitored, or the one `health.json` a world had before a dashboard was a package's — and goes.
+    written = {name for name, _ in docs}
+    for name in ["health.json", *(health_file(p) for p in ("runtime", *EVERY))]:
+        if name not in written and (stale := out_dir / name).exists():
+            stale.unlink()
+            log.info("  removed %s, which nothing reports any more", stale.relative_to(REPO_ROOT))
     if docs:
         out_dir.mkdir(parents=True, exist_ok=True)      # a world with nothing to draw gets no folder
     for name, doc in docs:
