@@ -41,7 +41,7 @@ TAG, VALUE, FLAG, LEVEL = _Mark("tag"), _Mark("value"), _Mark("flag"), _Mark("le
 Tag = Annotated[str | None, TAG]
 Value = Annotated[float | None, VALUE]
 Flag = Annotated[bool, FLAG]
-Level = Annotated[float | None, LEVEL]
+Level = Annotated[int | float | None, LEVEL]
 
 
 @cache
