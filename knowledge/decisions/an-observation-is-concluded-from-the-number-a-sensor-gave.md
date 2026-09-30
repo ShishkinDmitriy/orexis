@@ -41,7 +41,12 @@ moisture.
 **The calibration is the agent's belief**, a `sensing:CalibrationGraph` of its own, born from
 `beliefs/<agent>.ttl` and revised by `calibrate` — told "the probe is in dry air now", the point takes
 the latest number — which `orexis-calibrate` runs for a running agent, in its own image, while it is
-stopped. It is public knowledge the agent owns, since a reading is revised beside public knowledge.
+stopped. It is public knowledge the agent owns, since a reading is revised beside public knowledge —
+so a document under `beliefs/<id>` is the agent's own whatever its kind, where the boot had put a
+public-kind document in as nobody's and would have read it again at every boot, losing every
+revision. Read at birth only, as every graph of the agent's own is: a volume that lived before its
+calibration existed gains it by being born again, since nothing tells a document added later from a
+want the agent reached and withdrew.
 
 **Readers of an observation read it with its revisions.** Belief's part hears a graph written before
 any package beyond the mind, so the prediction and sensing's own `Observed` find the observation

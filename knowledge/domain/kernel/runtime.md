@@ -44,7 +44,9 @@ met-tests and estimates, the first state — owned by the agent. The catalogue i
 `scope_actions` writes the scopes. A store that already holds a catalogue is a volume the agent
 has lived in: every graph a document put in and nobody owns is forgotten and read again, with the
 closure, which is how an updated ontology or rule set reaches an agent that has lived; the graphs
-the agent owns are left as they are, since they are its beliefs now.
+the agent owns are left as they are, since they are its beliefs now. A document under the world's
+`beliefs/<id>` is the agent's own whatever its kind — a [calibration](/domain/sensing/calibration.md) is
+public knowledge the agent owns — read at its birth only, like every graph of its own.
 
 **A package's part is created, linked and started.** Every package the agent loads — the mind's
 three and each whose premise holds — that has a `create` module makes a

@@ -1165,8 +1165,10 @@ nothing.
 Beliefs are the agent's: **authored** once at birth from the world's documents, never touched by
 start or stop. A volume lived in keeps the agent's own graphs and reads again only what a
 document put in and nobody owns — the ontologies, the domains, the world's public graphs — which
-is how an updated ontology reaches a running agent. Anything that would reset an agent's own
-beliefs on a restart is a bug, not a convenience.
+is how an updated ontology reaches a running agent. A document under `beliefs/<id>` is the agent's
+own whatever its kind, and read at its birth only: reached, withdrawn or revised, it is its belief
+now, so a document added later reaches an agent born again. Anything that would reset an agent's own beliefs on a
+restart is a bug, not a convenience.
 
 ## Traps worth knowing, and one that is closed
 
