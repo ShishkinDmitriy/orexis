@@ -127,6 +127,17 @@ def test_a_level_is_written_as_it_last_stood_and_only_in_a_window_that_said_it(w
     assert flush() == []
 
 
+def test_a_level_keeps_the_type_it_was_said_in(written):
+    """A count said as an integer is written as one, and a measure as a float: the series store
+    refuses a field whose type changes, and the gauges before wrote their counts as integers, so a
+    count written as a float had every point of its measurement refused (#856, measured live)."""
+    metrics.tally(Held(scope="hanoi", worlds=20))
+    metrics.tally(Held(scope="courier", worlds=2.5))
+    points = {p["tags"]["scope"]: p["fields"]["worlds"] for p in flush()}
+    assert points == {"hanoi": 20, "courier": 2.5}
+    assert isinstance(points["hanoi"], int) and isinstance(points["courier"], float)
+
+
 def test_with_no_sink_nothing_is_tallied_and_a_new_sink_starts_an_empty_window(written):
     """Where no sink is loaded an event is nothing; a sink installed in place of another opens a
     window of its own, so no tally crosses from one to the other."""

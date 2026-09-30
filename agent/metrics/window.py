@@ -6,7 +6,8 @@ AN EVENT IS NOT A POINT. A counted event is added to the window's TALLY for its 
 tags: how many (`count`), for each VALUE its sum, mean and max (`<value>_sum`, `_mean`, `_max`, all
 floats, so a field never changes type between windows), and for each FLAG how many raised it
 (`<flag>`, written as nought where none did, so a rate is `<flag> / count`). A LEVEL is kept as it
-last stood in the window, under the same measurement and tags, and written as it is; a window in
+last stood in the window, under the same measurement and tags, and written as it is, in the type
+it was said in — a count an integer, a measure a float; a window in
 which nobody reported a level writes none, since a level nobody says is a level nobody knows. At
 the end of the window `flush` writes the tallies and the levels, every point stamped at the flush's
 own instant, and opens the next.
@@ -74,7 +75,7 @@ def tally(event) -> None:
     if name is None or to is None:
         return
     tags = tuple(sorted((t, str(v)) for t in fields_of(cls, TAG) if (v := getattr(event, t)) is not None))
-    levels = {f: float(v) for f in fields_of(cls, LEVEL) if (v := getattr(event, f)) is not None}
+    levels = {f: _as_said(v) for f in fields_of(cls, LEVEL) if (v := getattr(event, f)) is not None}
     with _lock:
         _window_for(to)
         if counted(cls):
@@ -84,6 +85,13 @@ def tally(event) -> None:
 
 
 # ---------------------------------------------------------------- the window
+
+def _as_said(level) -> int | float:
+    """A level as the type it was said in: a count stays an integer and a measure a float, rounded to
+    six places — the series store refuses a field whose type changes, and the gauges a level replaced
+    wrote their counts as integers, so a float count was refused on every window (#856)."""
+    return int(level) if isinstance(level, int) and not isinstance(level, bool) else round(float(level), 6)
+
 
 class _Tally:
     """One measurement's and tag set's counted events in the window."""
@@ -211,7 +219,7 @@ def flush() -> list[dict]:
         _window_for(to)
         held = {key: tally.fields() for key, tally in _tallies.items()}
         for key, levels in _levels.items():
-            held[key] = {**held.get(key, {}), **{k: round(v, 6) for k, v in levels.items()}}
+            held[key] = {**held.get(key, {}), **levels}
         _tallies.clear()
         _levels.clear()
         _opened = _monotonic()
