@@ -28,7 +28,7 @@ with its url and image; and the pool a broker's ports are allocated from.
 A world is **monitored** where its own deployment graph says so of itself, in one statement:
 `<> onboarding:monitored true`. Its agents then write their metrics — the admins' instrumentation
 of how each is doing ([series](/domain/kernel/series.md)) — each to a metrics bucket of its own,
-and the world gets a health dashboard. A world that says nothing is not monitored: metrics are
+and the world gets a health dashboard per package that reports. A world that says nothing is not monitored: metrics are
 opted into, world by world, since they are for whoever runs the host and a world is not the
 host's. The installation may serve metrics from no store, and then monitors no world; a world
 saying it is monitored there is refused at onboarding, before anything is granted. The greenhouse
