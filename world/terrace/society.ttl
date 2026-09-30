@@ -17,24 +17,25 @@
     orexis:localId "terrace" ;
     mqtt4ssn:hasClientID "terrace" ;
     mqtt4ssn:isConnectedToBroker :broker ;
-    orexis:actsFor :terrace_bed .
+    orexis:actsFor :terrace_bed , :terrace_battery .
 
 #  THE BOARD, as the bus knows it: one client, one credential — flashed as `moisture_sensor_terrace`
 #  and kept, so the board needs no reflash — hosting the probe and the BME280.
 :esp32_terrace a mqtt4ssn:Client ;
     mqtt4ssn:hasClientID "moisture_sensor_terrace" ;
     mqtt4ssn:isConnectedToBroker :broker ;
-    mqtt4ssn:hosts :moisture_sensor_terrace , :air_sensor_terrace .
+    mqtt4ssn:hosts :moisture_sensor_terrace , :air_sensor_terrace , :battery_sensor_terrace .
 
 :terrace_readings a mqtt4ssn:Topic .
 :terrace_filter a mqtt4ssn:TopicFilter ;
     mqtt4ssn:hasFilterPattern "sensors/moisture_sensor_terrace/reading" ; mqtt4ssn:matchesTopic :terrace_readings .
 
-#  ONE MESSAGE, FOUR SENSORS: each reads its own value of the board's one document by pointer.
+#  ONE MESSAGE, FIVE SENSORS: each reads its own value of the board's one document by pointer.
 :moisture_sensor_terrace mqtt4ssn:observesTopic :terrace_readings .
 :air_temp_terrace mqtt4ssn:observesTopic :terrace_readings .
 :air_humidity_terrace mqtt4ssn:observesTopic :terrace_readings .
 :air_pressure_terrace mqtt4ssn:observesTopic :terrace_readings .
+:battery_sensor_terrace mqtt4ssn:observesTopic :terrace_readings .
 
 #  THE FORECAST SERVICE, read over HTTP: a Thing whose form's target is a URI template, its latitude and
 #  longitude filled from the terrace's schema:geo, which secrets/place.ttl states and git does not hold.

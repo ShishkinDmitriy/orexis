@@ -1,5 +1,6 @@
 @prefix : <http://example.org/orexis/world/terrace#> .
 @prefix climate: <http://example.org/orexis/climate#> .
+@prefix power: <http://example.org/orexis/power#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -11,7 +12,7 @@
 @prefix unit: <http://qudt.org/vocab/unit/> .
 
 <> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
-    owl:imports <../../domains/climate/ontology.ttl> .
+    owl:imports <../../domains/climate/ontology.ttl> , <../../domains/power/ontology.ttl> .
 
 #  THE TERRACE, on Agent 0.2.0. "1 esp32, 1 moisture sensor, 1 bme. For now just monitoring. All
 #  outside." One bed, one board, one agent, and nothing to pursue: the agent holds no desire, so it
@@ -19,9 +20,10 @@
 #
 #  The board is a SENTINEL (firmware/outdoor-sentinel): it takes no orders, its ULP watches the
 #  soil for movement while everything sleeps, and a heartbeat every twenty minutes keeps silence
-#  distinguishable from death. It publishes ONE document with four values on one topic, and each
-#  sensor reads its own by pointer; nothing here changed on the wire, so the flashed board goes on
-#  as it is.
+#  distinguishable from death. It publishes ONE document on one topic — the probe's raw count, the
+#  air's three values and the battery's voltage — and each sensor reads its own by pointer. The
+#  probe's count becomes a moisture by the calibration the agent believes of it, in its own
+#  beliefs/terrace.ttl, so recalibrating never needs the board back.
 #
 #  This graph is the bed and the sensors. The agent, the board as a client and its topic are
 #  society.ttl; where the broker listens is deployment.ttl; the parts' pins and calibration are
@@ -59,13 +61,14 @@
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 60 ; schema:unitCode unit:MIN ] ] .
 
-#  THE FOUR VALUES of one message, one sensor each, every one reporting at the board's heartbeat.
+#  THE FIVE VALUES of one message, one sensor each, every one reporting at the board's heartbeat.
+#  The probe publishes its raw ADC count, a moisture by the two points the agent believes of it.
 :moisture_sensor_terrace a sosa:Sensor ;
     orexis:localId "moisture_sensor_terrace" ;
     schema:unitCode unit:UNITLESS ;
     sosa:isHostedBy :terrace_bed ;
     sosa:observes climate:SoilMoisture ;
-    sensing:readingPointer "/moisture" ;
+    sensing:readingPointer "/moisture_raw" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 20 ; schema:unitCode unit:MIN ] ] .
 
@@ -98,5 +101,25 @@
     sosa:isHostedBy :terrace_bed ;
     sosa:observes climate:AirPressure ;
     sensing:readingPointer "/pressure" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 20 ; schema:unitCode unit:MIN ] ] .
+
+#  THE BOARD'S BATTERY, a 1S LiPo on its JST port, read through the board's own divider on GPIO34 and
+#  published in volts, the ESP32's factory ADC calibration applied. Low below 3.3 V, full at 4.2.
+:terrace_battery a power:Battery ;
+    orexis:localId "terrace_battery" ;
+    rdfs:comment "The LiPo cell the terrace's board runs on." ;
+    schema:containedInPlace :terrace ;
+    ssn-system:hasOperatingRange :terrace_battery_operating .
+:terrace_battery_operating a ssn-system:OperatingRange ;
+    ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty power:BatteryVoltage ;
+                             schema:minValue 3.3 ; schema:maxValue 4.2 ; schema:unitCode unit:V ] .
+
+:battery_sensor_terrace a sosa:Sensor ;
+    orexis:localId "battery_sensor_terrace" ;
+    schema:unitCode unit:V ;
+    sosa:isHostedBy :terrace_battery ;
+    sosa:observes power:BatteryVoltage ;
+    sensing:readingPointer "/battery" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 20 ; schema:unitCode unit:MIN ] ] .

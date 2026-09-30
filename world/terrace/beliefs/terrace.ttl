@@ -1,0 +1,15 @@
+@prefix : <http://example.org/orexis/world/terrace#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a sensing:CalibrationGraph .    # this document is one graph, and this is what it is
+
+#  WHAT THE TERRACE AGENT BELIEVES OF ITS PROBE, at birth: the raw count it reads in dry air and in
+#  water. These are the counts the firmware shipped with, not yet measured on this probe; tell the
+#  agent what it is reading now (`orexis-calibrate terrace terrace moisture_sensor_terrace dry`,
+#  then `wet`) and it revises them, keeping the revision across restarts. This document is only
+#  what a newborn agent believes — a lived-in volume keeps its own.
+
+:moisture_sensor_terrace sensing:calibrationPoint
+    [ rdfs:label "dry" ; sensing:raw 3200 ; sensing:quantity 0.0 ] ,
+    [ rdfs:label "wet" ; sensing:raw 1300 ; sensing:quantity 1.0 ] .

@@ -49,7 +49,7 @@ import pyoxigraph as ox
 
 from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD, local_of
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
-                         remember, rows, update)
+                         remember, revisions_of, rows, update)
 
 from .ontology import DRIFT, FEATURE, MOVES, PROPERTY, RATE, RECORDED, RESULT, prediction_graph
 from .ranges import ranges_of, side
@@ -74,17 +74,20 @@ CARRIED_S = 3600.0
 #  or half the stretch where that is shorter.
 _EDGE_S = 60.0
 
-#  THE OBSERVATION IN HAND: the graph holding the node this sensor last made, its key, the
-#  stretch it stands for and its number — asked by the kernel's kind and by SOSA's pattern,
-#  never by name and never by a word of sensing's.
+#  THE OBSERVATION IN HAND: the graph holding the node this sensor last made and the stretch it
+#  stands for, asked by the kernel's kind and by SOSA's pattern, never by name and never by a word
+#  of sensing's. Its key and its number are asked of the graph and its revisions together
+#  (`_KEY_Q`), since what an observation is OF and its quantity are what the rules concluded of the
+#  number the sensor gave — written by the time this runs, belief's part hearing a graph first.
 _OBSERVATION_Q = """
-SELECT ?graph ?node ?feature ?property ?value ?taken ?from ?until WHERE {
+SELECT ?graph ?node ?taken ?from ?until WHERE {
   GRAPH $cat { ?graph a orexis:StateGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
                OPTIONAL { ?p orexis:end ?until } }
-  GRAPH ?graph { ?node sosa:madeBySensor $sensor ; sosa:hasFeatureOfInterest ?feature ;
-                 sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
-                 OPTIONAL { ?node sosa:resultTime ?taken } } }
+  GRAPH ?graph { ?node sosa:madeBySensor $sensor . OPTIONAL { ?node sosa:resultTime ?taken } } }
 ORDER BY DESC(?from) LIMIT 1"""
+_KEY_Q = """
+SELECT ?feature ?property ?value WHERE {
+  $node sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value } LIMIT 1"""
 
 #  EVERY DRIFT MOVING THE PROPERTY — the terms spliced as the terms they are, since no file of
 #  this package binds a label for its namespace and a query needs none.
@@ -121,8 +124,13 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
     if found is None:
         log.debug("nothing observed by %s: nothing to predict", local_of(sensor))
         return []
-    graph, node, feature, observed_property = found["graph"], found["node"], found["feature"], found["property"]
-    reading = float(found["value"])
+    graph, node = found["graph"], found["node"]
+    believed = [graph, *revisions_of(store, graph)]
+    key = next(iter(rows(store, _KEY_Q, believed, node=node)), None)
+    if key is None:
+        log.debug("%s's observation is of nothing the rules concluded: nothing to predict", local_of(sensor))
+        return []
+    feature, observed_property, reading = key["feature"], key["property"], float(key["value"])
     taken = datetime.fromisoformat(found["taken"] if found.get("taken") else found["from"])
     opens = datetime.fromisoformat(found["until"]) if found.get("until") else taken
     for old in rows(store, _WRITTEN_Q, (), cat=cat, graph=graph):
@@ -165,7 +173,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
         stretches = [(base, CARRIED_S, None)]
     else:
         stretches = _stretches(knots, ranges, base)
-    own = [ox.Triple(q.subject, q.predicate, q.object) for q in quads(store, graph)]
+    own = [ox.Triple(q.subject, q.predicate, q.object) for g in believed for q in quads(store, g)]
     written = []
     for n, (begins, closes, value) in enumerate(stretches):
         graph_n = prediction_graph(local_of(me), feature, observed_property, n)

@@ -3,16 +3,18 @@ type: Domain Concept
 title: Reading
 term: http://www.w3.org/ns/sosa/hasSimpleResult
 description: >-
-  The number an observation carries - the value of a property as an instrument reported it, after
-  the pipeline. What a plan moves, what a side is concluded of, what a drift predicts forward; it
-  ages by its period rather than by being overwritten, and it is the one belief a peer or a device
-  can be wrong about.
+  The quantity an observation carries - the value of a property, concluded by sensing's rule from
+  the number the sensor gave and the calibration the agent believes. What a plan moves, what a side
+  is concluded of, what a drift predicts forward; it ages by its period rather than by being
+  overwritten, and it is the one belief a peer or a device can be wrong about.
 ---
 
 # What it is
 
 `sosa:hasSimpleResult` on an [observation](/domain/sensing/observation.md): 0.27 for the fern's
-soil, 18.5 for the greenhouse air. The agent reads it and never writes it — except where an action
+soil, 18.5 for the greenhouse air — the sensor's number as it is where the number is already a
+quantity, a thermometer's degrees, or placed through its [calibration](/domain/sensing/calibration.md),
+a probe's count made a moisture. The agent reads it and never writes it — except where an action
 is fictive and the executor, being the world, writes what the step predicted.
 
 # What is made of it
@@ -27,6 +29,7 @@ is fictive and the executor, being the world, writes what the step predicted.
 
 # What it is not
 
-Not a [series](/domain/kernel/series.md) point. Sensing also contributes each reading to the
-agent's history as it writes it, for the panels to draw, and that series is watched and never
-believed.
+Not a [series](/domain/kernel/series.md) point. Sensing also says each reading as it is concluded,
+and history writes it for the panels to draw; that series is watched and never believed. And not the
+number the sensor gave (`sensing:rawResult`), which is kept beside it as what a calibration is
+revised by.

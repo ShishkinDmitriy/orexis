@@ -24,7 +24,7 @@ RULES = Path(__file__).parents[1] / "rules.ttl"
 TEST = "http://example.org/test#"
 PROBE = TEST + "probe"
 
-_SIDES_Q = "SELECT ?p ?range WHERE { GRAPH $g { ?obs ?p ?range } }"
+_SIDES_Q = "SELECT ?p ?range WHERE { GRAPH $g { ?obs ?p ?range VALUES ?p { sensing:below sensing:inside sensing:above } } }"
 
 
 def _sides(store, graph: str) -> set[tuple[str, str]]:
@@ -73,11 +73,12 @@ def test_a_bound_is_inside(world, snapshots):
 
 def test_a_samples_observation_is_judged_by_its_subjects_ranges(monkeypatch, snapshots):
     """A probe mounted in a patch of the pot — `sosa:isHostedBy` a `sosa:Sample` that
-    `sosa:isSampleOf` it, the received case's world — keys its node by the patch and is judged
-    by the pot's ranges."""
+    `sosa:isSampleOf` it, the received case's world — is concluded an observation OF the patch,
+    and is judged by the pot's ranges."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    world = snapshots.stand_in(Path(__file__).parent / "received" / "a_probes_sample_keys_the_node.trig")
+    world = snapshots.stand_in(Path(__file__).parent / "worlds" / "a_probe_in_a_sample_of_the_pot.trig")
     put_document(world, document(RULES))
     graph = _read(world, snapshots, PROBE, 0.05)
-    assert graph.endswith("/patch_moisture")
+    (of,) = rows(world, "SELECT ?f WHERE { GRAPH $g { ?o sosa:hasFeatureOfInterest ?f } }", (), g=graph + "/revisions")
+    assert of["f"].endswith("#patch")
     assert ("below", "zamioculcas.operating") in _sides(world, graph)

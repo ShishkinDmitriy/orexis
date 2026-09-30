@@ -15,8 +15,8 @@
 #  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph an
 #  observation is kept in, the silence of a sensor that has stopped reporting, the three sides
 #  this layer's rules conclude, and the pipeline's own concepts, since neither standard says how
-#  bytes become a number: a codec and a scaling, the binding of a sensor to one of each, the two
-#  members that ship, and the pointer. Sensing is the translation row of the agent stack and
+#  bytes become a number: a codec, the binding of a sensor to one, the member that ships, and the
+#  pointer; and how a number becomes a quantity, which is a calibration the agent believes and a rule. Sensing is the translation row of the agent stack and
 #  nothing above it: a transport hands it bytes, it makes a number of them and writes one
 #  sosa:Observation holding until the next is due, and on the container's tick it says which
 #  readings are missing and which sensors have gone silent. It predicts nothing — that is the
@@ -46,7 +46,7 @@
 :Codec a owl:Class ;
     rdfs:label "Codec" ;
     rdfs:comment """A wire format, both ways: how a sensor's bytes are a document and a document is
-    bytes. The first stage of the pipeline, bytes → document → raw value → quantity, and a family
+    bytes. The first stage of the pipeline, bytes → document → number, and a family
     in rule 2's sense: the members are interchangeable and a sensor is bound to one by
     :decodedBy. JSON ships with this layer; a member from a package declares its own term as an
     instance of this class and implements this layer's Codec contract, and genesis loads it by
@@ -62,23 +62,52 @@
     rdfs:label "JSON" ;
     rdfs:comment "The document is JSON, and a value in it is found by the pointer." .
 
-:Scaling a owl:Class ;
-    rdfs:label "Scaling" ;
-    rdfs:comment """How a raw value is a quantity: the last stage of the pipeline, and a family as the
-    codec is. Identity ships with this layer — the firmware scaled before it published, which is
-    what every board here does — and a member from a package declares its own term as an instance
-    of this class and implements this layer's Scaling contract. A scaling that is arithmetic could
-    be a rule rather than code; none here is yet.""" .
+:CalibrationGraph a owl:Class ;
+    rdfs:subClassOf orexis:PublicGraph , orexis:BeliefGraph ;
+    rdfs:label "Calibration graph" ;
+    rdfs:comment """The agent's own belief of how an instrument's numbers are quantities: the
+    calibration points of each sensor whose number is not already one. The agent's and not the
+    world's, since it is one agent's understanding of one probe in one bed, revised by that agent
+    when it is told what it is reading now (`calibrate`), and kept across restarts as every graph
+    of its own is. Born from the agent's document under the world's `beliefs/`; a lived-in volume
+    keeps the revised one. Public knowledge the agent owns, as a derivation graph is, since what a
+    reading is revised beside is public knowledge, and the rule concluding an observation reads it
+    there; not a state graph, so no plan forks it.""" .
 
-:scaledBy a owl:ObjectProperty ;
+:CalibrationPoint a owl:Class ;
+    rdfs:label "Calibration point" ;
+    rdfs:comment """One reference the agent believes of a sensor: the number it reads there (`raw`)
+    and the quantity that stands for (`quantity`), named by its rdfs:label — dry, wet — which is
+    how it is referred to when the agent is told what it is reading now. A sensor with two is read
+    on the straight line through them, unclamped, so a number past a point is a quantity past its
+    own, which a side then says; a sensor with none gives its quantity as it is.""" .
+
+:calibrationPoint a owl:ObjectProperty ;
     rdfs:domain sosa:Sensor ;
-    rdfs:range :Scaling ;
-    rdfs:label "scaled by" ;
-    rdfs:comment "The scaling a sensor's raw value is a quantity by — derived onto the sensor at genesis, identity where nothing says otherwise." .
+    rdfs:range :CalibrationPoint ;
+    rdfs:label "calibration point" .
 
-:Identity a :Scaling ;
-    rdfs:label "Identity" ;
-    rdfs:comment "The raw value, as it stands." .
+:raw a owl:DatatypeProperty ;
+    rdfs:domain :CalibrationPoint ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "raw" ;
+    rdfs:comment "The raw value the sensor reads at a calibration point." .
+
+:quantity a owl:DatatypeProperty ;
+    rdfs:domain :CalibrationPoint ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "quantity" ;
+    rdfs:comment "The quantity a calibration point's raw value stands for." .
+
+:rawResult a owl:DatatypeProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "raw result" ;
+    rdfs:comment """The number a sensor gave, as the pointer found it in the bytes — all `received`
+    writes of an observation beside who made it and when. What it is an observation OF, and the
+    quantity (sosa:hasSimpleResult), this layer's rules conclude from the topology and the
+    calibration the agent believes; it is also what the agent takes as the reading of a reference
+    when it is told what it is reading now.""" .
 
 :readingPointer a owl:DatatypeProperty ;
     rdfs:domain sosa:Sensor ;

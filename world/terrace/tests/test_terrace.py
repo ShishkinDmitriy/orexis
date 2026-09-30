@@ -1,6 +1,7 @@
-"""The terrace on Agent 0.2.0: the sentinel's one message is four observations, the soil's side is
-concluded against the bed's range, and the agent — holding no desire — watches and sends nothing,
-and keeps running, since a transport reaches it."""
+"""The terrace on Agent 0.2.0: the sentinel's one message is five observations — the probe's raw
+count concluded a moisture through the two points the agent believes, the air's three values and the
+battery's voltage as they come — the soil's side is concluded against the bed's range, and the agent
+— holding no desire — watches and sends nothing, and keeps running, since a transport reaches it."""
 
 from __future__ import annotations
 
@@ -21,7 +22,10 @@ from agent.transport.mqtt.driver import Mqtt
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT = "http://example.org/orexis/world/terrace#terrace_agent"
-MESSAGE = json.dumps({"moisture": 0.2, "temperature": 14.5, "humidity": 0.8, "pressure": 1012}).encode()
+#  WHAT THE BOARD PUBLISHES: the probe's count — 2820, a fifth of the way from dry (3200) to wet (1300)
+#  by the calibration beliefs/terrace.ttl gives the agent at birth — the air, and the battery.
+MESSAGE = json.dumps({"moisture_raw": 2820, "temperature": 14.5, "humidity": 0.8, "pressure": 1012,
+                      "battery": 3.91}).encode()
 
 
 class Broker:
@@ -67,16 +71,18 @@ def test_the_agent_listens_on_the_boards_one_topic(monkeypatch):
     assert broker.subscribed == ["sensors/moisture_sensor_terrace/reading"]
 
 
-def test_one_message_is_four_observations_and_the_soil_is_below_the_beds_range(monkeypatch):
+def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(monkeypatch):
     runtime, broker = _terrace(monkeypatch)
     runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
     assert runtime.run(passes=2, poll_s=0) == UNFINISHED, "it watches for good"
+    beliefs = graphs_of(runtime.beliefs, OREXIS + "BeliefGraph")
     read = {r["p"].rsplit("#", 1)[-1]: float(r["v"]) for r in rows(
-        runtime.beliefs, "SELECT ?p ?v WHERE { ?o sosa:observedProperty ?p ; sosa:hasSimpleResult ?v }",
-        graphs_of(runtime.beliefs, STATE))}
-    assert read == {"SoilMoisture": 0.2, "AirTemperature": 14.5, "AirHumidity": 0.8, "AirPressure": 1012.0}
-    below = rows(runtime.beliefs, "SELECT DISTINCT ?o WHERE { ?o sensing:below ?r }", graphs_of(runtime.beliefs, OREXIS + "BeliefGraph"))
-    assert [r["o"].rsplit("#", 1)[-1] for r in below] == ["obs_terrace_bed_SoilMoisture"]
+        runtime.beliefs, "SELECT ?p ?v WHERE { ?o sosa:madeBySensor ?s ; sosa:observedProperty ?p ; sosa:hasSimpleResult ?v }",
+        [g for g in beliefs if g in set(graphs_of(runtime.beliefs, STATE)) or g.endswith("/revisions")])}
+    assert read == {"SoilMoisture": 0.2, "AirTemperature": 14.5, "AirHumidity": 0.8, "AirPressure": 1012.0,
+                    "BatteryVoltage": 3.91}
+    below = rows(runtime.beliefs, "SELECT DISTINCT ?o WHERE { ?o sensing:below ?r }", beliefs)
+    assert [r["o"].rsplit("#", 1)[-1] for r in below] == ["obs_moisture_sensor_terrace"]
     assert broker.published == [], "nothing is wanted, so nothing is sent"
 
 
@@ -94,21 +100,23 @@ def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monke
     runtime.run(passes=1, poll_s=0)
     silent = rows(runtime.beliefs, "SELECT ?s WHERE { ?s sensing:silentSince ?t } ORDER BY ?s", graphs_of(runtime.beliefs, STATE))
     assert [r["s"].rsplit("#", 1)[-1] for r in silent] == [
-        "air_humidity_terrace", "air_pressure_terrace", "air_temp_terrace", "moisture_sensor_terrace"]
+        "air_humidity_terrace", "air_pressure_terrace", "air_temp_terrace", "battery_sensor_terrace",
+        "moisture_sensor_terrace"]
     assert broker.published == []
 
 
 def test_each_reading_reaches_the_series_under_its_own_property(monkeypatch, history):
-    """The four values of one message are four points, each measured under the property it
-    observes — the air's temperature is not soil moisture (#822) — and contributed by sensing as
-    it writes each observation (#825)."""
+    """The five values of one message are five points, each measured under the property it
+    observes — the air's temperature is not soil moisture (#822) — and said by sensing as each
+    observation is concluded (#825)."""
     runtime, broker = _terrace(monkeypatch)
     runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
     runtime.drain(NOW)
     assert sorted((p["measurement"], p["tags"]["sensor"], p["fields"]["value"]) for p in history) == [
         ("AirHumidity", "air_humidity_terrace", 0.8), ("AirPressure", "air_pressure_terrace", 1012.0),
-        ("AirTemperature", "air_temp_terrace", 14.5), ("SoilMoisture", "moisture_sensor_terrace", 0.2)]
-    assert {p["tags"]["plant"] for p in history} == {"terrace_bed"}
+        ("AirTemperature", "air_temp_terrace", 14.5), ("BatteryVoltage", "battery_sensor_terrace", 3.91),
+        ("SoilMoisture", "moisture_sensor_terrace", 0.2)]
+    assert {p["tags"].get("plant") for p in history} == {"terrace_bed", "terrace_battery"}
     assert {p["time"] for p in history} == {NOW}, "at the reading's own instant"
 
 
@@ -125,7 +133,7 @@ def test_every_point_the_agent_writes_is_drawn_by_one_terrace_panel(monkeypatch,
     drawn = {(p["measurement"], p["tags"]["sensor"]):
              [q for q in queries if f'r._measurement == "{p["measurement"]}"' in q
               and f'r.sensor == "{p["tags"]["sensor"]}"' in q] for p in history}
-    assert len(drawn) == 4 and all(len(panels) == 1 for panels in drawn.values()), drawn
+    assert len(drawn) == 5 and all(len(panels) == 1 for panels in drawn.values()), drawn
 
 
 def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):

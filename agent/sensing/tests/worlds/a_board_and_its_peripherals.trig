@@ -2,8 +2,8 @@
 #
 # THE WORLD THE PIPELINE IS HELD TO: one board in the pot carrying a thermometer, a hygrometer and the
 # moisture probe, publishing one document each takes its own value out of by its pointer; a gauge whose
-# bytes are CSV and whose raw value is in tenths, bound to a codec and a scaling declared here as
-# instances of sensing's families, the way a member package would declare its own; and a barometer bound
+# bytes are CSV, bound to a codec declared here as an instance of sensing's family, the way a member
+# package would declare its own; and a barometer bound
 # to a codec nothing implements; and a light sensor mounted nowhere, which has no key. Each states how often it reports in a unit of its own — minutes, an
 # hour by its UN/CEFACT code, bare seconds, one nothing converts — and the probe states none at all.
 #
@@ -37,7 +37,6 @@ GRAPH :ontology {
 GRAPH :world {
   :Cbor a sensing:Codec .
   :Csv a sensing:Codec .
-  :Tenths a sensing:Scaling .
   :barometer a sosa:Sensor .
   :barometer sensing:decodedBy :Cbor .
   :barometer sosa:isHostedBy :zamioculcas .
@@ -50,7 +49,6 @@ GRAPH :world {
   :gauge a sosa:Sensor .
   :gauge sensing:decodedBy :Csv .
   :gauge sensing:readingPointer "/1" .
-  :gauge sensing:scaledBy :Tenths .
   :gauge sosa:isHostedBy :zamioculcas .
   :gauge sosa:observes :pressure .
   :gauge ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:value 30 ] ] .

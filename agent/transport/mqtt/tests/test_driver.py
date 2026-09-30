@@ -21,7 +21,8 @@ THERMO, HYGRO, PROBE, PHOTOMETER = (TEST + n for n in ("thermo", "hygro", "probe
 OBSERVED = "http://example.org/orexis/graph/observed/keeper/"
 BOARD_MESSAGE = b'{"temperature": 21.5, "humidity": 0.61}'
 
-_RESULTS_Q = "SELECT ?p ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:observedProperty ?p ; sosa:hasSimpleResult ?v } } ORDER BY ?p"
+#  WHAT EACH SENSOR GAVE: the number `received` keeps, by the sensor; what it is of is the rules'.
+_RESULTS_Q = "SELECT ?s ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:madeBySensor ?s ; sensing:rawResult ?v } } ORDER BY ?s"
 
 
 @dataclass
@@ -72,7 +73,7 @@ def bus(monkeypatch, snapshots):
 
 
 def _results(store):
-    return [(r["p"].rsplit("#", 1)[-1], float(r["v"])) for r in rows(store, _RESULTS_Q, ())]
+    return [(r["s"].rsplit("#", 1)[-1], float(r["v"])) for r in rows(store, _RESULTS_Q, ())]
 
 
 def test_the_driver_answers_the_familys_contract(bus):
@@ -119,8 +120,8 @@ def test_a_sensor_whose_board_listens_nowhere_takes_no_command(bus, caplog):
 def test_one_message_on_the_boards_topic_is_two_observations(bus, snapshots):
     store, driver, _ = bus
     written = driver.handle(store, "sensors/board/reading", BOARD_MESSAGE, snapshots.NOW)
-    assert written == [(HYGRO, OBSERVED + "zamioculcas_humidity"), (THERMO, OBSERVED + "zamioculcas_warmth")]
-    assert _results(store) == [("humidity", 0.61), ("warmth", 21.5)]
+    assert written == [(HYGRO, OBSERVED + "hygro"), (THERMO, OBSERVED + "thermo")]
+    assert _results(store) == [("hygro", 0.61), ("thermo", 21.5)]
     taken = rows(store, "SELECT ?t WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:resultTime ?t } }", ())
     assert len(taken) == 2 and all(r["t"].startswith("2026-01-01T12:00:00") for r in taken)
 
@@ -138,7 +139,7 @@ def test_a_message_a_sensor_cannot_read_writes_nothing_for_it(bus, snapshots, ca
     store, driver, _ = bus
     with caplog.at_level("WARNING", logger="pipeline"):
         written = driver.handle(store, "sensors/board/reading", b'{"temperature": 21.5}', snapshots.NOW)
-    assert written == [(THERMO, OBSERVED + "zamioculcas_warmth")], "the hygrometer's field is missing, the thermometer's is there"
+    assert written == [(THERMO, OBSERVED + "thermo")], "the hygrometer's field is missing, the thermometer's is there"
     assert "unread" in caplog.text
 
 

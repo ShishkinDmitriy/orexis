@@ -1,7 +1,7 @@
-# a_probes_sample_keys_the_node
+# a_probe_in_a_sample_of_the_pot
 #
-# The probe states the patch it sits in (#98), a sosa:Sample of the pot: the observation is OF the
-# patch, and the graph and the node are keyed by it, not by the pot.
+# The probe states the patch it sits in (#98), a sosa:Sample of the pot: the rules conclude its
+# observation is OF the patch, and judge it by the pot's ranges.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 

@@ -653,8 +653,12 @@ def test_a_committed_compose_file_is_what_onboarding_renders():
 
     composed = sorted(p.parent.name for p in (REPO_ROOT / "world").glob("*/compose.yaml"))
     assert composed == _worlds(), f"a world with no committed compose file: {sorted(set(_worlds()) - set(composed))}"
+    #  A MOUNT OF A SECRET DOCUMENT is set aside on both sides: it is rendered where this checkout holds
+    #  the document and not where it does not, so it cannot be committed either way (#860).
+    private = lambda text: "\n".join(line for line in text.splitlines()
+                                     if not (line.strip().startswith("- ./secrets/") and ".ttl:" in line))
     for world in composed:
-        assert (REPO_ROOT / "world" / world / "compose.yaml").read_text() == compose.render(world), \
+        assert private((REPO_ROOT / "world" / world / "compose.yaml").read_text()) == private(compose.render(world)), \
             f"world/{world}/compose.yaml is not what `orexis-compose {world}` renders — regenerate it"
 
 
@@ -965,3 +969,27 @@ def test_no_generated_credential_is_tracked():
     assert not offenders, ("a credential or a generated file is tracked — regenerate it with "
                            "`orexis-onboard` instead of committing it, and rotate whatever leaked:\n  "
                            + "\n  ".join(offenders))
+
+
+def test_calibrating_stops_the_agent_tells_it_in_its_own_image_and_starts_it_whatever_happened(monkeypatch, tmp_path):
+    """`orexis-calibrate` runs the act against the agent's volume only while the agent is stopped,
+    inside the agent's own image so the store is opened by the engine that wrote it — and starts
+    the agent again even where the act was refused."""
+    import subprocess
+
+    from onboarding import calibrate as tool
+    from onboarding.compose import STATE
+
+    monkeypatch.setattr(tool, "world_dir", lambda name: tmp_path)
+    ran = []
+
+    def refused(command, cwd, check):
+        ran.append(command)
+        if command[2] == "run":
+            raise subprocess.CalledProcessError(1, command)
+    with pytest.raises(subprocess.CalledProcessError):
+        tool.calibrate("terrace", "terrace", "moisture_sensor_terrace", "dry", run=refused)
+    assert [c[2] for c in ran] == ["stop", "run", "start"], "started again, the act refused"
+    assert ran[1][-3:] == [STATE, "moisture_sensor_terrace", "dry"]
+    assert ran[1][:6] == ["podman", "compose", "run", "--rm", "--no-deps", "agent-terrace"]
+    assert tool.steps("terrace", "moisture_sensor_terrace", "wet", 1105)[1][-2:] == ["--raw", "1105"]

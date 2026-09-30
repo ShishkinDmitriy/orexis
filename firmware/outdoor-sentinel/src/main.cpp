@@ -1,8 +1,16 @@
 // Orexis — the OUTDOOR SENTINEL (sensing:PushProcedure + sensing:AlarmProcedure).
 //
-// A COPY of firmware/moisture-sentinel/src/main.cpp with three additions — a BME280 read in
-// every payload, the FireBeetle 2 ESP32-E's own WS2812 as the lamp, and dark-before-sleep —
-// kept in step with the original by hand (#461). What follows is the sentinel's own account.
+// A COPY of firmware/moisture-sentinel/src/main.cpp with these departures — a BME280 read in
+// every payload, the FireBeetle 2 ESP32-E's own WS2812 as the lamp, dark-before-sleep, the
+// battery's voltage off the board's own divider, and the probe's RAW COUNT published rather than
+// a fraction — kept in step with the original by hand where they share (#461). What follows is
+// the sentinel's own account.
+//
+// THE RAW COUNT, because a calibration is the agent's belief and not the board's: the count in
+// dry air and in water is one probe in one bed, it drifts, and a board that scaled with it
+// needed retrieving to be recalibrated. The agent scales the count by the two points it believes
+// (sensing:TwoPoint), and is told what the probe reads now to revise them. So nothing here knows
+// what dry or wet is; the ULP watches counts, and its window is counts wide.
 //
 // The second firmware, and the inverse temperament of the first. The moisture-sensor node is
 // governed: the agent commands its cadence and its band, and the board keeps them. A sentinel
@@ -21,13 +29,14 @@
 // Sampling is not reporting: the patrol's looks die in a register — no observation, no
 // testimony — and only a crossing or a heartbeat becomes a published reading.
 //
-//   publish:   MOISTURE_TOPIC   {"moisture":0.183,"sensor":"<SENSOR_ID>"}          heartbeat
-//              MOISTURE_TOPIC   {"moisture":0.391,"sensor":"<SENSOR_ID>",
+//   publish:   MOISTURE_TOPIC   {"moisture_raw":2412,"sensor":"<SENSOR_ID>"}       heartbeat
+//              MOISTURE_TOPIC   {"moisture_raw":1830,"sensor":"<SENSOR_ID>",
 //                                "wake":"alarm"}                             the news
 //              — and, on a board the world gives a BME280 (BME280_SDA_PIN), the same
 //              message carries "temperature", "humidity" and "pressure" beside the
-//              moisture, each picked out by its own mqtt:readingPointer; absent, never
-//              zero, when the part does not answer.
+//              count, each picked out by its own sensing:readingPointer; absent, never
+//              zero, when the part does not answer; and where the board states its battery
+//              divider (BATTERY_PIN), "battery" in volts.
 //
 // No sleep_s in the payload, deliberately: the ack is a receipt for a commanded cadence, and
 // nothing commands this board. A push device that acked would invite its agent to hold a
@@ -69,9 +78,10 @@
 WiFiClient wifi;
 PubSubClient mqtt(wifi);
 
-static float lastFrac = 0.0f;
 static float lastRaw = 0.0f;
 
+// The probe's raw count, averaged over sixteen looks: what is published, and what the ULP's window
+// is centred on. Unscaled and unclamped — dry and wet are the agent's to say.
 static float readMoisture() {
   const int samples = 16;
   long sum = 0;
@@ -80,11 +90,40 @@ static float readMoisture() {
     delay(5);
   }
   lastRaw = sum / (float)samples;
-  float frac = (ADC_DRY - lastRaw) / (float)(ADC_DRY - ADC_WET);
-  if (frac < 0.0f) frac = 0.0f;
-  if (frac > 1.0f) frac = 1.0f;
-  return frac;
+  return lastRaw;
 }
+
+// ---------------------------------------------------------------------------------------------
+// THE BATTERY, where the board states a divider on its battery port (BATTERY_PIN, and the ratio
+// BATTERY_DIVIDER): the FireBeetle 2 ESP32-E halves the cell's voltage onto GPIO34 through 1 MΩ +
+// 1 MΩ. Read in millivolts with the factory calibration the ESP32 carries in its eFuses
+// (analogReadMilliVolts), since a raw count on this ADC is not linear enough to be a voltage, then
+// scaled back up. Taken after ulpStop(), like every analogRead, since the ULP owns ADC1 until then.
+#ifdef BATTERY_PIN
+static float battV = -1.0f;
+
+static void readBattery() {
+  const int samples = 16;
+  uint32_t sum = 0;
+  for (int i = 0; i < samples; i++) {
+    sum += analogReadMilliVolts(BATTERY_PIN);
+    delay(2);
+  }
+  battV = (sum / (float)samples) * BATTERY_DIVIDER / 1000.0f;
+  Serial.printf("battery: %.3f V\n", battV);
+}
+
+// Appended as the air fields are: the closing brace becomes ",\"battery\":...}".
+static void appendBattery(char *payload, size_t size) {
+  if (battV < 0.0f) return;
+  size_t n = strlen(payload);
+  if (n == 0 || payload[n - 1] != '}') return;
+  snprintf(payload + n - 1, size - (n - 1), ",\"battery\":%.3f}", battV);
+}
+#else
+static void readBattery() {}
+static void appendBattery(char *, size_t) {}
+#endif
 
 // ---------------------------------------------------------------------------------------------
 // The outdoor air sensor: a BME280 over I2C, where the world's wiring states one. The sentinel
@@ -150,18 +189,17 @@ static void appendAir(char *, size_t) {}
 // nothing else; OBSERVE_S 0 removes it.
 static void observeProbe() {
   if (OBSERVE_S <= 0) return;
-  Serial.printf("observing %ds — grab the probe and watch the fraction move\n", OBSERVE_S);
+  Serial.printf("observing %ds — hold the probe in air, then in water, and watch the count move\n", OBSERVE_S);
   uint32_t until = millis() + (uint32_t)OBSERVE_S * 1000UL;
-  float seenLo = 1.0f, seenHi = 0.0f;
+  float seenLo = 4095.0f, seenHi = 0.0f;
   while ((int32_t)(until - millis()) > 0) {
-    float f = readMoisture();
-    if (f < seenLo) seenLo = f;
-    if (f > seenHi) seenHi = f;
-    Serial.printf("  raw %6.0f   frac %0.3f\n", lastRaw, f);
+    float r = readMoisture();
+    if (r < seenLo) seenLo = r;
+    if (r > seenHi) seenHi = r;
+    Serial.printf("  raw %6.0f\n", r);
     delay(400);
   }
-  Serial.printf("observed %0.3f..%0.3f over %ds — the band must contain the RESTING value "
-                "and exclude the triggered one\n", seenLo, seenHi, OBSERVE_S);
+  Serial.printf("observed counts %0.0f..%0.0f over %ds\n", seenLo, seenHi, OBSERVE_S);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -302,12 +340,13 @@ void setup() {
   ulpStop();          // before ANY analogRead: the ULP still holds ADC1 from the last arm
   ulpReport("boot");
   ulpDumpAdcRegs("boot");
-  lastFrac = readMoisture();
-  Serial.printf("\norexis moisture sentinel  %s\nmoisture %.3f  [raw %.0f]  wake: %s\n",
-                SENSOR_ID, lastFrac, lastRaw, crossing ? "crossing" : "heartbeat");
+  readMoisture();
+  Serial.printf("\norexis moisture sentinel  %s\nmoisture raw %.0f  wake: %s\n",
+                SENSOR_ID, lastRaw, crossing ? "crossing" : "heartbeat");
 
   observeProbe();
-  lastFrac = readMoisture();   // publish what is true after observing, not before
+  readMoisture();              // publish what is true after observing, not before
+  readBattery();               // the board's own divider, where it states one
   readAir();                   // the BME280, where the world wires one; silent otherwise
 
   ledBegin();
@@ -325,27 +364,28 @@ void setup() {
         // so, and the agent can place that point at its own instant.
         //
         // `prev` mirrors the reading's own shape, so the same pointer reaches it one level
-        // down: a sensor reading `/moisture` finds its prior at `/prev/moisture`.
+        // down: a sensor reading `/moisture_raw` finds its prior at `/prev/moisture_raw`.
         // The age comes off the RTC clock at THIS instant, so it already includes the time
         // spent connecting — and, across a failed attempt, the sleeps since. Nothing to add.
-        float prevFrac; uint32_t prevAge;
-        if (priorQuietSample(&prevFrac, &prevAge)) {
+        float prevRaw; uint32_t prevAge;
+        if (priorQuietSample(&prevRaw, &prevAge)) {
           snprintf(payload, sizeof(payload),
-                   "{\"moisture\":%.3f,\"sensor\":\"%s\",\"wake\":\"alarm\","
-                   "\"prev\":{\"moisture\":%.3f,\"age_s\":%lu}}",
-                   lastFrac, SENSOR_ID, prevFrac, (unsigned long)prevAge);
+                   "{\"moisture_raw\":%.0f,\"sensor\":\"%s\",\"wake\":\"alarm\","
+                   "\"prev\":{\"moisture_raw\":%.0f,\"age_s\":%lu}}",
+                   lastRaw, SENSOR_ID, prevRaw, (unsigned long)prevAge);
         } else {
           snprintf(payload, sizeof(payload),
-                   "{\"moisture\":%.3f,\"sensor\":\"%s\",\"wake\":\"alarm\"}",
-                   lastFrac, SENSOR_ID);
+                   "{\"moisture_raw\":%.0f,\"sensor\":\"%s\",\"wake\":\"alarm\"}",
+                   lastRaw, SENSOR_ID);
         }
       } else {
-        snprintf(payload, sizeof(payload), "{\"moisture\":%.3f,\"sensor\":\"%s\"}",
-                 lastFrac, SENSOR_ID);
+        snprintf(payload, sizeof(payload), "{\"moisture_raw\":%.0f,\"sensor\":\"%s\"}",
+                 lastRaw, SENSOR_ID);
       }
-      appendAir(payload, sizeof(payload));   // heartbeat and alarm alike: one message, all of it
+      appendAir(payload, sizeof(payload));       // heartbeat and alarm alike: one message, all of it
+      appendBattery(payload, sizeof(payload));
       bool sent = published = mqtt.publish(MOISTURE_TOPIC, payload);
-      if (sent) noteReported(lastFrac);
+      if (sent) noteReported(lastRaw);
       Serial.printf("%s %s   %s\n", MOISTURE_TOPIC, payload, sent ? "sent" : "REFUSED");
       mqtt.disconnect();
     }
@@ -364,7 +404,7 @@ void setup() {
   // so a lamp lit at the wrong moment would stay lit through a whole heartbeat on battery —
   // the discrete LED goes dark when its pins do, and never needed this.
   ledOff();
-  armUlpWatch(lastFrac);
+  armUlpWatch(lastRaw);
 #ifdef ULP_SELFTEST_S
   ulpSelfTest(ULP_SELFTEST_S);
 #endif

@@ -1,6 +1,6 @@
-"""The pipeline: bytes to a document by the codec, to a raw value by the pointer, to a quantity
-by the scaling — over the pot's probe and over a board's peripherals, and every way it refuses,
-which is None and a warning, never a number."""
+"""The pipeline: bytes to a document by the codec, to a number by the pointer — over the pot's
+probe and over a board's peripherals, and every way it refuses, which is None and a warning, never
+a number. What quantity a number is, sensing's rules conclude."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from agent.sensing.pipeline import (CODECS, DEFAULT_POINTER, SCALINGS, Codec, CodecError, JsonCodec,
-                                    PointerError, Scaling, decode, decode_series, reads_series, resolve)
+from agent.sensing.pipeline import (CODECS, DEFAULT_POINTER, Codec, CodecError, JsonCodec,
+                                    PointerError, decode, decode_series, reads_series, resolve)
 
 WORLDS = Path(__file__).parent / "worlds"
 POT = WORLDS / "a_pot_and_its_probe.trig"
@@ -37,9 +37,9 @@ def test_two_sensors_on_one_board_take_their_own_values_from_one_message(snapsho
 
 
 def test_a_member_from_elsewhere_serves_by_the_term_it_declares(snapshots, monkeypatch):
-    """What a codec or a scaling package would ship: a term the world declares as an instance
-    of the family, a class implementing the contract under that term, and a sensor bound to
-    it — found by the term, never by the class, so two pipelines run side by side."""
+    """What a codec package would ship: a term the world declares as an instance of the family, a
+    class implementing the contract under that term, and a sensor bound to it — found by the term,
+    never by the class, so two pipelines run side by side."""
     class Csv(Codec):
         TERM = TEST + "Csv"
 
@@ -49,16 +49,9 @@ def test_a_member_from_elsewhere_serves_by_the_term_it_declares(snapshots, monke
         def encode(self, document) -> bytes:
             return ",".join(str(x) for x in document).encode()
 
-    class Tenths(Scaling):
-        TERM = TEST + "Tenths"
-
-        def apply(self, sensor: str, raw: float) -> float:
-            return raw / 10
-
     monkeypatch.setitem(CODECS, Csv.TERM, Csv)
-    monkeypatch.setitem(SCALINGS, Tenths.TERM, Tenths)
     store = snapshots.stand_in(BOARD)
-    assert decode(store, TEST + "gauge", b"10130,225") == 22.5
+    assert decode(store, TEST + "gauge", b"10130,225") == 225
     assert decode(store, TEST + "thermo", b"10130,225") is None, "the thermometer's bytes are JSON, whatever the gauge's are"
 
 
@@ -130,3 +123,4 @@ def test_a_series_whose_arrays_disagree_is_unread(snapshots, caplog):
     with caplog.at_level("WARNING", logger="pipeline"):
         assert decode_series(store, TEST + "weather", b'{"hourly": {"time": ["2026-01-01T13:00"], "precipitation": [1, 2]}}') is None
     assert "unread series" in caplog.text
+

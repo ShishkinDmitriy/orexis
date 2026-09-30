@@ -17,16 +17,17 @@ import pytest
 
 from agent import clock
 from agent.belief.revise import revise
-from agent.ontology import KNOWN
+from agent.ontology import PUBLIC
 from agent.prediction.predict import predict
 from agent.sensing.received import received
-from agent.store import document, graphs_of, put_document, rows
+from agent.store import close_catalogue, document, graphs_of, put_document, rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 SENSING_RULES = Path(__file__).parents[2] / "sensing" / "rules.ttl"
+BELIEF = Path(__file__).parents[2] / "belief" / "ontology.ttl"
 PROBE = "http://example.org/test#probe"
 
-_SIDES_Q = "SELECT ?p ?range WHERE { GRAPH $g { ?obs ?p ?range } }"
+_SIDES_Q = "SELECT ?p ?range WHERE { GRAPH $g { ?obs ?p ?range VALUES ?p { sensing:below sensing:inside sensing:above } } }"
 _PREDICTIONS_Q = """
 SELECT ?g ?start WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?start } }
 ORDER BY ?start"""
@@ -41,17 +42,21 @@ def pot(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
     put_document(store, document(SENSING_RULES))
+    put_document(store, document(BELIEF))          # what a revision is, so its row closes as a boot's does
     return store, PROBE
 
 
 def _reading(store, snapshots, probe, value, minutes=0):
-    """Bytes arrive: received, then the stretches are rewritten, and every graph written is
-    revised — the order a container would keep."""
+    """Bytes arrive: received, the reading revised — the rules conclude what it is of, its quantity
+    and its sides — then the stretches are rewritten from it and revised in turn: the order a
+    container keeps, belief's part hearing a graph before prediction's."""
     at = snapshots.NOW + timedelta(minutes=minutes)
-    read = graphs_of(store, *KNOWN, at=at)
+    read = graphs_of(store, PUBLIC, at=at)          # beside what the world states, as belief's part revises
     [graph] = received(store, snapshots.ME, probe, f'{{"value": {value}}}'.encode(), at)
+    revise(store, graph, read=read)
+    close_catalogue(store)
     written = predict(store, snapshots.ME, probe, now=at)
-    for g in (graph, *written):
+    for g in written:
         revise(store, g, read=read)
     return graph, written
 

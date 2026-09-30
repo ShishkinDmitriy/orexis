@@ -11,6 +11,11 @@ status: accepted
 timestamp: 2026-08-23T22:05:00Z
 ---
 
+> **Amended 2026-09-30 by [an-observation-is-concluded-from-the-number-a-sensor-gave](/decisions/an-observation-is-concluded-from-the-number-a-sensor-gave.md)**,
+> for the outdoor sentinel: it publishes raw counts and knows no `ADC_DRY`/`ADC_WET`, so its window is
+> counts wide and the fraction's clamp this record reconciles below is gone there. The moisture sentinel
+> and the governed node still scale on the board.
+
 # The sentinel alarms on movement, not on range
 
 [the-alarm-answers-to-the-last-report](/decisions/0.1.0/the-alarm-answers-to-the-last-report.md) gave

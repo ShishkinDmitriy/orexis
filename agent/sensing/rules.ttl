@@ -9,20 +9,64 @@
 
 <> a sh:RulesGraph .    # this document is one graph, and this is what it is
 
-#  THE RULES SENSING REGISTERS: which side of each of its subject's ranges an observation's result
-#  lies on. Three global SPARQL rules of one layer and one order, as SHACL 1.2 Inference Rules
-#  defines them, run by the deliberator over every observation and every predicted observation.
+#  THE RULES SENSING REGISTERS, in two layers, as SHACL 1.2 Inference Rules defines them, run by the
+#  deliberator over every observation and every predicted observation.
+#
+#  LAYER 0, WHAT AN OBSERVATION IS OF. `received` writes only what a sensor gave — its number
+#  (`sensing:rawResult`), who made it and when — and these conclude the rest from the topology: the
+#  feature of interest is what the sensor is hosted by, a sample or the subject itself; the
+#  property is what it observes; the quantity is the number as it is, or, where the agent believes
+#  two calibration points of the sensor, the number on the straight line through them, unclamped.
+#  The arithmetic is in doubles and rounded to six places as a decimal, measured: a decimal
+#  division whose dividend is an exact zero binds nothing, and a double cast to a decimal carries
+#  its binary error (1.100000000000000128) unless rounded after the cast.
+#
+#  LAYER 1, WHICH SIDE of each of its subject's ranges an observation's result lies on — over what
+#  layer 0 concluded, and over a predicted observation, which the prediction writes whole.
 #  A range is SSN-System's, stated by what hosts the sensor, by what that is a sample of — a sample
 #  stands for its subject — or by the sensor itself, whose condition is for the observed property
 #  and states a floor and a ceiling.
 #  The bounds are inclusive on the inside, so a result on a bound is inside — and a prediction
 #  checks the number it writes against the same bounds, so a stretch reads the side it is.
 
+:observation a sh:RuleSet ;
+    rdfs:label "what an observation is of, and its quantity" ;
+    sh:hasRule :asGivenRule , :calibratedRule .
+
+:asGivenRule a sh:SPARQLRule ;
+    rdfs:label "a number that is already its quantity" ;
+    sh:layer 0 ;
+    sh:construct """
+        CONSTRUCT { ?obs sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?raw }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:rawResult ?raw .
+            ?sensor sosa:observes ?property ; sosa:isHostedBy ?feature .
+            FILTER NOT EXISTS { ?sensor sensing:calibrationPoint ?point }
+        }""" .
+
+:calibratedRule a sh:SPARQLRule ;
+    rdfs:label "a number on the line through the two calibration points the agent believes" ;
+    sh:layer 0 ;
+    sh:construct """
+        CONSTRUCT { ?obs sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:rawResult ?raw .
+            ?sensor sosa:observes ?property ; sosa:isHostedBy ?feature ;
+                    sensing:calibrationPoint ?a , ?b .
+            ?a sensing:raw ?ra ; sensing:quantity ?qa .
+            ?b sensing:raw ?rb ; sensing:quantity ?qb .
+            FILTER(?ra < ?rb)
+            FILTER NOT EXISTS { ?sensor sensing:calibrationPoint ?c . ?c sensing:raw ?rc FILTER(?rc != ?ra && ?rc != ?rb) }
+            BIND(ROUND(xsd:decimal(xsd:double(?qa) + ((xsd:double(?raw) - xsd:double(?ra)) * (xsd:double(?qb) - xsd:double(?qa)))
+                                                   / (xsd:double(?rb) - xsd:double(?ra))) * 1000000) / 1000000 AS ?value)
+        }""" .
+
 :sides a sh:RuleSet ;
     rdfs:label "which side of each of its subject's ranges an observation is on" ;
     sh:hasRule :belowRule , :insideRule , :aboveRule .
 
 :belowRule a sh:SPARQLRule ;
+    sh:layer 1 ;
     rdfs:label "under the floor" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:below ?range } WHERE {
@@ -35,6 +79,7 @@
         }""" .
 
 :insideRule a sh:SPARQLRule ;
+    sh:layer 1 ;
     rdfs:label "within the range, bounds included" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:inside ?range } WHERE {
@@ -47,6 +92,7 @@
         }""" .
 
 :aboveRule a sh:SPARQLRule ;
+    sh:layer 1 ;
     rdfs:label "over the ceiling" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:above ?range } WHERE {

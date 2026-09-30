@@ -52,7 +52,8 @@ from agent.ontology import PUBLIC, local_of
 from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
 from .cadence import cadence_of
-from .ontology import FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, forecast_graph, observation_graph, observation_of
+from .ontology import (FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, forecast_graph, observation_by, observation_graph,
+                       observation_of)
 from .pipeline import decode, decode_series, reads_series
 
 log = logging.getLogger("received")
@@ -82,18 +83,17 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     how it read; `phenomenon_at` the instant a device that speaks for itself says the result
     applies to (#101), where `at` is the arrival.
     """
-    keys = rows(store, _KEY_Q, graphs_of(store, PUBLIC), sensor=sensor)
-    if len(keys) != 1:
-        log.warning("%s has no key: one property observed of one host makes one, and the world states %d", local_of(sensor), len(keys))
-        return []
-    feature, observed_property = keys[0]["feature"], keys[0]["property"]
     if reads_series(store, sensor):
-        return _forecast(store, me, sensor, feature, observed_property, payload, at)
-    value = decode(store, sensor, payload)
-    if value is None:
+        keys = rows(store, _KEY_Q, graphs_of(store, PUBLIC), sensor=sensor)
+        if len(keys) != 1:
+            log.warning("%s has no key: one property observed of one host makes one, and the world states %d", local_of(sensor), len(keys))
+            return []
+        return _forecast(store, me, sensor, keys[0]["feature"], keys[0]["property"], payload, at)
+    number = decode(store, sensor, payload)
+    if number is None:
         return []
-    node = observation_of(feature, observed_property)
-    graph = observation_graph(local_of(me), feature, observed_property)
+    node = observation_by(sensor)
+    graph = observation_graph(local_of(me), sensor)
     forget_graph(store, graph)
     cat = Raw(f"<{catalogue_of(store)}>")
     for silence in rows(store, _SILENCE_Q, (), cat=cat, sensor=sensor):
@@ -101,9 +101,7 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     cadence = cadence_of(store, sensor, memo)
     until = at + timedelta(seconds=cadence) if cadence is not None else None
     said = [f'<{node}> a sosa:Observation',
-            f'<{node}> sosa:hasFeatureOfInterest <{feature}>',
-            f'<{node}> sosa:observedProperty <{observed_property}>',
-            f'<{node}> sosa:hasSimpleResult "{round(float(value), 6)}"^^xsd:decimal',
+            f'<{node}> sensing:rawResult "{round(float(number), 6)}"^^xsd:decimal',
             f'<{node}> sosa:resultTime "{at.isoformat()}"^^xsd:dateTime',
             f'<{node}> sosa:madeBySensor <{sensor}>',
             f'<{node}> prov:wasGeneratedBy <{me}>']
@@ -115,7 +113,7 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
 INSERT DATA {{
   GRAPH <{graph}> {{ {' . '.join(said)} . }}
   {entry(store, graph, OBSERVATION_GRAPH, RECEIVED, me, start=at, end=until)} }}""")
-    log.info("%s: %s of %s reads %s", local_of(me), local_of(observed_property), local_of(feature), value)
+    log.info("%s: %s reads %s", local_of(me), local_of(sensor), number)
     return [graph]
 
 

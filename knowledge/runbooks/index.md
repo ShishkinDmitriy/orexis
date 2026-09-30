@@ -10,6 +10,7 @@ How to actually operate a society: bring one into existence, run it, and take it
 * [add-a-domain](/runbooks/add-a-domain.md) - A directory of documents under `domains/`: its words, actions, shapes and rules, each text declaring its prefixes.
 * [measure-the-search](/runbooks/measure-the-search.md) - Time the planner on its bench, record a row in the ledger, and alternate A/B in one session.
 * [move-a-world-to-agent-0-2-0](/runbooks/move-a-world-to-agent-0-2-0.md) - Take a running 0.1.0 world onto the 0.2.0 image: rebuild, clear 0.1.0's leftovers, replace the belief volume. The board is untouched.
+* [calibrate-a-probe](/runbooks/calibrate-a-probe.md) - Move the probe off the battery pin, flash raw counts, then tell the agent what it reads dry and wet; no reflash again.
 * [tear-down](/runbooks/tear-down.md) - Stopping a society is not one command. What survives `down`, why each survives on purpose, and how to remove it.
 
 # A note on commands

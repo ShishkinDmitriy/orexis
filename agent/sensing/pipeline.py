@@ -1,23 +1,27 @@
-"""How bytes become a quantity — the three stages, and the two families among them.
+"""How bytes become a number — the three stages, and the family among them.
 
-    bytes ─[codec]→ document ─[pointer]→ raw value ─[scaling]→ quantity
+    bytes ─[codec]→ document ─[pointer]→ number
 
-Ported from the 0.1.0 sensing package, where the codec and the scaling were contracts a
-plug-in package implemented and the pointer was the one function between them (RFC 6901 works
-over any tree, so nothing about it varies with the codec that made the document). What changes
-here is where `parse` lives: it was the transport's driver that ran the codec and the pointer,
-fusing how a device is reached with what its bytes mean; bytes to number is sensing's, and a
-transport hands bytes.
+Ported from the 0.1.0 sensing package, where the codec was a contract a plug-in package
+implemented and the pointer was the one function after it (RFC 6901 works over any tree, so
+nothing about it varies with the codec that made the document). What changes here is where
+`parse` lives: it was the transport's driver that ran the codec and the pointer, fusing how a
+device is reached with what its bytes mean; bytes to number is sensing's, and a transport hands
+bytes.
 
-**THE CONCEPTS ARE THIS LAYER'S, IN ITS ONTOLOGY.** A codec and a scaling are families in
-rule 2's sense, `sensing:Codec` and `sensing:Scaling`; which member serves a sensor is a fact
-the world derives onto it (`sensing:decodedBy`, `sensing:scaledBy`) and this module looks up;
-the two members that ship, JSON and identity, are declared beside the families and held here
-by their terms, and a sensor whose world states neither gets them, which is what every board
-here speaks and does. A member from a package declares its own term as an instance of the
-family and implements the contract below, and genesis 0.2.0 loads it by that term; until then
-the table holds this layer's two, and a member the world names that the table lacks is one
-unread sensor and a warning, never a dead agent.
+**A NUMBER IS NOT YET A QUANTITY.** What the number is an observation of, and what quantity it is,
+are concluded by this layer's rules from the topology and the calibration the agent believes of
+the sensor (rules.ttl) — a probe's count is a moisture there, and a thermometer's degrees are
+already one. The scaling that stood here as a third stage and a family of code members went with
+that: arithmetic over beliefs is a rule, and a rule is revised when the belief is.
+
+**THE CONCEPT IS THIS LAYER'S, IN ITS ONTOLOGY.** A codec is a family in rule 2's sense,
+`sensing:Codec`; which member serves a sensor is a fact the world derives onto it
+(`sensing:decodedBy`) and this module looks up; the member that ships, JSON, is declared beside the
+family and held here by its term, and a sensor whose world states none gets it. A member from a
+package declares its own term as an instance of the family and implements the contract below;
+until genesis loads such members the table holds this layer's one, and a member the world names
+that the table lacks is one unread sensor and a warning, never a dead agent.
 """
 
 from __future__ import annotations
@@ -29,7 +33,7 @@ from datetime import datetime, timezone
 from agent.ontology import PUBLIC
 from agent.store import graphs_of, rows
 
-from .ontology import IDENTITY_SCALING, JSON_CODEC
+from .ontology import JSON_CODEC
 
 log = logging.getLogger("pipeline")
 
@@ -61,17 +65,6 @@ class Codec:
         raise NotImplementedError
 
 
-class Scaling:
-    """One way of turning a raw value into a quantity — a member of `sensing:Scaling`."""
-
-    TERM: str = ""
-
-    def apply(self, sensor: str, raw: float) -> float:
-        """The quantity `raw` is for the sensor named — its IRI, for a scaling that must ask
-        the world about it."""
-        raise NotImplementedError
-
-
 class JsonCodec(Codec):
     """Bytes to a document and back, by the format every board here already speaks."""
 
@@ -90,17 +83,7 @@ class JsonCodec(Codec):
             raise CodecError(f"not encodable as JSON: {exc}") from exc
 
 
-class IdentityScaling(Scaling):
-    """The raw value, as it stands: the firmware scaled before it published."""
-
-    TERM = IDENTITY_SCALING
-
-    def apply(self, sensor: str, raw: float) -> float:
-        return raw
-
-
 CODECS: dict[str, type[Codec]] = {JsonCodec.TERM: JsonCodec}
-SCALINGS: dict[str, type[Scaling]] = {IdentityScaling.TERM: IdentityScaling}
 
 
 def resolve(pointer: str, doc):
@@ -137,10 +120,9 @@ def _walk(pointer: str, doc):
 
 #  THE BINDING: what the world derives onto a sensor about its bytes, every part optional.
 _BINDING_Q = """
-SELECT ?codec ?pointer ?scaling ?starts ?ends WHERE {
+SELECT ?codec ?pointer ?starts ?ends WHERE {
   OPTIONAL { $sensor sensing:decodedBy ?codec }
   OPTIONAL { $sensor sensing:readingPointer ?pointer }
-  OPTIONAL { $sensor sensing:scaledBy ?scaling }
   OPTIONAL { $sensor sensing:startsPointer ?starts }
   OPTIONAL { $sensor sensing:endsPointer ?ends } }"""
 
@@ -149,32 +131,25 @@ def _binding(store, sensor: str) -> dict:
     return next(iter(rows(store, _BINDING_Q, graphs_of(store, PUBLIC), sensor=sensor)), {})
 
 
-def _members(sensor: str, binding: dict):
-    """The codec and the scaling the binding names, or None where either is one nothing here
-    implements — said in the log."""
+def _codec(sensor: str, binding: dict) -> Codec | None:
+    """The codec the binding names, or None where it is one nothing here implements — said in the log."""
     codec_cls = CODECS.get(binding.get("codec") or JsonCodec.TERM)
     if codec_cls is None:
         log.warning("%s names a codec nothing here implements: %s", sensor, binding["codec"])
         return None
-    scaling_cls = SCALINGS.get(binding.get("scaling") or IdentityScaling.TERM)
-    if scaling_cls is None:
-        log.warning("%s names a scaling nothing here implements: %s", sensor, binding["scaling"])
-        return None
-    return codec_cls(), scaling_cls()
+    return codec_cls()
 
 
 def decode(store, sensor: str, payload: bytes) -> float | None:
-    """The quantity `sensor`'s share of `payload` holds, by the binding public knowledge states
-    for it, or None where any stage refuses — said in the log, since a pointer that misses is not
-    a measurement and nothing is written."""
+    """The number `sensor`'s share of `payload` holds, by the binding public knowledge states for
+    it, or None where any stage refuses — said in the log, since a pointer that misses is not a
+    measurement and nothing is written."""
     binding = _binding(store, sensor)
-    members = _members(sensor, binding)
-    if members is None:
+    codec = _codec(sensor, binding)
+    if codec is None:
         return None
-    codec, scaling = members
     try:
-        raw = resolve(binding.get("pointer") or DEFAULT_POINTER, codec.decode(payload))
-        return float(scaling.apply(sensor, float(raw)))
+        return float(resolve(binding.get("pointer") or DEFAULT_POINTER, codec.decode(payload)))
     except (CodecError, PointerError) as exc:
         log.warning("%s: unread — %s", sensor, exc)
         return None
@@ -188,7 +163,7 @@ def reads_series(store, sensor: str) -> bool:
 
 
 def decode_series(store, sensor: str, payload: bytes) -> list[tuple[datetime, datetime, float]] | None:
-    """The stretches `sensor`'s series in `payload` holds — (start, end, quantity), first first —
+    """The stretches `sensor`'s series in `payload` holds — (start, end, value), first first —
     by its binding, or None where any stage refuses, said in the log.
 
     The reading pointer finds the array of values and the starts or ends pointer the array of
@@ -198,10 +173,9 @@ def decode_series(store, sensor: str, payload: bytes) -> list[tuple[datetime, da
     service asked in GMT answers. A value that is not a number — a null where the service has
     nothing — is no stretch."""
     binding = _binding(store, sensor)
-    members = _members(sensor, binding)
-    if members is None:
+    codec = _codec(sensor, binding)
+    if codec is None:
         return None
-    codec, scaling = members
     ends = not binding.get("starts")
     try:
         document = codec.decode(payload)
@@ -226,7 +200,7 @@ def decode_series(store, sensor: str, payload: bytes) -> list[tuple[datetime, da
         else:
             start = when
             end = times[n + 1] if n + 1 < len(times) else when + (times[-1] - times[-2])
-        out.append((start, end, float(scaling.apply(sensor, float(value)))))
+        out.append((start, end, float(value)))
     return out
 
 
