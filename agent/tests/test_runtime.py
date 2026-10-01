@@ -65,29 +65,3 @@ def test_an_agent_reads_its_own_beliefs_file_and_no_other_agents(tmp_path):
     assert read == ["world.ttl", "beliefs/rose.ttl"]
     assert [p for p in documents(tmp_path) if tmp_path in p.parents] == [tmp_path / "world.ttl"], \
         "what the world says to nobody in particular — the operator's tools — is its own files alone"
-
-
-
-def test_a_document_under_beliefs_is_the_agents_own_whatever_its_kind_so_a_revision_is_kept(tmp_path):
-    """The terrace's calibration is public knowledge the agent owns: booted, it is the agent's, and not
-    read again as nobody's at the next boot — so a revision survives a restart."""
-    import gc
-
-    import pyoxigraph as ox
-
-    from agent.sensing.ontology import CALIBRATION_GRAPH
-    from agent.store import graphs_of, rows, update
-
-    world = Path(__file__).resolve().parents[2] / "world" / "terrace"
-    volume = str(tmp_path / "volume")
-    store = boot(world, "terrace", ox.Store(volume))
-    (calibration,) = graphs_of(store, CALIBRATION_GRAPH)
-    owner = rows(store, "SELECT ?who WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g orexis:beliefsOf ?who } }", (), g=calibration)
-    assert owner and owner[0]["who"].endswith("#terrace_agent"), "the agent's own"
-    update(store, f"PREFIX sensing: <http://example.org/orexis/sensing#> DELETE {{ GRAPH <{calibration}> {{ ?p sensing:raw 3200 }} }} "
-                  f"INSERT {{ GRAPH <{calibration}> {{ ?p sensing:raw 2900 }} }} WHERE {{ GRAPH <{calibration}> {{ ?p sensing:raw 3200 }} }}")
-    del store
-    gc.collect()                                      # one process holds a volume at a time
-    store = boot(world, "terrace", ox.Store(volume))
-    raws = sorted(float(r["r"]) for r in rows(store, "SELECT ?r WHERE { GRAPH $g { ?p sensing:raw ?r } }", (), g=calibration))
-    assert raws == [1300.0, 2900.0], "the revision kept across a restart"

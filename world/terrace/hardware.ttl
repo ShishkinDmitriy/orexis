@@ -95,8 +95,8 @@
 ##########  What is wired to it  ##########
 
 # The probe. GPIO 36 is deliberate: ADC1, the only ADC that works while WiFi is up, and not the
-# battery's GPIO34. No calibration here: the board publishes its raw count, and what dry and wet
-# read is the agent's belief, in world/terrace/beliefs/terrace.ttl, revised by telling the agent.
+# battery's GPIO34. No scaling here: the board publishes its raw count, and what dry and wet read is
+# the world's :probe_scaling, in world.ttl, which the agent's rules apply.
 :moisture_sensor_terrace a probe:CapacitiveMoistureProbe ;
     mc:model "Capacitive Soil Moisture Sensor v2.0" ;
     mc:hasPin :probe_out , :probe_vcc , :probe_gnd .

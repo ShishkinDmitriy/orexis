@@ -71,7 +71,6 @@ services:
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./society.ttl:/app/world/terrace/society.ttl:ro
       - ./world.ttl:/app/world/terrace/world.ttl:ro
-      - ./beliefs/terrace.ttl:/app/world/terrace/beliefs/terrace.ttl:ro
       - ./secrets/terrace.crt:/app/secrets/agent.crt:ro
       - ./secrets/terrace.key:/app/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro

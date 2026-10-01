@@ -330,13 +330,10 @@ def _put(store: ox.Store, world: Path, read, passed) -> tuple[list, list]:
             still.append((path, doc, graph, kinds))
             continue
         beneath = {k for kind in kinds for k in closed(store, kind)}
-        #  A DOCUMENT UNDER `beliefs/` IS THE AGENT'S OWN, whatever its kind: a calibration is public
-        #  knowledge the agent owns, and read again at every boot as nobody's it would lose every
-        #  revision the agent made of it.
-        if world in path.parents and (BELIEFS in path.relative_to(world).parts or PUBLIC not in beneath):
-            own.append((doc, graph))
-        else:
+        if world not in path.parents or PUBLIC in beneath:
             public.append((doc, graph))
+        else:
+            own.append((doc, graph))
     for doc, graph in public:
         put_document(store, doc, graphs={graph})
     return own, still
@@ -371,10 +368,6 @@ def boot(world: Path, agent_id: str, store: ox.Store | None = None, others=froze
         update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
     own = _put_public(store, world, agent_id, others=frozenset(others))
     me = _identity(store, agent_id)
-    #  THE AGENT'S OWN, AT BIRTH AND NEVER AGAIN: on a volume lived in they are its beliefs now, revised,
-    #  reached or withdrawn — a want reached and withdrawn does not come back at a restart, and nothing
-    #  records which documents a volume was born from, so one added later is not told apart from one
-    #  withdrawn. A new document under `beliefs/` reaches an agent that is born again.
     if not lived_in:
         for doc, graph in own:
             put_document(store, doc, owner=me, graphs={graph})

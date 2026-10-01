@@ -63,9 +63,6 @@ from .worlds import world_dir, worlds
 
 from .mqtt import broker
 
-#  WHERE AN AGENT'S CONTAINER MOUNTS ITS OWN BELIEF BASE — what `orexis-calibrate` opens too.
-STATE = "/app/state"
-
 log = logging.getLogger("compose")
 
 IMAGE = "orexis:local"
@@ -205,7 +202,7 @@ def _service(agent_id: str, world: str, read: set[Path], bus: tuple[str, int, in
     return f"""
   agent-{agent_id}:
     image: {IMAGE}
-    command: ["orexis-agent", "/app/world/{world}", "{agent_id}", "--volume", "{STATE}"]
+    command: ["orexis-agent", "/app/world/{world}", "{agent_id}", "--volume", "/app/state"]
     environment:{where}
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold{stores}
@@ -218,7 +215,7 @@ def _service(agent_id: str, world: str, read: set[Path], bus: tuple[str, int, in
     {_restart(lasting)}
     volumes:
       # its own belief base, and nobody else can name it
-      - orexis-{world}-{agent_id}:{STATE}
+      - orexis-{world}-{agent_id}:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world, read, agent_id)}{certificates}
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME ones
       # the Containerfile copies, which `tests/test_layout.py` holds the two lists to.

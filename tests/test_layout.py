@@ -970,26 +970,3 @@ def test_no_generated_credential_is_tracked():
                            "`orexis-onboard` instead of committing it, and rotate whatever leaked:\n  "
                            + "\n  ".join(offenders))
 
-
-def test_calibrating_stops_the_agent_tells_it_in_its_own_image_and_starts_it_whatever_happened(monkeypatch, tmp_path):
-    """`orexis-calibrate` runs the act against the agent's volume only while the agent is stopped,
-    inside the agent's own image so the store is opened by the engine that wrote it — and starts
-    the agent again even where the act was refused."""
-    import subprocess
-
-    from onboarding import calibrate as tool
-    from onboarding.compose import STATE
-
-    monkeypatch.setattr(tool, "world_dir", lambda name: tmp_path)
-    ran = []
-
-    def refused(command, cwd, check):
-        ran.append(command)
-        if command[2] == "run":
-            raise subprocess.CalledProcessError(1, command)
-    with pytest.raises(subprocess.CalledProcessError):
-        tool.calibrate("terrace", "terrace", "moisture_sensor_terrace", "dry", run=refused)
-    assert [c[2] for c in ran] == ["stop", "run", "start"], "started again, the act refused"
-    assert ran[1][-3:] == [STATE, "moisture_sensor_terrace", "dry"]
-    assert ran[1][:6] == ["podman", "compose", "run", "--rm", "--no-deps", "agent-terrace"]
-    assert tool.steps("terrace", "moisture_sensor_terrace", "wet", 1105)[1][-2:] == ["--raw", "1105"]

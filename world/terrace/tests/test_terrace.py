@@ -1,5 +1,5 @@
 """The terrace on Agent 0.2.0: the sentinel's one message is five observations — the probe's raw
-count concluded a moisture through the two points the agent believes, the air's three values and the
+count rescaled to a moisture through the two points the world states, the air's three values and the
 battery's voltage as they come — the soil's side is concluded against the bed's range, and the agent
 — holding no desire — watches and sends nothing, and keeps running, since a transport reaches it."""
 
@@ -23,7 +23,7 @@ WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT = "http://example.org/orexis/world/terrace#terrace_agent"
 #  WHAT THE BOARD PUBLISHES: the probe's count — 2820, a fifth of the way from dry (3200) to wet (1300)
-#  by the calibration beliefs/terrace.ttl gives the agent at birth — the air, and the battery.
+#  through the scaling world.ttl states of the probe — the air, and the battery.
 MESSAGE = json.dumps({"moisture_raw": 2820, "temperature": 14.5, "humidity": 0.8, "pressure": 1012,
                       "battery": 3.91}).encode()
 

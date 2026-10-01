@@ -15,9 +15,9 @@ description: >-
 # the sensor's graph, as `received` writes it: what the sensor gave
 :obs_probe a sosa:Observation ; sosa:madeBySensor :probe ; sensing:rawResult 2412 ;
     sosa:resultTime "2026-09-20T12:00:00Z"^^xsd:dateTime .
-# its revision, as sensing's rules conclude it from the topology and the calibration
+# its revision, as sensing's rules conclude it from the topology and the probe's scaling
 :obs_probe sosa:observedProperty climate:SoilMoisture ; sosa:hasFeatureOfInterest :fern ;
-    sosa:hasSimpleResult 0.414737 .
+    sensing:scaledResult 0.414737 ; sosa:hasSimpleResult 0.414737 .
 ```
 
 Written by [sensing](/domain/sensing/sensing.md)'s `received` into an `sensing:ObservationGraph`

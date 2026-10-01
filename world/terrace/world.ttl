@@ -22,8 +22,8 @@
 #  soil for movement while everything sleeps, and a heartbeat every twenty minutes keeps silence
 #  distinguishable from death. It publishes ONE document on one topic — the probe's raw count, the
 #  air's three values and the battery's voltage — and each sensor reads its own by pointer. The
-#  probe's count becomes a moisture by the calibration the agent believes of it, in its own
-#  beliefs/terrace.ttl, so recalibrating never needs the board back.
+#  probe's count becomes a moisture through the scaling stated below, so recalibrating is editing
+#  two numbers here and restarting the agent, never fetching the board.
 #
 #  This graph is the bed and the sensors. The agent, the board as a client and its topic are
 #  society.ttl; where the broker listens is deployment.ttl; the parts' pins and calibration are
@@ -62,7 +62,7 @@
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 60 ; schema:unitCode unit:MIN ] ] .
 
 #  THE FIVE VALUES of one message, one sensor each, every one reporting at the board's heartbeat.
-#  The probe publishes its raw ADC count, a moisture by the two points the agent believes of it.
+#  The probe publishes its raw ADC count, a moisture through :probe_scaling.
 :moisture_sensor_terrace a sosa:Sensor ;
     orexis:localId "moisture_sensor_terrace" ;
     schema:unitCode unit:UNITLESS ;
@@ -71,6 +71,15 @@
     sensing:readingPointer "/moisture_raw" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 20 ; schema:unitCode unit:MIN ] ] .
+
+#  THE PROBE'S SCALING, a rescale: its ADC count is a fraction of saturation on the line through what it
+#  reads in dry air and in water. These are the counts the firmware shipped with, not yet measured on
+#  this probe: read the count in the agent's log with the probe in air, then in water, and put them here
+#  (knowledge/runbooks/calibrate-a-probe.md). The generator sizes the board's wake window from them too.
+:probe_scaling a sensing:TwoPointScaling ;
+    sensing:scales :moisture_sensor_terrace ;
+    sensing:point [ rdfs:label "dry" ; sensing:reads 3200 ; sensing:standsFor 0.0 ] ,
+                  [ rdfs:label "wet" ; sensing:reads 1300 ; sensing:standsFor 1.0 ] .
 
 :air_sensor_terrace a ssn:System ;
     orexis:localId "air_sensor_terrace" ;

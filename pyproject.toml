@@ -39,7 +39,6 @@ orexis-dashboards = "onboarding.dashboards:main"
 # A board's config.h is a per-instance deployment fact, and every value in it is already
 # stated by the world. Regenerating beats retrieving the board.
 orexis-firmware = "onboarding.firmware:main"
-orexis-calibrate = "onboarding.calibrate:main"
 # Once per world, before it is onboarded. An agent may LOAD its two keys; it may not mint them.
 # INFRA, not onboarding: the services' own identities and whom the broker trusts. Its lifecycle
 # is the infrastructure's — possibly another host, certainly another schedule.

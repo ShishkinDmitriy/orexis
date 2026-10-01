@@ -7,7 +7,7 @@ a range is SSN-System's. What this layer declares is in `ontology.ttl` beside th
 graph an observation is kept in and a forecast's, the silence, the three sides its rules
 conclude, and the pipeline's concepts: a codec, the binding of a sensor to one, the JSON member
 that ships, the pointer and the two a series is read by, the number a sensor gave, and the
-calibration a rule makes a quantity of it by — and nothing of the 0.1.0 packages' own: what an agent polled, what a sensor monitored or sampled,
+scaling and calibration the rules make a quantity of it by — and nothing of the 0.1.0 packages' own: what an agent polled, what a sensor monitored or sampled,
 a device's sense mode and a drift's horizons were SSN restated or read by nothing, and 0.2.0
 speaks none of them. The drift is the prediction package's. Not one word of any transport.
 
@@ -34,15 +34,14 @@ INSIDE = SENSING + "inside"
 ABOVE = SENSING + "above"
 
 #  THE PIPELINE'S: the codec family, a sensor's binding to a member, the member that ships, the
-#  pointers, the number a sensor gave and the calibration a rule makes a quantity of it by.
+#  pointers, the number a sensor gave, and the scaling and calibration the rules make a quantity of it by.
 CODEC = SENSING + "Codec"
 DECODED_BY = SENSING + "decodedBy"
 JSON_CODEC = SENSING + "Json"
-CALIBRATION_GRAPH = SENSING + "CalibrationGraph"
-CALIBRATION_POINT = SENSING + "calibrationPoint"
-RAW = SENSING + "raw"
-QUANTITY = SENSING + "quantity"
+TWO_POINT_SCALING = SENSING + "TwoPointScaling"
+TWO_POINT_CALIBRATION = SENSING + "TwoPointCalibration"
 RAW_RESULT = SENSING + "rawResult"
+SCALED_RESULT = SENSING + "scaledResult"
 READING_POINTER = SENSING + "readingPointer"
 STARTS_POINTER = SENSING + "startsPointer"
 ENDS_POINTER = SENSING + "endsPointer"

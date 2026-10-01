@@ -586,8 +586,8 @@ it is a record wearing a bullet.
   `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is what its
   observation is concluded to be of, and the layer's own words are the observation graph's kind, the silence,
   the three sides and the pipeline's — a codec as a family, a sensor's binding to a member, JSON
-  as the member that ships, and the pointer, then the number a sensor gave and the calibration a
-  rule makes it a quantity by — since neither
+  as the member that ships, and the pointer, then the number a sensor gave and the two-point scaling
+  and calibration the rules make it a quantity by — since neither
   standard says how bytes become a number, while the drift (a value moving by itself, which no
   `sosa:Procedure` is) is the prediction package's one word;
   `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
@@ -931,11 +931,11 @@ it is a record wearing a bullet.
   now, as a package's is at boot (#824), and `broker` still refuses the question it cannot answer.
 
 - **An observation is concluded from the number a sensor gave** — sensing keeps the number, who
-  made it and when, and its rules conclude what it observes and its quantity from the topology and
-  a calibration the agent believes and revises when told what the sensor reads now; the firmware
-  scaling, a pipeline stage of code members and the calibration as a world fact were each refused,
-  and a reader of an observation reads it with its revisions
-  (an-observation-is-concluded-from-the-number-a-sensor-gave).
+  made it and when, and its rules conclude what it observes, its quantity through the scaling the
+  world states (a rescale, the unit changing) and its reading through the calibration (a correction,
+  the unit staying), then its sides; the firmware scaling, a pipeline stage of code members, and the
+  calibration as the agent's belief revised by an act were each refused, and a reader of an
+  observation reads it with its revisions (an-observation-is-concluded-from-the-number-a-sensor-gave).
 
 - **A drift answers a rate, and a prediction accumulates them** — a drift answering the value it
   reached could not be combined with a second, and a ladder of rungs found a crossing only where a
@@ -1165,9 +1165,7 @@ nothing.
 Beliefs are the agent's: **authored** once at birth from the world's documents, never touched by
 start or stop. A volume lived in keeps the agent's own graphs and reads again only what a
 document put in and nobody owns — the ontologies, the domains, the world's public graphs — which
-is how an updated ontology reaches a running agent. A document under `beliefs/<id>` is the agent's
-own whatever its kind, and read at its birth only: reached, withdrawn or revised, it is its belief
-now, so a document added later reaches an agent born again. Anything that would reset an agent's own beliefs on a
+is how an updated ontology reaches a running agent. Anything that would reset an agent's own beliefs on a
 restart is a bug, not a convenience.
 
 ## Traps worth knowing, and one that is closed

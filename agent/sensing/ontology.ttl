@@ -16,7 +16,8 @@
 #  observation is kept in, the silence of a sensor that has stopped reporting, the three sides
 #  this layer's rules conclude, and the pipeline's own concepts, since neither standard says how
 #  bytes become a number: a codec, the binding of a sensor to one, the member that ships, and the
-#  pointer; and how a number becomes a quantity, which is a calibration the agent believes and a rule. Sensing is the translation row of the agent stack and
+#  pointer; and how a number becomes a quantity, which is a scaling and a calibration the world states,
+#  and the rules. Sensing is the translation row of the agent stack and
 #  nothing above it: a transport hands it bytes, it makes a number of them and writes one
 #  sosa:Observation holding until the next is due, and on the container's tick it says which
 #  readings are missing and which sensors have gone silent. It predicts nothing — that is the
@@ -62,42 +63,64 @@
     rdfs:label "JSON" ;
     rdfs:comment "The document is JSON, and a value in it is found by the pointer." .
 
-:CalibrationGraph a owl:Class ;
-    rdfs:subClassOf orexis:PublicGraph , orexis:BeliefGraph ;
-    rdfs:label "Calibration graph" ;
-    rdfs:comment """The agent's own belief of how an instrument's numbers are quantities: the
-    calibration points of each sensor whose number is not already one. The agent's and not the
-    world's, since it is one agent's understanding of one probe in one bed, revised by that agent
-    when it is told what it is reading now (`calibrate`), and kept across restarts as every graph
-    of its own is. Born from the agent's document under the world's `beliefs/`; a lived-in volume
-    keeps the revised one. Public knowledge the agent owns, as a derivation graph is, since what a
-    reading is revised beside is public knowledge, and the rule concluding an observation reads it
-    there; not a state graph, so no plan forks it.""" .
+:TwoPointScaling a owl:Class ;
+    rdfs:label "Two-point scaling" ;
+    rdfs:comment """A RESCALE: the unit changes. How a sensor's number — a probe's ADC count — is a
+    quantity in its property's unit — a soil-moisture fraction: the straight line through two points,
+    each what the sensor reads there and what that stands for, named by its label (dry, wet).
+    Unclamped, so a count past a point is a quantity past its own, which a side then says, rather
+    than a saturated one hiding a flooded or frozen probe. The world states one per instrument it
+    rescales (`scales`), beside the sensor; this layer's rule reads it at layer 0, and a sensor no
+    scaling scales gives its number as its quantity — a thermometer already reports degrees.""" .
 
-:CalibrationPoint a owl:Class ;
-    rdfs:label "Calibration point" ;
-    rdfs:comment """One reference the agent believes of a sensor: the number it reads there (`raw`)
-    and the quantity that stands for (`quantity`), named by its rdfs:label — dry, wet — which is
-    how it is referred to when the agent is told what it is reading now. A sensor with two is read
-    on the straight line through them, unclamped, so a number past a point is a quantity past its
-    own, which a side then says; a sensor with none gives its quantity as it is.""" .
+:TwoPointCalibration a owl:Class ;
+    rdfs:label "Two-point calibration" ;
+    rdfs:comment """A CORRECTION: the unit stays. How a quantity an instrument reports with an error
+    is the true one — a thermometer reading 0.4 in ice water and 99.1 in boiling — the straight line
+    through two points, each what the sensor reads there in its own unit and what is true. Stated by
+    the world beside the sensor it corrects, and read by this layer's rule at layer 1, after any
+    scaling, over the scaled quantity; a sensor no calibration corrects keeps its scaled quantity as
+    its reading.""" .
 
-:calibrationPoint a owl:ObjectProperty ;
-    rdfs:domain sosa:Sensor ;
-    rdfs:range :CalibrationPoint ;
-    rdfs:label "calibration point" .
+:scales a owl:ObjectProperty ;
+    rdfs:domain :TwoPointScaling ;
+    rdfs:range sosa:Sensor ;
+    rdfs:label "scales" .
 
-:raw a owl:DatatypeProperty ;
-    rdfs:domain :CalibrationPoint ;
+:corrects a owl:ObjectProperty ;
+    rdfs:domain :TwoPointCalibration ;
+    rdfs:range sosa:Sensor ;
+    rdfs:label "corrects" .
+
+:Point a owl:Class ;
+    rdfs:label "Point" ;
+    rdfs:comment """One reference of a scaling or a calibration: what the sensor reads there (`reads`)
+    and what that stands for (`standsFor`), named by its rdfs:label — dry, wet, ice — for whoever
+    measures it again.""" .
+
+:point a owl:ObjectProperty ;
+    rdfs:range :Point ;
+    rdfs:label "point" .
+
+:reads a owl:DatatypeProperty ;
+    rdfs:domain :Point ;
     rdfs:range xsd:decimal ;
-    rdfs:label "raw" ;
-    rdfs:comment "The raw value the sensor reads at a calibration point." .
+    rdfs:label "reads" ;
+    rdfs:comment "What the sensor gives at a point: its raw number for a scaling, its scaled quantity for a calibration." .
 
-:quantity a owl:DatatypeProperty ;
-    rdfs:domain :CalibrationPoint ;
+:standsFor a owl:DatatypeProperty ;
+    rdfs:domain :Point ;
     rdfs:range xsd:decimal ;
-    rdfs:label "quantity" ;
-    rdfs:comment "The quantity a calibration point's raw value stands for." .
+    rdfs:label "stands for" ;
+    rdfs:comment "What a point's reading is: the quantity for a scaling, the true quantity for a calibration." .
+
+:scaledResult a owl:DatatypeProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "scaled result" ;
+    rdfs:comment """The quantity in the property's unit, before any calibration corrects it: concluded
+    at layer 0 from the number the sensor gave, through the sensor's scaling or as it is, and read at
+    layer 1 to conclude the reading (sosa:hasSimpleResult). What a calibration's points read.""" .
 
 :rawResult a owl:DatatypeProperty ;
     rdfs:domain sosa:Observation ;
@@ -105,9 +128,8 @@
     rdfs:label "raw result" ;
     rdfs:comment """The number a sensor gave, as the pointer found it in the bytes — all `received`
     writes of an observation beside who made it and when. What it is an observation OF, and the
-    quantity (sosa:hasSimpleResult), this layer's rules conclude from the topology and the
-    calibration the agent believes; it is also what the agent takes as the reading of a reference
-    when it is told what it is reading now.""" .
+    quantity (sosa:hasSimpleResult), this layer's rules conclude from the topology and the scaling
+    and calibration the world states of the sensor.""" .
 
 :readingPointer a owl:DatatypeProperty ;
     rdfs:domain sosa:Sensor ;

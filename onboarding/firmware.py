@@ -9,8 +9,8 @@ its `mqtt4ssn:Broker`, or the one the installation allocated it; the ids and top
 MQTT4SSN's words; the pins and the
 calibration are the hardware's; the credential was minted by `orexis-mqtt`; a sentinel's heartbeat
 is its sensor's stated `ssn-system:Frequency`. A board that publishes its raw count — the outdoor
-sentinel — carries no calibration at all: dry and wet are the agent's belief, in the world's
-`beliefs/`, and what the generator reads of them is only the ULP's window, sized in counts. The world is read as an Agent 0.2.0 boot reads it
+sentinel — carries no scaling at all: what its count is, the world states and the agent's rules
+conclude, and what the generator reads of the scaling is only the ULP's window, sized in counts. The world is read as an Agent 0.2.0 boot reads it
 and then its hardware graph, a kind no agent reads (`onboarding.reading.world`). Keeping a second
 copy in a C header is the
 same second list this project refuses everywhere else — and it is the expensive kind, because
@@ -40,8 +40,6 @@ from __future__ import annotations
 import argparse
 import logging
 from pathlib import Path
-
-import pyoxigraph as ox
 
 from agent.store import graphs_of, rows as _rows_of
 from . import reading
@@ -100,7 +98,7 @@ WHERE {{
   ?sensor a <{PROBE}CapacitiveMoistureProbe> ; <{OREXIS}localId> ?sensorId ;
           <{MQTT4SSN}observesTopic> ?topic .
   #  A calibration on the part, for a board that scales its own count; a board that publishes the
-  #  raw count states none, its calibration being the agent's belief.
+  #  raw count states none, its scaling being the world's for the agent's rules to read.
   OPTIONAL {{ ?sensor <{PROBE}rawDry> ?rawDry ; <{PROBE}rawWet> ?rawWet }}
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?readTopic .
   OPTIONAL {{ ?board <{MQTT4SSN}listensToTopic> ?cmd . ?cmdFilter <{MQTT4SSN}matchesTopic> ?cmd ;
@@ -350,34 +348,20 @@ _SECONDS = {"SEC": 1, "MIN": 60, "HR": 3600, "HUR": 3600, "DAY": 86400}
 #  WHICH ADC1 CHANNEL A PIN IS, which the ULP addresses: only these eight can be watched in sleep.
 _ADC1_CHANNEL = {36: 0, 37: 1, 38: 2, 39: 3, 32: 4, 33: 5, 34: 6, 35: 7}
 
-_POINTS_Q = """SELECT ?raw ?quantity WHERE {{ <{sensor}> <{SENSING}calibrationPoint> ?p .
-  ?p <{SENSING}raw> ?raw ; <{SENSING}quantity> ?quantity }}"""
+#  THE POINTS OF THE SCALING THE WORLD STATES OF A SENSOR, as (raw, quantity).
+_POINTS_Q = """SELECT ?raw ?quantity WHERE {{ ?scaling <{SENSING}scales> <{sensor}> ; <{SENSING}point> ?p .
+  ?p <{SENSING}reads> ?raw ; <{SENSING}standsFor> ?quantity }}"""
 
 
-def _believed_calibration(world: str, sensor: str) -> list[tuple[float, float]]:
-    """The calibration points some agent of `world` is born believing of `sensor` — (raw, quantity),
-    read off the documents under its `beliefs/`, which no world graph holds and this generator reads
-    only to size a ULP window in counts."""
-    points = set()
-    for path in sorted((world_dir(world) / "beliefs").glob("*")):
-        if path.suffix not in (".ttl", ".trig"):
-            continue
-        doc = ox.Store()
-        doc.load(path=str(path), format=ox.RdfFormat.TRIG if path.suffix == ".trig" else ox.RdfFormat.TURTLE,
-                 base_iri=path.resolve().as_uri(), **({} if path.suffix == ".trig" else {"to_graph": ox.DefaultGraph()}))
-        for r in doc.query(_POINTS_Q.format(sensor=sensor, SENSING=SENSING), use_default_graph_as_union=True):
-            points.add((float(r["raw"].value), float(r["quantity"].value)))
-    return sorted(points)
-
-
-def _raw_window(world: str, row: dict, lo: float, hi: float) -> int:
-    """The ULP's window in counts: a quarter of the band's width, through the two points the agent
-    is born believing. A recalibration the agent is told later moves them; regenerate and reflash
-    only where the window's sensitivity has moved further than matters."""
-    points = _believed_calibration(world, row["sensor"])
+def _raw_window(store, row: dict, lo: float, hi: float) -> int:
+    """The ULP's window in counts: a quarter of the band's width, through the two points of the scaling
+    the world states of the probe. A recalibration moves them; regenerate and reflash only where the
+    window's sensitivity has moved further than matters."""
+    points = sorted({(float(r["raw"]), float(r["quantity"]))
+                     for r in _rows(store, _POINTS_Q.format(sensor=row["sensor"], SENSING=SENSING))})
     if len(points) != 2 or points[0][0] == points[1][0]:
-        raise SystemExit(f"{row['sensorId']} publishes its raw count, and the agents' beliefs state "
-                         f"{len(points)} distinct calibration points of it, where the window needs two")
+        raise SystemExit(f"{row['sensorId']} publishes its raw count, and the world states "
+                         f"{len(points)} distinct points of a scaling of it, where the window needs two")
     (r0, q0), (r1, q1) = points
     return max(1, round(WAKE_DELTA_FRACTION * (hi - lo) * abs((r1 - r0) / (q1 - q0))))
 
@@ -413,10 +397,10 @@ def render_sentinel(world: str, row: dict, store) -> str:
         if gpio not in _ADC1_CHANNEL:
             raise SystemExit(f"{row['sensorId']} is on GPIO {gpio}, which is no ADC1 channel the ULP can watch")
         probe = (f"#define MOISTURE_PIN {gpio}\n#define MOISTURE_ADC_CHANNEL {_ADC1_CHANNEL[gpio]}"
-                 "\n// No calibration: the board publishes its raw count, and dry and wet are the agent's.")
-        window = ("// The deviation limit in COUNTS: a quarter of the band's width, through the calibration the\n"
-                  "// agent is born believing — an in-band move of more than this since the last report wakes\n"
-                  f"// the board.\n#define WAKE_DELTA_RAW {_raw_window(world, row, lo, hi)}")
+                 "\n// No scaling: the board publishes its raw count, and what it is the agent's rules conclude.")
+        window = ("// The deviation limit in COUNTS: a quarter of the band's width, through the scaling the\n"
+                  "// world states of the probe — an in-band move of more than this since the last report wakes\n"
+                  f"// the board.\n#define WAKE_DELTA_RAW {_raw_window(store, row, lo, hi)}")
     else:
         if not row.get("rawDry"):
             raise SystemExit(f"{row['sensorId']}: a board that scales its own count needs probe:rawDry and rawWet")
