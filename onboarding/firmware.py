@@ -8,7 +8,9 @@ already written down somewhere else. The broker's port is the `schema:url` the w
 its `mqtt4ssn:Broker`, or the one the installation allocated it; the ids and topics are the society graph's, in
 MQTT4SSN's words; the pins and the
 calibration are the hardware's; the credential was minted by `orexis-mqtt`; a sentinel's heartbeat
-is its sensor's stated `ssn-system:Frequency`. The world is read as an Agent 0.2.0 boot reads it
+is its sensor's stated `ssn-system:Frequency`. A board that publishes its raw count — the outdoor
+sentinel — carries no scaling at all: what its count is, the world states and the agent's rules
+conclude, and what the generator reads of the scaling is only the ULP's window, sized in counts. The world is read as an Agent 0.2.0 boot reads it
 and then its hardware graph, a kind no agent reads (`onboarding.reading.world`). Keeping a second
 copy in a C header is the
 same second list this project refuses everywhere else — and it is the expensive kind, because
@@ -82,9 +84,9 @@ WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 # the OPTIONAL parts this generator has a template for — an LED, a DHT11, a BME280. A board
 # carrying something it has no template for is reported (_untemplated), not guessed at.
 _BOARDS_Q = f"""
-SELECT ?boardId ?firmware ?lan ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
+SELECT ?boardId ?firmware ?lan ?sensor ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
        ?alarm
-       ?ledRed ?ledGreen ?ledBlue ?airPin ?bmeSda ?bmeScl ?bmeAddr ?ws2812
+       ?ledRed ?ledGreen ?ledBlue ?airPin ?bmeSda ?bmeScl ?bmeAddr ?ws2812 ?battPin ?battDiv
 WHERE {{
   ?board a <{MC}Microcontroller> ; <{OREXIS}localId> ?boardId ; <{MQTT4SSN}hosts> ?sensor .
   # The firmware name: stated on the board directly, or — since #175 — entailed onto the
@@ -94,8 +96,10 @@ WHERE {{
   UNION
   {{ ?board <{MQTT4SSN}hosts> ?fwBearer . ?fwBearer <{MC}firmware> ?firmware }}
   ?sensor a <{PROBE}CapacitiveMoistureProbe> ; <{OREXIS}localId> ?sensorId ;
-          <{MQTT4SSN}observesTopic> ?topic ;
-          <{PROBE}rawDry> ?rawDry ; <{PROBE}rawWet> ?rawWet .
+          <{MQTT4SSN}observesTopic> ?topic .
+  #  A calibration on the part, for a board that scales its own count; a board that publishes the
+  #  raw count states none, its scaling being the world's for the agent's rules to read.
+  OPTIONAL {{ ?sensor <{PROBE}rawDry> ?rawDry ; <{PROBE}rawWet> ?rawWet }}
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?readTopic .
   OPTIONAL {{ ?board <{MQTT4SSN}listensToTopic> ?cmd . ?cmdFilter <{MQTT4SSN}matchesTopic> ?cmd ;
                      <{MQTT4SSN}hasFilterPattern> ?cmdTopic }}
@@ -142,6 +146,8 @@ WHERE {{
   # A BUILT-IN status LED, from no wire: a FireBeetle 2 ESP32-E carries a WS2812 on GPIO 5 by
   # construction, and the world's hardware.ttl states it of the board.
   OPTIONAL {{ ?board <{ESP32}ws2812Gpio> ?ws2812 }}
+  # The board's own battery divider, as the board states it: which line, and by how much it halves.
+  OPTIONAL {{ ?board <{ESP32}batteryGpio> ?battPin ; <{ESP32}batteryDivider> ?battDiv }}
  }}"""
 
 # Every part a board hosts that has legs, with its classes — so a part this generator has no
@@ -298,6 +304,14 @@ def _optional_pins(row: dict) -> str:
             f"#define BME280_SCL_PIN {int(row['bmeScl'])}",
             f"#define BME280_ADDR 0x{addr:02X}",
         ]
+    if row.get("battPin"):
+        out += [
+            "",
+            "// The board's OWN battery divider: the JST port's cell, divided by this much onto this",
+            "// line. Published as \"battery\" in volts, the ESP32's factory ADC calibration applied.",
+            f"#define BATTERY_PIN {int(row['battPin'])}",
+            f"#define BATTERY_DIVIDER {float(row['battDiv']):g}",
+        ]
     if row.get("ws2812"):
         out += [
             "",
@@ -331,6 +345,27 @@ SELECT ?lo ?hi ?every ?unit WHERE {{
 _SECONDS = {"SEC": 1, "MIN": 60, "HR": 3600, "HUR": 3600, "DAY": 86400}
 
 
+#  WHICH ADC1 CHANNEL A PIN IS, which the ULP addresses: only these eight can be watched in sleep.
+_ADC1_CHANNEL = {36: 0, 37: 1, 38: 2, 39: 3, 32: 4, 33: 5, 34: 6, 35: 7}
+
+#  THE POINTS OF THE SCALING THE WORLD STATES OF A SENSOR, as (raw, quantity).
+_POINTS_Q = """SELECT ?raw ?quantity WHERE {{ ?scaling <{SENSING}scales> <{sensor}> ; <{SENSING}point> ?p .
+  ?p <{SENSING}reads> ?raw ; <{SENSING}standsFor> ?quantity }}"""
+
+
+def _raw_window(store, row: dict, lo: float, hi: float) -> int:
+    """The ULP's window in counts: a quarter of the band's width, through the two points of the scaling
+    the world states of the probe. A recalibration moves them; regenerate and reflash only where the
+    window's sensitivity has moved further than matters."""
+    points = sorted({(float(r["raw"]), float(r["quantity"]))
+                     for r in _rows(store, _POINTS_Q.format(sensor=row["sensor"], SENSING=SENSING))})
+    if len(points) != 2 or points[0][0] == points[1][0]:
+        raise SystemExit(f"{row['sensorId']} publishes its raw count, and the world states "
+                         f"{len(points)} distinct points of a scaling of it, where the window needs two")
+    (r0, q0), (r1, q1) = points
+    return max(1, round(WAKE_DELTA_FRACTION * (hi - lo) * abs((r1 - r0) / (q1 - q0))))
+
+
 def render_sentinel(world: str, row: dict, store) -> str:
     """config.h for the SECOND firmware (#151): a sentinel takes no orders, so its config
     carries what a command would have — the deviation limit, sized from the WORLD's operating range
@@ -356,6 +391,22 @@ def render_sentinel(world: str, row: dict, store) -> str:
     heartbeat = int(float(found[0]["every"]) * _SECONDS.get(found[0]["unit"].rsplit("/", 1)[-1], 1))
     delta = round(WAKE_DELTA_FRACTION * (hi - lo), 3)
     persist = PERSIST_LOOKS
+    raw = row["firmware"] == "outdoor-sentinel"
+    if raw:
+        gpio = int(row["gpio"])
+        if gpio not in _ADC1_CHANNEL:
+            raise SystemExit(f"{row['sensorId']} is on GPIO {gpio}, which is no ADC1 channel the ULP can watch")
+        probe = (f"#define MOISTURE_PIN {gpio}\n#define MOISTURE_ADC_CHANNEL {_ADC1_CHANNEL[gpio]}"
+                 "\n// No scaling: the board publishes its raw count, and what it is the agent's rules conclude.")
+        window = ("// The deviation limit in COUNTS: a quarter of the band's width, through the scaling the\n"
+                  "// world states of the probe — an in-band move of more than this since the last report wakes\n"
+                  f"// the board.\n#define WAKE_DELTA_RAW {_raw_window(store, row, lo, hi)}")
+    else:
+        if not row.get("rawDry"):
+            raise SystemExit(f"{row['sensorId']}: a board that scales its own count needs probe:rawDry and rawWet")
+        probe = f"#define MOISTURE_PIN {int(row['gpio'])}\n#define ADC_DRY {int(row['rawDry'])}\n#define ADC_WET {int(row['rawWet'])}"
+        window = ("// The deviation limit (a quarter of the band, the society's figure): an in-band move of more than\n"
+                  f"// this since the last report wakes the board — a stranger's water on a comfortable pot.\n#define WAKE_DELTA {delta}")
 
     return f"""// GENERATED by `orexis-firmware {world}` for {row['boardId']} — do not edit.
 //
@@ -375,9 +426,7 @@ def render_sentinel(world: str, row: dict, store) -> str:
 #define SENSOR_ID "{row['sensorId']}"
 #define MOISTURE_TOPIC "{row['readTopic']}"
 
-#define MOISTURE_PIN {int(row['gpio'])}
-#define ADC_DRY {int(row['rawDry'])}
-#define ADC_WET {int(row['rawWet'])}
+{probe}
 {_optional_pins(row)}
 // NOT the band. A sentinel's ULP watches MOVEMENT — the last published value plus or minus
 // WAKE_DELTA — and does not compare against the operating range at all; watching it made a pot
@@ -393,9 +442,7 @@ def render_sentinel(world: str, row: dict, store) -> str:
 // same the governed node compiles, because what counts as evidence is the society's to say.
 #define WAKE_PERSIST_LOOKS {persist}
 
-// The deviation limit (a quarter of the band, the society's figure): an in-band move of more than
-// this since the last report wakes the board — a stranger's water on a comfortable pot.
-#define WAKE_DELTA {delta}
+{window}
 """
 
 def generate(world: str, board: str | None = None) -> None:

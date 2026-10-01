@@ -24,9 +24,11 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Sensing — bytes become observations
 
+* [scaling](/domain/sensing/scaling.md) - A rescale, a probe's count a moisture: two points the world states beside the sensor, applied by sensing's rule.
 * [sensing](/domain/sensing/sensing.md) - A transport's bytes become one observation per key, holding until the next is due; says when a sensor falls silent.
 * [observation](/domain/sensing/observation.md) - One act of observing in SOSA's words, one per key, replaced whole by the next; the premise everything else derives from.
 * [reading](/domain/sensing/reading.md) - The number an observation carries: what a side is concluded of, what a drift predicts, what a dose is sized from.
+* [calibration](/domain/sensing/calibration.md) - A correction within one unit, two points the world states beside the sensor, applied by sensing's rule after any scaling.
 * [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; the rules say which side a reading is on.
 

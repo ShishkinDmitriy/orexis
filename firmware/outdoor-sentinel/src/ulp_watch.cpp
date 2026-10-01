@@ -60,7 +60,9 @@
                            // the program itself. A ULP that is not running leaves this at 0,
                            // which is the one fact a silent watcher cannot otherwise report.
 #define ULP_PROG_START 8
-#define ULP_ADC_CHANNEL 6  // GPIO34; if MOISTURE_PIN moves, check this row first
+// The probe's ADC1 channel, from the generator, which maps MOISTURE_PIN to it: the ULP addresses
+// a channel, not a pin. GPIO34 is the FireBeetle's battery divider, so the probe is on GPIO36, ch 0.
+#define ULP_ADC_CHANNEL MOISTURE_ADC_CHANNEL
 
 #ifndef WAKE_PERSIST_LOOKS
 #define WAKE_PERSIST_LOOKS 2   // the society's figure, generated; this is only the fallback
@@ -167,14 +169,7 @@ static_assert(rtcGpioOf(VIGIL_LED_PIN) >= 0,
 #define VIGIL_DARK()
 #endif
 
-static uint16_t fracToRaw(float frac) {
-  float raw = ADC_DRY - frac * (float)(ADC_DRY - ADC_WET);
-  if (raw < 0) raw = 0;
-  if (raw > 4095) raw = 4095;
-  return (uint16_t)raw;
-}
-
-RTC_DATA_ATTR static float rtc_last_reported = -1.0f;
+RTC_DATA_ATTR static float rtc_last_reported = -1.0f;   // a raw count; negative: none yet
 
 // A PRIOR OUTLIVES A FAILED PUBLISH. The bench found this: a crossing wake that could not reach
 // the broker slept, re-armed — which resets the last-quiet-look to none — and woke again on a
@@ -184,18 +179,18 @@ RTC_DATA_ATTR static float rtc_last_reported = -1.0f;
 //
 // Held across sleeps in RTC memory and cleared only by a publish that SUCCEEDED, because a
 // successful report re-anchors the window and any earlier crossing is then superseded.
-RTC_DATA_ATTR static float    rtc_prior_frac  = -1.0f;   // negative: none held
+RTC_DATA_ATTR static float    rtc_prior_raw   = -1.0f;   // negative: none held
 RTC_DATA_ATTR static uint64_t rtc_prior_at_us = 0;       // RTC-clock instant of that quiet look
 
-void noteReported(float frac) {
-  rtc_last_reported = frac;
-  rtc_prior_frac = -1.0f;   // the report landed; the window re-anchors and the prior is spent
+void noteReported(float raw) {
+  rtc_last_reported = raw;
+  rtc_prior_raw = -1.0f;    // the report landed; the window re-anchors and the prior is spent
 }
 
-void armUlpWatch(float nowFrac) {
-  // A DEVIATION alarm, and only that. The window is the last value the agent HEARD, plus and
-  // minus WAKE_DELTA, clamped to the physical 0..1 of a saturation fraction — the operating
-  // range does not appear here at all.
+void armUlpWatch(float nowRaw) {
+  // A DEVIATION alarm, and only that. The window is the last count the agent HEARD, plus and
+  // minus WAKE_DELTA_RAW counts, clamped to the 12-bit ADC's 0..4095 — the operating range does
+  // not appear here at all, and neither does any calibration: dry and wet are the agent's.
   //
   // Why the band is gone. Watching it too meant the ULP alarmed whenever the pot sat outside
   // its range, which is a SLOW fact the heartbeat already reports and the agent — who holds the
@@ -203,35 +198,27 @@ void armUlpWatch(float nowFrac) {
   // plant was thirsty, so a pot that needed water woke the radio every patrol forever. The two
   // jobs separate cleanly: the heartbeat says where the value IS, the ULP says that it MOVED.
   //
-  // The band still sizes the trigger, upstream: WAKE_DELTA is sensing:alarmDeltaFraction of the
-  // band width, so a fussy plant gets a tight delta and a tolerant one a loose delta. That
-  // arrives already resolved to a number, which is why nothing below mentions a range.
+  // The band still sizes the trigger, upstream: WAKE_DELTA_RAW is a quarter of the band's width
+  // in counts, by the calibration the agent was born believing, so a fussy plant gets a tight
+  // window and a tolerant one a loose one. That arrives already resolved to a number, which is
+  // why nothing below mentions a range.
   //
   // The reference is what was last PUBLISHED, not last sampled — a drift is measured from what
   // the agent believes, so an unheard reading cannot silently re-centre the window. Before the
   // first successful publish there is no such value, and the current sample stands in: arming
   // around something is better than a board that cannot alarm until it has managed to speak.
-  float ref = (rtc_last_reported >= 0) ? rtc_last_reported : nowFrac;
-  float lo = ref - WAKE_DELTA, hi = ref + WAKE_DELTA;
-  // THE CLAMP IS IN FRACTIONS AND THE COMPARISON IS IN COUNTS, and reconciling the two is this
-  // firmware's job. A fraction is defined by the calibration: 1.0 means "as wet as ADC_WET", not
-  // "as wet as it gets". Water is wetter than a calibration point — the probe reads about 1100
-  // where ADC_WET is 1300 — so readMoisture() clamps to 1.000 and hides it, while the ULP, which
-  // compares raw counts and knows nothing of clamping, sees a sample below the wet threshold and
-  // breaches on every look. Seen on the bench as an alarm every ~23 seconds for as long as the
-  // probe stayed in the glass: re-arm, immediate breach, confirm, wake, publish, repeat. The dry
-  // end is the same defect mirrored, for a pot drier than ADC_DRY.
-  //
-  // So an edge that has reached a PHYSICAL limit is opened to the hardware limit rather than
-  // pinned to the calibration point. An open edge cannot fire: no 12-bit sample exceeds 4095,
-  // and none is below 0.
-  bool openDry = (lo <= 0.0f);   // the window already includes "drier than calibration knows"
-  bool openWet = (hi >= 1.0f);   // ... and likewise wetter
+  float ref = (rtc_last_reported >= 0) ? rtc_last_reported : nowRaw;
+  // A capacitive probe reads LOWER the wetter it is: a count above the window is drier than the
+  // floor, one below it wetter than the ceiling. An edge at the ADC's limit cannot fire — no
+  // 12-bit sample exceeds 4095 or is below 0 — which is what the fraction's clamp used to have to
+  // reconcile, and counts need no reconciling: a probe in water past the wet point is just a
+  // smaller count, not a breach on every look.
+  float lo = ref - WAKE_DELTA_RAW, hi = ref + WAKE_DELTA_RAW;
   if (lo < 0.0f) lo = 0.0f;
-  if (hi > 1.0f) hi = 1.0f;
+  if (hi > 4095.0f) hi = 4095.0f;
 
-  RTC_SLOW_MEM[ULP_MEM_HIGH] = openDry ? 4095 : fracToRaw(lo);  // drier than the floor
-  RTC_SLOW_MEM[ULP_MEM_LOW]  = openWet ? 0    : fracToRaw(hi);  // wetter than the ceiling
+  RTC_SLOW_MEM[ULP_MEM_HIGH] = (uint16_t)hi;   // drier than the floor
+  RTC_SLOW_MEM[ULP_MEM_LOW]  = (uint16_t)lo;   // wetter than the ceiling
   // Every word the ULP writes carries its PC in bits 31:21 and the address register in 17:16
   // (see I_ST in ulp.h), so a CPU-side read is meaningless without this mask. Reading one raw
   // is how "2746843456 looks" happened.
@@ -417,9 +404,8 @@ void armUlpWatch(float nowFrac) {
 #else
   const int lampPin = -1;   // no leg wired; the vigil is silent
 #endif
-  Serial.printf("watching %0.3f+-%0.3f = %0.3f..%0.3f (counts %u..%u), "
-                "patrol %ds confirm %ds x%d, lamp %d\n",
-                ref, (float)WAKE_DELTA, lo, hi, (unsigned)RTC_SLOW_MEM[ULP_MEM_LOW],
+  Serial.printf("watching count %0.0f+-%d = %u..%u, patrol %ds confirm %ds x%d, lamp %d\n",
+                ref, (int)WAKE_DELTA_RAW, (unsigned)RTC_SLOW_MEM[ULP_MEM_LOW],
                 (unsigned)RTC_SLOW_MEM[ULP_MEM_HIGH],
                 WATCH_PATROL_S, WATCH_CONFIRM_S, WAKE_PERSIST_LOOKS, lampPin);
 }
@@ -500,37 +486,34 @@ void ulpSelfTest(int seconds) {
   }
 }
 
-static bool latchQuietSample(float *frac, uint32_t *ageS, uint64_t now);
+static bool latchQuietSample(float *raw, uint32_t *ageS, uint64_t now);
 
-bool priorQuietSample(float *frac, uint32_t *ageS) {
+bool priorQuietSample(float *raw, uint32_t *ageS) {
   // A prior already held from an attempt that failed to publish outranks a fresh look: it is
   // the older, truer corner, and its age has simply grown while the radio was losing.
   uint64_t now = esp_clk_rtc_time();
-  if (rtc_prior_frac >= 0.0f) {
+  if (rtc_prior_raw >= 0.0f) {
     uint64_t age = (now > rtc_prior_at_us) ? (now - rtc_prior_at_us) / 1000000ULL : 0;
     // A prior older than a couple of heartbeats is no longer evidence about the SHAPE of this
     // crossing — it is just an old reading, and the interpolation it would fix has long since
     // been overwritten by beats in between. Dropped rather than reported stale.
-    if (age > (uint64_t)HEARTBEAT_S * 2) { rtc_prior_frac = -1.0f; }
-    else { *frac = rtc_prior_frac; *ageS = (uint32_t)age; return true; }
+    if (age > (uint64_t)HEARTBEAT_S * 2) { rtc_prior_raw = -1.0f; }
+    else { *raw = rtc_prior_raw; *ageS = (uint32_t)age; return true; }
   }
-  return latchQuietSample(frac, ageS, now);
+  return latchQuietSample(raw, ageS, now);
 }
 
-static bool latchQuietSample(float *frac, uint32_t *ageS, uint64_t now) {
+static bool latchQuietSample(float *rawOut, uint32_t *ageS, uint64_t now) {
   // What the coprocessor saw on its last in-window look, and how long before the wake that was.
   // The arithmetic is exact rather than estimated: a quiet look sets the patrol rate, the look
   // after it breached and switched to the confirm rate, and every look from there was a confirm
   // apart. So the last quiet sample is one patrol plus (N-1) confirms before the alarm.
   uint32_t raw = RTC_SLOW_MEM[ULP_MEM_LASTOK] & 0xFFFF;
   if (raw == 0xFFFF) return false;      // the window broke on its very first look
-  float f = (ADC_DRY - (float)raw) / (float)(ADC_DRY - ADC_WET);
-  if (f < 0.0f) f = 0.0f;
-  if (f > 1.0f) f = 1.0f;
   uint32_t age = (uint32_t)WATCH_PATROL_S + (uint32_t)(WAKE_PERSIST_LOOKS - 1) * WATCH_CONFIRM_S;
-  rtc_prior_frac  = f;
+  rtc_prior_raw   = (float)raw;
   rtc_prior_at_us = (now > (uint64_t)age * 1000000ULL) ? now - (uint64_t)age * 1000000ULL : 0;
-  *frac = f;
+  *rawOut = (float)raw;
   *ageS = age;
   return true;
 }

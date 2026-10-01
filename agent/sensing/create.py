@@ -5,9 +5,10 @@ it, `received` writes; nothing else here is called.
 
 WHAT SENSING SAYS HAPPENED, by the part's own signals, each carrying an event of `events.py` and made
 only where heard: `observed`, an observation graph written — heard as it is written, whoever wrote
-it, and said with how long after the reading it replaced it came, which the part remembers per
-sensor since the reading replaced is gone by then — and `silence`, how many sensors are said silent
-after each ask.
+it, and said with what the rules concluded of it, which is written by then, since belief's part
+starts before any package beyond the mind and so hears the graph first; and with how long after the
+reading it replaced it came, which the part remembers per sensor since the reading replaced is gone
+by then — and `silence`, how many sensors are said silent after each ask.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from datetime import datetime
 
 from agent.lifecycle import Signal
 from agent.ontology import PUBLIC, local_of
-from agent.store import Raw, catalogue_of, graphs_of, rows
+from agent.store import Raw, catalogue_of, graphs_of, revisions_of, rows
 
 from .cadence import cadence_of
 from .events import Observed, Silence
@@ -26,11 +27,12 @@ from .ontology import OBSERVATION_GRAPH
 #  HOW OFTEN SENSING ASKS WHAT HAS FALLEN DUE, in seconds of the one timeline.
 EVERY_S = 60.0
 
-#  WHAT AN OBSERVATION GRAPH SAYS, and the ids its sensor and its subject go by.
+#  WHAT AN OBSERVATION IS — what the sensor gave, in the graph written, and what the rules concluded
+#  of it, in its revisions — and the ids its sensor and its subject go by.
 _OBSERVED_Q = """
-SELECT ?sensor ?feature ?property ?value ?t WHERE { GRAPH $graph {
-  ?o sosa:madeBySensor ?sensor ; sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property ;
-     sosa:hasSimpleResult ?value ; sosa:resultTime ?t } } LIMIT 1"""
+SELECT ?sensor ?feature ?property ?value ?t WHERE {
+  ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?t ; sosa:hasFeatureOfInterest ?feature ;
+     sosa:observedProperty ?property ; sosa:hasSimpleResult ?value } LIMIT 1"""
 _IDS_Q = """
 SELECT ?subject ?sensor WHERE { OPTIONAL { $feature orexis:localId ?subject } OPTIONAL { $sensor orexis:localId ?sensor } }"""
 
@@ -58,7 +60,7 @@ class _Sensing:
     def _observation(self, graph: str) -> list[str]:
         """Say the observation `graph` holds, with how long after the last of its sensor it came."""
         beliefs = self.runtime.beliefs
-        found = rows(beliefs, _OBSERVED_Q, (), graph=graph)
+        found = rows(beliefs, _OBSERVED_Q, [graph, *revisions_of(beliefs, graph)])
         if not found:
             return []
         o = found[0]

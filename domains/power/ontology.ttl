@@ -1,0 +1,17 @@
+@prefix : <http://example.org/orexis/power#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  POWER: what keeps a device running — a battery, and how charged it is by the voltage across it.
+#  The terrace's board is the first to speak it: a FireBeetle on a LiPo cell, reporting the voltage
+#  its own divider sees, so the agent knows how long its instrument has left.
+
+:Battery a owl:Class ; rdfs:subClassOf sosa:FeatureOfInterest ; rdfs:label "Battery" ;
+    rdfs:comment "A cell or pack a device runs on; its state is observed by the voltage across it." .
+
+:BatteryVoltage a sosa:ObservableProperty ; rdfs:label "Battery voltage" ;
+    rdfs:comment "The voltage across a battery's terminals, in volts: how charged a lithium cell is, read against the range its chemistry states." .

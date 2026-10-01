@@ -573,7 +573,7 @@ it is a record wearing a bullet.
   was concluded with the row saying so, the deliberator re-queues such rows at boot, and a
   rule set that never settles spends a budget every pass and is reported rather than looped on.
 - **Sensing observes and says when a sensor has gone silent, and prediction is a package of
-  its own** — `received` writes one `sosa:Observation` per key with its number, holding until
+  its own** — `received` writes one `sosa:Observation` per sensor with the number it gave, holding until
   the next is due by the sensor's `ssn-system:Frequency`, `missed` answers the readings fallen
   due when sensing's own `start` asks each minute and says `sensing:silentSince` of a sensor silent past a limit of
   its cadences, and the side is a revision the three rules sensing ships conclude; no band,
@@ -583,10 +583,11 @@ it is a record wearing a bullet.
   nothing of sensing — a stretch already says when a rule's result changes, and the planner's
   re-root tells a surprise — and a range is SSN-System's as the world states it, nothing minted.
 - **Sensing speaks SOSA and SSN, and declares only what they lack** — a sensor
-  `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is the
-  observation's key, and the layer's own words are the observation graph's kind, the silence,
-  the three sides and the pipeline's — a codec and a scaling as families, a sensor's binding to
-  a member of each, JSON and identity as the members that ship, and the pointer — since neither
+  `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is what its
+  observation is concluded to be of, and the layer's own words are the observation graph's kind, the silence,
+  the three sides and the pipeline's — a codec as a family, a sensor's binding to a member, JSON
+  as the member that ships, and the pointer, then the number a sensor gave and the two-point scaling
+  and calibration the rules make it a quantity by — since neither
   standard says how bytes become a number, while the drift (a value moving by itself, which no
   `sosa:Procedure` is) is the prediction package's one word;
   `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
@@ -929,6 +930,13 @@ it is a record wearing a bullet.
   could not be onboarded or run in a container at all; the bus is a premise read off the world
   now, as a package's is at boot (#824), and `broker` still refuses the question it cannot answer.
 
+- **An observation is concluded from the number a sensor gave** — sensing keeps the number, who
+  made it and when, and its rules conclude what it observes, its quantity through the scaling the
+  world states (a rescale, the unit changing) and its reading through the calibration (a correction,
+  the unit staying), then its sides; the firmware scaling, a pipeline stage of code members, and the
+  calibration as the agent's belief revised by an act were each refused, and a reader of an
+  observation reads it with its revisions (an-observation-is-concluded-from-the-number-a-sensor-gave).
+
 - **A drift answers a rate, and a prediction accumulates them** — a drift answering the value it
   reached could not be combined with a second, and a ladder of rungs found a crossing only where a
   rung's two ends disagreed, so rain lifting a drying bed back inside one rung was never seen;
@@ -1157,8 +1165,8 @@ nothing.
 Beliefs are the agent's: **authored** once at birth from the world's documents, never touched by
 start or stop. A volume lived in keeps the agent's own graphs and reads again only what a
 document put in and nobody owns — the ontologies, the domains, the world's public graphs — which
-is how an updated ontology reaches a running agent. Anything that would reset an agent's own
-beliefs on a restart is a bug, not a convenience.
+is how an updated ontology reaches a running agent. Anything that would reset an agent's own beliefs on a
+restart is a bug, not a convenience.
 
 ## Traps worth knowing, and one that is closed
 

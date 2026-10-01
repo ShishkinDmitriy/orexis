@@ -1,11 +1,11 @@
 """`received`, one case per file, held to a PATCH of the store it leaves.
 
 A case in `received/` is a belief base as bytes find it — the world with the pot's ranges and
-the probe's frequency, whatever observation of the key already stands — and the diff is what
-the bytes leave: the graph of the key holding one sosa:Observation with its number, and the
-catalogue's account of it, holding until the next reading is due — or, for a sensor reading a
-series, a forecast graph per stretch ahead. No side is written: that is
-the rules' to conclude.
+the probe's frequency, whatever observation by the sensor already stands — and the diff is what
+the bytes leave: the sensor's graph holding one sosa:Observation with the number it gave, who made
+it and when, and the catalogue's account of it, holding until the next reading is due — or, for a
+sensor reading a series, a forecast graph per stretch ahead. What the observation is OF, its
+quantity and its sides are the rules' to conclude (test_rules.py).
 """
 
 from __future__ import annotations
@@ -29,9 +29,8 @@ FORECAST = "http://example.org/orexis/graph/forecast/keeper/"     # the writer's
 
 #  WHAT EACH CASE'S BYTES SAY, and which graphs they land in.
 BYTES = {
-    "a_first_reading_becomes_an_observation": (b'{"value": 0.22}', [OBSERVED + "zamioculcas_moisture"]),
-    "a_second_reading_replaces_the_first": (b'{"value": 0.08}', [OBSERVED + "zamioculcas_moisture"]),
-    "a_probes_sample_keys_the_node": (b'{"value": 0.22}', [OBSERVED + "patch_moisture"]),
+    "a_first_reading_becomes_an_observation": (b'{"value": 0.22}', [OBSERVED + "probe"]),
+    "a_second_reading_replaces_the_first": (b'{"value": 0.08}', [OBSERVED + "probe"]),
     "a_forecast_is_a_graph_per_stretch_ahead": (
         b'{"hourly": {"time": ["2026-01-01T11:00", "2026-01-01T12:00", "2026-01-01T13:00", "2026-01-01T14:00",'
         b' "2026-01-01T15:00"], "precipitation": [0.5, 0.0, 1.2, null, 0.3]}}',
@@ -60,28 +59,26 @@ def test_bytes_that_hold_no_reading_write_nothing(monkeypatch, snapshots, caplog
     assert "unread" in caplog.text
 
 
-def test_a_sensor_with_no_host_has_no_key_and_writes_nothing(monkeypatch, snapshots, caplog):
-    """The key is what the sensor observes of what hosts it, in SOSA's words; the board's light
-    sensor is mounted nowhere, so it is not keyed and its bytes measure nothing."""
+def test_a_sensor_mounted_nowhere_keeps_its_number_and_is_of_nothing(monkeypatch, snapshots):
+    """What an observation is OF is the rules' to conclude from what hosts the sensor; the board's
+    light sensor is mounted nowhere, so its number is kept, as every sensor's is, and nothing here
+    says what it is of."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(BOARD)
-    before = set(snapshots.graph_names(store))
-    with caplog.at_level("WARNING", logger="received"):
-        assert received(store, snapshots.ME, TEST + "loose", b'{"value": 0.2}', snapshots.NOW) == []
-    assert set(snapshots.graph_names(store)) == before
-    assert "no key" in caplog.text
+    assert received(store, snapshots.ME, TEST + "loose", b'{"value": 0.2}', snapshots.NOW) == [OBSERVED + "loose"]
+    assert not rows(store, "SELECT ?f WHERE { GRAPH ?g { ?o sosa:hasFeatureOfInterest ?f } }", ())
 
 
 def test_one_message_for_two_sensors_is_two_observations(monkeypatch, snapshots):
     """A board carrying two peripherals publishes one message; a transport hands it to sensing
-    once per sensor that owns the channel, and each writes the observation of its own key."""
+    once per sensor that owns the channel, and each keeps the number its pointer finds."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(BOARD)
     message = b'{"temperature": 21.5, "soil": {"moisture": 0.22}}'
     written = [g for sensor in (PROBE, TEST + "thermo") for g in received(store, snapshots.ME, sensor, message, snapshots.NOW)]
-    assert written == [OBSERVED + "zamioculcas_moisture", OBSERVED + "zamioculcas_warmth"]
-    found = rows(store, "SELECT ?p ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:observedProperty ?p ; sosa:hasSimpleResult ?v } } ORDER BY ?p", ())
-    assert [(r["p"].rsplit("#", 1)[-1], float(r["v"])) for r in found] == [("moisture", 0.22), ("warmth", 21.5)]
+    assert written == [OBSERVED + "probe", OBSERVED + "thermo"]
+    found = rows(store, "SELECT ?s ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:madeBySensor ?s ; sensing:rawResult ?v } } ORDER BY ?s", ())
+    assert [(r["s"].rsplit("#", 1)[-1], float(r["v"])) for r in found] == [("probe", 0.22), ("thermo", 21.5)]
 
 
 def test_a_sensor_stating_no_frequency_stands_until_replaced(monkeypatch, snapshots):

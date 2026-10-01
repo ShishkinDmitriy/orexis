@@ -47,8 +47,13 @@
     #  and the built-in WS2812's line. Agent 0.2.0 closes subclasses and no restriction.
     mc:firmware "outdoor-sentinel" ;
     esp32:ws2812Gpio 5 ;
+    #  The board's own battery divider: the JST port's cell, halved through 1 MΩ + 1 MΩ onto GPIO34
+    #  by construction, which is why the probe is not on A2 any more. Stated of the board, as the
+    #  WS2812 is; the generator writes BATTERY_PIN and BATTERY_DIVIDER from these.
+    esp32:batteryGpio 34 ;
+    esp32:batteryDivider 2 ;
     ssn:inDeployment :terrace_deployment ;
-    rdfs:comment "A sentinel on a LiPo: deep-sleeps while its ULP watches the soil for movement, wakes to speak on a crossing or a heartbeat, takes no orders." .
+    rdfs:comment "A sentinel on a 1S LiPo on its JST port: deep-sleeps while its ULP watches the soil for movement, wakes to speak on a crossing or a heartbeat, takes no orders." .
 
 #  The deployment: which systems, on which platform, from when, into what. The hosting is
 #  entailed from it (#99), and the society's own sosa:hosts in world.ttl is held to agreeing.
@@ -75,28 +80,26 @@
 #
 # skos:notation is what DFRobot PRINTED beside the leg — A2, SDA, SCL, 3V3, GND.
 
-:esp32_terrace mc:hasPin :pin_gpio21 , :pin_gpio22 , :pin_gpio34 , :pin_3v3 , :pin_gnd ;
+:esp32_terrace mc:hasPin :pin_gpio21 , :pin_gpio22 , :pin_gpio36 , :pin_3v3 , :pin_gnd ;
     mc:logicVolts 3.3 .
 
 :pin_gpio21 a mc:Pin ; mc:gpio 21 ; skos:notation "SDA" .
 :pin_gpio22 a mc:Pin ; mc:gpio 22 ; skos:notation "SCL" .
-# A2 on this silkscreen: ADC1, input-only, the one leg the ULP can watch while everything sleeps.
-:pin_gpio34 a mc:Pin ; mc:gpio 34 ; skos:notation "A2"  .
+# A0 on this silkscreen: ADC1 channel 0, input-only, a leg the ULP can watch while everything
+# sleeps. A2 (GPIO34) would do as well but for the battery divider the board puts on it.
+:pin_gpio36 a mc:Pin ; mc:gpio 36 ; skos:notation "A0"  .
 :pin_3v3    a mc:Pin ; mc:pinRole mc:PowerPinRole ; mc:railVolts 3.3 ;
                          skos:notation "3V3" .
 :pin_gnd    a mc:Pin ; mc:pinRole mc:GroundPinRole ; skos:notation "GND" .
 
 ##########  What is wired to it  ##########
 
-# The probe. GPIO 34 is deliberate: ADC1, the only ADC that works while WiFi is up.
+# The probe. GPIO 36 is deliberate: ADC1, the only ADC that works while WiFi is up, and not the
+# battery's GPIO34. No scaling here: the board publishes its raw count, and what dry and wet read is
+# the world's :probe_scaling, in world.ttl, which the agent's rules apply.
 :moisture_sensor_terrace a probe:CapacitiveMoistureProbe ;
     mc:model "Capacitive Soil Moisture Sensor v2.0" ;
-    mc:hasPin :probe_out , :probe_vcc , :probe_gnd ;
-    # STARTING calibration — the counts firmware/moisture-sensor shipped with, not yet measured
-    # on this probe in this bed. Per instance by the part's own ontology, so they live here:
-    # read the raw count off the serial line in air and in wet soil, replace these, regenerate.
-    probe:rawDry 3200 ;
-    probe:rawWet 1300 .
+    mc:hasPin :probe_out , :probe_vcc , :probe_gnd .
 
 :probe_out a mc:Pin ; mc:pinRole mc:AnalogInPinRole .
 :probe_vcc a mc:Pin ; mc:pinRole mc:PowerPinRole .
@@ -126,7 +129,7 @@
 ##########  The wires  ##########
 # Named, so a fault can be pointed at. Colours are the jumpers on the bench.
 
-:w_probe_sig a mc:Wire ; mc:joins :probe_out , :pin_gpio34 ; mc:colour "green" .
+:w_probe_sig a mc:Wire ; mc:joins :probe_out , :pin_gpio36 ; mc:colour "green" .
 :w_probe_pwr a mc:Wire ; mc:joins :probe_vcc , :pin_3v3    ; mc:colour "red" .
 :w_probe_gnd a mc:Wire ; mc:joins :probe_gnd , :pin_gnd    ; mc:colour "black" .
 

@@ -15,8 +15,9 @@
 #  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph an
 #  observation is kept in, the silence of a sensor that has stopped reporting, the three sides
 #  this layer's rules conclude, and the pipeline's own concepts, since neither standard says how
-#  bytes become a number: a codec and a scaling, the binding of a sensor to one of each, the two
-#  members that ship, and the pointer. Sensing is the translation row of the agent stack and
+#  bytes become a number: a codec, the binding of a sensor to one, the member that ships, and the
+#  pointer; and how a number becomes a quantity, which is a scaling and a calibration the world states,
+#  and the rules. Sensing is the translation row of the agent stack and
 #  nothing above it: a transport hands it bytes, it makes a number of them and writes one
 #  sosa:Observation holding until the next is due, and on the container's tick it says which
 #  readings are missing and which sensors have gone silent. It predicts nothing — that is the
@@ -46,7 +47,7 @@
 :Codec a owl:Class ;
     rdfs:label "Codec" ;
     rdfs:comment """A wire format, both ways: how a sensor's bytes are a document and a document is
-    bytes. The first stage of the pipeline, bytes → document → raw value → quantity, and a family
+    bytes. The first stage of the pipeline, bytes → document → number, and a family
     in rule 2's sense: the members are interchangeable and a sensor is bound to one by
     :decodedBy. JSON ships with this layer; a member from a package declares its own term as an
     instance of this class and implements this layer's Codec contract, and genesis loads it by
@@ -62,23 +63,73 @@
     rdfs:label "JSON" ;
     rdfs:comment "The document is JSON, and a value in it is found by the pointer." .
 
-:Scaling a owl:Class ;
-    rdfs:label "Scaling" ;
-    rdfs:comment """How a raw value is a quantity: the last stage of the pipeline, and a family as the
-    codec is. Identity ships with this layer — the firmware scaled before it published, which is
-    what every board here does — and a member from a package declares its own term as an instance
-    of this class and implements this layer's Scaling contract. A scaling that is arithmetic could
-    be a rule rather than code; none here is yet.""" .
+:TwoPointScaling a owl:Class ;
+    rdfs:label "Two-point scaling" ;
+    rdfs:comment """A RESCALE: the unit changes. How a sensor's number — a probe's ADC count — is a
+    quantity in its property's unit — a soil-moisture fraction: the straight line through two points,
+    each what the sensor reads there and what that stands for, named by its label (dry, wet).
+    Unclamped, so a count past a point is a quantity past its own, which a side then says, rather
+    than a saturated one hiding a flooded or frozen probe. The world states one per instrument it
+    rescales (`scales`), beside the sensor; this layer's rule reads it at layer 0, and a sensor no
+    scaling scales gives its number as its quantity — a thermometer already reports degrees.""" .
 
-:scaledBy a owl:ObjectProperty ;
-    rdfs:domain sosa:Sensor ;
-    rdfs:range :Scaling ;
-    rdfs:label "scaled by" ;
-    rdfs:comment "The scaling a sensor's raw value is a quantity by — derived onto the sensor at genesis, identity where nothing says otherwise." .
+:TwoPointCalibration a owl:Class ;
+    rdfs:label "Two-point calibration" ;
+    rdfs:comment """A CORRECTION: the unit stays. How a quantity an instrument reports with an error
+    is the true one — a thermometer reading 0.4 in ice water and 99.1 in boiling — the straight line
+    through two points, each what the sensor reads there in its own unit and what is true. Stated by
+    the world beside the sensor it corrects, and read by this layer's rule at layer 1, after any
+    scaling, over the scaled quantity; a sensor no calibration corrects keeps its scaled quantity as
+    its reading.""" .
 
-:Identity a :Scaling ;
-    rdfs:label "Identity" ;
-    rdfs:comment "The raw value, as it stands." .
+:scales a owl:ObjectProperty ;
+    rdfs:domain :TwoPointScaling ;
+    rdfs:range sosa:Sensor ;
+    rdfs:label "scales" .
+
+:corrects a owl:ObjectProperty ;
+    rdfs:domain :TwoPointCalibration ;
+    rdfs:range sosa:Sensor ;
+    rdfs:label "corrects" .
+
+:Point a owl:Class ;
+    rdfs:label "Point" ;
+    rdfs:comment """One reference of a scaling or a calibration: what the sensor reads there (`reads`)
+    and what that stands for (`standsFor`), named by its rdfs:label — dry, wet, ice — for whoever
+    measures it again.""" .
+
+:point a owl:ObjectProperty ;
+    rdfs:range :Point ;
+    rdfs:label "point" .
+
+:reads a owl:DatatypeProperty ;
+    rdfs:domain :Point ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "reads" ;
+    rdfs:comment "What the sensor gives at a point: its raw number for a scaling, its scaled quantity for a calibration." .
+
+:standsFor a owl:DatatypeProperty ;
+    rdfs:domain :Point ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "stands for" ;
+    rdfs:comment "What a point's reading is: the quantity for a scaling, the true quantity for a calibration." .
+
+:scaledResult a owl:DatatypeProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "scaled result" ;
+    rdfs:comment """The quantity in the property's unit, before any calibration corrects it: concluded
+    at layer 0 from the number the sensor gave, through the sensor's scaling or as it is, and read at
+    layer 1 to conclude the reading (sosa:hasSimpleResult). What a calibration's points read.""" .
+
+:rawResult a owl:DatatypeProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "raw result" ;
+    rdfs:comment """The number a sensor gave, as the pointer found it in the bytes — all `received`
+    writes of an observation beside who made it and when. What it is an observation OF, and the
+    quantity (sosa:hasSimpleResult), this layer's rules conclude from the topology and the scaling
+    and calibration the world states of the sensor.""" .
 
 :readingPointer a owl:DatatypeProperty ;
     rdfs:domain sosa:Sensor ;

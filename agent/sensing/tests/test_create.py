@@ -8,14 +8,18 @@ from datetime import timedelta
 from pathlib import Path
 
 from agent import clock
+from agent.belief.revise import revise
+from agent.ontology import PUBLIC
 from agent.sensing.create import EVERY_S, create
 from agent.sensing.events import Observed, Silence
 from agent.sensing.missed import SILENT_AFTER
 from agent.sensing.ontology import OBSERVATION_GRAPH
 from agent.sensing.received import received
-from agent.store import rows
+from agent.store import close_catalogue, document, graphs_of, put_document, rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
+RULES = Path(__file__).parents[1] / "rules.ttl"
+BELIEF = Path(__file__).parents[2] / "belief" / "ontology.ttl"
 PROBE = "http://example.org/test#probe"
 CADENCE = timedelta(seconds=900)
 
@@ -34,10 +38,13 @@ def test_its_part_asks_after_silence_every_minute(monkeypatch, snapshots, stand_
 
 
 def test_where_heard_it_says_each_observation_with_its_interval_and_the_silence(monkeypatch, snapshots, stand_in_runtime):
-    """The second reading a cadence and a half after the first: said with that interval beside the
-    cadence the world states; and once the probe is past its limit, one sensor silent."""
+    """The second reading a cadence and a half after the first, revised as belief's part revises it
+    before this part hears it: said with that interval beside the cadence the world states; and once
+    the probe is past its limit, one sensor silent."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
+    put_document(store, document(RULES))
+    put_document(store, document(BELIEF))          # what a revision is, so its row closes as a boot's does
     runtime = stand_in_runtime(store, snapshots.ME, snapshots.NOW)
     part = create(runtime)
     heard = []
@@ -48,6 +55,8 @@ def test_where_heard_it_says_each_observation_with_its_interval_and_the_silence(
     assert kind == OBSERVATION_GRAPH
     for at, value in ((snapshots.NOW, 0.2), (snapshots.NOW + CADENCE * 1.5, 0.3)):
         (graph,) = received(store, snapshots.ME, PROBE, f'{{"value": {value}}}'.encode(), at)
+        revise(store, graph, read=graphs_of(store, PUBLIC))
+        close_catalogue(store)
         observation(graph)
     first, second = heard
     assert isinstance(second, Observed) and first.interval_s is None

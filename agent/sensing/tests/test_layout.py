@@ -95,7 +95,7 @@ def test_the_rules_are_the_drafts_and_the_graph_kind_is_its():
     """The rule set this layer ships is a `sh:RuleSet` of `sh:SPARQLRule`s and nothing of ours
     types a rule; and the document says it is a `sh:RulesGraph`, the draft's kind."""
     rules = (SENSING / "rules.ttl").read_text()
-    assert "a sh:RuleSet" in rules and rules.count("a sh:SPARQLRule") == 3
+    assert "a sh:RuleSet" in rules and rules.count("a sh:SPARQLRule") == rules.count("sh:construct") > 0
     assert not re.search(r"sensing:\w*Rule\b", rules)
     assert "<> a sh:RulesGraph ." in rules
 

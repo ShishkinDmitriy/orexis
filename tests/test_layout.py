@@ -653,8 +653,12 @@ def test_a_committed_compose_file_is_what_onboarding_renders():
 
     composed = sorted(p.parent.name for p in (REPO_ROOT / "world").glob("*/compose.yaml"))
     assert composed == _worlds(), f"a world with no committed compose file: {sorted(set(_worlds()) - set(composed))}"
+    #  A MOUNT OF A SECRET DOCUMENT is set aside on both sides: it is rendered where this checkout holds
+    #  the document and not where it does not, so it cannot be committed either way (#860).
+    private = lambda text: "\n".join(line for line in text.splitlines()
+                                     if not (line.strip().startswith("- ./secrets/") and ".ttl:" in line))
     for world in composed:
-        assert (REPO_ROOT / "world" / world / "compose.yaml").read_text() == compose.render(world), \
+        assert private((REPO_ROOT / "world" / world / "compose.yaml").read_text()) == private(compose.render(world)), \
             f"world/{world}/compose.yaml is not what `orexis-compose {world}` renders — regenerate it"
 
 
@@ -965,3 +969,4 @@ def test_no_generated_credential_is_tracked():
     assert not offenders, ("a credential or a generated file is tracked — regenerate it with "
                            "`orexis-onboard` instead of committing it, and rotate whatever leaked:\n  "
                            + "\n  ".join(offenders))
+

@@ -1,12 +1,12 @@
 // The ULP watcher (#151) — the sentinel's variant, now a pure DEVIATION alarm: the ULP watches
-// the last published value plus/minus WAKE_DELTA and wakes the radio when the reading leaves
-// it. The operating range is not watched; it only sized WAKE_DELTA, upstream at generation.
+// the last published RAW COUNT plus/minus WAKE_DELTA_RAW and wakes the radio when the reading
+// leaves it. The operating range is not watched; it only sized WAKE_DELTA_RAW, upstream at generation.
 // See ulp_watch.cpp for that argument and for the two-rate patrol/confirm machinery.
 #pragma once
 
 // The reference for the deviation window: what was last published if anything has been, and
 // this reading otherwise. See ulp_watch.cpp for why the operating range is not consulted.
-void armUlpWatch(float nowFrac);
+void armUlpWatch(float nowRaw);
 // Stay awake and report what the coprocessor is doing, second by second. Diagnostic only.
 void ulpSelfTest(int seconds);
 
@@ -27,7 +27,7 @@ void ulpDumpAdcRegs(const char *when);
 // A prior held over from a publish that FAILED outranks a fresh look and keeps ageing, so a
 // retry still carries the corner; it is cleared by a publish that succeeds. False when no quiet
 // look has happened under this window and none is held.
-bool priorQuietSample(float *frac, uint32_t *ageS);
+bool priorQuietSample(float *raw, uint32_t *ageS);
 
 bool wokeByAlarm();
-void noteReported(float frac);   // the deviation limit drifts from what was last heard
+void noteReported(float raw);    // the deviation limit drifts from what was last heard
