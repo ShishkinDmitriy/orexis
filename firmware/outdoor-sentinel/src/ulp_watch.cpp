@@ -261,8 +261,15 @@ void armUlpWatch(float nowRaw) {
   // fits — correct samples awake, 4095 asleep, and no register we forced ever helping.
   //
   // Clearing the pin's bus runs Arduino's own detach handler, which deletes the oneshot unit
-  // once no channel is left using it (esp32-hal-adc.c: adcDetachBus). GPIO34 is our only one.
+  // once no channel is left using it (esp32-hal-adc.c: adcDetachBus) — the probe's, and the battery's below.
   perimanClearPinBus(MOISTURE_PIN);
+#ifdef BATTERY_PIN
+  // THE BATTERY'S PIN HOLDS ADC1 TOO: analogReadMilliVolts on GPIO34 attached the unit to it, and the
+  // driver frees ADC1 only once no pin uses it — so with the probe's pin freed and the battery's not,
+  // ulp_adc_init still answered "adc1 is already in use" and the ULP never watched. Seen on the
+  // terrace's first boot with the battery read (2026-10-02).
+  perimanClearPinBus(BATTERY_PIN);
+#endif
   esp_err_t adcErr = ulp_adc_init(&adcCfg);
   // Only worth a line when it FAILS — and it will, loudly, if anything ever takes ADC1 back:
   // "adc1 is already in use" is what a whole evening of this looked like before it was found.
