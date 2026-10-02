@@ -22,9 +22,9 @@ from agent.transport.mqtt.driver import Mqtt
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT = "http://example.org/orexis/world/terrace#terrace_agent"
-#  WHAT THE BOARD PUBLISHES: the probe's count — 2820, a fifth of the way from dry (3200) to wet (1300)
+#  WHAT THE BOARD PUBLISHES: the probe's count — 710, a fifth of the way from dry (785) to wet (410)
 #  through the scaling world.ttl states of the probe — the air, and the battery.
-MESSAGE = json.dumps({"moisture_raw": 2820, "temperature": 14.5, "humidity": 0.8, "pressure": 1012,
+MESSAGE = json.dumps({"moisture_raw": 710, "temperature": 14.5, "humidity": 0.8, "pressure": 1012,
                       "battery": 3.91}).encode()
 
 
