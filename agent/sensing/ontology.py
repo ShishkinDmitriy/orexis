@@ -75,6 +75,11 @@ def observation_graph(agent_id: str, sensor: str) -> str:
     return f"{GRAPH_PREFIX}observed/{agent_id}/{slug(sensor)}"
 
 
+def earlier_graph(agent_id: str, sensor: str, n: int) -> str:
+    """Where the `n`th reading a message carries from before its latest stands, until the next."""
+    return f"{GRAPH_PREFIX}observed/{agent_id}/{slug(sensor)}_earlier_{n}"
+
+
 def silent_graph(agent_id: str, sensor: str) -> str:
     """Where a sensor's silence is said, while it lasts."""
     return f"{GRAPH_PREFIX}silent/{agent_id}/{slug(sensor)}"

@@ -24,16 +24,16 @@ BOARD_MESSAGE = b'{"temperature": 21.5, "humidity": 0.61, "soil": {"moisture": 0
 
 def test_json_then_the_default_pointer_then_identity(snapshots):
     """The pot's probe states no binding at all, and reads as every board here speaks."""
-    assert decode(snapshots.stand_in(POT), PROBE, b'{"value": 0.183}') == 0.183
+    assert decode(snapshots.stand_in(POT), PROBE, b'{"value": 0.183}') == [(0.183, 0.0)]
 
 
 def test_two_sensors_on_one_board_take_their_own_values_from_one_message(snapshots):
     """A board carrying several peripherals is one client publishing one document; each sensor
     is bound to its own pointer and reads its own number out of the same bytes."""
     store = snapshots.stand_in(BOARD)
-    assert decode(store, TEST + "thermo", BOARD_MESSAGE) == 21.5
-    assert decode(store, TEST + "hygro", BOARD_MESSAGE) == 0.61
-    assert decode(store, PROBE, BOARD_MESSAGE) == 0.22
+    assert decode(store, TEST + "thermo", BOARD_MESSAGE) == [(21.5, 0.0)]
+    assert decode(store, TEST + "hygro", BOARD_MESSAGE) == [(0.61, 0.0)]
+    assert decode(store, PROBE, BOARD_MESSAGE) == [(0.22, 0.0)]
 
 
 def test_a_member_from_elsewhere_serves_by_the_term_it_declares(snapshots, monkeypatch):
@@ -51,7 +51,7 @@ def test_a_member_from_elsewhere_serves_by_the_term_it_declares(snapshots, monke
 
     monkeypatch.setitem(CODECS, Csv.TERM, Csv)
     store = snapshots.stand_in(BOARD)
-    assert decode(store, TEST + "gauge", b"10130,225") == 225
+    assert decode(store, TEST + "gauge", b"10130,225") == [(225, 0.0)]
     assert decode(store, TEST + "thermo", b"10130,225") is None, "the thermometer's bytes are JSON, whatever the gauge's are"
 
 
@@ -124,3 +124,20 @@ def test_a_series_whose_arrays_disagree_is_unread(snapshots, caplog):
         assert decode_series(store, TEST + "weather", b'{"hourly": {"time": ["2026-01-01T13:00"], "precipitation": [1, 2]}}') is None
     assert "unread series" in caplog.text
 
+
+
+def test_an_array_of_readings_is_each_its_number_and_how_long_ago_oldest_first(snapshots):
+    """A sentinel's alarm: its watcher's last quiet sample 25 seconds before, then the reading that
+    broke the window. An element saying no age was taken as the message was sent."""
+    store = snapshots.stand_in(POT)
+    got = decode(store, PROBE, b'{"value": [{"value": 361, "age_s": 0}, {"value": 656, "age_s": 25}]}')
+    assert got == [(656.0, 25.0), (361.0, 0.0)]
+    assert decode(store, PROBE, b'{"value": [{"value": 718}]}') == [(718.0, 0.0)]
+
+
+def test_an_array_holding_no_number_is_unread(snapshots, caplog):
+    store = snapshots.stand_in(POT)
+    with caplog.at_level("WARNING", logger="pipeline"):
+        assert decode(store, PROBE, b'{"value": []}') is None
+        assert decode(store, PROBE, b'{"value": [{"age_s": 3}]}') is None
+    assert "unread" in caplog.text

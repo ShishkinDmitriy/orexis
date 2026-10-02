@@ -1,6 +1,6 @@
 """How bytes become a number — the three stages, and the family among them.
 
-    bytes ─[codec]→ document ─[pointer]→ number
+    bytes ─[codec]→ document ─[pointer]→ number, or numbers each with how long ago
 
 Ported from the 0.1.0 sensing package, where the codec was a contract a plug-in package
 implemented and the pointer was the one function after it (RFC 6901 works over any tree, so
@@ -140,19 +140,44 @@ def _codec(sensor: str, binding: dict) -> Codec | None:
     return codec_cls()
 
 
-def decode(store, sensor: str, payload: bytes) -> float | None:
-    """The number `sensor`'s share of `payload` holds, by the binding public knowledge states for
-    it, or None where any stage refuses — said in the log, since a pointer that misses is not a
-    measurement and nothing is written."""
+#  WHAT A READING IN AN ARRAY SAYS: its number, and how many seconds before the message it was taken —
+#  a device with no wall clock says when only relative to now.
+VALUE, AGE = "value", "age_s"
+
+
+def decode(store, sensor: str, payload: bytes) -> list[tuple[float, float]] | None:
+    """What `sensor`'s share of `payload` holds, by the binding public knowledge states for it — each
+    reading as (number, seconds before the message), oldest first — or None where any stage refuses,
+    said in the log, since a pointer that misses is not a measurement and nothing is written.
+
+    The pointer finds a NUMBER, one reading taken as the message was sent, or an ARRAY of readings, each
+    `{"value": number, "age_s": seconds}`: a sentinel sends its moisture so, one element on a heartbeat
+    and, on an alarm, its watcher's last quiet sample before the reading that broke the window — so a
+    change seconds long is a step in the history and not a slope from the last report."""
     binding = _binding(store, sensor)
     codec = _codec(sensor, binding)
     if codec is None:
         return None
+    pointer = binding.get("pointer") or DEFAULT_POINTER
     try:
-        return float(resolve(binding.get("pointer") or DEFAULT_POINTER, codec.decode(payload)))
+        node = _walk(pointer, codec.decode(payload))
+        if isinstance(node, list):
+            if not node:
+                raise PointerError(f"{pointer!r}: an array of no readings")
+            readings = [(_number(f"{pointer}/{n}/{VALUE}", r.get(VALUE) if isinstance(r, dict) else None),
+                         _number(f"{pointer}/{n}/{AGE}", r.get(AGE, 0) if isinstance(r, dict) else None))
+                        for n, r in enumerate(node)]
+            return sorted(readings, key=lambda reading: -reading[1])
+        return [(_number(pointer, node), 0.0)]
     except (CodecError, PointerError) as exc:
         log.warning("%s: unread — %s", sensor, exc)
         return None
+
+
+def _number(pointer: str, node) -> float:
+    if isinstance(node, bool) or not isinstance(node, (int, float)):
+        raise PointerError(f"{pointer!r}: what is there is not a number")
+    return float(node)
 
 
 def reads_series(store, sensor: str) -> bool:

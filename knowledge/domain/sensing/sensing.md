@@ -17,7 +17,10 @@ member that ships) and the pointer to its value in the document (`sensing:readin
 Pointer). One [observation](/domain/sensing/observation.md) is written into the sensor's graph, an
 `sensing:ObservationGraph` beneath `orexis:StateGraph`, classified `orexis:Received` and holding
 from its instant until the next is due by the sensor's `ssn-system:Frequency` — and all it says is
-the number the sensor gave (`sensing:rawResult`), who made it and when.
+the number the sensor gave (`sensing:rawResult`), who made it and when. Where the pointer finds an array of readings,
+each with how many seconds before the message it was taken — a sentinel's alarm carries its watcher's
+last quiet sample before the reading that broke the window — each is an observation of its own, an
+earlier one holding only until the next one's instant: a step in the history, not a slope.
 
 **What the number is, the rules conclude** (`rules.ttl`), from the topology and what the world states
 of the sensor: at layer 0 the observation's feature of interest — what the sensor is hosted by, a sample

@@ -52,8 +52,8 @@ from agent.ontology import PUBLIC, local_of
 from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
 from .cadence import cadence_of
-from .ontology import (FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, forecast_graph, observation_by, observation_graph,
-                       observation_of)
+from .ontology import (FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, earlier_graph, forecast_graph, observation_by,
+                       observation_graph, observation_of)
 from .pipeline import decode, decode_series, reads_series
 
 log = logging.getLogger("received")
@@ -64,6 +64,10 @@ _KEY_Q = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; so
 #  THE SILENCE SAID OF THIS SENSOR, if any — the graph holding the row, found by its content.
 _SILENCE_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { $sensor sensing:silentSince ?since } }"""
+
+#  WHAT THIS SENSOR READ BEFORE: every observation graph of it, found by its content.
+_OBSERVED_Q = """
+SELECT ?g WHERE { GRAPH $cat { ?g a sensing:ObservationGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }"""
 
 #  THE FORECAST THIS SENSOR GAVE BEFORE: every graph of it, found by its content.
 _FORECAST_Q = """
@@ -89,17 +93,37 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
             log.warning("%s has no key: one property observed of one host makes one, and the world states %d", local_of(sensor), len(keys))
             return []
         return _forecast(store, me, sensor, keys[0]["feature"], keys[0]["property"], payload, at)
-    number = decode(store, sensor, payload)
-    if number is None:
+    readings = decode(store, sensor, payload)
+    if readings is None:
         return []
-    node = observation_by(sensor)
-    graph = observation_graph(local_of(me), sensor)
-    forget_graph(store, graph)
     cat = Raw(f"<{catalogue_of(store)}>")
     for silence in rows(store, _SILENCE_Q, (), cat=cat, sensor=sensor):
         forget_graph(store, silence["g"])
+    for old in rows(store, _OBSERVED_Q, (), cat=cat, sensor=sensor):
+        forget_graph(store, old["g"])
+    #  EVERY READING THE MESSAGE CARRIES, oldest first, each placed that long before it arrived: an
+    #  earlier one — a sentinel's last quiet sample before its alarm — holds only until the next one's
+    #  instant, so it is a step in the history and, at the latest one's instant, nothing; the latest
+    #  stands as the present until the next is due by the sensor's frequency.
+    instants = [at - timedelta(seconds=age) for _, age in readings]
+    written = []
+    for n, ((number, _), when, then) in enumerate(zip(readings[:-1], instants[:-1], instants[1:])):
+        graph = earlier_graph(local_of(me), sensor, n)
+        _write(store, me, sensor, graph, f"{observation_by(sensor)}_earlier_{n}", number, when, then, procedure)
+        written.append(graph)
+    number, when = readings[-1][0], instants[-1]
+    graph = observation_graph(local_of(me), sensor)
     cadence = cadence_of(store, sensor, memo)
-    until = at + timedelta(seconds=cadence) if cadence is not None else None
+    _write(store, me, sensor, graph, observation_by(sensor), number, when,
+           when + timedelta(seconds=cadence) if cadence is not None else None, procedure, phenomenon_at)
+    log.info("%s: %s reads %s%s", local_of(me), local_of(sensor), number,
+             "".join(f", and read {n:g} {a:g}s before" for n, a in readings[:-1]))
+    return [*written, graph]
+
+
+def _write(store, me: str, sensor: str, graph: str, node: str, number: float, at: datetime,
+           until: datetime | None, procedure: str | None = None, phenomenon_at: datetime | None = None) -> None:
+    """One observation of what `sensor` gave, `number` at `at`, standing until `until` or for good."""
     said = [f'<{node}> a sosa:Observation',
             f'<{node}> sensing:rawResult "{round(float(number), 6)}"^^xsd:decimal',
             f'<{node}> sosa:resultTime "{at.isoformat()}"^^xsd:dateTime',
@@ -113,8 +137,6 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
 INSERT DATA {{
   GRAPH <{graph}> {{ {' . '.join(said)} . }}
   {entry(store, graph, OBSERVATION_GRAPH, RECEIVED, me, start=at, end=until)} }}""")
-    log.info("%s: %s reads %s", local_of(me), local_of(sensor), number)
-    return [graph]
 
 
 def _forecast(store, me: str, sensor: str, feature: str, observed_property: str, payload: bytes,
