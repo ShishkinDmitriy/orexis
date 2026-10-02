@@ -196,7 +196,10 @@ static void observeProbe() {
     float r = readMoisture();
     if (r < seenLo) seenLo = r;
     if (r > seenHi) seenHi = r;
-    Serial.printf("  raw %6.0f\n", r);
+    // The pin's voltage beside the count, by the factory calibration: a probe that is unpowered or
+    // whose ground and signal are swapped shows a voltage no capacitive probe gives — roughly 1.2 V
+    // in water to 2.5 V in air on 3.3 V — where the count alone only says "low".
+    Serial.printf("  raw %6.0f   %4lu mV\n", r, (unsigned long)analogReadMilliVolts(MOISTURE_PIN));
     delay(400);
   }
   Serial.printf("observed counts %0.0f..%0.0f over %ds\n", seenLo, seenHi, OBSERVE_S);
