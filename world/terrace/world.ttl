@@ -73,13 +73,14 @@
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 20 ; schema:unitCode unit:MIN ] ] .
 
 #  THE PROBE'S SCALING, a rescale: its ADC count is a fraction of saturation on the line through what it
-#  reads in dry air and in water. These are the counts the firmware shipped with, not yet measured on
-#  this probe: read the count in the agent's log with the probe in air, then in water, and put them here
-#  (knowledge/runbooks/calibrate-a-probe.md). The generator sizes the board's wake window from them too.
+#  reads in dry air and in water — measured on this probe on the bench, 2026-10-02, by the firmware's
+#  readout (OBSERVE_S): steady at 785 in dry air and 410 in water. The range is narrow because the probe
+#  runs on 3.3 V through its own 3.3 V regulator; a second probe, TLC555 and 662K, read the same. The
+#  generator sizes the board's wake window from these too (knowledge/runbooks/calibrate-a-probe.md).
 :probe_scaling a sensing:TwoPointScaling ;
     sensing:scales :moisture_sensor_terrace ;
-    sensing:point [ rdfs:label "dry" ; sensing:reads 3200 ; sensing:standsFor 0.0 ] ,
-                  [ rdfs:label "wet" ; sensing:reads 1300 ; sensing:standsFor 1.0 ] .
+    sensing:point [ rdfs:label "dry" ; sensing:reads 785 ; sensing:standsFor 0.0 ] ,
+                  [ rdfs:label "wet" ; sensing:reads 410 ; sensing:standsFor 1.0 ] .
 
 :air_sensor_terrace a ssn:System ;
     orexis:localId "air_sensor_terrace" ;

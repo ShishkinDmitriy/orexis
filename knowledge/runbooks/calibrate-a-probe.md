@@ -21,6 +21,16 @@ cd firmware/outdoor-sentinel && pio run -t upload        # board on /dev/ttyUSB0
 A power-cycle makes the board publish at once. The agent's log then shows five readings — the soil's
 count, the air's three and `battery_sensor_terrace` in volts.
 
+If the board's serial line says `DNS Failed for 'raspberry.local'` and its MQTT attempts fail, the host
+running the broker is on Wi-Fi with power saving on: the chip sleeps between beacons and misses the
+multicast a `.local` name is resolved by. Turn it off, now and for good (measured on the terrace's Pi,
+2026-10-02 — three of three attempts failed with it on, every boot resolved first time with it off):
+
+```bash
+sudo iw dev wlan0 set power_save off
+sudo nmcli connection modify "<the Wi-Fi connection>" 802-11-wireless.powersave 2
+```
+
 # Whenever: the scaling
 
 What the probe's count means is the world's [scaling](/domain/sensing/scaling.md), `:probe_scaling` in
