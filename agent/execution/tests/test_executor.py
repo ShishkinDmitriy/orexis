@@ -336,6 +336,25 @@ def test_a_world_that_does_not_answer_by_the_patience_fails_the_intention():
     assert _resolved(x, intention) == [{"o": "failed"}]
 
 
+def test_the_patience_runs_from_the_latest_landing_where_the_plan_states_one():
+    """A step whose landing is a band — `landsAt` the earliest, `notAfter` the latest (#596) — is
+    looked at from the earliest and given up a patience past the latest, not past the earliest: a
+    dose the sensor may show any time within a cadence is not failed a minute into it."""
+    x = Executor(_beliefs(PEG_A), AGENT, ox.Store())
+    source = _predicting(1)
+    latest = NOW + timedelta(minutes=10)
+    update(source, f'INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notAfter "{latest.isoformat()}"^^xsd:dateTime }} }}')
+    intention = x.commit(source, PLAN, WANT)
+    x.tick(NOW)
+    x.drain()
+    x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S))
+    assert _resolved(x, intention) == [] and len(x.standing()) == 1, "a patience past the earliest is still inside the band"
+    x.tick(latest + timedelta(seconds=DEFAULT_PATIENCE_S - 1))
+    assert _resolved(x, intention) == []
+    x.tick(latest + timedelta(seconds=DEFAULT_PATIENCE_S))
+    assert _resolved(x, intention) == [{"o": "failed"}]
+
+
 def test_a_step_is_not_held_to_the_world_before_it_lands():
     """The landing is when the prediction is first asked of the present: a reading that
     already says B before the landing is not read as the step having landed."""
@@ -407,6 +426,21 @@ def _placed(plan: ox.Store) -> ox.Store:
                  execution:landsAt "{(NOW + timedelta(minutes=15)).isoformat()}"^^xsd:dateTime ;
                  <http://example.org/test#disk> <{DISK}> }} }}""")
     return plan
+
+
+def test_a_committed_steps_window_closes_a_patience_past_its_latest_landing():
+    """Where the plan states a latest landing, the window a committed step is believed over runs to
+    it and the patience past it, and `execution:answeredWithinS` says so, while `landsWithinS` stays
+    the earliest — the two numbers a drift's high and low trajectories are divided by (#596)."""
+    beliefs = _beliefs(PEG_A)
+    plan = _placed(_predicting(1))
+    update(plan, f"""INSERT DATA {{ GRAPH <{PLAN}> {{
+      <{PLAN}.0> execution:notAfter "{(NOW + timedelta(minutes=25)).isoformat()}"^^xsd:dateTime }} }}""")
+    Executor(beliefs, AGENT, ox.Store()).commit(plan, PLAN, WANT)
+    [(first, start, end)] = _windows(beliefs)
+    assert (start, end) == (NOW + timedelta(minutes=5), NOW + timedelta(minutes=25, seconds=DEFAULT_PATIENCE_S))
+    held = {(r["p"], r["o"]) for r in rows(beliefs, "SELECT ?p ?o WHERE { GRAPH $g { ?s ?p ?o } }", (), g=first)}
+    assert (EXECUTION + "landsWithinS", "600") in held and (EXECUTION + "answeredWithinS", "1260") in held
 
 
 def test_a_committed_step_is_a_belief_over_its_landing_window():

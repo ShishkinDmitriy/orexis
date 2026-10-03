@@ -36,6 +36,8 @@ GRAPH :world {
 GRAPH :actions {
   :fill a orexis:Action .
   :fill orexis:takes :tank .
+  #  A FILL SHOWS WITHIN THREE MINUTES OF THE TURN, a minute at the least: the band a world reached by it holds over.
+  :fill planning:landsAfter """SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }""" .
   :fill planning:costs """PREFIX : <http://example.org/test#>
       SELECT (1 AS ?cost) WHERE { }""" .
   :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>

@@ -26,19 +26,21 @@ climate:Heating a orexis:Action ;
                      sensing:below ?range .
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
-    #  IT LANDS WHEN THE NEXT READING IS DUE, at the latest: the effect speaks the side the rules
-    #  conclude of a reading, so nothing can show the heating before the sensor reads again — a cadence
-    #  past the step, in the unit the world states it in. The executor holds the step to the present
-    #  from then, and a patience past it with no answer is a heating the world did not take.
+    #  IT LANDS AT THE NEXT READING, due within a cadence of the step — nothing at the least, the
+    #  cadence at the most, in the unit the world states it in: the effect speaks the side the rules
+    #  conclude of a reading, so nothing can show the heating before the sensor reads again, and no rule
+    #  can say how far off that reading is. The executor looks for the answer from the step, and a
+    #  patience past the cadence with no answer is a heating the world did not take.
     planning:landsAfter """PREFIX unit: <http://qudt.org/vocab/unit/>
-        SELECT ?seconds WHERE {
+        SELECT ?least ?most WHERE {
             $reading sosa:madeBySensor ?sensor .
             ?sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f .
             ?f a ssn-system:Frequency ; schema:value ?every .
             OPTIONAL { ?f schema:unitCode ?unit }
             VALUES (?u ?per) { (unit:SEC 1) (unit:MIN 60) (unit:HR 3600) (unit:HUR 3600) (unit:DAY 86400) }
             FILTER(COALESCE(?unit, unit:SEC) = ?u)
-            BIND(xsd:double(?every) * ?per AS ?seconds)
+            BIND(0 AS ?least)
+            BIND(xsd:double(?every) * ?per AS ?most)
         }""" ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>

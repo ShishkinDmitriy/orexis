@@ -4,7 +4,7 @@ title: Committed step
 term: http://example.org/orexis/execution#CommittedStepGraph
 description: >-
   A step an intention has adopted, believed over its landing window - from the instant it may be
-  taken to the latest the world may answer it. One graph per step, written by the executor at
+  taken to a patience past the latest it may land. One graph per step, written by the executor at
   adoption and closed when the step is answered or its intention ends, so that a drift reads what
   the agent is about to do and a prediction made afterwards contains the plan.
 ---
@@ -20,10 +20,11 @@ GRAPH <…/committed/grower/plan_s1> {
 ```
 
 The catalogue says the graph is an `execution:CommittedStepGraph`, a belief, holding from the step's
-`execution:notBefore` to its `execution:landsAt` plus the patience. Inside is the step's filling,
-copied from the [plan](/domain/planning/plan.md) as terms the executor never reads, and two numbers
-of the executor's own: `execution:landsWithinS`, how many seconds after its opening the change lands
-at the earliest, and `execution:answeredWithinS`, how many until the window closes. They are numbers
+`execution:notBefore` to its `execution:notAfter`, the latest landing, plus the patience. Inside is
+the step's filling, copied from the [plan](/domain/planning/plan.md) as terms the executor never
+reads, and two numbers of the executor's own: `execution:landsWithinS`, how many seconds after its
+opening the change lands at the earliest, and `execution:answeredWithinS`, how many until the
+window closes. They are numbers
 because the engine binds nothing for the stretch between two instants, so a rule dividing a rise by
 the window could not take it from the instants on the step.
 

@@ -17,7 +17,7 @@ ground whose hash the last present's repeats, so the whole cone is kept under th
 and the search reads its way to the same plan without forking a world. This is the common
 rerun, and it is the case a match among the children alone would have thrown away.
 
-WHAT SHIFTS AND WHAT DOES NOT. `planning:atInstant` moves by the stretch from the match's
+WHAT SHIFTS AND WHAT DOES NOT. A world's period moves by the stretch from the match's
 instant to the ground's, because a plan is placed at the instant of the root it is found from
 and the root moved; `planning:spent` is rebased by what the match had spent, because spent is
 the cost from the root. A kept world's FACTS do not move — they are the ground's plus the diffs
@@ -76,21 +76,24 @@ _MADE_Q = """
 SELECT ?w WHERE { GRAPH $cat { ?w a ?kind . VALUES ?kind { planning:PossibleGraph planning:GroundGraph }
                               FILTER(isIRI(?w)) } }"""
 
-#  THE CONE RE-STAMPED: each world's instant moved by the stretch from the match's instant to
-#  the ground's, and its spent less what the match had spent. A ground's instant is its
-#  period's start and a world's is its own row, whichever the match is. The engine adds a
-#  duration to an instant and takes one instant from another (measured on 0.5.9, and
-#  `tests/test_reroot.py` pins it, since an operation it lacked would bind nothing and the
-#  DELETE would strip every instant in silence).
+#  THE CONE RE-STAMPED: each world's period moved by the stretch from the match's start to the
+#  ground's, both ends, and its spent less what the match had spent. A ground's instant is its
+#  period's start and a world's is its own, whichever the match is. The stretch is TAKEN from
+#  each end, never added to it: the engine binds nothing for `dateTime + dayTimeDuration` at
+#  about a third of the seconds of a minute (measured on 0.5.11, deterministic per instant) and
+#  takes one instant from another at every one, so an instant moved ahead is the instant less a
+#  negative stretch; `tests/test_reroot.py` pins it, since an operation the engine lacked would
+#  bind nothing and the DELETE would strip every period in silence.
 _RESTAMP_U = """
-DELETE { GRAPH $cat { ?w planning:atInstant ?a ; planning:spent ?s } }
-INSERT { GRAPH $cat { ?w planning:atInstant ?a2 ; planning:spent ?s2 } }
+DELETE { GRAPH $cat { ?period orexis:start ?a ; orexis:end ?b . ?w planning:spent ?s } }
+INSERT { GRAPH $cat { ?period orexis:start ?a2 ; orexis:end ?b2 . ?w planning:spent ?s2 } }
 WHERE  { GRAPH $cat {
   $ground dcterms:temporal/orexis:start ?g0 .
-  OPTIONAL { $match planning:atInstant ?m0 } OPTIONAL { $match dcterms:temporal/orexis:start ?m1 }
+  $match dcterms:temporal/orexis:start ?m .
   OPTIONAL { $match planning:spent ?ms }
-  ?w (planning:by/planning:from)+ $match ; planning:atInstant ?a ; planning:spent ?s }
-  BIND(COALESCE(?m0, ?m1) AS ?m) BIND(?a + (?g0 - ?m) AS ?a2) BIND(?s - COALESCE(?ms, 0.0) AS ?s2) }"""
+  ?w (planning:by/planning:from)+ $match ; planning:spent ?s ; dcterms:temporal ?period .
+  ?period orexis:start ?a ; orexis:end ?b }
+  BIND(?a - (?m - ?g0) AS ?a2) BIND(?b - (?m - ?g0) AS ?b2) BIND(?s - COALESCE(?ms, 0.0) AS ?s2) }"""
 
 #  THE MATCH'S CANDIDATES LEAVE THE GROUND NOW.
 _REPARENT_U = """

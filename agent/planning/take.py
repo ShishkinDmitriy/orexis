@@ -78,15 +78,18 @@ SELECT ?rule ?order ?construct ?update WHERE {
   BIND(COALESCE(?o, 0) AS ?order) }
 ORDER BY ?order"""
 
-#  THE CANDIDATE'S ROW: the world it is taken in, when that world is, the action it fills,
-#  and every parameter it is filled with — the parameter's IRI and the value, one row each.
+#  THE CANDIDATE'S ROW: the world it is taken in, when that world is — the start of its period
+#  and, for a possible world, its end; a ground's end is when it stops holding, which is not when
+#  the search stands, so a ground is a point — the action it fills, and every parameter it is
+#  filled with — the parameter's IRI and the value, one row each.
 _CANDIDATE_Q = """
-SELECT ?from ?at ?spent ?action ?p ?v WHERE {
+SELECT ?from ?start ?end ?spent ?action ?p ?v WHERE {
   GRAPH $cat { $cand planning:from ?from ; planning:fills ?action .
-    OPTIONAL { ?from planning:atInstant ?a } OPTIONAL { ?from dcterms:temporal/orexis:start ?start }
+    ?from dcterms:temporal ?period . ?period orexis:start ?start .
+    OPTIONAL { ?from a planning:PossibleGraph . ?period orexis:end ?e }
     OPTIONAL { ?from planning:spent ?s }
     OPTIONAL { $cand ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, rdf:type)) } }
-  BIND(COALESCE(?a, ?start) AS ?at) BIND(COALESCE(?s, 0.0) AS ?spent) }"""
+  BIND(COALESCE(?e, ?start) AS ?end) BIND(COALESCE(?s, 0.0) AS ?spent) }"""
 
 #  WHOM THE AGENT ACTS FOR, off the world graph — `$subject` in a rule text.
 _ACTS_FOR_Q = """SELECT ?for WHERE { $me orexis:actsFor ?for } LIMIT 1"""
@@ -97,27 +100,14 @@ _MINTED_Q = """
 SELECT (MAX(?m) AS ?n) WHERE { GRAPH $cat { ?w planning:minted ?m } }"""
 
 #  A WORLD'S OWN ROW: every kind the vocabulary puts a possible graph beneath, how it arrived,
-#  what it holds by hash, what reaching it spent, when it is, where it came in the order the
-#  pass made worlds, and the candidate that made it.
+#  what it holds by hash, what reaching it spent, when it is — the period from the earliest to
+#  the latest the path's landings reach it, as a ground says when it holds — where it came in the
+#  order the pass made worlds, and the candidate that made it.
 _WORLD_U = """
 INSERT { GRAPH ?cat { $world a $kinds ; orexis:arrivedBy orexis:Derived ; orexis:hash $hash ;
-                      planning:spent $spent ; planning:atInstant $at ; planning:minted $minted ;
-                      planning:by $cand } }
+                      planning:spent $spent ; planning:minted $minted ; planning:by $cand ;
+                      dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ; orexis:end $end ] } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"""
-
-
-#  THE CANDIDATE'S ROW: the world it is taken in, when that world is, the action it fills,
-#  and every parameter it is filled with — the parameter's IRI and the value, one row each.
-_CANDIDATE_Q = """
-SELECT ?from ?at ?spent ?action ?p ?v WHERE {
-  GRAPH $cat {
-    $cand planning:from ?from ; planning:fills ?action .
-    OPTIONAL { ?from planning:atInstant ?a } OPTIONAL { ?from dcterms:temporal/orexis:start ?start }
-    OPTIONAL { ?from planning:spent ?s }
-    OPTIONAL { $cand ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, rdf:type)) } }
-  BIND(COALESCE(?a, ?start) AS ?at) BIND(COALESCE(?s, 0.0) AS ?spent) }"""
-
-#  WHOM THE AGENT ACTS FOR, off the world graph — `$subject` in a rule text.
 
 
 
@@ -127,13 +117,14 @@ def take(store, cand: str, me: str, *, memo=None) -> bool:
 
     WHAT THE STEP COSTS AND HOW LONG IT TAKES TO LAND are asked of the world it is taken IN,
     before anything is applied — a cost read off the state it is about to change would answer
-    about the change. `planning:atInstant` is the parent's instant plus the landing, written
-    and not derived, because this engine binds nothing for duration arithmetic.
+    about the change. The child's period is the parent's moved by the landing's band — its start
+    by the least, its end by the most — written and not derived, because this engine binds
+    nothing for duration arithmetic; a landing declared as nothing is nought twice.
     """
     child = cand.removesuffix(".by")
     binding = _binding(store, cand, me, memo)
     cost = _figure(store, cand, me, memo, "costs", "cost") or 0.0
-    lands = _figure(store, cand, me, memo, "lands", "seconds") or 0.0
+    least, most = _landing(store, cand, me, memo)
     if not _apply(store, cand, child, me, memo):
         return False
     #  EVERY KIND A POSSIBLE GRAPH IS BENEATH, once per pass: the closure is materialised at
@@ -147,11 +138,12 @@ def take(store, cand: str, me: str, *, memo=None) -> bool:
     minted = remember(memo, ("minted",), lambda: int(rows(store, _MINTED_Q, (), cat=cat)[0].get("n") or 0)) + 1
     if memo is not None:
         memo.put(("minted",), minted)
-    at = datetime.fromisoformat(binding["at"]) + timedelta(seconds=lands)
+    start = datetime.fromisoformat(binding["start"]) + timedelta(seconds=least)
+    end = datetime.fromisoformat(binding["end"]) + timedelta(seconds=most)
     update(store, bind(_WORLD_U, world=child, cand=cand,
                        kinds=Raw(" , ".join(f"<{k}>" for k in kinds)),
                        hash=Raw(f'"{digest_of(store, child)}"'),
-                       spent=binding["spent"] + cost, at=instant(at), minted=minted))
+                       spent=binding["spent"] + cost, start=instant(start), end=instant(end), minted=minted))
     return True
 
 
@@ -168,7 +160,7 @@ def _apply(store, cand: str, into: str, me: str, memo) -> bool:
     rule = _rule(store, binding["action"], memo)
     if rule is None:
         return False
-    tokens = {k: v for k, v in binding.items() if k not in ("action", "from", "at", "spent")}
+    tokens = {k: v for k, v in binding.items() if k not in ("action", "from", "start", "end", "spent")}
     leaves = world_at(store, binding["from"], memo=memo)
     forked = False
     for order in sorted({r["order"] for r in rule["rules"]}):
@@ -221,10 +213,11 @@ def _run(store, text: str | None, tokens: dict, graphs) -> list:
 
 def _binding(store, cand: str, me: str, memo) -> dict:
     """The `$tokens` a candidate's rule texts take: which world (`$state`, the one it is
-    taken in), who is asking (`$me`), whom for (`$subject`), when (`$now`, that world's
-    instant) and what it is filled with, one token per parameter under the parameter's
+    taken in), who is asking (`$me`), whom for (`$subject`), when (`$now`, the start of that
+    world's period) and what it is filled with, one token per parameter under the parameter's
     local part — one spelling serving three places (an-action-takes-parameters). With
-    `action`, which the texts are read off, and `from`, for the caller asking about that world.
+    `action`, which the texts are read off, `from`, for the caller asking about that world,
+    and the world's `start` and `end`, which the child's period is moved from.
 
     ONE QUERY, remembered for the pass, since the act reads it four times for one candidate.
     """
@@ -236,9 +229,9 @@ def _binding(store, cand: str, me: str, memo) -> dict:
         subject = remember(memo, ("acts_for", me), lambda: next(
             (r["for"] for r in rows(store, _ACTS_FOR_Q, graphs_of(store, PUBLIC), me=me)), None))
         out = {"state": Raw(f"<{found[0]['from']}>"), "me": me, "subject": subject or "urn:nobody",
-               "now": instant(datetime.fromisoformat(found[0]["at"])),
+               "now": instant(datetime.fromisoformat(found[0]["start"])),
                "action": found[0]["action"], "from": found[0]["from"],
-               "at": found[0]["at"], "spent": float(found[0]["spent"])}
+               "start": found[0]["start"], "end": found[0]["end"], "spent": float(found[0]["spent"])}
         for r in found:
             if r.get("p"):
                 out[local_of(r["p"])] = r["v"]
@@ -261,27 +254,55 @@ def _rule(store, action: str, memo) -> dict | None:
     return remember(memo, ("rule", action), fetch)
 
 
+def _landing(store, cand: str, me: str, memo) -> tuple[float, float]:
+    """How long after the act the world change can show, as the band the action's `landsAfter`
+    answers — `?least` and `?most`, in seconds — asked over the world the candidate is taken in.
+    Nought twice where the action declares none or the text declines, which is a step the world
+    shows the instant it is taken; a text binding only one of the two, or an older `?seconds`,
+    is a package's bug, said in the log and read as nought."""
+    row = _answer(store, cand, me, memo, "lands")
+    if row is None:
+        return 0.0, 0.0
+    least, most = _bound(row, "least"), _bound(row, "most")
+    if least is None or most is None:
+        log.error("the landing of this action binds no ?least and ?most, so it lands at once")
+        return 0.0, 0.0
+    return min(least, most), max(least, most)
+
+
 def _figure(store, cand: str, me: str, memo, text: str, column: str) -> float | None:
     """One of a rule's SELECTs that answers with a number — `costs`, what taking the act would
-    spend in the wallet's unit (#466), or `lands`, how long until the world change completes,
-    in seconds (#238): asked, never computed, so the figure a planner plans against and the
-    figure a waiter waits for are one figure. None where the rule declines — no text, or
-    premises that do not hold — which every caller reads as free, or as landing at once.
+    spend in the wallet's unit (#466) — asked, never computed, so the figure a planner plans
+    against is the package's own. None where the rule declines — no text, or premises that do
+    not hold — which the caller reads as free."""
+    row = _answer(store, cand, me, memo, text)
+    return None if row is None else _bound(row, column)
 
-    One of a rule's SELECTs that answers with a number, asked over the world the candidate
-    is taken in — through the rules' own door, so it sees exactly what the CONSTRUCT sees
-    (#472). A rule that will not run is a package's bug and must not take an agent down."""
+
+def _bound(row, column: str) -> float | None:
+    """What a solution binds `column` to, as a number — None where it binds nothing, or a variable
+    the text does not project."""
+    try:
+        term = row[column]
+    except (KeyError, IndexError, ValueError):
+        return None
+    return None if term is None else float(term.value)
+
+
+def _answer(store, cand: str, me: str, memo, text: str):
+    """The first row of one of the action's SELECTs — `costs`, `lands` — asked over the world the
+    candidate is taken in, through the rules' own door, so it sees exactly what the CONSTRUCT
+    sees (#472); None where the action states no such text, the text yields no row, or it will
+    not run, which is a package's bug and must not take an agent down."""
     binding = _binding(store, cand, me, memo)
     rule = _rule(store, binding["action"], memo)
     if rule is None or not rule.get(text):
         return None
-    tokens = {k: v for k, v in binding.items() if k not in ("action", "from", "at", "spent")}
+    tokens = {k: v for k, v in binding.items() if k not in ("action", "from", "start", "end", "spent")}
     try:
         found = construct(store, bind(rule[text], **tokens),
                           world_at(store, binding["from"], memo=memo))
     except Exception as exc:                                        # noqa: BLE001
         log.error("%s query for this action would not run: %s", text, exc)
         return None
-    if not found or found[0][column] is None:
-        return None
-    return float(found[0][column].value)
+    return found[0] if found else None

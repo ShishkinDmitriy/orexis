@@ -115,7 +115,7 @@ GRAPH :catalogue {
   possible:fill-tank1 a planning:PossibleGraph .
   possible:fill-tank1 orexis:arrivedBy orexis:Derived .
   possible:fill-tank1 orexis:hash "sha256:c80ff1f6e0ffce1c8575ebd35a6183b376384efef6139df68098f31e3b94921e" .
-  possible:fill-tank1 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   possible:fill-tank1 planning:by possible:fill-tank1.by .
   possible:fill-tank1 planning:minted 1 .
   possible:fill-tank1 planning:spent 1.0 .
@@ -126,7 +126,7 @@ GRAPH :catalogue {
   possible:fill-tank1.fill-tank1 a planning:PossibleGraph .
   possible:fill-tank1.fill-tank1 orexis:arrivedBy orexis:Derived .
   possible:fill-tank1.fill-tank1 orexis:hash "sha256:262245b8ab6803ce947b3d056e7289f4f5b6c0c8a36cd94f06c2cb130be5235f" .
-  possible:fill-tank1.fill-tank1 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:fill-tank1.fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   possible:fill-tank1.fill-tank1 planning:by possible:fill-tank1.fill-tank1.by .
   possible:fill-tank1.fill-tank1 planning:minted 3 .
   possible:fill-tank1.fill-tank1 planning:spent 2.0 .
@@ -141,7 +141,7 @@ GRAPH :catalogue {
   possible:fill-tank1.fill-tank2 a planning:PossibleGraph .
   possible:fill-tank1.fill-tank2 orexis:arrivedBy orexis:Derived .
   possible:fill-tank1.fill-tank2 orexis:hash "sha256:886db30e45d2ce9df71bfa463e64da2ed0b025d20c419774efde962241fa9582" .
-  possible:fill-tank1.fill-tank2 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:fill-tank1.fill-tank2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   possible:fill-tank1.fill-tank2 planning:by possible:fill-tank1.fill-tank2.by .
   possible:fill-tank1.fill-tank2 planning:minted 4 .
   possible:fill-tank1.fill-tank2 planning:spent 2.0 .
@@ -164,7 +164,7 @@ GRAPH :catalogue {
   possible:fill-tank2 a planning:PossibleGraph .
   possible:fill-tank2 orexis:arrivedBy orexis:Derived .
   possible:fill-tank2 orexis:hash "sha256:b925a49cc433542befaf03149f9d7f1e92e07473431966218677da6fae49dc78" .
-  possible:fill-tank2 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:fill-tank2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   possible:fill-tank2 planning:by possible:fill-tank2.by .
   possible:fill-tank2 planning:minted 2 .
   possible:fill-tank2 planning:spent 1.0 .
@@ -175,7 +175,7 @@ GRAPH :catalogue {
   possible:fill-tank2.fill-tank1 a planning:PossibleGraph .
   possible:fill-tank2.fill-tank1 orexis:arrivedBy orexis:Derived .
   possible:fill-tank2.fill-tank1 orexis:hash "sha256:886db30e45d2ce9df71bfa463e64da2ed0b025d20c419774efde962241fa9582" .
-  possible:fill-tank2.fill-tank1 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:fill-tank2.fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   possible:fill-tank2.fill-tank1 planning:by possible:fill-tank2.fill-tank1.by .
   possible:fill-tank2.fill-tank1 planning:minted 5 .
   possible:fill-tank2.fill-tank1 planning:spent 2.0 .
@@ -186,7 +186,7 @@ GRAPH :catalogue {
   possible:fill-tank2.fill-tank2 a planning:PossibleGraph .
   possible:fill-tank2.fill-tank2 orexis:arrivedBy orexis:Derived .
   possible:fill-tank2.fill-tank2 orexis:hash "sha256:71af2c683666133f094033222ad82f45676a17913532f4ca8f587ecc30cc9993" .
-  possible:fill-tank2.fill-tank2 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  possible:fill-tank2.fill-tank2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   possible:fill-tank2.fill-tank2 planning:by possible:fill-tank2.fill-tank2.by .
   possible:fill-tank2.fill-tank2 planning:minted 6 .
   possible:fill-tank2.fill-tank2 planning:spent 2.0 .

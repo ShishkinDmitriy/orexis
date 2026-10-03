@@ -40,10 +40,10 @@ In one order, read off the action's [implementation](/domain/execution/implement
 
 # The world answers
 
-A taken step waits for its landing, `execution:landsAt` — shifted by how late it was taken — and
-then for the present, readings and their revisions, to hold every fact it `execution:predicts`
+A taken step waits for its earliest landing, `execution:landsAt` — shifted by how late it was taken
+— and then for the present, readings and their revisions, to hold every fact it `execution:predicts`
 adds and none it retracts. Then `execution:by` moves; the last step resolves the intention `done`.
-Past the landing by the patience with no answer, the intention resolves `failed`, and the want is
-the search's again. A step kept below waits on the intention walking its want instead of the
+Past its latest landing, `execution:notAfter`, by the patience with no answer, the intention
+resolves `failed`, and the want is the search's again. A step kept below waits on the intention walking its want instead of the
 clock, fails when that one does, and what hangs below an intention that ended undone is abandoned
 with it.

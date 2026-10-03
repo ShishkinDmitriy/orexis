@@ -64,7 +64,7 @@ Four horizons, solved four ways, none of them wrong and none of them the same:
 | a reading is no longer evidence | `sensing:staleSince`, written by a deadline landing on the loop (#598) |
 | a round is over | the host declares it, with `closesAt` as the backstop horizon (#599) |
 | a venue has cooled | `market:coolingUntil`, retracted by a deadline (#601) |
-| a possible world is at an instant | the path's summed `orexis:landsAfter`, which is not identity ([#587](https://github.com/ShishkinDmitriy/orexis/issues/587)) |
+| a possible world is at an instant | the path's summed `orexis:landsAfter`, which is not identity ([#587](https://github.com/ShishkinDmitriy/orexis/issues/587)); since 2026-10-03 it holds OVER a period, the path's bands summed, on its row as a ground's is ([a-landing-is-a-band-and-a-world-holds-over-a-period](/decisions/a-landing-is-a-band-and-a-world-holds-over-a-period.md)) |
 
 And the fifth, which has no mechanism at all and is why this is worth building: **a forecast is
 facts valid over a future interval.** *Rain between six and nine* is not a fact about now and
