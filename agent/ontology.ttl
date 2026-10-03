@@ -185,6 +185,12 @@ orexis:PlanGraph
     rdfs:label "Plan graph" ;
     rdfs:comment "A PLAN PUBLISHED: the steps a search found for one want, in execution's words, written once by planning into the belief base under a name of its own, its root saying which want it `execution:pursues`. Planning owns it and it stays; an intention adopts it by reference (`execution:adopts`). The kernel's because planning writes it and execution reads it, and neither may name the other's word (knowledge/decisions/planning-and-execution-meet-at-the-store.md). Not public: it never crosses into an imaginarium." .
 
+orexis:DriftGraph
+    a owl:Class ;
+    rdfs:subClassOf orexis:PublicGraph ;
+    rdfs:label "Drift graph" ;
+    rdfs:comment "A graph of `prediction:Drift` rows — what moves a value while nobody acts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/drifts.ttl`, `<> a orexis:DriftGraph`), and the prediction package reads its drifts from these graphs alone rather than from every public graph. The KERNEL'S and not prediction's, though the rows are prediction's words: the runtime loads prediction where its premise finds a drift in the world's public graphs, and a premise is asked before the package it decides is read, so a kind only that package declared was passed over, the premise found no drift, and the package was never loaded (a-documents-kind-says-who-reads-it, #824). Where a domain's document, the premise and the predictor meet is the kernel's to name, as the actions' graph is." .
+
 orexis:PredictionGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;

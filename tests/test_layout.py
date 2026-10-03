@@ -1153,6 +1153,30 @@ def test_agents_md_names_code_that_exists():
     assert not stale, f"_NAMED_AS_HISTORY lists {stale}, which AGENTS.md no longer names — drop them"
 
 
+# --- a graph of drifts says so -----------------------------------------------------------------------
+
+def test_a_document_holding_drifts_is_a_drift_graph():
+    """`predict` reads drifts from `orexis:DriftGraph` graphs alone, as the planner reads actions from
+    `orexis:ActionGraph` alone — so a drifts file left typed the bare `orexis:PublicGraph` is a file the
+    predictor passes over in silence, every public graph having been where it looked before. Every
+    document under `domains/` and `world/` carrying a `prediction:Drift` row says the kind."""
+    import rdflib
+
+    PREDICTION, OREXIS = rdflib.Namespace("http://example.org/orexis/prediction#"), rdflib.Namespace("http://example.org/orexis#")
+    holding = []
+    for path in sorted([*REPO_ROOT.glob("domains/*/*.ttl"), *REPO_ROOT.glob("world/*/*.ttl")]):
+        if "prediction:Drift" not in path.read_text():
+            continue
+        g = rdflib.Graph()
+        g.parse(path, format="turtle", publicID=path.as_uri())
+        if (None, rdflib.RDF.type, PREDICTION.Drift) not in g:
+            continue
+        holding.append(path)
+        kinds = set(g.objects(rdflib.URIRef(path.as_uri()), rdflib.RDF.type))
+        assert OREXIS.DriftGraph in kinds, f"{path.relative_to(REPO_ROOT)} holds drifts and says {kinds} — the predictor reads orexis:DriftGraph alone"
+    assert holding, "no document holds a drift — this guard checks nothing"
+
+
 # --- the domain is a plug-in -----------------------------------------------------------------------
 
 @pytest.mark.parametrize("tree", ["onboarding", "agent"])

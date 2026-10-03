@@ -47,7 +47,7 @@ from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
-from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD, local_of
+from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, PUBLIC, RECORD, local_of
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
                          remember, revisions_of, rows, update)
 
@@ -91,6 +91,10 @@ SELECT ?feature ?property ?value WHERE {
 
 #  EVERY DRIFT MOVING THE PROPERTY — the terms spliced as the terms they are, since no file of
 #  this package binds a label for its namespace and a query needs none.
+#  Read from the graphs of drifts alone (`orexis:DriftGraph`), as the planner reads actions from
+#  `orexis:ActionGraph` alone: named for what it holds, and asked for, it is a term somebody reads. The
+#  kind is the kernel's and not this package's, since this package's premise reads the drift rows off
+#  the world before this package is loaded, and a premise reads only the kernel's and the mind's kinds.
 _DRIFTS_Q = "SELECT ?drift ?rate WHERE { ?drift a $drift ; $moves $property ; $rate_of ?rate } ORDER BY ?drift"
 
 #  THE PREDICTIONS WRITTEN FOR THIS KEY BEFORE: every one derived from the observation's graph.
@@ -139,7 +143,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
     if base >= HORIZON_S:
         return []
     drifts = remember(memo, ("drifts", observed_property), lambda: rows(
-        store, _DRIFTS_Q, graphs_of(store, PUBLIC), drift=Raw(f"<{DRIFT}>"), moves=Raw(f"<{MOVES}>"),
+        store, _DRIFTS_Q, graphs_of(store, DRIFT_GRAPH), drift=Raw(f"<{DRIFT}>"), moves=Raw(f"<{MOVES}>"),
         rate_of=Raw(f"<{RATE}>"), property=observed_property))
     ranges = ranges_of(store, sensor, observed_property, memo)
 
