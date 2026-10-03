@@ -221,3 +221,26 @@ def test_a_cold_bed_is_heated_for_as_long_as_the_gap_takes(monkeypatch):
     runtime.deliver("sensors/thermometer/reading", b'{"value": 16.0}', NOW)
     runtime.run(passes=1, poll_s=0)
     assert broker.published == [("actuators/heater/command", {"heat_s": 3600}, False)]
+
+
+def test_a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives(monkeypatch):
+    """#858: the bed reads 0.31 and dries 0.04 a day, so the forecast crosses the floor in six hours.
+    The want minted for that instant was weighed in the present ground, read met there and was
+    withdrawn in the pass that minted it — every pass, thirty log lines a minute, and the foresight
+    never became a dose. It is weighed in the ground holding at its instant now: the search roots
+    there, where the predicted reading is below, finds the dose, and the executor holds the step
+    until it is due. Nothing is sent while the bed is comfortable, the plan survives the passes
+    between, and the dose goes out once the crossing has come and the present admits it."""
+    runtime, broker = _grower(monkeypatch)
+    runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
+    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.31}', NOW)
+    runtime.run(passes=2, poll_s=0)
+    assert broker.published == [], "comfortable now, so nothing is sent"
+    (want,) = runtime.parts["execution"].executor.walking()
+    runtime.run(passes=2, poll_s=0)
+    assert runtime.parts["execution"].executor.walking() == [want], "the plan placed ahead survives the passes"
+    assert broker.published == []
+    runtime.time.at = NOW + timedelta(hours=7)
+    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2995}', runtime.time.at)
+    runtime.run(passes=2, poll_s=0)
+    assert [t for t, _, _ in broker.published] == ["actuators/pump/command"], "the foreseen crossing came, and the dose with it"

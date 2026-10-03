@@ -123,865 +123,333 @@ record is worse than none, because it is still cited.
 Most work ends with a line here plus a commit message; a record is for the rarer case where a
 real alternative was weighed and refused, and the argument has to survive. A principle earns a
 line when it would have changed a decision, and it stays one sentence — if it needs a paragraph
-it is a record wearing a bullet.
+it is a record wearing a bullet. The commit messages carry what each change did and why, at
+length; a line here carries only the rule, and names the record or the issue where the argument
+lives. The file was 18,000 words once, and every coding session paid for all of it.
 
-- **An RDF URI beats a homemade id for referring to an agent**, and the exception proves it: the
-  one name that stays a short string is the one that must also be a broker principal, a bucket, a
-  container and a directory.
+### Words, records and the bundle
+
+- **An RDF URI beats a homemade id for referring to an agent**; the one short string left is the
+  one that must also be a broker principal, a bucket, a container and a directory.
 - **A term nobody reads is annotation**, however many instances state it.
 - **A word used before it is defined is a word everyone defines differently** — `duty` ran to 64
-  code sites and 13 pages with no page of its own, meaning `obligation` all along.
+  code sites and 13 pages, meaning `obligation` all along.
 - **Desire is bouletic, obligation deontic, availability alethic, freshness epistemic** — different
-  logics rather than strengths of one, which is why an unmet want is a gap and an unpaid debt is
-  a breach.
+  logics rather than strengths of one, so an unmet want is a gap and an unpaid debt is a breach.
 - **A repository holds data and a service holds logic**, and a thing that decides nothing is a
-  repository's support function rather than a service.
-- **Deciding nothing is the finding** — writing no graph is only the hint, since three services
-  write none and stay services.
+  repository's support function; deciding nothing is the finding, writing no graph only the hint.
+- **A repository is a collection of domain objects, not a store, and nothing here is one any
+  more** — `Wants` and `Desires` became functions over a store; `Store` is infrastructure.
 - **Verify a claim in the bundle against the code before repeating it**; nothing gates prose
-  against the thing it describes.
+  against the thing it describes, and a dictionary nothing holds to the code rots in the present
+  tense (the-knowledge-is-filed-like-the-code).
 - **A rename is done when the suite says so**, not when the thing you grepped for is gone.
-- **A word-boundary sweep bites a hyphenated slug and a variable named after the word** —
-  `\bstake\b` matches inside `the-stake-is-sensings-want`, so 45 files came to cite a record
-  that does not exist, and a local `stake` is spelled like the word it was named after, so nine
-  files grew `(region want := ...)` and stopped parsing; hold out the words that merely contain
-  the letters (`mistake`, `stakeholder`) before starting, and let the parser and the suite find
-  the rest.
-- **Search every tree that loads the vocabulary before calling a term dead** — `assembly/` reads
-  ontologies that `agent/` never mentions.
+- **A word-boundary sweep bites a hyphenated slug and a variable named after the word** — hold out
+  the words that merely contain the letters first, and let the parser and the suite find the rest.
+- **Search every tree that loads the vocabulary before calling a term dead.**
 - **A record earns its place by refusing something**; "we could have not done it" is not an
-  alternative.
-- **A record is engaged by its premises, not cited by its conclusion** — the mind's record
-  refuses a granted mind, and was nearly spent against unconditional layer trees it never
-  argued about.
-- **A prune is only as good as when its bound arrives** — an admissible estimate refused
-  nothing under breadth-first, because the first achiever came last, and the same estimate
-  refused sixty percent of the courier's forks the day the search followed it.
-- **The layer that waits does the waiting, and a package has ONE way in** — a module that keeps
-  its own timer and checks its own trigger has rebuilt the middle layer inside a capability;
-  adopt with a condition and a deadline, and say only what you wait for. Deliberation once kept
-  a `Timer` whose landing reached back into the container's collection, so no single place was
-  where a pass began; a package's part asks the container for its timers now
-  (a-package-starts-itself).
-- **A kind said by absence is a kind two readers disagree about** — an action with no effect
-  was "an act the reflex may take" to one reader and "passed over, plan partial" to another,
-  until the gate held every action to both texts or neither, and a class for the second kind
-  was weighed and dropped as a term nobody would read.
-- **An action that touches nothing the want reads is never simulated, and the closure is what
-  makes that safe** — filtering to the goal's predicates deletes every chain; closing backward
-  through preconditions keeps the bid that makes the dose possible.
-- **A want is authored positive and the kernel writes the negation** — rows are
-  existential and a want is universal, so somebody turns the shape inside out, and a compiler
-  held to the judge by parity does it once where every author would do it differently.
-- **A plan that worked is kept, and the world verifies it, not a search** — a remembered plan is
-  adopted where the facts its steps read still hold, since every step is checked when it is
-  taken and a failed step drops the tail; re-simulating it first would be a search per reuse,
-  and hashing the whole world keyed it to facts it never read.
-- **A level is a vocabulary, and the hierarchy is found in the rules a world combines** — a
-  search never leaves the vocabulary its want is written in; a step whose predicted fact a
-  bridge rule concludes is refined, the rule run backwards over the world the step lands in,
-  and nothing marks an action abstract: Move is fictive in hanoi's world and refined in the
-  tower's (the-hierarchy-is-found-in-the-rules).
-- **A method is walked, never searched** — the steps an abstract action comes to are the
-  package's protocol, not a choice, so the keeper expands them at adoption and each step says
-  what it waits for; simulating them would spend the budget on worlds the measure cannot tell apart.
-- **A step is an action PICKED for execution, and what it adds is at least the variables** —
-  planning finds a plan and every action in a plan is a step, so a world merely ADMITS one per
-  action per legal filling and the search picks; an `Affordance` carried four of a step's fields
-  and a `from_row` copied them across, which is two classes for one shape and a second word doing
-  no work the absent fields were not. The service between the two collections fetched nothing and
-  decided nothing once the word was gone, so the loop is `Steps.find_all` and every identity it
-  held is a criterion of the ask (a-row-is-a-step).
-- **An action declares what it is filled with, and the kernel names no column** — a parameter's
-  local part is the variable its precondition projects, the `$token` its rules read and the
-  predicate a step is written under, so one spelling serves three places; five named columns
-  stood here instead, two of them the kernel's own inventions and one read by nothing, which is
-  how a disk came to be called a lever and a peg a property, and how a venue and a valve came to
-  be written into one slot by two different writers (an-action-takes-parameters).
-- **An action is a point its taker contributes to** — `@contributes(<action>)` on a module says who
-  and how in one place, a triple restating who was retired as a duplicate, and a gate in the
-  repo, at onboarding and at boot holds a family to its actions, because a taker missing at
-  runtime looked exactly like an actor that was busy.
-- **An effect is one declaration** — the diff the search planned on rides on the step and is
-  what the world is held to, so no actor sizes an expectation of its own; the one thing an
-  actor adds is how close, and that is a bounded pick rather than a kernel constant.
-- **The desire owns the term and the package owns the COST** — a want says `unmetWhen` and
-  `estimates`; what the pattern means and that the estimate never overstates are promises about
-  the package's own actions and costs, which a world file cannot keep. It owned a MEASURE too,
-  of how badly a want was unmet in a given world, and that was a second judgment beside the
-  met-test the judge was already held to; the met-test is the only one now, and what still
-  orders the frontier is the estimate.
-- **A want is judged by its met-test, and nothing scores a world by degree** — the search sees
-  no partial progress, so a repair is found where the plan REACHES the met state, by one step
-  or by several; what that cost is the slope's pruning, and what it bought is one judgment
-  path, a stricter one — a lever that wrote a reading without retracting the one it replaced
-  passed the measure and does not pass the met-test.
-- **A ceiling on compute is stated in the unit the search spends** — depth was that unit
-  under breadth-first and stopped being it under best-first, and a budget of worlds is what a
-  sovereign can size from a measured cost per fork.
-- **An interval is how this project says it does not know, and membership in one is CRISP** —
-  a band in value, a period in time, a narrowing set of bands further out; the continuous part
-  lives in the measure, which is why a reading is never 0.7 in its region and why expected
-  values were refused where a set of possibilities would do.
-- **A row whose presence is meant to BE a fact is named for the state, not for the instant it
-  ends** — a cooldown row saying when the host may convene again was true the whole time it was
-  written, so its presence said nothing and every reader did the arithmetic; the 0.1.0 market's cooling
-  row was made present while the venue cools, and the instant it carries is the horizon a sweep reads
-  rather than a number to compare.
-- **A base class is an import and an annotation is not** — a layer contract named in a
-  signature costs nothing at assembly; subclassed, it loads the layer, which is why sensing's
-  row types live behind the touch (#455).
-- **A verdict the search reads is a query, and the judge stays at the gates** — a shape
-  compiled to the select whose rows are its violations costs a millisecond where the judge's
-  reader floors at tens, and holding the two to one answer by parity is what makes that safe.
-- **The present is identified among the root's children, never asserted from one** — a child is
-  a prediction and the present is observed, so what execution decides is which imagined world
-  the real one landed in, and the cone under the match survives while its siblings die.
-- **The claims a host issued are its demand** — a demand prediction was asked for as a new
-  belief and found in the ledger the host already kept: a debt with a window is an occurrence
-  about the window, and a drift that reads it drains the vessel ahead of the arrivals (#626).
-- **A plan is placed at the instant of the root it was found from, never by subtraction from
-  a deadline** — a bid placed at the crossing less the plan's duration landed in a round that
-  had closed; the bid is taken while the round is open, and what waits for the instant is the
-  claim's presenting, which the claim's own window places (#625).
-- **What a search may see at a future instant is the instant's to say, and the reader names it** — a round row with no
-  period was still open to a root standing hours ahead, and a bid was placed into a round that
-  had closed; a round is a graph holding during its period now, and the rule never learned the
-  time (#620).
-- **A retraction is canonicalised like an addition** — a reading retracted without its type is
-  two plain triples that cancel nothing, and a node's diff claimed the old value beside the
-  new until the drift kept the whole node it took (#619); the bug hid because novelty needs
-  only a difference, and a world claiming two readings for one key is still a different world.
-- **A search is never handed a DESIRE** — what is pursued is a WANT derived from one, with a
-  binding of its own; and the desire is not the law, because the region a want names, under
-  never-newly-enter refused the very dose that repairs it: a replaced reading is a new node, so
-  every standing violation re-read as newly entered (#618, measured before it was believed).
-  It was "a desire is a ROOT", from when there were root desires and children derived under
-  them; there is one kind of desire and wants are derived FROM it, so the word is retired
-  wherever it meant one — `planner`'s `root` is the root WORLD a pass stands in and stays.
-- **A round is the allocation under scarcity, and what makes buying available is a fact that
-  holds at the instant the search stands at** — a host whose stock covers an ask grants a
-  claim with no round, and a claim held, unlike a round, holds at every instant, so the plan
-  is placed at the latest start; Acquiring on a want's instant alone placed the plan past the
-  round a scarce host convenes now, and was refused.
-- **A plan waiting at its last step is in progress** — held or placed, the world has not
-  answered, and a search there found buying available on the very claim the plan was about
-  to present and adopted it twice; only the round's close had hidden that.
-- **A package's words are the package's, however long the kernel spoke them** — the ledger's
-  vocabulary sat in `orexis:` because the ledger was the kernel's once, and the planner judged
-  a debt met by naming its discharge itself; the host's desire carries the met-test in the
-  ledger's words — the debt's own from #635 until the one derivation put it on the desire —
-  `market:dischargedAt` is the market's, and the kernel names no word of it (#635).
-- **A fallback is held to the case it was written for** — one want about everything a desire
-  is about was for a desire UNMET now whose select yields no rows, and it minted a want under
-  a met desire with nothing foreseen the first time the derivation ran without a judgment in
-  hand.
-- **A prediction is bands, and the width never leaves the rule** — a drift types the reading it
-  predicts with every band the instrument's noise and the rate's spread reach, inside its own
-  text; sensing writes what the drifts predict as graphs holding during their windows, the
-  next reading's window first, and no kernel or sensing line adds a width to a centre (#642).
-- **The agent keeps one timeline, and its clock may run fast** — two worlds ran their physics a
-  hundred and forty-four times faster than the agent predicted by, because the stand-ins
-  scaled their clock and the agent kept the wall's; every instant and stretch is in one
-  timeline now, `clock.now()` is the only read, the pace is a deployment fact converted once
-  where something sleeps, and no rule learned a unit (#646).
-- **The core's word has priority, and a package speaks around it** — the keeper's row was
-  renamed to "watch" to make room for a package's use of "expectation", before asking whether the
-  package needed the word at all; it did not — sensing writes predictions, the first is what the
-  next reading is held to — and "watch" was sensing's own, the instrument's, already (#640).
-- **What ends by the clock is a graph with a period, and one sweep drops it** — four
-  sweeps each knew its kind and each was a copy, a cooling row kept a timer a restart lost, and
-  a claim past its window was let go by hand; a reader asking at an instant is handed no ended graph,
-  upkeep drops whatever has ended on its tick and at boot, and what the ending MEANS stays
-  the owner's, told the graph is outdated before the drop — which is where a debt's verdict is
-  written, since the ledger keeps the verdict and not the want (#645).
-- **The mind wakes on contradiction, not on time, and a set of bands is what a reading
-  contradicts** — the actuator marked the region want on every reading and the dwell (#615) was
-  weighed to slow it; a reading inside the bands the next observation was expected in leaves
-  no mark now, one outside is a surprise the pass names, and a boundary crossed inside the
-  set is the hysteresis a margin would have bought, without the margin (#632).
-- **A step's band is the prediction from its landing, and a reading is compared once** — the
-  keeper told sensing what a reading answering a step looked like and held a shape per step,
-  and a node stating no value passed a constraint on a value; it tells the predictor the
-  intended branch now, the ladder shows it from the landing, and one comparison at arrival is
-  the verdict, met in the band and unmet outside it past the landing (#639).
-- **What a plan changed is read off the signature, never off node identity** — a look
-  re-stamps the node it finds and a purchase mints a new one, so by identity the look kept a
-  pot from drying for five hours and the purchase could not stop the prediction emptying the
-  barrel it had just filled; a key is changed when its canonical facts are, which is what a
-  look's diff netting to nothing already said (#643).
-- **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —
-  hanoi's Move walks a tower it has not touched inside `GRAPH $state`; narrowing took a padded
-  solve from 58% of its time forking to 2% and was not taken, because a real pass forks for
-  0.1% of it and reads for fifteen (#662).
-- **A rule does not say which world it reads, and the list the runner builds says it instead** — naming it
-  (`GRAPH $state` for a fact a plan can change, unqualified for one it cannot) is one package
-  claiming what every OTHER package's actions can change, including packages that do not exist
-  yet; climate's outside read carried the scar (#589), and taking the choice away deleted five
-  doubled clauses and a UNION along with it, for no measurable cost (#666).
-- **A/B on this bench is alternated within one session or it is not a measurement** — the Pi
-  drifts about twofold between invocations, and two sides timed minutes apart made a change
-  that does nothing read as a thirty-percent win (#666).
-- **A repository is a collection of domain objects and not a store, and nothing here is one
-  any more** — the convention was two instances, `Wants` and `Desires`, and both are functions
-  over a store now; what a class still earns its keep for is owning a store whose nature is its
-  decision (a MODALITY) or reaching the choir, neither of which is a collection. `Store` is
-  infrastructure and keeps its name, and the layer above it is absent rather than mostly so.
-- **A long-lived object and situational data about it is one shape three times, and only
-  testimony is kept** — a desire and a judgment, an action and a step, a property and an
-  observation; the observation is stored because it IS the premise, the other two are conclusions
-  whose premises are stored and would outlive them, and the differences the likeness hides are
-  cardinality (nine of eleven actions afford nothing, one afforded three), provenance
-  (contributed, derived, received) and whether two agents may differ and both be right.
-- **A graph's name is for eyes, and code relies on its classification alone** — an owner
-  classifies what it writes when it creates it, a reader asks by class, and the name is a
-  readable convention nothing depends on; boot used to type every per-agent graph by matching
-  its name against a prefix its class declared, the planner and the projection named five,
-  and asked which graphs could be renamed freely the answer was none — it is all of them now.
-- **A graph class is named for the rows it holds, and a retired spelling may return with a
-  different claim** — `RootsGraph` named the derivation's role for rows `planning:Desire` already
-  typed, the asserted graph said desire and held wants, and `planning:DesireGraph`, retired as a
-  modality class, returns as a content one, because a second spelling for a graph of desires
-  would be the synonym the dictionary refuses.
-- **A content class may not say how a graph arrived, and the cost of one that did was a second
-  judging pass** — the asserted-desire class said its arrival in its NAME and the pursued class
-  said nothing else at all, so no read could ask for *a graph of wants* and mean both the
-  derivation's and a world's; the kernel read its own and compiled and judged the world's at
-  read time, and `find_wants` alone answers for every want now. Both spellings are gone from
-  this file too, because a retired term named in prose is the dangling spelling the rename rule
-  refuses — `tests/test_layout.py` caught these two.
-- **A graph is classified per kind it HOLDS, and a graph holding two kinds is two graphs** — one
-  asserted graph was a graph of desires AND a graph of wants because four worlds put different
-  content in it, which is a graph whose content no reader can predict; `graph/desire/asserted`
-  and `graph/want/asserted` have one content class each, and `test_modalities` stopped
-  exempting them from the rule it exists to state.
-- **A want is one-shot and carries where it has got to; a desire has no stages** — recognized,
-  planning, ready, pursued, done, failed, unreachable, each written by whoever DECIDES it and
-  never inferred, because computing each from its own corner is how one question comes to have
-  six answerers; a desire stands for the agent's life and is good or bad at the instant it is
-  asked about, computed and stored nowhere.
-- **A terminal state is an invariant, not an ordering rule** — the deliberator marked a want it
-  had already reached `Done` and answered with no plan, and the caller, seeing no plan, wrote
-  `Unreachable` over it, so hanoi solved its tower and reported it unreachable; nothing moves a
-  want out of `Done`, and neither writer has to know the other exists.
-- **Deciding a thing is finished and clearing it away are two acts** — every site that withdrew
-  a want was guarded on how the want had been WRITTEN, so a want a world authored was withdrawn
-  at none of them; `forget_wants` is garbage collection over whatever is `Done`, on the pass, as
-  the keeper's sweep already was for what ends by the clock (#645).
-- **Never count what a class answers for** — two tests asserted eight public graphs, which meant
-  "as many as there are today" and went red over a vocabulary change they were not about; what
-  they each meant was that the answer is not empty, and that a set is unchanged.
-- **A case is held to the whole store it leaves, never to a reading of it** — the derivation's
-  cases compared five things per want where a want writes nineteen quads, so a label, a link,
-  a period or an owner could be wrong with every case green; a snapshot compared whole catches
-  under-reporting, and a behaviour change is a diff regenerated by a flag and reviewed by eyes.
-- **A read is handed a store and nothing else, because an agent id is another aggregate root's
-  identity** — which store is the agent's decision since it owns them; identity travels as a
-  query criterion, and the reads need none at all, since one agent, one volume means the store
-  IS the scope.
-- **A capability that asks for a derivation is not minting** — the ledger, having written a
-  debt and what it predicts of it, calls `derive_wants` so a claim arriving is a want arriving
-  and not a want on the next tick; what it writes is the instance and the prediction, and what
-  stands afterwards is deliberation's, about that debt — and every other desire's, since the
-  derivation is about all of them.
-- **Nothing stands between a desire and a want** — `derive_wants` judges every desire at the
-  present and at each foreseen instant and mints a want per cluster of what the met-tests read
-  unmet, in one function and one contract; `scope_actions` writes the scopes at boot, so the
-  derivation reads no action. It was two functions with a written judgment between them, and
-  no caller ever took one half.
-- **A want exists because its desire read unmet, so the same rows withdraw it** — a want the
-  decomposition no longer produces is met, and running the want's own met-test to discover
-  that asked twice what one pass had already concluded; withdrawal is against the WHOLE
-  decomposition, present and foreseen, since a presented debt's rows do not mention the
-  unpresented debt whose want was minted at its lapse, and dropping on the present alone took
-  it. A want a plan is walking is kept whatever its desire reads.
-- **A possible world is kept, and its diff was a memo** — a world's graph was dropped once
-  its node was expanded and re-made from the nearest kept ancestor, so a node carried the two
-  lists its step's rules had answered; two measurements retired that, since a world's readings
-  are 2 quads on the courier and 26 on the greenhouse against the ~5,000 shared quads a pass
-  copies once, and the diff is derivable anyway — it is what a step's own rules produce from
-  its parent, and the step's row already names the action and every binding they take. The
-  memory argument was made when a node ALSO carried a flat rdflib copy of the whole world
-  (#481), and did not outlive it.
-- **The one function over TWO stores is the filling of a possible world** — `init_imaginarium` takes
-  the beliefs and an empty store the caller made, copies every public graph whatever its
-  period and the catalogue with them, and hands the second back; everything that happens to
-  that world afterwards happens to it the ordinary way, so this is the seam rather than a
-  wrapper. Narrowing what crosses — four named graphs, or the graphs of one scope — was
-  measured at 10.4 ms against 0.6 on a pass costing over a second, and fails silently: a
-  pattern reaching a graph nobody copied returns an EMPTY RESULT, not an error.
-- **A function over the store is handed the engine and nothing else** — `derive_wants` and
-  `scope_actions` take `pyoxigraph.Store` and no wrapper: which graphs they read they ask of
-  the catalogue in their own texts, whose a desire is they read off `planning:holds`, and the
-  present is the clock's; the wrapper caching a view of the store cannot see a write it did
-  not make, so asking it for the engine (`Store.engine`) is what makes it forget.
-- **A met-test asked by band says it once per way of failing, and tests no topology** — a reading
-  is the band it is in, so a desire says *it should be inside* once per way of failing, and the
-  violation row names the block that refused. Which way that is was once a term the want carried
-  (`violationIs`: below, above, unmeasured, stale) on the claim that it decided the repair; in
-  0.2.0 no precondition, effect or line of planning read it, so it was retired as annotation —
-  to planning a side is the domain's, and a domain that needs it says so in its own words. A test that walked the topology instead would be satisfiable by
-  moving the sample off the subject or by re-pointing what counts as ideal, which is the goal
-  repaired by editing its own premises; a structural repair stays reachable because the
-  closure walks back from what the want reads to whatever changes it.
-- **One module reads predictions, and it takes them as given** — `judging` enumerates the
-  states, the present and every instant a prediction reaches, and runs each desire's met-test
-  at each; what it reads is a WITNESS, computed where it is needed and stored nowhere, so the
-  minting and a crossing get the same answer from the same code rather than from two paths
-  that could disagree.
-- **A derivation asks nothing the met-tests do not answer** — a foresight filtered a foreseen
-  failure the reading already dated, and was two states in practice, unbounded and absent;
-  how far ahead the agent sees is the horizons each drift predicts at, and the pick, the
-  extension point and the kernel property are gone.
-- **A partition of the vocabulary belongs to the store, not to an agent** — the scopes are a
-  function of the actions the store holds and the derivations loaded, so every agent reading
-  one store computes the same one and there is nobody to name it after; genesis puts the
-  derivations' read and write predicates in the store beside the actions, which were there
-  all along.
-- **What was foreseen may arrive early, and the present outranks the instant** — a want
-  minted at a predicted crossing or lapse says *hold at T* and its plan is placed to land at
-  T, so when the holder presented an hour early the serve was placed at the deadline; a
-  cluster unmet now whose want still names an instant is re-minted at none, same name.
-- **One function mints every want, and a package writes instances and predictions** — a desire
-  is one and universal, its met-test's violation rows are the instances in trouble and each
-  prediction's start is when, a want is minted per scope of them, and the ledger's own
-  decomposition never had a runtime form; the per-instance DESIRE level was drawn and
-  struck, because the instance is the want's grain.
-- **A want states no time semantics of its own** — the KIND is its type, the INTERVAL is its
-  graph's period, the INSTANT is `planning:holdsAt`, and the FAMILY a reader filtering on a binding
-  actually wanted is the graph's classification; the binding property said all four a fifth
-  time, was computed from whether an instant was known, and the planner its own comment named
-  as its reader never branched on it (#681).
-- **A kind is a type, not a binding** — the always-binding had six readers and every one asked
-  it which KIND a node was, while the planner it named as its reader never branched on it; a node
-  could be a desire by type and a want by binding at once, which three shipped worlds were, and
-  neither collection could see them.
-- **`planning:Want` is not a subclass of `planning:Desire`** — the closure is materialised once at
-  genesis and a want is minted long after, so the entailment never reached one and every writer
-  hand-wrote both types; what the axis actually did was make `?d a planning:Desire` match both
-  kinds, so a collection of desires had to filter on a binding to find its own contents.
-- **Standing versus occasioned is the axis, and who wrote it is provenance** — three worlds
-  ratify a WANT directly, authored and standing and handed to a search, so declared-versus-derived
-  was never the distinction it was written up as.
-- **A desire is declared and a judgment is made** — the class called `Desire` carried an
-  urgency and an expiry, was built fresh by whichever capability held the region want and was never
-  written down or read back, while the row a package's rule writes at genesis had no type at
-  all; naming the second thing let the first become data. The name has since gone the way of
-  the thing: nothing stands between a desire and a want, and what a judgment carried — the
-  reading and which way it broke — a WANT carries, made fresh where it is made fresh and
-  stored where it is stored; the urgency it also carried is gone, and the line below says why.
-- **Nothing ranks a want before the search that could rank it** — a want carried an urgency
-  four packages each computed their own way, and `Planner.plan` searches EVERY want it
-  is handed, so the rank only ever decided which was searched first; what would compare a
-  thirsty fern to an overdue debt is what their plans cost and how long they take, which is
-  the search's answer and no contributor's.
-- **A read over stored rows is handed a store, and one over contributed answers is handed the
-  agent** — `find_wants` reads graphs so it takes somewhere to search, `Pursuing` asked the choir
-  so it had to reach the choir, and the asymmetry is what tells the two kinds of read apart.
-- **The function that decides a thing owns writing it, and a read only reads** — `Wants`
-  carried `save`/`delete_by_uri` beside the module functions the derivation called, plus
-  `on_saved`/`on_deleted` so a write could announce itself; the announcement had one live
-  producer and one live consumer and both were rebuilding the desire projection, and the
-  collection's own writers had no caller but their tests. A want's graph, its catalogue row
-  and its period are decided where the want is, and whoever wrote says what changed.
-- **Two readings of one met-test are not a duplicate when the compiler, the source and the
-  cache all differ** — the derivation wants WITNESSES from the graphs of desires and wants and
-  caches nothing; the kernel lifting a ratified want wants a BOOLEAN from public knowledge,
-  where a package's shape lives, and caches per want because an asserted one cannot change
-  while the agent runs. Merging them was attempted and refused on all three counts.
-- **A synchronous twin of a pass is a second pass, and it drifts** — `deliberate_on_gaps` was
-  what a test called to have the consequences before it asserted, and it read what the agent
-  was considering DIRECTLY where the real pass derives first; so every test went down a path
-  production does not have, missing the one step the seam was built to add. One pass that the
-  runtime and a test both call is what stops that — the executor's `tick` and `drain` are that
-  shape — so the difference is who calls it, and nothing else can differ.
-- **A pass begins in one place, and judging happens once in it** — the container re-ran a
-  want's own met-test to correct a row gone stale, which is asking twice what one pass had
-  concluded; it went stale because the derivation ran only where a package wrote something a
-  desire reads, so what fixed it was not a better re-judging but `Planner.plan` deriving
-  every pass — the third reading above, and the reason it existed, both gone with the seam.
-- **A want somebody else sourced is still an INSTANCE under a standing desire** — a call was
-  lifted per call by `hosting.desires()`, the one want here no derivation minted, so it had no
-  provenance, no graph and no period, and the planner could judge it only by asking a
-  capability how unmet it was; a host holds *no unanswered calls* over its venues now and the
-  call is the row that desire is about, which is the shape the ledger's debts already had.
-- **A criterion is an argument, never a name** — `Wants` was five finders over ONE query with a
-  `where` clause swapped, three of them called by nothing but their own test, because the Spring
-  Data spelling put each criterion in a method name and so charged a name per combination;
-  `find_wants(store, desire=…, derived=True)` says at the call site what `find_first_by_desire`
-  hid, and the one distinction worth a name of its own is the answer's SHAPE — a page against
-  one-or-None.
-- **A model is a Python type only where something READS its fields** — `Want` is one:
-  nineteen modules import it, capabilities subclass it to add their own, and its state, its
-  instant and what it is about are all read. `Desire` was not: it was built from a query and
-  discarded, because the two callers wanted a boolean and a uri and the third wanted uris, so
-  the reads answer those and there is no type. A class that carries a uri out of a query is
-  the store duplicated in Python for the length of one expression.
-- **A model gets its OWN file when it is cheaper alone** — `want.py` imports nothing but the
-  standard library, so naming the type costs its nineteen importers nothing; folding it into
-  `wants.py` would make every one load progression's clock, ontology and store (#455, the
-  reason sensing's rows sit behind a touch).
-- **An update takes no dataset** — `Store.query` is handed its graphs per call, which is the
-  door, and `Store.update` names them only in its own text; so what chooses which graphs are
-  the world at an instant is Python or a materialised view, a derivation that needs neither
-  is a rule, and a search — an order, a budget, a stop — is neither and stays Python.
-- **Deliberation is on triples, and a number is not special** — how a domain describes its
-  world, exact numbers, ranges or classes, is decided inside the domain, and its actions'
-  preconditions and effects are described the same way; the core compares triples and
-  interprets no literal, and progression sizes the act when it is taken. A partition and an
-  interval were both built into the core and refused on reading.
-- **One graph describes every graph and itself** — what a graph is, whose it is, how it arrived,
-  when it holds and what loaded it were three meta-graphs each reader named by kind; the
-  catalogue is found by its own row, `a orexis:CatalogueGraph`, genesis alone spells its name
-  because genesis creates it, and it is neither public nor the agent's own, so a mention of a
-  graph is never a fact in a world.
-- **A reader states the kinds it reads, and the store decides nothing** — four doors each
-  assembled a dataset by a rule of the store's, and which graphs were the agent's own was five
-  classes it excluded and a tree it walked, so a package chose its treatment by a superclass
-  and a caller never said what it read; a query is handed its graphs now, `graphs_of` answers
-  by kind and instant, every row carries every kind, and the union of everything was refused
-  as the default because it reads every sibling world and next hour's readings as the present.
-- **A rule concludes and never deletes, and what replaces a revision is its source
-  rewritten** — SHACL 1.2 Inference Rules and the sovereign's instinct agree; the revisions
-  of a graph live in a graph of their own, derived from it, and go when it goes, so no rule
-  ever names what it takes away; the rules are the draft's, adopted as they stand — a rules
-  graph, a rule set, SPARQL rules by layer and order — with no word of ours on them, and one
-  axiom: that a rules graph is an `orexis:Graph`, which is how a boot knows to read one
-  (`agent/belief/revise.py`).
-- **Any belief is accepted, and revised; validation was built beside revision and struck the
-  same day** — every new graph held to the packages' shapes and forgotten whole on a
-  violation; belief revision keeps the new information, dropping testimony over a shape is a
-  gate wearing revision's name, and a law's objection to a graph is a revision a rule can conclude for the mind to want repaired.
-- **A state that served a gate goes with the gate** — a proposal, a graph classified as not
-  yet believed until `believe` retyped it, bought only that a graph was never seen without its
-  revisions; a graph with no catalogue row is already invisible to every reader, so the
-  writer concludes and then classifies, and a class, a property, two acts and a page said
-  nothing the row's absence did not.
-- **Revision's ceiling is a budget in rule executions, and a source the budget cuts short is
-  continued by the next pass** — `revise` capped its own iterations at a number the module
-  chose, where the search's ceiling is the container's in the unit it spends; a cut keeps what
-  was concluded with the row saying so, the deliberator re-queues such rows at boot, and a
-  rule set that never settles spends a budget every pass and is reported rather than looped on.
-- **Sensing observes and says when a sensor has gone silent, and prediction is a package of
-  its own** — `received` writes one `sosa:Observation` per sensor with the number it gave, holding until
-  the next is due by the sensor's `ssn-system:Frequency` and a grace past it, `missed` answers the readings gone
-  missing when sensing's own `start` asks each minute and says `sensing:silentSince` of a sensor silent past a limit of
-  its cadences, and the side is a revision the three rules sensing ships conclude; no band,
-  no side, no want, no verdict on a prediction is sensing's own write. `agent/prediction/`
-  accumulates the drifts' summed rates between happenings, places every crossing of a range
-  bound exactly and writes one prediction per stretch, finds the observation by the kernel's kind and `sosa:madeBySensor` and imports
-  nothing of sensing — a stretch already says when a rule's result changes, and the planner's
-  re-root tells a surprise — and a range is SSN-System's as the world states it, nothing minted.
-- **A sensor that keeps reporting one number is stuck, and age is not the only doubt about a
-  reading** — the terrace's probe lost half its wire at mounting and gave a plausible number on
-  time all night, and every gate stayed green because silence was the one failure sensing could
-  say; each observation carries `sensing:unchangedSince`, the start of the unbroken run of its
-  raw number, so the run survives the replacement and a restart with nothing counted in Python,
-  and `received` says `sensing:stuckSince` the run's start once it has lasted `STUCK_AFTER`
-  cadences, in a state graph of the agent's own that the first differing number takes back; a
-  clamp or a rescale can make two counts one reading, so identical is the raw number, and a
-  connection that creeps by a count is the other two detectors' (#462).
-- **Sensing speaks SOSA and SSN, and declares only what they lack** — a sensor
-  `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is what its
-  observation is concluded to be of, and the layer's own words are the observation graph's kind, the silence,
-  the three sides and the pipeline's — a codec as a family, a sensor's binding to a member, JSON
-  as the member that ships, and the pointer, then the number a sensor gave and the two-point scaling
-  and calibration the rules make it a quantity by — since neither
-  standard says how bytes become a number, while the drift (a value moving by itself, which no
-  `sosa:Procedure` is) is the prediction package's one word;
-  `polls`, `monitors`, `samples` and `senseMode` were SSN restated, `atHorizon` had a drift
-  declare the scan's reach, and the wiring module that read them had no caller, so the ladder
-  is sensing's, a transport hands `received` the sensor's IRI and bytes and sensing knows no
-  transport — the contract a member answers is the family's own, `Transport` at
-  `agent/transport/` — and the layout test holds every `sensing:` word the tree speaks to the
-  ontology beside it.
-- **The transport speaks MQTT4SSN, and a topic is named by the filters that match it** — the
-  ontology that extends SSN and SOSA with the protocol in the OASIS terms is adopted as it stands,
-  as SHACL's rules were, and `agent/transport/mqtt/` declares no word of its own; a sensor
-  `mqtt4ssn:observesTopic` a topic, a board `mqtt4ssn:listensToTopic` another, and since MQTT4SSN
-  gives a topic no name but the `mqtt4ssn:hasFilterPattern` of a `mqtt4ssn:TopicFilter` that
-  `mqtt4ssn:matchesTopic` it — and a topic name is itself a valid filter — the agent subscribes by
-  the pattern and publishes a command to one with no wildcard; what it listens to is derived from
-  what it acts for, and the broker's address stays in the environment.
-- **A world's words are its own or a domain's it imports, and the runtime boots from its files** — Hanoi's puzzle was a
-  tool package with an ontology and one action; in 0.2.0 the puzzle is the domain
-  `domains/hanoi/` and `world/hanoi/` imports it beside its desires and state, `agent/runtime.py` reads the kernel's
-  T-Box, the loaded packages' and the world's as graphs of their own and derives the closure into
-  one more, and the world's tests live with the world, since the target state is no global tests.
-- **A package beyond the mind is loaded where its premise, read off the world, holds, and the
-  runtime states the premise** — Hanoi's mover read sensing's three rules and imported speech for
-  no fact of its world; a premise is an ASK in the words of whoever calls the package, since
-  speech's is in the transport's words and execution's, which speech may not speak, and it reads
-  only the kernel's and the mind's kinds, since it is asked before the package it decides is read (#824).
-- **The runtime stops when no desire is held, no transport reaches it and every want is reached** —
-  a transport keeps an agent running whatever it wants, since what it senses goes on arriving and
-  the terrace watches and pursues nothing; a desire is universal
-  and asks at every instant, so an agent holding one runs for as long as the process does; a
-  want is one-shot, and a pass that weighs one met in the present ground withdraws it from the
-  imaginarium and the beliefs whoever authored it, so Hanoi's mover, holding a want and no
-  desire, exits once the tower stands. Wants standing with nothing walking is either a search
-  the budget cut short, which `planning:Exhausted` says and the next pass continues, or
-  unreachable, which an agent holding no desire exits saying. A pass at the same instant
-  as the last re-lays the present under its name and the search starts over, so a clock that
-  does not tick is a test's mistake and not a runtime's.
-- **A document says which graph it is, and the file's name is for eyes** — a Turtle file is one
-  graph named by its own IRI and `<> a orexis:StateGraph` says what it is, a TriG file names its
-  graphs and says so in its default graph, and the loader moves those rows to the catalogue and
-  adds the arrival and the owner, which a document may not state; the runtime knew five file
-  names and one vocabulary graph before, and now every ontology and rule set is a graph of its
-  own that a lived-in volume reads again at boot, so updating one is editing its file; and no
-  `owl:Ontology` header, since nothing read one — a package's prose about itself is a comment.
-- **A document's kind says who reads it, and every reader loads only the kinds it reads** — the
-  agent's boot included, so what an agent is not given is a kind its T-Box never declared, not a
-  file name compose leaves unmounted; packages, brokers, series stores and the deployment itself
-  follow from it (a-documents-kind-says-who-reads-it). A kind is declared where the vocabulary
-  puts it beneath `orexis:Graph` — the belief package says it of `sh:RulesGraph`, without which
-  every rule set was passed over — and `orexis-onboard` refuses a graph no reader declares, since
-  every reader passes over a misspelled kind in silence.
-- **A pass weighs its grounds, and a candidate is weighed where it is taken** — the pass's own
-  loop weighed every unweighed pair, so the candidates a budget cut left untaken were weighed
-  and never offered to the expansion that takes them; the courier's corner at sixteen a pass
-  emptied its frontier short of the door and read EXHAUSTED for ever, while Hanoi's cuts had
-  happened to leave nothing behind.
-- **A vocabulary two worlds speak is a domain, and a world imports it** — `domains/<name>/` holds
-  the words, the actions and the shapes a desire points at, and a world says
-  `owl:imports <../../domains/hanoi/ontology.ttl>`, which resolves to the `file:` IRI the graph is
-  loaded under, so the import names the graph it brings and the boot loads only what a world
-  asks for; the shapes are `planning:ShapesGraph`, their own kind, because crossing every ontology
-  graph into the planner's view cost thirty times crossing the desires.
-- **A graph of actions is an `orexis:ActionGraph`, and the planner reads actions from those
-  alone** — the kind was 0.1.0's and the 0.2.0 census dropped it because nothing asked for it,
-  so Hanoi's actions were typed the bare `orexis:PublicGraph` and `admit`, `take` and
-  `footprint` read every public graph to find them; named for what it holds, and asked for by
-  the three reads, it is a term somebody reads.
-- **The search runs no rules, so a reading's revisions travel with it and an effect speaks the
-  concept they conclude** — a side is what the rules concluded of a reading, in a graph derived
-  from the reading's; the imaginarium takes every graph derived from what crosses, the present
-  ground holds the readings and their revisions, a prediction is laid with its own, and the
-  executor answers a step over both, so a dose that predicts the soil `inside` its range is
-  answered when the next reading is revised to it (`store.revisions_of`) — a revision is a
-  belief and a drift's prediction, derived from the same observation, is not, which is what
-  keeps the foreseen reading out of the present.
-- **0.1.0 was amended into 0.2.0, not copied, and then retired whole** — a package 0.2.0 needed
-  moved into a domain and changed there, and once the market had moved too, the old kernel, its
-  assembly, its packages and its suite were deleted (2026-09-26); its vocabulary stays under
-  `tests/fixtures/retired/` only so that the bundle's history still resolves, and nothing loads it.
-- **A step is sized when it is taken, from the present, and the search only says the side it
-  reaches** — a dose's effect is the soil coming to be inside its range; the `execution:Command` of
-  the action's implementation is run over the beliefs as they stand when the step is taken and answers the actuator and
-  the payload, the dose's size from how far the reading is below the middle of the range, and the
-  runtime sends it through the transport's `actuate`.
-- **A world speaks for its readings' revisions** — `world_at` hands a rule every known graph but
-  those a world speaks for, and once a ground carries the sides beside the readings, the revision
-  graphs are among them: read beside a possible world, a dry reading's `below` outlived the dose
-  that answered it, and the greenhouse's search offered the same dose for ever.
-- **The plant's surroundings are one domain** — water and climate were two 0.1.0 packages, and the
-  soil's moisture, the air's temperature, the source and the heater are one `climate:` vocabulary
-  in `domains/climate/`; actuation is the other, the devices and the dose.
-- **A broker's address is the world's to assert or the installation's to allocate, and the
-  agent's to be told** — MQTT4SSN names a broker and no port, so a world may say `schema:url` on
-  its `mqtt4ssn:Broker` in a `deployment.ttl` of its own, and one that does not is allocated a url
-  by the installation, which alone sees which ports every world holds; the operator's tools read
-  the asserted url or the allocated one to run the broker and write each agent's environment.
-  Asserted wins, derived completes, and a collision is refused, never resolved (#827). The address
-  is in a deployment graph, a kind no agent loads, so being told is structure rather than
-  discipline (#823), and an agent would be told one per broker it shares with something it needs
-  (a-documents-kind-says-who-reads-it); the installation may name a world's broker, and a world
-  names nothing of the installation.
-- **What the documents leave out is derived into a document, and a renderer only formats** — an
-  allocated port is a line in `infra/installation.derived.ttl`, committed, read back as
-  `orexis:Derived` and held to a fresh derivation, so no compose file, broker config or `config.h`
-  computes one; a derivation that remembers what it allocated moves no world's port when another is
-  added, and checks what it remembers, since its own output is then one of its inputs (#827).
-- **A world's wiring is its society, and its world graph speaks no MQTT4SSN** — the agents, the
-  clients, the broker as a rendezvous, the topics, the filters and which device speaks on which are
-  `society.ttl`, the broker's address, where the world asserts one, `deployment.ttl`, so a sensor is
-  stated in two graphs, what it observes in the world and where it publishes in the society; the
-  layout test holds every MQTT4SSN word to a society graph and every `schema:url` to a deployment
-  graph (#823).
-- **Signing is between agents, and an agent trusts itself** — a signature proves to a device that
-  the agent asking for an act was authorised by another; an agent dosing its own bed through its
-  own pump has no second party to convince, and the broker's ACL already admits only the holder to
-  its devices' command topics. The 0.2.0 market signs nothing either: the host serves only a claim
-  its own said documents hold, so what signing would still close is which peer spoke, which the
-  transport does not say (speech).
-- **The simulator is a process of the world, not a pretend board** — it reads the world as an agent
-  boots it and plays every system marked `sim:simulatedBy` from the world's own words: the topics
-  from MQTT4SSN, the cadence from a sensor's `ssn-system:Frequency`, the drying, a dose and a
-  heating from the climate and actuation domains; so `domains/sim/` says only what the world
-  lacks, a system's model, starting reading and bounds, and the 0.1.0 stand-ins, told everything
-  as environment like a board, went with the physics they duplicated (`simulation/`).
-- **A series is watched and never believed, and the package that decides a thing shapes its
-  history** — the runtime handed the sink each observation graph and so decided history was
-  observations; now it only loads a sink per purpose the environment names (`INFLUX_HISTORY_*`,
-  `INFLUX_METRICS_*`), sensing shapes an observation's point under its property's local name
-  (#822), and execution a step taken and, where the world answers or does not, landed or failed
-  (#825), each on the event it says, which the history part hears and writes. A store that refuses
-  is said in the log and costs the agent nothing.
-- **Metrics are the admins' instrumentation, so they are code and not model** — a document
-  declaring them was ceremony nobody but the dashboards read (#826, amended); what a package
-  reports is marked on its own event classes, and a level is read by the one object holding its
-  store, since the imaginaria copy the beliefs and a read run everywhere counted one silent probe
-  per scope.
-- **Metrics and history are what events say, and no package imports either** — each package called
-  its metrics and wrote its history from its acts, the coupling the parts had just shed; a signal
-  carries an event its package declares, the class marks what is reported (`Tag`, `Value`, `Flag`,
-  `Level`) and an event that is history answers its point, and two parts hear every signal. Gauges
-  pulled per window, deltas totalled by metrics and a metrics table per event were each weighed and
-  refused (metrics-and-history-are-what-events-say).
-- **A metric is optional at every level and aggregated where it happens** — no sink, nothing is
-  made, timed or read; a world is monitored only where its deployment says `onboarding:monitored`, and an
-  installation may serve metrics from no store; events are tallied in memory and written once a
-  minute of REAL time with every level as it last stood, stamped by the wall and never by the agent's
-  clock, which a test ticks per read; `world`, `agent` and `desire` are tags, and a want's name is on
-  no point, since it neither aggregates nor stays few.
-- **A process is the AGENT with the id it was told, never whatever carries that id** — the sensing
-  world's fern and the agent acting for it are both `localId "fern"`, and the runtime's identity
-  read found two and refused to boot; it asks for an `orexis:Agent` now.
-- **The 0.2.0 kernel's T-Box is what the tree reads** — `agent/ontology.ttl` is extracted from the
-  0.1.0 file by a census of query texts, term constants and the packages' vocabularies, closed
-  over what each declaration reaches; a mention in prose is not a read, and a term nothing reads
-  is annotation and goes.
-- **A belief kind enters through `propose`, and a package's working graph is not a belief** —
-  the belief package's layout test holds every writer in the tree to the door, and what
-  bypasses it is what no rule reads as the world.
-- **A prediction is a diff, and only a ground has applied it** — the derivation judged a
-  foreseen instant over the state graph beside the prediction holding then, so a tank low now
-  with a prediction refilling it read unmet for ever while the search beside it read the grounds
-  laid for exactly that; one reader answers both now (`world_at`), refuses a store with no
-  ground, and the case that would have caught it is in the suite.
-- **What a pass worked out about a world for a want is a WEIGHING, and the frontier is a
-  query** — a heap of Python nodes was the open list, so no pass could be continued and "no
-  candidate" was a boolean; a world's row says what is true of it whoever asks, a weighing per
-  want says met, open, expanded, and a candidate passed over is weighed too, which the
-  predecessor had and the first cut of the planning package lost.
-- **A module named for an act exports that act alone, and a module named for a thing may
-  answer several questions about it** — `planner.py` held the loop, the frontier, the
-  met-test and the read that hands it the wants, six hundred lines of which a reader wanting
-  the pass needed a hundred; `expand.py` is where `expand` is, and the layout test holds the
-  planning tree to it, with the nouns listed.
-- **A desire weighed in a ground and a want weighed in a possible world are one judgment at
-  two grains** — a ground is a world, a want is a desire at one instance, and the met-test's
-  report in that world is what both read; the search reads whether it has a row, the derivation
-  reads the rows across the grounds, which give each its stretch. The derivation kept a
-  witness dataclass for what a weighing already was, and `planning:Weighing` carries its
-  `planning:violation` rows now for either.
-- **A function of the planning package starts in the store and ends in it, and takes the
-  names of what it is about** — `weigh(store, want, world)`, `take(store, candidate, me)`,
-  `expand(store, want, world)`; what one act needs from another it reads off the rows the
-  other wrote, so a candidate and a witness are rows and not values in flight, and the price
-  is measured per pass rather than argued.
-- **Public is public to the package, and public means tested** — outside `agent/planning/`
-  the one name the tree imports is `Planner`, and every module with a public function has a
-  test named for it, an act over the store by a case directory; the layout test holds both,
-  and ten modules had no test named for them when it was first written.
-- **The planning package is a star, not a chain** — the `Planner` sequences the acts as its
-  own methods (`plan`, `search`, `expand`), an act calls no other act, and what one needs of
-  another's work it reads off the rows the other wrote; the pass called the search, the search
-  the expansion and the extraction, the derivation the weighing, and what a pass did was spread
-  over every file it went through. A primitive two acts share is the store's (`fork`).
-- **A read that finds the catalogue by its row and then asks OPTIONALs inside that group is
-  evaluated per named graph** — `GRAPH ?cat { ?cat a orexis:CatalogueGraph . OPTIONAL … }` cost
-  0.5 to 1.0 ms a read on a store of sixteen possible worlds where the same read over the one
-  bound graph cost 0.1 to 0.2; a pass asks the store for the catalogue's name once
-  (`catalogue_of`, remembered) and splices it, which is asking and not spelling — and spelling would buy nothing more, since every
-  `?cat` replaced by the constant at the engine's door ran the three-disk bench at 163 ms
-  against 168, inside one session's noise. And a read asked per iteration is sized by what the iteration opens: `unweighed` narrowed to one want
-  and one world took the three-disk bench from 496 ms to 158.
-- **The imaginarium outlives the pass, and the present is identified in it by hash** — a
-  planner called every minute imagined the same cone afresh each time and handed down an
-  intention per pass for one want; the Planner keeps an imaginarium per scope now, `reroot`
-  finds the world of the last pass whose `orexis:hash` the new ground repeats — the old
-  present when nothing happened, a child when a step landed as predicted — hands its
-  candidates to the ground, re-stamps the cone's instants and rebases its spent, and drops the
-  rest; three disks re-planned after the first move in 34 ms against 132 fresh, and a minute
-  later with nothing happened in 42 against 156. A surprise matches nothing and everything
-  goes; a name is never trusted, so a re-laid ground's old cone goes too.
-- **A want an intention is walking is neither searched nor handed down again** — the world has
-  not answered yet, so re-deciding is the executor's verdict on a step and not the clock's;
-  `Executor.walking` is the one read, the Planner skips those wants and keeps them from
-  `withdraw`, and `publish_plan` hands no plan down for one, since the plan graph of an earlier
-  pass is still in the kept imaginarium.
-- **What crosses into the imaginarium is taken back before it crosses again, and what the
-  store made for itself stays** — a refresh forgets every graph of a crossing kind the store
-  did not make (grounds, worlds, plans and the derivation's own wants are its), so a reading
-  replaced is replaced and a forecast swept is gone; laid on top, the old facts stood beside
-  the new.
-- **The estimate rides on the weighing, and the frontier is A\* by reading it** — a want's
-  `planning:estimates` select, the package's promise of what is left in the unit the search
-  spends, is run where the world is weighed and written as `planning:remaining`, so ordering
-  by spent plus remaining costs the frontier nothing per iteration and the first achiever
-  bounds the sum; the courier's corner delivery went from exhausting a budget of 128 to
-  arriving after 45 candidates, hanoi from 56 to 50, and a want with no estimate is
-  uniform-cost, because an absent figure reads nought and a broken select writes none.
-- **A search the budget cuts short is finished by the passes after, and the passes together
-  are the one-shot search** — the budget is each call's and the frontier is rows, so three
-  disks at twenty a pass read EXHAUSTED twice, hand nothing down, and reach their seven moves
-  on the third pass having weighed the fifty one pass with room weighs, not one more; a
-  ceiling on compute per pass is then a ceiling on latency, and what is spent in all is the
-  problem's.
-- **A variable in predicate position writes what a `VALUES` block in its own text binds it
-  to, and anything only where nothing bounds it** — the range of a filling is the
-  precondition that enumerates it and a range declared beside a text is a promise nothing
-  holds the text to, so the one range the scopes honour is SPARQL's own, in the text the
-  engine runs; `footprint` read every variable predicate as anything before, which under a
-  derived fork would have copied the whole store per world for a two-valued predicate.
-- **The executor owns the intentions and alone writes them, any plan among them is
-  scheduled, and the two threads are two doors** — the timekeeper's pass is `tick` (the head steps due, by `execution:notBefore`,
-  handed to the queue) and the executing thread's is `drain` (each step taken, its
-  `execution:Act` written, `execution:by` moved, the last step resolving `done`), so a test
-  drives a plan through at instants it chooses and the threads call the same two; the
-  keeper was renamed rather than kept beside it, since one store has one owner, and what
-  taking a step IS today is saying its name.
-- **"Ledger" is the market's word, for the book of what an agent owes, and the intentions
-  are called the intentions** — the 0.1.0 keeper's intention ledger and the ower's ledger of
-  debts shared one word with no page for either, and a reader of "the ledger's debts" beside
-  "the ledger is walking a want" met two things; `agent/` says intentions, intentions store
-  and execution's own words now, and leaves the word to the package that has no other.
-- **The world moves an intention, and the executor only says what happened** — a step carries
-  the diff the search planned on (`execution:predicts`, the canonical facts of the world it
-  reaches less the one it leaves) and a taken head waits at its `landsAt` for the present to
-  hold every addition and none of the retractions, over the readings; then `execution:by`
-  moves, and past the landing by the patience with no answer the intention is `failed` and
-  the want is the search's again. A pure simulation has nothing to answer with, so an action may
-  be FICTIVE (an `execution:Fictive` operation in its implementation) and the executor writes
-  its prediction into the readings itself — hanoi's physics is its own effect — and that is
-  the feedback a plan promoted to a method would be judged by.
-- **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes
-  first** — `?x a planning:Weighing ; … ; planning:weighs ?about` scanned every weighing per
-  candidate and cost 74 ms on a kept three-disk cone, answering nothing; `?x planning:weighs
-  ?about ; …` costs 4, and an act that means to admit a world it already admits is idempotent
-  by FILLING, not by name, since a candidate handed on by a re-root keeps the name it was
-  made with.
-- **A prologue goes at the head of a joined update, and the engine refuses one after `;`** —
-  every retraction carries its package's `PREFIX`, so joining the copy and the retraction into
-  one text skipped every retraction, at the log level and green; hoist the declarations, and
-  run apart the two texts that spell one label two ways.
-- **A refined step's goal below is the world it lands in, not its diff** — `disk_1 on disk_2`
-  alone was met by carrying disk_2 over to disk_1, off the peg the plan above had put it on,
-  and the plan walked on over a world it had not predicted; the frame is held below.
-- **A type pattern reads its CLASS** — keyed by `rdf:type`, `?x a hanoi:Peg` and `?v a
-  courier:Van` read one predicate, and two domains nothing else joined were one scope.
-- **A scope's worlds admit the scope's actions alone** — a courier's drive in hanoi's search
-  forks a world the met-test cannot tell from its parent, and spent the budget moving no disk;
-  and a want is placed by what it reads that some action can CHANGE, since a disk's size
-  counted pulled a courier goal into the puzzle's scope.
-- **Hardware is the firmware generator's input, and no vocabulary types it** — `hardware.ttl`'s
-  pins, parts and boards are read by `orexis-firmware` alone, which interpolates their IRIs into a
-  `config.h`, and no agent holds them — the graph is an `onboarding:HardwareGraph`, a kind no
-  agent's T-Box declares, so a boot passes over it and compose mounts it nowhere, where a
-  directory boot once held 116 and 147 of its quads as public (#820); the parts inside stay
-  untyped, and bringing them back as a domain was weighed and
-  refused, since a vocabulary one string-filling reader uses checks nothing, and the firmware
-  ontologies nothing loaded were deleted with the `config.h` they fed unchanged byte for byte.
-- **A dictionary that nothing holds to the code rots in the present tense** — 38 of 88 pages
-  described a deleted kernel as current until each page was filed under its owning package and
-  gated to live terms (the-knowledge-is-filed-like-the-code).
-- **A plan whose want is gone is nobody's** — the imaginarium outlives the pass, so a plan
-  kept in one after its want was reached in another was handed down and walked again.
-- **A step is refined only where it would be fictive** — a dose predicts the soil inside its
-  range, which sensing's rules conclude, so asked first every command became a want below and
-  no pump ran; an implementation that reaches the world is taken, and a bridge is asked next.
-- **A read of the clock is a tick in a test** — `footprint.written` read the clock once per
-  want, and the allotment's clock, which advances per read, sized a dose five hundred where it
-  was four; a pass hands its own instant down.
-
-- **A peer's word is a document, and it is believed as it stands where it is state** — a
-  message between agents arrives as TriG naming its graphs and saying what each is, as a world's
-  files do; `heard` refuses a graph that is no `orexis:StateGraph` or that replaces anything but a
-  peer's word, `said` believes what the agent told, and neither concludes anything.
-- **The market is files** — calls, rounds, bids, claims and presentations are documents one agent
-  says to another, what they mean is five rules, and the protocol is six actions whose effects
-  speak those conclusions and whose `execution:Saying` operations make the documents at take time; the kernel
-  learned to tell a peer something and nothing of what a bid is (`domains/market/`).
-- **A graph is revised beside what the world states and nothing else** — every rule shipped reads
-  one graph and public knowledge, and a revision is replaced only when its source is written
-  again, so revised beside everything believed the first of two readings took the second's side
-  into its own revision and kept it after the second was read inside.
-- **A step lands as long after it is taken as its plan placed it after its opening** — a plan
-  places steps at the instants of the worlds it searched, and a presentation taken late behind a
-  round that cleared late failed at its placed instant before the probe could answer.
-- **A step lands when the world can SHOW its effect, and an action whose effect is a reading's
-  side lands at the sensor's next reading** — the dose declared no `planning:landsAfter`, so it
-  landed the instant it was taken and failed a patience later with the answering reading nine
-  minutes off, a dose a minute, each re-planned before the last was answered; the dose and the
-  heating declare the cadence of the sensor that made the reading they are sized from now, as
-  the market's acts declare their round's window. And a `landsAfter` text that will not parse
-  is logged and read as nought, so the suite was green with the landing unread: probe a
-  declared figure on the plan it places, never only on the outcome.
-- **A graph forgotten takes its revisions with it, and an orphan revision is a side with no
-  reading** — each reading rewrites the forecast, a stretch the shorter forecast no longer had
-  was forgotten without the revision derived from it, and that orphan said `below` for the old
-  horizon in every possible world of the day, so the dose read unmet in the world it made and
-  the greenhouse's search exhausted until the period ran out; `forget_graph` forgets
-  `revisions_of` the graph first, and the world test steps a reading at a time, since the one
-  that jumped a day never let the orphan form.
-- **An intention's steps are its own** — a second plan for one want names its steps as the first
-  did, and the act the first recorded read as the second's step taken, so the grower never
-  called again; a held name is tagged at adoption.
-- **An agent's own documents are under `beliefs/<id>`** — the derivation mints a want under every
-  desire a store holds, so a world of several agents states each one's desires apart, and a boot
-  and a compose file read only the agent's own.
-
-- **An action is a precondition, an effect and an implementation, and the effect is rules** — the
-  precondition is the select whose rows are the steps a world admits, the effect is `sh:rule`s run
-  on the possible world a step makes, grouped by `sh:order` as SHACL groups them, a delete being
-  an `planning:update` the runner scopes `WITH` the new world, and the implementation is the
-  operations that go out when the step is taken, grouped the same way; the never-delete rule is
-  belief revision's, and an effect deletes because a possible world is where taking something
-  away is the point. `orexis:retracts` survives on a prediction's catalogue row alone.
-
+  alternative, and a record is engaged by its premises, not cited by its conclusion.
+- **A graph class is named for the rows it holds, may not say how a graph arrived, and a retired
+  spelling may return with a different claim** — a second spelling for one thing is the synonym
+  the dictionary refuses.
+- **A package's words are the package's, however long the kernel spoke them** — `market:dischargedAt`
+  is the market's, and the kernel names no word of it (#635).
 - **A term belongs to the package that owns the concept, and the kernel keeps what packages meet
-  at** — ownership and not touch: desires, wants, the met-test's words and the searched half of an
-  action are `planning:`, an action's implementation and its operations `execution:`, while
-  `orexis:Action` and `orexis:takes`, where planning and execution meet, and
-  `orexis:PredictionGraph`, which planning reads by kind and must not import prediction to name,
-  stay the kernel's; a plan's scored total became `planning:spent`, since `planning:costs` now
-  names the action's cost select and one word is one concept.
+  at** — `orexis:Action`, `orexis:takes` and `orexis:PredictionGraph` are the kernel's; one word is
+  one concept, so `planning:spent` and `planning:costs` are two.
+- **The core's word has priority, and a package speaks around it** (#640).
+- **"Ledger" is the market's word, for the book of what an agent owes; the intentions are called the
+  intentions.**
+- **Never count what a class answers for** — a test that asserted eight public graphs meant "as
+  many as there are today" and went red over a change it was not about.
 
+### Desires, wants and the derivation
+
+- **A search is never handed a DESIRE** — what is pursued is a WANT derived from one, with a
+  binding of its own; the desire is universal, the want existential and one-shot (#618).
+- **Nothing stands between a desire and a want** — `derive_wants` judges every desire at the present
+  and at each foreseen instant and mints a want per cluster of what the met-tests read unmet, in one
+  function; `scope_actions` writes the scopes at boot.
+- **A want exists because its desire read unmet, so the same rows withdraw it** — against the whole
+  decomposition, present and foreseen; a want a plan is walking is kept whatever its desire reads.
+- **A want is judged by its met-test, and nothing scores a world by degree** — the search sees no
+  partial progress, and the met-test is the one judgment path.
+- **A met-test asked by band says it once per way of failing, and tests no topology** — a reading is
+  the band it is in; a test that walked the topology would be met by moving the sample off the
+  subject.
+- **A want is authored positive and the kernel writes the negation** — rows are existential and a
+  want universal, so one compiler turns the shape inside out, held to the judge by parity.
+- **The desire owns the term and the package owns the COST** — what the pattern means and that the
+  estimate never overstates are promises about the package's own actions.
+- **Nothing ranks a want before the search that could rank it** — `Planner.plan` searches every
+  want it is handed, and what compares a thirsty fern to an overdue debt is what their plans cost.
+- **A want states no time semantics of its own** — the KIND is its type, the INTERVAL its graph's
+  period, the INSTANT `planning:holdsAt`, the FAMILY its graph's classification (#681).
+- **A kind is a type, not a binding**, and **`planning:Want` is not a subclass of `planning:Desire`**
+  — the closure is materialised at genesis, and the axis only made `?d a planning:Desire` match both.
+- **Standing versus occasioned is the axis, and who wrote it is provenance** — three worlds ratify a
+  WANT directly, and it is handed to a search like any other.
+- **A want is one-shot and carries where it has got to; a desire has no stages** — each state
+  written by whoever DECIDES it, never inferred, and a terminal state is an invariant (`Done` is
+  never left) rather than an ordering rule.
+- **Deciding a thing is finished and clearing it away are two acts** — `forget_wants` is garbage
+  collection over whatever is `Done`, on the pass.
+- **What was foreseen may arrive early, and the present outranks the instant** — a cluster unmet
+  now whose want still names an instant is re-minted at none, same name.
+- **A want is weighed in the ground holding at its instant, and a pass searches the wants holding
+  at any instant it can see** — weighed in the present, a want minted for a foreseen crossing read
+  met and was withdrawn in the pass that minted it, every pass, and the forecast never became a
+  dose (#858).
+- **A fallback is held to the case it was written for** — one want about everything a desire is
+  about is for a desire UNMET NOW whose select yields no rows.
+- **A want somebody else sourced is still an INSTANCE under a standing desire** — a host holds
+  *no unanswered calls* over its venues, and the call is the row that desire is about.
+- **A capability that asks for a derivation is not minting** — the ledger writes a debt and its
+  prediction and calls `derive_wants`, so a claim arriving is a want arriving.
+- **A desire weighed in a ground and a want weighed in a possible world are one judgment at two
+  grains**, and `planning:Weighing` carries the `planning:violation` rows for either.
+- **A derivation asks nothing the met-tests do not answer** — how far ahead the agent sees is the
+  horizons each drift predicts at.
+- **Two readings of one met-test are not a duplicate when the compiler, the source and the cache
+  all differ** — the derivation wants witnesses and caches nothing; the kernel lifting a ratified
+  want wants a boolean and caches per want.
+- **A criterion is an argument, never a name** — `find_wants(store, desire=…, derived=True)` says at
+  the call site what five Spring-Data finders hid; the one distinction worth a name is the answer's
+  SHAPE.
+- **A model is a Python type only where something READS its fields**, and **gets its own file when
+  it is cheaper alone** — `Want` is both; `Desire` was built from a query and discarded.
+- **The function that decides a thing owns writing it, and a read only reads**; a read over stored
+  rows is handed a store, a read over contributed answers the agent, and a read is handed a store
+  and nothing else because an agent id is another aggregate root's identity.
+- **A long-lived object and situational data about it is one shape three times, and only
+  testimony is kept** — the observation is stored because it IS the premise; a judgment and a step
+  are conclusions whose premises are stored.
+- **A synchronous twin of a pass is a second pass, and it drifts** — one pass the runtime and a
+  test both call (the executor's `tick` and `drain`) is what stops that.
+- **A pass begins in one place, and judging happens once in it** — `Planner.plan` derives every
+  pass, so no row goes stale for want of a re-judging.
+- **The layer that waits does the waiting, and a package has ONE way in** — a module keeping its own
+  timer has rebuilt the middle layer inside a capability (a-package-starts-itself).
+
+### Planning: the search
+
+- **A plan is placed at the instant of the root it was found from, never by subtraction from a
+  deadline** (#625), and **what a search may see at a future instant is the instant's to say** —
+  a round is a graph holding during its period (#620).
+- **A round is the allocation under scarcity, and what makes buying available is a fact that holds
+  at the instant the search stands at**; a plan waiting at its last step is in progress.
+- **A ceiling on compute is stated in the unit the search spends** — a budget of worlds, sized from
+  a measured cost per fork; a search the budget cuts short is finished by the passes after.
+- **A prune is only as good as when its bound arrives** — an admissible estimate refused nothing
+  under breadth-first and sixty percent of the courier's forks under best-first.
+- **The estimate rides on the weighing, and the frontier is A\* by reading it** — `planning:remaining`
+  is written where the world is weighed; a want with no estimate is uniform-cost.
+- **An action that touches nothing the want reads is never simulated, and the closure is what makes
+  that safe** — closing backward through preconditions keeps the bid that makes the dose possible.
+- **A scope's worlds admit the scope's actions alone**, a want is placed by what it reads that some
+  action can CHANGE, **a type pattern reads its CLASS**, and **a partition of the vocabulary belongs
+  to the store, not to an agent**.
+- **A variable in predicate position writes what a `VALUES` block in its own text binds it to, and
+  anything only where nothing bounds it** — the one range the scopes honour is SPARQL's own.
+- **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —
+  narrowing was measured and not taken, since a real pass forks for 0.1% of itself (#662).
+- **A rule does not say which world it reads; the list the runner builds says it instead** —
+  `GRAPH $state` was one package claiming what every other package's actions can change (#666).
+- **A/B on this bench is alternated within one session or it is not a measurement** — the Pi drifts
+  twofold between invocations (#666).
+- **A level is a vocabulary, and the hierarchy is found in the rules a world combines** — a step
+  whose predicted fact a bridge concludes is refined, and nothing marks an action abstract
+  (the-hierarchy-is-found-in-the-rules); **a step is refined only where it would be fictive**, and
+  **a refined step's goal below is the world it lands in, not its diff**.
+- **A method is walked, never searched**, and **a plan that worked is kept, and the world verifies
+  it, not a search** — every step is checked when it is taken.
+- **A step is an action PICKED for execution** — a world merely ADMITS one per action per legal
+  filling and the search picks (a-row-is-a-step); **an action declares what it is filled with, and
+  the kernel names no column** (an-action-takes-parameters).
+- **An action is a precondition, an effect and an implementation, and the effect is rules** — the
+  effect deletes because a possible world is where taking something away is the point; the
+  never-delete rule is belief revision's.
+- **An effect is one declaration** — the diff the search planned on rides on the step and is what
+  the world is held to; **a kind said by absence is a kind two readers disagree about**.
+- **Deliberation is on triples, and a number is not special** — the core compares triples and
+  interprets no literal; **an interval is how this project says it does not know, and membership
+  in one is CRISP**.
+- **A step is sized when it is taken, from the present, and the search only says the side it
+  reaches** — the `execution:Command` runs over the beliefs as they stand.
+- **A step lands when the world can SHOW its effect** — a dose lands at its sensor's next reading,
+  a market act when its round's window closes; declared as nothing, a step landed the instant it
+  was taken and failed a patience later. **A `landsAfter` text that will not parse is read as
+  nought**, so probe a declared figure on the plan it places, never only on the outcome.
+- **A step lands as long after it is taken as its plan placed it after its opening.**
+- **A want's view is parsed off its met-test, never declared beside it**, and a want spanning
+  scopes is searched in the first of them.
+
+### Planning: the imaginarium
+
+- **What a pass worked out about a world for a want is a WEIGHING, and the frontier is a query** —
+  a candidate passed over is weighed too, so a pass can be continued.
+- **A pass weighs its grounds, and a candidate is weighed where it is taken** — weighed in the pass's
+  own loop, the candidates a budget left untaken were never offered to the expansion.
+- **A possible world is kept, and its diff was a memo** — a world's readings are a handful of quads
+  against the thousands a pass copies once (#481).
+- **The one function over TWO stores is the filling of a possible world** — narrowing what crosses
+  fails silently, since a pattern reaching a graph nobody copied returns an EMPTY RESULT.
+- **A function over the store is handed the engine and nothing else**, and **a function of the
+  planning package starts in the store and ends in it, taking the names of what it is about** —
+  `weigh(store, want, world)`, `take(store, candidate, me)`.
+- **The planning package is a star, not a chain** — the `Planner` sequences the acts, an act calls
+  no other act, and what one needs of another's work it reads off the rows the other wrote.
+- **A module named for an act exports that act alone**, and **public means tested** — outside
+  `agent/planning/` the one name imported is `Planner`.
+- **The imaginarium outlives the pass, and the present is identified in it by hash** — `reroot`
+  keeps the cone under the match and drops the rest; a surprise matches nothing; a name is never
+  trusted (the-future-is-a-cone-and-the-present-is-identified-in-it).
+- **What crosses into the imaginarium is taken back before it crosses again, and what the store
+  made for itself stays.**
+- **A want an intention is walking is neither searched nor handed down again**, and **a plan whose
+  want is gone is nobody's**.
+- **A prediction is a diff, and only a ground has applied it** — one reader answers the derivation
+  and the search (`world_at`), and refuses a store with no ground.
+- **A world speaks for its readings' revisions**, and **the search runs no rules, so a reading's
+  revisions travel with it and an effect speaks the concept they conclude** — a revision is a belief
+  and a drift's prediction is not, which keeps the foreseen reading out of the present.
+- **A graph forgotten takes its revisions with it, and an orphan revision is a side with no
+  reading** — one said `below` for a day in every possible world, and the dose read unmet in the
+  world it made; `forget_graph` forgets `revisions_of` first.
+- **What a plan changed is read off the signature, never off node identity** — a key is changed
+  when its canonical facts are (#643); **a retraction is canonicalised like an addition** (#619).
+- **A read that finds the catalogue by its row and then asks OPTIONALs inside that group is
+  evaluated per named graph** — ask the catalogue's name once (`catalogue_of`) and splice it; and a
+  read asked per iteration is sized by what the iteration opens.
+- **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes first**;
+  an act that admits a world it already admits is idempotent by FILLING, not by name.
+- **A prologue goes at the head of a joined update, and the engine refuses one after `;`.**
+- **A read of the clock is a tick in a test** — a pass hands its own instant down.
+
+### Execution
+
+- **The executor owns the intentions and alone writes them**, and its two doors are `tick` (the
+  heads due) and `drain` (each step taken); **an intention's steps are its own**, tagged at adoption.
+- **The world moves an intention, and the executor only says what happened** — a taken head waits
+  at its `landsAt` for the present to hold what it predicted, fails a patience past it, and an
+  action with nothing to answer with is FICTIVE and writes its own prediction.
+- **A step whose command answers nothing is not taken** — recorded taken, it waited out its
+  patience as though the pump had run (#869).
+- **Planning and execution meet at the store and signal each other** — a plan is published once
+  and an intention adopts it by reference; a plan begun is walked to its end
+  (planning-and-execution-meet-at-the-store).
+- **An action is a point its taker contributes to**, and a taker missing at runtime looks exactly
+  like an actor that is busy, so a gate holds a family to its actions.
+
+### Belief, sensing and prediction
+
+- **A rule concludes and never deletes, and what replaces a revision is its source rewritten** —
+  the revisions live in a graph derived from the source and go when it goes; the rules are SHACL's
+  draft adopted as it stands (`agent/belief/revise.py`).
+- **A graph is revised beside what the world states and nothing else** — revised beside everything
+  believed, the first of two readings took the second's side.
+- **Any belief is accepted, and revised** — dropping testimony over a shape is a gate wearing
+  revision's name; **a state that served a gate goes with the gate**.
+- **Revision's ceiling is a budget in rule executions, and a source the budget cuts short is
+  continued by the next pass.**
+- **A belief kind enters through `propose`, and a package's working graph is not a belief.**
+- **Sensing observes and says when a sensor has gone silent, and prediction is a package of its
+  own** — `received` writes one `sosa:Observation` per sensor holding until the next is due and a
+  grace past it, `missed` says `sensing:silentSince`, the sides are revisions; `agent/prediction/`
+  accumulates the drifts' rates and imports nothing of sensing.
+- **A reading late is not a reading missing** — ended exactly at the next one's due, a late reading
+  left no present, and a dose sized from it commanded nothing (#870,
+  a-reading-late-is-not-a-reading-missing).
+- **A sensor that keeps reporting one number is stuck, and age is not the only doubt about a
+  reading** — each observation carries `sensing:unchangedSince`, the start of the unbroken run of
+  its raw number, and `received` says `sensing:stuckSince` once the run has lasted `STUCK_AFTER`
+  cadences, in a state graph the first differing number takes back; identical is the raw number,
+  since a clamp can make two counts one reading, and a count that creeps is the other two
+  detectors' (#462).
+- **Sensing speaks SOSA and SSN, and declares only what they lack** — the observation graph's kind,
+  the silence, the sides and the pipeline's words; a transport hands `received` bytes and sensing
+  knows no transport.
+- **An observation is concluded from the number a sensor gave** — its quantity through the scaling,
+  its reading through the calibration, then its sides
+  (an-observation-is-concluded-from-the-number-a-sensor-gave).
+- **A drift answers a rate, and a prediction accumulates them** — rates add, a happening is where
+  one may change, a crossing is on a straight line (a-prediction-accumulates-rates-between-happenings).
+- **A prediction is bands, and the width never leaves the rule** (#642); **the mind wakes on
+  contradiction, not on time** — a reading inside the bands leaves no mark (#632).
+- **A step's band is the prediction from its landing, and a reading is compared once** (#639).
+- **The claims a host issued are its demand** — a debt with a window is an occurrence about the
+  window (#626).
+- **A forecast is a series a sensor reads, and a public service's address is wiring** — one graph per
+  stretch, the HTTP member polls, the location lives in `secrets/` (a-forecast-is-a-series-a-sensor-reads).
+- **Several transport members are one to the container** — a message goes back to the member that
+  queued it, a command to the member that `reaches` the device.
+- **The transport speaks MQTT4SSN, and a topic is named by the filters that match it** — the agent
+  subscribes by the pattern and publishes to one with no wildcard; the broker's address stays in the
+  environment.
+- **A peer's word is a document, believed as it stands where it is state**; **the market is files** —
+  six actions whose `execution:Saying` operations make the documents at take time (`domains/market/`).
+- **Signing is between agents, and an agent trusts itself** — the broker's ACL already admits only
+  the holder to its devices' command topics.
+
+### Graphs, the store and the runtime
+
+- **A graph's name is for eyes, and code relies on its classification alone**; **a graph is
+  classified per kind it HOLDS**, and a graph holding two kinds is two graphs.
+- **One graph describes every graph and itself** — the catalogue, found by its own row, created by
+  genesis alone.
+- **A reader states the kinds it reads, and the store decides nothing** — a query is handed its
+  graphs, `graphs_of` answers by kind and instant, and the union of everything was refused as the
+  default.
+- **An update takes no dataset** — what chooses which graphs are the world at an instant is Python
+  or a materialised view.
+- **What ends by the clock is a graph with a period, and one sweep drops it** — what the ending
+  MEANS stays the owner's (#645); **a row whose presence is meant to BE a fact is named for the
+  state, not for the instant it ends**.
+- **A base class is an import and an annotation is not** (#455).
+- **A verdict the search reads is a query, and the judge stays at the gates.**
+- **The present is identified among the root's children, never asserted from one.**
+- **The agent keeps one timeline, and its clock may run fast** — `clock.now()` is the only read,
+  the pace is a deployment fact converted once where something sleeps (#646).
+- **A document says which graph it is, and the file's name is for eyes**; **a document's kind says
+  who reads it**, and `orexis-onboard` refuses a graph no reader declares
+  (a-documents-kind-says-who-reads-it).
+- **A world's words are its own or a domain's it imports** — `owl:imports` names the graph it
+  brings; **a vocabulary two worlds speak is a domain**, and the shapes are `planning:ShapesGraph`.
+- **A graph of actions is an `orexis:ActionGraph`, and the planner reads actions from those alone.**
+- **A package beyond the mind is loaded where its premise, read off the world, holds** (#824).
+- **The runtime stops when no desire is held, no transport reaches it and every want is reached** —
+  wants standing with nothing walking is `planning:Exhausted` or unreachable; a clock that does not
+  tick is a test's mistake.
+- **A package starts itself, and the runtime is a lifecycle container** — each part says what it
+  does by jobs it submits, kinds it hears and timers it asks for (a-package-starts-itself).
+- **A process is the AGENT with the id it was told, never whatever carries that id.**
+- **The 0.2.0 kernel's T-Box is what the tree reads**; **0.1.0 was amended into 0.2.0, not copied,
+  and then retired whole** (2026-09-26), its vocabulary kept under `tests/fixtures/retired/` for
+  the bundle's history alone.
+- **The plant's surroundings are one domain** (`climate:`), and actuation is the other.
+- **A case is held to the whole store it leaves, never to a reading of it** — a behaviour change is
+  a diff regenerated by a flag and reviewed by eyes.
+
+### Deployment, onboarding and operating
+
+- **A broker's address is the world's to assert or the installation's to allocate, and the agent's
+  to be told** — asserted wins, derived completes, a collision is refused (#827, #823).
+- **What the documents leave out is derived into a document, and a renderer only formats** —
+  `infra/installation.derived.ttl` is committed and held to a fresh derivation (#827).
+- **A world's wiring is its society, and its world graph speaks no MQTT4SSN** (#823).
+- **An agent's own documents are under `beliefs/<id>`.**
 - **A step of onboarding runs where the world has what it serves, and says so where it does not**
-  — every tool asked the broker for an address, so hanoi, the courier and the tower, naming none,
-  could not be onboarded or run in a container at all; the bus is a premise read off the world
-  now, as a package's is at boot (#824), and `broker` still refuses the question it cannot answer.
-
-- **An observation is concluded from the number a sensor gave** — sensing keeps the number, who
-  made it and when, and its rules conclude what it observes, its quantity through the scaling the
-  world states (a rescale, the unit changing) and its reading through the calibration (a correction,
-  the unit staying), then its sides; the firmware scaling, a pipeline stage of code members, and the
-  calibration as the agent's belief revised by an act were each refused, and a reader of an
-  observation reads it with its revisions (an-observation-is-concluded-from-the-number-a-sensor-gave).
-
-- **A drift answers a rate, and a prediction accumulates them** — a drift answering the value it
-  reached could not be combined with a second, and a ladder of rungs found a crossing only where a
-  rung's two ends disagreed, so rain lifting a drying bed back inside one rung was never seen;
-  rates add, a happening is where one may change, a crossing between two is on a straight line,
-  and a rate known as a range is a corridor whose worst side each stretch is
-  (a-prediction-accumulates-rates-between-happenings).
-
-- **A forecast is a series a sensor reads, and a public service's address is wiring** — a weather
-  service is a `sosa:Sensor` whose one response holds many stretches, so sensing writes a
-  `sensing:ForecastGraph` per stretch and the HTTP member polls at its frequency, since a series is pulled;
-  the HTTP member adopts the WoT Thing Description, its target a URI template the place's
-  `schema:geo` fills, and the location lives in the world's `secrets/`, which a boot reads and git
-  does not hold (a-forecast-is-a-series-a-sensor-reads).
-- **Several transport members are one to the container** — `Transports` hands a message back to the
-  member that queued it and a nudge or a command to the member that `reaches` the device, so a
-  world may reach its board over MQTT and its forecast over HTTP; and a sensor is the agent's where
-  it is hosted by what the agent acts for, a sample of it, or a place that contains it.
-
-- **A package starts itself, and the runtime is a lifecycle container** — `Runtime.sense` wrote
-  every package's behaviour in one order, so silence was asked after only when some other message
-  came (#843); now each package's part, made by `create(runtime)`, says what it does by jobs it
-  submits, kinds it hears and timers it asks for, one thread runs every job, and packages meet at the store and call
-  no one (a-package-starts-itself).
-
-- **Planning and execution meet at the store and signal each other, and the mind starts itself** —
-  the Planner held the executor and the executor the Planner's refine; a plan is published once as
-  an `orexis:PlanGraph` planning owns and an intention `execution:adopts` it by reference, a package's
-  signals are its own object's and its part connects them once every part exists, what is walked is read off the intentions,
-  and an intention ends early only where its want is met before it began or its next step is blocked
-  — a plan begun is walked to its end, since the supplier's round opened answers a call and must
-  still be cleared (planning-and-execution-meet-at-the-store).
+  (#824).
+- **The simulator is a process of the world, not a pretend board** — it plays every system marked
+  `sim:simulatedBy` from the world's own words, and sleeps until the next reading is due in the
+  world's time (`simulation/`).
+- **Hardware is the firmware generator's input, and no vocabulary types it** — `hardware.ttl` is an
+  `onboarding:HardwareGraph`, a kind no agent loads (#820).
+- **A series is watched and never believed, and the package that decides a thing shapes its
+  history** (#822, #825); **metrics are the admins' instrumentation, so they are code and not
+  model** (#826); **metrics and history are what events say, and no package imports either**
+  (metrics-and-history-are-what-events-say); **a metric is optional at every level and aggregated
+  where it happens**.
 
 ## The rules the code lives by
 
