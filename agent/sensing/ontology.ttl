@@ -19,7 +19,7 @@
 #  pointer; and how a number becomes a quantity, which is a scaling and a calibration the world states,
 #  and the rules. Sensing is the translation row of the agent stack and
 #  nothing above it: a transport hands it bytes, it makes a number of them and writes one
-#  sosa:Observation holding until the next is due, and on the container's tick it says which
+#  sosa:Observation holding until the next is due and a grace past it, and on the container's tick it says which
 #  readings are missing and which sensors have gone silent. It predicts nothing — that is the
 #  prediction package's — and concludes nothing itself: the sides are revisions, concluded by the
 #  three rules this layer ships (rules.ttl beside this file) and run by the deliberator over

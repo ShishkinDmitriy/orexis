@@ -23,7 +23,11 @@ description: >-
 Written by [sensing](/domain/sensing/sensing.md)'s `received` into an `sensing:ObservationGraph`
 named for its sensor. A sensor holds ONE observation: a new reading does not join the old one, it
 replaces the graph, so a reader asking what the soil is finds one number, and the graph's period
-says how long that number is worth believing — until the next is due. What it is OF and its
+says how long that number is worth believing — until the next is due and a **grace** past it, or
+until the next arrives, whichever is first. The grace is how late a reading may be and still be the
+promise its sensor's cadence made, one cadence (`received.GRACE`): a reading late inside it is not
+missing, and the one in hand is still the present
+([a-reading-late-is-not-a-reading-missing](/decisions/a-reading-late-is-not-a-reading-missing.md)). What it is OF and its
 [reading](/domain/sensing/reading.md) are in its revision, so a reader of an observation reads the graph
 and its revisions together (`store.revisions_of`), as the planner's ground and the prediction do.
 

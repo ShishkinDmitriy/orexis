@@ -564,8 +564,8 @@ it is a record wearing a bullet.
   rule set that never settles spends a budget every pass and is reported rather than looped on.
 - **Sensing observes and says when a sensor has gone silent, and prediction is a package of
   its own** — `received` writes one `sosa:Observation` per sensor with the number it gave, holding until
-  the next is due by the sensor's `ssn-system:Frequency`, `missed` answers the readings fallen
-  due when sensing's own `start` asks each minute and says `sensing:silentSince` of a sensor silent past a limit of
+  the next is due by the sensor's `ssn-system:Frequency` and a grace past it, `missed` answers the readings gone
+  missing when sensing's own `start` asks each minute and says `sensing:silentSince` of a sensor silent past a limit of
   its cadences, and the side is a revision the three rules sensing ships conclude; no band,
   no side, no want, no verdict on a prediction is sensing's own write. `agent/prediction/`
   accumulates the drifts' summed rates between happenings, places every crossing of a range

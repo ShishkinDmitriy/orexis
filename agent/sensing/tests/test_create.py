@@ -14,7 +14,7 @@ from agent.sensing.create import EVERY_S, create
 from agent.sensing.events import Observed, Silence
 from agent.sensing.missed import SILENT_AFTER
 from agent.sensing.ontology import OBSERVATION_GRAPH
-from agent.sensing.received import received
+from agent.sensing.received import GRACE, received
 from agent.store import close_catalogue, document, graphs_of, put_document, rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
@@ -28,7 +28,7 @@ def test_its_part_asks_after_silence_every_minute(monkeypatch, snapshots, stand_
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
     received(store, snapshots.ME, PROBE, b'{"value": 0.2}', snapshots.NOW)
-    runtime = stand_in_runtime(store, snapshots.ME, snapshots.NOW + CADENCE * (1 + SILENT_AFTER))
+    runtime = stand_in_runtime(store, snapshots.ME, snapshots.NOW + CADENCE * (1 + GRACE + SILENT_AFTER))
     create(runtime).start(runtime)
     [(seconds, ask)] = runtime.timers
     assert seconds == EVERY_S and runtime.heard == [], "nobody hears an observation, so none is listened for"
@@ -62,7 +62,7 @@ def test_where_heard_it_says_each_observation_with_its_interval_and_the_silence(
     assert isinstance(second, Observed) and first.interval_s is None
     assert (second.value, second.interval_s, second.cadence_s) == (0.3, 1350.0, 900.0)
     assert second.point()["measurement"] == "moisture" and second.point()["fields"] == {"value": 0.3}
-    runtime.now = snapshots.NOW + CADENCE * (2.5 + SILENT_AFTER)
+    runtime.now = snapshots.NOW + CADENCE * (2.5 + GRACE + SILENT_AFTER)
     [(_, ask)] = runtime.timers
     ask()
     assert heard[-1] == Silence(silent=1)
