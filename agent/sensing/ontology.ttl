@@ -139,7 +139,10 @@
     A fact about a document and not about a bus: two sensors on one board share a message and
     differ only here. The middle stage of the pipeline, document → raw value, and the one that
     is data rather than a member. Absent, the pointer is /value, which is what every
-    single-property device here publishes.""" .
+    single-property device here publishes. It finds a number, one reading taken as the message was
+    sent, or an array of readings, each {"value": number, "age_s": seconds before the message},
+    oldest first — a sentinel's count, one on a heartbeat and two on an alarm — and each is an
+    observation of its own, an earlier one holding only until the next one's instant.""" .
 
 :startsPointer a owl:DatatypeProperty ;
     rdfs:domain sosa:Sensor ;

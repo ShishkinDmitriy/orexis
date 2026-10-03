@@ -15,6 +15,14 @@ timestamp: 2026-08-23T22:05:00Z
 > for the outdoor sentinel: it publishes raw counts and knows no `ADC_DRY`/`ADC_WET`, so its window is
 > counts wide and the fraction's clamp this record reconciles below is gone there. The moisture sentinel
 > and the governed node still scale on the board.
+>
+> **Amended 2026-10-03**, for the prior quiet sample: the outdoor sentinel sends its count as an ARRAY
+> of readings, each `{value, age_s}`, oldest first — one on a heartbeat, and on an alarm the last quiet
+> sample before the reading that broke the window — and `received` writes each as an observation of
+> its own. The premise below that kept the prior out of the belief base — that one observation per
+> subject and property is replaced, so an older value would overwrite a newer one — no longer holds:
+> the earlier reading is a graph of its own, written first, holding only until the next reading's
+> instant, so at that instant it holds nothing and nothing it says is the present.
 
 # The sentinel alarms on movement, not on range
 

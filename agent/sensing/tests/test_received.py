@@ -95,3 +95,27 @@ def test_a_sensor_stating_no_frequency_stands_until_replaced(monkeypatch, snapsh
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     assert set(BYTES) == {c.stem for c in CASES}, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)
+
+
+
+def test_an_array_of_readings_is_an_observation_each_the_earlier_ending_at_the_next(monkeypatch, snapshots):
+    """A sentinel's alarm carries its watcher's last quiet sample and the reading that broke the window:
+    the earlier is an observation of its own, made 25 seconds before and holding only until the
+    reading's instant, so at that instant the reading alone holds; a heartbeat's one element takes it
+    away again."""
+    from datetime import datetime, timedelta
+
+    from agent.ontology import STATE
+    from agent.store import graphs_of
+
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(CASES_DIR / "a_first_reading_becomes_an_observation.trig")
+    alarm = b'{"value": [{"value": 656, "age_s": 25}, {"value": 361, "age_s": 0}]}'
+    assert received(store, snapshots.ME, PROBE, alarm, snapshots.NOW) == [OBSERVED + "probe_earlier_0", OBSERVED + "probe"]
+    said = {r["g"].rsplit("/", 1)[-1]: (float(r["n"]), datetime.fromisoformat(r["t"])) for r in rows(
+        store, "SELECT ?g ?n ?t WHERE { GRAPH ?g { ?o sensing:rawResult ?n ; sosa:resultTime ?t } }", ())}
+    assert said == {"probe_earlier_0": (656.0, snapshots.NOW - timedelta(seconds=25)), "probe": (361.0, snapshots.NOW)}
+    assert OBSERVED + "probe_earlier_0" not in graphs_of(store, STATE, at=snapshots.NOW), "ended at the reading's instant"
+    heartbeat = b'{"value": [{"value": 370, "age_s": 0}]}'
+    assert received(store, snapshots.ME, PROBE, heartbeat, snapshots.NOW) == [OBSERVED + "probe"]
+    assert OBSERVED + "probe_earlier_0" not in snapshots.graph_names(store), "the alarm's earlier reading is gone"

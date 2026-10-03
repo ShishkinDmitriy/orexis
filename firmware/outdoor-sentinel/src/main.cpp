@@ -29,9 +29,12 @@
 // Sampling is not reporting: the patrol's looks die in a register — no observation, no
 // testimony — and only a crossing or a heartbeat becomes a published reading.
 //
-//   publish:   MOISTURE_TOPIC   {"moisture_raw":2412,"sensor":"<SENSOR_ID>"}       heartbeat
-//              MOISTURE_TOPIC   {"moisture_raw":1830,"sensor":"<SENSOR_ID>",
-//                                "wake":"alarm"}                             the news
+//   publish:   MOISTURE_TOPIC   {"moisture_raw":[{"value":718,"age_s":0}],"sensor":"<SENSOR_ID>"}     heartbeat
+//              MOISTURE_TOPIC   {"moisture_raw":[{"value":656,"age_s":25},{"value":361,"age_s":0}],
+//                                "sensor":"<SENSOR_ID>","wake":"alarm"}              the news
+//              — the count always an ARRAY of readings, oldest first, each with how many seconds
+//              before the message it was taken: one on a heartbeat, and on an alarm the watcher's
+//              last quiet sample before the reading that broke the window
 //              — and, on a board the world gives a BME280 (BME280_SDA_PIN), the same
 //              message carries "temperature", "humidity" and "pressure" beside the
 //              count, each picked out by its own sensing:readingPointer; absent, never
@@ -359,30 +362,29 @@ void setup() {
     if (connectMqtt()) {
       char payload[256];   // room for the air fields beside the prior sample
       if (crossing) {
-        // An alarm carries the PRIOR QUIET SAMPLE, and it is the difference between a graph
-        // that tells the truth and one that does not. Two points half an hour apart — 0.15 and
+        // An alarm carries the PRIOR QUIET SAMPLE as the array's first reading, and it is the
+        // difference between a graph that tells the truth and one that does not. Two points half an hour apart — 0.15 and
         // 1.00 — are drawn as a straight line by every consumer, which claims a gradual
         // half-hour soak where there was a 25-second jump. The board knows better: it took
         // ~120 looks in that window and every one before the breach was in-window. So it says
         // so, and the agent can place that point at its own instant.
         //
-        // `prev` mirrors the reading's own shape, so the same pointer reaches it one level
-        // down: a sensor reading `/moisture_raw` finds its prior at `/prev/moisture_raw`.
-        // The age comes off the RTC clock at THIS instant, so it already includes the time
-        // spent connecting — and, across a failed attempt, the sleeps since. Nothing to add.
+        // Each reading says how many seconds before the message it was taken, since this board
+        // has no wall clock. The prior's age comes off the RTC clock at THIS instant, so it already
+        // includes the time spent connecting — and, across a failed attempt, the sleeps since.
         float prevRaw; uint32_t prevAge;
         if (priorQuietSample(&prevRaw, &prevAge)) {
           snprintf(payload, sizeof(payload),
-                   "{\"moisture_raw\":%.0f,\"sensor\":\"%s\",\"wake\":\"alarm\","
-                   "\"prev\":{\"moisture_raw\":%.0f,\"age_s\":%lu}}",
-                   lastRaw, SENSOR_ID, prevRaw, (unsigned long)prevAge);
+                   "{\"moisture_raw\":[{\"value\":%.0f,\"age_s\":%lu},{\"value\":%.0f,\"age_s\":0}],"
+                   "\"sensor\":\"%s\",\"wake\":\"alarm\"}",
+                   prevRaw, (unsigned long)prevAge, lastRaw, SENSOR_ID);
         } else {
           snprintf(payload, sizeof(payload),
-                   "{\"moisture_raw\":%.0f,\"sensor\":\"%s\",\"wake\":\"alarm\"}",
+                   "{\"moisture_raw\":[{\"value\":%.0f,\"age_s\":0}],\"sensor\":\"%s\",\"wake\":\"alarm\"}",
                    lastRaw, SENSOR_ID);
         }
       } else {
-        snprintf(payload, sizeof(payload), "{\"moisture_raw\":%.0f,\"sensor\":\"%s\"}",
+        snprintf(payload, sizeof(payload), "{\"moisture_raw\":[{\"value\":%.0f,\"age_s\":0}],\"sensor\":\"%s\"}",
                  lastRaw, SENSOR_ID);
       }
       appendAir(payload, sizeof(payload));       // heartbeat and alarm alike: one message, all of it

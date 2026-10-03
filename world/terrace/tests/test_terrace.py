@@ -22,9 +22,9 @@ from agent.transport.mqtt.driver import Mqtt
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT = "http://example.org/orexis/world/terrace#terrace_agent"
-#  WHAT THE BOARD PUBLISHES: the probe's count — 710, a fifth of the way from dry (785) to wet (410)
+#  WHAT THE BOARD PUBLISHES: the probe's count, always an array of readings — here one, 710, a fifth of the way from dry (785) to wet (410)
 #  through the scaling world.ttl states of the probe — the air, and the battery.
-MESSAGE = json.dumps({"moisture_raw": 710, "temperature": 14.5, "humidity": 0.8, "pressure": 1012,
+MESSAGE = json.dumps({"moisture_raw": [{"value": 710, "age_s": 0}], "temperature": 14.5, "humidity": 0.8, "pressure": 1012,
                       "battery": 3.91}).encode()
 
 
@@ -118,6 +118,22 @@ def test_each_reading_reaches_the_series_under_its_own_property(monkeypatch, his
         ("SoilMoisture", "moisture_sensor_terrace", 0.2)]
     assert {p["tags"].get("plant") for p in history} == {"terrace_bed", "terrace_battery"}
     assert {p["time"] for p in history} == {NOW}, "at the reading's own instant"
+
+
+def test_an_alarm_is_two_points_in_the_history_and_a_step_not_a_slope(monkeypatch, history):
+    """The board's watcher saw the soil leave its window and woke: the alarm's array carries its last
+    quiet sample, 25 seconds before, and the reading. Both are observations, both are concluded through the probe's scaling,
+    and history draws the earlier at its own instant — a step, where the reading alone would be a
+    slope from the last heartbeat."""
+    from datetime import timedelta
+
+    runtime, broker = _terrace(monkeypatch)
+    alarm = json.dumps({"moisture_raw": [{"value": 710, "age_s": 25}, {"value": 410, "age_s": 0}],
+                        "sensor": "moisture_sensor_terrace", "wake": "alarm"}).encode()
+    runtime.deliver("sensors/moisture_sensor_terrace/reading", alarm, NOW)
+    runtime.drain(NOW)
+    soil = sorted((p["time"], p["fields"]["value"]) for p in history if p["measurement"] == "SoilMoisture")
+    assert soil == [(NOW - timedelta(seconds=25), 0.2), (NOW, 1.0)]
 
 
 def test_every_point_the_agent_writes_is_drawn_by_one_terrace_panel(monkeypatch, history):
