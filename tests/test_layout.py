@@ -712,6 +712,9 @@ def _onboarded(tmp_path, monkeypatch, world: str, caplog):
     asked, reloaded = [], []
     monkeypatch.setattr(influx, "_provision", lambda w, agents, purpose, rotate: asked.append(("grant", purpose, tuple(agents))))
     monkeypatch.setattr(influx, "_withdraw", lambda w, agents, purpose: asked.append(("withdraw", purpose, tuple(agents))))
+    #  THE REPORT'S STORE HALF asks the series store with the admin token; here it answers nothing
+    #  stale and records that it was asked, so a host holding an admin token asks no real store.
+    monkeypatch.setattr(influx, "stale_grants", lambda w: asked.append(("stale", w)) or [])
     monkeypatch.setattr(mqtt, "reload_broker", lambda w: reloaded.append(w) or True)
     with caplog.at_level(logging.DEBUG):
         onboard.onboard(world)
@@ -736,7 +739,7 @@ def test_a_world_with_no_bus_is_onboarded_without_one(tmp_path, monkeypatch, cap
     here, asked, reloaded = _onboarded(tmp_path, monkeypatch, world, caplog)
     agents = tuple(roster(world))
     assert agents, f"{world} has no agents — the grants below would check nothing"
-    assert asked == [("grant", HISTORY, agents), ("withdraw", METRICS, agents)]
+    assert asked == [("grant", HISTORY, agents), ("withdraw", METRICS, agents), ("stale", world)]
     assert reloaded == []
     secrets = sorted(p.name for p in (here / "secrets").glob("*")) if (here / "secrets").exists() else []
     assert not [s for s in secrets if s.startswith("mqtt-") or s.endswith((".crt", ".key"))], secrets
@@ -768,13 +771,15 @@ def test_a_world_with_a_bus_is_onboarded_with_everything(tmp_path, monkeypatch, 
 
     here, asked, reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
     agents, _devices = mqtt.grants("sensing")
-    assert asked == [("grant", HISTORY, tuple(roster("sensing"))), ("withdraw", METRICS, tuple(roster("sensing")))]
+    assert asked == [("grant", HISTORY, tuple(roster("sensing"))), ("withdraw", METRICS, tuple(roster("sensing"))),
+                     ("stale", "sensing")]
     assert reloaded == ["sensing"]
     for agent in agents:
         for minted in (f"mqtt-{agent}.env", f"{agent}.crt", f"{agent}.key"):
             assert (here / "secrets" / minted).exists(), minted
-    for minted in ("secrets/ca.crt", "secrets/broker.crt", "mosquitto/acl.conf", "mosquitto/orexis.conf"):
+    for minted in ("secrets/ca.crt", "secrets/broker.crt", "mosquitto/acl.conf", "mosquitto/orexis.conf", "mosquitto/crl.pem"):
         assert (here / minted).exists(), minted
+    assert [r for r in caplog.records if "nothing stale" in r.getMessage()], "a fresh onboarding reports nothing stale"
     assert not [r for r in caplog.records if "no bus" in r.getMessage()]
     written = (here / "compose.yaml").read_text()
     assert written == (REPO_ROOT / "world" / "sensing" / "compose.yaml").read_text(), "not the committed compose file"
@@ -809,6 +814,195 @@ def test_orexis_mqtt_grants_a_world_with_no_bus_nothing_and_says_so(tmp_path, mo
     with pytest.raises(SystemExit, match="states no mqtt4ssn:Broker"):
         mqtt.provision("hanoi")
     assert not (root / "hanoi" / "secrets").exists(), "credentials minted for a world with no bus"
+
+
+# --- revocation: a CRL always, a report that takes nothing, and --revoke that does ---------------
+
+def _crl_of(here):
+    from cryptography import x509
+
+    return x509.load_pem_x509_crl((here / "mosquitto" / "crl.pem").read_bytes())
+
+
+def test_a_crl_is_written_empty_where_nobody_is_revoked_and_the_config_always_names_it(tmp_path, monkeypatch, caplog):
+    """`crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming a
+    file that is absent, or a CRL past its nextUpdate, refuses the whole society (#29). Onboarded
+    fresh, the sensing world's broker config names the CRL, the compose file mounts it, and the file
+    is there: signed by the world's authority, naming no serial, and good for as long as the
+    authority is."""
+    from cryptography import x509
+
+    here, _asked, _reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
+    #  WHOLE LINES, not substrings: the first cut of this asked `in config`, and the config's own
+    #  comment names the option, so the guard stayed green with the line struck out.
+    directives = [line for line in (here / "mosquitto" / "orexis.conf").read_text().splitlines() if not line.startswith("#")]
+    assert "crlfile /etc/mosquitto/crl.pem" in directives, directives
+    assert directives.index("cafile /etc/mosquitto/clients-ca.crt") < directives.index("crlfile /etc/mosquitto/crl.pem") \
+        < directives.index("acl_file /etc/mosquitto/acl.conf"), "the CRL is the TLS listener's"
+    mounts = [line.strip() for line in (here / "compose.yaml").read_text().splitlines()]
+    assert "- ./mosquitto/crl.pem:/etc/mosquitto/crl.pem:ro" in mounts
+    crl = _crl_of(here)
+    ca = x509.load_pem_x509_certificate((here / "secrets" / "ca.crt").read_bytes())
+    assert list(crl) == [], "nobody was revoked"
+    assert crl.issuer == ca.subject and crl.is_signature_valid(ca.public_key())
+    assert crl.next_update_utc == ca.not_valid_after_utc, "the CRL's horizon is the authority's"
+    assert crl.extensions.get_extension_for_class(x509.CRLNumber).value.crl_number == 1
+
+
+def test_revoking_an_agent_puts_its_serial_on_the_crl_and_takes_its_credential(tmp_path, monkeypatch, caplog):
+    """`orexis-mqtt sensing --revoke fern`: fern's certificate is on the CRL by serial, its files
+    and its broker credential are gone, the passwd and the ACL no longer name it, and the output
+    says the broker must restart, since SIGHUP reloads no TLS material. Onboarded again, the
+    wiring still implies fern, so it gets a NEW certificate — and the old serial stays on the CRL,
+    carried forward from the file, so the revoked one stays refused."""
+    import logging
+
+    from cryptography import x509
+
+    from onboarding import mqtt
+
+    here, _asked, _reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
+    secrets = here / "secrets"
+    old = x509.load_pem_x509_certificate((secrets / "fern.crt").read_bytes())
+    assert "sensing-fern" in (here / "mosquitto" / "passwd").read_text()
+    caplog.clear()
+    with caplog.at_level(logging.INFO):
+        mqtt.main(["sensing", "--revoke", "fern", "--no-reload"])
+    said = [r.getMessage() for r in caplog.records]
+    assert [r.serial_number for r in _crl_of(here)] == [old.serial_number]
+    assert _crl_of(here).extensions.get_extension_for_class(x509.CRLNumber).value.crl_number == 2
+    for gone in ("fern.crt", "fern.key", "mqtt-fern.env"):
+        assert not (secrets / gone).exists(), gone
+    assert "sensing-fern" not in (here / "mosquitto" / "passwd").read_text()
+    assert "user sensing-fern" not in (here / "mosquitto" / "acl.conf").read_text()
+    assert [s for s in said if "restart" in s and "SIGHUP" in s], said
+    assert [s for s in said if "still implies fern" in s], said
+
+    #  A DEVICE has a credential and no certificate: the credential goes, the CRL is unchanged.
+    device = next(p.name[len("mqtt-"):-len(".env")] for p in secrets.glob("mqtt-*.env"))
+    mqtt.main(["sensing", "--revoke", device, "--no-reload"])
+    assert not (secrets / f"mqtt-{device}.env").exists()
+    assert [r.serial_number for r in _crl_of(here)] == [old.serial_number]
+    with pytest.raises(SystemExit, match="nothing to revoke"):
+        mqtt.main(["sensing", "--revoke", "nobody", "--no-reload"])
+
+    mqtt.provision("sensing")
+    new = x509.load_pem_x509_certificate((secrets / "fern.crt").read_bytes())
+    assert new.serial_number != old.serial_number
+    assert [r.serial_number for r in _crl_of(here)] == [old.serial_number], "carried forward, not re-made"
+    assert (secrets / f"mqtt-{device}.env").exists(), "the wiring still implies the device, so it is granted again"
+
+
+def test_a_crl_that_will_not_parse_is_refused_not_rewritten(tmp_path, monkeypatch, caplog):
+    """The CRL is the record of what was revoked; rewritten from nothing it would re-admit every
+    certificate it named, in silence."""
+    from onboarding import mqtt
+
+    here, _asked, _reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
+    (here / "mosquitto" / "crl.pem").write_text("not a CRL\n")
+    with pytest.raises(SystemExit, match="will not parse"):
+        mqtt.provision("sensing")
+
+
+def test_the_report_names_a_stale_credential_and_takes_nothing(tmp_path, monkeypatch, caplog):
+    """A principal with files under `secrets/` and no agent or device in the society: `ghost` has a
+    broker credential, a certificate not on the CRL, and a history token's file. `orexis-onboard`
+    names all three, says the certificate still opens a session, names the command for each, and
+    removes none of them."""
+    import logging
+    import shutil
+
+    from onboarding import influx, onboard
+
+    asks_the_store = influx.stale_grants
+    here, _asked, _reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
+    secrets = here / "secrets"
+    planted = ["mqtt-ghost.env", "ghost.crt", "ghost.key", "influx-history-ghost.env"]
+    shutil.copy(secrets / "mqtt-fern.env", secrets / "mqtt-ghost.env")
+    shutil.copy(secrets / "fern.crt", secrets / "ghost.crt")
+    shutil.copy(secrets / "fern.key", secrets / "ghost.key")
+    (secrets / "influx-history-ghost.env").write_text("INFLUX_HISTORY_BUCKET=sensing-ghost\nINFLUX_HISTORY_TOKEN=x\n")
+    caplog.clear()
+    with caplog.at_level(logging.INFO):
+        found = onboard.report("sensing")
+    assert len(found) == 4 and all("ghost" in line for line in found), found
+    assert [line for line in found if "ghost.crt" in line and "NOT on the CRL" in line], found
+    assert [line for line in found if "mqtt-ghost.env" in line and "orexis-mqtt sensing --revoke ghost" in line], found
+    assert [line for line in found if "influx-history-ghost.env" in line and "orexis-influx sensing --revoke ghost" in line
+            and "keeps the bucket" in line], found
+    assert not [line for line in found if "fern" in line], "a principal the wiring implies is not stale"
+    assert all((secrets / name).exists() for name in planted), "the report took something"
+    assert [r for r in caplog.records if r.levelno == logging.WARNING and "stale" in r.getMessage()]
+
+    #  NO ADMIN TOKEN HERE: the real store half refuses to ask, the report says so and goes on with
+    #  what the files alone say, so a report never fails the onboarding it ends.
+    monkeypatch.setattr(influx, "stale_grants", asks_the_store)
+    monkeypatch.setattr(influx, "ADMIN_ENV", REPO_ROOT / "infra" / "secrets" / "no-such-admin.env")
+    caplog.clear()
+    with caplog.at_level(logging.INFO):
+        assert onboard.report("sensing") == found
+    assert [r for r in caplog.records if "was not asked" in r.getMessage()], [r.getMessage() for r in caplog.records]
+    #  AND A STORE THAT IS DOWN — a token in hand, nothing listening — is said and gone on from.
+    monkeypatch.setattr(influx, "_admin_token", lambda: "a-token")
+    monkeypatch.setattr(influx.installation, "served", lambda purpose: ("http://127.0.0.1:9", "orexis"))
+    caplog.clear()
+    with caplog.at_level(logging.INFO):
+        assert onboard.report("sensing") == found
+    assert [r for r in caplog.records if "could not be asked" in r.getMessage() and "127.0.0.1:9" in r.getMessage()], \
+        [r.getMessage() for r in caplog.records]
+
+
+def test_influx_revoke_deletes_the_tokens_and_keeps_the_bucket(tmp_path, monkeypatch, caplog):
+    """The store half, against a stub of the authorizations API: every token described as the
+    principal's in this world goes, whatever its purpose and one made before purposes with them,
+    no other world's or agent's does, and nothing asks the buckets API at all — a bucket is
+    history, and history that was true stays."""
+    import logging
+
+    from onboarding import influx
+
+    class Auth:
+        def __init__(self, description):
+            self.description = description
+
+    class Stub:
+        def __init__(self):
+            self.held = [Auth("orexis sensing/ghost history"), Auth("orexis sensing/ghost metrics"),
+                         Auth("orexis sensing/ghost"), Auth("orexis sensing/ghostly history"),
+                         Auth("orexis terrace/ghost history"), Auth("orexis sensing/fern history"), Auth(None)]
+            self.deleted = []
+
+        def find_authorizations(self):
+            return list(self.held)
+
+        def delete_authorization(self, auth):
+            self.held.remove(auth)
+            self.deleted.append(auth.description)
+
+    stub = Stub()
+    assert influx._revoke_grants(stub, "sensing", "ghost") == ["orexis sensing/ghost history", "orexis sensing/ghost metrics",
+                                                                "orexis sensing/ghost"]
+    assert [a.description for a in stub.held] == ["orexis sensing/ghostly history", "orexis terrace/ghost history",
+                                                  "orexis sensing/fern history", None]
+
+    #  THE FILE HALF, with the store unreachable by design: `served` answers no store, so nothing is
+    #  asked, the credential files go, and the bucket is said to be kept.
+    root = _installed(tmp_path, monkeypatch, {("sensing", "world.ttl"): lambda text: text})
+    monkeypatch.setattr(influx, "world_dir", lambda name: root / name)
+    monkeypatch.setattr(influx.installation, "served", lambda purpose: None)
+    secrets = root / "sensing" / "secrets"
+    secrets.mkdir()
+    for name in ("influx-history-ghost.env", "influx-metrics-ghost.env", "influx-ghost.env", "influx-history-fern.env"):
+        (secrets / name).write_text("INFLUX_HISTORY_TOKEN=x\n")
+    with caplog.at_level(logging.INFO):
+        influx.revoke("sensing", "ghost")
+    assert sorted(p.name for p in secrets.iterdir()) == ["influx-history-fern.env"]
+    assert [r for r in caplog.records if "bucket sensing-ghost kept" in r.getMessage()]
+    assert influx.stale_files("sensing") == []
+    (secrets / "influx-metrics-ghost.env").write_text("x\n")
+    assert len(influx.stale_files("sensing")) == 1 and "'ghost'" in influx.stale_files("sensing")[0]
+    with pytest.raises(SystemExit, match="nothing to revoke"):
+        influx.revoke("sensing", "nobody")
 
 
 def test_onboarding_passes_over_its_own_kinds_quietly_and_an_unknown_kind_aloud(tmp_path, caplog):

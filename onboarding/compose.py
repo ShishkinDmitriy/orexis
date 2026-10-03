@@ -238,6 +238,9 @@ def _broker(world: str, plain: int, tls: int | None) -> str:
         "\n      # Its authority is this world's own, so it trusts exactly one and never learns\n"
         "      # that other worlds exist — the same rule the belief base already follows.\n"
         "      - ./secrets/ca.crt:/etc/mosquitto/clients-ca.crt:ro\n"
+        "      # and what that authority has revoked — empty where nobody is, and always mounted,\n"
+        "      # since the config names it and a crlfile that is absent refuses every agent\n"
+        "      - ./mosquitto/crl.pem:/etc/mosquitto/crl.pem:ro\n"
         "      - ./secrets/broker.crt:/etc/mosquitto/broker.crt:ro\n"
         "      - ./secrets/broker.key:/etc/mosquitto/broker.key:ro")
     return f"""
