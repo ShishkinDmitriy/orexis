@@ -14,15 +14,20 @@ from pathlib import Path
 
 import pytest
 
+from datetime import datetime, timedelta
+
 from agent import clock
-from agent.sensing.received import received
-from agent.store import rows
+from agent.ontology import STATE
+from agent.sensing.received import STUCK_AFTER, received
+from agent.store import graphs_of, rows
 
 CASES_DIR = Path(__file__).parent / "received"
+WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 BOARD = Path(__file__).parent / "worlds" / "a_board_and_its_peripherals.trig"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 TEST = "http://example.org/test#"
 PROBE = TEST + "probe"
+CADENCE = timedelta(seconds=900)
 OBSERVED = "http://example.org/orexis/graph/observed/keeper/"     # the writer's name, for eyes
 
 FORECAST = "http://example.org/orexis/graph/forecast/keeper/"     # the writer's name, for eyes
@@ -31,6 +36,7 @@ FORECAST = "http://example.org/orexis/graph/forecast/keeper/"     # the writer's
 BYTES = {
     "a_first_reading_becomes_an_observation": (b'{"value": 0.22}', [OBSERVED + "probe"]),
     "a_second_reading_replaces_the_first": (b'{"value": 0.08}', [OBSERVED + "probe"]),
+    "a_number_unchanged_past_the_limit_says_the_sensor_stuck": (b'{"value": 0.25}', [OBSERVED + "probe"]),
     "a_forecast_is_a_graph_per_stretch_ahead": (
         b'{"hourly": {"time": ["2026-01-01T11:00", "2026-01-01T12:00", "2026-01-01T13:00", "2026-01-01T14:00",'
         b' "2026-01-01T15:00"], "precipitation": [0.5, 0.0, 1.2, null, 0.3]}}',
@@ -119,3 +125,88 @@ def test_an_array_of_readings_is_an_observation_each_the_earlier_ending_at_the_n
     heartbeat = b'{"value": [{"value": 370, "age_s": 0}]}'
     assert received(store, snapshots.ME, PROBE, heartbeat, snapshots.NOW) == [OBSERVED + "probe"]
     assert OBSERVED + "probe_earlier_0" not in snapshots.graph_names(store), "the alarm's earlier reading is gone"
+
+
+#  THE SENSORS SAID STUCK: the row, the instant it says, and the graph's own start.
+_STUCK_Q = """
+SELECT ?sensor ?since ?start WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph ; orexis:arrivedBy orexis:Derived ;
+               dcterms:temporal/orexis:start ?start }
+  GRAPH ?g { ?sensor sensing:stuckSince ?since } }"""
+
+_RUN_Q = "SELECT ?since WHERE { ?o sosa:madeBySensor $sensor ; sensing:unchangedSince ?since }"
+
+
+def _stuck(store):
+    return [(r["sensor"], datetime.fromisoformat(r["since"]), datetime.fromisoformat(r["start"]))
+            for r in rows(store, _STUCK_Q, ())]
+
+
+def _run_of(store, sensor, at):
+    found = rows(store, _RUN_Q, graphs_of(store, STATE, at=at, now=at), sensor=sensor)
+    return datetime.fromisoformat(found[0]["since"]) if found else None
+
+
+def _every_cadence(store, snapshots, number: float, readings: int, start: datetime | None = None) -> datetime:
+    """`readings` readings of `number` by the probe, one per cadence from `start`; the last one's instant."""
+    at = start or snapshots.NOW
+    for _ in range(readings):
+        received(store, snapshots.ME, PROBE, f'{{"value": {number}}}'.encode(), at)
+        at += CADENCE
+    return at - CADENCE
+
+
+def test_a_number_unchanged_past_the_limit_says_the_sensor_stuck_once(monkeypatch, snapshots):
+    """#462: the probe gives 0.25 at every reading, on time. Through `STUCK_AFTER` cadences nothing
+    is said, since still soil and a frozen probe look alike for a while; at the limit the probe is
+    said stuck since the run's first reading — named for the state, not for the reading that tipped
+    it — and a reading later it is not said again."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(WORLD)
+    last = _every_cadence(store, snapshots, 0.25, STUCK_AFTER)
+    assert _run_of(store, PROBE, last) == snapshots.NOW, "the run began with the first reading"
+    assert _stuck(store) == [], f"{STUCK_AFTER} readings are {STUCK_AFTER - 1} cadences unchanged, short of the limit"
+    tipped = _every_cadence(store, snapshots, 0.25, 1, last + CADENCE)
+    said = _stuck(store)
+    assert said == [(PROBE, snapshots.NOW, snapshots.NOW)]
+    _every_cadence(store, snapshots, 0.25, 1, tipped + CADENCE)
+    assert _stuck(store) == said, "said once"
+
+
+def test_a_reading_whose_number_differs_ends_the_run_and_the_stuck(monkeypatch, snapshots):
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(WORLD)
+    last = _every_cadence(store, snapshots, 0.25, STUCK_AFTER + 1)
+    assert _stuck(store)
+    moved = last + CADENCE
+    received(store, snapshots.ME, PROBE, b'{"value": 0.26}', moved)
+    assert _stuck(store) == []
+    assert _run_of(store, PROBE, moved) == moved, "a new number is a new run, from this reading"
+    last = _every_cadence(store, snapshots, 0.26, STUCK_AFTER - 1, moved + CADENCE)
+    assert _stuck(store) == [], "the new run is counted from its own start, and is a cadence short"
+    _every_cadence(store, snapshots, 0.26, 1, last + CADENCE)
+    assert _stuck(store) == [(PROBE, moved, moved)]
+
+
+def test_a_number_a_count_apart_is_two_numbers(monkeypatch, snapshots):
+    """Identical means the raw number: a probe creeping by a count is alive to this detector, and the
+    page says whose that case is."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(WORLD)
+    at = snapshots.NOW
+    for n in range(STUCK_AFTER + 2):
+        received(store, snapshots.ME, PROBE, f'{{"value": {1330 + (n % 2)}}}'.encode(), at)
+        at += CADENCE
+    assert _stuck(store) == [] and _run_of(store, PROBE, at - CADENCE) == at - CADENCE
+
+
+def test_a_sensor_stating_no_frequency_is_never_said_stuck(monkeypatch, snapshots):
+    """The board's probe states no frequency, so the limit has no cadence to count in — as its
+    silence is never said, since the world made no promise about how often its number could move."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(BOARD)
+    at = snapshots.NOW
+    for _ in range(STUCK_AFTER + 2):
+        received(store, snapshots.ME, PROBE, b'{"soil": {"moisture": 0.2}}', at)
+        at += timedelta(days=1)
+    assert _stuck(store) == [] and _run_of(store, PROBE, at) == snapshots.NOW

@@ -31,6 +31,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [calibration](/domain/sensing/calibration.md) - A correction within one unit, two points the world states beside the sensor, applied by sensing's rule after any scaling.
 * [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; the rules say which side a reading is on.
+* [stuck](/domain/sensing/stuck.md) - A sensor reporting one number for a limit of its cadences is said stuck until a differing number ends it; the doubt beside age.
 
 # Transport — reaching the society
 

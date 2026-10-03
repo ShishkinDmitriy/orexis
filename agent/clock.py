@@ -12,9 +12,10 @@ is the layer that keeps time, so the clock is its: `now()` is what every layer a
 reads instead of the wall clock, and the one conversion is at the sleep — a delay of so many
 of the agent's seconds is that many real seconds over the PACE (`real_delay`). The pace is a
 deployment fact, environment and never a belief (rule 5): `OREXIS_TIME_PACE`, world seconds
-per real second, handed by compose to every process of a world alike — the agents' clocks
-and the stand-ins' physics, ticks and pours — from the pace the world states. The mind
-cannot ask for it. The timeline's origin is fixed with the pace, `OREXIS_TIME_EPOCH`, so a
+per real second, handed to every process of a world alike — the agents' clocks and the
+simulator's physics, ticks and pours — by whoever runs it: no world states a pace and
+`orexis-compose` writes none, so a bench or the end-to-end job sets it as environment, and a
+world run as deployed keeps the wall's. The mind cannot ask for it. The timeline's origin is fixed with the pace, `OREXIS_TIME_EPOCH`, so a
 restarted agent's `now()` lands where the world's clock stands and every instant it wrote
 before still means what it meant; a paced clock with no epoch stated starts its timeline at
 the process's own start, which is a bench convenience and a restart's discontinuity.

@@ -37,18 +37,21 @@ the infra containers and the two provisioning tools and by nothing else.
 An agent's credentials are **per world**, in `world/<name>/secrets/` and gitignored, and nothing
 is signed in 0.2.0: the broker's ACL admits an agent only to its own topics.
 
-The MQTT broker is part of `infra/compose.yaml`, built from `infra/mosquitto/Containerfile`
-with a config that listens on `0.0.0.0` — mosquitto binds loopback only without one, and every
-LAN board gets `Connection refused`.
+**The MQTT broker is a world's, not the installation's**: one per world, in `world/<name>/compose.yaml`,
+on the ports the world asserts in its `deployment.ttl` or the installation allocates it
+(`infra/installation.derived.ttl`), built from `infra/mosquitto/Containerfile` with a config that
+listens on `0.0.0.0` — mosquitto binds loopback only without one, and every LAN board gets
+`Connection refused`.
 
-It **no longer accepts anonymous clients**, and its password and ACL files are generated from
-the worlds' wiring, so at least one world must be provisioned before it will start. If the files
-are missing, podman creates directories in their place and mosquitto exits reading its config.
+It **accepts no anonymous clients**, and its password, ACL and config files are generated into
+`world/<name>/mosquitto/` from that world's wiring, so the world must be onboarded before its broker
+will start. If the files are missing, podman creates directories in their place and mosquitto exits
+reading its config.
 
 ```bash
-orexis-mqtt <world>            # credentials + the ACL, derived. Do this first
-cd infra && podman compose up -d
-ss -lntp | grep 1883          # expect 0.0.0.0:1883
+orexis-mqtt <world>                 # credentials + the ACL, derived. Do this first
+cd world/<world> && podman compose up -d
+ss -lntp | grep 18                  # expect 0.0.0.0:<the world's port>, 1890 for the allotment
 ```
 
 A **host** mosquitto left over from an earlier setup will hold that port and win. Retained
@@ -79,7 +82,7 @@ Both halves were necessary:
 path works whether or not the profile is loaded, which is why it was chosen. By hand it is:
 
 ```bash
-pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' orexis_mosquitto_1)
+pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' orexis-<world>_mosquitto_1)
 ```
 
 Making PID 1 a root shell fixed something else that had been wasting time: `podman stop` could
@@ -126,14 +129,14 @@ Still no store to prepare, and **no agent and no world is disturbed** — existi
 running, keep their beliefs and keep their credentials, because every grant is per principal and
 nothing is re-issued that already exists. Adding a bucket restarts nothing.
 
-**The one shared thing that must hear about it is the broker**, since one broker serves every
-world and `orexis-mqtt` rewrites `passwd` and `acl.conf` across all of them. Mosquitto reads both
-only at startup — but `orexis-mqtt` **reloads it for you**, and a reload is not a restart:
-connected agents keep their sessions and nothing is interrupted. You will see it say so:
+**The one running thing that must hear about it is the world's broker**, since `orexis-mqtt`
+rewrites its `passwd` and `acl.conf`. Mosquitto reads both only at startup — but `orexis-mqtt`
+**reloads it for you**, and a reload is not a restart: connected agents keep their sessions and
+nothing is interrupted. You will see it say so:
 
 ```
-wrote infra/mosquitto/passwd and infra/mosquitto/acl.conf (15 principals)
-reloaded orexis_mosquitto_1 — connected agents kept their sessions
+wrote world/allotment/mosquitto/passwd and world/allotment/mosquitto/acl.conf (4 principals)
+reloaded orexis-allotment_mosquitto_1 — connected agents kept their sessions
 ```
 
 If no broker is running it says that instead, and the files are simply read when it next starts.
@@ -296,8 +299,8 @@ processes**, which is no longer a deployment mode — and worse, a unit left ena
 host agent on the same topics as its container, both ingesting every reading. That failure has
 already cost time here twice; the fix was to stop having two ways to run an agent.
 
-Mosquitto used to be the exception, running as a **system** service. It is now in
-`infra/compose.yaml` like everything else, so there is again only one way to run each thing —
+Mosquitto used to be the exception, running as a **system** service. It is in each world's
+compose file like everything else, so there is again only one way to run each thing —
 `sudo systemctl disable --now mosquitto` if a host one survives from before.
 
 # No hardware?

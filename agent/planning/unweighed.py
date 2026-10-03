@@ -5,9 +5,13 @@ own about what a pass weighs next.
 THREE KINDS OF PAIR, and every one is `(for, about)` as `weigh` takes them:
 
 - every DESIRE in every ground it is not weighed in — what the derivation reads its wants off;
-- every WANT in the PRESENT ground it is not weighed in — the root of the want's search, and
-  only the present: a want weighed in a later ground would be a later ground on its
-  frontier, spent nought, and the search would open the future instead of the present;
+- every WANT in the ground HOLDING AT ITS INSTANT it is not weighed in — the root of the want's
+  search, and only that one: a want weighed in a second ground would be a second root on its
+  frontier, spent nought. The instant is the want's graph's period start: the present for a
+  want minted now or naming none, and the ground holding at T for a want minted for a foreseen
+  instant T, whose plan is placed to land at T — weighed in the present instead, it read met
+  there and was withdrawn in the pass that minted it (#858). A want whose T has passed roots at
+  the present, since the present outranks the instant;
 - for every want, every CANDIDATE leaving a world the want has weighed that it has weighed
   neither the candidate nor the world it reached — which is what an iteration weighs after
   admitting and taking, and what a pass cut by the budget takes up.
@@ -39,12 +43,21 @@ SELECT ?for ?about WHERE {
   { GRAPH $cat { ?d a planning:DesireGraph } GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Desire $narrow }
     GRAPH $cat { ?about a planning:GroundGraph } }
   UNION
-  { GRAPH $cat { ?d a planning:WantGraph } GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Want $narrow }
-    { SELECT ?about WHERE {
-        GRAPH ?c1 { ?c1 a orexis:CatalogueGraph . ?about a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
-      ORDER BY ?start LIMIT 1 } }
-  FILTER NOT EXISTS { GRAPH $cat { ?x a planning:Weighing ; planning:for ?for ; planning:weighs ?about } } }
+  { GRAPH $cat { ?d a planning:WantGraph . OPTIONAL { ?d dcterms:temporal/orexis:start ?ws } }
+    GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Want $narrow }
+    GRAPH $cat { ?about a planning:GroundGraph ; dcterms:temporal/orexis:start ?gs }
+    BIND(COALESCE(?ws, "0001-01-01T00:00:00Z"^^xsd:dateTime) AS ?at)
+    FILTER NOT EXISTS { GRAPH $cat { ?other a planning:GroundGraph ; dcterms:temporal/orexis:start ?os .
+                                     FILTER((?os <= ?at && ?os > ?gs) || (?gs > ?at && ?os < ?gs)) } } }
+  FILTER NOT EXISTS { GRAPH $cat { ?x planning:weighs ?about ; planning:for ?for } } }
 ORDER BY ?for ?about"""
+
+#  THE GROUND HOLDING AT THE WANT'S INSTANT, in the want branch above: the latest ground begun by
+#  `?at`, or the earliest of all where none had begun by then — a want with no period, or one
+#  whose instant every ground is past. The filter excludes a ground that a later one still inside
+#  the instant beats, and a ground past the instant that any earlier one beats; what survives is
+#  one ground per want. Inside the branch, where `?gs` and `?at` are bound, since a filter at the
+#  top of the WHERE cannot see what one branch of a union bound.
 
 #  THE BOUND VARIABLE FIRST IN A `NOT EXISTS`. The engine evaluates one per row, from its first
 #  pattern: `?x a planning:Weighing ; … ; planning:weighs ?about` scanned every weighing per

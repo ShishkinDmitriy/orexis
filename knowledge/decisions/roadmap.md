@@ -28,8 +28,8 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
 
 # Next, in order
 
-1. **What is wrong before what is missing** — #858 (a foreseen want judged in the present), #849
-   (predictions blind to committed steps), and #462 (a frozen probe reads fresh forever).
+1. **What is wrong before what is missing** — #849 (predictions blind to committed steps) and #462
+   (a frozen probe reads fresh forever).
 2. **Planning in time, its second half** — #596, an action with a duration, then #591, a plan as a
    partial order, then #593, a want over several scopes; #565 and #527 narrow and resume the
    search, and #486 names a world by its path.
