@@ -75,7 +75,6 @@ FROM = PLANNING + "from"
 #  WHAT IS TRUE OF A POSSIBLE WORLD WHOEVER ASKS: what the path to it spent, when it is, and
 #  where it came in the order the pass made worlds — the tie-break between two of equal cost.
 SPENT = PLANNING + "spent"
-AT_INSTANT = PLANNING + "atInstant"
 MINTED = PLANNING + "minted"
 
 #  A WEIGHING: what a pass worked out about one world FOR ONE WANT, or about one ground for

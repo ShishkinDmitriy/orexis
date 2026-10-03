@@ -38,9 +38,10 @@ SELECT ?g WHERE {
 ORDER BY DESC(?start) LIMIT 1"""
 
 _WORLDS_Q = """
-SELECT ?w ?at ?spent WHERE {
+SELECT ?w ?at ?until ?spent WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph .
-               OPTIONAL { ?w planning:atInstant ?at } OPTIONAL { ?w planning:spent ?spent } } }"""
+               OPTIONAL { ?w dcterms:temporal ?p . ?p orexis:start ?at . OPTIONAL { ?p orexis:end ?until } }
+               OPTIONAL { ?w planning:spent ?spent } } }"""
 
 
 def _present(store) -> str:
@@ -57,16 +58,18 @@ def test_reroot_leaves_the_store_the_patch_says(case, monkeypatch, request, snap
 
 
 def test_every_kept_world_is_re_stamped_and_none_loses_its_instant(snapshots):
-    """The re-stamping is one update that DELETES every kept world's instant and INSERTS the
-    moved one — so an operation the engine lacked would bind nothing and strip every instant
-    in silence, and `world_at` would refuse each world as saying no instant. Adding a
-    duration to an instant and taking one instant from another were measured to bind on
-    0.5.9; this holds the engine to it, and to the rebased spent beside it."""
+    """The re-stamping is one update that DELETES every kept world's period and INSERTS the
+    moved one — so an operation the engine lacked would bind nothing and strip every period
+    in silence, and `world_at` would refuse each world as saying no period. Taking one instant
+    from another, and a duration from an instant, bind at every instant on 0.5.11 where adding
+    a duration does not at a third of them; this holds the engine to it, and to the rebased
+    spent beside it."""
     store = snapshots.stand_in(CASES_DIR / "a_step_taken_as_predicted_keeps_its_cone.trig")
     assert reroot(store, _present(store)).match is not None, "the moved disk is a world the pass imagined"
     kept = rows(store, _WORLDS_Q, ())
     assert kept, "the cone beneath the match is kept"
-    assert all(r.get("at") and r.get("spent") is not None for r in kept), kept
+    assert all(r.get("at") and r.get("until") and r.get("spent") is not None for r in kept), kept
+    assert all(r["until"] >= r["at"] for r in kept), "a period's end is not before its start"
     later = snapshots.NOW + timedelta(minutes=1)
     assert min(datetime.fromisoformat(r["at"]) for r in kept) >= later, \
         "every kept world stands at or after the new present"

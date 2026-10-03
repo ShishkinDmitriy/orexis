@@ -56,7 +56,7 @@ market:Tendering a orexis:Action ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  IT LANDS WHEN THE ROUND CLOSES, at the latest: the window after the tender is taken.
     planning:landsAfter """PREFIX market: <http://example.org/orexis/market#>
-        SELECT ?seconds WHERE { $venue market:bidWindowS ?seconds }""" ;
+        SELECT ?least ?most WHERE { $venue market:bidWindowS ?least . BIND(?least AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX market: <http://example.org/orexis/market#>
         DELETE { $venue market:open true  }
@@ -125,7 +125,7 @@ market:Offering a orexis:Action ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  IT LANDS WHEN THE WINDOW CLOSES, so the clearing after it is not taken before.
     planning:landsAfter """PREFIX market: <http://example.org/orexis/market#>
-        SELECT ?seconds WHERE { $venue market:bidWindowS ?seconds }""" ;
+        SELECT ?least ?most WHERE { $venue market:bidWindowS ?least . BIND(?least AS ?most) }""" ;
     #  THE ROUND CLOSES A WINDOW AFTER IT OPENS, and the instant is the opening LESS A NEGATIVE
     #  duration: the engine binds nothing for `dateTime + dayTimeDuration` at about a third of the
     #  seconds of a minute (measured on pyoxigraph 0.5.11, deterministic per instant), so a round

@@ -13,8 +13,10 @@ as they stand over a period with each prediction applied, so handing the raw sta
 beside it puts the present's value in the world next to the one that superseded it, and a
 shape holding over every value sees both.
 
-THE INSTANT IS THE WORLD'S OWN, read off its row: a possible world's `planning:atInstant`, a
-ground's period start. A reader names a world and nothing else.
+THE INSTANT IS THE WORLD'S OWN, read off its row: the start of its period — a ground's, or the
+earliest a possible world is reached by the landings on its path. A reader names a world and
+nothing else. Where within its period a possible world is judged — at its earliest, as here, or
+in every ground the period overlaps — is the half of #596 still open.
 """
 
 from __future__ import annotations
@@ -29,9 +31,7 @@ from agent.store import Raw, catalogue_of, graphs_of, remember, revisions_of, ro
 from .ontology import GROUND_GRAPH, POSSIBLE_GRAPH
 
 _WHEN_Q = """
-SELECT ?at WHERE {
-  GRAPH $cat { OPTIONAL { $world planning:atInstant ?a } OPTIONAL { $world dcterms:temporal/orexis:start ?start } }
-  BIND(COALESCE(?a, ?start) AS ?at) }"""
+SELECT ?at WHERE { GRAPH $cat { $world dcterms:temporal/orexis:start ?at } }"""
 
 
 def world_at(store, world: str, *, holder: str | None = None, now: datetime | None = None,
@@ -49,7 +49,7 @@ def world_at(store, world: str, *, holder: str | None = None, now: datetime | No
     when = remember(memo, ("when", world), lambda: next(
         (r.get("at") for r in rows(store, _WHEN_Q, (), world=world, cat=cat)), None))
     if when is None:
-        raise LookupError(f"{world} says no instant — is it a ground or a possible world?")
+        raise LookupError(f"{world} says no period — is it a ground or a possible world?")
     at = datetime.fromisoformat(when)
     #  WHAT A WORLD SPEAKS FOR: the readings, the predictions, the grounds and the possible
     #  worlds — and what the rules concluded of a reading or a prediction, since a ground is laid

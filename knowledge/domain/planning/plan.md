@@ -15,8 +15,9 @@ description: >-
 it, and each candidate the world it was taken in — and writes it as a graph of its own: one
 `planning:Plan` `planning:for` the want, one [step](/domain/execution/step.md) per candidate on the
 path, ordered by `execution:then`, each with what it `execution:predicts`, what its rules read
-(`execution:precondition`) and when it may be taken (`execution:notBefore`, the instant of the
-world it is taken in). `planning:spent` is what the path cost.
+(`execution:precondition`), when it may be taken (`execution:notBefore`, the start of the
+world it is taken in) and the earliest and the latest its change lands (`execution:landsAt`,
+`execution:notAfter`, the two ends of the world it reaches). `planning:spent` is what the path cost.
 
 # An empty plan is an answer
 

@@ -71,9 +71,11 @@ from .ontology import EXHAUSTED, NO_CANDIDATE, SATISFIED
 #  off the two graphs in Python, since a diff of two graphs is not a pattern, and spliced in as a
 #  VALUES row per world.
 #  A STEP SAYS WHEN IT MAY BE TAKEN AND WHEN IT LANDS, in execution's words: `execution:notBefore` is
-#  the instant of the world the step is taken in and `execution:landsAt` the instant of the world it
-#  reaches, so a plan placed at the instant of its root carries that placing across, and the executor
-#  keeps time by the first and holds the world to the step by the second.
+#  the start of the period of the world the step is taken in, `execution:landsAt` the start of the
+#  world it reaches — the earliest its change can show — and `execution:notAfter` that world's end,
+#  the latest; so a plan placed at the instant of its root carries that placing across, and the
+#  executor keeps time by the first, looks for the answer from the second and gives up a patience
+#  past the third.
 #  A STEP IS NAMED FOR ITS WORLD UNDER THE PLAN — `<plan>.<world's tail>` — so two wants
 #  planning through one world mint two steps, and nothing counts: a depth-numbered name needed
 #  a subselect walking the ancestry per world, measured at twice this update's cost, and a
@@ -84,17 +86,16 @@ INSERT { GRAPH $plan { $plan a planning:Plan ; planning:for $want ; planning:out
 WHERE  {} ;
 INSERT { GRAPH $plan { ?step a execution:Step ; execution:partOf $plan ;
                        planning:fills ?action ; planning:of ?by ;
-                       execution:notBefore ?since ; execution:landsAt ?lands ;
+                       execution:notBefore ?since ; execution:landsAt ?lands ; execution:notAfter ?after ;
                        execution:predicts ?predicts . ?step ?p ?v } }
 WHERE  { VALUES (?w ?predicts) { $predicted }
          GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
                       ?by planning:fills ?action ; planning:from ?in .
-                      OPTIONAL { ?in planning:atInstant ?a0 } OPTIONAL { ?in dcterms:temporal/orexis:start ?s0 }
-                      OPTIONAL { ?w planning:atInstant ?lands }
+                      ?in dcterms:temporal/orexis:start ?since .
+                      ?w dcterms:temporal ?period . ?period orexis:start ?lands . OPTIONAL { ?period orexis:end ?after }
                       OPTIONAL { ?by ?p ?v . FILTER(?p NOT IN (planning:fills, planning:from, rdf:type)) } }
-         BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step)
-         BIND(COALESCE(?a0, ?s0) AS ?since) } ;
+         BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step) } ;
 INSERT { GRAPH $plan { ?prev execution:then ?step } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
