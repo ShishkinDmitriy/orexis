@@ -930,6 +930,35 @@ def test_the_docs_only_name_terms_that_exist(doc):
                          f"the prose wrong rather than broken, so nothing else will tell you.")
 
 
+#  Code names AGENTS.md spells on purpose though nothing in the tree does: what a principle says WAS
+#  (a retired class, method or test), a SPARQL function, and the words a sweep was told to hold out.
+#  Retiring a name AGENTS.md uses is adding it here or rewording the line, and either is a choice.
+_NAMED_AS_HISTORY = {"Pursuing", "Timer", "deliberate_on_gaps", "from_row", "on_saved", "on_deleted",
+                     "test_modalities", "HOURS", "MINUTES", "stake", "stakeholder"}
+
+
+def test_agents_md_names_code_that_exists():
+    """Every backticked code name in AGENTS.md is spelled somewhere in the tracked tree, or is listed
+    above as named on purpose. Written after finding the principles saying in the present tense that
+    `Deliberator.pursued` plans every want and that the container calls `pursuit.consider`, both
+    retired: the prose was wrong rather than broken, and the term census above reads `prefix:Term`
+    alone."""
+    text = (REPO_ROOT / "AGENTS.md").read_text()
+    named = {n for n in re.findall(r"`([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)(?:\(\))?`", text)}
+    assert len(named) > 50, "AGENTS.md names almost no code — this guard checks nothing"
+    tracked = subprocess.run(["git", "ls-files"], capture_output=True, text=True,
+                             cwd=REPO_ROOT, check=True).stdout.split()
+    corpus = "\n".join((REPO_ROOT / f).read_text(errors="ignore") for f in tracked
+                       if f.endswith((".py", ".toml", ".ttl", ".ru", ".trig", ".yml", ".yaml", ".sh"))
+                       or f.endswith("Containerfile"))
+    words = set(re.findall(r"\w+", corpus))
+    missing = sorted(n for n in named - _NAMED_AS_HISTORY if not set(n.split(".")) <= words)
+    assert not missing, (f"AGENTS.md names {missing}, spelled nowhere in the tree. Reword the line, or, "
+                         f"where it says what WAS, add the name to _NAMED_AS_HISTORY.")
+    stale = sorted(n for n in _NAMED_AS_HISTORY if n not in named)
+    assert not stale, f"_NAMED_AS_HISTORY lists {stale}, which AGENTS.md no longer names — drop them"
+
+
 # --- the domain is a plug-in -----------------------------------------------------------------------
 
 @pytest.mark.parametrize("tree", ["onboarding", "agent"])

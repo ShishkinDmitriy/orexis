@@ -186,4 +186,4 @@ Each of these is a gate that went green while something was broken. The record s
 
 # Direction
 
-* [roadmap](/decisions/roadmap.md) - What v1 is, and the v2/v3 extensions each seam unlocks.
+* [roadmap](/decisions/roadmap.md) - Where 0.2.0 stands, the open issue chains in order, and the parked extensions with the seam each needs.
