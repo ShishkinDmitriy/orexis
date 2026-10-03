@@ -1,0 +1,52 @@
+# A world, run end to end from nothing (#47) — what `gates.yml` says it is not.
+#
+# The gates prove nothing obviously broke; every interesting failure this project has had was found
+# by running the real thing: a keyfile the broker could not read, a bind mount that made `host.key`
+# a directory, onboarding that only ever ran incrementally on a bench that already held a CA and
+# credentials. This job starts with none of it: the images built in this run, the series store up,
+# `orexis-onboard` from an empty `secrets/`, the world started on a fast clock, and
+# `tools/run-world-end-to-end.sh` waiting for a reading to reach the agent and a command to come
+# back answered. On a failure it says what did not happen, then prints every container's log.
+#
+# THE GREENHOUSE, because it closes the loop with one agent and no peer: the bed dries, the grower
+# runs the pump, the simulator's next reading answers the step. The allotment's market was tried at
+# the same pace and its grower never called the supplier while readings arrived faster than its
+# search settled, which is a finding about the pace and not a gate to hold it to yet.
+#
+# PODMAN, ROOTLESS, as the runner's own user: the generated compose files say `userns_mode: keep-id`,
+# which is podman's. The admin token is the example's, minted for a store this job throws away.
+#
+# Not a required check while it earns trust. A flaky end-to-end job people learn to re-run is worse
+# than none (#47): when it fails, read what it says did not happen before re-running it.
+
+name: world
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: world-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  greenhouse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" podman-compose
+          podman --version && podman-compose --version
+      - name: the installation's secrets, throwaway
+        run: |
+          mkdir -p infra/secrets
+          cp infra/admin.env.example infra/secrets/admin.env
+      - name: run the greenhouse end to end
+        run: tools/run-world-end-to-end.sh greenhouse grower 600
