@@ -930,11 +930,11 @@ def test_the_docs_only_name_terms_that_exist(doc):
                          f"the prose wrong rather than broken, so nothing else will tell you.")
 
 
-#  Code names AGENTS.md spells on purpose though nothing in the tree does: what a principle says WAS
-#  (a retired class, method or test), a SPARQL function, and the words a sweep was told to hold out.
-#  Retiring a name AGENTS.md uses is adding it here or rewording the line, and either is a choice.
-_NAMED_AS_HISTORY = {"Pursuing", "Timer", "deliberate_on_gaps", "from_row", "on_saved", "on_deleted",
-                     "test_modalities", "HOURS", "MINUTES", "stake", "stakeholder"}
+#  Code names AGENTS.md spells on purpose though nothing in the tree does — SPARQL's own functions,
+#  today; it held nine retired identifiers as well while the principles narrated what WAS, until the
+#  narration moved to the commit messages that already carried it. Retiring a name AGENTS.md uses is
+#  adding it here or rewording the line, and either is a choice.
+_NAMED_AS_HISTORY = {"HOURS", "MINUTES"}
 
 
 def test_agents_md_names_code_that_exists():
