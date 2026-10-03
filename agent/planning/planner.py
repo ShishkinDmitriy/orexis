@@ -22,7 +22,7 @@ process is told:
 2. every desire is weighed in every ground (`weigh`, over what `unweighed` lists),
    `derive_wants` reads the weighings and mints a want per cluster of what they read unmet,
    and `withdraw` takes away what no desire implies and no intention is walking;
-3. per want that no intention is walking, `search`: the want is weighed in the present
+3. per want that no intention is walking, `search`: the want is weighed in the ground holding at its instant
    ground, and `expand` opens the cheapest open world until nothing is open, the cheapest
    achiever refuses the top, or the budget is spent — an iteration admits the world's
    candidates, takes each and weighs what it reached; then `extract_plan` writes what the
@@ -204,6 +204,11 @@ SELECT DISTINCT ?for WHERE {
   GRAPH ?any { ?for a planning:Want } }"""
 
 _OUTCOMES_Q = "SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"
+
+#  EVERY INSTANT A GROUND BEGINS AT — the instants the agent can see, which is where a want may hold.
+_GROUND_STARTS_Q = """
+SELECT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?s } }
+ORDER BY ?s"""
 
 #  WHAT THE EVENTS SAY OF A WANT, read where the event is made: the plan its search wrote and how it
 #  ended, the desire it was derived under, what its estimate said at the present ground, and how many
@@ -550,7 +555,8 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
     def search(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
                memo: Memo | None = None, scope: str | None = None) -> None:
-        """Plan for `want` from the present ground, spending at most `budget` candidates, and
+        """Plan for `want` from the ground holding at its instant — the present, or the one a want
+        minted for a foreseen instant names (#858) — spending at most `budget` candidates, and
         write the plan — whatever the search concluded, since an empty plan is an answer and
         `planning:outcome` says which of the three.
 
@@ -572,7 +578,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         started = time.perf_counter()
         for pair in unweighed(store, for_=want, memo=memo):
             if not pair.get("from"):
-                weigh(store, want, pair["about"], memo=memo)             # the root: the present
+                weigh(store, want, pair["about"], memo=memo)             # the root: the ground at its instant
         ceiling = _spent(store, want, memo) + budget
         while (spent := self.expand(store, want, budget=ceiling, only=only, memo=memo)) is not None \
                 and spent < ceiling:
@@ -712,7 +718,14 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
     first = (sorted(set(scopes.values())) or [UNSCOPED])[0]
     mine = []
     written = footprint.written(store, at)       # at the pass's instant: a read of the clock is a tick
-    for want in find_wants(store, at, holder=holder):
+    #  THE WANTS HOLDING AT ANY INSTANT THE AGENT CAN SEE: those holding now, and those minted for
+    #  a foreseen instant, which hold from then and are searched from the ground holding then
+    #  (#858) — the grounds' starts are every instant there is.
+    instants = [at, *(datetime.fromisoformat(r["s"]) for r in rows(store, _GROUND_STARTS_Q, ()))]
+    found: list[str] = []
+    for instant in instants:
+        found += [w for w in find_wants(store, instant, holder=holder) if w not in found]
+    for want in found:
         #  WHAT ITS MET-TEST READS, off the shape it is met when — the want node itself is no
         #  shape and reads nothing, which placed every want in the first scope and went unseen
         #  while every world was one scope.
