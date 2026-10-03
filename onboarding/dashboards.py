@@ -114,6 +114,8 @@ _GRAFANA_UNIT = {
     "UNITLESS": "percentunit",
     "PERCENT": "percent",
     "LUX": "lux",
+    "V": "volt",                 # a battery's voltage, the terrace's LiPo
+    "HectoPA": "pressurehpa",    # the air's pressure, the terrace's BME280
 }
 
 
