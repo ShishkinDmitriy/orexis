@@ -64,3 +64,51 @@ def test_its_part_ends_an_intention_whose_next_step_is_blocked(monkeypatch, snap
     (standing,) = part.executor.standing()
     part.executor.end_at(standing.at, "failed")
     assert part.executor.walking() == [] and ended == ["failed"]
+
+
+#  A DOSING ACTION WHOSE COMMAND IS SIZED FROM THE READING THE STEP NAMES, as the actuation domain's is.
+T = "http://example.org/test#"
+_DOSE = f"""INSERT DATA {{
+  GRAPH <{T}actions> {{
+    <{T}Dose> a orexis:Action ; orexis:takes <{T}valve> , <{T}reading> ;
+      execution:implementation [ execution:operation [ a execution:Command ; sh:select \"\"\"SELECT ?actuator ?payload WHERE {{
+          $reading sosa:hasSimpleResult ?value .
+          BIND($valve AS ?actuator)
+          BIND(CONCAT('{{"dose_ml": ', STR(xsd:integer(ROUND((0.45 - ?value) * 2000.0))), '}}') AS ?payload) }}\"\"\" ] ] . }}
+  GRAPH <{PLAN}> {{ <{PLAN}> <http://example.org/orexis/execution#pursues> <{WANT}> .
+                   <{PLAN}.s1> a <http://example.org/orexis/execution#Step> ;
+                               <http://example.org/orexis/execution#partOf> <{PLAN}> ;
+                               <http://example.org/orexis/planning#fills> <{T}Dose> ;
+                               <{T}valve> <{T}pump> ; <{T}reading> <{T}soil> . }} }}"""
+
+
+def _dosing(monkeypatch, snapshots, stand_in_runtime, reading: str | None):
+    store, runtime, part, ended = _part(monkeypatch, snapshots, stand_in_runtime)
+    runtime.me = T + "me"
+    update(store, _DOSE)
+    update(store, "INSERT DATA { "
+           + entry(store, T + "actions", "http://example.org/orexis#ActionGraph", "http://example.org/orexis#Asserted")
+           + entry(store, PLAN, "http://example.org/orexis#PlanGraph", "http://example.org/orexis#Recorded") + " }")
+    if reading is not None:
+        update(store, f"INSERT DATA {{ GRAPH <{T}sensed> {{ <{T}soil> sosa:hasSimpleResult {reading} }} "
+               + entry(store, T + "sensed", "http://example.org/orexis#StateGraph", "http://example.org/orexis#Received")
+               + " }")
+    sent = []
+    part.executor.commanded.connect(lambda c: sent.append((c.actuator, c.payload)) or [])
+    part.executor.adopt(PLAN, WANT)
+    part.executor.walk(snapshots.NOW)
+    return sent, ended
+
+
+def test_a_step_whose_command_answers_is_taken_and_sent(monkeypatch, snapshots, stand_in_runtime):
+    sent, ended = _dosing(monkeypatch, snapshots, stand_in_runtime, "0.35")
+    assert sent == [(T + "pump", {"dose_ml": 200})] and ended == ["done"]
+
+
+def test_a_step_whose_command_answers_nothing_is_not_taken(monkeypatch, snapshots, stand_in_runtime, caplog):
+    """#869: the reading the step names is not in the present — read past its period, say — so the
+    command sizes nothing. Sending nothing and recording the step taken left the intention to wait out
+    its patience as though the pump had run; the step is not taken, and the intention fails at once."""
+    sent, ended = _dosing(monkeypatch, snapshots, stand_in_runtime, None)
+    assert sent == [] and ended == ["failed"]
+    assert "Dose" in caplog.text and "answered nothing" in caplog.text

@@ -134,9 +134,11 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     bed: one intention standing, one act taken, and the plan's world met its want, which an `EXISTS`
     read against the default graph never saw. A day later the thermometer reports and the probe has
     not: the reading sets the executor walking at once, the dose was never answered, so the intention
-    failed, and planning, hearing it end, plans a second dose in that same pass — standing, not yet
-    sent; and the probe is past its cadences, so it is silent. Sensing is loaded here, so silence is
-    said beside the mind's figures."""
+    failed, and planning, hearing it end, plans a second dose in that same pass. The probe is past its
+    cadences, so it is silent and the present holds no reading to size that dose from: its command
+    answers nothing, the step is not taken and the intention fails at once (#869) — it was counted
+    taken before, having sent nothing. Sensing is loaded here, so silence is said beside the mind's
+    figures."""
     runtime, broker, windows = _unanswered(monkeypatch, interval_s=0)
     dosed, a_day_later = windows[:2]
     of = lambda window, name: [p for p in window if p["measurement"] == name]
@@ -147,8 +149,9 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     assert sum(p["fields"]["satisfied"] for p in of(dosed, "imaginarium")) == 1
     assert sum(p["fields"]["met"] for p in of(dosed, "imaginarium")) == 1
     assert one(dosed, "revisions")["unsettled"] == 0 < one(dosed, "revisions")["revisions"]
-    assert [(p["tags"]["outcome"], p["fields"]["count"]) for p in of(a_day_later, "intention")] == [("failed", 1)]
-    assert one(a_day_later, "intentions") == {"standing": 1}
+    assert [(p["tags"]["outcome"], p["fields"]["count"]) for p in of(a_day_later, "intention")] == [("failed", 2)]
+    assert one(a_day_later, "intentions") == {"standing": 0}
+    assert one(a_day_later, "act") == {"count": 1, "taken": 0}, "the second dose, sized from no reading"
     assert one(a_day_later, "silence") == {"silent": 1}, "the probe, and not the thermometer that reported"
     assert len(broker.published) == 1
 

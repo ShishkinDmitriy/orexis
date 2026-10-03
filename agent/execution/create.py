@@ -12,6 +12,8 @@ present the earlier ones left.
 
 from __future__ import annotations
 
+from agent.ontology import local_of
+
 from .command import command
 from .events import Commanded, Said
 from .executor import Executor
@@ -71,8 +73,15 @@ class _Execution:
         if not orders or not (executor.commanded.connected or executor.said.connected):
             executor.say(said, intention)           # nothing reaches the world: as the executor would alone
             return
+        commanding = {op.order for op in operations(runtime.beliefs, said.get("fills") or "") if op.kind == COMMAND}
         for order in orders:
-            for actuator, payload in command(runtime.beliefs, said, runtime.me, order=order):
+            sent = command(runtime.beliefs, said, runtime.me, order=order)
+            #  A COMMAND THAT ANSWERS NOTHING IS A STEP NOT TAKEN (#869): the present held nothing it
+            #  sizes from — a reading past its period, say — so nothing went out, and recording the
+            #  step taken would have the intention wait out its patience as though the device had run.
+            if order in commanding and not sent:
+                raise LookupError(f"{local_of(said['fills'])}'s command answered nothing in the present")
+            for actuator, payload in sent:
                 runtime.wrote(executor.commanded.emit(Commanded(actuator, payload)))
             for agents, document in says(runtime.beliefs, said, runtime.me, order=order):
                 runtime.wrote(executor.said.emit(Said(document, tuple(agents))))
