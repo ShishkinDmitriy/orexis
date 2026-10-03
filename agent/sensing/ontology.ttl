@@ -180,6 +180,15 @@
     run's start survives the replacement of the observation and a restart, and nothing counts
     readings in Python. What a sensor is said stuck from.""" .
 
+:stuckAfter a owl:DatatypeProperty ;
+    rdfs:domain orexis:Agent ;
+    rdfs:range xsd:integer ;
+    rdfs:label "stuck after" ;
+    rdfs:comment """How many of a sensor's cadences its number may stay unchanged before this agent says the
+    sensor stuck: the agent's own opinion, stated of the agent in the documents it believes, as what it
+    acts for is. `received.STUCK_AFTER`, six, where the agent states none — a package's figure until
+    something revises it, as the executor's patience is.""" .
+
 :stuckSince a owl:DatatypeProperty ;
     rdfs:domain sosa:Sensor ;
     rdfs:range xsd:dateTime ;

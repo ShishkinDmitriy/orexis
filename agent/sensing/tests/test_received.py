@@ -188,6 +188,23 @@ def test_a_reading_whose_number_differs_ends_the_run_and_the_stuck(monkeypatch, 
     assert _stuck(store) == [(PROBE, moved, moved)]
 
 
+def test_the_limit_is_the_agents_own_where_it_states_one(monkeypatch, snapshots):
+    """The limit is the agent's belief, not the package's: an agent stating `sensing:stuckAfter 2` of
+    itself says its probe stuck after two cadences unchanged, where the package's six would still
+    be waiting."""
+    from agent.ontology import PUBLIC
+    from agent.store import update
+
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(WORLD)
+    (public, *_) = graphs_of(store, PUBLIC)
+    update(store, f"INSERT DATA {{ GRAPH <{public}> {{ <{snapshots.ME}> sensing:stuckAfter 2 }} }}")
+    last = _every_cadence(store, snapshots, 0.25, 2)
+    assert _stuck(store) == [], "two readings are one cadence unchanged"
+    _every_cadence(store, snapshots, 0.25, 1, last + CADENCE)
+    assert _stuck(store) == [(PROBE, snapshots.NOW, snapshots.NOW)], "two cadences: the agent's own limit"
+
+
 def test_a_number_a_count_apart_is_two_numbers(monkeypatch, snapshots):
     """Identical means the raw number: a probe creeping by a count is alive to this detector, and the
     page says whose that case is."""

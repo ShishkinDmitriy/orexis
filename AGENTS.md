@@ -362,8 +362,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   a-reading-late-is-not-a-reading-missing).
 - **A sensor that keeps reporting one number is stuck, and age is not the only doubt about a
   reading** — each observation carries `sensing:unchangedSince`, the start of the unbroken run of
-  its raw number, and `received` says `sensing:stuckSince` once the run has lasted `STUCK_AFTER`
-  cadences, in a state graph the first differing number takes back; identical is the raw number,
+  its raw number, and `received` says `sensing:stuckSince` once the run has lasted the agent's own
+  `sensing:stuckAfter` cadences, six where it states none, in a state graph the first differing
+  number takes back; identical is the raw number,
   since a clamp can make two counts one reading, and a count that creeps is the other two
   detectors' (#462).
 - **Sensing speaks SOSA and SSN, and declares only what they lack** — the observation graph's kind,
