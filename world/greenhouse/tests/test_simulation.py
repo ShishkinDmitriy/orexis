@@ -46,6 +46,8 @@ def test_a_bed_that_dries_below_its_floor_is_dosed_and_the_next_reading_answers(
     assert bus.simulator.open() == ["actuators/heater/command", "actuators/pump/command"]
 
     bus.simulator.step(NOW)                                         # 0.40 and 21: comfortable
+    assert bus.simulator.due_in(NOW) == 600.0 and bus.simulator.due_in(NOW + timedelta(minutes=10)) == 0.0, \
+        "the process sleeps until the next reading is due, in the world's time"
     assert bus.runtime.run(passes=1, poll_s=0) == UNFINISHED and bus.commands == []
 
     time["at"] = NOW + timedelta(days=3)                            # 0.28: below the floor of 0.30

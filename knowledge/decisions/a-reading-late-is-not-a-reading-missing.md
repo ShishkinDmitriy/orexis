@@ -56,5 +56,3 @@ said silent a cadence later.
 - **The grace is one cadence for every sensor.** A sensor that is reliably late by more, such as a
   board that sleeps past its interval to save a battery, would want its own, stated by its world in
   SSN-System's words. Nothing reads such a statement yet.
-- **The simulator's loop is one real second whatever the pace**, so a fast enough clock still
-  outruns any grace. That is the simulator's to fix, not the observation's.
