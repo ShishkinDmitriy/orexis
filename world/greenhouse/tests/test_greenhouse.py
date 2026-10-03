@@ -80,14 +80,17 @@ def test_a_reading_is_written_and_its_side_concluded(monkeypatch):
 def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_reading_answers_it(monkeypatch):
     """0.2 against a range of 0.30 to 0.60: the middle is 0.45, two litres a fraction make half a
     litre, which is the pump's cap. The dose goes out on the pump's topic, not retained; the next
-    reading, 0.45, is revised inside and the intention is done."""
+    reading, 0.45, is revised inside and the intention is done — the dose lands when that reading is
+    due, a cadence after the step's instant, so an answer is looked for from then and not before: the
+    clock here ticks per read, so the step stands a few seconds after NOW and the reading comes a
+    minute past the cadence."""
     runtime, broker = _grower(monkeypatch)
     runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     assert broker.published == [("actuators/pump/command", {"dose_ml": 500}, False)]
     assert len(runtime.parts["execution"].executor.walking()) == 1, "the world has not answered yet"
-    runtime.time.at = NOW + timedelta(minutes=5)
+    runtime.time.at = NOW + timedelta(minutes=11)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert runtime.parts["execution"].executor.walking() == [], "the reading was revised inside and answered the dose"
@@ -112,13 +115,13 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
     runtime.run(passes=1, poll_s=0)
-    runtime.time.at = NOW + timedelta(minutes=5)
+    runtime.time.at = NOW + timedelta(minutes=11)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert runtime.parts["execution"].executor.walking() == [], "the dose landed"
     observed = [(p["measurement"], p["fields"]["value"], p["time"]) for p in history if p["measurement"] != "Step"]
     assert observed == [("AirTemperature", 21.0, NOW), ("SoilMoisture", 0.2, NOW),
-                        ("SoilMoisture", 0.45, NOW + timedelta(minutes=5))]
+                        ("SoilMoisture", 0.45, NOW + timedelta(minutes=11))]
     steps = [p for p in history if p["measurement"] == "Step"]
     assert [p["fields"] for p in steps] == [{"taken": True}, {"landed": True}]
     (taken, landed) = steps

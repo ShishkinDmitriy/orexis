@@ -892,6 +892,14 @@ it is a record wearing a bullet.
 - **A step lands as long after it is taken as its plan placed it after its opening** — a plan
   places steps at the instants of the worlds it searched, and a presentation taken late behind a
   round that cleared late failed at its placed instant before the probe could answer.
+- **A step lands when the world can SHOW its effect, and an action whose effect is a reading's
+  side lands at the sensor's next reading** — the dose declared no `planning:landsAfter`, so it
+  landed the instant it was taken and failed a patience later with the answering reading nine
+  minutes off, a dose a minute, each re-planned before the last was answered; the dose and the
+  heating declare the cadence of the sensor that made the reading they are sized from now, as
+  the market's acts declare their round's window. And a `landsAfter` text that will not parse
+  is logged and read as nought, so the suite was green with the landing unread: probe a
+  declared figure on the plan it places, never only on the outcome.
 - **An intention's steps are its own** — a second plan for one want names its steps as the first
   did, and the act the first recorded read as the second's step taken, so the grower never
   called again; a held name is tagged at adoption.
