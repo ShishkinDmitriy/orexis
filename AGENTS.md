@@ -196,6 +196,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   collection over whatever is `Done`, on the pass.
 - **What was foreseen may arrive early, and the present outranks the instant** — a cluster unmet
   now whose want still names an instant is re-minted at none, same name.
+- **A want is weighed in the ground holding at its instant, and a pass searches the wants holding
+  at any instant it can see** — weighed in the present, a want minted for a foreseen crossing read
+  met and was withdrawn in the pass that minted it, every pass, and the forecast never became a
+  dose (#858).
 - **A fallback is held to the case it was written for** — one want about everything a desire is
   about is for a desire UNMET NOW whose select yields no rows.
 - **A want somebody else sourced is still an INSTANCE under a standing desire** — a host holds
