@@ -37,7 +37,7 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    worked lifted into a method the executor proves or forgets.
 4. **Several agents contend** — #567, one dispatcher and two vans, then #568, right-of-way as a lot
    the market allocates.
-5. **Operating it** — #47, a world run end to end from nothing; #28 and #29, revocation; #839,
+5. **Operating it** — #47, a world run end to end from nothing; #839,
    #836, #860 and #838, what a world states about its installation and its wiring.
 6. **The edge** — #865, #868, #81, #322, #323, #461, #328 and #25, the boards and their firmware.
 

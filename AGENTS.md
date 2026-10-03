@@ -930,6 +930,15 @@ it is a record wearing a bullet.
   stay the kernel's; a plan's scored total became `planning:spent`, since `planning:costs` now
   names the action's cost select and one word is one concept.
 
+- **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
+  `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
+  absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
+  taking an agent away is not the mirror of adding one — a re-run reports what the wiring no
+  longer implies and `--revoke` takes it, keeping the bucket, since history that was true stays
+  (#28, #29).
+- **A guard asked `in text` is answered by the comment that names the option** — the test for the
+  `crlfile` line stayed green with the line struck out, because the config's own comment spelled
+  it; a directive is held to by whole lines.
 - **A step of onboarding runs where the world has what it serves, and says so where it does not**
   — every tool asked the broker for an address, so hanoi, the courier and the tower, naming none,
   could not be onboarded or run in a container at all; the bus is a premise read off the world

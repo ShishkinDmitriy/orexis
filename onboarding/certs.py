@@ -34,10 +34,20 @@ Nothing crosses between the two any more. When the broker was shared it needed a
 world's authority, rebuilt and reloaded whenever a world appeared; a broker that belongs to one
 world trusts exactly one authority and never learns the others exist.
 
-Certificates expire, which passwords did not. That is a real gain — it is the first thing here
-that can be revoked — and a real new failure mode: an agent whose certificate lapsed stops
-connecting and looks exactly like a process that went quiet. Re-running `orexis-onboard` reissues
-anything within `RENEW_BEFORE_DAYS` of expiry, so the routine cure is the routine command.
+Certificates expire, which passwords did not. That is a real gain, and a real new failure mode:
+an agent whose certificate lapsed stops connecting and looks exactly like a process that went
+quiet. Re-running `orexis-onboard` reissues anything within `RENEW_BEFORE_DAYS` of expiry, so the
+routine cure is the routine command.
+
+**And a certificate can be revoked inside its validity window, by the authority's CRL.** Mosquitto
+takes a `crlfile` on the TLS listener, and once it does OpenSSL demands a CRL signed by the leaf's
+issuer for EVERY handshake — a listener naming no CRL, or a CRL past its `nextUpdate`, refuses the
+whole society, not the one agent. So the CRL is written on every run, empty where nobody has been
+revoked, its horizon is the authority's own expiry, and the serials it carries are carried forward
+from the file itself: the CRL is the record of what was revoked, and there is no second list. A
+revoked serial stays on it after the agent's files are gone, so an agent re-onboarded gets a NEW
+certificate and the old one stays refused. The broker reads TLS material at start only, so a
+revocation reaches it on restart, not on the SIGHUP that reloads the ACL (#29).
 """
 
 from __future__ import annotations
@@ -186,9 +196,85 @@ def world_ca(world: str) -> Path:
     return world_dir(world) / "secrets" / "ca.crt"
 
 
+def crl_file(world: str) -> Path:
+    """The authority's CRL, beside the broker's other generated files, since the broker is what
+    reads it: `orexis-compose` mounts it at the path the generated config names. Public material
+    — signed by the authority, carrying serials and dates — so 0644 like the ACL."""
+    from .mqtt import mosquitto_dir
+
+    return mosquitto_dir(world) / "crl.pem"
+
+
+def _crl(world: str, ca: tuple[Path, Path], revoking=()) -> x509.CertificateRevocationList:
+    """Write this world's CRL: every serial it already carried, plus those of `revoking`, signed by
+    the authority as it stands now. Always written, empty where nobody is revoked.
+
+    The file is the record. A CRL that will not parse is refused rather than rewritten from
+    nothing, because rewriting it would quietly re-admit every certificate it named.
+
+    `nextUpdate` is the authority's own expiry: OpenSSL refuses a handshake over a CRL that has
+    lapsed, and that refusal is of every agent in the society, so a horizon shorter than the
+    authority's would be a timer that locks the world out on the day nobody re-ran onboarding. The
+    CRL is re-signed on every run regardless, so a rotated authority signs its own.
+    """
+    ca_cert, ca_key = _load_ca(*ca)
+    path = crl_file(world)
+    carried: list[x509.RevokedCertificate] = []
+    number = 0
+    if path.exists():
+        try:
+            previous = x509.load_pem_x509_crl(path.read_bytes())
+        except ValueError as exc:
+            raise SystemExit(f"orexis-mqtt: {path} will not parse ({exc}) — it is the record of what this world "
+                             "revoked, so it is not rewritten from nothing; restore it or delete it knowingly")
+        carried = list(previous)
+        try:
+            number = previous.extensions.get_extension_for_class(x509.CRLNumber).value.crl_number
+        except x509.ExtensionNotFound:
+            pass
+
+    now = _now()
+    builder = (
+        x509.CertificateRevocationListBuilder()
+        .issuer_name(ca_cert.subject)
+        .last_update(now - dt.timedelta(minutes=5))  # the same skew the certificates tolerate
+        .next_update(ca_cert.not_valid_after_utc)
+        .add_extension(x509.CRLNumber(number + 1), critical=False)
+    )
+    known = {r.serial_number for r in carried}
+    for revoked in carried:
+        builder = builder.add_revoked_certificate(revoked)
+    for cert in revoking:
+        if cert.serial_number in known:
+            continue
+        known.add(cert.serial_number)
+        builder = builder.add_revoked_certificate(
+            x509.RevokedCertificateBuilder().serial_number(cert.serial_number).revocation_date(now).build())
+    crl = builder.sign(ca_key, _sign_with(ca_key))
+    _write(path, crl.public_bytes(serialization.Encoding.PEM), private=False)
+    return crl
+
+
+def revoke(world: str, cert_path: Path) -> int:
+    """Put the certificate at `cert_path` on this world's CRL, and answer its serial. The file
+    itself is left to the caller, which is also taking the credential beside it."""
+    secrets = world_dir(world) / "secrets"
+    cert = x509.load_pem_x509_certificate(cert_path.read_bytes())
+    _crl(world, (secrets / "ca.crt", secrets / "ca.key"), revoking=[cert])
+    return cert.serial_number
+
+
+def revoked(world: str) -> list[int]:
+    """The serials this world's CRL names, or none where it has not been written."""
+    path = crl_file(world)
+    if not path.exists():
+        return []
+    return [r.serial_number for r in x509.load_pem_x509_crl(path.read_bytes())]
+
+
 def issue_for_world(world: str, agent_ids, rotate: bool = False,
                     broker_host: str | None = None) -> None:
-    """This world's authority, its broker's certificate, and one per agent.
+    """This world's authority, its broker's certificate, one per agent, and the authority's CRL.
 
     The CN is the agent's world-qualified username, so the broker maps it straight onto the ACL
     that is already derived from the wiring.
@@ -205,3 +291,7 @@ def issue_for_world(world: str, agent_ids, rotate: bool = False,
         if _leaf(secrets, agent_id, agent_username(world, agent_id), ca,
                  server=False, rotate=rotate):
             log.info("  cert   %-14s CN=%s", agent_id, agent_username(world, agent_id))
+    #  THE CRL, EVERY RUN: the config names it unconditionally, so it must exist before the broker
+    #  starts, and it is re-signed here so that a rotated authority vouches for its own.
+    crl = _crl(world, ca)
+    log.info("  crl    %-14s %d revoked", "", len(list(crl)))

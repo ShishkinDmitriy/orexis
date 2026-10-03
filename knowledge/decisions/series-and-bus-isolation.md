@@ -315,21 +315,60 @@ recorded in `orexis-infra-certs --rotate`, observed rather than predicted.
 # The CA is files and a function, not a service
 
 Nothing in `podman ps` is a certificate authority and nothing is meant to be. An authority here
-is a private key on disk plus a function that signs — no issuing service, no ACME, no CRL, no
-OCSP responder. For one Pi that is proportionate; step-ca or Vault would be the largest thing in
-`infra/` and would bring its own availability and backup story.
+is a private key on disk plus a function that signs — no issuing service, no ACME, no OCSP
+responder, and a CRL that is a file the same function signs. For one Pi that is proportionate;
+step-ca or Vault would be the largest thing in `infra/` and would bring its own availability and
+backup story.
 
 Three consequences, and only the first is comfortable.
 
 **Issuance is fine.** Re-running the command issues or renews, and anything within 30 days of
 expiry is reissued, so the routine command is the routine cure.
 
-**Revocation barely exists, and an earlier note here overstated it.** Certificates were described
-as "the first thing that can genuinely be revoked". They are not: with no CRL the broker cannot
-reject a certificate that is still inside its validity window. What revocation exists is coarse
-and comes from an accident of the design — `clients-ca.crt` is a *concatenation*, so deleting a
-world's authority from it and restarting the broker locks out that entire society. Per world,
-never per agent, and it costs every connected client.
+**Revocation barely existed, and an earlier note here overstated it.** Certificates were described
+as "the first thing that can genuinely be revoked". They were not: with no CRL the broker cannot
+reject a certificate that is still inside its validity window. What revocation existed was coarse
+and came from an accident of the design — `clients-ca.crt` was a *concatenation*, so deleting a
+world's authority from it and restarting the broker locked out that entire society. Per world,
+never per agent, and it cost every connected client.
+
+> **Amended 2026-10-03 (#28, #29).** Per agent now, by the authority's CRL. Mosquitto 2.0.11
+> takes a `crlfile` on the TLS listener, and `orexis-mqtt` writes one on every run beside the
+> broker's other generated files, `world/<w>/mosquitto/crl.pem`, signed by the world's authority
+> and naming the serials of every certificate `orexis-mqtt <w> --revoke <agent>` has put on it;
+> the generated config names it unconditionally and the compose file mounts it. Two things were
+> refused on the way. **A CRL only where somebody is revoked** — once `crlfile` is set OpenSSL
+> demands a CRL from the issuer on every handshake, so a config naming an absent file, or a world
+> that had revoked nobody and so had none, refuses every agent of the society rather than none;
+> the file is written empty instead, and the config never names what is not there. **A CRL with
+> a horizon of its own** — a CRL past its `nextUpdate` is refused the same way, so a horizon
+> shorter than the authority's is a timer that locks the world out on the day nobody re-ran
+> onboarding; the horizon is the authority's expiry, and the file is re-signed on every run
+> regardless. The CRL is the record: a revoked serial is carried forward from the file itself,
+> so a re-onboarded agent gets a new certificate and the old one stays refused, and a file that
+> will not parse is refused rather than rewritten from nothing, since that would re-admit every
+> certificate it named in silence. **What is not proven**: the broker reads TLS material at start,
+> so a revocation reaches it on restart and not on the SIGHUP that reloads the ACL — which is the
+> repo's measured claim about the trust bundle and is taken on it here, as is the reading of the
+> mosquitto source that `crlfile` sets `X509_V_FLAG_CRL_CHECK` and checks the leaf alone. That a
+> broker with `crlfile` and an EMPTY CRL still admits every agent, and that a revoked certificate
+> is refused after a restart, are the two things `infra/tests/` does not yet hold the broker to;
+> until it does, a revocation is a file the broker has been handed, not a refusal anyone has seen.
+
+**Taking an agent away is not the mirror of adding one, and no re-run does it.** Onboarding grants
+what the wiring implies and takes nothing back; `orexis-onboard` ends by reporting what the world
+still holds that its wiring no longer implies — a broker credential or a certificate of no
+principal in the society, a series token or a bucket of no agent in the roster, the store asked
+where the admin token is present and said not asked where it is not — and each line names the
+`--revoke` that would take it. Three reasons it is a report and never an act, each a decision a
+re-run may not make: an agent absent from a world today may be back tomorrow, and re-granted it
+writes on in the bucket it had; a bucket is the record of what that agent observed and did while
+it was here, and history that was true stays true after its author has gone, so `orexis-influx
+--revoke` deletes the token and KEEPS the bucket, and deleting one is the admin's act with the
+admin's token by hand; and a certificate is refused by nothing until the authority says so.
+`orexis-mqtt --revoke` on a principal the wiring still implies is a one-time eviction and says
+so — the next run grants it again, with a new certificate — because the wiring is the grant, and
+taking the principal out of `society.ttl` is what revokes it for good.
 
 **The keys sit at rest** on whichever host runs each command, protected by file permissions and
 nothing more — the same standing as the admin token beside them.
@@ -348,5 +387,7 @@ onboarding a world could no longer happen on a host that infra is not on. That i
 
 The cost is honest and worth stating plainly: **a new world requires a broker restart**, because
 the trust bundle changes and SIGHUP does not reload TLS material. Adding an *agent* to an
-existing world still costs nothing, since the authority is unchanged. And the coarse revocation
-above is only possible because the bundle is a list — a hierarchy would take that away too.
+existing world still costs nothing, since the authority is unchanged. The coarse revocation
+above was only possible because the bundle was a list — a hierarchy would have taken that away
+too; with a CRL per authority the point is moot, since each world's broker trusts one authority
+and reads that one's CRL.

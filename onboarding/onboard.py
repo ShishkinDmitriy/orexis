@@ -28,6 +28,13 @@ ratified, which is why this can be a single command and why re-running it is saf
 agent to a world and running this again is the whole of onboarding it; there is no list to keep
 in step, because there is no list.
 
+**Taking an agent away is not the mirror of adding one.** A re-run grants what the wiring implies
+and takes nothing back: it ends by REPORTING what the world still holds that its wiring no longer
+implies — a credential, a certificate, a token, a bucket — and each line names the command that
+would take it. That is `--revoke <principal>` on `orexis-mqtt` and on `orexis-influx`, explicit
+every time, because each is a decision a re-run may not make: an agent absent today may be back
+tomorrow, and its bucket is the record of what happened while it was here (#28, #29).
+
 **It is not birth.** Onboarding gives an agent what it needs from the outside world;
 birth is the agent authoring its own beliefs, once, on its first start — inside its own
 container, from the files mounted beside it, with nobody watching. One is done TO an agent and
@@ -104,7 +111,38 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     dashboards.generate(world)
     if bus and not certs.world_ca(world).exists():
         log.warning("  ! no certificate authority for this world")
+    report(world)
     log.info("onboarded %s — `cd world/%s && podman compose up -d` to start it", world, world)
+
+
+def report(world: str) -> list[str]:
+    """What exists for this world that its wiring no longer implies — a credential, a certificate,
+    a token or a bucket of a principal the society does not state. Said, and nothing taken: a
+    grant is derived from the wiring, so adding an agent is re-running this, but taking one away
+    is not the mirror of it. An agent absent today may be back tomorrow, its bucket is the record
+    of what happened while it was here, and its certificate is refused by nothing until the
+    authority says so — each of which is a decision, made by `--revoke` on the tool that granted
+    it and never by a re-run. The series store is asked where the admin token is here, and the
+    line says so where it is not.
+    """
+    from influxdb_client.rest import ApiException
+
+    found = mqtt.stale(world) + influx.stale_files(world)
+    try:
+        found += influx.stale_grants(world)
+    except influx.AdminError as exc:
+        log.info("  the series store was not asked what it holds for %s — %s", world, exc)
+    except (influx.StoreUnreachable, ApiException) as exc:
+        #  THE STORE'S OWN REFUSALS, and only those: a report must not fail the onboarding it
+        #  ends, and a store that is down is the ordinary case on a host that is not the bench —
+        #  but a fault in the report itself is not the store's and is not swallowed here. The
+        #  first cut caught everything, and hid a path error of its own for one test run.
+        log.warning("  ! the series store could not be asked what it holds for %s: %s", world, exc)
+    for line in found:
+        log.warning("  stale  %s", line)
+    if not found:
+        log.info("  nothing stale — everything held is implied by the wiring")
+    return found
 
 
 def main() -> None:
