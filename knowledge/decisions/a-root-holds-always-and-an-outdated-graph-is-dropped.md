@@ -110,7 +110,9 @@ prediction's lifecycle.
   for leaves a held root with no met-test; endowment adds and never removes, so removing a
   region want is a rebirth until somebody needs it not to be.
 - **A frozen probe** ([#462](https://github.com/ShishkinDmitriy/orexis/issues/462)) stays fresh
-  under this as under the timer: a reading that keeps arriving is inside its window.
+  under this as under the timer: a reading that keeps arriving is inside its window. Freshness
+  never doubts it; the doubt is sensing's own, said beside the age as
+  [stuck](/domain/sensing/stuck.md), and that is a second row and not a shorter window.
 - **Retention of verdicts.** How long the reviewer's evidence is kept is the review package's
   bound, and the stretch record's retention seam moves there.
 - **A promise and a call end by an event, not by the clock** — the step above resolving, the

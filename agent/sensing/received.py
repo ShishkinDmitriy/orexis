@@ -35,6 +35,18 @@ A forecast is a belief and not a reading, so it ends no silence and is said as n
 **A READING ENDS A SILENCE.** A sensor `missed` had said silent is silent no longer: the graph
 saying so goes before the observation is written, found by the row's content and never by name.
 
+**A NUMBER THAT NEVER CHANGES IS A SENSOR STUCK (#462).** Freshness was the one doubt the store
+held about a reading, so a probe that lost half its wire at mounting and reported a plausible
+number on time all night was believed all night. Each observation carries `sensing:unchangedSince`,
+the instant of the earliest reading in the unbroken run of its number — its own where the number
+differs from the one it replaced, the replaced one's where it is identical — so the run's start is
+in the store and not in a count a restart loses. A sensor whose run has lasted `STUCK_AFTER` of
+its cadences is said `sensing:stuckSince` the run's start, once, in a graph of the agent's own
+classified `orexis:StateGraph` as a silence is, holding from that instant; the first reading whose
+number differs takes the graph back here, as a reading takes a silence back. Identical means the
+raw number, the count the pointer found, since a clamp or a rescale can make two different counts
+one reading; and a sensor stating no frequency is never said stuck, as it is never said silent.
+
 **AND IT IS SAID.** The graph written is answered to whoever runs the transport, and sensing's
 part, hearing an observation graph written, says it as an `Observed` (`events.py`), which history
 writes as a point and metrics tallies: sensing decides what an observation is, so sensing says
@@ -56,12 +68,12 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
-from agent.ontology import PUBLIC, local_of
+from agent.ontology import PUBLIC, STATE, local_of
 from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
 from .cadence import cadence_of
-from .ontology import (FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, earlier_graph, forecast_graph, observation_by,
-                       observation_graph, observation_of)
+from .ontology import (DERIVED, FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, earlier_graph, forecast_graph,
+                       observation_by, observation_graph, observation_of, stuck_graph)
 from .pipeline import decode, decode_series, reads_series
 
 log = logging.getLogger("received")
@@ -70,6 +82,14 @@ log = logging.getLogger("received")
 #  until its successor arrives or this long past the instant the successor was due.
 GRACE = 1
 
+#  HOW LONG A SENSOR'S NUMBER MAY STAY THE SAME before the sensor is said stuck, in its own cadences:
+#  twice the silence limit. A live instrument's count moves by a bit within a few readings even in
+#  still soil, and soil itself drifts within an hour, so a number unchanged through six cadences —
+#  an hour at the greenhouse's ten minutes, two at the terrace's twenty — is the signature of a
+#  frozen oscillator or a half-lost wire rather than of equilibrium; and the suspicion costs the
+#  row alone, since the first reading that differs takes it back.
+STUCK_AFTER = 6
+
 #  THE KEY: what the sensor observes, of what it is mounted in.
 _KEY_Q = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; sosa:isHostedBy ?feature }"
 
@@ -77,9 +97,19 @@ _KEY_Q = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; so
 _SILENCE_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { $sensor sensing:silentSince ?since } }"""
 
-#  WHAT THIS SENSOR READ BEFORE: every observation graph of it, found by its content.
+#  WHAT THIS SENSOR READ BEFORE: every observation graph of it, found by its content, with the
+#  number it gave, when, and since when the number had been that — for the run to carry on from.
 _OBSERVED_Q = """
-SELECT ?g WHERE { GRAPH $cat { ?g a sensing:ObservationGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }"""
+SELECT ?g ?raw ?t ?since WHERE {
+  GRAPH $cat { ?g a sensing:ObservationGraph }
+  GRAPH ?g { ?o sosa:madeBySensor $sensor
+             OPTIONAL { ?o sensing:rawResult ?raw } OPTIONAL { ?o sosa:resultTime ?t }
+             OPTIONAL { ?o sensing:unchangedSince ?since } } }
+ORDER BY ?t"""
+
+#  WHETHER THIS SENSOR IS SAID STUCK — the graph holding the row, found by its content.
+_STUCK_Q = """
+SELECT ?g WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { $sensor sensing:stuckSince ?since } }"""
 
 #  THE FORECAST THIS SENSOR GAVE BEFORE: every graph of it, found by its content.
 _FORECAST_Q = """
@@ -112,33 +142,68 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     cat = Raw(f"<{catalogue_of(store)}>")
     for silence in rows(store, _SILENCE_Q, (), cat=cat, sensor=sensor):
         forget_graph(store, silence["g"])
+    #  THE RUN SO FAR: the number the latest observation replaced gave, and since when it had given
+    #  it — read before the graph goes, since the run is the one thing the replacement carries over.
+    run = None
     for old in rows(store, _OBSERVED_Q, (), cat=cat, sensor=sensor):
+        if old.get("raw") is not None and old.get("t"):
+            run = (float(old["raw"]), datetime.fromisoformat(old.get("since") or old["t"]))
         forget_graph(store, old["g"])
     #  EVERY READING THE MESSAGE CARRIES, oldest first, each placed that long before it arrived: an
     #  earlier one — a sentinel's last quiet sample before its alarm — holds only until the next one's
     #  instant, so it is a step in the history and, at the latest one's instant, nothing; the latest
     #  stands as the present until the next is due by the sensor's frequency, and a grace past it.
+    #  Each carries on the run where its number is the one before, and starts one where it is not.
     instants = [at - timedelta(seconds=age) for _, age in readings]
+    since = []
+    for (number, _), when in zip(readings, instants):
+        run = (round(float(number), 6), run[1] if run is not None and run[0] == round(float(number), 6) else when)
+        since.append(run[1])
     written = []
     for n, ((number, _), when, then) in enumerate(zip(readings[:-1], instants[:-1], instants[1:])):
         graph = earlier_graph(local_of(me), sensor, n)
-        _write(store, me, sensor, graph, f"{observation_by(sensor)}_earlier_{n}", number, when, then, procedure)
+        _write(store, me, sensor, graph, f"{observation_by(sensor)}_earlier_{n}", number, when, then, since[n], procedure)
         written.append(graph)
     number, when = readings[-1][0], instants[-1]
     graph = observation_graph(local_of(me), sensor)
     cadence = cadence_of(store, sensor, memo)
     _write(store, me, sensor, graph, observation_by(sensor), number, when,
-           when + timedelta(seconds=(1 + GRACE) * cadence) if cadence is not None else None, procedure, phenomenon_at)
+           when + timedelta(seconds=(1 + GRACE) * cadence) if cadence is not None else None, since[-1], procedure,
+           phenomenon_at)
     log.info("%s: %s reads %s%s", local_of(me), local_of(sensor), number,
              "".join(f", and read {n:g} {a:g}s before" for n, a in readings[:-1]))
+    _stuck(store, me, sensor, cat, since[-1], when, cadence)
     return [*written, graph]
 
 
+def _stuck(store, me: str, sensor: str, cat: Raw, since: datetime, at: datetime, cadence: float | None) -> None:
+    """Say `sensor` stuck, once, where its number has been the same since `since` for `STUCK_AFTER`
+    cadences and more at `at`; take the saying back where it has not — the run having restarted
+    with this reading, or the sensor stating no cadence to count in."""
+    said = rows(store, _STUCK_Q, (), cat=cat, sensor=sensor)
+    if cadence is None or at < since + timedelta(seconds=STUCK_AFTER * cadence):
+        for row in said:
+            forget_graph(store, row["g"])
+        return
+    if said:
+        return                                          # said already, and once is enough
+    graph = stuck_graph(local_of(me), sensor)
+    update(store, f"""
+INSERT DATA {{
+  GRAPH <{graph}> {{ <{sensor}> sensing:stuckSince "{since.isoformat()}"^^xsd:dateTime . }}
+  {entry(store, graph, STATE, DERIVED, me, start=since)} }}""")
+    log.warning("%s: %s stuck since %s, its number unchanged for %d cadences", local_of(me), local_of(sensor),
+                since.isoformat(timespec="seconds"), STUCK_AFTER)
+
+
 def _write(store, me: str, sensor: str, graph: str, node: str, number: float, at: datetime,
-           until: datetime | None, procedure: str | None = None, phenomenon_at: datetime | None = None) -> None:
-    """One observation of what `sensor` gave, `number` at `at`, standing until `until` or for good."""
+           until: datetime | None, since: datetime, procedure: str | None = None,
+           phenomenon_at: datetime | None = None) -> None:
+    """One observation of what `sensor` gave, `number` at `at`, standing until `until` or for good,
+    the number unchanged since `since`."""
     said = [f'<{node}> a sosa:Observation',
             f'<{node}> sensing:rawResult "{round(float(number), 6)}"^^xsd:decimal',
+            f'<{node}> sensing:unchangedSince "{since.isoformat()}"^^xsd:dateTime',
             f'<{node}> sosa:resultTime "{at.isoformat()}"^^xsd:dateTime',
             f'<{node}> sosa:madeBySensor <{sensor}>',
             f'<{node}> prov:wasGeneratedBy <{me}>']
