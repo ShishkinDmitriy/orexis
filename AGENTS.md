@@ -460,6 +460,15 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   model** (#826); **metrics and history are what events say, and no package imports either**
   (metrics-and-history-are-what-events-say); **a metric is optional at every level and aggregated
   where it happens**.
+- **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
+  `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
+  absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
+  taking an agent away is not the mirror of adding one — a re-run reports what the wiring no
+  longer implies and `--revoke` takes it, keeping the bucket, since history that was true stays
+  (#28, #29).
+- **A guard asked `in text` is answered by the comment that names the option** — the test for the
+  `crlfile` line stayed green with the line struck out, because the config's own comment spelled
+  it; a directive is held to by whole lines.
 
 ## The rules the code lives by
 

@@ -5,7 +5,8 @@ description: >-
   The phase between a ratified world and a society that can be started - a bucket and a token per
   agent, where the world has a bus a broker credential per principal and the ACL derived from the
   wiring, a compose file, the dashboards, and a board's config. Every grant is read off the world
-  as an agent boots it, so re-running it is safe and adding an agent is the whole of deploying one.
+  as an agent boots it, so re-running it is safe and adding an agent is the whole of deploying one;
+  taking one away is reported by a re-run and done only by `--revoke`, which keeps the bucket.
 ---
 
 # What it grants
@@ -56,6 +57,31 @@ a world stating a second `mqtt4ssn:Broker`, or one broker whose urls disagree on
 scheme's port, is refused and named rather than merged (`broker` in `onboarding/mqtt.py`).
 How several would reach an agent is the first seam of
 [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md).
+
+# What it takes back, and only when told
+
+A re-run grants what the wiring implies and takes nothing away. It ends with a **report**: every
+file under `world/<w>/secrets/` for a principal the society no longer states — a broker
+credential, a certificate, a series token's file — and, where the admin token is on this host, every
+token and bucket the series store holds under this world's name for an agent not in its roster.
+Each line says what, why, and the command that would take it; a certificate not yet on the CRL is
+said to still open a session. Nothing is removed by the report.
+
+Taking back is **`--revoke <principal>`** on the tool that granted, by the principal's id:
+
+| command | takes back | and says |
+|---|---|---|
+| `orexis-mqtt <w> --revoke <id>` | the broker credential, so the rebuilt `passwd` and ACL no longer name it; the certificate, by its serial on the authority's CRL, its files removed | restart the broker — TLS material is read at start, and SIGHUP reloads only the ACL |
+| `orexis-influx <w> --revoke <id>` | every token described as that agent's, in every store, and its credential files | the bucket is kept — it is the record of what the agent did while it was here |
+
+Explicit every time, because each is a decision no re-run may make for you — an agent absent
+today may be back tomorrow, and a bucket deleted is history edited because its author left. The
+CRL is the broker's premise for refusing a certificate it still trusts the issuer of, so it is
+written on every run, empty where nobody is revoked, and the config names it unconditionally:
+`crlfile` set with no CRL to read refuses every agent, not the revoked one. The CRL itself is the
+record of what was revoked, carried forward from the file, with the authority's expiry as its
+horizon. What the bench has not yet shown is written where the decision is,
+[series-and-bus-isolation](/decisions/series-and-bus-isolation.md).
 
 # Nothing here decides
 

@@ -226,10 +226,30 @@ version upgrade changes any of it.
 | **revoke** | edit `society.ttl`, `orexis-mqtt <w>` — delivery stops at once, and the agent is **not** disconnected | delete the token; refused on its very next request |
 | **rotate** credential | `orexis-mqtt <w> --rotate` — **evicts** the session it invalidates | `orexis-influx <w> --rotate` — old token refused at once |
 
-**Revoking is immediate on both, and neither needs a restart.** Mosquitto re-checks the ACL on
-every *delivery*, not just at subscribe — which is also why an agent may subscribe `#` and still
-receive only its own topics. Influx checks the token on every request. The bus needs its SIGHUP,
-which `orexis-mqtt` sends for you; the store needs nothing at all.
+**Revoking a grant is immediate on both, and neither needs a restart.** Mosquitto re-checks the
+ACL on every *delivery*, not just at subscribe — which is also why an agent may subscribe `#` and
+still receive only its own topics. Influx checks the token on every request. The bus needs its
+SIGHUP, which `orexis-mqtt` sends for you; the store needs nothing at all.
+
+# Removing an agent
+
+Take it out of the world's documents and re-run `orexis-onboard <w>`. Nothing of it is taken back
+by that: the run ends by **reporting** what the world still holds that its wiring no longer
+implies — its broker credential, its certificate, its series token's file, and where the admin
+token is on this host its tokens and buckets in the store — each with the command that would take
+it. Then say so, per service:
+
+```bash
+orexis-mqtt <w> --revoke <id>       # credential gone, ACL rebuilt and reloaded, certificate on the CRL
+cd world/<w> && podman compose restart mosquitto    # the CRL is TLS material: read at start, not on SIGHUP
+orexis-influx <w> --revoke <id>     # its tokens deleted; its buckets KEPT
+```
+
+The bucket stays on purpose: it is the record of what that agent observed and did while it was
+here, and a removed agent's readings are still what happened. Delete it by hand with the admin
+token if you mean to. `--revoke` on an agent still in the documents is an eviction for one run —
+the next `orexis-onboard` grants it again, with a new certificate, and the revoked one stays on the
+CRL — which is the shape for *stop this agent now, decide later*.
 
 **Rotation is a revocation, not a re-key.** Both credentials are handed to a container as an
 `env_file` when it is *created*, and the agent holds them in memory. So rotating takes that agent

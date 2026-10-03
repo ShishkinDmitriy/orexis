@@ -36,6 +36,12 @@ the board is pointed at.
 Only agents get a world-qualified *username*, which is now belt-and-braces rather than load-
 bearing: a broker that serves one world has no namespace for `fern` to collide in.
 
+**Taking a principal away is said, never derived.** A re-run grants what the wiring implies and
+`orexis-onboard` reports what is held beyond that (`stale`); `--revoke <principal>` takes it: the
+credential goes and the ACL is rebuilt without it, the certificate goes on the world's CRL, which
+the generated config names on every TLS listener and `certs` writes on every run, empty where
+nobody is revoked — a `crlfile` the broker cannot read refuses every agent, not one (#28, #29).
+
 Like `influx_admin`, this is the operator's half and nothing inside an agent may import it.
 See knowledge/decisions/series-and-bus-isolation.md.
 """
@@ -50,10 +56,12 @@ import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from cryptography import x509
+
 from . import certs, installation, reading
 from agent.store import graphs_of, rows
 from .worlds import REPO_ROOT
-from .worlds import world_dir, worlds
+from .worlds import shown, world_dir, worlds
 
 log = logging.getLogger("mqtt")
 
@@ -397,6 +405,11 @@ def write_config(world: str) -> None:
             "require_certificate true",
             "use_identity_as_username true",
             "cafile /etc/mosquitto/clients-ca.crt",
+            "# What that authority has revoked. ALWAYS named: with a crlfile OpenSSL demands a CRL",
+            "# from the issuer on every handshake, so a listener naming an absent file refuses the",
+            "# whole society — `orexis-mqtt` writes one on every run, empty where nobody is revoked.",
+            "# Read at start only, like the certificates: a revocation needs a restart, not a HUP.",
+            "crlfile /etc/mosquitto/crl.pem",
             "certfile /etc/mosquitto/broker.crt",
             "# entrypoint.sh re-owns this to mosquitto at 0600 while it is still root, because",
             "# the broker opens it AFTER dropping privileges.",
@@ -459,6 +472,84 @@ def rebuild(world: str) -> None:
     acl_file.chmod(0o644)
     log.info("  wrote %s and %s (%d principals)", passwd_file.relative_to(REPO_ROOT),
              acl_file.relative_to(REPO_ROOT), len(passwd))
+
+
+# ---------------------------------------------------------------- revocation
+
+
+RESTART_HINT = "cd world/{world} && podman compose restart mosquitto"
+
+
+def revoke(world: str, principal: str) -> None:
+    """Take one principal off the bus, by name: its credential file goes, so the next `rebuild`
+    writes it no password and no grants; its certificate, where it has one, goes on the authority's
+    CRL and its files go with it, so a re-onboarding issues a new one and the old stays refused.
+
+    Explicit and never implicit. A principal the wiring no longer implies is reported by
+    `orexis-onboard` and left alone until somebody says this, because an agent absent from a world
+    today may be back tomorrow — and one the wiring STILL implies is granted again by the next
+    `orexis-mqtt`, since the wiring is the grant; taking it out of the society is what revokes it
+    for good, and this says so.
+
+    The ACL change reaches the broker on the reload the caller sends. The CRL does not: the broker
+    reads TLS material at start, so until it restarts the revoked certificate still opens a
+    session — with a username the ACL grants nothing, which is a foothold and not a voice.
+    """
+    agents, devices = grants(world)
+    credential = agent_credential_file(world, principal)   # a device's is at the same path
+    cert_path, key_path = certs.agent_cert_files(world, principal)
+    held = [p for p in (credential, cert_path, key_path) if p.exists()]
+    if not held:
+        raise SystemExit(f"orexis-mqtt: nothing to revoke — world {world!r} holds no credential or certificate "
+                         f"for {principal!r} under secrets/")
+
+    restart = False
+    if cert_path.exists():
+        serial = certs.revoke(world, cert_path)
+        log.info("  %-14s certificate %x revoked — on %s", principal, serial, shown(certs.crl_file(world)))
+        restart = True
+    for path in held:
+        path.unlink()
+        log.info("  %-14s %s removed", principal, shown(path))
+    rebuild(world)
+    if principal in agents or principal in devices:
+        log.warning("  ! the wiring still implies %s, so the next `orexis-mqtt %s` grants it again%s — take it "
+                    "out of society.ttl to revoke it for good", principal, world,
+                    " with a new certificate" if restart else "")
+    if restart:
+        log.warning("  ! the broker reads its CRL at start and SIGHUP does not reload TLS material — restart it "
+                    "for the revocation to take: %s", RESTART_HINT.format(world=world))
+
+
+def stale(world: str) -> list[str]:
+    """What this world holds under `secrets/` for the bus that its wiring no longer implies: a
+    broker credential of no agent or device in the society, a certificate of no agent. Report only
+    — each line names what, why, and the command that would take it back. A world with no bus
+    implies no principal at all, so everything of the bus it still holds is stale."""
+    agents, devices = grants(world)
+    secrets = world_dir(world) / "secrets"
+    if not secrets.is_dir():
+        return []
+    found = []
+    for path in sorted(secrets.iterdir()):
+        name = path.name
+        if name.startswith("mqtt-") and name.endswith(".env"):
+            who = name[len("mqtt-"):-len(".env")]
+            if who not in agents and who not in devices:
+                found.append(f"secrets/{name} — no agent or device {who!r} in the society; "
+                             f"`orexis-mqtt {world} --revoke {who}` takes it back")
+        elif name.endswith((".crt", ".key")) and name.rsplit(".", 1)[0] not in ("ca", "broker"):
+            who = name.rsplit(".", 1)[0]
+            if who not in agents:
+                how = ""
+                if name.endswith(".crt"):
+                    cert = x509.load_pem_x509_certificate(path.read_bytes())
+                    how = (" — on the CRL already" if cert.serial_number in certs.revoked(world) else
+                           f" — valid until {cert.not_valid_after_utc:%Y-%m-%d} and NOT on the CRL, so it still "
+                           "opens a session")
+                found.append(f"secrets/{name} — no agent {who!r} in the society{how}; "
+                             f"`orexis-mqtt {world} --revoke {who}` revokes it")
+    return found
 
 
 # The broker reads `passwd` and `acl.conf` only at startup, so a regenerated ACL means nothing
@@ -546,12 +637,22 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--no-reload", action="store_true",
                    help="write the files but do not signal the broker. It will keep enforcing "
                         "the previous ACL until it is reloaded or restarted.")
+    p.add_argument("--revoke", metavar="PRINCIPAL",
+                   help="take ONE principal off the bus, by its id, and grant nothing else: its credential "
+                        "goes, its certificate goes on the world's CRL. Never implicit — `orexis-onboard` "
+                        "only reports what the wiring no longer implies. The broker must be restarted "
+                        "for a revoked certificate to be refused.")
     args = p.parse_args(argv)
     log.info("world %s", args.world)
-    if reading.BUS not in reading.premises(world_dir(args.world)):
+    if args.revoke:
+        #  A world with no bus may still hold a credential from when it had one; what is revoked
+        #  is what is on disk, so this is not gated on the premise the grants are.
+        revoke(args.world, args.revoke)
+    elif reading.BUS not in reading.premises(world_dir(args.world)):
         log.info("  no bus — its society names no mqtt4ssn:Broker, so there is nothing to grant")
         return
-    provision(args.world, rotate=args.rotate)
+    else:
+        provision(args.world, rotate=args.rotate)
     if not args.no_reload:
         reload_broker(args.world)
 

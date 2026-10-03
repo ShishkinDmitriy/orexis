@@ -30,6 +30,9 @@ services:
       # Its authority is this world's own, so it trusts exactly one and never learns
       # that other worlds exist — the same rule the belief base already follows.
       - ./secrets/ca.crt:/etc/mosquitto/clients-ca.crt:ro
+      # and what that authority has revoked — empty where nobody is, and always mounted,
+      # since the config names it and a crlfile that is absent refuses every agent
+      - ./mosquitto/crl.pem:/etc/mosquitto/crl.pem:ro
       - ./secrets/broker.crt:/etc/mosquitto/broker.crt:ro
       - ./secrets/broker.key:/etc/mosquitto/broker.key:ro
       # retained cadences outlive a restart: a sleeping board must still receive the interval

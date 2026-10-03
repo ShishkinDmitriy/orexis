@@ -63,7 +63,7 @@ from agent.series import HISTORY, METRICS, PURPOSES
 
 from . import compose, installation
 from .worlds import REPO_ROOT
-from .worlds import world_dir, worlds
+from .worlds import shown, world_dir, worlds
 
 log = logging.getLogger("influx")
 
@@ -72,6 +72,11 @@ ADMIN_ENV = REPO_ROOT / "infra" / "secrets" / "admin.env"
 
 class AdminError(RuntimeError):
     """The operator's environment is not set up. Not an agent's problem — nothing is running."""
+
+
+class StoreUnreachable(RuntimeError):
+    """A store the installation names did not answer a ping. Raised by the report alone, which must
+    go on without it; a grant refuses through the client's own errors, as it did."""
 
 
 def bucket_name(world: str, agent_id: str, purpose: str = HISTORY) -> str:
@@ -97,6 +102,21 @@ def credential_file(world: str, agent_id: str, purpose: str = HISTORY) -> Path:
 def _unpurposed_file(world: str, agent_id: str) -> Path:
     """Where a grant made before purposes was written — removed when the history grant replaces it."""
     return world_dir(world) / "secrets" / f"influx-{agent_id}.env"
+
+
+def _description(world: str, agent_id: str, purpose: str | None) -> str:
+    """How a grant is described in the store — the one place its principal is written down there,
+    since a token's own text says nothing of whose it is."""
+    return f"orexis {world}/{agent_id}" + (f" {purpose.lower()}" if purpose else "")
+
+
+def _principal_of(description: str, world: str) -> str | None:
+    """The agent a grant's description names, where it is one of this world's; the metrics grant
+    says `orexis <world>/<agent> metrics`, and one made before purposes `orexis <world>/<agent>`."""
+    head = f"orexis {world}/"
+    if not description.startswith(head):
+        return None
+    return description[len(head):].split(" ", 1)[0]
 
 
 def _admin_token() -> str:
@@ -171,7 +191,7 @@ def _withdraw(world: str, agents: list[str], purpose: str) -> None:
         auth_api = client.authorizations_api()
         existing = {a.description: a for a in auth_api.find_authorizations() or [] if a.description}
         for agent_id in agents:
-            held = existing.get(f"orexis {world}/{agent_id} {purpose.lower()}")
+            held = existing.get(_description(world, agent_id, purpose))
             if held:
                 auth_api.delete_authorization(held)
                 log.info("  bucket %-32s grant revoked — the world is not %s", bucket_name(world, agent_id, purpose),
@@ -209,11 +229,11 @@ def _provision(world: str, agents: list[str], purpose: str, rotate: bool) -> Non
                 log.info("  bucket %-32s kept %d days, as the installation says", name, days)
 
             path = credential_file(world, agent_id, purpose)
-            description = f"orexis {world}/{agent_id} {purpose.lower()}"
+            description = _description(world, agent_id, purpose)
             held = existing.get(description)
             #  A GRANT MADE BEFORE PURPOSES opens the history bucket under a description naming
             #  none; the history grant replaces it, and its file goes with its token.
-            unpurposed = existing.get(f"orexis {world}/{agent_id}") if purpose == HISTORY else None
+            unpurposed = existing.get(_description(world, agent_id, None)) if purpose == HISTORY else None
             if unpurposed:
                 auth_api.delete_authorization(unpurposed)
                 _unpurposed_file(world, agent_id).unlink(missing_ok=True)
@@ -241,6 +261,114 @@ def _provision(world: str, agents: list[str], purpose: str, rotate: bool) -> Non
         #  GRAFANA'S TOKEN is org-wide, so it is minted once, in the store history is written to.
         if purpose == HISTORY:
             _grafana_token(auth_api, organisation, existing, rotate)
+
+
+# ---------------------------------------------------------------- revocation and the report
+
+
+def _revoke_grants(auth_api, world: str, principal: str) -> list[str]:
+    """Delete every token the store holds for `principal` in this world, whatever its purpose, and
+    answer the descriptions of those deleted. Buckets are not touched here or anywhere."""
+    gone = []
+    for auth in auth_api.find_authorizations() or []:
+        if auth.description and _principal_of(auth.description, world) == principal:
+            auth_api.delete_authorization(auth)
+            gone.append(auth.description)
+    return gone
+
+
+def revoke(world: str, principal: str) -> None:
+    """Take one agent's access to the series store away, by name, and KEEP its buckets.
+
+    The token is the grant and it goes: deleted in every store the installation serves a purpose
+    from, refused on the agent's very next request, and its credential files removed so no
+    container is handed it again. The bucket is history — the record of what that agent observed
+    and did while it was here — and history that was true stays true after the agent is gone;
+    deleting it would be editing the record because its author left. A bucket nobody writes to
+    costs nothing and grants nobody anything, which is also why a withdrawn metrics bucket is left
+    for its retention to empty. Deleting one is the admin's act, with the admin's token, by hand.
+
+    Explicit, never implicit: `orexis-onboard` reports a grant the wiring no longer implies and
+    leaves it, since an agent absent from a world today may be back tomorrow, and re-granted it
+    writes on in the bucket it had.
+    """
+    removed = []
+    for path in [*(credential_file(world, principal, p) for p in PURPOSES), _unpurposed_file(world, principal)]:
+        if path.exists():
+            path.unlink()
+            removed.append(path)
+            log.info("  %-14s %s removed", principal, shown(path))
+    gone: list[str] = []
+    asked: set[tuple[str, str]] = set()
+    for purpose in PURPOSES:
+        where = installation.served(purpose)
+        if where is None or where in asked:
+            continue
+        asked.add(where)
+        url, org = where
+        with InfluxDBClient(url=url, token=_admin_token(), org=org) as client:
+            gone += _revoke_grants(client.authorizations_api(), world, principal)
+    for description in gone:
+        log.info("  %-14s token revoked (%s) — refused on its next request", principal, description)
+    if not removed and not gone:
+        raise SystemExit(f"orexis-influx: nothing to revoke — world {world!r} holds no credential file for "
+                         f"{principal!r} and no store holds a grant described as {_description(world, principal, None)!r}")
+    log.info("  %-14s bucket %s kept — history that was true stays; deleting it is the admin's act, by hand",
+             principal, bucket_name(world, principal))
+
+
+def stale_files(world: str) -> list[str]:
+    """Credential files under this world's `secrets/` for the series store whose agent the world no
+    longer states. Report only."""
+    roster = set(compose.agent_ids(world))
+    secrets = world_dir(world) / "secrets"
+    if not secrets.is_dir():
+        return []
+    found = []
+    for path in sorted(secrets.glob("influx-*.env")):
+        who = path.name[len("influx-"):-len(".env")]
+        for purpose in PURPOSES:
+            who = who.removeprefix(f"{purpose.lower()}-")
+        if who not in roster:
+            found.append(f"secrets/{path.name} — no agent {who!r} in the world; "
+                         f"`orexis-influx {world} --revoke {who}` takes it back and keeps the bucket")
+    return found
+
+
+def stale_grants(world: str) -> list[str]:
+    """What the series stores hold for this world that its roster no longer implies: a token
+    described as an agent's the world does not state, and a bucket named for one. Asks every store
+    the installation serves a purpose from, with the admin token, which is why `orexis-onboard`
+    runs this where it can and says so where it cannot. Report only: a token here is taken back by
+    `--revoke`, and a bucket by nobody but the admin, by hand."""
+    roster = set(compose.agent_ids(world))
+    implied = {bucket_name(world, a, p) for a in roster for p in PURPOSES}
+    found = []
+    asked: set[tuple[str, str]] = set()
+    for purpose in PURPOSES:
+        where = installation.served(purpose)
+        if where is None or where in asked:
+            continue
+        asked.add(where)
+        url, org = where
+        with InfluxDBClient(url=url, token=_admin_token(), org=org) as client:
+            #  PINGED FIRST: the client's ping answers False on a store that is down, where every
+            #  other call raises the transport's own error, which this tree does not import.
+            if not client.ping():
+                raise StoreUnreachable(f"{url} did not answer")
+            for auth in client.authorizations_api().find_authorizations() or []:
+                who = _principal_of(auth.description or "", world)
+                if who is not None and who not in roster:
+                    found.append(f"token {auth.description!r} at {url} — no agent {who!r} in the world; "
+                                 f"`orexis-influx {world} --revoke {who}` deletes it")
+            #  A BUCKET IS THIS WORLD'S BY ITS PREFIX, which is the convention `bucket_name` writes
+            #  and the only mark a bucket carries; a world whose name is another's prefix would be
+            #  read as owning the other's buckets, and no shipped world is.
+            for bucket in client.buckets_api().find_buckets_iter():
+                if bucket.name.startswith(f"{world}-") and bucket.name not in implied:
+                    found.append(f"bucket {bucket.name} at {url} — named for no agent in the world; kept, since "
+                                 "history that was true stays — delete it with the admin token, by hand, if you mean to")
+    return found
 
 
 GRAFANA_ENV = REPO_ROOT / "infra" / "secrets" / "grafana.env"
@@ -291,10 +419,17 @@ def main() -> None:
                    help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("--rotate", action="store_true",
                    help="replace every token even if one is already held")
+    p.add_argument("--revoke", metavar="PRINCIPAL",
+                   help="delete ONE agent's tokens, by its id, remove its credential files, and grant "
+                        "nothing else. Its buckets are KEPT: they are history. Never implicit — "
+                        "`orexis-onboard` only reports a grant the wiring no longer implies.")
     args = p.parse_args()
     log.info("world %s", args.world)
     try:
-        provision(args.world, rotate=args.rotate)
+        if args.revoke:
+            revoke(args.world, args.revoke)
+        else:
+            provision(args.world, rotate=args.rotate)
     except AdminError as exc:
         raise SystemExit(f"orexis-influx: {exc}")
 

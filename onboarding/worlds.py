@@ -27,6 +27,12 @@ def worlds() -> list[str]:
     return sorted(d.name for d in WORLDS_ROOT.iterdir() if _documents(d))
 
 
+def shown(path: Path) -> Path:
+    """A path as a log line says it: relative to the repo where it is under it, whole otherwise —
+    a test's copy of a world is not, and a line about it is still a line."""
+    return path.relative_to(REPO_ROOT) if path.is_relative_to(REPO_ROOT) else path
+
+
 def world_dir(name: str) -> Path:
     """One world's directory, or a refusal that names the ones there are."""
     path = WORLDS_ROOT / name
