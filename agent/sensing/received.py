@@ -40,9 +40,10 @@ held about a reading, so a probe that lost half its wire at mounting and reporte
 number on time all night was believed all night. Each observation carries `sensing:unchangedSince`,
 the instant of the earliest reading in the unbroken run of its number — its own where the number
 differs from the one it replaced, the replaced one's where it is identical — so the run's start is
-in the store and not in a count a restart loses. A sensor whose run has lasted `STUCK_AFTER` of
-its cadences is said `sensing:stuckSince` the run's start, once, in a graph of the agent's own
-classified `orexis:StateGraph` as a silence is, holding from that instant; the first reading whose
+in the store and not in a count a restart loses. A sensor whose run has lasted `sensing:stuckAfter`
+of its cadences — the agent's limit, `STUCK_AFTER` where its world states none — is said
+`sensing:stuckSince` the run's start, once, in a graph of the agent's own classified
+`orexis:StateGraph` as a silence is, holding from that instant; the first reading whose
 number differs takes the graph back here, as a reading takes a silence back. Identical means the
 raw number, the count the pointer found, since a clamp or a rescale can make two different counts
 one reading; and a sensor stating no frequency is never said stuck, as it is never said silent.
@@ -71,8 +72,8 @@ from datetime import datetime, timedelta
 from agent.ontology import PUBLIC, STATE, local_of
 from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
-from .cadence import cadence_of
-from .ontology import (DERIVED, FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, earlier_graph, forecast_graph,
+from .cadence import cadence_of, limit_of
+from .ontology import (DERIVED, FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, STUCK_AFTER_TERM, earlier_graph, forecast_graph,
                        observation_by, observation_graph, observation_of, stuck_graph)
 from .pipeline import decode, decode_series, reads_series
 
@@ -82,9 +83,10 @@ log = logging.getLogger("received")
 #  until its successor arrives or this long past the instant the successor was due.
 GRACE = 1
 
-#  HOW LONG A SENSOR'S NUMBER MAY STAY THE SAME before the sensor is said stuck, in its own cadences:
-#  twice the silence limit. A live instrument's count moves by a bit within a few readings even in
-#  still soil, and soil itself drifts within an hour, so a number unchanged through six cadences —
+#  HOW LONG A SENSOR'S NUMBER MAY STAY THE SAME before the sensor is said stuck, in its own cadences,
+#  where the agent's world states no `sensing:stuckAfter` of it: twice the silence limit. A live
+#  instrument's count moves by a bit within a few readings even in still soil, and soil itself
+#  drifts within an hour, so a number unchanged through six cadences —
 #  an hour at the greenhouse's ten minutes, two at the terrace's twenty — is the signature of a
 #  frozen oscillator or a half-lost wire rather than of equilibrium; and the suspicion costs the
 #  row alone, since the first reading that differs takes it back.
@@ -172,16 +174,17 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
            phenomenon_at)
     log.info("%s: %s reads %s%s", local_of(me), local_of(sensor), number,
              "".join(f", and read {n:g} {a:g}s before" for n, a in readings[:-1]))
-    _stuck(store, me, sensor, cat, since[-1], when, cadence)
+    _stuck(store, me, sensor, cat, since[-1], when, cadence, limit_of(store, me, STUCK_AFTER_TERM, STUCK_AFTER, memo))
     return [*written, graph]
 
 
-def _stuck(store, me: str, sensor: str, cat: Raw, since: datetime, at: datetime, cadence: float | None) -> None:
-    """Say `sensor` stuck, once, where its number has been the same since `since` for `STUCK_AFTER`
+def _stuck(store, me: str, sensor: str, cat: Raw, since: datetime, at: datetime, cadence: float | None,
+           limit: int) -> None:
+    """Say `sensor` stuck, once, where its number has been the same since `since` for `limit`
     cadences and more at `at`; take the saying back where it has not — the run having restarted
     with this reading, or the sensor stating no cadence to count in."""
     said = rows(store, _STUCK_Q, (), cat=cat, sensor=sensor)
-    if cadence is None or at < since + timedelta(seconds=STUCK_AFTER * cadence):
+    if cadence is None or at < since + timedelta(seconds=limit * cadence):
         for row in said:
             forget_graph(store, row["g"])
         return
@@ -193,7 +196,7 @@ INSERT DATA {{
   GRAPH <{graph}> {{ <{sensor}> sensing:stuckSince "{since.isoformat()}"^^xsd:dateTime . }}
   {entry(store, graph, STATE, DERIVED, me, start=since)} }}""")
     log.warning("%s: %s stuck since %s, its number unchanged for %d cadences", local_of(me), local_of(sensor),
-                since.isoformat(timespec="seconds"), STUCK_AFTER)
+                since.isoformat(timespec="seconds"), limit)
 
 
 def _write(store, me: str, sensor: str, graph: str, node: str, number: float, at: datetime,

@@ -28,7 +28,7 @@ ever holds. That is the property
 [a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md) named as the one
 to keep "if readings ever move": validity until the next observation, non-overlapping by
 construction. A late reading is the promise kept a little late; past the grace the reading is
-missing, which is what `missed` answers; and `SILENT_AFTER` cadences past that, the sensor is
+missing, which is what `missed` answers; and `sensing:silentAfter` cadences past that (`SILENT_AFTER` where the world states none), the sensor is
 silent.
 
 Two things move with the period's end, because the end was their hinge as well. `missed` says a

@@ -26,7 +26,8 @@ observation `sensing:unchangedSince`, the instant of the earliest reading in the
 this number - its own instant where the number differs from the one before - so the run's start
 survives the replacement of the observation and a restart alike, and nothing is counted in Python.
 
-A sensor whose run has lasted `received.STUCK_AFTER` of its cadences is said stuck: one row,
+A sensor whose run has lasted `sensing:stuckAfter` of its cadences — the limit the agent's world
+states of it, six where it states none — is said stuck: one row,
 `sensing:stuckSince` the run's start, in a graph of the agent's own classified `orexis:StateGraph`,
 holding from that instant - named for the state and never for the reading that tipped it - and
 said once. A reading whose number differs ends the run and takes the graph with it, at the writer.

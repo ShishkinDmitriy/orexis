@@ -19,7 +19,8 @@ from agent import clock
 from agent.sensing.missed import SILENT_AFTER, missed
 from agent.sensing.received import GRACE, received
 from agent.ontology import STATE
-from agent.store import graphs_of, rows
+from agent.sensing.ontology import SILENT_AFTER_TERM
+from agent.store import graphs_of, rows, update
 
 CASES_DIR = Path(__file__).parent / "missed"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -108,3 +109,12 @@ def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     assert CASES, "no case in missed/"
     assert not snapshots.orphans_in(CASES_DIR)
 
+
+def test_the_silence_limit_is_the_agents_where_its_world_states_one(pot, snapshots):
+    """The keeper's world says `sensing:silentAfter 1` of it: one cadence past the reading's grace,
+    the probe is silent, where the figure in code would have waited three."""
+    update(pot, f"INSERT DATA {{ GRAPH <http://example.org/test#world> {{ <{snapshots.ME}> <{SILENT_AFTER_TERM}> 1 }} }}")
+    fell_due = snapshots.NOW + LAPSE
+    assert missed(pot, snapshots.ME, fell_due + CADENCE - timedelta(seconds=1)) == [PROBE] and _silences(pot) == []
+    assert missed(pot, snapshots.ME, fell_due + CADENCE) == [PROBE]
+    assert _silences(pot) == [(PROBE, fell_due, fell_due)]

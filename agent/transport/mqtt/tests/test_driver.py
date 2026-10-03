@@ -184,11 +184,17 @@ def test_a_steps_command_goes_to_the_topic_the_actuator_listens_on_and_is_not_re
     assert client.published == [("sensors/board/command", json.dumps({"dose_ml": 250}).encode(), False)]
 
 
-def test_an_actuator_that_listens_nowhere_is_sent_nothing(bus, caplog):
+def test_an_actuator_that_listens_nowhere_is_sent_nothing_and_said_once(bus, caplog):
+    """A step whose command answers nothing is not taken and is tried again every pass (#869), so
+    the warning is said the first time and not per pass; a second such actuator is said too."""
     store, driver, client = bus
     with caplog.at_level("WARNING", logger="mqtt"):
         assert driver.actuate(store, PROBE, {"dose_ml": 250}) is False
-    assert client.published == [] and "listens on no topic" in caplog.text
+        assert driver.actuate(store, PROBE, {"dose_ml": 250}) is False
+        assert driver.tell(store, PROBE, b"{}") is False
+        assert driver.actuate(store, TEST + "nobody", {"dose_ml": 250}) is False
+    said = [r.getMessage() for r in caplog.records if "listens on no topic" in r.getMessage()]
+    assert client.published == [] and len(said) == 2 and said[0].startswith("probe ") and said[1].startswith("nobody ")
 
 
 #  THE KEEPER AND A PEER, each listening on a topic of its own for what the other says.

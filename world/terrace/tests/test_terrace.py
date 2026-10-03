@@ -271,3 +271,37 @@ def test_a_forecast_is_fetched_when_due_and_the_soils_next_prediction_carries_it
                "dcterms:temporal/orexis:start ?s } GRAPH ?g { ?o sosa:observedProperty <http://example.org/orexis/climate#SoilMoisture> ; "
                "sosa:hasSimpleResult ?v } } ORDER BY ?s", (),)]
     assert predicted[0] < 0.25 and any(0.25 <= v <= 0.60 for v in predicted[1:]), predicted
+
+
+def test_the_boards_config_is_rendered_from_the_world(monkeypatch, tmp_path):
+    """#323: `orexis-firmware terrace` renders the sentinel's config.h from the world as onboarding
+    reads it — the heartbeat from the probe's frequency, the ULP's window in counts from the bed's
+    range through the probe's scaling, the ADC channel from the wiring — and from the credential
+    `orexis-mqtt` minted and the site's wifi, stand-ins here. The generated file is gitignored, so the
+    firmware tree it is written into is a copy. What the board does with it is the bench's."""
+    import shutil
+
+    from onboarding import firmware
+
+    world = tmp_path / "world" / "terrace"
+    shutil.copytree(WORLD, world, ignore=shutil.ignore_patterns("tests", "secrets", "__pycache__"))
+    (tmp_path / "domains").symlink_to(WORLD.parents[1] / "domains")     # a world imports its domains by the tree's shape
+    (world / "secrets").mkdir()
+    (world / "secrets" / "mqtt-moisture_sensor_terrace.env").write_text(
+        "MQTT_USERNAME=terrace-moisture_sensor_terrace\nMQTT_PASSWORD=hush\n")
+    (tmp_path / "wifi.env").write_text("WIFI_SSID=bench\nWIFI_PASS=open-sesame\n")
+    (tmp_path / "firmware" / "outdoor-sentinel").mkdir(parents=True)
+    monkeypatch.setattr(firmware, "world_dir", lambda name: world)
+    monkeypatch.setattr(firmware, "WIFI_ENV", tmp_path / "wifi.env")
+    monkeypatch.setattr(firmware, "FIRMWARE_ROOT", tmp_path / "firmware")
+    firmware.generate("terrace")
+    config = (tmp_path / "firmware" / "outdoor-sentinel" / "include" / "config.h").read_text()
+    defined = dict(line.split()[1:3] for line in config.splitlines() if line.startswith("#define ") and len(line.split()) >= 3)
+    assert defined["HEARTBEAT_S"] == "1200", "twenty minutes, the probe's stated frequency"
+    assert (defined["MOISTURE_PIN"], defined["MOISTURE_ADC_CHANNEL"]) == ("36", "0"), "A0, by the wire"
+    #  a quarter of the bed's band (0.25..0.60) in counts, through the scaling's two points (785 dry, 410 wet)
+    assert defined["WAKE_DELTA_RAW"] == str(round(0.25 * 0.35 * 375))
+    assert "ADC_DRY" not in defined, "the outdoor sentinel publishes its raw count, and scales nothing"
+    assert (defined["MQTT_USER"], defined["MQTT_PASS"]) == ('"terrace-moisture_sensor_terrace"', '"hush"')
+    assert defined["WIFI_SSID"] == '"bench"' and defined["SENSOR_ID"] == '"moisture_sensor_terrace"'
+    assert defined["MOISTURE_TOPIC"] == '"sensors/moisture_sensor_terrace/reading"'

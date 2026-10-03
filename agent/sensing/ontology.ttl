@@ -170,6 +170,27 @@
     the agent's own and dropped by the sensor's next reading. SOSA and SSN say how often a sensor
     reports and nothing about one that has stopped, which is why this is sensing's word.""" .
 
+# TWO LIMITS THE AGENT IS TOLD, in cadences of the sensor doubted. Stated of the agent in its
+# world's documents and read by `missed` and `received` with the figure in code where none is
+# stated; one row each, since an agent judges every sensor it hears by one standard. A shape #876
+# gives a home of its own.
+:silentAfter a owl:DatatypeProperty ;
+    rdfs:domain orexis:Agent ;
+    rdfs:range xsd:integer ;
+    rdfs:label "silent after" ;
+    rdfs:comment """How many of a sensor's cadences its reading may be missing before `missed` says the
+    sensor silent (`silentSince`). The world states it of the agent; where it states none, three.""" .
+
+:stuckAfter a owl:DatatypeProperty ;
+    rdfs:domain orexis:Agent ;
+    rdfs:range xsd:integer ;
+    rdfs:label "stuck after" ;
+    rdfs:comment """How many of a sensor's cadences its number may stay the same before `received` says
+    the sensor stuck (`stuckSince`). The world states it of the agent; where it states none, six —
+    twice the silence: a live instrument's count moves by a bit within a few readings even in still
+    soil, and soil itself drifts within an hour, so a number unchanged through six cadences is the
+    signature of a frozen oscillator or a half-lost wire rather than of equilibrium.""" .
+
 :unchangedSince a owl:DatatypeProperty ;
     rdfs:domain sosa:Observation ;
     rdfs:range xsd:dateTime ;

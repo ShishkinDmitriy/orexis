@@ -528,7 +528,11 @@ rendezvous stays public, its address does not.
   `BUDGET` in `agent/planning/planner.py` (32), `agent/belief/revise.py` (64) and
   `agent/belief/deliberator.py` (256), `DEFAULT_PATIENCE_S` in `agent/execution/executor.py`, and
   `SILENT_AFTER` in `agent/sensing/missed.py`; only the planner's has an override, `--budget`.
-  Not decided. The kind rule says who would read such a graph; what is not settled is whether a
+  Settled for sensing's two, 2026-10-03: `sensing:silentAfter` and `sensing:stuckAfter` are stated
+  of the agent by its world, in a public graph as `orexis:actsFor` is, and the figure in code holds
+  where it states none — they decide when a `silentSince` or `stuckSince` row exists, which a
+  met-test may read, so a plan does branch on them. The rest stay in code, and where an agent's
+  word about itself lives — one node, one graph — is #876's. What is still not settled is whether a
   figure no plan branches on is a belief at all
   ([model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)).
 - **A wrong world is not caught by derivation.** A premise misstated loads the wrong packages as

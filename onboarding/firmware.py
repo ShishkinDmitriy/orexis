@@ -45,7 +45,7 @@ from agent.store import graphs_of, rows as _rows_of
 from . import reading
 from .reading import HARDWARE
 from .worlds import REPO_ROOT
-from .worlds import world_dir, worlds
+from .worlds import shown, world_dir, worlds
 from .mqtt import broker
 from .namespaces import BME280, DHT11, ESP32, I2C, MC, ONEWIRE, PROBE, RGBLED
 
@@ -475,7 +475,7 @@ def generate(world: str, board: str | None = None) -> None:
         else:
             out.write_text(render(world, row, bounds, PERSIST_LOOKS))
         out.chmod(0o600)  # it carries this board's password
-        log.info("  wrote %s  (%s -> %s:%s, pin %s)", out.relative_to(REPO_ROOT),
+        log.info("  wrote %s  (%s -> %s:%s, pin %s)", shown(out),
                  row["boardId"], row.get("lan") or row["host"], row["port"], row["gpio"])
         for part in _untemplated(store, row["boardId"]):
             log.warning("  ! %s carries %s, which this generator has no template for — the "

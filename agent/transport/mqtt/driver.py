@@ -124,6 +124,15 @@ class Mqtt(Transport):
     def __init__(self, me: str, client, deliver=None):
         self.me, self.client = me, client
         self.deliver = deliver or (lambda *message: None)
+        self._unreachable: set[str] = set()     # said to listen on no topic name, so said once
+
+    def _unreached(self, who: str, what: str) -> bool:
+        """Say once that `who` listens on no topic name — a step whose actuator does is not taken
+        and tried again every pass (#869), and a line per pass is noise, not news — and False."""
+        if who not in self._unreachable:
+            self._unreachable.add(who)
+            log.warning("%s listens on no topic name, so %s", local_of(who), what)
+        return False
 
     @classmethod
     def connect(cls, me: str, deliver=None, *, environ=None, client=None) -> "Mqtt":
@@ -193,8 +202,8 @@ class Mqtt(Transport):
         names = [p for p in (r["pattern"] for r in rows(store, _ACTUATES_Q, graphs_of(store, PUBLIC), actuator=actuator))
                  if "+" not in p and "#" not in p]
         if not names:
-            log.warning("%s listens on no topic name, so the command is not sent", local_of(actuator))
-            return False
+            return self._unreached(actuator, "the command is not sent")
+        self._unreachable.discard(actuator)
         self.publish(names[0], payload, False)
         log.info("%s: %s on %s", local_of(actuator), payload, names[0])
         return True
@@ -210,8 +219,8 @@ class Mqtt(Transport):
         names = [p for p in (r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=to))
                  if "+" not in p and "#" not in p]
         if not names:
-            log.warning("%s listens on no topic name, so nothing said to it is sent", local_of(to))
-            return False
+            return self._unreached(to, "nothing said to it is sent")
+        self._unreachable.discard(to)
         self.client.publish(names[0], document, retain=False)
         log.info("told %s on %s", local_of(to), names[0])
         return True

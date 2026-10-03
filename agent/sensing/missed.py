@@ -11,7 +11,8 @@ through the driver (`sense_now`); it writes nothing for a reading merely missed,
 period's end already says it, and a mark would say it twice.
 
 **A SENSOR SILENT PAST THE LIMIT IS SAID SO.** One whose reading has been missing for
-`SILENT_AFTER` cadences and more gets `sensing:silentSince` the instant its last reading fell
+`sensing:silentAfter` cadences and more — the agent's limit, `SILENT_AFTER` where its world states
+none — gets `sensing:silentSince` the instant its last reading fell
 due — named for the state, not for the tick that noticed — in a graph of the agent's own
 classified `orexis:StateGraph`, the kernel's kind, since a silence is a fact a plan may
 change, holding from that instant and present while the silence lasts; the sensor's next
@@ -33,12 +34,13 @@ from datetime import datetime, timedelta
 from agent.ontology import STATE, local_of
 from agent.store import Raw, catalogue_of, entry, instant, remember, rows, update
 
-from .cadence import cadence_of
-from .ontology import DERIVED, silent_graph
+from .cadence import cadence_of, limit_of
+from .ontology import DERIVED, SILENT_AFTER_TERM, silent_graph
 
 log = logging.getLogger("missed")
 
-#  HOW LONG A READING MAY BE MISSING before its sensor is said silent, in its own cadences.
+#  HOW LONG A READING MAY BE MISSING before its sensor is said silent, in its own cadences, where the
+#  agent's world states no `sensing:silentAfter` of it.
 SILENT_AFTER = 3
 
 #  EVERY SENSOR WHOSE OBSERVATION HAS LAPSED, with the instant it did and whether it is said
@@ -54,11 +56,12 @@ ORDER BY ?end ?sensor"""
 def missed(store, me: str, now: datetime, *, memo=None) -> list[str]:
     """The sensors whose reading is missing at `now` — observed once, and the observation
     fallen due before now with nothing arrived since — earliest lapse first; and any of them
-    silent for `SILENT_AFTER` cadences is said so, once, by `sensing:silentSince` in a graph
+    silent for the agent's limit of cadences is said so, once, by `sensing:silentSince` in a graph
     of `me`'s own.
     """
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
     lapsed = rows(store, _MISSING_Q, (), cat=cat, now=instant(now))
+    limit = limit_of(store, me, SILENT_AFTER_TERM, SILENT_AFTER, memo)
     out: list[str] = []
     for r in lapsed:
         sensor, fell_due = r["sensor"], datetime.fromisoformat(r["end"])
@@ -68,7 +71,7 @@ def missed(store, me: str, now: datetime, *, memo=None) -> list[str]:
         if r.get("since"):
             continue                                    # said already, and once is enough
         cadence = cadence_of(store, sensor, memo)
-        if cadence is None or now < fell_due + timedelta(seconds=SILENT_AFTER * cadence):
+        if cadence is None or now < fell_due + timedelta(seconds=limit * cadence):
             continue
         graph = silent_graph(local_of(me), sensor)
         update(store, f"""
@@ -76,5 +79,5 @@ INSERT DATA {{
   GRAPH <{graph}> {{ <{sensor}> sensing:silentSince "{fell_due.isoformat()}"^^xsd:dateTime . }}
   {entry(store, graph, STATE, DERIVED, me, start=fell_due)} }}""")
         log.warning("%s: %s silent since %s, %d cadences past", local_of(me), local_of(sensor),
-                    fell_due.isoformat(timespec="seconds"), SILENT_AFTER)
+                    fell_due.isoformat(timespec="seconds"), limit)
     return out

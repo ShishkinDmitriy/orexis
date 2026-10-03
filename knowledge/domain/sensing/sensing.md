@@ -20,8 +20,8 @@ Pointer). One [observation](/domain/sensing/observation.md) is written into the 
 from its instant until the next is due by the sensor's `ssn-system:Frequency` and the
 [observation](/domain/sensing/observation.md)'s grace past it — and all it says is
 the number the sensor gave (`sensing:rawResult`), who made it and when, and since when the number has been
-that one - the run a sensor is said [stuck](/domain/sensing/stuck.md) from, once it has lasted a limit of
-the sensor's cadences, by `sensing:stuckSince` until a differing number ends it. Where the pointer finds an array of readings,
+that one - the run a sensor is said [stuck](/domain/sensing/stuck.md) from, once it has lasted the agent's
+limit of the sensor's cadences (`sensing:stuckAfter`), by `sensing:stuckSince` until a differing number ends it. Where the pointer finds an array of readings,
 each with how many seconds before the message it was taken — a sentinel's alarm carries its watcher's
 last quiet sample before the reading that broke the window — each is an observation of its own, an
 earlier one holding only until the next one's instant: a step in the history, not a slope.
@@ -38,8 +38,9 @@ does not decode writes nothing and says so in the log. A sensor reading a SERIES
 
 **`missed`** is what sensing's own `start` asks every minute of the timeline, whether or not anything
 arrived ([a-package-starts-itself](/decisions/a-package-starts-itself.md)): which sensors' readings have gone missing,
-past their grace with nothing arrived, for the container to ask again, and which have been silent past a limit of their
-cadences — said by `sensing:silentSince` until a reading ends it.
+past their grace with nothing arrived, for the container to ask again, and which have been silent past the agent's limit of
+their cadences (`sensing:silentAfter`) — said by `sensing:silentSince` until a reading ends it. Both limits the world
+states of the agent, as it states what it acts for, and a figure in code holds where it states none.
 
 # What it leaves to others
 
