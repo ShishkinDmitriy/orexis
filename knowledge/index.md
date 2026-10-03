@@ -33,6 +33,6 @@ others. This bundle is the durable what and why; the live state is in each agent
 * **Operating one?** Start at [runbooks](runbooks/).
 * **Changing something?** Check whether a record pins it — its seams are what you are checking for.
 * **Adding a document?** Frontmatter with a `type` — `Decision`, `Domain Concept`, `Process`,
-  `Capability`, `Role`, `Service`, `Repository` or `Runbook` — a `title` and a `description`; a
+  `Role`, `Service`, `Repository` or `Runbook` — a `title` and a `description`; a
   decision adds `status` and `timestamp`; a domain page whose word the T-Box carries binds it with
   `term:`. An `index.md` carries none; only this file declares `okf_version`.

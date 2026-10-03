@@ -48,16 +48,20 @@ BUNDLE = REPO_ROOT / "knowledge"
 # `auction` opened "an auction is a PROCESS", `bid-matching` called itself "the STEP that turns a
 # lot and a set of bids into an allocation", `onboarding` "the PHASE between genesis and a running
 # society" — three pages naming their own type in prose because the field could not hold it.
-# `Capability` is rule 2's unit and not a subtype of convenience: those pages carry a family term,
-# its interchangeable members, and the premise that grants it, which no other kind of page has.
 #
 # Distribution when Component folded: Concept 10, Service 7, Process 5, Capability 4, Role 4,
 # Repository 2 — Component's own two examples, the belief base and the imaginarium, WERE the
 # repositories, so the word had nothing left to mean once they were named.
 # no type with one member, which is the evidence it is a real division rather than a tidy one. A
 # type that drops to one page is a type to fold back, not to defend.
-TYPES = {"Decision", "Domain Concept", "Process", "Capability", "Role", "Service", "Repository",
-         "Runbook"}
+#
+# `Capability` WAS a sixth: rule 2's unit, a page carrying a family term, its interchangeable
+# members and the premise that grants it. It folded (#828) when the dictionary was filed by package
+# and no page was left with it — sensing, prediction and speech each have one implementation, and a
+# package loaded by its premise is a package (a-documents-kind-says-who-reads-it, §2). Census
+# 2026-10-03: Decision 194, Domain Concept 41, Service 8, Runbook 7, Role 4, Process 3,
+# Repository 3. It returns the day a page is a family of members, and not before.
+TYPES = {"Decision", "Domain Concept", "Process", "Role", "Service", "Repository", "Runbook"}
 STATUSES = {"accepted", "superseded", "superseded-in-part"}
 
 # An index entry is the CLAIM. The abstract is the record's own `description`, and the record is

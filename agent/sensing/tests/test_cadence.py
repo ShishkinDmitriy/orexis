@@ -1,11 +1,14 @@
 """How often a sensor reports, read off SSN-System's frequency in the unit the world states —
-over the pot's probe and over a board whose peripherals each state theirs in a unit of their own."""
+over the pot's probe and over a board whose peripherals each state theirs in a unit of their own;
+and how many of those cadences the agent allows before a doubt, as its world states of it."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from agent.sensing.cadence import cadence_of
+from agent.sensing.cadence import cadence_of, limit_of
+from agent.sensing.ontology import SILENT_AFTER_TERM, STUCK_AFTER_TERM
+from agent.store import update
 
 WORLDS = Path(__file__).parent / "worlds"
 POT = WORLDS / "a_pot_and_its_probe.trig"
@@ -32,3 +35,17 @@ def test_no_frequency_or_a_unit_nothing_converts_is_no_cadence(snapshots, caplog
     with caplog.at_level("WARNING", logger="cadence"):
         assert cadence_of(store, TEST + "barometer") is None
     assert "nothing here converts" in caplog.text
+
+
+def test_a_limit_is_the_agents_where_its_world_states_one_and_the_default_where_not(snapshots, caplog):
+    """The keeper's world states no `sensing:stuckAfter`, so the figure handed in holds; told one,
+    the keeper's is read — of the keeper, as `orexis:actsFor` is stated — and told two, neither is."""
+    store = snapshots.stand_in(POT)
+    assert limit_of(store, snapshots.ME, STUCK_AFTER_TERM, 6) == 6
+    update(store, f"INSERT DATA {{ GRAPH <{TEST}world> {{ <{snapshots.ME}> sensing:stuckAfter 2 }} }}")
+    assert limit_of(store, snapshots.ME, STUCK_AFTER_TERM, 6) == 2
+    assert limit_of(store, snapshots.ME, SILENT_AFTER_TERM, 3) == 3, "each limit is its own word"
+    update(store, f"INSERT DATA {{ GRAPH <{TEST}world> {{ <{snapshots.ME}> sensing:stuckAfter 4 }} }}")
+    with caplog.at_level("WARNING", logger="cadence"):
+        assert limit_of(store, snapshots.ME, STUCK_AFTER_TERM, 6) == 6
+    assert "states 2 figures for stuckAfter" in caplog.text

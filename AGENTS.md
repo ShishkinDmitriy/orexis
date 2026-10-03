@@ -16,7 +16,7 @@ If it is unavailable, the rules are short enough to follow by hand:
 - every concept `.md` has YAML frontmatter with a non-empty `type`, plus `title` and
   `description` — and a `domain/` page whose word the T-Box carries binds it with `term:`,
   which `tests/test_knowledge.py` holds to what the ontologies (ours vendored under
-  `tests/fixtures/vocabularies/` for the external ones) actually declare. **Eight types, and the one to reach for is the one that answers what KIND of
+  `tests/fixtures/vocabularies/` for the external ones) actually declare. **Seven types, and the one to reach for is the one that answers what KIND of
   thing the page is:**
 
   | | |
@@ -24,7 +24,6 @@ If it is unavailable, the rules are short enough to follow by hand:
   | `Decision` | why the code is as it is. Closed by nothing; superseded or amended |
   | `Domain Concept` | a **thing** in the model — a claim, a good, a step, a world |
   | `Process` | something that **happens**, with phases and an end — an auction, a round, onboarding |
-  | `Capability` | a named ability with **interchangeable implementations**, granted by its own premise and provided by a package — rule 2's unit |
   | `Role` | a kind of **principal** with something at stake — an agent, a supplier, a dealer |
   | `Service` | a part of the implementation that **holds logic** — the deliberator, the revision seam |
   | `Repository` | a part that **passively holds data**, scoped to one agent — the belief base, the imaginarium |
@@ -33,10 +32,11 @@ If it is unavailable, the rules are short enough to follow by hand:
   The split was asked for by the pages: `auction` opened "an auction is a PROCESS", `bid-matching`
   called itself "the STEP that…", `onboarding` "the PHASE between…" — three pages naming their own
   type in prose because the field could not hold it. **A type that falls to one member is a type
-  to fold back**, not to defend; the split landed at 10 / 5 / 5 / 4 / 4;
+  to fold back**, not to defend: `Capability`, rule 2's unit, fell to none once the dictionary was
+  filed by package, and folded (#828); the rest stand at 41 / 8 / 7 / 4 / 3 / 3, concept to repository;
 - a **decision** additionally carries `status` (`accepted`, `superseded`, `superseded-in-part`)
   and `timestamp`, and a superseded one carries `superseded-by`. **No other type carries any of
-  those**: a concept, a process, a capability, a role, a service and a repository have no state to be in,
+  those**: a concept, a process, a role, a service and a repository have no state to be in,
   being either current or wrong. `stage` and `tags` are
   gone — `stage` said `v1` in every record, and `tags` had 147 values of which 86 were used
   once and nothing read any of them;
@@ -365,12 +365,15 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   own** — `received` writes one `sosa:Observation` per sensor holding until the next is due and a
   grace past it, `missed` says `sensing:silentSince`, the sides are revisions; `agent/prediction/`
   accumulates the drifts' rates and imports nothing of sensing.
+- **A limit on how long a sensor may be silent or stuck is the agent's, stated of it by its world,
+  and the figure in code is what holds where it states none** — `sensing:silentAfter` and
+  `sensing:stuckAfter`, read as a cadence is; where an agent's word about itself lives is #876's.
 - **A reading late is not a reading missing** — ended exactly at the next one's due, a late reading
   left no present, and a dose sized from it commanded nothing (#870,
   a-reading-late-is-not-a-reading-missing).
 - **A sensor that keeps reporting one number is stuck, and age is not the only doubt about a
   reading** — each observation carries `sensing:unchangedSince`, the start of the unbroken run of
-  its raw number, and `received` says `sensing:stuckSince` once the run has lasted `STUCK_AFTER`
+  its raw number, and `received` says `sensing:stuckSince` once the run has lasted `sensing:stuckAfter`
   cadences, in a state graph the first differing number takes back; identical is the raw number,
   since a clamp can make two counts one reading, and a count that creeps is the other two
   detectors' (#462).
