@@ -6,7 +6,8 @@ description: >-
   The translation row of the agent stack: a transport hands it an instrument's bytes, and it keeps
   the number they hold as the sensor's observation, in a graph per sensor that holds until the next
   reading is due and a grace past it; its rules conclude what that number is an observation of and what quantity it is.
-  It says when a sensor has gone silent - it predicts nothing and names no transport. `agent/sensing/`.
+  It says when a sensor has gone silent and when one is stuck on a number - it predicts nothing and
+  names no transport. `agent/sensing/`.
 ---
 
 # What it does
@@ -18,7 +19,9 @@ Pointer). One [observation](/domain/sensing/observation.md) is written into the 
 `sensing:ObservationGraph` beneath `orexis:StateGraph`, classified `orexis:Received` and holding
 from its instant until the next is due by the sensor's `ssn-system:Frequency` and the
 [observation](/domain/sensing/observation.md)'s grace past it — and all it says is
-the number the sensor gave (`sensing:rawResult`), who made it and when. Where the pointer finds an array of readings,
+the number the sensor gave (`sensing:rawResult`), who made it and when, and since when the number has been
+that one - the run a sensor is said [stuck](/domain/sensing/stuck.md) from, once it has lasted a limit of
+the sensor's cadences, by `sensing:stuckSince` until a differing number ends it. Where the pointer finds an array of readings,
 each with how many seconds before the message it was taken — a sentinel's alarm carries its watcher's
 last quiet sample before the reading that broke the window — each is an observation of its own, an
 earlier one holding only until the next one's instant: a step in the history, not a slope.

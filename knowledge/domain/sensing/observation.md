@@ -14,7 +14,8 @@ description: >-
 ```turtle
 # the sensor's graph, as `received` writes it: what the sensor gave
 :obs_probe a sosa:Observation ; sosa:madeBySensor :probe ; sensing:rawResult 2412 ;
-    sosa:resultTime "2026-09-20T12:00:00Z"^^xsd:dateTime .
+    sosa:resultTime "2026-09-20T12:00:00Z"^^xsd:dateTime ;
+    sensing:unchangedSince "2026-09-20T11:40:00Z"^^xsd:dateTime .   # 2412 at the last two readings too
 # its revision, as sensing's rules conclude it from the topology and the probe's scaling
 :obs_probe sosa:observedProperty climate:SoilMoisture ; sosa:hasFeatureOfInterest :fern ;
     sensing:scaledResult 0.414737 ; sosa:hasSimpleResult 0.414737 .

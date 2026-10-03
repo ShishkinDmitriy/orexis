@@ -11,7 +11,7 @@ scaling and calibration the rules make a quantity of it by — and nothing of th
 a device's sense mode and a drift's horizons were SSN restated or read by nothing, and 0.2.0
 speaks none of them. The drift is the prediction package's. Not one word of any transport.
 
-THE NAMES ARE FOR EYES. An observation's graph and a silence's are spelled here for the
+THE NAMES ARE FOR EYES. An observation's graph, a silence's and a stuck sensor's are spelled here for the
 writer, from the one identifier a process is handed and the key an observation is written
 under; every reader asks the catalogue by class and by pattern, and renaming one here would
 change nothing a reader sees.
@@ -25,10 +25,13 @@ from agent.ontology import GRAPH_PREFIX, OREXIS
 
 SENSING = "http://example.org/orexis/sensing#"
 
-#  THIS LAYER'S OWN: the graph an observation is kept in and a forecast's, the silence, the sides.
+#  THIS LAYER'S OWN: the graph an observation is kept in and a forecast's, the silence, the stuck
+#  sensor and the run its number is unchanged since, the sides.
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
 FORECAST_GRAPH = SENSING + "ForecastGraph"
 SILENT_SINCE = SENSING + "silentSince"
+STUCK_SINCE = SENSING + "stuckSince"
+UNCHANGED_SINCE = SENSING + "unchangedSince"
 BELOW = SENSING + "below"
 INSIDE = SENSING + "inside"
 ABOVE = SENSING + "above"
@@ -84,6 +87,10 @@ def silent_graph(agent_id: str, sensor: str) -> str:
     """Where a sensor's silence is said, while it lasts."""
     return f"{GRAPH_PREFIX}silent/{agent_id}/{slug(sensor)}"
 
+
+def stuck_graph(agent_id: str, sensor: str) -> str:
+    """Where a sensor is said stuck, while its number stays."""
+    return f"{GRAPH_PREFIX}stuck/{agent_id}/{slug(sensor)}"
 
 
 def forecast_graph(agent_id: str, sensor: str, starts) -> str:

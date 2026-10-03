@@ -572,6 +572,15 @@ it is a record wearing a bullet.
   bound exactly and writes one prediction per stretch, finds the observation by the kernel's kind and `sosa:madeBySensor` and imports
   nothing of sensing — a stretch already says when a rule's result changes, and the planner's
   re-root tells a surprise — and a range is SSN-System's as the world states it, nothing minted.
+- **A sensor that keeps reporting one number is stuck, and age is not the only doubt about a
+  reading** — the terrace's probe lost half its wire at mounting and gave a plausible number on
+  time all night, and every gate stayed green because silence was the one failure sensing could
+  say; each observation carries `sensing:unchangedSince`, the start of the unbroken run of its
+  raw number, so the run survives the replacement and a restart with nothing counted in Python,
+  and `received` says `sensing:stuckSince` the run's start once it has lasted `STUCK_AFTER`
+  cadences, in a state graph of the agent's own that the first differing number takes back; a
+  clamp or a rescale can make two counts one reading, so identical is the raw number, and a
+  connection that creeps by a count is the other two detectors' (#462).
 - **Sensing speaks SOSA and SSN, and declares only what they lack** — a sensor
   `sosa:observes` a property and `sosa:isHostedBy` what it is mounted in, which is what its
   observation is concluded to be of, and the layer's own words are the observation graph's kind, the silence,

@@ -170,6 +170,27 @@
     the agent's own and dropped by the sensor's next reading. SOSA and SSN say how often a sensor
     reports and nothing about one that has stopped, which is why this is sensing's word.""" .
 
+:unchangedSince a owl:DatatypeProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "unchanged since" ;
+    rdfs:comment """The instant of the earliest reading in the unbroken run of this observation's number:
+    the observation's own instant where its rawResult differs from the one it replaced, the
+    replaced observation's where it is identical. Written by `received` beside the number, so the
+    run's start survives the replacement of the observation and a restart, and nothing counts
+    readings in Python. What a sensor is said stuck from.""" .
+
+:stuckSince a owl:DatatypeProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "stuck since" ;
+    rdfs:comment """The sensor keeps reporting one number: every reading since this instant gave the
+    same rawResult, for a limit of its cadences and more. A row present while the run lasts, named
+    for the state and not for the reading that tipped it, written by `received` into a graph of the
+    agent's own and dropped by the first reading whose number differs. The second doubt the store
+    holds about a reading, beside its age: a silent sensor has no present, a stuck one has a present
+    not to be believed (#462).""" .
+
 :below a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;
     rdfs:label "below" ;
