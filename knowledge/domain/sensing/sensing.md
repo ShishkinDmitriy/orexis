@@ -5,7 +5,7 @@ term: http://example.org/orexis/sensing#ObservationGraph
 description: >-
   The translation row of the agent stack: a transport hands it an instrument's bytes, and it keeps
   the number they hold as the sensor's observation, in a graph per sensor that holds until the next
-  reading is due; its rules conclude what that number is an observation of and what quantity it is.
+  reading is due and a grace past it; its rules conclude what that number is an observation of and what quantity it is.
   It says when a sensor has gone silent - it predicts nothing and names no transport. `agent/sensing/`.
 ---
 
@@ -16,7 +16,8 @@ pipeline makes a number of them — the codec the sensor is bound to (`sensing:d
 member that ships) and the pointer to its value in the document (`sensing:readingPointer`, a JSON
 Pointer). One [observation](/domain/sensing/observation.md) is written into the sensor's graph, an
 `sensing:ObservationGraph` beneath `orexis:StateGraph`, classified `orexis:Received` and holding
-from its instant until the next is due by the sensor's `ssn-system:Frequency` — and all it says is
+from its instant until the next is due by the sensor's `ssn-system:Frequency` and the
+[observation](/domain/sensing/observation.md)'s grace past it — and all it says is
 the number the sensor gave (`sensing:rawResult`), who made it and when. Where the pointer finds an array of readings,
 each with how many seconds before the message it was taken — a sentinel's alarm carries its watcher's
 last quiet sample before the reading that broke the window — each is an observation of its own, an
@@ -33,8 +34,8 @@ does not decode writes nothing and says so in the log. A sensor reading a SERIES
 [forecast](/domain/sensing/forecast.md) per stretch still ahead instead, and replaces its last.
 
 **`missed`** is what sensing's own `start` asks every minute of the timeline, whether or not anything
-arrived ([a-package-starts-itself](/decisions/a-package-starts-itself.md)): which sensors' readings have fallen due with
-nothing arrived, for the container to ask again, and which have been silent past a limit of their
+arrived ([a-package-starts-itself](/decisions/a-package-starts-itself.md)): which sensors' readings have gone missing,
+past their grace with nothing arrived, for the container to ask again, and which have been silent past a limit of their
 cadences — said by `sensing:silentSince` until a reading ends it.
 
 # What it leaves to others

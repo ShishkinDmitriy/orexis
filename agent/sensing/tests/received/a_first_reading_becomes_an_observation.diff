@@ -8,7 +8,7 @@
 +  observed:probe a orexis:Graph .
 +  observed:probe a orexis:StateGraph .
 +  observed:probe a sensing:ObservationGraph .
-+  observed:probe dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  observed:probe dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  observed:probe orexis:arrivedBy orexis:Received .
 +  observed:probe orexis:beliefsOf :keeper .
  }

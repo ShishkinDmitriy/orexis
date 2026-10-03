@@ -157,9 +157,12 @@ it is a record wearing a bullet.
 - **A prune is only as good as when its bound arrives** — an admissible estimate refused
   nothing under breadth-first, because the first achiever came last, and the same estimate
   refused sixty percent of the courier's forks the day the search followed it.
-- **The layer that waits does the waiting** — a module that keeps its own timer and checks
-  its own trigger has rebuilt the middle layer inside a capability; adopt with a condition and
-  a deadline, and say only what you wait for.
+- **The layer that waits does the waiting, and a package has ONE way in** — a module that keeps
+  its own timer and checks its own trigger has rebuilt the middle layer inside a capability;
+  adopt with a condition and a deadline, and say only what you wait for. Deliberation once kept
+  a `Timer` whose landing reached back into the container's collection, so no single place was
+  where a pass began; a package's part asks the container for its timers now
+  (a-package-starts-itself).
 - **A kind said by absence is a kind two readers disagree about** — an action with no effect
   was "an act the reflex may take" to one reader and "passed over, plan partial" to another,
   until the gate held every action to both texts or neither, and a class for the second kind
@@ -307,11 +310,6 @@ it is a record wearing a bullet.
   pot from drying for five hours and the purchase could not stop the prediction emptying the
   barrel it had just filled; a key is changed when its canonical facts are, which is what a
   look's diff netting to nothing already said (#643).
-- **A rule saying which world it reads is a package claiming something about every other
-  package's actions** — `GRAPH $state` means a plan can change this and an unqualified pattern
-  means it cannot, which depends on the whole loaded action set and is chosen from inside one
-  package; climate's outside read carries the correction (#589), and the fix is precedence in
-  the engine rather than a better guess.
 - **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —
   hanoi's Move walks a tower it has not touched inside `GRAPH $state`; narrowing took a padded
   solve from 58% of its time forking to 2% and was not taken, because a real pass forks for
@@ -473,13 +471,13 @@ it is a record wearing a bullet.
   reading and which way it broke — a WANT carries, made fresh where it is made fresh and
   stored where it is stored; the urgency it also carried is gone, and the line below says why.
 - **Nothing ranks a want before the search that could rank it** — a want carried an urgency
-  four packages each computed their own way, and `Deliberator.pursued` plans for EVERY want it
+  four packages each computed their own way, and `Planner.plan` searches EVERY want it
   is handed, so the rank only ever decided which was searched first; what would compare a
   thirsty fern to an overdue debt is what their plans cost and how long they take, which is
   the search's answer and no contributor's.
 - **A read over stored rows is handed a store, and one over contributed answers is handed the
-  agent** — `find_wants` reads graphs so it takes somewhere to search, `Pursuing` asks the choir
-  so it must reach the choir, and the asymmetry is what tells the two kinds of read apart.
+  agent** — `find_wants` reads graphs so it takes somewhere to search, `Pursuing` asked the choir
+  so it had to reach the choir, and the asymmetry is what tells the two kinds of read apart.
 - **The function that decides a thing owns writing it, and a read only reads** — `Wants`
   carried `save`/`delete_by_uri` beside the module functions the derivation called, plus
   `on_saved`/`on_deleted` so a write could announce itself; the announcement had one live
@@ -494,22 +492,14 @@ it is a record wearing a bullet.
 - **A synchronous twin of a pass is a second pass, and it drifts** — `deliberate_on_gaps` was
   what a test called to have the consequences before it asserted, and it read what the agent
   was considering DIRECTLY where the real pass derives first; so every test went down a path
-  production does not have, missing the one step the seam was built to add. One pass with two
-  endings (`consider` marks, `consider_now` takes) sharing the generator that derives is what
-  stops that: the difference is where the work happens, and nothing else can differ.
+  production does not have, missing the one step the seam was built to add. One pass that the
+  runtime and a test both call is what stops that — the executor's `tick` and `drain` are that
+  shape — so the difference is who calls it, and nothing else can differ.
 - **A pass begins in one place, and judging happens once in it** — the container re-ran a
   want's own met-test to correct a row gone stale, which is asking twice what one pass had
   concluded; it went stale because the derivation ran only where a package wrote something a
-  desire reads, so what fixed it was not a better re-judging but `pursuit.consider` deriving
+  desire reads, so what fixed it was not a better re-judging but `Planner.plan` deriving
   every pass — the third reading above, and the reason it existed, both gone with the seam.
-- **The layer that waits does the waiting, and a package has ONE way in** — deliberation kept
-  a `Timer` and its landing reached back into the container's collection, so the two reached
-  into each other and no single place was where a pass began; the container holds the clock
-  now and calls `pursuit.consider`, and what a want IS stays in the package that has the word.
-- **Considering and pursuing are a pass apart** — `consider` derives what is wanted and hands
-  what may be acted on to the search, `pursue` plans one of them and commits, so a want nobody
-  may act on yet is CONSIDERED and never pursued; the collection was `Pursuing` while the
-  container held it and the pass had no name of its own.
 - **A want somebody else sourced is still an INSTANCE under a standing desire** — a call was
   lifted per call by `hosting.desires()`, the one want here no derivation minted, so it had no
   provenance, no graph and no period, and the planner could judge it only by asking a
@@ -574,8 +564,8 @@ it is a record wearing a bullet.
   rule set that never settles spends a budget every pass and is reported rather than looped on.
 - **Sensing observes and says when a sensor has gone silent, and prediction is a package of
   its own** — `received` writes one `sosa:Observation` per sensor with the number it gave, holding until
-  the next is due by the sensor's `ssn-system:Frequency`, `missed` answers the readings fallen
-  due when sensing's own `start` asks each minute and says `sensing:silentSince` of a sensor silent past a limit of
+  the next is due by the sensor's `ssn-system:Frequency` and a grace past it, `missed` answers the readings gone
+  missing when sensing's own `start` asks each minute and says `sensing:silentSince` of a sensor silent past a limit of
   its cadences, and the side is a revision the three rules sensing ships conclude; no band,
   no side, no want, no verdict on a prediction is sensing's own write. `agent/prediction/`
   accumulates the drifts' summed rates between happenings, places every crossing of a range
@@ -902,6 +892,21 @@ it is a record wearing a bullet.
 - **A step lands as long after it is taken as its plan placed it after its opening** — a plan
   places steps at the instants of the worlds it searched, and a presentation taken late behind a
   round that cleared late failed at its placed instant before the probe could answer.
+- **A step lands when the world can SHOW its effect, and an action whose effect is a reading's
+  side lands at the sensor's next reading** — the dose declared no `planning:landsAfter`, so it
+  landed the instant it was taken and failed a patience later with the answering reading nine
+  minutes off, a dose a minute, each re-planned before the last was answered; the dose and the
+  heating declare the cadence of the sensor that made the reading they are sized from now, as
+  the market's acts declare their round's window. And a `landsAfter` text that will not parse
+  is logged and read as nought, so the suite was green with the landing unread: probe a
+  declared figure on the plan it places, never only on the outcome.
+- **A graph forgotten takes its revisions with it, and an orphan revision is a side with no
+  reading** — each reading rewrites the forecast, a stretch the shorter forecast no longer had
+  was forgotten without the revision derived from it, and that orphan said `below` for the old
+  horizon in every possible world of the day, so the dose read unmet in the world it made and
+  the greenhouse's search exhausted until the period ran out; `forget_graph` forgets
+  `revisions_of` the graph first, and the world test steps a reading at a time, since the one
+  that jumped a day never let the orphan form.
 - **An intention's steps are its own** — a second plan for one want names its steps as the first
   did, and the act the first recorded read as the second's step taken, so the grower never
   called again; a held name is tagged at adoption.

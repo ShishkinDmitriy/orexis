@@ -80,14 +80,17 @@ def test_a_reading_is_written_and_its_side_concluded(monkeypatch):
 def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_reading_answers_it(monkeypatch):
     """0.2 against a range of 0.30 to 0.60: the middle is 0.45, two litres a fraction make half a
     litre, which is the pump's cap. The dose goes out on the pump's topic, not retained; the next
-    reading, 0.45, is revised inside and the intention is done."""
+    reading, 0.45, is revised inside and the intention is done — the dose lands when that reading is
+    due, a cadence after the step's instant, so an answer is looked for from then and not before: the
+    clock here ticks per read, so the step stands a few seconds after NOW and the reading comes a
+    minute past the cadence."""
     runtime, broker = _grower(monkeypatch)
     runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     assert broker.published == [("actuators/pump/command", {"dose_ml": 500}, False)]
     assert len(runtime.parts["execution"].executor.walking()) == 1, "the world has not answered yet"
-    runtime.time.at = NOW + timedelta(minutes=5)
+    runtime.time.at = NOW + timedelta(minutes=11)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert runtime.parts["execution"].executor.walking() == [], "the reading was revised inside and answered the dose"
@@ -112,13 +115,13 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
     runtime.run(passes=1, poll_s=0)
-    runtime.time.at = NOW + timedelta(minutes=5)
+    runtime.time.at = NOW + timedelta(minutes=11)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert runtime.parts["execution"].executor.walking() == [], "the dose landed"
     observed = [(p["measurement"], p["fields"]["value"], p["time"]) for p in history if p["measurement"] != "Step"]
     assert observed == [("AirTemperature", 21.0, NOW), ("SoilMoisture", 0.2, NOW),
-                        ("SoilMoisture", 0.45, NOW + timedelta(minutes=5))]
+                        ("SoilMoisture", 0.45, NOW + timedelta(minutes=11))]
     steps = [p for p in history if p["measurement"] == "Step"]
     assert [p["fields"] for p in steps] == [{"taken": True}, {"landed": True}]
     (taken, landed) = steps
@@ -134,9 +137,11 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     bed: one intention standing, one act taken, and the plan's world met its want, which an `EXISTS`
     read against the default graph never saw. A day later the thermometer reports and the probe has
     not: the reading sets the executor walking at once, the dose was never answered, so the intention
-    failed, and planning, hearing it end, plans a second dose in that same pass — standing, not yet
-    sent; and the probe is past its cadences, so it is silent. Sensing is loaded here, so silence is
-    said beside the mind's figures."""
+    failed, and planning, hearing it end, plans a second dose in that same pass. The probe is past its
+    cadences, so it is silent and the present holds no reading to size that dose from: its command
+    answers nothing, the step is not taken and the intention fails at once (#869) — it was counted
+    taken before, having sent nothing. Sensing is loaded here, so silence is said beside the mind's
+    figures."""
     runtime, broker, windows = _unanswered(monkeypatch, interval_s=0)
     dosed, a_day_later = windows[:2]
     of = lambda window, name: [p for p in window if p["measurement"] == name]
@@ -147,8 +152,9 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     assert sum(p["fields"]["satisfied"] for p in of(dosed, "imaginarium")) == 1
     assert sum(p["fields"]["met"] for p in of(dosed, "imaginarium")) == 1
     assert one(dosed, "revisions")["unsettled"] == 0 < one(dosed, "revisions")["revisions"]
-    assert [(p["tags"]["outcome"], p["fields"]["count"]) for p in of(a_day_later, "intention")] == [("failed", 1)]
-    assert one(a_day_later, "intentions") == {"standing": 1}
+    assert [(p["tags"]["outcome"], p["fields"]["count"]) for p in of(a_day_later, "intention")] == [("failed", 2)]
+    assert one(a_day_later, "intentions") == {"standing": 0}
+    assert one(a_day_later, "act") == {"count": 1, "taken": 0}, "the second dose, sized from no reading"
     assert one(a_day_later, "silence") == {"silent": 1}, "the probe, and not the thermometer that reported"
     assert len(broker.published) == 1
 

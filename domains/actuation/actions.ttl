@@ -10,7 +10,7 @@
 #  THE DOSE, stated in the concepts the rules conclude: a reading of what a valve moves, below a
 #  range of the subject the valve acts on, comes to be inside it. The search runs no rules, so the
 #  effect writes the side and not a number; the executor answers the step when the next reading is
-#  revised inside. How much to pour is not the search's: its `execution:Command` is run over the
+#  revised inside, and the step lands when that reading is due. How much to pour is not the search's: its `execution:Command` is run over the
 #  present when the step is taken, and sizes the dose from how far the reading is below the middle
 #  of the range, by the subject's litres per fraction, at most the valve's cap.
 
@@ -26,6 +26,20 @@ actuation:Dosing a orexis:Action ;
                      sensing:below ?range .
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    #  IT LANDS WHEN THE NEXT READING IS DUE, at the latest: the effect speaks the side the rules
+    #  conclude of a reading, so nothing can show the dose before the sensor reads again — a cadence
+    #  past the step, in the unit the world states it in. The executor holds the step to the present
+    #  from then, and a patience past it with no answer is a dose the world did not take.
+    planning:landsAfter """PREFIX unit: <http://qudt.org/vocab/unit/>
+        SELECT ?seconds WHERE {
+            $reading sosa:madeBySensor ?sensor .
+            ?sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f .
+            ?f a ssn-system:Frequency ; schema:value ?every .
+            OPTIONAL { ?f schema:unitCode ?unit }
+            VALUES (?u ?per) { (unit:SEC 1) (unit:MIN 60) (unit:HR 3600) (unit:HUR 3600) (unit:DAY 86400) }
+            FILTER(COALESCE(?unit, unit:SEC) = ?u)
+            BIND(xsd:double(?every) * ?per AS ?seconds)
+        }""" ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
         DELETE { $reading sensing:below ?range  }

@@ -22,7 +22,7 @@ candidate that was picked, and adds at least the values it was picked with:
 | `execution:predicts` | the change: the canonical facts its world gains and loses (`adds`, `retracts`) |
 | `execution:precondition` | what its rules read there ([precondition](/domain/planning/precondition.md)) |
 | `execution:notBefore` | the instant of the world it is taken in — a requirement |
-| `execution:landsAt` | when its change is complete, off the action's `planning:landsAfter` |
+| `execution:landsAt` | when the world can show its change, off the action's `planning:landsAfter` — a dose's at its sensor's next reading |
 | `execution:then` | the next step of the plan |
 
 # How it is taken

@@ -84,6 +84,7 @@ Time in the search: an instant, a stretch, a graph holding during a period, a pr
 
 * [the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md) - The future is a tree of diffs under the observed present; execution identifies which child the present is in, never asserts one.
 * [a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md) - A class is timeless; the stretch a saying holds during is the graph's, said once and read at the door. The forecast first.
+* [a-reading-late-is-not-a-reading-missing](/decisions/a-reading-late-is-not-a-reading-missing.md) - An observation holds a cadence past its due, so a late reading leaves no hole in the present; its successor still replaces it on arrival.
 * [one-catalogue-describes-every-graph-and-itself](/decisions/one-catalogue-describes-every-graph-and-itself.md) - One graph, the catalogue, says what every graph is, whose, how it arrived and when it holds, itself included, so no reader names it.
 * [a-reader-states-the-kinds-it-reads](/decisions/a-reader-states-the-kinds-it-reads.md) - A query is handed its graphs; a reader asks by kind and instant; every row says every kind; the store decides nothing.
 * [a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md) - A root is authored at genesis into a graph with no period; everything sourced at a time has one, and one sweep drops the outdated.
@@ -186,4 +187,4 @@ Each of these is a gate that went green while something was broken. The record s
 
 # Direction
 
-* [roadmap](/decisions/roadmap.md) - What v1 is, and the v2/v3 extensions each seam unlocks.
+* [roadmap](/decisions/roadmap.md) - Where 0.2.0 stands, the open issue chains in order, and the parked extensions with the seam each needs.

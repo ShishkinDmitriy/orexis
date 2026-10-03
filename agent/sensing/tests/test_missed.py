@@ -2,7 +2,8 @@
 
 One case per file in `missed/`, held to a PATCH of the store it leaves: the world with an
 observation whose period has ended, and the diff is the silence said of its sensor. The rest
-is told over the world: nothing is missing while the reading stands, a lapsed reading is
+is told over the world: nothing is missing while the reading stands, nor while it is late inside
+its grace (#870), a lapsed reading is
 missing and nothing is written for it, a sensor silent past the limit is said so once, a
 reading ends the silence, and a sensor stating no frequency is never missing.
 """
@@ -16,8 +17,9 @@ import pytest
 
 from agent import clock
 from agent.sensing.missed import SILENT_AFTER, missed
-from agent.sensing.received import received
-from agent.store import rows
+from agent.sensing.received import GRACE, received
+from agent.ontology import STATE
+from agent.store import graphs_of, rows
 
 CASES_DIR = Path(__file__).parent / "missed"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -25,6 +27,7 @@ WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 BOARD = Path(__file__).parent / "worlds" / "a_board_and_its_peripherals.trig"
 PROBE = "http://example.org/test#probe"
 CADENCE = timedelta(seconds=900)
+LAPSE = CADENCE * (1 + GRACE)            # when the reading goes missing: due, and a grace past it
 
 _SILENCES_Q = """
 SELECT ?g ?sensor ?since ?start WHERE {
@@ -59,13 +62,22 @@ def test_nothing_is_missing_while_the_reading_stands(pot, snapshots):
     assert _silences(pot) == []
 
 
+def test_a_reading_late_inside_its_grace_is_still_the_present(pot, snapshots):
+    """#870: the next reading was due a minute ago and has not arrived. The one in hand is late, not
+    missing — still the present to a reader asking now, so a step sized from it has a number."""
+    late = snapshots.NOW + CADENCE + timedelta(minutes=1)
+    assert missed(pot, snapshots.ME, late) == []
+    assert rows(pot, "SELECT ?v WHERE { ?o sensing:rawResult ?v }",
+                graphs_of(pot, STATE, at=late, now=late)) == [{"v": "0.2"}]
+
+
 def test_a_lapsed_reading_is_missing_and_nothing_is_written_for_it(pot, snapshots):
-    assert missed(pot, snapshots.ME, snapshots.NOW + timedelta(minutes=16)) == [PROBE]
+    assert missed(pot, snapshots.ME, snapshots.NOW + LAPSE + timedelta(minutes=1)) == [PROBE]
     assert _silences(pot) == []
 
 
 def test_a_sensor_silent_past_the_limit_is_said_so_once(pot, snapshots):
-    fell_due = snapshots.NOW + CADENCE
+    fell_due = snapshots.NOW + LAPSE
     late = fell_due + CADENCE * SILENT_AFTER
     assert missed(pot, snapshots.ME, late - timedelta(seconds=1)) == [PROBE] and _silences(pot) == []
     assert missed(pot, snapshots.ME, late) == [PROBE]
@@ -76,7 +88,7 @@ def test_a_sensor_silent_past_the_limit_is_said_so_once(pot, snapshots):
 
 
 def test_a_reading_ends_the_silence(pot, snapshots):
-    late = snapshots.NOW + CADENCE * (1 + SILENT_AFTER)
+    late = snapshots.NOW + LAPSE + CADENCE * SILENT_AFTER
     missed(pot, snapshots.ME, late)
     assert _silences(pot)
     received(pot, snapshots.ME, PROBE, b'{"value": 0.2}', late)

@@ -3,7 +3,8 @@ silent — asked every minute of the timeline by sensing's own `start`, which th
 
 **A READING IS MISSING WHEN ITS OBSERVATION'S PERIOD HAS ENDED AND NOTHING REPLACED IT.** The
 observation `received` writes holds from its instant until the next is due by the sensor's
-`ssn-system:Frequency`, so its graph's period ending IS the reading falling due: a reader
+`ssn-system:Frequency` and a grace past it (`received.GRACE`), so its graph's period ending IS the
+reading going missing — later than due, since a reading a little late is not missing (#870): a reader
 asking at a later instant is handed no observation of the key, which is what unmeasured is.
 This act answers the sensors in that state, earliest lapse first, for the container to nudge
 through the driver (`sense_now`); it writes nothing for a reading merely missed, since the

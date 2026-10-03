@@ -1,91 +1,68 @@
 ---
 type: Decision
-title: Staging roadmap — v1 scope and what the seams unlock
-description: What to build now, what's parked, and which decision opens each extension.
+title: Roadmap — where Agent 0.2.0 goes next, by the issues that carry it
+description: >-
+  Direction, not a task list: the open chains of issues in the order each unlocks the next, and the
+  parked extensions with the record whose seam opens each.
 status: accepted
-timestamp: 2026-08-01T00:00:00Z
+timestamp: 2026-10-03T00:00:00Z
 ---
 
-# v1 — build this now
+# Where it stands
 
-Three plant agents (Fern, Tomato, Succulent), one strategic supplier hosting one iterative
-auction, grounded in real sensors on a Raspberry Pi.
+[Agent 0.2.0 replaced the kernel](/decisions/agent-0-2-0-replaced-the-kernel.md), and 0.1.0 was
+retired whole. What the previous roadmap listed as ahead and is now behind:
 
-The pipeline: gateway → [belief base](/domain/belief/belief-base.md) →
-clearing inside the [supplier](/domain/market/supplier.md) →
-plant agents. Build order: gateway first (most settled, most
-trusted), then clearing (pure code, fully unit-testable with scripted bids), then agents
-(the only LLM part, stubbed against a working clearing).
+- **BDI, with no model in the loop.** Desires derive wants, a budgeted search finds plans over
+  possible worlds, and the executor walks intentions and holds each step to what it predicted. The
+  LLM member 0.1.0 declared was never built, and the 0.2.0 tree has no seam reserved for one.
+- **The domain is a plug-in.** Hanoi, the courier, the tower, climate, actuation and the market are
+  documents under `domains/`, and no shipped code names one
+  ([the-domain-is-a-plug-in-and-hanoi-is-the-proof](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md)).
+- **Bus privacy.** Per-agent credentials, ACLs derived from the wiring and a bucket per agent
+  ([series-and-bus-isolation](/decisions/series-and-bus-isolation.md)), and every agent on the bus
+  over mTLS. A board still authenticates with a password on the plain port (#81).
+- **Planning in time, its first half.** One timeline whose clock may run fast, predictions that
+  accumulate rates between happenings, and an imaginarium kept between passes with the present
+  identified in it ([the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md)).
 
-Supplier cost is a **fixed constant** with a reserve price. See [strategic-supplier](/decisions/0.1.0/strategic-supplier.md).
-- **Progression steps through a plan** — [#510](https://github.com/ShishkinDmitriy/orexis/issues/510), the build of [progression-steps-through-a-plan-on-confirmed-feedback](/decisions/0.1.0/progression-steps-through-a-plan-on-confirmed-feedback.md): one search per delivery, re-plan on surprise.
+# Next, in order
+
+1. **What is wrong before what is missing** — #858 (a foreseen want judged in the present), #849
+   (predictions blind to committed steps), and #462 (a frozen probe reads fresh forever).
+2. **Planning in time, its second half** — #596, an action with a duration, then #591, a plan as a
+   partial order, then #593, a want over several scopes; #565 and #527 narrow and resume the
+   search, and #486 names a world by its path.
+3. **The world answers otherwise** — #522, several outcomes with a likelihood, and #781, a plan that
+   worked lifted into a method the executor proves or forgets.
+4. **Several agents contend** — #567, one dispatcher and two vans, then #568, right-of-way as a lot
+   the market allocates.
+5. **Operating it** — #47, a world run end to end from nothing; #28 and #29, revocation; #839,
+   #836, #860 and #838, what a world states about its installation and its wiring.
+6. **The edge** — #865, #868, #81, #322, #323, #461, #328 and #25, the boards and their firmware.
 
 # Parked, with the seam that unlocks each
 
-- **Nested markets** (supplier is a buyer upstream; scarcity propagates down as price) —
-  unlocked by [strategic-supplier](/decisions/0.1.0/strategic-supplier.md) leaving cost as a
-  replaceable input. (v2)
-- **Multi-source / N-to-N** (many suppliers, reverse auctions, exchange) — unlocked by
-  [standalone-clearing](/decisions/0.1.0/standalone-clearing.md) + [bids-as-unmet-demand](/decisions/0.1.0/bids-as-unmet-demand.md). (v2/v3)
-- **Decentralized decomposition** (local auctions coupled by price, no global view) —
-  the real thesis; sequential decomposition is the honest stepping-stone. (v3)
-- **Self-organization** (elected/rotating chair, borrowed or spawned mediator) — chair gets
-  procedural authority only; the privileged powers never transfer to a borrowed chair (see
-  [trust-boundary](/decisions/0.1.0/trust-boundary.md) / [thin-trusted-infra](/decisions/0.1.0/thin-trusted-infra.md)). (v2)
-- **Sybil / open-system** (naturalize + endow, currency minted not seized, reputation on
-  identity). (v2)
-- **World genesis tool** (sovereign narrates → LLM drafts topology + charters → ratify →
-  infra writes; versioned, amendable migrations) — unlocked by [genesis](/decisions/genesis.md);
-  v1 hand-authors the ratified config. (v2/v3)
-- **Futures market** (a distinct venue from the v1 **spot** auction): win **held claims**,
-  redeemable until `exp`; the agent **spends** them to actuate on its own schedule — win and
-  actuate *decoupled*. Enables temporal strategy (water at night, wait for rain, hedge a
-  forecast). Adds a claim inventory, a supplier redemption ledger, and forward-vs-option
-  reservation. Unlocked by the claim's `exp` seam
-  ([authn-authz-capabilities](/decisions/authn-authz-capabilities.md)). (v2/v3)
-- **Domain-as-plugin** (swap ontology → electricity instead of plants) — unlocked by
-  [llm-heavy-deliberation](/decisions/0.1.0/llm-heavy-deliberation.md) (agents read the T-Box
-  from context). Extract seams from watering *first*, don't abstract prematurely. (v3)
-
-- **Enforced bus privacy — DONE**, by
-  [series-and-bus-isolation](/decisions/series-and-bus-isolation.md). Per-agent broker
-  credentials and topic ACLs derived from the wiring, plus a per-agent Influx bucket, so an
-  agent can no longer watch its neighbours' readings on the wire *or* read their history. What
-  remains of this item is **TLS**: credentials authenticate, they do not encrypt, so anything
-  with a port mirror still sees every payload. That is the last precondition for taking the
-  society adversarial — a signing sensor stops an agent authoring its own readings, isolation
-  stops it reading others' minds, and encryption stops it listening.
-
-- **BDI completed: the gap, the aim, the intention, the deliberator** — the four phases of
-  [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md),
-  tracked as #119 → #120 → #121 → #122 — **DONE**, all four. What remains open is exactly the
-  seam the phases were run to create: `deliberation:Consulting`, the LLM member, declared and
-  unimplemented, its constraints already fixed in the vocabulary. That member is the "only LLM
-  part" v1 promises, made affordable by intentions persisting between calls.
-
-- **Planning in time** — the cone the agent builds is the shape the search already has, and the
-  direction now is to give it an axis and a twin:
-  [planning-branches-on-action-forecasting-on-belief](/decisions/0.1.0/planning-branches-on-action-forecasting-on-belief.md),
-  five items from a node that carries a time to a plan that is a partial order. The first of
-  them is the one everything waits on, and the fourth retires the workaround that keeps looking
-  alive today. Where such a pass BEGINS is the sovereign's split of 2026-09-12:
-  [an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it](/decisions/0.1.0/an-always-want-is-a-root-and-what-is-pursued-is-derived-from-it.md)
-  — an Always want is a root never pursued, what is pursued is derived from it, and its binding
-  roots the search at the present or at a predicted crossing — #618, #619, #620 in that order.
-  The belief cone's own future is next:
-  [a-prediction-is-a-set-of-bands-that-widens-with-the-horizon](/decisions/0.1.0/a-prediction-is-a-set-of-bands-that-widens-with-the-horizon.md),
-  a prediction as a set of bands widening with the horizon, an observation as an event
-  expected in a window, and the reviser waking on a surprise rather than on a reading —
-  #631, #632, #633. Groomed once the first stood beside the keeper's watch:
-  [the-drift-is-sensings-and-its-result-is-predictions](/decisions/the-drift-is-sensings-and-its-result-is-predictions.md)
-  — the drift is sensing's and its result is predictions the core reads: graphs holding
-  during windows, typed with bands, the search overlaying them at a node's instant and
-  running no rule — #646 (one timeline, a clock that may run fast), #644 (roots authored), #642, #643, #639, #632, #645,
-  #640 in that order, #633 inside #643:
-  [the-agent-keeps-one-timeline-and-its-clock-may-run-fast](/decisions/the-agent-keeps-one-timeline-and-its-clock-may-run-fast.md),
-  [a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md).
+- **Nested markets** — the supplier a buyer upstream, scarcity propagating down as price; opened by
+  [strategic-supplier](/decisions/0.1.0/strategic-supplier.md) leaving cost a replaceable input.
+- **Many sources** — many suppliers, reverse auctions, an exchange; opened by
+  [standalone-clearing](/decisions/0.1.0/standalone-clearing.md) and
+  [bids-as-unmet-demand](/decisions/0.1.0/bids-as-unmet-demand.md).
+- **Decentralized decomposition** — local auctions coupled by price, with no global view; the
+  thesis, of which sequential decomposition is the stepping-stone.
+- **Self-organization** — a chair elected, rotated or borrowed holds procedural authority only
+  ([trust-boundary](/decisions/0.1.0/trust-boundary.md),
+  [thin-trusted-infra](/decisions/0.1.0/thin-trusted-infra.md)).
+- **An open society** — naturalize and endow, currency minted rather than seized, reputation on
+  identity.
+- **A world drafted from narration** — the sovereign narrates, a draft is ratified, onboarding
+  writes the rest; opened by [genesis](/decisions/genesis.md).
+- **Futures** — partly here already: a claim is held and presented within its own window (#625),
+  so winning and acting are decoupled. A forward venue distinct from the spot round is not, and
+  its seam is the claim's expiry ([authn-authz-capabilities](/decisions/authn-authz-capabilities.md)).
 
 # Working principle
 
-Extract-from-concrete. Build watering concretely; keep the four seams visible (value model,
-constitution, ontology, clearing) but don't generalize until a second domain pushes on them.
+Extract from the concrete. A seam is generalised when a second world pushes on it, and not before:
+the hierarchy was found in the rules because the tower combined hanoi and the courier, not because
+it was designed ahead of them.

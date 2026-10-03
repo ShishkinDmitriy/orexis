@@ -125,6 +125,13 @@ class Simulator:
             self.heating[actuator] = self.at + timedelta(seconds=float(said["heat_s"]))
             log.info("%s heats for %s s", actuator.rsplit("#", 1)[-1], said["heat_s"])
 
+    def due_in(self, now: datetime) -> float:
+        """World seconds until the earliest reading falls due — nought where one is due already, a day
+        where nothing here reads — so the process sleeps until then and not for a real second."""
+        if not self.sensors:
+            return 86400.0
+        return max(0.0, (min(s["due"] for s in self.sensors.values()) - now).total_seconds())
+
     def step(self, now: datetime) -> list[tuple[str, float]]:
         """Advance the physics to `now` and publish every reading fallen due; what was published."""
         seconds = max(0.0, (now - self.at).total_seconds())

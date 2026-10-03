@@ -10,11 +10,19 @@ the log, because a pointer that misses is not a measurement. What is written is 
 `sosa:Observation` in SOSA's words — of what, which property, the result, the instant it
 arrived, the sensor, the procedure and the instant the device says the result applies to
 where it says one — into the graph of this key, `sensing:ObservationGraph`, received, the
-agent's, holding from its instant UNTIL THE NEXT IS DUE — the sensor's `ssn-system:Frequency`
-past it (`cadence_of`), or with no end where the world states none — and replacing whole the
-observation of the key before (#669's invariant, kept at the writer). A reader asking at an
-instant past that is handed nothing: the observation's standing as the present ends by the
-clock, `missed` says so when sensing's `start` asks every minute, and nothing here keeps a timer.
+agent's, holding from its instant UNTIL THE NEXT IS DUE AND A GRACE PAST IT — the sensor's
+`ssn-system:Frequency` past it (`cadence_of`), and `GRACE` of those cadences more, or with no end
+where the world states none — and replacing whole the observation of the key before (#669's
+invariant, kept at the writer), so a successor arriving on time or late ends it the moment it
+lands. A reader asking at an instant past that is handed nothing: the observation's standing as
+the present ends by the clock, `missed` says so when sensing's `start` asks every minute, and
+nothing here keeps a timer.
+
+**A READING LATE IS NOT A READING MISSING (#870).** Ended exactly at the next one's due instant, a
+reading published a moment late — a board's radio, a broker, a simulator's loop — left the agent
+with no present for that moment, and a step sized from the reading in it commanded nothing. The
+grace is how late a reading may be and still be the same promise kept; past it the reading is
+missing, and past `missed`'s limit the sensor is silent.
 
 **A SERIES IS A FORECAST, ONE GRAPH PER STRETCH.** A sensor stating where the instants its values
 are for are kept (`reads_series`) is read as a series: each value still ahead is written as its own
@@ -58,6 +66,10 @@ from .pipeline import decode, decode_series, reads_series
 
 log = logging.getLogger("received")
 
+#  HOW LATE A READING MAY BE, in its sensor's cadences: the observation before it stays the present
+#  until its successor arrives or this long past the instant the successor was due.
+GRACE = 1
+
 #  THE KEY: what the sensor observes, of what it is mounted in.
 _KEY_Q = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; sosa:isHostedBy ?feature }"
 
@@ -78,7 +90,8 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
              procedure: str | None = None, phenomenon_at: datetime | None = None, memo=None) -> list[str]:
     """Write what `sensor` read, `payload` decoded by its binding: the observation of the
     property it observes, of what it is hosted by, standing as the present from `at` until
-    the next is due by the sensor's frequency — with no end where the world states none — or,
+    the next is due by the sensor's frequency and `GRACE` cadences past it, or until the next
+    arrives — with no end where the world states none — or,
     for a sensor reading a series, one forecast per stretch still ahead. The graphs written,
     none where the sensor has no key or the payload holds nothing it reads.
 
@@ -104,7 +117,7 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     #  EVERY READING THE MESSAGE CARRIES, oldest first, each placed that long before it arrived: an
     #  earlier one — a sentinel's last quiet sample before its alarm — holds only until the next one's
     #  instant, so it is a step in the history and, at the latest one's instant, nothing; the latest
-    #  stands as the present until the next is due by the sensor's frequency.
+    #  stands as the present until the next is due by the sensor's frequency, and a grace past it.
     instants = [at - timedelta(seconds=age) for _, age in readings]
     written = []
     for n, ((number, _), when, then) in enumerate(zip(readings[:-1], instants[:-1], instants[1:])):
@@ -115,7 +128,7 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     graph = observation_graph(local_of(me), sensor)
     cadence = cadence_of(store, sensor, memo)
     _write(store, me, sensor, graph, observation_by(sensor), number, when,
-           when + timedelta(seconds=cadence) if cadence is not None else None, procedure, phenomenon_at)
+           when + timedelta(seconds=(1 + GRACE) * cadence) if cadence is not None else None, procedure, phenomenon_at)
     log.info("%s: %s reads %s%s", local_of(me), local_of(sensor), number,
              "".join(f", and read {n:g} {a:g}s before" for n, a in readings[:-1]))
     return [*written, graph]

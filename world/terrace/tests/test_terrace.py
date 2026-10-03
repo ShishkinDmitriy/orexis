@@ -88,14 +88,15 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
 
 def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monkeypatch):
     """The terrace's one board reports once and then dies. Nothing arrives after, so no pass has
-    a message to take; the passes still ask what has fallen due, and once three cadences are gone
-    every sensor of the board is said silent (#843). The sentinel takes no orders, so nothing is sent."""
+    a message to take; the passes still ask what has gone missing, and once three cadences are gone
+    past a reading's grace — a hundred minutes at twenty a reading (#870) — every sensor of the board
+    is said silent (#843). The sentinel takes no orders, so nothing is sent."""
     from datetime import timedelta
 
     runtime, broker = _terrace(monkeypatch)
     runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
     runtime.run(passes=1, poll_s=0)
-    later = NOW + timedelta(minutes=90)
+    later = NOW + timedelta(minutes=100)
     monkeypatch.setattr(clock, "now", lambda: later)
     runtime.run(passes=1, poll_s=0)
     silent = rows(runtime.beliefs, "SELECT ?s WHERE { ?s sensing:silentSince ?t } ORDER BY ?s", graphs_of(runtime.beliefs, STATE))

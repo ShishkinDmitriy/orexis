@@ -50,9 +50,11 @@
 :water_butt a climate:WaterSource ; rdfs:label "the water butt" ; climate:capacityL 20.0 .
 
 #  THE INSTRUMENTS, each reporting every ten minutes.
-#  None of the four exists: the simulator plays them, from where each reading starts.
+#  None of the four exists: the simulator plays them, from where each reading starts. The bed starts
+#  comfortable and a quarter of a day from its floor, so a world brought up shows its loop — the
+#  drying, the dose, the reading that answers it — in the first hours of its time and not its third day.
 :moisture_probe a sosa:Sensor ;
-    sim:simulatedBy [ a sim:Model ; sim:initialValue 0.40 ; sim:minValue 0.0 ; sim:maxValue 1.0 ] ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 0.31 ; sim:minValue 0.0 ; sim:maxValue 1.0 ] ;
     sosa:isHostedBy :bed ;
     sosa:observes climate:SoilMoisture ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
