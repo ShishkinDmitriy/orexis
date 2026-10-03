@@ -14,8 +14,10 @@
 # the bench.
 #
 # The pace is a deployment fact, environment and never a belief (agent/clock.py): it is handed to
-# every process of the world through a compose override, never written into the world. 1440 is a
-# world day a real minute.
+# every process of the world through a compose override, never written into the world. 1440 was
+# measured to fail: the simulator publishes once a real second whatever the pace, a reading holds
+# only until the next is due, so the agent stood with no present reading most of the time and the
+# dose it took commanded nothing. The lower the pace, the smaller that gap and the longer the run.
 #
 # Needs rootless podman and podman-compose — the generated files use `userns_mode: keep-id`, which
 # is podman's — and `infra/secrets/admin.env`, which this refuses to invent.
@@ -24,7 +26,7 @@ set -euo pipefail
 world=${1:?a world is required — there is no default world}
 agent=${2:?an agent of the world is required, the one whose intention is waited for}
 timeout=${3:-900}
-pace=${OREXIS_TIME_PACE:-1440}
+pace=${OREXIS_TIME_PACE:-120}
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 dir="$root/world/$world"

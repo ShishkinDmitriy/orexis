@@ -9,20 +9,21 @@
 # back answered. On a failure it says what did not happen, then prints every container's log.
 #
 # THE GREENHOUSE, because it closes the loop with one agent and no peer: the bed dries, the grower
-# runs the pump, the simulator's next reading answers the step. The allotment's market was tried at
-# the same pace and its grower never called the supplier while readings arrived faster than its
-# search settled, which is a finding about the pace and not a gate to hold it to yet.
+# runs the pump, the simulator's next reading answers the step. Its bed takes two and a half world
+# days to dry below its floor, so the pace decides the job's length.
+#
+# ON DEMAND ONLY, and not on a pull request, until a fast clock can pass it. Spiked at 1440x it
+# could not: a reading holds exactly until the next is due, the simulator publishes once a real
+# second whatever the pace, so at that pace the grower held no present reading most of the time,
+# and a step taken then commanded nothing and was recorded taken. At 120x the bed takes about half
+# an hour to dry. A flaky end-to-end job people learn to re-run is worse than none (#47).
 #
 # PODMAN, ROOTLESS, as the runner's own user: the generated compose files say `userns_mode: keep-id`,
 # which is podman's. The admin token is the example's, minted for a store this job throws away.
-#
-# Not a required check while it earns trust. A flaky end-to-end job people learn to re-run is worse
-# than none (#47): when it fails, read what it says did not happen before re-running it.
 
 name: world
 
 on:
-  pull_request:
   workflow_dispatch:
 
 concurrency:
@@ -32,7 +33,7 @@ concurrency:
 jobs:
   greenhouse:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -49,4 +50,6 @@ jobs:
           mkdir -p infra/secrets
           cp infra/admin.env.example infra/secrets/admin.env
       - name: run the greenhouse end to end
-        run: tools/run-world-end-to-end.sh greenhouse grower 600
+        env:
+          OREXIS_TIME_PACE: "120"
+        run: tools/run-world-end-to-end.sh greenhouse grower 3000
