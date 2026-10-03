@@ -19,6 +19,17 @@
 execution:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
     rdfs:comment "What the agent is DOING: commitments adopted, standing and resolved, kept in the belief base's volume as a graph of the agent's own, not public, so a restart finds them and planning reads what is walked by this kind." .
 
+execution:CommittedStepGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ; rdfs:label "Committed step graph" ;
+    rdfs:comment "ONE STEP AN INTENTION HAS COMMITTED TO, as a belief holding over its landing window: from the step's `execution:notBefore` to its `execution:landsAt` plus the patience (knowledge/domain/execution/committed-step.md). Written by the executor at adoption, one graph per step, carrying the step's filling as the plan states it and the window's two lengths in seconds; closed at the instant the world answers the step or the intention ends, and forgotten once it has ended. A belief and not a reading: no plan forks it, nothing holds the world to it, and a drift reads it at an instant — the dose a bed is committed to is a flow its soil's prediction accumulates, so a later want is searched against a future that contains the earlier plan, and the start and end of the window are happenings of every prediction (a-prediction-accumulates-rates-between-happenings)." .
+
+execution:landsWithinS a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:decimal ;
+    rdfs:label "lands within seconds" ;
+    rdfs:comment "On a committed step: how long after its opening the step's change lands at the earliest — `execution:landsAt` less `execution:notBefore`, in seconds of the one timeline. Stated as a number beside the two instants because the engine binds nothing for the stretch between two instants (no cast of a duration to a number binds, measured), so a drift dividing a rise by this window could not compute it from the plan's instants." .
+
+execution:answeredWithinS a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:decimal ;
+    rdfs:label "answered within seconds" ;
+    rdfs:comment "On a committed step: how long after its opening the world must have answered the step at the latest — `execution:landsWithinS` plus the patience, in seconds; the window closes then, and an intention whose step is unanswered by then fails. The low trajectory of a drift reading a committed step assumes this, the latest landing, which is how a late landing widens the corridor." .
+
 execution:adopts a owl:ObjectProperty ; rdfs:domain execution:Intention ;
     rdfs:label "adopts" ;
     rdfs:comment "The plan an intention commits to — an orexis:PlanGraph planning published and owns — referred to and never copied: the plan's steps are read where planning wrote them, and the intention holds only its own rows." .

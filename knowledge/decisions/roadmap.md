@@ -23,13 +23,13 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
   ([series-and-bus-isolation](/decisions/series-and-bus-isolation.md)), and every agent on the bus
   over mTLS. A board still authenticates with a password on the plain port (#81).
 - **Planning in time, its first half.** One timeline whose clock may run fast, predictions that
-  accumulate rates between happenings, and an imaginarium kept between passes with the present
-  identified in it ([the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md)).
+  accumulate rates between happenings and see the steps the agent is committed to
+  ([committed-step](/domain/execution/committed-step.md), #849), and an imaginarium kept between passes
+  with the present identified in it ([the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md)).
 
 # Next, in order
 
-1. **What is wrong before what is missing** — #849 (predictions blind to committed steps) and #462
-   (a frozen probe reads fresh forever).
+1. **What is wrong before what is missing** — #462 (a frozen probe reads fresh forever).
 2. **Planning in time, its second half** — #596, an action with a duration, then #591, a plan as a
    partial order, then #593, a want over several scopes; #565 and #527 narrow and resume the
    search, and #486 names a world by its path.

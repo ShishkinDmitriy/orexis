@@ -3,8 +3,9 @@ happened by its own signals, each carrying an event of `events.py`: `intention_r
 `commanded`, `said`, and — made only where heard — `step_taken`, `step_answered`, `walked`.
 
 LINKED, it connects `commanded` to every transport — a part that takes a `command` — and `said` to speech — what lies beneath it — and
-hears the deliberator's `revised`: the present changed, so the world may have answered a step, and
-a walk is queued. STARTED, it walks what is due every pass, after planning.
+hears the deliberator's `revised`: where a source revised is a state graph the present changed, so
+the world may have answered a step, and a walk is queued; a prediction or a committed step revised
+is not the present, and answers no step. STARTED, it walks what is due every pass, after planning.
 A step is taken by its action's implementation, order by order: each command emitted, each saying
 emitted, and what they wrote said before the next order is asked, so a later order is made from the
 present the earlier ones left.
@@ -12,13 +13,18 @@ present the earlier ones left.
 
 from __future__ import annotations
 
-from agent.ontology import local_of
+from agent.ontology import STATE, local_of
+from agent.store import Raw, catalogue_of, rows
 
 from .command import command
 from .events import Commanded, Said
 from .executor import Executor
 from .implementation import COMMAND, SAYING, operations
 from .says import says
+
+
+#  WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a state graph, by the catalogue.
+_PRESENT_Q = "SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a $kind } } LIMIT 1"
 
 
 class _Execution:
@@ -37,7 +43,16 @@ class _Execution:
             self.executor.said.connect(lambda said: speech.say(said.document, said.to))
         belief = parts.get("belief")
         if belief is not None:
-            belief.deliberator.revised.connect(lambda revised: self._walk_soon())
+            belief.deliberator.revised.connect(lambda revised: self._walk_soon() if self._present(revised.graphs) else None)
+
+    def _present(self, graphs) -> bool:
+        """Whether any of `graphs` is a state graph — the present, which alone answers a step. A
+        prediction revised, or a committed step the executor itself wrote, is not: a walk on those
+        would read the clock for nothing, and a read of the clock is a tick in a test."""
+        cat = catalogue_of(self.runtime.beliefs)
+        return bool(graphs) and cat is not None and bool(rows(
+            self.runtime.beliefs, _PRESENT_Q, (), cat=Raw(f"<{cat}>"), kind=Raw(f"<{STATE}>"),
+            revised=Raw(" ".join(f"<{g}>" for g in graphs))))
 
     def _walk_soon(self) -> None:
         """Queue a walk, once: the present changed, and however many revisions say so before it runs,

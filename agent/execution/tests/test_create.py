@@ -11,7 +11,8 @@ from agent.lifecycle import Signal
 from agent.execution.executor import Executor
 from agent.belief.events import Revised
 from agent.execution.create import create
-from agent.store import entry, update
+from agent.ontology import STATE
+from agent.store import entry, graphs_of, update
 
 BENCH = Path(__file__).resolve().parents[2] / "planning" / "tests" / "bench"
 PLAN, WANT = "urn:test:plan", "urn:test:want"
@@ -49,6 +50,9 @@ def test_its_part_adopts_what_is_published_and_ends_what_was_reached_untaken(mon
     part.start(runtime)
     assert [seconds for seconds, _ in runtime.timers] == [0], "a walk every pass"
     belief.deliberator.revised.emit(Revised(("urn:g",)))
+    assert runtime.jobs == [], "a graph revised that is not the present — a prediction, a committed step — answers no step"
+    (state,) = graphs_of(store, STATE)
+    belief.deliberator.revised.emit(Revised((state,)))
     assert len(runtime.jobs) == 1, "the present changed, so a walk is queued"
     _hand_down(store)
     assert part.executor.adopt(PLAN, WANT) == [part.executor.graph]

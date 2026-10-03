@@ -1,0 +1,135 @@
+--- case
++++ expected
+@@ -20,12 +20,12 @@
+ 
+ GRAPH :ontology {
+   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
++  execution:CommittedStepGraph rdfs:subClassOf orexis:BeliefGraph .
++  execution:CommittedStepGraph rdfs:subClassOf orexis:Graph .
+   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+   orexis:StateGraph rdfs:subClassOf orexis:Graph .
+-  execution:CommittedStepGraph rdfs:subClassOf orexis:BeliefGraph .
+-  execution:CommittedStepGraph rdfs:subClassOf orexis:Graph .
+ }
+ 
+ GRAPH :world {
+@@ -35,9 +35,9 @@
+   :probe a sosa:Sensor .
+   :probe sosa:isHostedBy :zamioculcas .
+   :probe sosa:observes :moisture .
++  :tap :aimsAt 0.27 .
++  :tap :risesBy 0.15 .
+   :tap :waters :zamioculcas .
+-  :tap :risesBy 0.15 .
+-  :tap :aimsAt 0.27 .
+   :zamioculcas :driesPerDay 4.0 .
+   :zamioculcas a :Pot .
+   :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
+@@ -49,14 +49,6 @@
+ }
+ 
+ GRAPH :actions {
+-  :Drying a prediction:Drift .
+-  :Drying prediction:moves :moisture .
+-  :Drying prediction:rate """PREFIX : <http://example.org/test#>
+-      SELECT ?rate ?until WHERE {
+-          $feature :driesPerDay ?perDay .
+-          BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
+-          BIND(0.0 AS ?until)
+-      }""" .
+   :Dosed a prediction:Drift .
+   :Dosed prediction:moves :moisture .
+   :Dosed prediction:rate """PREFIX : <http://example.org/test#>
+@@ -66,6 +58,14 @@
+           ?tap :waters $feature ; :risesBy ?rise ; :aimsAt ?until .
+           BIND(xsd:double(?rise) / xsd:double(?soon) AS ?high)
+           BIND(xsd:double(?rise) / xsd:double(?late) AS ?low)
++      }""" .
++  :Drying a prediction:Drift .
++  :Drying prediction:moves :moisture .
++  :Drying prediction:rate """PREFIX : <http://example.org/test#>
++      SELECT ?rate ?until WHERE {
++          $feature :driesPerDay ?perDay .
++          BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
++          BIND(0.0 AS ?until)
+       }""" .
+ }
+ 
+@@ -80,10 +80,10 @@
+ }
+ 
+ GRAPH committed:plan_dose {
++  :plan_dose :tap :tap .
+   :plan_dose a execution:Step .
+-  :plan_dose :tap :tap .
++  :plan_dose execution:answeredWithinS 1200 .
+   :plan_dose execution:landsWithinS 600 .
+-  :plan_dose execution:answeredWithinS 1200 .
+ }
+ 
+ GRAPH :catalogue {
+@@ -97,6 +97,8 @@
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
+   committed:plan_dose a execution:CommittedStepGraph .
++  committed:plan_dose a orexis:BeliefGraph .
++  committed:plan_dose a orexis:Graph .
+   committed:plan_dose dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:25:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:05:00+00:00"^^xsd:dateTime ] .
+   committed:plan_dose orexis:arrivedBy orexis:Recorded .
+   committed:plan_dose orexis:beliefsOf :keeper .
+@@ -106,4 +108,53 @@
+   observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+   observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
+   observed:zamioculcas_moisture orexis:beliefsOf :keeper .
++  predicted:zamioculcas_moisture_0 a orexis:Graph .
++  predicted:zamioculcas_moisture_0 a orexis:PredictionGraph .
++  predicted:zamioculcas_moisture_0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:01:12+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
++  predicted:zamioculcas_moisture_0 orexis:arrivedBy orexis:Recorded .
++  predicted:zamioculcas_moisture_0 orexis:beliefsOf :keeper .
++  predicted:zamioculcas_moisture_0 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
++  predicted:zamioculcas_moisture_0 prov:wasDerivedFrom observed:zamioculcas_moisture .
++  predicted:zamioculcas_moisture_1 a orexis:Graph .
++  predicted:zamioculcas_moisture_1 a orexis:PredictionGraph .
++  predicted:zamioculcas_moisture_1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:30:01+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T13:01:12+00:00"^^xsd:dateTime ] .
++  predicted:zamioculcas_moisture_1 orexis:arrivedBy orexis:Recorded .
++  predicted:zamioculcas_moisture_1 orexis:beliefsOf :keeper .
++  predicted:zamioculcas_moisture_1 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
++  predicted:zamioculcas_moisture_1 prov:wasDerivedFrom observed:zamioculcas_moisture .
++  predicted:zamioculcas_moisture_2 a orexis:Graph .
++  predicted:zamioculcas_moisture_2 a orexis:PredictionGraph .
++  predicted:zamioculcas_moisture_2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T13:30:01+00:00"^^xsd:dateTime ] .
++  predicted:zamioculcas_moisture_2 orexis:arrivedBy orexis:Recorded .
++  predicted:zamioculcas_moisture_2 orexis:beliefsOf :keeper .
++  predicted:zamioculcas_moisture_2 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
++  predicted:zamioculcas_moisture_2 prov:wasDerivedFrom observed:zamioculcas_moisture .
+ }
++
++
++GRAPH predicted:zamioculcas_moisture_0 {
++  orexis:obs_zamioculcas_moisture a sosa:Observation .
++  orexis:obs_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
++  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.1 .
++  orexis:obs_zamioculcas_moisture sosa:madeBySensor :probe .
++  orexis:obs_zamioculcas_moisture sosa:observedProperty :moisture .
++  orexis:obs_zamioculcas_moisture sosa:resultTime "2026-01-01T13:01:12+00:00"^^xsd:dateTime .
++}
++
++GRAPH predicted:zamioculcas_moisture_1 {
++  orexis:obs_zamioculcas_moisture a sosa:Observation .
++  orexis:obs_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
++  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.022731 .
++  orexis:obs_zamioculcas_moisture sosa:madeBySensor :probe .
++  orexis:obs_zamioculcas_moisture sosa:observedProperty :moisture .
++  orexis:obs_zamioculcas_moisture sosa:resultTime "2026-01-01T13:29:01+00:00"^^xsd:dateTime .
++}
++
++GRAPH predicted:zamioculcas_moisture_2 {
++  orexis:obs_zamioculcas_moisture a sosa:Observation .
++  orexis:obs_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
++  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.0 .
++  orexis:obs_zamioculcas_moisture sosa:madeBySensor :probe .
++  orexis:obs_zamioculcas_moisture sosa:observedProperty :moisture .
++  orexis:obs_zamioculcas_moisture sosa:resultTime "2026-01-02T12:00:00+00:00"^^xsd:dateTime .
++}

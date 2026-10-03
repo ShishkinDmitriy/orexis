@@ -13,7 +13,16 @@ name belonged to went with them: it had no reader, and `term()` consulted it for
 
 from __future__ import annotations
 
+import re
+
 EXECUTION = "http://example.org/orexis/execution#"
+
+#  A STEP AN INTENTION HAS COMMITTED TO, as a belief over its landing window: the graph's kind and
+#  the two lengths of the window the executor states on the step, in seconds, since a rule cannot
+#  measure the stretch between the plan's two instants.
+COMMITTED_STEP_GRAPH = EXECUTION + "CommittedStepGraph"
+LANDS_WITHIN_S = EXECUTION + "landsWithinS"
+ANSWERED_WITHIN_S = EXECUTION + "answeredWithinS"
 
 #  HOW LONG A COMMITMENT IS GIVEN before a fresh impulse to do the same thing is decided
 #  again — the one figure of execution's that something outside it reads: a want
@@ -34,3 +43,11 @@ def intentions_graph(agent_id: str) -> str:
     brings to it, which is what this agent thought it was doing and why it stopped.
     """
     return _GRAPH + "intentions/" + agent_id
+
+
+def committed_graph(agent_id: str, step: str) -> str:
+    """The graph holding one committed step over its landing window — the agent's own, named for
+    the step for eyes; a reader asks the catalogue for `execution:CommittedStepGraph` and the
+    writer alone reads it back by this name, to close it and to forget it."""
+    local = re.sub(r"[^A-Za-z0-9_]", "_", re.split(r"[#/]", step.rstrip("#/"))[-1])
+    return f"{_GRAPH}committed/{agent_id}/{local}"

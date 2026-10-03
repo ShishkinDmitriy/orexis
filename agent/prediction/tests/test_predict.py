@@ -41,6 +41,7 @@ OPENS = {
     "two_drifts_moving_one_property_add": [(15, 0), (36, 0.02), (55.2, 0.02)],
     "a_forecast_shower_lifts_the_reading_back_inside": [(15, 0), (28.8, 0.02), (144, 0.02), (316.8, 0.02), (432, 0.02)],
     "a_forecast_range_opens_a_corridor_on_its_dry_side": [(15, 0), (28.8, 0.02), (144, 0.02)],
+    "a_committed_dose_lifts_the_reading_over_its_window": [(15, 0), (61.2, 0.02), (90, 0.02)],
 }
 
 

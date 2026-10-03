@@ -338,6 +338,14 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **Planning and execution meet at the store and signal each other** — a plan is published once
   and an intention adopts it by reference; a plan begun is walked to its end
   (planning-and-execution-meet-at-the-store).
+- **A committed step is a belief over its landing window, and a drift reads it there** — the
+  executor writes each adopted step as an `execution:CommittedStepGraph` holding from its
+  `notBefore` to its `landsAt` plus the patience, closes it when answered or ended, and prediction
+  hears every belief and rewrites every key for one that is no observation; a later want is then
+  searched against a future that contains the earlier plan (#849, committed-step).
+- **The executor walks when the present changed, not when anything was revised** — a prediction or
+  a committed step revised answers no step, and a walk on it read the clock for nothing, which on a
+  test's clock is seconds the round could not spare.
 - **An action is a point its taker contributes to**, and a taker missing at runtime looks exactly
   like an actor that is busy, so a gate holds a family to its actions.
 
@@ -373,7 +381,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   its reading through the calibration, then its sides
   (an-observation-is-concluded-from-the-number-a-sensor-gave).
 - **A drift answers a rate, and a prediction accumulates them** — rates add, a happening is where
-  one may change, a crossing is on a straight line (a-prediction-accumulates-rates-between-happenings).
+  one may change, a crossing is on a straight line (a-prediction-accumulates-rates-between-happenings);
+  the observation in hand is read at every instant with its revisions, since a drift sized from a
+  reading reads it past the stretch the observation holds for.
 - **A prediction is bands, and the width never leaves the rule** (#642); **the mind wakes on
   contradiction, not on time** — a reading inside the bands leaves no mark (#632).
 - **A step's band is the prediction from its landing, and a reading is compared once** (#639).
@@ -746,9 +756,13 @@ hand-rolled walk was once refused for exactly that reason. See
   Repeat the preamble inside each branch.
 - **An operation this engine lacks binds NOTHING — it does not fail.** `duration / duration`
   and `duration * number` return unbound in pyoxigraph, and so does every cast of a duration
-  to a number (`xsd:decimal(?a - ?b)`, measured on 0.5.9: only a dateTime's `HOURS`, `MINUTES`
+  to a number (`xsd:decimal(?a - ?b)`, measured on 0.5.9 and again on 0.5.11: only a dateTime's `HOURS`, `MINUTES`
   and `SECONDS` bind, so no rule can measure the stretch between two instants, which is why a
-  drift counts the `$elapsed` sensing hands it when it writes a prediction), and so does a decimal division whose
+  committed step states its window's lengths in seconds beside the plan's instants), and so does
+  `dateTime + dayTimeDuration` at about a third of the seconds of a minute — deterministic per
+  instant, measured on 0.5.11, so a round said at an unlucky instant had no `closesAt` and its
+  venue stayed open for ever — where `dateTime - dayTimeDuration` binds at every one, so an
+  instant ahead is the instant LESS a negative duration (`- xsd:dayTimeDuration("-PT30S")`), and so does a decimal division whose
   dividend is an exact zero (`0.0 / 0.25`; cast the dividend to `xsd:double`), and so does a
   decimal PRODUCT past the engine's eighteen fractional digits (`0.5 * (0.02 / 0.375)`; round
   the repeating operand to six places first, as every derived number here is written), and so

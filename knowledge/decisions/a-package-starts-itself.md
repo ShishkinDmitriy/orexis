@@ -28,7 +28,9 @@ the package's name and knows no word of what it does.
 - `submit(job)` queues a callable, answering the graphs it wrote, from any thread: a
   transport's listener hands its message on this way.
 - `on(kind, handler)` runs `handler(graph)` for every graph of that kind a job reports writing:
-  prediction hears `orexis:StateGraph`, and revision, until belief starts itself, every graph.
+  prediction hears `orexis:BeliefGraph` — an observation, and it rewrites that sensor's stretches; a
+  belief that is no sensor's observation, a committed step, and it rewrites every key's (#849) — and
+  revision, until belief starts itself, every graph.
   The belief base is the interface between the layers
   ([layered-by-timescale-and-interruptibility](/decisions/layered-by-timescale-and-interruptibility.md)),
   and a package learns of another's work by what was written, never by who wrote it.
