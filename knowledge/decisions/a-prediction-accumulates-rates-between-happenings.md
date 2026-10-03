@@ -27,13 +27,13 @@ is saturated.
 **What is stored is what the world states; the net rate is computed and never written.**
 `climate:driesPerDay` is a rate, and it is stored, because it is a constant of the bed. What is
 never stored is the rate the value actually moves by at an instant, because it depends on what
-holds then: a forecast hour, and later a committed step. The drift reads both and answers; the
+holds then: a forecast hour, and a committed step. The drift reads both and answers; the
 package sums and accumulates; only the stretches are written.
 
 **Time is split at the happenings.** A happening is an instant at which what a drift reads may
 change: the start or end of any public or belief graph holding inside the horizon, which is how a
-forecast hour and, later, a committed landing become one without prediction learning a word of
-either. Between two happenings the rates are asked once and held, at most for an hour, so a rate
+forecast hour and a committed step's landing window become one without prediction learning a word
+of either. Between two happenings the rates are asked once and held, at most for an hour, so a rate
 that depends on the value is asked again; within a segment the value is linear, and a crossing of
 a range bound is placed exactly, `(bound − value) / rate`. The horizon is a day past the
 observation.
@@ -103,13 +103,16 @@ more of them is finer foresight bought with more worlds.
   so a corridor that straddles a bound is written as its worst side and not as "may be either"; the
   0.1.0 set of bands is what carrying both would look like. A corridor below one range's floor and
   above another's ceiling at once writes the floor's side.
-- **Committed steps are not yet flows.** An intention's step contributes to what its property does
-  over its landing window - the pump runs and the soil takes the water up - and the executor
-  writing that window into the beliefs as a graph makes it a happening that a drift reads, with a
-  late landing widening the corridor. Until then a later want is searched against a future that
-  does not contain the earlier plan, and two plans drawing one barrel interfere. That is the
-  IRMA order (Bratman, Israel and Pollack, 1988): a commitment is background a new option is
-  filtered against, earliest committed first.
+- ~~Committed steps are not yet flows~~ - closed by #849, 2026-10-03, as this seam said it would be:
+  the executor writes each step of an adopted plan into the beliefs as a
+  [committed step](/domain/execution/committed-step.md), a graph holding over its landing window, so
+  the window's ends are happenings and a drift reads the step at an instant inside it; the actuation
+  domain's `actuation:Dosed` answers the dose's rise over the window, the low trajectory by the latest
+  landing, so a late landing widens the corridor. A later want is searched against a future that
+  contains the earlier plan, which is the IRMA order (Bratman, Israel and Pollack, 1988): a
+  commitment is background a new option is filtered against, earliest committed first. Two plans
+  drawing one barrel still interfere only where a drift of the barrel's level reads the committed
+  draws; no shipped world observes a source's level yet.
 - **A possible world holds at an instant, not over its landing.** A step whose landing may come
   late is judged in the ground it started in; judging it in every ground its landing interval
   overlaps is strong controllability over an STNU (Morris, Muscettola and Vidal, 2001), and is

@@ -1,13 +1,25 @@
-# a_reading_already_below_crosses_only_the_survival_floor
+# a_committed_dose_lifts_the_reading_over_its_window
 #
-# Read at 0.05, already under the operating floor: the one change left is the survival floor, 0.03
-# away at half a fraction a day, 86 minutes out. Two stretches.
+# A step the executor has committed to stands in the beliefs as a graph holding over its landing
+# window (execution:CommittedStepGraph), and a drift reads it there: the tap the step opens lifts the
+# pot's moisture by 0.15 toward an aim of 0.27 — over 600 seconds on the high trajectory, the earliest
+# landing, and over 1200 on the low, the latest, which is how a late landing widens the corridor. The
+# window's start and end are happenings, and nothing of this package learned the word.
+#
+# Read at 0.12 and drying four fractions a day, the pot alone meets the operating floor at 0.10 in 7.2
+# minutes, before the first stretch opens. The window opens at 12:05 and closes at 12:25: at 12:05 both
+# trajectories stand at 0.106111; by 12:25 the high has reached the aim at 12:18:25 and dried to
+# 0.251690, the low has risen to 0.200556. Both dry from there, so the low trajectory crosses the
+# operating floor 2172 seconds past 12:25, at 13:01:12, and the survival floor at 0.02 another 1728
+# seconds on, at 13:30:00, placed to the whole second after — three stretches from a quarter past,
+# the first inside its range because of the dose.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix execution: <http://example.org/orexis/execution#> .
 @prefix belief: <http://example.org/orexis/belief#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
@@ -21,6 +33,7 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
 @prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
+@prefix committed: <http://example.org/orexis/graph/committed/keeper/> .
 
 GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
@@ -28,6 +41,8 @@ GRAPH :ontology {
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  execution:CommittedStepGraph rdfs:subClassOf orexis:BeliefGraph .
+  execution:CommittedStepGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -37,7 +52,10 @@ GRAPH :world {
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :zamioculcas .
   :probe sosa:observes :moisture .
-  :zamioculcas :driesPerDay 0.5 .
+  :tap :waters :zamioculcas .
+  :tap :risesBy 0.15 .
+  :tap :aimsAt 0.27 .
+  :zamioculcas :driesPerDay 4.0 .
   :zamioculcas a :Pot .
   :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
   :zamioculcas ssn-system:hasSurvivalRange :zamioculcas.survival .
@@ -56,17 +74,33 @@ GRAPH :actions {
           BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
           BIND(0.0 AS ?until)
       }""" .
-  :Drying rdfs:label "what a pot loses while nobody waters it" .
+  :Dosed a prediction:Drift .
+  :Dosed prediction:moves :moisture .
+  :Dosed prediction:rate """PREFIX : <http://example.org/test#>
+      PREFIX execution: <http://example.org/orexis/execution#>
+      SELECT ?low ?high ?until WHERE {
+          ?step :tap ?tap ; execution:landsWithinS ?soon ; execution:answeredWithinS ?late .
+          ?tap :waters $feature ; :risesBy ?rise ; :aimsAt ?until .
+          BIND(xsd:double(?rise) / xsd:double(?soon) AS ?high)
+          BIND(xsd:double(?rise) / xsd:double(?late) AS ?low)
+      }""" .
 }
 
 GRAPH observed:zamioculcas_moisture {
   orexis:obs_zamioculcas_moisture a sosa:Observation .
   orexis:obs_zamioculcas_moisture prov:wasGeneratedBy :keeper .
   orexis:obs_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
-  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.05 .
+  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.12 .
   orexis:obs_zamioculcas_moisture sosa:madeBySensor :probe .
   orexis:obs_zamioculcas_moisture sosa:observedProperty :moisture .
   orexis:obs_zamioculcas_moisture sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+}
+
+GRAPH committed:plan_dose {
+  :plan_dose a execution:Step .
+  :plan_dose :tap :tap .
+  :plan_dose execution:landsWithinS 600 .
+  :plan_dose execution:answeredWithinS 1200 .
 }
 
 GRAPH :catalogue {
@@ -80,6 +114,10 @@ GRAPH :catalogue {
   :ontology a orexis:PublicGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
+  committed:plan_dose a execution:CommittedStepGraph .
+  committed:plan_dose dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:25:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:05:00+00:00"^^xsd:dateTime ] .
+  committed:plan_dose orexis:arrivedBy orexis:Recorded .
+  committed:plan_dose orexis:beliefsOf :keeper .
   observed:zamioculcas_moisture a orexis:BeliefGraph .
   observed:zamioculcas_moisture a orexis:Graph .
   observed:zamioculcas_moisture a orexis:StateGraph .

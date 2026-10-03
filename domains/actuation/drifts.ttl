@@ -1,0 +1,49 @@
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix climate: <http://example.org/orexis/climate#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:DriftGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A DOSE THE AGENT IS COMMITTED TO GIVES ITS SUBJECT'S SOIL, over the step's landing window:
+#  the pump runs and the soil takes the water up. A step the executor has adopted stands in the
+#  beliefs as a graph holding from its opening to the latest the world may answer it
+#  (execution:CommittedStepGraph), and this drift reads it there at the instant it is asked at —
+#  so a prediction made after the adoption rises where the dose will land, a later want is searched
+#  against a future that contains the earlier plan, and two plans drawing one source see each
+#  other's draw (a-prediction-accumulates-rates-between-happenings).
+#
+#  SIZED TO THE AIM THE COMMAND SIZES TO (actions.ttl): the rise is the dose in millilitres the
+#  command will send — to the middle of the subject's operating range, at most the valve's cap —
+#  back in fractions, by the subject's litres per fraction. Spread over the window it is a rate: the
+#  high trajectory has the whole rise in by the earliest landing (`execution:landsWithinS`), the low
+#  one by the latest (`execution:answeredWithinS`), which is how a late landing widens the corridor;
+#  neither rises past the aim (`?until`). The drift contributes nothing outside the window, since
+#  the graph it reads holds for the window alone, and nothing once the step is answered or its
+#  intention ends, since the executor closes the window then.
+
+actuation:Dosed a prediction:Drift ;
+    rdfs:label "what a dose the agent is committed to gives its subject's soil over the step's landing window" ;
+    prediction:moves climate:SoilMoisture ;
+    prediction:rate """PREFIX actuation: <http://example.org/orexis/actuation#>
+        PREFIX climate: <http://example.org/orexis/climate#>
+        PREFIX execution: <http://example.org/orexis/execution#>
+        SELECT ?low ?high ?until WHERE {
+            ?step actuation:valve ?valve ; actuation:reading ?reading ;
+                  execution:landsWithinS ?soon ; execution:answeredWithinS ?late .
+            ?valve actuation:actuates $feature ; actuation:actuatesProperty climate:SoilMoisture ;
+                   actuation:maxDoseMl ?cap .
+            ?reading sosa:hasFeatureOfInterest $feature ; sosa:observedProperty climate:SoilMoisture ;
+                     sosa:hasSimpleResult ?read .
+            $feature ssn-system:hasOperatingRange/ssn-system:inCondition ?condition ;
+                     climate:litresPerFraction ?litres .
+            ?condition ssn:forProperty climate:SoilMoisture ; schema:minValue ?lo ; schema:maxValue ?hi .
+            BIND(((xsd:double(?lo) + xsd:double(?hi)) / 2.0) AS ?aim)
+            BIND((?aim - xsd:double(?read)) * xsd:double(?litres) * 1000.0 AS ?wanted)
+            BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), IF(?wanted < 0.0, 0.0, ?wanted)) AS ?ml)
+            BIND(?ml / (xsd:double(?litres) * 1000.0) AS ?rise)
+            BIND(?rise / xsd:double(?soon) AS ?high)
+            BIND(?rise / xsd:double(?late) AS ?low)
+            BIND(xsd:double(?read) + ?rise AS ?until)
+        }""" .

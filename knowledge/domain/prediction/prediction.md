@@ -17,14 +17,16 @@ rain wetting it, a barrel leaking. It says which property it `prediction:moves` 
 `prediction:rate`, a select answering `?rate` - how fast, per second of the one timeline - for the
 subject `$feature` whose value is `$value` at the instant `$at`. It may answer `?low` and `?high`
 instead, a rate known only as a range, and `?until`, the value past which it contributes nothing.
-A drift reads whatever holds at `$at`: the world's facts, such as `climate:driesPerDay`, and a
-[forecast](/domain/sensing/forecast.md) hour. Every drift moving one property ADDS: the value moves by
+A drift reads whatever holds at `$at`: the world's facts, such as `climate:driesPerDay`, a
+[forecast](/domain/sensing/forecast.md) hour, and a [committed step](/domain/execution/committed-step.md)
+inside its landing window - the dose the agent is about to give. Every drift moving one property ADDS: the value moves by
 the sum, and no drift knows another exists.
 
 # What is written
 
-Started, the package answers every observation a job writes by rewriting that sensor's predictions
-([a-package-starts-itself](/decisions/a-package-starts-itself.md)). `predict`
+Started, the package answers every belief a job writes: an observation by rewriting that sensor's
+predictions, any other - a committed step written or closed - by rewriting every key's, since what a
+drift reads has changed ([a-package-starts-itself](/decisions/a-package-starts-itself.md)). `predict`
 (`agent/prediction/predict.py`) takes the observation a sensor last made - found by the
 kernel's kind and `sosa:madeBySensor`, so nothing of sensing is imported - and accumulates the
 drifts' sum from it for a day. Time is split at every **happening**, the start or end of a public

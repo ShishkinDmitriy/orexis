@@ -9,9 +9,9 @@ ADD: drying and rain are two drifts and the value moves by their sum, which is P
 trajectory semantics, a drift being a process (a-prediction-accumulates-rates-between-happenings).
 The sum is accumulated from the observation for `HORIZON_S`, split at every HAPPENING — the
 start or end of a public or belief graph holding in that stretch, since only there can what a
-drift reads change, which is how a forecast hour becomes one without this package learning the
-word — and held for at most `SEGMENT_S` between, so a rate that depends on the value is asked
-again. Within a segment the value is a straight line, and a crossing of a bound of every range
+drift reads change, which is how a forecast hour and a step the executor committed to become
+one without this package learning either word — and held for at most `SEGMENT_S` between, so a
+rate that depends on the value is asked again. Within a segment the value is a straight line, and a crossing of a bound of every range
 that applies to what the sensor observes (SSN-System's, `ranges_of`) is placed exactly, by
 division: no scan looks for it, so a value that dips below a floor and comes back inside an hour
 later is seen. A drift answering `?until` contributes nothing past it, and a segment is split
@@ -47,7 +47,7 @@ from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
-from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD, local_of
+from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, PUBLIC, RECORD, local_of
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
                          remember, revisions_of, rows, update)
 
@@ -91,6 +91,10 @@ SELECT ?feature ?property ?value WHERE {
 
 #  EVERY DRIFT MOVING THE PROPERTY — the terms spliced as the terms they are, since no file of
 #  this package binds a label for its namespace and a query needs none.
+#  Read from the graphs of drifts alone (`orexis:DriftGraph`), as the planner reads actions from
+#  `orexis:ActionGraph` alone: named for what it holds, and asked for, it is a term somebody reads. The
+#  kind is the kernel's and not this package's, since this package's premise reads the drift rows off
+#  the world before this package is loaded, and a premise reads only the kernel's and the mind's kinds.
 _DRIFTS_Q = "SELECT ?drift ?rate WHERE { ?drift a $drift ; $moves $property ; $rate_of ?rate } ORDER BY ?drift"
 
 #  THE PREDICTIONS WRITTEN FOR THIS KEY BEFORE: every one derived from the observation's graph.
@@ -139,7 +143,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
     if base >= HORIZON_S:
         return []
     drifts = remember(memo, ("drifts", observed_property), lambda: rows(
-        store, _DRIFTS_Q, graphs_of(store, PUBLIC), drift=Raw(f"<{DRIFT}>"), moves=Raw(f"<{MOVES}>"),
+        store, _DRIFTS_Q, graphs_of(store, DRIFT_GRAPH), drift=Raw(f"<{DRIFT}>"), moves=Raw(f"<{MOVES}>"),
         rate_of=Raw(f"<{RATE}>"), property=observed_property))
     ranges = ranges_of(store, sensor, observed_property, memo)
 
@@ -148,7 +152,10 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
         the subject holding `value`: (lowest rate, highest rate, the value it stops at)."""
         at = taken + timedelta(seconds=elapsed)
         known = remember(memo, ("known", at), lambda: graphs_of(store, PUBLIC, BELIEF, RECORD, at=at, now=now or taken))
-        graphs = list(dict.fromkeys([*known, graph]))
+        #  THE OBSERVATION IN HAND IS READ AT EVERY INSTANT, with what the rules concluded of it —
+        #  its key and its number live in its revisions — since a drift sized from the reading a
+        #  committed step answers reads it past the stretch the observation holds for.
+        graphs = list(dict.fromkeys([*known, *believed]))
         said = []
         for drift in drifts:
             try:

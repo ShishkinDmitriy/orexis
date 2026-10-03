@@ -12,8 +12,10 @@ description: >-
 
 - **`adopt`** — heard when planning publishes a [plan](/domain/planning/plan.md) — commits it as an
   [intention](/domain/execution/intention.md) that `execution:adopts` the plan by reference, standing at
-  its first step; the plan stays planning's. A second plan for a want already standing is absorbed
-  inside the patience and supersedes past it. **`end_for`** ends an intention that has taken no step
+  its first step; the plan stays planning's. It writes each step into the beliefs as a
+  [committed step](/domain/execution/committed-step.md) over its landing window, closes the window when
+  the step is answered or the intention ends, and `tick` forgets what has ended. A second plan for a
+  want already standing is absorbed inside the patience and supersedes past it. **`end_for`** ends an intention that has taken no step
   `reached`, when planning says its want is met; **`end_at`** ends one `failed`, when planning says its
   next step is blocked; every intention that ends is an event planning hears
   ([planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).

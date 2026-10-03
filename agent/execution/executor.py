@@ -43,6 +43,14 @@ code — an actuator, a message on the bus — and how an action names its taker
 decided here. A `take` that raises records the act as not taken and resolves the intention
 `failed`, and the executing thread outlives it.
 
+**A COMMITTED STEP IS A BELIEF OVER ITS LANDING WINDOW** (#849). At adoption every step of the plan
+is written into the beliefs as a graph of its own, `execution:CommittedStepGraph`, holding from the
+step's `notBefore` to its `landsAt` plus the patience and carrying the step's filling and the window's
+two lengths in seconds; a drift reads it at an instant inside the window, so a prediction made after
+the adoption contains the plan and the window's ends are its happenings. The window closes when the
+world answers the step or the intention ends, which is a write whoever hears a belief written hears,
+and `tick` forgets what has ended (knowledge/domain/execution/committed-step.md).
+
 **THE PATIENCE IS STILL HERE**, unchanged from the keeper this was: a second plan for a want
 already standing is absorbed inside the patience and supersedes past it, which is the
 amortisation (an-intention-is-an-amortised-deliberation). The planner does not go through
@@ -70,12 +78,13 @@ from agent import clock
 from agent.lifecycle import Signal
 from agent.hash_named_graph import facts_of
 from agent.ontology import ACTION, OREXIS, STATE, local_of
-from agent.store import (Raw, add_quads, bind, catalogue_of, entry, graphs_of, instant, quads,
-                         revisions_of, rows, update)
+from agent.store import (Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
+                         quads_for_pattern, revisions_of, rows, update)
 
 from .events import Commanded, IntentionResolved, Said, StepAnswered, StepTaken, Walked  # noqa: F401 — the events it says
 from .implementation import FICTIVE, operations
-from .ontology import EXECUTION, intentions_graph
+from .ontology import (ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, LANDS_WITHIN_S, committed_graph,
+                       intentions_graph)
 
 log = logging.getLogger("executor")
 
@@ -189,6 +198,29 @@ ORDER BY ?p"""
 
 _NEXT_Q = """SELECT ?next WHERE { GRAPH ?plan { $step execution:then ?next } } LIMIT 1"""
 
+#  A COMMITTED STEP'S LANDING WINDOW, off the plan it is in: when it may be taken and when its change
+#  lands, each where the plan says one.
+_PLACED_Q = """
+SELECT ?opens ?lands WHERE { GRAPH $plan {
+  OPTIONAL { $step execution:notBefore ?opens } OPTIONAL { $step execution:landsAt ?lands } } }"""
+
+#  EVERY STEP AN INTENTION COMMITTED TO.
+_COMMITTED_Q = """SELECT ?step WHERE { GRAPH $intentions { $intention execution:step ?step } }"""
+
+#  WHEN A COMMITTED STEP'S WINDOW CLOSES, on the catalogue row of the graph this executor wrote for it.
+_WINDOW_Q = """SELECT ?end WHERE { GRAPH $cat { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }"""
+
+#  CLOSE A WINDOW AT AN INSTANT: the period's end becomes $now, whatever it was.
+_CLOSE_U = """
+DELETE { GRAPH $cat { ?p orexis:end ?old } }
+INSERT { GRAPH $cat { ?p orexis:end $now } }
+WHERE  { GRAPH $cat { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?old } } }"""
+
+#  EVERY COMMITTED STEP WHOSE WINDOW HAS ENDED by $now — this agent's where the store says whose.
+_ENDED_Q = """
+SELECT ?g WHERE { GRAPH $cat { ?g a $kind $owned ; dcterms:temporal ?p . ?p orexis:end ?end . FILTER(?end <= $now) } }
+ORDER BY ?g"""
+
 #  THE RECORD THAT A STEP WAS TAKEN — history, and only history.
 _ACT_U = """
 INSERT DATA { GRAPH $intentions { $act a execution:Act ; execution:of $step ;
@@ -221,6 +253,11 @@ def _term(fact) -> ox.NamedNode | ox.Literal:
 def _quad(fact, graph: str) -> ox.Quad:
     s, p, o = fact
     return ox.Quad(_term(s), ox.NamedNode(p), _term(o), ox.NamedNode(graph))
+
+
+def _decimal(seconds: float) -> ox.Literal:
+    """A stretch in seconds as the decimal a rule divides by."""
+    return ox.Literal(f"{seconds:.3f}".rstrip("0").rstrip(".") or "0", datatype=ox.NamedNode(_XSD + "decimal"))
 
 
 class Standing:
@@ -380,16 +417,89 @@ class Executor:
         if catalogue_of(self.intentions) is not None and not rows(self.intentions, _CLASSIFIED_Q, (), graph=self.graph):
             update(self.intentions, f"INSERT DATA {{ {entry(self.intentions, self.graph, INTENTION_GRAPH, RECORDED, self.holder or _me_of(self.beliefs, self.id))} }}")
         intention = ox.NamedNode(f"{OREXIS}intention_{self.id}_{uuid.uuid4().hex[:8]}")
+        now = clock.now()                       # read once: a read of the clock is a tick in a test
         own = [ox.Quad(intention, _RDF_TYPE, ox.NamedNode(INTENTION), node),
                ox.Quad(intention, ox.NamedNode(PURSUES), ox.NamedNode(want), node),
-               ox.Quad(intention, ox.NamedNode(ADOPTED_AT), instant(clock.now()), node),
+               ox.Quad(intention, ox.NamedNode(ADOPTED_AT), instant(now), node),
                ox.Quad(intention, ox.NamedNode(ADOPTS), ox.NamedNode(graph), node),
                ox.Quad(intention, ox.NamedNode(BY), ox.NamedNode(head[0]), node)]
         own += [ox.Quad(intention, ox.NamedNode(STEP), ox.NamedNode(s), node) for s in sorted(steps)]
         add_quads(self.intentions, own)
         log.info("%s: committed a plan of %d step(s) for %s", self.id, len(steps),
                  want.rsplit("#", 1)[-1])
+        self._commit_windows(graph, sorted(steps), now)
         return intention.value
+
+    # --- the committed steps, as beliefs over their landing windows ------------------------------
+
+    def _commit_windows(self, plan: str, steps: list[str], now: datetime) -> None:
+        """Write every step of the adopted plan into the beliefs as a graph of its own, an
+        `execution:CommittedStepGraph` holding over the step's LANDING WINDOW — from its
+        `execution:notBefore` to its `execution:landsAt` plus the patience — so that a prediction
+        made from now on sees the intention: the window's two ends are happenings, and a drift reads
+        the step at any instant inside it (a-prediction-accumulates-rates-between-happenings, the seam
+        "committed steps are not yet flows", closed by #849).
+
+        WHAT THE GRAPH HOLDS is the step's filling as the plan states it — the action and a triple per
+        parameter, copied as terms and never read, since they are the layer above's and the domain's
+        words — its type, and the window's two lengths in seconds (`execution:landsWithinS`,
+        `execution:answeredWithinS`), stated as numbers because no rule can measure the stretch between
+        the plan's two instants. A step placed at no instant opens at the adoption and lands as it is
+        taken; its window is the patience alone. Nothing is written where the beliefs describe no
+        graphs, as a bare store a case hands in does not.
+        """
+        if catalogue_of(self.beliefs) is None:
+            return
+        owner = self.holder or _me_of(self.beliefs, self.id)
+        named = Raw(f"<{plan}>")
+        for step in steps:
+            placed = next(iter(rows(self.intentions, bind(_PLACED_Q, plan=named, step=step))), {})
+            opens = datetime.fromisoformat(placed["opens"]) if placed.get("opens") else now
+            lands = max(opens, datetime.fromisoformat(placed["lands"])) if placed.get("lands") else opens
+            within, by = (lands - opens).total_seconds(), (lands - opens).total_seconds() + self.patience_s
+            graph = committed_graph(self.id, step)
+            forget_graph(self.beliefs, graph)
+            update(self.beliefs, f"INSERT DATA {{ {entry(self.beliefs, graph, COMMITTED_STEP_GRAPH, RECORDED, owner, start=opens, end=lands + timedelta(seconds=self.patience_s))} }}")
+            subject, into = ox.NamedNode(step), ox.NamedNode(graph)
+            held = [ox.Quad(subject, _RDF_TYPE, ox.NamedNode(EXECUTION + "Step"), into),
+                    ox.Quad(subject, ox.NamedNode(LANDS_WITHIN_S), _decimal(within), into),
+                    ox.Quad(subject, ox.NamedNode(ANSWERED_WITHIN_S), _decimal(by), into)]
+            held += [ox.Quad(q.subject, q.predicate, q.object, into)
+                     for q in quads_for_pattern(self.intentions, subject, graph=plan)
+                     if not q.predicate.value.startswith(EXECUTION) and q.predicate != _RDF_TYPE]
+            add_quads(self.beliefs, held)
+            log.debug("%s: %s is committed from %s, landing within %.0fs and answered within %.0fs",
+                      self.id, local_of(step), opens.isoformat(timespec="seconds"), within, by)
+            if self.on_write is not None:
+                self.on_write(graph)
+
+    def _close_window(self, step: str, now: datetime) -> None:
+        """Close the committed step's window at `now`: the world answered the step, or the intention
+        ended, so nothing of the step flows past this instant. A window already ended by the clock
+        is left as it stands — the sweep takes it — and one closed is said to whoever hears a belief
+        written, since what a drift reads changed."""
+        if catalogue_of(self.beliefs) is None:
+            return
+        cat, graph = Raw(f"<{catalogue_of(self.beliefs)}>"), committed_graph(self.id, step)
+        found = rows(self.beliefs, _WINDOW_Q, (), cat=cat, g=graph, kind=Raw(f"<{COMMITTED_STEP_GRAPH}>"))
+        if not found or (found[0].get("end") and datetime.fromisoformat(found[0]["end"]) <= now):
+            return
+        update(self.beliefs, bind(_CLOSE_U, cat=cat, g=graph, now=instant(now)))
+        if self.on_write is not None:
+            self.on_write(graph)
+
+    def _sweep(self, now: datetime) -> None:
+        """Forget every committed step whose window has ended by `now`: what ends by the clock is a
+        graph with a period, and one sweep drops it. Nobody is told — a graph past its end is handed
+        to no reader asking at a later instant, so dropping it changes nothing anyone reads."""
+        if catalogue_of(self.beliefs) is None:
+            return
+        owner = self.holder or _me_of(self.beliefs, self.id)
+        ended = rows(self.beliefs, _ENDED_Q, (), cat=Raw(f"<{catalogue_of(self.beliefs)}>"),
+                     kind=Raw(f"<{COMMITTED_STEP_GRAPH}>"), now=instant(now),
+                     owned=Raw(f"; orexis:beliefsOf <{owner}>" if owner else ""))
+        for r in ended:
+            forget_graph(self.beliefs, r["g"])
 
     # --- what stands --------------------------------------------------------------------------
 
@@ -422,11 +532,16 @@ class Executor:
         not answer the only question an operator brings to it, which is what this agent
         thought it was doing and why it stopped.
         """
+        now = clock.now()
         update(self.intentions, f"""
 INSERT DATA {{ GRAPH <{self.graph}> {{
-  <{intention}> <{RESOLVED_AT}> "{clock.now().isoformat()}"^^xsd:dateTime ;
+  <{intention}> <{RESOLVED_AT}> "{now.isoformat()}"^^xsd:dateTime ;
                 <{OUTCOME}> "{outcome}" . }} }}""")
         log.info("%s: %s — %s", self.id, intention.rsplit("#", 1)[-1], outcome)
+        #  NOTHING OF AN ENDED INTENTION FLOWS ON: every step it committed to closes now, the ones
+        #  taken and answered with nothing left to close, the ones never taken with their whole window.
+        for r in rows(self.intentions, bind(_COMMITTED_Q, intentions=Raw(f"<{self.graph}>"), intention=intention)):
+            self._close_window(r["step"], now)
         want = next(iter(rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))), {})
         self.intention_resolved.emit(IntentionResolved(intention, want.get("want"), outcome,
                                                        desire=self._desires.get(want.get("want"))))
@@ -452,6 +567,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         a present that surprised it. The executor never replans; it says what happened.
         """
         now = now or clock.now()
+        self._sweep(now)
         due, soonest = [], None
         def wake_at(when):
             nonlocal soonest
@@ -481,7 +597,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 wake_at(lands)
             elif self._answered(r["predicts"]):
                 self._verdict(intention, step, r, now, landed=True)
-                self._advance(intention, step)
+                self._advance(intention, step, now)
             elif None in below:
                 continue                        # kept below: a plan for it stands, and waits on no clock
             elif below and "done" not in below:
@@ -526,15 +642,17 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         return all(json.dumps(f) in present for f in said.get("adds", ())) \
             and not any(json.dumps(f) in present for f in said.get("retracts", ()))
 
-    def _advance(self, intention: str, step: str) -> None:
+    def _advance(self, intention: str, step: str, now: datetime | None = None) -> None:
         """Move the intention to the step after `step`, or resolve it `done` at the last. The
-        timekeeper is woken either way: a new head may be due at once."""
+        step's window closes at `now`, since the world has answered it. The timekeeper is woken
+        either way: a new head may be due at once."""
         following = next(iter(rows(self.intentions, bind(_NEXT_Q, intentions=Raw(f"<{self.graph}>"), step=step))), None)
         if following is None:
             self.resolve(intention, "done")
         else:
             update(self.intentions, bind(_ADVANCE_U, intentions=Raw(f"<{self.graph}>"),
                                          intention=intention, step=step, next=following["next"]))
+            self._close_window(step, now or clock.now())
         self.wake()
 
     def walk(self, now: datetime | None = None) -> int:
@@ -607,7 +725,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         if not taken:
             self.resolve(intention, "failed")
         elif not rows(self.intentions, bind(_PREDICTS_Q, intentions=Raw(f"<{self.graph}>"), step=step)):
-            self._advance(intention, step)
+            self._advance(intention, step, done_at)
         self._inflight.discard(step)
         self.wake()
 

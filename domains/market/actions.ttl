@@ -126,6 +126,11 @@ market:Offering a orexis:Action ;
     #  IT LANDS WHEN THE WINDOW CLOSES, so the clearing after it is not taken before.
     planning:landsAfter """PREFIX market: <http://example.org/orexis/market#>
         SELECT ?seconds WHERE { $venue market:bidWindowS ?seconds }""" ;
+    #  THE ROUND CLOSES A WINDOW AFTER IT OPENS, and the instant is the opening LESS A NEGATIVE
+    #  duration: the engine binds nothing for `dateTime + dayTimeDuration` at about a third of the
+    #  seconds of a minute (measured on pyoxigraph 0.5.11, deterministic per instant), so a round
+    #  said at such an instant had no `closesAt`, the clearing found no round to say cleared, and
+    #  the bidder's venue stayed open for ever; subtraction binds at every one.
     planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { $venue market:open true . ?call market:offered true }
@@ -138,7 +143,7 @@ market:Offering a orexis:Action ;
         WHERE { $venue market:lotL ?lot ; market:reservePerL ?reserve ; market:bidWindowS ?window .
                 ?bidder market:bidsIn $venue .
                 ?call market:calledOn $venue . FILTER NOT EXISTS { ?call market:answered true }
-                BIND(xsd:dateTime($now) + xsd:dayTimeDuration(CONCAT("PT", STR(?window), "S")) AS ?closes)
+                BIND(xsd:dateTime($now) - xsd:dayTimeDuration(CONCAT("-PT", STR(?window), "S")) AS ?closes)
                 BIND(IRI(CONCAT(STR($venue), "-round-", REPLACE(STR($now), "[^0-9]", ""))) AS ?round) }""" ] ] .
 
 market:Clearing a orexis:Action ;

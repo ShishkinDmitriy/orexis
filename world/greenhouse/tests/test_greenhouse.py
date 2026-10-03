@@ -12,10 +12,11 @@ from pathlib import Path
 import pytest
 
 from agent import clock
+from agent.execution.executor import DEFAULT_PATIENCE_S
 from agent.ontology import OREXIS
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.series import HISTORY, Sink, install
-from agent.store import graphs_of, rows
+from agent.store import graphs_of, revisions_of, rows
 from agent.transport.mqtt.driver import Mqtt
 
 WORLD = Path(__file__).resolve().parents[1]
@@ -96,6 +97,52 @@ def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
     assert runtime.parts["execution"].executor.walking() == [], "the reading was revised inside and answered the dose"
     assert ("SoilMoisture", "inside") in _sides(runtime.beliefs)
     assert len(broker.published) == 1, "one dose, and nothing more once the bed is comfortable"
+
+
+_PREDICTED_Q = """
+SELECT ?start ?value WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?start }
+  GRAPH ?g { ?o sosa:observedProperty <http://example.org/orexis/climate#SoilMoisture> ; sosa:hasSimpleResult ?value } }
+ORDER BY ?start"""
+
+
+def test_a_committed_dose_is_a_flow_the_beds_prediction_accumulates(monkeypatch):
+    """#849. Adopted, the dose stands in the beliefs as a committed step holding over its landing
+    window — from the step's instant to the probe's next reading plus the patience — and the actuation
+    domain's drift reads it there: the bed's prediction, rewritten as the window is written, rises to
+    the aim the command sizes to, 0.45, by the time the next reading is due, and dries from there, so
+    the one stretch of the day reads inside its range — 0.41 at its end, a day's drying under the aim —
+    where the drying alone read 0.2 and below. When the reading answers the dose the window closes and
+    the next tick forgets it."""
+    runtime, broker = _grower(monkeypatch)
+    runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
+    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    runtime.run(passes=1, poll_s=0)
+    assert broker.published == [("actuators/pump/command", {"dose_ml": 500}, False)]
+    committed = "http://example.org/orexis/execution#CommittedStepGraph"
+    (window,) = graphs_of(runtime.beliefs, committed)
+    (period,) = rows(runtime.beliefs, "SELECT ?s ?e WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g dcterms:temporal ?p . ?p orexis:start ?s ; orexis:end ?e } }", (), g=window)
+    opens, closes = datetime.fromisoformat(period["s"]), datetime.fromisoformat(period["e"])
+    assert timedelta(minutes=11) <= closes - opens <= timedelta(minutes=11, seconds=5), "a cadence, and the patience"
+    predicted = [(datetime.fromisoformat(r["start"]), float(r["value"])) for r in rows(runtime.beliefs, _PREDICTED_Q, ())]
+    assert [(s >= closes - timedelta(seconds=DEFAULT_PATIENCE_S), round(v, 2)) for s, v in predicted] == [(True, 0.41)], \
+        f"one stretch from where the reading is due, risen to the aim and dried a day, not dried from 0.2: {predicted}"
+    sides = _predicted_sides(runtime.beliefs)
+    assert ("SoilMoisture", "inside") in sides and ("SoilMoisture", "below") not in sides, f"foreseen inside, never below: {sides}"
+    runtime.time.at = NOW + timedelta(minutes=11)
+    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
+    runtime.run(passes=2, poll_s=0)
+    assert runtime.parts["execution"].executor.walking() == []
+    assert graphs_of(runtime.beliefs, committed) == [], "answered: closed, then swept"
+
+
+def _predicted_sides(beliefs) -> set[tuple[str, str]]:
+    """The sides of every predicted observation, read with its revisions as a reader of a prediction does."""
+    q = """SELECT ?p ?side WHERE { ?obs sosa:observedProperty ?p ; ?side ?range .
+           VALUES ?side { sensing:below sensing:inside sensing:above } }"""
+    predicted = graphs_of(beliefs, OREXIS + "PredictionGraph")
+    return {(r["p"].rsplit("#", 1)[-1], r["side"].rsplit("#", 1)[-1])
+            for r in rows(beliefs, q, [*predicted, *revisions_of(beliefs, *predicted)])}
 
 
 @pytest.fixture

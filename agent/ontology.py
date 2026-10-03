@@ -106,6 +106,7 @@ PREDICTION = OREXIS + "PredictionGraph"  # what is expected, holding during its 
 PLAN = OREXIS + "PlanGraph"              # a plan published, adopted by reference
 RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period
 ACTION = OREXIS + "ActionGraph"          # actions
+DRIFT_GRAPH = OREXIS + "DriftGraph"      # drifts — a domain's, read by the predictor, found by its premise
 #  What a text is answered over: everyone's knowledge, what is, and the records. Stated once
 #  here and named at every runner, so a runner says what it hands a text; a package that owns
 #  more kinds a text of its reads — planning's desires and wants — adds them to its own list.

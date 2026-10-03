@@ -69,6 +69,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [executor](/domain/execution/executor.md) - Commits plans as intentions, takes each step when due, moves on only when the world answers.
 * [intention](/domain/execution/intention.md) - One plan committed to for one want, standing at a step until done, failed or abandoned.
 * [step](/domain/execution/step.md) - An action picked with its values: what it predicts, what it read, when it may be taken and lands.
+* [committed-step](/domain/execution/committed-step.md) - A step an intention adopted, believed over its landing window, so a drift reads it and a later search sees the plan.
 * [act](/domain/execution/act.md) - The record that a step was taken, and when; the world, not the act, says whether it landed.
 * [implementation](/domain/execution/implementation.md) - How an action is carried out when a step is taken: operations grouped by order, sized from the present, never read by a search.
 * [operation](/domain/execution/operation.md) - One thing taking a step does — a command, a saying, or the fictive write. Not an act, which is the record.

@@ -20,7 +20,7 @@ from agent import clock
 from agent.execution.executor import DEFAULT_PATIENCE_S, Executor
 from agent.execution.ontology import EXECUTION, intentions_graph
 from agent.hash_named_graph import facts_of
-from agent.store import bindings, put_graph, query_over, update
+from agent.store import bindings, put_graph, query_over, rows, update
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT, ME = "keeper", "http://example.org/test#keeper"
@@ -386,3 +386,80 @@ def test_a_second_plan_for_a_want_is_walked_by_steps_of_its_own(monkeypatch):
     (standing,) = x.standing()
     assert standing.uri == second and standing.at == f"{PLAN}2.0"
     assert x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S)) == [standing.at], "due, since it was never taken"
+
+
+#  THE COMMITTED STEPS, as beliefs over their landing windows (#849).
+COMMITTED = EXECUTION + "CommittedStepGraph"
+_WINDOWS_Q = """
+SELECT ?g ?start ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a $kind ; dcterms:temporal ?p .
+  ?p orexis:start ?start ; orexis:end ?end } } ORDER BY ?g"""
+
+
+def _windows(beliefs: ox.Store) -> list[tuple[str, datetime, datetime]]:
+    return [(r["g"], datetime.fromisoformat(r["start"]), datetime.fromisoformat(r["end"]))
+            for r in rows(beliefs, _WINDOWS_Q, (), kind=COMMITTED)]
+
+
+def _placed(plan: ox.Store) -> ox.Store:
+    """The first step placed: due in five minutes, landing a quarter past, filling a disk."""
+    update(plan, f"""INSERT DATA {{ GRAPH <{PLAN}> {{
+      <{PLAN}.0> execution:notBefore "{(NOW + timedelta(minutes=5)).isoformat()}"^^xsd:dateTime ;
+                 execution:landsAt "{(NOW + timedelta(minutes=15)).isoformat()}"^^xsd:dateTime ;
+                 <http://example.org/test#disk> <{DISK}> }} }}""")
+    return plan
+
+
+def test_a_committed_step_is_a_belief_over_its_landing_window():
+    """Adopted, every step stands in the beliefs as a graph of its own, holding from the step's
+    opening to its landing plus the patience, carrying its filling as the plan states it and the
+    window's two lengths in seconds — never the step's prediction, which is the plan's — and each
+    is said to whoever hears a belief written. A step placed at no instant opens at the adoption and
+    lands as it is taken, so its window is the patience alone."""
+    beliefs, told = _beliefs(PEG_A), []
+    x = Executor(beliefs, AGENT, ox.Store(), on_write=told.append)
+    x.commit(_placed(_predicting(2)), PLAN, WANT)
+    windows = _windows(beliefs)
+    assert [(s, e) for _, s, e in windows] == [
+        (NOW + timedelta(minutes=5), NOW + timedelta(minutes=15, seconds=DEFAULT_PATIENCE_S)),
+        (NOW, NOW + timedelta(seconds=DEFAULT_PATIENCE_S))]
+    assert told == [g for g, _, _ in windows], "each window is said as it is written"
+    (first, _, _) = windows[0]
+    held = {(r["p"], r["o"]) for r in rows(beliefs, "SELECT ?p ?o WHERE { GRAPH $g { ?s ?p ?o } }", (), g=first)}
+    assert (EXECUTION + "landsWithinS", "600") in held and (EXECUTION + "answeredWithinS", "660") in held
+    assert ("http://example.org/test#disk", DISK) in held, "the filling, copied as the plan states it"
+    assert not any(p == EXECUTION + "predicts" for p, _ in held), "the prediction stays the plan's"
+    assert ("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", EXECUTION + "Step") in held
+
+
+def test_a_window_closes_when_the_world_answers_and_an_ended_one_is_swept():
+    """The world answers the taken step: its window closes at that instant, said as a belief
+    written, and the next tick forgets what has ended; the step behind it stands untouched."""
+    beliefs, told = _beliefs(PEG_A), []
+    x = Executor(beliefs, AGENT, ox.Store(), on_write=told.append)
+    x.commit(_predicting(2), PLAN, WANT)
+    assert len(_windows(beliefs)) == 2 and len(told) == 2
+    x.tick(NOW)
+    x.drain()
+    update(beliefs, f"DELETE DATA {{ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{PEG_A}> }} }} ; "
+                    f"INSERT DATA {{ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{PEG_B}> }} }}")
+    at = NOW + timedelta(seconds=10)
+    x.tick(at)
+    assert x.standing()[0].at == f"{PLAN}.1", "answered"
+    (closed,) = [(g, e) for g, _, e in _windows(beliefs) if g.endswith("plan_0")]
+    assert closed[1] == at, "closed at the instant the world answered"
+    assert told[-1] == closed[0], "and said"
+    x.tick(at + timedelta(seconds=1))
+    assert [g for g, _, _ in _windows(beliefs)] == [g for g in told[:2] if g.endswith("plan_1")], "swept; the next step's stands"
+
+
+def test_an_intention_that_ends_closes_every_window_it_opened():
+    """Superseded, failed or abandoned, nothing of the intention flows on: every step's window
+    closes now, the untaken ones with their whole stretch ahead, and a tick sweeps them."""
+    beliefs, told = _beliefs(PEG_A), []
+    x = Executor(beliefs, AGENT, ox.Store(), on_write=told.append)
+    intention = x.commit(_placed(_predicting(2)), PLAN, WANT)
+    x.resolve(intention, "superseded")
+    assert [e for _, _, e in _windows(beliefs)] == [NOW, NOW], "both closed at the resolution"
+    assert len(told) == 4, "written twice, closed twice"
+    x.tick(NOW)
+    assert _windows(beliefs) == []
