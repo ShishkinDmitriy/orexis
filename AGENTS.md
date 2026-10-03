@@ -425,7 +425,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (a-documents-kind-says-who-reads-it).
 - **A world's words are its own or a domain's it imports** — `owl:imports` names the graph it
   brings; **a vocabulary two worlds speak is a domain**, and the shapes are `planning:ShapesGraph`.
-- **A graph of actions is an `orexis:ActionGraph`, and the planner reads actions from those alone.**
+- **A graph of actions is an `orexis:ActionGraph` and a graph of drifts an `orexis:DriftGraph`, and the
+  planner and the predictor read each from those alone** — typed bare `orexis:PublicGraph`, every public
+  graph was scanned for them; and the drifts' kind is the kernel's, not prediction's, because prediction's
+  premise finds the drift rows before prediction is loaded, and a kind only it declared left it unloaded.
 - **A package beyond the mind is loaded where its premise, read off the world, holds** (#824).
 - **The runtime stops when no desire is held, no transport reaches it and every want is reached** —
   wants standing with nothing walking is `planning:Exhausted` or unreachable; a clock that does not

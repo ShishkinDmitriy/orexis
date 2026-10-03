@@ -3,7 +3,7 @@
 @prefix prediction: <http://example.org/orexis/prediction#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<> a orexis:PublicGraph .    # this document is one graph, and this is what it is
+<> a orexis:DriftGraph .    # this document is one graph, and this is what it is
 
 #  WHAT MOVES A SUBJECT'S SOIL WHILE NOBODY WATERS IT, one drift per flow, each answering a rate
 #  per second of the one timeline; the prediction package adds them and accumulates the sum. A drift

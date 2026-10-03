@@ -70,6 +70,7 @@ GRAPH :actions {
 GRAPH :catalogue {
   :actions a orexis:Graph .
   :actions a orexis:PublicGraph .
+  :actions a orexis:DriftGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
   :ontology a orexis:Graph .
