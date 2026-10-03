@@ -959,7 +959,16 @@ def forget_graph(store, graph_iri: str) -> None:
     `<graph> ?p ?o` alone leaves `_:b a dcterms:PeriodOfTime ; orexis:start …` standing with
     nothing pointing at it — litter that no reader asks for and nothing would ever remove. It
     costs one more clause and the alternative is a store that grows for ever.
+
+    AND ITS REVISIONS GO WITH IT. What the rules concluded of a graph lives in a belief derived
+    from it, and the bundle's rule is that the revisions go when the graph goes; forgotten alone,
+    a prediction's revisions outlived the stretch that was forgotten for a shorter forecast, kept
+    the old side with the old horizon-long period, and were handed to every possible world of
+    that day — so the greenhouse's dose read unmet in the world it made, and the search exhausted
+    for a day after the bed crossed its floor.
     """
+    for revision in revisions_of(store, graph_iri):
+        forget_graph(store, revision)
     clear_graph(store, graph_iri)
     catalogue = catalogue_of(store)
     if catalogue is not None:

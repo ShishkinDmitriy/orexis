@@ -31,7 +31,8 @@ and rules of one order see none of each other's inferences until they have all r
 inferred is what the base graph does not already hold. The runtime hands public knowledge alone
 as what stands beside a graph it wrote — a reading, a prediction, a peer's document — because every
 rule shipped reads one graph and what the world states, and a revision is replaced only when its
-own source is written again: handed everything believed, the first of two readings arriving
+own source is written again, and goes when its source is forgotten (`forget_graph` takes
+`revisions_of` the graph with it): handed everything believed, the first of two readings arriving
 together took the second's side into its own revision, where the second's next reading never
 reached it. All of that is section 8 of the draft,
 within a **budget** of rule executions, the unit revision spends, which the

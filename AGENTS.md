@@ -900,6 +900,13 @@ it is a record wearing a bullet.
   the market's acts declare their round's window. And a `landsAfter` text that will not parse
   is logged and read as nought, so the suite was green with the landing unread: probe a
   declared figure on the plan it places, never only on the outcome.
+- **A graph forgotten takes its revisions with it, and an orphan revision is a side with no
+  reading** — each reading rewrites the forecast, a stretch the shorter forecast no longer had
+  was forgotten without the revision derived from it, and that orphan said `below` for the old
+  horizon in every possible world of the day, so the dose read unmet in the world it made and
+  the greenhouse's search exhausted until the period ran out; `forget_graph` forgets
+  `revisions_of` the graph first, and the world test steps a reading at a time, since the one
+  that jumped a day never let the orphan form.
 - **An intention's steps are its own** — a second plan for one want names its steps as the first
   did, and the act the first recorded read as the second's step taken, so the grower never
   called again; a held name is tagged at adoption.
