@@ -57,7 +57,7 @@
        }""" .
  }
  
-@@ -80,10 +80,10 @@
+@@ -80,16 +80,16 @@
  }
  
  GRAPH committed:plan_dose {
@@ -70,7 +70,14 @@
  }
  
  GRAPH :catalogue {
-@@ -97,6 +97,8 @@
++  :actions a orexis:DriftGraph .
+   :actions a orexis:Graph .
+   :actions a orexis:PublicGraph .
+-  :actions a orexis:DriftGraph .
+   :catalogue a orexis:CatalogueGraph .
+   :catalogue a orexis:Graph .
+   :ontology a orexis:Graph .
+@@ -98,6 +98,8 @@
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
    committed:plan_dose a execution:CommittedStepGraph .
@@ -79,7 +86,7 @@
    committed:plan_dose dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:25:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:05:00+00:00"^^xsd:dateTime ] .
    committed:plan_dose orexis:arrivedBy orexis:Recorded .
    committed:plan_dose orexis:beliefsOf :keeper .
-@@ -106,4 +108,53 @@
+@@ -107,4 +109,53 @@
    observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
    observed:zamioculcas_moisture orexis:beliefsOf :keeper .
