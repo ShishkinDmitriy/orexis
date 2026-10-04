@@ -37,11 +37,11 @@ You may run read-only commands to ground what you claim — and you should, beca
 not checked is worth less than no claim. Measure rather than assert. Run the gates if a conclusion
 depends on them. Never build an image, start or stop a container, or run `orexis-onboard`,
 `orexis-mqtt`, `orexis-influx`, `orexis-compose` or `pytest infra`: they mint credentials, write files
-or reload a live broker, and the bench has three worlds running.
+or reload a live broker, and the bench may have worlds running.
 
 # How to be useful
 
-**Check the open issues before concluding anything** — `gh issue list`. Ten or so are open, and
+**Check the open issues before concluding anything** — `gh issue list`, or `gh api repos/<owner>/<repo>/issues?state=open` where GraphQL is refused. Several are open, and
 several of the interesting questions here are already recorded. Re-deriving one is waste; finding
 that your question is a known seam is a real answer.
 

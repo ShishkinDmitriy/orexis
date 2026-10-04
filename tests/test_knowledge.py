@@ -199,6 +199,11 @@ def test_an_index_entry_is_a_claim_not_an_abstract():
 # A trailing `/` is a directory, `<name>` is a placeholder and matches any single segment.
 _TOP = ("agent/", "agent_old/", "packages/", "onboarding/", "tests/", "infra/", "tools/", "firmware/", "world/")
 _PATH = re.compile(r"`((?:" + "|".join(re.escape(t) for t in _TOP) + r")[A-Za-z0-9_./<>*-]*)`")
+#  A PROCEDURE NAMES ITS PATHS IN FENCED COMMANDS AS OFTEN AS IN BACKTICKS — `pytest world/<name>`
+#  on its own line — so a skill or a role is read for a path wherever one stands, not only between
+#  backticks; a record's prose is read between backticks alone, where a bare word like `world`
+#  is a word and not a path.
+_PATH_ANYWHERE = re.compile(r"(?<![\w/`.-])((?:" + "|".join(re.escape(t) for t in _TOP) + r")[A-Za-z0-9_./<>*-]*)")
 
 
 #  ASK GIT, NOT THE FILESYSTEM. This guard used to call `Path.exists()`, and that made its
@@ -433,17 +438,34 @@ def test_no_document_names_a_path_that_is_not_there():
     #  `agent/`, and a Fuseki endpoint removed with the shared store, while AGENTS.md cited
     #  `tests/test_goals.py` — renamed to `test_desires.py` by the goal-is-a-desire ruling, in
     #  the very file that tells everyone which guard pins what.
-    docs = concepts() + [REPO_ROOT / "README.md", REPO_ROOT / "AGENTS.md"]
+    #  AND THE SKILLS AND THE ROLES. `.claude/skills/*/SKILL.md` and `.claude/agents/*.md` tell a
+    #  coding agent where things are and what to run, in backticks exactly as a record does, and
+    #  nothing was looking: the snapshot skill named `packages/orexis-agent-deliberation/tests/`
+    #  for a week after that tree was retired, and the implementing role a validator that no
+    #  longer exists (2026-10-04). A procedure that names a path that is not there sends every
+    #  session that follows it to the wrong place.
+    docs = (concepts() + [REPO_ROOT / "README.md", REPO_ROOT / "AGENTS.md"]
+            + sorted((REPO_ROOT / ".claude" / "skills").glob("*/SKILL.md"))
+            + sorted((REPO_ROOT / ".claude" / "agents").glob("*.md")))
     known = _tracked()
     assert docs, "no concept documents found — the glob stopped matching"
     assert all(d.exists() for d in docs), "a desire document moved — README.md or AGENTS.md"
+    assert any(".claude" in d.parts for d in docs), "no skill or role found — the glob stopped matching"
     assert known, "git tracks nothing — `git ls-files` stopped answering, and every path below "
     "would read as missing"
 
     unresolved = {}
     for path in docs:
-        for spec in set(_PATH.findall(path.read_text())):
-            if spec in absent_on_purpose or spec.startswith(_RETIRED_TREES) or _is_tracked(spec, known):
+        #  A RECORD MAY NARRATE A RETIRED PATH; A PROCEDURE MAY NOT. The exemptions above are for
+        #  prose that says "was": a skill or a role tells the next session what to run and where,
+        #  in the present tense, and the one path it names that is not there is the one it sends
+        #  every session to — the snapshot skill named the retired `packages/` tree for a week.
+        procedure = ".claude" in path.parts
+        found = (_PATH_ANYWHERE if procedure else _PATH).findall(path.read_text())
+        for spec in set(found):
+            if _is_tracked(spec, known):
+                continue
+            if not procedure and (spec in absent_on_purpose or spec.startswith(_RETIRED_TREES)):
                 continue
             where = (path.relative_to(BUNDLE) if BUNDLE in path.parents
                      else path.relative_to(REPO_ROOT))

@@ -605,8 +605,12 @@ about this project are already answered in one. Re-deriving a known defect is wa
 that your question is a recorded seam is a real answer.
 
 Two roles are defined in `.claude/agents/` — `deliberate` for thinking a question through and
-writing down the outcome, `implement` for carrying out something already decided. They say what a
-role does; this file says what is true of the project, and it wins wherever they seem to disagree.
+writing down the outcome, `implement` for carrying out something already decided — and two skills
+in `.claude/skills/`: `snapshot-tests`, for the case suites, and `author-a-world`, genesis as a
+procedure. They say what a role does and what to run; this file says what is true of the project,
+and it wins wherever they seem to disagree. **A skill or a role is a procedure, so it names no path
+that is not there**: `tests/test_knowledge.py` reads them as it reads the bundle, with no exemption
+for a retired tree, since the snapshot skill pointed at the retired `packages/` tree for a week.
 
 ## Unfinished work: an issue is a debt, a seam is a decision
 
