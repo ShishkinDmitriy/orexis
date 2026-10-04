@@ -460,7 +460,10 @@ def test_no_document_names_a_path_that_is_not_there():
         #  prose that says "was": a skill or a role tells the next session what to run and where,
         #  in the present tense, and the one path it names that is not there is the one it sends
         #  every session to — the snapshot skill named the retired `packages/` tree for a week.
-        procedure = ".claude" in path.parts
+        #  JUDGED BY ITS PLACE IN THE REPO, not by its absolute path: a worktree under
+        #  `.claude/worktrees/` made every record a procedure and listed every retired path the
+        #  records narrate, found the first time an agent ran the gate from one.
+        procedure = ".claude" in path.relative_to(REPO_ROOT).parts
         found = (_PATH_ANYWHERE if procedure else _PATH).findall(path.read_text())
         for spec in set(found):
             if _is_tracked(spec, known):

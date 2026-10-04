@@ -184,7 +184,7 @@ def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
         assert variable["name"] == AGENT_VARIABLE and variable["query"] == "terrace"
         assert dashboard["links"][0]["includeVars"] and "health" in dashboard["links"][0]["tags"]
     (sensing,) = [d for name, d in health if name == "sensing.json"]
-    assert [p["title"] for p in sensing["panels"] if p["type"] == "row"] == ["received", "silence"]
+    assert [p["title"] for p in sensing["panels"] if p["type"] == "row"] == ["received", "silence", "doubted"]
     assert len({d["uid"] for _, d in health}) == len(health)
     panels = [p for _, d in health for p in d["panels"] if p["type"] != "row"]
     queries = [[t["query"] for t in p["targets"]] for p in panels]

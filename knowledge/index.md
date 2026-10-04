@@ -22,7 +22,7 @@ tower of the two are the others. This bundle is the durable what and why; the li
 
 # Runbooks
 
-* [runbooks/](runbooks/) - Author a world, add a domain, run it, measure the search and a pass, and take it apart.
+* [runbooks/](runbooks/) - Author a world, add a domain, run it, measure the search and a pass, reflect on a season, and take it apart.
 
 # How to use this bundle
 

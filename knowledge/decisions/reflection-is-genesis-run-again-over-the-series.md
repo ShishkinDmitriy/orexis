@@ -172,6 +172,20 @@ said stuck or silent named on the series — since the tool cannot answer the fi
 the first. Filed as [#894](https://github.com/ShishkinDmitriy/orexis/issues/894) once the sovereign had read
 this record.
 
+**What #894 built, and measured in-process.** `orexis-explain <world> <agent>` (`onboarding/explain.py`)
+answers the five questions over the two buckets, each question a function over rows that come either
+from a Flux query with the admin-side token or from points handed in directly, so every question is
+held to points a real runtime wrote in the suite with no store in the room
+(`world/greenhouse/tests/test_explain.py`). Consequence A's two gaps closed on sensing's side: every
+observation point carries the raw count as field `raw` beside `value`, and sensing says `doubted`,
+a level per sensor tagged `sensor` — `silent`, `stuck`, as each stands at the ask — where `silence`
+only counted. On the greenhouse played by its simulator in-process, a reading every ten minutes with
+both sinks recording and a metrics window a pass long: a simulated day is 144 passes in 31 s, 290
+history and 1,736 metrics points, and the report over them takes 1.4 ms; it names the one dose's
+landing, 600 s after its `landsAt` — the next reading — and finds nothing else, which is the honest
+answer for a world that works ([reflect](/runbooks/reflect.md) has the figures and the command). The
+measurement the issue asks for, the containers at pace 600 for a real hour, is still to be run.
+
 # Seams left open
 
 - **The model is optional and no model is wired.** The fixed set is answered by queries over two
@@ -195,5 +209,9 @@ this record.
   are beliefs, so by this record reflection does not read them; but a budget exhausted every pass is
   a proposal ABOUT one, and a stance is authored in the world, so the proposal is an edit to a world
   document as any other is. Whether the tool is handed the world's documents as well as the series
-  — public, ratified, nobody's belief — is open, and the honest default is that it is, since the
-  world is what the proposal is written against.
+  — public, ratified, nobody's belief — was open, and #894 took the honest default: the tool reads
+  the world's documents for the two things the series cannot say — which desires the agent holds,
+  since a desire never read unmet leaves no trace on the series, booted from the documents in memory
+  as onboarding's `lasts` boots them; and which sensors read a fraction of one, since "past 1.0" is a
+  calibration point for a probe and nothing for a thermometer — and still opens no volume. A stance
+  of the agent's, once #876 gives it a document, is the same kind of read.

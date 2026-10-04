@@ -16,9 +16,16 @@ one short string a process is handed. The dashboards filter on `sensor` alone. `
 asks `measurement_of`, `tag_of` and `FIELD` here, so a panel cannot query a name or a tag sensing
 does not write.
 
+THE POINT CARRIES THE RAW COUNT BESIDE THE READING (#894): field `raw`, the number the sensor gave
+(`sensing:rawResult`), where the observation has one. Reflection reads the series and never the
+beliefs, and two of its questions — a count that has not moved for days, a reading past a
+calibration point — could be asked of the reading alone only through the very scaling under doubt.
+The dashboards keep drawing `value`; a point written before carries `value` alone.
+
 AND IT IS A METRIC: how long after the reading it replaced it came, in the agent's seconds, beside
 the cadence the world states, tagged by the sensor. So is how many sensors are said silent now, which
-is made only where heard.
+is made only where heard — and WHICH sensors the agent doubts, `Doubted`, a level per sensor tagged
+`sensor`: silent, stuck, each as it stands at the ask. `silence` counts; `doubted` names.
 """
 
 from __future__ import annotations
@@ -30,6 +37,7 @@ from agent.metrics import Level, Tag, Value
 from agent.ontology import local_of
 
 FIELD = "value"
+RAW = "raw"
 
 
 def measurement_of(prop: str) -> str:
@@ -46,8 +54,9 @@ def tag_of(iri: str) -> str:
 @dataclass(frozen=True)
 class Observed:
     """An observation of `observed_property` by the sensor, reading `value` at `at`: the sensor's and
-    its feature of interest's tags, the local names of their IRIs, and how long after the reading it
-    replaced it came beside the cadence the world states, where either is known."""
+    its feature of interest's tags, the local names of their IRIs, the raw number the sensor gave
+    where the observation has one, and how long after the reading it replaced it came beside the
+    cadence the world states, where either is known."""
     metric = "received"
     observed_property: str
     value: float
@@ -57,6 +66,7 @@ class Observed:
     feature_id: str | None = None
     interval_s: Value = None
     cadence_s: Value = None
+    raw: float | None = None
 
     def point(self) -> dict:
         tags = {}
@@ -64,8 +74,10 @@ class Observed:
             tags["feature"] = self.feature_id
         if self.sensor_id:
             tags["sensor"] = self.sensor_id
-        return {"measurement": measurement_of(self.observed_property), "tags": tags,
-                "fields": {FIELD: float(self.value)}, "time": self.at}
+        fields = {FIELD: float(self.value)}
+        if self.raw is not None:
+            fields[RAW] = float(self.raw)
+        return {"measurement": measurement_of(self.observed_property), "tags": tags, "fields": fields, "time": self.at}
 
 
 @dataclass(frozen=True)
@@ -75,3 +87,15 @@ class Silence:
     reading ends it."""
     metric = "silence"
     silent: Level = None
+
+
+@dataclass(frozen=True)
+class Doubted:
+    """A sensor the agent doubts, as it stands at the ask: said silent (`sensing:silentSince`), said
+    stuck (`sensing:stuckSince`), each one or nought; and nought on both once, for a sensor doubted
+    at the last ask and no longer. Named by the sensor, so the series says WHICH where `silence` says
+    how many."""
+    metric = "doubted"
+    sensor: Tag
+    silent: Level = 0
+    stuck: Level = 0

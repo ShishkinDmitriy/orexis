@@ -27,6 +27,11 @@ the `schema:url` on the world's `mqtt4ssn:Broker`, asserted or allocated, the to
 society graph's MQTT4SSN words, the pins from the world's hardware graph, the credential
 `orexis-mqtt` minted.
 
+`orexis-explain <world> <agent>` is not onboarding but lives beside it for the same reason
+`orexis-influx` does: it reads an agent's history and metrics buckets with the admin-side token no
+agent holds, and answers reflection's fixed questions over a season
+([reflect](/runbooks/reflect.md)). It grants nothing and opens no volume.
+
 **A step runs where the world has what it serves.** History is every agent's, so every world is
 granted it, and metrics are where the world says it is monitored. The **bus** is a broker the
 world's society names — a premise read off the world, an ASK over its public graphs in `PREMISES`
