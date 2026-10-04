@@ -14,6 +14,18 @@ identifier a process is handed. False where the action's rules say nothing about
 — no effect stated, or a construct and a retraction that both come to nothing — which is not
 a move, and the caller's weighing then says the candidate repeats the world it left.
 
+**THE CHILD IS FORKED FROM THE GROUND HOLDING AT ITS LANDING** (#596). The grounds are the
+present with each prediction applied in turn, one per period; a step whose landing falls in a
+later period than the world it is taken in would, forked from that world, be judged against the
+present's readings plus the plan's diffs, with what the predictions say holds by then unseen — a
+pot drying while the plan runs. So where the ground at the child's earliest landing is not the one
+its parent stands in, the child is a copy of THAT ground with every step on the path replayed onto
+it in order, each with its own filling, and then this step's effect; a step whose effect changes
+nothing there is not a move, exactly as in its parent. The predictions keep a reading's node and
+replace its value, so a filling naming the reading finds it in every ground. Where the landing
+stays inside the parent's period — hanoi, the courier, a dose landing within a cadence — nothing
+is replayed and the child is forked from its parent, as it always was.
+
 AN EFFECT IS RULES, GROUPED BY ORDER. An action's `planning:effect` holds `sh:rule`s, each a
 `sh:SPARQLRule` whose `sh:construct` yields what applying it ADDS, or whose `planning:update` is a
 `DELETE … WHERE` taking away whatever stands in the place the step changes, which nobody can name
@@ -43,10 +55,10 @@ from agent.hash_named_graph import digest_of
 from agent.ontology import ACTION, PUBLIC, local_of
 import pyoxigraph as ox
 
-from agent.store import (Raw, add_quads, bind, bindings, catalogue_of, closed, construct, fork,
+from agent.store import (Raw, add_quads, bind, bindings, catalogue_of, clear_graph, closed, construct, fork,
                                 graphs_of, instant, query, remember, render, rows, scoped, update)
 
-from .ontology import POSSIBLE_GRAPH
+from .ontology import GROUND_GRAPH, POSSIBLE_GRAPH
 from .world_at import world_at
 
 #  THE CATALOGUE IS BOUND, NOT FOUND, IN THE HOT READS: `GRAPH ?cat { ?cat a
@@ -95,6 +107,12 @@ SELECT ?from ?start ?end ?spent ?action ?p ?v WHERE {
 _ACTS_FOR_Q = """SELECT ?for WHERE { $me orexis:actsFor ?for } LIMIT 1"""
 
 
+#  THE PATH TO A WORLD: every candidate taken from the ground down to the world itself, in the
+#  order the worlds were minted, which is the order the steps are taken in.
+_PATH_Q = """
+SELECT ?c WHERE { GRAPH $cat { $world (planning:by/planning:from)* ?w . ?w planning:by ?c ; planning:minted ?m } }
+ORDER BY ?m"""
+
 #  THE HIGHEST MINT NUMBER IN THE STORE — the worlds are the scope's, so the counter is too.
 _MINTED_Q = """
 SELECT (MAX(?m) AS ?n) WHERE { GRAPH $cat { ?w planning:minted ?m } }"""
@@ -125,7 +143,22 @@ def take(store, cand: str, me: str, *, memo=None) -> bool:
     binding = _binding(store, cand, me, memo)
     cost = _figure(store, cand, me, memo, "costs", "cost") or 0.0
     least, most = _landing(store, cand, me, memo)
-    if not _apply(store, cand, child, me, memo):
+    start = datetime.fromisoformat(binding["start"]) + timedelta(seconds=least)
+    end = datetime.fromisoformat(binding["end"]) + timedelta(seconds=most)
+    #  THE GROUND THE CHILD LANDS IN, against the one its parent stands in: the same, and the child
+    #  is forked from its parent; a later one, and it is forked from that ground with the path
+    #  replayed, since what holds there is what the step's effect changes.
+    lands_in = _ground_at(store, start, memo)
+    stands_in = binding["from"] if binding["from"] in _grounds(store, memo) else \
+        _ground_at(store, datetime.fromisoformat(binding["start"]), memo)
+    if lands_in is None or lands_in == stands_in:
+        made = _apply(store, cand, child, me, memo)
+    else:
+        base = _replayed(store, cand, child, lands_in, me, memo)
+        made = _apply(store, cand, child, me, memo, base=base,
+                      graphs=[base if g == lands_in else g for g in world_at(store, lands_in, memo=memo)])
+        clear_graph(store, base)
+    if not made:
         return False
     #  EVERY KIND A POSSIBLE GRAPH IS BENEATH, once per pass: the closure is materialised at
     #  genesis, so one `rdfs:subClassOf` step is every step, and a row written with them all
@@ -138,8 +171,6 @@ def take(store, cand: str, me: str, *, memo=None) -> bool:
     minted = remember(memo, ("minted",), lambda: int(rows(store, _MINTED_Q, (), cat=cat)[0].get("n") or 0)) + 1
     if memo is not None:
         memo.put(("minted",), minted)
-    start = datetime.fromisoformat(binding["start"]) + timedelta(seconds=least)
-    end = datetime.fromisoformat(binding["end"]) + timedelta(seconds=most)
     update(store, bind(_WORLD_U, world=child, cand=cand,
                        kinds=Raw(" , ".join(f"<{k}>" for k in kinds)),
                        hash=Raw(f'"{digest_of(store, child)}"'),
@@ -147,10 +178,12 @@ def take(store, cand: str, me: str, *, memo=None) -> bool:
     return True
 
 
-def _apply(store, cand: str, into: str, me: str, memo) -> bool:
-    """Make `into` out of the world `cand` is taken in, with the action's effect applied, order
-    by order. False, and no graph made, where the effect says NOTHING about this world — no rule
-    stated, or every rule coming to nothing — which is not a move.
+def _apply(store, cand: str, into: str, me: str, memo, *, base: str | None = None, graphs=None) -> bool:
+    """Make `into` out of `base` — the world `cand` is taken in, unless the caller hands the ground
+    at its landing with the path replayed — with the action's effect applied, order by order,
+    reading `graphs`, the world's at its instant. False, and no graph made, where the effect says
+    NOTHING about this world — no rule stated, or every rule coming to nothing — which is not a
+    move.
 
     THE FORK IS MADE AT THE FIRST ORDER THAT CHANGES SOMETHING: until then a construct is asked
     of the world the candidate leaves, which is the world it would read anyway, so a candidate
@@ -160,29 +193,81 @@ def _apply(store, cand: str, into: str, me: str, memo) -> bool:
     rule = _rule(store, binding["action"], memo)
     if rule is None:
         return False
-    tokens = {k: v for k, v in binding.items() if k not in ("action", "from", "start", "end", "spent")}
-    leaves = world_at(store, binding["from"], memo=memo)
+    source = base or binding["from"]
+    leaves = graphs if graphs is not None else world_at(store, binding["from"], memo=memo)
+    tokens = _tokens(binding)
     forked = False
     for order in sorted({r["order"] for r in rule["rules"]}):
         rules = [r for r in rule["rules"] if r["order"] == order]
-        graphs = [into if g == binding["from"] else g for g in leaves] if forked else leaves
-        added = [t for r in rules for t in _run(store, r.get("construct"), tokens, graphs)]
+        scope = [into if g == source else g for g in leaves]
+        added = [t for r in rules for t in _run(store, r.get("construct"), tokens, scope if forked else leaves)]
         texts = [r["update"] for r in rules if r.get("update")]
         if not forked and not added and not texts:
             continue
-        scope = [into if g == binding["from"] else g for g in leaves]
         deletes = [d for d in (_delete(text, into, tokens, scope) for text in texts) if d is not None]
         if not forked:
-            fork(store, binding["from"], into, added, deletes)
+            fork(store, source, into, added, deletes)
             forked = True
             continue
-        for text in deletes:
-            try:
-                update(store, text)
-            except Exception as exc:                                # noqa: BLE001
-                log.error("an effect's delete would not run, so it deletes nothing: %s", exc)
-        add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(into)) for t in added))
+        _change(store, into, added, deletes)
     return forked
+
+
+def _replayed(store, cand: str, child: str, ground: str, me: str, memo) -> str:
+    """A copy of `ground` with every step on the path to `cand`'s world applied onto it in order,
+    each with its own filling — the world the step `cand` is taken in, as it stands in the ground
+    the step lands in. Named `<child>.base`, and the caller's to clear once the child is forked
+    from it. Measured on the two-tank plans case: a replayed fork costs two copies of a ground
+    where a plain fork costs one, and nothing is replayed where the landing stays in the parent's
+    period, which is every shipped world's today."""
+    binding = _binding(store, cand, me, memo)
+    base = f"{child}.base"
+    clear_graph(store, base)
+    fork(store, ground, base, [], [])
+    graphs = [base if g == ground else g for g in world_at(store, ground, memo=memo)]
+    cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
+    path = [r["c"] for r in rows(store, _PATH_Q, (), world=binding["from"], cat=cat)]
+    for step in path:
+        taken = _binding(store, step, me, memo)
+        rule = _rule(store, taken["action"], memo)
+        if rule is None:
+            continue
+        tokens = _tokens(taken)
+        for order in sorted({r["order"] for r in rule["rules"]}):
+            rules = [r for r in rule["rules"] if r["order"] == order]
+            added = [t for r in rules for t in _run(store, r.get("construct"), tokens, graphs)]
+            texts = [r["update"] for r in rules if r.get("update")]
+            deletes = [d for d in (_delete(text, base, tokens, graphs) for text in texts) if d is not None]
+            _change(store, base, added, deletes)
+    log.debug("%s lands in %s: %d step(s) replayed there", local_of(child), ground.rsplit("/", 1)[-1], len(path))
+    return base
+
+
+def _change(store, into: str, added, deletes) -> None:
+    """One order of an effect applied in place: its deletions first, its additions after."""
+    for text in deletes:
+        try:
+            update(store, text)
+        except Exception as exc:                                    # noqa: BLE001
+            log.error("an effect's delete would not run, so it deletes nothing: %s", exc)
+    add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(into)) for t in added))
+
+
+def _tokens(binding: dict) -> dict:
+    """The `$tokens` a rule text takes, off a candidate's binding: everything but what the caller
+    reads of the row."""
+    return {k: v for k, v in binding.items() if k not in ("action", "from", "start", "end", "spent")}
+
+
+def _grounds(store, memo) -> frozenset:
+    """Every ground laid in the store, once per pass."""
+    return remember(memo, ("grounds",), lambda: frozenset(graphs_of(store, GROUND_GRAPH)))
+
+
+def _ground_at(store, at: datetime, memo) -> str | None:
+    """The ground holding at `at`, or None before the first — remembered per instant, since every
+    fork of a world landing at nought asks about the same one."""
+    return remember(memo, ("ground_at", at), lambda: next(iter(graphs_of(store, GROUND_GRAPH, at=at)), None))
 
 
 def _delete(text: str, into: str, tokens: dict, graphs) -> str | None:
@@ -298,7 +383,7 @@ def _answer(store, cand: str, me: str, memo, text: str):
     rule = _rule(store, binding["action"], memo)
     if rule is None or not rule.get(text):
         return None
-    tokens = {k: v for k, v in binding.items() if k not in ("action", "from", "start", "end", "spent")}
+    tokens = _tokens(binding)
     try:
         found = construct(store, bind(rule[text], **tokens),
                           world_at(store, binding["from"], memo=memo))

@@ -6,10 +6,19 @@ description: >-
   the most, and a possible world holds over the period its path's bands sum to. A step carries both
   ends, the executor looks for the answer from the earliest and gives up a patience past the latest,
   and the dose declares the band it always was. A point, an expected value and a second term were
-  refused. The first half of #596; where within its period a world is judged is the second.
+  refused. The first half of #596; the second, a world forked from the ground holding at its
+  landing with the path replayed there, followed a day later, and the landing that straddles a
+  boundary is what stays open.
 status: accepted
 timestamp: 2026-10-03T22:00:00Z
 ---
+
+> **Amended 2026-10-04**, the second half: a possible world is forked from the ground holding at
+> its earliest landing where that is not the ground its parent stands in, every step on the path
+> replayed onto that ground in order with its own filling, and this step's effect applied last;
+> and what a world reads beside its facts is what holds THROUGHOUT its period. The seam below that
+> said the world was still judged at its earliest, in its parent's ground, is closed to that
+> extent; what it leaves is stated in its place.
 
 # The claim
 
@@ -78,13 +87,20 @@ So, since 2026-10-03:
 
 # Seams left open
 
-- **Where within its period a world is judged.** A possible world is still judged at its earliest
-  instant, in the ground holding then, with the plan's diffs on the present's readings. #596's
-  second half is to judge it in every ground its period overlaps — strong controllability over a
-  simple temporal network with uncertainty — forking one child per ground where the period
-  straddles a boundary, with the path replayed; measured first, since replaying a path per fork
-  multiplies the one cost the star was measured on. Until then a band informs the executor and
-  the drift, and the search ranks as it did.
+- **~~Where within its period a world is judged~~** — closed in part, 2026-10-04. A possible
+  world is forked from the ground holding at its earliest landing, the path replayed there
+  (`take._replayed`): the two-tank case `a_fill_lands_in_a_later_ground` reads nine where a fork
+  from the present read eleven, and chains the second fill the world would have demanded. The
+  predictions keep a reading's node and replace its value, which is what lets a filling naming the
+  reading be replayed in a later ground. Measured against the bench, alternated in one session: two
+  queries more per pass (the grounds, and the ground at an instant, each remembered), and the
+  times within the session's own drift. What stays: **a landing that straddles a boundary is
+  judged in the ground at its earliest alone** — one child per ground overlapped, siblings under one
+  step, with the re-root picking the one the present matches, is the strong-controllability half of
+  the STNU reading (Morris, Muscettola and Vidal, 2001) and the next slice of #596; and **a step's
+  `execution:predicts` is still the diff against the world it leaves**, so a step landing in a
+  later ground is held to the prediction's changes beside its own, which is right while the
+  prediction is and the executor's verdict otherwise.
 - **Ranking by lateness.** Achievers rank by cost; a want with an instant is weighed at it (#858),
   and nothing yet prefers the achiever landing by the instant, nor refuses a world past the want's
   lifting. Both are #596's, stated there.
