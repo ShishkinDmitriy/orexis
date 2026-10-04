@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent import clock
-from agent.ontology import PUBLIC, STATE
+from agent.ontology import PUBLIC, STATE, local_of
 from agent.runtime import boot
 from agent.store import close_catalogue, graphs_of, quads, revisions_of, rows
 from agent.sensing.received import received
@@ -48,7 +48,13 @@ def _pass(world: Path, readings: dict) -> tuple[int, int, dict]:
         (ground,) = [r["g"] for r in rows(im, "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph } }", ())]
         worlds = [r["w"] for r in rows(im, "SELECT ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph } }", ())]
         cands = rows(im, "SELECT (COUNT(DISTINCT ?c) AS ?n) (COUNT(DISTINCT ?a) AS ?actions) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate ; planning:fills ?a } }", ())[0]
-        plans = {r["p"].rsplit(".", 1)[-1] for r in rows(im, "SELECT ?p WHERE { GRAPH ?g { ?p a planning:Plan ; planning:outcome planning:Satisfied } }", ())}
+        #  WHAT EACH PLAN IS ABOUT, off the want its row names and the property the want's met-test is
+        #  about — a want states no `planning:about` of its own, its shape's blocks do — and never off
+        #  the plan's name, which is for eyes.
+        plans = {local_of(r["about"]) for r in rows(im, """
+            SELECT DISTINCT ?about WHERE {
+              GRAPH ?g { ?p a planning:Plan ; planning:outcome planning:Satisfied ; planning:for ?want }
+              GRAPH ?w { ?want planning:metWhen|planning:unmetWhen ?shape . ?shape sh:property ?block . ?block planning:about ?about } }""", ())}
         out[frozenset(plans) or scope] = (len(list(quads(im, ground))), sorted(len(list(quads(im, w))) for w in worlds),
                                            int(cands["n"]), int(cands["actions"]), plans)
     return present, state, out

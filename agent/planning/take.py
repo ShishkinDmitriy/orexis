@@ -41,9 +41,13 @@ only as forward-chaining inference to a fixpoint; a plan step is one rule agains
 hypothesis, the opposite shape. A stored `sh:construct` is just a query, and this project has
 an engine that runs queries. See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md.
 
-THE CHILD IS NAMED FOR THE CANDIDATE, `<child>.by` being `admit`'s spelling of a candidate,
-so the edge and the world it makes are one spelling apart. A name is for eyes: every reader
-asks `planning:by` and `planning:from`.
+THE CHILD IS NAMED BY THE CANDIDATE'S MINT NUMBER, read off the candidate's row and never off
+its name (#486): `admit` minted the candidate `possible/<n>.by` with `planning:minted n`, and
+the world it makes is `possible/<n>` carrying the same number, so the edge and the world at
+its end are one spelling apart, for eyes, and one number on the rows. A name is for eyes:
+every reader asks `planning:by` and `planning:from`, and the frontier's tie-break asks
+`planning:minted`. The path that reaches a world is the rows, never its spelling, so a name
+is the same length at depth eight as at depth one.
 """
 
 from __future__ import annotations
@@ -58,6 +62,7 @@ import pyoxigraph as ox
 from agent.store import (Raw, add_quads, bind, bindings, catalogue_of, clear_graph, closed, construct, fork,
                                 graphs_of, instant, query, remember, render, rows, scoped, update)
 
+from .admit import POSSIBLE
 from .ontology import GROUND_GRAPH, POSSIBLE_GRAPH
 from .world_at import world_at
 
@@ -92,15 +97,16 @@ ORDER BY ?order"""
 
 #  THE CANDIDATE'S ROW: the world it is taken in, when that world is — the start of its period
 #  and, for a possible world, its end; a ground's end is when it stops holding, which is not when
-#  the search stands, so a ground is a point — the action it fills, and every parameter it is
-#  filled with — the parameter's IRI and the value, one row each.
+#  the search stands, so a ground is a point — the action it fills, its mint number, which names
+#  the world it makes, and every parameter it is filled with — the parameter's IRI and the
+#  value, one row each. A candidate stating no mint number was admitted by nobody, and is refused.
 _CANDIDATE_Q = """
-SELECT ?from ?start ?end ?spent ?action ?p ?v WHERE {
-  GRAPH $cat { $cand planning:from ?from ; planning:fills ?action .
+SELECT ?from ?start ?end ?spent ?action ?minted ?p ?v WHERE {
+  GRAPH $cat { $cand planning:from ?from ; planning:fills ?action ; planning:minted ?minted .
     ?from dcterms:temporal ?period . ?period orexis:start ?start .
     OPTIONAL { ?from a planning:PossibleGraph . ?period orexis:end ?e }
     OPTIONAL { ?from planning:spent ?s }
-    OPTIONAL { $cand ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, rdf:type)) } }
+    OPTIONAL { $cand ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, planning:minted, rdf:type)) } }
   BIND(COALESCE(?e, ?start) AS ?end) BIND(COALESCE(?s, 0.0) AS ?spent) }"""
 
 #  WHOM THE AGENT ACTS FOR, off the world graph — `$subject` in a rule text.
@@ -113,14 +119,10 @@ _PATH_Q = """
 SELECT ?c WHERE { GRAPH $cat { $world (planning:by/planning:from)* ?w . ?w planning:by ?c ; planning:minted ?m } }
 ORDER BY ?m"""
 
-#  THE HIGHEST MINT NUMBER IN THE STORE — the worlds are the scope's, so the counter is too.
-_MINTED_Q = """
-SELECT (MAX(?m) AS ?n) WHERE { GRAPH $cat { ?w planning:minted ?m } }"""
-
 #  A WORLD'S OWN ROW: every kind the vocabulary puts a possible graph beneath, how it arrived,
 #  what it holds by hash, what reaching it spent, when it is — the period from the earliest to
-#  the latest the path's landings reach it, as a ground says when it holds — where it came in the
-#  order the pass made worlds, and the candidate that made it.
+#  the latest the path's landings reach it, as a ground says when it holds — its mint number,
+#  the candidate's, and the candidate that made it.
 _WORLD_U = """
 INSERT { GRAPH ?cat { $world a $kinds ; orexis:arrivedBy orexis:Derived ; orexis:hash $hash ;
                       planning:spent $spent ; planning:minted $minted ; planning:by $cand ;
@@ -139,8 +141,9 @@ def take(store, cand: str, me: str, *, memo=None) -> bool:
     by the least, its end by the most — written and not derived, because this engine binds
     nothing for duration arithmetic; a landing declared as nothing is nought twice.
     """
-    child = cand.removesuffix(".by")
     binding = _binding(store, cand, me, memo)
+    minted = binding["minted"]
+    child = f"{POSSIBLE}{minted}"
     cost = _figure(store, cand, me, memo, "costs", "cost") or 0.0
     least, most = _landing(store, cand, me, memo)
     start = datetime.fromisoformat(binding["start"]) + timedelta(seconds=least)
@@ -164,13 +167,8 @@ def take(store, cand: str, me: str, *, memo=None) -> bool:
     #  genesis, so one `rdfs:subClassOf` step is every step, and a row written with them all
     #  is what lets a reader ask `?g a orexis:WorkingGraph` and walk no path.
     kinds = remember(memo, ("closed", POSSIBLE_GRAPH), lambda: closed(store, POSSIBLE_GRAPH))
-    #  THE MINT COUNTER IS THE PASS'S: read off the store once, advanced per world made. The
-    #  store stays the truth — a pass resumed reads MAX again — and reading MAX per world
-    #  cost a tenth of a search on the two-disk bench.
-    cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
-    minted = remember(memo, ("minted",), lambda: int(rows(store, _MINTED_Q, (), cat=cat)[0].get("n") or 0)) + 1
-    if memo is not None:
-        memo.put(("minted",), minted)
+    #  THE MINT NUMBER IS THE CANDIDATE'S: `admit` drew it from the store's counter when it wrote
+    #  the row, and the world carries it on, so nothing here counts.
     update(store, bind(_WORLD_U, world=child, cand=cand,
                        kinds=Raw(" , ".join(f"<{k}>" for k in kinds)),
                        hash=Raw(f'"{digest_of(store, child)}"'),
@@ -256,7 +254,7 @@ def _change(store, into: str, added, deletes) -> None:
 def _tokens(binding: dict) -> dict:
     """The `$tokens` a rule text takes, off a candidate's binding: everything but what the caller
     reads of the row."""
-    return {k: v for k, v in binding.items() if k not in ("action", "from", "start", "end", "spent")}
+    return {k: v for k, v in binding.items() if k not in ("action", "from", "minted", "start", "end", "spent")}
 
 
 def _grounds(store, memo) -> frozenset:
@@ -302,7 +300,8 @@ def _binding(store, cand: str, me: str, memo) -> dict:
     world's period) and what it is filled with, one token per parameter under the parameter's
     local part — one spelling serving three places (an-action-takes-parameters). With
     `action`, which the texts are read off, `from`, for the caller asking about that world,
-    and the world's `start` and `end`, which the child's period is moved from.
+    `minted`, the number that names the child, and the world's `start` and `end`, which the
+    child's period is moved from — none of which is a token.
 
     ONE QUERY, remembered for the pass, since the act reads it four times for one candidate.
     """
@@ -315,7 +314,7 @@ def _binding(store, cand: str, me: str, memo) -> dict:
             (r["for"] for r in rows(store, _ACTS_FOR_Q, graphs_of(store, PUBLIC), me=me)), None))
         out = {"state": Raw(f"<{found[0]['from']}>"), "me": me, "subject": subject or "urn:nobody",
                "now": instant(datetime.fromisoformat(found[0]["start"])),
-               "action": found[0]["action"], "from": found[0]["from"],
+               "action": found[0]["action"], "from": found[0]["from"], "minted": int(found[0]["minted"]),
                "start": found[0]["start"], "end": found[0]["end"], "spent": float(found[0]["spent"])}
         for r in found:
             if r.get("p"):

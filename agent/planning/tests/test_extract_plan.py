@@ -73,10 +73,14 @@ def test_the_chain_is_the_worlds_ancestry_and_not_a_tuple(walked):
     by_chain = [s["of"] for s in _steps(walked, graph)]
 
     #  the same walk, done by hand from the world the plan was found in — the deepest fork,
-    #  whose name carries the longest path — one candidate edge at a time: the world says
-    #  which candidate reached it, the candidate says which world it was taken in
-    deepest = max((g for g in graph_names_of(walked) if "/possible/" in g), key=len)
-    ancestry, world = [], deepest
+    #  the one with the most worlds on its ancestry, asked of the rows since a name says nothing
+    #  of its path (#486) — one candidate edge at a time: the world says which candidate reached
+    #  it, the candidate says which world it was taken in
+    (deepest,) = rows(walked, bind(f"""
+        SELECT ?w (COUNT(?above) AS ?depth) WHERE {{
+          GRAPH $cat {{ ?w a <{PLANNING}PossibleGraph> ; (<{BY}>/<{FROM}>)+ ?above }} }}
+        GROUP BY ?w ORDER BY DESC(?depth) LIMIT 1""", cat=Raw(f"<{catalogue_of(walked)}>")))
+    ancestry, world = [], deepest["w"]
     while True:
         found = rows(walked, bind(f"""
             SELECT ?parent ?by WHERE {{ GRAPH $cat {{ $w <{BY}> ?by . ?by <{FROM}> ?parent }} }}""",

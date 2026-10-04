@@ -11,8 +11,19 @@ action and a binding — carried from here to the fork and written only if taken
 of an opened world IS taken, forked or passed over, so writing them as they are found writes
 the same rows a little earlier and hands nothing across: `expand` reads back what leaves the
 world and has not been weighed for its want, `take` reads what a candidate fills off its row,
-and the class is gone. A candidate is named for the world it would reach, `<child>.by`, so
-the edge and the world it makes are one spelling apart, for eyes.
+and the class is gone.
+
+**A CANDIDATE IS NAMED BY A MINT NUMBER, AND THE PATH IS ROWS** (#486). The counter is the
+store's — the highest `planning:minted` any candidate or world carries, read once per pass and
+advanced per candidate written — so the name is opaque, short and never repeated in one store,
+and the number rides on the row as `planning:minted`: the order the pass admitted candidates,
+which is the order they are taken in and the frontier's tie-break. The world a candidate makes
+takes the same number, so the edge and the world at its end are one spelling apart, for eyes
+(`possible/17.by` makes `possible/17`), and `take` reads the number off the row rather than
+the name. It was a path — `<parent>.<action>-<values>`, URL-quoted — and an identifier
+carrying structure collided once (two fillings differing only in a value nobody had put in
+the segment), needed escaping, grew with depth, and was read back by nothing: `planning:by`,
+`planning:from` and `planning:fills` already say what reached a world.
 
 **THE WORLD IS ASKED ABOUT, NOT HELD**: `world_at` says what a precondition reads there, and
 the precondition names no graph to get it (#666). **AND EVERY ACTION OF THE SCOPE IS ASKED**,
@@ -26,8 +37,6 @@ action, which a store of one scope is.
 """
 
 from __future__ import annotations
-
-from urllib.parse import quote
 
 from agent.ontology import ACTION, GRAPH_PREFIX, local_of
 from agent.store import Raw, bind, bindings, catalogue_of, graphs_of, query, remember, render, rows, update
@@ -58,17 +67,28 @@ INSERT { GRAPH ?cat { $edges } } WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGra
 _ADMITTED_Q = """
 SELECT ?c ?action ?p ?v WHERE {
   GRAPH $cat { ?c a planning:Candidate ; planning:from $world ; planning:fills ?action .
-               OPTIONAL { ?c ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, rdf:type)) } } }"""
+               OPTIONAL { ?c ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, planning:minted, rdf:type)) } } }"""
+
+#  THE HIGHEST MINT NUMBER IN THE STORE, candidate or world — the names are the store's, so the
+#  counter is too: a second pass over one store, and a cone `reroot` kept, mint above it.
+_MINTED_Q = """
+SELECT (MAX(?m) AS ?n) WHERE { GRAPH $cat { ?w planning:minted ?m } }"""
 
 
 def admit(store, world: str, me: str, *, only=None, elsewhere=frozenset(), memo=None) -> None:
     """Write every candidate `world` admits for the agent `me`: one per action per row its
     precondition binds there, each saying which world it leaves (`planning:from`), which
-    action it fills and, one triple per parameter under the parameter's own IRI, what it is
-    filled with. Idempotent by FILLING and not by name: a world admitted twice says the same
-    rows, and a world that already admits a candidate for an action with a filling — under
-    whatever name, since a candidate handed to a re-rooted ground by `reroot` was named for the
-    world it used to leave — is not given a second one for it.
+    action it fills, where it came in the order of minting (`planning:minted`, which names it)
+    and, one triple per parameter under the parameter's own IRI, what it is filled with.
+    Idempotent by FILLING and not by name: a world admitted twice says the same rows, and a
+    world that already admits a candidate for an action with a filling — under whatever name,
+    since a candidate handed to a re-rooted ground by `reroot` was minted in an earlier pass —
+    is not given a second one for it, and the counter does not move for it.
+
+    THE FILLINGS ARE NUMBERED IN A FIXED ORDER — by action, then by what they are filled with —
+    so two traces of one search compare: the engine's row order is not promised, and a number
+    handed out in it would make the taking order, and every tie-break after it, a different
+    one per run.
 
     THE ROW IS WHAT THE PRECONDITION BOUND, held to what the action says it TAKES: a projected
     variable the action does not declare is ignored, and a declared parameter the row left
@@ -90,7 +110,7 @@ def admit(store, world: str, me: str, *, only=None, elsewhere=frozenset(), memo=
         if r.get("p"):
             held.add((r["p"], r["v"]))
     already = {(action, frozenset(filling)) for (_, action), filling in admitted.items()}
-    edges = []
+    fillings = []
     for action in remember(memo, ("actions",), lambda: sorted(
             bindings(query(store, _ACTIONS_Q, graphs_of(store, ACTION))), key=lambda r: r["action"])):
         if only is not None and action["action"] not in only:
@@ -102,15 +122,23 @@ def admit(store, world: str, me: str, *, only=None, elsewhere=frozenset(), memo=
             filling = sorted((iri, row[local]) for local, iri in params.items() if row.get(local))
             if (action["action"], frozenset(filling)) in already or any(v in elsewhere for _, v in filling):
                 continue
-            segment = "-".join(quote(local_of(part), safe="")
-                               for part in (action["action"], *(v for _, v in filling)))
-            child = f"{world}.{segment}" if world.startswith(POSSIBLE) else POSSIBLE + segment
-            cand = child + ".by"
-            edges.append(f"<{cand}> a planning:Candidate ; planning:from <{world}> ; "
-                         f"planning:fills <{action['action']}> .\n"
-                         + "".join(f"<{cand}> <{p}> {_term(v)} .\n" for p, v in filling))
-    if edges:
-        update(store, bind(_ADMIT_U, edges=Raw("".join(edges))))
+            if (action["action"], filling) not in fillings:
+                fillings.append((action["action"], filling))
+    if not fillings:
+        return
+    #  THE MINT COUNTER IS THE STORE'S: read off it once per pass, advanced per candidate written,
+    #  and the memo keeps where it stands so a pass resumed reads MAX again and never below it.
+    minted = remember(memo, ("minted",), lambda: int(rows(store, _MINTED_Q, (), cat=cat)[0].get("n") or 0))
+    edges = []
+    for action, filling in sorted(fillings):
+        minted += 1
+        cand = f"{POSSIBLE}{minted}.by"
+        edges.append(f"<{cand}> a planning:Candidate ; planning:from <{world}> ; "
+                     f"planning:fills <{action}> ; planning:minted {minted} .\n"
+                     + "".join(f"<{cand}> <{p}> {_term(v)} .\n" for p, v in filling))
+    if memo is not None:
+        memo.put(("minted",), minted)
+    update(store, bind(_ADMIT_U, edges=Raw("".join(edges))))
 
 
 def _term(value: str) -> str:

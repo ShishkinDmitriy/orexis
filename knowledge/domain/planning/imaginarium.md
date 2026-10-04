@@ -35,6 +35,12 @@ What it makes for itself: a `planning:PossibleGraph` per world a candidate reach
 its parent and never mutated, since the search holds siblings open at once; the weighings and
 candidates on the catalogue; and a `planning:PlanGraph` per want.
 
+A candidate and the world it makes are named by one mint number — `possible/17.by` makes
+`possible/17` — drawn from the store's own counter, the highest `planning:minted` anything in it
+carries, so a cone kept from the last pass is never named over and a name is as short at depth
+eight as at depth one. The path to a world is `planning:by` and `planning:from`, read off the rows;
+nothing reads a name back ([#486](https://github.com/ShishkinDmitriy/orexis/issues/486)).
+
 # What outlives the pass
 
 The whole store, which is what lets a search the budget cut short be finished by the passes after,

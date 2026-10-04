@@ -125,6 +125,7 @@ GRAPH :catalogue {
   possible:fill-tank1.by a planning:Candidate .
   possible:fill-tank1.by planning:fills :fill .
   possible:fill-tank1.by planning:from ground:2026-01-01T120000p0000 .
+  possible:fill-tank1.by planning:minted 1 .
   possible:fill-tank1.fill-tank1 a planning:PossibleGraph .
   possible:fill-tank1.fill-tank1 orexis:arrivedBy orexis:Derived .
   possible:fill-tank1.fill-tank1 orexis:hash "sha256:262245b8ab6803ce947b3d056e7289f4f5b6c0c8a36cd94f06c2cb130be5235f" .
@@ -136,6 +137,7 @@ GRAPH :catalogue {
   possible:fill-tank1.fill-tank1.by a planning:Candidate .
   possible:fill-tank1.fill-tank1.by planning:fills :fill .
   possible:fill-tank1.fill-tank1.by planning:from possible:fill-tank1 .
+  possible:fill-tank1.fill-tank1.by planning:minted 3 .
   possible:fill-tank1.fill-tank1.for.keeper.in_range.pursued.tank1 a planning:Weighing .
   possible:fill-tank1.fill-tank1.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
   possible:fill-tank1.fill-tank1.for.keeper.in_range.pursued.tank1 planning:met true .
@@ -151,6 +153,7 @@ GRAPH :catalogue {
   possible:fill-tank1.fill-tank2.by a planning:Candidate .
   possible:fill-tank1.fill-tank2.by planning:fills :fill .
   possible:fill-tank1.fill-tank2.by planning:from possible:fill-tank1 .
+  possible:fill-tank1.fill-tank2.by planning:minted 4 .
   possible:fill-tank1.fill-tank2.for.keeper.in_range.pursued.tank1 a planning:Weighing .
   possible:fill-tank1.fill-tank2.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
   possible:fill-tank1.fill-tank2.for.keeper.in_range.pursued.tank1 planning:met false .
@@ -174,6 +177,7 @@ GRAPH :catalogue {
   possible:fill-tank2.by a planning:Candidate .
   possible:fill-tank2.by planning:fills :fill .
   possible:fill-tank2.by planning:from ground:2026-01-01T120000p0000 .
+  possible:fill-tank2.by planning:minted 2 .
   possible:fill-tank2.for.keeper.in_range.pursued.tank1 a planning:Weighing .
   possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
   possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:met false .

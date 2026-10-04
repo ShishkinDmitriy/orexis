@@ -102,7 +102,7 @@
  
  GRAPH pursued:2026-01-01T120000p0000--open {
    :keeper planning:holds :keeper.every_disk_home.pursued .
-@@ -183,279 +138,12 @@
+@@ -183,293 +138,12 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -149,6 +149,7 @@
 -  possible:Move-disk_1-PegB.Move-disk_1-PegA.by hanoi:onto hanoi:PegA .
 -  possible:Move-disk_1-PegB.Move-disk_1-PegA.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegB.Move-disk_1-PegA.by planning:from possible:Move-disk_1-PegB .
+-  possible:Move-disk_1-PegB.Move-disk_1-PegA.by planning:minted 6 .
 -  possible:Move-disk_1-PegB.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegB.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
 -  possible:Move-disk_1-PegB.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued planning:repeats ground:2026-01-01T120000p0000 .
@@ -165,6 +166,7 @@
 -  possible:Move-disk_1-PegB.Move-disk_1-PegC.by hanoi:onto hanoi:PegC .
 -  possible:Move-disk_1-PegB.Move-disk_1-PegC.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegB.Move-disk_1-PegC.by planning:from possible:Move-disk_1-PegB .
+-  possible:Move-disk_1-PegB.Move-disk_1-PegC.by planning:minted 7 .
 -  possible:Move-disk_1-PegB.Move-disk_1-PegC.by.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegB.Move-disk_1-PegC.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
 -  possible:Move-disk_1-PegB.Move-disk_1-PegC.by.for.keeper.every_disk_home.pursued planning:repeats possible:Move-disk_1-PegC .
@@ -188,6 +190,7 @@
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by hanoi:onto hanoi:PegA .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by planning:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
+-  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by planning:minted 12 .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:met false .
@@ -207,6 +210,7 @@
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by hanoi:onto hanoi:PegC .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by planning:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
+-  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by planning:minted 13 .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:met true .
@@ -224,6 +228,7 @@
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by hanoi:onto hanoi:PegA .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by planning:from possible:Move-disk_1-PegB.Move-disk_2-PegC .
+-  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by planning:minted 14 .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued planning:repeats possible:Move-disk_1-PegB .
@@ -233,6 +238,7 @@
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.by hanoi:onto hanoi:PegC .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.by planning:from possible:Move-disk_1-PegB .
+-  possible:Move-disk_1-PegB.Move-disk_2-PegC.by planning:minted 8 .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:expanded true .
 -  possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
@@ -245,6 +251,7 @@
 -  possible:Move-disk_1-PegB.by hanoi:onto hanoi:PegB .
 -  possible:Move-disk_1-PegB.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegB.by planning:from ground:2026-01-01T120000p0000 .
+-  possible:Move-disk_1-PegB.by planning:minted 1 .
 -  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:expanded true .
 -  possible:Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
@@ -272,6 +279,7 @@
 -  possible:Move-disk_1-PegC.Move-disk_1-PegA.by hanoi:onto hanoi:PegA .
 -  possible:Move-disk_1-PegC.Move-disk_1-PegA.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegC.Move-disk_1-PegA.by planning:from possible:Move-disk_1-PegC .
+-  possible:Move-disk_1-PegC.Move-disk_1-PegA.by planning:minted 3 .
 -  possible:Move-disk_1-PegC.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegC.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
 -  possible:Move-disk_1-PegC.Move-disk_1-PegA.by.for.keeper.every_disk_home.pursued planning:repeats ground:2026-01-01T120000p0000 .
@@ -288,6 +296,7 @@
 -  possible:Move-disk_1-PegC.Move-disk_1-PegB.by hanoi:onto hanoi:PegB .
 -  possible:Move-disk_1-PegC.Move-disk_1-PegB.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegC.Move-disk_1-PegB.by planning:from possible:Move-disk_1-PegC .
+-  possible:Move-disk_1-PegC.Move-disk_1-PegB.by planning:minted 4 .
 -  possible:Move-disk_1-PegC.Move-disk_1-PegB.by.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegC.Move-disk_1-PegB.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
 -  possible:Move-disk_1-PegC.Move-disk_1-PegB.by.for.keeper.every_disk_home.pursued planning:repeats possible:Move-disk_1-PegB .
@@ -311,6 +320,7 @@
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.by hanoi:onto hanoi:PegA .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.by planning:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
+-  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.by planning:minted 9 .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:met false .
@@ -331,6 +341,7 @@
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.by hanoi:onto hanoi:PegB .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.by planning:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
+-  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.by planning:minted 10 .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB.for.keeper.every_disk_home.pursued planning:met false .
@@ -351,6 +362,7 @@
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by hanoi:onto hanoi:PegA .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by planning:from possible:Move-disk_1-PegC.Move-disk_2-PegB .
+-  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by planning:minted 11 .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA.by.for.keeper.every_disk_home.pursued planning:repeats possible:Move-disk_1-PegC .
@@ -360,6 +372,7 @@
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.by hanoi:onto hanoi:PegB .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.by planning:from possible:Move-disk_1-PegC .
+-  possible:Move-disk_1-PegC.Move-disk_2-PegB.by planning:minted 5 .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.for.keeper.every_disk_home.pursued planning:expanded true .
 -  possible:Move-disk_1-PegC.Move-disk_2-PegB.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
@@ -372,6 +385,7 @@
 -  possible:Move-disk_1-PegC.by hanoi:onto hanoi:PegC .
 -  possible:Move-disk_1-PegC.by planning:fills hanoi:Move .
 -  possible:Move-disk_1-PegC.by planning:from ground:2026-01-01T120000p0000 .
+-  possible:Move-disk_1-PegC.by planning:minted 2 .
 -  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued a planning:Weighing .
 -  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:expanded true .
 -  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .

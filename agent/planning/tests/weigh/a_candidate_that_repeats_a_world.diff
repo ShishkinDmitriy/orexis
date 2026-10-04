@@ -18,9 +18,9 @@
    possible:fill-tank1 planning:by possible:fill-tank1.by .
    possible:fill-tank1 planning:minted 1 .
    possible:fill-tank1 planning:spent 1.0 .
-@@ -115,9 +121,9 @@
-   possible:fill-tank1.by planning:fills :fill .
+@@ -116,9 +122,9 @@
    possible:fill-tank1.by planning:from ground:2026-01-01T120000p0000 .
+   possible:fill-tank1.by planning:minted 1 .
    possible:fill-tank1.fill-tank1 a planning:PossibleGraph .
 +  possible:fill-tank1.fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    possible:fill-tank1.fill-tank1 orexis:arrivedBy orexis:Derived .
@@ -29,7 +29,7 @@
    possible:fill-tank1.fill-tank1 planning:by possible:fill-tank1.fill-tank1.by .
    possible:fill-tank1.fill-tank1 planning:minted 3 .
    possible:fill-tank1.fill-tank1 planning:spent 2.0 .
-@@ -130,9 +136,9 @@
+@@ -132,9 +138,9 @@
    possible:fill-tank1.fill-tank1.for.keeper.in_range.pursued.tank1 planning:met true .
    possible:fill-tank1.fill-tank1.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank1.fill-tank1 .
    possible:fill-tank1.fill-tank2 a planning:PossibleGraph .
@@ -40,7 +40,7 @@
    possible:fill-tank1.fill-tank2 planning:by possible:fill-tank1.fill-tank2.by .
    possible:fill-tank1.fill-tank2 planning:minted 4 .
    possible:fill-tank1.fill-tank2 planning:spent 2.0 .
-@@ -153,9 +159,9 @@
+@@ -156,9 +162,9 @@
    possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank1 .
    possible:fill-tank2 a planning:PossibleGraph .
@@ -51,9 +51,9 @@
    possible:fill-tank2 planning:by possible:fill-tank2.by .
    possible:fill-tank2 planning:minted 2 .
    possible:fill-tank2 planning:spent 1.0 .
-@@ -164,9 +170,9 @@
-   possible:fill-tank2.by planning:fills :fill .
+@@ -168,9 +174,9 @@
    possible:fill-tank2.by planning:from ground:2026-01-01T120000p0000 .
+   possible:fill-tank2.by planning:minted 2 .
    possible:fill-tank2.fill-tank1 a planning:PossibleGraph .
 +  possible:fill-tank2.fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    possible:fill-tank2.fill-tank1 orexis:arrivedBy orexis:Derived .
@@ -62,10 +62,10 @@
    possible:fill-tank2.fill-tank1 planning:by possible:fill-tank2.fill-tank1.by .
    possible:fill-tank2.fill-tank1 planning:minted 5 .
    possible:fill-tank2.fill-tank1 planning:spent 2.0 .
-@@ -174,10 +180,14 @@
-   possible:fill-tank2.fill-tank1.by a planning:Candidate .
+@@ -179,10 +185,14 @@
    possible:fill-tank2.fill-tank1.by planning:fills :fill .
    possible:fill-tank2.fill-tank1.by planning:from possible:fill-tank2 .
+   possible:fill-tank2.fill-tank1.by planning:minted 5 .
 +  possible:fill-tank2.fill-tank1.by.for.keeper.in_range.pursued.tank1 a planning:Weighing .
 +  possible:fill-tank2.fill-tank1.by.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
 +  possible:fill-tank2.fill-tank1.by.for.keeper.in_range.pursued.tank1 planning:repeats possible:fill-tank1.fill-tank2 .
@@ -78,10 +78,10 @@
    possible:fill-tank2.fill-tank2 planning:by possible:fill-tank2.fill-tank2.by .
    possible:fill-tank2.fill-tank2 planning:minted 6 .
    possible:fill-tank2.fill-tank2 planning:spent 2.0 .
-@@ -185,6 +195,12 @@
-   possible:fill-tank2.fill-tank2.by a planning:Candidate .
+@@ -191,6 +201,12 @@
    possible:fill-tank2.fill-tank2.by planning:fills :fill .
    possible:fill-tank2.fill-tank2.by planning:from possible:fill-tank2 .
+   possible:fill-tank2.fill-tank2.by planning:minted 6 .
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 a planning:Weighing .
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:met false .

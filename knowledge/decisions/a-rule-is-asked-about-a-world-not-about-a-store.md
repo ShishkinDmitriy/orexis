@@ -117,8 +117,12 @@ obvious next step is to build one.
 affordance rows applied to reach it, and a child is `parent.taken + (row,)`. There are no parent
 pointers and none are wanted: the frontier is one depth's worth of nodes, expansion produces the
 next, and the path is the only ancestry anything asks about. What this design adds is a NAME per
-node, and the path is what names it — deterministic, and it reads back in the trace beside the
-`progression:through` a candidate already records.
+node, and the path is what named it at first — deterministic, and it read back in the trace beside the
+`progression:through` a candidate already records. That naming did not last: it collided once, needed
+escaping and grew with depth, and nothing ever read it back, so since
+[#486](https://github.com/ShishkinDmitriy/orexis/issues/486) a node is named by a mint number and
+the path is the rows `planning:by` and `planning:from` — the ancestry moved from a tuple into the
+store, and the name carries nothing.
 
 **Fork, do not replay.** A node's graph is made by copying its parent's and applying the step's
 diff — 0.19 ms, against a hypothesis of five triples. The alternative is to keep only paths and
