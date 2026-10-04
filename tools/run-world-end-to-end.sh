@@ -15,9 +15,10 @@
 #
 # The pace is a deployment fact, environment and never a belief (agent/clock.py): it is handed to
 # every process of the world through a compose override, never written into the world. The ceiling
-# is the agent's pass: a reading costs the grower about 0.4 s of work, so past ~1200 on a ten-minute
-# cadence it falls behind its own readings; 600 leaves twice that room, and the greenhouse's bed,
-# a quarter-day from its floor, is dosed and answered inside a minute of real time.
+# is the agent's pass: a reading costs the grower about 0.4 s of work on the Pi (the bench for it is
+# world/greenhouse/tests/test_bench.py and its ledger world/greenhouse/tests/bench/results.tsv), so
+# past ~1200 on a ten-minute cadence it falls behind its own readings; 600 leaves twice that room, and
+# the greenhouse's bed, a quarter-day from its floor, is dosed and answered inside a minute of real time.
 #
 # Needs rootless podman and podman-compose — the generated files use `userns_mode: keep-id`, which
 # is podman's — and `infra/secrets/admin.env`, which this refuses to invent.

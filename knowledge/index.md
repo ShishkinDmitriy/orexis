@@ -22,7 +22,7 @@ others. This bundle is the durable what and why; the live state is in each agent
 
 # Runbooks
 
-* [runbooks/](runbooks/) - Author a world, add a domain, run it, measure the search, and take it apart.
+* [runbooks/](runbooks/) - Author a world, add a domain, run it, measure the search and a pass, and take it apart.
 
 # How to use this bundle
 

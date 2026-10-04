@@ -364,10 +364,10 @@ def snapshots():
 
 
 def pytest_addoption(parser):
+    #  `--bench-record` is the repo-root conftest's: two benches read it, the search's here and a
+    #  world's under `world/`, and an option registered in two conftests one session loads is refused.
     parser.addoption("--update-snapshots", action="store_true", default=False,
                      help="rewrite the cases' snapshots from what each function left, then review the diff")
-    parser.addoption("--bench-record", action="store_true", default=False,
-                     help="append the bench's rows to tests/bench/results.tsv — commit, machine, median of the runs")
 
 
 class StandInRuntime:
@@ -381,6 +381,7 @@ class StandInRuntime:
         self.budget, self.intentions = budget, intentions
         self.jobs, self.heard, self.timers, self.attached = [], [], [], []
         self.written, self.held, self.outcome, self.pressed = [], set(), None, False
+        self.laps: list[str] = []                   # every part of the pass marked, in order
 
     def wrote(self, graphs) -> None:
         self.written += list(graphs)
@@ -396,7 +397,7 @@ class StandInRuntime:
         self.pressed = True
 
     def lap(self, part: str) -> None:
-        pass
+        self.laps.append(part)
 
     def submit(self, job) -> None:
         self.jobs.append(job)

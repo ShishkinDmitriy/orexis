@@ -67,18 +67,19 @@ class _Execution:
     def _pass(self):
         """The walk a pass asks for, after planning: skipped where this pass walked already and nothing
         was adopted or ended since, since a walk at the same instant over the same intentions finds
-        nothing new."""
-        if self._walked_at == self.runtime.now and self._since == len(self.executor.intentions):
-            self.runtime.lap("execute")
-            return []
-        return self._walk()
+        nothing new. THE PASS'S LAP IS MARKED HERE AND ONLY HERE: a lap is from the last mark, so a
+        walk a revision queued, run among the drain's jobs, marked `execute` over the sensing and
+        revision before it and the pass's `drain` read nought while two readings were being sensed."""
+        if not (self._walked_at == self.runtime.now and self._since == len(self.executor.intentions)):
+            self._walk()
+        self.runtime.lap("execute")
+        return []
 
     def _walk(self):
         self._queued = False
         if self.executor.walk(self.runtime.now):
             self.runtime.again()                    # a step taken may make the next due at once
         self._walked_at, self._since = self.runtime.now, len(self.executor.intentions)
-        self.runtime.lap("execute")
         return []
 
     def _take(self, said: dict, intention: str) -> None:

@@ -363,6 +363,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **The executor walks when the present changed, not when anything was revised** — a prediction or
   a committed step revised answers no step, and a walk on it read the clock for nothing, which on a
   test's clock is seconds the round could not spare.
+- **A lap is from the last mark, so a part that marks one inside a drained job takes the drain with
+  it** — the walk a revision queued read sensing's 52 ms as `execute` and the pass's `drain` as
+  nought; only the walk a pass asks for marks the lap (measure-a-pass).
 - **An action is a point its taker contributes to**, and a taker missing at runtime looks exactly
   like an actor that is busy, so a gate holds a family to its actions.
 

@@ -14,6 +14,9 @@ A hanoi puzzle and a courier delivery are all search: no bus, no sensors, no con
 want, a handful of actions, and the plan is the whole cost. A change that moves these numbers
 moved the planner, not the weather. See
 [the-domain-is-a-plug-in-and-hanoi-is-the-proof](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md).
+What a whole agent pays per reading on a shipped world — sensing and revision and the executor
+around the search — is the other bench's, [measure-a-pass](/runbooks/measure-a-pass.md); the
+greenhouse figures below are the Planner's alone.
 
 # How to measure
 

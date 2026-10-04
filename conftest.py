@@ -1,4 +1,4 @@
-"""Repo-root conftest: the one check that must reach BOTH test roots.
+"""Repo-root conftest: what must reach BOTH test roots — one check, and one option two benches read.
 
 `tests/` holds the integration suite and a package may carry its own tests beside its code, so a
 guard that lives in `tests/conftest.py` covers half of them. This one covers everything pytest
@@ -13,6 +13,15 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
+
+def pytest_addoption(parser):
+    """`--bench-record`, for the two benches: the search's (`agent/planning/tests/test_bench.py`) and
+    a world's pass (`world/greenhouse/tests/test_bench.py`), each appending to a ledger of its own. It
+    is registered here and not beside either, because `pytest -q` collects both roots in one session
+    and pytest refuses an option two conftests register."""
+    parser.addoption("--bench-record", action="store_true", default=False,
+                     help="append a bench's rows to its ledger — commit, machine, median of the runs; needs -n0")
 
 # --- vacuity: a test that asserted nothing passed by doing nothing ----------------------------
 #
