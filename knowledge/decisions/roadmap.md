@@ -15,7 +15,12 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
 
 - **BDI, with no model in the loop.** Desires derive wants, a budgeted search finds plans over
   possible worlds, and the executor walks intentions and holds each step to what it predicted. The
-  LLM member 0.1.0 declared was never built, and the 0.2.0 tree has no seam reserved for one.
+  LLM member 0.1.0 declared was never built, and the 0.2.0 tree has no seam reserved for one
+  inside the mind; a model stands outside it, in two places that read and never write: the present,
+  what an agent accounts of itself for its sovereign over chat
+  ([an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md)),
+  and the season, the agent's series read back as reflection and offered as a proposal
+  ([reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md)).
 - **The domain is a plug-in.** Hanoi, the courier, the tower, climate, actuation and the market are
   documents under `domains/`, and no shipped code names one
   ([the-domain-is-a-plug-in-and-hanoi-is-the-proof](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md)).
@@ -45,7 +50,9 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    in (`world/dispatcher/`), and the search that derives a want from two plans' conflict is what is
    left; then #568, right-of-way as a lot the market allocates.
 5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
-   its wiring.
+   its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays
+   it and the model that phrases a free question, then #862's recalibration walked with a person
+   ([an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md)).
 6. **The edge** — #865, #868, #322, #323, #461, #328 and #25, the boards and their firmware.
 
 # Parked, with the seam that unlocks each
@@ -64,6 +71,10 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
   identity.
 - **A world drafted from narration** — the sovereign narrates, a draft is ratified, onboarding
   writes the rest; opened by [genesis](/decisions/genesis.md).
+- **Reflection** — the agent's season read back from its series and offered to the sovereign as a
+  proposal; opened by
+  [reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md),
+  whose first tool is the gap it emits.
 - **Futures** — partly here already: a claim is held and presented within its own window (#625),
   so winning and acting are decoupled. A forward venue distinct from the spot round is not, and
   its seam is the claim's expiry ([authn-authz-capabilities](/decisions/authn-authz-capabilities.md)).

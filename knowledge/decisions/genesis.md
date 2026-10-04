@@ -124,7 +124,10 @@ No one describes a world correctly the first time, so genesis is **not one-shot*
   open.
 - **Evidence can prompt amendment** — the system may *suggest* amendments from observed
   behaviour ("the fern keeps hitting rot at your stated target — lower it?"). A suggestion is
-  a proposal; the sovereign still ratifies.
+  a proposal; the sovereign still ratifies. In 0.2.0 this is reflection, genesis run again over
+  the agent's series — see
+  [reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md),
+  which also says why that example, a figure inside a desire, is the one a ratifier must refuse.
 
 # Versioning — a monotonic world-version
 

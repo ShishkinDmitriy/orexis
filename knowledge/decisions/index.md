@@ -79,6 +79,7 @@ The search itself, and the two places a language model is allowed near it.
 * [the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md) - The SHACL judge is rudof behind one door, its two gaps closed on our side; pySHACL stays only as a gate.
 * [the-domain-is-a-plug-in-and-hanoi-is-the-proof](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md) - Tower of Hanoi: an ontology, one move action, no Python — the optimal solution is the cheapest achiever.
 * [deliberation-is-on-triples-and-a-number-is-not-special](/decisions/deliberation-is-on-triples-and-a-number-is-not-special.md) - The core compares triples and interprets no literal; numbers, ranges or classes are the domain's choice; progression sizes the act.
+* [an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md) - The sovereign asks over chat; an agent publishes an account of itself, retained; a model outside the mind phrases it and decides nothing.
 
 # The mind — time and prediction
 
@@ -182,6 +183,7 @@ Authoring a world, ratifying it, and what an amendment may do to a running agent
 * [an-amendment-endows-what-it-grants](/decisions/an-amendment-endows-what-it-grants.md) - Never-held terms arrive with their structures; held terms stay the agent's whatever their value.
 * [a-dead-session-is-resigned-not-endured](/decisions/a-dead-session-is-resigned-not-endured.md) - An agent cut off from its bus sends itself SIGTERM; the container's restart policy is the recovery.
 * [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md) - Every reader, the boot included, loads only the kinds it reads; packages, brokers, series and deployment follow.
+* [reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md) - No model in a pass; reflection is the sovereign's slow process over the series, never the beliefs, and its output is a proposal to ratify.
 
 # Gates and guards
 

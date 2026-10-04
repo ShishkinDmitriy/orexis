@@ -11,13 +11,14 @@ rather than deciding it yourself in passing.
 the OKF requirement for `knowledge/`, derived-never-declared, no default world. This file says what
 your ROLE is; it does not repeat those rules, and `AGENTS.md` wins wherever they seem to disagree.
 
-If you were given an issue number, read it with `gh issue view`. It carries the definition of done,
+If you were given an issue number, read it with `gh issue view` (or `gh api repos/<owner>/<repo>/issues/<n>` where GraphQL is refused). It carries the definition of done,
 and the reasoning usually lives in a linked record under `knowledge/decisions/`.
 
 # The gates, all of them, before you commit
 
-    .venv/bin/orexis-validate sensing        and society and simulation
-    .venv/bin/pytest tests -q
+    .venv/bin/pytest -q                 the agent, the simulator and every world
+    .venv/bin/pytest -q tests           the four files that read the whole tree
+    .venv/bin/lint-imports
     ./tools/validate-okf.sh knowledge
 
 Run them as separate bare commands. Wrapping them in `cd … &&`, a `for` loop or a pipe defeats the
