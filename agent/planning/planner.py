@@ -422,11 +422,14 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  THE SCOPE'S OWN ACTIONS are what its worlds admit; a store of no scope admits all.
             only = None if _scope == UNSCOPED else {
                 r["a"] for r in rows(self.beliefs, _IN_SCOPE_Q, graphs_of(self.beliefs, SCOPE_GRAPH), scope=_scope)}
+            #  AND THE TERMS THAT ARE ANOTHER SCOPE'S, so a filling of a shared action that is theirs
+            #  — the lamp's heating, in the air's search — is not admitted here (#593).
+            elsewhere = frozenset(m for m, s in scopes.items() if s != _scope) if _scope != UNSCOPED else frozenset()
             shapes = memo.get(("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
             for want in _of_scope(store, shapes, self.uri, _scope, scopes, at):
                 if want in walking:
                     continue                # a want a plan is walking is not planned again
-                self.search(store, want, budget=self.budget, only=only, memo=memo, scope=_scope)
+                self.search(store, want, budget=self.budget, only=only, elsewhere=elsewhere, memo=memo, scope=_scope)
                 searched.add(want)
             if lap:
                 lap("search")
@@ -554,7 +557,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
     # --- one want ------------------------------------------------------------------------
 
     def search(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
-               memo: Memo | None = None, scope: str | None = None) -> None:
+               elsewhere=frozenset(), memo: Memo | None = None, scope: str | None = None) -> None:
         """Plan for `want` from the ground holding at its instant — the present, or the one a want
         minted for a foreseen instant names (#858) — spending at most `budget` candidates, and
         write the plan — whatever the search concluded, since an empty plan is an answer and
@@ -580,7 +583,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             if not pair.get("from"):
                 weigh(store, want, pair["about"], memo=memo)             # the root: the ground at its instant
         ceiling = _spent(store, want, memo) + budget
-        while (spent := self.expand(store, want, budget=ceiling, only=only, memo=memo)) is not None \
+        while (spent := self.expand(store, want, budget=ceiling, only=only, elsewhere=elsewhere, memo=memo)) is not None \
                 and spent < ceiling:
             pass
         extract_plan(store, want)
@@ -640,7 +643,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
     # --- one iteration -------------------------------------------------------------------
 
     def expand(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
-               memo: Memo | None = None) -> int | None:
+               elsewhere=frozenset(), memo: Memo | None = None) -> int | None:
         """Open the top of `want`'s frontier: admit what it admits, take each candidate this
         want has not yet weighed, weigh what it reached, close the world's weighing. What the
         want's search has spent afterwards, in candidates weighed — or None where there was
@@ -664,7 +667,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                            and float(top["spent"]) + float(top["remaining"]) >= float(top["best"])):
             return None
         world = top["w"]
-        admit(store, world, self.uri, only=only, memo=memo)
+        admit(store, world, self.uri, only=only, elsewhere=elsewhere, memo=memo)
         spent = int(top.get("used") or 0)
         for pair in unweighed(store, for_=want, leaving=world, memo=memo):
             if spent >= budget:
@@ -708,6 +711,15 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
     `water:SoilMoisture` matched no scope and every want fell through to its own name.
     A shape's paths ARE predicates, so this separates what cannot interfere.
 
+    AND BY THE TERMS IT NAMES. A scope is over keys (#593), so a predicate two scopes' actions
+    both write — a reading's side, written by the pump and the heater alike — is in neither for a
+    reader, while the TERMS that key the writes apart, the properties, are each in one; a want's
+    met-test names what it is about in those terms (`planning:about` on its blocks, a
+    `sh:hasValue`), parsed off the shape as its predicates are, so a want about the soil is placed
+    by the soil where its predicates place it nowhere — and only there: the puzzle's want names
+    the peg it wants the disks on, a cell the courier drives to, and placed by the term it was
+    searched among the van's actions.
+
     A WANT SPANNING SCOPES IS SEARCHED IN THE FIRST OF THEM, and that is a LOSS this
     ordering bought. The grouping it replaced was keyed by every scope a want reached, so
     two wants that could interfere through it shared a world; scopes are the store's now
@@ -742,7 +754,8 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
         #  are read by a want refined below and changed by nothing, so they say nothing about
         #  which world could repair it — counted, they pulled a courier goal into hanoi's scope.
         changeable = [p for p in reads if str(p) in written] or list(reads)
-        reached = sorted({scopes[str(p)] for p in changeable if str(p) in scopes})
+        reached = sorted({scopes[str(p)] for p in changeable if str(p) in scopes}) or sorted(
+            {scopes[str(t)] for t in footprint.terms_of_shape(shapes, met) if str(t) in scopes})
         if reached[:1] == [scope] or (not reached and scope == first):
             mine.append(want)
     return mine

@@ -270,6 +270,25 @@ def test_a_cold_bed_is_heated_for_as_long_as_the_gap_takes(monkeypatch):
     assert broker.published == [("actuators/heater/command", {"heat_s": 3600}, False)]
 
 
+def test_a_cold_dry_bed_is_two_wants_planned_apart(monkeypatch):
+    """#593: the pump and the heater write the same predicates — a reading's side — and over
+    predicates alone they were one scope, so a cold dry bed was one want searched over both levers
+    at once, four worlds for two steps. Over keys the pump's reading is the soil's and the heater's
+    the air's, so the bed is two wants in two imaginaria of one world each, and both commands go
+    out in the one pass."""
+    runtime, broker = _grower(monkeypatch)
+    runtime.deliver("sensors/thermometer/reading", b'{"value": 12.0}', NOW)
+    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    assert runtime.run(passes=1, poll_s=0) == UNFINISHED
+    assert sorted(t for t, _, _ in broker.published) == ["actuators/heater/command", "actuators/pump/command"]
+    imaginaria = runtime.parts["planning"].planner.imaginaria
+    assert len(imaginaria) == 2, "one imaginarium per scope, and the bed's two properties are two"
+    worlds = [len(rows(im, "SELECT ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph } }", ()))
+              for im in imaginaria.values()]
+    assert worlds == [1, 1], f"one step each, searched apart: {worlds}"
+    assert len(runtime.parts["execution"].executor.walking()) == 2
+
+
 def test_a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives(monkeypatch):
     """#858: the bed reads 0.31 and dries 0.04 a day, so the forecast crosses the floor in six hours.
     The want minted for that instant was weighed in the present ground, read met there and was

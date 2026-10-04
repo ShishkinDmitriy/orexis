@@ -42,8 +42,23 @@ falls back to anything where no block binds it, where a row leaves it `UNDEF`, o
 binds it to a literal. A range declared beside the text, an `rdfs:range` on a parameter, is
 not read, because it would be a promise about the text that nothing holds the text to.
 
+# Per filling, on a key
+
+The footprint of one TEXT names predicates. The [scopes](/domain/planning/scope.md) need more, since
+two levers writing one predicate on two readings are two scopes only if the readings are told apart,
+so `atoms_of` reads an action's footprint per FILLING: its precondition is asked over the public
+graphs with every pattern optional and no filter, which binds what the world states and leaves
+what the state would have bound unbound; each row is one filling as far as the world alone decides
+it, and each pattern the filling reads of what some action writes, or writes, is an atom - the
+predicate on the subject's key. The key is the subject's own value where the row binds it, and
+otherwise the values of whatever shares a pattern with it that the row does bind or the text
+states, a reading's feature and property; a subject keyed by nothing keys every atom of its
+predicate. The terms a key holds are what a scope later holds as members, so a want naming one is
+placed by it.
+
 # What it is not
 
-Not a scope: a scope is a set of predicates joined across many footprints, and one footprint
-is one text's. Not a filling's range: which values a parameter may take is enumerated by the
-precondition against a world, and a footprint names predicates, never values.
+Not a scope: a scope is atoms joined across many fillings of many actions, and one footprint is
+one text's, or one filling's. Not a filling's range: which values a parameter may take in the
+WORLD is enumerated by the precondition against the state as well; the public half a footprint
+reads is the part the world alone decides, and it over-approximates the rest.

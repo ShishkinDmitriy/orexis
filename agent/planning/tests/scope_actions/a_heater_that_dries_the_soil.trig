@@ -1,0 +1,74 @@
+# a_heater_that_dries_the_soil
+#
+# THE KNOB REGIME: the heater's effect reaches into the pump's property — warming the bed's air also
+# takes its soil from inside its range to below — so the heater's one filling writes an atom keyed
+# by the soil as well as one keyed by the air, and the two levers are one scope again, as they must
+# be: the order of dosing and heating is real here, and the search has to find it.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix scopes: <http://example.org/orexis/graph/scopes/> .
+
+
+GRAPH :ontology {
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+  planning:ScopeGraph rdfs:subClassOf orexis:Graph .
+  planning:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+}
+
+# THE WORLD, public: one keeper with a pump and a heater on one bed, each moving one property.
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :bed .
+  :keeper :hasActuator :pump .
+  :keeper :hasActuator :heater .
+  :pump :actuates :bed .
+  :pump :actuatesProperty :Moisture .
+  :heater :warms :bed .
+  :heater :warmsProperty :Temperature .
+}
+
+GRAPH :actions {
+  :dose a orexis:Action .
+  :dose planning:precondition """PREFIX : <http://example.org/test#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        SELECT DISTINCT ?valve ?reading WHERE {
+            $me :hasActuator ?valve ; orexis:actsFor ?subject .
+            ?valve :actuates ?subject ; :actuatesProperty ?property .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
+  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
+      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+  :heat a orexis:Action .
+  :heat planning:precondition """PREFIX : <http://example.org/test#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        SELECT DISTINCT ?heater ?reading ?soil WHERE {
+            $me :hasActuator ?heater ; orexis:actsFor ?subject .
+            ?heater :warms ?subject ; :warmsProperty ?property .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range .
+            ?soil sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty :Moisture . }""" .
+  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range . $soil sensing:inside ?dry } WHERE { $reading sensing:below ?range . OPTIONAL { $soil sensing:inside ?dry } }""" ] ,
+      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range . $soil sensing:below ?dry } WHERE { $reading sensing:below ?range . $soil sensing:inside ?dry }""" ] ] .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

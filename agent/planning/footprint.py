@@ -38,6 +38,19 @@ what this reads and this deciding nothing.
 
 **WHAT THIS ANSWERS FOR IS THE SCOPES.** `scope_actions` clusters the vocabulary by which
 predicates move together, and a want belongs to the scope of what it reads. It returns with the thing that needs it (an-agent-is-four-things).
+
+**AND A PREDICATE ON A KEY** (`atoms_of`, #593). A predicate alone separates a vocabulary and
+never two instances of one: a pump and a heater both write `sensing:below` of a reading, and over
+predicates they are one scope though nothing either does reaches the other's property. What tells
+their writes apart is WHOM the reading is of — the subject and the property the precondition binds
+it by, both public facts. So an action's footprint is read per FILLING: its precondition is asked
+over the public graphs with every pattern optional, which binds what the world states and leaves
+what the state would have bound unbound; each row is one filling as far as the world alone decides
+it; and each pattern a filling reads or writes is an atom `(predicate, key)`, the key being the
+subject's own value where the row binds it and otherwise the values of the variables that share a
+pattern with the subject — a reading is keyed by its feature and its property, exactly as sensing
+keys it. A subject the world binds nothing of is keyed by nothing and its atom joins every atom of
+that predicate, which is the predicate partition again, the safe side.
 """
 
 from __future__ import annotations
@@ -48,18 +61,19 @@ import functools
 import logging
 import re
 
+import pyoxigraph as ox
 import rdflib
 from rdflib import RDF, URIRef
 from rdflib.collection import Collection
 from rdflib.paths import AlternativePath, InvPath, MulPath, NegatedPath, SequencePath
-from rdflib.plugins.sparql.algebra import translateQuery, traverse
-from rdflib.plugins.sparql.parser import parseQuery
+from rdflib.plugins.sparql.algebra import translateQuery, translateUpdate, traverse
+from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
 
 #  WHAT A `$token` IS, from the module that BINDS one. It was spelled here too, a
 #  character apart, which is two definitions of one thing waiting to disagree.
 from agent import clock
-from agent.ontology import ACTION
-from agent.store import _TOKEN, PREFIXES, graphs_of, rows
+from agent.ontology import ACTION, PUBLIC
+from agent.store import _TOKEN, NAMESPACES, PREFIXES, graphs_of, rows
 
 log = logging.getLogger("footprint")
 
@@ -194,6 +208,25 @@ def reads_of_shape(shapes: rdflib.Graph, shape) -> frozenset | None:
         out |= set(shapes.objects(shape, p))
     out |= set(shapes.objects(shape, SH.targetClass))       # a class target reads that class
     return frozenset(out)
+
+def terms_of_shape(shapes: rdflib.Graph, shape) -> frozenset:
+    """Every TERM a shape names as what it is about or holds a value to — `planning:about` on its
+    blocks and constraints, `sh:hasValue` and `sh:class` on them and inside their qualified value
+    shapes, and a class it targets — the quantity kinds a scope holds as members, which is how a want
+    reading a predicate two scopes share is placed by the property it reads it of (#593)."""
+    about = URIRef("http://example.org/orexis/planning#about")
+    out: set = set()
+    for p in (SH.property, SH.sparql):
+        for block in shapes.objects(shape, p):
+            for q in (about, SH.hasValue, SH["class"]):
+                out |= {o for o in shapes.objects(block, q) if isinstance(o, URIRef)}
+            for inner in shapes.objects(block, SH.qualifiedValueShape):
+                out |= terms_of_shape(shapes, inner)
+    for negated in shapes.objects(shape, SH["not"]):
+        out |= terms_of_shape(shapes, negated)
+    out |= {o for o in shapes.objects(shape, SH.targetClass) if isinstance(o, URIRef)}
+    return frozenset(out)
+
 
 def _shacl_path_iris(g: rdflib.Graph, node) -> set | None:
     if node is None:
@@ -358,3 +391,187 @@ def stored_edges(store, graphs) -> tuple:
         out.append((ANYTHING if ANYTHING_IRI in reads else frozenset(URIRef(p) for p in reads),
                     ANYTHING if ANYTHING_IRI in writes else frozenset(URIRef(p) for p in writes)))
     return tuple(out)
+
+
+# --- the footprint per filling: predicates on keys ----------------------------------------------
+
+#  A FILLING AS THE WORLD ALONE DECIDES IT: the precondition's patterns, each OPTIONAL, asked over
+#  the public graphs — what the world states binds, what the state would have bound stays unbound.
+_PUBLIC_P_Q = "SELECT DISTINCT ?p WHERE { ?s ?p ?o }"
+
+
+def atoms_of(store, at: datetime | None = None) -> dict[str, list | None]:
+    """Every action the store holds as `iri -> fillings`, each filling `(atoms, terms)`: the atoms
+    `(predicate, key)` the filling reads of what some action writes and the atoms it writes, and
+    the public terms its key values are. ANYTHING where the action's texts cannot be read so.
+
+    The KEY of a pattern's subject is its own value where the filling binds it — a disk, a venue,
+    the agent — and otherwise the values of the variables sharing a pattern with it that the filling
+    does bind — a reading's feature and property — and None where it binds none, which joins every
+    atom of the predicate. Over-approximation is the safe side throughout: a filling the world
+    alone cannot narrow is every filling, and an atom keyed by nothing is every atom.
+    """
+    out: dict = {}
+    effects = _effects(store, at)
+    if not effects:
+        return out
+    public = graphs_of(store, PUBLIC, at=at or clock.now())
+    changeable = {str(p) for _, writes in actions_of(store, at).values() if writes is not ANYTHING for p in writes}
+    for action, effect in effects.items():
+        if not effect["constructs"]:
+            continue
+        parsed = _patterns(effect["precondition"]) if effect["precondition"] else []
+        written = _written_subjects(effect["constructs"], effect["updates"])
+        if parsed is ANYTHING or written is ANYTHING:
+            out[action] = ANYTHING
+            continue
+        out[action] = _fillings(store, public, parsed, written, changeable)
+    return out
+
+
+def _effects(store, at: datetime | None) -> dict[str, dict]:
+    effects: dict[str, dict] = {}
+    for row in rows(store, _ACTIONS_Q, graphs_of(store, ACTION, at=at or clock.now())):
+        held = effects.setdefault(row["action"], {"precondition": row.get("precondition"), "constructs": [], "updates": []})
+        if row.get("construct"):
+            held["constructs"].append(row["construct"])
+        if row.get("update"):
+            held["updates"].append(row["update"])
+    return effects
+
+
+def _patterns(text: str) -> list | None:
+    """The triple patterns a SELECT reads, under its groups and under its EXISTS filters alike, as
+    `(s, p, o)` of rdflib terms — the variables named, tokens among them — or ANYTHING."""
+    try:
+        alg = translateQuery(parseQuery(PREFIXES + parseable(text))).algebra
+    except Exception as exc:                            # noqa: BLE001
+        log.debug("could not parse a precondition for its patterns: %s", exc)
+        return ANYTHING
+    found: list = []
+    bad = [False]
+
+    def visit(n):
+        if getattr(n, "name", None) in ("BGP", "TriplesBlock"):
+            for triple in n["triples"]:
+                if len(triple) != 3 or _read(*triple) is None:
+                    bad[0] = True
+                else:
+                    found.append(tuple(triple))
+        return n
+    traverse(alg.get("p", alg), visitPost=visit)
+    return ANYTHING if bad[0] else found
+
+
+def _written_subjects(constructs: list[str], updates: list[str]) -> dict | None:
+    """What an effect writes, as `subject variable -> predicates` off its CONSTRUCT templates and
+    its DELETE templates — a type written is its class — or ANYTHING where a template's predicate
+    is a variable or its subject is not one."""
+    out: dict = {}
+    for text in constructs:
+        try:
+            alg = translateQuery(parseQuery(PREFIXES + parseable(text))).algebra
+        except Exception:                                   # noqa: BLE001
+            return ANYTHING
+        if _collect(alg.get("template") or (), out) is ANYTHING:
+            return ANYTHING
+    for text in updates:
+        try:
+            ops = translateUpdate(parseUpdate(PREFIXES + parseable(text))).algebra
+        except Exception:                                   # noqa: BLE001
+            return ANYTHING
+        for op in ops:
+            delete = getattr(op, "delete", None)
+            if delete is None:
+                continue
+            if _collect(getattr(delete, "triples", ()) or (), out) is ANYTHING:
+                return ANYTHING
+    return out
+
+
+def _collect(triples, out: dict):
+    for s, p, o in triples:
+        if not isinstance(s, rdflib.Variable):
+            return ANYTHING
+        if p == RDF.type and isinstance(o, URIRef):
+            out.setdefault(str(s), set()).add(str(o))
+        elif isinstance(p, URIRef):
+            out.setdefault(str(s), set()).add(str(p))
+        else:
+            return ANYTHING
+    return out
+
+
+def _fillings(store, public, patterns: list, written: dict, changeable: set) -> list:
+    """Each filling the world alone decides, as `(atoms, terms)`: the public graphs asked the
+    precondition's patterns, every one OPTIONAL and no filter, so a row binds what the world states
+    and nothing else; then the atoms each filling reads of what some action writes, and writes."""
+    variables = sorted({str(t) for triple in patterns for t in triple if isinstance(t, rdflib.Variable)}
+                       | set(written))
+    rows_: list[dict] = [{}]
+    if patterns:
+        text = "SELECT DISTINCT * WHERE { " + " ".join(f"OPTIONAL {{ {_n3(s)} {_n3(p)} {_n3(o)} . }}" for s, p, o in patterns) + " }"
+        try:
+            found = store.query(text, prefixes=NAMESPACES, default_graph=[ox.NamedNode(g) for g in public])
+            names = [v.value for v in found.variables]
+            rows_ = [{n: solution[n] for n in names if solution[n] is not None} for solution in found]
+        except Exception as exc:                            # noqa: BLE001
+            log.debug("a precondition's patterns would not run over the public graphs: %s", exc)
+            rows_ = [{}]
+    #  WHAT A SUBJECT IS KEYED BY where the world binds it nothing: the other end of every pattern
+    #  it stands in — a variable the filling binds, or a constant the text states, which keys a
+    #  reading `sosa:observedProperty :Moisture` as surely as one bound to a variable does.
+    links: dict = {}
+    for s, _, o in patterns:
+        for a, b in ((s, o), (o, s)):
+            if isinstance(a, rdflib.Variable) and isinstance(b, (rdflib.Variable, URIRef, rdflib.Literal)):
+                links.setdefault(str(a), set()).add(b)
+    fillings = []
+    for bound in rows_ or [{}]:
+        iris: set = set()
+
+        def value(term) -> str:
+            """A key value as text; an IRI among them is a TERM a scope may hold as a member, a
+            literal — a topic's name, a figure — keys as well and is nobody's member."""
+            if isinstance(term, (ox.NamedNode, URIRef)):
+                iris.add(str(term.value if isinstance(term, ox.NamedNode) else term))
+            return str(term.value if isinstance(term, (ox.NamedNode, ox.Literal)) else term)
+
+        def key(var: str):
+            if var in bound:
+                return (value(bound[var]),)
+            linked = set()
+            for other in links.get(var, ()):
+                if isinstance(other, rdflib.Variable):
+                    if str(other) in bound:
+                        linked.add(value(bound[str(other)]))
+                else:
+                    linked.add(value(other))
+            return tuple(sorted(linked)) or None
+        atoms = set()
+        for s, p, o in patterns:
+            if not isinstance(s, rdflib.Variable):
+                continue
+            for pred in _read(s, p, o):
+                if str(pred) in changeable:
+                    atoms.add((str(pred), key(str(s))))
+        for subject, predicates in written.items():
+            for pred in predicates:
+                atoms.add((pred, key(subject)))
+        #  THE FILLING'S TERMS: every IRI the world binds in it — the valve as much as the property it
+        #  moves — so a scope can hold the valve as a member and a candidate filled with it is known
+        #  for that scope's; a value two scopes' fillings both bind, the agent or the bed, is nobody's.
+        for term in bound.values():
+            value(term)
+        fillings.append((frozenset(atoms), frozenset(iris)))
+    return fillings
+
+
+def _n3(term) -> str:
+    """One rdflib term as the SPARQL text it is — a variable, an IRI, a literal; a blank node as a
+    variable of its own, since a pattern's blank node is one."""
+    if isinstance(term, rdflib.Variable):
+        return f"?{term}"
+    if isinstance(term, rdflib.BNode):
+        return f"?_b{term}"
+    return term.n3()

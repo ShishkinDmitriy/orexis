@@ -1,0 +1,76 @@
+# two_levers_keyed_by_property
+#
+# TWO LEVERS THAT WRITE THE SAME PREDICATES ON DIFFERENT KEYS ARE TWO SCOPES (#593). A pump and a
+# heater each turn a reading of the bed from below its range to inside it — the same two predicates,
+# `sensing:below` and `sensing:inside` — and over predicates alone they were one scope. What tells
+# their writes apart is public: the pump moves the bed's moisture, the heater its temperature, and
+# each precondition keys the reading it writes by that property. So the atoms are
+# `(below, {bed, Moisture})` and `(below, {bed, Temperature})`, two scopes; the properties are each
+# in one scope and are its members, the shared predicates and the bed are in both and in neither.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix scopes: <http://example.org/orexis/graph/scopes/> .
+
+
+GRAPH :ontology {
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+  planning:ScopeGraph rdfs:subClassOf orexis:Graph .
+  planning:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+}
+
+# THE WORLD, public: one keeper with a pump and a heater on one bed, each moving one property.
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :bed .
+  :keeper :hasActuator :pump .
+  :keeper :hasActuator :heater .
+  :pump :actuates :bed .
+  :pump :actuatesProperty :Moisture .
+  :heater :warms :bed .
+  :heater :warmsProperty :Temperature .
+}
+
+GRAPH :actions {
+  :dose a orexis:Action .
+  :dose planning:precondition """PREFIX : <http://example.org/test#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        SELECT DISTINCT ?valve ?reading WHERE {
+            $me :hasActuator ?valve ; orexis:actsFor ?subject .
+            ?valve :actuates ?subject ; :actuatesProperty ?property .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
+  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
+      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+  :heat a orexis:Action .
+  :heat planning:precondition """PREFIX : <http://example.org/test#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        SELECT DISTINCT ?heater ?reading WHERE {
+            $me :hasActuator ?heater ; orexis:actsFor ?subject .
+            ?heater :warms ?subject ; :warmsProperty ?property .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
+  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
+      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

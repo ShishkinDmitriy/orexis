@@ -98,6 +98,7 @@ Time in the search: an instant, a stretch, a graph holding during a period, a pr
 * [a-landing-is-a-band-and-a-world-holds-over-a-period](/decisions/a-landing-is-a-band-and-a-world-holds-over-a-period.md) - An action's landing is a band, least and most; a possible world holds over its path's summed period; the executor gives up past the latest.
 * [a-prediction-accumulates-rates-between-happenings](/decisions/a-prediction-accumulates-rates-between-happenings.md) - A drift answers a rate and rates add; the sum is accumulated between happenings, a crossing placed exactly, a range of rates a corridor.
 * [a-drift-toward-the-surroundings-is-one-link-and-no-physics](/decisions/a-drift-toward-the-surroundings-is-one-link-and-no-physics.md) - A sample exchanges heat with what surrounds it: one link, a stated rate, the sign of the gap, no physics; the drift says when it crosses.
+* [a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md) - A scope joins predicates on keys read per filling off the public graphs; the greenhouse's pump and heater are two scopes.
 * [one-function-mints-every-want](/decisions/one-function-mints-every-want.md) - A desire is one; its met-test's violations are the instances in trouble, clustered by scope into wants; packages write instances and predictions, never wants.
 
 # The market

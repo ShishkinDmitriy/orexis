@@ -115,6 +115,45 @@ query; what a pass pays for is the COUNT of statements, which is the star's pric
 reads its inputs back off the rows the last act wrote, and what would move the figure is
 fewer reads, not shorter ones.
 
+# The greenhouse: one scope against two (2026-10-04)
+
+The measurement #593 asked for, on the cold dry bed — the thermometer at 12 and the probe at 0.2,
+both below the bed's ranges — one pass of the Planner at a budget of 128 over the booted world,
+the two trees alternated in one session on the development container:
+
+| partition | imaginaria | worlds forked | weighings | plans | pass |
+|---|---|---|---|---|---|
+| over predicates, `ef8b912` | 1 | 4 | 6 | one want, two steps | 58 ms |
+| over keys, this tree | 2 | 1 + 1 | 3 + 3 | two wants, one step each | 107 ms |
+
+The sum against the product: both levers in one cone forked the dose, the heating and each after
+the other before the two-step plan was found; apart, each cone forked its one step. The pass costs
+nearly twice as much, and the whole of the difference is the second imaginarium's filling —
+`prepare_ground` copies the beliefs once per scope — which is a fixed price per scope while the
+worlds saved grow with the depth of the plans. The knob regime, a heater that dries the soil, has
+no shipped world; `agent/planning/tests/scope_actions/a_heater_that_dries_the_soil.trig` holds it to one
+scope.
+
+# What a world costs against the present, and what an unrelated aspect costs a want (2026-10-04)
+
+The two metrics the sovereign named, held by `world/greenhouse/tests/test_scaling.py`. The cold dry
+bed as above, then the same world with a light sensor on the bed, a lamp that raises it and a desire
+that the bed be lit — an aspect nothing of the soil or the air touches:
+
+| | present store | readings + sides | ground / world | scopes | soil's search |
+|---|---|---|---|---|---|
+| greenhouse as shipped | 1248 quads | 24 | 24 | 2 | 1 world, 1 candidate of 1 action |
+| with light, lamp and a lit desire, the bed dim | 1335 | 35 | 35 | 3 | 1 world, 1 candidate of 1 action |
+
+A possible world is the readings and the sides concluded of them, forked from the ground, and no
+public knowledge: two percent of the present. The unrelated aspect left the soil's search as it was,
+and the lamp — a second filling of the heating action, which is in the air's scope and the light's —
+is admitted in the light's search alone, since a scope admits a FILLING and not an action: before
+that was so, the air's search forked the lamp's heating too, two candidates where one is its own. What
+does grow with the aspect is every world's size, by the light's reading and its sides, because a fork
+copies every reading the agent holds whatever scope it is of; narrowing the fork to the scope's keys
+is the next thing this table would move, and the one thing in it that is not yet flat.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge
