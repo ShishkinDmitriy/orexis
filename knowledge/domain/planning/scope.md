@@ -2,19 +2,21 @@
 type: Domain Concept
 title: Scope
 description: >-
-  A set of predicates joined wherever one action or one derivation reads or writes both, and
-  separate where nothing does — a bulkhead in the vocabulary. Two wants in different
-  scopes cannot contradict, because no action of one writes a fact the other reads, which
-  is what would make it safe to plan them apart and concatenate their plans. Computed from what
-  the shipped rules do, never read off namespaces. The tower is the first world that splits:
-  the puzzle's words and the grid's, one imaginarium each.
+  A set of atoms - a predicate on a key - joined wherever one filling of one action reads or
+  writes both, and separate where nothing does: a bulkhead in the vocabulary. Two wants in
+  different scopes cannot contradict, because no action of one writes a fact the other reads,
+  which is what makes it safe to plan them apart and concatenate their plans. Computed from what
+  the shipped rules do over what the world states, never read off namespaces. The tower splits
+  by its words; the greenhouse by the property each lever moves.
 ---
 
 # What it is
 
-Take every [action](/domain/kernel/action.md) and every derivation, and join the predicates each one
-reads or writes. What falls out is a partition of the vocabulary: within a scope, some action
-couples the words; across scopes, nothing does. A hull's compartments are the picture — flooding
+Take every [action](/domain/kernel/action.md), ask its precondition what the world alone binds of
+each filling, and join the atoms each filling reads or writes - a predicate on a KEY, the key being
+the subject's own value where the filling binds it, a disk, a venue, the agent, and otherwise the
+public values the filling binds it by, a reading's feature and its property. What falls out is a
+partition: within a scope, some filling couples the atoms; across scopes, nothing does. A hull's compartments are the picture — flooding
 one does not flood the next, because nothing passes between them — and SCOPE is the word,
 because what this names is how far anything an agent does can reach.
 
@@ -33,20 +35,30 @@ two cases that look obvious are the reason:
 - Two vans in one courier vocabulary look like one until you notice nothing they do touches the
   same van.
 
-The second names the limit. A scope here is a set of PREDICATES, so it separates a
-vocabulary and never two instances of one. Two vans are two scopes only over VARIABLES, a
-subject and a predicate together, which is what a mechanism that split a plan would need.
+The second names what a predicate alone could not do. A scope was a set of PREDICATES until
+#593, and separated a vocabulary and never two instances of one: a pump and a heater both write a
+reading's side, and over predicates they were one scope though nothing the pump does reaches the
+air. The KEY is what tells them apart, and it is public: the pump moves the bed's moisture and the
+heater its temperature, each precondition keys the reading it writes by that property, and the
+atoms `(below, bed and moisture)` and `(below, bed and temperature)` share nothing. A heater that
+dried the soil as well would write an atom keyed by the soil too, and the two levers would be one
+scope again - which they must be, since the order of dosing and heating is real there
+([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)).
 
-An action whose [footprint](/domain/planning/footprint.md) cannot be read from its text joins everything. An action that
+A subject the world alone binds nothing of is keyed by nothing, and its atom is every atom of
+its predicate - the predicate partition again, the safe side. An action whose
+[footprint](/domain/planning/footprint.md) cannot be read from its text joins everything. An action that
 might touch any predicate cannot be proven not to, and a scope wrongly split would let two
 plans contradict each other.
 
-# What it measures: the tower splits, and everything else is one
+# What it measures: the tower splits by its words, the greenhouse by its keys
 
-Most shipped worlds are ONE scope: every effect they ship predicts a reading of the same shape,
-so the market's plumbing and sensing's readings are joined by the actions alone. The
-greenhouse was built to break that and did not — a heater that dries the soil couples two
-properties through a VALUE, and both readings carry the same predicates.
+Over predicates most shipped worlds were ONE scope: every effect they ship predicts a reading of
+the same shape, so the market's plumbing and sensing's readings were joined by the actions alone,
+and the greenhouse, built to break that, did not. Over keys the greenhouse is two: the soil's
+moisture with the pump, the air's temperature with the heater, and a cold dry bed is two wants in
+two imaginaria of one world each, where it was one want searched over both levers in four
+([measure-the-search](/runbooks/measure-the-search.md)).
 
 `world/tower` splits in two, the first world to: hanoi's Move reads and writes `hanoi:on` and
 what a peg is, the courier's drives and drops read and write `courier:at` and
@@ -70,7 +82,10 @@ spent the puzzle's budget and moved no disk.
 # In the store
 
 `scope_actions` writes the partition to the store's scope graph at boot — a `planning:Scope`
-per part, each predicate and each action `planning:inScope` its own — and `derive_wants`
-clusters a desire's results by reading it, never by recomputing it. The Planner keeps an
-imaginarium per scope and hands each search the actions `planning:inScope` of it. The cases in
+per part, each action `planning:inScope` every scope a filling of it falls in, and each predicate
+and each TERM a key holds `planning:inScope` its own where that is one scope and nowhere where it
+is two, since a reader told nothing joins every group — and `derive_wants` clusters a desire's
+witnesses by the scope of what each is about, never recomputing it. The Planner keeps an
+imaginarium per scope, places a want by the predicates its met-test reads and, where those place
+it nowhere, by the terms it names, and hands each search the actions `planning:inScope` of it. The cases in
 `agent/planning/tests/scope_actions/` hold the function to a snapshot of what it writes.

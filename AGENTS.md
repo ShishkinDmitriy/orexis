@@ -249,6 +249,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A scope's worlds admit the scope's actions alone**, a want is placed by what it reads that some
   action can CHANGE, **a type pattern reads its CLASS**, and **a partition of the vocabulary belongs
   to the store, not to an agent**.
+- **A scope is a predicate on a KEY, read per filling off what the world alone binds** — a pump and a
+  heater writing one predicate on two readings are two scopes by the property each is keyed by, one
+  again where a lever reaches into the other's; a term places a want only where its predicates place
+  it nowhere, since the puzzle's peg is a cell the van drives to (a-scope-is-a-predicate-on-a-key).
 - **A variable in predicate position writes what a `VALUES` block in its own text binds it to, and
   anything only where nothing bounds it** — the one range the scopes honour is SPARQL's own.
 - **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —

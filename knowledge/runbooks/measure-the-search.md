@@ -115,6 +115,25 @@ query; what a pass pays for is the COUNT of statements, which is the star's pric
 reads its inputs back off the rows the last act wrote, and what would move the figure is
 fewer reads, not shorter ones.
 
+# The greenhouse: one scope against two (2026-10-04)
+
+The measurement #593 asked for, on the cold dry bed — the thermometer at 12 and the probe at 0.2,
+both below the bed's ranges — one pass of the Planner at a budget of 128 over the booted world,
+the two trees alternated in one session on the development container:
+
+| partition | imaginaria | worlds forked | weighings | plans | pass |
+|---|---|---|---|---|---|
+| over predicates, `ef8b912` | 1 | 4 | 6 | one want, two steps | 58 ms |
+| over keys, this tree | 2 | 1 + 1 | 3 + 3 | two wants, one step each | 107 ms |
+
+The sum against the product: both levers in one cone forked the dose, the heating and each after
+the other before the two-step plan was found; apart, each cone forked its one step. The pass costs
+nearly twice as much, and the whole of the difference is the second imaginarium's filling —
+`prepare_ground` copies the beliefs once per scope — which is a fixed price per scope while the
+worlds saved grow with the depth of the plans. The knob regime, a heater that dries the soil, has
+no shipped world; `agent/planning/tests/scope_actions/a_heater_that_dries_the_soil.trig` holds it to one
+scope.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

@@ -46,18 +46,30 @@ def scope_actions(store: ox.Store) -> None:
     the same one from the same rows, so there is nobody to name it after (`scopes.py`).
     """
     now = clock.now()
-    actions = footprint.actions_of(store, now)
+    atoms = footprint.atoms_of(store, now)
     edges = footprint.stored_edges(store, graphs_of(store, DERIVATION_GRAPH))
-    parts = _partition(actions, edges)
+    parts = _partition(atoms, edges)
+    #  WHAT EACH SCOPE HOLDS: the predicates and the terms of its atoms, and the actions a filling
+    #  of which is in it. A predicate or a term that falls in two scopes is in neither for a
+    #  reader — a reader asking it is told nothing, which joins every group, the safe side — where
+    #  an action in two scopes is admitted in both.
+    terms = {t for fillings in atoms.values() if fillings is not ANYTHING for _, ts in fillings for t in ts}
+    where: dict = {}
+    for n, part in enumerate(parts, 1):
+        for predicate, key in part:
+            where.setdefault(("p", predicate), set()).add(n)
+            for term in key or ():
+                if term in terms:
+                    where.setdefault(("t", term), set()).add(n)
     written = []
     for n, part in enumerate(parts, 1):
         scope = _scope_name(n)
-        members = {action for action, (reads, writes) in actions.items()
-                   if reads is ANYTHING or writes is ANYTHING
-                   or any(str(p) in part for p in set(reads) | set(writes))}
-        written.append((scope, set(part), members))
+        members = {m for (kind, m), scopes in where.items() if scopes == {n}}
+        actions = {action for action, fillings in atoms.items()
+                   if fillings is ANYTHING or any(atom in part for atoms_, _ in fillings for atom in atoms_)}
+        written.append((scope, members, actions))
     _save_scopes(store, written)
-    log.info("%d action(s) in %d scope(s)", len(actions), len(parts))
+    log.info("%d action(s) in %d scope(s)", len(atoms), len(parts))
 
 
 #  THE STORE'S SCOPES, and the name is this module's because this module replaces the graph
@@ -88,8 +100,8 @@ def _scope_name(n: int) -> str:
 
 
 def _save_scopes(store: ox.Store, scopes: list[tuple[str, set[str], set[str]]]) -> None:
-    """Replace the store's scopes with these — `(scope, predicates, actions)` each — and say
-    what the graph is. Written whole, and classified even when empty: a store with no scope
+    """Replace the store's scopes with these — `(scope, members, actions)` each, the members the
+    predicates and the terms in no other scope — and say what the graph is. Written whole, and classified even when empty: a store with no scope
     graph has never been scoped, which `derive_wants` refuses to guess about.
 
     ONE UPDATE OVER THE ENGINE: every standing scope graph asked of the catalogue by class and
@@ -100,8 +112,8 @@ def _save_scopes(store: ox.Store, scopes: list[tuple[str, set[str], set[str]]]) 
     standing = [row["g"] for row in rows(store, STANDING_Q)]
     graph = SCOPES_GRAPH
     blocks = []
-    for scope, predicates, actions in scopes:
-        members = " ".join(f"<{m}> planning:inScope <{scope}> ." for m in sorted(predicates | actions))
+    for scope, held, actions in scopes:
+        members = " ".join(f"<{m}> planning:inScope <{scope}> ." for m in sorted(held | actions))
         blocks.append(f"  <{scope}> a planning:Scope .\n  {members}")
     dropped = "".join(
         f"DROP SILENT GRAPH <{g}> ;\n"
@@ -122,9 +134,9 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
 
 
 
-def _partition(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozenset, ...]:
-    """The SCOPES of a vocabulary: predicates joined wherever one action or one derivation
-    reads or writes both, and separate where nothing does (#565).
+def _partition(atoms: dict[str, list | None], rules: tuple = ()) -> tuple[frozenset, ...]:
+    """The SCOPES of a vocabulary: atoms — a predicate on a key — joined wherever one filling of one
+    action reads or writes both, and separate where nothing does (#565, #593).
 
     How far anything an agent does can reach. A hull's compartments are the picture — flooding
     one does not flood the next — and the sovereign ruled the word: a core concept outranks a
@@ -138,46 +150,59 @@ def _partition(actions: dict[str, tuple], rules: tuple = ()) -> tuple[frozenset,
     soil, and two vans in one courier vocabulary look like one until you notice nothing they do
     touches the same van.
 
-    Computed from `footprint`'s own tables, so it says what the shipped rules actually do rather
-    than what anyone declared. An action whose reads or writes are unreadable joins everything:
-    a lever that might touch any predicate cannot be proven not to.
-
-    **A scope here is a set of PREDICATES, and that is the limit worth naming.** Two vans are
-    two scopes only over VARIABLES — a subject and a predicate together — and this sees
-    predicates alone, so it separates a vocabulary and never two instances of one. Measured on
-    every shipped world, it separates nothing at all: 90 predicates, one scope, whether the
-    derivations are counted or the actions taken alone. That is the honest state of the claim,
-    and it is why one cone per scope has nothing yet to split.
+    **A SCOPE IS OVER KEYS, NOT PREDICATES ALONE.** Over predicates it separated a vocabulary and
+    never two instances of one: a pump and a heater both write a reading's side, and were one
+    scope though the pump's reading is the soil's and the heater's the air's. An atom is a
+    predicate on a KEY — the subject's own value, or the public values the filling binds it by, a
+    reading's feature and property — read per filling off the public graphs (`footprint.atoms_of`);
+    two fillings join only where they share an atom, and an atom keyed by nothing is every atom of
+    its predicate, which is the predicate partition again. An action whose texts cannot be read
+    joins everything. A derivation's edges are predicates and join every key of theirs.
     """
-    edges = list(actions.values()) + list(rules)
-    known = {str(p) for reads, writes in edges
-             for side in (reads, writes) if side is not ANYTHING for p in side}
+    edges = [atoms_ for fillings in atoms.values() if fillings is not ANYTHING for atoms_, _ in fillings]
+    known: set = set()
+    for atoms_ in edges:
+        known |= atoms_
+    for reads, writes in rules:
+        for side in (reads, writes):
+            if side is not ANYTHING:
+                known |= {(str(p), None) for p in side}
     parent: dict = {}
 
-    def find(x: str) -> str:
+    def find(x):
         parent.setdefault(x, x)
         while parent[x] != x:
             parent[x] = parent[parent[x]]
             x = parent[x]
         return x
 
-    def join(terms) -> None:
-        terms = list(terms)
-        for other in terms[1:]:
-            a, b = find(terms[0]), find(other)
+    def join(items) -> None:
+        items = list(items)
+        for other in items[1:]:
+            a, b = find(items[0]), find(other)
             if a != b:
                 parent[a] = b
 
-    for term in known:
-        find(term)
-    for reads, writes in edges:
+    for atom in known:
+        find(atom)
+    if any(fillings is ANYTHING for fillings in atoms.values()):
+        join(known)                  # unreadable: it might touch anything, so it joins everything
+    for atoms_ in edges:
+        join(atoms_)
+    for reads, writes in rules:
         if reads is ANYTHING or writes is ANYTHING:
-            join(known)          # unreadable: it might touch anything, so it joins everything
+            join(known)
             continue
-        join(str(p) for p in set(reads) | set(writes))
+        join((str(p), None) for p in set(reads) | set(writes))
+    #  AN ATOM KEYED BY NOTHING IS EVERY ATOM OF ITS PREDICATE: a subject the world alone binds
+    #  nothing of may be any instance, so its predicate's atoms are one.
+    by_predicate: dict = {}
+    for predicate, key in known:
+        by_predicate.setdefault(predicate, []).append((predicate, key))
+    for predicate, members in by_predicate.items():
+        if any(key is None for _, key in members):
+            join(members)
     out: dict = {}
-    for term in known:
-        out.setdefault(find(term), set()).add(term)
-    return tuple(frozenset(v) for v in sorted(out.values(), key=lambda s: (-len(s), sorted(s))))
-
-
+    for atom in known:
+        out.setdefault(find(atom), set()).add(atom)
+    return tuple(frozenset(v) for v in sorted(out.values(), key=lambda s: (-len(s), sorted(map(str, s)))))

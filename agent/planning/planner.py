@@ -708,6 +708,15 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
     `water:SoilMoisture` matched no scope and every want fell through to its own name.
     A shape's paths ARE predicates, so this separates what cannot interfere.
 
+    AND BY THE TERMS IT NAMES. A scope is over keys (#593), so a predicate two scopes' actions
+    both write — a reading's side, written by the pump and the heater alike — is in neither for a
+    reader, while the TERMS that key the writes apart, the properties, are each in one; a want's
+    met-test names what it is about in those terms (`planning:about` on its blocks, a
+    `sh:hasValue`), parsed off the shape as its predicates are, so a want about the soil is placed
+    by the soil where its predicates place it nowhere — and only there: the puzzle's want names
+    the peg it wants the disks on, a cell the courier drives to, and placed by the term it was
+    searched among the van's actions.
+
     A WANT SPANNING SCOPES IS SEARCHED IN THE FIRST OF THEM, and that is a LOSS this
     ordering bought. The grouping it replaced was keyed by every scope a want reached, so
     two wants that could interfere through it shared a world; scopes are the store's now
@@ -742,7 +751,8 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
         #  are read by a want refined below and changed by nothing, so they say nothing about
         #  which world could repair it — counted, they pulled a courier goal into hanoi's scope.
         changeable = [p for p in reads if str(p) in written] or list(reads)
-        reached = sorted({scopes[str(p)] for p in changeable if str(p) in scopes})
+        reached = sorted({scopes[str(p)] for p in changeable if str(p) in scopes}) or sorted(
+            {scopes[str(t)] for t in footprint.terms_of_shape(shapes, met) if str(t) in scopes})
         if reached[:1] == [scope] or (not reached and scope == first):
             mine.append(want)
     return mine
