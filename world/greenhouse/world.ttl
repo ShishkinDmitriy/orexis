@@ -53,6 +53,10 @@
 #  None of the four exists: the simulator plays them, from where each reading starts. The bed starts
 #  comfortable and a quarter of a day from its floor, so a world brought up shows its loop — the
 #  drying, the dose, the reading that answers it — in the first hours of its time and not its third day.
+#  The thermometer's number strays a hundredth of a degree, a thermometer's count, since nobody heats
+#  the air for hours at a time and a number that never moves is a stuck instrument to the grower
+#  (#879); the probe strays by what the simulator publishes to, a ten-thousandth, which is a hundredth
+#  of the gap between where it starts and the floor it dries to.
 :moisture_probe a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:initialValue 0.31 ; sim:minValue 0.0 ; sim:maxValue 1.0 ] ;
     sosa:isHostedBy :bed ;
@@ -61,7 +65,7 @@
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:MIN ] ] .
 
 :thermometer a sosa:Sensor ;
-    sim:simulatedBy [ a sim:Model ; sim:initialValue 21.0 ; sim:minValue -10.0 ; sim:maxValue 45.0 ] ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 21.0 ; sim:minValue -10.0 ; sim:maxValue 45.0 ; sim:jitter 0.01 ] ;
     sosa:isHostedBy :bed ;
     sosa:observes climate:AirTemperature ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty

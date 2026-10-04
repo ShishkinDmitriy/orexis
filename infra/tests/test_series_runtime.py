@@ -106,14 +106,17 @@ def _as(grant: Grant, url: str, org: str) -> InfluxDBClient:
 
 
 def _write(client, bucket, value):
+    #  The shape sensing writes today — a property's local name, tagged `feature` and `sensor` —
+    #  though nothing here tests the shape: the contract is who may reach which bucket.
     client.write_api(write_options=SYNCHRONOUS).write(
-        bucket=bucket, record=Point("soil_moisture").tag("plant", "probe").field("value", value))
+        bucket=bucket, record=Point("SoilMoisture").tag("feature", "bed").tag("sensor", "probe")
+        .field("value", value))
 
 
 def _read(client, bucket):
     rows = client.query_api().query(
         f'from(bucket:"{bucket}") |> range(start:-1h) '
-        f'|> filter(fn:(r) => r._measurement == "soil_moisture") |> last()')
+        f'|> filter(fn:(r) => r._measurement == "SoilMoisture") |> last()')
     return [r.records[0].get_value() for r in rows]
 
 

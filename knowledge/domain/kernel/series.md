@@ -53,13 +53,15 @@ for a sink and none imports `agent.series`
 ([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md)).
 
 - **Sensing's** point, an `Observed` its part says as it hears an observation graph written:
-  measured under the local name of the property observed, field `value`, tagged with the local
-  names of the subject's and the sensor's IRIs — never a stated `orexis:localId`, which is an
-  agent's, and which the greenhouse states of no sensor — at the reading's `sosa:resultTime`. The
-  dashboards ask sensing for the name and the tags (`measurement_of`, `tag_of`), so a panel draws
-  what is written and filters for the tag written. The subject's tag is still
-  called `plant`, a domain word #834 renames. Points 0.1.0 wrote as `soil_moisture` stay under that
-  name.
+  measured under the local name of the property observed, field `value`, tagged `feature` and
+  `sensor` — the SOSA roles, what the observation is of and what made it, each the local name of
+  its IRI and never a stated `orexis:localId`, which is an agent's, and which the greenhouse states
+  of no sensor — at the reading's `sosa:resultTime`. The dashboards ask sensing for the name and
+  the tags (`measurement_of`, `tag_of`), so a panel draws what is written and filters for the tag
+  written. The subject's tag was `plant` until #834, a domain word in the shape as `soil_moisture`
+  was in the measurement; points written before either rename stay as they were written, under
+  `soil_moisture` or tagged `plant`, and a panel, filtering on `sensor` and the measurement alone,
+  draws a point tagged either way.
 - **Execution's** points, measured `Step`: field `taken` on the `StepTaken` said when the executor
   records the [act](/domain/execution/act.md), and field `landed` on the `StepAnswered` said at the
   verdict — true where the present came to hold what the step predicted, false where the patience

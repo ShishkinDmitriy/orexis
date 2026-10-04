@@ -308,8 +308,14 @@ compose file like everything else, so there is again only one way to run each th
 **A simulation is part of a world.** The simulator (`simulation/`) is a process of its own that
 reads the world as an agent boots it and plays every system marked `sim:simulatedBy` from the
 world's own words — the topics, the cadence, the drying, a dose, a heating — so nothing is told
-by hand which subjects to pretend to be. `greenhouse` and `allotment` run whole without a board;
-`sensing` and `terrace` have a real one.
+by hand which subjects to pretend to be. What it publishes is the instrument's number and not the
+model's: each strays from the model's reading within the model's `sim:jitter` (one count of the
+four places it publishes to, where the model states none) and is never the number published
+before, since sensing says a sensor stuck whose number has not moved for `sensing:stuckAfter`
+cadences, and a model nothing touches never moves (#879). The draw is seeded, so a run is
+reproducible, and `tools/run-world-end-to-end.sh` fails where any agent's log says a sensor
+stuck. `greenhouse` and `allotment` run whole without a board; `sensing` and `terrace` have a
+real one.
 
 # It went wrong
 

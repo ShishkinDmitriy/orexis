@@ -15,10 +15,14 @@ AT = datetime(2026, 1, 1, 12, tzinfo=timezone.utc)
 
 
 def test_an_observation_is_measured_under_its_propertys_name():
+    """Tagged for the SOSA roles — `feature`, what it is of, and `sensor`, what made it — and the
+    subject's tag is no longer `plant`, the domain word #834 took out of the shape as #822 took it
+    out of the measurement."""
     said = Observed(CLIMATE + "SoilMoisture", 0.2, AT, sensor="moisture_sensor_terrace",
-                    sensor_id="moisture_sensor_terrace", subject_id="terrace_bed")
+                    sensor_id="moisture_sensor_terrace", feature_id="terrace_bed")
     assert said.point() == {"measurement": "SoilMoisture", "fields": {"value": 0.2},
-                            "tags": {"plant": "terrace_bed", "sensor": "moisture_sensor_terrace"}, "time": AT}
+                            "tags": {"feature": "terrace_bed", "sensor": "moisture_sensor_terrace"}, "time": AT}
+    assert "plant" not in said.point()["tags"]
 
 
 def test_a_temperature_is_not_measured_as_soil_moisture():

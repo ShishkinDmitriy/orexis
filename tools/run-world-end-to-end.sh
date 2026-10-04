@@ -121,4 +121,15 @@ wait_for "$agent never resolved an intention done" 300 \
   sh -c "podman logs orexis-${world}_agent-${agent}_1 2>&1 | grep -Eq ': [^ ]+ — done$'"
 logs_of "agent-$agent" | grep -E ' — done$' | head -3
 
+# A simulated instrument that publishes the model's reading exactly is a stuck one to sensing, which
+# says so (`received` logs the warning) six cadences into a run where nothing moves the reading — an
+# hour of the greenhouse's time, inside this run at pace 600 (#879).
+say "no agent said a sensor stuck"
+for service in $agents; do
+  if logs_of "$service" | grep -q 'stuck since'; then
+    logs_of "$service" | grep 'stuck since' | head -3
+    fail "$service said a sensor stuck — a simulated instrument published a number that never moved"
+  fi
+done
+
 say "$world ran end to end"

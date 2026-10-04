@@ -9,12 +9,20 @@ from pathlib import Path
 
 from agent import clock
 from agent.runtime import UNFINISHED, Runtime, boot
+from agent.sensing.received import STUCK_AFTER
+from agent.store import rows
 from agent.transport.mqtt.driver import Mqtt
 from simulation.simulator import Simulator
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 GH = "http://example.org/orexis/world/greenhouse#"
+
+#  EVERY SENSOR THE GROWER SAYS STUCK — the state graphs holding the row, found by their content.
+_STUCK_Q = """
+SELECT ?sensor WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph }
+  GRAPH ?g { ?sensor sensing:stuckSince ?since } }"""
 
 
 class Bus:
@@ -87,3 +95,26 @@ def test_the_bed_is_dosed_within_a_cadence_of_crossing_its_floor(monkeypatch):
         time["at"] += timedelta(minutes=30)
     assert crossed is not None and [t for t, _ in bus.commands] == ["actuators/pump/command"]
     assert time["at"] - crossed <= timedelta(minutes=30), f"crossed at {crossed}, dosed at {time['at']}"
+
+
+def test_no_sensor_of_a_quiet_bed_is_said_stuck(monkeypatch):
+    """The bed from where the world starts it, a reading every ten minutes for longer than the grower's
+    stuck limit, nobody heating the air: the grower says no sensor stuck. It said the thermometer
+    stuck an hour in — the model read 21.0 at every cadence, exactly, and the simulator published it
+    exactly — which is what a simulated instrument's jitter is for (#879). The probe was never at
+    risk, since the bed dries by three counts a cadence."""
+    time = {"at": NOW}
+    monkeypatch.setattr(clock, "now", lambda: time["at"])
+    bus = Bus()
+    bus.simulator = Simulator(WORLD, bus, now=NOW)
+    bus.runtime = Runtime(boot(WORLD, "grower"), "grower", transport=Mqtt(GH + "grower", bus))
+    bus.simulator.open()
+    air = []
+    for _ in range(STUCK_AFTER + 2):
+        air.extend(v for t, v in bus.simulator.step(time["at"]) if "thermometer" in t)
+        bus.runtime.run(passes=1, poll_s=0)
+        time["at"] += timedelta(minutes=10)
+    stuck = [r["sensor"].rsplit("#", 1)[-1] for r in rows(bus.runtime.beliefs, _STUCK_Q, ())]
+    assert stuck == [], f"a quiet instrument is not a stuck one, and the grower says {stuck} stuck"
+    assert len(air) == STUCK_AFTER + 2 and len(set(air)) > 1, air
+    assert bus.commands == [], "the bed stayed comfortable through the hour, so nothing was commanded"

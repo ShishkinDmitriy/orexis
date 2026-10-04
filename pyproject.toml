@@ -57,9 +57,9 @@ where = ["."]
 include = ["agent*", "onboarding*", "simulation*"]
 
 [tool.pytest.ini_options]
-# The agent's own suites and each world's, which live beside what they test. `tests/` holds the
-# four files that read the whole tree, run by the gates by name.
-testpaths = ["agent", "world"]
+# The agent's own suites, the simulator's and each world's, which live beside what they test.
+# `tests/` holds the four files that read the whole tree, run by the gates by name.
+testpaths = ["agent", "simulation", "world"]
 
 # `importlib` is the mode pytest recommends and the one that does not derive a module name from
 # a path; it stops inserting directories into sys.path, which is why `pythonpath` is here.

@@ -52,3 +52,11 @@ read and a plan may branch on, and what a world makes of one is the world's. Two
 apart are two readings, so a connection that creeps rather than freezes is not caught here: that
 is what publishing the raw number unclamped (#462's first detector) and the board's other sensors
 moving while this one does not (its third) are for.
+
+The premise is the instrument's to keep, and a simulated one keeps it too. The simulator
+(`simulation/simulator.py`) publishes each number with the instrument's noise — a seeded draw
+within the model's `sim:jitter` either way, never the number that sensor published last — because
+the model's reading moves only where the physics moves it, and a thermometer in a greenhouse
+nobody heats was said stuck an hour into its world (#879). The limit is the agent's, stated of it
+by its world; a simulated world that read as stuck was a quiet instrument, not a low limit, and
+`sensing:stuckAfter` is not where that is fixed.

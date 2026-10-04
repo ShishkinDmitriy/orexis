@@ -13,9 +13,10 @@
 #  boots it and plays every system marked `sim:simulatedBy` from the world's own words — the topics
 #  from MQTT4SSN, how often a sensor reports from its `ssn-system:Frequency`, how the subject dries
 #  and what a dose or a heating does to it from the climate and actuation domains. What only a
-#  simulation needs is here: that no such thing exists and a process plays it, and where its
-#  reading starts and between which bounds it can move. The 0.1.0 package's own physics rates, its
-#  tick, its time scale and its meddler went with the physics to the domains that own it.
+#  simulation needs is here: that no such thing exists and a process plays it, where its reading
+#  starts and between which bounds it can move, and how far the number it publishes strays from
+#  that reading. The 0.1.0 package's own physics rates, its tick, its time scale and its meddler
+#  went with the physics to the domains that own it.
 
 :simulatedBy a owl:ObjectProperty ; rdfs:domain ssn:System ; rdfs:range :Model ;
     rdfs:label "simulated by" ;
@@ -32,3 +33,13 @@
     rdfs:comment "The floor of what it can report: a moisture fraction runs 0 to 1, a thermometer does not." .
 
 :maxValue a owl:DatatypeProperty ; rdfs:domain :Model ; rdfs:range xsd:decimal ; rdfs:label "maximum" .
+
+:jitter a owl:DatatypeProperty ; rdfs:domain :Model ; rdfs:range xsd:decimal ; rdfs:label "jitter" ;
+    rdfs:comment """How far the number the simulator publishes may stray from the model's reading either
+    way, in the sensor's own unit: the instrument's noise, which the physics never has. A live
+    instrument's count moves by a bit within a few readings even where what it observes does not, and
+    sensing's `stuckAfter` is premised on that; a simulated sensor publishing the model's reading exactly
+    was said stuck an hour into a greenhouse nobody was heating (#879). Where the model states none, one
+    count of what the simulator publishes, 0.0001; a model stating nought publishes the reading exactly,
+    and is a stuck instrument to sensing. The draw is seeded, and the number published is never the one
+    published before, which is the premise held to and not left to chance.""" .
