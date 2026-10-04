@@ -178,6 +178,53 @@ costs what a scope costs — a filling of the imaginarium and one weighing of th
 pumps are commanded in the one pass. On the tree before, the same world minted `pursued.SoilMoisture`
 in all three imaginaria, placed it in the first, reported it unreachable and commanded nothing.
 
+# The dispatcher: two vans in one scope (2026-10-04)
+
+The measurements #567 asked for, on `world/dispatcher/` — one agent, two vans, two parcels on the
+courier's 4x4 grid, a desire that every parcel be delivered and an aversion to two vans on one cell —
+taken on the development container with the tree that added the world, one pass of the Planner at a
+budget of 128 over the booted world unless a budget is named, medians of five where a time is given.
+`world/dispatcher/tests/test_dispatcher.py` holds every claim below but the times.
+
+**The partition.** One scope: both vans, both parcels, every cell, `courier:at`, `courier:carriedBy`
+and the three actions. Nothing van A does reads a fact about van B, and the key cannot see it: a
+Pick's filling binds a van and a parcel, either with either, so the two vans' atoms are joined
+through each parcel's ([a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astray-is-a-want-of-its-own.md)).
+
+**Apart** — each van at the foot of its own column, its parcel one cell up, owed at the top; the two
+chains share no cell — against each van and its parcel alone in a world of its own:
+
+| world | wants | candidates | weighings per want | plans | pass |
+|---|---|---|---|---|---|
+| both vans, the delivery shape's block about nothing | one, about both parcels | 128 of a budget of 128 | 83 | `Exhausted` | 731 ms |
+| the same at a budget of 1024 | one | 674 | 325 | one plan of ten steps, `Satisfied` | 85 s |
+| both vans, the block about `sh:this` (shipped) | two, one per parcel | 90 | 61 and 64 | two plans of five steps | 545 ms |
+| van A and parcel A alone | one | 17 | 13 | five steps | 88 ms |
+| van B and parcel B alone | one | 17 | 13 | five steps | 87 ms |
+
+The sum the issue hoped for is 26 weighings over 34 candidates; the product over one want is 325
+over 674 and finds the same ten steps; a want per parcel is between, 125 over 90, because each
+want's search still forks the other van — the estimate is the desire's and counts both parcels, so
+the other van's drive toward its parcel ties the frontier. Through the runtime, the shipped world
+delivers both parcels in one pass, ten acts.
+
+**The corridor** — van A drives parcel A along the second row, van B drives parcel B down the third
+column, and the two shortest chains meet at `c2_1` at each van's third step (the test's variant of
+the world). One pass: two wants, two plans of five steps, 87 and 92 weighings over 118 candidates,
+each plan driving its van to `c2_1`; of the 118 worlds the searches visited, FOUR hold two vans on
+one cell, and the aversion was weighed in none of them — a desire is weighed in grounds alone, and
+in the present the vans stood apart, so no want was minted from it. Walked, the two intentions
+alternate steps within the one pass, and after the sixth act BOTH VANS STAND ON `c2_1` in the
+agent's beliefs, for one act; the next pass finds both parcels delivered and nothing to mint. The
+delivered plans put two vans on one cell, and nothing saw it: the derivation runs in the planner's
+pass, the walk comes after it, and the state between two steps is judged by nobody.
+
+**Both vans on one cell at a pass's start** — van B posed on van A's cell: the aversion reads unmet
+for each van, one want `no_cell_holds_two_vans.pursued` is minted, about both vans, and a one-step
+plan — a drive — satisfies it in 4 weighings. Authored as `planning:unmetWhen` instead, as #567
+asks, the desire is weighed in no ground at all: `weigh` reads a met-test through
+`planning:metWhen` and nothing else, and the pass minted nothing from it.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

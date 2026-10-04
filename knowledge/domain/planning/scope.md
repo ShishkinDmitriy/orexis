@@ -33,7 +33,8 @@ two cases that look obvious are the reason:
 - A greenhouse's water words and climate words look like two vocabularies until a heater dries
   the soil. One action across both makes one scope.
 - Two vans in one courier vocabulary look like one until you notice nothing they do touches the
-  same van.
+  same van — and ARE one, by key as by predicate, while a parcel either van could pick is a filling
+  value of both vans' Pick (`world/dispatcher/`, the two-vans seam of the record below).
 
 The second names what a predicate alone could not do. A scope was a set of PREDICATES until
 #593, and separated a vocabulary and never two instances of one: a pump and a heater both write a

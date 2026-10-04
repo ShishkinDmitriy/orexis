@@ -53,6 +53,7 @@ Desire: where a want comes from, what shape it has, and who is allowed to change
 * [a-store-is-a-modality](/decisions/a-store-is-a-modality.md) - A modality is a store with its own persistence; graphs inside carry only arrival. The desires store is read-only to the runtime.
 * [a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md) - SUPERSEDED IN PART — the met-test is SHACL and force is severity; the desire itself became a node carrying the shape.
 * [a-want-is-judged-by-its-met-test-and-nothing-else](/decisions/a-want-is-judged-by-its-met-test-and-nothing-else.md) - Three things were called urgency; all three are gone, and a want's met-test is the one judgment left.
+* [a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astray-is-a-want-of-its-own.md) - A shape over instances says each block is about `sh:this`, or two parcels are one want searched over the product.
 
 # The mind — intention, act and execution
 

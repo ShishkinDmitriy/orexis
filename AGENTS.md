@@ -208,6 +208,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   *no unanswered calls* over its venues, and the call is the row that desire is about.
 - **A capability that asks for a derivation is not minting** — the ledger writes a debt and its
   prediction and calls `derive_wants`, so a claim arriving is a want arriving.
+- **A shape over instances says each block is about `sh:this`, or two instances are one want** — a
+  witness about nothing joins every cluster, and the dispatcher's two parcels were one want searched
+  over both vans' every move, 674 candidates where a want per parcel costs 90
+  (a-parcel-astray-is-a-want-of-its-own).
+- **A desire is weighed in grounds alone, in the planner's pass, and the walk comes after it** — so
+  a state two intentions make between two acts is judged by nobody: the dispatcher's vans stood on
+  one cell for one act and no want was minted (#567, measure-the-search).
 - **A desire weighed in a ground and a want weighed in a possible world are one judgment at two
   grains**, and `planning:Weighing` carries the `planning:violation` rows for either.
 - **A derivation asks nothing the met-tests do not answer** — how far ahead the agent sees is the

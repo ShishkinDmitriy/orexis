@@ -10,11 +10,18 @@
 #  `planning:metWhen` and `planning:estimates`. Delivered is the shape — on every parcel, the cell it
 #  is at equals the cell it is owed at, so a carried parcel, at no cell, is not delivered — and the
 #  estimate is the drives still owed, which never overstates what this domain's own actions cost.
+#
+#  EACH BLOCK IS ABOUT THE PARCEL ITSELF, `planning:about sh:this`: the shape targets every parcel,
+#  so under a DESIRE two parcels astray are two instances in trouble, and the derivation clusters a
+#  witness per instance only where the block says what it is about. Saying nothing, the dispatcher's
+#  two parcels were one want searched over both vans' every move — 674 candidates and 85 s for a
+#  ten-step plan — where a want per parcel is found in 90 and under a second
+#  (a-parcel-astray-is-a-want-of-its-own). A WANT pointing here, the courier's, reads it as before.
 
 courier:delivered a sh:NodeShape ;
     rdfs:label "every parcel standing where it is owed" ;
     sh:targetClass courier:Parcel ;
-    sh:property [ sh:path courier:at ; sh:equals courier:destination ] .
+    sh:property [ sh:path courier:at ; sh:equals courier:destination ; planning:about sh:this ] .
 
 #  DRIVES STILL OWED: aboard, the road to the door; standing somewhere, the road to the parcel
 #  and then its road home. It counts drives and not the pick or the drop, so it never overstates

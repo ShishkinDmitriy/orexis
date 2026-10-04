@@ -1,0 +1,46 @@
+@prefix : <http://example.org/orexis/world/dispatcher#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+
+<> a planning:DesireGraph .    # this document is one graph, and this is what it is
+
+#  TWO DESIRES, and desires rather than wants: the dispatcher runs for good, asking at every
+#  instant that every parcel stand where it is owed and that no cell hold two vans.
+#
+#  THE DELIVERY points at the domain's shape and the domain's estimate, as the courier's want
+#  does. The shape targets every parcel, so the derivation mints one want PER PARCEL — two
+#  instances in trouble are two wants, as two debts are — and each is searched on its own.
+#
+#  THE AVERSION is the world's own shape, since no domain says that two vans may not share a
+#  cell: a van conforms while no other van stands where it stands. Authored as a met-test over a
+#  `sh:sparql` constraint and NOT as `planning:unmetWhen`, which #567 asked for: measured on this
+#  tree, a desire carrying `unmetWhen` alone is weighed in no ground — `weigh` reads a met-test
+#  through `planning:metWhen` and nothing else — so it would mint no want and refuse nothing
+#  (a-scope-is-a-predicate-on-a-key, the two-vans seam). The constraint offends with no value, so
+#  a want minted from it is named for the van it targets and keyed by nothing.
+
+:dispatcher planning:holds :every_parcel_delivered , :no_cell_holds_two_vans .
+
+:every_parcel_delivered a planning:Desire ;
+    rdfs:label "every parcel where it is owed" ;
+    planning:metWhen courier:delivered ;
+    planning:estimates courier:drivesOwed .
+
+:no_cell_holds_two_vans a planning:Desire ;
+    rdfs:label "no cell holds two vans" ;
+    planning:metWhen :apart .
+
+:apart a sh:NodeShape ;
+    sh:targetClass courier:Van ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "two vans stand on one cell" ;
+        sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+            SELECT $this WHERE {
+                $this courier:at ?cell .
+                ?other courier:at ?cell .
+                ?other a courier:Van .
+                FILTER(?other != $this)
+            }""" ] .

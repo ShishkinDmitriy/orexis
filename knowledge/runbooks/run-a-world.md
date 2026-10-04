@@ -114,11 +114,11 @@ All four read the world as an agent boots it and grant exactly what its wiring i
 agent to the world and re-running is the whole of deploying one — there is no list to keep in
 step. They are idempotent: an agent that already holds a bucket and a credential keeps them.
 
-A world with no bus — hanoi, the courier, the tower — is onboarded the same way. It has no broker,
-so `orexis-onboard` skips the MQTT step and says so in one line, and its compose file is its
-agents alone, each with its history credential; `orexis-influx <world>` is the one thing to run
-before `podman compose up`. **It finishes, and stays finished:** such a world's agent holds wants
-and no desire and no transport reaches it, so it exits when they are reached — 0, or 1 when
+A world with no bus — hanoi, the courier, the tower, the dispatcher — is onboarded the same way. It
+has no broker, so `orexis-onboard` skips the MQTT step and says so in one line, and its compose file
+is its agents alone, each with its history credential; `orexis-influx <world>` is the one thing to
+run before `podman compose up`. **One that holds only wants finishes, and stays finished:** such a
+world's agent holds wants and no desire and no transport reaches it, so it exits when they are reached — 0, or 1 when
 nothing it holds reaches one — and its service says `restart: "no"`, so the container stays
 exited. `orexis-compose` decides that per agent ([onboarding](/domain/onboarding/onboarding.md));
 under `unless-stopped`, as before, it was started again on its lived-in volume, found nothing

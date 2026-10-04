@@ -41,8 +41,9 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    done.
 3. **The world answers otherwise** — #522, several outcomes with a likelihood, and #781, a plan that
    worked lifted into a method the executor proves or forgets.
-4. **Several agents contend** — #567, one dispatcher and two vans, then #568, right-of-way as a lot
-   the market allocates.
+4. **Several agents contend** — #567, one dispatcher and two vans: the world and its measurement are
+   in (`world/dispatcher/`), and the search that derives a want from two plans' conflict is what is
+   left; then #568, right-of-way as a lot the market allocates.
 5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring.
 6. **The edge** — #865, #868, #322, #323, #461, #328 and #25, the boards and their firmware.
