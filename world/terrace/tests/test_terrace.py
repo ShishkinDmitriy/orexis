@@ -117,7 +117,7 @@ def test_each_reading_reaches_the_series_under_its_own_property(monkeypatch, his
         ("AirHumidity", "air_humidity_terrace", 0.8), ("AirPressure", "air_pressure_terrace", 1012.0),
         ("AirTemperature", "air_temp_terrace", 14.5), ("BatteryVoltage", "battery_sensor_terrace", 3.91),
         ("SoilMoisture", "moisture_sensor_terrace", 0.2)]
-    assert {p["tags"].get("plant") for p in history} == {"terrace_bed", "terrace_battery"}
+    assert {p["tags"].get("feature") for p in history} == {"terrace_bed", "terrace_battery"}
     assert {p["time"] for p in history} == {NOW}, "at the reading's own instant"
 
 

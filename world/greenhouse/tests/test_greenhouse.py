@@ -171,7 +171,8 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
                         ("SoilMoisture", 0.45, NOW + timedelta(minutes=11))]
     #  TAGGED BY THE LOCAL NAME OF THE IRI, since this world states no `orexis:localId` of a sensor or
     #  of the bed; tagged by a stated id, these points carried none and no panel could filter for them (#885).
-    assert [(p["tags"]["sensor"], p["tags"]["plant"]) for p in history if p["measurement"] != "Step"] == \
+    #  The bed is tagged `feature`, for its SOSA role, and no longer `plant` (#834).
+    assert [(p["tags"]["sensor"], p["tags"]["feature"]) for p in history if p["measurement"] != "Step"] == \
         [("thermometer", "bed"), ("moisture_probe", "bed"), ("moisture_probe", "bed")]
     steps = [p for p in history if p["measurement"] == "Step"]
     assert [p["fields"] for p in steps] == [{"taken": True}, {"landed": True}]

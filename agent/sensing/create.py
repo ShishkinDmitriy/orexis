@@ -68,7 +68,7 @@ class _Sensing:
         cadence = cadence_of(beliefs, o["sensor"])
         return self.observed.emit(Observed(
             observed_property=o["property"], value=round(float(o["value"]), 6), at=at,
-            sensor=tag_of(o["sensor"]), sensor_id=tag_of(o["sensor"]), subject_id=tag_of(o["feature"]),
+            sensor=tag_of(o["sensor"]), sensor_id=tag_of(o["sensor"]), feature_id=tag_of(o["feature"]),
             interval_s=round((at - before).total_seconds(), 3) if before is not None else None,
             cadence_s=float(cadence) if cadence is not None else None))
 

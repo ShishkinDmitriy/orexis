@@ -3,16 +3,18 @@ which is history.
 
 AN OBSERVATION IS HISTORY: one point per observation written, measured under the observed property's
 own name — its local name, so a temperature is `AirTemperature` and this module names no property —
-with field `value`, tagged `plant` (the subject) and `sensor` (the sensor), each the local name of its
-IRI (`tag_of`), and stamped with the reading's own `sosa:resultTime`, so the series and the belief
-agree on when. THE TAG IS THE IRI'S LOCAL NAME AND NEVER A STATED `orexis:localId`: tagged by the
-stated id, a sensor stating none was not tagged at all, and the one world whose sensors state none —
-the greenhouse, which names its devices by the topics its society wires — wrote points no panel could
-filter for and got no readings dashboard (#885); in every world that did state one it equalled the
-local name, and the id is the agent's, the one short string a process is handed. The `plant` tag is a
-domain word in sensing's code, carried over as it stood, and #834 renames it for its SOSA role; the
-dashboards filter on `sensor` alone. `orexis-dashboards` asks `measurement_of`, `tag_of` and `FIELD`
-here, so a panel cannot query a name or a tag sensing does not write.
+with field `value`, tagged `feature` (what the observation is of, `sosa:hasFeatureOfInterest`) and
+`sensor` (what made it, `sosa:madeBySensor`), each the local name of its IRI (`tag_of`), and stamped
+with the reading's own `sosa:resultTime`, so the series and the belief agree on when. THE TAGS ARE
+NAMED FOR THE SOSA ROLES AND SPELL NO DOMAIN WORD: the subject's tag was `plant` once, the same
+defect #822 took out of the measurement, and #834 renamed it. THE TAG IS THE IRI'S LOCAL NAME AND
+NEVER A STATED `orexis:localId`: tagged by the stated id, a sensor stating none was not tagged at
+all, and the one world whose sensors state none — the greenhouse, which names its devices by the
+topics its society wires — wrote points no panel could filter for and got no readings dashboard
+(#885); in every world that did state one it equalled the local name, and the id is the agent's, the
+one short string a process is handed. The dashboards filter on `sensor` alone. `orexis-dashboards`
+asks `measurement_of`, `tag_of` and `FIELD` here, so a panel cannot query a name or a tag sensing
+does not write.
 
 AND IT IS A METRIC: how long after the reading it replaced it came, in the agent's seconds, beside
 the cadence the world states, tagged by the sensor. So is how many sensors are said silent now, which
@@ -44,22 +46,22 @@ def tag_of(iri: str) -> str:
 @dataclass(frozen=True)
 class Observed:
     """An observation of `observed_property` by the sensor, reading `value` at `at`: the sensor's and
-    its subject's tags, the local names of their IRIs, and how long after the reading it replaced it
-    came beside the cadence the world states, where either is known."""
+    its feature of interest's tags, the local names of their IRIs, and how long after the reading it
+    replaced it came beside the cadence the world states, where either is known."""
     metric = "received"
     observed_property: str
     value: float
     at: datetime
     sensor: Tag = None
     sensor_id: str | None = None
-    subject_id: str | None = None
+    feature_id: str | None = None
     interval_s: Value = None
     cadence_s: Value = None
 
     def point(self) -> dict:
         tags = {}
-        if self.subject_id:
-            tags["plant"] = self.subject_id
+        if self.feature_id:
+            tags["feature"] = self.feature_id
         if self.sensor_id:
             tags["sensor"] = self.sensor_id
         return {"measurement": measurement_of(self.observed_property), "tags": tags,
