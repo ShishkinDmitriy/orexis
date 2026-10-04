@@ -259,6 +259,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   a measured cost per fork; a search the budget cuts short is finished by the passes after.
 - **A prune is only as good as when its bound arrives** — an admissible estimate refused nothing
   under breadth-first and sixty percent of the courier's forks under best-first.
+- **An estimate counts every step the want is certainly owed, not only the ones that move** — the
+  courier's counted drives and not the pick or the drop, admissible and loose by two at the root,
+  where fourteen of the twenty-four weighings laid at the one scope's door were its slack (#898).
 - **The estimate rides on the weighing, and the frontier is A\* by reading it** — `planning:remaining`
   is written where the world is weighed; a want with no estimate is uniform-cost.
 - **An action that touches nothing the want reads is never simulated, and the closure is what makes

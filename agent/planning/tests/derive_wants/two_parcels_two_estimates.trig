@@ -1,12 +1,14 @@
 # two_parcels_two_estimates
 #
 # A DESIRE OVER INSTANCES WITH AN ESTIMATE: two parcels astray under one desire that every parcel
-# stand where it is owed, the domain's select summing the drives owed over every parcel. Two
-# wants, one per parcel (a-parcel-astray-is-a-want-of-its-own), and each carries the estimate as
-# ITS OWN — the desire's select with `$this` bound to its parcel, under the want's name — so the
-# two wants read two figures where the desire reads their sum: parcel A's van is a drive away and
-# its door two more, three; parcel B's van stands on it, two. Carrying the desire's select, each
-# want read five and forked the other van (#893). `test_derive_wants.py` holds the figures.
+# stand where it is owed, a select summing the drives owed over every parcel — the courier's as it
+# stood before #898 counted the pick and the drop beside them, kept here as its own text since the
+# case is about the BINDING and not the figure. Two wants, one per parcel
+# (a-parcel-astray-is-a-want-of-its-own), and each carries the estimate as ITS OWN — the desire's
+# select with `$this` bound to its parcel, under the want's name — so the two wants read two
+# figures where the desire reads their sum: parcel A's van is a drive away and its door two more,
+# three; parcel B's van stands on it, two. Carrying the desire's select, each want read five and
+# forked the other van (#893). `test_derive_wants.py` holds the figures.
 #
 # The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 

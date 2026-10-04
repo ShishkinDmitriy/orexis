@@ -142,8 +142,10 @@ GRAPH :actions {
 }
 
 # THE DESIRE, AND THE PACKAGE'S MEASURE OF IT: every parcel where it is owed, and how far
-# that still is in drives — the van to the parcel and the parcel to its door, which never
-# overstates since every drive moves one cell.
+# that still is — the van to the parcel and the parcel to its door, which never overstates
+# since every drive moves one cell, and the pick and the drop the parcel is certainly owed
+# (#898). The select is the domain's, `domains/courier/shapes.ttl`, copied as it stands there,
+# so the bench's courier figure is the shipped estimate's.
 GRAPH :desires {
   :keeper planning:holds :keeper.every_parcel_delivered .
   :keeper.every_parcel_delivered a planning:Desire .
@@ -153,26 +155,28 @@ GRAPH :desires {
   courier:delivered a sh:NodeShape .
   courier:delivered sh:targetClass courier:Parcel .
   courier:delivered sh:property [ sh:path courier:at ; sh:equals courier:destination ] .
-  courier:drivesOwed rdfs:label "drives still owed" .
+  courier:drivesOwed rdfs:label "drives still owed, and each parcel's pick and drop" .
   courier:drivesOwed sh:select """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT (SUM(?d) AS ?estimate) WHERE {
           SELECT ?p (MIN(?dist) AS ?d) WHERE {
               {
-                  ?p a courier:Parcel ; courier:destination ?owed .
+                  $this a courier:Parcel ; courier:destination ?owed .
                   ?owed courier:x ?ox ; courier:y ?oy .
-                  ?p courier:carriedBy ?van . ?van courier:at ?vc .
+                  $this courier:carriedBy ?van . ?van courier:at ?vc .
                   ?vc courier:x ?vx ; courier:y ?vy .
-                  BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
+                  BIND($this AS ?p)
+                  BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) + 1 AS ?dist)
               } UNION {
-                  ?p a courier:Parcel ; courier:destination ?owed .
+                  $this a courier:Parcel ; courier:destination ?owed .
                   ?owed courier:x ?ox ; courier:y ?oy .
-                  ?p courier:at ?pc . ?v courier:at ?vc .
+                  $this courier:at ?pc . ?v courier:at ?vc .
                   ?v a courier:Van .
                   ?pc courier:x ?px ; courier:y ?py .
                   ?vc courier:x ?vx ; courier:y ?vy .
                   FILTER(?px != ?ox || ?py != ?oy)
+                  BIND($this AS ?p)
                   BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
-                       + ABS(?px - ?ox) + ABS(?py - ?oy) AS ?dist)
+                       + ABS(?px - ?ox) + ABS(?py - ?oy) + 2 AS ?dist)
               }
           } GROUP BY ?p
       }""" .
