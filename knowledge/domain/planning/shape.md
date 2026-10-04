@@ -31,5 +31,14 @@ world and writes the rows as `planning:violation`s on the weighing. No row is me
 carries its own select and its own prefixes; one a [refinement](/domain/planning/refinement.md)
 mints is exactly that, the bridge's WHERE bound and negated.
 
+An aversion is the other polarity and no shape: what a desire points at with `planning:unmetWhen`
+is one select, and [desire](/domain/planning/desire.md) says what it is; `violation.entered_select`
+puts its rows in this same report, unnegated.
+
 A met-test is a boolean by nature. How far a world still is belongs to `planning:estimates`, a
 separate select the domain promises never overstates, which orders the frontier and judges nothing.
+In that select `$this` is the instance, as in a `sh:sparql` constraint: left unbound by a desire it is
+a variable and the figure covers every instance; written where a name and a variable are both legal
+— a pattern's subject, a `BIND`'s argument, never a projection or a `GROUP BY` — it can be bound to
+the one instance a derived want is about, and is, so the promise holds per want and not only per
+desire (`domains/courier/shapes.ttl`, #893).

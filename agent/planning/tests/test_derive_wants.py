@@ -67,3 +67,33 @@ def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):
     """A glob that stopped matching would pass every case by running none."""
     assert len(CASES) >= 14, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)
+
+
+#  WHAT EACH WANT'S ESTIMATE READS IN THE PRESENT GROUND — written by `weigh` on the want's
+#  weighing there, off the select the want's `planning:estimates` points at.
+_REMAINING_Q = """
+SELECT ?for ?left WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+               ?x a planning:Weighing ; planning:for ?for ; planning:weighs ?g ; planning:remaining ?left .
+               ?g a planning:GroundGraph } }"""
+
+
+def test_two_wants_under_one_desire_read_two_estimates(monkeypatch, snapshots):
+    """The estimate is the desire's instantiated at the want's instance, as the met-test is: the
+    `two_parcels_two_estimates` case derived and each want weighed in the present ground, parcel
+    A's want reads three drives and parcel B's two, where the desire's select — `$this` unbound,
+    every parcel — reads their sum. Before #893 each want pointed at the desire's select and both
+    read five, so a want per parcel paid for the other van's forks."""
+    from agent.store import rows
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(CASES_DIR / "two_parcels_two_estimates.trig")
+    lay_ground(store, snapshots.NOW)
+    for pair in unweighed(store):
+        weigh(store, pair["for"], pair["about"])
+    wants = derive_wants(store, snapshots.NOW)
+    assert len(wants) == 2, wants
+    for want in sorted(wants):
+        for pair in unweighed(store, for_=want):
+            weigh(store, want, pair["about"])
+    left = {r["for"].rsplit(".", 1)[-1]: float(r["left"]) for r in rows(store, _REMAINING_Q, ())}
+    assert left == {"parcel_a": 3.0, "parcel_b": 2.0}, left

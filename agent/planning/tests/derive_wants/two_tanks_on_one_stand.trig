@@ -1,0 +1,73 @@
+# two_tanks_on_one_stand
+#
+# An AVERSION: the keeper's desire points at the avoided state through planning:unmetWhen — one
+# select whose rows are the tanks sharing a stand — and both tanks stand on stand A. Judged as a
+# met-test is (#892): the desire reads unmet in the present with one witness per row, the stand
+# as the offending value, and ONE want is minted under it, about both tanks and named for neither,
+# since the select says nothing of what it is about and a witness about nothing joins every
+# cluster. The want carries the avoided state as its own, whole, under planning:unmetWhen.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+
+GRAPH :ontology {
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :stand_a a :Stand .
+  :stand_b a :Stand .
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+}
+
+GRAPH :desires {
+  :keeper planning:holds :keeper.apart .
+  :keeper.apart a planning:Desire .
+  :keeper.apart planning:unmetWhen :sharing_a_stand .
+  :keeper.apart rdfs:label "no stand holds two tanks" .
+  :sharing_a_stand sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :on ?value . ?other a :Tank ; :on ?value . FILTER(?other != $this) }" .
+}
+
+GRAPH :sensed {
+  :tank1 :on :stand_a .
+  :tank2 :on :stand_a .
+}
+
+GRAPH :scopes {
+  :keeper.scope.1 a planning:Scope .
+  :move planning:inScope :keeper.scope.1 .
+  :on planning:inScope :keeper.scope.1 .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

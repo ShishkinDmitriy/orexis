@@ -183,6 +183,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   want universal, so one compiler turns the shape inside out, held to the judge by parity.
 - **The desire owns the term and the package owns the COST** — what the pattern means and that the
   estimate never overstates are promises about the package's own actions.
+- **A want's estimate is the desire's with `$this` bound to its instance, and `$this` stands where a
+  name and a variable are both legal** — a pattern's subject or a `BIND`'s argument, never a projection
+  or a `GROUP BY`; the desire's sum over every parcel read six for a want about one, and the other
+  van's drive tied the frontier (#893).
 - **Nothing ranks a want before the search that could rank it** — `Planner.plan` searches every
   want it is handed, and what compares a thirsty fern to an overdue debt is what their plans cost.
 - **A want states no time semantics of its own** — the KIND is its type, the INTERVAL its graph's
@@ -208,6 +212,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   *no unanswered calls* over its venues, and the call is the row that desire is about.
 - **A capability that asks for a derivation is not minting** — the ledger writes a debt and its
   prediction and calls `derive_wants`, so a claim arriving is a want arriving.
+- **A desire is met when a shape holds or unmet when a select binds, one of the two, and `weigh`
+  judges either** — `planning:unmetWhen` was declared, carried onto wants and compiled since #468
+  and weighed by nothing, so the dispatcher's aversion shipped as a shape named for the good state
+  wrapping the select of the bad one (#892).
 - **A shape over instances says each block is about `sh:this`, or two instances are one want** — a
   witness about nothing joins every cluster, and the dispatcher's two parcels were one want searched
   over both vans' every move, 674 candidates where a want per parcel costs 90

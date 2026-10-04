@@ -1,0 +1,39 @@
+--- case
++++ expected
+@@ -59,4 +59,36 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:75beff4b3e6086898a01001eb697652e11114290129ba919a4ad3343aae879be" .
++  ground:2026-01-01T120000p0000.for.keeper.apart a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:for :keeper.apart .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:violation [ planning:constraint 0 ; planning:instance :tank1 ; planning:offending :stand_a ] .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:violation [ planning:constraint 0 ; planning:instance :tank2 ; planning:offending :stand_a ] .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:weighs ground:2026-01-01T120000p0000 .
++  pursued:2026-01-01T120000p0000--open a orexis:Graph .
++  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :tank1 :on :stand_a .
++  :tank2 :on :stand_a .
++}
++
++GRAPH pursued:2026-01-01T120000p0000--open {
++  :keeper planning:holds :keeper.apart.pursued .
++  :keeper.apart.pursued a planning:Want .
++  :keeper.apart.pursued planning:state planning:Recognized .
++  :keeper.apart.pursued planning:unmetWhen :keeper.apart.pursued.avoided .
++  :keeper.apart.pursued prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.apart.pursued prov:wasDerivedFrom :keeper.apart .
++  :keeper.apart.pursued rdfs:label "pursued: no stand holds two tanks" .
++  :keeper.apart.pursued.avoided sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :on ?value . ?other a :Tank ; :on ?value . FILTER(?other != $this) }" .
++}

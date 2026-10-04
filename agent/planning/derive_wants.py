@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from datetime import datetime
 
 import pyoxigraph as ox
@@ -44,12 +45,18 @@ RECOGNIZED = PLANNING + "Recognized"
 log = logging.getLogger("derive_wants")
 
 MET_WHEN = PLANNING + "metWhen"
+#  THE MET-TEST'S NEGATIVE TWIN: the avoided state, one select, unmet where it yields a row. A
+#  desire carries one of the two, and the want minted under it carries the same one, narrowed
+#  (#892); `weigh` judges either and the witnesses read the same, so nothing below this line
+#  but `_mint` and `_targets_one_node` knows which a desire spoke.
+UNMET_WHEN = PLANNING + "unmetWhen"
 #  THE TWO OF A DESIRE'S OWN WORDS THIS FILE SORTS BY. They were matched as string SUFFIXES —
 #  `p.endswith("#about")` at three sites — which is safe only because `_SAID_Q` four hundred
 #  lines away filters to five named predicates, so nothing else can end in those letters. That
 #  coupling was invisible at every site, and a sixth predicate whose local name ended in
 #  `about` or `label` would have been read as one of these, silently.
 ABOUT = PLANNING + "about"
+ESTIMATES = PLANNING + "estimates"
 KEYED_BY = PLANNING + "keyedBy"
 RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
 
@@ -323,7 +330,7 @@ def _targets_one_node(shapes: rdflib.Graph, said) -> bool:
     from rdflib import URIRef
     from rdflib.namespace import SH
     return any((URIRef(str(o.value)), SH.targetNode, None) in shapes
-               for p, o in said if p == MET_WHEN)
+               for p, o in said if p in (MET_WHEN, UNMET_WHEN))
 
 
 # --- what a want IS on disk, and how one goes -------------------------------------------
@@ -484,31 +491,50 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
     #  where its scope's imaginarium is.
     child = _name_of(shapes, desire, said, about, instance, keys)
     points = [(KEYED_BY, k) for k in keys]
-    met_test = None
+    met_test = estimate = None
     for p, o in said:
         if isinstance(o, ox.BlankNode):
             log.warning("%s states its %s inline; it is pursued itself", desire.rsplit("#", 1)[-1],
                         p.rsplit("#", 1)[-1])
             return None
         #  WHAT IT IS ABOUT is the witnesses' where the shape named them per block, and the
-        #  desire's whole where it did not; the avoided state and the estimate are pointed at
-        #  as ever, and the met-test is carried, instantiated, below. The label is read here
+        #  desire's whole where it did not; the avoided state is pointed at as ever, and the
+        #  met-test and the estimate are carried, instantiated, below. The label is read here
         #  too and is not a point: a want's is made from it.
         if p in (ABOUT, RDFS_LABEL):
             continue
-        if p == MET_WHEN:
-            met_test = str(o.value)
+        if p in (MET_WHEN, UNMET_WHEN):
+            met_test = (p, str(o.value))
+            continue
+        if p == ESTIMATES:
+            estimate = str(o.value)
             continue
         points.append((p, str(o.value)))
     #  THE MET-TEST IS THE DESIRE'S INSTANTIATED AT THE WITNESS: carved from where the desire's
     #  shape lives and _narrowed to this cluster — the instance as its target, the blocks about
     #  what the want is about — and written into the want's own graph under its own name, so
     #  the want is judged on its instance and a plan for one tank is not refused for another's.
+    #  UNDER THE DESIRE'S OWN POLARITY: a shape it is met when stays a shape, `.met`; an avoided
+    #  state it is unmet when stays a select, `.avoided`, its one `sh:select` carried whole and
+    #  the instance written as `sh:targetNode` beside it, which the compiler reads as it reads a
+    #  shape's (#892). The names are for eyes; a reader asks the want which it carries.
     shape_lines: tuple = ()
     if met_test is not None:
-        own = child + ".met"
-        shape_lines = _narrowed(shapes, met_test, own, instance, about)
-        points.append((MET_WHEN, own))
+        polarity, shape = met_test
+        own = child + (".met" if polarity == MET_WHEN else ".avoided")
+        shape_lines = _narrowed(shapes, shape, own, instance, about)
+        points.append((polarity, own))
+    #  AND SO IS THE ESTIMATE, where it speaks of the instance: the desire's select with `$this`
+    #  bound to the one instance this want is about, written beside the met-test under the
+    #  want's own name (`_instantiated`). The desire's select sums over every instance, which
+    #  is right for the desire and overstated the want's — a want per parcel read the other
+    #  parcel's drives in its `planning:remaining` and forked the other van (#893). A select
+    #  that names no `$this`, or a want about several instances, points at the desire's as ever.
+    if estimate is not None:
+        own = child + ".estimate"
+        lines = _instantiated(shapes, estimate, own, instance)
+        shape_lines += lines
+        points.append((ESTIMATES, own if lines else estimate))
 
     labels = [str(o.value) for p, o in said if p == RDFS_LABEL]
     label = "pursued: " + (labels[0] if labels else desire.rsplit("#", 1)[-1])
@@ -589,6 +615,38 @@ def _narrowed(shapes: rdflib.Graph, shape: str, own: str, instance: str | None, 
         if s != URIRef(shape) and (s, p, o) not in dropped:
             out.add((s, p, o))
     return tuple(line for line in out.serialize(format="nt").splitlines() if line.strip())
+
+
+def _instantiated(shapes: rdflib.Graph, node: str, own: str, instance: str | None) -> tuple[str, ...]:
+    """The desire's estimate as THIS want's: the node its `planning:estimates` points at, under
+    the want's own name, its `sh:select` with `$this` bound to the one instance the want is
+    about — the universal's measure instantiated at its witness, as `_narrowed` instantiates
+    the shape. Nothing, where the want is about no one instance or the select never speaks of
+    `$this`: the desire's select is then the want's, and the want points at it as before.
+
+    `$this` is SHACL's word for the instance and `store.bind`'s one token that may go unbound —
+    unbound it parses as a variable, so a select written to stand it in subject position and
+    bind it onto the variable it groups by runs over every instance for a desire and over one
+    for a want, the one text both ways (`domains/courier/shapes.ttl`). The triples, as
+    N-Triples lines the write puts into the want's graph.
+    """
+    from rdflib import Graph, Literal, URIRef
+    from rdflib.namespace import SH
+
+    text = shapes.value(URIRef(node), SH.select)
+    if instance is None or text is None or not _speaks_of_this(str(text)):
+        return ()
+    out = Graph()
+    for p, o in shapes.predicate_objects(URIRef(node)):
+        if p == SH.select:
+            o = Literal(bind(str(o), this=ox.NamedNode(instance)))
+        out.add((URIRef(own), p, o))
+    return tuple(line for line in out.serialize(format="nt").splitlines() if line.strip())
+
+
+def _speaks_of_this(text: str) -> bool:
+    """Does a select carry the `$this` token — whole-token, as the binder matches it?"""
+    return re.search(r"\$this\b", text) is not None
 
 # --- WHAT THE WEIGHINGS SAY --------------------------------------------------------------
 #

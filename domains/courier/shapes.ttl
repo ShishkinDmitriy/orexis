@@ -27,24 +27,34 @@ courier:delivered a sh:NodeShape ;
 #  and then its road home. It counts drives and not the pick or the drop, so it never overstates
 #  what is left. EACH BRANCH REPEATS THE PREAMBLE, since a BIND inside a UNION branch cannot see
 #  a variable bound outside it — written the tidy way it answered 0 for every world.
+#
+#  THE PARCEL IS `$this`, SHACL's word for the instance, and it stands where a variable and a
+#  name are both legal — the subject of a pattern, the argument of a BIND — never in a projection
+#  or a GROUP BY. Unbound, as the desire's and the courier's own want's, it is a variable and the
+#  sum runs over every parcel astray; bound by the derivation to the one parcel a want is about,
+#  the sum is that parcel's drives alone. Counting every parcel, a want per parcel read the other
+#  van's drives in its `planning:remaining` too, and the other van's drive toward its own parcel
+#  cost one, saved one and tied the frontier: 61 and 64 weighings against 13 for a van alone (#893).
 courier:drivesOwed rdfs:label "drives still owed" ;
     sh:select """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT (SUM(?d) AS ?estimate) WHERE {
             SELECT ?p (MIN(?dist) AS ?d) WHERE {
                 {
-                    ?p a courier:Parcel ; courier:destination ?owed .
+                    $this a courier:Parcel ; courier:destination ?owed .
                     ?owed courier:x ?ox ; courier:y ?oy .
-                    ?p courier:carriedBy ?van . ?van courier:at ?vc .
+                    $this courier:carriedBy ?van . ?van courier:at ?vc .
                     ?vc courier:x ?vx ; courier:y ?vy .
+                    BIND($this AS ?p)
                     BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
                 } UNION {
-                    ?p a courier:Parcel ; courier:destination ?owed .
+                    $this a courier:Parcel ; courier:destination ?owed .
                     ?owed courier:x ?ox ; courier:y ?oy .
-                    ?p courier:at ?pc . ?v courier:at ?vc .
+                    $this courier:at ?pc . ?v courier:at ?vc .
                     ?v a courier:Van .
                     ?pc courier:x ?px ; courier:y ?py .
                     ?vc courier:x ?vx ; courier:y ?vy .
                     FILTER(?px != ?ox || ?py != ?oy)
+                    BIND($this AS ?p)
                     BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
                          + ABS(?px - ?ox) + ABS(?py - ?oy) AS ?dist)
                 }

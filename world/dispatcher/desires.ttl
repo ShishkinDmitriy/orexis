@@ -14,13 +14,15 @@
 #  does. The shape targets every parcel, so the derivation mints one want PER PARCEL — two
 #  instances in trouble are two wants, as two debts are — and each is searched on its own.
 #
-#  THE AVERSION is the world's own shape, since no domain says that two vans may not share a
-#  cell: a van conforms while no other van stands where it stands. Authored as a met-test over a
-#  `sh:sparql` constraint and NOT as `planning:unmetWhen`, which #567 asked for: measured on this
-#  tree, a desire carrying `unmetWhen` alone is weighed in no ground — `weigh` reads a met-test
-#  through `planning:metWhen` and nothing else — so it would mint no want and refuse nothing
-#  (a-scope-is-a-predicate-on-a-key, the two-vans seam). The constraint offends with no value, so
-#  a want minted from it is named for the van it targets and keyed by nothing.
+#  THE AVERSION is the world's own, since no domain says that two vans may not share a cell, and
+#  it is authored as `planning:unmetWhen`, as #567 asks: the AVOIDED STATE itself, one select
+#  whose rows are the vans sharing a cell, unmet where it yields a row (#892). It was a met-test
+#  over a `sh:sparql` constraint — a shape named `apart` wrapping this same select — because on
+#  the tree that shipped it `weigh` read `planning:metWhen` alone and an aversion so authored was
+#  weighed in no ground. The select projects the cell as `?value`, the offending value, so each
+#  witness says where the two stand; it says nothing of what it is about, so the want minted from
+#  it is about both vans and named for neither, and a one-step plan — either van's drive — parts
+#  them (`tests/test_dispatcher.py`).
 
 :dispatcher planning:holds :every_parcel_delivered , :no_cell_holds_two_vans .
 
@@ -31,16 +33,15 @@
 
 :no_cell_holds_two_vans a planning:Desire ;
     rdfs:label "no cell holds two vans" ;
-    planning:metWhen :apart .
+    planning:unmetWhen :two_vans_on_one_cell .
 
-:apart a sh:NodeShape ;
-    sh:targetClass courier:Van ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "two vans stand on one cell" ;
-        sh:select """PREFIX courier: <http://example.org/orexis/courier#>
-            SELECT $this WHERE {
-                $this courier:at ?cell .
-                ?other courier:at ?cell .
-                ?other a courier:Van .
-                FILTER(?other != $this)
-            }""" ] .
+:two_vans_on_one_cell
+    sh:message "two vans stand on one cell" ;
+    sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT $this ?value WHERE {
+            $this a courier:Van ;
+                courier:at ?value .
+            ?other a courier:Van ;
+                courier:at ?value .
+            FILTER(?other != $this)
+        }""" .

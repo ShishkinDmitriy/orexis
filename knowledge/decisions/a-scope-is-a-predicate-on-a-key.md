@@ -207,15 +207,21 @@ nothing blocked in the next.
   seam first gave: before any witness is placed, the PARTITION joins the vans, since a Pick's
   filling binds a van and a parcel, either with either, so `(at, van_a)` and `(at, van_b)` meet at
   `(at, parcel_a)`; the key is what the world binds a subject by, and the world binds no parcel to
-  a van. Each parcel's want is then searched over both vans' moves — 61 and 64 weighings against 13
-  for a van alone — and on a corridor where the two shortest chains cross one cell, each plan
-  drives its van through it at the third step, the two walk in lockstep within one pass, and the
-  present holds two vans on that cell for one act with nothing to see it: a desire is weighed in
-  grounds alone, in the planner's pass, and the walk comes after. Of 118 worlds the searches
-  visited, four held two vans on one cell, judged by nobody. What would separate the vans is not a
-  key but the mechanism #567 names — a search that derives a want from a conflict between two
-  plans — and the aversion authored as `planning:unmetWhen`, as the issue asks, is weighed in no
-  ground on this tree; `weigh` reads `planning:metWhen` alone
+  a van. Each parcel's want is then searched over both vans' moves — 37 weighings against 13 for a
+  van alone, the other van's drives admitted into every world the search opens and weighed there,
+  which an estimate bound to the parcel refuses to open and cannot refuse to weigh (#893; 61 and
+  64 while the estimate was the desire's) — and on a corridor where the two shortest chains cross
+  one cell, each plan drives its van through it at the third step, the two walk in lockstep
+  within one pass, and the present holds two vans on that cell for one act with nothing to see
+  it: a desire is weighed in grounds alone, in the planner's pass, and the walk comes after. With
+  the desire's estimate four of the 118 worlds the searches visited held two vans on one cell,
+  judged by nobody; with each want's own none of 140 does, and the vans still meet when walked.
+  What would separate the vans is not a key but the mechanism #567 names — a search that derives
+  a want from a conflict between two plans. The aversion is authored as `planning:unmetWhen`, as
+  the issue asks, and judged as a met-test is since #892 — on the tree this was measured on it was
+  weighed in no ground, since `weigh` then read `planning:metWhen` alone — but a desire is weighed
+  in grounds and not in the worlds a search visits, so the judging reaches the present and never
+  the two plans
   ([measure-the-search](/runbooks/measure-the-search.md),
   [a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astray-is-a-want-of-its-own.md)).
 - **A disjunctive want.** A want whose met-test says `sh:or` of two scopes' halves is a CHOICE, and

@@ -753,10 +753,12 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
     for instant in instants:
         found += [w for w in find_wants(store, instant, holder=holder) if w not in found]
     for want in found:
-        #  WHAT ITS MET-TEST READS, off the shape it is met when — the want node itself is no
-        #  shape and reads nothing, which placed every want in the first scope and went unseen
-        #  while every world was one scope.
+        #  WHAT ITS MET-TEST READS, off the shape it is met when or the avoided state it is
+        #  unmet when (#892) — the want node itself is no shape and reads nothing, which placed
+        #  every want in the first scope and went unseen while every world was one scope.
         met = shapes.value(rdflib.URIRef(want), rdflib.URIRef(PLANNING + "metWhen"))
+        if met is None:
+            met = shapes.value(rdflib.URIRef(want), rdflib.URIRef(PLANNING + "unmetWhen"))
         reads = footprint.reads_of_shape(shapes, met) if met is not None else footprint.ANYTHING
         if reads is footprint.ANYTHING:
             #  A WANT WHOSE SHAPE THE WALKER CANNOT READ joins everything, which is the

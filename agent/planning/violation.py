@@ -8,7 +8,11 @@ their goals as `planning:unmetWhen` patterns by hand, and why those patterns rea
 negative: rows are existential, the want is universal, so "every parcel delivered" had to be
 said as "some parcel astray".
 
-This module says it for them. A shape's Core constraints are each defined by the SHACL
+This module says it for them — and keeps the other polarity for the aversion whose content IS the
+avoided state: a `planning:unmetWhen` node carries the pattern of the trouble as one select, and
+`entered_select` puts it in the report's shape unnegated, unmet where it yields a row (#892).
+
+A shape's Core constraints are each defined by the SHACL
 specification as a violation condition, and a violation condition is a pattern: the compiled
 select is the union of them, one branch per constraint, each branch carrying the target so
 that a `FILTER` inside it can see `?this` (a BIND or a FILTER inside a UNION branch cannot see
@@ -77,6 +81,9 @@ _NODE_KIND_VIOLATED = {
     SH.IRI: "isLiteral({v})", SH.BlankNodeOrIRI: "isLiteral({v})",
     SH.Literal: "!isLiteral({v})", SH.BlankNodeOrLiteral: "isIRI({v}) || isBlank({v})",
 }
+#  What an AVOIDED STATE — the node a `planning:unmetWhen` points at — may say in SHACL's
+#  namespace: its one select, the instance a narrowed want holds it to, and a message for eyes.
+_AVOIDED_STATE_WORDS = {SH.select, SH.targetNode, SH.message}
 #  Value constraints a NODE shape may carry about its focus itself, beside its properties.
 _NODE_VALUE_CONSTRAINTS = {SH["class"], SH.datatype, SH.nodeKind, SH["in"], SH.hasValue,
                            SH.minExclusive, SH.maxExclusive, SH.minInclusive, SH.maxInclusive}
@@ -141,12 +148,28 @@ def report_selects(shapes: rdflib.Graph, focus_node=None) -> dict:
     return out
 
 
-def entered_select(shapes: rdflib.Graph, shape) -> str:
-    """The select whose rows are the focus nodes that CONFORM to `shape` — the negative twin
-    (#499). An aversion under `planning:unmetWhen` is authored as the avoided state itself, so
-    its want is unmet exactly where a focus node conforms; the two terms keep their polarity
-    and the compiler reads either. Same fragment, same refusals, same parity."""
-    return _Compiler(shapes).select(shape, entered=True)
+def entered_select(shapes: rdflib.Graph, node) -> str:
+    """The select whose rows are the instances that have ENTERED the avoided state `node` names —
+    what a desire's `planning:unmetWhen` points at — in the report's shape, so `weigh` writes one
+    witness per row exactly as it writes a met-test's violations (#892).
+
+    THE NODE CARRIES ONE `sh:select`, SHACL-SPARQL's own form for a select whose rows are nodes —
+    a `sh:SPARQLConstraint`'s, a `sh:SPARQLTarget`'s: `SELECT $this ?value WHERE { … }`, `$this`
+    the instance in trouble and `?value`, where the head projects it, the offending value — the
+    cell two vans stand on — which the derivation keys a want by. An aversion is unmet where this
+    yields a row, which is the pattern of the trouble written once and read as it evaluates;
+    the met-test's negation is what `report_select` compiles FOR a positive shape, and nothing
+    here is negated. `planning:about` on the node says what the trouble is about, `sh:this` the
+    instance itself, as a `sh:sparql` constraint may say it; `sh:targetNode` on the node, which
+    the derivation writes when it narrows a want to its instance, holds the rows to that instance
+    as a shape's target does. One select is one way of failing, so the constraint's index is
+    nought.
+
+    REFUSES a node carrying no select or two, or any other word of SHACL's — a shape where an
+    avoided state was expected is not compiled inside out, since an avoided state authored as a
+    shape with a `sh:sparql` constraint would have to list the instances NOT in it, the double
+    negative this term exists to spare the author."""
+    return _Compiler(shapes).entered(node)
 
 
 class _Compiler:
@@ -228,17 +251,48 @@ class _Compiler:
             branches.append(f"{{ {target} {text} BIND({k} AS ?_constraint){bound} }}")
         return branches
 
-    def select(self, shape, entered: bool = False) -> str:
+    def select(self, shape) -> str:
         target = self.target(shape)
         alternatives = self.violations(shape, "?this")
         if not alternatives:
             raise Unsupported(f"{shape} states no constraint this compiler knows — a want "
                               "with nothing to violate would read as met for ever")
-        if entered:
-            return (self.preamble()
-                    + f"SELECT DISTINCT ?this WHERE {{ {target} {self.conforms(shape, '?this')} }}")
         branches = " UNION ".join(f"{{ {target} {alt} }}" for alt in alternatives)
         return self.preamble() + f"SELECT DISTINCT ?this WHERE {{ {branches} }}"
+
+    def entered(self, node) -> str:
+        """The avoided state `node` names, as the report: its one select's body inlined with
+        `$this` bound, held to `sh:targetNode` where the node carries one, the index nought,
+        `?value` the offending value where the head projects it, and what the node says it is
+        about — see `entered_select`."""
+        for p in self.g.predicates(node):
+            if _is_shacl(p) and p not in _AVOIDED_STATE_WORDS:
+                raise Unsupported(f"{node}: {p.n3()} on an avoided state is not compiled — an "
+                                  "avoided state is the select whose rows are the instances in it, "
+                                  "not a shape")
+        texts = list(self.g.objects(node, SH.select))
+        if len(texts) != 1:
+            raise Unsupported(f"{node}: an avoided state carries one sh:select, and this carries "
+                              f"{len(texts)} — a node with none would read as met for ever")
+        text = str(texts[0])
+        body = self.body_of(text, node, "?this")
+        for projected in ("?_constraint", "?_offending", "?_about"):
+            if projected in body:
+                raise Unsupported(f"{node}: a select body binds {projected}, which the report projects")
+        parts = []
+        targets = list(self.g.objects(node, SH.targetNode))
+        if targets:
+            parts.append("VALUES ?this { " + " ".join(self.term(t) for t in targets) + " }")
+        parts += [body, "BIND(0 AS ?_constraint)"]
+        if re.search(r"[?$]value\b", text.partition("{")[0]):
+            parts.append("BIND(?value AS ?_offending)")
+        about = self.g.value(node, PLANNING.about)
+        if about == SH.this:
+            parts.append("BIND(?this AS ?_about)")
+        elif about is not None:
+            parts.append(f"BIND({self.term(about)} AS ?_about)")
+        return (self.preamble() + "SELECT DISTINCT ?this ?_constraint ?_offending ?_about WHERE { "
+                + " ".join(parts) + " }")
 
     def target(self, shape) -> str:
         nodes = list(self.g.objects(shape, SH.targetNode))

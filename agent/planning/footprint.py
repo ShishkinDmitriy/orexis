@@ -199,6 +199,13 @@ def reads_of_shape(shapes: rdflib.Graph, shape) -> frozenset | None:
         if inner is None:
             return ANYTHING
         out |= inner
+    #  AN AVOIDED STATE carries its one select itself (#892): the node a `planning:unmetWhen`
+    #  points at is no shape, and what its want reads is what that select reads.
+    for text in shapes.objects(shape, SH.select):
+        inner = reads_of_select(str(text))
+        if inner is None:
+            return ANYTHING
+        out |= inner
     for negated in shapes.objects(shape, SH["not"]):
         inner = reads_of_shape(shapes, negated)
         if inner is None:
@@ -225,6 +232,9 @@ def terms_of_shape(shapes: rdflib.Graph, shape) -> frozenset:
     for negated in shapes.objects(shape, SH["not"]):
         out |= terms_of_shape(shapes, negated)
     out |= {o for o in shapes.objects(shape, SH.targetClass) if isinstance(o, URIRef)}
+    #  An avoided state says what it is about on the node itself (#892); `sh:this` names the
+    #  instance and no term.
+    out |= {o for o in shapes.objects(shape, about) if isinstance(o, URIRef) and o != SH.this}
     return frozenset(out)
 
 
