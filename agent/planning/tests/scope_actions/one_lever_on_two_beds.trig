@@ -1,0 +1,64 @@
+# one_lever_on_two_beds
+#
+# AN ACTION IS IN EVERY SCOPE A FILLING OF IT FALLS IN. One pump action, two beds each with its own
+# valve: the filling for the first bed writes `(below, {bed1, Moisture})` and the second
+# `(below, {bed2, Moisture})`, nothing joins them, so the beds are two scopes — and the one action is
+# admitted in both, since each imaginarium needs it for its own bed. The property is a key of both
+# and so a member of neither; each bed is a member of its own.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix scopes: <http://example.org/orexis/graph/scopes/> .
+
+
+GRAPH :ontology {
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+  planning:ScopeGraph rdfs:subClassOf orexis:Graph .
+  planning:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+}
+
+# THE WORLD, public: one keeper with a pump and a heater on one bed, each moving one property.
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :bed1 .
+  :keeper orexis:actsFor :bed2 .
+  :keeper :hasActuator :pump1 .
+  :keeper :hasActuator :pump2 .
+  :pump1 :actuates :bed1 .
+  :pump1 :actuatesProperty :Moisture .
+  :pump2 :actuates :bed2 .
+  :pump2 :actuatesProperty :Moisture .
+}
+
+GRAPH :actions {
+  :dose a orexis:Action .
+  :dose planning:precondition """PREFIX : <http://example.org/test#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        SELECT DISTINCT ?valve ?reading WHERE {
+            $me :hasActuator ?valve ; orexis:actsFor ?subject .
+            ?valve :actuates ?subject ; :actuatesProperty ?property .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
+  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
+      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}
