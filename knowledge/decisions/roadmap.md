@@ -47,8 +47,11 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
 3. **The world answers otherwise** — #522, several outcomes with a likelihood, and #781, a plan that
    worked lifted into a method the executor proves or forgets.
 4. **Several agents contend** — #567, one dispatcher and two vans: the world and its measurement are
-   in (`world/dispatcher/`), and the search that derives a want from two plans' conflict is what is
-   left; then #568, right-of-way as a lot the market allocates.
+   in (`world/dispatcher/`), and the mechanism is decided and not built — a desire bounds the search
+   and a plan found is the ground of the next, the derived want refused
+   ([a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next](/decisions/a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next.md));
+   the courier's landing band, the bound, the plan laid as predictions and the fictive committed
+   step's prediction are its debts; then #568, right-of-way as a lot the market allocates.
 5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays
    it and the model that phrases a free question, then #862's recalibration walked with a person

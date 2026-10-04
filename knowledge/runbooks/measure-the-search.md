@@ -309,6 +309,27 @@ aversion IS the `unmetWhen` form, the avoided state as one select, and the figur
 a witness per van offending with the cell, the one want carrying the same select, the one-step
 plan, 4 weighings (measured 2026-10-04, pinned in `world/dispatcher/tests/test_dispatcher.py`).
 
+# The dispatcher: what a bound on worlds would cost, and a parked van (2026-10-04)
+
+The measurements [a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next](/decisions/a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next.md)
+stands on, taken on the development container with the tree at `1f98dc14`, one pass of the Planner
+at a budget of 128 over the booted world as the test builds it; not in the suite, since the
+mechanism they measure is decided and not built.
+
+| case | wants | weighings | worlds | holding two vans | the aversion weighed in every world | walked |
+|---|---|---|---|---|---|---|
+| the corridor | 2 | 33 and 33 | 68 | 0 | 38.4 ms (min 37.7 of five), 0.56 ms a world, unmet in 0 | both on `c2_1` for one act |
+| van B parked on `c2_1`, parcel A owed at `c3_1` from `c1_1` | 1 | 58 | 66 | 11 | unmet in 11 | both on `c2_1` for one act |
+
+**Every world and every step of the corridor stands at one instant** — the pass's, for both ends of
+each of the 68 worlds' periods and for the ten steps' `notBefore`, `landsAt` and `notAfter` alike —
+because the courier declares no `planning:landsAfter`; so the two plans have no instant to be
+composed at. **After the runtime's pass the beliefs hold two plan graphs and nothing else of the
+walk**: no committed step (every window closed and swept inside the pass), no prediction, no drift,
+no sensor. The parked van is the case a bound on worlds refuses and the corridor the case it
+cannot: the plan through the parked van visits eleven worlds that hold two vans, where the two
+corridor plans, each moving its own van, visit none.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

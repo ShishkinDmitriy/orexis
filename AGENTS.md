@@ -220,9 +220,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   witness about nothing joins every cluster, and the dispatcher's two parcels were one want searched
   over both vans' every move, 674 candidates where a want per parcel costs 90
   (a-parcel-astray-is-a-want-of-its-own).
-- **A desire is weighed in grounds alone, in the planner's pass, and the walk comes after it** — so
-  a state two intentions make between two acts is judged by nobody: the dispatcher's vans stood on
-  one cell for one act and no want was minted (#567, measure-the-search).
+- **A desire is weighed in grounds to mint and in possible worlds to bound, and a plan found is the
+  ground of the searches after it** — a world that newly enters an avoided state is refused and the
+  younger plan is found around the elder; weighed in grounds alone, the dispatcher's vans stood on
+  one cell for one act and no want was minted, and a derived want between two plans is refused
+  (#567, a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next).
 - **A desire weighed in a ground and a want weighed in a possible world are one judgment at two
   grains**, and `planning:Weighing` carries the `planning:violation` rows for either.
 - **A derivation asks nothing the met-tests do not answer** — how far ahead the agent sees is the
