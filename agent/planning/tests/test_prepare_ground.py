@@ -70,3 +70,26 @@ def test_a_second_filling_refreshes_the_copy_and_keeps_what_the_store_made(monke
     assert new in held and old not in held, "the row replaced, not laid beside the old one"
     assert swept not in graph_names(into), "the graph the beliefs swept is gone from the copy"
     assert set(graphs_of(into, GROUND_GRAPH)) == grounds, "what the store made stays"
+
+
+def test_a_reading_keyed_by_another_scopes_term_stays_behind_with_its_revisions_and_its_prediction(monkeypatch, snapshots):
+    """One imaginarium is one scope's, and its readings are the scope's: handed the terms that are
+    another scope's members, the filling leaves behind every reading and prediction naming one — with
+    its revisions, where the property is named — and brings across everything else as before. A
+    refresh with the terms changed takes back what crossed and brings what stayed, both ways."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    beliefs = snapshots.stand_in(CASES_DIR / "a_readings_revisions_cross_with_it.trig")
+    soils = {"http://example.org/test#sensed", "http://example.org/test#sensed_revisions",
+             "http://example.org/test#drying_stops", "http://example.org/test#drying_stops_revisions"}
+    whole = set(graph_names(prepare_ground(beliefs, ox.Store())))
+    assert soils <= whole, "with no other scope, every reading crosses"
+    into = prepare_ground(beliefs, ox.Store(), elsewhere=frozenset({"http://example.org/test#SoilMoisture"}))
+    assert set(graph_names(into)) == whole - soils, "the soil's reading, its side and its prediction are another scope's"
+    assert set(graph_names(prepare_ground(beliefs, into))) == whole, "a refresh for a store of one scope brings them"
+    assert set(graph_names(prepare_ground(beliefs, into, elsewhere=frozenset({"http://example.org/test#SoilMoisture"})))) \
+        == whole - soils, "and a refresh with the term elsewhere takes them back"
+    #  NAMING THIS SCOPE'S MEMBER TOO, the reading is both scopes' and crosses — the tower's state
+    #  stands in the courier's cells and its revisions say the puzzle's `on`, and it is both.
+    both = prepare_ground(beliefs, ox.Store(), own=frozenset({"http://example.org/test#bed"}),
+                          elsewhere=frozenset({"http://example.org/test#SoilMoisture"}))
+    assert set(graph_names(both)) == whole, "a reading naming a member of each scope is each scope's"

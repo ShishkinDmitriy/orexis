@@ -67,7 +67,9 @@ action and couples nothing here ([refinement](/domain/planning/refinement.md)). 
 type pattern was read as its CLASS: keyed by `rdf:type` alone, `?x a hanoi:Peg` and
 `?v a courier:Van` read one predicate, and every action of both domains was one scope.
 
-**One imaginarium per scope, and a scope's worlds admit the scope's actions alone.** A want is
+**One imaginarium per scope, holding the scope's readings, and a scope's worlds admit the scope's
+fillings alone.** A reading keyed by another scope's term crosses into no imaginarium but its own,
+so a world is the scope's readings and a sensor added elsewhere adds nothing to it. A want is
 searched in the scope its met-test reads, counting only what some action can change — a disk's
 size is read by a refined want and changed by nothing, and counted, it pulled a courier goal
 into the puzzle's scope. An action of another scope writes nothing that want reads, so its

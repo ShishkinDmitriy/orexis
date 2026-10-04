@@ -197,7 +197,9 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     assert one(dosed, "intentions") == {"standing": 1} and one(dosed, "silence") == {"silent": 0}
     assert one(dosed, "act")["count"] == one(dosed, "act")["taken"] == 1
     assert sum(p["fields"]["satisfied"] for p in of(dosed, "imaginarium")) == 1
-    assert sum(p["fields"]["met"] for p in of(dosed, "imaginarium")) == 1
+    #  TWO MET: the soil want in the world its dose made, and the desire in the air's ground, which
+    #  holds the air's reading alone — the soil the desire is also about is not there to read dry.
+    assert sum(p["fields"]["met"] for p in of(dosed, "imaginarium")) == 2
     assert one(dosed, "revisions")["unsettled"] == 0 < one(dosed, "revisions")["revisions"]
     assert [(p["tags"]["outcome"], p["fields"]["count"]) for p in of(a_day_later, "intention")] == [("failed", 2)]
     assert one(a_day_later, "intentions") == {"standing": 0}
@@ -286,6 +288,12 @@ def test_a_cold_dry_bed_is_two_wants_planned_apart(monkeypatch):
     worlds = [len(rows(im, "SELECT ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph } }", ()))
               for im in imaginaria.values()]
     assert worlds == [1, 1], f"one step each, searched apart: {worlds}"
+    assert len(runtime.parts["execution"].executor.walking()) == 2
+    #  AND EACH HEAD IS JUDGED IN ITS OWN SCOPE: the soil's imaginarium holds the soil's reading
+    #  alone, so the heater's step asked there would read no air and be called blocked. A second
+    #  pass, both steps standing, blocks neither.
+    assert runtime.run(passes=1, poll_s=0) == UNFINISHED
+    assert runtime.parts["planning"].planner.blocked == []
     assert len(runtime.parts["execution"].executor.walking()) == 2
 
 

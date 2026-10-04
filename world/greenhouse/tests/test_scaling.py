@@ -1,19 +1,19 @@
 """What the search spends against the world it stands in, and whether an aspect of the world that is
 unrelated to a want changes what that want's search spends (#593).
 
-Two metrics the sovereign named. A POSSIBLE WORLD'S SIZE against the present: a world is the readings
-and their revisions, forked from the ground, never the public knowledge, so it is the ground's size
-and a few percent of the store. And STABILITY: a lamp and a light sensor added to the greenhouse, with
-a desire that the bed be lit, are a third scope; the soil want's search forks the same one world over
-the same one candidate it did before, and the lamp — a second filling of the heating action — is
-admitted in the light's scope alone. What does grow is each world's size, since a fork copies every
-reading the agent holds, whatever scope it is of.
+Two metrics the sovereign named. A POSSIBLE WORLD'S SIZE against the present: a world is the SCOPE'S
+readings and their revisions, forked from a ground that holds those alone, never the public knowledge,
+so it is one percent of the store. And STABILITY: a lamp and a light sensor added to the greenhouse,
+with a desire that the bed be lit, are a third scope; the soil want's search forks the same one world
+over the same one candidate it did before, that world is the same twelve quads, and the lamp — a
+second filling of the heating action — is admitted in the light's scope alone and its step judged
+there alone.
 """
 
 from __future__ import annotations
 
 import shutil
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -40,7 +40,17 @@ LIGHT = '''
                              schema:minValue 200 ; schema:maxValue 800 ; schema:unitCode unit:LUX ] .
 :bed ssn-system:hasOperatingRange :bed_light_operating .
 :lamp a climate:Heater ; orexis:localId "lamp" ; climate:warms :bed ; climate:warmsProperty climate:Light ;
-    climate:degreesPerHour 400.0 ; climate:maxRunS 3600 .
+    climate:degreesPerHour 400.0 ; climate:maxHeatS 3600 .
+'''
+WIRED = '''
+:light_sensor mqtt4ssn:observesTopic :light_readings .
+:light_readings a mqtt4ssn:Topic .
+:light_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "sensors/light_sensor/reading" ; mqtt4ssn:matchesTopic :light_readings .
+:lamp mqtt4ssn:listensToTopic :lamp_commands .
+:lamp_commands a mqtt4ssn:Topic .
+:lamp_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "actuators/lamp/command" ; mqtt4ssn:matchesTopic :lamp_commands .
 '''
 LIT = '''
 :grower planning:holds :the_bed_is_lit .
@@ -70,6 +80,7 @@ def lit_greenhouse(tmp_path):
                        .replace("actuation:hasActuator :pump , :heater .", "actuation:hasActuator :pump , :heater , :lamp .")
                        .replace("mqtt4ssn:hosts :moisture_probe , :thermometer , :pump , :heater ;",
                                 "mqtt4ssn:hosts :moisture_probe , :thermometer , :pump , :heater , :light_sensor , :lamp ;"))
+    society.write_text(society.read_text() + WIRED)
     (world / "desires.ttl").write_text((world / "desires.ttl").read_text() + LIT)
     return world
 
@@ -98,27 +109,78 @@ def _pass(world: Path, readings: dict) -> tuple[int, int, dict]:
     return present, state, out
 
 
-def test_a_possible_world_is_the_readings_and_a_few_percent_of_the_present(monkeypatch):
+def test_a_possible_world_is_the_scopes_readings_and_a_percent_of_the_present(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW)
     present, state, scopes = _pass(WORLD, {"thermometer": 12.0, "moisture_probe": 0.2})
     for ground, worlds, _, _, _ in scopes.values():
         assert worlds == [ground], "a world is a fork of its ground, nothing more"
-        assert ground == state, "the readings and the sides concluded of them, and no public knowledge"
-        assert ground * 20 < present, f"a world of {ground} quads against a present of {present}"
+        assert ground * 50 < present, f"a world of {ground} quads against a present of {present}"
+    #  THE READINGS ARE PARTED BETWEEN THE SCOPES, each reading and its sides to the one scope whose
+    #  property it names: the two grounds together are the state, and neither is.
+    assert sorted(ground for ground, *_ in scopes.values()) == [state // 2, state // 2]
 
 
 def test_an_unrelated_aspect_changes_nothing_of_the_soil_wants_search(monkeypatch, lit_greenhouse):
     """The light and the lamp are a third scope. The soil's search forks the one world over the one
-    candidate it forked without them; the lamp's heating, a second filling of the heating action, is
-    admitted in the light's scope and nowhere else; and what grows is each world's size, by the
-    light's reading and its revisions, since a fork copies every reading."""
+    candidate it forked without them, and that world is the same size: the light's reading is the
+    light's scope's and crosses into no other imaginarium. The lamp's heating, a second filling of the
+    heating action, is admitted in the light's scope and nowhere else."""
     monkeypatch.setattr(clock, "now", lambda: NOW)
     _, state, before = _pass(WORLD, {"thermometer": 12.0, "moisture_probe": 0.2})
     _, lit_state, after = _pass(lit_greenhouse, {"thermometer": 12.0, "moisture_probe": 0.2, "light_sensor": 100})
     soil_before, soil_after = before[frozenset({"SoilMoisture"})], after[frozenset({"SoilMoisture"})]
-    assert (soil_before[1:], soil_after[1:]) == (([soil_before[0]], 1, 1, {"SoilMoisture"}),
-                                                 ([soil_after[0]], 1, 1, {"SoilMoisture"}))
+    assert soil_before == soil_after == (soil_before[0], [soil_before[0]], 1, 1, {"SoilMoisture"}), \
+        f"the soil's search, with and without the light: {soil_before} against {soil_after}"
     assert len(after) == 3 and {p for _, _, _, _, plans in after.values() for p in plans} == {"SoilMoisture", "AirTemperature", "Light"}
     assert all(cands == 1 and actions == 1 for _, _, cands, actions, _ in after.values()), \
         f"one filling per scope, the lamp's in the light's alone: {after}"
-    assert soil_after[0] == lit_state > soil_before[0] == state, "a world grows by the readings added, whatever their scope"
+    assert lit_state > state and sum(ground for ground, *_ in after.values()) == lit_state, \
+        "the reading added went to its own scope's ground and to no other"
+
+
+class _Broker:
+    """What the grower publishes, and nothing else of MQTT."""
+
+    def __init__(self):
+        self.published = []
+
+    def subscribe(self, pattern):
+        pass
+
+    def publish(self, topic, payload, retain=False):
+        self.published.append(topic)
+
+
+def test_a_step_is_judged_in_the_scope_that_admitted_its_filling(monkeypatch, lit_greenhouse):
+    """The heating action is the air's and the light's, filled by the heater in one and the lamp in the
+    other. Both steps standing, the next pass asks each imaginarium whether the present still admits
+    the heads due: asked of the lamp's step, the air's imaginarium — which holds no light reading —
+    would answer no row and call it blocked. A step is judged where its filling was admitted: nothing
+    is blocked, and all three intentions walk on."""
+    from agent.runtime import UNFINISHED, Runtime
+    from agent.transport.mqtt.driver import Mqtt
+    time = _Clock(NOW)
+    monkeypatch.setattr(clock, "now", time)
+    beliefs = boot(lit_greenhouse, "grower")
+    broker = _Broker()
+    runtime = Runtime(beliefs, "grower", transport=Mqtt(GH + "grower", broker))
+    runtime.time = time
+    for sensor, value in {"thermometer": 12.0, "moisture_probe": 0.2, "light_sensor": 100}.items():
+        runtime.deliver(f"sensors/{sensor}/reading", f'{{"value": {value}}}'.encode(), NOW)
+    assert runtime.run(passes=1, poll_s=0) == UNFINISHED
+    assert sorted(broker.published) == ["actuators/heater/command", "actuators/lamp/command", "actuators/pump/command"]
+    assert len(runtime.parts["execution"].executor.walking()) == 3
+    assert runtime.run(passes=1, poll_s=0) == UNFINISHED
+    assert runtime.parts["planning"].planner.blocked == []
+    assert len(runtime.parts["execution"].executor.walking()) == 3
+
+
+class _Clock:
+    """One timeline: every read moves it on by a second, as a running agent's clock does."""
+
+    def __init__(self, at):
+        self.at = at
+
+    def __call__(self):
+        self.at += timedelta(seconds=1)
+        return self.at

@@ -374,8 +374,17 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         lap = Laps() if self.planned.connected else None
         searched: set[str] = set()
         for _scope in sorted(set(scopes.values())) or [UNSCOPED]:
+            #  THE SCOPE'S OWN ACTIONS are what its worlds admit; a store of no scope admits all.
+            only = None if _scope == UNSCOPED else {
+                r["a"] for r in rows(self.beliefs, _IN_SCOPE_Q, graphs_of(self.beliefs, SCOPE_GRAPH), scope=_scope)}
+            #  AND THE TERMS THAT ARE ANOTHER SCOPE'S, so a filling of a shared action that is theirs
+            #  — the lamp's heating, in the air's search — is not admitted here (#593), and a reading
+            #  keyed by one — the air's, in the soil's — does not cross: the imaginarium is the
+            #  scope's, its grounds the scope's readings, and a world their size.
+            elsewhere = frozenset(m for m, s in scopes.items() if s != _scope) if _scope != UNSCOPED else frozenset()
+            own = frozenset(m for m, s in scopes.items() if s == _scope)
             store = self.imaginaria.setdefault(_scope, ox.Store())
-            prepare_ground(self.beliefs, store)
+            prepare_ground(self.beliefs, store, own=own, elsewhere=elsewhere)
             #  THE PASS'S MEMO, one per world: the action templates, a rule text, the graph
             #  list per instant and the shapes cost more to re-read than a pass can afford
             #  and can change only by a write the search does not make.
@@ -387,7 +396,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                                                        kept=len(rerooting.kept), dropped=len(rerooting.dropped)))
             if lap:
                 lap("ground")
-            self.blocked += self._blocked(store, present, at, memo)
+            self.blocked += self._blocked(store, present, at, memo, only, elsewhere)
             for pair in unweighed(store, memo=memo):
                 #  GROUNDS ONLY. A candidate the budget left untaken in a world it cut is
                 #  unweighed too, and weighed here it would never be offered to the expansion
@@ -419,12 +428,6 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  fifth of a pass re-reading them, measured.
             #  THE SHAPES, CROSSED ONCE PER SCOPE and after the derivation, under the memo's
             #  key so `weigh` finds the same crossing.
-            #  THE SCOPE'S OWN ACTIONS are what its worlds admit; a store of no scope admits all.
-            only = None if _scope == UNSCOPED else {
-                r["a"] for r in rows(self.beliefs, _IN_SCOPE_Q, graphs_of(self.beliefs, SCOPE_GRAPH), scope=_scope)}
-            #  AND THE TERMS THAT ARE ANOTHER SCOPE'S, so a filling of a shared action that is theirs
-            #  — the lamp's heating, in the air's search — is not admitted here (#593).
-            elsewhere = frozenset(m for m, s in scopes.items() if s != _scope) if _scope != UNSCOPED else frozenset()
             shapes = memo.get(("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
             for want in _of_scope(store, shapes, self.uri, _scope, scopes, at):
                 if want in walking:
@@ -477,22 +480,29 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 minted += [g["g"] for g in rows(self.beliefs, _REFINED_Q, ()) if g["want"] == want]
         return minted
 
-    def _blocked(self, store: ox.Store, present: str, at: datetime, memo: Memo) -> list[str]:
+    def _blocked(self, store: ox.Store, present: str, at: datetime, memo: Memo, only, elsewhere) -> list[str]:
         """Every step an intention stands at, fallen due and not yet taken, that the `present` ground
         of `store` no longer admits: its action's precondition answers there with no row carrying
-        the step's own value for every parameter the action takes. Only an action this scope's
-        imaginarium holds is asked; a step of another scope's is that scope's to judge."""
+        the step's own value for every parameter the action takes. A step is judged in the scope
+        that admitted its filling and nowhere else — its action among `only`, and no value of its
+        filling a member of another scope, `elsewhere` — since the imaginarium holds the scope's
+        readings alone, and the lamp's step asked in the air's search would read no light and be
+        called blocked by a world that was never its."""
         blocked = []
         actions = graphs_of(store, ACTION)
         world = None
         for head in rows(self.beliefs, _DUE_HEADS_Q, (), now=instant(at)):
+            if only is not None and head["action"] not in only:
+                continue
             found = rows(store, _PRECONDITION_Q, actions, action=head["action"])
             if not found:
                 continue
-            world = world or world_at(store, present, memo=memo)
             takes = {r["takes"] for r in found if r.get("takes")}
             filling = {local_of(r["p"]): r["v"] for r in rows(self.beliefs, _FILLING_Q, (), step=head["step"])
                        if r["p"] in takes}
+            if any(v in elsewhere for v in filling.values()):
+                continue
+            world = world or world_at(store, present, memo=memo)
             answers = bindings(query(store, bind(found[0]["text"], me=self.uri), world))
             if not any(all(row.get(k) == v for k, v in filling.items()) for row in answers):
                 log.info("%s: %s can no longer be taken — the present admits it no more", self.id, local_of(head["step"]))

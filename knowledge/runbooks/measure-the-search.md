@@ -140,19 +140,20 @@ The two metrics the sovereign named, held by `world/greenhouse/tests/test_scalin
 bed as above, then the same world with a light sensor on the bed, a lamp that raises it and a desire
 that the bed be lit — an aspect nothing of the soil or the air touches:
 
-| | present store | readings + sides | ground / world | scopes | soil's search |
+| | present store | readings + sides | soil's ground / world | scopes | soil's search |
 |---|---|---|---|---|---|
-| greenhouse as shipped | 1248 quads | 24 | 24 | 2 | 1 world, 1 candidate of 1 action |
-| with light, lamp and a lit desire, the bed dim | 1335 | 35 | 35 | 3 | 1 world, 1 candidate of 1 action |
+| greenhouse as shipped | 1248 quads | 24 | 12 | 2 | 1 world, 1 candidate of 1 action |
+| with light, lamp and a lit desire, the bed dim | 1335 | 35 | 12 | 3 | 1 world, 1 candidate of 1 action |
 
-A possible world is the readings and the sides concluded of them, forked from the ground, and no
-public knowledge: two percent of the present. The unrelated aspect left the soil's search as it was,
-and the lamp — a second filling of the heating action, which is in the air's scope and the light's —
-is admitted in the light's search alone, since a scope admits a FILLING and not an action: before
-that was so, the air's search forked the lamp's heating too, two candidates where one is its own. What
-does grow with the aspect is every world's size, by the light's reading and its sides, because a fork
-copies every reading the agent holds whatever scope it is of; narrowing the fork to the scope's keys
-is the next thing this table would move, and the one thing in it that is not yet flat.
+A possible world is the SCOPE's readings and the sides concluded of them, forked from a ground that
+holds those alone, and no public knowledge: one percent of the present. The unrelated aspect left the
+soil's search as it was — the same world of the same twelve quads over the same one candidate — and
+the lamp, a second filling of the heating action, which is in the air's scope and the light's, is
+admitted in the light's search alone and its step judged there alone, since a scope admits a FILLING
+and not an action. Before the readings were parted by scope the soil's world was 24 quads and grew to
+35 with the light's reading, which the soil never reads; before a scope admitted fillings, the air's
+search forked the lamp's heating too, two candidates where one is its own. Every figure in the
+soil's columns is now flat under the aspect added.
 
 # Before Agent 0.2.0
 
