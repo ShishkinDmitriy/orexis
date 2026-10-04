@@ -129,3 +129,51 @@ class _Clock:
     def __call__(self):
         self.at += timedelta(seconds=1)
         return self.at
+
+
+def test_a_drift_outside_a_wants_scope_keeps_its_cone(monkeypatch, lit_greenhouse):
+    """#565's second item, by construction since a scope's imaginarium holds the scope's readings alone
+    (#884): a present that drifts in a fact a want never reads — the light, under a soil plan — hashes
+    to the same soil ground, so the soil's re-root finds the last pass's present and keeps its cone,
+    while the light's own search is surprised. A drift in the soil itself drops the soil's cone."""
+    monkeypatch.setattr(clock, "now", lambda: NOW)
+    store = boot(lit_greenhouse, "grower")
+
+    def deliver(sensor: str, value: float, at: datetime) -> None:
+        for graph in received(store, GH + "grower", GH + sensor, f'{{"value": {value}}}'.encode(), at):
+            revise(store, graph, read=graphs_of(store, PUBLIC))
+            close_catalogue(store)
+
+    def scope_of(term: str) -> str:
+        """The local name of the scope `term` is a member of, as the re-root names it."""
+        (found,) = rows(store, f"""PREFIX climate: <http://example.org/orexis/climate#>
+            SELECT ?s WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph }}
+                               GRAPH ?g {{ climate:{term} planning:inScope ?s }} }}""", ())
+        return found["s"].rsplit("/", 1)[-1]
+
+    heard: list = []
+    planner = Planner(store, "grower", budget=128)
+    planner.rerooted.connect(lambda event: heard.append(event) or [])
+    for sensor, value in {"thermometer": 21.0, "moisture_probe": 0.2, "light_sensor": 100}.items():
+        deliver(sensor, value, NOW)
+    planner.plan(NOW)
+    soil, light = scope_of("SoilMoisture"), scope_of("Light")
+    assert {e.present for e in heard} == {"first"} and len(heard) == 3
+    #  THE LIGHT DRIFTS AND THE SOIL DOES NOT: the soil's imaginarium holds no light reading, so the
+    #  ground it lays hashes as last pass's did, and its one world is kept under it; the last pass's
+    #  ground — the match itself, whose facts the new one carries — is the one graph dropped. The
+    #  light's imaginarium is surprised and drops what it imagined.
+    heard.clear()
+    later = NOW + timedelta(minutes=10)
+    deliver("light_sensor", 150, later)
+    planner.plan(later)
+    second = {e.scope: (e.present, e.kept, e.dropped) for e in heard}
+    assert second[soil] == ("ground", 2, 1), f"the soil's ground and its world kept, last pass's ground gone: {second}"
+    assert second[light][0] == "surprise", second
+    #  THE SOIL DRIFTS: a reading the soil's want reads moved, nothing it imagined holds, the cone goes.
+    heard.clear()
+    latest = later + timedelta(minutes=10)
+    deliver("moisture_probe", 0.25, latest)
+    planner.plan(latest)
+    third = {e.scope: (e.present, e.kept, e.dropped) for e in heard}
+    assert third[soil][0] == "surprise" and third[light][0] == "ground", third

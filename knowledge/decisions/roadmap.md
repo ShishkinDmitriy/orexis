@@ -31,8 +31,10 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
 
 1. **What is wrong before what is missing** — #462 (a frozen probe reads fresh forever).
 2. **Planning in time, its second half** — #596, an action with a duration, then #591, a plan as a
-   partial order, then #593, a want over several scopes; #565 and #527 narrow and resume the
-   search, and #486 names a world by its path.
+   partial order, then #593, a want over several scopes; #486 names a world by its path. #565 and
+   #527, narrowing and resuming the search, are done: a scope's imaginarium holds the scope's
+   readings and the present is identified in it by hash
+   ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)).
 3. **The world answers otherwise** — #522, several outcomes with a likelihood, and #781, a plan that
    worked lifted into a method the executor proves or forgets.
 4. **Several agents contend** — #567, one dispatcher and two vans, then #568, right-of-way as a lot
