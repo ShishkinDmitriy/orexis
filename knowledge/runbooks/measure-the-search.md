@@ -158,6 +158,26 @@ and not an action. Before the readings were parted by scope the soil's world was
 search forked the lamp's heating too, two candidates where one is its own. Every figure in the
 soil's columns is now flat under the aspect added.
 
+# Two beds, two pumps: two instances of one property (2026-10-04)
+
+The two-instances seam of [a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md),
+measured closed. The shipped greenhouse against the same world with a second bed, probe and pump
+added (`world/greenhouse/tests/test_two_beds.py`), every soil at 0.2 and the air warm at 21, one
+pass of the Planner at a budget of 128 over the booted world, the two alternated in one session on
+the development container, medians of five:
+
+| world | present store | readings + sides | imaginaria | grounds | worlds forked | weighings | plans | pass |
+|---|---|---|---|---|---|---|---|---|
+| one bed | 1263 quads | 24 | 2 | 12 + 12 | 0 + 1 | 1 + 3 | `pursued.SoilMoisture`, one step | 65 ms (min 58) |
+| two beds | 1357 | 36 | 3 | 12 + 12 + 12 | 0 + 1 + 1 | 1 + 3 + 3 | `pursued.bed.SoilMoisture` and `pursued.bed2.SoilMoisture`, one step each | 121 ms (min 104) |
+
+Each soil scope's ground is its own bed's reading and sides, twelve quads, and the air's its
+thermometer's; the first bed's reading, which is the pump's scope's and the heater's by the bed and
+the first pump's by the property, crosses into the first pump's imaginarium alone. The second bed
+costs what a scope costs — a filling of the imaginarium and one weighing of the desire — and both
+pumps are commanded in the one pass. On the tree before, the same world minted `pursued.SoilMoisture`
+in all three imaginaria, placed it in the first, reported it unreachable and commanded nothing.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

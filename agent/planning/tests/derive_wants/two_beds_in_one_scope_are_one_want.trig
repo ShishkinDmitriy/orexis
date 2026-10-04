@@ -1,0 +1,102 @@
+# two_beds_in_one_scope_are_one_want
+#
+# THE SAME TWO DRY BEDS UNDER THE SAME DESIRE, where something couples them — a heater that dries
+# both beds' soil, say — so both pumps, both beds and the property are one scope, and the heater on
+# the air another. The property alone places both witnesses in the one scope, so the key is never
+# asked: one want about the soil of both, named as it always was and keyed by nothing. Two beds in
+# one scope are one want because they are one met-test — the shape cannot tell them apart, and two
+# wants with one met-test would be one plan found twice.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+
+GRAPH :ontology {
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :bed1 a sosa:FeatureOfInterest .
+  :bed2 a sosa:FeatureOfInterest .
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :bed1 .
+  :keeper orexis:actsFor :bed2 .
+}
+
+GRAPH :desires {
+  :comfortable a sh:NodeShape .
+  :comfortable sh:property [ planning:about :Moisture ; sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:property [ sh:hasValue :Moisture ; sh:path sosa:observedProperty ] ; sh:property [ sh:minCount 1 ; sh:path sensing:below ] ] ] .
+  :comfortable sh:targetNode :keeper .
+  :keeper planning:holds :keeper.comfortable .
+  :keeper.comfortable a planning:Desire .
+  :keeper.comfortable planning:metWhen :comfortable .
+  :keeper.comfortable rdfs:label "every bed's soil inside its range" .
+}
+
+GRAPH :sensed {
+  :soil1 a sosa:Observation .
+  :soil1 prov:wasGeneratedBy :keeper .
+  :soil1 sensing:below :bed1_range .
+  :soil1 sosa:hasFeatureOfInterest :bed1 .
+  :soil1 sosa:observedProperty :Moisture .
+  :soil2 a sosa:Observation .
+  :soil2 prov:wasGeneratedBy :keeper .
+  :soil2 sensing:below :bed2_range .
+  :soil2 sosa:hasFeatureOfInterest :bed2 .
+  :soil2 sosa:observedProperty :Moisture .
+}
+
+# The partition: the two doses and the heater's drying joined into one scope by the heater's filling,
+# which writes both beds' soil; the heating alone in the other.
+GRAPH :scopes {
+  :Moisture planning:inScope :keeper.scope.1 .
+  :Temperature planning:inScope :keeper.scope.2 .
+  :bed1 planning:inScope :keeper.scope.1 .
+  :bed2 planning:inScope :keeper.scope.1 .
+  :dose planning:inScope :keeper.scope.1 .
+  :dry planning:inScope :keeper.scope.1 .
+  :heat planning:inScope :keeper.scope.2 .
+  :heater planning:inScope :keeper.scope.1 .
+  :heater planning:inScope :keeper.scope.2 .
+  :keeper planning:inScope :keeper.scope.1 .
+  :keeper planning:inScope :keeper.scope.2 .
+  :keeper.scope.1 a planning:Scope .
+  :keeper.scope.2 a planning:Scope .
+  :pump1 planning:inScope :keeper.scope.1 .
+  :pump2 planning:inScope :keeper.scope.1 .
+  sensing:below planning:inScope :keeper.scope.1 .
+  sensing:below planning:inScope :keeper.scope.2 .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

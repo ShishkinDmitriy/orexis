@@ -169,6 +169,10 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     observed = [(p["measurement"], p["fields"]["value"], p["time"]) for p in history if p["measurement"] != "Step"]
     assert observed == [("AirTemperature", 21.0, NOW), ("SoilMoisture", 0.2, NOW),
                         ("SoilMoisture", 0.45, NOW + timedelta(minutes=11))]
+    #  TAGGED BY THE LOCAL NAME OF THE IRI, since this world states no `orexis:localId` of a sensor or
+    #  of the bed; tagged by a stated id, these points carried none and no panel could filter for them (#885).
+    assert [(p["tags"]["sensor"], p["tags"]["plant"]) for p in history if p["measurement"] != "Step"] == \
+        [("thermometer", "bed"), ("moisture_probe", "bed"), ("moisture_probe", "bed")]
     steps = [p for p in history if p["measurement"] == "Step"]
     assert [p["fields"] for p in steps] == [{"taken": True}, {"landed": True}]
     (taken, landed) = steps
@@ -177,6 +181,26 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     assert taken["tags"]["valve"] == "pump"
     assert taken["time"] < landed["time"], "taken, then answered"
     assert len(broker.published) == 1
+
+
+def test_every_reading_the_grower_writes_is_drawn_by_one_greenhouse_panel(monkeypatch, history):
+    """`orexis-dashboards greenhouse` is held to what the agent writes, as the terrace's is: each
+    point's measurement and sensor are filtered for by exactly one panel. This world states no
+    `orexis:localId` of a sensor or of the bed, and keyed on one the generator read it as observing
+    nothing and wrote no readings dashboard (#885)."""
+    from onboarding.dashboards import render
+
+    runtime, broker = _grower(monkeypatch)
+    runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
+    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    runtime.drain(NOW)
+    panels = render("greenhouse")["panels"]
+    assert [p["title"] for p in panels] == ["bed — SoilMoisture", "bed — AirTemperature"], "by subject, then by sensor"
+    queries = [t["query"] for panel in panels for t in panel["targets"]]
+    drawn = {(p["measurement"], p["tags"]["sensor"]):
+             [q for q in queries if f'r._measurement == "{p["measurement"]}"' in q
+              and f'r.sensor == "{p["tags"]["sensor"]}"' in q] for p in history if p["measurement"] != "Step"}
+    assert len(drawn) == 2 and all(len(found) == 1 for found in drawn.values()), drawn
 
 
 def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_counted(monkeypatch):

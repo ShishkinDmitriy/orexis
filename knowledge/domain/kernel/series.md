@@ -53,9 +53,11 @@ for a sink and none imports `agent.series`
 ([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md)).
 
 - **Sensing's** point, an `Observed` its part says as it hears an observation graph written:
-  measured under the local name of the property observed, field `value`, tagged with the subject's
-  and the sensor's `orexis:localId`, at the reading's `sosa:resultTime`. The dashboards ask sensing
-  for the name (`measurement_of`), so a panel draws what is written. The subject's tag is still
+  measured under the local name of the property observed, field `value`, tagged with the local
+  names of the subject's and the sensor's IRIs — never a stated `orexis:localId`, which is an
+  agent's, and which the greenhouse states of no sensor — at the reading's `sosa:resultTime`. The
+  dashboards ask sensing for the name and the tags (`measurement_of`, `tag_of`), so a panel draws
+  what is written and filters for the tag written. The subject's tag is still
   called `plant`, a domain word #834 renames. Points 0.1.0 wrote as `soil_moisture` stay under that
   name.
 - **Execution's** points, measured `Step`: field `taken` on the `StepTaken` said when the executor

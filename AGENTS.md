@@ -130,7 +130,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 ### Words, records and the bundle
 
 - **An RDF URI beats a homemade id for referring to an agent**; the one short string left is the
-  one that must also be a broker principal, a bucket, a container and a directory.
+  one that must also be a broker principal, a bucket, a container and a directory — and a sensor
+  or a subject goes by the local name of its IRI in the series, since a stated id equalled it in
+  every world and was missing in the one that mattered, which got no readings dashboard (#885).
 - **A term nobody reads is annotation**, however many instances state it.
 - **A word used before it is defined is a word everyone defines differently** — `duty` ran to 64
   code sites and 13 pages, meaning `obligation` all along.
@@ -258,6 +260,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   head is judged where its filling was admitted, and a reading keyed by another scope's term crosses
   into no imaginarium but its own, so a world is one percent of the present and a sensor added
   elsewhere adds nothing to it (`world/greenhouse/tests/test_scaling.py`).
+- **A member is in every scope it falls in, and a reading, a witness and a want are placed where
+  the scopes of what they name MEET; a member of every scope tells nothing** — the bed is the pump's
+  and the heater's, the soil both pumps', a reading naming both the one pump's; so two beds each
+  with a pump are two wants under the grower's one desire, each keyed by its bed off the violation's
+  offending value, since the shape cannot say which bed came down its path
+  (a-scope-is-a-predicate-on-a-key, `world/greenhouse/tests/test_two_beds.py`).
 - **A variable in predicate position writes what a `VALUES` block in its own text binds it to, and
   anything only where nothing bounds it** — the one range the scopes honour is SPARQL's own.
 - **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —

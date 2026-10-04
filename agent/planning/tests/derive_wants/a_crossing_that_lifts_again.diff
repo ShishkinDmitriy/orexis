@@ -20,7 +20,7 @@
 +  ground:2026-01-01T123000p0000.for.keeper.in_range a planning:Weighing .
 +  ground:2026-01-01T123000p0000.for.keeper.in_range planning:for :keeper.in_range .
 +  ground:2026-01-01T123000p0000.for.keeper.in_range planning:met false .
-+  ground:2026-01-01T123000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  ground:2026-01-01T123000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 5 ] .
 +  ground:2026-01-01T123000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T123000p0000 .
 +  ground:2026-01-01T130000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .

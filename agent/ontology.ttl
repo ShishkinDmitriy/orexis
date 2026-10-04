@@ -144,7 +144,7 @@ orexis:localId
     a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:label "local id" ;
-    rdfs:comment "The short name a resource is known by outside RDF. Stated here so nothing has to infer it from the shape of a URI. The ONE instance identifier a process is given is an agent's localId; everything else it discovers." .
+    rdfs:comment "The short name a resource is known by outside RDF, stated so nothing has to infer it from the shape of a URI: an agent's, the ONE instance identifier a process is given and the string that is also its broker principal, its bucket, its container and its directory — everything else it discovers — and a board's, for the firmware generator. A sensor and a subject need none: the series tags them by the local name of their IRI (agent/sensing/events.py, tag_of), which every world gives them, where a stated id was missing in the one world that mattered (#885)." .
 
 orexis:start
     a owl:DatatypeProperty ;

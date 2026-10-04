@@ -30,7 +30,9 @@ the agent records for itself, to keep a step one level down.
 `derive_wants` judges every desire in every ground — the present, and what each prediction makes
 of the period after it ([prediction](/domain/prediction/prediction.md)) — by the same `weigh` the
 search uses: the met-test's violation rows are the instances in trouble, and each ground's start
-is when. A want is minted per [scope](/domain/planning/scope.md) of those rows, and one the rows no
+is when. A want is minted per [scope](/domain/planning/scope.md) of those rows — each placed by what
+it is about and, where that belongs to two scopes, by what its offending value is keyed by, the bed,
+which the want then carries as `planning:keyedBy` — and one the rows no
 longer imply is withdrawn by the same pass — unless an intention is walking it. Nothing ranks one
 want before the search that could rank it: every want is searched, and what their plans cost is
 the comparison.

@@ -84,14 +84,15 @@ from .ontology import DESIRE, SCOPE_GRAPH, WANT
 log = logging.getLogger("prepare_ground")
 
 
-def prepare_ground(beliefs: ox.Store, into: ox.Store, *, own=frozenset(), elsewhere=frozenset()) -> ox.Store:
+def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = None, scopes=None) -> ox.Store:
     """Fill an empty store with what a search over one SCOPE needs, and hand it back.
 
     `beliefs` is read and `into` is written; both are the engine, a `pyoxigraph.Store`, and the
     caller makes the empty one. Everything that happens to a possible world afterwards happens
-    to `into` the ordinary way, so this is the seam and not a wrapper. `own` and `elsewhere` are
-    the members of this scope and of every other, off the scope graphs; a reading or a prediction
-    naming one of the others' and none of this scope's is theirs and stays behind.
+    to `into` the ordinary way, so this is the seam and not a wrapper. `scope` is the scope this
+    imaginarium is for and `scopes` the store's partition as `find_scopes` reads it, every member
+    to every scope it is in; a reading or a prediction whose named members meet in other scopes
+    alone is theirs and stays behind. Handed neither, everything crosses.
 
     THREE THINGS CROSS, and then a fourth is BUILT:
 
@@ -111,17 +112,20 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, own=frozenset(), elsewh
        search starts; its predictions, which make the grounds; and its desires and wants,
        whose shapes the packages' shapes target. **The readings and the predictions are the
        SCOPE's** (a-scope-is-a-predicate-on-a-key): one imaginarium is one scope's, and a reading
-       or a prediction that, with its revisions, names a member of another scope — `elsewhere`,
-       the terms `admit` refuses a filling for — and none of this scope's, `own`, does not cross,
-       so the ground laid here is the scope's readings and every world forked from it their size,
-       whatever sensors the agent grows elsewhere. Safe where narrowing the public graphs was not,
-       because the same test already refuses every filling that could reach such a reading: no
-       candidate of this scope binds another scope's key, so no rule of this scope's search
-       reaches the reading left out. Named is a predicate or an object: the tower's one state
-       graph says where every disk and the van stand in the courier's cells, and its revisions
-       conclude `hanoi:on` of it, the puzzle's word, so it is both scopes' and crosses into both;
-       a reading naming no scope's member — a forecast, a sensor no action acts on — crosses
-       into every imaginarium, as everything did. Whatever
+       or a prediction that, with its revisions, names members whose scopes MEET elsewhere —
+       `find_scopes.meet`: the scopes every named member is in, or every scope any is in where no
+       scope holds them all — does not cross, so the ground laid here is the scope's readings and
+       every world forked from it their size, whatever sensors the agent grows elsewhere. Safe
+       where narrowing the public graphs was not, because the same test already refuses every
+       filling that could reach such a reading: no candidate of this scope binds another scope's
+       key, so no rule of this scope's search reaches the reading left out. Named is a predicate
+       or an object: the tower's one state graph says where every disk and the van stand in the
+       courier's cells, and its revisions conclude `hanoi:on` of it, the puzzle's word, which no
+       scope holds together, so it is both scopes' and crosses into both; a bed's soil reading
+       names the bed, of the pump's scope and the heater's, and the soil's property, of this
+       pump's scope and the other bed's, and is this pump's alone; a reading naming no scope's
+       member — a forecast, a sensor no action acts on — crosses into every imaginarium, as
+       everything did. Whatever
        its period — a pass asks its rules at instants of its own, and a forecast holding then is
        a graph the present has not reached. AND THE SCOPES, because the derivation runs in
        here and clusters what it reads unmet by them: without the scope graph it found none,
@@ -145,7 +149,7 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, own=frozenset(), elsewh
             forget_graph(into, iri)           # what the last filling brought across
     #  A READING'S REVISIONS CROSS BY KIND: what the rules concluded of it is a belief, in a graph
     #  derived from the reading's, and a met-test asks the side it holds.
-    behind = _of_another_scope(beliefs, own, elsewhere)
+    behind = _of_another_scope(beliefs, scope, scopes)
     for iri in dict.fromkeys([*graphs_of(beliefs, *CROSSING), catalogue_of(beliefs)]):
         if iri is None or iri in behind:
             continue                          # a store nobody has told anything to has no catalogue
@@ -153,15 +157,17 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, own=frozenset(), elsewh
     return into
 
 
-def _of_another_scope(beliefs: ox.Store, own, elsewhere) -> frozenset[str]:
-    """Every reading and prediction that is another scope's alone, with its revisions: a graph of
+def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset[str]:
+    """Every reading and prediction that is other scopes' alone, with its revisions: a graph of
     the kinds the ground is made of whose quads, taken with what was concluded of it, name — as a
-    predicate or an object — a member of `elsewhere` and none of `own`. The test is `admit`'s on
-    a filling's values, asked of a reading's: a sensing observation names its property in its
-    revisions and a prediction copies the node whole, so the one that names the air's property is
-    the air's; the tower's state names the courier's cells and its revisions the puzzle's `on`,
-    and is both scopes'. Nothing, in a store of one scope."""
-    if not elsewhere:
+    predicate or an object — members whose scopes meet without `scope`. The test is `admit`'s on
+    a filling's values, asked of a reading's: a sensing observation names its feature and its
+    property in its revisions and a prediction copies the node whole, so the one that names the
+    air's property is the air's, and one naming a bed of two scopes and a property of two is the
+    one scope's they share; the tower's state names the courier's cells and its revisions the
+    puzzle's `on`, which meet nowhere, and is both scopes'. Nothing, in a store of one scope or
+    for a caller naming none."""
+    if scope is None or not scopes or len(scopes.all()) < 2:
         return frozenset()
     behind: set[str] = set()
     for graph in graphs_of(beliefs, STATE, PREDICTION):
@@ -172,7 +178,8 @@ def _of_another_scope(beliefs: ox.Store, own, elsewhere) -> frozenset[str]:
                 named.add(q.predicate.value)
                 if isinstance(q.object, ox.NamedNode):
                     named.add(q.object.value)
-        if named & elsewhere and not named & own:
+        home = scopes.meet(named)
+        if home and scope not in home:
             behind.update(group)
     return frozenset(behind)
 

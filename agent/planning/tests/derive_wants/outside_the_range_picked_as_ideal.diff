@@ -22,8 +22,8 @@
 +  ground:2026-01-01T120000p0000.for.keeper.ideal a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.ideal planning:for :keeper.ideal .
 +  ground:2026-01-01T120000p0000.for.keeper.ideal planning:met false .
-+  ground:2026-01-01T120000p0000.for.keeper.ideal planning:violation [ planning:about :air_warmth_of_fern ; planning:constraint 0 ; planning:instance :air_warmth_of_fern ] .
-+  ground:2026-01-01T120000p0000.for.keeper.ideal planning:violation [ planning:about :soil_moisture_of_fern ; planning:constraint 1 ; planning:instance :soil_moisture_of_fern ] .
++  ground:2026-01-01T120000p0000.for.keeper.ideal planning:violation [ planning:about :air_warmth_of_fern ; planning:constraint 0 ; planning:instance :air_warmth_of_fern ; planning:offending :warmth_reading ] .
++  ground:2026-01-01T120000p0000.for.keeper.ideal planning:violation [ planning:about :soil_moisture_of_fern ; planning:constraint 1 ; planning:instance :soil_moisture_of_fern ; planning:offending :soil_reading ] .
 +  ground:2026-01-01T120000p0000.for.keeper.ideal planning:violation [ planning:about :soil_warmth_of_fern ; planning:constraint 2 ; planning:instance :soil_warmth_of_fern ] .
 +  ground:2026-01-01T120000p0000.for.keeper.ideal planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .

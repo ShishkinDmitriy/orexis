@@ -24,8 +24,8 @@ refreshes it:
 - `prepare_ground` takes back every graph the last filling brought across and copies again every
   public graph — every one, since a pattern reaching a graph nobody copied returns an empty result
   rather than an error — the catalogue, the agent's desires, wants and records, and of its readings
-  and predictions those that are the scope's: one naming another scope's member, with its
-  revisions, stays behind, so the grounds laid here are the scope's readings and a world their size
+  and predictions those that are the scope's: one whose named members' scopes meet elsewhere, with
+  its revisions, stays behind, so the grounds laid here are the scope's readings and a world their size
   ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)). What the
   store made for itself stays.
 - `lay_ground` lays a `planning:GroundGraph` per period: the present, and the present with each

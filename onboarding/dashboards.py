@@ -19,9 +19,12 @@ subdirectory per world. With `foldersFromFilesStructure`, Grafana shows a folder
 world removed from disk simply stops having one.
 
 Vocabulary: nothing new. The panels are built from what each sensor `sosa:observes`, the bucket
-name comes from `onboarding.influx` and the measurement from `agent.sensing.events` — sensing's,
-since sensing contributes the observation — so the dashboard cannot disagree with where the agent
-writes or under what name.
+name comes from `onboarding.influx` and the measurement and the tags from `agent.sensing.events` —
+sensing's, since sensing contributes the observation — so the dashboard cannot disagree with where
+the agent writes or under what name. A sensor and a subject go by the local names of their IRIs
+(`tag_of`), as sensing tags them; keyed by a stated `orexis:localId` instead, the greenhouse — whose
+devices the society names by their topics — read as observing nothing and got no readings
+dashboard (#885).
 
 **Steps have no panel yet.** Execution writes a step taken and how it ended under
 `agent.execution.events.MEASUREMENT`, tagged by action, want and parameter. A panel for them would
@@ -54,7 +57,7 @@ import logging
 from agent import runtime as the_runtime
 from agent.metrics import FLAG, LEVEL, VALUE, counted, fields_of, measurement, reported
 from agent.runtime import EVERY, KERNEL, packages_of
-from agent.sensing.events import FIELD, measurement_of
+from agent.sensing.events import FIELD, measurement_of, tag_of
 from agent.series import METRICS
 from agent.store import graphs_of, rows
 from . import installation, reading
@@ -76,14 +79,14 @@ log = logging.getLogger("dashboards")
 DASHBOARD_ROOT = REPO_ROOT / "infra" / "grafana" / "dashboards"
 
 # Whatever an agent observes, with the subject it observes it for: every sensor hosted by what the
-# agent acts for, which is what it listens to. The agent owns the bucket, so it is what a panel is
-# keyed on; the subject is what a person reading it cares about. The unit is the sensor's own
-# `schema:unitCode`.
+# agent acts for, which is what it listens to. The agent owns the bucket, so its id — the one short
+# string a process is handed — is what a panel is keyed on; the sensor and the subject go by the
+# local names of their IRIs, as sensing tags them (`tag_of`), and no `orexis:localId` is asked of
+# either, since a world need not state one (#885). The unit is the sensor's own `schema:unitCode`.
 _SENSORS_Q = f"""
-SELECT DISTINCT ?agentId ?sensorId ?subjectId ?property ?unit WHERE {{
+SELECT DISTINCT ?agentId ?sensor ?subject ?property ?unit WHERE {{
   ?agent a <{OREXIS}Agent> ; <{OREXIS}localId> ?agentId ; <{OREXIS}actsFor> ?subject .
-  ?sensor <{OREXIS}localId> ?sensorId ; <{SOSA}isHostedBy> ?subject ; <{SOSA}observes> ?property .
-  ?subject <{OREXIS}localId> ?subjectId .
+  ?sensor <{SOSA}isHostedBy> ?subject ; <{SOSA}observes> ?property .
   OPTIONAL {{ ?sensor <{SCHEMA}unitCode> ?unit }}
  }}"""
 
@@ -93,9 +96,9 @@ SELECT DISTINCT ?agentId ?sensorId ?subjectId ?property ?unit WHERE {{
 # first, amber between them, red outside the second. A world that states neither gets neither,
 # and the panel falls back to no opinion rather than to a moisture-shaped guess.
 _RANGES_Q = f"""
-SELECT DISTINCT ?subjectId ?kind ?property ?lo ?hi WHERE {{
+SELECT DISTINCT ?subject ?kind ?property ?lo ?hi WHERE {{
   VALUES ?rel {{ <{SSN_SYSTEM}hasOperatingRange> <{SSN_SYSTEM}hasSurvivalRange> }}
-  ?subject <{OREXIS}localId> ?subjectId ; ?rel ?range .
+  ?subject ?rel ?range .
   ?range a ?kind ; <{SSN_SYSTEM}inCondition> ?condition .
   ?condition <{SSN}forProperty> ?property ;
              <{SCHEMA}minValue> ?lo ; <{SCHEMA}maxValue> ?hi .
@@ -217,13 +220,13 @@ def _sensor_panel(title: str, bucket: str, sensor_id: str, measurement: str, uni
 
 
 def _ranges_by_subject(store) -> dict:
-    """{(subjectId, propertyIri): {"OperatingRange": (lo, hi), ...}} — empty when none stated."""
+    """{(subjectIri, propertyIri): {"OperatingRange": (lo, hi), ...}} — empty when none stated."""
     out: dict = {}
     for r in rows(store, _RANGES_Q, graphs_of(store, PUBLIC)):
         kind = r["kind"].rsplit("/", 1)[-1].rsplit("#", 1)[-1]
         if kind not in ("OperatingRange", "SurvivalRange"):
             continue
-        out.setdefault((r["subjectId"], r["property"]), {})[kind] = (float(r["lo"]),
+        out.setdefault((r["subject"], r["property"]), {})[kind] = (float(r["lo"]),
                                                                      float(r["hi"]))
     return out
 
@@ -244,17 +247,18 @@ def render(world: str) -> dict:
     ranges = _ranges_by_subject(store)
 
     panels, y, pid = [], 0, 1
-    for row in sorted(sensors, key=lambda r: (r["subjectId"], r["sensorId"])):
+    for row in sorted(sensors, key=lambda r: (tag_of(r["subject"]), tag_of(r["sensor"]))):
         bucket = bucket_name(world, row["agentId"])
+        sensor_id, subject_id = tag_of(row["sensor"]), tag_of(row["subject"])
         unit = _unit_of(row.get("unit"))
         prop = row["property"].rsplit("/", 1)[-1].rsplit("#", 1)[-1]
-        stated = ranges.get((row["subjectId"], row["property"]), {})
+        stated = ranges.get((row["subject"], row["property"]), {})
         told = ", ".join(f"{k.replace('Range', '').lower()} {v[0]:g}-{v[1]:g}"
                          for k, v in sorted(stated.items())) or "no range stated"
-        desc = (f"{row['sensorId']} observes {prop} of {row['subjectId']}, in {unit}. "
+        desc = (f"{sensor_id} observes {prop} of {subject_id}, in {unit}. "
                 f"Bands: {told}. Both come from the world, never from this file.")
 
-        panels.append(_sensor_panel(f"{row['subjectId']} — {prop}", bucket, row["sensorId"],
+        panels.append(_sensor_panel(f"{subject_id} — {prop}", bucket, sensor_id,
                                     measurement_of(row["property"]), unit, stated,
                                     y=y, h=8, panel_id=pid, desc=desc))
         pid += 1

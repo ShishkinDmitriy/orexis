@@ -373,18 +373,19 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         #  `perf_counter`, since the agent's clock may run fast and a test's ticks per read.
         lap = Laps() if self.planned.connected else None
         searched: set[str] = set()
-        for _scope in sorted(set(scopes.values())) or [UNSCOPED]:
+        for _scope in sorted(scopes.all()) or [UNSCOPED]:
             #  THE SCOPE'S OWN ACTIONS are what its worlds admit; a store of no scope admits all.
             only = None if _scope == UNSCOPED else {
                 r["a"] for r in rows(self.beliefs, _IN_SCOPE_Q, graphs_of(self.beliefs, SCOPE_GRAPH), scope=_scope)}
-            #  AND THE TERMS THAT ARE ANOTHER SCOPE'S, so a filling of a shared action that is theirs
-            #  — the lamp's heating, in the air's search — is not admitted here (#593), and a reading
-            #  keyed by one — the air's, in the soil's — does not cross: the imaginarium is the
-            #  scope's, its grounds the scope's readings, and a world their size.
-            elsewhere = frozenset(m for m, s in scopes.items() if s != _scope) if _scope != UNSCOPED else frozenset()
-            own = frozenset(m for m, s in scopes.items() if s == _scope)
+            #  AND THE TERMS THAT ARE ANOTHER SCOPE'S — every member this scope is not among the
+            #  scopes of — so a filling of a shared action that is theirs — the lamp's heating, in
+            #  the air's search — is not admitted here (#593); and the partition whole, so a reading
+            #  keyed by them — the air's, in the soil's; the other bed's, in this bed's — does not
+            #  cross: the imaginarium is the scope's, its grounds the scope's readings, and a world
+            #  their size.
+            elsewhere = frozenset(m for m, ss in scopes.items() if _scope not in ss) if _scope != UNSCOPED else frozenset()
             store = self.imaginaria.setdefault(_scope, ox.Store())
-            prepare_ground(self.beliefs, store, own=own, elsewhere=elsewhere)
+            prepare_ground(self.beliefs, store, scope=None if _scope == UNSCOPED else _scope, scopes=scopes)
             #  THE PASS'S MEMO, one per world: the action templates, a rule text, the graph
             #  list per instant and the shapes cost more to re-read than a pass can afford
             #  and can change only by a write the search does not make.
@@ -722,13 +723,17 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
     A shape's paths ARE predicates, so this separates what cannot interfere.
 
     AND BY THE TERMS IT NAMES. A scope is over keys (#593), so a predicate two scopes' actions
-    both write — a reading's side, written by the pump and the heater alike — is in neither for a
-    reader, while the TERMS that key the writes apart, the properties, are each in one; a want's
-    met-test names what it is about in those terms (`planning:about` on its blocks, a
-    `sh:hasValue`), parsed off the shape as its predicates are, so a want about the soil is placed
-    by the soil where its predicates place it nowhere — and only there: the puzzle's want names
-    the peg it wants the disks on, a cell the courier drives to, and placed by the term it was
-    searched among the van's actions.
+    both write — a reading's side, written by the pump and the heater alike — is in both and
+    places a want nowhere, while the TERMS that key the writes apart narrow it: a want's met-test
+    names what it is about in those terms (`planning:about` on its blocks, a `sh:hasValue`),
+    parsed off the shape as its predicates are, and a want the derivation keyed (`planning:keyedBy`,
+    the bed whose reading it was minted from) names that too. The want is placed where the
+    predicates' scopes MEET — every scope all of them are in — and, where that leaves more than
+    one, where the terms' scopes meet within it: a want about the soil is placed by the soil where
+    its predicates place it nowhere, and a want about one bed's soil, the property being two
+    pumps' and the bed the pump's and the heater's, by the two together — and only after the
+    predicates: the puzzle's want names the peg it wants the disks on, a cell the courier drives
+    to, and placed by the term it was searched among the van's actions.
 
     A WANT SPANNING SCOPES IS SEARCHED IN THE FIRST OF THEM, and that is a LOSS this
     ordering bought. The grouping it replaced was keyed by every scope a want reached, so
@@ -737,7 +742,8 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
     the third want's step is invisible to the other two, not that anything is done twice:
     one world is picked, deterministically, so a want has one plan.
     """
-    first = (sorted(set(scopes.values())) or [UNSCOPED])[0]
+    first = (sorted(scopes.all()) or [UNSCOPED])[0]
+    keyed_by = rdflib.URIRef(PLANNING + "keyedBy")
     mine = []
     written = footprint.written(store, at)       # at the pass's instant: a read of the clock is a tick
     #  THE WANTS HOLDING AT ANY INSTANT THE AGENT CAN SEE: those holding now, and those minted for
@@ -764,8 +770,15 @@ def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, sc
         #  are read by a want refined below and changed by nothing, so they say nothing about
         #  which world could repair it — counted, they pulled a courier goal into hanoi's scope.
         changeable = [p for p in reads if str(p) in written] or list(reads)
-        reached = sorted({scopes[str(p)] for p in changeable if str(p) in scopes}) or sorted(
-            {scopes[str(t)] for t in footprint.terms_of_shape(shapes, met) if str(t) in scopes})
+        placed = scopes.meet(str(p) for p in changeable)
+        if len(placed) != 1:
+            #  THE TERMS BREAK THE TIE THE PREDICATES LEAVE, and never overrule them: among the
+            #  scopes the predicates left, those the terms meet in; the terms alone where the
+            #  predicates placed it nowhere.
+            terms = {str(t) for t in footprint.terms_of_shape(shapes, met)} | {str(t) for t in shapes.objects(rdflib.URIRef(want), keyed_by)}
+            narrowed = scopes.meet(terms)
+            placed = (placed & narrowed) or placed or narrowed
+        reached = sorted(placed)
         if reached[:1] == [scope] or (not reached and scope == first):
             mine.append(want)
     return mine

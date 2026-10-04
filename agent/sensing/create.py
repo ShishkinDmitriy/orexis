@@ -16,11 +16,10 @@ from __future__ import annotations
 from datetime import datetime
 
 from agent.lifecycle import Signal
-from agent.ontology import PUBLIC, local_of
-from agent.store import Raw, catalogue_of, graphs_of, revisions_of, rows
+from agent.store import Raw, catalogue_of, revisions_of, rows
 
 from .cadence import cadence_of
-from .events import Observed, Silence
+from .events import Observed, Silence, tag_of
 from .missed import missed
 from .ontology import OBSERVATION_GRAPH
 
@@ -28,13 +27,12 @@ from .ontology import OBSERVATION_GRAPH
 EVERY_S = 60.0
 
 #  WHAT AN OBSERVATION IS — what the sensor gave, in the graph written, and what the rules concluded
-#  of it, in its revisions — and the ids its sensor and its subject go by.
+#  of it, in its revisions. Its sensor and its subject go by the local names of their IRIs
+#  (`events.tag_of`), never by a stated id a world may leave out (#885).
 _OBSERVED_Q = """
 SELECT ?sensor ?feature ?property ?value ?t WHERE {
   ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?t ; sosa:hasFeatureOfInterest ?feature ;
      sosa:observedProperty ?property ; sosa:hasSimpleResult ?value } LIMIT 1"""
-_IDS_Q = """
-SELECT ?subject ?sensor WHERE { OPTIONAL { $feature orexis:localId ?subject } OPTIONAL { $sensor orexis:localId ?sensor } }"""
 
 #  THE SENSORS SAID SILENT NOW: `sensing:silentSince` in a state graph of the agent's.
 _SILENT_Q = """
@@ -67,11 +65,10 @@ class _Sensing:
         at = datetime.fromisoformat(o["t"])
         before = self._last.get(o["sensor"])
         self._last[o["sensor"]] = at
-        ids = (rows(beliefs, _IDS_Q, graphs_of(beliefs, PUBLIC), feature=o["feature"], sensor=o["sensor"]) or [{}])[0]
         cadence = cadence_of(beliefs, o["sensor"])
         return self.observed.emit(Observed(
             observed_property=o["property"], value=round(float(o["value"]), 6), at=at,
-            sensor=ids.get("sensor") or local_of(o["sensor"]), sensor_id=ids.get("sensor"), subject_id=ids.get("subject"),
+            sensor=tag_of(o["sensor"]), sensor_id=tag_of(o["sensor"]), subject_id=tag_of(o["feature"]),
             interval_s=round((at - before).total_seconds(), 3) if before is not None else None,
             cadence_s=float(cadence) if cadence is not None else None))
 

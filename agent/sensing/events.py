@@ -3,12 +3,16 @@ which is history.
 
 AN OBSERVATION IS HISTORY: one point per observation written, measured under the observed property's
 own name — its local name, so a temperature is `AirTemperature` and this module names no property —
-with field `value`, tagged `plant` (the subject's `orexis:localId`) and `sensor` (the sensor's), and
-stamped with the reading's own `sosa:resultTime`, so the series and the belief agree on when. A
-subject or a sensor stating no `orexis:localId` is not tagged. The `plant` tag is a domain word in
-sensing's code, carried over as it stood, and #834 renames it for its SOSA role; the dashboards
-filter on `sensor` alone. `orexis-dashboards` asks `measurement_of` and `FIELD` here, so a panel
-cannot query a name sensing does not write.
+with field `value`, tagged `plant` (the subject) and `sensor` (the sensor), each the local name of its
+IRI (`tag_of`), and stamped with the reading's own `sosa:resultTime`, so the series and the belief
+agree on when. THE TAG IS THE IRI'S LOCAL NAME AND NEVER A STATED `orexis:localId`: tagged by the
+stated id, a sensor stating none was not tagged at all, and the one world whose sensors state none —
+the greenhouse, which names its devices by the topics its society wires — wrote points no panel could
+filter for and got no readings dashboard (#885); in every world that did state one it equalled the
+local name, and the id is the agent's, the one short string a process is handed. The `plant` tag is a
+domain word in sensing's code, carried over as it stood, and #834 renames it for its SOSA role; the
+dashboards filter on `sensor` alone. `orexis-dashboards` asks `measurement_of`, `tag_of` and `FIELD`
+here, so a panel cannot query a name or a tag sensing does not write.
 
 AND IT IS A METRIC: how long after the reading it replaced it came, in the agent's seconds, beside
 the cadence the world states, tagged by the sensor. So is how many sensors are said silent now, which
@@ -31,11 +35,17 @@ def measurement_of(prop: str) -> str:
     return local_of(prop)
 
 
+def tag_of(iri: str) -> str:
+    """The tag a sensor or a subject goes by in the series: the local name of its IRI, which every
+    document gives it, where a stated `orexis:localId` is an agent's and a board's."""
+    return local_of(iri)
+
+
 @dataclass(frozen=True)
 class Observed:
     """An observation of `observed_property` by the sensor, reading `value` at `at`: the sensor's and
-    its subject's ids where the world states them, and how long after the reading it replaced it came
-    beside the cadence the world states, where either is known."""
+    its subject's tags, the local names of their IRIs, and how long after the reading it replaced it
+    came beside the cadence the world states, where either is known."""
     metric = "received"
     observed_property: str
     value: float

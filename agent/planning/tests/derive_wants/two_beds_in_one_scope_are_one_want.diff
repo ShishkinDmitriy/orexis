@@ -1,0 +1,49 @@
+--- case
++++ expected
+@@ -86,4 +86,46 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:d19775254f1025d77f78b13df544de29631df012d5e0c74eca2e2477404ae45f" .
++  ground:2026-01-01T120000p0000.for.keeper.comfortable a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.comfortable planning:for :keeper.comfortable .
++  ground:2026-01-01T120000p0000.for.keeper.comfortable planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.comfortable planning:violation [ planning:about :Moisture ; planning:constraint 0 ; planning:instance :keeper ; planning:offending :soil1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.comfortable planning:violation [ planning:about :Moisture ; planning:constraint 0 ; planning:instance :keeper ; planning:offending :soil2 ] .
++  ground:2026-01-01T120000p0000.for.keeper.comfortable planning:weighs ground:2026-01-01T120000p0000 .
++  pursued:2026-01-01T120000p0000--open a orexis:Graph .
++  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :soil1 a sosa:Observation .
++  :soil1 prov:wasGeneratedBy :keeper .
++  :soil1 sensing:below :bed1_range .
++  :soil1 sosa:hasFeatureOfInterest :bed1 .
++  :soil1 sosa:observedProperty :Moisture .
++  :soil2 a sosa:Observation .
++  :soil2 prov:wasGeneratedBy :keeper .
++  :soil2 sensing:below :bed2_range .
++  :soil2 sosa:hasFeatureOfInterest :bed2 .
++  :soil2 sosa:observedProperty :Moisture .
++}
++
++GRAPH pursued:2026-01-01T120000p0000--open {
++  :keeper planning:holds :keeper.comfortable.pursued.Moisture .
++  :keeper.comfortable.pursued.Moisture a planning:Want .
++  :keeper.comfortable.pursued.Moisture planning:metWhen :keeper.comfortable.pursued.Moisture.met .
++  :keeper.comfortable.pursued.Moisture planning:state planning:Recognized .
++  :keeper.comfortable.pursued.Moisture prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.comfortable.pursued.Moisture prov:wasDerivedFrom :keeper.comfortable .
++  :keeper.comfortable.pursued.Moisture rdfs:label "pursued: every bed's soil inside its range" .
++  :keeper.comfortable.pursued.Moisture.met a sh:NodeShape .
++  :keeper.comfortable.pursued.Moisture.met sh:property [ planning:about :Moisture ; sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:property [ sh:hasValue :Moisture ; sh:path sosa:observedProperty ] ; sh:property [ sh:minCount 1 ; sh:path sensing:below ] ] ] .
++  :keeper.comfortable.pursued.Moisture.met sh:targetNode :keeper .
++}

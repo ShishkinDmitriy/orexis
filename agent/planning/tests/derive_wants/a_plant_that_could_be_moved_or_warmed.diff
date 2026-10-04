@@ -11,7 +11,7 @@
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:for :keeper.warm_enough .
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:met false .
-+  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:violation [ planning:about water:AirTemperature ; planning:constraint 1 ; planning:instance :fern ] .
++  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:violation [ planning:about water:AirTemperature ; planning:constraint 1 ; planning:instance :fern ; planning:offending :cold_reading ] .
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
