@@ -83,6 +83,12 @@ say "onboarding $world from nothing"
 orexis-onboard "$world"
 git diff --exit-code -- "$dir/compose.yaml" \
   || fail "onboarding regenerated $world's compose file differently from the one committed"
+# A world that observes something gets a readings dashboard, or the generator read its wiring wrong:
+# the greenhouse once onboarded green with "nothing observes anything" in the log (#885).
+if grep -q "sosa:observes" "$dir"/*.ttl; then
+  [ -f "infra/grafana/dashboards/$world/orexis.json" ] \
+    || fail "$world observes something and onboarding wrote it no readings dashboard"
+fi
 
 say "starting $world at pace $pace"
 epoch=$(date -u +%Y-%m-%dT%H:%M:%SZ)

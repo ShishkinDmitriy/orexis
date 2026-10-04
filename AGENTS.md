@@ -130,7 +130,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 ### Words, records and the bundle
 
 - **An RDF URI beats a homemade id for referring to an agent**; the one short string left is the
-  one that must also be a broker principal, a bucket, a container and a directory.
+  one that must also be a broker principal, a bucket, a container and a directory — and a sensor
+  or a subject goes by the local name of its IRI in the series, since a stated id equalled it in
+  every world and was missing in the one that mattered, which got no readings dashboard (#885).
 - **A term nobody reads is annotation**, however many instances state it.
 - **A word used before it is defined is a word everyone defines differently** — `duty` ran to 64
   code sites and 13 pages, meaning `obligation` all along.
