@@ -83,9 +83,11 @@ spent the puzzle's budget and moved no disk.
 
 `scope_actions` writes the partition to the store's scope graph at boot — a `planning:Scope`
 per part, each action `planning:inScope` every scope a filling of it falls in, and each predicate
-and each TERM a key holds `planning:inScope` its own where that is one scope and nowhere where it
-is two, since a reader told nothing joins every group — and `derive_wants` clusters a desire's
+and each TERM a filling binds — the property, the valve — `planning:inScope` its own where that is
+one scope and nowhere where it is two, since a reader told nothing joins every group — and `derive_wants` clusters a desire's
 witnesses by the scope of what each is about, never recomputing it. The Planner keeps an
 imaginarium per scope, places a want by the predicates its met-test reads and, where those place
-it nowhere, by the terms it names, and hands each search the actions `planning:inScope` of it. The cases in
+it nowhere, by the terms it names, and hands each search the actions `planning:inScope` of it and
+the terms that are another scope's, so a scope admits the FILLINGS that are its own: the lamp's
+heating is admitted in the light's search and not in the air's, though the action is in both. The cases in
 `agent/planning/tests/scope_actions/` hold the function to a snapshot of what it writes.

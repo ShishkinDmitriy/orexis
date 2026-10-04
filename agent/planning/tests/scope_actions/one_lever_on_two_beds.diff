@@ -34,7 +34,7 @@
  }
  
  GRAPH :catalogue {
-@@ -53,4 +52,18 @@
+@@ -53,4 +52,20 @@
    :ontology a orexis:PublicGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -50,6 +50,8 @@
 +  :bed2 planning:inScope scopes:2 .
 +  :dose planning:inScope scopes:1 .
 +  :dose planning:inScope scopes:2 .
++  :pump1 planning:inScope scopes:1 .
++  :pump2 planning:inScope scopes:2 .
 +  scopes:1 a planning:Scope .
 +  scopes:2 a planning:Scope .
 +}

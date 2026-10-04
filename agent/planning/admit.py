@@ -16,7 +16,8 @@ the edge and the world it makes are one spelling apart, for eyes.
 
 **THE WORLD IS ASKED ABOUT, NOT HELD**: `world_at` says what a precondition reads there, and
 the precondition names no graph to get it (#666). **AND EVERY ACTION OF THE SCOPE IS ASKED**,
-`only` naming them: an action of another scope writes nothing a want of this one reads, so its
+`only` naming them, and every filling of the scope, `elsewhere` naming the terms that are another's:
+an action of another scope writes nothing a want of this one reads, so its
 steps fork worlds the met-test cannot tell apart — a courier's drive, taken in hanoi's search
 once a world combined the two domains, spent the budget and moved no disk. None asks every
 action, which a store of one scope is.
@@ -60,7 +61,7 @@ SELECT ?c ?action ?p ?v WHERE {
                OPTIONAL { ?c ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, rdf:type)) } } }"""
 
 
-def admit(store, world: str, me: str, *, only=None, memo=None) -> None:
+def admit(store, world: str, me: str, *, only=None, elsewhere=frozenset(), memo=None) -> None:
     """Write every candidate `world` admits for the agent `me`: one per action per row its
     precondition binds there, each saying which world it leaves (`planning:from`), which
     action it fills and, one triple per parameter under the parameter's own IRI, what it is
@@ -75,6 +76,11 @@ def admit(store, world: str, me: str, *, only=None, memo=None) -> None:
     are honest. ZERO IS ORDINARY: nine of the eleven actions a simulation agent loads are
     admitted by nothing. MANY is ordinary too — a supplier with three valves admits `Serving`
     three times, and choosing between them is the whole of what the search does there.
+
+    AND A SCOPE ADMITS A FILLING, NOT AN ACTION (#593): one action filled two ways — a heater on the
+    air and a lamp on the light — is in two scopes, and the air's search is not the lamp's. A filling
+    one of whose values is a member of another scope, `elsewhere`, is that scope's and is not written
+    here; a value no scope holds alone — the agent, the bed — tells nothing and refuses nothing.
     """
     graphs = world_at(store, world, memo=memo)
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
@@ -94,7 +100,7 @@ def admit(store, world: str, me: str, *, only=None, memo=None) -> None:
         params = {local_of(p): p for p in (action.get("takes_") or "").split()}
         for row in bindings(query(store, bind(action["precondition"], me=me), graphs)):
             filling = sorted((iri, row[local]) for local, iri in params.items() if row.get(local))
-            if (action["action"], frozenset(filling)) in already:
+            if (action["action"], frozenset(filling)) in already or any(v in elsewhere for _, v in filling):
                 continue
             segment = "-".join(quote(local_of(part), safe="")
                                for part in (action["action"], *(v for _, v in filling)))

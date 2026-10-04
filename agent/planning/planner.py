@@ -422,11 +422,14 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  THE SCOPE'S OWN ACTIONS are what its worlds admit; a store of no scope admits all.
             only = None if _scope == UNSCOPED else {
                 r["a"] for r in rows(self.beliefs, _IN_SCOPE_Q, graphs_of(self.beliefs, SCOPE_GRAPH), scope=_scope)}
+            #  AND THE TERMS THAT ARE ANOTHER SCOPE'S, so a filling of a shared action that is theirs
+            #  — the lamp's heating, in the air's search — is not admitted here (#593).
+            elsewhere = frozenset(m for m, s in scopes.items() if s != _scope) if _scope != UNSCOPED else frozenset()
             shapes = memo.get(("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
             for want in _of_scope(store, shapes, self.uri, _scope, scopes, at):
                 if want in walking:
                     continue                # a want a plan is walking is not planned again
-                self.search(store, want, budget=self.budget, only=only, memo=memo, scope=_scope)
+                self.search(store, want, budget=self.budget, only=only, elsewhere=elsewhere, memo=memo, scope=_scope)
                 searched.add(want)
             if lap:
                 lap("search")
@@ -554,7 +557,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
     # --- one want ------------------------------------------------------------------------
 
     def search(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
-               memo: Memo | None = None, scope: str | None = None) -> None:
+               elsewhere=frozenset(), memo: Memo | None = None, scope: str | None = None) -> None:
         """Plan for `want` from the ground holding at its instant — the present, or the one a want
         minted for a foreseen instant names (#858) — spending at most `budget` candidates, and
         write the plan — whatever the search concluded, since an empty plan is an answer and
@@ -580,7 +583,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             if not pair.get("from"):
                 weigh(store, want, pair["about"], memo=memo)             # the root: the ground at its instant
         ceiling = _spent(store, want, memo) + budget
-        while (spent := self.expand(store, want, budget=ceiling, only=only, memo=memo)) is not None \
+        while (spent := self.expand(store, want, budget=ceiling, only=only, elsewhere=elsewhere, memo=memo)) is not None \
                 and spent < ceiling:
             pass
         extract_plan(store, want)
@@ -640,7 +643,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
     # --- one iteration -------------------------------------------------------------------
 
     def expand(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
-               memo: Memo | None = None) -> int | None:
+               elsewhere=frozenset(), memo: Memo | None = None) -> int | None:
         """Open the top of `want`'s frontier: admit what it admits, take each candidate this
         want has not yet weighed, weigh what it reached, close the world's weighing. What the
         want's search has spent afterwards, in candidates weighed — or None where there was
@@ -664,7 +667,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                            and float(top["spent"]) + float(top["remaining"]) >= float(top["best"])):
             return None
         world = top["w"]
-        admit(store, world, self.uri, only=only, memo=memo)
+        admit(store, world, self.uri, only=only, elsewhere=elsewhere, memo=memo)
         spent = int(top.get("used") or 0)
         for pair in unweighed(store, for_=want, leaving=world, memo=memo):
             if spent >= budget:

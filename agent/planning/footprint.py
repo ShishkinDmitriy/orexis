@@ -558,8 +558,12 @@ def _fillings(store, public, patterns: list, written: dict, changeable: set) -> 
         for subject, predicates in written.items():
             for pred in predicates:
                 atoms.add((pred, key(subject)))
-        keyed = {v for _, k in atoms for v in (k or ())}
-        fillings.append((frozenset(atoms), frozenset(iris & keyed)))
+        #  THE FILLING'S TERMS: every IRI the world binds in it — the valve as much as the property it
+        #  moves — so a scope can hold the valve as a member and a candidate filled with it is known
+        #  for that scope's; a value two scopes' fillings both bind, the agent or the bed, is nobody's.
+        for term in bound.values():
+            value(term)
+        fillings.append((frozenset(atoms), frozenset(iris)))
     return fillings
 
 

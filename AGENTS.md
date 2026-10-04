@@ -253,6 +253,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   heater writing one predicate on two readings are two scopes by the property each is keyed by, one
   again where a lever reaches into the other's; a term places a want only where its predicates place
   it nowhere, since the puzzle's peg is a cell the van drives to (a-scope-is-a-predicate-on-a-key).
+- **A scope admits a FILLING, not an action, and a possible world is the readings** — a lamp's heating
+  is admitted in the light's search alone though the action is the air's too; a world is two percent
+  of the present and grows with every sensor added, related or not (`world/greenhouse/tests/test_scaling.py`).
 - **A variable in predicate position writes what a `VALUES` block in its own text binds it to, and
   anything only where nothing bounds it** — the one range the scopes honour is SPARQL's own.
 - **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —

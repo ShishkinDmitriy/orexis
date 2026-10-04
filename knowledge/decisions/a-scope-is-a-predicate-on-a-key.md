@@ -62,6 +62,17 @@ scopes' actions write them, by the terms the met-test names — and only then.
   that term is a key of the courier's atoms alone; the tower hung searching for a disk among drives.
   Predicates place a want where they can; terms break the tie the shared predicates leave.
 
+# A scope admits a filling, not an action
+
+Measured the same day on the greenhouse with a lamp added — a second `climate:Heater` on the bed's
+light, a second filling of the one heating action — the air's search admitted the lamp's heating
+too: `only` named the ACTIONS of the scope, and the heating is in both. So a filling's terms are its
+scope's members — the valve, the heater, the lamp, each unique to the fillings it is of — and
+`admit` is handed the terms that are another scope's and writes no candidate filled with one. The
+agent and the bed are every filling's and nobody's member, and tell nothing. Held by
+`world/greenhouse/tests/test_scaling.py`: the soil's search is one world over one candidate with or
+without the lamp, and each scope admits one filling.
+
 # Measured
 
 - The greenhouse boots to two scopes, `{SoilMoisture, Dosing}` and `{AirTemperature, Heating}`,
@@ -90,6 +101,11 @@ scopes' actions write them, by the terms the met-test names — and only then.
   keyed through a sample of the bed (`?reading sosa:hasFeatureOfInterest ?sample . ?sample
   sosa:isSampleOf ?bed`) is keyed by the sample, which is as good a key while samples are not
   shared.
+- **A fork copies every reading, whatever its scope.** A possible world is the ground's size — the
+  readings and their sides, two percent of the present — and grows by every sensor added, related or
+  not: 24 quads to 35 with a light sensor the soil never reads. Narrowing the fork to the scope's keys
+  is the one figure in the scaling table not yet flat, and it waits on the empty-result trap being
+  closed for a world that holds less than the ground.
 - **The second imaginarium's price.** A scope costs a copy of the beliefs per pass. The world that
   pays more for the copies than it saves in worlds has not been built; the tower and the greenhouse
   both come out ahead or even.

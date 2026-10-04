@@ -53,14 +53,18 @@ def scope_actions(store: ox.Store) -> None:
     #  of which is in it. A predicate or a term that falls in two scopes is in neither for a
     #  reader — a reader asking it is told nothing, which joins every group, the safe side — where
     #  an action in two scopes is admitted in both.
-    terms = {t for fillings in atoms.values() if fillings is not ANYTHING for _, ts in fillings for t in ts}
+    part_of = {atom: n for n, part in enumerate(parts, 1) for atom in part}
     where: dict = {}
     for n, part in enumerate(parts, 1):
-        for predicate, key in part:
+        for predicate, _ in part:
             where.setdefault(("p", predicate), set()).add(n)
-            for term in key or ():
-                if term in terms:
-                    where.setdefault(("t", term), set()).add(n)
+    #  A FILLING'S TERMS BELONG TO THE SCOPE ITS ATOMS FALL IN — one, since a filling's atoms are
+    #  joined — so the valve a filling is of is the member a search tells its candidates by.
+    for fillings in atoms.values():
+        for atoms_, terms in (fillings if fillings is not ANYTHING else ()):
+            scopes_of = {part_of[a] for a in atoms_ if a in part_of}
+            for term in terms:
+                where.setdefault(("t", term), set()).update(scopes_of or set(range(1, len(parts) + 1)))
     written = []
     for n, part in enumerate(parts, 1):
         scope = _scope_name(n)

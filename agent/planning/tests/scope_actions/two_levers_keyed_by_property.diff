@@ -50,7 +50,7 @@
  }
  
  GRAPH :catalogue {
-@@ -63,4 +61,18 @@
+@@ -63,4 +61,20 @@
    :ontology a orexis:PublicGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -66,6 +66,8 @@
 +  :Temperature planning:inScope scopes:2 .
 +  :dose planning:inScope scopes:1 .
 +  :heat planning:inScope scopes:2 .
++  :heater planning:inScope scopes:2 .
++  :pump planning:inScope scopes:1 .
 +  scopes:1 a planning:Scope .
 +  scopes:2 a planning:Scope .
 +}
