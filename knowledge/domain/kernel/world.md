@@ -26,9 +26,9 @@ what it is with `<> a <a graph kind>` on its own IRI, or, in TriG, of each graph
 | `beliefs/<id>.ttl` | any agent-owned kind | one agent's own documents, in a world of several | that agent alone |
 | `hardware.ttl` | `onboarding:HardwareGraph` | pins, parts and boards | `orexis-firmware` alone |
 
-The file's NAME is for eyes; the kind in the document is what the loader reads. Seven ship:
-`hanoi`, `courier` and `tower` plan and exit; `greenhouse` doses and heats; `allotment` trades
-water on a market; `sensing` and `terrace` observe.
+The file's NAME is for eyes; the kind in the document is what the loader reads. Eight ship:
+`hanoi`, `courier` and `tower` plan and exit; `dispatcher` drives two vans for good; `greenhouse`
+doses and heats; `allotment` trades water on a market; `sensing` and `terrace` observe.
 
 # Who reads which kind
 
@@ -50,7 +50,7 @@ graph, onboarding's kind, which the agent's T-Box cannot name, so no agent's boo
 and no container mounts the document. A world may assert it there, and a world that does not is
 allocated a port by the installation, which alone sees which ports every world holds.
 
-A world with no bus — hanoi, courier, tower — has no society graph, and its one agent stays in the
+A world with no bus — hanoi, courier, tower, dispatcher — has no society graph, and its one agent stays in the
 world graph beside what it acts on.
 
 # How it is used

@@ -24,6 +24,15 @@ COMMITTED_STEP_GRAPH = EXECUTION + "CommittedStepGraph"
 LANDS_WITHIN_S = EXECUTION + "landsWithinS"
 ANSWERED_WITHIN_S = EXECUTION + "answeredWithinS"
 
+#  WHAT A STEP PREDICTS, as two graphs it names: the facts its world gains and the facts it loses,
+#  each a graph of a kind no reader of the present is handed — stated, never asserted
+#  (a-steps-prediction-is-two-graphs-it-names). Planning writes them beside the step when the plan is
+#  extracted; the executor holds the world to them and a fictive step is written from them.
+ADDS_GRAPH = EXECUTION + "AddsGraph"
+RETRACTS_GRAPH = EXECUTION + "RetractsGraph"
+ADDS = EXECUTION + "adds"
+RETRACTS = EXECUTION + "retracts"
+
 #  HOW LONG A COMMITMENT IS GIVEN before a fresh impulse to do the same thing is decided
 #  again — the one figure of execution's that something outside it reads: a want
 #  foreseen at an instant holds until that instant plus this, because the last step is placed

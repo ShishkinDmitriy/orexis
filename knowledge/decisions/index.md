@@ -53,6 +53,7 @@ Desire: where a want comes from, what shape it has, and who is allowed to change
 * [a-store-is-a-modality](/decisions/a-store-is-a-modality.md) - A modality is a store with its own persistence; graphs inside carry only arrival. The desires store is read-only to the runtime.
 * [a-desire-is-a-shape](/decisions/a-desire-is-a-shape.md) - SUPERSEDED IN PART — the met-test is SHACL and force is severity; the desire itself became a node carrying the shape.
 * [a-want-is-judged-by-its-met-test-and-nothing-else](/decisions/a-want-is-judged-by-its-met-test-and-nothing-else.md) - Three things were called urgency; all three are gone, and a want's met-test is the one judgment left.
+* [a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astray-is-a-want-of-its-own.md) - A shape over instances says each block is about `sh:this`, or two parcels are one want searched over the product.
 
 # The mind — intention, act and execution
 
@@ -63,6 +64,7 @@ What happens to a decision — committed as an intention, carried out by whoever
 * [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) - The plan's head is what the keeper writes, execution is one kernel path, and `orexis:takenBy` links a row to the code that takes it.
 * [an-action-takes-parameters](/decisions/an-action-takes-parameters.md) - An action declares what it is filled with; the kernel carries opaque pairs and names no column.
 * [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) - `orexis:Means` read by nothing; the action node is what a row carries and an intention commits to, and the five means are gone.
+* [a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md) - A step predicts in two graphs it names, stated and never asserted; a JSON literal, reification and RDF-star refused, the precondition retired.
 
 # The mind — deliberation and the model
 

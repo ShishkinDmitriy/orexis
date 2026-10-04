@@ -1,0 +1,49 @@
+@prefix : <http://example.org/orexis/world/dispatcher#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
+    owl:imports <../../domains/courier/ontology.ttl> .    # the domain this world poses
+
+#  THE DISPATCHER: the courier's grid with TWO vans and two parcels, and one agent driving both
+#  (#567). The point of the world is independence by INSTANCE rather than by vocabulary: nothing
+#  van A does reads a fact about van B, so the two deliveries are two causal chains in one
+#  domain — which a scope over predicates cannot see, and a scope over keys only sees where no
+#  filling binds both vans. Here one does: a parcel standing where either van could stand is a
+#  filling value of both vans' Pick, so the parcels join the vans into one scope
+#  (a-scope-is-a-predicate-on-a-key, the two-vans seam). The world is where that is measured.
+#  The grid is the courier's 4x4; where the vans and the parcels stand is posed in state.ttl, and
+#  the parcels are owed at the top of their own columns, so the shipped delivery is two chains
+#  that never meet. The corridor case, where the two shortest chains cross one cell at one step,
+#  is the test's variant of this world (`tests/test_dispatcher.py`).
+
+:dispatcher a orexis:Agent ;
+    orexis:localId "dispatcher" ;
+    rdfs:comment "The dispatcher: a mind with the courier's three actions over two vans, acting for nothing and owing nobody." .
+
+:van_a a courier:Van ; rdfs:label "van A" .
+:van_b a courier:Van ; rdfs:label "van B" .
+
+:parcel_a a courier:Parcel ; courier:destination :c0_3 ;
+    rdfs:label "the parcel owed at the top of the first column" .
+:parcel_b a courier:Parcel ; courier:destination :c3_3 ;
+    rdfs:label "the parcel owed at the top of the last column" .
+
+:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
+:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
+:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .
+:c0_3 a courier:Cell ; courier:x 0 ; courier:y 3 .
+:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 .
+:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 .
+:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 .
+:c1_3 a courier:Cell ; courier:x 1 ; courier:y 3 .
+:c2_0 a courier:Cell ; courier:x 2 ; courier:y 0 .
+:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 .
+:c2_2 a courier:Cell ; courier:x 2 ; courier:y 2 .
+:c2_3 a courier:Cell ; courier:x 2 ; courier:y 3 .
+:c3_0 a courier:Cell ; courier:x 3 ; courier:y 0 .
+:c3_1 a courier:Cell ; courier:x 3 ; courier:y 1 .
+:c3_2 a courier:Cell ; courier:x 3 ; courier:y 2 .
+:c3_3 a courier:Cell ; courier:x 3 ; courier:y 3 .

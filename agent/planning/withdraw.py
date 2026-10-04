@@ -127,10 +127,17 @@ SELECT ?plan WHERE {
   GRAPH ?plan { ?plan planning:for $want } }"""
 
 
+#  THE GRAPHS A PLAN'S STEPS NAME — what each step predicts, which goes with the plan.
+_STEP_GRAPHS_Q = """SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }"""
+
+
 def _forget_search(store, uri: str) -> None:
-    """Drop what a search wrote about one want: every weighing for it and its plan."""
+    """Drop what a search wrote about one want: every weighing for it and its plan, with the
+    two graphs each of its steps predicts in."""
     update(store, bind(_WEIGHINGS_U, want=uri))
     for row in rows(store, _PLAN_Q, (), want=uri):
+        for g in rows(store, _STEP_GRAPHS_Q, (), plan=Raw(f"<{row['plan']}>")):
+            forget_graph(store, g["g"])
         forget_graph(store, row["plan"])
 
 

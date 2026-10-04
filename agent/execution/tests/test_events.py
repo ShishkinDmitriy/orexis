@@ -4,7 +4,6 @@ takes — and nothing made where nobody hears."""
 
 from __future__ import annotations
 
-import json
 from datetime import datetime, timedelta, timezone
 
 import pyoxigraph as ox
@@ -13,7 +12,6 @@ import pytest
 from agent import clock
 from agent.execution.events import MEASUREMENT, StepAnswered, StepTaken
 from agent.execution.executor import DEFAULT_PATIENCE_S, Executor
-from agent.hash_named_graph import facts_of
 from agent.store import put_graph, update
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -51,15 +49,16 @@ GRAPH <{T}catalogue> {{
 
 
 def _plan() -> ox.Store:
-    """One step filling `Move` with disk_1 and peg B, predicting the disk on B, landing at NOW."""
-    (before,) = facts_of(_beliefs(PEG_A), STATE)
-    (after,) = facts_of(_beliefs(PEG_B), STATE)
-    predicts = json.dumps({"adds": [after], "retracts": [before]})
+    """One step filling `Move` with disk_1 and peg B, predicting the disk on B in the two graphs a
+    step names, landing at NOW."""
     st = ox.Store()
     update(st, f"""INSERT DATA {{ GRAPH <{PLAN}> {{
   <{PLAN}.0> a execution:Step ; execution:partOf <{PLAN}> ; <{FILLS}> <{MOVE}> ;
              <{T}disk> <{DISK}> ; <{T}to> <{PEG_B}> ; <{T}spent> 1 ;
-             execution:predicts {json.dumps(predicts)} ; execution:landsAt "{NOW.isoformat()}"^^xsd:dateTime }} }}""")
+             execution:adds <{PLAN}.0.adds> ; execution:retracts <{PLAN}.0.retracts> ;
+             execution:landsAt "{NOW.isoformat()}"^^xsd:dateTime }}
+  GRAPH <{PLAN}.0.adds> {{ <{DISK}> <{ON}> <{PEG_B}> }}
+  GRAPH <{PLAN}.0.retracts> {{ <{DISK}> <{ON}> <{PEG_A}> }} }}""")
     return st
 
 

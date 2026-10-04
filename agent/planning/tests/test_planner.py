@@ -106,8 +106,11 @@ def _steps(planner) -> int:
 
 
 def _move(store, disk: str, onto: str) -> None:
-    """The world moves a disk: its `hanoi:on` row replaced in the state graph."""
-    (row,) = rows(store, f'SELECT ?d ?p ?o ?g WHERE {{ GRAPH ?g {{ ?d ?p ?o }} FILTER(STRENDS(STR(?d), "{disk}") && STRENDS(STR(?p), "#on")) }}')
+    """The world moves a disk: its `hanoi:on` row replaced in the state graph — asked by kind, since
+    a published plan's steps state the same row in the graphs they predict in, and those are not
+    the world."""
+    (row,) = rows(store, f'''SELECT ?d ?p ?o ?g WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph }}
+        GRAPH ?g {{ ?d ?p ?o }} FILTER(STRENDS(STR(?d), "{disk}") && STRENDS(STR(?p), "#on")) }}''')
     store.update(f'DELETE DATA {{ GRAPH <{row["g"]}> {{ <{row["d"]}> <{row["p"]}> <{row["o"]}> }} }} ; '
                  f'INSERT DATA {{ GRAPH <{row["g"]}> {{ <{row["d"]}> <{row["p"]}> <{onto}> }} }}')
 
@@ -181,7 +184,7 @@ def test_a_surprise_starts_the_search_afresh(monkeypatch, snapshots):
     #  the last pass's is the ground its ancestry ends at.
     old = set(graphs_of(im, GROUND_GRAPH))
     assert old and graphs_of(im, POSSIBLE_GRAPH), "the first pass imagined something to lose"
-    (a_disk,) = rows(store, 'SELECT ?d WHERE { GRAPH ?g { ?d ?p ?o } FILTER(STRENDS(STR(?d), "disk_1") && STRENDS(STR(?p), "#on")) }')
+    (a_disk,) = rows(store, 'SELECT ?d WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph } GRAPH ?g { ?d ?p ?o } FILTER(STRENDS(STR(?d), "disk_1") && STRENDS(STR(?p), "#on")) }')
     hanoi = "http://example.org/orexis/hanoi#"
     _move(store, "disk_1", hanoi + "PegB")
     _move(store, "disk_2", a_disk["d"])
@@ -315,7 +318,7 @@ def test_a_step_the_present_no_longer_admits_is_blocked(monkeypatch, snapshots):
     store, held = _two_disks(snapshots, held=True)
     held.plan(snapshots.NOW)
     (standing,) = held.executor.standing()
-    (a_disk,) = rows(store, 'SELECT ?d WHERE { GRAPH ?g { ?d ?p ?o } FILTER(STRENDS(STR(?d), "disk_1") && STRENDS(STR(?p), "#on")) }')
+    (a_disk,) = rows(store, 'SELECT ?d WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph } GRAPH ?g { ?d ?p ?o } FILTER(STRENDS(STR(?d), "disk_1") && STRENDS(STR(?p), "#on")) }')
     _move(store, "disk_2", a_disk["d"])
     later = snapshots.NOW + timedelta(minutes=1)
     monkeypatch.setattr(clock, "now", lambda: later)
@@ -331,7 +334,7 @@ def test_a_want_the_world_meets_before_the_plan_begins_is_reached(monkeypatch, s
     held.plan(snapshots.NOW)
     (standing,) = held.executor.standing()
     hanoi = "http://example.org/orexis/hanoi#"
-    (disk_2,) = rows(store, 'SELECT ?d WHERE { GRAPH ?g { ?d ?p ?o } FILTER(STRENDS(STR(?d), "disk_2") && STRENDS(STR(?p), "#on")) }')
+    (disk_2,) = rows(store, 'SELECT ?d WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph } GRAPH ?g { ?d ?p ?o } FILTER(STRENDS(STR(?d), "disk_2") && STRENDS(STR(?p), "#on")) }')
     _move(store, "disk_2", hanoi + "PegC")
     _move(store, "disk_1", disk_2["d"])
     later = snapshots.NOW + timedelta(minutes=1)

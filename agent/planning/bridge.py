@@ -13,8 +13,10 @@ from __future__ import annotations
 import logging
 import re
 
+import pyoxigraph as ox
+
 from agent.ontology import local_of
-from agent.store import graphs_of, rows
+from agent.store import bind, graphs_of, quads, rows
 
 log = logging.getLogger("bridge")
 
@@ -23,6 +25,12 @@ RULES_GRAPH = "http://www.w3.org/ns/shacl#RulesGraph"
 _RULES_Q = """
 SELECT ?rule ?text WHERE { ?rule a sh:SPARQLRule ; sh:construct ?text .
                            FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule"""
+
+#  THE TWO GRAPHS A STEP PREDICTS IN, wherever its plan is (a-steps-prediction-is-two-graphs-it-names).
+_PREDICTED_Q = """
+SELECT ?adds ?retracts WHERE {
+  OPTIONAL { GRAPH ?a { $step execution:adds ?adds } }
+  OPTIONAL { GRAPH ?r { $step execution:retracts ?retracts } } } LIMIT 1"""
 
 _PREFIX = re.compile(r"^\s*PREFIX\s+(?:[A-Za-z][\w.-]*)?\s*:\s*<[^>]*>\s*$", re.I | re.M)
 _TERM = r"(\?\w+|<[^>]+>|(?:[A-Za-z][\w.-]*)?:[\w.-]*|a)"
@@ -35,16 +43,21 @@ def heads(store) -> list[tuple[list[str], tuple[str, str, str], str, dict[str, s
     return [(declared, head, where, _names(declared)) for declared, head, where in parsed]
 
 
-def keeps(store, adds) -> bool:
-    """Whether a step predicting the facts it `adds` is kept below: a bridge's head binds one of
-    them — which is what makes `refine` mint a want for it whatever the present holds."""
+def keeps(store, step: str) -> bool:
+    """Whether the step `step` is kept below: a bridge's head binds a fact the step predicts its
+    world gains — which is what makes `refine` mint a want for it whatever the present holds."""
     found = heads(store)
-    return any(binding(head, as_fact(f), names) is not None for f in adds for _, head, _, names in found)
+    adds, _ = predicted(store, step)
+    return any(binding(head, f, names) is not None for f in adds for _, head, _, names in found)
 
 
-def as_fact(f) -> tuple:
-    """A canonical fact as nested tuples, whether it came from JSON or from the store."""
-    return tuple(as_fact(x) for x in f) if isinstance(f, (list, tuple)) else f
+def predicted(store, step: str) -> tuple[list[tuple], list[tuple]]:
+    """What the step `step` predicts, as the terms they are: the facts of the graph it
+    `execution:adds` and of the one it `execution:retracts`, each a `(subject, predicate, object)`
+    of the engine's own terms, sorted. Empty on a side the step does not name."""
+    found = next(iter(rows(store, bind(_PREDICTED_Q, step=step))), {})
+    facts = lambda g: sorted(((q.subject, q.predicate, q.object) for q in quads(store, g)), key=str) if g else []
+    return facts(found.get("adds")), facts(found.get("retracts"))
 
 
 def _rules(store) -> list[tuple[str, str]]:
@@ -114,11 +127,11 @@ def _names(declared: list[str]) -> dict[str, str]:
 
 
 def binding(head: tuple[str, str, str], fact, names: dict[str, str]) -> dict[str, str] | None:
-    """The head's variables bound to one predicted fact, as the terms they are — None where the
-    head does not conclude that fact."""
+    """The head's variables bound to one predicted fact — a triple of the engine's terms — as
+    SPARQL text; None where the head does not conclude that fact."""
     s, p, o = head
     fs, fp, fo = fact
-    if expand(p, names) != fp:
+    if expand(p, names) != fp.value:
         return None
     bound: dict[str, str] = {}
     for term, value in ((s, fs), (o, fo)):
@@ -128,7 +141,7 @@ def binding(head: tuple[str, str, str], fact, names: dict[str, str]) -> dict[str
         if term.startswith("?"):
             if bound.setdefault(term[1:], rendered) != rendered:
                 return None
-        elif expand(term, names) != (value[1] if value[0] == "iri" else None):
+        elif expand(term, names) != (value.value if isinstance(value, ox.NamedNode) else None):
             return None
     return bound
 
@@ -146,15 +159,12 @@ def expand(term: str, names: dict[str, str]) -> str | None:
 
 
 def _render(value) -> str | None:
-    """A canonical term back as SPARQL: an IRI, a number, a text with its language or type."""
-    kind = value[0]
-    if kind == "iri":
-        return f"<{value[1]}>"
-    if kind == "num":
-        return repr(value[1])
-    if kind == "lit":
-        text, tag = value[1], value[2]
-        return literal(text) + (f"^^<{tag}>" if "://" in tag else (f"@{tag}" if tag else ""))
+    """A term as SPARQL: an IRI in angles, a literal in its N-Triples form. A blank node is
+    nothing a WHERE can be bound to and is refused."""
+    if isinstance(value, ox.NamedNode):
+        return f"<{value.value}>"
+    if isinstance(value, ox.Literal):
+        return str(value)
     return None
 
 

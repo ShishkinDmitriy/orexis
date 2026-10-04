@@ -5,8 +5,8 @@ term: http://example.org/orexis/planning#precondition
 description: >-
   When an action may be taken - a SELECT over a world binding one variable per parameter the
   action takes, whose rows are the steps that world admits. Zero rows is ordinary, many is the
-  choice the search makes. A step carries what its rules read there, as facts, beside what it
-  predicts.
+  choice the search makes. Asked of the present again to learn whether a step still applies, so
+  no step keeps a copy of what it read.
 ---
 
 # What it is
@@ -21,8 +21,11 @@ A precondition is the query, whole. It says which disk may move onto which peg, 
 to which neighbouring cell, which venue has a round open to tender into; nothing else in the
 action restates it.
 
-# What a step carries
+# What a step does not carry
 
-When a plan is extracted, each step carries `execution:precondition`: the positive patterns its
-precondition and its effect read, instantiated for its filling in the world it was planned from,
-as the same canonical facts its prediction is made of. It is the step's premise, kept with it.
+A [step](/domain/execution/step.md) keeps no copy of what its precondition read in the world it was
+planned from. Whether a step an intention stands at can still be taken is asked of the present by
+running the action's precondition there again (`Planner._blocked`), and a row carrying the step's own
+filling is the answer; a stored copy of the facts the search read was declared once, written by
+nothing, and retired
+([a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md)).

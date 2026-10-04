@@ -16,8 +16,11 @@ from agent.store import graphs_of, rows
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 
+#  THE DISKS HOME, read off the state by kind: a published plan's steps state the same rows in the
+#  graphs they predict in, and a prediction of a disk on C is not a disk on C.
 _HOME_Q = """PREFIX hanoi: <http://example.org/orexis/hanoi#>
-SELECT (COUNT(DISTINCT ?d) AS ?n) WHERE { GRAPH ?g { ?d (hanoi:on)+ hanoi:PegC } }"""
+SELECT (COUNT(DISTINCT ?d) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph }
+  GRAPH ?g { ?d (hanoi:on)+ hanoi:PegC } }"""
 _ACTS_Q = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }"
 
 

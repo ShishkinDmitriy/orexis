@@ -31,18 +31,16 @@ produced them. So the root is `planning:Plan` and execution reads past it to the
 
 from __future__ import annotations
 
-import json
 from urllib.parse import quote
 
 import pyoxigraph as ox
 
-from agent.hash_named_graph import facts_of
 from agent.ontology import GRAPH_PREFIX, local_of
-from agent.store import Raw, bind, clear_graph, rows, update
+from agent.store import Raw, bind, clear_graph, forget_graph, rows, update
 
 from .ontology import EXHAUSTED, NO_CANDIDATE, SATISFIED
 
-#  ONE UPDATE, FIVE OPERATIONS, and nothing read out. It was a clear, four updates and a
+#  ONE UPDATE, NINE OPERATIONS, and nothing read out. It was a clear, four updates and a
 #  classification of three questions each — eight round trips per plan — and every part of
 #  that is something the engine does over its own graphs in one text.
 #
@@ -64,12 +62,19 @@ from .ontology import EXHAUSTED, NO_CANDIDATE, SATISFIED
 #  5. EVERY KIND THE VOCABULARY PUTS A PLAN GRAPH BENEATH, from one `rdfs:subClassOf` step —
 #     the closure is materialised at genesis, so one step is every step. Its own operation,
 #     because a vocabulary that says nothing of plan graphs must not take the row with it.
-#  A STEP SAYS WHAT IT PREDICTS: the diff of the world it reaches against the one it leaves, the
-#  canonical facts a world's digest is made of, as one JSON literal of two lists (`adds`,
-#  `retracts`) under `execution:predicts` — one declaration, the effect the search planned on,
-#  which is what the world is held to after the step lands (an-effect-is-one-declaration). Read
-#  off the two graphs in Python, since a diff of two graphs is not a pattern, and spliced in as a
-#  VALUES row per world.
+#  6–7. A STEP SAYS WHAT IT PREDICTS, AS TWO GRAPHS IT NAMES: `<step>.adds` holds what the world
+#     it reaches states and the one it leaves does not, `<step>.retracts` the converse — one
+#     declaration, the effect the search planned on, which is what the world is held to after the
+#     step lands (an-effect-is-one-declaration). Stated and never asserted: the graphs' kinds are
+#     execution's and beneath `orexis:Graph` alone, so no reader of the present is handed them
+#     (a-steps-prediction-is-two-graphs-it-names). THE DIFF IS A PATTERN — `GRAPH ?w { ?s ?p ?o }
+#     FILTER NOT EXISTS { GRAPH ?in { ?s ?p ?o } }` — and the engine computes it where the worlds
+#     are; it was the canonical facts of two worlds set-differenced in Python and written as one
+#     JSON string of them, which nothing could query, abbreviate or compare in a pattern (#759).
+#     A blank node keeps its identity across a fork, so a term diff is as faithful as the
+#     canonical one was.
+#  8–9. WHAT THE TWO GRAPHS ARE, on their catalogue rows, and every kind the vocabulary puts
+#     each beneath — as 4 and 5 do for the plan.
 #  A STEP SAYS WHEN IT MAY BE TAKEN AND WHEN IT LANDS, in execution's words: `execution:notBefore` is
 #  the start of the period of the world the step is taken in, `execution:landsAt` the start of the
 #  world it reaches — the earliest its change can show — and `execution:notAfter` that world's end,
@@ -89,15 +94,16 @@ WHERE  {} ;
 INSERT { GRAPH $plan { ?step a execution:Step ; execution:partOf $plan ;
                        planning:fills ?action ; planning:of ?by ;
                        execution:notBefore ?since ; execution:landsAt ?lands ; execution:notAfter ?after ;
-                       execution:predicts ?predicts . ?step ?p ?v } }
-WHERE  { VALUES (?w ?predicts) { $predicted }
-         GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                       execution:adds ?adds ; execution:retracts ?retracts . ?step ?p ?v } }
+WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
                       ?by planning:fills ?action ; planning:from ?in .
                       ?in dcterms:temporal/orexis:start ?since .
                       ?w dcterms:temporal ?period . ?period orexis:start ?lands . OPTIONAL { ?period orexis:end ?after }
                       OPTIONAL { ?by ?p ?v . FILTER(?p NOT IN (planning:fills, planning:from, planning:minted, rdf:type)) } }
-         BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step) } ;
+         BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step)
+         BIND(IRI(CONCAT(STR(?step), ".adds")) AS ?adds)
+         BIND(IRI(CONCAT(STR(?step), ".retracts")) AS ?retracts) } ;
 INSERT { GRAPH $plan { ?prev execution:then ?step } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
@@ -108,16 +114,31 @@ INSERT { GRAPH ?cat { $plan a planning:PlanGraph ; orexis:arrivedBy orexis:Deriv
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } } ;
 INSERT { GRAPH ?cat { $plan a ?kind } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }
-         GRAPH ?vocabulary { planning:PlanGraph rdfs:subClassOf ?kind } }"""
+         GRAPH ?vocabulary { planning:PlanGraph rdfs:subClassOf ?kind } } ;
+INSERT { GRAPH ?adds { ?s ?p ?o } }
+WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                      $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in }
+         GRAPH ?w { ?s ?p ?o } FILTER NOT EXISTS { GRAPH ?in { ?s ?p ?o } }
+         BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".adds")) AS ?adds) } ;
+INSERT { GRAPH ?retracts { ?s ?p ?o } }
+WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                      $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in }
+         GRAPH ?in { ?s ?p ?o } FILTER NOT EXISTS { GRAPH ?w { ?s ?p ?o } }
+         BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".retracts")) AS ?retracts) } ;
+INSERT { GRAPH ?cat { ?adds a execution:AddsGraph ; orexis:arrivedBy orexis:Derived .
+                      ?retracts a execution:RetractsGraph ; orexis:arrivedBy orexis:Derived } }
+WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph }
+         GRAPH $plan { ?step execution:adds ?adds ; execution:retracts ?retracts } } ;
+INSERT { GRAPH ?cat { ?g a ?kind } }
+WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph . ?g a ?class }
+         GRAPH $plan { ?step execution:adds|execution:retracts ?g }
+         GRAPH ?vocabulary { ?class rdfs:subClassOf ?kind } }"""
 
+
+#  THE GRAPHS A PLAN'S STEPS NAME — what goes when the plan is replaced.
+_STEP_GRAPHS_Q = """SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }"""
 
 #  THE CHEAPEST WORLD WHERE THE WANT IS MET — the plan, where there is one.
-#  THE ANCESTRY, world by world with the world each was taken in — what a step's prediction
-#  is the diff of.
-_ANCESTRY_Q = """
-SELECT ?w ?in WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-    $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in } }"""
 
 _BEST_Q = """
 SELECT ?w ?spent WHERE {
@@ -149,13 +170,14 @@ def extract_plan(store: ox.Store, want: str) -> str:
     says which. Handed the want and nothing else, because everything a plan is made of is
     what the search wrote.
 
-    ONE UPDATE AND NOTHING ELSE READ OUT — see `_PLAN_U` for the five operations in it. What
+    ONE UPDATE AND NOTHING ELSE READ OUT — see `_PLAN_U` for the nine operations in it. What
     kept this in Python was ORDER: a plan is a chain, and a list seemed to be the only way to
     have one. It is not. A step follows the step of the world its world was taken in, so
-    `execution:then` falls out of the ancestry and nothing counts.
+    `execution:then` falls out of the ancestry and nothing counts. What kept the DIFF in Python
+    was the belief that a diff of two graphs is not a pattern; it is one `FILTER NOT EXISTS`.
 
-    REPLACED WHOLE, so a second pass over one want leaves one plan and not two — which is the
-    first reason a plan is a graph rather than a corner of one.
+    REPLACED WHOLE, the steps' two graphs with it, so a second pass over one want leaves one
+    plan and not two — which is the first reason a plan is a graph rather than a corner of one.
     """
     best = next(iter(rows(store, _BEST_Q, (), want=want)), None)
     if best is not None:
@@ -167,22 +189,14 @@ def extract_plan(store: ox.Store, want: str) -> str:
         world, cost = root["g"], None
         outcome = EXHAUSTED if int(root["spent"]) else NO_CANDIDATE
     graph = _plan_graph(want)
+    for r in rows(store, _STEP_GRAPHS_Q, (), plan=Raw(f"<{graph}>")):
+        forget_graph(store, r["g"])
     clear_graph(store, graph)
-    predicted = " ".join(f'(<{r["w"]}> {json.dumps(_predicts(store, r["w"], r["in"]))})'
-                         for r in rows(store, _ANCESTRY_Q, (), world=world))
     update(store, bind(_PLAN_U, plan=Raw(f"<{graph}>"), want=Raw(f"<{want}>"),
                        outcome=Raw(f"<{outcome}>"), world=Raw(f"<{world}>"),
-                       predicted=Raw(predicted),
                        costs=Raw(f' ; planning:spent "{cost}"^^xsd:decimal'
                                  if cost is not None else "")))
     return graph
-
-
-def _predicts(store: ox.Store, world: str, parent: str) -> str:
-    """What reaching `world` from `parent` changes, as the JSON literal a step carries."""
-    after, before = facts_of(store, world), facts_of(store, parent)
-    return json.dumps({"adds": sorted(after - before), "retracts": sorted(before - after)},
-                      separators=(",", ":"))
 
 
 def _plan_graph(want: str) -> str:

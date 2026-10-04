@@ -31,7 +31,7 @@ society graph's MQTT4SSN words, the pins from the world's hardware graph, the cr
 granted it, and metrics are where the world says it is monitored. The **bus** is a broker the
 world's society names — a premise read off the world, an ASK over its public graphs in `PREMISES`
 of `onboarding/reading.py`, the shape the runtime gives a package's. A world naming none — hanoi,
-the courier, the tower — is onboarded without the MQTT step, which says in one line that it was
+the courier, the tower, the dispatcher — is onboarded without the MQTT step, which says in one line that it was
 skipped, and its compose file holds its agents and nothing of a bus; `orexis-mqtt` run on it grants
 nothing and says so. `broker` still refuses an address such a world does not have, so the tools ask
 the premise and never it. Until they did, every tool asked `broker`, and a world with no bus could

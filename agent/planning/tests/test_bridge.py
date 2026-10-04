@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from agent.planning.bridge import heads, keeps
 
-from .test_refine import T, _iri, _store
+from .test_refine import _predicting, _store
 
 
 def test_a_rule_with_one_head_triple_is_a_bridge():
@@ -16,6 +16,8 @@ def test_a_rule_with_one_head_triple_is_a_bridge():
 
 def test_a_step_is_kept_below_where_a_bridge_concludes_a_fact_it_adds():
     store = _store()
-    assert keeps(store, [[_iri(T + "d"), T + "on", _iri(T + "pegB")]])
-    assert not keeps(store, [[_iri(T + "d"), T + "painted", _iri(T + "red")]]), "no rule concludes a colour"
-    assert not keeps(store, []), "a step that adds nothing is kept by nothing"
+    assert keeps(store, _predicting(store, ":d :on :pegB"))
+    store = _store()
+    assert not keeps(store, _predicting(store, ":d :painted :red")), "no rule concludes a colour"
+    store = _store()
+    assert not keeps(store, _predicting(store, "")), "a step that adds nothing is kept by nothing"

@@ -34,8 +34,10 @@ predict a moisture value: the step is sized from the present when it is taken, b
 
 # What it is held to
 
-The diff between the world a step reaches and the one it leaves is what the step
-`execution:predicts`, and the [executor](/domain/execution/executor.md) waits at the landing for the
-present — readings and their revisions — to hold every addition and none of the retractions. A
+The diff between the world a step reaches and the one it leaves is what the step predicts, held in
+the two graphs it `execution:adds` and `execution:retracts`, and the
+[executor](/domain/execution/executor.md) waits at the landing for the
+present — readings and their revisions — to hold every addition and none of the retractions, asked
+as one pattern over the two graphs. A
 fictive action's effect is its own physics: the executor writes the prediction into the state
 itself. Nobody sizes an expectation of their own.

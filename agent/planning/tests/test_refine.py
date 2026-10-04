@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 import pyoxigraph as ox
 
 from agent.planning.refine import refine
-from agent.store import close_catalogue, graphs_of, put_graph, rows
+from agent.store import close_catalogue, graphs_of, put_graph, rows, update
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 ME = "http://example.org/test#mover"
@@ -51,8 +51,15 @@ def _store() -> ox.Store:
     return st
 
 
-def _iri(x):
-    return ["iri", x]
+def _predicting(store, adds: str, retracts: str = "") -> str:
+    """The step, written as a plan's extraction writes one: its two graphs, named off it, holding
+    the `adds` and `retracts` triples given as Turtle-ish `s p o` text with the case's prefix."""
+    update(store, f"""PREFIX : <{T}>
+INSERT DATA {{
+  GRAPH <{T}plan> {{ <{STEP}> a execution:Step ; execution:adds <{STEP}.adds> ; execution:retracts <{STEP}.retracts> }}
+  GRAPH <{STEP}.adds> {{ {adds} }}
+  GRAPH <{STEP}.retracts> {{ {retracts} }} }}""")
+    return STEP
 
 
 def _met(store, want: str, state: str) -> bool:
@@ -63,8 +70,7 @@ def _met(store, want: str, state: str) -> bool:
 
 def test_a_step_whose_fact_a_rule_concludes_is_a_want_below():
     store = _store()
-    want = refine(store, ME, STEP, [[_iri(T + "d"), T + "on", _iri(T + "pegB")]], NOW,
-                  retracts=[[_iri(T + "d"), T + "on", _iri(T + "pegA")]])
+    want = refine(store, ME, _predicting(store, ":d :on :pegB", ":d :on :pegA"), NOW)
     assert want == STEP + ".below"
     (row,) = rows(store, "SELECT ?step WHERE { ?step execution:keptBy ?w }", graphs_of(store, WANT))
     assert row["step"] == STEP
@@ -75,8 +81,7 @@ def test_the_want_below_is_the_world_the_step_lands_in_not_its_diff():
     """The moved disk on B's cell AND the one the step left alone still on A's: carrying `e`
     away as well reaches the diff and breaks the frame the level above stands on."""
     store = _store()
-    want = refine(store, ME, STEP, [[_iri(T + "d"), T + "on", _iri(T + "pegB")]], NOW,
-                  retracts=[[_iri(T + "d"), T + "on", _iri(T + "pegA")]])
+    want = refine(store, ME, _predicting(store, ":d :on :pegB", ":d :on :pegA"), NOW)
     moved = T + "moved"
     put_graph(store, moved, """@prefix : <http://example.org/test#> .
         :pegA a :Peg ; :at :c1 . :pegB a :Peg ; :at :c2 . :d :at :c2 . :e :at :c1 .""")
@@ -89,10 +94,10 @@ def test_the_want_below_is_the_world_the_step_lands_in_not_its_diff():
 
 def test_a_step_no_rule_concludes_is_taken_as_it_would_be():
     store = _store()
-    assert refine(store, ME, STEP, [[_iri(T + "d"), T + "painted", _iri(T + "red")]], NOW) is None
+    assert refine(store, ME, _predicting(store, ":d :painted :red"), NOW) is None
     assert not graphs_of(store, WANT), "nothing minted"
 
 
 def test_a_rule_of_two_head_triples_is_not_run_backwards():
     store = _store()
-    assert refine(store, ME, STEP, [[_iri(T + "d"), T + "near", _iri(T + "pegB")]], NOW) is None
+    assert refine(store, ME, _predicting(store, ":d :near :pegB"), NOW) is None

@@ -208,6 +208,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   *no unanswered calls* over its venues, and the call is the row that desire is about.
 - **A capability that asks for a derivation is not minting** — the ledger writes a debt and its
   prediction and calls `derive_wants`, so a claim arriving is a want arriving.
+- **A shape over instances says each block is about `sh:this`, or two instances are one want** — a
+  witness about nothing joins every cluster, and the dispatcher's two parcels were one want searched
+  over both vans' every move, 674 candidates where a want per parcel costs 90
+  (a-parcel-astray-is-a-want-of-its-own).
+- **A desire is weighed in grounds alone, in the planner's pass, and the walk comes after it** — so
+  a state two intentions make between two acts is judged by nobody: the dispatcher's vans stood on
+  one cell for one act and no want was minted (#567, measure-the-search).
 - **A desire weighed in a ground and a want weighed in a possible world are one judgment at two
   grains**, and `planning:Weighing` carries the `planning:violation` rows for either.
 - **A derivation asks nothing the met-tests do not answer** — how far ahead the agent sees is the
@@ -363,6 +370,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   action with nothing to answer with is FICTIVE and writes its own prediction.
 - **A step whose command answers nothing is not taken** — recorded taken, it waited out its
   patience as though the pump had run (#869).
+- **A fact stated and not asserted is a graph of a kind no reader of the present is handed, and a
+  diff of two graphs is one `FILTER NOT EXISTS`** — a step predicts in `execution:adds` and
+  `execution:retracts`, the engine fills them, compares the present to them and writes a fictive
+  step from them; a JSON literal of triples in a triplestore could be queried, abbreviated and
+  compared by nothing (#759, a-steps-prediction-is-two-graphs-it-names).
 - **Planning and execution meet at the store and signal each other** — a plan is published once
   and an intention adopts it by reference; a plan begun is walked to its end
   (planning-and-execution-meet-at-the-store).
