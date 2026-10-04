@@ -29,20 +29,19 @@ from datetime import datetime
 
 import pyoxigraph as ox
 
-from agent.hash_named_graph import facts_of
 from agent.ontology import GRAPH_PREFIX, OREXIS, STATE, local_of
-from agent.store import classify, graphs_of, instant, revisions_of, rows, update
+from agent.store import classify, graphs_of, instant, quads_for_pattern, revisions_of, rows, update
 
-from .bridge import binding, expand, as_fact, literal, heads
+from .bridge import binding, expand, literal, heads, predicted
 from .ontology import PLANNING, WANT
 
 log = logging.getLogger("refine")
 
-def refine(store: ox.Store, me: str, step: str, adds, now: datetime, retracts=()) -> str | None:
-    """Mint the want that keeps the step `step` below, from the facts it predicts it `adds` and
-    `retracts` (the canonical form a step's prediction is written in), in the agent `me`'s own
-    want graph; the want. None where no rule the store holds concludes any fact it adds, which
-    is the answer for every step of a level with nothing beneath it.
+def refine(store: ox.Store, me: str, step: str, now: datetime) -> str | None:
+    """Mint the want that keeps the step `step` below, from the facts it predicts its world gains
+    and loses — read off the two graphs the step names, as the terms they are — in the agent
+    `me`'s own want graph; the want. None where no rule the store holds concludes any fact it
+    adds, which is the answer for every step of a level with nothing beneath it.
 
     THE GOAL IS THE WORLD THE STEP LANDS IN, NOT ITS DIFF. Every fact of a concluded predicate
     the present holds, less what the step retracts, plus what it adds — each regressed, and all
@@ -53,14 +52,14 @@ def refine(store: ox.Store, me: str, step: str, adds, now: datetime, retracts=()
     beneath is held to keeping them — the frame, in the level above's own words."""
     bridges = heads(store)
     concluded = {expand(head[1], names) for _, head, _, names in bridges}
-    adds = [as_fact(f) for f in adds]
-    if not any(f[1] in concluded for f in adds):
+    adds, retracts = predicted(store, step)
+    if not any(f[1].value in concluded for f in adds):
         return None
-    gone = {as_fact(f) for f in retracts}
     states = graphs_of(store, STATE)
-    present = facts_of(store, *states, *revisions_of(store, *states))
-    target = sorted({as_fact(f) for f in present if f[1] in concluded} - gone
-                    | {f for f in adds if f[1] in concluded}, key=repr)
+    present = {(q.subject, q.predicate, q.object)
+               for p in concluded for g in (*states, *revisions_of(store, *states))
+               for q in quads_for_pattern(store, None, ox.NamedNode(p), None, g)}
+    target = sorted(present - set(retracts) | {f for f in adds if f[1].value in concluded}, key=str)
     prefixes, conjuncts = set(), []
     for fact in target:
         branches = []

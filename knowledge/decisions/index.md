@@ -64,6 +64,7 @@ What happens to a decision — committed as an intention, carried out by whoever
 * [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) - The plan's head is what the keeper writes, execution is one kernel path, and `orexis:takenBy` links a row to the code that takes it.
 * [an-action-takes-parameters](/decisions/an-action-takes-parameters.md) - An action declares what it is filled with; the kernel carries opaque pairs and names no column.
 * [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) - `orexis:Means` read by nothing; the action node is what a row carries and an intention commits to, and the five means are gone.
+* [a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md) - A step predicts in two graphs it names, stated and never asserted; a JSON literal, reification and RDF-star refused, the precondition retired.
 
 # The mind — deliberation and the model
 

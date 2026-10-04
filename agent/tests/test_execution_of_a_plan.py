@@ -31,9 +31,12 @@ SELECT ?disk ?onto WHERE {
 
 def _move(beliefs, disk: str, onto: str) -> None:
     """The world does what the move says: the disk lands on whatever is on top of the peg it
-    was moved onto, or on the peg itself — the domain's own effect, not the parameter."""
-    (row,) = rows(beliefs, f'SELECT ?d ?p ?o ?g WHERE {{ GRAPH ?g {{ ?d ?p ?o }} FILTER(?d = <{disk}> && STRENDS(STR(?p), "#on")) }}')
-    top = rows(beliefs, f'SELECT ?t WHERE {{ GRAPH ?g {{ ?t <{row["p"]}>+ <{onto}> . FILTER NOT EXISTS {{ ?z <{row["p"]}> ?t }} FILTER(?t != <{disk}>) }} }}')
+    was moved onto, or on the peg itself — the domain's own effect, not the parameter. Read off
+    the state graph by kind: a published plan's steps state the same rows in the graphs they
+    predict in, and those are what the world is held to, not the world."""
+    state = 'GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph }'
+    (row,) = rows(beliefs, f'SELECT ?d ?p ?o ?g WHERE {{ {state} GRAPH ?g {{ ?d ?p ?o }} FILTER(?d = <{disk}> && STRENDS(STR(?p), "#on")) }}')
+    top = rows(beliefs, f'SELECT ?t WHERE {{ {state} GRAPH ?g {{ ?t <{row["p"]}>+ <{onto}> . FILTER NOT EXISTS {{ ?z <{row["p"]}> ?t }} FILTER(?t != <{disk}>) }} }}')
     dest = top[0]["t"] if top else onto
     beliefs.update(f'DELETE DATA {{ GRAPH <{row["g"]}> {{ <{row["d"]}> <{row["p"]}> <{row["o"]}> }} }} ; '
                    f'INSERT DATA {{ GRAPH <{row["g"]}> {{ <{row["d"]}> <{row["p"]}> <{dest}> }} }}')

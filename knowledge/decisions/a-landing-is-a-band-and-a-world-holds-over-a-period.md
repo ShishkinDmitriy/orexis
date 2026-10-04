@@ -97,10 +97,11 @@ So, since 2026-10-03:
   times within the session's own drift. What stays: **a landing that straddles a boundary is
   judged in the ground at its earliest alone** — one child per ground overlapped, siblings under one
   step, with the re-root picking the one the present matches, is the strong-controllability half of
-  the STNU reading (Morris, Muscettola and Vidal, 2001) and the next slice of #596; and **a step's
-  `execution:predicts` is still the diff against the world it leaves**, so a step landing in a
-  later ground is held to the prediction's changes beside its own, which is right while the
-  prediction is and the executor's verdict otherwise.
+  the STNU reading (Morris, Muscettola and Vidal, 2001) and the next slice of #596; and **what a
+  step predicts is still the diff against the world it leaves** (the two graphs it names since
+  [a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md)),
+  so a step landing in a later ground is held to the prediction's changes beside its own, which is
+  right while the prediction is and the executor's verdict otherwise.
 - **Ranking by lateness.** Achievers rank by cost; a want with an instant is weighed at it (#858),
   and nothing yet prefers the achiever landing by the instant, nor refuses a world past the want's
   lifting. Both are #596's, stated there.

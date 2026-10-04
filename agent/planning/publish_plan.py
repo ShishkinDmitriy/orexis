@@ -12,7 +12,9 @@ never calls it (planning-and-execution-meet-at-the-store).
 **A NAME OF ITS OWN**, and its steps' with it: the imaginarium names a plan for its want and a step
 for its plan, so a second plan for one want would name its steps as the first did, and an act on
 record for the first would read as the second's. Published, the plan and every step move under a
-name minted for this plan.
+name minted for this plan — and so do the two graphs each step predicts in, `<step>.adds` and
+`<step>.retracts`, copied beside the plan with their rows, since the executor holds the world to
+them where the plan is (a-steps-prediction-is-two-graphs-it-names).
 
 **IT IS A COPY AND NOT A REWRITE**, which is why the search writes a step as `execution:Step` in
 the first place: a translation on the way would be a second place the two shapes could disagree.
@@ -37,6 +39,7 @@ import pyoxigraph as ox
 
 import uuid
 
+from agent.execution.ontology import ADDS_GRAPH, RETRACTS_GRAPH
 from agent.ontology import GRAPH_PREFIX, OREXIS, PLAN, local_of
 from agent.store import Raw, add_quads, bind, entry, forget_graph, graphs_of, quads, rows, update
 
@@ -51,6 +54,8 @@ _STANDS_Q = """SELECT ?w WHERE { $want a planning:Want . BIND($want AS ?w) } LIM
 _FOR_Q = """SELECT ?want WHERE { GRAPH $plan { $plan planning:for ?want } }"""
 _STEPS_Q = """SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step } } LIMIT 1"""
 _DERIVED_Q = """SELECT ?d WHERE { GRAPH ?g { $want prov:wasDerivedFrom ?d } }"""
+#  THE GRAPHS A PLAN'S STEPS PREDICT IN, each with which side it is.
+_STEP_GRAPHS_Q = """SELECT ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }"""
 
 
 def publish_plan(imaginarium: ox.Store, beliefs: ox.Store, me: str, walking: set[str]) -> list[str]:
@@ -74,6 +79,8 @@ def publish_plan(imaginarium: ox.Store, beliefs: ox.Store, me: str, walking: set
             #  beliefs and taken back by the refresh, and the plan graph the imaginarium kept
             #  would be walked a second time — measured on the tower, whose goal was reached in
             #  the courier's imaginarium and re-committed from the puzzle's. Dropped with it.
+            for g in rows(imaginarium, _STEP_GRAPHS_Q, (), plan=Raw(f"<{graph}>")):
+                forget_graph(imaginarium, g["g"])
             forget_graph(imaginarium, graph)
             continue
         if want in walking or not rows(imaginarium, bind(_STEPS_Q, plan=Raw(f"<{graph}>"))):
@@ -83,9 +90,17 @@ def publish_plan(imaginarium: ox.Store, beliefs: ox.Store, me: str, walking: set
                               if isinstance(term, ox.NamedNode) and term.value.startswith(graph) else term)
         name = ox.NamedNode(published)
         add_quads(beliefs, (ox.Quad(moved(q.subject), q.predicate, moved(q.object), name) for q in quads(imaginarium, graph)))
+        #  AND WHAT EACH STEP PREDICTS, the two graphs it names, under the moved names with their
+        #  rows — the facts themselves are the world's words and move nowhere.
+        entries = []
+        for g in rows(imaginarium, _STEP_GRAPHS_Q, (), plan=Raw(f"<{graph}>")):
+            into = moved(ox.NamedNode(g["g"]))
+            add_quads(beliefs, (ox.Quad(q.subject, q.predicate, q.object, into) for q in quads(imaginarium, g["g"])))
+            entries.append(entry(beliefs, into.value, ADDS_GRAPH if g["side"].endswith("adds") else RETRACTS_GRAPH,
+                                 OREXIS + "Recorded", me))
         derived = [f"<{want}> prov:wasDerivedFrom <{r['d']}> ." for r in rows(imaginarium, _DERIVED_Q, (), want=want)]
         update(beliefs, f"""INSERT DATA {{
   GRAPH <{published}> {{ <{published}> execution:pursues <{want}> . {' '.join(derived)} }}
-  {entry(beliefs, published, PLAN, OREXIS + "Recorded", me)} }}""")
+  {entry(beliefs, published, PLAN, OREXIS + "Recorded", me)} {' '.join(entries)} }}""")
         handed.append(published)
     return handed

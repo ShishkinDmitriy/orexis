@@ -55,8 +55,11 @@ _WORLDS_Q = "SELECT ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a 
 _SHARED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
 SELECT DISTINCT ?cell WHERE { GRAPH $w { ?a courier:at ?cell . ?b courier:at ?cell }
                               GRAPH ?h { ?a a courier:Van . ?b a courier:Van } FILTER(?a != ?b) }"""
+#  WHERE THINGS STAND, asked of what the agent BELIEVES by kind: a published plan's steps state the
+#  positions they predict in graphs of their own (a-steps-prediction-is-two-graphs-it-names), and a
+#  read over every graph took a van's predicted cell for its present one.
 _AT_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?x ?cell WHERE { GRAPH ?g { ?x courier:at ?cell } }"""
+SELECT ?x ?cell WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?x courier:at ?cell } }"""
 _ACTS_Q = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }"
 
 #  THE CORRIDOR: van A drives parcel A along the second row, van B drives parcel B down the third

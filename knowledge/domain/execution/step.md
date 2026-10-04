@@ -4,9 +4,9 @@ title: Step
 term: http://example.org/orexis/execution#Step
 description: >-
   An action picked for execution, with the values it was filled with - what a plan is made of.
-  Carries the action it fills, a triple per parameter, what the search predicted it changes, what
-  its rules read, when it may be taken and when its change will have landed. A world merely admits
-  candidates; the search picks, and a picked candidate is a step.
+  Carries the action it fills, a triple per parameter, the two graphs holding what the search
+  predicted it changes, when it may be taken and when its change will have landed. A world merely
+  admits candidates; the search picks, and a picked candidate is a step.
 ---
 
 # What it is
@@ -19,12 +19,23 @@ candidate that was picked, and adds at least the values it was picked with:
 |---|---|
 | `planning:fills` | the [action](/domain/kernel/action.md) |
 | a triple per parameter | under the parameter's own IRI — `hanoi:disk :disk_1`, `hanoi:onto hanoi:PegC` |
-| `execution:predicts` | the change: the canonical facts its world gains and loses (`adds`, `retracts`) |
-| `execution:precondition` | what its rules read there ([precondition](/domain/planning/precondition.md)) |
+| `execution:adds` | the graph of facts its world gains — an `execution:AddsGraph`, stated and not believed |
+| `execution:retracts` | the graph of facts its world loses — an `execution:RetractsGraph` |
 | `execution:notBefore` | the start of the period of the world it is taken in — a requirement |
 | `execution:landsAt` | the earliest the world can show its change — the least the action's `planning:landsAfter` says |
 | `execution:notAfter` | the latest — the most it says, summed along the plan; a dose's a cadence past the step, since its sensor's next reading is due within one |
 | `execution:then` | the next step of the plan |
+
+# What it predicts
+
+The diff of the possible world the step reaches against the one it leaves, as two graphs named
+`<step>.adds` and `<step>.retracts`, which the engine fills when the plan is extracted. Their kinds
+are beneath `orexis:Graph` alone, so a reader of the present is never handed them: a world where the
+dose has landed is not this world
+([a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md)).
+They travel with the plan when it is published and go when it goes. What a step's rules read in the
+world it was planned from is not kept with it; whether a step still applies is asked of the present
+with the action's own [precondition](/domain/planning/precondition.md).
 
 # How it is taken
 

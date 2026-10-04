@@ -32,8 +32,9 @@ not read — go to the log, an `execution:Act` row records that the step was tak
 taker was handed it and when it returned (the step's `notBefore` and `landsAt` are the plan's
 requirement and prediction, and the act is what actually happened),
 and then the WORLD moves the intention: a step that predicts something waits at its
-`landsAt` for the present to hold what it predicted, every addition present and every
-retraction gone over the agent's readings, and `execution:by` moves to the next step when it
+`landsAt` for the present to hold what it predicted — every fact of the graph it `execution:adds`
+present and every fact of the one it `execution:retracts` gone over the agent's readings, asked
+as one pattern — and `execution:by` moves to the next step when it
 does, the last step resolving the intention `done`; past the landing by the patience with no
 answer, the intention resolves `failed`. A step that predicts nothing moves as soon as it is
 taken. A FICTIVE ACTION — an `execution:Fictive` operation in its implementation — is taken by writing the step's own prediction into the readings, so the
@@ -65,7 +66,6 @@ each, so it says each; whoever writes history and metrics hears them.
 
 from __future__ import annotations
 
-import json
 import logging
 import queue
 import threading
@@ -76,15 +76,14 @@ import pyoxigraph as ox
 
 from agent import clock
 from agent.lifecycle import Signal
-from agent.hash_named_graph import facts_of
 from agent.ontology import ACTION, OREXIS, STATE, local_of
-from agent.store import (Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
-                         quads_for_pattern, revisions_of, rows, update)
+from agent.store import (NAMESPACES, Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant,
+                         quads, quads_for_pattern, revisions_of, rows, update)
 
 from .events import Commanded, IntentionResolved, Said, StepAnswered, StepTaken, Walked  # noqa: F401 — the events it says
 from .implementation import FICTIVE, operations
-from .ontology import (ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, LANDS_WITHIN_S, committed_graph,
-                       intentions_graph)
+from .ontology import (ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, LANDS_WITHIN_S, RETRACTS_GRAPH,
+                       committed_graph, intentions_graph)
 
 log = logging.getLogger("executor")
 
@@ -141,9 +140,10 @@ ORDER BY ?adopted"""
 
 #  THE HEAD OF EVERY STANDING INTENTION: when it may be taken — `execution:notBefore` where the
 #  plan says, at once where it says nothing — whether it has been taken (an act saying so), and
-#  where it has, what it predicted and when that should show, at the earliest and at the latest.
+#  where it has, the two graphs it predicts in and when that should show, at the earliest and at
+#  the latest.
 _HEADS_Q = """
-SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?after ?predicts WHERE {
+SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?after ?adds ?retracts WHERE {
   GRAPH $intentions {
     ?intention a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
@@ -152,10 +152,35 @@ SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?after ?predicts WHERE {
   OPTIONAL { GRAPH ?plan { ?step execution:keptBelow ?kept } }
   OPTIONAL { GRAPH ?plan { ?step execution:landsAt ?lands } }
   OPTIONAL { GRAPH ?plan { ?step execution:notAfter ?after } }
-  OPTIONAL { GRAPH ?plan { ?step execution:predicts ?predicts } } }
+  OPTIONAL { GRAPH ?plan { ?step execution:adds ?adds } }
+  OPTIONAL { GRAPH ?plan { ?step execution:retracts ?retracts } } }
 ORDER BY ?due ?intention"""
 
-_PREDICTS_Q = """SELECT ?predicts WHERE { GRAPH ?plan { $step execution:predicts ?predicts } } LIMIT 1"""
+#  WHAT A STEP PREDICTS: the two graphs it names, wherever it names them — each side its own
+#  OPTIONAL over any graph, since the step is typed in its plan AND in its committed-step graph,
+#  and a read anchored on the type in one graph was handed the committed step's row, which names
+#  neither, and called the step one that predicts nothing (measured on the tower).
+_PREDICTED_Q = """
+SELECT ?adds ?retracts WHERE {
+  OPTIONAL { GRAPH ?a { $step execution:adds ?adds } }
+  OPTIONAL { GRAPH ?r { $step execution:retracts ?retracts } } } LIMIT 1"""
+
+#  THE GRAPHS A PLAN'S STEPS PREDICT IN, each with which side it is — what crosses with a plan
+#  handed in from another store.
+_STEP_GRAPHS_Q = """SELECT ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }"""
+
+#  DOES THE PRESENT FAIL THE STEP — a fact it adds with no equal in the present, or a fact it
+#  retracts with one. Asked over the readings and their revisions as the default graph, the two
+#  graphs the step names reached by name; the step is answered where this is false. Equality is
+#  SPARQL's own, so `5` and `5.0` are one value as they were under the rounded canonical form,
+#  and a literal of another type is not equal (a-steps-prediction-is-two-graphs-it-names).
+_ADDS_MISSING = """{ GRAPH $adds { ?s ?p ?o } FILTER NOT EXISTS { ?s ?p ?x . FILTER(?x = ?o) } }"""
+_RETRACTS_STANDING = """{ GRAPH $retracts { ?s ?p ?o } ?s ?p ?x . FILTER(?x = ?o) }"""
+
+#  A FICTIVE STEP'S WRITE: what it retracts leaves the state and what it adds enters it, the two
+#  graphs read where they stand and the terms carried over as they are.
+_RETRACT_U = """DELETE { GRAPH $state { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o } }"""
+_ADD_U = """INSERT { GRAPH $state { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o } }"""
 
 #  WHETHER THE INTENTIONS GRAPH IS CLASSIFIED YET, and every plan published and adopted by none, with its want.
 _CLASSIFIED_Q = """SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph a ?k } } LIMIT 1"""
@@ -236,25 +261,6 @@ WHERE  { GRAPH $intentions { $intention execution:by $step } }"""
 
 
 _XSD = "http://www.w3.org/2001/XMLSchema#"
-
-
-def _term(fact) -> ox.NamedNode | ox.Literal:
-    """A canonical term back as the engine's: an IRI, a text with its language or datatype, a
-    number as a decimal. A blank node's content is not a term and is refused."""
-    kind = fact[0]
-    if kind == "iri":
-        return ox.NamedNode(fact[1])
-    if kind == "num":
-        return ox.Literal(repr(fact[1]), datatype=ox.NamedNode(_XSD + "decimal"))
-    if kind == "lit":
-        tag = fact[2]
-        return ox.Literal(fact[1], language=tag) if "://" not in tag else ox.Literal(fact[1], datatype=ox.NamedNode(tag))
-    raise ValueError(f"a fictive world cannot write a fact hanging off a blank node: {fact!r}")
-
-
-def _quad(fact, graph: str) -> ox.Quad:
-    s, p, o = fact
-    return ox.Quad(_term(s), ox.NamedNode(p), _term(o), ox.NamedNode(graph))
 
 
 def _decimal(seconds: float) -> ox.Literal:
@@ -398,7 +404,9 @@ class Executor:
         BY REFERENCE, NOT BY COPY. The plan is planning's, published once under a name of its own, and
         stays; what is written here is the intention's own rows (planning-and-execution-meet-at-the-store).
         A plan found in another store — a case handing the executor one of its own — is brought in whole
-        first, under its own name, since a reference must reach it.
+        first, under its own name, since a reference must reach it; and the two graphs each of its
+        steps predicts in are brought to where the PRESENT is, the beliefs, since that is what they
+        are compared with — in the runtime the plan already stands there, published.
         """
         named = Raw(f"<{graph}>")
         node = ox.NamedNode(self.graph)
@@ -414,6 +422,15 @@ class Executor:
         if source is not self.intentions:
             plan = ox.NamedNode(graph)
             add_quads(self.intentions, (ox.Quad(q.subject, q.predicate, q.object, plan) for q in quads(source, graph)))
+        if source is not self.beliefs:
+            described = catalogue_of(self.beliefs) is not None
+            owner = (self.holder or _me_of(self.beliefs, self.id)) if described else None
+            for g in rows(source, bind(_STEP_GRAPHS_Q, plan=named)):
+                into = ox.NamedNode(g["g"])
+                add_quads(self.beliefs, (ox.Quad(q.subject, q.predicate, q.object, into) for q in quads(source, g["g"])))
+                if described:
+                    kind = ADDS_GRAPH if g["side"].endswith("adds") else RETRACTS_GRAPH
+                    update(self.beliefs, f"INSERT DATA {{ {entry(self.beliefs, g['g'], kind, RECORDED, owner)} }}")
         #  THE INTENTIONS ARE A GRAPH OF THE AGENT'S OWN, classified when first kept, so a lived-in
         #  volume keeps them and a reader asks for them by kind.
         if catalogue_of(self.intentions) is not None and not rows(self.intentions, _CLASSIFIED_Q, (), graph=self.graph):
@@ -592,14 +609,14 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 else:
                     wake_at(when)
                 continue
-            if not r.get("predicts"):
+            if not r.get("adds") and not r.get("retracts"):
                 continue                        # advanced when it was taken; nothing to hold it to
             lands, latest = self._landing(r, now)
             below = [b.get("outcome") for b in rows(self.intentions, bind(
                 _REFINED_Q, intentions=Raw(f"<{self.graph}>"), act=r["act"]))]
             if now < lands:
                 wake_at(lands)
-            elif self._answered(r["predicts"]):
+            elif self._answered(r.get("adds"), r.get("retracts")):
                 self._verdict(intention, step, r, now, landed=True)
                 self._advance(intention, step, now)
             elif None in below:
@@ -636,18 +653,20 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             lands, latest = lands + late, latest + late
         return lands, latest
 
-    def _answered(self, predicts: str) -> bool:
-        """Does the present hold what a step predicted — every addition present, every
-        retraction gone — over the agent's readings as they stand and what the rules concluded
-        of them?"""
-        said = json.loads(predicts)
+    def _answered(self, adds: str | None, retracts: str | None) -> bool:
+        """Does the present hold what a step predicted — every fact of its `adds` graph present,
+        every fact of its `retracts` graph gone — over the agent's readings as they stand and what
+        the rules concluded of them? One ASK, the two graphs reached by name and the present as its
+        default graph; a side the step does not name is asked of an empty graph."""
         #  THE READINGS AND THEIR REVISIONS: a step predicts in the concepts the rules conclude —
         #  a dose, that the soil comes to be inside its range — so it is answered when the next
         #  reading is revised to that, and the side lives in the graph derived from the reading's.
         states = graphs_of(self.beliefs, STATE)
-        present = {json.dumps(f) for f in facts_of(self.beliefs, *states, *revisions_of(self.beliefs, *states))}
-        return all(json.dumps(f) in present for f in said.get("adds", ())) \
-            and not any(json.dumps(f) in present for f in said.get("retracts", ()))
+        present = [ox.NamedNode(g) for g in (*states, *revisions_of(self.beliefs, *states))]
+        failing = ([bind(_ADDS_MISSING, adds=adds)] if adds else []) \
+            + ([bind(_RETRACTS_STANDING, retracts=retracts)] if retracts else [])
+        return not bool(self.beliefs.query("ASK { " + " UNION ".join(failing) + " }",
+                                           prefixes=NAMESPACES, default_graph=present))
 
     def _advance(self, intention: str, step: str, now: datetime | None = None) -> None:
         """Move the intention to the step after `step`, or resolve it `done` at the last. The
@@ -731,7 +750,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         #  answer is what moves it.
         if not taken:
             self.resolve(intention, "failed")
-        elif not rows(self.intentions, bind(_PREDICTS_Q, intentions=Raw(f"<{self.graph}>"), step=step)):
+        elif not any(next(iter(rows(self.intentions, bind(_PREDICTED_Q, step=step))), {}).values()):
             self._advance(intention, step, done_at)
         self._inflight.discard(step)
         self.wake()
@@ -804,21 +823,21 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         what taking them did, so a step held to the world would wait out the patience and
         fail for ever. Its world is the belief base, and the step's own prediction is the
         physics. An executor built `fictive` takes every step so, the shorthand for a world
-        that exists only in the store. The fact is rebuilt from its canonical form, which
-        keeps an IRI and a text and rounds a number, and a fact hanging off a blank node is
-        refused rather than guessed at.
+        that exists only in the store. The write is one update over the two graphs the step
+        names, the terms carried as they are — it rebuilt each fact from a canonical form that
+        kept an IRI and a text, rounded a number and refused a blank node, while the form was a
+        string's (a-steps-prediction-is-two-graphs-it-names).
         """
         self.say(said, intention)
-        (predicts,) = rows(self.intentions, bind(_PREDICTS_Q, intentions=Raw(f"<{self.graph}>"), step=said["step"])) or [{}]
-        if not predicts:
+        predicted = next(iter(rows(self.intentions, bind(_PREDICTED_Q, step=said["step"]))), {})
+        if not any(predicted.values()):
             return
         (state, *_) = graphs_of(self.beliefs, STATE) or [None]
         if state is None:
             raise RuntimeError(f"{self.id}: a fictive step has no state graph to write into")
-        change = json.loads(predicts["predicts"])
-        for fact in change.get("retracts", ()):
-            self.beliefs.remove(_quad(fact, state))
-        add_quads(self.beliefs, (_quad(fact, state) for fact in change.get("adds", ())))
+        writes = ([bind(_RETRACT_U, state=state, retracts=predicted["retracts"])] if predicted.get("retracts") else []) \
+            + ([bind(_ADD_U, state=state, adds=predicted["adds"])] if predicted.get("adds") else [])
+        update(self.beliefs, " ;\n".join(writes))
         if self.on_write is not None:
             self.on_write(state)                # the rules conclude of the world the step moved
 

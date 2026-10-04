@@ -16,10 +16,11 @@
    :fill planning:precondition """PREFIX : <http://example.org/test#>
        SELECT ?tank WHERE {
        ?tank a :Tank ; :level ?l .
-@@ -86,4 +86,112 @@
+@@ -86,4 +86,138 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
+-}
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
@@ -37,6 +38,14 @@
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
 +  plan:keeper.in_range.pursued.tank1 a planning:PlanGraph .
 +  plan:keeper.in_range.pursued.tank1 orexis:arrivedBy orexis:Derived .
++  plan:keeper.in_range.pursued.tank1.1.adds a execution:AddsGraph .
++  plan:keeper.in_range.pursued.tank1.1.adds orexis:arrivedBy orexis:Derived .
++  plan:keeper.in_range.pursued.tank1.1.retracts a execution:RetractsGraph .
++  plan:keeper.in_range.pursued.tank1.1.retracts orexis:arrivedBy orexis:Derived .
++  plan:keeper.in_range.pursued.tank1.2.adds a execution:AddsGraph .
++  plan:keeper.in_range.pursued.tank1.2.adds orexis:arrivedBy orexis:Derived .
++  plan:keeper.in_range.pursued.tank1.2.retracts a execution:RetractsGraph .
++  plan:keeper.in_range.pursued.tank1.2.retracts orexis:arrivedBy orexis:Derived .
 +  possible:1 a planning:PossibleGraph .
 +  possible:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:03:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:00+00:00"^^xsd:dateTime ] .
 +  possible:1 orexis:arrivedBy orexis:Derived .
@@ -76,7 +85,7 @@
 +  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
 +  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
- }
++}
 +
 +
 +GRAPH ground:2026-01-01T120000p0000 {
@@ -90,23 +99,41 @@
 +  plan:keeper.in_range.pursued.tank1 planning:spent 2.0 .
 +  plan:keeper.in_range.pursued.tank1.1 :tank :tank1 .
 +  plan:keeper.in_range.pursued.tank1.1 a execution:Step .
++  plan:keeper.in_range.pursued.tank1.1 execution:adds plan:keeper.in_range.pursued.tank1.1.adds .
 +  plan:keeper.in_range.pursued.tank1.1 execution:landsAt "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.1 execution:notAfter "2026-01-01T12:03:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.1 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.1 execution:partOf plan:keeper.in_range.pursued.tank1 .
-+  plan:keeper.in_range.pursued.tank1.1 execution:predicts "{\"adds\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",5.0]]],\"retracts\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",0.0]]]}" .
++  plan:keeper.in_range.pursued.tank1.1 execution:retracts plan:keeper.in_range.pursued.tank1.1.retracts .
 +  plan:keeper.in_range.pursued.tank1.1 execution:then plan:keeper.in_range.pursued.tank1.2 .
 +  plan:keeper.in_range.pursued.tank1.1 planning:fills :fill .
 +  plan:keeper.in_range.pursued.tank1.1 planning:of possible:1.by .
 +  plan:keeper.in_range.pursued.tank1.2 :tank :tank1 .
 +  plan:keeper.in_range.pursued.tank1.2 a execution:Step .
++  plan:keeper.in_range.pursued.tank1.2 execution:adds plan:keeper.in_range.pursued.tank1.2.adds .
 +  plan:keeper.in_range.pursued.tank1.2 execution:landsAt "2026-01-01T12:02:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.2 execution:notAfter "2026-01-01T12:06:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.2 execution:notBefore "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.2 execution:partOf plan:keeper.in_range.pursued.tank1 .
-+  plan:keeper.in_range.pursued.tank1.2 execution:predicts "{\"adds\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",10.0]]],\"retracts\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",5.0]]]}" .
++  plan:keeper.in_range.pursued.tank1.2 execution:retracts plan:keeper.in_range.pursued.tank1.2.retracts .
 +  plan:keeper.in_range.pursued.tank1.2 planning:fills :fill .
 +  plan:keeper.in_range.pursued.tank1.2 planning:of possible:2.by .
++}
++
++GRAPH plan:keeper.in_range.pursued.tank1.1.adds {
++  :tank1 :level 5 .
++}
++
++GRAPH plan:keeper.in_range.pursued.tank1.1.retracts {
++  :tank1 :level 0 .
++}
++
++GRAPH plan:keeper.in_range.pursued.tank1.2.adds {
++  :tank1 :level 10 .
++}
++
++GRAPH plan:keeper.in_range.pursued.tank1.2.retracts {
++  :tank1 :level 5 .
 +}
 +
 +GRAPH possible:1 {

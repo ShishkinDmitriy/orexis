@@ -57,7 +57,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [cone](/domain/planning/cone.md) - The worlds and weighings a search leaves; the next pass finds the present among them by hash, or drops them.
 * [scope](/domain/planning/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.
 * [footprint](/domain/planning/footprint.md) - What one text reads and what it writes, as predicates, taken from the text; unreadable is anything.
-* [precondition](/domain/planning/precondition.md) - The select whose rows in a world are the steps it admits; a step keeps what its rules read.
+* [precondition](/domain/planning/precondition.md) - The select whose rows in a world are the steps it admits; asked of the present again, never copied onto a step.
 * [effect](/domain/planning/effect.md) - Rules run on the possible world a step makes, a delete among them; the one declaration the world is held to.
 * [plan](/domain/planning/plan.md) - One want's steps on the winning path, what they spent, and why the search ended — an empty plan is an answer.
 * [budget](/domain/planning/budget.md) - A ceiling each call states in the unit it spends: candidates for a search, rule executions for revision.
@@ -68,7 +68,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 * [executor](/domain/execution/executor.md) - Commits plans as intentions, takes each step when due, moves on only when the world answers.
 * [intention](/domain/execution/intention.md) - One plan committed to for one want, standing at a step until done, failed or abandoned.
-* [step](/domain/execution/step.md) - An action picked with its values: what it predicts, what it read, when it may be taken and lands.
+* [step](/domain/execution/step.md) - An action picked with its values: the two graphs it predicts in, when it may be taken and lands.
 * [committed-step](/domain/execution/committed-step.md) - A step an intention adopted, believed over its landing window, so a drift reads it and a later search sees the plan.
 * [act](/domain/execution/act.md) - The record that a step was taken, and when; the world, not the act, says whether it landed.
 * [implementation](/domain/execution/implementation.md) - How an action is carried out when a step is taken: operations grouped by order, sized from the present, never read by a search.

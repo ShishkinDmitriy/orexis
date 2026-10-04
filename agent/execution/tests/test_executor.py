@@ -8,7 +8,6 @@ what it promises without a world, a search or a capability.
 
 from __future__ import annotations
 
-import json
 import logging
 import time
 from datetime import datetime, timedelta, timezone
@@ -19,7 +18,6 @@ import pytest
 from agent import clock
 from agent.execution.executor import DEFAULT_PATIENCE_S, Executor
 from agent.execution.ontology import EXECUTION, intentions_graph
-from agent.hash_named_graph import facts_of
 from agent.store import bindings, put_graph, query_over, rows, update
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -227,15 +225,21 @@ GRAPH <http://example.org/test#catalogue> {{
     return st
 
 
+def predicting(source: ox.Store, step: str, adds: str, retracts: str, plan: str = PLAN) -> ox.Store:
+    """`source`, its `step` predicting the triples of `adds` gained and those of `retracts` lost —
+    each a Turtle-ish `s p o` text — in the two graphs a step names, as the extraction writes them."""
+    update(source, f"""INSERT DATA {{
+  GRAPH <{plan}> {{ <{step}> execution:adds <{step}.adds> ; execution:retracts <{step}.retracts> }}
+  GRAPH <{step}.adds> {{ {adds} }}
+  GRAPH <{step}.retracts> {{ {retracts} }} }}""")
+    return source
+
+
 def _predicting(steps: int = 1, plan: str = PLAN) -> ox.Store:
-    """A plan whose first step predicts the disk moving from A to B, in the canonical facts a
-    world's digest is made of, and lands at NOW."""
-    source = a_plan(steps, plan)
-    (before,) = facts_of(_beliefs(PEG_A), STATE)
-    (after,) = facts_of(_beliefs(PEG_B), STATE)
-    predicts = json.dumps({"adds": [after], "retracts": [before]})
-    update(source, f"""INSERT DATA {{ GRAPH <{plan}> {{ <{plan}.0> execution:predicts {json.dumps(predicts)} ;
-                                                       execution:landsAt "{NOW.isoformat()}"^^xsd:dateTime }} }}""")
+    """A plan whose first step predicts the disk moving from A to B, in the two graphs a step
+    names, and lands at NOW."""
+    source = predicting(a_plan(steps, plan), f"{plan}.0", f"<{DISK}> <{ON}> <{PEG_B}>", f"<{DISK}> <{ON}> <{PEG_A}>", plan)
+    update(source, f"""INSERT DATA {{ GRAPH <{plan}> {{ <{plan}.0> execution:landsAt "{NOW.isoformat()}"^^xsd:dateTime }} }}""")
     return source
 
 
@@ -268,15 +272,8 @@ def test_a_step_predicting_a_side_is_answered_by_the_readings_revision():
     beliefs = _beliefs(PEG_A)
     update(beliefs, f"""INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{bed_range}> }}
         GRAPH <http://example.org/test#catalogue> {{ <{revisions}> <http://www.w3.org/ns/prov#wasDerivedFrom> <{STATE}> ; a <http://example.org/orexis#BeliefGraph> }} }}""")
-    source = a_plan(2)
-    def fact(side):
-        one = ox.Store()
-        update(one, f"INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{side}> <{bed_range}> }} }}")
-        (said,) = facts_of(one, revisions)
-        return said
-    predicts = json.dumps({"adds": [fact(inside)], "retracts": [fact(below)]})
-    update(source, f"""INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:predicts {json.dumps(predicts)} ;
-                                                       execution:landsAt "{NOW.isoformat()}"^^xsd:dateTime }} }}""")
+    source = predicting(a_plan(2), f"{PLAN}.0", f"<{soil}> <{inside}> <{bed_range}>", f"<{soil}> <{below}> <{bed_range}>")
+    update(source, f"""INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt "{NOW.isoformat()}"^^xsd:dateTime }} }}""")
     x = Executor(beliefs, AGENT, ox.Store())
     x.commit(source, PLAN, WANT)
     x.tick(NOW)
@@ -461,7 +458,7 @@ def test_a_committed_step_is_a_belief_over_its_landing_window():
     held = {(r["p"], r["o"]) for r in rows(beliefs, "SELECT ?p ?o WHERE { GRAPH $g { ?s ?p ?o } }", (), g=first)}
     assert (EXECUTION + "landsWithinS", "600") in held and (EXECUTION + "answeredWithinS", "660") in held
     assert ("http://example.org/test#disk", DISK) in held, "the filling, copied as the plan states it"
-    assert not any(p == EXECUTION + "predicts" for p, _ in held), "the prediction stays the plan's"
+    assert not any(p in (EXECUTION + "adds", EXECUTION + "retracts") for p, _ in held), "the prediction stays the plan's"
     assert ("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", EXECUTION + "Step") in held
 
 

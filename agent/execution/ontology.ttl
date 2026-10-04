@@ -55,7 +55,7 @@ execution:by a owl:ObjectProperty ; rdfs:domain execution:Intention ; rdfs:range
     rdfs:comment "The step this intention stands at now. Moved along `execution:then` when the world answers what the step predicted; absent once the intention resolves." .
 
 execution:Step a owl:Class ; rdfs:label "Step" ;
-    rdfs:comment "One orexis:Action filled in and PLANNED — not yet done: the action it fills and a triple per parameter, when it may be taken (execution:notBefore), the earliest and the latest its change lands (execution:landsAt, execution:notAfter), what the search predicted taking it changes (execution:predicts), what its rules read to plan it (execution:precondition), and what follows (execution:then). A plan is steps; an intention commits to them (execution:step) and stands at one (execution:by)." .
+    rdfs:comment "One orexis:Action filled in and PLANNED — not yet done: the action it fills and a triple per parameter, when it may be taken (execution:notBefore), the earliest and the latest its change lands (execution:landsAt, execution:notAfter), what the search predicted taking it changes, as two graphs it names (execution:adds, execution:retracts), and what follows (execution:then). A plan is steps; an intention commits to them (execution:step) and stands at one (execution:by)." .
 
 execution:Act a owl:Class ; rdfs:label "Act" ;
     rdfs:comment "The RECORD that a step was taken: which step (execution:of), when (execution:takenAt), whether anyone took it (execution:taken) — history, and only history. Written by the executor as the step leaves flight. A step kept one level down carries `execution:refinedBy` the want it became." .
@@ -130,13 +130,28 @@ execution:partOf a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range 
     rdfs:comment "The plan a step belongs to — written by the extraction, read by the executor to adopt the plan's steps." .
 
 
-execution:predicts a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:string ;
-    rdfs:label "predicts" ;
-    rdfs:comment "The change the search predicted this step makes: what its world holds that the one before did not, and what it lost — the same canonical facts the plan's signature is made of, as one JSON literal of two lists (`adds`, `retracts`). One declaration: the effect the search planned on is the effect the world is held to. A step that predicts nothing moves as soon as it is taken." .
+#  WHAT A STEP PREDICTS, as two graphs it names — stated, and never asserted: a world where the
+#  dose has landed is not this world (a-steps-prediction-is-two-graphs-it-names). The kinds are
+#  beneath orexis:Graph alone, so no reader of the present, the public knowledge or a package's
+#  scratch is handed one; a reader reaches them through the step, by `execution:adds` and
+#  `execution:retracts`. The engine computes the diff when the plan is extracted, compares the
+#  present to it when the step is held to the world, and writes a fictive step from it. They
+#  were one JSON literal of canonical triples, which nothing could query, abbreviate or compare
+#  in a pattern (#759).
 
-execution:precondition a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:string ;
-    rdfs:label "precondition" ;
-    rdfs:comment "What the step's rules READ in the world it was planned from — the positive patterns of its effect's WHERE and of its availability select, instantiated for this step and stated as the same canonical facts `predicts` is made of, one JSON literal of one list. Derived from the rule texts and never authored beside them; an absence a rule requires (FILTER NOT EXISTS) is not here." .
+execution:AddsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Adds graph" ;
+    rdfs:comment "The facts a step predicts its world GAINS: every triple the possible world the step reaches states that the world it leaves does not, as the terms they are. One graph per step, named by the step's `execution:adds`, written by the plan's extraction beside the step and copied with the plan; the executor holds the world to it — the step is answered once the present holds every one of them — and a fictive step writes them into the state. Not a belief and not public: what it says is what WOULD hold, and no reader asking for the present is handed it." .
+
+execution:RetractsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Retracts graph" ;
+    rdfs:comment "The facts a step predicts its world LOSES: every triple the world the step leaves states that the world it reaches does not. The other half of the prediction, a graph of its own because a graph is classified per kind it holds and a retraction is a different claim from an addition; named by the step's `execution:retracts`, and the step is answered only while the present holds none of them." .
+
+execution:adds a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range execution:AddsGraph ;
+    rdfs:label "adds" ;
+    rdfs:comment "The graph of facts this step predicts the world gains. One declaration: the effect the search planned on is the effect the world is held to. A step naming neither this nor `execution:retracts` predicts nothing and moves as soon as it is taken; one naming an empty graph is answered the moment it lands." .
+
+execution:retracts a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range execution:RetractsGraph ;
+    rdfs:label "retracts" ;
+    rdfs:comment "The graph of facts this step predicts the world loses — the reading that stood before the dose, the peg the disk was on. The present must hold none of them for the step to be answered." .
 execution:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
     rdfs:label "patience seconds" ;
     rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second plan for the same want is absorbed; past it, the new one supersedes the old. Also how long past its latest landing (`execution:notAfter`) a step may go unanswered before its intention fails. The executor's default stands until an agent states its own." .

@@ -67,7 +67,6 @@ See knowledge/domain/planning/planner.md.
 
 from __future__ import annotations
 
-import json
 import logging
 import time
 from datetime import datetime
@@ -143,12 +142,12 @@ SELECT DISTINCT ?step WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by
                                          FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }"""
 
 #  EVERY STEP AN INTENTION STANDS AT THAT IS KEPT BELOW, HAS FALLEN DUE AND HAS NO WANT KEEPING IT
-#  YET, with what it predicts.
+#  YET; what it predicts is read off the two graphs it names, by `refine`.
 _KEPT_DUE_Q = """
-SELECT ?step ?predicts WHERE {
+SELECT ?step WHERE {
   GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
              FILTER NOT EXISTS { ?i execution:resolvedAt ?done } }
-  GRAPH ?plan { ?step execution:keptBelow true ; execution:predicts ?predicts .
+  GRAPH ?plan { ?step execution:keptBelow true .
                 OPTIONAL { ?step execution:notBefore ?due } }
   FILTER(!BOUND(?due) || ?due <= $now)
   FILTER NOT EXISTS { GRAPH ?h { ?step execution:keptBy ?w } } }
@@ -170,10 +169,11 @@ ORDER BY ?step"""
 _PRECONDITION_Q = """SELECT ?text ?takes WHERE { $action planning:precondition ?text . OPTIONAL { $action orexis:takes ?takes } }"""
 _FILLING_Q = """SELECT ?p ?v WHERE { GRAPH ?plan { $step ?p ?v } }"""
 
-#  EVERY STEP OF A PLAN PUBLISHED WHOSE ACTION IS TAKEN FICTIVELY, with what it predicts.
+#  EVERY STEP OF A PLAN PUBLISHED WHOSE ACTION IS TAKEN FICTIVELY; what it predicts is read off
+#  the two graphs it names, by `keeps`.
 _FICTIVE_STEPS_Q = """
-SELECT ?step ?predicts WHERE {
-  GRAPH $plan { ?step a execution:Step ; planning:fills ?action ; execution:predicts ?predicts }
+SELECT ?step WHERE {
+  GRAPH $plan { ?step a execution:Step ; planning:fills ?action }
   ?action execution:implementation/execution:operation ?op . ?op a execution:Fictive }
 ORDER BY ?step"""
 
@@ -475,8 +475,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         that keeps it, one level down (`refine`), which the executor waits on. The want graphs."""
         minted = []
         for r in rows(self.beliefs, _KEPT_DUE_Q, (), now=instant(at)):
-            predicted = json.loads(r["predicts"])
-            want = refine(self.beliefs, self.uri, r["step"], predicted.get("adds", ()), at, predicted.get("retracts", ()))
+            want = refine(self.beliefs, self.uri, r["step"], at)
             if want is not None:
                 minted += [g["g"] for g in rows(self.beliefs, _REFINED_Q, ()) if g["want"] == want]
         return minted
@@ -517,7 +516,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         actions = graphs_of(self.beliefs, ACTION)
         for plan in handed:
             for r in rows(self.beliefs, _FICTIVE_STEPS_Q, actions, plan=Raw(f"<{plan}>")):
-                if keeps(self.beliefs, json.loads(r["predicts"]).get("adds", ())):
+                if keeps(self.beliefs, r["step"]):
                     update(self.beliefs, f'INSERT DATA {{ GRAPH <{plan}> {{ <{r["step"]}> execution:keptBelow true }} }}')
 
     def _withdraw_orphaned_refinements(self, walking: set[str]) -> None:

@@ -22,10 +22,13 @@ WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 TOWER = "http://example.org/orexis/world/tower#"
 
+#  WHAT THE MOVER BELIEVES, read off the belief graphs by kind — the state and what the rules
+#  concluded of it — since a published plan's steps state the same rows in the graphs they predict
+#  in, and a prediction is not the world.
 _ON_Q = """PREFIX hanoi: <http://example.org/orexis/hanoi#>
-SELECT ?d ?below WHERE { GRAPH ?g { ?d hanoi:on ?below } } ORDER BY ?d"""
+SELECT ?d ?below WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?d hanoi:on ?below } } ORDER BY ?d"""
 _AT_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?x ?cell WHERE { GRAPH ?g { ?x courier:at ?cell } } ORDER BY ?x"""
+SELECT ?x ?cell WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?x courier:at ?cell } } ORDER BY ?x"""
 _REFINED_Q = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a execution:refinedBy ?w } }"
 
 

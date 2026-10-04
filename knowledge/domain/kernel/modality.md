@@ -19,6 +19,7 @@ asserts is its kind:
 | `orexis:StateGraph` | what IS, as this agent holds it | the kernel; sensing's observation graph beneath it |
 | `orexis:PredictionGraph` | what WILL be, during a window | prediction writes, planning reads |
 | `planning:PossibleGraph` | what WOULD be, if a plan were taken | the planner, in its [imaginarium](/domain/planning/imaginarium.md) |
+| `execution:AddsGraph`, `execution:RetractsGraph` | what one [step](/domain/execution/step.md) WOULD make true and false | planning writes, the executor reads |
 | `planning:DesireGraph`, `planning:WantGraph` | what is WANTED, standing or once | the world, and the derivation |
 | `orexis:RecordGraph` | what is OWED or was done, worth believing for a period | a package's record |
 | `execution:IntentionGraph` | what is being DONE | the executor |

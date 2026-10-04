@@ -42,6 +42,15 @@ The window's two ends are happenings of every prediction, and prediction learned
 execution's: it hears every belief written and rewrites each key's stretches when the one written is
 no sensor's observation.
 
+# Not the prediction
+
+The two graphs a step predicts in, `execution:adds` and `execution:retracts`, stay the
+[plan](/domain/planning/plan.md)'s and are never copied here. They differ from this graph in
+modality — stated against believed — and in lifetime — the plan's against the window's; put in a
+belief graph, "the soil is inside its range" would be handed to every met-test from the moment of
+adoption, and the want would read met before the world answered
+([a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md)).
+
 # How it ends
 
 The [executor](/domain/execution/executor.md) closes the window at the instant the world answers the
