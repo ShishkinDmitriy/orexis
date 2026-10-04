@@ -29,19 +29,23 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
 
 # Next, in order
 
-1. **What is wrong before what is missing** — #462 (a frozen probe reads fresh forever).
-2. **Planning in time, its second half** — #596, an action with a duration, then #591, a plan as a
-   partial order, then #593, a want over several scopes; #486 names a world by its path. #565 and
-   #527, narrowing and resuming the search, are done: a scope's imaginarium holds the scope's
-   readings and the present is identified in it by hash
-   ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)).
+1. **What is wrong before what is missing** — nothing known is wrong today: a frozen probe is said
+   stuck (#462, done; the detectors it listed and did not build are seams in
+   [stuck](/domain/sensing/stuck.md)), and a world runs end to end from nothing on demand (#47, done).
+2. **Planning in time, its second half** — #596, an action with a duration, down to its two unticked
+   lines, a landing straddling a boundary and ranking by lateness. A plan as a partial order and a
+   want over several scopes are seams, not issues, until a world pushes on them
+   ([a-landing-is-a-band-and-a-world-holds-over-a-period](/decisions/a-landing-is-a-band-and-a-world-holds-over-a-period.md),
+   [a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)); the rest of
+   the chain — narrowing, resuming and identifying the present, a world named by a mint number — is
+   done.
 3. **The world answers otherwise** — #522, several outcomes with a likelihood, and #781, a plan that
    worked lifted into a method the executor proves or forgets.
 4. **Several agents contend** — #567, one dispatcher and two vans, then #568, right-of-way as a lot
    the market allocates.
-5. **Operating it** — #47, a world run end to end from nothing; #839,
-   #836, #860 and #838, what a world states about its installation and its wiring.
-6. **The edge** — #865, #868, #81, #322, #323, #461, #328 and #25, the boards and their firmware.
+5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
+   its wiring.
+6. **The edge** — #865, #868, #322, #323, #461, #328 and #25, the boards and their firmware.
 
 # Parked, with the seam that unlocks each
 
