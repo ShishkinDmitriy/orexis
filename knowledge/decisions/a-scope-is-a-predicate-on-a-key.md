@@ -8,7 +8,9 @@ description: >-
   the subject by, read by asking each action's precondition over the public graphs with every
   pattern optional. Refused: a declaration of what an action moves; the partition computed from the
   candidates a pass admits; a key named by its variable. The greenhouse splits; the tower still
-  does; a term places a want only where its predicates place it nowhere.
+  does; a term places a want only where its predicates place it nowhere. Amended the same day: a
+  scope's imaginarium holds the scope's readings, by the same test, so a world is their size and
+  a sensor of another scope adds nothing to it.
 status: accepted
 timestamp: 2026-10-04T12:00:00Z
 ---
@@ -73,8 +75,55 @@ agent and the bed are every filling's and nobody's member, and tell nothing. Hel
 `world/greenhouse/tests/test_scaling.py`: the soil's search is one world over one candidate with or
 without the lamp, and each scope admits one filling.
 
+# A scope's imaginarium holds the scope's readings (amended 2026-10-04)
+
+The sovereign's second metric was that a possible world's size should not grow when an aspect of
+the world nothing of the want touches is added, and it did: a world was a fork of the ground, the
+ground every reading the agent holds with its sides, so a light sensor the soil never reads put
+eleven quads into every world of the soil's search. The fork could not be narrowed by graphs — the
+filling's own first page refuses that, because a pattern reaching a graph nobody copied returns an
+empty result and no error — and it waited on a slice a rule could be refused against.
+
+The slice is the one `admit` already refuses a filling by. A reading names what keys it — its
+feature and its property, in its revisions — and a reading naming a member of another scope is
+that scope's, exactly as a filling binding one is. So `prepare_ground` is handed `elsewhere`, the
+same set, and the scope's own members beside it, and a reading or a prediction that with its
+revisions names — as a predicate or an object — one of the others' and none of its own does not
+cross: the imaginarium is the scope's, the grounds `lay_ground` lays in it are the scope's
+readings, and every world forked from them is their size. It is safe where narrowing by graph was
+not because the same test holds on both sides of the seam: no candidate of this scope binds
+another scope's key, so no rule of this scope's search can reach the reading left out. A reading
+no scope holds alone — a forecast, a sensor no action acts on — crosses into every imaginarium as
+before, and so does one that is several scopes' at once: the tower's one state graph says where
+every disk and the van stand, in the courier's cells, and its revisions conclude `hanoi:on` of
+it, the puzzle's own word, so it is both scopes' and the puzzle's search still has its disks.
+Measured first: kept out by the cells alone, the puzzle read unreachable.
+
+Two things followed and were measured before they were believed. **A due head is judged in the
+scope that admitted its filling**: the planner asked every imaginarium whether the present still
+admits each step an intention stands at, which was harmless while every ground held every reading
+and would call the heater's step blocked in the soil's imaginarium now; it asks only where the
+action is the scope's and no value of the filling is another's, the lamp's step in the light's
+alone. **And a desire about two scopes is judged in each on that scope's readings**: in the air's
+imaginarium the comfortable bed reads met when the air is warm, since the dry soil it is also about
+is not there to read; the soil's want is minted where the soil is. The shapes shipped read an
+absence as met — `sh:qualifiedMaxCount 0` of readings below — so no want is minted from a reading
+that is merely elsewhere; a shape that read a reading's PRESENCE would mint one in every
+imaginarium but its own, and that is the seam below.
+
+Refused, as the way to keep the hashes comparable: narrowing the fork alone and leaving the ground
+whole. A re-root identifies the present among the last pass's worlds by hash, and a world holding
+less than the ground would never match it, so every pass would start the search over — the
+failure the imaginarium outliving the pass was built to close. The ground and the worlds hold the
+same readings or the identification is gone.
+
 # Measured
 
+- A possible world of the greenhouse is twelve quads, the scope's reading and its sides, one
+  percent of the present; with a light sensor, a lamp and a desire that the bed be lit, the soil's
+  world is the same twelve, where it was thirty-five against twenty-four before. The three grounds
+  together are the state, and none is
+  ([measure-the-search](/runbooks/measure-the-search.md), `world/greenhouse/tests/test_scaling.py`).
 - The greenhouse boots to two scopes, `{SoilMoisture, Dosing}` and `{AirTemperature, Heating}`,
   with the shared `sensing:below` and `sensing:inside` and the bed in neither. A cold dry bed is two
   wants in two imaginaria of one world each where it was one want over four worlds; the pass costs
@@ -101,11 +150,12 @@ without the lamp, and each scope admits one filling.
   keyed through a sample of the bed (`?reading sosa:hasFeatureOfInterest ?sample . ?sample
   sosa:isSampleOf ?bed`) is keyed by the sample, which is as good a key while samples are not
   shared.
-- **A fork copies every reading, whatever its scope.** A possible world is the ground's size — the
-  readings and their sides, two percent of the present — and grows by every sensor added, related or
-  not: 24 quads to 35 with a light sensor the soil never reads. Narrowing the fork to the scope's keys
-  is the one figure in the scaling table not yet flat, and it waits on the empty-result trap being
-  closed for a world that holds less than the ground.
+- **A shape that reads a reading's presence, about another scope.** A desire's met-test asking
+  `sh:minCount 1` of a reading would read it absent in every imaginarium but the reading's own and
+  mint a want there, which `_of_scope` would place in the reading's scope and never search here —
+  standing in a store that cannot reach it. No shipped shape reads that way; the day one does, the
+  derivation mints a cluster only where its scope's readings are, which is the scope the
+  imaginarium is for.
 - **The second imaginarium's price.** A scope costs a copy of the beliefs per pass. The world that
   pays more for the copies than it saves in worlds has not been built; the tower and the greenhouse
   both come out ahead or even.

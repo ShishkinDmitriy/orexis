@@ -77,19 +77,21 @@ import logging
 import pyoxigraph as ox
 
 from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD, STATE
-from agent.store import catalogue_of, forget_graph, graphs_of, rows
+from agent.store import catalogue_of, forget_graph, graphs_of, revisions_of, rows
 
 from .ontology import DESIRE, SCOPE_GRAPH, WANT
 
 log = logging.getLogger("prepare_ground")
 
 
-def prepare_ground(beliefs: ox.Store, into: ox.Store) -> ox.Store:
+def prepare_ground(beliefs: ox.Store, into: ox.Store, *, own=frozenset(), elsewhere=frozenset()) -> ox.Store:
     """Fill an empty store with what a search over one SCOPE needs, and hand it back.
 
     `beliefs` is read and `into` is written; both are the engine, a `pyoxigraph.Store`, and the
     caller makes the empty one. Everything that happens to a possible world afterwards happens
-    to `into` the ordinary way, so this is the seam and not a wrapper.
+    to `into` the ordinary way, so this is the seam and not a wrapper. `own` and `elsewhere` are
+    the members of this scope and of every other, off the scope graphs; a reading or a prediction
+    naming one of the others' and none of this scope's is theirs and stays behind.
 
     THREE THINGS CROSS, and then a fourth is BUILT:
 
@@ -101,14 +103,25 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store) -> ox.Store:
        public graph costs 10.4 ms and 2,646 quads on `world/loner` where the lean set is 0.6 ms
        and 165 — and the lean set is wrong in the way this function exists to prevent, since a
        pattern reaching a graph nobody copied returns an EMPTY RESULT rather than an error.
-       **That measurement is also why nothing here is narrowed per scope**: fewer graphs is the
-       same move under another name, and it fails the same silent way. One imaginarium is one
-       scope's; the scope does not cut it, and would need a slice a rule could be REFUSED
-       against before it safely could.
+       **That measurement is also why no PUBLIC graph is narrowed per scope**: fewer graphs is
+       the same move under another name, and it fails the same silent way. What IS narrowed is
+       the readings, below, and by the one slice a rule can be refused against.
     2. **The catalogue**, since every read inside asks it what the graphs are.
     3. **What the agent alone holds and a rule still names**: its readings, which are where the
        search starts; its predictions, which make the grounds; and its desires and wants,
-       whose shapes the packages' shapes target. Whatever
+       whose shapes the packages' shapes target. **The readings and the predictions are the
+       SCOPE's** (a-scope-is-a-predicate-on-a-key): one imaginarium is one scope's, and a reading
+       or a prediction that, with its revisions, names a member of another scope — `elsewhere`,
+       the terms `admit` refuses a filling for — and none of this scope's, `own`, does not cross,
+       so the ground laid here is the scope's readings and every world forked from it their size,
+       whatever sensors the agent grows elsewhere. Safe where narrowing the public graphs was not,
+       because the same test already refuses every filling that could reach such a reading: no
+       candidate of this scope binds another scope's key, so no rule of this scope's search
+       reaches the reading left out. Named is a predicate or an object: the tower's one state
+       graph says where every disk and the van stand in the courier's cells, and its revisions
+       conclude `hanoi:on` of it, the puzzle's word, so it is both scopes' and crosses into both;
+       a reading naming no scope's member — a forecast, a sensor no action acts on — crosses
+       into every imaginarium, as everything did. Whatever
        its period — a pass asks its rules at instants of its own, and a forecast holding then is
        a graph the present has not reached. AND THE SCOPES, because the derivation runs in
        here and clusters what it reads unmet by them: without the scope graph it found none,
@@ -132,11 +145,36 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store) -> ox.Store:
             forget_graph(into, iri)           # what the last filling brought across
     #  A READING'S REVISIONS CROSS BY KIND: what the rules concluded of it is a belief, in a graph
     #  derived from the reading's, and a met-test asks the side it holds.
+    behind = _of_another_scope(beliefs, own, elsewhere)
     for iri in dict.fromkeys([*graphs_of(beliefs, *CROSSING), catalogue_of(beliefs)]):
-        if iri is None:
+        if iri is None or iri in behind:
             continue                          # a store nobody has told anything to has no catalogue
         into.extend(beliefs.quads_for_pattern(None, None, None, ox.NamedNode(iri)))
     return into
+
+
+def _of_another_scope(beliefs: ox.Store, own, elsewhere) -> frozenset[str]:
+    """Every reading and prediction that is another scope's alone, with its revisions: a graph of
+    the kinds the ground is made of whose quads, taken with what was concluded of it, name — as a
+    predicate or an object — a member of `elsewhere` and none of `own`. The test is `admit`'s on
+    a filling's values, asked of a reading's: a sensing observation names its property in its
+    revisions and a prediction copies the node whole, so the one that names the air's property is
+    the air's; the tower's state names the courier's cells and its revisions the puzzle's `on`,
+    and is both scopes'. Nothing, in a store of one scope."""
+    if not elsewhere:
+        return frozenset()
+    behind: set[str] = set()
+    for graph in graphs_of(beliefs, STATE, PREDICTION):
+        group = [graph, *revisions_of(beliefs, graph)]
+        named: set[str] = set()
+        for g in group:
+            for q in beliefs.quads_for_pattern(None, None, None, ox.NamedNode(g)):
+                named.add(q.predicate.value)
+                if isinstance(q.object, ox.NamedNode):
+                    named.add(q.object.value)
+        if named & elsewhere and not named & own:
+            behind.update(group)
+    return frozenset(behind)
 
 
 #  THE KINDS THAT CROSS, spelled once for the filling and the refresh.

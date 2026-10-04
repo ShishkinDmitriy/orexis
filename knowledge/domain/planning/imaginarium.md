@@ -4,8 +4,8 @@ title: Imaginarium
 term: http://example.org/orexis/planning#PossibleGraph
 description: >-
   The store a search thinks in - a second pyoxigraph store, in memory, one per scope, filled from
-  the beliefs with every public graph and the agent's state, predictions, desires and wants, and
-  holding one graph per possible world. What is in it never happened, and nothing in it reaches
+  the beliefs with every public graph, the agent's desires and wants, and the readings and
+  predictions that are the scope's, and holding one graph per possible world. What is in it never happened, and nothing in it reaches
   the beliefs; it outlives the pass so the next can continue.
 ---
 
@@ -23,8 +23,11 @@ refreshes it:
 
 - `prepare_ground` takes back every graph the last filling brought across and copies again every
   public graph — every one, since a pattern reaching a graph nobody copied returns an empty result
-  rather than an error — the catalogue, and the agent's state, predictions, desires, wants,
-  records and the revisions of each. What the store made for itself stays.
+  rather than an error — the catalogue, the agent's desires, wants and records, and of its readings
+  and predictions those that are the scope's: one naming another scope's member, with its
+  revisions, stays behind, so the grounds laid here are the scope's readings and a world their size
+  ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)). What the
+  store made for itself stays.
 - `lay_ground` lays a `planning:GroundGraph` per period: the present, and the present with each
   [prediction](/domain/prediction/prediction.md) applied at its instant.
 
