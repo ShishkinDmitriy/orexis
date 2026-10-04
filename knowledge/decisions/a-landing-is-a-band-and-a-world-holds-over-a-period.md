@@ -67,8 +67,8 @@ So, since 2026-10-03:
   each other; one text binding two columns cannot. The issue's own question, whether the two
   quantities it saw — how long the act occupies its actor, and when its effect lands — are two
   terms, is answered no for now: nothing shipped occupies an actor for longer than the search's
-  grain, and a term nobody reads is annotation. Occupancy returns with #591, where two steps
-  overlap exactly when neither occupies what the other needs.
+  grain, and a term nobody reads is annotation. Occupancy returns with a plan that is a partial
+  order, the seam below, where two steps overlap exactly when neither occupies what the other needs.
 - **Adding a duration to an instant in the re-root.** The engine binds nothing for
   `dateTime + dayTimeDuration` at about a third of the seconds of a minute (measured on 0.5.11,
   deterministic per instant), so the re-stamp takes the stretch from each end instead, which binds
@@ -104,6 +104,12 @@ So, since 2026-10-03:
 - **Ranking by lateness.** Achievers rank by cost; a want with an instant is weighed at it (#858),
   and nothing yet prefers the achiever landing by the instant, nor refuses a world past the want's
   lifting. Both are #596's, stated there.
+- **A plan is a chain, not a partial order.** `execution:then` orders every step after the one
+  before it, and nothing shipped has two levers that must run at once, so no step occupies its actor
+  for a stretch and no two steps overlap. The day a world has two, a step's occupancy is a term and
+  two steps overlap exactly when neither occupies what the other needs. That was #591, whose first
+  half — a step spans an interval — this record built, and whose second has no definition of done
+  until such a world exists; it closed into this seam (2026-10-04).
 - **The patience is still a figure beside the band.** With a latest landing stated, the grace the
   patience added was redundant at one end and honest at the other; it stays, since an action's
   band is the world's promise and the patience the agent's tolerance beyond it, and nothing here

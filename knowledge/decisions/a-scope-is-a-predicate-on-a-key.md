@@ -207,6 +207,11 @@ nothing blocked in the next.
   courier's want, every parcel where it is owed, offends with a parcel, and a parcel names its cell
   and nothing of a van, so two vans in one vocabulary would still be one scope by this; #565 closed
   with the beds, and the dispatcher world (#567) is where the vans are measured.
+- **A disjunctive want.** A want whose met-test says `sh:or` of two scopes' halves is a CHOICE, and
+  would be planned as the cheaper half's plan; a conjunction over two scopes is two wants already,
+  since the derivation mints one per cluster. No shipped desire says `sh:or` — only a test fixture
+  does — so there is nothing to build it against; it was the last line of #593, closed into this
+  seam (2026-10-04), and the trigger is the first world whose desire says `sh:or` across scopes.
 - **A derivation's edges are predicates and join every key of theirs.** No derivation rows are
   written in 0.2.0 — `stored_edges` reads an empty graph — so nothing is joined by them today; the
   day one is, a rule reading one subject's reading and writing another's should join across keys

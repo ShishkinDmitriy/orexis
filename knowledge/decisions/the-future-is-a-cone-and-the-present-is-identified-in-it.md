@@ -181,3 +181,9 @@ it works with today's execution-time band, and intervals are the widest change.
   identification inherits the gap.
 - **Two fillings binding one lifted method at once** — each is a candidate on the menu, walked
   and settled like a primitive, or the cheapest adopted outright; decided when a world has two.
+- **A search from the goal.** A bidirectional search needs a goal state to start from, and a want
+  is a SHAPE — the set of worlds that meet it, not one of them — while no action declares an
+  inverse to walk backward by; so the search runs forward from the ground, and the cone is what it
+  keeps. #489 asked this as a question, in its own words, and closed into this seam (2026-10-04);
+  what would reopen it is a want whose shape reads as the states that meet it, and an effect that
+  runs both ways.
