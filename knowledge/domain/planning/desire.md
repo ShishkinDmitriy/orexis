@@ -28,7 +28,10 @@ for all and never handed to a search. A world authors it, in a `planning:DesireG
 
 A **want** is a `planning:Want`, `prov:wasDerivedFrom` its desire, bound to the instances in
 trouble and holding during a period of its own — its graph's — with `planning:holdsAt` where it
-must hold at a foreseen instant. It is one-shot: it carries where it has got to
+must hold at a foreseen instant. It carries the desire's met-test narrowed to its instance, and the
+desire's estimate with `$this` bound to it, under names of its own
+([shape](/domain/planning/shape.md)), so a want about one parcel is judged and measured on that
+parcel alone. It is one-shot: it carries where it has got to
 (`planning:state`, Recognized to Done, each written by whoever decides it) and it goes once met.
 Three worlds author a want directly — Hanoi's, the courier's and the tower's movers hold one and
 no desire, and exit when it is reached. And [refinement](/domain/planning/refinement.md) mints one

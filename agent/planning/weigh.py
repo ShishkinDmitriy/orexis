@@ -168,7 +168,10 @@ def _remaining(store, for_, world: str, held: dict, memo) -> str | None:
     binds `?estimate`; the package that declares the actions declares the node, because
     *never overstates* is a promise about the package's own costs and no world can keep it.
     Run over the same graphs as the met-test, the world at its instant, and written on the
-    weighing as `planning:remaining` for the frontier to order by.
+    weighing as `planning:remaining` for the frontier to order by. A derived want's own node
+    is the desire's select with `$this` bound to the want's instance, written by the
+    derivation as it narrows the met-test (#893); the desire's, `$this` unbound, is the
+    measure over every instance.
 
     NONE IS NOT NOUGHT. A want with no estimate is not a want that is nought away, and a
     broken declaration read as arrived would crown a plan that achieved nothing; the frontier
@@ -189,8 +192,9 @@ def _remaining(store, for_, world: str, held: dict, memo) -> str | None:
 
 
 def _estimate(store, for_, memo) -> str | None:
-    """The `sh:select` the want's `planning:estimates` points at — the want's own, or its
-    desire's — off the shapes crossed once for the pass. None where neither declares one."""
+    """The `sh:select` the want's `planning:estimates` points at — the want's own, which the
+    derivation writes instantiated at the want's instance, or its desire's where the want
+    states none — off the shapes crossed once for the pass. None where neither declares one."""
     shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
     want = rdflib.URIRef(for_)
     node = shapes.value(want, _ESTIMATES)

@@ -1,0 +1,130 @@
+# two_parcels_two_estimates
+#
+# A DESIRE OVER INSTANCES WITH AN ESTIMATE: two parcels astray under one desire that every parcel
+# stand where it is owed, the domain's select summing the drives owed over every parcel. Two
+# wants, one per parcel (a-parcel-astray-is-a-want-of-its-own), and each carries the estimate as
+# ITS OWN — the desire's select with `$this` bound to its parcel, under the want's name — so the
+# two wants read two figures where the desire reads their sum: parcel A's van is a drive away and
+# its door two more, three; parcel B's van stands on it, two. Carrying the desire's select, each
+# want read five and forked the other van (#893). `test_derive_wants.py` holds the figures.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+
+GRAPH :ontology {
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :van_a a courier:Van .
+  :van_b a courier:Van .
+  :parcel_a a courier:Parcel .
+  :parcel_a courier:destination :c0_3 .
+  :parcel_b a courier:Parcel .
+  :parcel_b courier:destination :c1_3 .
+  :c0_0 a courier:Cell . :c0_0 courier:x 0 . :c0_0 courier:y 0 .
+  :c0_1 a courier:Cell . :c0_1 courier:x 0 . :c0_1 courier:y 1 .
+  :c0_2 a courier:Cell . :c0_2 courier:x 0 . :c0_2 courier:y 2 .
+  :c0_3 a courier:Cell . :c0_3 courier:x 0 . :c0_3 courier:y 3 .
+  :c1_0 a courier:Cell . :c1_0 courier:x 1 . :c1_0 courier:y 0 .
+  :c1_1 a courier:Cell . :c1_1 courier:x 1 . :c1_1 courier:y 1 .
+  :c1_2 a courier:Cell . :c1_2 courier:x 1 . :c1_2 courier:y 2 .
+  :c1_3 a courier:Cell . :c1_3 courier:x 1 . :c1_3 courier:y 3 .
+}
+
+GRAPH :desires {
+  :keeper planning:holds :keeper.every_parcel_delivered .
+  :keeper.every_parcel_delivered a planning:Desire .
+  :keeper.every_parcel_delivered planning:metWhen :delivered .
+  :keeper.every_parcel_delivered planning:estimates :drivesOwed .
+  :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
+  :delivered a sh:NodeShape .
+  :delivered sh:targetClass courier:Parcel .
+  :delivered sh:property [ sh:path courier:at ; sh:equals courier:destination ; planning:about sh:this ] .
+  :drivesOwed rdfs:label "drives still owed" .
+  :drivesOwed sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT (SUM(?d) AS ?estimate) WHERE {
+          SELECT ?p (MIN(?dist) AS ?d) WHERE {
+              {
+                  $this a courier:Parcel ; courier:destination ?owed .
+                  ?owed courier:x ?ox ; courier:y ?oy .
+                  $this courier:carriedBy ?van . ?van courier:at ?vc .
+                  ?vc courier:x ?vx ; courier:y ?vy .
+                  BIND($this AS ?p)
+                  BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
+              } UNION {
+                  $this a courier:Parcel ; courier:destination ?owed .
+                  ?owed courier:x ?ox ; courier:y ?oy .
+                  $this courier:at ?pc . ?v courier:at ?vc .
+                  ?v a courier:Van .
+                  ?pc courier:x ?px ; courier:y ?py .
+                  ?vc courier:x ?vx ; courier:y ?vy .
+                  FILTER(?px != ?ox || ?py != ?oy)
+                  BIND($this AS ?p)
+                  BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
+                       + ABS(?px - ?ox) + ABS(?py - ?oy) AS ?dist)
+              }
+          } GROUP BY ?p
+      }""" .
+}
+
+GRAPH :sensed {
+  :van_a courier:at :c0_0 .
+  :parcel_a courier:at :c0_1 .
+  :van_b courier:at :c1_1 .
+  :parcel_b courier:at :c1_1 .
+}
+
+GRAPH :scopes {
+  :keeper.scope.1 a planning:Scope .
+  courier:Drive planning:inScope :keeper.scope.1 .
+  courier:Pick planning:inScope :keeper.scope.1 .
+  courier:Drop planning:inScope :keeper.scope.1 .
+  courier:at planning:inScope :keeper.scope.1 .
+  courier:carriedBy planning:inScope :keeper.scope.1 .
+  :van_a planning:inScope :keeper.scope.1 .
+  :van_b planning:inScope :keeper.scope.1 .
+  :parcel_a planning:inScope :keeper.scope.1 .
+  :parcel_b planning:inScope :keeper.scope.1 .
+  :c0_0 planning:inScope :keeper.scope.1 .
+  :c0_1 planning:inScope :keeper.scope.1 .
+  :c0_2 planning:inScope :keeper.scope.1 .
+  :c0_3 planning:inScope :keeper.scope.1 .
+  :c1_0 planning:inScope :keeper.scope.1 .
+  :c1_1 planning:inScope :keeper.scope.1 .
+  :c1_2 planning:inScope :keeper.scope.1 .
+  :c1_3 planning:inScope :keeper.scope.1 .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

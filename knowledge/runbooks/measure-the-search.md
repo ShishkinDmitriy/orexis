@@ -198,26 +198,58 @@ chains share no cell — against each van and its parcel alone in a world of its
 |---|---|---|---|---|---|
 | both vans, the delivery shape's block about nothing | one, about both parcels | 128 of a budget of 128 | 83 | `Exhausted` | 731 ms |
 | the same at a budget of 1024 | one | 674 | 325 | one plan of ten steps, `Satisfied` | 85 s |
-| both vans, the block about `sh:this` (shipped) | two, one per parcel | 90 | 61 and 64 | two plans of five steps | 545 ms |
+| both vans, the block about `sh:this`, the desire's estimate | two, one per parcel | 90 | 61 and 64 | two plans of five steps | 545 ms |
 | van A and parcel A alone | one | 17 | 13 | five steps | 88 ms |
 | van B and parcel B alone | one | 17 | 13 | five steps | 87 ms |
 
+Weighings per want are of possible worlds; a candidate passed over is weighed too and not counted.
 The sum the issue hoped for is 26 weighings over 34 candidates; the product over one want is 325
-over 674 and finds the same ten steps; a want per parcel is between, 125 over 90, because each
-want's search still forks the other van — the estimate is the desire's and counts both parcels, so
-the other van's drive toward its parcel ties the frontier. Through the runtime, the shipped world
-delivers both parcels in one pass, ten acts.
+over 674 and finds the same ten steps; a want per parcel was between, 125 over 90, because each
+want's search still forked the other van — the estimate was the desire's and counted both parcels,
+so the other van's drive toward its parcel tied the frontier. That is the figure #893 closed, below.
+Through the runtime, the shipped world delivers both parcels in one pass, ten acts.
 
 **The corridor** — van A drives parcel A along the second row, van B drives parcel B down the third
 column, and the two shortest chains meet at `c2_1` at each van's third step (the test's variant of
-the world). One pass: two wants, two plans of five steps, 87 and 92 weighings over 118 candidates,
-each plan driving its van to `c2_1`; of the 118 worlds the searches visited, FOUR hold two vans on
-one cell, and the aversion was weighed in none of them — a desire is weighed in grounds alone, and
-in the present the vans stood apart, so no want was minted from it. Walked, the two intentions
-alternate steps within the one pass, and after the sixth act BOTH VANS STAND ON `c2_1` in the
-agent's beliefs, for one act; the next pass finds both parcels delivered and nothing to mint. The
-delivered plans put two vans on one cell, and nothing saw it: the derivation runs in the planner's
-pass, the walk comes after it, and the state between two steps is judged by nobody.
+the world). One pass with the desire's estimate: two wants, two plans of five steps, 87 and 92
+weighings over 118 candidates, each plan driving its van to `c2_1`; of the 118 worlds the searches
+visited, FOUR held two vans on one cell, and the aversion was weighed in none of them — a desire is
+weighed in grounds alone, and in the present the vans stood apart, so no want was minted from it.
+Walked, the two intentions alternate steps within the one pass, and after the sixth act BOTH VANS
+STAND ON `c2_1` in the agent's beliefs, for one act; the next pass finds both parcels delivered and
+nothing to mint. The delivered plans put two vans on one cell, and nothing saw it: the derivation
+runs in the planner's pass, the walk comes after it, and the state between two steps is judged by
+nobody.
+
+# The dispatcher: a want's estimate bound to its parcel (2026-10-04, #893)
+
+The apart figures above re-measured with each want's estimate instantiated at its parcel — the
+courier's select written with `$this` for the parcel, and the derivation writing each want's own
+node with `$this` bound (a-parcel-astray-is-a-want-of-its-own, the closed seam). Same world, same
+budget of 128, the two trees alternated twice in one session on the development container, medians
+of five; `remaining` is what each want's estimate read in the present ground:
+
+| world | estimate | candidates | weighings per want | reached by the other van | `remaining` | pass |
+|---|---|---|---|---|---|---|
+| both vans, apart | the desire's, every parcel | 90 | 61 and 64 | 29 and 28 | 6 and 6 | 635 ms, then 498 (min 551, 474) |
+| both vans, apart | the want's, its parcel | 90 | 37 and 37 | 16 and 16 | 3 and 3 | 449 ms, then 409 (min 385, 365) |
+| either van and its parcel alone | either, one parcel | 17 | 13 | — | 3 | 80 to 98 ms, both trees |
+| the corridor | the desire's | 118 | 87 and 92 | 42 and 42 | 6 and 6 | 821 ms, then 954 |
+| the corridor | the want's | 140 | 58 and 58 | 22 and 22 | 3 and 3 | 832 ms, then 821 |
+
+Each want reads what the van alone reads, three drives, where it read the sum. The weighings fell
+from 61 and 64 toward 13 and stopped at 37, and the 24 over the van alone are the one scope's price
+that an estimate cannot pay: every world a search opens admits the other van's two or three drives,
+a candidate admitted is weighed — that is where `remaining` is read — and the estimate orders the
+frontier and refuses to OPEN a world, never to weigh one. Sixteen of each want's 37 worlds were
+reached by the other van's move; with the desire's estimate the other van's drive cost one and saved
+one, so those worlds tied the frontier at the plan's own cost and were opened in turn, and 29 of
+61 were the other van's. The other van's drive now costs one and saves nothing, so its worlds stand
+at the plan's cost or past it and are opened only where the tie-break reaches them before the plan
+is found. What would take the 24 away is the two-vans seam of a-scope-is-a-predicate-on-a-key, not
+a better estimate. On the corridor the searches no longer visit a world with two vans on one cell
+— none of 140, against four of 118 — and the two still meet on `c2_1` when the plans are walked,
+which is the finding that mattered and is unchanged.
 
 **Both vans on one cell at a pass's start** — van B posed on van A's cell: the aversion reads unmet
 for each van, one want `no_cell_holds_two_vans.pursued` is minted, about both vans, and a one-step

@@ -228,7 +228,7 @@ planning:estimates
     a owl:ObjectProperty ;
     rdfs:domain planning:Desire ;
     rdfs:label "what is left to pay" ;
-    rdfs:comment "Points at a node carrying one `sh:select` that binds ?estimate — the remaining cost to meet this want, in the unit `planning:costs` is stated in, evaluated against whichever world is being judged with $state naming that world's readings. Substituted and run exactly as an avoided pattern is: one declaration, the store's own engine, no Python anywhere. A want that declares none is simply not measurable this way, and the search treats every unmet world as equally far." .
+    rdfs:comment "Points at a node carrying one `sh:select` that binds ?estimate — the remaining cost to meet this want, in the unit `planning:costs` is stated in, run over whichever world is being judged as the met-test is, and written on the weighing as `planning:remaining`. `$this` in the select is the instance: a desire's select leaves it unbound, a variable, and measures every instance; the derivation writes a want's own node with `$this` bound to the one instance the want is about, as it narrows the met-test, so a want per parcel reads its parcel's drives alone (#893). A want that declares none is simply not measurable this way, and the search treats every unmet world as equally far." .
 
 
 planning:holds

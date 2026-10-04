@@ -1,0 +1,218 @@
+--- case
++++ expected
+@@ -17,31 +17,42 @@
+ }
+ 
+ GRAPH :world {
+-  :van_a a courier:Van .
+-  :van_b a courier:Van .
++  :c0_0 a courier:Cell .
++  :c0_0 courier:x 0 .
++  :c0_0 courier:y 0 .
++  :c0_1 a courier:Cell .
++  :c0_1 courier:x 0 .
++  :c0_1 courier:y 1 .
++  :c0_2 a courier:Cell .
++  :c0_2 courier:x 0 .
++  :c0_2 courier:y 2 .
++  :c0_3 a courier:Cell .
++  :c0_3 courier:x 0 .
++  :c0_3 courier:y 3 .
++  :c1_0 a courier:Cell .
++  :c1_0 courier:x 1 .
++  :c1_0 courier:y 0 .
++  :c1_1 a courier:Cell .
++  :c1_1 courier:x 1 .
++  :c1_1 courier:y 1 .
++  :c1_2 a courier:Cell .
++  :c1_2 courier:x 1 .
++  :c1_2 courier:y 2 .
++  :c1_3 a courier:Cell .
++  :c1_3 courier:x 1 .
++  :c1_3 courier:y 3 .
+   :parcel_a a courier:Parcel .
+   :parcel_a courier:destination :c0_3 .
+   :parcel_b a courier:Parcel .
+   :parcel_b courier:destination :c1_3 .
+-  :c0_0 a courier:Cell . :c0_0 courier:x 0 . :c0_0 courier:y 0 .
+-  :c0_1 a courier:Cell . :c0_1 courier:x 0 . :c0_1 courier:y 1 .
+-  :c0_2 a courier:Cell . :c0_2 courier:x 0 . :c0_2 courier:y 2 .
+-  :c0_3 a courier:Cell . :c0_3 courier:x 0 . :c0_3 courier:y 3 .
+-  :c1_0 a courier:Cell . :c1_0 courier:x 1 . :c1_0 courier:y 0 .
+-  :c1_1 a courier:Cell . :c1_1 courier:x 1 . :c1_1 courier:y 1 .
+-  :c1_2 a courier:Cell . :c1_2 courier:x 1 . :c1_2 courier:y 2 .
+-  :c1_3 a courier:Cell . :c1_3 courier:x 1 . :c1_3 courier:y 3 .
++  :van_a a courier:Van .
++  :van_b a courier:Van .
+ }
+ 
+ GRAPH :desires {
+-  :keeper planning:holds :keeper.every_parcel_delivered .
+-  :keeper.every_parcel_delivered a planning:Desire .
+-  :keeper.every_parcel_delivered planning:metWhen :delivered .
+-  :keeper.every_parcel_delivered planning:estimates :drivesOwed .
+-  :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
+   :delivered a sh:NodeShape .
++  :delivered sh:property [ planning:about sh:this ; sh:equals courier:destination ; sh:path courier:at ] .
+   :delivered sh:targetClass courier:Parcel .
+-  :delivered sh:property [ sh:path courier:at ; sh:equals courier:destination ; planning:about sh:this ] .
+   :drivesOwed rdfs:label "drives still owed" .
+   :drivesOwed sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+       SELECT (SUM(?d) AS ?estimate) WHERE {
+@@ -67,26 +78,21 @@
+               }
+           } GROUP BY ?p
+       }""" .
++  :keeper planning:holds :keeper.every_parcel_delivered .
++  :keeper.every_parcel_delivered a planning:Desire .
++  :keeper.every_parcel_delivered planning:estimates :drivesOwed .
++  :keeper.every_parcel_delivered planning:metWhen :delivered .
++  :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
+ }
+ 
+ GRAPH :sensed {
++  :parcel_a courier:at :c0_1 .
++  :parcel_b courier:at :c1_1 .
+   :van_a courier:at :c0_0 .
+-  :parcel_a courier:at :c0_1 .
+   :van_b courier:at :c1_1 .
+-  :parcel_b courier:at :c1_1 .
+ }
+ 
+ GRAPH :scopes {
+-  :keeper.scope.1 a planning:Scope .
+-  courier:Drive planning:inScope :keeper.scope.1 .
+-  courier:Pick planning:inScope :keeper.scope.1 .
+-  courier:Drop planning:inScope :keeper.scope.1 .
+-  courier:at planning:inScope :keeper.scope.1 .
+-  courier:carriedBy planning:inScope :keeper.scope.1 .
+-  :van_a planning:inScope :keeper.scope.1 .
+-  :van_b planning:inScope :keeper.scope.1 .
+-  :parcel_a planning:inScope :keeper.scope.1 .
+-  :parcel_b planning:inScope :keeper.scope.1 .
+   :c0_0 planning:inScope :keeper.scope.1 .
+   :c0_1 planning:inScope :keeper.scope.1 .
+   :c0_2 planning:inScope :keeper.scope.1 .
+@@ -95,6 +101,16 @@
+   :c1_1 planning:inScope :keeper.scope.1 .
+   :c1_2 planning:inScope :keeper.scope.1 .
+   :c1_3 planning:inScope :keeper.scope.1 .
++  :keeper.scope.1 a planning:Scope .
++  :parcel_a planning:inScope :keeper.scope.1 .
++  :parcel_b planning:inScope :keeper.scope.1 .
++  :van_a planning:inScope :keeper.scope.1 .
++  :van_b planning:inScope :keeper.scope.1 .
++  courier:Drive planning:inScope :keeper.scope.1 .
++  courier:Drop planning:inScope :keeper.scope.1 .
++  courier:Pick planning:inScope :keeper.scope.1 .
++  courier:at planning:inScope :keeper.scope.1 .
++  courier:carriedBy planning:inScope :keeper.scope.1 .
+ }
+ 
+ GRAPH :catalogue {
+@@ -115,4 +131,104 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
+-}
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:89f2f43dd417b2325d8df95904a6f9b2b4ddd756319f30ea6d6ca7c07b908618" .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:for :keeper.every_parcel_delivered .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_a ; planning:constraint 0 ; planning:instance :parcel_a ; planning:offending :c0_1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_a ; planning:constraint 1 ; planning:instance :parcel_a ; planning:offending :c0_3 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ; planning:offending :c1_1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 1 ; planning:instance :parcel_b ; planning:offending :c1_3 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:weighs ground:2026-01-01T120000p0000 .
++  pursued:2026-01-01T120000p0000--open a orexis:Graph .
++  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
++}
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :parcel_a courier:at :c0_1 .
++  :parcel_b courier:at :c1_1 .
++  :van_a courier:at :c0_0 .
++  :van_b courier:at :c1_1 .
++}
++
++GRAPH pursued:2026-01-01T120000p0000--open {
++  :keeper planning:holds :keeper.every_parcel_delivered.pursued.parcel_a .
++  :keeper planning:holds :keeper.every_parcel_delivered.pursued.parcel_b .
++  :keeper.every_parcel_delivered.pursued.parcel_a a planning:Want .
++  :keeper.every_parcel_delivered.pursued.parcel_a planning:estimates :keeper.every_parcel_delivered.pursued.parcel_a.estimate .
++  :keeper.every_parcel_delivered.pursued.parcel_a planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_a.met .
++  :keeper.every_parcel_delivered.pursued.parcel_a planning:state planning:Recognized .
++  :keeper.every_parcel_delivered.pursued.parcel_a prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.every_parcel_delivered.pursued.parcel_a prov:wasDerivedFrom :keeper.every_parcel_delivered .
++  :keeper.every_parcel_delivered.pursued.parcel_a rdfs:label "pursued: every parcel where it is owed" .
++  :keeper.every_parcel_delivered.pursued.parcel_a.estimate rdfs:label "drives still owed" .
++  :keeper.every_parcel_delivered.pursued.parcel_a.estimate sh:select """PREFIX courier: <http://example.org/orexis/courier#>
++      SELECT (SUM(?d) AS ?estimate) WHERE {
++          SELECT ?p (MIN(?dist) AS ?d) WHERE {
++              {
++                  <http://example.org/test#parcel_a> a courier:Parcel ; courier:destination ?owed .
++                  ?owed courier:x ?ox ; courier:y ?oy .
++                  <http://example.org/test#parcel_a> courier:carriedBy ?van . ?van courier:at ?vc .
++                  ?vc courier:x ?vx ; courier:y ?vy .
++                  BIND(<http://example.org/test#parcel_a> AS ?p)
++                  BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
++              } UNION {
++                  <http://example.org/test#parcel_a> a courier:Parcel ; courier:destination ?owed .
++                  ?owed courier:x ?ox ; courier:y ?oy .
++                  <http://example.org/test#parcel_a> courier:at ?pc . ?v courier:at ?vc .
++                  ?v a courier:Van .
++                  ?pc courier:x ?px ; courier:y ?py .
++                  ?vc courier:x ?vx ; courier:y ?vy .
++                  FILTER(?px != ?ox || ?py != ?oy)
++                  BIND(<http://example.org/test#parcel_a> AS ?p)
++                  BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
++                       + ABS(?px - ?ox) + ABS(?py - ?oy) AS ?dist)
++              }
++          } GROUP BY ?p
++      }""" .
++  :keeper.every_parcel_delivered.pursued.parcel_a.met a sh:NodeShape .
++  :keeper.every_parcel_delivered.pursued.parcel_a.met sh:property [ planning:about sh:this ; sh:equals courier:destination ; sh:path courier:at ] .
++  :keeper.every_parcel_delivered.pursued.parcel_a.met sh:targetNode :parcel_a .
++  :keeper.every_parcel_delivered.pursued.parcel_b a planning:Want .
++  :keeper.every_parcel_delivered.pursued.parcel_b planning:estimates :keeper.every_parcel_delivered.pursued.parcel_b.estimate .
++  :keeper.every_parcel_delivered.pursued.parcel_b planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_b.met .
++  :keeper.every_parcel_delivered.pursued.parcel_b planning:state planning:Recognized .
++  :keeper.every_parcel_delivered.pursued.parcel_b prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.every_parcel_delivered.pursued.parcel_b prov:wasDerivedFrom :keeper.every_parcel_delivered .
++  :keeper.every_parcel_delivered.pursued.parcel_b rdfs:label "pursued: every parcel where it is owed" .
++  :keeper.every_parcel_delivered.pursued.parcel_b.estimate rdfs:label "drives still owed" .
++  :keeper.every_parcel_delivered.pursued.parcel_b.estimate sh:select """PREFIX courier: <http://example.org/orexis/courier#>
++      SELECT (SUM(?d) AS ?estimate) WHERE {
++          SELECT ?p (MIN(?dist) AS ?d) WHERE {
++              {
++                  <http://example.org/test#parcel_b> a courier:Parcel ; courier:destination ?owed .
++                  ?owed courier:x ?ox ; courier:y ?oy .
++                  <http://example.org/test#parcel_b> courier:carriedBy ?van . ?van courier:at ?vc .
++                  ?vc courier:x ?vx ; courier:y ?vy .
++                  BIND(<http://example.org/test#parcel_b> AS ?p)
++                  BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
++              } UNION {
++                  <http://example.org/test#parcel_b> a courier:Parcel ; courier:destination ?owed .
++                  ?owed courier:x ?ox ; courier:y ?oy .
++                  <http://example.org/test#parcel_b> courier:at ?pc . ?v courier:at ?vc .
++                  ?v a courier:Van .
++                  ?pc courier:x ?px ; courier:y ?py .
++                  ?vc courier:x ?vx ; courier:y ?vy .
++                  FILTER(?px != ?ox || ?py != ?oy)
++                  BIND(<http://example.org/test#parcel_b> AS ?p)
++                  BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
++                       + ABS(?px - ?ox) + ABS(?py - ?oy) AS ?dist)
++              }
++          } GROUP BY ?p
++      }""" .
++  :keeper.every_parcel_delivered.pursued.parcel_b.met a sh:NodeShape .
++  :keeper.every_parcel_delivered.pursued.parcel_b.met sh:property [ planning:about sh:this ; sh:equals courier:destination ; sh:path courier:at ] .
++  :keeper.every_parcel_delivered.pursued.parcel_b.met sh:targetNode :parcel_b .
++}

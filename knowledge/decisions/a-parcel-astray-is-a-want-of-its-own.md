@@ -10,9 +10,11 @@ description: >-
   block is about the parcel itself - so two parcels astray are two wants, each named for its parcel,
   narrowed to it and planned alone, both delivered in one pass. Refused: a default read off the
   absence, in the derivation; a want about every parcel, which is the product; and two scopes by
-  van, which the key cannot give since a parcel is a filling value of both vans' Pick. Left open:
-  the estimate is the desire's and counts every parcel, so a want per parcel pays for the other
-  van's forks - 61 against 13.
+  van, which the key cannot give since a parcel is a filling value of both vans' Pick. Closed the
+  same day (#893): the estimate was the desire's and counted every parcel, so a want per parcel
+  paid for the other van's forks - 61 against 13; the derivation now writes each want's estimate
+  with `$this` bound to its parcel, and a want reads its own drives - 37 against 13, the rest the
+  one scope's.
 status: accepted
 timestamp: 2026-10-04T18:00:00Z
 ---
@@ -46,13 +48,47 @@ container; the figures are in [measure-the-search](/runbooks/measure-the-search.
 |---|---|---|---|---|---|
 | one block about nothing, budget 128 | one, about both parcels | 128 | 83 | `Exhausted` | 0.73 s |
 | the same, budget 1024 | one | 674 | 325 | `Satisfied`, ten steps | 85 s |
-| the block about `sh:this`, budget 128 | two, one per parcel | 90 | 61 and 64 | two of five steps | 0.55 s |
+| the block about `sh:this`, the desire's estimate, budget 128 | two, one per parcel | 90 | 61 and 64 | two of five steps | 0.55 s |
+| the same, each want's estimate bound to its parcel (#893) | two | 90 | 37 and 37 | two of five steps | 0.41 to 0.45 s |
 | either van and its parcel alone | one | 17 | 13 | five steps | 0.09 s |
 
 The one want is the product: the estimate, drives owed, falls by one for either van's drive toward
 its parcel, so every interleaving of the two chains costs the same and the frontier opens them all,
 and a budget that finds the corner delivery in 45 candidates does not reach a ten-step plan in 512.
 Two wants are each found in five steps, and the dispatcher delivers both in one pass.
+
+# The estimate instantiated at the want (closed 2026-10-04, #893)
+
+The seam this record left: `planning:estimates` pointed at the domain's select, which summed the
+drives owed over every parcel astray, and a want narrowed to one parcel inherited it unchanged, so
+its `planning:remaining` counted the other parcel's drives too — six where the van alone read three —
+and the other van's drive toward its own parcel cost one, saved one, tied the frontier and was
+opened. The estimate never overstated the desire's cost and overstated every want's, which is the
+one promise an estimate makes. `_narrowed` already instantiated the met-test at the want's instance;
+nothing did the same to the select.
+
+The select now speaks of its instance as SHACL's constraints do, `$this` — the one token
+`store.bind` lets go unbound — standing where a variable and a name are both legal, the subject of
+a pattern and the argument of a `BIND` onto the variable it groups by, never in a projection or a
+`GROUP BY`, where a name would not parse. Unbound, for the desire and for the courier's own want, it
+is a variable and the sum runs over every parcel; the derivation writes a derived want's own node,
+`<want>.estimate`, the desire's select with `$this` bound to the want's instance, beside the
+narrowed met-test, and `weigh` reads the want's own node before the desire's as it always did. A
+select that names no `$this` — hanoi's disks astray — or a want about several instances points at the
+desire's node as before. The derivation's table holds two wants under one desire to two figures,
+three and two (`agent/planning/tests/derive_wants/two_parcels_two_estimates.trig`), and the dispatcher's
+test holds each want's figure to the van alone's.
+
+Measured, alternated in one session ([measure-the-search](/runbooks/measure-the-search.md)): each
+want's weighings fell from 61 and 64 to 37, and `remaining` at the present from six to three. Not to
+13, and the 24 left are not the estimate's to take: every world a search opens admits the other van's
+drives, and a candidate admitted is weighed before its estimate is read, so the estimate refuses to
+open those worlds and cannot refuse to weigh them. Sixteen of the 37 were reached by the other van.
+That is the two-vans seam of [a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md),
+unchanged. Refused here: binding the want's `planning:keyedBy` into the select as well — the key is
+a tuple of terms the derivation reads off the offending value, no select reads one and no token
+names it, and a token nobody reads is annotation; the first estimate that needs a bed rather than a
+parcel decides how it is spelled.
 
 # What was refused
 
@@ -78,13 +114,6 @@ Two wants are each found in five steps, and the dispatcher delivers both in one 
 
 # Seams left open
 
-- **The estimate is the desire's and counts every parcel.** `planning:estimates` points at the
-  domain's select, which sums the drives owed over every parcel astray; a want narrowed to one
-  parcel reads the other's drives in its `planning:remaining` too, so the other van's drive toward
-  its own parcel costs one and saves one, ties the frontier, and is forked: 61 and 64 weighings
-  per want against 13 for the van alone. The estimate never overstates the desire's cost and does
-  overstate the want's, and nothing instantiates a select at a want's instance as `_narrowed` does
-  a shape. That is a defect of the per-instance want, and an issue, not a seam of this record.
 - **Which van a parcel's want is about is found, not said.** A want per parcel is still searched
   over both vans; the nearest delivers because the estimate says so, and a world where both vans
   are equally near has not been built.
