@@ -75,6 +75,19 @@ def test_what_a_shape_reads_is_its_paths_and_its_target_class():
     assert footprint.reads_of_shape(g, shape) == frozenset({P, URIRef("urn:test:C")})
 
 
+def test_what_an_avoided_state_reads_is_what_its_own_select_reads():
+    """The node a `planning:unmetWhen` points at is no shape and carries its select itself (#892);
+    its want is placed by what that select reads, and what it is about is a term, `sh:this` apart."""
+    g = rdflib.Graph()
+    node, about = URIRef("urn:test:avoided"), URIRef("http://example.org/orexis/planning#about")
+    g.add((node, SH.select, rdflib.Literal("SELECT $this ?value WHERE { $this <urn:test:p> ?value . ?o <urn:test:q> ?value }")))
+    g.add((node, about, SH.this))
+    assert footprint.reads_of_shape(g, node) == frozenset({P, Q})
+    assert footprint.terms_of_shape(g, node) == frozenset()
+    g.set((node, about, P))
+    assert footprint.terms_of_shape(g, node) == frozenset({P})
+
+
 def test_actions_of_reads_every_action_the_store_holds(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(Path(__file__).parent / "plans" / "a_low_tank_is_filled.trig")

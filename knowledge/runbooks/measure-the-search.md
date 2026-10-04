@@ -221,9 +221,13 @@ pass, the walk comes after it, and the state between two steps is judged by nobo
 
 **Both vans on one cell at a pass's start** — van B posed on van A's cell: the aversion reads unmet
 for each van, one want `no_cell_holds_two_vans.pursued` is minted, about both vans, and a one-step
-plan — a drive — satisfies it in 4 weighings. Authored as `planning:unmetWhen` instead, as #567
-asks, the desire is weighed in no ground at all: `weigh` reads a met-test through
-`planning:metWhen` and nothing else, and the pass minted nothing from it.
+plan — a drive — satisfies it in 4 weighings. Measured first with the aversion authored as a
+met-test over a `sh:sparql` constraint, because authored as `planning:unmetWhen`, as #567 asks,
+the desire was then weighed in no ground at all — `weigh` read a met-test through
+`planning:metWhen` and nothing else, and the pass minted nothing from it. Since #892 the shipped
+aversion IS the `unmetWhen` form, the avoided state as one select, and the figures are the same:
+a witness per van offending with the cell, the one want carrying the same select, the one-step
+plan, 4 weighings (measured 2026-10-04, pinned in `world/dispatcher/tests/test_dispatcher.py`).
 
 # Before Agent 0.2.0
 

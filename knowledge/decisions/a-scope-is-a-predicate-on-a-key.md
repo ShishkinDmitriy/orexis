@@ -214,8 +214,10 @@ nothing blocked in the next.
   grounds alone, in the planner's pass, and the walk comes after. Of 118 worlds the searches
   visited, four held two vans on one cell, judged by nobody. What would separate the vans is not a
   key but the mechanism #567 names — a search that derives a want from a conflict between two
-  plans — and the aversion authored as `planning:unmetWhen`, as the issue asks, is weighed in no
-  ground on this tree; `weigh` reads `planning:metWhen` alone
+  plans. The aversion is authored as `planning:unmetWhen`, as the issue asks, and judged as a
+  met-test is since #892 — on the tree this was measured on it was weighed in no ground, since
+  `weigh` then read `planning:metWhen` alone — but a desire is weighed in grounds and not in the
+  worlds a search visits, so the judging reaches the present and never the two plans
   ([measure-the-search](/runbooks/measure-the-search.md),
   [a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astray-is-a-want-of-its-own.md)).
 - **A disjunctive want.** A want whose met-test says `sh:or` of two scopes' halves is a CHOICE, and

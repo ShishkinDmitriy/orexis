@@ -1,0 +1,21 @@
+--- case
++++ expected
+@@ -63,6 +63,18 @@
+   ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+   ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
+   ground:2026-01-01T120000p0000 orexis:hash "sha256:0000000000000000000000000000000000000000000000000000000000000000" .
++  ground:2026-01-01T120000p0000.for.keeper.apart a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:for :keeper.apart .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:violation [ planning:about :tank1 ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending :stand_a ] .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:violation [ planning:about :tank2 ; planning:constraint 0 ; planning:instance :tank2 ; planning:offending :stand_a ] .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:weighs ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T120000p0000.for.keeper.apart.pursued.tank1 a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.apart.pursued.tank1 planning:for :keeper.apart.pursued.tank1 .
++  ground:2026-01-01T120000p0000.for.keeper.apart.pursued.tank1 planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.apart.pursued.tank1 planning:open true .
++  ground:2026-01-01T120000p0000.for.keeper.apart.pursued.tank1 planning:violation [ planning:about :tank1 ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending :stand_a ] .
++  ground:2026-01-01T120000p0000.for.keeper.apart.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
+   pursued:2026-01-01T120000p0000--open a orexis:Graph .
+   pursued:2026-01-01T120000p0000--open a planning:WantGraph .
+   pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .

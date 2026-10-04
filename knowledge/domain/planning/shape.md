@@ -31,5 +31,9 @@ world and writes the rows as `planning:violation`s on the weighing. No row is me
 carries its own select and its own prefixes; one a [refinement](/domain/planning/refinement.md)
 mints is exactly that, the bridge's WHERE bound and negated.
 
+An aversion is the other polarity and no shape: what a desire points at with `planning:unmetWhen`
+is one select, and [desire](/domain/planning/desire.md) says what it is; `violation.entered_select`
+puts its rows in this same report, unnegated.
+
 A met-test is a boolean by nature. How far a world still is belongs to `planning:estimates`, a
 separate select the domain promises never overstates, which orders the frontier and judges nothing.

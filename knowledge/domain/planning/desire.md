@@ -11,11 +11,19 @@ description: >-
 
 # The two kinds
 
-A **desire** is a `planning:Desire` an agent `planning:holds`, carrying its met-test — a SHACL
-shape through `planning:metWhen`; the vocabulary declares `planning:unmetWhen` for the pattern of
-what it avoids too, but on this tree nothing weighs a desire by it, so an aversion is authored as a
-met-test over the avoided state's negation, as the dispatcher's is — and, where its domain has one,
-`planning:estimates`, a select saying how far a world still is in the unit actions cost. It is about every instance at every instant, so it is never met once and
+A **desire** is a `planning:Desire` an agent `planning:holds`, carrying its met-test in one of two
+polarities. `planning:metWhen` points at a SHACL [shape](/domain/planning/shape.md) every instance
+it targets must conform to. `planning:unmetWhen` points at the AVOIDED STATE: a node carrying one
+`sh:select`, `SELECT $this ?value WHERE { … }`, whose rows are the instances in it — `$this` the
+instance, `?value` where projected the offending value, `planning:about` on the node what the
+trouble is about — and the desire is unmet where it yields a row. That is the aversion's honest
+form: "unmet when two vans stand on one cell" reads as it evaluates, where a shape named for the
+bad state reads inverted. `weigh` judges either in every ground and writes the same witnesses, so a
+want is minted from an aversion exactly as from a met-test and carries the same select under the
+same term, held to its instance by `sh:targetNode` where the cluster had one (the dispatcher's
+`no_cell_holds_two_vans`, #892). One of the two, never both: a desire carrying both is not judged.
+And, where its domain has one, `planning:estimates`, a select saying how far a world still is in
+the unit actions cost. It is about every instance at every instant, so it is never met once and
 for all and never handed to a search. A world authors it, in a `planning:DesireGraph`.
 
 A **want** is a `planning:Want`, `prov:wasDerivedFrom` its desire, bound to the instances in

@@ -208,6 +208,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   *no unanswered calls* over its venues, and the call is the row that desire is about.
 - **A capability that asks for a derivation is not minting** — the ledger writes a debt and its
   prediction and calls `derive_wants`, so a claim arriving is a want arriving.
+- **A desire is met when a shape holds or unmet when a select binds, one of the two, and `weigh`
+  judges either** — `planning:unmetWhen` was declared, carried onto wants and compiled since #468
+  and weighed by nothing, so the dispatcher's aversion shipped as a shape named for the good state
+  wrapping the select of the bad one (#892).
 - **A shape over instances says each block is about `sh:this`, or two instances are one want** — a
   witness about nothing joins every cluster, and the dispatcher's two parcels were one want searched
   over both vans' every move, 674 candidates where a want per parcel costs 90

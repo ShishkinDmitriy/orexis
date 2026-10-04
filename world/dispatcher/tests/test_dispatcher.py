@@ -11,8 +11,10 @@ mechanism — a search that derives a want to resolve a conflict — is not buil
 - on a corridor, each plan drives its van through the shared cell at its third step, the two walk in
   lockstep, and the present holds two vans on that cell for one act — which nothing sees, since a
   desire is weighed in the planner's pass and the walk comes after it;
-- two vans on one cell at a PASS'S START are seen: the aversion reads unmet, its want is minted and a
-  one-step plan parts them.
+- two vans on one cell at a PASS'S START are seen: the aversion — the avoided state itself, under
+  `planning:unmetWhen`, judged as a met-test is since #892 — reads unmet with a witness per van and
+  the cell as the offending value, its want is minted carrying the same select, and a one-step plan
+  parts them.
 """
 
 from __future__ import annotations
@@ -61,6 +63,14 @@ SELECT DISTINCT ?cell WHERE { GRAPH $w { ?a courier:at ?cell . ?b courier:at ?ce
 _AT_Q = """PREFIX courier: <http://example.org/orexis/courier#>
 SELECT ?x ?cell WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?x courier:at ?cell } }"""
 _ACTS_Q = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }"
+#  WHAT A DESIRE'S WEIGHING IN A GROUND SAYS IS IN TROUBLE, and where: each witness's instance and
+#  the value that offended — for the aversion, the van and the cell it shares.
+_WITNESSES_Q = """
+SELECT ?x ?cell WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:Weighing ; planning:for $d ; planning:weighs ?g ; planning:violation ?v .
+               ?g a planning:GroundGraph . ?v planning:instance ?x ; planning:offending ?cell } }"""
+#  WHICH POLARITY a want carries its met-test under, and what it points at.
+_POLARITY_Q = "SELECT ?p ?o WHERE { GRAPH ?g { $w ?p ?o FILTER(?p IN (planning:metWhen, planning:unmetWhen)) } }"
 
 #  THE CORRIDOR: van A drives parcel A along the second row, van B drives parcel B down the third
 #  column, and the two shortest chains meet at c2_1 — each van's third step.
@@ -242,14 +252,20 @@ def test_corridor_each_plan_crosses_the_shared_cell_and_the_present_holds_two_va
 
 
 def test_two_vans_on_one_cell_at_a_pass_start_mint_the_aversions_want_and_a_drive_parts_them(ticking, tmp_path):
-    """The aversion, as a met-test the compiler reads: both vans on c0_0 as posed, it reads unmet for each
-    van, one want is minted under it — about both, named for neither — and a one-step plan, a drive,
-    satisfies it; run, the vans stand apart."""
+    """The aversion, the avoided state under `planning:unmetWhen` (#892): both vans on c0_0 as posed, it
+    reads unmet with a witness per van, each offending with c0_0, one want is minted under it — about
+    both, named for neither, carrying the same select under the same term — and a one-step plan, a
+    drive, satisfies it; run, the vans stand apart."""
     together = variant(tmp_path, "together", TOGETHER)
     im = _pass(together)
+    assert {(_local(r["x"]), _local(r["cell"])) for r in rows(im, _WITNESSES_Q, (), d=D + "no_cell_holds_two_vans")} == \
+        {("van_a", "c0_0"), ("van_b", "c0_0")}, "the avoided state is judged in the present: a row per van, the cell offending"
     assert _wants(im)["no_cell_holds_two_vans.pursued"] == "no_cell_holds_two_vans"
+    assert [(_local(r["p"]), _local(r["o"])) for r in rows(im, _POLARITY_Q, (), w=D + "no_cell_holds_two_vans.pursued")] == \
+        [("unmetWhen", "no_cell_holds_two_vans.pursued.avoided")]
     assert _plans(im)["no_cell_holds_two_vans.pursued"] == ("Satisfied", 1)
     assert {a for a, *_ in _steps(im)["no_cell_holds_two_vans.pursued"]} == {"Drive"}
+    assert _weighed(im)["no_cell_holds_two_vans.pursued"] == 4, "what the met-test form cost, measured: " + str(_weighed(im))
     runtime, outcome, trace = _run(together)
     at = _at(runtime.beliefs)
     assert at["van_a"] != at["van_b"], at

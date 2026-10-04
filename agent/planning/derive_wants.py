@@ -44,6 +44,11 @@ RECOGNIZED = PLANNING + "Recognized"
 log = logging.getLogger("derive_wants")
 
 MET_WHEN = PLANNING + "metWhen"
+#  THE MET-TEST'S NEGATIVE TWIN: the avoided state, one select, unmet where it yields a row. A
+#  desire carries one of the two, and the want minted under it carries the same one, narrowed
+#  (#892); `weigh` judges either and the witnesses read the same, so nothing below this line
+#  but `_mint` and `_targets_one_node` knows which a desire spoke.
+UNMET_WHEN = PLANNING + "unmetWhen"
 #  THE TWO OF A DESIRE'S OWN WORDS THIS FILE SORTS BY. They were matched as string SUFFIXES —
 #  `p.endswith("#about")` at three sites — which is safe only because `_SAID_Q` four hundred
 #  lines away filters to five named predicates, so nothing else can end in those letters. That
@@ -323,7 +328,7 @@ def _targets_one_node(shapes: rdflib.Graph, said) -> bool:
     from rdflib import URIRef
     from rdflib.namespace import SH
     return any((URIRef(str(o.value)), SH.targetNode, None) in shapes
-               for p, o in said if p == MET_WHEN)
+               for p, o in said if p in (MET_WHEN, UNMET_WHEN))
 
 
 # --- what a want IS on disk, and how one goes -------------------------------------------
@@ -496,19 +501,24 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
         #  too and is not a point: a want's is made from it.
         if p in (ABOUT, RDFS_LABEL):
             continue
-        if p == MET_WHEN:
-            met_test = str(o.value)
+        if p in (MET_WHEN, UNMET_WHEN):
+            met_test = (p, str(o.value))
             continue
         points.append((p, str(o.value)))
     #  THE MET-TEST IS THE DESIRE'S INSTANTIATED AT THE WITNESS: carved from where the desire's
     #  shape lives and _narrowed to this cluster — the instance as its target, the blocks about
     #  what the want is about — and written into the want's own graph under its own name, so
     #  the want is judged on its instance and a plan for one tank is not refused for another's.
+    #  UNDER THE DESIRE'S OWN POLARITY: a shape it is met when stays a shape, `.met`; an avoided
+    #  state it is unmet when stays a select, `.avoided`, its one `sh:select` carried whole and
+    #  the instance written as `sh:targetNode` beside it, which the compiler reads as it reads a
+    #  shape's (#892). The names are for eyes; a reader asks the want which it carries.
     shape_lines: tuple = ()
     if met_test is not None:
-        own = child + ".met"
-        shape_lines = _narrowed(shapes, met_test, own, instance, about)
-        points.append((MET_WHEN, own))
+        polarity, shape = met_test
+        own = child + (".met" if polarity == MET_WHEN else ".avoided")
+        shape_lines = _narrowed(shapes, shape, own, instance, about)
+        points.append((polarity, own))
 
     labels = [str(o.value) for p, o in said if p == RDFS_LABEL]
     label = "pursued: " + (labels[0] if labels else desire.rsplit("#", 1)[-1])
