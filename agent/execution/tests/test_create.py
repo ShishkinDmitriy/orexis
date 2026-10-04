@@ -54,6 +54,14 @@ def test_its_part_adopts_what_is_published_and_ends_what_was_reached_untaken(mon
     (state,) = graphs_of(store, STATE)
     belief.deliberator.revised.emit(Revised((state,)))
     assert len(runtime.jobs) == 1, "the present changed, so a walk is queued"
+    #  THE WALK A REVISION QUEUED IS THE DRAIN'S, and marks no lap: a lap is from the last mark, so
+    #  the one it marked took the sensing and revision before it — the drain of two readings, 52 ms
+    #  by hand — as `execute`, and the pass's `drain` read nought. The walk a pass asks for marks it.
+    runtime.jobs[0]()
+    assert runtime.laps == [], "a walk run inside the drain is the drain's, not execution's"
+    ((_, walk),) = runtime.timers
+    walk()
+    assert runtime.laps == ["execute"], "the walk a pass asks for is execution's lap"
     _hand_down(store)
     assert part.executor.adopt(PLAN, WANT) == [part.executor.graph]
     assert part.executor.walking() == [WANT]
