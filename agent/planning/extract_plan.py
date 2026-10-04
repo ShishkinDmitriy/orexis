@@ -76,11 +76,13 @@ from .ontology import EXHAUSTED, NO_CANDIDATE, SATISFIED
 #  the latest; so a plan placed at the instant of its root carries that placing across, and the
 #  executor keeps time by the first, looks for the answer from the second and gives up a patience
 #  past the third.
-#  A STEP IS NAMED FOR ITS WORLD UNDER THE PLAN — `<plan>.<world's tail>` — so two wants
-#  planning through one world mint two steps, and nothing counts: a depth-numbered name needed
-#  a subselect walking the ancestry per world, measured at twice this update's cost, and a
-#  name is for eyes. The chain is read off the ancestry: a step follows the step of the world
-#  its world was taken in.
+#  A STEP IS NAMED FOR ITS WORLD UNDER THE PLAN — `<plan>.<world's tail>`, the tail being the
+#  world's mint number since #486 — so two wants planning through one world mint two steps, and
+#  nothing counts: a depth-numbered name needed a subselect walking the ancestry per world,
+#  measured at twice this update's cost, and a name is for eyes: what a step fills is
+#  `planning:fills`, and the candidate's `planning:minted` is left off the step, since it names
+#  a world and is not a parameter. The chain is read off the ancestry: a step follows the step
+#  of the world its world was taken in.
 _PLAN_U = """
 INSERT { GRAPH $plan { $plan a planning:Plan ; planning:for $want ; planning:outcome $outcome $costs } }
 WHERE  {} ;
@@ -94,7 +96,7 @@ WHERE  { VALUES (?w ?predicts) { $predicted }
                       ?by planning:fills ?action ; planning:from ?in .
                       ?in dcterms:temporal/orexis:start ?since .
                       ?w dcterms:temporal ?period . ?period orexis:start ?lands . OPTIONAL { ?period orexis:end ?after }
-                      OPTIONAL { ?by ?p ?v . FILTER(?p NOT IN (planning:fills, planning:from, rdf:type)) } }
+                      OPTIONAL { ?by ?p ?v . FILTER(?p NOT IN (planning:fills, planning:from, planning:minted, rdf:type)) } }
          BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step) } ;
 INSERT { GRAPH $plan { ?prev execution:then ?step } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .

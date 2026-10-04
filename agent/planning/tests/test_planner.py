@@ -25,7 +25,7 @@ import pyoxigraph as ox
 
 from agent import clock
 from agent.execution.executor import Executor
-from agent.planning.ontology import PLAN_GRAPH, POSSIBLE_GRAPH
+from agent.planning.ontology import GROUND_GRAPH, PLAN_GRAPH, POSSIBLE_GRAPH
 from agent.planning.planner import Planner
 from agent.store import forget_graph, graphs_of, rows
 
@@ -56,6 +56,12 @@ def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
 BENCH = Path(__file__).parent / "bench"
 
 _STEPS_Q = """SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?p { ?p a planning:Plan . ?s a execution:Step ; execution:partOf ?p } }"""
+
+#  THE GROUND EACH POSSIBLE WORLD'S ANCESTRY ENDS AT — which pass's search it belongs to.
+_ROOTS_Q = """
+SELECT DISTINCT ?root WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph ; (planning:by/planning:from)+ ?root .
+               ?root a planning:GroundGraph } }"""
 _HEAD_Q = """
 SELECT ?disk ?onto WHERE {
   GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
@@ -169,7 +175,12 @@ def test_a_surprise_starts_the_search_afresh(monkeypatch, snapshots):
     for handed in graphs_of(store, "http://example.org/orexis#PlanGraph"):
         forget_graph(store, handed)
     (im,) = planner.imaginaria.values()
-    before = set(graphs_of(im, POSSIBLE_GRAPH))
+    #  WHAT SURVIVES IS READ OFF THE ROWS AND NOT OFF THE NAMES: a world's name is a mint number
+    #  the store's counter hands out, and with the cone gone whole the counter starts over, so
+    #  a world of the new search may be spelled as one of the old was (#486). What says a world is
+    #  the last pass's is the ground its ancestry ends at.
+    old = set(graphs_of(im, GROUND_GRAPH))
+    assert old and graphs_of(im, POSSIBLE_GRAPH), "the first pass imagined something to lose"
     (a_disk,) = rows(store, 'SELECT ?d WHERE { GRAPH ?g { ?d ?p ?o } FILTER(STRENDS(STR(?d), "disk_1") && STRENDS(STR(?p), "#on")) }')
     hanoi = "http://example.org/orexis/hanoi#"
     _move(store, "disk_1", hanoi + "PegB")
@@ -177,9 +188,11 @@ def test_a_surprise_starts_the_search_afresh(monkeypatch, snapshots):
     later = snapshots.NOW + timedelta(minutes=1)
     monkeypatch.setattr(clock, "now", lambda: later)
     planner.plan(later)
-    after = set(graphs_of(im, POSSIBLE_GRAPH))
-    assert not (before & after), "no world of the last pass survived"
-    assert after and _steps(planner) == 2, "disk 2 to C, disk 1 to C — found from the new ground"
+    new = set(graphs_of(im, GROUND_GRAPH))
+    assert new and not (old & new), "the ground the last pass stood in went"
+    roots = {r["root"] for r in rows(im, _ROOTS_Q, ())}
+    assert roots and roots <= new, "every world standing was forked from the new ground: none of the last pass survived"
+    assert _steps(planner) == 2, "disk 2 to C, disk 1 to C — found from the new ground"
 
 
 # --- the estimate ---------------------------------------------------------------------------

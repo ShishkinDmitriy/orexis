@@ -90,7 +90,10 @@ def test_a_candidate_leaving_a_weighed_world_is_offered_with_what_it_reached(sto
     (root,) = _sweep(store)
     admit(store, root["about"], snapshots.ME)
     (pair,) = unweighed(store)
-    assert pair["for"] == want and pair["about"].endswith(".by") and pair["from"] == root["about"]
+    from agent.store import Raw, rows
+    assert pair["for"] == want and pair["from"] == root["about"]
+    assert rows(store, "SELECT ?c WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $c a planning:Candidate } BIND($c AS ?c) }",
+                (), c=Raw(f"<{pair['about']}>")), "what is offered is the candidate, said by its row"
     assert not pair.get("child"), "not yet taken"
 
 

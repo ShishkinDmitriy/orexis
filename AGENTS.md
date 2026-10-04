@@ -331,6 +331,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   trusted (the-future-is-a-cone-and-the-present-is-identified-in-it).
 - **What crosses into the imaginarium is taken back before it crosses again, and what the store
   made for itself stays.**
+- **A possible world is named by a mint number and the path to it is rows** — a name that joined
+  its path collided once, needed escaping, grew with depth and was read back by nothing; the
+  counter is the store's, so a cone kept across passes is never named over (#486).
 - **A want an intention is walking is neither searched nor handed down again**, and **a plan whose
   want is gone is nobody's**.
 - **A prediction is a diff, and only a ground has applied it** — one reader answers the derivation

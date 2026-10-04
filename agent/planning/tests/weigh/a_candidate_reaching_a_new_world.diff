@@ -11,10 +11,10 @@
    possible:fill-tank1 planning:by possible:fill-tank1.by .
    possible:fill-tank1 planning:minted 1 .
    possible:fill-tank1 planning:spent 1.0 .
-@@ -111,6 +111,12 @@
-   possible:fill-tank1.by a planning:Candidate .
+@@ -112,6 +112,12 @@
    possible:fill-tank1.by planning:fills :fill .
    possible:fill-tank1.by planning:from ground:2026-01-01T120000p0000 .
+   possible:fill-tank1.by planning:minted 1 .
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 a planning:Weighing .
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:met false .

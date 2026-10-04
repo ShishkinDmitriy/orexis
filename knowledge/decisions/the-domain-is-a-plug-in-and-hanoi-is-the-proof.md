@@ -94,9 +94,11 @@ the tree; the optimum is the deontic sitting's two-stage ranking doing what it s
   yielded at most one row per lever, which six ground actions guaranteed by accident. One
   schema yields several rows per lever differing only in `about`; two siblings collided, the
   second child's quads merged into the first's graph — a disk resting on two supports at
-  once — and the search answered NOT_BETTER to a solvable puzzle. The segment now carries
-  the full act, (action, via, about). A domain with one action and many targets is what it
-  took to make the collision reachable.
+  once — and the search answered NOT_BETTER to a solvable puzzle. The segment was widened to
+  carry the full act, (action, via, about) — a patch on the encoding, not on the idea, and
+  [#486](https://github.com/ShishkinDmitriy/orexis/issues/486) retired the encoding: a world
+  is named by a mint number and the path to it is rows. A domain with one action and many
+  targets is what it took to make the collision reachable.
 - **A latent kernel bug, caught by the first maxCount that ever had a focus.** The world
   gate joins two data paths — the store's serialisation parse and `effects._triple` — and
   the two disagreed about a plain string's identity: pyoxigraph reports `xsd:string` on

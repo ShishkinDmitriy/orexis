@@ -65,23 +65,25 @@ ORDER BY ?for ?about"""
 #  weighings — the read cost 74 ms and answered nothing; `?x planning:weighs ?about ; …` costs
 #  4. Only a weighing says `planning:weighs`, so the type it no longer asks is not a check
 #  given up.
+#  THE CANDIDATES IN THE ORDER THEY WERE MINTED, off the row and not the name: a name is a
+#  number now (#486), and `possible/10.by` sorts before `possible/9.by` as text.
 _CANDIDATES_Q = """
 SELECT ?for ?about ?from ?child WHERE {
   GRAPH $cat { ?d a planning:WantGraph }
   GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Want $narrow }
   GRAPH $cat {
-    ?about a planning:Candidate ; planning:from ?from $leaving .
+    ?about a planning:Candidate ; planning:from ?from ; planning:minted ?m $leaving .
     ?y planning:weighs ?from ; planning:for ?for ; a planning:Weighing .
     OPTIONAL { ?child planning:by ?about } }
   FILTER NOT EXISTS { GRAPH $cat { ?x planning:weighs ?about ; planning:for ?for } }
   FILTER NOT EXISTS { GRAPH $cat { ?c planning:by ?about . ?z planning:weighs ?c ; planning:for ?for } } }
-ORDER BY ?for ?about"""
+ORDER BY ?for ?m"""
 
 
 def unweighed(store, *, for_: str | None = None, leaving: str | None = None, memo=None) -> list[dict]:
-    """Every `(for, about)` still to be weighed, in name order: desires in grounds and wants in
-    the present ground first, then candidates — each with `from`, the world it leaves, and
-    `child`, the world it reached where it was taken.
+    """Every `(for, about)` still to be weighed: desires in grounds and wants in the present
+    ground first, in name order, then candidates in the order they were minted — each with
+    `from`, the world it leaves, and `child`, the world it reached where it was taken.
 
     NARROWED WHERE THE CALLER KNOWS: `for_` to one want's or desire's, `leaving` to the
     candidates leaving one world — which is what an iteration opens, and asks for nothing
