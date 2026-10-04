@@ -13,10 +13,11 @@ as they stand over a period with each prediction applied, so handing the raw sta
 beside it puts the present's value in the world next to the one that superseded it, and a
 shape holding over every value sees both.
 
-THE INSTANT IS THE WORLD'S OWN, read off its row: the start of its period — a ground's, or the
-earliest a possible world is reached by the landings on its path. A reader names a world and
-nothing else. Where within its period a possible world is judged — at its earliest, as here, or
-in every ground the period overlaps — is the half of #596 still open.
+THE PERIOD IS THE WORLD'S OWN, read off its row. A ground is read at its start, the instant the
+search stands at; a possible world at its start — the earliest the landings on its path reach it,
+in whose ground it was forked (`take`) — and over its whole period for what else it reads: a want,
+a record or a round that ends inside the period is not one a step landing anywhere in it may count
+on (#596). A reader names a world and nothing else.
 """
 
 from __future__ import annotations
@@ -31,7 +32,9 @@ from agent.store import Raw, catalogue_of, graphs_of, remember, revisions_of, ro
 from .ontology import GROUND_GRAPH, POSSIBLE_GRAPH
 
 _WHEN_Q = """
-SELECT ?at WHERE { GRAPH $cat { $world dcterms:temporal/orexis:start ?at } }"""
+SELECT ?at ?until WHERE {
+  GRAPH $cat { $world dcterms:temporal ?p . ?p orexis:start ?at .
+               OPTIONAL { $world a planning:PossibleGraph . ?p orexis:end ?until } } }"""
 
 
 def world_at(store, world: str, *, holder: str | None = None, now: datetime | None = None,
@@ -47,10 +50,11 @@ def world_at(store, world: str, *, holder: str | None = None, now: datetime | No
     """
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
     when = remember(memo, ("when", world), lambda: next(
-        (r.get("at") for r in rows(store, _WHEN_Q, (), world=world, cat=cat)), None))
+        ((r.get("at"), r.get("until")) for r in rows(store, _WHEN_Q, (), world=world, cat=cat)), None))
     if when is None:
         raise LookupError(f"{world} says no period — is it a ground or a possible world?")
-    at = datetime.fromisoformat(when)
+    at = datetime.fromisoformat(when[0])
+    until = datetime.fromisoformat(when[1]) if when[1] else at
     #  WHAT A WORLD SPEAKS FOR: the readings, the predictions, the grounds and the possible
     #  worlds — and what the rules concluded of a reading or a prediction, since a ground is laid
     #  with those revisions and a step's effect rewrites them there. Read beside the world, a
@@ -60,7 +64,7 @@ def world_at(store, world: str, *, holder: str | None = None, now: datetime | No
         return frozenset([*graphs_of(store, STATE, PREDICTION, GROUND_GRAPH, POSSIBLE_GRAPH),
                           *revisions_of(store, *readings)])
     spoken_for = remember(memo, ("spoken_for",), spoken)
-    known = remember(memo, ("knowable", at, holder, now), lambda: tuple(
-        g for g in graphs_of(store, *FORESEEN, at=at, holder=holder, now=now)
+    known = remember(memo, ("knowable", at, until, holder, now), lambda: tuple(
+        g for g in graphs_of(store, *FORESEEN, at=at, until=until, holder=holder, now=now)
         if g not in spoken_for))
     return [*known, world]

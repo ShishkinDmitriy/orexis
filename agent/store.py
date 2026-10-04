@@ -345,10 +345,14 @@ ORDER BY ?g"""
 
 _OWNED = """OPTIONAL { ?g orexis:beliefsOf ?owner } FILTER(!BOUND(?owner) || ?owner = $holder)"""
 
+#  HOLDING AT `$at` AND STILL AT `$until`: begun by the first and not ended by the second, so a
+#  reader standing over a period is handed what holds throughout it; a reader standing at an
+#  instant says the same instant twice. A record is read at the present whatever is asked about.
 _HOLDING = """OPTIONAL { ?g dcterms:temporal ?period .
                OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } }
     BIND(IF(EXISTS { ?g a orexis:RecordGraph }, $now, $at) AS ?when)
-    FILTER(!BOUND(?start) || ?when >= ?start) FILTER(!BOUND(?end) || ?when < ?end)"""
+    BIND(IF(EXISTS { ?g a orexis:RecordGraph }, $now, $until) AS ?till)
+    FILTER(!BOUND(?start) || ?when >= ?start) FILTER(!BOUND(?end) || ?till < ?end)"""
 
 
 def instant(at: datetime) -> ox.Literal:
@@ -666,10 +670,12 @@ def close_catalogue(store) -> None:
         update(store, f"INSERT DATA {{ GRAPH <{catalogue}> {{\n{rows_} }} }}")
 
 
-def graphs_of(store, *kinds: str, at: datetime | None = None,
+def graphs_of(store, *kinds: str, at: datetime | None = None, until: datetime | None = None,
               holder: str | None = None, now: datetime | None = None) -> list[str]:
     """Every graph the catalogue types under any of `kinds` — subclasses included, the rows
-    having been closed when they were written — holding at `at` where an instant is given.
+    having been closed when they were written — holding at `at` where an instant is given, and
+    still holding at `until` where a reader stands over a period rather than at an instant (#596):
+    a round open for part of a step's landing window is not one the step may count on.
 
     THE ONE LOOKUP A READER TAKES, and it is ONE (a-reader-states-the-kinds-it-reads). The
     reader says which kinds it means and, if it stands at an instant, which; this answers with
@@ -686,7 +692,7 @@ def graphs_of(store, *kinds: str, at: datetime | None = None,
     """
     text = bind(_GRAPHS_Q, kinds=Raw(" ".join(f"<{k}>" for k in kinds)),
                 owned=Raw(bind(_OWNED, holder=holder) if holder is not None else ""),
-                holding=Raw(bind(_HOLDING, at=instant(at), now=instant(now or at))
+                holding=Raw(bind(_HOLDING, at=instant(at), until=instant(until or at), now=instant(now or at))
                             if at is not None else ""))
     return [str(row["g"].value) for row in store.query(text, prefixes=NAMESPACES)]
 

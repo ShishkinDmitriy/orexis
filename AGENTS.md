@@ -282,8 +282,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   patience later. **A `landsAfter` text that will not parse is read as nought**, so probe a
   declared figure on the plan it places, never only on the outcome.
 - **A possible world holds over the period its path's bands sum to, and a step carries both ends**
-  — the executor looks from `landsAt` and gives up a patience past `notAfter`; where within its
-  period a world is JUDGED is still #596's (a-landing-is-a-band-and-a-world-holds-over-a-period).
+  — the executor looks from `landsAt` and gives up a patience past `notAfter`
+  (a-landing-is-a-band-and-a-world-holds-over-a-period).
+- **A world is forked from the ground holding at its earliest landing, with the path replayed
+  there** — forked from its parent, a fill landing after a predicted drain read eleven where the
+  world would read nine; a landing straddling a boundary is judged at its earliest alone, which is
+  what #596 still asks.
 - **A step lands as long after it is taken as its plan placed it after its opening.**
 - **A want's view is parsed off its met-test, never declared beside it**, and a want spanning
   scopes is searched in the first of them.

@@ -113,12 +113,13 @@ more of them is finer foresight bought with more worlds.
   commitment is background a new option is filtered against, earliest committed first. Two plans
   drawing one barrel still interfere only where a drift of the barrel's level reads the committed
   draws; no shipped world observes a source's level yet.
-- **A possible world is judged at an instant, though it holds over its landing.** Since 2026-10-03
-  a world holds over the period its path's landing bands sum to
-  ([a-landing-is-a-band-and-a-world-holds-over-a-period](/decisions/a-landing-is-a-band-and-a-world-holds-over-a-period.md)),
-  and a step whose landing may come late is still judged in the ground holding at its earliest;
-  judging it in every ground its period overlaps is strong controllability over an STNU (Morris,
-  Muscettola and Vidal, 2001), and is the half of
+- **A possible world is judged in the ground at its earliest landing, not in every ground its
+  landing overlaps.** Since 2026-10-03 a world holds over the period its path's landing bands sum
+  to, and since 2026-10-04 it is forked from the ground holding at its earliest landing with the
+  path replayed there
+  ([a-landing-is-a-band-and-a-world-holds-over-a-period](/decisions/a-landing-is-a-band-and-a-world-holds-over-a-period.md));
+  judging a landing that straddles a boundary in every ground it overlaps is strong controllability
+  over an STNU (Morris, Muscettola and Vidal, 2001), and is the part of
   [#596](https://github.com/ShishkinDmitriy/orexis/issues/596) still open.
 - **A driver has no level form.** Outside temperature is not a stock; its forecast IS its future,
   and a key the agent observes that follows a forecast would be a drift answering a level rather
