@@ -12,7 +12,10 @@ description: >-
 # What it is
 
 A **series** is time-stamped points in an InfluxDB bucket of the agent's own, for a person to
-draw. It is watched and never believed: nothing written there reaches a plan. It has two
+draw. It is watched and never believed: nothing written there reaches a plan. It is also the whole
+of what reflection reads of an agent
+([reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md)),
+so a figure reflection lacks is a point missing here. It has two
 purposes, and the agent is told of a store for each apart, in environment keyed by the purpose —
 two purposes may name one instance, by coincidence and not by design:
 

@@ -69,6 +69,10 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
   identity.
 - **A world drafted from narration** — the sovereign narrates, a draft is ratified, onboarding
   writes the rest; opened by [genesis](/decisions/genesis.md).
+- **Reflection** — the agent's season read back from its series and offered to the sovereign as a
+  proposal; opened by
+  [reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md),
+  whose first tool is the gap it emits.
 - **Futures** — partly here already: a claim is held and presented within its own window (#625),
   so winning and acting are decoupled. A forward venue distinct from the spot round is not, and
   its seam is the claim's expiry ([authn-authz-capabilities](/decisions/authn-authz-capabilities.md)).

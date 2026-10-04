@@ -183,6 +183,7 @@ Authoring a world, ratifying it, and what an amendment may do to a running agent
 * [an-amendment-endows-what-it-grants](/decisions/an-amendment-endows-what-it-grants.md) - Never-held terms arrive with their structures; held terms stay the agent's whatever their value.
 * [a-dead-session-is-resigned-not-endured](/decisions/a-dead-session-is-resigned-not-endured.md) - An agent cut off from its bus sends itself SIGTERM; the container's restart policy is the recovery.
 * [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md) - Every reader, the boot included, loads only the kinds it reads; packages, brokers, series and deployment follow.
+* [reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md) - No model in a pass; reflection is the sovereign's slow process over the series, never the beliefs, and its output is a proposal to ratify.
 
 # Gates and guards
 
