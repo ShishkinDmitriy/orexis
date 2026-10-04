@@ -154,7 +154,10 @@ asks often sets Haiku.
   `/watch` is a line in the gateway, once a sovereign wants it.
 - **The past is not in the account.** "What did you see yesterday" is the history's, and a tool the
   model may call to read an agent's history bucket — a read token, as Grafana's — is buildable;
-  not here, since the account is the present.
+  not here, since the account is the present. The season is reflection's, decided the same day:
+  [reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md)
+  reads the series for what a season says of the agent and offers a proposal, and never asks it
+  for the present, which is this record's refusal kept.
 - **The account's form is each package's, and nothing holds the prose to the store.** The same debt
   the bundle carries (the-knowledge-is-filed-like-the-code): a template that says `Searching` for a
   want the planner now calls otherwise rots in the present tense. A case per part that renders a

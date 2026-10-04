@@ -16,9 +16,11 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
 - **BDI, with no model in the loop.** Desires derive wants, a budgeted search finds plans over
   possible worlds, and the executor walks intentions and holds each step to what it predicted. The
   LLM member 0.1.0 declared was never built, and the 0.2.0 tree has no seam reserved for one
-  inside the mind; the one place a model stands is outside it, reading what an agent accounts of
-  itself for its sovereign over chat
-  ([an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md)).
+  inside the mind; a model stands outside it, in two places that read and never write: the present,
+  what an agent accounts of itself for its sovereign over chat
+  ([an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md)),
+  and the season, the agent's series read back as reflection and offered as a proposal
+  ([reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md)).
 - **The domain is a plug-in.** Hanoi, the courier, the tower, climate, actuation and the market are
   documents under `domains/`, and no shipped code names one
   ([the-domain-is-a-plug-in-and-hanoi-is-the-proof](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md)).

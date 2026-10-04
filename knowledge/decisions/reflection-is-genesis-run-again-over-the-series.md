@@ -58,6 +58,11 @@ the same four steps with a different first input: instead of the sovereign's sto
 does not exist yet, the record of a world that has run. It is a separate, slow process, run from the
 [sovereign](/domain/kernel/sovereign.md)'s side on the sovereign's clock — a season, a month, a visit —
 over the agent's **series alone**, its history and its metrics. It never opens the agent's volume.
+And it never asks the series for the PRESENT: what an agent observes, wants, plans and does now is
+its account, published for the sovereign over chat
+([an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md)),
+and that record's refusal of a present reconstructed from the series stands; reflection asks the
+series what a SEASON says, which is the one question the account cannot answer.
 
 **It answers a fixed set of questions first, and a model is optional.** Each is a reading of the
 series that names something in the world's own words:
