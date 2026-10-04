@@ -36,6 +36,9 @@ orexis-influx = "onboarding.influx:main"
 orexis-mqtt = "onboarding.mqtt:main"
 orexis-compose = "onboarding.compose:main"
 orexis-dashboards = "onboarding.dashboards:main"
+# REFLECTION'S FIRST TOOL, beside onboarding and outside the agent as it is: one agent's season from
+# its history and metrics buckets, read with the admin-side token, never from its beliefs (#894).
+orexis-explain = "onboarding.explain:main"
 # A board's config.h is a per-instance deployment fact, and every value in it is already
 # stated by the world. Regenerating beats retrieving the board.
 orexis-firmware = "onboarding.firmware:main"

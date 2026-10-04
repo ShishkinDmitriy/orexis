@@ -169,6 +169,10 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     observed = [(p["measurement"], p["fields"]["value"], p["time"]) for p in history if p["measurement"] != "Step"]
     assert observed == [("AirTemperature", 21.0, NOW), ("SoilMoisture", 0.2, NOW),
                         ("SoilMoisture", 0.45, NOW + timedelta(minutes=11))]
+    #  THE RAW COUNT BESIDE THE READING (#894): this world scales no sensor, so the number the sensor
+    #  gave is the reading, and the point says so twice rather than leaving the second field off.
+    assert all(p["fields"] == {"value": p["fields"]["value"], "raw": p["fields"]["value"]}
+               for p in history if p["measurement"] != "Step")
     #  TAGGED BY THE LOCAL NAME OF THE IRI, since this world states no `orexis:localId` of a sensor or
     #  of the bed; tagged by a stated id, these points carried none and no panel could filter for them (#885).
     #  The bed is tagged `feature`, for its SOSA role, and no longer `plant` (#834).
@@ -230,6 +234,12 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     assert one(a_day_later, "intentions") == {"standing": 0}
     assert one(a_day_later, "act") == {"count": 1, "taken": 0}, "the second dose, sized from no reading"
     assert one(a_day_later, "silence") == {"silent": 1}, "the probe, and not the thermometer that reported"
+    #  AND WHICH (#894): the series names the probe silent, so reflection reads which and not how many —
+    #  and the thermometer stuck, since this test hands it 21.0 exactly twice a day apart, which is the
+    #  unchanged number sensing says stuck of (#462); a simulated instrument jitters so that it is not.
+    assert [(p["tags"]["sensor"], p["fields"]) for p in of(a_day_later, "doubted")] == \
+        [("moisture_probe", {"silent": 1, "stuck": 0}), ("thermometer", {"silent": 0, "stuck": 1})]
+    assert of(dosed, "doubted") == [], "a sensor nobody doubts is on no point"
     assert len(broker.published) == 1
 
 

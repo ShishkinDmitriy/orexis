@@ -512,6 +512,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   model** (#826); **metrics and history are what events say, and no package imports either**
   (metrics-and-history-are-what-events-say); **a metric is optional at every level and aggregated
   where it happens**.
+- **Reflection reads the series and never the beliefs, so a figure it lacks is a point the agent
+  does not yet write** — the raw count rides beside every reading and `doubted` names the sensor
+  where `silence` counted, and `orexis-explain` answers the fixed questions over the two buckets
+  (#894, reflection-is-genesis-run-again-over-the-series).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
@@ -674,6 +678,8 @@ orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, 
   orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived — where its society names a broker
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster, the broker only with a bus
   orexis-dashboards <world>  #   a Grafana folder per world: what its agents observe, and their health where monitored
+orexis-explain <world> <agent>  # REFLECTION, not onboarding: one agent's season from its two buckets, the fixed
+                             #   questions answered in the world's words, read with the admin token and never a volume
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 orexis-infra-compose         # INFRA — infra/compose.yaml, from infra/installation.ttl

@@ -15,7 +15,8 @@ A **series** is time-stamped points in an InfluxDB bucket of the agent's own, fo
 draw. It is watched and never believed: nothing written there reaches a plan. It is also the whole
 of what reflection reads of an agent
 ([reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md)),
-so a figure reflection lacks is a point missing here. It has two
+so a figure reflection lacks is a point missing here; `orexis-explain` is the reader
+([reflect](/runbooks/reflect.md)). It has two
 purposes, and the agent is told of a store for each apart, in environment keyed by the purpose —
 two purposes may name one instance, by coincidence and not by design:
 
@@ -56,12 +57,15 @@ for a sink and none imports `agent.series`
 ([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md)).
 
 - **Sensing's** point, an `Observed` its part says as it hears an observation graph written:
-  measured under the local name of the property observed, field `value`, tagged `feature` and
-  `sensor` — the SOSA roles, what the observation is of and what made it, each the local name of
-  its IRI and never a stated `orexis:localId`, which is an agent's, and which the greenhouse states
-  of no sensor — at the reading's `sosa:resultTime`. The dashboards ask sensing for the name and
-  the tags (`measurement_of`, `tag_of`), so a panel draws what is written and filters for the tag
-  written. The subject's tag was `plant` until #834, a domain word in the shape as `soil_moisture`
+  measured under the local name of the property observed, field `value`, and beside it field `raw`,
+  the number the sensor gave (`sensing:rawResult`), where the observation has one — so a count that
+  has not moved for days is asked of the history and not of the scaling under doubt (#894); tagged
+  `feature` and `sensor` — the SOSA roles, what the observation is of and what made it, each the
+  local name of its IRI and never a stated `orexis:localId`, which is an agent's, and which the
+  greenhouse states of no sensor — at the reading's `sosa:resultTime`. The dashboards ask sensing
+  for the name and the tags (`measurement_of`, `tag_of`), so a panel draws what is written and
+  filters for the tag written, and they draw `value` alone; a point written before #894 carries
+  `value` alone and is read as it was written. The subject's tag was `plant` until #834, a domain word in the shape as `soil_moisture`
   was in the measurement; points written before either rename stay as they were written, under
   `soil_moisture` or tagged `plant`, and a panel, filtering on `sensor` and the measurement alone,
   draws a point tagged either way.
@@ -82,7 +86,7 @@ loaded, no metrics part hears anything, and an event only it would hear is never
 | the runtime | `pass`, each pass: `duration_s` and each part's seconds; levels `quads`, `uptime_s` |
 | planning | `planner`, each pass: each part's seconds and the wants searched; `search`, each want each pass: `duration_s`, `budget`, `weighed`; `desire`, `scope`, `outcome`; `published`, a plan published: `passes`, `weighed`, `wall_s`, `estimate`, `cost`; `replan`; `desire`, `scope`; `reroot`, each scope each pass: `kept`, `dropped`; `scope`, `present`; `imaginarium`, each scope each pass: levels `worlds`, `weighings`, `open`, `met`, `satisfied`, `exhausted`, `no_candidate`; `scope`; `unreachable`, a want nothing reaches: `desire` |
 | execution | `intention`, one ended: `outcome`, `desire`; `act`, a step taken: `taken`; `action`, `desire`; `landing`, a verdict on a step: `late_s`; `landed`, `timed_out`; `action`, `desire`; `intentions`, each walk: level `standing` |
-| sensing | `received`, an observation written: `interval_s`, `cadence_s`; `sensor`; `silence`, each ask: level `silent` |
+| sensing | `received`, an observation written: `interval_s`, `cadence_s`; `sensor`; `silence`, each ask: level `silent`; `doubted`, each ask, per sensor said silent or stuck: levels `silent`, `stuck`, and nought on both once for one doubted no longer; `sensor` |
 | belief | `revise`, a revision pass: `sources`, `executions`, `cut`, `duration_s`; `revisions`, after one: levels `revisions`, `unsettled` |
 
 **A level is read where its owner looks.** The imaginaria copy the belief base's readings and its
