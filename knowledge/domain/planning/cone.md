@@ -19,7 +19,7 @@ ground the search stood in — worlds widen away from the present, hence the nam
 The [imaginarium](/domain/planning/imaginarium.md) outlives the pass, so the cone does. At the start
 of the next pass `reroot` looks for the world of the last pass whose `orexis:hash` the new ground
 repeats: the old present, when nothing happened; a child, when a step landed as predicted. That
-world's candidates are handed to the ground, the cone's instants are re-stamped and what it spent
+world's candidates are handed to the ground, the cone's periods are re-stamped and what it spent
 is rebased, and everything else is dropped. Three disks re-planned after the first move in 34 ms
 against 132 fresh.
 

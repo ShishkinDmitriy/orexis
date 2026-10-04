@@ -19,6 +19,8 @@
 #  back in fractions, by the subject's litres per fraction. Spread over the window it is a rate: the
 #  high trajectory has the whole rise in by the earliest landing (`execution:landsWithinS`), the low
 #  one by the latest (`execution:answeredWithinS`), which is how a late landing widens the corridor;
+#  a dose lands at the least at once (#596), and a rise over no time is no rate, so a second stands
+#  in for at once there — the engine would answer INF, measured, and INF times nought is not a number;
 #  neither rises past the aim (`?until`). The drift contributes nothing outside the window, since
 #  the graph it reads holds for the window alone, and nothing once the step is answered or its
 #  intention ends, since the executor closes the window then.
@@ -43,7 +45,7 @@ actuation:Dosed a prediction:Drift ;
             BIND((?aim - xsd:double(?read)) * xsd:double(?litres) * 1000.0 AS ?wanted)
             BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), IF(?wanted < 0.0, 0.0, ?wanted)) AS ?ml)
             BIND(?ml / (xsd:double(?litres) * 1000.0) AS ?rise)
-            BIND(?rise / xsd:double(?soon) AS ?high)
+            BIND(?rise / IF(xsd:double(?soon) > 0.0, xsd:double(?soon), 1.0) AS ?high)
             BIND(?rise / xsd:double(?late) AS ?low)
             BIND(xsd:double(?read) + ?rise AS ?until)
         }""" .

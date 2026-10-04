@@ -1,6 +1,22 @@
 --- case
 +++ expected
-@@ -85,4 +85,108 @@
+@@ -28,7 +28,6 @@
+ GRAPH :actions {
+   :fill a orexis:Action .
+   :fill orexis:takes :tank .
+-  :fill planning:landsAfter """SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }""" .
+   :fill planning:costs """PREFIX : <http://example.org/test#>
+       SELECT (1 AS ?cost) WHERE { }""" .
+   :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>
+@@ -37,6 +36,7 @@
+       CONSTRUCT { ?tank :level ?next } WHERE {
+       $tank :level ?l .
+       BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
++  :fill planning:landsAfter "SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }" .
+   :fill planning:precondition """PREFIX : <http://example.org/test#>
+       SELECT ?tank WHERE {
+       ?tank a :Tank ; :level ?l .
+@@ -86,4 +86,110 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -22,9 +38,9 @@
 +  plan:keeper.in_range.pursued.tank1 a planning:PlanGraph .
 +  plan:keeper.in_range.pursued.tank1 orexis:arrivedBy orexis:Derived .
 +  possible:fill-tank1 a planning:PossibleGraph .
++  possible:fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:03:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:00+00:00"^^xsd:dateTime ] .
 +  possible:fill-tank1 orexis:arrivedBy orexis:Derived .
 +  possible:fill-tank1 orexis:hash "sha256:5fc000937f8262b502a2b8f48b0d1f90bac44c72d656db033cb7a98eaf7e9e49" .
-+  possible:fill-tank1 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  possible:fill-tank1 planning:by possible:fill-tank1.by .
 +  possible:fill-tank1 planning:minted 1 .
 +  possible:fill-tank1 planning:spent 1.0 .
@@ -33,9 +49,9 @@
 +  possible:fill-tank1.by planning:fills :fill .
 +  possible:fill-tank1.by planning:from ground:2026-01-01T120000p0000 .
 +  possible:fill-tank1.fill-tank1 a planning:PossibleGraph .
++  possible:fill-tank1.fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:06:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:02:00+00:00"^^xsd:dateTime ] .
 +  possible:fill-tank1.fill-tank1 orexis:arrivedBy orexis:Derived .
 +  possible:fill-tank1.fill-tank1 orexis:hash "sha256:192e554eacef02d6c30628031f9be08a4e529dc6070f1fc2867ab73d8cc1f6d6" .
-+  possible:fill-tank1.fill-tank1 planning:atInstant "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  possible:fill-tank1.fill-tank1 planning:by possible:fill-tank1.fill-tank1.by .
 +  possible:fill-tank1.fill-tank1 planning:minted 2 .
 +  possible:fill-tank1.fill-tank1 planning:spent 2.0 .
@@ -72,7 +88,8 @@
 +  plan:keeper.in_range.pursued.tank1 planning:spent 2.0 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 :tank :tank1 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 a execution:Step .
-+  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:landsAt "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:landsAt "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:notAfter "2026-01-01T12:03:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:partOf plan:keeper.in_range.pursued.tank1 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:predicts "{\"adds\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",5.0]]],\"retracts\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",0.0]]]}" .
@@ -81,8 +98,9 @@
 +  plan:keeper.in_range.pursued.tank1.fill-tank1 planning:of possible:fill-tank1.by .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 :tank :tank1 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 a execution:Step .
-+  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:landsAt "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-+  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:landsAt "2026-01-01T12:02:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:notAfter "2026-01-01T12:06:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:notBefore "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:partOf plan:keeper.in_range.pursued.tank1 .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:predicts "{\"adds\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",10.0]]],\"retracts\":[[[\"iri\",\"http://example.org/test#tank1\"],\"http://example.org/test#level\",[\"num\",5.0]]]}" .
 +  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 planning:fills :fill .

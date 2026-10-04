@@ -141,9 +141,9 @@ ORDER BY ?adopted"""
 
 #  THE HEAD OF EVERY STANDING INTENTION: when it may be taken — `execution:notBefore` where the
 #  plan says, at once where it says nothing — whether it has been taken (an act saying so), and
-#  where it has, what it predicted and when that should show.
+#  where it has, what it predicted and when that should show, at the earliest and at the latest.
 _HEADS_Q = """
-SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?predicts WHERE {
+SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?after ?predicts WHERE {
   GRAPH $intentions {
     ?intention a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
@@ -151,6 +151,7 @@ SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?predicts WHERE {
   OPTIONAL { GRAPH ?plan { ?step execution:notBefore ?due } }
   OPTIONAL { GRAPH ?plan { ?step execution:keptBelow ?kept } }
   OPTIONAL { GRAPH ?plan { ?step execution:landsAt ?lands } }
+  OPTIONAL { GRAPH ?plan { ?step execution:notAfter ?after } }
   OPTIONAL { GRAPH ?plan { ?step execution:predicts ?predicts } } }
 ORDER BY ?due ?intention"""
 
@@ -199,10 +200,11 @@ ORDER BY ?p"""
 _NEXT_Q = """SELECT ?next WHERE { GRAPH ?plan { $step execution:then ?next } } LIMIT 1"""
 
 #  A COMMITTED STEP'S LANDING WINDOW, off the plan it is in: when it may be taken and when its change
-#  lands, each where the plan says one.
+#  lands at the earliest and at the latest, each where the plan says one.
 _PLACED_Q = """
-SELECT ?opens ?lands WHERE { GRAPH $plan {
-  OPTIONAL { $step execution:notBefore ?opens } OPTIONAL { $step execution:landsAt ?lands } } }"""
+SELECT ?opens ?lands ?after WHERE { GRAPH $plan {
+  OPTIONAL { $step execution:notBefore ?opens } OPTIONAL { $step execution:landsAt ?lands }
+  OPTIONAL { $step execution:notAfter ?after } } }"""
 
 #  EVERY STEP AN INTENTION COMMITTED TO.
 _COMMITTED_Q = """SELECT ?step WHERE { GRAPH $intentions { $intention execution:step ?step } }"""
@@ -435,17 +437,17 @@ class Executor:
     def _commit_windows(self, plan: str, steps: list[str], now: datetime) -> None:
         """Write every step of the adopted plan into the beliefs as a graph of its own, an
         `execution:CommittedStepGraph` holding over the step's LANDING WINDOW — from its
-        `execution:notBefore` to its `execution:landsAt` plus the patience — so that a prediction
+        `execution:notBefore` to its `execution:notAfter`, the latest landing, plus the patience — so that a prediction
         made from now on sees the intention: the window's two ends are happenings, and a drift reads
         the step at any instant inside it (a-prediction-accumulates-rates-between-happenings, the seam
         "committed steps are not yet flows", closed by #849).
 
         WHAT THE GRAPH HOLDS is the step's filling as the plan states it — the action and a triple per
         parameter, copied as terms and never read, since they are the layer above's and the domain's
-        words — its type, and the window's two lengths in seconds (`execution:landsWithinS`,
-        `execution:answeredWithinS`), stated as numbers because no rule can measure the stretch between
-        the plan's two instants. A step placed at no instant opens at the adoption and lands as it is
-        taken; its window is the patience alone. Nothing is written where the beliefs describe no
+        words — its type, and the window's two lengths in seconds (`execution:landsWithinS`, to the
+        earliest landing; `execution:answeredWithinS`, to the latest and the patience past it), stated
+        as numbers because no rule can measure the stretch between the plan's instants. A step placed
+        at no instant opens at the adoption and lands as it is taken; its window is the patience alone. Nothing is written where the beliefs describe no
         graphs, as a bare store a case hands in does not.
         """
         if catalogue_of(self.beliefs) is None:
@@ -456,10 +458,11 @@ class Executor:
             placed = next(iter(rows(self.intentions, bind(_PLACED_Q, plan=named, step=step))), {})
             opens = datetime.fromisoformat(placed["opens"]) if placed.get("opens") else now
             lands = max(opens, datetime.fromisoformat(placed["lands"])) if placed.get("lands") else opens
-            within, by = (lands - opens).total_seconds(), (lands - opens).total_seconds() + self.patience_s
+            latest = max(lands, datetime.fromisoformat(placed["after"])) if placed.get("after") else lands
+            within, by = (lands - opens).total_seconds(), (latest - opens).total_seconds() + self.patience_s
             graph = committed_graph(self.id, step)
             forget_graph(self.beliefs, graph)
-            update(self.beliefs, f"INSERT DATA {{ {entry(self.beliefs, graph, COMMITTED_STEP_GRAPH, RECORDED, owner, start=opens, end=lands + timedelta(seconds=self.patience_s))} }}")
+            update(self.beliefs, f"INSERT DATA {{ {entry(self.beliefs, graph, COMMITTED_STEP_GRAPH, RECORDED, owner, start=opens, end=latest + timedelta(seconds=self.patience_s))} }}")
             subject, into = ox.NamedNode(step), ox.NamedNode(graph)
             held = [ox.Quad(subject, _RDF_TYPE, ox.NamedNode(EXECUTION + "Step"), into),
                     ox.Quad(subject, ox.NamedNode(LANDS_WITHIN_S), _decimal(within), into),
@@ -560,11 +563,12 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         instant to wake at.
 
         THE WORLD ANSWERS OR IT DOES NOT. A taken head that predicts something waits at its
-        `landsAt`; from then on, every pass asks the present whether what the step predicted
-        holds, and moves the intention along when it does. Past the landing by the patience
-        with no answer, the step is unmet, the tail is dropped with it and the intention
-        resolves `failed` — the search will see the want again on its next pass, standing in
-        a present that surprised it. The executor never replans; it says what happened.
+        `landsAt`, the earliest its change can show; from then on, every pass asks the present
+        whether what the step predicted holds, and moves the intention along when it does. Past
+        its `notAfter`, the latest, by the patience with no answer, the step is unmet, the tail is
+        dropped with it and the intention resolves `failed` — the search will see the want again
+        on its next pass, standing in a present that surprised it. The executor never replans; it
+        says what happened.
         """
         now = now or clock.now()
         self._sweep(now)
@@ -590,7 +594,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 continue
             if not r.get("predicts"):
                 continue                        # advanced when it was taken; nothing to hold it to
-            lands = self._landing(r, now)
+            lands, latest = self._landing(r, now)
             below = [b.get("outcome") for b in rows(self.intentions, bind(
                 _REFINED_Q, intentions=Raw(f"<{self.graph}>"), act=r["act"]))]
             if now < lands:
@@ -605,29 +609,32 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                             intention.rsplit("#", 1)[-1])
                 self._verdict(intention, step, r, now, landed=False)
                 self.resolve(intention, "failed")
-            elif now >= lands + timedelta(seconds=self.patience_s):
+            elif now >= latest + timedelta(seconds=self.patience_s):
                 log.warning("%s: the world did not answer %s by %s — %s fails",
-                            self.id, local_of(step), lands.isoformat(), intention.rsplit("#", 1)[-1])
+                            self.id, local_of(step), latest.isoformat(), intention.rsplit("#", 1)[-1])
                 self._verdict(intention, step, r, now, landed=False, timed_out=True)
                 self.resolve(intention, "failed")
             else:
-                wake_at(lands + timedelta(seconds=self.patience_s))
+                wake_at(latest + timedelta(seconds=self.patience_s))
         self._next_due = soonest
         return due
 
     @staticmethod
-    def _landing(head: dict, now: datetime) -> datetime:
-        """When a taken head should show what it predicted: as long after it was TAKEN as the
-        plan placed its landing after its opening. A plan places every step at the instants of
-        the worlds it searched, and a step taken late — the step before it waited on a round
+    def _landing(head: dict, now: datetime) -> tuple[datetime, datetime]:
+        """When a taken head should show what it predicted — at the earliest (`landsAt`) and at the
+        latest (`notAfter`, the earliest where the plan states none) — each as long after it was
+        TAKEN as the plan placed it after its opening. A plan places every step at the instants
+        of the worlds it searched, and a step taken late — the step before it waited on a round
         that cleared late, or on a peer — lands late by as much; held to the placed instant, it
         would fail before the world could answer it."""
         if not head.get("lands"):
-            return now
+            return now, now
         lands = datetime.fromisoformat(head["lands"])
+        latest = max(lands, datetime.fromisoformat(head["after"])) if head.get("after") else lands
         if head.get("taken") and head.get("due"):
-            lands += max(timedelta(0), datetime.fromisoformat(head["taken"]) - datetime.fromisoformat(head["due"]))
-        return lands
+            late = max(timedelta(0), datetime.fromisoformat(head["taken"]) - datetime.fromisoformat(head["due"]))
+            lands, latest = lands + late, latest + late
+        return lands, latest
 
     def _answered(self, predicts: str) -> bool:
         """Does the present hold what a step predicted — every addition present, every

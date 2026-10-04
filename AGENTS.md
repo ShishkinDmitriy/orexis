@@ -276,10 +276,14 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   in one is CRISP**.
 - **A step is sized when it is taken, from the present, and the search only says the side it
   reaches** — the `execution:Command` runs over the beliefs as they stand.
-- **A step lands when the world can SHOW its effect** — a dose lands at its sensor's next reading,
-  a market act when its round's window closes; declared as nothing, a step landed the instant it
-  was taken and failed a patience later. **A `landsAfter` text that will not parse is read as
-  nought**, so probe a declared figure on the plan it places, never only on the outcome.
+- **A step lands when the world can SHOW its effect, and a landing is a BAND** — the least and the
+  most, so a dose lands within a cadence of the step, a market act when its round's window closes,
+  both ends agreeing; declared as nothing, a step landed the instant it was taken and failed a
+  patience later. **A `landsAfter` text that will not parse is read as nought**, so probe a
+  declared figure on the plan it places, never only on the outcome.
+- **A possible world holds over the period its path's bands sum to, and a step carries both ends**
+  — the executor looks from `landsAt` and gives up a patience past `notAfter`; where within its
+  period a world is JUDGED is still #596's (a-landing-is-a-band-and-a-world-holds-over-a-period).
 - **A step lands as long after it is taken as its plan placed it after its opening.**
 - **A want's view is parsed off its met-test, never declared beside it**, and a want spanning
   scopes is searched in the first of them.
