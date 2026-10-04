@@ -487,6 +487,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **The simulator is a process of the world, not a pretend board** — it plays every system marked
   `sim:simulatedBy` from the world's own words, and sleeps until the next reading is due in the
   world's time (`simulation/`).
+- **A simulated instrument keeps the premise its detector states** — the number published strays
+  from the model's reading within the model's `sim:jitter` and is never the one before, since the
+  physics moves only what something moves and sensing read a quiet thermometer as stuck (#879).
 - **Hardware is the firmware generator's input, and no vocabulary types it** — `hardware.ttl` is an
   `onboarding:HardwareGraph`, a kind no agent loads (#820).
 - **A series is watched and never believed, and the package that decides a thing shapes its
