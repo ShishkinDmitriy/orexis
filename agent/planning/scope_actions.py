@@ -34,8 +34,8 @@ log = logging.getLogger("scope_actions")
 def scope_actions(store: ox.Store) -> None:
     """Cluster every action the store holds into scopes and write them, replacing what stood.
 
-    An action is in the scope its reads and writes lie in — one by construction, since an
-    action touching two would have joined them. An action stating no effect is in no scope, as
+    An action is in every scope a filling of it lies in, and a predicate or a term in every
+    scope an atom of it falls in. An action stating no effect is in no scope, as
     no world admits it; one whose effect cannot be read joins everything and is in the one scope
     that holds everything. A scope is named for the graph it is written in and its place in the
     partition, largest first (`scopes.py` names both), so the same actions write the same text.
@@ -50,9 +50,14 @@ def scope_actions(store: ox.Store) -> None:
     edges = footprint.stored_edges(store, graphs_of(store, DERIVATION_GRAPH))
     parts = _partition(atoms, edges)
     #  WHAT EACH SCOPE HOLDS: the predicates and the terms of its atoms, and the actions a filling
-    #  of which is in it. A predicate or a term that falls in two scopes is in neither for a
-    #  reader — a reader asking it is told nothing, which joins every group, the safe side — where
-    #  an action in two scopes is admitted in both.
+    #  of which is in it — EACH IN EVERY SCOPE IT FALLS IN. A predicate or a term in two scopes
+    #  used to be written in neither, so a reader asking it was told nothing and joined every
+    #  group; that was the safe side for a word alone, and the wrong side for a word among others:
+    #  a bed keyed by the pump's filling and the heater's was in neither scope, so its soil's
+    #  reading — the bed and the soil's property, each of two scopes, together of one — named no
+    #  member and crossed into every imaginarium, a second bed's among them. Written in full, a
+    #  reader places a reading, a witness or a want by the MEET of its terms' scopes, and asks for
+    #  one scope where it wants the term unique to it.
     part_of = {atom: n for n, part in enumerate(parts, 1) for atom in part}
     where: dict = {}
     for n, part in enumerate(parts, 1):
@@ -68,7 +73,7 @@ def scope_actions(store: ox.Store) -> None:
     written = []
     for n, part in enumerate(parts, 1):
         scope = _scope_name(n)
-        members = {m for (kind, m), scopes in where.items() if scopes == {n}}
+        members = {m for (kind, m), scopes in where.items() if n in scopes}
         actions = {action for action, fillings in atoms.items()
                    if fillings is ANYTHING or any(atom in part for atoms_, _ in fillings for atom in atoms_)}
         written.append((scope, members, actions))
@@ -105,7 +110,7 @@ def _scope_name(n: int) -> str:
 
 def _save_scopes(store: ox.Store, scopes: list[tuple[str, set[str], set[str]]]) -> None:
     """Replace the store's scopes with these — `(scope, members, actions)` each, the members the
-    predicates and the terms in no other scope — and say what the graph is. Written whole, and classified even when empty: a store with no scope
+    predicates and the terms whose atoms fall in it — and say what the graph is. Written whole, and classified even when empty: a store with no scope
     graph has never been scoped, which `derive_wants` refuses to guess about.
 
     ONE UPDATE OVER THE ENGINE: every standing scope graph asked of the catalogue by class and

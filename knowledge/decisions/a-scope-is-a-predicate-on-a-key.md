@@ -10,7 +10,10 @@ description: >-
   candidates a pass admits; a key named by its variable. The greenhouse splits; the tower still
   does; a term places a want only where its predicates place it nowhere. Amended the same day: a
   scope's imaginarium holds the scope's readings, by the same test, so a world is their size and
-  a sensor of another scope adds nothing to it.
+  a sensor of another scope adds nothing to it. And again: a member is written in every scope it
+  is in and a reading, a witness and a want are placed where the scopes of what they name meet,
+  so two beds each with a pump are two wants, each keyed by its bed off the violation's offending
+  value. Refused there: rewriting the want's shape to name the bed.
 status: accepted
 timestamp: 2026-10-04T12:00:00Z
 ---
@@ -34,11 +37,13 @@ and the atoms it writes; `scope_actions` partitions the atoms; a subject keyed b
 atom of its predicate, which is the predicate partition, the safe side.
 
 What a scope then holds as members: every action a filling of which falls in it, in as many scopes
-as its fillings do; and each predicate and each term a key holds, where that is ONE scope and
-nowhere where it is two — a reader told nothing joins every group, as it always has. The derivation
-clusters a desire's witnesses by the scope of what each is about, a property term; the planner
-places a want by the predicates its met-test reads and, where those place it nowhere because two
-scopes' actions write them, by the terms the met-test names — and only then.
+as its fillings do; and each predicate and each term a key holds, in every scope it falls in. It
+was written only where that was ONE scope, a reader told nothing joining every group — the safe
+side for a word alone, and the wrong side for a word among others, as the two-beds section below
+found. The derivation clusters a desire's witnesses by the scope of what each is about, a property
+term, and where that is two scopes' by the MEET of it and the witness's key; the planner places a
+want by the predicates its met-test reads and, where those leave more than one scope, by the terms
+the met-test names and the key the want carries, within what the predicates left — and only then.
 
 # What was refused
 
@@ -86,11 +91,12 @@ empty result and no error — and it waited on a slice a rule could be refused a
 
 The slice is the one `admit` already refuses a filling by. A reading names what keys it — its
 feature and its property, in its revisions — and a reading naming a member of another scope is
-that scope's, exactly as a filling binding one is. So `prepare_ground` is handed `elsewhere`, the
-same set, and the scope's own members beside it, and a reading or a prediction that with its
-revisions names — as a predicate or an object — one of the others' and none of its own does not
-cross: the imaginarium is the scope's, the grounds `lay_ground` lays in it are the scope's
-readings, and every world forked from them is their size. It is safe where narrowing by graph was
+that scope's, exactly as a filling binding one is. So `prepare_ground` is handed the scope and the
+partition, and a reading or a prediction that with its revisions names — as a predicate or an
+object — members whose scopes meet without this one does not cross: the imaginarium is the
+scope's, the grounds `lay_ground` lays in it are the scope's readings, and every world forked from
+them is their size. (First written as *names one of the others' and none of its own*, over members
+unique to a scope; the two-beds section below says why that was not enough.) It is safe where narrowing by graph was
 not because the same test holds on both sides of the seam: no candidate of this scope binds
 another scope's key, so no rule of this scope's search can reach the reading left out. A reading
 no scope holds alone — a forecast, a sensor no action acts on — crosses into every imaginarium as
@@ -117,6 +123,66 @@ less than the ground would never match it, so every pass would start the search 
 failure the imaginarium outliving the pass was built to close. The ground and the worlds hold the
 same readings or the identification is gone.
 
+# Two instances of one property (closed 2026-10-04)
+
+The seam this record left first: two beds each with a pump are two scopes by key, and a desire
+about both beds' soil — the greenhouse's, which targets the grower and reaches every bed's reading
+down `orexis:actsFor / ^sosa:hasFeatureOfInterest` — had witnesses about the one term,
+`SoilMoisture`, held by both scopes, and a focus node, the grower, that told the two apart by
+nothing. Measured before anything was changed, on the shipped greenhouse with a second bed, probe
+and pump added and both beds dry: one want, `pursued.SoilMoisture`, minted in every imaginarium,
+placed in the first scope, found unreachable there, and NO pump commanded. Two things were wrong,
+and the second was found by the first.
+
+**The witness is placed by its key, read off the violation's offending value.** The report's row
+already projected the value that offended — the reading below — and dropped it; `weigh` writes it
+now as `planning:offending`, and the derivation reads off the ground what the node names: its
+feature, the bed. A way of failing is `(instance, constraint, key)`, where the key is the scope
+members the offending value names, less what the violation is about and less a member of every
+scope; a cluster is placed where the scopes of its about and its key MEET; and a cluster the key
+placed is named for it and carries it, `planning:keyedBy`, which the Planner reads beside the
+shape's own terms to place the want. The key is the NAMED members and never the node, so the
+reading and a prediction's copy of it are one way of failing across the grounds — and the agent is
+no part of it, because an observation says whose it is and a prediction's copy does not, and keyed
+by the agent the present and the foreseen ground were two ways of failing under one name, the
+second mint moving the shipped greenhouse's one want to the later stretch so its dose never landed.
+
+**A member is written in every scope it is in, and a thing is placed where their scopes meet.**
+The first bed is bound by the pump's filling and the heater's, so under *one scope or none* it was
+in neither, and its soil's reading — the bed, of two scopes, and the property, of the other two —
+named no member and crossed into every imaginarium: the second bed's search, where it kept that
+bed's want unmet after the dose, and the air's, where it minted a soil want nothing there could
+reach. Written in full, the reading's named members meet in the first pump's scope alone, the
+`Scopes` map `find_scopes` answers says so (`meet`), and `prepare_ground`, `admit`'s `elsewhere`,
+the derivation and `_of_scope` all read the one relation. The tower's state, naming the courier's
+cells and the puzzle's `on`, which no scope holds together, is every scope either is in — both,
+as before.
+
+Refused:
+
+- **Rewriting the want's shape to name the bed.** The honest place for the key is the met-test, as
+  the instance goes in as `sh:targetNode`; and for the shipped shape it could be done — a
+  `sh:property [ sh:path sosa:hasFeatureOfInterest ; sh:hasValue :bed2 ]` inside the qualified value
+  shape, the predicate read off the ground. But where that block belongs differs by constraint — a
+  qualified MAX count restricts its value shape, a `sh:node` would be restricted the wrong way, a
+  count has no value at all — so the derivation would own a grammar of SHACL's constraints, and a
+  shape it rewrote would drift from the desire's with nothing to say so, which is the refusal
+  [footprint](/domain/planning/footprint.md) opens with. The one row a want states beside its shape
+  is the witness's own coordinate, not a property: what may repair it stays the planning problem.
+- **A declaration on the desire of what it is about** — refused already, above, for the action's
+  `moves`, and for the same reason.
+- **Keying by the offending node itself.** It would have told two beds apart as well, and made the
+  reading and its predicted copy two ways of failing; the key is what the world binds the reading
+  by, as a filling's is.
+
+What two beds in ONE scope come to is one want, as before: the property places both witnesses
+there and the key is not asked. Two wants with one met-test would be one plan found twice, since
+the shape cannot tell the beds apart — which is the whole reason the key is beside the shape.
+`agent/planning/tests/derive_wants/two_beds_two_pumps_are_two_wants.trig` and
+`two_beds_in_one_scope_are_one_want.trig` hold the derivation to both;
+`world/greenhouse/tests/test_two_beds.py` holds the world to both pumps commanded in one pass and
+nothing blocked in the next.
+
 # Measured
 
 - A possible world of the greenhouse is twelve quads, the scope's reading and its sides, one
@@ -125,7 +191,7 @@ same readings or the identification is gone.
   together are the state, and none is
   ([measure-the-search](/runbooks/measure-the-search.md), `world/greenhouse/tests/test_scaling.py`).
 - The greenhouse boots to two scopes, `{SoilMoisture, Dosing}` and `{AirTemperature, Heating}`,
-  with the shared `sensing:below` and `sensing:inside` and the bed in neither. A cold dry bed is two
+  with the shared `sensing:below` and `sensing:inside`, the bed and the grower in both. A cold dry bed is two
   wants in two imaginaria of one world each where it was one want over four worlds; the pass costs
   107 ms against 58, the whole difference the second imaginarium's filling
   ([measure-the-search](/runbooks/measure-the-search.md)).
@@ -137,11 +203,10 @@ same readings or the identification is gone.
 
 # Seams left open
 
-- **Two instances of one property.** Two beds each with a pump are two scopes by key, and a desire
-  about both beds' soil has witnesses about the one term, `SoilMoisture`, held by both scopes and so
-  by neither: the two beds are one want, planned in the first scope. A witness's instance — the bed
-  — would place it; the derivation's witnesses carry the focus node, which is the agent, not the bed.
-  Two vans wait on the same thing, which is #565's.
+- **Two vans.** The two-beds section places a witness by what its offending value names; the
+  courier's want, every parcel where it is owed, offends with a parcel, and a parcel names its cell
+  and nothing of a van, so two vans in one vocabulary would still be one scope by this and #565's
+  dispatcher world (#567) is where that is measured.
 - **A derivation's edges are predicates and join every key of theirs.** No derivation rows are
   written in 0.2.0 — `stored_edges` reads an empty graph — so nothing is joined by them today; the
   day one is, a rule reading one subject's reading and writing another's should join across keys

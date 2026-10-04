@@ -25,8 +25,9 @@ its own kind so that the planner crosses the shapes into a pass without every on
 # How it is read
 
 `violation.py` compiles a shape to one SELECT whose rows are its violations — the focus node, the
-constraint it broke, what the constraint is about — and `weigh` runs it in a world and writes the
-rows as `planning:violation`s on the weighing. No row is met. A shape's `sh:sparql` constraint
+constraint it broke, what the constraint is about, and the value that offended where the
+constraint has one (`planning:offending`, the reading that is below) — and `weigh` runs it in a
+world and writes the rows as `planning:violation`s on the weighing. No row is met. A shape's `sh:sparql` constraint
 carries its own select and its own prefixes; one a [refinement](/domain/planning/refinement.md)
 mints is exactly that, the bridge's WHERE bound and negated.
 

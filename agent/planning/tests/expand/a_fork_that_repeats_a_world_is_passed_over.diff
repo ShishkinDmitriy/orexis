@@ -78,7 +78,7 @@
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:met false .
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:open true .
-+  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 0 ] .
 +  possible:fill-tank2.fill-tank2.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank2.fill-tank2 .
    possible:fill-tank2.for.keeper.in_range.pursued.tank1 a planning:Weighing .
 +  possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:expanded true .

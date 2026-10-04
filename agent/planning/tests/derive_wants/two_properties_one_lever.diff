@@ -11,8 +11,8 @@
 +  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
-+  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
-+  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :temperature ; planning:constraint 1 ; planning:instance :tank1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 5 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :temperature ; planning:constraint 1 ; planning:instance :tank1 ; planning:offending 40 ] .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .

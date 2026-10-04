@@ -258,6 +258,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   head is judged where its filling was admitted, and a reading keyed by another scope's term crosses
   into no imaginarium but its own, so a world is one percent of the present and a sensor added
   elsewhere adds nothing to it (`world/greenhouse/tests/test_scaling.py`).
+- **A member is in every scope it falls in, and a reading, a witness and a want are placed where
+  the scopes of what they name MEET; a member of every scope tells nothing** — the bed is the pump's
+  and the heater's, the soil both pumps', a reading naming both the one pump's; so two beds each
+  with a pump are two wants under the grower's one desire, each keyed by its bed off the violation's
+  offending value, since the shape cannot say which bed came down its path
+  (a-scope-is-a-predicate-on-a-key, `world/greenhouse/tests/test_two_beds.py`).
 - **A variable in predicate position writes what a `VALUES` block in its own text binds it to, and
   anything only where nothing bounds it** — the one range the scopes honour is SPARQL's own.
 - **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —

@@ -217,10 +217,17 @@ def _select(store, for_, memo) -> str | None:
 
 
 def _violation(node: str, row: dict) -> str:
-    """One report row as the violation it is, hung off the weighing."""
+    """One report row as the violation it is, hung off the weighing: the focus node, the
+    constraint's index, what the block says it is about, and the OFFENDING value where the
+    constraint has one — the reading that is below, the level that is five — which is what lets
+    the derivation read off the world what the trouble is keyed by when the focus node is the
+    agent and tells two beds apart by nothing. A blank node would not survive the INSERT, but
+    sensing names its observations and no shipped shape offends with one."""
     parts = [f"planning:instance {row['this']}"]
     if "_constraint" in row:
         parts.append(f"planning:constraint {row['_constraint']}")
     if "_about" in row:
         parts.append(f"planning:about {row['_about']}")
+    if row.get("_offending") is not None and not isinstance(row["_offending"], ox.BlankNode):
+        parts.append(f"planning:offending {row['_offending']}")
     return f"<{node}> planning:violation [ {' ; '.join(parts)} ] .\n"

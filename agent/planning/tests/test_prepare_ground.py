@@ -25,6 +25,7 @@ import pytest
 from agent import clock
 import pyoxigraph as ox
 
+from agent.planning.find_scopes import Scopes
 from agent.planning.lay_ground import lay_ground
 from agent.planning.ontology import GROUND_GRAPH
 from agent.planning.prepare_ground import CROSSING, prepare_ground
@@ -81,15 +82,27 @@ def test_a_reading_keyed_by_another_scopes_term_stays_behind_with_its_revisions_
     beliefs = snapshots.stand_in(CASES_DIR / "a_readings_revisions_cross_with_it.trig")
     soils = {"http://example.org/test#sensed", "http://example.org/test#sensed_revisions",
              "http://example.org/test#drying_stops", "http://example.org/test#drying_stops_revisions"}
+    soil, air = "urn:test:soil", "urn:test:air"
+    parted = Scopes({"http://example.org/test#SoilMoisture": frozenset({soil})})
     whole = set(graph_names(prepare_ground(beliefs, ox.Store())))
     assert soils <= whole, "with no other scope, every reading crosses"
-    into = prepare_ground(beliefs, ox.Store(), elsewhere=frozenset({"http://example.org/test#SoilMoisture"}))
+    assert set(graph_names(prepare_ground(beliefs, ox.Store(), scope=soil, scopes=parted))) == whole, \
+        "one scope in the partition is a store of one scope: everything crosses"
+    parted["urn:test:AirTemperature"] = frozenset({air})
+    into = prepare_ground(beliefs, ox.Store(), scope=air, scopes=parted)
     assert set(graph_names(into)) == whole - soils, "the soil's reading, its side and its prediction are another scope's"
     assert set(graph_names(prepare_ground(beliefs, into))) == whole, "a refresh for a store of one scope brings them"
-    assert set(graph_names(prepare_ground(beliefs, into, elsewhere=frozenset({"http://example.org/test#SoilMoisture"})))) \
-        == whole - soils, "and a refresh with the term elsewhere takes them back"
-    #  NAMING THIS SCOPE'S MEMBER TOO, the reading is both scopes' and crosses — the tower's state
-    #  stands in the courier's cells and its revisions say the puzzle's `on`, and it is both.
-    both = prepare_ground(beliefs, ox.Store(), own=frozenset({"http://example.org/test#bed"}),
-                          elsewhere=frozenset({"http://example.org/test#SoilMoisture"}))
-    assert set(graph_names(both)) == whole, "a reading naming a member of each scope is each scope's"
+    assert set(graph_names(prepare_ground(beliefs, into, scope=air, scopes=parted))) \
+        == whole - soils, "and a refresh for the air's scope takes them back"
+    #  NAMING A MEMBER OF EACH SCOPE that no scope holds together, the reading is both scopes' and
+    #  crosses — the tower's state stands in the courier's cells and its revisions say the puzzle's
+    #  `on`, and it is both.
+    parted["http://example.org/test#bed"] = frozenset({air})
+    assert set(graph_names(prepare_ground(beliefs, ox.Store(), scope=air, scopes=parted))) == whole, \
+        "a reading naming a member of each scope, held together by neither, is each scope's"
+    #  NAMING THE BED, OF BOTH SCOPES, AND THE SOIL'S PROPERTY, OF ONE, the reading is the soil's
+    #  alone: the scopes of what it names MEET there, and the bed on its own told nothing.
+    parted["http://example.org/test#bed"] = frozenset({soil, air})
+    assert set(graph_names(prepare_ground(beliefs, ox.Store(), scope=air, scopes=parted))) == whole - soils, \
+        "a bed of two scopes and a property of one meet in the one"
+    assert set(graph_names(prepare_ground(beliefs, ox.Store(), scope=soil, scopes=parted))) == whole

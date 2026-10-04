@@ -50,6 +50,7 @@ MET_WHEN = PLANNING + "metWhen"
 #  coupling was invisible at every site, and a sixth predicate whose local name ended in
 #  `about` or `label` would have been read as one of these, silently.
 ABOUT = PLANNING + "about"
+KEYED_BY = PLANNING + "keyedBy"
 RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
 
 #  WHAT A DESIRE SAYS, from the graphs of desires and wants asked by class: what it is about,
@@ -110,7 +111,7 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
         raise RuntimeError("the store holds no ground — lay_ground has not run")
     wanted: set[str] = set()
     for holder, desire in _desires_in(store):
-        found = _troubles(store, desire)
+        found = _troubles(store, desire, scopes)
         if found is None:
             #  NOT JUDGED IS NOT MET. A desire whose met-test could not be run says nothing
             #  about its wants — so what stands under it is what it implies, and a dropper
@@ -162,7 +163,8 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
         about = tuple(sorted({w["about"] for w in cluster if w["about"]}))
         instances = {w["instance"] for w in cluster}
         instance = next(iter(instances)) if len(instances) == 1 else None
-        child = _name_of(shapes, desire, said, about, instance)
+        keys = _keys_of(cluster)
+        child = _name_of(shapes, desire, said, about, instance, keys)
         #  THE STRETCH THIS CLUSTER IS IN TROUBLE OVER: from the earliest boundary any of its
         #  ways of failing reads unmet at, to the earliest one they have ALL lifted by. A
         #  cluster where one way never lifts is open-ended, because the cluster is not repaired
@@ -178,10 +180,17 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
         if child in standing:
             continue
         child = _mint(store, shapes, holder, desire, now, at, until, said,
-                     about=about, instance=instance)
+                     about=about, instance=instance, keys=keys)
         if child is not None:
             minted.append(child)
     return minted
+
+
+def _keys_of(cluster: list[dict]) -> tuple[str, ...]:
+    """The key terms that PLACED the cluster's witnesses in their scope — the bed whose reading
+    is in trouble, where what the witness is about, the soil's property, is two pumps' and
+    placed it nowhere — sorted; nothing where what the witnesses are about placed them."""
+    return tuple(sorted({k for w in cluster for k in w.get("placed", ())}))
 
 
 def _named(shapes: rdflib.Graph, scopes: dict | None, desire: str, said,
@@ -196,7 +205,7 @@ def _named(shapes: rdflib.Graph, scopes: dict | None, desire: str, said,
         about = tuple(sorted({w["about"] for w in cluster if w["about"]}))
         instances = {w["instance"] for w in cluster}
         out.add(_name_of(shapes, desire, said, about,
-                        next(iter(instances)) if len(instances) == 1 else None))
+                        next(iter(instances)) if len(instances) == 1 else None, _keys_of(cluster)))
     return out
 
 
@@ -213,9 +222,18 @@ def _clusters(scopes: dict | None, witnesses: list) -> list[list]:
     loud direction, since one want about everything is what a missing partition would have
     quietly minted.
 
-    Measured on every shipped world: one scope, so one group. The code path is the same the
-    day a world splits, and a scope is over PREDICATES — two debts to two hosts are one scope,
-    correctly, since they may draw from one vessel."""
+    A WITNESS IS PLACED BY WHAT IT IS ABOUT, AND THEN BY ITS KEY. What it is about is a
+    property term, and where that is one scope's — the soil's, with one pump — the witness is
+    that scope's and its key says nothing more. Where the property is two scopes' — the soil's,
+    with a pump on each bed — the witness is placed where the property's scopes and its key's
+    MEET: the reading in trouble names the bed, which is the pump's scope's and the heater's,
+    and the two together are the one pump's. Two beds' witnesses are then two groups and two
+    wants, each searched where its pump is, and the key that placed each is remembered on the
+    witness (`placed`) for the want's name and its `planning:keyedBy`. A witness the meet
+    places in no one scope is loose, as a witness naming no property always was.
+
+    Measured on every shipped world before #593: one scope, so one group. The greenhouse is
+    two by key, and two beds each with a pump are two more."""
     if not witnesses:
         return []
     if scopes is None:
@@ -223,7 +241,14 @@ def _clusters(scopes: dict | None, witnesses: list) -> list[list]:
     groups: dict = {}
     loose = []
     for w in witnesses:
-        scope = scopes.get(w["about"]) if w["about"] else None
+        about = [w["about"]] if w["about"] else []
+        placed = scopes.meet(about)
+        w["placed"] = ()
+        if len(placed) != 1 and w.get("key"):
+            narrowed = scopes.meet([*about, *w["key"]])
+            if len(narrowed) == 1:
+                placed, w["placed"] = narrowed, w["key"]
+        scope = next(iter(placed)) if len(placed) == 1 else None
         #  AND BY THE STRETCH. Two ways of failing that one action could move together are one
         #  want only where they are in trouble over the SAME stretch: a want's period is its
         #  trouble's, and a plan for one is placed to land where that trouble begins, so one
@@ -258,7 +283,8 @@ def _tail(iri: str) -> str:
     return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 
-def _name_of(shapes: rdflib.Graph, desire: str, said, about: tuple, instance: str | None) -> str:
+def _name_of(shapes: rdflib.Graph, desire: str, said, about: tuple, instance: str | None,
+             keys: tuple = ()) -> str:
     """The name of the want minted under `desire` for one cluster of its witnesses: the desire's,
     suffixed, so a second episode of the same cluster pursues the same node and everything
     keyed by it — the planner's kept cone, the executor's intentions — finds what it kept.
@@ -272,6 +298,9 @@ def _name_of(shapes: rdflib.Graph, desire: str, said, about: tuple, instance: st
     name otherwise (found by the derivation's own table, `tests/derive_wants/`); a desire whose shape names
     its one node (`sh:targetNode`, sensing's and the greenhouse's) keeps its names, and an
     instance the want is already about (a debt, `planning:about sh:this`) is not said twice.
+    AND FOR THE KEY THAT PLACED IT where the cluster was placed by one: two beds each with a
+    pump under a desire targeting the grower are two clusters about the one property, and
+    `.pursued.SoilMoisture` twice would be one node and one plan for two pumps.
     """
     #  NARROWER THAN THE DESIRE, or the desire's own name. A want carries what it is about in
     #  its NAME only where the cluster covers less than the desire does: a desire about one
@@ -281,6 +310,7 @@ def _name_of(shapes: rdflib.Graph, desire: str, said, about: tuple, instance: st
     #  want's stored ones, and a want states none now.
     declared = {str(o.value) for p, o in said if p == ABOUT}
     tails = [_tail(a) for a in about] if about and set(about) != declared else []
+    tails = [_tail(k) for k in keys] + tails
     if instance is not None and instance not in about and not _targets_one_node(shapes, said):
         tails.insert(0, _tail(instance))
     return desire + ".pursued" + "".join(f".{t}" for t in tails)
@@ -431,7 +461,7 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
 
 def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: datetime,
          at: datetime, until: datetime | None = None, said=None,
-         about: tuple = (), instance: str | None = None) -> str | None:
+         about: tuple = (), instance: str | None = None, keys: tuple = ()) -> str | None:
     """Derive the want pursued under `desire` and write it to the pursued graph, named by
     `_name_of`. None, and the desire stays the goal, where the desire states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
@@ -441,8 +471,19 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
     #  under one desire — soil now, air later, two nodes — and that is an IDENTITY. It is not
     #  written onto the want, because a stated property is the planning problem answered in
     #  advance (see `_write`).
-    child = _name_of(shapes, desire, said, about, instance)
-    points = []
+    #
+    #  THE KEY NAMES AND IS WRITTEN, `planning:keyedBy` — the one row a want states beside its
+    #  met-test. It is not a property and answers nothing about what may repair the want; it is
+    #  the witness's own coordinate, the bed whose reading was in trouble, which the shape cannot
+    #  carry: the desire targets the grower and reaches the readings by a path, and the other
+    #  bed's come down the same path. The instance goes into the shape as its target
+    #  (`_narrowed`), and the key would go there too if a shape could say it — rewriting the
+    #  constraint to name the bed was refused, since where the restriction belongs differs by
+    #  constraint and a derivation that writes a constraint of its own owns a grammar
+    #  (a-scope-is-a-predicate-on-a-key). The Planner reads it to place the want
+    #  where its scope's imaginarium is.
+    child = _name_of(shapes, desire, said, about, instance, keys)
+    points = [(KEYED_BY, k) for k in keys]
     met_test = None
     for p, o in said:
         if isinstance(o, ox.BlankNode):
@@ -570,17 +611,25 @@ SELECT ?g WHERE {
 ORDER BY ?start"""
 
 #  WHAT ONE DESIRE'S WEIGHINGS SAY, ground by ground: the verdict, and every violation with
-#  its instance, its constraint and what it is about.
+#  its instance, its constraint, what it is about and the value that offended where it is a
+#  node — a literal is keyed by nothing, and the ground it was read in, where what the node
+#  names is read.
 _TROUBLES_Q = """
-SELECT ?start ?met ?instance ?constraint ?about WHERE {
+SELECT ?start ?g ?met ?instance ?constraint ?about ?offending WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     ?x a planning:Weighing ; planning:for $desire ; planning:weighs ?g .
     ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start .
     OPTIONAL { ?x planning:met ?met }
     OPTIONAL { ?x planning:violation ?v . ?v planning:instance ?instance .
                OPTIONAL { ?v planning:constraint ?constraint }
-               OPTIONAL { ?v planning:about ?about } } } }
-ORDER BY ?start ?instance ?constraint"""
+               OPTIONAL { ?v planning:about ?about }
+               OPTIONAL { ?v planning:offending ?offending FILTER(isIRI(?offending)) } } } }
+ORDER BY ?start ?instance ?constraint ?offending"""
+
+#  WHAT A NODE NAMES IN A GROUND, as the objects of its own facts — the terms a reading is keyed
+#  by, its feature and its property, among the rest. Values, never predicates: a key is values.
+_NAMES_Q = """
+SELECT DISTINCT ?o WHERE { GRAPH $ground { $node ?p ?o } FILTER(isIRI(?o)) }"""
 
 
 def _desires_in(store: ox.Store) -> list[tuple[str, str]]:
@@ -589,16 +638,25 @@ def _desires_in(store: ox.Store) -> list[tuple[str, str]]:
     return [(r["holder"], r["desire"]) for r in rows(store, _DESIRES_Q, ())]
 
 
-def _troubles(store: ox.Store, desire: str) -> list[dict] | None:
+def _troubles(store: ox.Store, desire: str, scopes=None) -> list[dict] | None:
     """Every way `desire` is failing, each with the stretch it fails over — or None where any
     ground was not judged, which is not the same as met.
 
-    A WAY OF FAILING is one `(instance, constraint)` pair, and the grounds it is violated in
-    give it an interval: `at`, the start of the earliest ground it reads unmet in; `until`,
-    the start of the first later ground it reads met in, or None where nothing the agent can
-    see ahead repairs it. The present is the first ground and is not otherwise special —
-    "unmet now" is `at == the present`. A way that fails, lifts and fails again is one want
-    over the first stretch, and the second is a ground away.
+    A WAY OF FAILING is one `(instance, constraint, key)` triple, and the grounds it is
+    violated in give it an interval: `at`, the start of the earliest ground it reads unmet in;
+    `until`, the start of the first later ground it reads met in, or None where nothing the
+    agent can see ahead repairs it. The present is the first ground and is not otherwise
+    special — "unmet now" is `at == the present`. A way that fails, lifts and fails again is
+    one want over the first stretch, and the second is a ground away.
+
+    THE KEY is what the offending value is keyed by, read off the ground it offended in: the
+    scope members among what the node names — its feature, the bed — less what the violation
+    is about, which is said already, and less a member of every scope, which tells nothing.
+    Two beds' readings below under a desire that targets the grower are one `(grower, 0)` and
+    two ways of failing, where they were one; a literal offends keyed by nothing, and a desire
+    targeting the tank has the tank as its instance already. The key is the NAMED members and
+    never the node, so a reading superseded by a prediction of the same bed is the same way of
+    failing across the grounds.
     """
     found = rows(store, _TROUBLES_Q, (), desire=desire)
     if not found or any(r.get("met") is None for r in found):
@@ -606,6 +664,13 @@ def _troubles(store: ox.Store, desire: str) -> list[dict] | None:
     seen: dict[tuple, dict] = {}
     lifted: dict[tuple, datetime] = {}
     by_ground: dict[str, list] = {}
+    names: dict[tuple, tuple] = {}
+    #  A MEMBER OF EVERY SCOPE TELLS NOTHING and is no part of a key — the agent, bound by every
+    #  filling, which an observation names as whose it is and a prediction's copy of it does
+    #  not, so keyed by it the present and the foreseen ground were two ways of failing under
+    #  one name, and the second mint moved the want to the later stretch. The same word
+    #  `admit` lives by: a value no scope holds alone refuses nothing.
+    everywhere = scopes.all() if scopes else frozenset()
     for r in found:
         by_ground.setdefault(r["start"], []).append(r)
     for start, group in sorted(by_ground.items()):
@@ -614,11 +679,16 @@ def _troubles(store: ox.Store, desire: str) -> list[dict] | None:
         for r in group:
             if not r.get("instance"):
                 continue
-            key = (r["instance"], r.get("constraint", ""))
+            keyed = ()
+            if scopes and r.get("offending"):
+                keyed = names.setdefault((r["g"], r["offending"]), tuple(sorted(
+                    o for o in {r["offending"], *(n["o"] for n in rows(store, _NAMES_Q, (), ground=r["g"], node=r["offending"]))}
+                    if o in scopes and scopes[o] != everywhere and o != r.get("about"))))
+            key = (r["instance"], r.get("constraint", ""), keyed)
             unmet.add(key)
             seen.setdefault(key, {"instance": r["instance"], "constraint": r.get("constraint", ""),
-                                  "about": r.get("about"), "at": at})
+                                  "about": r.get("about"), "key": keyed, "at": at})
         for key in seen.keys() - unmet:
             lifted.setdefault(key, at)
     return sorted(({**w, "until": lifted.get(k)} for k, w in seen.items()),
-                  key=lambda w: (w["at"], w["instance"], w["constraint"]))
+                  key=lambda w: (w["at"], w["instance"], w["constraint"], w["key"]))

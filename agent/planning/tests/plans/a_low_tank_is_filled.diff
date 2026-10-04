@@ -27,13 +27,13 @@
 +  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
-+  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 0 ] .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:expanded true .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:met false .
-+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 0 ] .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
 +  plan:keeper.in_range.pursued.tank1 a planning:PlanGraph .
 +  plan:keeper.in_range.pursued.tank1 orexis:arrivedBy orexis:Derived .
@@ -67,7 +67,7 @@
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:expanded true .
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:met false .
-+  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
++  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 5 ] .
 +  possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank1 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
