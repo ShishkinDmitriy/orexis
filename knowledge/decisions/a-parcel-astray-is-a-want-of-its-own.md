@@ -13,8 +13,9 @@ description: >-
   van, which the key cannot give since a parcel is a filling value of both vans' Pick. Closed the
   same day (#893): the estimate was the desire's and counted every parcel, so a want per parcel
   paid for the other van's forks - 61 against 13; the derivation now writes each want's estimate
-  with `$this` bound to its parcel, and a want reads its own drives - 37 against 13, the rest the
-  one scope's.
+  with `$this` bound to its parcel, and a want reads its own drives - 37 against 13. The estimate
+  then counted the pick and the drop beside the drives (#898) - 23 against 13, and the ten left
+  are the one scope's.
 status: accepted
 timestamp: 2026-10-04T18:00:00Z
 ---
@@ -50,6 +51,7 @@ container; the figures are in [measure-the-search](/runbooks/measure-the-search.
 | the same, budget 1024 | one | 674 | 325 | `Satisfied`, ten steps | 85 s |
 | the block about `sh:this`, the desire's estimate, budget 128 | two, one per parcel | 90 | 61 and 64 | two of five steps | 0.55 s |
 | the same, each want's estimate bound to its parcel (#893) | two | 90 | 37 and 37 | two of five steps | 0.41 to 0.45 s |
+| the same, the estimate counting the pick and the drop (#898) | two | 50 | 23 and 23 | two of five steps | 0.20 to 0.22 s |
 | either van and its parcel alone | one | 17 | 13 | five steps | 0.09 s |
 
 The one want is the product: the estimate, drives owed, falls by one for either van's drive toward
@@ -81,11 +83,18 @@ test holds each want's figure to the van alone's.
 
 Measured, alternated in one session ([measure-the-search](/runbooks/measure-the-search.md)): each
 want's weighings fell from 61 and 64 to 37, and `remaining` at the present from six to three. Not to
-13, and the 24 left are not the estimate's to take: every world a search opens admits the other van's
-drives, and a candidate admitted is weighed before its estimate is read, so the estimate refuses to
-open those worlds and cannot refuse to weigh them. Sixteen of the 37 were reached by the other van.
-That is the two-vans seam of [a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md),
-unchanged. Refused here: binding the want's `planning:keyedBy` into the select as well — the key is
+13; and this section first said the 24 left were not the estimate's to take, since every world a
+search opens admits the other van's drives and a candidate admitted is weighed before its estimate
+is read. That was right about weighing and wrong about the figure: the select counted the drives
+and not the pick or the drop, admissible and loose by two for a standing parcel, so the plan's own
+chain stood at three and four on the frontier where the other van's drive stood at four, and the
+ties were opened in turn — sixteen of the 37 reached by the other van, eight more of the own van's
+reached through them. Counting the pick and the drop (#898) each want reads five at the root, its
+plan's own cost, its chain stands at five throughout and the other van's worlds at six, and the
+search weighs 23: the van alone's 13 and the other van's two drives admitted in each of the five
+worlds it opens. Those ten are what the two-vans seam of
+[a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md) costs, and the
+seam is unchanged. Refused here: binding the want's `planning:keyedBy` into the select as well — the key is
 a tuple of terms the derivation reads off the offending value, no select reads one and no token
 names it, and a token nobody reads is annotation; the first estimate that needs a bed rather than a
 parcel decides how it is spelled.

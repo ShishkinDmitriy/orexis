@@ -246,10 +246,58 @@ reached by the other van's move; with the desire's estimate the other van's driv
 one, so those worlds tied the frontier at the plan's own cost and were opened in turn, and 29 of
 61 were the other van's. The other van's drive now costs one and saves nothing, so its worlds stand
 at the plan's cost or past it and are opened only where the tie-break reaches them before the plan
-is found. What would take the 24 away is the two-vans seam of a-scope-is-a-predicate-on-a-key, not
-a better estimate. On the corridor the searches no longer visit a world with two vans on one cell
-— none of 140, against four of 118 — and the two still meet on `c2_1` when the plans are walked,
-which is the finding that mattered and is unchanged.
+is found. This section first read the whole 24 as the one scope's price and said a better estimate
+could not take it away, which the next section found wrong by fourteen: the estimate counted the
+drives and not the pick or the drop, and the slack was where the ties came from. On the corridor
+the searches no longer visit a world with two vans on one cell — none of 140, against four of 118
+— and the two still meet on `c2_1` when the plans are walked, which is the finding that mattered
+and is unchanged.
+
+# The dispatcher: the pick and the drop counted (2026-10-04, #898)
+
+`courier:drivesOwed` summed the drives a parcel still needed and nothing else — admissible, and loose
+by one for a carried parcel and two for a standing one, since every courier action costs one and a
+parcel not at its door is dropped exactly once, one not yet carried picked exactly once. The select
+now adds them. The cases above re-measured, the two trees alternated twice in one session on the
+development container, medians of five; every count was identical across the four rounds, and the
+before tree reproduces the section above exactly. `remaining` is what each want's estimate read in
+the present ground, beside what the plan it got spent:
+
+| world | estimate | candidates | weighings per want | reached by the other van | `remaining` | plan spent | pass |
+|---|---|---|---|---|---|---|---|
+| both vans, apart | the drives alone (#893) | 90 | 37 and 37 | 16 and 16 | 3 and 3 | 5 and 5 | 439 ms, then 415 (min 426, 390) |
+| both vans, apart | the drives, the pick and the drop | 50 | 23 and 23 | 10 and 10 | 5 and 5 | 5 and 5 | 220 ms, then 204 (min 204, 185) |
+| either van and its parcel alone | the drives alone | 17 | 13 | — | 3 | 5 | 91 to 106 ms |
+| either van and its parcel alone | with the pick and the drop | 17 | 13 | — | 5 | 5 | 81 to 98 ms |
+| the corridor | the drives alone | 140 | 58 and 58 | 22 and 22 | 3 and 3 | 5 and 5 | 835 ms, then 869 (min 741, 806) |
+| the corridor | with the pick and the drop | 68 | 33 and 33 | 15 and 15 | 5 and 5 | 5 and 5 | 290 ms, then 302 (min 273, 293) |
+| the courier's own delivery, `world/courier/` | the drives alone | 45 | 26 | — | 6 | 8 | 143 ms, then 169 |
+| the courier's own delivery | with the pick and the drop | 45 | 26 | — | 8 | 8 | 162 ms, then 167 |
+
+**Of the 24 over the van alone, 14 were the estimate's and 10 are the one scope's.** At the root each
+want's estimate now reads what its plan will cost, five, and every world on the plan's own chain
+stands at five too: the drive toward the parcel costs one and saves one, the pick costs one and turns
+the standing parcel's two into the carried parcel's one, the drop costs one and saves the last one.
+The other van's drive costs one and saves nothing, so its worlds stand at six and are never opened
+before the plan is found. They are still admitted and weighed — two drives of the other van in each
+of the five worlds the search opens, ten — and that is the whole of what the one scope now costs:
+23 is the van alone's 13 plus those ten. With the drives alone the plan's chain stood at three and
+four, the other van's worlds at four, and the ties were opened in turn: sixteen of the other van's
+and, reached through them, eight more of the own van's, which is the fourteen. The two-vans seam of
+[a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md) carries the ten.
+
+**The courier alone does not move**, and that is the measurement's other half: with one van, every
+step of the plan keeps the frontier key where it is and every step off it raises it by two, under
+either estimate; the pick and the drop shift the key by the same amount at every world of a stretch,
+so the order the frontier opens in is the same and the 45 candidates are the same 45. The bench's
+`courier_corner`, its fixture brought to the domain's text, ran 476 queries and 169 updates on both
+trees — the count does not drift — at 150 and 144 ms before against 155 and 159 after, which is
+inside one session's noise. The tower's estimate is hanoi's and is untouched.
+
+**The promise is a gate now.** `world/dispatcher/tests/test_dispatcher.py` and
+`world/courier/tests/test_courier.py` each hold the `planning:remaining` written at the present
+ground to at most what the plan spent, over the shipped dispatcher, its corridor, a van alone and
+the courier's delivery; broken by ten on purpose, every case went red at that line.
 
 **Both vans on one cell at a pass's start** — van B posed on van A's cell: the aversion reads unmet
 for each van, one want `no_cell_holds_two_vans.pursued` is minted, about both vans, and a one-step

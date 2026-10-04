@@ -8,7 +8,11 @@ mechanism — a search that derives a want to resolve a conflict — is not buil
 - two parcels astray are two wants, each named for its parcel and planned alone, because the
   domain's shape says each block is about the parcel itself (a-parcel-astray-is-a-want-of-its-own);
   each carries the estimate bound to its parcel, so the other van's drive brings it no nearer and is
-  opened only where it ties (#893); both are delivered in one pass;
+  opened only where it ties (#893), and the estimate counts the pick and the drop beside the drives,
+  so at the root it reads what the plan will cost and nothing ties (#898); both are delivered in one
+  pass;
+- a want's estimate never overstates what its plan cost — the one promise an estimate makes, held
+  here as a gate over the shipped world, the corridor and a van alone;
 - on a corridor, each plan drives its van through the shared cell at its third step, the two walk in
   lockstep, and the present holds two vans on that cell for one act — which nothing sees, since a
   desire is weighed in the planner's pass and the walk comes after it;
@@ -66,6 +70,9 @@ _REMAINING_Q = """
 SELECT ?for ?left WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?x a planning:Weighing ; planning:for ?for ; planning:weighs ?g ;
     planning:remaining ?left . ?g a planning:GroundGraph } }"""
+#  WHAT EACH WANT'S PLAN SPENT — the cost the search found, which the estimate at the root may never exceed.
+_COSTS_Q = """
+SELECT ?want ?spent WHERE { GRAPH ?p { ?p a planning:Plan ; planning:for ?want ; planning:spent ?spent } }"""
 _WORLDS_Q = "SELECT ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph } }"
 #  TWO VANS ON ONE CELL, in one graph's facts: the vans' kinds are public and the world's facts its own.
 _SHARED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
@@ -172,6 +179,10 @@ def _remaining(im) -> dict[str, float]:
     return {_local(r["for"]): float(r["left"]) for r in rows(im, _REMAINING_Q, ())}
 
 
+def _costs(im) -> dict[str, float]:
+    return {_local(r["want"]): float(r["spent"]) for r in rows(im, _COSTS_Q, ())}
+
+
 def _shared(store, graphs) -> dict[str, list[str]]:
     """Per graph among `graphs`, the cells two vans stand on in it — only those holding one."""
     found = {_local(g): sorted(_local(r["cell"]) for r in rows(store, _SHARED_Q, (), w=g)) for g in graphs}
@@ -223,13 +234,15 @@ def test_the_boot_says_what_each_graph_is_and_two_vans_are_one_scope(ticking):
 
 def test_apart_two_parcels_are_two_wants_planned_alone_and_each_estimate_is_its_parcels(ticking, tmp_path):
     """Two wants, one per parcel, each a five-step plan over its own van and both delivered in one pass.
-    EACH WANT'S ESTIMATE IS ITS PARCEL'S: in the present ground it reads what the van alone reads,
-    three drives, where the desire's select — every parcel — read six (#893). What the one scope
-    still costs is the other van's moves: every world a want's search opens admits them, a candidate
-    admitted is weighed, and the estimate can refuse to OPEN a world and never to weigh it — so each
-    want weighs worlds the other van's drive reached, and more worlds than the van alone. Measured:
-    37 and 37 against 13, where the desire's estimate cost 61 and 64. The day the vans are two scopes
-    the other van's worlds go, and the finding in measure-the-search is to be rewritten."""
+    EACH WANT'S ESTIMATE IS ITS PARCEL'S: in the present ground it reads what the van alone reads —
+    five, the drive, the pick, two drives and the drop, which is the plan's own cost — where the
+    desire's select, every parcel, read the sum (#893), and the drives alone read three (#898). What
+    the one scope still costs is the other van's moves: every world a want's search opens admits
+    them, a candidate admitted is weighed, and the estimate can refuse to OPEN a world and never to
+    weigh it — so each want weighs worlds the other van's drive reached, and more worlds than the van
+    alone. Measured: 23 and 23 against 13, ten of each reached by the other van, where the drives
+    alone cost 37 and the desire's estimate 61 and 64. The day the vans are two scopes the other
+    van's worlds go, and the finding in measure-the-search is to be rewritten."""
     im = _pass(WORLD)
     assert _wants(im) == {"every_parcel_delivered.pursued.parcel_a": "every_parcel_delivered",
                           "every_parcel_delivered.pursued.parcel_b": "every_parcel_delivered"}
@@ -264,7 +277,9 @@ def test_corridor_each_plan_crosses_the_shared_cell_and_the_present_holds_two_va
     the next pass finds the parcels delivered. This is the measurement #567's mechanism waits on, held
     so it is rewritten when that is built. With the desire's estimate each search forked the other van
     far enough that four of 118 worlds held two vans on one cell; with each want's own (#893) none of
-    the worlds visited does, and the two vans meet on the cell only when the plans are walked."""
+    the worlds visited does, and the two vans meet on the cell only when the plans are walked. The
+    estimate counting the pick and the drop (#898) halves the search again — 33 and 33 weighings over
+    68 candidates against 58 and 58 over 140 — and changes nothing of that finding."""
     corridor = variant(tmp_path, "corridor", CORRIDOR)
     im = _pass(corridor)
     plans, steps = _plans(im), _steps(im)
@@ -282,6 +297,27 @@ def test_corridor_each_plan_crosses_the_shared_cell_and_the_present_holds_two_va
     planner = runtime.parts["planning"].planner
     minted = {w for im in planner.imaginaria.values() for w, d in _wants(im).items() if d == "no_cell_holds_two_vans"}
     assert minted == set(), f"nothing judged the present between the two walks: {minted}"
+
+
+@pytest.mark.parametrize("name, edits", [("apart", {}), ("corridor", CORRIDOR), ("half_a", HALF_A)])
+def test_a_wants_estimate_at_the_present_never_exceeds_what_its_plan_cost(ticking, tmp_path, name, edits):
+    """THE ONE PROMISE AN ESTIMATE MAKES, as a gate: what a want's estimate read in the present ground
+    (`planning:remaining` on the ground's weighing) is at most what the plan the search found spent
+    (`planning:spent` on the plan). An estimate that overstates lets a pass end with a dearer plan
+    than exists, and until #898 nothing in the suite held one to it — the courier's comment said it
+    and eyes checked. Every want with a plan here is judged, and the loop is held to judging at least
+    one, since an empty frontier would pass an `all` over nothing. Here the figure is TIGHT, five
+    against five: the drive, the pick, the two drives and the drop are each certain, and the estimate
+    counts each once."""
+    im = _pass(variant(tmp_path, name, edits) if edits else WORLD)
+    left, costs = _remaining(im), _costs(im)
+    judged = {w: (left[w], costs[w]) for w in costs if w in left}
+    assert judged and set(judged) == {w for w, (outcome, _) in _plans(im).items() if outcome == "Satisfied"}, \
+        f"every want the search found a plan for has an estimate at the present: {left} against {costs}"
+    assert all(estimate <= cost for estimate, cost in judged.values()), \
+        f"an estimate never overstates what the plan cost: {judged}"
+    assert all(estimate == cost for estimate, cost in judged.values()), \
+        f"and here it is tight, each certain step counted once: {judged}"
 
 
 def test_two_vans_on_one_cell_at_a_pass_start_mint_the_aversions_want_and_a_drive_parts_them(ticking, tmp_path):
