@@ -146,6 +146,33 @@ def test_nothing_happened_and_the_next_pass_forks_nothing(monkeypatch, snapshots
     assert (_worlds(planner), _steps(planner)) == (imagined, 3)
 
 
+def _stamp(store, disk: str, at: str) -> None:
+    """The world re-stamps a disk's row with the instant it was seen, as sensing re-stamps an
+    observation — a fact in the state graph whose predicate no action or desire reads."""
+    (row,) = rows(store, f'''SELECT ?d ?g WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph }}
+        GRAPH ?g {{ ?d ?p ?o }} FILTER(STRENDS(STR(?d), "{disk}") && STRENDS(STR(?p), "#on")) }}''')
+    store.update(f'DELETE WHERE {{ GRAPH <{row["g"]}> {{ <{row["d"]}> <http://www.w3.org/ns/sosa/resultTime> ?t }} }} ; '
+                 f'INSERT DATA {{ GRAPH <{row["g"]}> {{ <{row["d"]}> <http://www.w3.org/ns/sosa/resultTime> "{at}" }} }}')
+
+
+def test_a_reading_re_stamped_with_its_instant_is_no_surprise(monkeypatch, snapshots):
+    """Every reading re-stamps its observation with the instant it arrived at, and no rule reads
+    the instant; hashed whole, the grower's cone went every ten minutes with the soil and the
+    air unchanged (2026-10-03). A world is hashed within what is read, so a fact no text reads is not
+    what the present differs by: the cone is kept and nothing is forked."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store, planner = _two_disks(snapshots, held=False)
+    _stamp(store, "disk_1", "2026-01-01T12:00:00Z")
+    planner.plan(snapshots.NOW)
+    imagined, steps = _worlds(planner), _steps(planner)
+    assert steps == 3
+    _stamp(store, "disk_1", "2026-01-01T12:01:00Z")
+    later = snapshots.NOW + timedelta(minutes=1)
+    monkeypatch.setattr(clock, "now", lambda: later)
+    planner.plan(later)
+    assert (_worlds(planner), _steps(planner)) == (imagined, 3)
+
+
 def test_a_step_taken_as_predicted_is_planned_on_from_the_kept_cone(monkeypatch, snapshots):
     """The plan's first move is taken; the next pass finds that world to be the present, and the
     rest of the plan is read off the cone beneath it without a fork."""

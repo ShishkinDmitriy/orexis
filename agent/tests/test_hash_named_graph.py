@@ -121,3 +121,34 @@ def test_a_graph_the_store_never_heard_of_hashes_like_an_empty_one(store):
     since a case's graphs are the ones it writes."""
     assert hash_named_graph(store, "urn:test:nothing")
     assert hash_named_graph(store, "urn:test:nothing") == hash_named_graph(store, "urn:test:else")
+
+
+def test_hashed_within_a_scope_a_fact_outside_it_is_not_where_the_world_stands(store):
+    """Two worlds that differ only in a fact whose predicate the scope does not name are one
+    place within that scope and two without. The case the search met: every reading re-stamps
+    its observation with the instant it arrived at, no rule reads the instant, and hashed
+    whole every reading was a surprise to the re-root (2026-10-03, the greenhouse and the
+    terrace). No scope said hashes whole, as before."""
+    update(store, "INSERT DATA { GRAPH <urn:test:then> { <urn:disk> <urn:on> <urn:peg> . "
+                  '<urn:disk> <urn:seenAt> "2026-10-03T08:52:46Z" } }')
+    update(store, "INSERT DATA { GRAPH <urn:test:now> { <urn:disk> <urn:on> <urn:peg> . "
+                  '<urn:disk> <urn:seenAt> "2026-10-03T09:12:45Z" } }')
+    within = frozenset({"urn:on"})
+    assert hash_named_graph(store, "urn:test:then", within) == hash_named_graph(store, "urn:test:now", within)
+    assert hash_named_graph(store, "urn:test:then") != hash_named_graph(store, "urn:test:now")
+    assert _row(store, "urn:test:now") == [hash_named_graph(store, "urn:test:now")], "one row, the last asked"
+
+
+def test_within_a_scope_a_type_fact_counts_by_its_class(store):
+    """The partition keys a type pattern by its CLASS — `?x a hanoi:Peg` reads `hanoi:Peg`, not
+    `rdf:type` — so a scope names classes, and an effect may write one: the market's construct
+    typed nodes. Two worlds differing only in a type the scope names are two places; differing
+    in a type it does not name, one."""
+    a = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"
+    update(store, f"INSERT DATA {{ GRAPH <urn:test:bare> {{ <urn:r> <urn:on> <urn:v> }} }}")
+    update(store, f"INSERT DATA {{ GRAPH <urn:test:round> {{ <urn:r> <urn:on> <urn:v> ; {a} <urn:Round> }} }}")
+    update(store, f"INSERT DATA {{ GRAPH <urn:test:other> {{ <urn:r> <urn:on> <urn:v> ; {a} <urn:Unread> }} }}")
+    within = frozenset({"urn:on", "urn:Round"})
+    bare, typed, other = (hash_named_graph(store, f"urn:test:{g}", within) for g in ("bare", "round", "other"))
+    assert typed != bare, "a type the scope names is a fact the world stands by"
+    assert other == bare, "and one it does not name is not"

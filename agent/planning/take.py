@@ -131,9 +131,11 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"""
 
 
 
-def take(store, cand: str, me: str, *, memo=None) -> bool:
+def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = None) -> bool:
     """Fork the world `cand` reaches and write its row. False, and nothing made, where the
-    candidate's effect changes nothing in the world it leaves.
+    candidate's effect changes nothing in the world it leaves. `within` is what a world of this
+    imaginarium is identified by, and the child is hashed within it as `lay_ground` hashed its
+    ground — or the two never match.
 
     WHAT THE STEP COSTS AND HOW LONG IT TAKES TO LAND are asked of the world it is taken IN,
     before anything is applied — a cost read off the state it is about to change would answer
@@ -171,7 +173,7 @@ def take(store, cand: str, me: str, *, memo=None) -> bool:
     #  the row, and the world carries it on, so nothing here counts.
     update(store, bind(_WORLD_U, world=child, cand=cand,
                        kinds=Raw(" , ".join(f"<{k}>" for k in kinds)),
-                       hash=Raw(f'"{digest_of(store, child)}"'),
+                       hash=Raw(f'"{digest_of(store, child, within)}"'),
                        spent=binding["spent"] + cost, start=instant(start), end=instant(end), minted=minted))
     return True
 

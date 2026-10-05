@@ -23,7 +23,8 @@ because what this names is how far anything an agent does can reach.
 The consequence is about [wants](/domain/planning/desire.md), each placed in the scope its met-test reads. Two wants whose views lie in
 different scopes **cannot contradict**: no action serving one writes a fact the other reads,
 so pursuing one can never move the other. That is what would let an agent plan them apart, one
-[cone](/domain/planning/cone.md) each, and simply concatenate the plans.
+[cone](/domain/planning/cone.md) each, and simply concatenate the plans. A scope's members
+are also among what that cone's worlds are hashed within.
 
 # Proven, never declared
 

@@ -23,6 +23,17 @@ middle prediction restated the present — three boundaries, two grounds. That i
 judging: a desire is asked once per DISTINCT ground rather than once per boundary, so a store
 thick with predictions that say nothing new costs a pass nothing.
 
+**A PERIOD IS TOLD FROM THE ONE BEFORE IT BY EVERYTHING A GROUND HOLDS, AND ITS ROW'S HASH IS
+TAKEN WITHIN WHAT IS READ.** Two questions, and they were one digest until the hash was narrowed.
+The hash on a ground's row is what `reroot` finds the present by, so it reads only what some
+text reads — a reading's instant, which none does, is not what the present differs by. Whether a
+boundary is a period at all is asked of the whole graph, as it always was. Collapsing by what is
+read too was built and struck the same day (2026-10-05): once a plan for a foreseen crossing is
+adopted the prediction answers it, every ground ahead reads inside again and differs from the
+present only by a number, so all of them folded into the present; the want minted for the
+crossing was then weighed in the present ground, read met there, and its intention was ended as
+reached before the dose was due — #858 again, by another door.
+
 **WHAT IS BUILT IS CLASSIFIED, NOT RETURNED.** Each ground is a graph with the stretch it holds
 over, `planning:GroundGraph`, so a reader asks `graphs_of(store, GROUND_GRAPH, at=T)` and is
 handed the one world standing then. A list handed back would be a second place the answer lived
@@ -37,7 +48,7 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent.ontology import OREXIS, STATE
-from agent.hash_named_graph import hash_named_graph
+from agent.hash_named_graph import digest_of, hash_named_graph
 from agent.store import fork, Raw, add_quads, bind, catalogue_of, classify, revisions_of, forget_graph, graphs_of, quads, rows, update
 
 from .ontology import GROUND_GRAPH
@@ -79,8 +90,13 @@ ORDER BY ?at ?prediction"""
                   for r in rows(store, said, ()))
 
 
-def lay_ground(store: ox.Store, now: datetime) -> list[str]:
+def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None) -> list[str]:
     """Build one ground world per period the agent can see, classified with its stretch.
+
+    `within` is what a world of this imaginarium is identified by — the Planner's to say, from
+    what its texts read — and the hash on each ground's row is taken within it: a reading's
+    instant, which no text reads, is then not a fact the present differs by. None hashes whole.
+    Which boundary is a period is asked of the whole graph either way.
 
     The present is the first, and is the agent's readings as they stand. Each prediction that
     applies later is run against the ground standing before it and the diff applied; a ground
@@ -96,7 +112,7 @@ def lay_ground(store: ox.Store, now: datetime) -> list[str]:
 
     ahead = _foreseen(store)
     here = _present(store, now)
-    made, marks = [here], hash_named_graph(store, here)
+    made, marks = [here], _marked(store, here, within)
     opened = [now]
     for at, group in _by_instant(ahead):
         if at <= now:
@@ -119,7 +135,7 @@ def lay_ground(store: ox.Store, now: datetime) -> list[str]:
             #  the hash below reaches the same answer, having laid the graph first.
             continue
         there = _fork(store, here, _name(at), added, retracts)
-        mark = hash_named_graph(store, there)
+        mark = _marked(store, there, within)
         if mark == marks:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
             #  instant answers what the one before it answered and is not a period of its own.
@@ -153,6 +169,16 @@ def _present(store: ox.Store, now: datetime) -> str:
         update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                        f"WHERE {{ GRAPH <{source}> {{ ?s ?p ?o }} }}")
     return name
+
+
+def _marked(store: ox.Store, ground: str, within: frozenset | None) -> str:
+    """Write the ground's hash on its row, within what is read where that is said, and answer
+    the digest of everything it holds — what a period is told from the one before it by. One
+    digest where nothing is said, since the two are then the same."""
+    if within is None:
+        return hash_named_graph(store, ground)
+    hash_named_graph(store, ground, within)
+    return digest_of(store, ground)
 
 
 def _by_instant(predictions) -> list[tuple[datetime, list[tuple[str, str | None]]]]:
