@@ -352,6 +352,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **The imaginarium outlives the pass, and the present is identified in it by hash** — `reroot`
   keeps the cone under the match and drops the rest; a surprise matches nothing; a name is never
   trusted (the-future-is-a-cone-and-the-present-is-identified-in-it).
+- **A world is hashed within what is read, and a fact nothing reads is not where a world stands** —
+  a reading's instant made every reading a surprise to the re-root, and a number inside its band is
+  no side; a period ahead is still told by the whole ground, since folded by what is read a
+  foreseen plan lost its intention before its step was due ([cone](knowledge/domain/planning/cone.md)).
 - **What crosses into the imaginarium is taken back before it crosses again, and what the store
   made for itself stays.**
 - **A possible world is named by a mint number and the path to it is rows** — a name that joined
