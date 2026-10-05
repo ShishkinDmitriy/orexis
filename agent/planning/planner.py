@@ -241,6 +241,12 @@ SELECT (SUM(IF(?outcome = planning:Satisfied, 1, 0)) AS ?satisfied)
        (SUM(IF(?outcome = planning:NoCandidate, 1, 0)) AS ?noCandidate)
 WHERE { GRAPH ?plan { ?p a planning:Plan ; planning:outcome ?outcome } }"""
 
+#  AND THE ACHIEVER IS NEVER A REFUSED WORLD, with no filter to say so: a refusal REPLACES the
+#  verdict — `planning:met` and `planning:open` are taken back and `planning:refused` names the
+#  invariant — so a refused weighing matches neither the frontier's pattern nor the achiever's. It
+#  was a `FILTER NOT EXISTS { ?y planning:refused ?by }` inside the `MIN` subselect, and that cost a
+#  quarter of every pass on the search bench — hanoi, the courier, holders with no invariant at all
+#  — measured alternated against the tree before (#902).
 _FRONTIER_Q = """
 SELECT ?w ?spent ?remaining ?minted ?weighing ?best ?used WHERE {
   GRAPH $cat { ?weighing a planning:Weighing ; planning:for $want ; planning:open true ; planning:weighs ?w .
@@ -260,6 +266,39 @@ _CLOSE_U = """
 DELETE { GRAPH ?cat { $weighing planning:open ?o } }
 INSERT { GRAPH ?cat { $weighing planning:expanded true } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $weighing planning:open ?o } }"""
+
+#  THE BOUND (#902): every state invariant the holder holds — a desire in its `planning:unmetWhen`
+#  form, the aversion's honest form, which is what `constraint.md` says a constraint is — with the
+#  one select the avoided state carries, read where a desire lives and where a domain's shapes do.
+_INVARIANTS_Q = """
+SELECT ?d ?text WHERE { $holder planning:holds ?d . ?d a planning:Desire ; planning:unmetWhen ?node . ?node sh:select ?text }
+ORDER BY ?d"""
+
+#  THE WORLD A WEIGHING IS OF, where it is a possible world — a candidate passed over weighs the
+#  candidate, and reaches nothing the bound could refuse.
+_REACHED_Q = """SELECT ?w WHERE { GRAPH $cat { $x planning:weighs ?w . ?w a planning:PossibleGraph } }"""
+
+#  WHETHER `for` HAS BEEN WEIGHED IN `world`, and by which node — asked by the rows and never by
+#  the node's spelling, since a name is for eyes.
+_WEIGHED_IN_Q = """SELECT ?x WHERE { GRAPH $cat { ?x planning:weighs $world ; planning:for $for } } LIMIT 1"""
+
+#  THE ROWS OF ONE WEIGHING: each violation's instance, constraint, what it is about and the value
+#  that offended — one way of being in the avoided state, which is what a child's weighing is
+#  compared to its parent's by.
+_ROWS_Q = """
+SELECT ?i ?c ?a ?o WHERE {
+  GRAPH $cat { $x planning:violation ?v . ?v planning:instance ?i .
+               OPTIONAL { ?v planning:constraint ?c } OPTIONAL { ?v planning:about ?a } OPTIONAL { ?v planning:offending ?o } } }"""
+
+#  A WORLD REFUSED: the verdict replaced — `planning:open` and `planning:met` taken back, so the
+#  weighing is off the frontier and never an achiever by its rows alone — and `planning:refused`
+#  naming the invariant the world newly entered. The want's violation rows stand, so a refused
+#  weighing with none is a world the want was met in and could not be reached through.
+_REFUSE_U = """
+DELETE { GRAPH ?cat { $weighing planning:open ?o . $weighing planning:met ?m } }
+INSERT { GRAPH ?cat { $weighing planning:refused $by } }
+WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $weighing planning:weighs ?w .
+                      OPTIONAL { $weighing planning:open ?o } OPTIONAL { $weighing planning:met ?m } } }"""
 
 
 class Planner:
@@ -451,7 +490,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 if want in walking:
                     continue                # a want a plan is walking is not planned again
                 self.search(store, want, budget=self.budget, only=only, elsewhere=elsewhere, memo=memo, scope=_scope,
-                            within=within)
+                            within=within, at=at)
                 searched.add(want)
             if lap:
                 lap("search")
@@ -586,7 +625,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
     def search(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
                elsewhere=frozenset(), memo: Memo | None = None, scope: str | None = None,
-               within: frozenset | None = None) -> None:
+               within: frozenset | None = None, at: datetime | None = None) -> None:
         """Plan for `want` from the ground holding at its instant — the present, or the one a want
         minted for a foreseen instant names (#858) — spending at most `budget` candidates, and
         write the plan — whatever the search concluded, since an empty plan is an answer and
@@ -613,7 +652,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 weigh(store, want, pair["about"], memo=memo)             # the root: the ground at its instant
         ceiling = _spent(store, want, memo) + budget
         while (spent := self.expand(store, want, budget=ceiling, only=only, elsewhere=elsewhere, memo=memo,
-                                    within=within)) is not None \
+                                    within=within, at=at)) is not None \
                 and spent < ceiling:
             pass
         extract_plan(store, want)
@@ -673,11 +712,14 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
     # --- one iteration -------------------------------------------------------------------
 
     def expand(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
-               elsewhere=frozenset(), memo: Memo | None = None, within: frozenset | None = None) -> int | None:
+               elsewhere=frozenset(), memo: Memo | None = None, within: frozenset | None = None,
+               at: datetime | None = None) -> int | None:
         """Open the top of `want`'s frontier: admit what it admits, take each candidate this
-        want has not yet weighed, weigh what it reached, close the world's weighing. What the
-        want's search has spent afterwards, in candidates weighed — or None where there was
-        nothing to open: the frontier is empty, or the cheapest achiever refuses its top.
+        want has not yet weighed, weigh what it reached — for the want, and for every state
+        invariant the holder holds that the scope's actions can write — close the world's
+        weighing. What the want's search has spent afterwards, in candidates weighed — or None
+        where there was nothing to open: the frontier is empty, or the cheapest achiever refuses
+        its top.
 
         THE BOUND IS HERE and not in the loop, because a case of one iteration must not open
         what the search would not. It is on the top's spent PLUS what its want's estimate says
@@ -689,6 +731,20 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         the expansion was cut by the budget and this is the resumption — is not offered by
         `unweighed`. The weighing is closed only when every candidate was weighed, so a cut
         expansion stays open and is taken up next time.
+
+        AND THE INVARIANTS BOUND THE WORLDS (#902): a world in which an invariant's weighing
+        carries a violation row — instance, constraint, offending — with no equal in its parent's
+        weighing has NEWLY ENTERED the avoided state, and is refused: `planning:open` and
+        `planning:met` taken back and `planning:refused` naming the invariant, so the frontier never
+        picks it and the achiever read never finds it, whatever the want's own test said there — a
+        verdict replaced rather than filtered, since a filter on the frontier's read cost every
+        holder a quarter of its pass. Never-newly-enter, the
+        0.1.0 law's pruning at expansion: an invariant already unmet in the parent bounds nothing
+        a repair does, since repair removes a row and enters none, and two vans posed on one cell
+        still mint their want and a drive parts them. The invariants are the holder's desires in
+        the avoided-state form whose select reads a predicate some action of the scope writes
+        (`constraint.md`); a holder with none pays one query a pass
+        (one-mind-couples-the-wants-a-constraint-can-make-collide).
         """
         memo = Memo() if memo is None else memo
         cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
@@ -697,6 +753,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                            and float(top["spent"]) + float(top["remaining"]) >= float(top["best"])):
             return None
         world = top["w"]
+        invariants = remember(memo, ("invariants",), lambda: _invariants(store, self.uri, only, at or clock.now()))
         admit(store, world, self.uri, only=only, elsewhere=elsewhere, memo=memo)
         spent = int(top.get("used") or 0)
         for pair in unweighed(store, for_=want, leaving=world, memo=memo):
@@ -704,10 +761,32 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 return spent            # cut: the world stays open, to be taken up next time
             if not pair.get("child"):
                 take(store, pair["about"], self.uri, memo=memo, within=within)
-            weigh(store, want, pair["about"], memo=memo)
+            weighing = weigh(store, want, pair["about"], memo=memo)
+            if invariants:
+                self._bound(store, weighing, world, invariants, memo)
             spent += 1
         update(store, bind(_CLOSE_U, weighing=Raw(f"<{top['weighing']}>")))
         return spent
+
+    def _bound(self, store: ox.Store, weighing: str, parent: str, invariants: list[str], memo: Memo) -> None:
+        """Refuse the world `weighing` is of where some invariant among `invariants` reads a way of
+        being in the avoided state there that it did not read in `parent` — a violation row with no
+        equal in the parent's weighing. Each invariant is weighed in the world by `weigh`, the one
+        judge, and its weighing stands beside the want's with its rows, so a reader can see what
+        was entered; the parent's is weighed too where no pass has yet (a search begun on a bare
+        imaginarium), and read once per pass since a world's rows do not move."""
+        cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
+        reached = rows(store, _REACHED_Q, (), x=Raw(f"<{weighing}>"), cat=cat)
+        if not reached:
+            return                      # a candidate passed over reaches nothing to refuse
+        world = reached[0]["w"]
+        for invariant in invariants:
+            entered = _violations(store, invariant, world, memo) - _violations(store, invariant, parent, memo)
+            if entered:
+                update(store, bind(_REFUSE_U, weighing=Raw(f"<{weighing}>"), by=invariant))
+                log.info("%s: refused %s — it newly enters the state %s avoids: %s", self.id,
+                         world.rsplit("/", 1)[-1], local_of(invariant),
+                         ", ".join(f"({local_of(i)}, {c}, {o})" for i, c, _, o in sorted(entered, key=str)))
 
 
 #  WHAT A WANT'S SEARCH HAS SPENT — every weighing for it but a ground's — before this call.
@@ -755,6 +834,47 @@ def _read_anywhere(beliefs: ox.Store, at: datetime) -> frozenset | None:
                 return None
             out |= {str(p) for p in reads}
     return frozenset(out)
+def _invariants(store: ox.Store, holder: str, only, at: datetime) -> list[str]:
+    """The state invariants `holder` holds that a search among the actions `only` must bound its
+    worlds by: every desire in the avoided-state form whose select reads a predicate some action
+    of the scope can write — all actions where `only` is None, a store that scoped nothing. An
+    invariant that reads nothing the scope's actions write is kept by every world the scope
+    makes, and is not weighed in any; one whose select or whose actions' writes cannot be read
+    is weighed, the safe side, as a footprint that cannot be read joins everything. A holder
+    with no invariant pays this one query."""
+    found = rows(store, _INVARIANTS_Q, graphs_of(store, DESIRE, SHAPES), holder=holder)
+    if not found:
+        return []
+    writes: set[str] | None = set()
+    for action, (_, written) in footprint.actions_of(store, at).items():
+        if only is not None and action not in only:
+            continue
+        if written is footprint.ANYTHING:
+            writes = None
+            break
+        writes |= {str(p) for p in written}
+    out = []
+    for r in found:
+        reads = footprint.reads_of_select(r["text"])
+        if writes is None or reads is footprint.ANYTHING or any(str(p) in writes for p in reads):
+            out.append(r["d"])
+    return out
+
+
+def _violations(store: ox.Store, for_: str, world: str, memo: Memo) -> frozenset[tuple]:
+    """The ways `for_` reads the avoided state in `world`, off its weighing there — each row as
+    (instance, constraint, about, offending) — weighing it first where no pass has. Once per
+    pass per world, since a world's rows do not move and a parent is asked once per child.
+    An invariant that could not be judged there wrote no row and bounds nothing, which `weigh`
+    says in the log: a bound that refused every world over a select nobody can read would end
+    every search of the scope, where the derivation's not-judged keeps a want standing."""
+    def read():
+        cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
+        found = rows(store, _WEIGHED_IN_Q, (), world=world, cat=cat, **{"for": for_})
+        node = found[0]["x"] if found else weigh(store, for_, world, memo=memo)
+        return frozenset((r["i"], r.get("c"), r.get("a"), r.get("o"))
+                         for r in rows(store, _ROWS_Q, (), x=Raw(f"<{node}>"), cat=cat))
+    return remember(memo, ("violations", for_, world), read)
 
 
 def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, scopes: dict,

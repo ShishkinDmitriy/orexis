@@ -374,6 +374,74 @@ the pose that found the product's ceiling: both vans on one cell with their parc
 is a joint delivery of thirteen steps that neither 128 nor 512 finds — 32 s at 512 — which is the
 trigger the record's first seam names, pinned `Exhausted` beside the aversion's own one-step want.
 
+# The dispatcher: the invariant weighed in every possible world, and the worlds it refuses (2026-10-05, #902)
+
+The bound [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)
+decided: `Planner.expand` weighs each state [invariant](/domain/planning/constraint.md) of the holder
+whose select reads a predicate the scope's actions write in every possible world it weighs a want in,
+and a world whose weighing carries a violation row its parent's lacks is refused — `planning:refused`
+on the want's weighing in place of its verdict, `planning:open` and `planning:met` taken back, so the
+frontier's and the plan's reads pass it by unfiltered. Measured on the development container, `origin/main` at `3cd44687`
+exported to the scratchpad and the tree with the bound alternated per round in one session, five rounds,
+one pass of the Planner over the booted world as `world/dispatcher/tests/test_dispatcher.py` builds it;
+candidates and weighings as the sections above count them, refusals the weighings carrying
+`planning:refused`, two-van worlds every possible world holding two vans on a cell, whether or not the
+search ever opened it. The counts did not move between rounds on either tree.
+
+| pose | tree | budget | candidates | weighings per want | refused | two-van worlds | plan | pass, median of five (min) |
+|---|---|---|---|---|---|---|---|---|
+| apart, as shipped | before | 256 | 228 | 148 | - | 0 | one of ten steps | 2406 ms (2304) |
+| apart, as shipped | after | 256 | 228 | 148, and the aversion in 148 | 0 | 0 | the same | 2786 ms (2599) |
+| the corridor | before | 512 | 296 | 216 | - | 18, none refused | one of ten steps | 5348 ms (4556) |
+| the corridor | after | 512 | 286 | 210, and the aversion in 210 | 13 | 16, 13 refused and 3 passed over by hash; none opened | the same, walked with two vans on no cell | 5378 ms (4885) |
+| van B parked on `c2_1`, parcel A owed at `c3_1` from `c1_1` | before | 128 | 66 | 58 | - | 11, judged by nobody | five steps THROUGH van B | 353 ms (310) |
+| the same | after | 128 | 56 | 49, and the aversion in 49 | 7 | 8, 7 refused; none opened | five steps BY VAN B, which stands beside the parcel; van A never moves | 466 ms (316) |
+| parcel A aboard van A at `c1_1`, van B parked on `c2_1` | before | 128 | 26 | 24 | - | 5 | three steps through van B | 113 ms (93) |
+| the same | after | 128 | 66 | 52, and the aversion in 52 | 5 | 8, 5 refused; none opened | four steps: van B aside, van A through — the route round is five | 341 ms (307) |
+| both vans on `c0_0` | before | 128 | 4 and 128 | 4 and 70 | - | 16 | the aversion's one-step drive; the joint `Exhausted` | 693 ms (600) |
+| both vans on `c0_0` | after | 128 | 4 and 128 | 4 and 75, and the aversion in 75 | 0 and 7 | 14 | the same | 865 ms (760) |
+| both vans on `c0_0` | after | 512 | 4 and 512 | 4 and 263 | 0 and 11 | 24 | the joint still `Exhausted`, 39 s | one run |
+| the vans on disjoint grids | before | 128 | 27 and 27 | 23 and 23 | - | 0 | two of five steps | 270 ms (169) |
+| the vans on disjoint grids | after | 128 | 27 and 27 | 23 and 23, and the aversion in 42 | 0 | 0 | the same | 297 ms (209) |
+
+**What a world costs.** `Planner._bound` timed over one pass, the aversion's weighing and the two
+row reads inside it: 0.70 ms a candidate on the corridor (199 ms of a 4461 ms pass, 286 calls) and
+0.72 ms on the parked van (40 ms of 293, 56 calls) — against the 0.56 ms the record measured for the
+weighing alone, the rest being the child's rows read once and the parent's read once per pass. The
+invariant's select is compiled once per pass as a want's met-test is (`weigh` memoises it under
+`("select", desire)`), and the invariants of a scope are found once per pass. A holder with no
+invariant pays the one query that finds none, two round trips: the search bench
+(`agent/planning/tests/test_bench.py`) alternated twice read 60, 154 and 162 ms before against 56, 149
+and 160 after, then 42, 159 and 150 against 46, 129 and 170 — two disks, three disks, the courier's
+corner, 220 queries a pass where 218 were — and the pass bench (`world/greenhouse/tests/test_bench.py`)
+read its search lap 62, 29, 90 and 29 ms before against 62, 30, 94 and 23 after, then 51, 23, 79 and 29
+against 55, 29, 91 and 27, its four cases in order, five quads more for the term's declaration; both
+inside the drift the other laps show. **And one representation was refused on this bench:** the
+refusal first kept the want's verdict and filtered the frontier's achiever read and the plan's with
+`FILTER NOT EXISTS { ?y planning:refused ?by }`, and the search bench read 58, 150 and 176 against
+main's 44, 112 and 133, a quarter of every pass for holders with no invariant at all; with the filter
+struck the same tree read 45, 124 and 135. So the refusal replaces the verdict, and the reads carry no
+filter.
+
+**What the bound did.** On the corridor it refused the thirteen worlds in which a van is driven onto
+the other's cell and opened none of the sixteen that hold two vans — the other three were forked and
+passed over by hash as repeats of a refused one — and the plan is the one found before, since the
+colliding interleavings were never on the shortest path: ten candidates fewer, no step changed, and
+the walk now shares no cell by promise. On the shipped pose it refused nothing, because no world of
+it collides, so 228 stands and the default budget of 128 still does not suffice; neither did the
+corridor's 286 fall under 256, so the tests' budgets stand. **The parked van was the surprise.** The
+record expected the seven-step route round; the one mind holding both vans found better twice over —
+with the parcel on the ground beside van B it delivers with van B, five steps and van A never moves,
+and with the parcel already aboard van A it moves van B aside first and drives through, four steps.
+The route round is what a mind holding one van finds. There the estimate reads three and the plan
+costs four: admissible, loose by the step the invariant costs and the parcel does not owe, which the
+estimate test pins as not tight for that pose alone. **The together pose** still mints the aversion's
+want and finds its one-step drive in 4 weighings, since an invariant already unmet in the root bounds
+nothing a repair does; the joint want is still `Exhausted` at 128 and at 512, 39 seconds, so the
+product's seam stands as written. **Disjoint grids** pay the aversion's weighing in all 42 worlds
+though none can hold two vans: the bound reads the invariant's footprint by predicate, and `at` is
+the drive's, where the reach would have told it nothing collides — the record's seam.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

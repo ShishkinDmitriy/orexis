@@ -51,9 +51,10 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    can make collide into one search, and the constraint is a concept of its own with a state
    invariant and a resource as its kinds
    ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md));
-   the constraint's page, its footprint over the reach and the clustering are built (#900), and the
-   bound (#902), the resource in the executor (#903) and reconsideration on a coupled arrival (#905)
-   are its debts; then #568, right-of-way as a lot the market allocates.
+   the constraint's page, its footprint over the reach and the clustering are built (#900), and so
+   is the bound — the invariant weighed in every possible world, a world newly entering it refused
+   (#902); the resource in the executor (#903) and reconsideration on a coupled arrival (#905) are
+   its debts; then #568, right-of-way as a lot the market allocates.
 5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays
    it and the model that phrases a free question, then #862's recalibration walked with a person

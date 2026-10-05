@@ -229,7 +229,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   market and execution; sequencing the elder plan as the younger's ground was refused as the two-minds
   tool used on one (#567, one-mind-couples-the-wants-a-constraint-can-make-collide).
 - **A desire weighed in a ground and a want weighed in a possible world are one judgment at two
-  grains**, and `planning:Weighing` carries the `planning:violation` rows for either.
+  grains**, and `planning:Weighing` carries the `planning:violation` rows for either — and a desire
+  is weighed in grounds to mint and, where it is a state invariant the scope's actions can write, in
+  every possible world to bound: a world whose rows newly enter the avoided state is `planning:refused`,
+  off the frontier and never an achiever, and one already unmet in the root bounds nothing (#902).
 - **A derivation asks nothing the met-tests do not answer** — how far ahead the agent sees is the
   horizons each drift predicts at.
 - **Two readings of one met-test are not a duplicate when the compiler, the source and the cache

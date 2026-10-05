@@ -22,7 +22,9 @@
 #  weighed in no ground. The select projects the cell as `?value`, the offending value, so each
 #  witness says where the two stand; it says nothing of what it is about, so the want minted from
 #  it is about both vans and named for neither, and a one-step plan — either van's drive — parts
-#  them (`tests/test_dispatcher.py`).
+#  them (`tests/test_dispatcher.py`). It is also the world's one STATE INVARIANT: weighed in every
+#  possible world a search here weighs, and a world that newly puts two vans on a cell is refused
+#  (#902), which is what keeps the two parcels' joint plan off the other van's cell.
 
 :dispatcher planning:holds :every_parcel_delivered , :no_cell_holds_two_vans .
 

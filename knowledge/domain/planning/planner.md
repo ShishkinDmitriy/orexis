@@ -27,9 +27,11 @@ achiever refuses the top, or the [budget](/domain/planning/budget.md) is spent. 
 cheapest open world: `admit` writes the candidates its [preconditions](/domain/planning/precondition.md)
 allow, among the scope's actions only; `take` forks each into a world and runs its
 [effect](/domain/planning/effect.md); `weigh` judges the world by the want's met-test and writes
-`planning:met`, `planning:open`, `planning:spent` and `planning:remaining`. The frontier is a query
-over those rows — A\* by reading them — so a search called again takes up where it stopped.
-`extract_plan` then writes the [plan](/domain/planning/plan.md).
+`planning:met`, `planning:open`, `planning:spent` and `planning:remaining`, and judges it by each
+state [invariant](/domain/planning/constraint.md) of the holder the scope's actions can write, so a
+world that newly enters an avoided state is `planning:refused` and taken off the frontier. The
+frontier is a query over those rows — A\* by reading them — so a search called again takes up where
+it stopped. `extract_plan` then writes the [plan](/domain/planning/plan.md).
 
 # Its shape
 
