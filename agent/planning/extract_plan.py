@@ -138,7 +138,10 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontolo
 #  THE GRAPHS A PLAN'S STEPS NAME — what goes when the plan is replaced.
 _STEP_GRAPHS_Q = """SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }"""
 
-#  THE CHEAPEST WORLD WHERE THE WANT IS MET — the plan, where there is one.
+#  THE CHEAPEST WORLD WHERE THE WANT IS MET — the plan, where there is one. A world an invariant
+#  refused (#902) is not among them by its rows: its weighing says `planning:refused` and no
+#  `planning:met`, so a want met only through the avoided state has no plan here and its search
+#  ends `Exhausted`.
 
 _BEST_Q = """
 SELECT ?w ?spent WHERE {

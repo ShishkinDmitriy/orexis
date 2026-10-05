@@ -121,7 +121,15 @@ def couplings(store: ox.Store, holder: str, present: str, now: datetime, *, memo
         log.warning("a construct could not be closed over its precondition; every instance is coupled: %s", exc)
         return Couplings([], {}, anything=True)
     try:
-        _reach(store, texts, default)
+        try:
+            _reach(store, texts, default)
+        except Exception as exc:                            # noqa: BLE001 — unreadable is a finding
+            #  A COMPOSED TEXT THE ENGINE REFUSES is the same finding as one that would not compose:
+            #  a construct whose own WHERE rebinds a parameter the precondition projects —
+            #  `BIND($tank AS ?tank)`, the shape every planning case writes — parses alone and not
+            #  joined, and a pass that died here over it found nothing (#902, measured).
+            log.warning("a construct could not be run over the reach; every instance is coupled: %s", exc)
+            return Couplings([], {}, anything=True)
         parts = _parts(store, [c["text"] for c in constraints], holder, default)
         if parts is None:
             return Couplings([], {}, anything=True)

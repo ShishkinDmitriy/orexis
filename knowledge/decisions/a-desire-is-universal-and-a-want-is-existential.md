@@ -131,7 +131,9 @@ derivation itself wrote — it was
   is what `always` meant and what no reader ever implemented — is the first thing to measure when
   a Desire with a period is first written. Decided 2026-10-05 for the standing aversion: yes, as a
   bound and never a score — a world that newly enters the avoided state is refused
-  ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)).
+  ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)),
+  and built the same day (#902): `Planner.expand` weighs the aversion in every possible world and
+  writes `planning:refused` where its rows are new.
 - **A world cannot state a window on a want it ratifies.** Every want a world authors shares
   `graph/want/asserted`, so per-want periods need per-want graphs, minted at genesis. That is the
   only part of taking this model that is work rather than subtraction. (The authored desires and

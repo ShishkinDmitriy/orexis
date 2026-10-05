@@ -95,6 +95,9 @@ REMAINING = PLANNING + "remaining"
 OPEN = PLANNING + "open"
 EXPANDED = PLANNING + "expanded"
 REPEATS = PLANNING + "repeats"
+#  THE BOUND'S WORD: the state invariant a possible world newly entered, said of the want's
+#  weighing of it, which is then neither on the frontier nor an achiever (#902).
+REFUSED = PLANNING + "refused"
 
 #  A GROUND WORLD: what the agent's own knowledge comes to over ONE PERIOD, materialised in an
 #  imaginarium — the present, and what each prediction makes of it. Classified with a period,

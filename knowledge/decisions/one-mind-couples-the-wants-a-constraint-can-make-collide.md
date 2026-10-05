@@ -12,7 +12,8 @@ description: >-
   the wants of one mind are COUPLED where a constraint's footprint says their plans may interfere,
   one cluster, one want, one search, which finds the joint optimum by construction; a constraint
   is its own concept with two kinds, a state invariant weighed in every possible world and
-  refusing a world that newly enters it, and a resource over committed steps' windows the
+  refusing a world that newly enters it (built, #902 - the corridor's colliding worlds refused and
+  the parked van served or moved rather than driven through), and a resource over committed steps' windows the
   executor honours; a walking want is reconsidered when a want the footprint couples to it
   arrives; two minds optimize alone and meet through what they observe, what they are told and
   what the market allocates. Refused - the derived temporary want; the elder plan laid as the
@@ -113,6 +114,24 @@ are checked in two places:
   unmet in the ground bounds nothing, since repair removes a row and enters none; two vans posed on
   one cell still mint their want and a drive parts them. The parked van is the first instance: the
   eleven worlds refused and the route around found.
+
+  *Built 2026-10-05 (#902), and the last sentence was half right. `Planner.expand` weighs each
+  invariant of the holder whose select reads a predicate the scope's actions write in every world it
+  weighs the want in, and refuses the world whose rows its parent's weighing lacks: `planning:refused`
+  on the want's weighing names the invariant and REPLACES the verdict — `planning:open` and
+  `planning:met` taken back — so the frontier's and the plan's reads pass it by with no filter. The
+  verdict was first kept and the two reads filtered, and the `FILTER NOT EXISTS` inside the
+  frontier's `MIN` subselect cost a quarter of every pass on the search bench, hanoi and the courier
+  included, holders of no invariant; measured alternated, and refused. The refused world and both
+  weighings are KEPT, not forgotten — forgotten, its candidate would be unweighed again and the next
+  iteration would take it again, and kept, a pass can be continued and the runbook can count; the
+  want's own rows stand, so a refused weighing with none is a world the want was met in.
+  On the parked van the worlds through van B are refused, seven of them, and what the one mind finds
+  is not the seven-step route round but a five-step delivery BY VAN B, which stands beside the parcel;
+  with the parcel already aboard van A it moves van B aside and drives through, four steps where the
+  route round is five. The route round was what a mind holding one van would find, and this mind holds
+  both. The estimate is admissible and loose by one there, the step the invariant costs and the parcel
+  does not owe.*
 - *A resource* — one agent drives one van at a time — is a limit on ACTS, not states, and the repo
   can already say it: a committed step is a belief holding over its landing window, so "no two
   committed steps of this driver overlap" is an aversion over committed steps, the same select
@@ -225,6 +244,11 @@ yet — and for the resource, since two windows can overlap only once they have 
 | the shipped pose, coupled by the aversion (#900, built) | 1 | 148 | 228 | 0 | ten-step joint plan, 2.6 s at budget 256, cut short at 128; two apart cost 50 and 0.21 s |
 | the corridor, coupled (#900) | 1 | 216 | 296 | 18 | ten-step joint plan, 5.3 s at budget 512; nothing refuses the 18, the bound being #902's |
 | the vans on disjoint grids (#900) | 2 | 23 and 23 | 50 | 0 | the aversion over the reach yields no row; two wants as before |
+| the corridor, coupled, bounded (#902) | 1 | 210, and the aversion in 210 | 286 | 16, 13 refused and 3 passed over by hash | the same ten-step plan, walked with two vans on no cell; none of the 16 opened |
+| the shipped pose, coupled, bounded (#902) | 1 | 148, and the aversion in 148 | 228 | 0 | unchanged: the aversion reads met in every world and refuses none |
+| van B parked on `c2_1`, bounded (#902) | 1 | 49 | 56 | 8, 7 refused and 1 passed over | a five-step delivery BY VAN B; van A never moves |
+| the parcel aboard van A, van B parked, bounded (#902) | 1 | 52 | 66 | 8, 5 refused | van B steps aside, van A drives through: four steps, the route round five; the estimate reads three |
+| both vans on one cell, bounded (#902) | 2 | 4 and 75 | 128 | 14, 7 refused | the aversion's own want refused nothing, its one-step drive found; the joint want `Exhausted` at 128 as before |
 
 # Seams left open
 
@@ -232,10 +256,28 @@ yet — and for the resource, since two windows can overlap only once they have 
   vans; the footprint keeps the group small and the bound prunes the colliding worlds, and the pass
   is still bounded by its budget in worlds. The first group whose joint plan no budget finds is the
   trigger for the fallback, sequencing or reconciliation, and for measuring which. Measured 2026-10-05:
-  the shipped pose needs 228 candidates and the corridor 296, and both vans posed on one cell with
-  their parcels where they stand — a joint delivery of thirteen steps — is found by neither 128 nor
-  512, the latter in 32 seconds, so the trigger is already in the suite, pinned as `Exhausted` in
-  `world/dispatcher/tests/test_dispatcher.py`.
+  the shipped pose needs 228 candidates and the corridor 296 — 286 once the bound refuses its
+  colliding worlds (#902), since the interleavings it prunes were never on the shortest path, and the
+  shipped pose nothing, since no world of it collides; neither fits the default 128 — and both vans
+  posed on one cell with their parcels where they stand — a joint delivery of thirteen steps — is found
+  by neither 128 nor 512, the latter in 32 seconds, so the trigger is already in the suite, pinned as
+  `Exhausted` in `world/dispatcher/tests/test_dispatcher.py`.
+- **A plan that must pass through a forbidden state has no plan.** The bound refuses a world that newly
+  enters an avoided state whatever the want's verdict there, so a want every route to which crosses
+  the state ends `Exhausted`, and nothing relaxes an invariant for a want that cannot otherwise be met
+  — that would be the search weighing one desire against another by degree, which nothing here does.
+  Checked by reading on 2026-10-05 (#902): the dispatcher is the one shipped world whose holder holds
+  an invariant, and on its grid every cell has a neighbour the other van is not on, so no shipped want
+  is unreachable for it; the courier, the tower, the greenhouse and the market worlds hold none and pay
+  one query a pass. The trigger is the first world that poses a corridor one cell wide with a van at
+  each end, where the honest answer is a `Wait` (the seam below) or the market's right-of-way (#568).
+- **The bound reads an invariant's footprint by predicate, not over the reach.** An invariant is weighed
+  in a scope's worlds where its select reads a predicate the scope's actions write — `at`, which the
+  drive writes — so two vans on grids a continent apart pay the aversion's weighing in every world
+  (42 on the disjoint pose, 0.7 ms each) though the reach already knows no world of theirs can hold
+  two vans. Reading the reach there would be #900's analysis asked a second time, from the Planner,
+  and the saving is a few tens of milliseconds on a pose that costs 250; the trigger is a holder with
+  several invariants over a large scope, where the weighings outgrow the reach.
 - **The joint want's estimate is the desire's whole sum.** A want a constraint coupled about several
   instances points at the desire's select with `$this` unbound, which sums over EVERY instance astray;
   where the coupled instances are all there are that is the joint plan's cost exactly, and where a
@@ -251,7 +293,8 @@ yet — and for the resource, since two windows can overlap only once they have 
   no plan says and no executor walks; its trigger is the first world whose driver is two, and it is
   where the landing band becomes necessary rather than useful.
 - **A step that waits.** The courier has no action that does nothing for a stretch, so a van held
-  back by the bound takes a detour where one act's wait would do; a `Wait` is the domain's to add,
+  back by the bound takes a detour where one act's wait would do — or, measured (#902), the mind moves
+  the other van aside, which is one act too and is what it found; a `Wait` is the domain's to add,
   costed and banded like a drive.
 - **The resource's footprint.** A resource is read over committed steps' windows; which wants it
   couples is which wants have actions the same resource takes, which is the footprint over the

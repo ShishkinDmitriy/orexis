@@ -1,0 +1,173 @@
+# a_fork_that_keeps_a_violation_the_root_already_had_is_not_refused
+#
+# AN INVARIANT ALREADY UNMET IN THE ROOT BOUNDS NOTHING. Tank1 and tank2 both stand at seven, so
+# the aversion — no two tanks at one level — reads unmet in the ground with a row per tank, and
+# mints its own want about both; tank3 stands at nought under a desire that wants it at ten or
+# above, a second want. Each want's iteration opens the ground, in name order: the aversion's
+# forks the three fills, and tank3's finds the worlds standing and weighs them without forking.
+# Filling tank1 or tank2 takes the two apart — repair removes the rows and enters none — and
+# neither world is refused for either want. Filling tank3 reaches a world where tanks one and two
+# still share seven: the aversion's weighing there carries exactly the rows the ground's did, no
+# row is new, and the world is NOT refused — it stands open for both wants. A refusal is of a
+# state newly entered, never of one the agent was already in.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
+
+GRAPH :ontology {
+  :level a rdf:Property .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+  :tank3 a :Tank .
+}
+
+GRAPH :actions {
+  :fill a orexis:Action .
+  :fill orexis:takes :tank .
+  :fill planning:costs """PREFIX : <http://example.org/test#>
+      SELECT (1 AS ?cost) WHERE { }""" .
+  :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>
+      DELETE { $tank :level ?l  }
+      WHERE  { $tank :level ?l  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { $tank :level ?next } WHERE {
+      $tank :level ?l .
+      BIND(?l + 5 AS ?next) }""" ] ] .
+  :fill planning:precondition """PREFIX : <http://example.org/test#>
+      SELECT ?tank WHERE {
+      ?tank a :Tank ; :level ?l .
+      FILTER(?l < 10) }""" .
+  :tank a orexis:Parameter .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:targetNode :tank3 .
+  :keeper planning:holds :keeper.apart .
+  :keeper planning:holds :keeper.in_range .
+  :keeper.apart a planning:Desire .
+  :keeper.apart planning:unmetWhen :one_level .
+  :keeper.apart rdfs:label "no two tanks at one level" .
+  :keeper.in_range a planning:Desire .
+  :keeper.in_range planning:about :level .
+  :keeper.in_range planning:metWhen :in_range .
+  :keeper.in_range rdfs:label "the tank in range" .
+  :one_level sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :level ?value . ?other a :Tank ; :level ?value . FILTER(?other != $this) }" .
+}
+
+GRAPH :sensed {
+  :tank1 :level 7 .
+  :tank2 :level 7 .
+  :tank3 :level 0 .
+}
+
+GRAPH :scopes {
+  :fill planning:inScope :keeper.scope.1 .
+  :keeper.scope.1 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  ground:2026-01-01T120000p0000 a planning:GroundGraph .
+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
+  ground:2026-01-01T120000p0000 orexis:hash "sha256:122f9efd04505aa8d36ce8190f474f132c655429225259db8e8c7204268f4d26" .
+  ground:2026-01-01T120000p0000.for.keeper.apart a planning:Weighing .
+  ground:2026-01-01T120000p0000.for.keeper.apart planning:for :keeper.apart .
+  ground:2026-01-01T120000p0000.for.keeper.apart planning:met false .
+  ground:2026-01-01T120000p0000.for.keeper.apart planning:violation [ planning:constraint 0 ; planning:instance :tank1 ; planning:offending 7 ] .
+  ground:2026-01-01T120000p0000.for.keeper.apart planning:violation [ planning:constraint 0 ; planning:instance :tank2 ; planning:offending 7 ] .
+  ground:2026-01-01T120000p0000.for.keeper.apart planning:weighs ground:2026-01-01T120000p0000 .
+  ground:2026-01-01T120000p0000.for.keeper.apart.pursued a planning:Weighing .
+  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:for :keeper.apart.pursued .
+  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:met false .
+  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:open true .
+  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:violation [ planning:constraint 0 ; planning:instance :tank1 ; planning:offending 7 ] .
+  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:violation [ planning:constraint 0 ; planning:instance :tank2 ; planning:offending 7 ] .
+  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:weighs ground:2026-01-01T120000p0000 .
+  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
+  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
+  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
+  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank3 ; planning:offending 0 ] .
+  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued a planning:Weighing .
+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:for :keeper.in_range.pursued .
+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:met false .
+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:open true .
+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank3 ; planning:offending 0 ] .
+  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:weighs ground:2026-01-01T120000p0000 .
+  pursued:2026-01-01T120000p0000--open a orexis:Graph .
+  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
+  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
+}
+
+GRAPH ground:2026-01-01T120000p0000 {
+  :tank1 :level 7 .
+  :tank2 :level 7 .
+  :tank3 :level 0 .
+}
+
+GRAPH pursued:2026-01-01T120000p0000--open {
+  :keeper planning:holds :keeper.apart.pursued .
+  :keeper planning:holds :keeper.in_range.pursued .
+  :keeper.apart.pursued a planning:Want .
+  :keeper.apart.pursued planning:state planning:Recognized .
+  :keeper.apart.pursued planning:unmetWhen :keeper.apart.pursued.avoided .
+  :keeper.apart.pursued prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  :keeper.apart.pursued prov:wasDerivedFrom :keeper.apart .
+  :keeper.apart.pursued rdfs:label "pursued: no two tanks at one level" .
+  :keeper.apart.pursued.avoided sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :level ?value . ?other a :Tank ; :level ?value . FILTER(?other != $this) }" .
+  :keeper.apart.pursued.avoided sh:targetNode :tank1 .
+  :keeper.apart.pursued.avoided sh:targetNode :tank2 .
+  :keeper.in_range.pursued a planning:Want .
+  :keeper.in_range.pursued planning:metWhen :keeper.in_range.pursued.met .
+  :keeper.in_range.pursued planning:state planning:Recognized .
+  :keeper.in_range.pursued prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  :keeper.in_range.pursued prov:wasDerivedFrom :keeper.in_range .
+  :keeper.in_range.pursued rdfs:label "pursued: the tank in range" .
+  :keeper.in_range.pursued.met a sh:NodeShape .
+  :keeper.in_range.pursued.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :keeper.in_range.pursued.met sh:targetNode :tank3 .
+}

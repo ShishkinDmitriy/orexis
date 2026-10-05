@@ -17,7 +17,8 @@ what one action needs; a **constraint** is what no plan may bring about on its w
 serves. Two kinds, checked in two places:
 
 - a **state invariant** - *no cell holds two vans* - a condition on the world a plan must keep at
-  every step, judged in the possible worlds a search opens;
+  every step, judged in the possible worlds a search opens and refusing one that newly enters the
+  avoided state (#902);
 - a **resource** - *one driver drives one van at a time* - a limit on the ACTS in flight rather than
   on a state, judged over committed steps' windows. Named here and built by #903; nothing shipped
   declares one yet.
@@ -34,7 +35,7 @@ finds a holder's constraints by that word, which every aversion already carries 
 reads; a `planning:Constraint` beside it would say the same thing twice, and the day the two
 disagreed - a desire typed a constraint with a met-test, an aversion typed none - the search would
 believe one and the derivation the other. So *constraint* names a READING of a desire: the derivation
-reads an aversion as what may couple two wants, the search as what may refuse a world (#902), and the
+reads an aversion as what may couple two wants, the search as what may refuse a world, and the
 same node is still the desire whose unmet rows mint a want when the avoided state already holds. A
 resource, once built, is to be stated by the world in the same form, one select over committed
 steps' windows, for the same reason - a limit derived from an action's taker would be the agent
@@ -75,7 +76,22 @@ no aversion pays one query and couples nothing, and the dispatcher pays the reac
 
 # What it does
 
-`derive_wants` groups a desire's witnesses by scope and instance as before and then merges two
+**As a bound, in the search.** `Planner.expand` weighs each state invariant of the holder in every
+possible world it weighs a want in — the same `weigh`, the same rows — and refuses a world whose
+weighing carries a violation row with no equal in its parent's: `planning:refused` on the want's
+weighing names the invariant and replaces the verdict, `planning:open` and `planning:met` taken
+back, so the frontier and the plan pass the weighing by with no filter asked of either, whatever
+the want's own test said there. The invariants weighed in a scope are those whose
+select reads a predicate the scope's actions write; one that reads none is kept by every world and
+costs nothing. A world that merely keeps a row the root already had is not refused, which is why
+two vans posed on one cell still mint the aversion's want and a drive parts them. The cases are
+`agent/planning/tests/expand/a_fork_that_newly_enters_the_avoided_state_is_refused.trig` and
+`a_fork_that_keeps_a_violation_the_root_already_had_is_not_refused.trig`; what it did to the
+dispatcher's poses, and what it costs a world, is measured in
+[measure-the-search](/runbooks/measure-the-search.md). Why never-newly-enter and not a precondition
+or an executor's hold is the record's.
+
+**As what couples, in the derivation.** `derive_wants` groups a desire's witnesses by scope and instance as before and then merges two
 groups of one scope over one stretch whose instances a constraint couples, transitively: one want
 about both, named for both, its met-test targeting each instance by `sh:targetNode`, searched
 once, in which the invariant can refuse a colliding world rather than find it afterwards. Its

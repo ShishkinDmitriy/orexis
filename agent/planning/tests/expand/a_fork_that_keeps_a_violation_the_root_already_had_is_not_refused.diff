@@ -1,0 +1,132 @@
+--- case
++++ expected
+@@ -105,9 +105,9 @@
+   ground:2026-01-01T120000p0000.for.keeper.apart planning:violation [ planning:constraint 0 ; planning:instance :tank2 ; planning:offending 7 ] .
+   ground:2026-01-01T120000p0000.for.keeper.apart planning:weighs ground:2026-01-01T120000p0000 .
+   ground:2026-01-01T120000p0000.for.keeper.apart.pursued a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:expanded true .
+   ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:for :keeper.apart.pursued .
+   ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:met false .
+-  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:open true .
+   ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:violation [ planning:constraint 0 ; planning:instance :tank1 ; planning:offending 7 ] .
+   ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:violation [ planning:constraint 0 ; planning:instance :tank2 ; planning:offending 7 ] .
+   ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:weighs ground:2026-01-01T120000p0000 .
+@@ -117,11 +117,94 @@
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank3 ; planning:offending 0 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
+   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:expanded true .
+   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:for :keeper.in_range.pursued .
+   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:met false .
+-  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:open true .
+   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank3 ; planning:offending 0 ] .
+   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:weighs ground:2026-01-01T120000p0000 .
++  possible:1 a planning:PossibleGraph .
++  possible:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  possible:1 orexis:arrivedBy orexis:Derived .
++  possible:1 orexis:hash "sha256:c7244af7cb93ff855effca61030133d1ccd819d37a4991e1821257f2f7ab5f7e" .
++  possible:1 planning:by possible:1.by .
++  possible:1 planning:minted 1 .
++  possible:1 planning:spent 1.0 .
++  possible:1.by :tank :tank1 .
++  possible:1.by a planning:Candidate .
++  possible:1.by planning:fills :fill .
++  possible:1.by planning:from ground:2026-01-01T120000p0000 .
++  possible:1.by planning:minted 1 .
++  possible:1.for.keeper.apart a planning:Weighing .
++  possible:1.for.keeper.apart planning:for :keeper.apart .
++  possible:1.for.keeper.apart planning:met true .
++  possible:1.for.keeper.apart planning:weighs possible:1 .
++  possible:1.for.keeper.apart.pursued a planning:Weighing .
++  possible:1.for.keeper.apart.pursued planning:for :keeper.apart.pursued .
++  possible:1.for.keeper.apart.pursued planning:met true .
++  possible:1.for.keeper.apart.pursued planning:weighs possible:1 .
++  possible:1.for.keeper.in_range.pursued a planning:Weighing .
++  possible:1.for.keeper.in_range.pursued planning:for :keeper.in_range.pursued .
++  possible:1.for.keeper.in_range.pursued planning:met false .
++  possible:1.for.keeper.in_range.pursued planning:open true .
++  possible:1.for.keeper.in_range.pursued planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank3 ; planning:offending 0 ] .
++  possible:1.for.keeper.in_range.pursued planning:weighs possible:1 .
++  possible:2 a planning:PossibleGraph .
++  possible:2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  possible:2 orexis:arrivedBy orexis:Derived .
++  possible:2 orexis:hash "sha256:421c12cea43256aed09ec9ee37deb62c85da0eb36590bd1e331466d82cd42221" .
++  possible:2 planning:by possible:2.by .
++  possible:2 planning:minted 2 .
++  possible:2 planning:spent 1.0 .
++  possible:2.by :tank :tank2 .
++  possible:2.by a planning:Candidate .
++  possible:2.by planning:fills :fill .
++  possible:2.by planning:from ground:2026-01-01T120000p0000 .
++  possible:2.by planning:minted 2 .
++  possible:2.for.keeper.apart a planning:Weighing .
++  possible:2.for.keeper.apart planning:for :keeper.apart .
++  possible:2.for.keeper.apart planning:met true .
++  possible:2.for.keeper.apart planning:weighs possible:2 .
++  possible:2.for.keeper.apart.pursued a planning:Weighing .
++  possible:2.for.keeper.apart.pursued planning:for :keeper.apart.pursued .
++  possible:2.for.keeper.apart.pursued planning:met true .
++  possible:2.for.keeper.apart.pursued planning:weighs possible:2 .
++  possible:2.for.keeper.in_range.pursued a planning:Weighing .
++  possible:2.for.keeper.in_range.pursued planning:for :keeper.in_range.pursued .
++  possible:2.for.keeper.in_range.pursued planning:met false .
++  possible:2.for.keeper.in_range.pursued planning:open true .
++  possible:2.for.keeper.in_range.pursued planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank3 ; planning:offending 0 ] .
++  possible:2.for.keeper.in_range.pursued planning:weighs possible:2 .
++  possible:3 a planning:PossibleGraph .
++  possible:3 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  possible:3 orexis:arrivedBy orexis:Derived .
++  possible:3 orexis:hash "sha256:37bc4d1e0fb7b1b1029e95e5bfc6a5398045ecb09375496f5b172289a0b57242" .
++  possible:3 planning:by possible:3.by .
++  possible:3 planning:minted 3 .
++  possible:3 planning:spent 1.0 .
++  possible:3.by :tank :tank3 .
++  possible:3.by a planning:Candidate .
++  possible:3.by planning:fills :fill .
++  possible:3.by planning:from ground:2026-01-01T120000p0000 .
++  possible:3.by planning:minted 3 .
++  possible:3.for.keeper.apart a planning:Weighing .
++  possible:3.for.keeper.apart planning:for :keeper.apart .
++  possible:3.for.keeper.apart planning:met false .
++  possible:3.for.keeper.apart planning:violation [ planning:constraint 0 ; planning:instance :tank1 ; planning:offending 7 ] .
++  possible:3.for.keeper.apart planning:violation [ planning:constraint 0 ; planning:instance :tank2 ; planning:offending 7 ] .
++  possible:3.for.keeper.apart planning:weighs possible:3 .
++  possible:3.for.keeper.apart.pursued a planning:Weighing .
++  possible:3.for.keeper.apart.pursued planning:for :keeper.apart.pursued .
++  possible:3.for.keeper.apart.pursued planning:met false .
++  possible:3.for.keeper.apart.pursued planning:open true .
++  possible:3.for.keeper.apart.pursued planning:violation [ planning:constraint 0 ; planning:instance :tank1 ; planning:offending 7 ] .
++  possible:3.for.keeper.apart.pursued planning:violation [ planning:constraint 0 ; planning:instance :tank2 ; planning:offending 7 ] .
++  possible:3.for.keeper.apart.pursued planning:weighs possible:3 .
++  possible:3.for.keeper.in_range.pursued a planning:Weighing .
++  possible:3.for.keeper.in_range.pursued planning:for :keeper.in_range.pursued .
++  possible:3.for.keeper.in_range.pursued planning:met false .
++  possible:3.for.keeper.in_range.pursued planning:open true .
++  possible:3.for.keeper.in_range.pursued planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank3 ; planning:offending 5 ] .
++  possible:3.for.keeper.in_range.pursued planning:weighs possible:3 .
+   pursued:2026-01-01T120000p0000--open a orexis:Graph .
+   pursued:2026-01-01T120000p0000--open a planning:WantGraph .
+   pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+@@ -157,3 +240,22 @@
+   :keeper.in_range.pursued.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+   :keeper.in_range.pursued.met sh:targetNode :tank3 .
+ }
++
++
++GRAPH possible:1 {
++  :tank1 :level 12 .
++  :tank2 :level 7 .
++  :tank3 :level 0 .
++}
++
++GRAPH possible:2 {
++  :tank1 :level 7 .
++  :tank2 :level 12 .
++  :tank3 :level 0 .
++}
++
++GRAPH possible:3 {
++  :tank1 :level 7 .
++  :tank2 :level 7 .
++  :tank3 :level 5 .
++}
