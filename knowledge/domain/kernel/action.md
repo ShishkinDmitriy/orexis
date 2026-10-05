@@ -42,9 +42,13 @@ courier:Pick a orexis:Action ;
   executor runs when a step is taken: a command, a saying, or fictively the effect itself.
 - **Cost and timing** — `planning:costs` and `planning:landsAfter`, selects the search reads to
   rank a plan and place its steps.
+- **What its act holds** — `execution:occupies`, a world's row about the action and not the
+  domain's: the node an act of it holds while in flight, or a parameter whose value does, which the
+  executor reads as a [resource](/domain/planning/constraint.md).
 
-The first two and the last are planning's words and the implementation is execution's;
-`orexis:Action` and `orexis:takes` are the kernel's because both packages meet at them.
+The first two and the cost and timing are planning's words, the implementation and what an act
+holds are execution's; `orexis:Action` and `orexis:takes` are the kernel's because both packages
+meet at them.
 
 # How it is read
 

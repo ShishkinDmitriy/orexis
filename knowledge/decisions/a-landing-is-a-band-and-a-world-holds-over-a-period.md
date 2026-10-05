@@ -80,6 +80,9 @@ So, since 2026-10-03:
   terms, is answered no for now: nothing shipped occupies an actor for longer than the search's
   grain, and a term nobody reads is annotation. Occupancy returns with a plan that is a partial
   order, the seam below, where two steps overlap exactly when neither occupies what the other needs.
+  *The spelling returned with another claim (2026-10-05, #903): `execution:occupies` says WHAT an
+  act holds while in flight — the one driver — and nothing of how long; how long is still the band,
+  and two acts of one resource are kept apart by the executor, not by a second duration.*
 - **Adding a duration to an instant in the re-root.** The engine binds nothing for
   `dateTime + dayTimeDuration` at about a third of the seconds of a minute (measured on 0.5.11,
   deterministic per instant), so the re-stamp takes the stretch from each end instead, which binds

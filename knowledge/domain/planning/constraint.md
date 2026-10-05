@@ -6,8 +6,10 @@ description: >-
   resource. No term of its own - an invariant IS a standing desire in its avoided-state form, read
   twice more than a desire is - as a bound on every possible world a search opens, and, through
   its footprint over what the actions can reach from the present, as what couples two wants
-  into one search. The dispatcher's aversion joins two parcels whose vans can meet and leaves two
-  on separate grids apart.
+  into one search; a resource is one row the world states of an action, what its act holds while
+  in flight, which the executor honours by offering no second head while one holds it. The
+  dispatcher's aversion joins two parcels whose vans can meet and leaves two on separate grids
+  apart, and its one driver walks two plans a drive at a time.
 ---
 
 # What it is
@@ -20,8 +22,10 @@ serves. Two kinds, checked in two places:
   every step, judged in the possible worlds a search opens and refusing one that newly enters the
   avoided state (#902);
 - a **resource** - *one driver drives one van at a time* - a limit on the ACTS in flight rather than
-  on a state, judged over committed steps' windows. Named here and built by #903; nothing shipped
-  declares one yet.
+  on a state: what an action's act holds from being handed to its taker until the world answers it,
+  which the world states of a domain's action with `execution:occupies` and the executor honours by
+  handing no second head over while one holds it (#903). The dispatcher declares one driver whom
+  every drive, pick and drop occupies.
 
 Both are the world's to state and never the agent's to infer, which is the one rule the architecture
 applies to every limit - a cadence, a range, what is available
@@ -36,11 +40,22 @@ reads; a `planning:Constraint` beside it would say the same thing twice, and the
 disagreed - a desire typed a constraint with a met-test, an aversion typed none - the search would
 believe one and the derivation the other. So *constraint* names a READING of a desire: the derivation
 reads an aversion as what may couple two wants, the search as what may refuse a world, and the
-same node is still the desire whose unmet rows mint a want when the avoided state already holds. A
-resource, once built, is to be stated by the world in the same form, one select over committed
-steps' windows, for the same reason - a limit derived from an action's taker would be the agent
-inferring what it may do from who carries a step out, and no courier action names a taker at all,
-a drive being fictive.
+same node is still the desire whose unmet rows mint a want when the avoided state already holds.
+
+A resource is NOT a desire, and this page first said it would be - one select over committed steps'
+windows, in the aversion's form. Built (#903), that form could judge nothing: a committed step is
+believed over its landing window AS THE PLAN PLACED IT, and two plans placed in one pass for one
+driver both open at the pass's instant, so their windows overlap whether or not either act has begun
+- the overlap is the plans' bands, not the acts' occupancy - and a desire reading it would have
+minted an unreachable want every pass while the executor serialised the very acts it complained of.
+What *in flight* means - handed over or taken, and not yet answered - is written nowhere but the
+intentions, which no met-test is handed. So a resource is one row the world states of a domain's
+action, `execution:occupies`, naming the node held - the one driver - or a parameter the action
+takes, and then the step's own value for it, which is how a world says a driver per van; execution's
+word, since what is held while an act is in flight is a fact about taking the action, as its
+implementation is. It is still the world's and never derived from the action's taker, since a limit
+inferred from who carries a step out would be the agent deciding what it may do, and no courier
+action names a taker at all, a drive being fictive.
 
 SHACL's own word is a second meaning and keeps the word: a shape's *constraint* is one of its
 blocks, which `planning:constraint` indexes on a violation row.
@@ -90,6 +105,21 @@ two vans posed on one cell still mint the aversion's want and a drive parts them
 dispatcher's poses, and what it costs a world, is measured in
 [measure-the-search](/runbooks/measure-the-search.md). Why never-newly-enter and not a precondition
 or an executor's hold is the record's.
+
+**As a limit on acts, in the executor.** `Executor.tick` reads what each standing head's action
+occupies before it offers any head, and a head due whose resource another head holds - handed over
+this tick, or taken and not yet answered - is passed over, as a head before its `execution:notBefore`
+is, with nothing recorded of the wait; heads are offered in the order they fell due and then the
+order their intentions were adopted, so the elder plan drives first. The hold ends when the holding
+step is answered, which is when its [committed step](/domain/execution/committed-step.md)'s window
+closes. A holder with one intention standing is asked nothing, since a plan is a chain and a chain
+never has two acts in flight; one with several pays two queries a tick. On the dispatcher's two grids
+with one driver the two plans' drives alternate where they ran in lockstep, and with a driver per van
+they run in parallel again (`world/dispatcher/tests/test_dispatcher.py`,
+`agent/execution/tests/test_executor.py`). **The search has nothing to refuse here**: a step of a
+chain opens where the one before it lands, so no path a search makes holds two acts of one resource
+at once, and the day a plan is a partial order is the day the resource is read over a world's path
+(the record's concurrent-steps seam).
 
 **As what couples, in the derivation.** `derive_wants` groups a desire's witnesses by scope and instance as before and then merges two
 groups of one scope over one stretch whose instances a constraint couples, transitively: one want

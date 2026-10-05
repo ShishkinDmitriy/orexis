@@ -3,6 +3,7 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix execution: <http://example.org/orexis/execution#> .
 
 <> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
     owl:imports <../../domains/courier/ontology.ttl> .    # the domain this world poses
@@ -25,6 +26,20 @@
 
 :van_a a courier:Van ; rdfs:label "van A" .
 :van_b a courier:Van ; rdfs:label "van B" .
+
+#  ONE DRIVER DRIVES ONE VAN AT A TIME — the world's RESOURCE (#903), the second kind of constraint
+#  beside the aversion (knowledge/domain/planning/constraint.md): every drive, pick and drop of this
+#  world occupies the one driver while it is in flight, and the executor hands no second one over
+#  while one is. It is the world's to state and never derived from who takes a step: a drive is
+#  fictive and names no taker. A plan is a chain, so the joint plan for both parcels never has two
+#  acts in flight and the driver changes nothing for it; two plans walked at once — the vans on two
+#  grids, each parcel its own want — alternate their drives where they drove in lockstep, and a
+#  variant that gives each van its own driver (`courier:Drive execution:occupies courier:van`) drives
+#  them in parallel again (`tests/test_dispatcher.py`).
+:driver rdfs:label "the one driver, whom every act of either van occupies" .
+courier:Drive execution:occupies :driver .
+courier:Pick execution:occupies :driver .
+courier:Drop execution:occupies :driver .
 
 :parcel_a a courier:Parcel ; courier:destination :c0_3 ;
     rdfs:label "the parcel owed at the top of the first column" .

@@ -417,6 +417,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   nought; only the walk a pass asks for marks the lap (measure-a-pass).
 - **An action is a point its taker contributes to**, and a taker missing at runtime looks exactly
   like an actor that is busy, so a gate holds a family to its actions.
+- **A resource is a limit on acts in flight, and in flight is known to the executor alone** — a
+  committed window as placed is the plan's band, not the act's occupancy, so no select over committed
+  steps can judge one; the world states `execution:occupies` and the timekeeper holds the head (#903).
 
 ### Belief, sensing and prediction
 
