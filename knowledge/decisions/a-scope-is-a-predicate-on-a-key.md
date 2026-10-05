@@ -221,8 +221,21 @@ nothing blocked in the next.
   the desire's estimate four of the 118 worlds the searches visited held two vans on one cell,
   judged by nobody; with each want's own none of 140 does, none of 68 with the pick and the drop
   counted, and the vans still meet when walked.
-  What would separate the vans is not a key but the mechanism #567 names — a search that derives
-  a want from a conflict between two plans. The aversion is authored as `planning:unmetWhen`, as
+  What would separate the vans is not a key, and — decided 2026-10-05 — not the mechanism #567
+  named either: the vans stay one scope, and the two parcels' wants are COUPLED, one cluster and one
+  search, because the aversion's footprint — `at` on vans, joined on the cell — says their plans may
+  interfere, and the aversion weighed in every possible world refuses the one that puts two vans on a
+  cell; a parcel no constraint can join to another stays a want of its own
+  ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md),
+  which refuses the derived want and the sequenced plans and measures why a bound over two separate
+  searches is half: none of the corridor's 68 worlds holds two vans). The coupling is built (#900,
+  [constraint](/domain/planning/constraint.md)): the aversion is read over what the actions can reach
+  from the present, not over the public graphs as this partition is, because read as an atom is it
+  cannot tell one grid from two — the drive's adjacency is a filter over coordinates, and the public
+  half of a precondition is its patterns — so the partition stays one scope and the coupling, per
+  pass, joins the parcels on a shared grid and leaves two on disjoint grids apart. The ten weighings
+  the one scope costs each want apart are gone with the wants themselves: the coupled search weighs
+  148 worlds over 228 candidates, which is the product and not the scope. The aversion is authored as `planning:unmetWhen`, as
   the issue asks, and judged as a met-test is since #892 — on the tree this was measured on it was
   weighed in no ground, since `weigh` then read `planning:metWhen` alone — but a desire is weighed
   in grounds and not in the worlds a search visits, so the judging reaches the present and never

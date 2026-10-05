@@ -39,8 +39,9 @@ def test_the_namespace_portions_stay_unclaimed():
 
 
 #  A MODULE NAMED FOR A THING, which may export several reads of it. Every other module in
-#  the package is named for an ACT and exports that act alone.
-NOUNS = {"bridge", "events", "footprint", "ontology", "planner", "violation"}
+#  the package is named for an ACT and exports that act alone. `couplings` is what a holder's
+#  constraints can make collide, read for the derivation, and exports the read and its answer.
+NOUNS = {"bridge", "couplings", "events", "footprint", "ontology", "planner", "violation"}
 
 
 def test_a_module_named_for_an_act_exports_that_act_and_nothing_else():
@@ -104,8 +105,10 @@ def test_outside_the_package_only_the_planner_is_imported():
                         f"{path.relative_to(ROOT)} imports {a.name}"
 
 
-#  THE READS: modules that write nothing, which any act may ask.
-READS = {"ontology", "world_at", "find_wants", "find_scopes", "unweighed", "footprint", "violation", "bridge"}
+#  THE READS: modules that write nothing, which any act may ask. `couplings` writes a working
+#  graph for the reach and takes it away before it answers, so nothing it does outlives the call.
+READS = {"ontology", "world_at", "find_wants", "find_scopes", "unweighed", "footprint", "violation", "bridge",
+         "couplings"}
 
 
 def test_an_act_calls_no_other_act_and_the_planner_sequences_them():

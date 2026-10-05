@@ -47,8 +47,13 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
 3. **The world answers otherwise** — #522, several outcomes with a likelihood, and #781, a plan that
    worked lifted into a method the executor proves or forgets.
 4. **Several agents contend** — #567, one dispatcher and two vans: the world and its measurement are
-   in (`world/dispatcher/`), and the search that derives a want from two plans' conflict is what is
-   left; then #568, right-of-way as a lot the market allocates.
+   in (`world/dispatcher/`), and the mechanism is decided — one mind couples the wants a constraint
+   can make collide into one search, and the constraint is a concept of its own with a state
+   invariant and a resource as its kinds
+   ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md));
+   the constraint's page, its footprint over the reach and the clustering are built (#900), and the
+   bound (#902), the resource in the executor (#903) and reconsideration on a coupled arrival (#905)
+   are its debts; then #568, right-of-way as a lot the market allocates.
 5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays
    it and the model that phrases a free question, then #862's recalibration walked with a person
@@ -74,7 +79,12 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
 - **Reflection** — the agent's season read back from its series and offered to the sovereign as a
   proposal; opened by
   [reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md),
-  whose first tool is the gap it emits.
+  whose first tool is the gap it emits. Its first learning step is estimating what the mind never
+  measures — a bed's drying rate, a probe's two points — from the series, by a Kalman filter or
+  recursive least squares with the constant in the state, and proposing the figure to the
+  sovereign as a range the corridor can take (#862); the estimate may be Gaussian, since it is a
+  fit over history and never a belief, and the mind's own uncertainty stays an interval
+  ([a-prediction-accumulates-rates-between-happenings](/decisions/a-prediction-accumulates-rates-between-happenings.md)).
 - **Futures** — partly here already: a claim is held and presented within its own window (#625),
   so winning and acting are decoupled. A forward venue distinct from the spot round is not, and
   its seam is the claim's expiry ([authn-authz-capabilities](/decisions/authn-authz-capabilities.md)).

@@ -20,8 +20,10 @@ trouble is about — and the desire is unmet where it yields a row. That is the 
 form: "unmet when two vans stand on one cell" reads as it evaluates, where a shape named for the
 bad state reads inverted. `weigh` judges either in every ground and writes the same witnesses, so a
 want is minted from an aversion exactly as from a met-test and carries the same select under the
-same term, held to its instance by `sh:targetNode` where the cluster had one (the dispatcher's
+same term, held to its instances by a `sh:targetNode` each (the dispatcher's
 `no_cell_holds_two_vans`, #892). One of the two, never both: a desire carrying both is not judged.
+An aversion is also a [constraint](/domain/planning/constraint.md), read as one by the derivation
+and the search.
 And, where its domain has one, `planning:estimates`, a select saying how far a world still is in
 the unit actions cost. It is about every instance at every instant, so it is never met once and
 for all and never handed to a search. A world authors it, in a `planning:DesireGraph`.
@@ -46,7 +48,9 @@ is when. A want is minted per [scope](/domain/planning/scope.md) of those rows a
 it — each placed by what it is about and, where that belongs to two scopes, by what its offending
 value is keyed by, the bed, which the want then carries as `planning:keyedBy`; a row about nothing
 joins every cluster, so a shape ranging over instances says `planning:about sh:this` on its blocks
-([a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astray-is-a-want-of-its-own.md)) — and
+([a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astray-is-a-want-of-its-own.md)); two
+instances a [constraint](/domain/planning/constraint.md) the holder holds can make collide are one
+cluster and one want about both — and
 one the rows no longer imply is withdrawn by the same pass — unless an intention is walking it. Nothing ranks one
 want before the search that could rank it: every want is searched, and what their plans cost is
 the comparison.

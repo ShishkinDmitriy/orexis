@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -59,4 +59,36 @@
+@@ -59,4 +59,38 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -36,4 +36,6 @@
 +  :keeper.apart.pursued prov:wasDerivedFrom :keeper.apart .
 +  :keeper.apart.pursued rdfs:label "pursued: no stand holds two tanks" .
 +  :keeper.apart.pursued.avoided sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :on ?value . ?other a :Tank ; :on ?value . FILTER(?other != $this) }" .
++  :keeper.apart.pursued.avoided sh:targetNode :tank1 .
++  :keeper.apart.pursued.avoided sh:targetNode :tank2 .
 +}
