@@ -141,7 +141,14 @@ def test_a_drift_outside_a_wants_scope_keeps_its_cone(monkeypatch, lit_greenhous
     """#565's second item, by construction since a scope's imaginarium holds the scope's readings alone
     (#884): a present that drifts in a fact a want never reads — the light, under a soil plan — hashes
     to the same soil ground, so the soil's re-root finds the last pass's present and keeps its cone,
-    while the light's own search is surprised. A drift in the soil itself drops the soil's cone."""
+    while the light's own search finds the present among what it imagined. A drift in the soil itself
+    that nothing imagined drops the soil's cone.
+    WHAT MOVES A PRESENT IS A SIDE, NOT A NUMBER: a world is hashed within what is read, and no text
+    reads the number a reading gave inside its band, so the light going from 100 to 150 under a floor
+    of 200 would be the same place to the light's own search too. From 100 to 400 the bed is lit —
+    the world the lamp's plan predicted — so the light's present is that CHILD, a step landed as
+    predicted, which no sensed world could say while a reading's instant was part of where it stood.
+    The soil at 0.9 is over its range, which no world of the soil's imagined: a surprise."""
     monkeypatch.setattr(clock, "now", lambda: NOW)
     store = boot(lit_greenhouse, "grower")
 
@@ -168,18 +175,18 @@ def test_a_drift_outside_a_wants_scope_keeps_its_cone(monkeypatch, lit_greenhous
     #  THE LIGHT DRIFTS AND THE SOIL DOES NOT: the soil's imaginarium holds no light reading, so the
     #  ground it lays hashes as last pass's did, and its one world is kept under it; the last pass's
     #  ground — the match itself, whose facts the new one carries — is the one graph dropped. The
-    #  light's imaginarium is surprised and drops what it imagined.
+    #  light's imaginarium finds the present in the world its plan reached.
     heard.clear()
     later = NOW + timedelta(minutes=10)
-    deliver("light_sensor", 150, later)
+    deliver("light_sensor", 400, later)
     planner.plan(later)
     second = {e.scope: (e.present, e.kept, e.dropped) for e in heard}
     assert second[soil] == ("ground", 2, 1), f"the soil's ground and its world kept, last pass's ground gone: {second}"
-    assert second[light][0] == "surprise", second
-    #  THE SOIL DRIFTS: a reading the soil's want reads moved, nothing it imagined holds, the cone goes.
+    assert second[light][0] == "child", f"lit, as the lamp's plan predicted: {second}"
+    #  THE SOIL DRIFTS where nothing imagined it: over its range, not inside it as the dose predicted.
     heard.clear()
     latest = later + timedelta(minutes=10)
-    deliver("moisture_probe", 0.25, latest)
+    deliver("moisture_probe", 0.9, latest)
     planner.plan(latest)
     third = {e.scope: (e.present, e.kept, e.dropped) for e in heard}
     assert third[soil][0] == "surprise" and third[light][0] == "ground", third

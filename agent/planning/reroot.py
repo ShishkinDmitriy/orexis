@@ -29,7 +29,9 @@ is found when the step is taken, as every step is. That is the seam, and the exe
 is what makes it safe.
 
 THE MATCH IS BY HASH AND NOTHING ELSE — never by the name a graph was laid under and never by
-where in the tree it sits. Two worlds may repeat one hash (a candidate whose fork repeated a
+where in the tree it sits — and the hash is taken WITHIN WHAT IS READ, so a fact no text of an
+action or a desire reads, a reading's instant above all, is not what the present differs by
+(`hash_named_graph`). Two worlds may repeat one hash (a candidate whose fork repeated a
 world already seen makes a graph before it is known to repeat); the first minted is the one
 the search expanded, so it is the match, and a ground of the last pass ranks before any
 world. A world attached to the new ground BY NAME — a ground re-laid under the name of the
@@ -150,6 +152,10 @@ def reroot(store, ground: str) -> Rerooting:
     match = next((r["w"] for r in rows(store, _MATCH_Q, (), ground=ground, cat=cat,
                                         hash=Raw(f'"{found["h"]}"'))), None)
     kept = {r["g"] for r in rows(store, _LAID_Q, (), ground=ground, cat=cat)}
+    #  ASKED BEFORE THE MATCH'S ROW GOES: the match is among what is dropped, since the ground
+    #  carries its facts now, so asked afterwards a step that landed as predicted read as the old
+    #  present repeated — unseen while no step could land in a world that senses.
+    landed = match is not None and bool(rows(store, _POSSIBLE_Q, (), match=match, cat=cat))
     if match is not None:
         kept |= {r["w"] for r in rows(store, _CONE_Q, (), match=match, cat=cat)}
         update(store, bind(_RESTAMP_U, ground=ground, match=match, cat=cat))
@@ -163,7 +169,6 @@ def reroot(store, ground: str) -> Rerooting:
     #  SAID AT INFO ONLY WHERE SOMETHING HAPPENED: a step landed as a world predicted, or a surprise
     #  took the cone. The present repeating the last ground is every idle pass — once a second on
     #  the terrace, which watches and plans nothing — and said at INFO it was the whole log.
-    landed = match is not None and bool(rows(store, _POSSIBLE_Q, (), match=match, cat=cat))
     if match is None and not gone:
         log.debug("nothing imagined yet: the present is the ground")
     else:

@@ -26,14 +26,31 @@ starts minting:
   `1`, and `"hi"@en` with `"hi"@de` — which made a search call two worlds one place that no
   domain would.
 
-**NO CANONICALISATION BY CLASS, and that is a deliberate absence.** A package used to declare
-which predicates IDENTIFY a node of a class (`orexis:keyedBy`) and which it CARRIES
-(`orexis:carries`), so a reading could hash to its key and its value while its instant and its
-node identity were dropped. Exactly one package ever declared it — sensing, about
-`sosa:Observation` — and a sensing graph does not reach planning, so nothing here declared the
-terms, `keys_of` answered `{}` for every store in this tree, and the branch was dead code with
-a parameter threaded through four call sites to feed it. It comes back with sensing, and with
-the re-root that was its other reader (a-term-nobody-reads-is-annotation).
+**A WORLD IS HASHED WITHIN WHAT IS READ, and no package declares a word of it.** A caller
+may say what a world is identified by — `within`, a set of predicates and classes — and only the
+facts it names are then where the world stands, a type fact counting by its class, which is how
+the footprint keys a type pattern. The Planner says it for every world of an imaginarium: the
+scope's members, joined with every predicate a text the pass evaluates reads or writes — the
+actions' preconditions and effects, the desires' met-tests and estimates. A scope alone names
+what an action can CHANGE, and a fact a met-test reads that no action writes must still tell
+two presents apart.
+Measured on the greenhouse and the terrace, 2026-10-03: every reading re-stamps its observation
+with the instant it arrived at, no rule reads `sosa:resultTime`, and the re-root read every
+reading as a surprise — the grower's cone went every ten minutes with the soil at 0.92 and the
+air at 21.0 both times, and a step landing as predicted could never match, since the real landing
+always carries an instant the effect never wrote. Hashed within what is read, a fact nothing
+reads is not a place the search can be in: the instant, who made the reading, and the number it
+gave inside its band, since the texts read the side. A graph hashed with nothing said, or for a
+store holding a text that cannot be read, is hashed whole, as before.
+
+What was weighed and refused here: a package declaring which predicates IDENTIFY a node of a
+class (`orexis:keyedBy`) and which it CARRIES (`orexis:carries`), so a reading could hash to
+its key and its value. Exactly one package ever declared it — sensing, about
+`sosa:Observation` — and the branch was dead code with a parameter threaded through four call
+sites to feed it (a-term-nobody-reads-is-annotation). What the texts read says the same thing from
+the other side, for every package at once; and dropping every
+dateTime from the digest instead would have been a kernel rule about a datatype, wrong for a
+round, whose period is state.
 
 **THE TERMS ARE PYOXIGRAPH'S, never rdflib's.** The record that built the imaginarium refused
 an rdflib store by measurement and the same ruling holds here: the graph's quads are the
@@ -69,8 +86,9 @@ _ROUND = 6
 _ALGORITHM = "sha256"
 
 
-def hash_named_graph(store, graph: str) -> str:
+def hash_named_graph(store, graph: str, within: frozenset | None = None) -> str:
     """The canonical hash of what `graph` holds — written onto its catalogue row, and answered.
+    `within` is what the world is identified by, predicates and classes; None hashes every fact.
 
     WRITTEN AS WELL AS ANSWERED, because what a graph holds is a fact about the graph and the
     catalogue is where those live, beside its class and its period. Replaced rather than added
@@ -79,7 +97,7 @@ def hash_named_graph(store, graph: str) -> str:
     A graph the store has never heard of hashes like an empty one, which is a state like any
     other — the ground before anything is predicted — rather than an error or a None.
     """
-    digest = digest_of(store, graph)
+    digest = digest_of(store, graph, within)
     catalogue = catalogue_of(store)
     update(store, f"""
 DELETE {{ GRAPH <{catalogue}> {{ <{graph}> <{HASH}> ?old }} }}
@@ -89,12 +107,27 @@ WHERE  {{ GRAPH <{catalogue}> {{ <{graph}> <{HASH}> ?old }} }}""")
     return digest
 
 
-def digest_of(store, graph: str) -> str:
+def digest_of(store, graph: str, within: frozenset | None = None) -> str:
     """The canonical hash of what `graph` holds, answered and written NOWHERE — for a writer
     that puts it on the graph's row itself, in the same update as the row's class and period,
     rather than paying a second round trip to have it written here. `hash_named_graph` above
-    is this plus the write, for a graph whose row already stands."""
-    return _digest(_facts(quads(store, graph)))
+    is this plus the write, for a graph whose row already stands. `within` as there."""
+    return _digest(_facts(_within(quads(store, graph), within)))
+
+
+def _within(triples, within: frozenset | None):
+    """The triples `within` names — every one, where nothing is said.
+
+    A TYPE FACT COUNTS BY ITS CLASS, because that is how the partition keys a type pattern:
+    `?x a hanoi:Peg` reads `hanoi:Peg` and not `rdf:type` (`footprint`), so what is read names
+    classes, and the market's effects write typed nodes. Read by
+    predicate alone, two worlds differing in a type an effect wrote would have been one place —
+    and a pruned fork is the failure this hash exists to prevent. `rdf:type` itself is a member
+    only where some text reads a type through a variable class, and then every type counts."""
+    if within is None:
+        return triples
+    return [t for t in triples if t.predicate.value in within
+            or (t.predicate == _RDF_TYPE and isinstance(t.object, ox.NamedNode) and t.object.value in within)]
 
 
 def _digest(facts: frozenset) -> str:

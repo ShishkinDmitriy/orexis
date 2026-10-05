@@ -288,6 +288,8 @@ class Planner:
         #  by-kind read as everywhere else. They are memory and die with the Planner; what
         #  outlives the Planner is the intentions, a graph of the beliefs.
         self.imaginaria: dict[str, ox.Store] = {}
+        #  WHAT THE TEXTS A PASS EVALUATES READ, remembered while the graphs they live in stand.
+        self._read: tuple[frozenset | None, frozenset | None] = (None, None)
         self.handed: list[tuple[str, str]] = []
         self.reached: set[str] = set()
         self.blocked: list[str] = []
@@ -373,6 +375,14 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         #  `perf_counter`, since the agent's clock may run fast and a test's ticks per read.
         lap = Laps() if self.planned.connected else None
         searched: set[str] = set()
+        #  WHAT A WORLD IS HASHED WITHIN, read off the texts once and kept while the graphs holding
+        #  them are the ones it was read off: actions, desires and shapes are documents, and
+        #  reading them every pass cost 20 ms of an idle greenhouse pass's 132, measured with the
+        #  two alternated in one session.
+        texts = frozenset(graphs_of(self.beliefs, ACTION, DESIRE, WANT, RECORD, SHAPES))
+        if self._read[0] != texts:
+            self._read = (texts, _read_anywhere(self.beliefs, at))
+        read = self._read[1]
         for _scope in sorted(scopes.all()) or [UNSCOPED]:
             #  THE SCOPE'S OWN ACTIONS are what its worlds admit; a store of no scope admits all.
             only = None if _scope == UNSCOPED else {
@@ -390,7 +400,14 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  list per instant and the shapes cost more to re-read than a pass can afford
             #  and can change only by a write the search does not make.
             memo = Memo()
-            present, *_ = lay_ground(store, at)
+            #  EVERY WORLD OF THIS IMAGINARIUM IS HASHED WITHIN WHAT IS READ — the ground here, each
+            #  child in `take` — so a reading's instant, which nothing reads, is not what the present
+            #  differs by (`hash_named_graph`): the scope's members, and with them every predicate a
+            #  text the pass evaluates reads, since a scope names what an action can CHANGE and a
+            #  fact a met-test reads that no action writes must still tell two presents apart. A
+            #  text that cannot be read reads anything, and then the world is hashed whole.
+            within = None if read is None else read | frozenset(m for m, ss in scopes.items() if _scope in ss)
+            present, *_ = lay_ground(store, at, within)
             rerooting = reroot(store, present)
             if self.rerooted.connected:
                 written += self.rerooted.emit(Rerooted(scope=local_of(_scope), present=rerooting.present,
@@ -433,7 +450,8 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             for want in _of_scope(store, shapes, self.uri, _scope, scopes, at):
                 if want in walking:
                     continue                # a want a plan is walking is not planned again
-                self.search(store, want, budget=self.budget, only=only, elsewhere=elsewhere, memo=memo, scope=_scope)
+                self.search(store, want, budget=self.budget, only=only, elsewhere=elsewhere, memo=memo, scope=_scope,
+                            within=within)
                 searched.add(want)
             if lap:
                 lap("search")
@@ -567,7 +585,8 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
     # --- one want ------------------------------------------------------------------------
 
     def search(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
-               elsewhere=frozenset(), memo: Memo | None = None, scope: str | None = None) -> None:
+               elsewhere=frozenset(), memo: Memo | None = None, scope: str | None = None,
+               within: frozenset | None = None) -> None:
         """Plan for `want` from the ground holding at its instant — the present, or the one a want
         minted for a foreseen instant names (#858) — spending at most `budget` candidates, and
         write the plan — whatever the search concluded, since an empty plan is an answer and
@@ -593,7 +612,8 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             if not pair.get("from"):
                 weigh(store, want, pair["about"], memo=memo)             # the root: the ground at its instant
         ceiling = _spent(store, want, memo) + budget
-        while (spent := self.expand(store, want, budget=ceiling, only=only, elsewhere=elsewhere, memo=memo)) is not None \
+        while (spent := self.expand(store, want, budget=ceiling, only=only, elsewhere=elsewhere, memo=memo,
+                                    within=within)) is not None \
                 and spent < ceiling:
             pass
         extract_plan(store, want)
@@ -653,7 +673,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
     # --- one iteration -------------------------------------------------------------------
 
     def expand(self, store: ox.Store, want: str, *, budget: int = BUDGET, only=None,
-               elsewhere=frozenset(), memo: Memo | None = None) -> int | None:
+               elsewhere=frozenset(), memo: Memo | None = None, within: frozenset | None = None) -> int | None:
         """Open the top of `want`'s frontier: admit what it admits, take each candidate this
         want has not yet weighed, weigh what it reached, close the world's weighing. What the
         want's search has spent afterwards, in candidates weighed — or None where there was
@@ -683,7 +703,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             if spent >= budget:
                 return spent            # cut: the world stays open, to be taken up next time
             if not pair.get("child"):
-                take(store, pair["about"], self.uri, memo=memo)
+                take(store, pair["about"], self.uri, memo=memo, within=within)
             weigh(store, want, pair["about"], memo=memo)
             spent += 1
         update(store, bind(_CLOSE_U, weighing=Raw(f"<{top['weighing']}>")))
@@ -707,6 +727,34 @@ SELECT (COUNT(?x) AS ?used) WHERE {
 def _spent(store: ox.Store, want: str, memo: Memo) -> int:
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
     return int(next(iter(rows(store, _SPENT_Q, (), want=want, cat=cat)), {}).get("used") or 0)
+
+
+def _read_anywhere(beliefs: ox.Store, at: datetime) -> frozenset | None:
+    """Every predicate — and every class a type pattern names — that a text a pass evaluates
+    reads or writes: each action's precondition and effect, and each desire's and want's
+    met-test, avoided state and estimate. What two worlds of this store can be told apart by,
+    and so what a world is hashed within. None where any of them cannot be read, which reads
+    anything.
+
+    OFF THE BELIEFS, ONCE A PASS, before any imaginarium is filled: a want the derivation mints
+    carries its desire's texts with an instance bound, so the desires say what the wants read.
+    WHAT IS LEFT OUT is what the hash was scoped to leave out — the instant a reading arrived
+    at, the number it gave inside its band, who made it — and what an action's IMPLEMENTATION
+    reads when a step is taken, which is asked of the beliefs then and of no possible world.
+    """
+    out: set[str] = set()
+    for reads, writes in footprint.actions_of(beliefs, at).values():
+        if reads is footprint.ANYTHING or writes is footprint.ANYTHING:
+            return None
+        out |= {str(p) for p in reads} | {str(p) for p in writes}
+    shapes = rdflib_view(beliefs, *graphs_of(beliefs, DESIRE, WANT, RECORD, SHAPES))
+    for term in ("metWhen", "unmetWhen", "estimates"):
+        for node in set(shapes.objects(None, rdflib.URIRef(PLANNING + term))):
+            reads = footprint.reads_of_shape(shapes, node)
+            if reads is footprint.ANYTHING:
+                return None
+            out |= {str(p) for p in reads}
+    return frozenset(out)
 
 
 def _of_scope(store: ox.Store, shapes: rdflib.Graph, holder: str, scope: str, scopes: dict,
