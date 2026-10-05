@@ -442,6 +442,52 @@ product's seam stands as written. **Disjoint grids** pay the aversion's weighing
 though none can hold two vans: the bound reads the invariant's footprint by predicate, and `at` is
 the drive's, where the reach would have told it nothing collides — the record's seam.
 
+# The courier's drives take a stretch (2026-10-05, #901)
+
+`domains/courier/actions.ttl` declares `planning:landsAfter` — a drive lands between 30 and 60
+seconds after it is taken, a pick and a drop at once — where it declared nothing and every world and
+step of a delivery stood at the pass's one instant
+([a-landing-is-a-band-and-a-world-holds-over-a-period](/decisions/a-landing-is-a-band-and-a-world-holds-over-a-period.md)).
+Measured on the development container, the base (`7009c7a7`) and the tree with the band alternated
+twice in one session by switching this worktree's HEAD, one pass of the Planner over the booted world
+at the budget its tests state, medians of five for the bench and of three for a world; the bench's
+`courier_corner` fixture carries the band too, since the runbook holds it to the domain's text.
+
+| case | tree | candidates | worlds, distinct hashes | distinct periods | queries a pass | pass, median (min) |
+|---|---|---|---|---|---|---|
+| `courier_corner`, budget 128 | base | 45 | — | — | 484 | 164 ms (138), then 196 (168) |
+| `courier_corner` | band | 45 | — | — | 548 | 182 ms (174), then 159 (135) |
+| `world/courier`, budget 128 | base | 45 | 45, 27 | 1 | — | 207 ms (148), then 198 (181) |
+| `world/courier` | band | 45 | 45, 27 | 7 | — | 187 ms (183), then 142 (137) |
+| the dispatcher, apart, budget 256 | base | 228 | 228, 149 | 1 | — | 2436 ms (2382), then 2813 (2551) |
+| the dispatcher, apart | band | 228 | 228, 149 | 7 | — | 2590 ms (2508), then 2517 (2420) |
+
+**The band shifts instants and not the frontier's order.** Every count is the base's: 45 and 228
+candidates, the same steps, and the digest of every world's `orexis:hash` sorted is the same string
+on both trees for both worlds (`7760df54…` and `8940894b…`), which is what #907 promised — a world is
+hashed within what is read and its period is on its row, so a landing moved no world. What the band
+costs is 64 queries on the corner's 484: the `landsAfter` select asked once per candidate taken,
+the ground at each distinct landing instant and the graph list per distinct period, each remembered
+per instant; the times are inside the session's drift both ways. The hanoi cases read one query more
+(224 to 225, 474 to 475), which is the derivation's and not the band's: `_named` reads what stands
+under a desire once more, for the covering rule below.
+
+**What the plan carries now**, pinned in `world/dispatcher/tests/test_dispatcher.py`: each step
+opens where the one before it lands, the six drives of the joint plan land at six distinct instants,
+the last step lands between three and six minutes after the root, every possible world holds over the
+period its step's two ends say, and each committed step is believed from its opening to its latest
+landing plus the patience — a drive's `landsWithinS` 30 and its window two minutes and more, where
+every window was the patience alone.
+
+**And a walk is passes.** A fictive drive writes its effect the instant it is taken, but the executor
+looks for it from the step's `landsAt`, half a minute on, so a plan of drives is walked a drive a pass
+and the worlds' tests tick their clocks — the dispatcher's by the least between passes, the courier's
+a second a read, the tower's five. That walk showed what one pass had hidden: midway through the joint
+plan the desire read unmet for the parcel still astray alone, and the derivation minted a want for it
+under a name of its own beside the coupled want still walking, whose second plan drove the same van
+down the same cells (12 acts for 10 steps, measured). A cluster a standing want is already about is
+that want's now, and the shipped dispatcher's walk is one intention, ten acts, as before.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

@@ -202,6 +202,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   collection over whatever is `Done`, on the pass.
 - **What was foreseen may arrive early, and the present outranks the instant** — a cluster unmet
   now whose want still names an instant is re-minted at none, same name.
+- **A cluster a standing want is already about is that want's** — a coupled want's instances come
+  met one at a time, and the one still astray minted alone was a second plan down the same cells,
+  seen the day a walk first spanned passes (#901).
 - **A want is weighed in the ground holding at its instant, and a pass searches the wants holding
   at any instant it can see** — weighed in the present, a want minted for a foreseen crossing read
   met and was withdrawn in the pass that minted it, every pass, and the forecast never became a

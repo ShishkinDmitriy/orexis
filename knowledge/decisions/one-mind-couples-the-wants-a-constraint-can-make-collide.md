@@ -49,7 +49,9 @@ On the development container, one pass of the Planner at a budget of 128 over th
   be compared on. Walked, both vans stand on `c2_1` for one act. Afterwards the beliefs hold two plan
   graphs and no committed step, no prediction, no drift: the committed step reaches the future
   through a drift alone ([committed-step](/domain/execution/committed-step.md)) and the courier has
-  none.
+  none. *Since #901 (2026-10-05) the courier declares its band — a drive half a minute to a minute,
+  a pick and a drop at once — so the steps land at distinct instants, the worlds hold over periods
+  and a committed drive's window is two minutes and more; the counts above did not move.*
 - **A van parked across the other's only shortest path** — van B at `c2_1` with nothing to do,
   parcel A owed at `c3_1` from `c1_1`. One want, 58 weighings, a five-step plan that drives through
   the parked van; **eleven of the 66 worlds visited hold two vans**, and weighing the aversion in all
@@ -167,7 +169,13 @@ a time and the only collision the search can make is driving onto a cell a van s
 bound refuses with no time axis needed. The landing band
 ([a-landing-is-a-band-and-a-world-holds-over-a-period](/decisions/a-landing-is-a-band-and-a-world-holds-over-a-period.md))
 is needed where two vans are to move at once — concurrent steps in one plan, which no plan says
-yet — and for the resource, since two windows can overlap only once they have a length.
+yet — and for the resource, since two windows can overlap only once they have a length. *The
+courier declares it since #901: a drive lands between half a minute and a minute after it is taken,
+and a walk is a drive a pass. What that walk showed, which one pass had hidden: a pass in the middle
+of the joint plan read the desire unmet for the parcel still astray alone, a cluster under a name of
+its own, and minted it — a second want about an instance the coupled want still pursued, and a second
+plan down the same cells. A cluster a standing want is already about is that want's now
+(`derive_wants._covering`, `a_cluster_a_standing_want_is_about_is_not_minted_again`).*
 
 # Against the principles
 
@@ -290,8 +298,10 @@ yet — and for the resource, since two windows can overlap only once they have 
   lost, and a coupling across two holders' desires in one store is not asked.
 - **Concurrent steps.** A plan is a sequence and is walked one head at a time, so a coupled plan
   moves one van at a time. Two vans moving at once in one plan is a partial order over steps, which
-  no plan says and no executor walks; its trigger is the first world whose driver is two, and it is
-  where the landing band becomes necessary rather than useful.
+  no plan says and no executor walks; its trigger is the first world whose driver is two. The landing
+  band it needs is declared since #901 — a drive is a stretch, a step opens where the one before it
+  lands — so what is left is the order alone: a step whose window may overlap the one before it,
+  which `execution:then` cannot say.
 - **A step that waits.** The courier has no action that does nothing for a stretch, so a van held
   back by the bound takes a detour where one act's wait would do — or, measured (#902), the mind moves
   the other van aside, which is one act too and is what it found; a `Wait` is the domain's to add,

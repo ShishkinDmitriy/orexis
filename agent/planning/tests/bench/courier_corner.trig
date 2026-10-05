@@ -95,6 +95,7 @@ GRAPH :world {
 GRAPH :actions {
   courier:Drive a orexis:Action .
   courier:Drive planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  courier:Drive planning:landsAfter "SELECT ?least ?most WHERE { BIND(30 AS ?least) BIND(60 AS ?most) }" .
   courier:Drive planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $van courier:at ?old  }
       WHERE  { $van courier:at ?old  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
@@ -111,6 +112,7 @@ GRAPH :actions {
   courier:Drive orexis:takes courier:van .
   courier:Drop a orexis:Action .
   courier:Drop planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  courier:Drop planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Drop planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:carriedBy ?van  }
       WHERE  { $parcel courier:carriedBy ?van  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
@@ -124,6 +126,7 @@ GRAPH :actions {
   courier:Drop orexis:takes courier:to .
   courier:Pick a orexis:Action .
   courier:Pick planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  courier:Pick planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Pick planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:at ?cell  }
       WHERE  { $parcel courier:at ?cell  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>

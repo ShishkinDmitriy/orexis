@@ -55,6 +55,11 @@ JOINT = "every_parcel_delivered.pursued.parcel_a.parcel_b"
 BUDGET, CORRIDOR_BUDGET = 256, 512
 #  THE AVERSION, the one state invariant this world's holder holds.
 AVERSION = "no_cell_holds_two_vans"
+#  THE DRIVE'S BAND, as the courier declares it (`domains/courier/actions.ttl`, #901): a drive lands
+#  between half a minute and a minute after it is taken; a pick and a drop at once. The executor's
+#  patience past the latest landing is its own default.
+DRIVE_LEAST_S, DRIVE_MOST_S = 30, 60
+PATIENCE_S = 60
 
 _MEMBERS_Q = "SELECT ?m ?s WHERE { GRAPH ?g { ?m planning:inScope ?s } }"
 _WANTS_Q = "SELECT ?w ?d WHERE { GRAPH ?g { ?w a planning:Want ; prov:wasDerivedFrom ?d } }"
@@ -120,6 +125,21 @@ _WITNESSES_Q = """
 SELECT ?x ?cell WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:Weighing ; planning:for $d ; planning:weighs ?g ; planning:violation ?v .
                ?g a planning:GroundGraph . ?v planning:instance ?x ; planning:offending ?cell } }"""
+#  THE PLAN'S STEPS WITH THEIR INSTANTS, along the chain: when each may be taken, the earliest and the
+#  latest its change lands — and the period of the world it reaches, off that world's row.
+_PLACED_Q = """
+SELECT ?step ?a ?nb ?la ?na ?ws ?we WHERE {
+  GRAPH ?p { ?p a planning:Plan ; planning:for $want . ?step a execution:Step ; execution:partOf ?p ; planning:fills ?a ;
+             planning:of ?by ; execution:notBefore ?nb ; execution:landsAt ?la . OPTIONAL { ?step execution:notAfter ?na } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w planning:by ?by ; dcterms:temporal ?period . ?period orexis:start ?ws ; orexis:end ?we } }
+ORDER BY ?nb ?la"""
+#  THE COMMITTED STEPS' WINDOWS in the beliefs, with the two lengths each states.
+_WINDOWS_Q = """
+SELECT ?g ?s ?e ?within ?by WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:CommittedStepGraph ; dcterms:temporal ?p . ?p orexis:start ?s ; orexis:end ?e }
+  GRAPH ?g { ?step execution:landsWithinS ?within ; execution:answeredWithinS ?by } }
+ORDER BY ?s ?g"""
+_INTENTIONS_Q = "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention } }"
 #  WHICH POLARITY a want carries its met-test under, and what it points at.
 _POLARITY_Q = "SELECT ?p ?o WHERE { GRAPH ?g { $w ?p ?o FILTER(?p IN (planning:metWhen, planning:unmetWhen)) } }"
 #  WHAT A WANT'S MET-TEST TARGETS — one node per instance a coupled want is about.
@@ -169,6 +189,10 @@ DISJOINT = {"world.ttl": [(":c3_3 a courier:Cell ; courier:x 3 ; courier:y 3 .",
 
 def _local(iri: str | None) -> str | None:
     return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1] if iri else None
+
+
+def _dt(instant: str) -> datetime:
+    return datetime.fromisoformat(instant)
 
 
 def variant(tmp_path: Path, name: str, edits: dict) -> Path:
@@ -282,14 +306,16 @@ def _at(store) -> dict[str, str]:
     return {_local(r["x"]): _local(r["cell"]) for r in rows(store, _AT_Q, ()) if r["x"].startswith(D)}
 
 
-def _run(world: Path, passes: int = 1, budget: int = BUDGET):
-    """The runtime over the booted world for `passes`, every step taken traced as (step, van A's cell,
-    van B's cell, the cells two vans share) read off the beliefs the moment it was taken."""
+def _run(world: Path, passes: int = 40, budget: int = BUDGET):
+    """The runtime over the booted world, pass after pass with the clock moved on by a drive's least
+    landing between passes, until no intention stands or `passes` are spent; every step taken traced
+    as (step, van A's cell, van B's cell, the cells two vans share) read off the beliefs the moment it
+    was taken. A DRIVE LANDS HALF A MINUTE AFTER IT IS TAKEN (#901), so a plan of drives is walked
+    across as many passes as it has drives, each pass taking the head that has landed."""
     time = _Clock(NOW)
     clock.now = time
     beliefs = boot(world, "dispatcher")
     runtime = Runtime(beliefs, "dispatcher", budget=budget)
-    runtime.time = time
     executor = runtime.parts["execution"].executor
     trace: list[tuple] = []
 
@@ -298,7 +324,12 @@ def _run(world: Path, passes: int = 1, budget: int = BUDGET):
         trace.append((_local(event.step), at.get("van_a"), at.get("van_b"), _shared(beliefs, graphs_of(beliefs, STATE))))
         return []
     executor.step_taken.connect(traced)
-    outcome = runtime.run(passes=passes, poll_s=0)
+    outcome = runtime.run(passes=1, poll_s=0)
+    for _ in range(passes - 1):
+        if outcome != UNFINISHED or not executor.standing():
+            break
+        time.at += timedelta(seconds=DRIVE_LEAST_S)
+        outcome = runtime.run(passes=1, poll_s=0)
     return runtime, outcome, trace
 
 
@@ -361,8 +392,11 @@ def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_te
     assert (spent[JOINT], paid[JOINT]) == (228, 148), f"the product's price, measured: {spent} candidates, {paid} worlds"
     assert _refused(im) == {} and paid[AVERSION] == 148, "the invariant weighed in every world, refusing none: " + str(paid)
     runtime, outcome, trace = _run(WORLD)
-    assert outcome == UNFINISHED and len(trace) == 10, "a desire holds the agent, and the one plan is walked in one pass"
+    assert outcome == UNFINISHED and len(trace) == 10, "a desire holds the agent, and the one plan is walked, a drive a pass"
     assert _at(runtime.beliefs) == {"van_a": "c0_3", "parcel_a": "c0_3", "van_b": "c3_3", "parcel_b": "c3_3"}
+    executor = runtime.parts["execution"].executor
+    assert int(rows(executor.intentions, _INTENTIONS_Q, ())[0]["n"]) == 1 and executor.walking() == [], \
+        "one plan, one intention, done: the cluster left once parcel A was delivered is the coupled want's, not a second want's"
     apart = _pass(variant(tmp_path, "disjoint", DISJOINT), budget=128)
     assert _wants(apart) == {"every_parcel_delivered.pursued.parcel_a": "every_parcel_delivered",
                              "every_parcel_delivered.pursued.parcel_b": "every_parcel_delivered"}
@@ -461,6 +495,49 @@ def test_a_wants_estimate_at_the_present_never_exceeds_what_its_plan_cost(tickin
         f"an estimate never overstates what the plan cost: {judged}"
     assert all((estimate == cost) == tight for estimate, cost in judged.values()), \
         f"{'tight, each certain step counted once' if tight else 'loose by the step the bound costs'}: {judged}"
+
+
+def test_a_drive_lands_within_its_band_and_the_steps_and_worlds_advance_along_the_path(ticking):
+    """THE COURIER'S LANDING BAND (#901), probed on the plan it places and not only on the outcome,
+    since a `landsAfter` text that will not parse is read as nought and the walk would still deliver.
+    Each step of the joint plan opens where the step before it lands — `execution:notBefore` is the
+    previous `landsAt` — a drive lands half a minute after it opens at the earliest and a minute after
+    the plan's latest so far at the latest, and a pick or a drop lands at once; so the six drives land
+    at six distinct instants, the plan's last step lands no earlier than three minutes after the root
+    and no later than six, and every possible world holds over the period its step's two ends say,
+    where before the band every world and step stood at the pass's one instant
+    (a-landing-is-a-band-and-a-world-holds-over-a-period). ADOPTED, each committed step is believed
+    from its opening to its latest landing plus the patience — a drive's window two minutes and more,
+    no longer the patience alone — with `landsWithinS` the band's least and `answeredWithinS` the window's
+    whole length. The band shifts instants and not the frontier's order: the candidates, the weighings
+    and the steps are the figures `test_apart` pins, unchanged."""
+    im = _pass(WORLD)
+    placed = rows(im, _PLACED_Q, (), want=D + JOINT)
+    assert len(placed) == 10
+    least = {"Drive": DRIVE_LEAST_S, "Pick": 0, "Drop": 0}
+    most = {"Drive": DRIVE_MOST_S, "Pick": 0, "Drop": 0}
+    opens, latest = NOW, NOW
+    landings = []
+    for r in placed:
+        action, nb, la, na = _local(r["a"]), _dt(r["nb"]), _dt(r["la"]), _dt(r["na"])
+        assert nb == opens, f"a step opens where the one before it lands: {action} {nb} against {opens}"
+        assert la == nb + timedelta(seconds=least[action]) and na == latest + timedelta(seconds=most[action]), \
+            f"the band, summed along the path: {action} opens {nb}, lands {la}, latest {na}"
+        assert (_dt(r["ws"]), _dt(r["we"])) == (la, na), "the world a step reaches holds over the period the step's two ends say"
+        if action == "Drive":
+            landings.append(la)
+        opens, latest = la, na
+    assert len(landings) == len(set(landings)) == 6, f"six drives, six distinct landings: {landings}"
+    assert (opens, latest) == (NOW + timedelta(minutes=3), NOW + timedelta(minutes=6)), "the plan's last step lands between three and six minutes out"
+    runtime, outcome, trace = _run(WORLD, passes=1)
+    assert outcome == UNFINISHED and len(trace) == 1, "one pass takes the first drive, which has not landed when the pass ends"
+    windows = rows(runtime.beliefs, _WINDOWS_Q, ())
+    assert len(windows) == 10, "every step of the adopted plan is a belief over its window"
+    for w in windows:
+        length, within, by = (_dt(w["e"]) - _dt(w["s"])).total_seconds(), float(w["within"]), float(w["by"])
+        assert within in (0.0, float(DRIVE_LEAST_S)) and by == length and length > PATIENCE_S, f"a window is its step's band plus the patience: {w}"
+    assert sum(1 for w in windows if float(w["within"]) == DRIVE_LEAST_S) == 6 and len({w["s"] for w in windows}) == 7, \
+        "six drives land within the least; a pick or a drop opens where its drive landed"
 
 
 def test_two_vans_on_one_cell_at_a_pass_start_mint_the_aversions_want_and_a_drive_parts_them(ticking, tmp_path):
