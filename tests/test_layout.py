@@ -1057,6 +1057,25 @@ def test_an_agent_that_finishes_is_not_restarted():
     assert {("sensing", "fern"), ("terrace", "terrace")} <= set(policies), "no agent lasts by its transport alone"
 
 
+def test_every_service_that_lasts_says_so():
+    """After a boot the host starts again what says it lasts (`podman-restart`, run-a-world), and
+    nothing else: the installation's two services said nothing, so no setting of the host could
+    have brought the series store back after the power cut of 2026-10-03. Every service the
+    installation renders, and every service of a world that is no agent — its broker, its
+    simulator — says `unless-stopped`; an agent says it or `"no"`, which the test above holds."""
+    import yaml
+
+    from onboarding import compose, installation
+
+    shared = {name: service.get("restart") for name, service in yaml.safe_load(installation.render())["services"].items()}
+    assert shared and set(shared.values()) == {"unless-stopped"}, shared
+    beside = {(world, name): service.get("restart")
+              for world in _worlds()
+              for name, service in yaml.safe_load(compose.render(world))["services"].items()
+              if not name.startswith("agent-")}
+    assert beside and set(beside.values()) == {"unless-stopped"}, beside
+
+
 def test_an_agent_holding_a_desire_is_restarted_with_no_transport(tmp_path, monkeypatch):
     """The other premise alone: every shipped agent holding a desire is reached by a transport too,
     so the desire could go unread and the test above stay green. Hanoi's mover, given a desire

@@ -447,6 +447,9 @@ services:
     # PINNED in the installation, and load-bearing: see the comment on its image there.
     image: {store["image"]}
     ports: ["{store_port}:8086"]
+    # It lasts, and says so as every agent that lasts does: after a boot the host starts again
+    # what says it (run-a-world), and what says nothing no setting of the host brings back.
+    restart: unless-stopped
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_ORG: {organisation}
@@ -468,6 +471,7 @@ services:
   grafana:
     image: {shown["image"]}
     ports: ["{view_port}:3000"]
+    restart: unless-stopped
     environment:
       # Anonymous viewing is OFF. Grafana legitimately spans every agent's bucket — it is the
       # operator's view, not a member's view of its neighbours — and that is exactly why it
