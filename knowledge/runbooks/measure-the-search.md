@@ -309,10 +309,10 @@ aversion IS the `unmetWhen` form, the avoided state as one select, and the figur
 a witness per van offending with the cell, the one want carrying the same select, the one-step
 plan, 4 weighings (measured 2026-10-04, pinned in `world/dispatcher/tests/test_dispatcher.py`).
 
-# The dispatcher: what a bound on worlds would cost, and a parked van (2026-10-04)
+# The dispatcher: what a bound on worlds would cost, a parked van, and the coupled price (2026-10-04)
 
-The measurements [a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next](/decisions/a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next.md)
-stands on, taken on the development container with the tree at `1f98dc14`, one pass of the Planner
+The measurements [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)
+stands on (its first version, sequencing the plans, was refused the next day for the coupled search; the figures were taken for both), taken on the development container with the tree at `1f98dc14`, one pass of the Planner
 at a budget of 128 over the booted world as the test builds it; not in the suite, since the
 mechanism they measure is decided and not built.
 

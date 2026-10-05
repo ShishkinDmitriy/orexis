@@ -129,9 +129,9 @@ derivation itself wrote — it was
   today; the ∀/∃ difference lives in the planner's treatment rather than in anything that checks
   it. Whether a maintenance constraint should be judged at every state of a candidate plan — which
   is what `always` meant and what no reader ever implemented — is the first thing to measure when
-  a Desire with a period is first written. Decided 2026-10-04 for the standing aversion: yes, as a
+  a Desire with a period is first written. Decided 2026-10-05 for the standing aversion: yes, as a
   bound and never a score — a world that newly enters the avoided state is refused
-  ([a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next](/decisions/a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next.md)).
+  ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)).
 - **A world cannot state a window on a want it ratifies.** Every want a world authors shares
   `graph/want/asserted`, so per-want periods need per-want graphs, minted at genesis. That is the
   only part of taking this model that is work rather than subtraction. (The authored desires and

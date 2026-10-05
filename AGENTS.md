@@ -220,11 +220,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   witness about nothing joins every cluster, and the dispatcher's two parcels were one want searched
   over both vans' every move, 674 candidates where a want per parcel costs 90
   (a-parcel-astray-is-a-want-of-its-own).
-- **A desire is weighed in grounds to mint and in possible worlds to bound, and a plan found is the
-  ground of the searches after it** — a world that newly enters an avoided state is refused and the
-  younger plan is found around the elder; weighed in grounds alone, the dispatcher's vans stood on
-  one cell for one act and no want was minted, and a derived want between two plans is refused
-  (#567, a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next).
+- **One mind couples the wants a constraint can make collide, and searches them as one** — a
+  constraint's footprint, read as a scope's is, says which wants' plans may interfere; those are one
+  cluster, one want, one search, optimal for both by construction, and the invariant is weighed in
+  every possible world to refuse one that newly enters it; a walking want is reconsidered when a want
+  the footprint couples to it arrives; two minds optimize alone and meet through prediction, the
+  market and execution; sequencing the elder plan as the younger's ground was refused as the two-minds
+  tool used on one (#567, one-mind-couples-the-wants-a-constraint-can-make-collide).
 - **A desire weighed in a ground and a want weighed in a possible world are one judgment at two
   grains**, and `planning:Weighing` carries the `planning:violation` rows for either.
 - **A derivation asks nothing the met-tests do not answer** — how far ahead the agent sees is the

@@ -112,9 +112,10 @@ more of them is finer foresight bought with more worlds.
   contains the earlier plan, which is the IRMA order (Bratman, Israel and Pollack, 1988): a
   commitment is background a new option is filtered against, earliest committed first. Two plans
   drawing one barrel still interfere only where a drift of the barrel's level reads the committed
-  draws; no shipped world observes a source's level yet. A step no drift will ever read — a
-  fictive one, a drive — is laid as its own prediction instead, decided 2026-10-04
-  ([a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next](/decisions/a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next.md)).
+  draws; no shipped world observes a source's level yet. A PEER's announced route is a prediction
+  graph laid the same way, and that is the two-minds tool; one mind's own second want is coupled
+  into one search instead, decided 2026-10-05
+  ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)).
 - **A possible world is judged in the ground at its earliest landing, not in every ground its
   landing overlaps.** Since 2026-10-03 a world holds over the period its path's landing bands sum
   to, and since 2026-10-04 it is forked from the ground holding at its earliest landing with the

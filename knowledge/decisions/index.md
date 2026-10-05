@@ -65,7 +65,7 @@ What happens to a decision — committed as an intention, carried out by whoever
 * [an-action-takes-parameters](/decisions/an-action-takes-parameters.md) - An action declares what it is filled with; the kernel carries opaque pairs and names no column.
 * [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) - `orexis:Means` read by nothing; the action node is what a row carries and an intention commits to, and the five means are gone.
 * [a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md) - A step predicts in two graphs it names, stated and never asserted; a JSON literal, reification and RDF-star refused, the precondition retired.
-* [a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next](/decisions/a-desire-bounds-the-search-and-a-plan-found-is-the-ground-of-the-next.md) - A desire refuses a world newly entering its avoided state; a plan found is laid as predictions the next search forks from. Derived want refused.
+* [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md) - One mind couples the wants a constraint can make collide into one search; two minds meet through prediction, the market and execution. Sequencing refused.
 
 # The mind — deliberation and the model
 

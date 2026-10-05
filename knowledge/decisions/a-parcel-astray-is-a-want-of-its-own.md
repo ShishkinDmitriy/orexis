@@ -20,6 +20,14 @@ status: accepted
 timestamp: 2026-10-04T18:00:00Z
 ---
 
+# Amended 2026-10-05
+
+A parcel astray is a want of its own UNLESS a constraint can couple it to another — the two-vans
+aversion reads `at` on vans and joins on the cell, so two parcels whose vans may meet are one cluster,
+one want and one search, and the 674-against-90 price this record paid to avoid is paid there and
+only there ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)).
+Everything below stands for parcels no constraint can join.
+
 # The claim
 
 `derive_wants` clusters a desire's witnesses by the [scope](/domain/planning/scope.md) of what each
