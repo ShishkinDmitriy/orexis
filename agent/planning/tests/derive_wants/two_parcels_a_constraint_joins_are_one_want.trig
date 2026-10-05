@@ -1,0 +1,210 @@
+# two_parcels_a_constraint_joins_are_one_want
+#
+# TWO INSTANCES A CONSTRAINT CAN MAKE COLLIDE ARE ONE WANT. The `two_parcels_two_estimates` world —
+# two vans and two parcels on one 2x4 grid under one desire that every parcel stand where it is
+# owed — with the dispatcher's aversion beside it, `planning:unmetWhen` no cell holds two vans, and
+# the courier's three actions, which the reach is closed over. Apart, the two parcels are two
+# clusters, one per instance (a-parcel-astray-is-a-want-of-its-own); here the aversion reads `at`
+# on vans joined on the cell, both vans can reach every cell of the one grid from where they stand,
+# so the constraint can make a plan for either parcel collide with a plan for the other, and the two
+# are ONE cluster: one want about both, named for both, its met-test targeting both parcels and its
+# estimate the desire's, the sum over both (one-mind-couples-the-wants-a-constraint-can-make-collide).
+# The aversion itself reads met — the vans stand apart — and mints nothing.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+
+GRAPH :ontology {
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :c0_0 a courier:Cell .
+  :c0_0 courier:x 0 .
+  :c0_0 courier:y 0 .
+  :c0_1 a courier:Cell .
+  :c0_1 courier:x 0 .
+  :c0_1 courier:y 1 .
+  :c0_2 a courier:Cell .
+  :c0_2 courier:x 0 .
+  :c0_2 courier:y 2 .
+  :c0_3 a courier:Cell .
+  :c0_3 courier:x 0 .
+  :c0_3 courier:y 3 .
+  :c1_0 a courier:Cell .
+  :c1_0 courier:x 1 .
+  :c1_0 courier:y 0 .
+  :c1_1 a courier:Cell .
+  :c1_1 courier:x 1 .
+  :c1_1 courier:y 1 .
+  :c1_2 a courier:Cell .
+  :c1_2 courier:x 1 .
+  :c1_2 courier:y 2 .
+  :c1_3 a courier:Cell .
+  :c1_3 courier:x 1 .
+  :c1_3 courier:y 3 .
+  :keeper a orexis:Agent .
+  :parcel_a a courier:Parcel .
+  :parcel_a courier:destination :c0_3 .
+  :parcel_b a courier:Parcel .
+  :parcel_b courier:destination :c1_3 .
+  :van_a a courier:Van .
+  :van_b a courier:Van .
+}
+
+# THE COURIER'S THREE ACTIONS, as `domains/courier/actions.ttl` states them: what the reach is
+# closed over, so the constraint is asked which collisions the plans could actually make.
+GRAPH :actions {
+  courier:Drive a orexis:Action .
+  courier:Drive orexis:takes courier:to .
+  courier:Drive orexis:takes courier:van .
+  courier:Drive planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { $van courier:at ?old  }
+      WHERE  { $van courier:at ?old  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+      CONSTRUCT { $van courier:at $to } WHERE { }""" ] ] .
+  courier:Drive planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT ?van ?to WHERE {
+          ?van courier:at ?here .
+          ?van a courier:Van .
+          ?here courier:x ?hx ; courier:y ?hy .
+          ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
+          FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
+      }""" .
+  courier:Drop a orexis:Action .
+  courier:Drop orexis:takes courier:parcel .
+  courier:Drop orexis:takes courier:to .
+  courier:Drop planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { $parcel courier:carriedBy ?van  }
+      WHERE  { $parcel courier:carriedBy ?van  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+      CONSTRUCT { $parcel courier:at $to } WHERE { }""" ] ] .
+  courier:Drop planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT ?parcel ?to WHERE {
+          ?parcel courier:carriedBy ?van . ?van courier:at ?to .
+          ?parcel a courier:Parcel .
+      }""" .
+  courier:Pick a orexis:Action .
+  courier:Pick orexis:takes courier:parcel .
+  courier:Pick orexis:takes courier:van .
+  courier:Pick planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { $parcel courier:at ?cell  }
+      WHERE  { $parcel courier:at ?cell  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+      CONSTRUCT { $parcel courier:carriedBy $van } WHERE { }""" ] ] .
+  courier:Pick planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT ?parcel ?van WHERE {
+          ?van courier:at ?cell . ?parcel courier:at ?cell .
+          ?parcel a courier:Parcel .
+          ?van a courier:Van .
+      }""" .
+}
+
+GRAPH :desires {
+  :delivered a sh:NodeShape .
+  :delivered sh:property [ planning:about sh:this ; sh:equals courier:destination ; sh:path courier:at ] .
+  :delivered sh:targetClass courier:Parcel .
+  :drivesOwed rdfs:label "drives still owed" .
+  :drivesOwed sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT (SUM(?d) AS ?estimate) WHERE {
+          SELECT ?p (MIN(?dist) AS ?d) WHERE {
+              {
+                  $this a courier:Parcel ; courier:destination ?owed .
+                  ?owed courier:x ?ox ; courier:y ?oy .
+                  $this courier:carriedBy ?van . ?van courier:at ?vc .
+                  ?vc courier:x ?vx ; courier:y ?vy .
+                  BIND($this AS ?p)
+                  BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
+              } UNION {
+                  $this a courier:Parcel ; courier:destination ?owed .
+                  ?owed courier:x ?ox ; courier:y ?oy .
+                  $this courier:at ?pc . ?v courier:at ?vc .
+                  ?v a courier:Van .
+                  ?pc courier:x ?px ; courier:y ?py .
+                  ?vc courier:x ?vx ; courier:y ?vy .
+                  FILTER(?px != ?ox || ?py != ?oy)
+                  BIND($this AS ?p)
+                  BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
+                       + ABS(?px - ?ox) + ABS(?py - ?oy) AS ?dist)
+              }
+          } GROUP BY ?p
+      }""" .
+  :keeper planning:holds :keeper.every_parcel_delivered .
+  :keeper planning:holds :keeper.no_cell_holds_two_vans .
+  :keeper.every_parcel_delivered a planning:Desire .
+  :keeper.every_parcel_delivered planning:estimates :drivesOwed .
+  :keeper.every_parcel_delivered planning:metWhen :delivered .
+  :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
+  :keeper.no_cell_holds_two_vans a planning:Desire .
+  :keeper.no_cell_holds_two_vans planning:unmetWhen :two_vans_on_one_cell .
+  :keeper.no_cell_holds_two_vans rdfs:label "no cell holds two vans" .
+  :two_vans_on_one_cell sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT $this ?value WHERE {
+          $this a courier:Van ;
+              courier:at ?value .
+          ?other a courier:Van ;
+              courier:at ?value .
+          FILTER(?other != $this)
+      }""" .
+}
+
+GRAPH :sensed {
+  :parcel_a courier:at :c0_1 .
+  :parcel_b courier:at :c1_1 .
+  :van_a courier:at :c0_0 .
+  :van_b courier:at :c1_1 .
+}
+
+GRAPH :scopes {
+  :c0_0 planning:inScope :keeper.scope.1 .
+  :c0_1 planning:inScope :keeper.scope.1 .
+  :c0_2 planning:inScope :keeper.scope.1 .
+  :c0_3 planning:inScope :keeper.scope.1 .
+  :c1_0 planning:inScope :keeper.scope.1 .
+  :c1_1 planning:inScope :keeper.scope.1 .
+  :c1_2 planning:inScope :keeper.scope.1 .
+  :c1_3 planning:inScope :keeper.scope.1 .
+  :keeper.scope.1 a planning:Scope .
+  :parcel_a planning:inScope :keeper.scope.1 .
+  :parcel_b planning:inScope :keeper.scope.1 .
+  :van_a planning:inScope :keeper.scope.1 .
+  :van_b planning:inScope :keeper.scope.1 .
+  courier:Drive planning:inScope :keeper.scope.1 .
+  courier:Drop planning:inScope :keeper.scope.1 .
+  courier:Pick planning:inScope :keeper.scope.1 .
+  courier:at planning:inScope :keeper.scope.1 .
+  courier:carriedBy planning:inScope :keeper.scope.1 .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH :catalogue {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

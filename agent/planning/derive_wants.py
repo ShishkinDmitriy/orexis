@@ -38,6 +38,7 @@ from agent.store import NAMESPACES, Memo, Raw, bind, graphs_of, rdflib_view, rem
 
 from .ontology import DESIRE, PLANNING, SHAPES, WANT
 from .withdraw import FORGET_ONE_U
+from .couplings import couplings
 from .find_scopes import find_scopes
 
 RECOGNIZED = PLANNING + "Recognized"
@@ -114,8 +115,15 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
     shapes = remember(memo, ("shapes",),
                       lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
     scopes = find_scopes(store)
-    if not rows(store, _GROUNDS_Q, ()):
+    grounds = rows(store, _GROUNDS_Q, ())
+    if not grounds:
         raise RuntimeError("the store holds no ground — lay_ground has not run")
+    #  WHAT THE HOLDER'S CONSTRAINTS CAN MAKE COLLIDE, read once per holder over the reach from
+    #  the present ground, the first laid (`couplings`): the instances a constraint couples are
+    #  one cluster below, whatever desire they fall under. A holder with no constraint pays one
+    #  query and couples nothing (one-mind-couples-the-wants-a-constraint-can-make-collide).
+    present = grounds[0]["g"]
+    coupled: dict = {}
     wanted: set[str] = set()
     for holder, desire in _desires_in(store):
         found = _troubles(store, desire, scopes)
@@ -126,8 +134,10 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
             #  on a bad shape.
             wanted |= _standing_under(store, desire, now)
             continue
-        _derive_under(store, shapes, scopes, holder, desire, found, now)
-        wanted |= _named(shapes, scopes, desire, _said(store, desire), found)
+        if holder not in coupled:
+            coupled[holder] = couplings(store, holder, present, now, memo=memo)
+        _derive_under(store, shapes, scopes, holder, desire, found, now, coupled[holder])
+        wanted |= _named(shapes, scopes, desire, _said(store, desire), found, coupled[holder])
     return wanted
 
 
@@ -137,15 +147,17 @@ def _standing_under(store: ox.Store, desire: str, now: datetime) -> set[str]:
 
 
 def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, holder: str,
-                  desire: str, found: list[dict], now: datetime) -> list[str]:
+                  desire: str, found: list[dict], now: datetime, coupled=None) -> list[str]:
     """The wants one desire's witnesses imply, minted where none stands. `found` is what its
     met-test read over time: one witness per way of failing, each carrying the boundary it
-    first reads unmet at and the one it lifts at."""
-    #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE, and per INSTANCE: the results clustered by
-    #  which of them some action can move together, and a want minted per cluster about
-    #  exactly those, holding at the earliest instant among them. Every shipped world is one
-    #  scope, so two properties of one bed are one want; two debts are two instances and two
-    #  wants. A cluster that already has its want — `about` for `about` — is left standing.
+    first reads unmet at and the one it lifts at; `coupled` what the holder's constraints can
+    make collide, which joins two instances into one want."""
+    #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE, and per INSTANCE — UNLESS A CONSTRAINT COUPLES
+    #  TWO: the results clustered by which of them some action can move together, and a want
+    #  minted per cluster about exactly those, holding at the earliest instant among them. Every
+    #  shipped world is one scope, so two properties of one bed are one want; two debts are two
+    #  instances and two wants; two parcels whose vans can meet are one want about both, searched
+    #  as one. A cluster that already has its want — `about` for `about` — is left standing.
     #
     #  UNLESS WHAT WAS FORESEEN HAS ARRIVED. A want minted at a foreseen instant says "hold
     #  at T", and a plan for it is placed to land at T (#619). A cluster unmet NOW whose want
@@ -164,12 +176,12 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
     #  desire is about, for a desire whose select yields rows naming no property. A desire that
     #  reads MET at every boundary reaches this loop with NO clusters, so what stands under it
     #  is withdrawn.
-    clusters = _clusters(scopes, found) or ([[]] if found else [])
+    clusters = _clusters(scopes, found, coupled) or ([[]] if found else [])
     minted = []
     for cluster in clusters:
         about = tuple(sorted({w["about"] for w in cluster if w["about"]}))
-        instances = {w["instance"] for w in cluster}
-        instance = next(iter(instances)) if len(instances) == 1 else None
+        instances = tuple(sorted({w["instance"] for w in cluster}))
+        instance = instances[0] if len(instances) == 1 else None
         keys = _keys_of(cluster)
         child = _name_of(shapes, desire, said, about, instance, keys)
         #  THE STRETCH THIS CLUSTER IS IN TROUBLE OVER: from the earliest boundary any of its
@@ -187,7 +199,7 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
         if child in standing:
             continue
         child = _mint(store, shapes, holder, desire, now, at, until, said,
-                     about=about, instance=instance, keys=keys)
+                     about=about, instances=instances, keys=keys)
         if child is not None:
             minted.append(child)
     return minted
@@ -201,14 +213,14 @@ def _keys_of(cluster: list[dict]) -> tuple[str, ...]:
 
 
 def _named(shapes: rdflib.Graph, scopes: dict | None, desire: str, said,
-           found: list[dict]) -> set[str]:
+           found: list[dict], coupled=None) -> set[str]:
     """The names the clusters of `found` come to — what minting would call them.
 
     One namer for both halves: `_derive_under` mints under these names and `_withdraw_under`
     keeps what is under them, so the two can never disagree about which want a cluster is.
     """
     out = set()
-    for cluster in _clusters(scopes, found):
+    for cluster in _clusters(scopes, found, coupled):
         about = tuple(sorted({w["about"] for w in cluster if w["about"]}))
         instances = {w["instance"] for w in cluster}
         out.add(_name_of(shapes, desire, said, about,
@@ -216,12 +228,20 @@ def _named(shapes: rdflib.Graph, scopes: dict | None, desire: str, said,
     return out
 
 
-def _clusters(scopes: dict | None, witnesses: list) -> list[list]:
+def _clusters(scopes: dict | None, witnesses: list, coupled=None) -> list[list]:
     """The witnesses grouped by SCOPE — which of them some action can move together — so a
     want is minted per group. Two in one scope are one want and one cone; two in different
     scopes are two, planned apart and concatenated, which is the mechanism `scope.md` says the
     concept exists for. A witness naming no property, or one no scope holds, joins every group
     it could belong to, which with one scope is the one group.
+
+    AND BY WHAT A CONSTRAINT CAN MAKE COLLIDE. Two instances of one scope in trouble over one
+    stretch are two groups — two parcels, two wants, two searches that cannot see each other's
+    plan — unless `coupled` says a constraint the holder holds can join them: then they are ONE
+    group, one want about both and one search, which finds the plan optimal for both by
+    construction and in which the invariant can refuse the colliding world. The two-vans
+    aversion joins two parcels whose vans can meet on a cell and leaves two on disjoint grids
+    apart (`couplings`, one-mind-couples-the-wants-a-constraint-can-make-collide).
 
     THE SCOPES ARE READ, NEVER COMPUTED: `scope_actions` wrote them (scope-actions), read
     once per call and handed in, and a store holding no scope graph is refused rather than
@@ -267,6 +287,8 @@ def _clusters(scopes: dict | None, witnesses: list) -> list[list]:
         key = ((scope, w["instance"], w["at"], w["until"])
                if scope is not None or w["about"] == w["instance"] else None)
         (groups.setdefault(key, []) if key is not None else loose).append(w)
+    if coupled is not None and len(groups) > 1:
+        groups = _coupled(groups, coupled)
     if not groups:
         return [loose]
     #  A WITNESS NAMING NO SCOPE joins every group it could belong to, as it always has — but
@@ -277,6 +299,33 @@ def _clusters(scopes: dict | None, witnesses: list) -> list[list]:
         for group in shared or groups.values():
             group.append(w)
     return list(groups.values())
+
+
+def _coupled(groups: dict, coupled) -> dict:
+    """The groups with those a constraint couples merged: two groups of one scope over one
+    stretch whose instances `coupled.joins` are one, under the first's key, and transitively —
+    three vans that can each meet the next are one search. A group keyed by another scope or
+    another stretch is never joined: a constraint reaches across neither, since a want is one
+    period and a scope's actions write nothing another scope's constraint reads."""
+    keys = sorted(groups, key=lambda k: tuple(str(x) for x in k))
+    parent = {k: k for k in keys}
+
+    def find(k):
+        while parent[k] != k:
+            parent[k] = parent[parent[k]]
+            k = parent[k]
+        return k
+
+    for i, a in enumerate(keys):
+        for b in keys[i + 1:]:
+            if (a[0], a[2], a[3]) == (b[0], b[2], b[3]) and coupled.joins(a[1], b[1]):
+                ra, rb = find(a), find(b)
+                if ra != rb:
+                    parent[rb] = ra
+    merged: dict = {}
+    for k in keys:
+        merged.setdefault(find(k), []).extend(groups[k])
+    return merged
 
 
 def _said(store: ox.Store, desire: str) -> list[tuple[str, object]]:
@@ -468,12 +517,14 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
 
 def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: datetime,
          at: datetime, until: datetime | None = None, said=None,
-         about: tuple = (), instance: str | None = None, keys: tuple = ()) -> str | None:
+         about: tuple = (), instances: tuple = (), keys: tuple = ()) -> str | None:
     """Derive the want pursued under `desire` and write it to the pursued graph, named by
     `_name_of`. None, and the desire stays the goal, where the desire states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
-    owner of the claim."""
+    owner of the claim. `instances` are the cluster's — one, where the want is about one; two
+    where a constraint coupled them, and then the want is about both."""
     said = _said(store, desire) if said is None else said
+    instance = instances[0] if len(instances) == 1 else None
     #  `about` NAMES AND DOES NOT NARROW. What a cluster is about distinguishes two wants
     #  under one desire — soil now, air later, two nodes — and that is an IDENTITY. It is not
     #  written onto the want, because a stated property is the planning problem answered in
@@ -516,20 +567,24 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
     #  the want is judged on its instance and a plan for one tank is not refused for another's.
     #  UNDER THE DESIRE'S OWN POLARITY: a shape it is met when stays a shape, `.met`; an avoided
     #  state it is unmet when stays a select, `.avoided`, its one `sh:select` carried whole and
-    #  the instance written as `sh:targetNode` beside it, which the compiler reads as it reads a
+    #  each instance written as `sh:targetNode` beside it, which the compiler reads as it reads a
     #  shape's (#892). The names are for eyes; a reader asks the want which it carries.
     shape_lines: tuple = ()
     if met_test is not None:
         polarity, shape = met_test
         own = child + (".met" if polarity == MET_WHEN else ".avoided")
-        shape_lines = _narrowed(shapes, shape, own, instance, about)
+        shape_lines = _narrowed(shapes, shape, own, instances, about)
         points.append((polarity, own))
     #  AND SO IS THE ESTIMATE, where it speaks of the instance: the desire's select with `$this`
     #  bound to the one instance this want is about, written beside the met-test under the
     #  want's own name (`_instantiated`). The desire's select sums over every instance, which
     #  is right for the desire and overstated the want's — a want per parcel read the other
     #  parcel's drives in its `planning:remaining` and forked the other van (#893). A select
-    #  that names no `$this`, or a want about several instances, points at the desire's as ever.
+    #  that names no `$this` points at the desire's as ever, and so does a want a constraint
+    #  coupled about several instances: its estimate is the desire's sum over them, which is the
+    #  joint plan's cost and the A* key the coupled search wants — and the whole sum, so where a
+    #  third instance is astray and coupled to neither it is counted too, a seam
+    #  (knowledge/domain/planning/constraint.md).
     if estimate is not None:
         own = child + ".estimate"
         lines = _instantiated(shapes, estimate, own, instance)
@@ -574,18 +629,21 @@ def _local(holder: str) -> str:
     return holder.rsplit("#", 1)[-1].rsplit("/", 1)[-1]
 
 
-def _narrowed(shapes: rdflib.Graph, shape: str, own: str, instance: str | None, abouts: tuple) -> tuple[str, ...]:
+def _narrowed(shapes: rdflib.Graph, shape: str, own: str, instances: tuple, abouts: tuple) -> tuple[str, ...]:
     """The desire's met-test as THIS want's: the same shape under the want's own name, its
-    target the one instance the want is about where the cluster had one, and only the property
-    blocks and `sh:sparql` constraints about what the want is about — the universal instantiated
-    at its witness (a-desire-is-universal-and-a-want-is-existential). A block or constraint
-    saying nothing about what it is about is kept, as is one about `sh:this`, which is the
-    instance. The triples, as N-Triples lines the write puts into the want's graph.
+    targets the instances the want is about — one `sh:targetNode` each, where the cluster had
+    any — and only the property blocks and `sh:sparql` constraints about what the want is about —
+    the universal instantiated at its witnesses (a-desire-is-universal-and-a-want-is-existential).
+    A block or constraint saying nothing about what it is about is kept, as is one about
+    `sh:this`, which is each instance. The triples, as N-Triples lines the write puts into the
+    want's graph.
 
     Carved from the graphs of desires and wants, asked by classification, where a desire's shape
     lives; a shape that names its one node (`sh:targetNode`) narrows to the same node, so
     sensing's wants and the greenhouse's keep their target and lose only the blocks they are
-    not about.
+    not about. A want a constraint coupled about two parcels targets the two and not the class,
+    so a third parcel astray is not this want's to judge; a cluster with no instance — the
+    fallback, one want about everything the desire is about — keeps the desire's targets.
     """
     from rdflib import Graph, URIRef
     from rdflib.namespace import SH
@@ -599,17 +657,23 @@ def _narrowed(shapes: rdflib.Graph, shape: str, own: str, instance: str | None, 
     keep = {URIRef(a) for a in abouts}
     out, dropped = Graph(), Graph()
     for p, o in cbd.predicate_objects(URIRef(shape)):
-        if p in targets and instance is not None:
+        if p in targets and instances:
             continue
         if p in (SH.property, SH.sparql):
             about = cbd.value(o, about_p)
             if about == SH.this:
-                about = URIRef(instance) if instance is not None else None
+                #  ABOUT THE INSTANCES THEMSELVES: kept where the want is about any of them, or
+                #  about no instance at all, and dropped only where the cluster is about something
+                #  else — the block's parcel, under a cluster about the moisture.
+                if instances and keep and not keep & {URIRef(i) for i in instances}:
+                    dropped += cbd.cbd(o)
+                    continue
+                about = None
             if keep and about is not None and about not in keep:
                 dropped += cbd.cbd(o)
                 continue
         out.add((URIRef(own), p, o))
-    if instance is not None:
+    for instance in instances:
         out.add((URIRef(own), SH.targetNode, URIRef(instance)))
     for s, p, o in cbd:
         if s != URIRef(shape) and (s, p, o) not in dropped:

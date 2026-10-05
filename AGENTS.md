@@ -216,12 +216,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   judges either** — `planning:unmetWhen` was declared, carried onto wants and compiled since #468
   and weighed by nothing, so the dispatcher's aversion shipped as a shape named for the good state
   wrapping the select of the bad one (#892).
-- **A shape over instances says each block is about `sh:this`, or two instances are one want** — a
-  witness about nothing joins every cluster, and the dispatcher's two parcels were one want searched
-  over both vans' every move, 674 candidates where a want per parcel costs 90
-  (a-parcel-astray-is-a-want-of-its-own).
+- **A shape over instances says each block is about `sh:this`, and two instances are one want only
+  where a constraint can make their plans collide** — a witness about nothing joins every cluster; the
+  dispatcher's two parcels are one want on a shared grid, 228 candidates where two apart cost 50, and
+  two wants on disjoint grids (a-parcel-astray-is-a-want-of-its-own, constraint).
 - **One mind couples the wants a constraint can make collide, and searches them as one** — a
-  constraint's footprint, read as a scope's is, says which wants' plans may interfere; those are one
+  constraint's footprint, read over what the actions can REACH from the present (off the public
+  graphs alone, as a scope's is, it is grid-blind, measured), says which wants' plans may interfere; those are one
   cluster, one want, one search, optimal for both by construction, and the invariant is weighed in
   every possible world to refuse one that newly enters it; a walking want is reconsidered when a want
   the footprint couples to it arrives; two minds optimize alone and meet through prediction, the

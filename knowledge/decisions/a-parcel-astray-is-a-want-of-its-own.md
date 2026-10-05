@@ -24,8 +24,14 @@ timestamp: 2026-10-04T18:00:00Z
 
 A parcel astray is a want of its own UNLESS a constraint can couple it to another — the two-vans
 aversion reads `at` on vans and joins on the cell, so two parcels whose vans may meet are one cluster,
-one want and one search, and the 674-against-90 price this record paid to avoid is paid there and
+one want and one search, and the price this record paid to avoid is paid there and
 only there ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)).
+Built in #900 and measured the same day, alternated against the tree before it: on the shipped pose
+the one want about both parcels finds the ten-step plan at 228 candidates and 148 weighings in 2.6 s
+where two wants apart cost 50, 23 and 23 and 0.21 s — the product's price with the estimate counting
+the pick and the drop, where it was 674 against 90 with the drives alone — and a budget of 128 cuts
+it short; two parcels whose vans stand on disjoint grids are still two wants at 50, 23 and 23
+([measure-the-search](/runbooks/measure-the-search.md), [constraint](/domain/planning/constraint.md)).
 Everything below stands for parcels no constraint can join.
 
 # The claim

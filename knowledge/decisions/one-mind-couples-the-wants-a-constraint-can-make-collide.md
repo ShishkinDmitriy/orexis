@@ -89,6 +89,17 @@ never meet; a parcel want and a want about soil never meet; those stay separate 
 product. The analysis is the scopes' meet, one level up, and it is what makes coupling affordable:
 the product is paid only by the groups a constraint can actually make collide.
 
+*Built 2026-10-05 (#900), and one word of the above was wrong: read as a scope's atoms are, off the
+public graphs with every pattern optional, the aversion is grid-blind — it joins `van_a` to `van_b`
+with the cell unbound on the shipped pose and on two grids a continent apart alike, since the drive's
+adjacency is a `FILTER` over coordinates and the public half of a text is its patterns. The footprint
+is read instead over the REACH, the delete-free closure of the effects' constructs over their
+preconditions from the present ground, where the aversion's rows are the collisions the plans could
+make: 32 on the shared grid, none on disjoint grids. An instance meets a row's terms through a filling
+the reach admits that binds both, the pick of the parcel into the van. Per pass, in the derivation,
+since the reach begins at the present; 17 ms a pass on the dispatcher and one query on a holder with
+no aversion ([constraint](/domain/planning/constraint.md), `agent/planning/couplings.py`).*
+
 **A constraint is its own concept, with two kinds.** The bundle has the desire and the precondition
 and nothing between: a desire is what the agent wants of the world, a precondition what one action
 needs. A constraint is what a plan may not do, however the want is met, and it has two kinds that
@@ -211,13 +222,30 @@ yet — and for the resource, since two windows can overlap only once they have 
 | the corridor, two wants | 2 | 33 and 33 | 68 | 0 | the aversion weighed in all 68 reads unmet in none, 0.56 ms a world |
 | a van parked across the only shortest path | 1 | 58 | 66 | 11 | unmet in exactly those 11 |
 | one want about both parcels, coupled (before a-parcel-astray) | 1 | 674 candidates | | | ten-step joint plan, 85 s at budget 1024; two apart cost 90 |
+| the shipped pose, coupled by the aversion (#900, built) | 1 | 148 | 228 | 0 | ten-step joint plan, 2.6 s at budget 256, cut short at 128; two apart cost 50 and 0.21 s |
+| the corridor, coupled (#900) | 1 | 216 | 296 | 18 | ten-step joint plan, 5.3 s at budget 512; nothing refuses the 18, the bound being #902's |
+| the vans on disjoint grids (#900) | 2 | 23 and 23 | 50 | 0 | the aversion over the reach yields no row; two wants as before |
 
 # Seams left open
 
 - **The product's budget.** A coupled group costs the product of its members' moves, exponential in
   vans; the footprint keeps the group small and the bound prunes the colliding worlds, and the pass
   is still bounded by its budget in worlds. The first group whose joint plan no budget finds is the
-  trigger for the fallback, sequencing or reconciliation, and for measuring which.
+  trigger for the fallback, sequencing or reconciliation, and for measuring which. Measured 2026-10-05:
+  the shipped pose needs 228 candidates and the corridor 296, and both vans posed on one cell with
+  their parcels where they stand — a joint delivery of thirteen steps — is found by neither 128 nor
+  512, the latter in 32 seconds, so the trigger is already in the suite, pinned as `Exhausted` in
+  `world/dispatcher/tests/test_dispatcher.py`.
+- **The joint want's estimate is the desire's whole sum.** A want a constraint coupled about several
+  instances points at the desire's select with `$this` unbound, which sums over EVERY instance astray;
+  where the coupled instances are all there are that is the joint plan's cost exactly, and where a
+  third parcel is astray and coupled to neither its drives are counted too, an overstatement. Binding
+  `$this` to several instances is a `VALUES` block in a text whose inner group the derivation cannot
+  find without owning the select's grammar; the first world with three parcels decides how.
+- **A reach is one scope's actions wide and the holder's own.** The reach is closed over every action
+  the store holds with `$me` the holder, in the imaginarium of the scope the derivation runs in; a
+  scope whose actions another scope's constraint reads is already one scope with it, so nothing is
+  lost, and a coupling across two holders' desires in one store is not asked.
 - **Concurrent steps.** A plan is a sequence and is walked one head at a time, so a coupled plan
   moves one van at a time. Two vans moving at once in one plan is a partial order over steps, which
   no plan says and no executor walks; its trigger is the first world whose driver is two, and it is

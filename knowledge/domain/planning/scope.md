@@ -34,7 +34,9 @@ two cases that look obvious are the reason:
   the soil. One action across both makes one scope.
 - Two vans in one courier vocabulary look like one until you notice nothing they do touches the
   same van — and ARE one, by key as by predicate, while a parcel either van could pick is a filling
-  value of both vans' Pick (`world/dispatcher/`, the two-vans seam of the record below).
+  value of both vans' Pick (`world/dispatcher/`, the two-vans seam of the record below). Whether
+  their two parcels are one want or two is not the scope's question but the
+  [constraint](/domain/planning/constraint.md)'s.
 
 The second names what a predicate alone could not do. A scope was a set of PREDICATES until
 #593, and separated a vocabulary and never two instances of one: a pump and a heater both write a
@@ -91,7 +93,8 @@ member to scopes, and a reader places a reading, a witness or a want where the s
 names MEET: the bed is the pump's and the heater's, the soil's property each pump's, and a reading
 naming both is the one pump's. `derive_wants` clusters a desire's witnesses by the scope of what
 each is about and, where that is two scopes', by its key — the bed its offending reading names —
-never recomputing the partition. The Planner keeps an
+never recomputing the partition, and merges within a scope what a
+[constraint](/domain/planning/constraint.md) couples. The Planner keeps an
 imaginarium per scope, places a want by the predicates its met-test reads and, where those leave
 more than one, by the terms it names and the key it carries, and hands each search the actions
 `planning:inScope` of it and the terms that are another scope's, so a scope admits the FILLINGS

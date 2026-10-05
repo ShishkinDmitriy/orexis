@@ -314,7 +314,8 @@ plan, 4 weighings (measured 2026-10-04, pinned in `world/dispatcher/tests/test_d
 The measurements [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)
 stands on (its first version, sequencing the plans, was refused the next day for the coupled search; the figures were taken for both), taken on the development container with the tree at `1f98dc14`, one pass of the Planner
 at a budget of 128 over the booted world as the test builds it; not in the suite, since the
-mechanism they measure is decided and not built.
+mechanism they measure — the bound — is decided and not built. The coupling is built, and its
+figures are the next section's.
 
 | case | wants | weighings | worlds | holding two vans | the aversion weighed in every world | walked |
 |---|---|---|---|---|---|---|
@@ -329,6 +330,49 @@ walk**: no committed step (every window closed and swept inside the pass), no pr
 no sensor. The parked van is the case a bound on worlds refuses and the corridor the case it
 cannot: the plan through the parked van visits eleven worlds that hold two vans, where the two
 corridor plans, each moving its own van, visit none.
+
+# The dispatcher: the wants the aversion couples, searched as one (2026-10-05, #900)
+
+The derivation couples two instances a [constraint](/domain/planning/constraint.md) can make collide
+into one want, and the dispatcher's aversion — `at` on vans, joined on the cell — couples its two
+parcels wherever both vans can reach one cell. Measured on the development container, the tree before
+the change (`c8cd7ad1`) and the tree with it alternated per case in one session, five rounds, one pass
+of the Planner over the booted world as `world/dispatcher/tests/test_dispatcher.py` builds it, each
+tree at the budget its search needs; candidates are the possible worlds the pass made, weighings the
+worlds weighed per want. The counts did not move between rounds on either tree.
+
+| pose | tree | budget | wants | candidates | weighings per want | plan | pass, median of five (min) | worlds holding two vans |
+|---|---|---|---|---|---|---|---|---|
+| apart, as shipped | before | 128 | two, one per parcel | 50 | 23 and 23 | two of five steps | 206 ms (171) | 0 |
+| apart, as shipped | after | 128 | ONE, about both | 128 of 128 | 87 | `Exhausted` | 708 ms (668) | 0 |
+| apart, as shipped | after | 256 | one | 228 | 148 | one of ten steps | 2577 ms (2488) | 0 |
+| the corridor | before | 128 | two | 68 | 33 and 33 | two of five steps | 295 ms (262) | 0 |
+| the corridor | after | 512 | one | 296 | 216 | one of ten steps | 5272 ms (4973) | 18 |
+| the vans on disjoint grids | before | 128 | two | 50 | 23 and 23 | two of five steps | 196 ms (182) | 0 |
+| the vans on disjoint grids | after | 128 | two | 50 | 23 and 23 | two of five steps | 258 ms (211) | 0 |
+
+**The coupled search pays the product and finds the joint optimum.** Ten steps for 228 candidates on
+the shipped pose, against the 674 the same coupled want cost before the estimate was bound to its
+instances and counted the pick and the drop (a-parcel-astray-is-a-want-of-its-own): the joint want's
+estimate is the desire's sum, ten at the root and the plan's own cost, so every interleaving of the
+two five-step chains stands at ten on the frontier and is opened in turn, and the 80 candidates beyond
+the 148 worlds weighed are interleavings that reached a world already made. The default budget of 128
+cuts it short, so the world's tests state 256 and the corridor's 512. Twelve times the pass, for a
+plan that is optimal for both parcels by construction where two plans apart could only be optimal
+each; the pass still ends inside a cadence.
+
+**Disjoint grids pay nothing but the reach.** The aversion over what the vans can reach yields no row,
+the parcels stay two wants, and every count is the tree before's. The gap of 60 ms on that pose is
+the reach and the noise around it: the read itself — the delete-free closure over the courier's three
+constructs, seven rounds, and the aversion and the preconditions asked over it — is 17 ms a pass on
+the shipped 4x4 (median of five, 12.9 to 20.8), and a holder with no aversion pays one query.
+
+**The corridor's coupled search visits 18 worlds holding two vans on one cell and refuses none**,
+across five cells, since the bound (#902) is not built; the ten-step plan it finds happens to walk
+the vans past `c2_1` one at a time, which the test pins as what is true and not as a promise. And
+the pose that found the product's ceiling: both vans on one cell with their parcels where they stand
+is a joint delivery of thirteen steps that neither 128 nor 512 finds — 32 s at 512 — which is the
+trigger the record's first seam names, pinned `Exhausted` beside the aversion's own one-step want.
 
 # Before Agent 0.2.0
 
