@@ -108,7 +108,9 @@ estimate is the desire's select unbound, the sum over every instance astray, whi
 plan's cost where the coupled instances are all there are - and counts a third instance coupled to
 neither, the overstatement the record below carries as a seam. Instances no constraint joins stay
 apart exactly as [a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astray-is-a-want-of-its-own.md)
-left them. `agent/planning/tests/derive_wants/two_parcels_a_constraint_joins_are_one_want.trig`
+left them. A coupled cluster that takes in an instance a walking want is about reopens that want,
+which is the one trigger of soft [commitment](/domain/execution/commitment.md).
+`agent/planning/tests/derive_wants/two_parcels_a_constraint_joins_are_one_want.trig`
 and `two_parcels_on_disjoint_grids_are_two_wants.trig` hold the derivation to both;
 `world/dispatcher/tests/test_dispatcher.py` holds the world to the joint ten-step plan and to the
 product it costs. The argument, and what was refused in its place, is

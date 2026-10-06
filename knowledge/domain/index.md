@@ -68,7 +68,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Execution — carrying a plan out
 
 * [executor](/domain/execution/executor.md) - Commits plans as intentions, takes each step when due, moves on only when the world answers.
-* [intention](/domain/execution/intention.md) - One plan committed to for one want, standing at a step until done, failed or abandoned.
+* [intention](/domain/execution/intention.md) - One plan committed to for one want, standing at a step until done, failed, superseded or abandoned.
+* [commitment](/domain/execution/commitment.md) - Hard on the step in flight, never cancelled; soft on the plan, kept until a want a constraint couples to it arrives.
 * [step](/domain/execution/step.md) - An action picked with its values: the two graphs it predicts in, when it may be taken and lands.
 * [committed-step](/domain/execution/committed-step.md) - A step an intention adopted, believed over its landing window, so a drift reads it and a later search sees the plan.
 * [act](/domain/execution/act.md) - The record that a step was taken, and when; the world, not the act, says whether it landed.

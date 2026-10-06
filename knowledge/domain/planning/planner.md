@@ -17,8 +17,10 @@ description: >-
    re-root the kept [cone](/domain/planning/cone.md) on the present;
 2. weigh every desire in every ground and derive the wants from what reads unmet; withdraw what no
    longer does, and every want met in the present ([desire](/domain/planning/desire.md));
-3. search each want of the scope that no intention is already walking;
-4. hand the plans down (`publish_plan`).
+3. search each want of the scope that is not walking — one that reopens a walking want from the
+   ground where its step in flight lands, its plan then held against the walking intention's untaken
+   steps ([commitment](/domain/execution/commitment.md));
+4. hand the plans down (`publish_plan`), less any steps a standing intention already walks.
 
 # A search
 

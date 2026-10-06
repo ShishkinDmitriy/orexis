@@ -55,6 +55,8 @@ adoption, and the want would read met before the world answered
 
 The [executor](/domain/execution/executor.md) closes the window at the instant the world answers the
 step, and every window of an intention at the instant the intention resolves — superseded, failed or
-abandoned, the untaken steps' with their whole stretch ahead. Closing is a write, heard as one; what
+abandoned, the untaken steps' with their whole stretch ahead. A reconsideration closes the untaken
+steps' windows when it is heard, before its intention ends after the step in flight
+([commitment](/domain/execution/commitment.md)). Closing is a write, heard as one; what
 has ended is forgotten on the next tick, told to nobody, since a graph past its end is handed to no
 reader asking at a later instant.

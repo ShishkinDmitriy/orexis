@@ -16,7 +16,8 @@ description: >-
   impossible - never repaired, the present validated and refused rather than mended (built as a
   desire's bound, #902, and reworked 2026-10-06 - the corridor's colliding worlds impossible and
   the parked van served or moved rather than driven through); a walking want is reconsidered when
-  a want the footprint couples to it arrives; two minds optimize alone and meet through what they
+  a want the footprint couples to it arrives (built, #905 - the step in flight kept, the joint want
+  searched from where it lands); two minds optimize alone and meet through what they
   observe, what they are told and what the market allocates. Refused - the derived temporary want;
   the elder plan laid as the younger's ground, this record's own first version; independent plans
   reconciled afterwards as the default for one mind; the bound alone; execution alone; the aversion
@@ -167,6 +168,37 @@ and the joint plan is adopted. A van turning back is then a legitimate outcome, 
 and decided by nobody. Nothing is sunk but the step in flight, since the present already holds the
 van wherever it got to.
 
+*Built 2026-10-06 (#905), as the sovereign put it that day: commitment has two grains,
+[commitment](/domain/execution/commitment.md). HARD on the step in flight — handed to its taker and
+not yet answered — which nothing planning decides cancels; it may still fail by itself. SOFT on the
+plan, kept by default, with the one trigger above. The coupled want is a NEW want, under its own name
+and about both instances, minted by the derivation as every coupled want is, saying which walking
+want it reopens (`planning:reopens`) and minted at the instant that want's step in flight lands; the
+walking want is not edited, and goes by the rules it always went by — withdrawn once its intention
+has ended and the cluster is the coupled want's, or kept where its intention stands. That instant is
+a ground of its own: the pass lays a boundary at each step in flight's landing, `landsAt` shifted by
+how late the step was taken as the executor reads it, laid whatever it holds and so never collapsed
+into the ground before it, and holding what the agent already sees then — a fictive drive wrote its
+effect into the present when it was taken, so on the dispatcher it is the present's facts at a later
+instant, and the joint plan opens there. Struck, the reopening want is found by no pass until its
+instant has passed, and is then searched from the present while the walking intention walks on.
+"Match" is read as the record's own words have it, the joint plan's FIRST steps: the plan agrees where
+it begins with the walking intention's untaken steps, by action and filling, and then the intention
+stands untouched and only the new part is published (`publish_plan`'s `kept`); a plan with the same
+steps later does not agree, since two intentions are walked side by side and nothing holds a step of
+one after a step of the other, so the order the joint plan was found safe in would not be the order
+walked. Disagreeing, planning signals `reconsidered` and the executor marks the intention to end
+after its step in flight (`execution:endsAfter`), closing the untaken steps' committed windows at
+once, and resolves it `superseded` when the world answers the step. Measured, alternated against the
+tree before: the coupled re-search costs what the coupled search from that ground costs — 108
+candidates on the shipped pose, 112 on the corridor, the same on both trees, since a fictive drive's
+landing ground holds the present's facts — and what changed is what is walked. Before, the coupled
+want was searched from the present beside the walking want and both intentions drove van A: on the
+shipped pose van A's intention ended `failed`, a step of it blocked by the other's, and the corridor
+took twelve acts for ten; after, the walking intention ends `superseded` after its step in flight, or
+stands where the joint plan begins with its steps, and ten acts deliver both parcels with two vans on
+no cell (`world/dispatcher/tests/test_dispatcher.py`, [measure-the-search](/runbooks/measure-the-search.md)).*
+
 **Two minds optimize alone and meet through prediction, the market and execution.** Two agents each
 hold their own desire and neither sees the other's plan. Their channels are what the other did
 (execution: a blocked step, patience, a re-search), what the other said (a peer's announced route is
@@ -212,7 +244,10 @@ plan down the same cells. A cluster a standing want is already about is that wan
   constraint marks its worlds as a precondition admits candidates, read and never pursued.
 - *A want an intention is walking is neither searched nor handed down again* — AMENDED: it is
   searched again, coupled, when a want the footprint joins to it arrives; the default stays
-  commitment and the trigger is the constraint.
+  commitment and the trigger is the constraint. Built (#905): the step in flight is kept and only
+  the untaken steps are reopened.
+- *A plan begun is walked to its end* (planning-and-execution-meet-at-the-store) — AMENDED: unless
+  a reconsideration replaces its untaken steps, and then it ends after its step in flight.
 - *Nothing ranks a want before the search that could rank it* — KEPT, and this is what the first
   version broke: sequencing made the store's order a ranking of elder over younger. Coupled, the
   search ranks the steps and no want is first.
@@ -300,6 +335,10 @@ plan down the same cells. A cluster a standing want is already about is that wan
 | the parcel aboard van A, van B parked, the same | 1 | 52 | 66 | 8, 5 impossible | van B aside, van A through, four steps; 435 ms against 402 |
 | both vans on one cell, the same | 1 | 75 | 128 | 14, 7 impossible | NO want from the constraint: the present is a contradiction, said and refused at onboarding; the joint want `Exhausted` at 128; 916 ms against 966 |
 | the vans on disjoint grids, the same | 2 | 23 and 23, the constraint in 42 | 50 | 0 | unchanged; 357 ms against 378 |
+| parcel B arriving mid-walk, as shipped, reconsidered (#905) | 1, reopening | 76, and the constraint in 76 | 108 candidates | 0 | the joint plan opens where van A's drive in flight lands; van A's intention `superseded` after it; ten acts. Before: searched from the present beside, van A's intention `failed` |
+| parcel B arriving on the corridor, the same | 1, reopening | 87, and the constraint in 87 | 112 candidates | 7 impossible | the same, two vans on no cell; before, twelve acts for ten |
+| parcel B arriving at van B's cell, agreeing (#905) | 1, reopening | 76 | 108 candidates | 0 | the joint plan begins with van A's drive and drop: its intention stands, van B's five steps adopted beside it |
+| parcel B arriving on a disjoint grid (#905) | 1, alone | — | 37 candidates | 0 | nothing reopened; van A's intention untouched |
 
 # Seams left open
 
@@ -364,6 +403,30 @@ plan down the same cells. A cluster a standing want is already about is that wan
   sequence; a step that fails ends the intention and the coupled want is searched again from the
   present, as any failed plan is. What is not decided is a late landing in the concurrent case
   above, which does not exist yet.
+- **The joint plan opens at the step in flight's earliest landing and waits on no answer** (#905). A
+  plan opens each step where the one before it lands at the earliest, and the joint plan opens where
+  the reconsidered intention's step in flight does; but the executor holds a head to the step before
+  it in its own intention and to nothing of another's, so a step in flight the world answers late —
+  a real actuator, not a fictive drive, which answers exactly then — overlaps the joint plan's first
+  step by as much. No shipped world reconsiders a step that is not fictive; the trigger is the first
+  that does.
+- **The landing ground applies no prediction of the step in flight itself.** It holds what the agent
+  already sees then, which is right for a fictive step, whose effect is in the present, and for one a
+  drift reads as a committed step, whose effect is in the predictions; a step that reaches the world
+  and that no drift reads lands in a ground that lacks its effect, and the joint search would plan as
+  if it had not landed. Applying the step's own `execution:adds` there was refused while a drift can
+  already state it, since the two would count it twice; the trigger is the first such world that
+  reconsiders.
+- **A joint plan with the walking steps later is reconsidered, not kept.** Agreement is read as the
+  joint plan beginning with the untaken steps, so a plan that walks the same steps after a step of the
+  arriving want's ends the intention and re-adopts them in the joint plan — the shipped arrival does,
+  measured — which costs an intention and no act. Keeping it would need an order between two
+  intentions, which nothing says; the trigger is a world where the re-adoption costs something.
+- **A reconsideration the budget cuts short reconsiders nothing yet.** The reopening want's search is
+  continued by the passes after, as any cut search is, and the walking intention walks on meanwhile,
+  so the ground the search was rooted in may be behind the present by the time it ends; the joint
+  plan is still held against the intention's untaken steps as they then stand. Measured on no shipped
+  pose, since both arrivals fit the dispatcher's budget of 256.
 - **Two minds' announced routes.** A peer's route laid as a prediction is the tool this record
   reassigns to two agents; what a peer says, in which document kind, and how the market resolves two
   predictions that collide is #568's, and nothing of it is built.

@@ -4,7 +4,7 @@ title: Intention
 term: http://example.org/orexis/execution#Intention
 description: >-
   A commitment to one plan for one want - adopted at an instant, standing at a step, resolved at
-  another instant as done, failed or abandoned. Rows in a graph of the belief base, the agent's own
+  another instant as done, failed, superseded or abandoned. Rows in a graph of the belief base, the agent's own
   and not public, so a restart finds them where they stood; the I of BDI, and the only thing a pass
   leaves that outlives it.
 ---
@@ -30,15 +30,15 @@ The [executor](/domain/execution/executor.md) moves it and nothing else writes i
 the world holds what the step predicted, and the intention resolves `done` at the last step,
 `failed` when the world did not answer within the patience, a step kept below could not be kept,
 or planning said its next step is blocked in the present, `reached` when planning said its want is
-met before any step was taken, and `abandoned` when the intention a step of it was kept below for
-ended undone. A plan that has begun is not ended because its want is met partway.
+met before any step was taken, `superseded` when a reconsideration replaced its untaken steps — after
+its step in flight is answered, `execution:endsAfter` — and `abandoned` when the intention a step of
+it was kept below for ended undone. A plan that has begun is not ended because its want is met partway.
 
-# What it means for the search
+# What it holds the agent to
 
-A want an intention walks is neither searched again nor handed a second plan: the world has not
-answered yet, and deciding again is the executor's verdict on a step, never the clock's. When it
-ends, planning hears it and the want is the search's again at once, from wherever the world then
-stands.
+Its [commitment](/domain/execution/commitment.md): the step in flight is never cancelled, and the plan
+is kept until the one trigger reopens the want it pursues. When it ends, planning hears it and the
+want is the search's again at once, from wherever the world then stands.
 
 # Several at once
 

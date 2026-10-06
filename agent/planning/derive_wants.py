@@ -59,6 +59,7 @@ UNMET_WHEN = PLANNING + "unmetWhen"
 ABOUT = PLANNING + "about"
 ESTIMATES = PLANNING + "estimates"
 KEYED_BY = PLANNING + "keyedBy"
+REOPENS = PLANNING + "reopens"
 RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
 
 #  WHAT A DESIRE SAYS, from the graphs of desires and wants asked by class: what it is about,
@@ -85,10 +86,21 @@ SELECT ?w WHERE {
 ORDER BY ?w"""
 
 
-def derive_wants(store: ox.Store, now: datetime) -> set[str]:
+def derive_wants(store: ox.Store, now: datetime, walking: dict[str, datetime] | None = None) -> set[str]:
     """Mint a want under every desire for every cluster of what its met-test reads unmet, and
     answer with EVERY want those desires imply — the ones minted here and the ones already
     standing under the same name.
+
+    `walking` is the CALLER'S, as it is for `withdraw`: every want an intention or a plan
+    published is walking, each with the instant its step in flight lands — the present where none
+    is in flight. The intentions are another store's, and this reads none of them. It is read at
+    one place, the one trigger of soft commitment: a cluster a constraint COUPLED that is about
+    every instance a walking want under the same desire is about, and more, REOPENS that want —
+    it is minted saying so (`planning:reopens`) and at the instant the walking want's step in
+    flight lands, so its search starts from the ground in which that step has landed and the plan
+    it finds begins after it (knowledge/domain/execution/commitment.md, #905). Nothing else here
+    asks what is walked: a cluster no constraint couples to a walking want is minted as it always
+    was, and a walking want is kept by `withdraw`, not here.
 
     IT READS THE WEIGHINGS THE PLANNER WROTE. A desire is judged where the search judges a
     want, by `weigh`, which the Planner calls for every desire in every ground before this —
@@ -136,7 +148,7 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
             continue
         if holder not in coupled:
             coupled[holder] = couplings(store, holder, present, now, memo=memo)
-        _derive_under(store, shapes, scopes, holder, desire, found, now, coupled[holder])
+        _derive_under(store, shapes, scopes, holder, desire, found, now, coupled[holder], walking or {})
         wanted |= _named(shapes, scopes, desire, _said(store, desire), found, coupled[holder],
                          _standing_under(store, desire, now))
     return wanted
@@ -148,11 +160,13 @@ def _standing_under(store: ox.Store, desire: str, now: datetime) -> set[str]:
 
 
 def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, holder: str,
-                  desire: str, found: list[dict], now: datetime, coupled=None) -> list[str]:
+                  desire: str, found: list[dict], now: datetime, coupled=None,
+                  walking: dict[str, datetime] | None = None) -> list[str]:
     """The wants one desire's witnesses imply, minted where none stands. `found` is what its
     met-test read over time: one witness per way of failing, each carrying the boundary it
     first reads unmet at and the one it lifts at; `coupled` what the holder's constraints can
-    make collide, which joins two instances into one want."""
+    make collide, which joins two instances into one want; `walking` the wants walked, each with
+    the instant its step in flight lands, which a coupled cluster reopens."""
     #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE, and per INSTANCE — UNLESS A CONSTRAINT COUPLES
     #  TWO: the results clustered by which of them some action can move together, and a want
     #  minted per cluster about exactly those, holding at the earliest instant among them. Every
@@ -211,8 +225,24 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
             log.debug("%s is still pursued by %s, which is about every instance of it",
                       child.rsplit("#", 1)[-1], covering.rsplit("#", 1)[-1])
             continue
+        #  AND THE OTHER DIRECTION, THE ONE TRIGGER OF SOFT COMMITMENT (#905): a cluster a
+        #  constraint coupled that is about every instance a WALKING want is about, and more — a
+        #  parcel arriving whose van can meet the one a plan is driving. Minted as ever, under its
+        #  own name, and saying which walking wants it reopens; and AT THE INSTANT their steps in
+        #  flight land, the latest of them, since a step handed to its taker is never cancelled
+        #  and the ground the joint search starts from is the one in which it has landed. Minted
+        #  beside the walking want and searched from the present, as it was, the joint plan drove
+        #  the walking van as if its plan were not there, and the drop the walking plan still owed
+        #  was planned and taken twice (measured on the dispatcher).
+        reopened = _reopened(shapes, standing & set(walking or ()), instances, about) if coupled is not None else []
+        if reopened:
+            opens = max([at, *(walking[w] for w in reopened)])
+            if until is None or until > opens:
+                at = opens
+            log.info("%s reopens %s: a want a constraint couples to it has arrived",
+                     child.rsplit("#", 1)[-1], ", ".join(w.rsplit("#", 1)[-1] for w in reopened))
         child = _mint(store, shapes, holder, desire, now, at, until, said,
-                     about=about, instances=instances, keys=keys)
+                     about=about, instances=instances, keys=keys, reopens=tuple(reopened))
         if child is not None:
             minted.append(child)
     return minted
@@ -250,18 +280,40 @@ def _covering(shapes: rdflib.Graph, standing: set[str], instances: tuple, about:
     of an instance is never covered this way: a tank's level want targets the tank, and the
     tank's temperature out beside it is a second want, as `a_second_cluster_beside_a_standing_want`
     has always said; and a cluster about no instance is nobody's but its own."""
-    from rdflib import URIRef
-    from rdflib.namespace import SH
-
     if not instances or not set(about) <= set(instances):
         return None
     wanted = set(instances)
     for want in sorted(standing):
-        for polarity in (MET_WHEN, UNMET_WHEN):
-            shape = shapes.value(URIRef(want), URIRef(polarity))
-            if shape is not None and wanted <= {str(t) for t in shapes.objects(shape, SH.targetNode)}:
-                return want
+        if wanted <= _targets(shapes, want):
+            return want
     return None
+
+
+def _reopened(shapes: rdflib.Graph, walking: set[str], instances: tuple, about: tuple) -> list[str]:
+    """The wants among `walking` a cluster about `instances` reopens: each whose met-test targets
+    instances the cluster is about, every one of them and fewer than all — `_covering` turned
+    round, where a standing want about more claims a cluster about fewer. Read off the same
+    `sh:targetNode`s, and only for a cluster about its instances themselves, for the reason
+    `_covering` gives. Called where a constraint coupled the cluster, since nothing else makes a
+    cluster about more instances than a want minted under the same desire."""
+    if len(instances) < 2 or not set(about) <= set(instances):
+        return []
+    wanted = set(instances)
+    return sorted(w for w in walking if (held := _targets(shapes, w)) and held < wanted)
+
+
+def _targets(shapes: rdflib.Graph, want: str) -> set[str]:
+    """The instances a want is about, off the `sh:targetNode`s of the shape or the avoided state
+    it carries — where `_narrowed` wrote them."""
+    from rdflib import URIRef
+    from rdflib.namespace import SH
+
+    out: set[str] = set()
+    for polarity in (MET_WHEN, UNMET_WHEN):
+        shape = shapes.value(URIRef(want), URIRef(polarity))
+        if shape is not None:
+            out |= {str(t) for t in shapes.objects(shape, SH.targetNode)}
+    return out
 
 
 def _clusters(scopes: dict | None, witnesses: list, coupled=None) -> list[list]:
@@ -554,12 +606,13 @@ WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontol
 
 def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: datetime,
          at: datetime, until: datetime | None = None, said=None,
-         about: tuple = (), instances: tuple = (), keys: tuple = ()) -> str | None:
+         about: tuple = (), instances: tuple = (), keys: tuple = (), reopens: tuple = ()) -> str | None:
     """Derive the want pursued under `desire` and write it to the pursued graph, named by
     `_name_of`. None, and the desire stays the goal, where the desire states its met-test inline:
     a blank node has no name another graph could point at, and copying it would make a second
     owner of the claim. `instances` are the cluster's — one, where the want is about one; two
-    where a constraint coupled them, and then the want is about both."""
+    where a constraint coupled them, and then the want is about both; `reopens` the walking wants
+    it reopens, written as `planning:reopens`, the row the Planner reconsiders their intentions by."""
     said = _said(store, desire) if said is None else said
     instance = instances[0] if len(instances) == 1 else None
     #  `about` NAMES AND DOES NOT NARROW. What a cluster is about distinguishes two wants
@@ -578,7 +631,7 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
     #  (a-scope-is-a-predicate-on-a-key). The Planner reads it to place the want
     #  where its scope's imaginarium is.
     child = _name_of(shapes, desire, said, about, instance, keys)
-    points = [(KEYED_BY, k) for k in keys]
+    points = [(KEYED_BY, k) for k in keys] + [(REOPENS, w) for w in reopens]
     met_test = estimate = None
     for p, o in said:
         if isinstance(o, ox.BlankNode):

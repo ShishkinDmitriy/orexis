@@ -588,6 +588,43 @@ it names and it crosses into every scope any is in — 1, 3 and 4, measured — 
 `no_unserved_claim` is searched in scope 4, `Satisfied` at one weighing. The suspicion that it would
 be placed in scope 1 alone was wrong, and nothing in the placing was changed.
 
+# The dispatcher: a parcel arriving mid-walk, and the walking want reopened (2026-10-06, #905)
+
+[Commitment](/domain/execution/commitment.md) is hard on the step in flight and soft on the plan, and
+its one trigger is a want a constraint couples to a walking one arriving. Measured on the development
+container by running the dispatcher as `world/dispatcher/tests/test_dispatcher.py` does — the runtime,
+a drive's least landing between passes, until van A's plan has had two steps answered — then writing
+parcel B into the state, where the world named it a parcel and nothing else, and running the next pass
+at once, so van A's next drive is in flight when the arrival is planned for. The tree before
+(`3761ee50`) exported to the scratchpad and this tree alternated per round, two rounds each, budget
+256; candidates, weighings and impossible worlds are the arrival pass's search, the pass its wall time
+and its search lap, acts the steps taken over the whole walk. The counts did not move between rounds.
+
+| arrival | tree | candidates | weighings | impossible | the walking intention | acts | arrival pass (search lap) |
+|---|---|---|---|---|---|---|---|
+| parcel B at `c3_1`, as shipped | before | 108 | 76, and the constraint in 76 | 0 | `failed`, a step blocked by the other intention's | 10 | 1009 ms (879), then 763 (651) |
+| the same | after | 108 | 76, and the constraint in 76 | 0 | `superseded` after its drive in flight | 10 | 851 ms (730), then 753 (649) |
+| the corridor, B at `c2_2` | before | 112 | 87, and the constraint in 87 | 7 | `done`, beside a second driving van A | 12 | 923 ms (805), then 779 (674) |
+| the same | after | 112 | 87, and the constraint in 87 | 7 | `superseded` after its drive in flight | 10 | 873 ms (747), then 795 (688) |
+| B at `c3_0`, van B's cell | before | 108 | 76 | 0 | `failed` | 10 | 789 ms (686), then 762 (653) |
+| the same | after | 108 | 76 | 0 | stands, `done`; van B's five steps adopted beside it | 10 | 782 ms (687), then 771 (648) |
+
+**The search did not move; what is walked did.** The coupled re-search costs on both trees what the
+coupled search from the ground costs, because the ground the reopening want starts from — the one in
+which van A's drive in flight has landed — holds the present's facts: a fictive drive wrote its
+effect when it was taken. What moved is the instant the joint plan opens at, the drive's `landsAt`
+shifted by how late it was taken, and what happens to the walking intention. Before, the coupled want
+was minted beside the walking one and searched from the present, both intentions drove van A, and the
+second to reach a step found it blocked or took it twice. After, the intention ends after its step in
+flight where the joint plan does not begin with its untaken steps, and stands untouched where it does,
+and ten acts deliver both parcels with two vans on no cell; the walk takes one pass more, eight for
+seven, since the joint plan waits for the drive in flight to land. The arrival pass is inside this
+machine's drift both ways. **And a walk with no arrival pays nothing measurable** for the ground laid
+where a step in flight lands: the shipped joint walk's passes after the first read 163 and 153 ms
+before against 156 and 153 after, its ground lap 37 and 36 against 36 and 36; a holder with no
+constraint pays one query a pass and lays no such ground. **On a disjoint grid** nothing is reopened:
+parcel B's want is minted alone and searched alone, 37 candidates, and van A's intention walks on.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

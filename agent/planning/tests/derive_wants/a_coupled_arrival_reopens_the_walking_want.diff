@@ -1,0 +1,62 @@
+--- case
++++ expected
+@@ -217,12 +217,59 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:7f33c30714595d3a7552b20707f7537051eff96e554c5f8b945979ce990eb8b2" .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:for :keeper.every_parcel_delivered .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_a ; planning:constraint 1 ; planning:instance :parcel_a ; planning:offending :c0_3 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ; planning:offending :c1_1 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 1 ; planning:instance :parcel_b ; planning:offending :c1_3 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:weighs ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a planning:for :keeper.every_parcel_delivered.pursued.parcel_a .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a planning:open true .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a planning:remaining 3 .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a planning:violation [ planning:about :parcel_a ; planning:constraint 1 ; planning:instance :parcel_a ; planning:offending :c0_3 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a planning:weighs ground:2026-01-01T120000p0000 .
+   intentions:keeper a execution:IntentionGraph .
+   intentions:keeper a orexis:Graph .
+   intentions:keeper orexis:beliefsOf :keeper .
++  pursued:2026-01-01T120000p0000--open a orexis:Graph .
++  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
+   pursued:keeper.every_parcel_delivered.pursued.parcel_a a orexis:Graph .
+   pursued:keeper.every_parcel_delivered.pursued.parcel_a a planning:WantGraph .
+   pursued:keeper.every_parcel_delivered.pursued.parcel_a dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
+   pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:arrivedBy orexis:Derived .
+   pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :parcel_a courier:carriedBy :van_a .
++  :parcel_b courier:at :c1_1 .
++  :van_a courier:at :c0_2 .
++  :van_b courier:at :c1_1 .
++}
++
++GRAPH pursued:2026-01-01T120000p0000--open {
++  :keeper planning:holds :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a planning:Want .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:estimates :drivesOwed .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:reopens :keeper.every_parcel_delivered.pursued.parcel_a .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:state planning:Recognized .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:wasDerivedFrom :keeper.every_parcel_delivered .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b rdfs:label "pursued: every parcel where it is owed" .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met a sh:NodeShape .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met sh:property [ planning:about sh:this ; sh:equals courier:destination ; sh:path courier:at ] .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met sh:targetNode :parcel_a .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met sh:targetNode :parcel_b .
++}
