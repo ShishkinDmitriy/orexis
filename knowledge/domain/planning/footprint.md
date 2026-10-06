@@ -15,7 +15,9 @@ description: >-
 A text that runs against a store touches some of its vocabulary and none of the rest, and
 the footprint says which. It has two halves. The **reads** are the predicates of the patterns
 a `SELECT` or a `WHERE` matches, including a pattern under `NOT EXISTS`, since absence is a
-thing read. The **writes** are the predicates of a `CONSTRUCT` template, an `INSERT` template
+thing read - a group under a filter as fully as the group it stands in, a predicate list in it
+and a filter nested in it alike (#908; how rdflib hands such a group over, and why both of its
+forms are read, is the trap AGENTS.md records). The **writes** are the predicates of a `CONSTRUCT` template, an `INSERT` template
 or a retraction. An action has both halves; a want has only the reading half, taken off its
 met-test's paths, its `sh:equals` and its SPARQL constraints. The word is the planning
 literature's: the state variables an operator may inspect and may change.

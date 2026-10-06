@@ -15,7 +15,7 @@ from pathlib import Path
 
 from agent import clock
 from agent.runtime import Runtime, boot
-from agent.store import graphs_of, rows
+from agent.store import catalogue_of, graphs_of, rows
 from agent.transport.mqtt.driver import Mqtt, matches
 
 WORLD = Path(__file__).resolve().parents[1]
@@ -99,6 +99,54 @@ def test_each_agent_listens_on_its_own_topic_and_the_growers_on_their_probes(mon
     assert patterns == {"supplier": ["agents/supplier/inbox"],
                         "rose_grower": ["agents/rose_grower/inbox", "sensors/rose_probe/reading"],
                         "fern_grower": ["agents/fern_grower/inbox", "sensors/fern_probe/reading"]}
+
+
+def test_a_grower_s_world_is_hashed_within_what_the_market_s_texts_read(monkeypatch):
+    """The market's `Calling` and `Tendering` read anything until #908 — a predicate list under
+    `NOT EXISTS` with a `NOT EXISTS` nested in it — so a grower's read set was unreadable and every
+    world of it hashed whole: a reading inside its band at a new instant was a surprise every pass,
+    and the cone went with it. Read, the same number ten minutes on is the old present."""
+    agents, _, time = _allotment(monkeypatch)
+    rose = agents["rose_grower"]
+    planner = rose.parts["planning"].planner
+    heard: list = []
+    planner.rerooted.connect(lambda event: heard.append(event) or [])
+    rose.deliver("sensors/rose_probe/reading", b'{"value": 0.45}', time.at)
+    rose.run(passes=1, poll_s=0)
+    assert planner._read[1] is not None, "the growers' read set is readable: no text of the allotment reads anything"
+    assert {MARKET + p for p in ("bidsIn", "calledBy", "calledOn", "answered", "clearedAt")} <= planner._read[1]
+    assert {e.present for e in heard} == {"first"}
+    heard.clear()
+    time.at += timedelta(minutes=10)
+    rose.deliver("sensors/rose_probe/reading", b'{"value": 0.45}', time.at)
+    rose.run(passes=1, poll_s=0)
+    assert heard and {e.present for e in heard} == {"ground"}, \
+        f"the same reading at a new instant is the present the last pass stood in, not a surprise: {heard}"
+
+
+def test_the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing_under_four_scopes(monkeypatch):
+    """Readable, the market's texts leave the allotment FOUR scopes, and the grower a member of two
+    — so the grower's IRI, which an observation names as whose it is and a prediction's copy does
+    not, was no longer "a member of every scope" and keyed the present's trouble apart from the
+    foreseen's: two want graphs under one name, two roots, and the plan placed from the foreseen
+    ground twenty minutes out, where the test's rounds never reached it. The holder's own IRI is
+    never part of a trouble's key (#908): one want, one open stretch, placed from the present."""
+    agents, _, time = _allotment(monkeypatch)
+    rose = agents["rose_grower"]
+    scopes = rows(rose.beliefs, """SELECT DISTINCT ?s WHERE {
+        GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } GRAPH ?g { ?m planning:inScope ?s } }""", ())
+    assert len(scopes) == 4, f"the premise: four scopes, not the one an unreadable text joined everything into: {scopes}"
+    rose.deliver("sensors/rose_probe/reading", b'{"value": 0.2}', time.at)
+    rose.run(passes=1, poll_s=0)
+    wants = [(r["g"], r["s"], r.get("e")) for store in rose.parts["planning"].planner.imaginaria.values()
+             for r in rows(store, f"""SELECT ?g ?s ?e WHERE {{ GRAPH <{catalogue_of(store)}> {{
+                 ?g a planning:WantGraph ; dcterms:temporal ?p . ?p orexis:start ?s OPTIONAL {{ ?p orexis:end ?e }} }} }}""", ())]
+    assert len(wants) == 1 and wants[0][2] is None, f"one want graph over one open stretch, not one per ground: {wants}"
+    assert datetime.fromisoformat(wants[0][1]) < NOW + timedelta(minutes=1), f"in trouble from the present: {wants}"
+    committed = rows(rose.beliefs, f"""SELECT ?s WHERE {{ GRAPH <{catalogue_of(rose.beliefs)}> {{
+        ?g a execution:CommittedStepGraph ; dcterms:temporal/orexis:start ?s }} }}""", ())
+    assert committed and max(datetime.fromisoformat(r["s"]) for r in committed) < NOW + timedelta(minutes=2), \
+        f"the plan is placed from the present, not from the foreseen ground at the reading's instant plus twenty minutes: {committed}"
 
 
 def test_a_dry_plot_is_watered_by_a_claim_bought_on_the_supplier_s_venue(monkeypatch):

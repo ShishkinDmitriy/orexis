@@ -545,6 +545,49 @@ under a name of its own beside the coupled want still walking, whose second plan
 down the same cells (12 acts for 10 steps, measured). A cluster a standing want is already about is
 that want's now, and the shipped dispatcher's walk is one intention, ten acts, as before.
 
+# The allotment: the market's texts read, four scopes, and the holder out of the key (2026-10-06, #908)
+
+No bench times the allotment — it is three agents over a bus, not a search — so this section is
+counts and read sets, measured by booting `world/allotment` as its tests do, against `f11b3986`.
+
+**What the footprint read.** The market's `Calling` and `Tendering` carry a predicate list under
+`FILTER NOT EXISTS` with a `NOT EXISTS` nested in it, and both answered anything. Before: `Calling`
+`None`, `Tendering` `None`, `atoms_of` anything for both, `_read_anywhere` `None` for the rose grower
+and the supplier alike, every world of a grower hashed whole, and the same reading at a new instant a
+surprise every pass. After: `Calling` reads `bidsIn, open, calledBy, calledOn, answered`;
+`Tendering` `bidsIn, open, bidder, inRound, onVenue, clearedAt`; the growers' read set is 26
+predicates and classes (`Claim, aboutProperty, actsFor, actuates, actuatesProperty, answered, below,
+bidder, bidsIn, calledBy, calledOn, clearedAt, discharged, hasActuator, hasFeatureOfInterest,
+holdsClaimOn, hosts, inRound, inside, observedProperty, offered, onVenue, open, presented, warms,
+warmsProperty`); a reading of 0.45 ten minutes on re-roots `ground`, not `surprise`.
+
+**What the partition became.** One scope, joined through the two unreadable actions, became four:
+scope 1 the market plumbing with the dosing — `Calling, Clearing, Dosing, Offering, Presenting,
+Tendering`, both plots, both valves, all three agents, `water`, `SoilMoisture`, `open, offered,
+answered, holdsClaimOn, below, inside`; scopes 2 and 3 `Heating`'s filling per plot, one for the
+fern's grower and plot and one for the rose's, over `below` and `inside` — the climate domain is
+imported and no heater exists, so the filling binds the grower and the plot and nothing it would
+move, and the scope holds no want ever; scope 4 `Serving` alone, with `Claim`, `discharged`,
+`supplier` and `water`, since no action's effect writes `presented` or a claim — the documents do.
+
+**What that broke, and the rule it taught.** A trouble is keyed by the scope members its offending
+node names, less a member of every scope. With one scope every member was one and the key empty;
+with four the rose grower is a member of scopes 1 and 3 only, the observation names it as whose it
+is (`rose_grower, rose_plot`) and the drift's copy of it does not (`rose_plot`), so the present's
+ground and the foreseen one at the reading's instant plus twenty minutes were two ways of failing
+under one name: two want graphs (`…120007--…122006` and `…122006--open`), two roots, and the plan
+extracted under the foreseen one, placed at 12:20:06 where three rounds of the test never reached
+it — whether the world was hashed within what is read (the present's child passed over as a repeat
+of the foreseen's, 97fdda both) or whole (both branches expanded, eight worlds, the foreseen's
+plan kept). The holder's own IRI is now never part of a key, and the walk is main's again: one want
+graph `…120007--open`, four worlds, the plan from the present, every assertion of the buying path.
+
+**The claim reaches Serving's scope.** A Claim document names the class `market:Claim`, scope 4's
+member alone, beside `water` (1 and 4) and `rose_grower` (1 and 3), so no scope holds every member
+it names and it crosses into every scope any is in — 1, 3 and 4, measured — and the supplier's
+`no_unserved_claim` is searched in scope 4, `Satisfied` at one weighing. The suspicion that it would
+be placed in scope 1 alone was wrong, and nothing in the placing was changed.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

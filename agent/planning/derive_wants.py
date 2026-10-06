@@ -126,7 +126,7 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
     coupled: dict = {}
     wanted: set[str] = set()
     for holder, desire in _desires_in(store):
-        found = _troubles(store, desire, scopes)
+        found = _troubles(store, desire, scopes, holder)
         if found is None:
             #  NOT JUDGED IS NOT MET. A desire whose met-test could not be run says nothing
             #  about its wants — so what stands under it is what it implies, and a dropper
@@ -797,9 +797,10 @@ def _desires_in(store: ox.Store) -> list[tuple[str, str]]:
     return [(r["holder"], r["desire"]) for r in rows(store, _DESIRES_Q, ())]
 
 
-def _troubles(store: ox.Store, desire: str, scopes=None) -> list[dict] | None:
+def _troubles(store: ox.Store, desire: str, scopes=None, holder: str | None = None) -> list[dict] | None:
     """Every way `desire` is failing, each with the stretch it fails over — or None where any
-    ground was not judged, which is not the same as met.
+    ground was not judged, which is not the same as met. `holder` is who holds the desire, read
+    off its graph by the caller, and is never part of a key.
 
     A WAY OF FAILING is one `(instance, constraint, key)` triple, and the grounds it is
     violated in give it an interval: `at`, the start of the earliest ground it reads unmet in;
@@ -824,11 +825,15 @@ def _troubles(store: ox.Store, desire: str, scopes=None) -> list[dict] | None:
     lifted: dict[tuple, datetime] = {}
     by_ground: dict[str, list] = {}
     names: dict[tuple, tuple] = {}
-    #  A MEMBER OF EVERY SCOPE TELLS NOTHING and is no part of a key — the agent, bound by every
-    #  filling, which an observation names as whose it is and a prediction's copy of it does
-    #  not, so keyed by it the present and the foreseen ground were two ways of failing under
-    #  one name, and the second mint moved the want to the later stretch. The same word
-    #  `admit` lives by: a value no scope holds alone refuses nothing.
+    #  A MEMBER OF EVERY SCOPE TELLS NOTHING and is no part of a key — the same word `admit`
+    #  lives by: a value no scope holds alone refuses nothing. AND THE HOLDER'S OWN IRI NEVER IS,
+    #  directly: the agent id is the one constant of the agent's whole world (the one instance a
+    #  process is handed at boot) and cannot tell two of its own troubles apart, where an
+    #  observation names it as whose it is and a prediction's copy of it does not, so keyed by it
+    #  the present and the foreseen ground were two ways of failing under one name, two want
+    #  graphs and two roots, and the plan hung under the foreseen one. It fell out of the key by
+    #  the every-scope rule while every shipped world was one scope; the day the allotment's market
+    #  texts became readable it was four, the grower a member of two, and the accident showed (#908).
     everywhere = scopes.all() if scopes else frozenset()
     for r in found:
         by_ground.setdefault(r["start"], []).append(r)
@@ -842,7 +847,7 @@ def _troubles(store: ox.Store, desire: str, scopes=None) -> list[dict] | None:
             if scopes and r.get("offending"):
                 keyed = names.setdefault((r["g"], r["offending"]), tuple(sorted(
                     o for o in {r["offending"], *(n["o"] for n in rows(store, _NAMES_Q, (), ground=r["g"], node=r["offending"]))}
-                    if o in scopes and scopes[o] != everywhere and o != r.get("about"))))
+                    if o in scopes and scopes[o] != everywhere and o != r.get("about") and o != holder)))
             key = (r["instance"], r.get("constraint", ""), keyed)
             unmet.add(key)
             seen.setdefault(key, {"instance": r["instance"], "constraint": r.get("constraint", ""),

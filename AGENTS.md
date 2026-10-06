@@ -243,6 +243,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   were both built and refused (#902, constraint, one-mind-couples-the-wants-a-constraint-can-make-collide).
 - **A derivation asks nothing the met-tests do not answer** — how far ahead the agent sees is the
   horizons each drift predicts at.
+- **The holder's own IRI is never part of a trouble's key** — the one constant of an agent's world
+  tells two of its troubles apart from nothing, and keyed by it an observation and the prediction's
+  copy of it were two wants under one name, two roots, and a plan placed twenty minutes out; it fell
+  out of the key by the every-scope rule only while every shipped world was one scope (#908).
 - **Two readings of one met-test are not a duplicate when the compiler, the source and the cache
   all differ** — the derivation wants witnesses and caches nothing; the kernel lifting a ratified
   want wants a boolean and caches per want.
@@ -850,9 +854,15 @@ hand-rolled walk was once refused for exactly that reason. See
   evaluated per candidate, not once** — folding a second excluded class into the own-graphs
   query that way took it from 2 ms to 600 ms at the start of every pass, and two plain
   filters cost what one did. Measure a query you reshape, not only one you write.
-- **A pattern under `FILTER NOT EXISTS` is left untranslated by rdflib's algebra** — it sits
-  in the parse tree as a triples block, not a BGP, so a walk that reads BGPs alone reads
-  nothing from a want that says "unmet while this fact is absent"; `footprint` reads both.
+- **A pattern under `FILTER NOT EXISTS` is left untranslated by rdflib's algebra, in two
+  shapes a walk of the parse tree misreads** — under the node's KEY it sits as a triples block,
+  not a BGP, whose entry lays a predicate-object list flat (`?c :p ?a ; :q ?b` is one entry of
+  six terms, not two of three) and from which every nested filter has been popped; the
+  translated group, nested filters and all, hangs beside the key as the ATTRIBUTE `graph` that
+  rdflib's own evaluator reads. Read off the key alone the market's `Calling` answered
+  anything, and chunked alone it would have read everything but `answered`, the unsafe side
+  (#908); `footprint._triples_in` reads the key three terms at a time and the attribute as any
+  group, recursively.
 - **A `BIND` inside a `UNION` branch cannot see a variable bound outside the union.** The
   branches are evaluated on their own and joined with the surrounding pattern afterwards, so
   the tidy form — state the preamble once, then `{ … } UNION { … }` — leaves every outer
