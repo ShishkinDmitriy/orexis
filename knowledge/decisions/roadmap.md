@@ -46,19 +46,17 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    done.
 3. **The world answers otherwise** — #522, several outcomes with a likelihood, and #781, a plan that
    worked lifted into a method the executor proves or forgets.
-4. **Several agents contend** — #567, one dispatcher and two vans: the world and its measurement are
-   in (`world/dispatcher/`), and the mechanism is decided — one mind couples the wants a constraint
-   can make collide into one search, and a constraint is a kind of its own, `planning:Constraint`:
-   what the world says is possible, a world violating it impossible and never repaired
+4. **Several agents contend** — one mind is done (#567, closed 2026-10-06): one mind couples the
+   wants a constraint can make collide into one search, and a constraint is a kind of its own,
+   `planning:Constraint`, what the world says is possible, a world violating it impossible and never
+   repaired
    ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md),
-   [constraint](/domain/planning/constraint.md)); the constraint's page, its footprint over the reach
-   and the clustering are built (#900), and so is impossibility — the constraint weighed in every
-   possible world, a violating world marked and the present validated (#902, reworked 2026-10-06); the
-   executor-held resource was built and refused, and reconsideration on a coupled arrival is built
-   (#905) — [commitment](/domain/execution/commitment.md) hard on the step in flight and soft on the
-   plan; and "one van at a time" is world state, a driver the plans of two parcels share
-   (`world/driver/`, #903). What is left is #913, whether an action binding nothing to move makes a
-   scope; then #568, right-of-way as a lot the market allocates.
+   [constraint](/domain/planning/constraint.md)) — the footprint and the clustering (#900),
+   impossibility (#902), reconsideration on a coupled arrival under
+   [commitment](/domain/execution/commitment.md) (#905), and "one van at a time" as world state
+   (`world/driver/`, #903); the executor-held resource was built and refused. What it left is #916,
+   a head's precondition asked when it is taken and not only at a pass's start. Next is two minds:
+   #568, right-of-way as a lot the market allocates.
 5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays
    it and the model that phrases a free question, then #862's recalibration walked with a person
