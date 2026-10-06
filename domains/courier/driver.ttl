@@ -1,0 +1,49 @@
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+
+<> a orexis:ActionGraph .    # this document is one graph, and this is what it is
+
+#  THE DRIVER'S ONE ACTION, a document of the courier's that its ontology does NOT import: a world
+#  with a driver imports it beside the ontology (`world/driver/world.ttl`), and a world without one
+#  never loads it (#903). Imported by the ontology, the boarding admitted nothing where no driver is
+#  named and still split the vocabulary: the dispatcher went from one scope to three, the courier's
+#  pass laid more than one imaginarium, and a run that is met ended unreachable — eighteen of the
+#  three worlds' twenty-three tests red, measured. It is the allotment's empty heating scopes over
+#  again, which #913 asks whether to keep. A document a world asks for is the
+#  domain's way of saying an action belongs to some of its worlds and not all, whichever #913 decides.
+#
+#  THE BOARDING: the driver leaves the van it is aboard and boards another it drives, wherever that
+#  van stands — the ride across is the world's to have, and no cell of either grid says how it is
+#  made. It DELETES as the pick does, the van left and the van boarded being two pairs, so a driver
+#  is aboard one van in every possible world a plan reaches, and a drive (`actions.ttl`) moves only
+#  the van its driver is aboard. A driver is never on foot here: the smallest model that makes one
+#  van at a time a fact, and walking to a van is a cell and a road no world has needed yet.
+
+courier:Board a orexis:Action ;
+    rdfs:label "the driver leaves the van it is aboard and boards another it drives" ;
+    orexis:takes courier:driver , courier:van ;
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Fictive ] ] ;
+    planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT ?driver ?van WHERE {
+            ?driver courier:aboard ?from .
+            ?driver a courier:Driver .
+            ?van courier:drivenBy ?driver .
+            ?van a courier:Van .
+            FILTER(?van != ?from)
+        }""" ;
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    #  A BOARDING TAKES A STRETCH, longer than a drive to the next cell: the driver is between vans
+    #  from one minute to two, the courier's figure as the drive's half-minute to a minute is, and a
+    #  world that knows its roads better is where a truer one would come from.
+    planning:landsAfter """SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(120 AS ?most) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { $driver courier:aboard ?old  }
+        WHERE  { $driver courier:aboard ?old  }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { $driver courier:aboard $van } WHERE { }""" ] ] .

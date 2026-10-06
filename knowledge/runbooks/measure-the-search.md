@@ -625,6 +625,40 @@ before against 156 and 153 after, its ground lap 37 and 36 against 36 and 36; a 
 constraint pays one query a pass and lays no such ground. **On a disjoint grid** nothing is reopened:
 parcel B's want is minted alone and searched alone, 37 candidates, and van A's intention walks on.
 
+# The driver: one van at a time as world state (2026-10-06, #903)
+
+`world/driver/` is the dispatcher's two deliveries on two grids no drive crosses, and one driver who
+must be aboard a van to drive it and boards the other to move it (`domains/courier/driver.ttl`).
+Measured on the development container, alternated per case in one session, five rounds, one pass of
+the Planner over the booted world as `world/driver/tests/test_driver.py` builds it; candidates are
+every weighing but a ground's, weighings the possible worlds weighed per want. The counts did not
+move between rounds. The walk is the runtime, a drive's least landing between passes, until no
+intention stands.
+
+| case | budget | wants | candidates | weighings | plan | pass, median of five (min) | walked |
+|---|---|---|---|---|---|---|---|
+| the shipped dispatcher, the tree before | 256 | one | 228 | 148 | ten steps | 2943 ms (2608) | — |
+| the shipped dispatcher, the drive asking for a driver | 256 | one | 228 | 148 | ten steps | 3044 ms (2698) | — |
+| the driver, the two-vans constraint alone | 256 | two | 22 and 34 | 18 and 26, the constraint in 37 | five steps and six | 452 ms (399) | 11 acts, 6 passes, two at once; van A driven with the driver aboard van B |
+| the driver, its own constraint held | 128 | one | 128 of 128 | 90 | `Exhausted` | 1203 ms (1125) | — |
+| the driver, its own constraint held | 256 | one | 191 | 133, each constraint in 133 | eleven steps | 2225 ms (2182) | 11 acts, 9 passes, one at a time |
+
+**The drive's new filter costs the dispatcher nothing it can see.** A van the world names no driver
+for is refused by nothing, so every count is the tree before's and the pass is inside the drift. The
+boarding is a document the courier's ontology does not import: imported, it split the dispatcher
+into three scopes and turned eighteen of the twenty-three tests of the dispatcher, the courier and
+the tower red (#913).
+
+**One driver is one want only where a constraint says so.** With the two-vans constraint alone the
+derivation leaves the parcels two wants — over two grids it yields no row, and nothing else couples —
+and the second plan boards first, so the two walked side by side drove van A after the driver had
+left it. Holding the driver's own constraint, a driver aboard one van, couples them, and the joint
+search pays the product as the dispatcher's does: 191 candidates for eleven steps, more than three
+times the 56 of the two apart, and a budget of 128 cuts it short. The estimate is the courier's, ten against eleven
+spent, loose by the boarding; neither constraint marks a world impossible, since a boarding takes
+away the van left and no drive crosses. The walk is three passes longer than the two apart, the
+price of one act at a time.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

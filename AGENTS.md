@@ -231,6 +231,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   the footprint couples to it arrives; two minds optimize alone and meet through prediction, the
   market and execution; sequencing the elder plan as the younger's ground was refused as the two-minds
   tool used on one (#567, one-mind-couples-the-wants-a-constraint-can-make-collide).
+- **State two plans share couples their wants only where a constraint is stated over it** — one
+  driver both parcels' plans move was two wants, and a walk that drove a van its driver had left,
+  until the world held that a driver is aboard one van: a constraint no plan breaks, held for its
+  footprint over the reach (#903, `world/driver/`).
 - **A desire weighed in a ground and a want weighed in a possible world are one judgment at two
   grains**, and `planning:Weighing` carries the `planning:violation` rows for either — and a desire
   is weighed in grounds alone, to mint; nothing weighs one against a plan.

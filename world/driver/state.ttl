@@ -1,0 +1,19 @@
+@prefix : <http://example.org/orexis/world/driver#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:StateGraph .    # this document is one graph, and this is what it is
+
+#  THE TWO DELIVERIES AS POSED, one on each grid: each van at the foot of its grid's first column,
+#  its parcel one cell up it, owed at the top — five steps each, a drive, the pick, two drives, the
+#  drop — and the driver aboard van A. The only file here the runtime never reloads: from the first
+#  boot on, where the vans, the parcels and the driver stand is the agent's belief, rewritten by its
+#  own actions.
+
+:driver courier:aboard :van_a .
+
+:van_a courier:at :c0_0 .
+:parcel_a courier:at :c0_1 .
+
+:van_b courier:at :g10_0 .
+:parcel_b courier:at :g10_1 .

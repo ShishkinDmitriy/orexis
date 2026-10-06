@@ -1,0 +1,59 @@
+@prefix : <http://example.org/orexis/world/driver#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+
+<> a planning:ConstraintGraph .    # this document is one graph, and this is what it is
+
+#  TWO CONSTRAINTS, both physics and neither a preference: what the world says is POSSIBLE, held by
+#  the agent and weighed in every possible world it searches (knowledge/domain/planning/constraint.md).
+#
+#  NO CELL HOLDS TWO VANS, the dispatcher's, stated here because it is as true of this world: on two
+#  grids no drive crosses it can never be broken, and over what the vans can reach it yields no row,
+#  so it couples nothing here.
+#
+#  A DRIVER IS ABOARD ONE VAN AT A TIME, which is what "one van at a time" IS in a world with a
+#  driver. No plan breaks it — a boarding takes away the van the driver leaves, so it is weighed in
+#  every world and marks none impossible — and it is stated for what its FOOTPRINT says: the
+#  derivation couples two parcels into one want where some constraint's rows, read over the
+#  delete-free reach of the actions, join what each parcel's van is, and in that reach the driver
+#  boards both vans and is aboard both. So a plan for either parcel moves the driver a plan for the
+#  other needs, the two are one want and one search, and the plan drives one van, boards the other
+#  and drives it (one-mind-couples-the-wants-a-constraint-can-make-collide). Without it the two
+#  parcels were two wants and two plans, and walked side by side van A was driven with the driver
+#  aboard van B — measured, `tests/test_driver.py`.
+
+:dispatcher planning:holds :no_cell_holds_two_vans .
+
+:no_cell_holds_two_vans a planning:Constraint ;
+    rdfs:label "no cell holds two vans" ;
+    planning:unmetWhen :two_vans_on_one_cell .
+
+:two_vans_on_one_cell
+    sh:message "two vans stand on one cell" ;
+    sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT $this ?value WHERE {
+            $this a courier:Van ;
+                courier:at ?value .
+            ?other a courier:Van ;
+                courier:at ?value .
+            FILTER(?other != $this)
+        }""" .
+
+:dispatcher planning:holds :a_driver_is_aboard_one_van .
+
+:a_driver_is_aboard_one_van a planning:Constraint ;
+    rdfs:label "a driver is aboard one van at a time" ;
+    planning:unmetWhen :a_driver_aboard_two_vans .
+
+:a_driver_aboard_two_vans
+    sh:message "a driver is aboard two vans" ;
+    sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT $this ?value WHERE {
+            $this a courier:Driver ;
+                courier:aboard ?value .
+            $this courier:aboard ?other .
+            FILTER(?other != ?value)
+        }""" .

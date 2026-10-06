@@ -725,10 +725,11 @@ def _onboarded(tmp_path, monkeypatch, world: str, caplog):
     return root / world, asked, reloaded
 
 
-@pytest.mark.parametrize("world", ["hanoi", "courier", "tower"])
+@pytest.mark.parametrize("world", ["hanoi", "courier", "tower", "driver"])
 def test_a_world_with_no_bus_is_onboarded_without_one(tmp_path, monkeypatch, caplog, world):
     """Hanoi, the courier and the tower name no broker, and `orexis-onboard` refused all three at the
-    first tool that asked for an address, so none could run in a container. Onboarded now: history
+    first tool that asked for an address, so none could run in a container; the driver world, which
+    imports a domain document its domain's ontology does not, is onboarded the same way. Onboarded now: history
     granted, metrics withdrawn since none is monitored, no broker credential, ACL or certificate, and
     the one line saying so — and a compose file of its agents alone, which is the one committed."""
     import yaml

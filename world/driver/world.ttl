@@ -1,0 +1,72 @@
+@prefix : <http://example.org/orexis/world/driver#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
+    owl:imports <../../domains/courier/ontology.ttl> ,    # the domain this world poses
+                <../../domains/courier/driver.ttl> .      # and the boarding, since this world has a driver
+
+#  THE DRIVER (#903): the dispatcher's two vans and two parcels, and ONE DRIVER the agent controls,
+#  who sits in a van, drives it, and must board the other before it can move. The dispatcher is a
+#  child with two hands and two toy cars, moving both vans at once if it likes; here "one van at a
+#  time" is a fact about the world — where the driver is — and every plan respects it by
+#  construction: a drive moves only the van its driver is aboard (`domains/courier/actions.ttl`),
+#  and a boarding moves the driver from one van to the other (`domains/courier/driver.ttl`).
+#
+#  THE TWO VANS STAND ON TWO GRIDS a continent apart: the first is the courier's 4x4, the second a
+#  4x4 at x 10 to 13, and no cell of one is a neighbour of any cell of the other, so no drive crosses
+#  and no cell can ever hold both vans. The only thing the two deliveries share is the driver, and
+#  the driver is what makes them one plan: drive one van, board the other, drive it
+#  (`constraints.ttl` says how the derivation is told so).
+
+:dispatcher a orexis:Agent ;
+    orexis:localId "dispatcher" ;
+    rdfs:comment "The dispatcher: a mind with the courier's actions and one driver to act through, acting for nothing and owing nobody." .
+
+:driver a courier:Driver ; rdfs:label "the driver" .
+
+:van_a a courier:Van ; courier:drivenBy :driver ; rdfs:label "van A, on the first grid" .
+:van_b a courier:Van ; courier:drivenBy :driver ; rdfs:label "van B, on the second grid" .
+
+:parcel_a a courier:Parcel ; courier:destination :c0_3 ;
+    rdfs:label "the parcel owed at the top of the first grid's first column" .
+:parcel_b a courier:Parcel ; courier:destination :g10_3 ;
+    rdfs:label "the parcel owed at the top of the second grid's first column" .
+
+#  THE FIRST GRID
+:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
+:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
+:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .
+:c0_3 a courier:Cell ; courier:x 0 ; courier:y 3 .
+:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 .
+:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 .
+:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 .
+:c1_3 a courier:Cell ; courier:x 1 ; courier:y 3 .
+:c2_0 a courier:Cell ; courier:x 2 ; courier:y 0 .
+:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 .
+:c2_2 a courier:Cell ; courier:x 2 ; courier:y 2 .
+:c2_3 a courier:Cell ; courier:x 2 ; courier:y 3 .
+:c3_0 a courier:Cell ; courier:x 3 ; courier:y 0 .
+:c3_1 a courier:Cell ; courier:x 3 ; courier:y 1 .
+:c3_2 a courier:Cell ; courier:x 3 ; courier:y 2 .
+:c3_3 a courier:Cell ; courier:x 3 ; courier:y 3 .
+
+#  THE SECOND GRID, seven columns east of the first
+:g10_0 a courier:Cell ; courier:x 10 ; courier:y 0 .
+:g10_1 a courier:Cell ; courier:x 10 ; courier:y 1 .
+:g10_2 a courier:Cell ; courier:x 10 ; courier:y 2 .
+:g10_3 a courier:Cell ; courier:x 10 ; courier:y 3 .
+:g11_0 a courier:Cell ; courier:x 11 ; courier:y 0 .
+:g11_1 a courier:Cell ; courier:x 11 ; courier:y 1 .
+:g11_2 a courier:Cell ; courier:x 11 ; courier:y 2 .
+:g11_3 a courier:Cell ; courier:x 11 ; courier:y 3 .
+:g12_0 a courier:Cell ; courier:x 12 ; courier:y 0 .
+:g12_1 a courier:Cell ; courier:x 12 ; courier:y 1 .
+:g12_2 a courier:Cell ; courier:x 12 ; courier:y 2 .
+:g12_3 a courier:Cell ; courier:x 12 ; courier:y 3 .
+:g13_0 a courier:Cell ; courier:x 13 ; courier:y 0 .
+:g13_1 a courier:Cell ; courier:x 13 ; courier:y 1 .
+:g13_2 a courier:Cell ; courier:x 13 ; courier:y 2 .
+:g13_3 a courier:Cell ; courier:x 13 ; courier:y 3 .
