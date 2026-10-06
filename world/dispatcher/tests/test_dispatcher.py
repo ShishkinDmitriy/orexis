@@ -140,14 +140,6 @@ SELECT ?g ?s ?e ?within ?by WHERE {
   GRAPH ?g { ?step execution:landsWithinS ?within ; execution:answeredWithinS ?by } }
 ORDER BY ?s ?g"""
 _INTENTIONS_Q = "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention } }"
-#  THE ACTS IN FLIGHT: every head a standing intention stands at that has been taken and not yet
-#  answered, off the intentions — what a resource is a limit on (#903).
-_INFLIGHT_Q = """
-SELECT ?step WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step . ?act execution:of ?step .
-                               FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }"""
-#  WHICH VAN EACH DRIVE OF A PLAN MOVES, off the plan graphs in the beliefs.
-_VAN_OF_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?step ?van WHERE { GRAPH ?p { ?step a execution:Step ; planning:fills courier:Drive ; courier:van ?van } }"""
 #  WHICH POLARITY a want carries its met-test under, and what it points at.
 _POLARITY_Q = "SELECT ?p ?o WHERE { GRAPH ?g { $w ?p ?o FILTER(?p IN (planning:metWhen, planning:unmetWhen)) } }"
 #  WHAT A WANT'S MET-TEST TARGETS — one node per instance a coupled want is about.
@@ -184,12 +176,6 @@ CARRYING = {"world.ttl": PARKED["world.ttl"],
                           (":parcel_a courier:at :c0_1 .", ":parcel_a courier:carriedBy :van_a ."),
                           (":van_b courier:at :c3_0 .", ":van_b courier:at :c2_1 ."),
                           (":parcel_b courier:at :c3_1 .", "")]}
-#  A DRIVER PER VAN, on the two grids: a drive and a pick occupy the van they are filled with, and a
-#  drop — which names no van — nothing; the shipped world's one driver, whom every act occupies, is the
-#  other reading of the same term.
-TWO_DRIVERS = {"world.ttl": [("courier:Drive execution:occupies :driver .", "courier:Drive execution:occupies courier:van ."),
-                             ("courier:Pick execution:occupies :driver .", "courier:Pick execution:occupies courier:van ."),
-                             ("courier:Drop execution:occupies :driver .", "")]}
 #  TWO GRIDS A CONTINENT APART: van B and parcel B on a second 4x4 at x 10 to 13, no cell of which is
 #  one apart from any of the first, so no drive crosses and no cell can ever hold both vans.
 DISJOINT = {"world.ttl": [(":c3_3 a courier:Cell ; courier:x 3 ; courier:y 3 .",
@@ -335,8 +321,7 @@ def _run(world: Path, passes: int = 40, budget: int = BUDGET):
 
     def traced(event):
         at = _at(beliefs)
-        inflight = {_local(r["step"]) for r in rows(executor.intentions, _INFLIGHT_Q, ())} - {_local(event.step)}
-        trace.append((_local(event.step), at.get("van_a"), at.get("van_b"), _shared(beliefs, graphs_of(beliefs, STATE)), inflight))
+        trace.append((_local(event.step), at.get("van_a"), at.get("van_b"), _shared(beliefs, graphs_of(beliefs, STATE))))
         return []
     executor.step_taken.connect(traced)
     outcome = runtime.run(passes=1, poll_s=0)
@@ -452,7 +437,7 @@ def test_corridor_the_coupled_search_refuses_the_worlds_holding_two_vans_and_the
     _bounded(im, JOINT)
     runtime, outcome, trace = _run(corridor, budget=CORRIDOR_BUDGET)
     assert outcome == UNFINISHED and len(trace) == 10
-    met = [(step, shared) for step, _, _, shared, _ in trace if shared]
+    met = [(step, shared) for step, _, _, shared in trace if shared]
     assert met == [], f"walked, the joint plan puts two vans on no cell at any act — the bound's promise: {trace}"
     assert _at(runtime.beliefs) == {"van_a": "c3_1", "parcel_a": "c3_1", "van_b": "c2_0", "parcel_b": "c2_0"}
 
@@ -481,7 +466,7 @@ def test_a_van_parked_across_the_only_shortest_path_is_not_driven_through(tickin
     _bounded(im, want)
     runtime, outcome, trace = _run(world, budget=128)
     assert outcome == UNFINISHED and len(trace) == steps
-    assert [(step, shared) for step, _, _, shared, _ in trace if shared] == [], f"two vans on one cell at an act: {trace}"
+    assert [(step, shared) for step, _, _, shared in trace if shared] == [], f"two vans on one cell at an act: {trace}"
     assert _at(runtime.beliefs) == at
 
 
@@ -553,41 +538,6 @@ def test_a_drive_lands_within_its_band_and_the_steps_and_worlds_advance_along_th
         assert within in (0.0, float(DRIVE_LEAST_S)) and by == length and length > PATIENCE_S, f"a window is its step's band plus the patience: {w}"
     assert sum(1 for w in windows if float(w["within"]) == DRIVE_LEAST_S) == 6 and len({w["s"] for w in windows}) == 7, \
         "six drives land within the least; a pick or a drop opens where its drive landed"
-
-
-def test_one_driver_walks_two_plans_a_drive_at_a_time_and_a_driver_per_van_walks_them_at_once(ticking, tmp_path):
-    """THE RESOURCE (#903): the shipped world says every drive, pick and drop occupies its one
-    driver, and the executor hands no head over while another act holds the driver — handed over or
-    taken and not yet answered. On the two disjoint grids the parcels are two wants and two plans,
-    which the executor walked in lockstep before, both vans' first drives in one drain; with one
-    driver the trace shows them ALTERNATE — van A's drive, then van B's once A's has landed, then
-    A's next — and at no act is another act in flight, both parcels delivered in ten acts over as
-    many passes. With a DRIVER PER VAN — a drive occupies the van it is filled with, which is the
-    same term read as a parameter — the two plans are walked at once again, as before the word
-    existed: van B's first drive is taken while van A's is in flight, and the walk is half the
-    passes. AND THE JOINT PLAN OF THE SHIPPED POSE IS A CHAIN: each of its ten steps opens where the
-    one before it lands, so no two of its acts are ever in flight at once and the driver changes
-    nothing for it — which is why `test_apart`'s walk is the same ten acts with one driver as
-    without. The search has nothing to refuse here: a chain breaches no resource."""
-    one = variant(tmp_path, "one_driver", DISJOINT)
-    runtime, outcome, trace = _run(one, budget=128)
-    assert outcome == UNFINISHED and len(trace) == 10
-    assert [inflight for *_, inflight in trace if inflight] == [], f"one driver: no act is taken while another is in flight: {trace}"
-    vans = {_local(r["step"]): _local(r["van"]) for r in rows(runtime.beliefs, _VAN_OF_Q, ())}
-    drives = [vans[step] for step, *_ in trace if step in vans]
-    assert drives == ["van_a", "van_b"] * 3, f"the drives alternate, the elder plan's first; a pick lands at once and the tie on due goes to the elder: {drives}"
-    assert _at(runtime.beliefs) == {"van_a": "c0_3", "parcel_a": "c0_3", "van_b": "g10_3", "parcel_b": "g10_3"}
-    two = variant(tmp_path, "two_drivers", {**DISJOINT, "world.ttl": DISJOINT["world.ttl"] + TWO_DRIVERS["world.ttl"]})
-    runtime, outcome, trace = _run(two, budget=128)
-    assert outcome == UNFINISHED and len(trace) == 10
-    assert any(inflight for *_, inflight in trace), f"a driver per van: van B drives while van A's drive is in flight: {trace}"
-    assert _at(runtime.beliefs) == {"van_a": "c0_3", "parcel_a": "c0_3", "van_b": "g10_3", "parcel_b": "g10_3"}
-    im = _pass(WORLD)
-    placed = rows(im, _PLACED_Q, (), want=D + JOINT)
-    landed = NOW
-    for r in placed:
-        assert _dt(r["nb"]) >= landed, "a step of the chain opens no earlier than the one before it lands: no two acts in flight"
-        landed = _dt(r["la"])
 
 
 def test_two_vans_on_one_cell_at_a_pass_start_mint_the_aversions_want_and_a_drive_parts_them(ticking, tmp_path):

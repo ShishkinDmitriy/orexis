@@ -488,41 +488,6 @@ under a name of its own beside the coupled want still walking, whose second plan
 down the same cells (12 acts for 10 steps, measured). A cluster a standing want is already about is
 that want's now, and the shipped dispatcher's walk is one intention, ten acts, as before.
 
-# The resource: one driver for two vans (2026-10-05, #903)
-
-The dispatcher declares `courier:Drive`, `Pick` and `Drop` `execution:occupies :driver`, and the
-executor's timekeeper offers no head whose resource an act in flight holds
-([constraint](/domain/planning/constraint.md)). Nothing of the search moved — the shipped pose's
-joint plan is a chain and a chain never has two acts in flight, so its 228 candidates, ten steps and
-ten acts are what they were — and what was measured is the walk and what a holder pays for the word.
-
-| case | resource | acts | passes of the walk | acts taken while another was in flight | drives, in order |
-|---|---|---|---|---|---|
-| the vans on two grids, two plans | none, as before | 10 | 4 | 5 — both plans' heads in every drain | A, B, A, B, A, B, both in one tick |
-| the same | one driver, every act occupying it | 10 | 7 | 0 | A, B, A, B, A, B, one landed before the next is offered — the elder plan first, a pick landing at once and the tie on due going to it |
-| the same | a driver per van (`execution:occupies courier:van`) | 10 | 4 | 5 | lockstep again |
-| the shipped pose, one chain | one driver | 10 | 7 | 0 | the chain's, unchanged |
-
-The walk's passes are the test's clock moved on by a drive's least between passes; one driver takes
-the two plans' six drives in series, a driver per van takes them two at a time.
-
-**What a holder pays.** `tick` asks what the actions occupy only where two heads stand, two queries
-(`graphs_of(PUBLIC)` and the select), since a chain cannot hold its own head back; the greenhouse's
-cold dry bed has two intentions and pays them every tick. The pass bench
-(`world/greenhouse/tests/test_bench.py`), the band commit and this one alternated twice in one
-session on the development container, read its `execute` lap 12, 0, 18, 0 ms before against 12, 0,
-17, 0 after, then 12, 0, 16, 0 against 10, 0, 17, 0 — its four cases in order, inside the drift the
-other laps show — and four quads more for the term's declaration (1454 to 1458 on the cold dry bed).
-The dispatcher's one-driver walk and the driver-per-van walk together are 6.5 s in the suite.
-
-**What was refused on building, and why the page changed.** The constraint page said a resource would
-be a desire in the aversion's form, one select over committed steps' windows. Written, that select
-reads the two plans' first drives overlapping from the pass's instant — each committed step is
-believed over the window the PLAN placed, and both plans are placed from now — so it read unmet
-while the executor was serialising those very acts, and the derivation would have minted a want no
-action reaches, every pass. In flight is a fact of the intentions, which no met-test is handed; the
-executor is where it is known, and the resource is one row the world states of the action.
-
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

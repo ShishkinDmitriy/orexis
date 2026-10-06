@@ -21,10 +21,7 @@ description: >-
   ([planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 - **`tick(now)`** hands every standing intention whose head [step](/domain/execution/step.md) is due
   — `execution:notBefore` past — to the queue, and for a head already taken asks whether the world
-  answered. Where the world states a [resource](/domain/planning/constraint.md) — what an action
-  `execution:occupies` — a due head is kept back for as long as an act of another intention holds
-  the same thing, with nothing written of the wait; the elder intention's head goes first among those
-  due at one instant.
+  answered.
 - **`drain()`** takes each queued step and writes its [act](/domain/execution/act.md).
 
 # Taking a step

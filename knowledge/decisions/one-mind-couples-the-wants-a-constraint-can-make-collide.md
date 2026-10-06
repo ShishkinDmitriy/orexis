@@ -65,8 +65,7 @@ On the development container, one pass of the Planner at a budget of 128 over th
 - **What execution holds a step to.** `Executor.tick` hands a due head over unasked; `Planner._blocked`
   asks the present once a pass whether a head's precondition holds, and a drive's reads adjacency
   alone. Two intentions are walked in parallel, and nothing asks whether one actor can take two
-  steps in one drain. *Since #903 the dispatcher's one driver asks it: the timekeeper offers no head
-  whose resource an act in flight holds.*
+  steps in one drain.
 
 # The claim
 
@@ -141,19 +140,6 @@ are checked in two places:
   machinery read over acts. The executor honours it by not handing a head over while another step
   of the same resource is in flight, and the search honours it over a world's path, whose steps
   carry their windows.
-
-  *Built 2026-10-05 (#903), and two of those sentences did not survive building. A select over
-  committed steps' windows judges nothing: the window is the plan's placing, and two plans placed in
-  one pass for one driver overlap from their first instant whether or not an act has begun, so an
-  aversion so written read unmet while the executor was already serialising the acts, and would have
-  minted an unreachable want every pass. The resource is one row the world states of the action,
-  `execution:occupies` — a node, or a parameter whose value the step fills — and the executor alone
-  reads it: a head due whose resource a step in flight holds, handed over or taken and unanswered, is
-  not offered until that step is answered, the elder plan first. And the search has nothing to
-  refuse: a plan is a chain, each step opening where the one before it lands, so no path holds two
-  acts of one resource at once until a plan is a partial order ([constraint](/domain/planning/constraint.md)).
-  On the two grids with one driver the drives alternate where they ran in lockstep; with a driver per
-  van, or none, they run in parallel as before.*
 
 **A walking want is reconsidered when a want the footprint couples to it arrives.** Intentions are
 commitments: stable by default, reconsidered on a trigger, which is Bratman's stance and IRMA's
@@ -320,13 +306,10 @@ plan down the same cells. A cluster a standing want is already about is that wan
   back by the bound takes a detour where one act's wait would do — or, measured (#902), the mind moves
   the other van aside, which is one act too and is what it found; a `Wait` is the domain's to add,
   costed and banded like a drive.
-- **The resource's footprint.** Which wants a resource could couple is which wants have actions
-  that occupy it — a footprint over `execution:occupies` rather than over a predicate — and it is
-  NOT read (#903), on purpose: two plans for one driver cost the same sum of steps in every
-  interleaving, so a coupled search would pay the product for a plan no better than the two apart,
-  which the executor's hold then walks one act at a time. The dispatcher's two grids with one
-  driver stay two wants and two plans. The trigger is a cost that ranks by makespan or lateness
-  (#596's seam), where which van drives first is worth searching for.
+- **The resource's footprint.** A resource is read over committed steps' windows; which wants it
+  couples is which wants have actions the same resource takes, which is the footprint over the
+  actions' takers rather than over a predicate. Nothing shipped names a taker of a courier action,
+  since a drive is fictive.
 - **A surprise after coupling.** A joint plan walked with one van late still holds, since it is one
   sequence; a step that fails ends the intention and the coupled want is searched again from the
   present, as any failed plan is. What is not decided is a late landing in the concurrent case

@@ -52,16 +52,6 @@ the adoption contains the plan and the window's ends are its happenings. The win
 world answers the step or the intention ends, which is a write whoever hears a belief written hears,
 and `tick` forgets what has ended (knowledge/domain/execution/committed-step.md).
 
-**A RESOURCE IS A LIMIT ON ACTS IN FLIGHT, AND THE TIMEKEEPER HONOURS IT** (#903). An action may
-`execution:occupies` something — a node the world declares, or a parameter whose value the step
-fills — and at most one act holds it at a time: a head due whose resource another head holds, handed
-over or taken and not yet answered, is not handed over this tick, as a head before its `notBefore` is
-not, and nothing is recorded of the wait. Heads are offered in the order they fell due and then by
-the age of their intentions, so the elder plan drives first and the younger waits. The intentions of
-one plan are a chain and never have two steps in flight, so a holder with one intention standing is
-asked nothing; one with several pays two queries a tick for what the actions occupy
-(knowledge/domain/planning/constraint.md).
-
 **THE PATIENCE IS STILL HERE**, unchanged from the keeper this was: a second plan for a want
 already standing is absorbed inside the patience and supersedes past it, which is the
 amortisation (an-intention-is-an-amortised-deliberation). The planner does not go through
@@ -86,7 +76,7 @@ import pyoxigraph as ox
 
 from agent import clock
 from agent.lifecycle import Signal
-from agent.ontology import ACTION, OREXIS, PUBLIC, STATE, local_of
+from agent.ontology import ACTION, OREXIS, STATE, local_of
 from agent.store import (NAMESPACES, Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant,
                          quads, quads_for_pattern, revisions_of, rows, update)
 
@@ -151,13 +141,11 @@ ORDER BY ?adopted"""
 #  THE HEAD OF EVERY STANDING INTENTION: when it may be taken — `execution:notBefore` where the
 #  plan says, at once where it says nothing — whether it has been taken (an act saying so), and
 #  where it has, the two graphs it predicts in and when that should show, at the earliest and at
-#  the latest. In the order the heads fell due and then the order their intentions were adopted,
-#  since a resource goes to the first head offered and an elder plan is not made to wait on a
-#  younger by the store's order of two IRIs.
+#  the latest.
 _HEADS_Q = """
 SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?after ?adds ?retracts WHERE {
   GRAPH $intentions {
-    ?intention a execution:Intention ; execution:by ?step ; execution:adopts ?plan ; execution:adoptedAt ?adopted .
+    ?intention a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
     OPTIONAL { ?act execution:of ?step ; execution:taken true ; execution:takenAt ?taken } }
   OPTIONAL { GRAPH ?plan { ?step execution:notBefore ?due } }
@@ -166,15 +154,7 @@ SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?after ?adds ?retracts WHE
   OPTIONAL { GRAPH ?plan { ?step execution:notAfter ?after } }
   OPTIONAL { GRAPH ?plan { ?step execution:adds ?adds } }
   OPTIONAL { GRAPH ?plan { ?step execution:retracts ?retracts } } }
-ORDER BY ?due ?adopted ?intention"""
-
-#  WHAT AN ACTION'S ACT HOLDS WHILE IN FLIGHT, off public knowledge (#903): a node the world
-#  declares, or a parameter the action takes — `?parameter` bound — in which case the step's own
-#  value for it is what is held. One query a tick, asked only where two heads stand, since a chain
-#  never has two steps in flight and a resource cannot hold its own holder back.
-_OCCUPIES_Q = """
-SELECT ?action ?held ?parameter WHERE {
-  ?action execution:occupies ?held . OPTIONAL { ?action orexis:takes ?held BIND(true AS ?parameter) } }"""
+ORDER BY ?due ?intention"""
 
 #  WHAT A STEP PREDICTS: the two graphs it names, wherever it names them — each side its own
 #  OPTIONAL over any graph, since the step is typed in its plan AND in its committed-step graph,
@@ -614,19 +594,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             nonlocal soonest
             if soonest is None or when < soonest:
                 soonest = when
-        heads = rows(self.intentions, bind(_HEADS_Q, intentions=Raw(f"<{self.graph}>")))
-        #  WHAT IS HELD BY A STEP IN FLIGHT — handed over, or taken and not yet answered — before
-        #  any head is offered, since a head offered here joins them (#903). A head taken and
-        #  advanced as it was taken is no head any more and holds nothing.
-        occupancy = self._occupancy() if len(heads) > 1 else {}
-        held: dict[str, frozenset] = {}
-        busy: set[str] = set()
-        if occupancy:
-            for r in heads:
-                held[r["step"]] = self._occupied(r["step"], occupancy)
-                if r["step"] in self._inflight or r.get("act") is not None:
-                    busy |= held[r["step"]]
-        for r in heads:
+        for r in rows(self.intentions, bind(_HEADS_Q, intentions=Raw(f"<{self.graph}>"))):
             intention, step = r["intention"], r["step"]
             if step in self._inflight:
                 continue
@@ -635,13 +603,6 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 if (when is None or when <= now) and r.get("kept") and not self._kept_by(step):
                     continue                    # kept below: the want that keeps it is planning's to mint
                 if when is None or when <= now:
-                    if held.get(step, frozenset()) & busy:
-                        #  THE RESOURCE IS IN FLIGHT: not this tick, and not a failure. The step
-                        #  holding it registers its own landing as the instant to wake at.
-                        log.debug("%s: %s waits — %s is held by a step in flight", self.id, local_of(step),
-                                  ", ".join(sorted(local_of(x) for x in held[step] & busy)))
-                        continue
-                    busy |= held.get(step, frozenset())
                     self._inflight.add(step)
                     self._work.put((intention, step))
                     due.append(step)
@@ -674,24 +635,6 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 wake_at(latest + timedelta(seconds=self.patience_s))
         self._next_due = soonest
         return due
-
-    def _occupancy(self) -> dict[str, list[tuple[str, bool]]]:
-        """What each action's act holds while in flight, off public knowledge: per action, each
-        thing it `execution:occupies` and whether that is a parameter the action takes, whose value
-        on the step is then what is held. Empty for a world that declares no resource."""
-        out: dict[str, list[tuple[str, bool]]] = {}
-        for r in rows(self.beliefs, _OCCUPIES_Q, graphs_of(self.beliefs, PUBLIC)):
-            out.setdefault(r["action"], []).append((r["held"], bool(r.get("parameter"))))
-        return out
-
-    def _occupied(self, step: str, occupancy: dict) -> frozenset[str]:
-        """What `step` holds while in flight, under `occupancy`: each resource its action occupies —
-        the step's own value where the resource is a parameter, the node itself where it is not."""
-        said = self.step_of(step)
-        action = said.get("fills")
-        if action is None or action not in occupancy:
-            return frozenset()
-        return frozenset(said.get(local_of(held), held) if parameter else held for held, parameter in occupancy[action])
 
     @staticmethod
     def _landing(head: dict, now: datetime) -> tuple[datetime, datetime]:

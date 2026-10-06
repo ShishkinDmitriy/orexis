@@ -1177,31 +1177,6 @@ def test_a_document_holding_drifts_is_a_drift_graph():
     assert holding, "no document holds a drift — this guard checks nothing"
 
 
-# --- a resource is the world's to state --------------------------------------------------------------
-
-def test_a_resource_is_declared_by_a_world_and_never_by_a_domain():
-    """What an action's act occupies while in flight — `execution:occupies`, the resource of #903 — is a
-    limit of the WORLD's: one driver for two vans is the dispatcher's fact and no fact of the courier's
-    grid, as a cadence is the world's and not the dose's. So no document under `domains/` states one,
-    and the actuation domain's dose and the market's six actions are unaffected by the word's existence;
-    a world that states one states it of a domain's action in its own world graph. Held to at least one
-    world stating one, or the guard checks nothing."""
-    import rdflib
-
-    EXECUTION = rdflib.Namespace("http://example.org/orexis/execution#")
-    stating, wrong = [], []
-    for path in sorted([*REPO_ROOT.glob("domains/*/*.ttl"), *REPO_ROOT.glob("world/*/*.ttl")]):
-        if "occupies" not in path.read_text():
-            continue
-        g = rdflib.Graph()
-        g.parse(path, format="turtle", publicID=path.as_uri())
-        if (None, EXECUTION.occupies, None) not in g:
-            continue
-        (wrong if path.is_relative_to(REPO_ROOT / "domains") else stating).append(path.relative_to(REPO_ROOT))
-    assert not wrong, f"a domain declares what its actions occupy, which is a world's to say: {wrong}"
-    assert stating, "no world declares a resource — this guard checks nothing"
-
-
 # --- the domain is a plug-in -----------------------------------------------------------------------
 
 @pytest.mark.parametrize("tree", ["onboarding", "agent"])
