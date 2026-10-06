@@ -52,6 +52,12 @@ the adoption contains the plan and the window's ends are its happenings. The win
 world answers the step or the intention ends, which is a write whoever hears a belief written hears,
 and `tick` forgets what has ended (knowledge/domain/execution/committed-step.md).
 
+**A STEP IN FLIGHT IS NEVER CANCELLED** (#905, knowledge/domain/execution/commitment.md). Planning ends
+an intention early by three doors and none of them reaches a step handed to its taker and unanswered:
+`end_for` ends one none of whose steps was taken, `end_at` one whose head is due and untaken, and
+`supersede_after` — a reconsideration replaced the untaken steps — marks the intention to end after its
+step in flight, `execution:endsAfter`, which `_advance` reads when the world answers that step.
+
 **THE PATIENCE IS STILL HERE**, unchanged from the keeper this was: a second plan for a want
 already standing is absorbed inside the patience and supersedes past it, which is the
 amortisation (an-intention-is-an-amortised-deliberation). The planner does not go through
@@ -101,6 +107,7 @@ PURSUES = EXECUTION + "pursues"
 ADOPTED_AT = EXECUTION + "adoptedAt"
 RESOLVED_AT = EXECUTION + "resolvedAt"
 OUTCOME = EXECUTION + "outcome"
+ENDS_AFTER = EXECUTION + "endsAfter"
 _TAKES_Q = """SELECT ?takes WHERE { $action orexis:takes ?takes }"""
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
@@ -233,6 +240,12 @@ SELECT ?opens ?lands ?after WHERE { GRAPH $plan {
 
 #  EVERY STEP AN INTENTION COMMITTED TO.
 _COMMITTED_Q = """SELECT ?step WHERE { GRAPH $intentions { $intention execution:step ?step } }"""
+
+#  WHETHER A STEP HAS BEEN TAKEN — an act on record saying so; at an intention's head, a step in flight.
+_IN_FLIGHT_Q = """SELECT ?act WHERE { GRAPH $intentions { ?act execution:of $step ; execution:taken true } } LIMIT 1"""
+
+#  WHETHER AN INTENTION ENDS AFTER A STEP — planning reconsidered the want it pursues (#905).
+_ENDS_AFTER_Q = """SELECT ?i WHERE { GRAPH $intentions { $intention execution:endsAfter $step . BIND($intention AS ?i) } } LIMIT 1"""
 
 #  WHEN A COMMITTED STEP'S WINDOW CLOSES, on the catalogue row of the graph this executor wrote for it.
 _WINDOW_Q = """SELECT ?end WHERE { GRAPH $cat { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }"""
@@ -369,6 +382,35 @@ class Executor:
         for intention in ended:
             self.resolve(intention, outcome)
         return [self.graph] if ended else []
+
+    def supersede_after(self, step: str) -> list[str]:
+        """End the standing intention that stands at `step` AFTER it, `superseded` — planning has
+        reconsidered the want it pursues and a joint plan replaces its untaken steps (#905).
+
+        COMMITMENT HAS TWO GRAINS, and this is where they part (knowledge/domain/execution/commitment.md).
+        A step IN FLIGHT — handed to its taker, an act on record, and not yet answered — is never
+        cancelled: the intention is marked to end after it, `execution:endsAfter`, and the step is
+        held to its prediction as any taken step is, so it lands, or fails by the patience, and only
+        then does the intention resolve. The untaken steps are the plan's and go now: their committed
+        windows close, since a committed step not yet started is a prediction and not a commitment,
+        and a replaced plan takes it with it. An intention whose head has not been taken has nothing
+        in flight, and resolves at once."""
+        mine = Raw(f"<{self.graph}>")
+        for held in self.standing():
+            if held.at != step:
+                continue
+            taken = rows(self.intentions, bind(_IN_FLIGHT_Q, intentions=mine, step=step))
+            if not taken:
+                self.resolve(held.uri, "superseded")
+                continue
+            update(self.intentions, f"INSERT DATA {{ GRAPH <{self.graph}> {{ <{held.uri}> <{ENDS_AFTER}> <{step}> }} }}")
+            now = clock.now()
+            for r in rows(self.intentions, bind(_COMMITTED_Q, intentions=mine, intention=held.uri)):
+                if r["step"] != step and not rows(self.intentions, bind(_IN_FLIGHT_Q, intentions=mine, step=r["step"])):
+                    self._close_window(r["step"], now)
+            log.info("%s: %s ends after %s, its untaken steps replaced", self.id,
+                     held.uri.rsplit("#", 1)[-1], local_of(step))
+        return [self.graph]
 
     def commit(self, source: ox.Store, graph: str, want: str) -> str | None:
         """Copy a found plan into the intentions — unless one for this want is already standing
@@ -669,9 +711,16 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                                            prefixes=NAMESPACES, default_graph=present))
 
     def _advance(self, intention: str, step: str, now: datetime | None = None) -> None:
-        """Move the intention to the step after `step`, or resolve it `done` at the last. The
-        step's window closes at `now`, since the world has answered it. The timekeeper is woken
-        either way: a new head may be due at once."""
+        """Move the intention to the step after `step`, or resolve it `done` at the last — or
+        `superseded`, where it ends after `step` (`supersede_after`): the step in flight was
+        answered, and what came after it was replaced. The step's window closes at `now`, since
+        the world has answered it. The timekeeper is woken either way: a new head may be due at
+        once."""
+        if rows(self.intentions, bind(_ENDS_AFTER_Q, intentions=Raw(f"<{self.graph}>"), intention=intention, step=step)):
+            self._close_window(step, now or clock.now())
+            self.resolve(intention, "superseded")
+            self.wake()
+            return
         following = next(iter(rows(self.intentions, bind(_NEXT_Q, intentions=Raw(f"<{self.graph}>"), step=step))), None)
         if following is None:
             self.resolve(intention, "done")

@@ -1,10 +1,11 @@
 """`create`: the planning package's part (a-package-starts-itself) — its Planner, which says what
 happened by its own signals, each carrying an event of `events.py`: `plan_published`,
-`want_reached`, `step_blocked`, `want_unreachable`, and — made only where heard — `searched`,
-`planned`, `rerooted`, `imagined`.
+`want_reached`, `step_blocked`, `reconsidered`, `want_unreachable`, and — made only where heard —
+`searched`, `planned`, `rerooted`, `imagined`.
 
 LINKED, it connects those signals to what lies beneath it — the executor adopts a plan published,
-ends an unbegun intention whose want is reached, ends one whose next step is blocked — and hears the
+ends an unbegun intention whose want is reached, ends one whose next step is blocked, ends one a
+reconsideration replaced after its step in flight — and hears the
 executor's `intention_resolved`, asking for the next pass at once. STARTED, it plans every pass,
 after the jobs a pass drains, and holds the agent while something is wanted.
 
@@ -41,6 +42,7 @@ class _Planning:
                                                                               desire=published.desire))
         self.planner.want_reached.connect(lambda reached: executor.end_for(reached.want, "reached"))
         self.planner.step_blocked.connect(lambda blocked: executor.end_at(blocked.step, "failed"))
+        self.planner.reconsidered.connect(lambda reconsidered: executor.supersede_after(reconsidered.step))
         executor.intention_resolved.connect(lambda ended: self.runtime.again())
 
     def start(self, runtime) -> None:

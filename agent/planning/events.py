@@ -1,7 +1,8 @@
 """What the Planner says happened — every event its signals carry, and what of each is reported.
 
-An event is said whole, so a handler asks nobody: the executor adopts from `PlanPublished` and ends
-from `WantReached` and `StepBlocked`, and the metrics part tallies what a class marks
+An event is said whole, so a handler asks nobody: the executor adopts from `PlanPublished`, ends
+from `WantReached` and `StepBlocked`, and ends after the step in flight from `Reconsidered`, and the
+metrics part tallies what a class marks
 (`agent.metrics`). An event nobody but metrics hears — a search ended, a pass, a re-root, what an
 imaginarium holds — is made only where its signal is heard, so nothing is read or timed for it
 where no metrics sink is loaded.
@@ -47,6 +48,16 @@ class WantReached:
 class StepBlocked:
     """A step an intention stands at, fallen due, that the present no longer admits."""
     step: str
+
+
+@dataclass(frozen=True)
+class Reconsidered:
+    """A walking want reopened by a want a constraint couples to it, whose joint plan does not begin
+    with the intention's untaken steps: the intention standing at `step` ends after it — after the
+    step in flight, never before — its untaken steps replaced by the plan published for `by`."""
+    step: str
+    want: str
+    by: str
 
 
 @dataclass(frozen=True)

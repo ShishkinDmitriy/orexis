@@ -17,7 +17,9 @@ description: >-
   the step is answered or the intention ends, and `tick` forgets what has ended. A second plan for a
   want already standing is absorbed inside the patience and supersedes past it. **`end_for`** ends an intention that has taken no step
   `reached`, when planning says its want is met; **`end_at`** ends one `failed`, when planning says its
-  next step is blocked; every intention that ends is an event planning hears
+  next step is blocked; **`supersede_after`** ends one `superseded` once its step in flight is answered,
+  when a reconsideration replaced the rest ([commitment](/domain/execution/commitment.md)), closing the
+  untaken steps' windows at once; every intention that ends is an event planning hears
   ([planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 - **`tick(now)`** hands every standing intention whose head [step](/domain/execution/step.md) is due
   — `execution:notBefore` past — to the queue, and for a head already taken asks whether the world

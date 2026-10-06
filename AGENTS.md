@@ -376,8 +376,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A possible world is named by a mint number and the path to it is rows** — a name that joined
   its path collided once, needed escaping, grew with depth and was read back by nothing; the
   counter is the store's, so a cone kept across passes is never named over (#486).
-- **A want an intention is walking is neither searched nor handed down again**, and **a plan whose
-  want is gone is nobody's**.
+- **A walking want is neither searched nor handed down again until a want a constraint couples to it
+  arrives, and then only its untaken steps are reopened** — commitment is hard on the step in flight,
+  which nothing planning decides cancels, and soft on the plan, which that one trigger re-searches
+  from the ground the step lands in (#905, commitment); and **a plan whose want is gone is nobody's**.
 - **A prediction is a diff, and only a ground has applied it** — one reader answers the derivation
   and the search (`world_at`), and refuses a store with no ground.
 - **A world speaks for its readings' revisions**, and **the search runs no rules, so a reading's
@@ -411,8 +413,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   step from them; a JSON literal of triples in a triplestore could be queried, abbreviated and
   compared by nothing (#759, a-steps-prediction-is-two-graphs-it-names).
 - **Planning and execution meet at the store and signal each other** — a plan is published once
-  and an intention adopts it by reference; a plan begun is walked to its end
+  and an intention adopts it by reference; a plan begun is walked to its end, unless a
+  reconsideration replaces its untaken steps, and then it ends after its step in flight
   (planning-and-execution-meet-at-the-store).
+- **Two intentions walked side by side keep no order between them**, so a joint plan leaves a walking
+  intention standing only where it BEGINS with that intention's untaken steps — the same steps later
+  in the plan were found safe in an order nothing would walk them in (#905).
 - **A committed step is a belief over its landing window, and a drift reads it there** — the
   executor writes each adopted step as an `execution:CommittedStepGraph` holding from its
   `notBefore` to its `landsAt` plus the patience, closes it when answered or ended, and prediction

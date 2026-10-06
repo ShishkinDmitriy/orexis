@@ -54,8 +54,11 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    [constraint](/domain/planning/constraint.md)); the constraint's page, its footprint over the reach
    and the clustering are built (#900), and so is impossibility — the constraint weighed in every
    possible world, a violating world marked and the present validated (#902, reworked 2026-10-06); the
-   executor-held resource (#903) was built and refused, and reconsideration on a coupled arrival (#905)
-   is the debt left; then #568, right-of-way as a lot the market allocates.
+   executor-held resource was built and refused, and reconsideration on a coupled arrival is built
+   (#905) — [commitment](/domain/execution/commitment.md) hard on the step in flight and soft on the
+   plan. What is left is #903, now the driver world that makes "one van at a time" world state, and
+   #913, whether an action binding nothing to move makes a scope; then #568, right-of-way as a lot the
+   market allocates.
 5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays
    it and the model that phrases a free question, then #862's recalibration walked with a person

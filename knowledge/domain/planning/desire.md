@@ -53,7 +53,8 @@ joins every cluster, so a shape ranging over instances says `planning:about sh:t
 ([a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astray-is-a-want-of-its-own.md)); two
 instances a [constraint](/domain/planning/constraint.md) the holder holds can make collide are one
 cluster and one want about both — and
-one the rows no longer imply is withdrawn by the same pass — unless an intention is walking it. Nothing ranks one
+one the rows no longer imply is withdrawn by the same pass — unless it is walking, which a
+[commitment](/domain/execution/commitment.md) keeps until a coupled want arriving reopens it. Nothing ranks one
 want before the search that could rank it: every want is searched, and what their plans cost is
 the comparison.
 

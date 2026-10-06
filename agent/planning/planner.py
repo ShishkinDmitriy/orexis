@@ -17,17 +17,21 @@ process is told:
 
 1. per scope, an imaginarium — the Planner's, kept from pass to pass: `prepare_ground` copies
    what a rule may read, or refreshes the copy; `lay_ground` lays one ground per period the
-   predictions make; `reroot` finds the world the last pass imagined that the present landed
-   in, keeps its cone under the new ground and drops the rest;
+   predictions make, and one where each step in flight lands where a constraint is held;
+   `reroot` finds the world the last pass imagined that the present landed in, keeps its cone
+   under the new ground and drops the rest;
 2. every desire is weighed in every ground (`weigh`, over what `unweighed` lists),
-   `derive_wants` reads the weighings and mints a want per cluster of what they read unmet,
-   and `withdraw` takes away what no desire implies and no intention is walking;
+   `derive_wants` reads the weighings and mints a want per cluster of what they read unmet —
+   one a constraint couples to a walking want reopening it, minted where its step in flight
+   lands — and `withdraw` takes away what no desire implies and no intention is walking;
 3. per want that no intention is walking, `search`: the want is weighed in the ground holding at its instant
    ground, and `expand` opens the cheapest open world until nothing is open, the cheapest
    achiever refuses the top, or the budget is spent — an iteration admits the world's
    candidates, takes each and weighs what it reached; then `extract_plan` writes what the
-   want's weighings come to;
-4. `publish_plan` hands every plan no intention is already walking DOWN, through the belief base:
+   want's weighings come to, and `_reconsider` holds a reopening want's plan against the
+   walking intention's untaken steps;
+4. `publish_plan` hands every plan no intention is already walking DOWN, through the belief base,
+   less the steps a standing intention already walks:
    an `orexis:PlanGraph` published once in execution's words, each step a bridge may keep below marked so
    (`bridge.keeps`), which the executor adopts by reference.
 
@@ -48,7 +52,10 @@ landed as predicted and the cone beneath the landing is the search already done 
 nothing happened and the whole cone is kept under the new ground; the world surprised the
 agent and everything goes. A want an intention is walking is not searched again and its plan
 is not handed down again: the world has not answered yet, and re-deciding is what the
-executor's verdict on a step is for.
+executor's verdict on a step is for — until a want a constraint couples to it arrives, the one
+trigger that reopens it: the step in flight stays, the joint want is searched from the ground in
+which that step has landed, and its plan is held against the intention's untaken steps
+(`_reconsider`, knowledge/domain/execution/commitment.md).
 
 **THE SEARCH'S STATE IS IN THE STORE, AND THE FRONTIER IS A QUERY.** What is true of a world
 whoever asks is on its row; what a want's search worked out about it is a `planning:Weighing`
@@ -69,7 +76,7 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 import rdflib
@@ -85,14 +92,14 @@ from . import footprint
 from .admit import admit
 from .bridge import keeps
 from .derive_wants import derive_wants
-from .events import (Imagined, Planned, PlanPublished, Rerooted, SearchEnded, StepBlocked,
+from .events import (Imagined, Planned, PlanPublished, Reconsidered, Rerooted, SearchEnded, StepBlocked,
                      WantReached, WantUnreachable)
 from .extract_plan import extract_plan
 from .find_scopes import find_scopes
 from .refine import refine
 from .find_wants import find_wants
 from .lay_ground import lay_ground
-from .ontology import CONSTRAINT_GRAPH, DESIRE, PLAN_GRAPH, PLANNING, SCOPE_GRAPH, SHAPES, WANT
+from .ontology import CONSTRAINT_GRAPH, DESIRE, PLAN_GRAPH, PLANNING, SATISFIED, SCOPE_GRAPH, SHAPES, WANT
 from .prepare_ground import prepare_ground
 from .publish_plan import publish_plan
 from .reroot import reroot
@@ -135,6 +142,33 @@ SELECT DISTINCT ?want WHERE {
   { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
     FILTER NOT EXISTS { GRAPH ?h { ?i execution:adopts ?plan } } } }
 ORDER BY ?want"""
+
+#  WHERE EVERY STANDING INTENTION STANDS: the want it pursues, the plan it adopts, its head and the
+#  action the head fills, and — where the head has been TAKEN, handed to its taker with an act on
+#  record and not yet answered, which is a step IN FLIGHT — when it was due, when it was taken and
+#  when its plan placed it to land. Execution's rows, read from the layer beneath as `walking` reads them.
+_STANDS_AT_Q = """
+SELECT ?intention ?want ?plan ?step ?action ?due ?taken ?lands WHERE {
+  GRAPH ?g { ?intention a execution:Intention ; execution:pursues ?want ; execution:by ?step ; execution:adopts ?plan .
+             FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
+             OPTIONAL { ?act execution:of ?step ; execution:taken true ; execution:takenAt ?taken } }
+  GRAPH ?plan { ?step planning:fills ?action .
+                OPTIONAL { ?step execution:notBefore ?due } OPTIONAL { ?step execution:landsAt ?lands } } }
+ORDER BY ?intention"""
+
+#  A PLAN'S STEPS AS A CHAIN, in either store: each step, the one after it, the action it fills and
+#  every value it states — of which the parameters its action takes are its filling.
+_CHAIN_Q = """
+SELECT ?step ?next ?action ?p ?v WHERE { GRAPH $plan { ?step a execution:Step ; planning:fills ?action ; ?p ?v .
+  OPTIONAL { ?step execution:then ?next } } }"""
+_TAKES_Q = """SELECT ?takes WHERE { $action orexis:takes ?takes }"""
+
+#  THE WALKING WANTS A WANT REOPENS — the derivation's row — and the plan its search wrote, with how it ended.
+_REOPENS_Q = """SELECT ?w WHERE { GRAPH ?g { $want planning:reopens ?w } } ORDER BY ?w"""
+_PLAN_FOR_Q = """SELECT ?plan ?outcome WHERE { GRAPH ?plan { ?plan a planning:Plan ; planning:for $want ; planning:outcome ?outcome } } LIMIT 1"""
+
+#  WHETHER THE HOLDER HOLDS ANY CONSTRAINT — the one thing that can reopen a walking want.
+_HOLDS_CONSTRAINT_Q = """SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } LIMIT 1"""
 
 #  THE STEP EVERY STANDING INTENTION STANDS AT.
 _STANDING_AT_Q = """
@@ -337,13 +371,16 @@ class Planner:
         self.handed: list[tuple[str, str]] = []
         self.reached: set[str] = set()
         self.blocked: list[str] = []
+        self.superseded: list[Reconsidered] = []
         #  WHAT THE PLANNER SAYS HAPPENED, its own words for whoever connects, each carrying an event
         #  of `events.py`: a plan published; a want an intention walks that the present meets; a
-        #  step an intention stands at that the present no longer admits; a want nothing reaches;
+        #  step an intention stands at that the present no longer admits; an intention a
+        #  reconsideration replaced, to end after its step in flight; a want nothing reaches;
         #  and, made only where heard, a search ended, a pass, a re-root and what an imaginarium holds.
         self.plan_published = Signal("plan_published")
         self.want_reached = Signal("want_reached")
         self.step_blocked = Signal("step_blocked")
+        self.reconsidered = Signal("reconsidered")
         self.want_unreachable = Signal("want_unreachable")
         self.searched = Signal("searched")
         self.planned = Signal("planned")
@@ -417,9 +454,14 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         walking = self.walking()
         self._withdraw_orphaned_refinements(walking)
         written = self._keep_below(at)
+        #  WHERE EVERY STANDING INTENTION STANDS, and where its step in flight lands — read once, and
+        #  read at all only where a constraint is held, since only a constraint can reopen a walking
+        #  want (knowledge/domain/execution/commitment.md, #905): a holder with none pays one query.
+        flights = self._flights(at) if self._holds_a_constraint() else {}
         #  WHAT THE PASS SAYS, for whoever runs it to signal: the plans it published with their wants,
-        #  the wants an intention walks that the present meets, and the steps it can no longer take.
-        self.handed, self.reached, self.blocked = [], set(), []
+        #  the wants an intention walks that the present meets, the steps it can no longer take, and
+        #  the intentions a reconsideration replaced, to end after their steps in flight.
+        self.handed, self.reached, self.blocked, self.superseded = [], set(), [], []
         #  HOW LONG EACH PART OF THE PASS TOOK, where anybody hears the pass: in real seconds by
         #  `perf_counter`, since the agent's clock may run fast and a test's ticks per read.
         lap = Laps() if self.planned.connected else None
@@ -456,7 +498,11 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  fact a met-test reads that no action writes must still tell two presents apart. A
             #  text that cannot be read reads anything, and then the world is hashed whole.
             within = None if read is None else read | frozenset(m for m, ss in scopes.items() if _scope in ss)
-            present, *_ = lay_ground(store, at, within)
+            #  AND A BOUNDARY WHERE EACH STEP IN FLIGHT OF THIS SCOPE LANDS: the ground in which it
+            #  has landed is where a reconsideration's search starts, so the plan it finds begins
+            #  after the step and never beside it.
+            landings = [f["landing"] for f in flights.values() if f["in_flight"] and (only is None or f["action"] in only)]
+            present, *_ = lay_ground(store, at, within, landings)
             rerooting = reroot(store, present)
             if self.rerooted.connected:
                 written += self.rerooted.emit(Rerooted(scope=local_of(_scope), present=rerooting.present,
@@ -489,7 +535,11 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             met_now = {r["for"] for r in rows(store, _MET_NOW_Q, (), ground=present)}
             self.reached |= met_now & walking
             reached = met_now - walking
-            withdraw(store, derive_wants(store, at) | walking, at, reached=reached)
+            #  THE DERIVATION IS TOLD WHAT IS WALKED, and from when — the instant each walking want's
+            #  step in flight lands, the present where none is — since a cluster a constraint couples
+            #  to a walking want reopens it, and is minted where that step has landed.
+            opens = {w: flights[w]["landing"] if w in flights else at for w in walking}
+            withdraw(store, derive_wants(store, at, opens) | walking, at, reached=reached)
             if reached:
                 withdraw(self.beliefs, None, at, reached=reached)
             if lap:
@@ -505,15 +555,17 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  THE SHAPES, CROSSED ONCE PER SCOPE and after the derivation, under the memo's
             #  key so `weigh` finds the same crossing.
             shapes = _shapes(store, memo)
+            kept: dict[str, list[str]] = {}
             for want in _of_scope(store, shapes, self.uri, _scope, scopes, at):
                 if want in walking:
                     continue                # a want a plan is walking is not planned again
                 self.search(store, want, budget=self.budget, only=only, elsewhere=elsewhere, memo=memo, scope=_scope,
                             within=within, at=at)
                 searched.add(want)
+                self._reconsider(store, want, flights, kept)
             if lap:
                 lap("search")
-            handed = publish_plan(store, self.beliefs, self.uri, walking)
+            handed = publish_plan(store, self.beliefs, self.uri, walking, kept)
             self._mark_kept(handed)
             written += handed
             #  SAID BEFORE ANYTHING ADOPTS IT, since whether an intention pursued the want before is
@@ -535,6 +587,8 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             written += self.want_reached.emit(WantReached(want))
         for step in self.blocked:
             written += self.step_blocked.emit(StepBlocked(step))
+        for event in self.superseded:
+            written += self.reconsidered.emit(event)
         return written
 
     # --- a step kept one level down ----------------------------------------------------------
@@ -542,7 +596,8 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
     def walking(self) -> set[str]:
         """Every want this agent is walking, off execution's rows in the belief base: pursued by a
         standing intention, or by a plan published and not yet adopted. Neither searched again
-        nor withdrawn, whatever its desire reads."""
+        nor withdrawn, whatever its desire reads, until a want a constraint couples to it reopens
+        it (knowledge/domain/execution/commitment.md)."""
         cat = Raw(f"<{catalogue_of(self.beliefs)}>")
         return {r["want"] for r in rows(self.beliefs, _WALKING_Q, (), cat=cat)}
 
@@ -584,6 +639,103 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 log.info("%s: %s can no longer be taken — the present admits it no more", self.id, local_of(head["step"]))
                 blocked.append(head["step"])
         return blocked
+
+    # --- commitment: the step in flight, and the one trigger that reopens a walking want --------
+
+    def _holds_a_constraint(self) -> bool:
+        """Whether this agent holds any constraint — the one thing that can couple a want to a walking
+        one, and so the one thing a walking want can be reopened by."""
+        return bool(rows(self.beliefs, _HOLDS_CONSTRAINT_Q, graphs_of(self.beliefs, CONSTRAINT_GRAPH), holder=self.uri))
+
+    def _flights(self, at: datetime) -> dict[str, dict]:
+        """Where every standing intention stands, by the want it pursues: the intention, the plan it
+        adopts, its head and the action the head fills, whether the head is IN FLIGHT — taken, an act
+        on record, and not yet answered — and the instant it lands. A step in flight lands as long
+        after it was taken as its plan placed it after its opening, the executor's own reading
+        (`Executor._landing`), at the earliest; a head not taken has nothing in flight, and lands now."""
+        out: dict[str, dict] = {}
+        for r in rows(self.beliefs, _STANDS_AT_Q, ()):
+            landing = at
+            if r.get("taken") and r.get("lands"):
+                late = (datetime.fromisoformat(r["taken"]) - datetime.fromisoformat(r["due"])) if r.get("due") else None
+                landing = datetime.fromisoformat(r["lands"]) + (late if late and late.total_seconds() > 0 else timedelta(0))
+            out.setdefault(r["want"], {"intention": r["intention"], "plan": r["plan"], "head": r["step"],
+                                       "action": r["action"], "in_flight": bool(r.get("taken")),
+                                       "landing": max(landing, at)})
+        return out
+
+    def _reconsider(self, store: ox.Store, want: str, flights: dict, kept: dict) -> None:
+        """Hold the plan `want`'s search just wrote against the walking intentions it reopens, where
+        the derivation said it reopens any (`planning:reopens`) — soft commitment's one trigger.
+
+        THE JOINT PLAN AGREES WHERE IT BEGINS WITH THEIR UNTAKEN STEPS, compared by the action each
+        fills and the values it is filled with, never by node: the steps after the one in flight, or
+        from the head where nothing is. Then the intentions stand untouched and the steps they
+        already walk are `kept` out of what is published, so the part that is new is adopted beside
+        them, opening where the joint plan put it — after the kept steps. A joint plan that walks the
+        same steps LATER does not agree: two intentions are walked side by side and nothing holds a
+        step of one after a step of the other, so the order the joint plan was found safe in would
+        not be the order walked. ANYTHING ELSE disagrees, and each reopened intention is said to end
+        after its step in flight — planning decides, execution ends, as for a step blocked — while
+        the joint plan is published whole. A search that found no plan publishes nothing and
+        reconsiders nothing: the walking intentions walk on, and the passes after continue it."""
+        reopened = [r["w"] for r in rows(store, _REOPENS_Q, (), want=want)]
+        if not reopened:
+            return
+        found = next(iter(rows(store, _PLAN_FOR_Q, (), want=want)), None)
+        joint = self._chain(store, found["plan"]) if found and found["outcome"] == SATISFIED else []
+        if not joint:
+            return
+        queues: dict[str, list] = {}
+        for walked in reopened:
+            flight = flights.get(walked)
+            if flight is None:
+                continue                    # walked by a plan nothing has adopted yet: nothing stands to keep
+            steps = self._chain(self.beliefs, flight["plan"])
+            at = next((i for i, (step, _) in enumerate(steps) if step == flight["head"]), len(steps))
+            queues[walked] = [said for _, said in steps[at + (1 if flight["in_flight"] else 0):]]
+        prefix = joint[:sum(len(q) for q in queues.values())]
+        pending = {w: list(q) for w, q in queues.items()}
+        agrees = len(prefix) == sum(len(q) for q in queues.values())
+        for _, said in prefix:
+            owner = next((w for w, q in pending.items() if q and q[0] == said), None)
+            if owner is None:
+                agrees = False
+                break
+            pending[owner].pop(0)
+        if agrees:
+            kept[want] = [step for step, _ in prefix]
+            log.info("%s: %s agrees with what %s already walks — the intention stands, and %d new step(s) are adopted beside it",
+                     self.id, local_of(want), ", ".join(local_of(w) for w in queues), len(joint) - len(prefix))
+            return
+        for walked in queues:
+            flight = flights[walked]
+            log.info("%s: %s replaces the untaken steps of %s — it ends after %s", self.id, local_of(want),
+                     local_of(walked), local_of(flight["head"]))
+            self.superseded.append(Reconsidered(flight["head"], walked, want))
+
+    def _chain(self, store: ox.Store, plan: str) -> list[tuple[str, tuple]]:
+        """The steps of `plan` in `store`, in the order they are walked, each with what it says: the
+        action it fills and the values of the parameters that action takes. Read the same way in the
+        imaginarium and in the beliefs, so a step of a joint plan and a step an intention walks are
+        compared by what they do and not by the node either is."""
+        actions = graphs_of(self.beliefs, ACTION)
+        said: dict[str, dict] = {}
+        after: dict[str, str] = {}
+        for r in rows(store, _CHAIN_Q, (), plan=Raw(f"<{plan}>")):
+            step = said.setdefault(r["step"], {"action": r["action"], "values": {}})
+            step["values"][r["p"]] = r["v"]
+            if r.get("next"):
+                after[r["step"]] = r["next"]
+        takes = {a: {t["takes"] for t in rows(self.beliefs, _TAKES_Q, actions, action=a)}
+                 for a in {s["action"] for s in said.values()}}
+        head = next((s for s in said if s not in after.values()), None)
+        out = []
+        while head is not None and head in said:
+            s = said[head]
+            out.append((head, (s["action"], tuple(sorted((p, v) for p, v in s["values"].items() if p in takes[s["action"]])))))
+            head = after.get(head)
+        return out
 
     def _mark_kept(self, handed: list[str]) -> None:
         """Say of every step of a plan published that a bridge keeps below — one taken

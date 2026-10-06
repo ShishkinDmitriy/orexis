@@ -90,13 +90,24 @@ ORDER BY ?at ?prediction"""
                   for r in rows(store, said, ()))
 
 
-def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None) -> list[str]:
+def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
+               landings=()) -> list[str]:
     """Build one ground world per period the agent can see, classified with its stretch.
 
     `within` is what a world of this imaginarium is identified by — the Planner's to say, from
     what its texts read — and the hash on each ground's row is taken within it: a reading's
     instant, which no text reads, is then not a fact the present differs by. None hashes whole.
     Which boundary is a period is asked of the whole graph either way.
+
+    `landings` are the instants steps in flight land at — the Planner's to say, off the
+    intentions — and each ahead of `now` is a period of its own WHATEVER IT HOLDS: a want a
+    reconsideration mints is searched from the ground in which the step in flight has landed, so
+    the plan it finds begins after it, and a plan is placed at its root's instant (#905,
+    knowledge/domain/execution/commitment.md). What the ground holds is what the agent already
+    sees holding then, and the step's own prediction is not applied again: a fictive step wrote
+    it into the present when it was taken, and a step a drift reads as a committed step is in the
+    predictions already. So it is not collapsed into the ground before it by hash, which is the
+    one thing that makes it a boundary rather than a prediction.
 
     The present is the first, and is the agent's readings as they stand. Each prediction that
     applies later is run against the ground standing before it and the diff applied; a ground
@@ -114,7 +125,8 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None) 
     here = _present(store, now)
     made, marks = [here], _marked(store, here, within)
     opened = [now]
-    for at, group in _by_instant(ahead):
+    landing = {at for at in landings if at > now}
+    for at, group in _by_instant(ahead, landing):
         if at <= now:
             continue                    # a prediction already reached is the present's, not ahead
         #  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE. A boundary is an instant,
@@ -130,13 +142,13 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None) 
                 added += list(_triples(store, graph))       # the predicted reading and its side
             if supersedes:
                 retracts.append(supersedes)
-        if not added and not retracts:
+        if not added and not retracts and at not in landing:
             #  A prediction that changes nothing is not a period — an early-out, not a guard:
             #  the hash below reaches the same answer, having laid the graph first.
             continue
         there = _fork(store, here, _name(at), added, retracts)
         mark = _marked(store, there, within)
-        if mark == marks:
+        if mark == marks and at not in landing:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
             #  instant answers what the one before it answered and is not a period of its own.
             forget_graph(store, there)
@@ -181,10 +193,11 @@ def _marked(store: ox.Store, ground: str, within: frozenset | None) -> str:
     return digest_of(store, ground)
 
 
-def _by_instant(predictions) -> list[tuple[datetime, list[tuple[str, str | None]]]]:
+def _by_instant(predictions, landings=()) -> list[tuple[datetime, list[tuple[str, str | None]]]]:
     """The predictions grouped by the instant they apply, earliest first — one entry per
-    BOUNDARY rather than one per prediction."""
-    out: dict = {}
+    BOUNDARY rather than one per prediction — and every landing a boundary too, with what
+    predictions apply there or none."""
+    out: dict = {at: [] for at in landings}
     for at, prediction, supersedes in predictions:
         out.setdefault(at, []).append((prediction, supersedes))
     return sorted(out.items())

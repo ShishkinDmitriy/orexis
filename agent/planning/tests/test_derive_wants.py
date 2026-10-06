@@ -59,7 +59,10 @@ def test_derive_wants_leaves_the_store_as_the_snapshot_says(case, monkeypatch, r
     lay_ground(store, snapshots.NOW)
     for pair in unweighed(store):
         weigh(store, pair["for"], pair["about"])
-    withdraw(store, derive_wants(store, snapshots.NOW) | set(Executor(store, snapshots.AGENT, intentions=store).walking()), snapshots.NOW)
+    #  WHAT IS WALKED, as the Planner hands it: to the derivation, each walking want with the instant its
+    #  step in flight lands — NOW, since no case puts a step in flight — and to the withdrawal.
+    walking = set(Executor(store, snapshots.AGENT, intentions=store).walking())
+    withdraw(store, derive_wants(store, snapshots.NOW, {w: snapshots.NOW for w in walking}) | walking, snapshots.NOW)
     snapshots.held_to_diff(case, request, "derive_wants", snapshots.snapshot_of(store))
 
 
