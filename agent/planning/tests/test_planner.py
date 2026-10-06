@@ -71,11 +71,16 @@ SELECT ?disk ?onto WHERE {
 
 class _Held:
     """A planner and the executor it hands down to, meeting at the store as they do in a runtime: a
-    pass is the planner's, then the executor taking up what was handed down."""
+    pass is the planner's, then the executor taking up what was handed down — a head about to be taken
+    checked by the planner, and one it says blocked ended by the executor, as planning's part links
+    them. `fictive` builds the executor taking every step by writing its prediction, so a walk moves
+    the disks."""
 
-    def __init__(self, store, agent, **kw):
-        self.planner, self.executor = Planner(store, agent, **kw), Executor(store, agent)
+    def __init__(self, store, agent, fictive: bool = False, **kw):
+        self.planner, self.executor = Planner(store, agent, **kw), Executor(store, agent, fictive=fictive)
         self.imaginaria = self.planner.imaginaria
+        self.executor.taking.connect(lambda taking: self.planner.check(taking.step, taking.at))
+        self.planner.step_blocked.connect(lambda blocked: self.executor.end_at(blocked.step, "failed"))
 
     def plan(self, at):
         self.planner.plan(at)
@@ -88,9 +93,9 @@ class _Held:
         return self.planner.exhausted()
 
 
-def _two_disks(snapshots, held: bool):
+def _two_disks(snapshots, held: bool, fictive: bool = False):
     store = snapshots.stand_in(BENCH / "two_disk_hanoi.trig")
-    return store, (_Held(store, snapshots.AGENT) if held else Planner(store, snapshots.AGENT))
+    return store, (_Held(store, snapshots.AGENT, fictive=fictive) if held else Planner(store, snapshots.AGENT))
 
 
 def _worlds(planner) -> set[str]:
@@ -337,10 +342,17 @@ def test_a_candidate_a_cut_left_untaken_is_taken_by_the_next_pass(monkeypatch, s
     assert int(rows(im, _WEIGHED_Q, ())[0]["n"]) == whole, "no candidate weighed twice, and none skipped"
 
 
+#  THE ACTS ON RECORD, by the step each is of — what was handed to a taker.
+_ACTS_Q = """SELECT ?step WHERE { GRAPH ?g { ?act a execution:Act ; execution:of ?step } } ORDER BY ?step"""
+#  WHAT THE INTENTIONS ENDED WITH.
+_OUTCOMES_Q = """SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }"""
+
+
 def test_a_step_the_present_no_longer_admits_is_blocked(monkeypatch, snapshots):
     """A plan adopted and its first move not taken; the world moves the disks so that move cannot be
-    made — disk 2 lands on disk 1 — and the next pass says the step is blocked, for execution to end
-    the intention rather than take a move the world forbids."""
+    made — disk 2 lands on disk 1 — and when the walk is about to take it, the planner checks it against
+    the present and says it blocked, and the executor ends the intention rather than take a move the
+    world forbids: no act on record, and the intention `failed`, for the next pass to search again."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store, held = _two_disks(snapshots, held=True)
     held.plan(snapshots.NOW)
@@ -349,8 +361,46 @@ def test_a_step_the_present_no_longer_admits_is_blocked(monkeypatch, snapshots):
     _move(store, "disk_2", a_disk["d"])
     later = snapshots.NOW + timedelta(minutes=1)
     monkeypatch.setattr(clock, "now", lambda: later)
-    held.planner.plan(later)
+    assert held.executor.walk(later) == 0, "nothing taken"
     assert held.planner.blocked == [standing.at]
+    assert rows(store, _ACTS_Q, ()) == [] and [r["o"] for r in rows(store, _OUTCOMES_Q, ())] == ["failed"]
+    assert held.executor.walking() == []
+
+
+def test_a_head_that_falls_due_within_a_walk_is_checked_when_it_is_taken(monkeypatch, snapshots):
+    """#916. Every move is taken fictively and lands as it is taken, so one walk carries the plan's
+    three moves through — the first answered, the intention moved on, the second falling due and taken
+    in the same walk. Here the world moves while the first is in hand: a smaller disk is set down on
+    peg C. The second move, disk 2 onto peg C, fell due inside the walk, after any pass could have
+    asked; it is checked as it is about to be taken, the present no longer admits it, and it is not
+    taken — the disk stays on peg A, no act is on record for it, and the intention ends `failed`.
+    Before, a head that fell due inside a walk was handed to its taker unasked, and a fictive one then
+    wrote its own effect and landed."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    hanoi, T = "http://example.org/orexis/hanoi#", "http://example.org/test#"
+    #  THE CONTROL: left alone, the one walk takes all three moves and the intention is done.
+    store, held = _two_disks(snapshots, held=True, fictive=True)
+    held.plan(snapshots.NOW)
+    assert held.executor.walk(snapshots.NOW) == 3
+    assert [r["o"] for r in rows(store, _OUTCOMES_Q, ())] == ["done"] and held.planner.blocked == []
+    store, held = _two_disks(snapshots, held=True, fictive=True)
+    held.plan(snapshots.NOW)
+    (standing,) = held.executor.standing()
+    first = standing.at
+
+    def the_world_moves(taken):
+        if taken.step == first:
+            store.update(f"""INSERT DATA {{ GRAPH <{T}world> {{ <{T}disk_0> a <{hanoi}Disk> ; <{hanoi}size> 0 }}
+                                         GRAPH <{T}sensed> {{ <{T}disk_0> <{hanoi}on> <{hanoi}PegC> }} }}""")
+        return []
+    held.executor.step_taken.connect(the_world_moves)
+    assert held.executor.walk(snapshots.NOW) == 1, "the first move taken, and the second not"
+    (after,) = rows(store, "SELECT ?next WHERE { GRAPH ?p { $step execution:then ?next } } LIMIT 1", (), step=first)
+    assert held.planner.blocked == [after["next"]], "the move after the first, checked inside the walk and refused"
+    assert [r["step"] for r in rows(store, _ACTS_Q, ())] == [first], "no act for the move the present refused"
+    assert [r["o"] for r in rows(store, _OUTCOMES_Q, ())] == ["failed"]
+    (disk_2,) = rows(store, f'SELECT ?o WHERE {{ GRAPH <{T}sensed> {{ <{T}disk_2> <{hanoi}on> ?o }} }}')
+    assert disk_2["o"] == hanoi + "PegA", "the refused move wrote nothing"
 
 
 def test_a_want_the_world_meets_before_the_plan_begins_is_reached(monkeypatch, snapshots):

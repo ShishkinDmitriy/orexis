@@ -35,7 +35,8 @@ hand-rolled notion of "the same fact" beside the engine's.
 `execution:precondition` was worse: declared, documented on three pages, and written by nothing.
 The writer that filled it (#550's remembered-plan check) was retired with 0.1.0, and the reader
 that decides whether a step still applies became `Planner._blocked`, which asks the action's own
-precondition of the present. A term nobody reads is annotation.
+precondition of the present — since #916 `Planner.check`, as the step is about to be taken. A term
+nobody reads is annotation.
 
 # What it is now
 

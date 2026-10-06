@@ -1,8 +1,8 @@
 """What the executor says happened — every event its signals carry, what of each is reported, and
 which are history.
 
-An event is said whole, so a handler asks nobody: planning plans again on `IntentionResolved`, a
-transport sends a `Commanded`, speech believes and tells a `Said`. The metrics part tallies what a
+An event is said whole, so a handler asks nobody: planning plans again on `IntentionResolved` and
+checks a head on `Taking`, a transport sends a `Commanded`, speech believes and tells a `Said`. The metrics part tallies what a
 class marks (`agent.metrics`), and the history part writes what an event answers as its `point()`
 (`agent.history`); an event only they hear is made only where its signal is heard, so nothing is read
 for it where no series store is loaded.
@@ -59,6 +59,14 @@ class Said:
     """A document a step said, and the agents it is to."""
     document: object
     to: tuple
+
+
+@dataclass(frozen=True)
+class Taking:
+    """A head about to be handed to its taker at `at`, said before it is: whoever judges whether the
+    present still admits it says so now, and the executor takes no step whose intention that ended."""
+    step: str
+    at: datetime
 
 
 @dataclass(frozen=True)

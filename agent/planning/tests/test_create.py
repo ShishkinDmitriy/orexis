@@ -7,18 +7,22 @@ from __future__ import annotations
 from pathlib import Path
 
 from agent import clock
+from agent.execution.events import Taking
 from agent.lifecycle import MET, Signal
 from agent.planning.planner import Planner
 from agent.planning.create import create
+from agent.store import rows
 
 BENCH = Path(__file__).parent / "bench"
+#  THE FIRST STEP OF A PUBLISHED PLAN: the one nothing follows.
+_HEAD_Q = """SELECT ?s WHERE { GRAPH $plan { ?s a execution:Step . FILTER NOT EXISTS { ?o execution:then ?s } } }"""
 
 
 class _Executor:
     """What planning links to, as the executor answers it: its signal, and a record of what it heard."""
 
     def __init__(self):
-        self.intention_resolved, self.heard = Signal("intention_resolved"), []
+        self.intention_resolved, self.taking, self.heard = Signal("intention_resolved"), Signal("taking"), []
 
     def adopt(self, plan, want, desire=None):
         self.heard.append(("adopt", plan, want))
@@ -49,6 +53,12 @@ def test_its_part_plans_every_pass_links_its_signals_down_and_holds_the_agent(mo
     [(kind, published, want)] = execution.executor.heard
     assert kind == "adopt" and published in written and want in part.planner.walking()
     assert part.planner in runtime.held, "a want is walked, so the agent is held"
+    #  A HEAD ABOUT TO BE TAKEN IS PLANNING'S TO CHECK (#916): heard, and — the present admitting the
+    #  plan's first move, as it did when the plan was found — nothing ended.
+    assert execution.executor.taking.connected
+    (head,) = [r["s"] for r in rows(runtime.beliefs, _HEAD_Q, (), plan=published)]
+    execution.executor.taking.emit(Taking(head, snapshots.NOW))
+    assert execution.executor.heard == [(kind, published, want)], "a head the present admits is not ended"
     execution.executor.intention_resolved.emit(type("Resolved", (), {"want": want, "outcome": "failed"})())
     assert runtime.pressed, "an intention that ended asks for the next pass at once"
     assert runtime.outcome != MET

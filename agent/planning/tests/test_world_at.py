@@ -14,7 +14,7 @@ import pytest
 
 from agent import clock
 from agent.ontology import PUBLIC
-from agent.store import Memo, graphs_of
+from agent.store import Memo, bindings, graphs_of, query
 from agent.planning.lay_ground import lay_ground
 from agent.planning.ontology import GROUND_GRAPH
 from agent.planning.prepare_ground import prepare_ground
@@ -63,3 +63,26 @@ def test_the_memo_keeps_what_only_a_write_could_move(imagined):
     first = world_at(imagined, present, memo=memo)
     assert world_at(imagined, present, memo=memo) == first
     assert len(memo) == 4, "the catalogue, the instant, the graphs the grounds speak for, the list per instant"
+
+
+#  EVERY FACT A RULE READS IN A WORLD, as the default graph it is handed.
+_FACTS_Q = "SELECT ?s ?p ?o WHERE { ?s ?p ?o }"
+
+
+def test_the_present_a_store_holds_is_read_as_the_present_ground_laid_from_it(monkeypatch, snapshots):
+    """#916: a head is checked as it is taken, between passes, in the present the BELIEFS hold — no
+    ground is laid there, and laying one per step taken would be a second pass. Named as none, at an
+    instant, the world is the readings and what was concluded of them in the ground's place, and
+    nothing foreseen: a rule reads there exactly the facts it reads in the present ground the
+    imaginarium laid from the same beliefs, the refill an hour ahead in neither."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    beliefs = snapshots.stand_in(CASE)
+    imagined = prepare_ground(beliefs, ox.Store())
+    lay_ground(imagined, snapshots.NOW)
+    graphs = world_at(beliefs, None, now=snapshots.NOW)
+    assert STATE in graphs and PREDICTION not in graphs, "the readings in the ground's place, and no prediction"
+    present, _ = graphs_of(imagined, GROUND_GRAPH)
+    facts = {tuple(r.values()) for r in bindings(query(beliefs, _FACTS_Q, graphs))}
+    assert facts and facts == {tuple(r.values()) for r in bindings(query(imagined, _FACTS_Q, world_at(imagined, present)))}
+    with pytest.raises(ValueError):
+        world_at(beliefs, None)

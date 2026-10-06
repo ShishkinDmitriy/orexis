@@ -102,12 +102,12 @@ class _Broker:
         self.published.append(topic)
 
 
-def test_a_step_is_judged_in_the_scope_that_admitted_its_filling(monkeypatch, lit_greenhouse):
+def test_a_step_is_judged_by_its_own_filling_whichever_scope_admitted_it(monkeypatch, lit_greenhouse):
     """The heating action is the air's and the light's, filled by the heater in one and the lamp in the
-    other. Both steps standing, the next pass asks each imaginarium whether the present still admits
-    the heads due: asked of the lamp's step, the air's imaginarium — which holds no light reading —
-    would answer no row and call it blocked. A step is judged where its filling was admitted: nothing
-    is blocked, and all three intentions walk on."""
+    other. Asked of the lamp's step, the air's imaginarium — which holds no light reading — would answer
+    no row and call it blocked. Each head is checked as it is about to be taken, in the present the
+    beliefs hold, every scope's readings among them (#916): all three commands go out, nothing is
+    blocked in the pass after, and all three intentions walk on."""
     from agent.runtime import UNFINISHED, Runtime
     from agent.transport.mqtt.driver import Mqtt
     time = _Clock(NOW)

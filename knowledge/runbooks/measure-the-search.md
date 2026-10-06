@@ -694,6 +694,32 @@ spent, loose by the boarding; neither constraint marks a world impossible, since
 away the van left and no drive crosses. The walk is three passes longer than the two apart, the
 price of one act at a time.
 
+# A head checked when it is taken (2026-10-06, #916)
+
+Every head is now asked its precondition as the executor is about to take it (`Planner.check`,
+hearing the executor's `taking`), in the present the beliefs hold, and nothing asks once a pass.
+Measured on the development container, the tree before and this one alternated per run in one
+session, six runs each, one process per run: the runtime over the shipped dispatcher until its one
+intention is done, and over the greenhouse's cold dry bed for three passes from two readings.
+
+| case | passes | first pass, median | each pass after, median | the whole, median (min) |
+|---|---|---|---|---|
+| the dispatcher, the tree before | 7 | 2971 ms | 167 ms | 4010 ms (3737) |
+| the dispatcher, checked as taken | 7 | 3048 ms | 161 ms | 4051 ms (3660) |
+| the greenhouse, the tree before | 3 | 375 ms | 89 ms | 555 ms (515) |
+| the greenhouse, checked as taken | 3 | 383 ms | 89 ms | 564 ms (523) |
+
+**It costs nothing a pass can see.** One check, timed by wrapping it, is 1.9 ms at the median on both
+— ten a walk on the dispatcher, two on the greenhouse — against passes of tens to thousands of
+milliseconds. Every difference in the table is inside the drift between runs of one tree.
+
+**The driver's two plans apart now collide over the driver instead of driving a van it has left.**
+With the two-vans constraint alone, the row above walked van A with the driver aboard van B. Checked
+as taken, a drive of a van the driver has left is refused and its want searched again; which plan
+collides first follows which intention's name sorts first, ten runs of twenty each way: twelve passes
+and thirteen acts with two intentions failed, or thirteen and fourteen with three. Every drive taken
+is of the van the driver is aboard, and both parcels arrive.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

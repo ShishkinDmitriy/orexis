@@ -298,8 +298,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   again where a lever reaches into the other's; a term places a want only where its predicates place
   it nowhere, since the puzzle's peg is a cell the van drives to (a-scope-is-a-predicate-on-a-key).
 - **A scope admits a FILLING, not an action, and a scope's imaginarium holds the scope's readings** — a
-  lamp's heating is admitted in the light's search alone though the action is the air's too, a due
-  head is judged where its filling was admitted, and a reading keyed by another scope's term crosses
+  lamp's heating is admitted in the light's search alone though the action is the air's too, a head
+  is checked as it is taken in the beliefs, where every scope's readings are, and a reading keyed by another scope's term crosses
   into no imaginarium but its own, so a world is one percent of the present and a sensor added
   elsewhere adds nothing to it (`world/greenhouse/tests/test_scaling.py`).
 - **A filling is what the world can take an action WITH, so a row leaving unbound a parameter the
@@ -389,7 +389,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   which nothing planning decides cancels, and soft on the plan, which that one trigger re-searches
   from the ground the step lands in (#905, commitment); and **a plan whose want is gone is nobody's**.
 - **A prediction is a diff, and only a ground has applied it** — one reader answers the derivation
-  and the search (`world_at`), and refuses a store with no ground.
+  and the search (`world_at`), and refuses a world that says no period; the present, where no
+  prediction has applied, it reads off a store with no ground as the readings themselves (#916).
 - **A world speaks for its readings' revisions**, and **the search runs no rules, so a reading's
   revisions travel with it and an effect speaks the concept they conclude** — a revision is a belief
   and a drift's prediction is not, which keeps the foreseen reading out of the present.
@@ -424,6 +425,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   and an intention adopts it by reference; a plan begun is walked to its end, unless a
   reconsideration replaces its untaken steps, and then it ends after its step in flight
   (planning-and-execution-meet-at-the-store).
+- **Every head is checked when it is taken, and the precondition stays planning's to ask** — the
+  executor says `taking`, planning asks the present and answers by `step_blocked`, and nothing asks
+  once a pass; execution reading `planning:precondition` itself was refused, a lower layer speaking
+  a higher one's word and a second reader of one text, and two heads each admitted alone but not
+  together are the constraint's to couple, not the check's (#916).
 - **Two intentions walked side by side keep no order between them**, so a joint plan leaves a walking
   intention standing only where it BEGINS with that intention's untaken steps — the same steps later
   in the plan were found safe in an order nothing would walk them in (#905).
