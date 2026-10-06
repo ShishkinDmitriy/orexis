@@ -38,6 +38,90 @@ def test_a_pattern_under_not_exists_is_read_too():
         == frozenset({Q, URIRef("urn:test:C")})
 
 
+#  THE ISSUE'S TWO TEXTS, as it states them (#908), with its namespace made an IRI the store
+#  need not know; the predicates each must answer are the issue's too.
+_A_LIST_UNDER_A_FILTER = ("SELECT ?v WHERE { ?me <urn:m:bidsIn> ?v . "
+                          "FILTER NOT EXISTS { ?c <urn:m:calledBy> ?me ; <urn:m:calledOn> ?v } }")
+_A_FILTER_IN_A_FILTER = ("SELECT ?v WHERE { ?me <urn:m:bidsIn> ?v . "
+                         "FILTER NOT EXISTS { ?c <urn:m:calledOn> ?v . FILTER NOT EXISTS { ?c <urn:m:answered> true } } }")
+M = rdflib.Namespace("urn:m:")
+
+
+def test_a_predicate_list_under_not_exists_reads_every_predicate_of_the_list():
+    """`?c :calledBy ?me ; :calledOn ?v` is ONE entry of the parse-tree block, six terms laid flat,
+    and read as a triple it was unreadable: the whole text answered anything (#908). An object list
+    and a blank node are laid flat the same way."""
+    assert footprint.reads_of_select(_A_LIST_UNDER_A_FILTER) == frozenset({M.bidsIn, M.calledBy, M.calledOn})
+    assert footprint.reads_of_select(
+        "SELECT ?v WHERE { FILTER NOT EXISTS { ?c <urn:m:calledOn> ?v , ?w } }") == frozenset({M.calledOn})
+    assert footprint.reads_of_select(
+        "SELECT ?v WHERE { FILTER NOT EXISTS { ?c <urn:m:p> [ <urn:m:q> ?v ] } }") == frozenset({M.p, M.q})
+    assert footprint.reads_of_select(
+        "SELECT ?v WHERE { FILTER NOT EXISTS { ?c a <urn:m:C> ; <urn:m:p> ?v } }") == frozenset({M.C, M.p}), \
+        "a type pattern in the list reads its class, as one in the group does"
+    assert footprint.reads_of_select(
+        "SELECT ?v WHERE { FILTER NOT EXISTS { ?c ?p ?v ; <urn:m:r> ?w } }") is footprint.ANYTHING, \
+        "a variable predicate in the list is still anything"
+
+
+def test_a_not_exists_nested_in_a_not_exists_is_read_too():
+    """rdflib pops a filter out of the parse-tree group it was found in and keeps the translated
+    group beside it, as an attribute; read off the parse tree alone the inner filter was missing
+    and the answer under-read, the unsafe side: two presents differing only in `answered` hashed
+    as one (#908). Three deep, inside an OPTIONAL, under a `BIND(EXISTS …)`, the same."""
+    assert footprint.reads_of_select(_A_FILTER_IN_A_FILTER) == frozenset({M.bidsIn, M.calledOn, M.answered})
+    assert footprint.reads_of_select(
+        "SELECT ?v WHERE { ?me <urn:m:a> ?v FILTER NOT EXISTS { ?c <urn:m:b> ?v "
+        "FILTER NOT EXISTS { ?c <urn:m:c> ?v FILTER NOT EXISTS { ?c <urn:m:d> ?v } } } }") \
+        == frozenset({M.a, M.b, M.c, M.d})
+    assert footprint.reads_of_select(
+        "SELECT ?v WHERE { ?c <urn:m:p> ?v OPTIONAL { ?c <urn:m:q> ?w FILTER NOT EXISTS { ?w <urn:m:r> ?x ; <urn:m:s> ?y } } }") \
+        == frozenset({M.p, M.q, M.r, M.s})
+    assert footprint.reads_of_select(
+        "SELECT ?v WHERE { ?c <urn:m:p> ?v . FILTER NOT EXISTS { ?c <urn:m:q> ?v . OPTIONAL { ?c <urn:m:o> ?w } "
+        "MINUS { ?c <urn:m:m> ?z } FILTER EXISTS { ?c <urn:m:e> ?y } } }") == frozenset({M.p, M.q, M.o, M.m, M.e}), \
+        "an OPTIONAL, a MINUS and an EXISTS inside the block are read as the block is"
+    assert footprint.reads_of_select(
+        "SELECT ?v WHERE { ?c <urn:m:p> ?v BIND(EXISTS { ?c <urn:m:q> ?w ; <urn:m:r> ?x } AS ?b) }") \
+        == frozenset({M.p, M.q, M.r})
+
+
+def test_the_patterns_of_a_precondition_are_the_same_triples_the_predicates_were_read_off():
+    """One walk serves the read set and the fillings: `_patterns`, which `atoms_of` keys a filling
+    by, answers every pattern of both shapes, each once, where it answered anything for the first
+    and left the inner pattern out of the second."""
+    c, me, v = rdflib.Variable("c"), rdflib.Variable("me"), rdflib.Variable("v")
+    assert footprint._patterns(_A_LIST_UNDER_A_FILTER) == [(c, M.calledBy, me), (c, M.calledOn, v), (me, M.bidsIn, v)]
+    assert footprint._patterns(_A_FILTER_IN_A_FILTER) == [(c, M.calledOn, v), (c, M.answered, rdflib.Literal(True)),
+                                                           (me, M.bidsIn, v)]
+
+
+def test_the_market_s_calling_and_tendering_are_read_and_answer_what_they_read():
+    """The two shipped texts with both shapes at once (#908): a predicate list under `NOT EXISTS` and
+    a `NOT EXISTS` nested in it. Both read anything, so the first defect hid the second, and every
+    world of a market agent was hashed whole. Read off the document, not restated here."""
+    market = rdflib.Namespace("http://example.org/orexis/market#")
+    g = rdflib.Graph().parse(Path(__file__).resolve().parents[3] / "domains" / "market" / "actions.ttl")
+    precondition = rdflib.URIRef("http://example.org/orexis/planning#precondition")
+    calling, tendering = (str(g.value(market[a], precondition)) for a in ("Calling", "Tendering"))
+    assert "FILTER NOT EXISTS { ?call market:calledBy $me ; market:calledOn ?venue ." in calling \
+        and "FILTER NOT EXISTS { ?call market:answered true }" in calling, "the text has moved; so has this test's premise"
+    assert footprint.reads_of_select(calling) == frozenset(
+        {market.bidsIn, market.open, market.calledBy, market.calledOn, market.answered})
+    assert footprint.reads_of_select(tendering) == frozenset(
+        {market.bidsIn, market.open, market.bidder, market.inRound, market.onVenue, market.clearedAt})
+
+
+def test_a_shape_whose_select_has_the_two_shapes_reads_their_predicates():
+    """The door the constraints and the placing of a want go through (`_constraints`, `_of_scope`):
+    a constraint stated as the issue's select was weighed in every world of every scope, since a
+    footprint that cannot be read joins everything; it reads its three predicates now."""
+    g = rdflib.Graph()
+    node = URIRef("urn:test:avoided")
+    g.add((node, SH.select, rdflib.Literal(_A_FILTER_IN_A_FILTER.replace("?me", "$this"))))
+    assert footprint.reads_of_shape(g, node) == frozenset({M.bidsIn, M.calledOn, M.answered})
+
+
 def test_what_a_construct_writes_is_its_template_predicates_and_a_variable_one_is_anything():
     assert footprint.writes_of_construct("CONSTRUCT { ?x <urn:test:q> ?v } WHERE { ?x <urn:test:p> ?v }") \
         == frozenset({Q})

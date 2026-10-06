@@ -129,33 +129,76 @@ def _read(s, p, o) -> set | None:
     return _path_iris(p)
 
 
-def _predicates_in(node, out: set) -> bool:
-    """Collect the predicates of every triple pattern under `node`; False if any is unreadable."""
-    ok = [True]
+_EXISTS = ("Builtin_EXISTS", "Builtin_NOTEXISTS")
+
+
+def _triples_in(node) -> list[tuple] | None:
+    """Every triple pattern under `node` as `(s, p, o)`, under its groups and under its EXISTS
+    filters alike, in the order met and each once — or ANYTHING where a block will not read as
+    triples.
+
+    A PATTERN UNDER EXISTS / NOT EXISTS IS READ AS MUCH AS ONE IN THE GROUP — a want saying "unmet
+    while this fact is absent" reads that fact's predicate (#523) — and rdflib hands it over in two
+    places at once. The algebra's `traverse` walks a node's KEYS, and under the key `graph` an EXISTS
+    node keeps the PARSE-TREE group: its `TriplesBlock`s, each entry one `TriplesSameSubjectPath`
+    laid flat — `?c :calledBy ?me ; :calledOn ?v` is one entry of SIX terms, s p o s p o, as an
+    object list `?c :p ?v , ?w` and a blank node `?c :p [ :q ?v ]` are — and its filters POPPED
+    OUT, since `collectAndRemoveFilters` took them from that list to build the translated group.
+    The translated group hangs beside the key as the ATTRIBUTE `graph`: `translateExists` set it
+    with `n.graph = …`, which on rdflib's `CompValue` lands in the instance and not the dict, and
+    rdflib's own evaluator reads it there. That is where a filter NESTED in the filter now lives,
+    BGPs of three and a `Filter` whose expression is the inner EXISTS. Read only the key, an entry
+    of six was unreadable and the inner filter invisible — the market's `Calling` read anything and
+    `Tendering` with it, every world of a market agent was hashed whole, and had the entry alone
+    been chunked both would have read every predicate but `answered` and `clearedAt`, the unsafe
+    side (#908). So BOTH are read: the key's blocks three terms at a time, and the attribute's
+    algebra as any group's, recursively; what each finds twice the set keeps once.
+    """
+    found: list = []
+    seen: set = set()
+    bad = [False]
+
+    def keep(triple) -> None:
+        if triple not in seen:
+            seen.add(triple)
+            found.append(triple)
 
     def visit(n):
-        if getattr(n, "name", None) == "BGP":
-            for s_, p, o in n["triples"]:
-                iris = _read(s_, p, o)
-                if iris is None:
-                    ok[0] = False
-                else:
-                    out.update(iris)
-        elif getattr(n, "name", None) == "TriplesBlock":
-            #  A pattern under EXISTS / NOT EXISTS is READ as much as one in the group — a
-            #  want saying "unmet while this fact is absent" reads that fact's predicate —
-            #  and rdflib leaves it UNTRANSLATED inside the filter's expression: a parse-tree
-            #  TriplesBlock rather than a BGP (#523: a promise's want is exactly that shape,
-            #  and read nothing before this).
+        name = getattr(n, "name", None)
+        if name == "BGP":
             for triple in n["triples"]:
-                iris = _read(*triple) if len(triple) == 3 else None
-                if iris is None:
-                    ok[0] = False
+                keep(tuple(triple))
+        elif name == "TriplesBlock":
+            for entry in n["triples"]:
+                if len(entry) % 3:
+                    bad[0] = True
                 else:
-                    out.update(iris)
+                    for i in range(0, len(entry), 3):
+                        keep(tuple(entry[i:i + 3]))
+        elif name in _EXISTS:
+            translated = vars(n).get("graph")
+            inner = _triples_in(translated) if translated is not None else []
+            if inner is None:
+                bad[0] = True
+            else:
+                for triple in inner:
+                    keep(triple)
         return n
     traverse(node, visitPost=visit)
-    return ok[0]
+    return ANYTHING if bad[0] else found
+
+
+def _predicates_in(node, out: set) -> bool:
+    """Collect the predicates of every triple pattern under `node`; False if any is unreadable."""
+    triples = _triples_in(node)
+    if triples is None:
+        return False
+    for triple in triples:
+        iris = _read(*triple)
+        if iris is None:
+            return False
+        out.update(iris)
+    return True
 
 
 @functools.lru_cache(maxsize=512)
@@ -458,19 +501,10 @@ def _patterns(text: str) -> list | None:
     except Exception as exc:                            # noqa: BLE001
         log.debug("could not parse a precondition for its patterns: %s", exc)
         return ANYTHING
-    found: list = []
-    bad = [False]
-
-    def visit(n):
-        if getattr(n, "name", None) in ("BGP", "TriplesBlock"):
-            for triple in n["triples"]:
-                if len(triple) != 3 or _read(*triple) is None:
-                    bad[0] = True
-                else:
-                    found.append(tuple(triple))
-        return n
-    traverse(alg.get("p", alg), visitPost=visit)
-    return ANYTHING if bad[0] else found
+    triples = _triples_in(alg.get("p", alg))
+    if triples is None or any(_read(*triple) is None for triple in triples):
+        return ANYTHING
+    return triples
 
 
 def _written_subjects(constructs: list[str], updates: list[str]) -> dict | None:

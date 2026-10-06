@@ -46,5 +46,7 @@ none did.
 Two things the projection does not reach. Which boundary ahead is a period is still told by
 everything a ground holds: folded by what is read, the grounds a plan's own prediction had
 answered collapsed into the present, and a want minted for a foreseen crossing was weighed there,
-read met and lost its intention before the step was due. And where a text cannot be read — the
-market's calling and tendering are two — the world is hashed whole, as every world was.
+read met and lost its intention before the step was due. And where a text cannot be read the
+world is hashed whole, as every world was — which no shipped world is any longer: the market's
+calling and tendering were two such texts until #908, and the allotment's growers then found the
+same reading at a new instant the old present rather than a surprise.
