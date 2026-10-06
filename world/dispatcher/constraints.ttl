@@ -1,0 +1,46 @@
+@prefix : <http://example.org/orexis/world/dispatcher#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+
+<> a planning:ConstraintGraph .    # this document is one graph, and this is what it is
+
+#  ONE CONSTRAINT, and a constraint rather than a desire: two vans cannot share a cell. That is
+#  physics, not a preference — a world in which they do is not a bad world the dispatcher should
+#  set about mending but a world that cannot be — so it is a `planning:Constraint`, of another
+#  modality than the desires in `desires.ttl`, and the agent holds it as it holds those.
+#
+#  AUTHORED AS THE AVOIDED STATE, `planning:unmetWhen`, the honest polarity for a prohibition
+#  (#892): one select whose rows are the vans sharing a cell, violated where it yields a row, the
+#  cell projected as `?value`. The compiler would take a shape under `planning:metWhen` as readily;
+#  this is the form that reads as it evaluates.
+#
+#  WHAT IT DOES. The search weighs it in every possible world it weighs a want in, and a world with
+#  two vans on a cell is marked `planning:impossible` — off the frontier, never an achiever — which is
+#  what keeps the two parcels' joint plan off the other van's cell. Its footprint, `at` on vans
+#  joined on the cell, is what couples the two parcels' wants into one search, since a plan for
+#  either could collide with a plan for the other (one-mind-couples-the-wants-a-constraint-can-make-collide).
+#  And posed with both vans on one cell the world is REFUSED — by `orexis-onboard` before anything
+#  is granted, and said in the log by every pass — never repaired: no want is minted from it, since
+#  it is no desire. It was a desire, the dispatcher's aversion, and a drive parted the vans; that
+#  made the world's physics something the agent wanted, which is the wrong modality
+#  (knowledge/domain/planning/constraint.md).
+
+:dispatcher planning:holds :no_cell_holds_two_vans .
+
+:no_cell_holds_two_vans a planning:Constraint ;
+    rdfs:label "no cell holds two vans" ;
+    planning:unmetWhen :two_vans_on_one_cell .
+
+:two_vans_on_one_cell
+    sh:message "two vans stand on one cell" ;
+    sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT $this ?value WHERE {
+            $this a courier:Van ;
+                courier:at ?value .
+            ?other a courier:Van ;
+                courier:at ?value .
+            FILTER(?other != $this)
+        }""" .

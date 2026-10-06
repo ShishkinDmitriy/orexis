@@ -1,16 +1,17 @@
-# a_fork_that_newly_enters_the_avoided_state_is_refused
+# a_fork_that_violates_a_constraint_is_impossible
 #
-# THE BOUND (#902). The keeper holds a desire about tank1 — in range, at ten or above — and a
-# state invariant, an aversion in its `planning:unmetWhen` form: no two tanks at one level. Tank1
-# stands at nought and tank2 at five, so the aversion is met in the ground and mints nothing; the
-# one want is tank1's, weighed in the ground, unmet and open. The iteration opens the ground: two
-# candidates, fill tank1 and fill tank2. Filling tank1 reaches a world where both tanks stand at
-# five — the aversion, weighed there, carries two violation rows the ground's weighing does not,
-# so the world has NEWLY ENTERED the avoided state and is REFUSED: `planning:refused` on the want's
-# weighing names the aversion in place of a verdict — no `planning:met`, no `planning:open` — while
-# the want's own violation row stands, saying tank1 read five there. Filling tank2 reaches a world
-# at nought and ten, where the aversion is met; that world is open.
-# The aversion's weighing stands in both worlds beside the want's, so what was entered can be read.
+# A WORLD THAT VIOLATES A CONSTRAINT CANNOT BE. The keeper holds a desire about tank1 — in range,
+# at ten or above — and the world states a CONSTRAINT, a `planning:Constraint` in the avoided-state
+# form: no two tanks at one level. Tank1 stands at nought and tank2 at five, so the constraint is
+# kept in the ground — the pass weighed it there to say so — and, being no desire, it mints nothing;
+# the one want is tank1's, weighed in the ground, unmet and open. The iteration opens the ground:
+# two candidates, fill tank1 and fill tank2. Filling tank1 reaches a world where both tanks stand
+# at five — the constraint, weighed there, yields a row per tank, so the world is IMPOSSIBLE:
+# `planning:impossible` on the WORLD'S row names the constraint, and the want's weighing of it is
+# BARE — no `planning:met`, no `planning:open`, no row — since a want is asked nothing of a world
+# that cannot be. Filling tank2 reaches a world at nought and ten, where the constraint is kept;
+# that world is open. The constraint's weighing stands in both worlds, so what each violates can
+# be read.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -63,15 +64,19 @@ GRAPH :desires {
   :in_range a sh:NodeShape .
   :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
   :in_range sh:targetNode :tank1 .
-  :keeper planning:holds :keeper.apart .
   :keeper planning:holds :keeper.in_range .
-  :keeper.apart a planning:Desire .
-  :keeper.apart planning:unmetWhen :one_level .
-  :keeper.apart rdfs:label "no two tanks at one level" .
   :keeper.in_range a planning:Desire .
   :keeper.in_range planning:about :level .
   :keeper.in_range planning:metWhen :in_range .
   :keeper.in_range rdfs:label "the tank in range" .
+}
+
+# THE WORLD'S CONSTRAINT: no two tanks at one level, stated as what is possible and no desire.
+GRAPH :constraints {
+  :keeper planning:holds :keeper.apart .
+  :keeper.apart a planning:Constraint .
+  :keeper.apart planning:unmetWhen :one_level .
+  :keeper.apart rdfs:label "no two tanks at one level" .
   :one_level sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :level ?value . ?other a :Tank ; :level ?value . FILTER(?other != $this) }" .
 }
 
@@ -92,6 +97,9 @@ GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :constraints a orexis:Graph .
+  :constraints a orexis:PublicGraph .
+  :constraints a planning:ConstraintGraph .
   :desires a orexis:Graph .
   :desires a planning:DesireGraph .
   :ontology a orexis:Graph .

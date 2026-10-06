@@ -1,15 +1,18 @@
-# a_fork_that_keeps_a_violation_the_root_already_had_is_not_refused
+# a_fork_that_keeps_the_presents_violation_is_impossible_too
 #
-# AN INVARIANT ALREADY UNMET IN THE ROOT BOUNDS NOTHING. Tank1 and tank2 both stand at seven, so
-# the aversion — no two tanks at one level — reads unmet in the ground with a row per tank, and
-# mints its own want about both; tank3 stands at nought under a desire that wants it at ten or
-# above, a second want. Each want's iteration opens the ground, in name order: the aversion's
-# forks the three fills, and tank3's finds the worlds standing and weighs them without forking.
-# Filling tank1 or tank2 takes the two apart — repair removes the rows and enters none — and
-# neither world is refused for either want. Filling tank3 reaches a world where tanks one and two
-# still share seven: the aversion's weighing there carries exactly the rows the ground's did, no
-# row is new, and the world is NOT refused — it stands open for both wants. A refusal is of a
-# state newly entered, never of one the agent was already in.
+# POSSIBILITY IS A FACT ABOUT A WORLD, NOT ABOUT THE STEP THAT REACHED IT. Tank1 and tank2 both
+# stand at seven, so the world's constraint — no two tanks at one level — is violated in the
+# PRESENT: the pass weighed it in the ground, found a row per tank, said so in the log, and minted
+# nothing, since a constraint is no desire and a present that violates one is a contradiction and
+# not a want. Tank3 stands at nought under a desire that wants it at ten or above, the one want.
+# Its iteration opens the ground and forks the three fills. Filling tank1 or tank2 takes the two
+# apart, the constraint is kept in the world reached, and that world is open. Filling tank3 reaches
+# a world where tanks one and two still share seven: the constraint yields the same two rows there
+# as in the ground, and the world is IMPOSSIBLE all the same — marked on its row, the want's
+# weighing of it bare — since nothing compares a child to its parent: a world the present's
+# violation persists into cannot be, exactly as one that enters it. What the search is left is the
+# two worlds that happen to repair the present on the way to the want, found by the want's own
+# search and decided by nobody.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -63,15 +66,20 @@ GRAPH :desires {
   :in_range a sh:NodeShape .
   :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
   :in_range sh:targetNode :tank3 .
-  :keeper planning:holds :keeper.apart .
   :keeper planning:holds :keeper.in_range .
-  :keeper.apart a planning:Desire .
-  :keeper.apart planning:unmetWhen :one_level .
-  :keeper.apart rdfs:label "no two tanks at one level" .
   :keeper.in_range a planning:Desire .
   :keeper.in_range planning:about :level .
   :keeper.in_range planning:metWhen :in_range .
   :keeper.in_range rdfs:label "the tank in range" .
+}
+
+# THE WORLD'S CONSTRAINT: no two tanks at one level, stated as what is possible and no desire —
+# and violated by the present as posed, which the pass says and nothing repairs.
+GRAPH :constraints {
+  :keeper planning:holds :keeper.apart .
+  :keeper.apart a planning:Constraint .
+  :keeper.apart planning:unmetWhen :one_level .
+  :keeper.apart rdfs:label "no two tanks at one level" .
   :one_level sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :level ?value . ?other a :Tank ; :level ?value . FILTER(?other != $this) }" .
 }
 
@@ -93,6 +101,9 @@ GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :constraints a orexis:Graph .
+  :constraints a orexis:PublicGraph .
+  :constraints a planning:ConstraintGraph .
   :desires a orexis:Graph .
   :desires a planning:DesireGraph .
   :ontology a orexis:Graph .
@@ -118,13 +129,6 @@ GRAPH :catalogue {
   ground:2026-01-01T120000p0000.for.keeper.apart planning:violation [ planning:constraint 0 ; planning:instance :tank1 ; planning:offending 7 ] .
   ground:2026-01-01T120000p0000.for.keeper.apart planning:violation [ planning:constraint 0 ; planning:instance :tank2 ; planning:offending 7 ] .
   ground:2026-01-01T120000p0000.for.keeper.apart planning:weighs ground:2026-01-01T120000p0000 .
-  ground:2026-01-01T120000p0000.for.keeper.apart.pursued a planning:Weighing .
-  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:for :keeper.apart.pursued .
-  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:met false .
-  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:open true .
-  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:violation [ planning:constraint 0 ; planning:instance :tank1 ; planning:offending 7 ] .
-  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:violation [ planning:constraint 0 ; planning:instance :tank2 ; planning:offending 7 ] .
-  ground:2026-01-01T120000p0000.for.keeper.apart.pursued planning:weighs ground:2026-01-01T120000p0000 .
   ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
   ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
   ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
@@ -150,17 +154,7 @@ GRAPH ground:2026-01-01T120000p0000 {
 }
 
 GRAPH pursued:2026-01-01T120000p0000--open {
-  :keeper planning:holds :keeper.apart.pursued .
   :keeper planning:holds :keeper.in_range.pursued .
-  :keeper.apart.pursued a planning:Want .
-  :keeper.apart.pursued planning:state planning:Recognized .
-  :keeper.apart.pursued planning:unmetWhen :keeper.apart.pursued.avoided .
-  :keeper.apart.pursued prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-  :keeper.apart.pursued prov:wasDerivedFrom :keeper.apart .
-  :keeper.apart.pursued rdfs:label "pursued: no two tanks at one level" .
-  :keeper.apart.pursued.avoided sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :level ?value . ?other a :Tank ; :level ?value . FILTER(?other != $this) }" .
-  :keeper.apart.pursued.avoided sh:targetNode :tank1 .
-  :keeper.apart.pursued.avoided sh:targetNode :tank2 .
   :keeper.in_range.pursued a planning:Want .
   :keeper.in_range.pursued planning:metWhen :keeper.in_range.pursued.met .
   :keeper.in_range.pursued planning:state planning:Recognized .

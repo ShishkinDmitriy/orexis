@@ -148,6 +148,29 @@ def report_selects(shapes: rdflib.Graph, focus_node=None) -> dict:
     return out
 
 
+def select_of(shapes: rdflib.Graph, subject) -> str | None:
+    """The select whose rows are `subject`'s violations, under whichever polarity it carries in
+    `shapes`: `planning:metWhen` a shape, compiled by `report_select`; `planning:unmetWhen` an
+    avoided state, by `entered_select`. None where it carries neither — nothing to judge by.
+
+    ONE READER FOR A DESIRE, A WANT AND A CONSTRAINT: the three carry a met-test in the same
+    two words and are judged by the same rows, and what differs between them is what a row
+    MEANS — trouble to repair for the first two, a world that cannot be for the third — which
+    is the caller's to say and no business of the compiler's. REFUSES a subject carrying both
+    polarities, the loud direction: judged by whichever a read found first, a thing wrongly
+    judged met is withdrawn, where a thing not judged is kept (#892)."""
+    subject = rdflib.URIRef(subject) if not isinstance(subject, rdflib.term.Node) else subject
+    shape = shapes.value(subject, PLANNING.metWhen)
+    avoided = shapes.value(subject, PLANNING.unmetWhen)
+    if shape is not None and avoided is not None:
+        raise Unsupported(f"{subject} carries both planning:metWhen and planning:unmetWhen")
+    if shape is None and avoided is None:
+        return None
+    if shape is not None:
+        return report_select(shapes.cbd(shape), shape)
+    return entered_select(shapes.cbd(avoided), avoided)
+
+
 def entered_select(shapes: rdflib.Graph, node) -> str:
     """The select whose rows are the instances that have ENTERED the avoided state `node` names —
     what a desire's `planning:unmetWhen` points at — in the report's shape, so `weigh` writes one

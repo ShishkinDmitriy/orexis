@@ -17,11 +17,13 @@ from agent.ontology import KNOWN as _KERNEL_KNOWN, PREDICTION
 
 PLANNING = "http://example.org/orexis/planning#"
 
-#  PLANNING'S GRAPH KINDS: desires, the wants derived from them, and the shapes a met-test and an
-#  estimate point at.
+#  PLANNING'S GRAPH KINDS: desires, the wants derived from them, the shapes a met-test and an
+#  estimate point at, and the constraints a world states — what is possible, in a desire's words
+#  and of another modality, public since physics is everyone's.
 DESIRE = PLANNING + "DesireGraph"
 WANT = PLANNING + "WantGraph"
 SHAPES = PLANNING + "ShapesGraph"
+CONSTRAINT_GRAPH = PLANNING + "ConstraintGraph"
 #  WHAT A PLANNING TEXT IS ANSWERED OVER — a met-test, a precondition, an effect: the kernel's
 #  kinds and the desires and wants — and, standing at an instant, what is expected then.
 KNOWN = (*_KERNEL_KNOWN, DESIRE, WANT)
@@ -95,9 +97,9 @@ REMAINING = PLANNING + "remaining"
 OPEN = PLANNING + "open"
 EXPANDED = PLANNING + "expanded"
 REPEATS = PLANNING + "repeats"
-#  THE BOUND'S WORD: the state invariant a possible world newly entered, said of the want's
-#  weighing of it, which is then neither on the frontier nor an achiever (#902).
-REFUSED = PLANNING + "refused"
+#  A WORLD THAT CANNOT BE: the constraint a possible world violates, said on the world's own row,
+#  so every want's weighing of it is bare and the frontier and the plan pass it by unfiltered.
+IMPOSSIBLE = PLANNING + "impossible"
 
 #  A GROUND WORLD: what the agent's own knowledge comes to over ONE PERIOD, materialised in an
 #  imaginarium — the present, and what each prediction makes of it. Classified with a period,

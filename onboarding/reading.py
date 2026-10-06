@@ -108,6 +108,20 @@ def lasts(here: Path, agent_id: str) -> bool:
     return planner.holds_a_desire() or MQTT in packages_of(beliefs, planner.uri)
 
 
+def contradicted(here: Path, agent_id: str) -> list[str]:
+    """Every constraint the agent `agent_id` of the world in `here` holds that the world AS POSED
+    violates, as `constraint: (instance, constraint, offending), …` — asked of the agent as its boot
+    reads it, by the Planner's own judge. A constraint is what the world says is possible, so a
+    world whose asserted state violates its own word is a contradiction and not a want anyone could
+    repair: `orexis-onboard` refuses it before anything is granted, as it refuses a world that will
+    not load, since a society started that way would say the contradiction in every pass and mend
+    nothing (knowledge/domain/planning/constraint.md). Empty for a world posed as it says it can be."""
+    planner = Planner(boot(Path(here).resolve(), agent_id, others=ours()), agent_id)
+    return [f"{constraint.rsplit('#', 1)[-1]}: " + ", ".join(
+                f"({str(i).rsplit('#', 1)[-1]}, {c}, {str(o).rsplit('#', 1)[-1]})" for i, c, _, o in sorted(broken, key=str))
+            for constraint, broken in planner.contradictions()]
+
+
 def unread(here: Path) -> list[str]:
     """Every graph the world in `here` holds — in its directory, in every agent's own documents
     under `beliefs/`, and in whatever they import — whose kind no reader declares, as

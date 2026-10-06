@@ -82,6 +82,13 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
         if unread:
             raise SystemExit(f"orexis-onboard: world {world!r} holds graphs of a kind no reader declares — "
                              f"{'; '.join(unread)}; nothing granted")
+        # And a world posed in a state its own constraints say cannot be is refused the same way: a
+        # constraint is what the world says is possible, so this is the world contradicting itself,
+        # which no agent repairs — it would say so in every pass and mend nothing (constraint.md).
+        contradicted = [f"{a} holds {c}" for a in compose.roster(world) for c in reading.contradicted(world_dir(world), a)]
+        if contradicted:
+            raise SystemExit(f"orexis-onboard: world {world!r} is posed in a state its own constraints say is "
+                             f"impossible — {'; '.join(contradicted)}; nothing granted")
 
     log.info("onboarding %s", world)
     # A world asking to be monitored where the installation serves metrics nowhere is refused before

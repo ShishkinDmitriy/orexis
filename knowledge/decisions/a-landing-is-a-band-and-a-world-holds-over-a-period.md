@@ -49,7 +49,18 @@ So, since 2026-10-03:
   what the drift's two trajectories were already dividing by.
 - **The dose and the heating declare the band they are**: the next reading is due within a cadence
   of the act, nothing at the least and the cadence at the most, read off the world in SSN-System's
-  words. A market act lands when its round's window closes, exactly, both ends agreeing.
+  words. A market act lands when its round's window closes, exactly, both ends agreeing. **And the
+  courier's drive declares one** (2026-10-05, #901): half a minute at the least and a minute at the
+  most for a van to show at the next cell, the courier's own figure for its grid, with the pick and
+  the drop nought twice, declared. Declared as nothing, every world of a delivery and every step of
+  its plan stood at the pass's one instant, so two plans had no time axis to be composed on and no
+  committed step a window with a length; now the six drives of the dispatcher's joint plan land at
+  six distinct instants, a step opens where the one before it lands, and a committed drive is
+  believed over two minutes and more where it was the patience alone. The band shifts instants and
+  not the frontier's order — 45 candidates for the corner and 228 for the joint plan, as before, and
+  every world's hash unmoved, since the hash is of what a world holds and its period is on its row —
+  and a walk is passes now, one drive landing a pass, which is what the worlds' tests tick their
+  clocks for.
 
 # What was refused
 

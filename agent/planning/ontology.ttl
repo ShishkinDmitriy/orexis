@@ -98,11 +98,11 @@ planning:remaining a owl:DatatypeProperty ; rdfs:domain planning:Weighing ; rdfs
 
 planning:met a owl:DatatypeProperty ; rdfs:domain planning:Weighing ; rdfs:range xsd:boolean ;
     rdfs:label "met" ;
-    rdfs:comment "Whether the want's met-test passes in the world weighed. The verdict of one judgment, written where it was decided so that nobody judges the same world for the same want twice — a pass resumed here, or a pass for another want sharing the world. ABSENT MEANS THE QUESTION WAS NEVER PUT, which is not the same as no: a candidate passed over has no world to judge — or that an invariant REFUSED the world (`planning:refused`), which takes the verdict back so the weighing is neither on the frontier nor an achiever by its rows." .
+    rdfs:comment "Whether the want's met-test passes in the world weighed. The verdict of one judgment, written where it was decided so that nobody judges the same world for the same want twice — a pass resumed here, or a pass for another want sharing the world. ABSENT MEANS THE QUESTION WAS NEVER PUT, which is not the same as no: a candidate passed over has no world to judge — or that the world is IMPOSSIBLE (`planning:impossible` on its row), where the question is moot and the verdict is taken back, so the weighing is neither on the frontier nor an achiever by its rows." .
 
 planning:open a owl:DatatypeProperty ; rdfs:domain planning:Weighing ; rdfs:range xsd:boolean ;
     rdfs:label "open" ;
-    rdfs:comment "Whether the world weighed is on the frontier — somewhere this want's search may still open. THE OPEN LIST IS THESE ROWS, ordered by what the world spent and then by the order it was minted; an iteration needs nothing carried over from the last one but the name the query hands back. TAKEN BACK when the world is opened, or when an invariant refuses it (`planning:refused`), and never written for a world that met the want or a candidate that reached nothing: a settled world is not on the frontier, so its absence is said rather than deduced from `planning:expanded`." .
+    rdfs:comment "Whether the world weighed is on the frontier — somewhere this want's search may still open. THE OPEN LIST IS THESE ROWS, ordered by what the world spent and then by the order it was minted; an iteration needs nothing carried over from the last one but the name the query hands back. TAKEN BACK when the world is opened, or when a constraint makes it impossible (`planning:impossible`), and never written for a world that met the want or a candidate that reached nothing: a settled world is not on the frontier, so its absence is said rather than deduced from `planning:expanded`." .
 
 planning:expanded a owl:DatatypeProperty ; rdfs:domain planning:Weighing ; rdfs:range xsd:boolean ;
     rdfs:label "expanded" ;
@@ -112,9 +112,9 @@ planning:repeats a owl:ObjectProperty ; rdfs:domain planning:Weighing ; rdfs:ran
     rdfs:label "repeats" ;
     rdfs:comment "Said of a weighing of a CANDIDATE that reached no new world: the world its fork came to holds exactly what this one already held, by hash — its parent's, where the effect changed nothing, or an earlier world's, where the path went round. A cycle is a world already seen, and this is where the search says it saw one." .
 
-planning:refused a owl:ObjectProperty ; rdfs:domain planning:Weighing ; rdfs:range planning:Desire ;
-    rdfs:label "refused" ;
-    rdfs:comment "Said of a want's weighing of a possible world that NEWLY ENTERED a state the holder avoids: the state invariant — a desire in its `planning:unmetWhen` form — whose weighing in this world carries a violation row with no equal in the parent world's weighing (#902). THE VERDICT REPLACED: `planning:open` and `planning:met` are taken back, so the weighing matches neither the frontier's read nor the plan's by its rows alone, with no filter on either — a filter inside the frontier's read cost every holder a quarter of its pass, measured. The want's own violation rows stand, so a refused weighing with none is a world the want was met in and may not be reached through. The invariant's weighing stands beside this one with its rows, so what was entered can be read off the store. Kept and never forgotten, since the candidate that reached the world is then weighed and a resumed pass does not take it again; an invariant already unmet in the parent refuses nothing a repair does, since repair removes a row and enters none." .
+planning:impossible a owl:ObjectProperty ; rdfs:domain planning:PossibleGraph ; rdfs:range planning:Constraint ;
+    rdfs:label "impossible" ;
+    rdfs:comment "Said of a possible world in which a `planning:Constraint` the holder holds is violated — the constraint named — so the world is one the search may not stand in, whatever any want's met-test says there. ON THE WORLD'S ROW and not on a weighing, since a world's possibility is true of it whoever asks, where a weighing is one want's. The weighing of any want in such a world is BARE — `planning:for` and `planning:weighs` and no verdict, `planning:open` and `planning:met` taken back where they were written before the constraint was weighed — so the frontier's read and the plan's pass it by by their rows alone, with no filter on either: a filter inside the frontier's read cost every holder a quarter of its pass, measured (#902). The constraint's own weighing stands beside with its rows, so what the world violates can be read off the store. Kept and never forgotten, since the candidate that reached the world is then weighed and a resumed pass does not take it again. A ground is never marked: the present is validated and said, not repaired, and a want is searched from it as it stands." .
 
 planning:Candidate a owl:Class ; rdfs:label "Candidate" ;
     rdfs:comment """A MOVE A WORLD ADMITS — one action and one filling of it, off the action's own `planning:precondition`, whose rows ARE the fillings. A search walks possible worlds and forks on a candidate at a time; the ones it PICKS become the plan's steps, and that is the whole difference between the two words. They were one Python class until the fields that would have told them apart turned out to be set by nothing.
@@ -215,6 +215,23 @@ planning:WantGraph
     rdfs:comment "A graph of `planning:Want` rows. The derivation's are these, one per want it minted, each holding during its period and `orexis:arrivedBy orexis:Derived`; a world that states a want directly writes one `orexis:Asserted`, and a refinement's is the agent's own, `orexis:Recorded`. Which a reader means is the ARRIVAL axis, never a subclass. A want is not a desire, so this is no subclass of `planning:DesireGraph`." .
 
 
+planning:Constraint
+    a owl:Class ;
+    rdfs:label "Constraint" ;
+    rdfs:comment """What a world says of itself is POSSIBLE, stated as a desire is stated — a node a holder `planning:holds`, carrying a shape under `planning:metWhen` or an avoided state under `planning:unmetWhen`, compiled by the same compiler into the same rows — and of a different MODALITY from a desire: a desire is bouletic and says what is wanted, a constraint alethic and says what can be. The dispatcher's is that no cell holds two vans, which is physics and not a preference.
+
+A WORLD VIOLATING IT IS IMPOSSIBLE, NEVER REPAIRED. The search weighs every constraint of the holder whose footprint the scope's actions write in each possible world it weighs a want in, and a world where one yields a row is marked `planning:impossible` on its own row — off the frontier and never an achiever, whatever the want's met-test says there. No want is minted from a constraint: the derivation reads desires alone, and a constraint violated in the PRESENT is a contradiction between the world's state and its own word, said in the log by the pass and refused by `orexis-onboard` for a world posed that way, not a trouble the agent sets about mending. Not a `planning:Desire` and no subclass of one, since the one difference between them is the one that matters: an unmet desire is a want, and a violated constraint is a world that cannot be.
+
+Its footprint is what couples: two wants whose plans a constraint could make collide are searched as one (`agent/planning/couplings.py`, one-mind-couples-the-wants-a-constraint-can-make-collide). A prohibition that is possible but forbidden — a state the agent may enter and must then leave — is not a constraint but an AVERSION, a desire in its `planning:unmetWhen` form, repaired when entered. See knowledge/domain/planning/constraint.md.""" .
+
+
+planning:ConstraintGraph
+    a owl:Class ;
+    rdfs:subClassOf orexis:PublicGraph ;
+    rdfs:label "Constraint graph" ;
+    rdfs:comment "A graph of `planning:Constraint` rows, with who holds each and the shape or avoided state each carries where no domain's shapes graph does — named for what it HOLDS, as every graph class is. A world authors one, `<> a planning:ConstraintGraph`, with no period: what is possible holds at every instant as the T-Box does. PUBLIC, not the agent's own, because what the world says is possible is everyone's — physics is not a belief one agent holds and another may lack — so it is read again at every boot as an ontology is, and an amended constraint reaches a running agent. The planner crosses it beside the graphs of desires, wants, records and shapes wherever it reads a met-test." .
+
+
 planning:WantState
     a owl:Class ;
     rdfs:label "Want state" ;
@@ -239,7 +256,7 @@ planning:holds
     a owl:ObjectProperty ;
     rdfs:domain orexis:Agent ;
     rdfs:label "holds" ;
-    rdfs:comment "What this agent is held to or holds to: an `planning:Desire` (which carries its met-shape and its measure), or a bare shape like the survival envelope, whose violation is a warning rather than a want. Replaces `orexis:boundedBy`, which named only the first and named it as though bounds were a kind of thing rather than a kind of FORCE. No `rdfs:range` since the desire was reified: a held thing is a desire OR a shape, and a range naming one would quietly claim the other is not held." .
+    rdfs:comment "What this agent is held to or holds to: an `planning:Desire` (which carries its met-shape and its measure), a `planning:Constraint` (which carries a shape in the same words and says what is POSSIBLE rather than what is wanted), or a bare shape like the survival envelope, whose violation is a warning rather than a want. Replaces `orexis:boundedBy`, which named only the first and named it as though bounds were a kind of thing rather than a kind of FORCE. No `rdfs:range` since the desire was reified: a held thing is a desire, a constraint OR a shape, and a range naming one would quietly claim the others are not held." .
 
 
 planning:holdsAt
@@ -252,10 +269,9 @@ planning:holdsAt
 
 planning:metWhen
     a owl:ObjectProperty ;
-    rdfs:domain planning:Desire ;
     rdfs:range sh:NodeShape ;
     rdfs:label "met when" ;
-    rdfs:comment "The met-test: a SHACL node shape whose conformance says nothing is wanted here right now — met where every instance it targets conforms, and each violation an instance in trouble. Boolean by nature — it governs the outcome LABEL and a duty's discharge, never how hard to try. Never validated: compiled by `violation.report_select` into the select whose rows are its violations and run by `weigh` on the store's own engine over whichever world is judged. Its negative twin is `planning:unmetWhen`; a desire or a want carries one of the two, never both, and one carrying both is not judged at all (#892)." .
+    rdfs:comment "The met-test: a SHACL node shape whose conformance says nothing is wanted here right now — met where every instance it targets conforms, and each violation an instance in trouble. Boolean by nature — it governs the outcome LABEL and a duty's discharge, never how hard to try. Never validated: compiled by `violation.report_select` into the select whose rows are its violations and run by `weigh` on the store's own engine over whichever world is judged. Its negative twin is `planning:unmetWhen`; a desire or a want carries one of the two, never both, and one carrying both is not judged at all (#892). NO DOMAIN: a desire, a want and a `planning:Constraint` all carry it, and a constraint carrying it is held to a shape that says what is POSSIBLE, not what is wanted — the same compiler, the same rows, a different modality. A domain naming the desire would have entailed that a constraint is one, which is the claim its page refuses." .
 
 
 planning:state
@@ -268,11 +284,10 @@ planning:state
 
 planning:unmetWhen
     a owl:ObjectProperty ;
-    rdfs:domain planning:Desire ;
     rdfs:label "unmet when" ;
     rdfs:comment """The met-test's negative twin (#468; judged since #892): an aversion points here at the AVOIDED state — a node carrying one `sh:select`, SHACL-SPARQL's own form for a select whose rows are nodes — and is UNMET WHERE IT YIELDS A ROW. Ruled by the sovereign when the first build routed avoidance through `planning:metWhen`: a met-test pointing at the bad state evaluates right and READS inverted — 'met when dry-and-hot' — and a term that reads wrong to every skimmer is the flag-that-eventually-disagrees, in the reader's head. 'Unmet when two vans stand on one cell' reads as it evaluates.
 
-The contract of the select: `SELECT $this ?value WHERE { … }` — `$this` the instance in trouble, `?value`, where the head projects it, the offending value the derivation keys a want by (the cell both vans stand on), and nothing else bound in. No `$state`: a text does not say which world it reads, and `weigh` hands it the world's graphs as the default graph exactly as it hands a met-test's compiled select. `planning:about` on the node says what the trouble is about, `sh:this` the instance itself, as a `sh:sparql` constraint may say it; `sh:targetNode` on the node, written by the derivation when it narrows a want to its instance, holds the rows to that instance. Compiled by `violation.entered_select` into the report's shape — no negation, one way of failing — and run by `weigh` in every ground as a met-test is, one `planning:violation` per row, so the derivation mints a want from an aversion exactly as from a met-test's violations and the want carries the avoided state, narrowed, under this same term. A select that will not compile or run writes no verdict, which the derivation reads as not judged and the search as unmet. Judged like any met-test: met or not, and nothing in between.""" .
+The contract of the select: `SELECT $this ?value WHERE { … }` — `$this` the instance in trouble, `?value`, where the head projects it, the offending value the derivation keys a want by (the cell both vans stand on), and nothing else bound in. No `$state`: a text does not say which world it reads, and `weigh` hands it the world's graphs as the default graph exactly as it hands a met-test's compiled select. `planning:about` on the node says what the trouble is about, `sh:this` the instance itself, as a `sh:sparql` constraint may say it; `sh:targetNode` on the node, written by the derivation when it narrows a want to its instance, holds the rows to that instance. Compiled by `violation.entered_select` into the report's shape — no negation, one way of failing — and run by `weigh` in every ground as a met-test is, one `planning:violation` per row, so the derivation mints a want from an aversion exactly as from a met-test's violations and the want carries the avoided state, narrowed, under this same term. A select that will not compile or run writes no verdict, which the derivation reads as not judged and the search as unmet. Judged like any met-test: met or not, and nothing in between. NO DOMAIN, as `planning:metWhen` has none: a `planning:Constraint` carries it too — the dispatcher's two vans on one cell — and there a row is not trouble to repair but a world that is not possible.""" .
 
 
 

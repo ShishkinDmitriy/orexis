@@ -42,14 +42,24 @@ def test_the_boot_says_what_each_graph_is():
     assert _parcel_at(beliefs) == ["c1_2"], "the parcel stands where the delivery was posed"
 
 
+def _ticking(monkeypatch, seconds: float = 1.0) -> None:
+    """One timeline that moves on by `seconds` at every read, as a running agent's clock does. A
+    DRIVE LANDS HALF A MINUTE AFTER IT IS TAKEN (#901, `domains/courier/actions.ttl`), and the
+    executor looks for the van at the next cell from then; held at one instant, the clock would
+    never reach it and the run would never end — a clock that does not tick is a test's mistake."""
+    ticks = iter(range(1, 1_000_000))
+    monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=seconds * next(ticks)))
+
+
 def test_the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops(monkeypatch):
     """Three drives, the pick, three drives, the drop: the cheapest delivery, found by a search
-    the drives-owed estimate guides."""
-    monkeypatch.setattr(clock, "now", lambda: NOW)
+    the drives-owed estimate guides — and walked a drive at a time, each landing half a minute
+    after it is taken, so the run is passes until the last lands and the want is reached."""
+    _ticking(monkeypatch)
     runtime = Runtime(boot(WORLD, "courier"), "courier", budget=128)
-    assert runtime.run() == MET
+    assert runtime.run(poll_s=0) == MET
     assert _acts(runtime) == 8 and _parcel_at(runtime.beliefs) == ["c3_3"]
-    assert runtime.run() == MET and _acts(runtime) == 8, "met stays met, and nothing moves again"
+    assert runtime.run(poll_s=0) == MET and _acts(runtime) == 8, "met stays met, and nothing moves again"
 
 
 def test_the_wants_estimate_at_the_present_never_exceeds_what_the_plan_cost(monkeypatch):
@@ -71,18 +81,18 @@ def test_the_wants_estimate_at_the_present_never_exceeds_what_the_plan_cost(monk
 
 def test_a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after(monkeypatch):
     """Sixteen candidates a pass cannot reach the far corner in one pass; the passes together
-    are the one-shot search. The clock ticks, as a running agent's does."""
-    ticks = iter(range(1, 10_000))
-    monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=next(ticks)))
+    are the one-shot search. The clock ticks, as a running agent's does, and the passes are
+    enough for the search and then for six drives to land, half a minute each."""
+    _ticking(monkeypatch)
     runtime = Runtime(boot(WORLD, "courier"), "courier", budget=16)
-    assert runtime.run(passes=20) == MET
+    assert runtime.run(passes=200, poll_s=0) == MET
     assert _acts(runtime) == 8
 
 
 def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeypatch):
-    monkeypatch.setattr(clock, "now", lambda: NOW)
+    _ticking(monkeypatch)
     beliefs = boot(WORLD, "courier")
-    Runtime(beliefs, "courier", budget=128).run()
+    Runtime(beliefs, "courier", budget=128).run(poll_s=0)
     boot(WORLD, "courier", beliefs)                   # a restart on the same volume
     assert _parcel_at(beliefs) == ["c3_3"], "the delivered parcel is the agent's belief, not the file's"
     assert len(graphs_of(beliefs, STATE)) == 1

@@ -30,7 +30,7 @@ from . import violation
 from agent.ontology import OREXIS, RECORD, local_of
 from agent.store import NAMESPACES, Raw, bind, catalogue_of, graphs_of, rdflib_view, remember, rows, update
 
-from .ontology import DESIRE, PLANNING, SHAPES, WANT
+from .ontology import CONSTRAINT_GRAPH, DESIRE, PLANNING, SHAPES, WANT
 from .world_at import world_at
 
 #  THE CATALOGUE IS BOUND, NOT FOUND, IN THE HOT READS: `GRAPH ?cat { ?cat a
@@ -42,8 +42,6 @@ from .world_at import world_at
 
 log = logging.getLogger("weigh")
 
-_MET_WHEN = rdflib.URIRef(PLANNING + "metWhen")
-_UNMET_WHEN = rdflib.URIRef(PLANNING + "unmetWhen")
 _ESTIMATES = rdflib.URIRef(PLANNING + "estimates")
 _DERIVED_FROM = rdflib.URIRef("http://www.w3.org/ns/prov#wasDerivedFrom")
 _SELECT = rdflib.URIRef("http://www.w3.org/ns/shacl#select")
@@ -51,11 +49,14 @@ _SELECT = rdflib.URIRef("http://www.w3.org/ns/shacl#select")
 #  WHAT `about` IS, AND WHETHER IT IS A REPEAT, in one read: a candidate says the world it was
 #  taken in, and the world it reached if it reached one; a world says neither. Where the
 #  reached world holds what a world this want already weighed holds, by hash, `?seen` names
-#  that world. Two reads before, at a tenth of a search on the two-disk bench.
+#  that world. Two reads before, at a tenth of a search on the two-disk bench. AND WHETHER THE
+#  WORLD REACHED IS IMPOSSIBLE — a constraint another want's search found violated there, on the
+#  world's own row — since a want weighed in a world that cannot be is asked nothing.
 _ABOUT_Q = """
-SELECT ?from ?child ?seen WHERE {
+SELECT ?from ?child ?seen ?impossible WHERE {
   GRAPH $cat { OPTIONAL { $about planning:from ?from }
     OPTIONAL { ?child planning:by $about ; orexis:hash ?hash .
+               OPTIONAL { ?child planning:impossible ?impossible }
                OPTIONAL { ?x a planning:Weighing ; planning:for $for ; planning:weighs ?seen .
                           ?seen orexis:hash ?hash } } } }
 ORDER BY ?seen LIMIT 1"""
@@ -94,7 +95,14 @@ def weigh(store, for_, about: str, *, memo=None) -> str:
     reads as not judged and the search reads as unmet, the safe direction for each.
 
     ON THE FRONTIER where it is a want's and the world is unmet. A desire's weighing is never
-    open: a desire is not searched, its wants are.
+    open: a desire is not searched, its wants are. A CONSTRAINT is weighed the same way — by the
+    Planner, in the present ground to say it and in each possible world to mark it — and its
+    weighing is never open either; what its rows mean there is the Planner's to say.
+
+    IN A WORLD MARKED IMPOSSIBLE the weighing is BARE — `planning:for` and `planning:weighs`, no
+    verdict, no estimate — since the question is moot, and a bare weighing is what the Planner
+    leaves of a want's weighing when a constraint marks the world after it was judged; so a
+    reader sees one shape for one thing whichever way it got there.
     """
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
     found = next(iter(rows(store, _ABOUT_Q, (), about=about, cat=cat, **{"for": for_})), {})
@@ -113,7 +121,7 @@ def weigh(store, for_, about: str, *, memo=None) -> str:
     #  because the rows hang off the name.
     about = about if world is None else world
     node = f"{about}.for.{local_of(for_)}"
-    if world is not None:
+    if world is not None and not found.get("impossible"):
         report = _report(store, for_, world, held, memo)
         if report is not None:
             verdict = f" ; planning:met {'true' if not report else 'false'}"
@@ -195,7 +203,7 @@ def _estimate(store, for_, memo) -> str | None:
     """The `sh:select` the want's `planning:estimates` points at — the want's own, which the
     derivation writes instantiated at the want's instance, or its desire's where the want
     states none — off the shapes crossed once for the pass. None where neither declares one."""
-    shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
+    shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES, CONSTRAINT_GRAPH)))
     want = rdflib.URIRef(for_)
     node = shapes.value(want, _ESTIMATES)
     if node is None:
@@ -217,18 +225,9 @@ def _select(store, for_, memo) -> str | None:
     one of the two, never both, and one carrying both is not judged rather than judged by
     whichever a read happened to find first — the loud direction, since a thing not judged is
     kept and a thing wrongly judged met is withdrawn."""
-    shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES)))
-    shape = shapes.value(rdflib.URIRef(for_), _MET_WHEN)
-    avoided = shapes.value(rdflib.URIRef(for_), _UNMET_WHEN)
-    if shape is not None and avoided is not None:
-        log.warning("%s carries both planning:metWhen and planning:unmetWhen, so it is not judged", local_of(for_))
-        return None
-    if shape is None and avoided is None:
-        return None
+    shapes = remember(memo, ("shapes",), lambda: rdflib_view(store, *graphs_of(store, DESIRE, WANT, RECORD, SHAPES, CONSTRAINT_GRAPH)))
     try:
-        if shape is not None:
-            return violation.report_select(shapes.cbd(shape), shape)
-        return violation.entered_select(shapes.cbd(avoided), avoided)
+        return violation.select_of(shapes, for_)
     except violation.Unsupported as exc:
         log.warning("%s: its met-test cannot be compiled, so it is not judged: %s", local_of(for_), exc)
         return None

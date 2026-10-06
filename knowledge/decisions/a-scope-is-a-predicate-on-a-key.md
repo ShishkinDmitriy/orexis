@@ -224,8 +224,9 @@ nothing blocked in the next.
   What would separate the vans is not a key, and — decided 2026-10-05 — not the mechanism #567
   named either: the vans stay one scope, and the two parcels' wants are COUPLED, one cluster and one
   search, because the aversion's footprint — `at` on vans, joined on the cell — says their plans may
-  interfere, and the aversion weighed in every possible world refuses the one that puts two vans on a
-  cell (built, #902: thirteen of the corridor's worlds refused and none opened, the joint plan walked
+  interfere, and the constraint weighed in every possible world marks the one that puts two vans on a
+  cell impossible (built, #902, and reworked 2026-10-06 from a desire's bound to a constraint's
+  impossibility: thirteen of the corridor's worlds impossible and none opened, the joint plan walked
   with two vans on no cell, and a van parked across the other's path delivered round by the mind's
   other hand — van B carries the parcel, or steps aside); a parcel no constraint can join to another stays a want of its own
   ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md),

@@ -51,7 +51,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Planning — what is wanted, and how to get there
 
 * [desire](/domain/planning/desire.md) - A desire stands and is never searched; a want is minted where it bites, searched, and withdrawn once met.
-* [constraint](/domain/planning/constraint.md) - What a plan may not do however the want is met; its footprint over the reach couples the wants it can make collide.
+* [constraint](/domain/planning/constraint.md) - What the world says is possible, stated as a desire is; a world violating it is impossible, never repaired, and its footprint couples wants.
 * [shape](/domain/planning/shape.md) - A met-test is a SHACL shape a domain declares, compiled to the select whose rows are its violations.
 * [planner](/domain/planning/planner.md) - One pass: grounds laid, wants derived, each searched best-first within a budget, the plans published down.
 * [imaginarium](/domain/planning/imaginarium.md) - The in-memory store a search forks worlds in, one per scope, kept from pass to pass.

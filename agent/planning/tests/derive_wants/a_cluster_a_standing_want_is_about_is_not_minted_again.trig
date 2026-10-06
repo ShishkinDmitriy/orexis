@@ -1,15 +1,14 @@
-# two_parcels_a_constraint_joins_are_one_want
+# a_cluster_a_standing_want_is_about_is_not_minted_again
 #
-# TWO INSTANCES A CONSTRAINT CAN MAKE COLLIDE ARE ONE WANT. The `two_parcels_two_estimates` world —
-# two vans and two parcels on one 2x4 grid under one desire that every parcel stand where it is
-# owed — with the dispatcher's aversion beside it, `planning:unmetWhen` no cell holds two vans, and
-# the courier's three actions, which the reach is closed over. Apart, the two parcels are two
-# clusters, one per instance (a-parcel-astray-is-a-want-of-its-own); here the aversion reads `at`
-# on vans joined on the cell, both vans can reach every cell of the one grid from where they stand,
-# so the constraint can make a plan for either parcel collide with a plan for the other, and the two
-# are ONE cluster: one want about both, named for both, its met-test targeting both parcels and its
-# estimate the desire's, the sum over both (one-mind-couples-the-wants-a-constraint-can-make-collide).
-# The aversion itself reads met — the vans stand apart — and mints nothing.
+# A CLUSTER A STANDING WANT IS ALREADY ABOUT IS THAT WANT'S. The `two_parcels_a_constraint_joins_are_one_want`
+# world halfway through its plan: the coupled want about both parcels stands, van A has delivered
+# parcel A at `c0_3`, and parcel B is still astray at `c1_1`. The desire now reads unmet for parcel B
+# alone, a cluster of one instance under a name of its own — and that cluster is not minted: the
+# standing want's met-test targets parcel B already, so the cluster is its, and it is kept under the
+# name it has. Minted, it was a second want about an instance the coupled want still pursued, and a
+# second plan drove van B down the same cells, measured on the dispatcher the day the courier's drives
+# took time to land and the walk first spanned passes (#901). Nothing here walks the want: the rule is
+# the derivation's and asks nothing of the intentions.
 #
 # The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
 
@@ -146,7 +145,7 @@ GRAPH :desires {
 }
 
 # THE WORLD'S CONSTRAINT, a `planning:Constraint` and no desire: two vans cannot share a cell. What
-# couples the two parcels — and never minted, since a world violating it is impossible, not unwanted.
+# coupled the two parcels into the standing want below, and never minted.
 GRAPH :constraints {
   :keeper planning:holds :keeper.no_cell_holds_two_vans .
   :keeper.no_cell_holds_two_vans a planning:Constraint .
@@ -163,10 +162,27 @@ GRAPH :constraints {
 }
 
 GRAPH :sensed {
-  :parcel_a courier:at :c0_1 .
+  :parcel_a courier:at :c0_3 .
   :parcel_b courier:at :c1_1 .
-  :van_a courier:at :c0_0 .
+  :van_a courier:at :c0_3 .
   :van_b courier:at :c1_1 .
+}
+
+# THE COUPLED WANT, STANDING: about both parcels, as `two_parcels_a_constraint_joins_are_one_want`
+# minted it an hour ago, its met-test targeting each.
+GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b {
+  :keeper planning:holds :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a planning:Want .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:estimates :drivesOwed .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:state planning:Recognized .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:generatedAtTime "2026-01-01T11:00:00+00:00"^^xsd:dateTime .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:wasDerivedFrom :keeper.every_parcel_delivered .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b rdfs:label "pursued: every parcel where it is owed" .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met a sh:NodeShape .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met sh:property [ planning:about sh:this ; sh:equals courier:destination ; sh:path courier:at ] .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met sh:targetNode :parcel_a .
+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met sh:targetNode :parcel_b .
 }
 
 GRAPH :scopes {
@@ -215,4 +231,9 @@ GRAPH :catalogue {
   :sensed a orexis:StateGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a orexis:Graph .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a planning:WantGraph .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b orexis:arrivedBy orexis:Derived .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b orexis:beliefsOf :keeper .
 }

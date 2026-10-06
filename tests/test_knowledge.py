@@ -629,10 +629,10 @@ def test_a_domain_page_names_only_terms_that_exist():
         # version of the page invented for a constraint that has no shape of its own (#275).
         # When #275 lands and gives that constraint a real name, this entry comes out.
         "desire:UnwatchedDesireShape",
-        # domain/planning/constraint.md names this to say it is deliberately NOT declared: a constraint
-        # is a reading of a desire in its `planning:unmetWhen` form, and a class beside it would say the
-        # same thing twice (#900). It comes out the day a constraint gets a term of its own.
-        "planning:Constraint",
+        # domain/planning/constraint.md names this to say it was BUILT AND REFUSED: the executor-held
+        # resource of #903, not merged, whose refusal one-mind-couples-the-wants-a-constraint-can-make-collide
+        # records. It comes out if a world ever needs a schedule limit with no state behind it.
+        "execution:occupies",
     }
 
     project = set(_project_prefixes())        # found by looking, never listed — as the code does

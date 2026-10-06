@@ -137,7 +137,8 @@ def derive_wants(store: ox.Store, now: datetime) -> set[str]:
         if holder not in coupled:
             coupled[holder] = couplings(store, holder, present, now, memo=memo)
         _derive_under(store, shapes, scopes, holder, desire, found, now, coupled[holder])
-        wanted |= _named(shapes, scopes, desire, _said(store, desire), found, coupled[holder])
+        wanted |= _named(shapes, scopes, desire, _said(store, desire), found, coupled[holder],
+                         _standing_under(store, desire, now))
     return wanted
 
 
@@ -198,6 +199,18 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
         #  whether it is two o'clock or four.
         if child in standing:
             continue
+        #  AND SO IS A WANT ALREADY ABOUT EVERY INSTANCE OF IT. A want a constraint coupled is
+        #  about two parcels; once the plan has delivered one, the cluster still in trouble is
+        #  the other parcel alone, under a name of its own — and minted, it was a second want
+        #  about an instance the coupled want still pursues, and a second plan drove the same
+        #  van down the same cells (measured on the dispatcher the day the courier's drives took
+        #  time to land, #901). The coupled want is one-shot and carries where it has got to; the
+        #  cluster is its, and it is kept under the name it has.
+        covering = _covering(shapes, standing, instances, about)
+        if covering is not None:
+            log.debug("%s is still pursued by %s, which is about every instance of it",
+                      child.rsplit("#", 1)[-1], covering.rsplit("#", 1)[-1])
+            continue
         child = _mint(store, shapes, holder, desire, now, at, until, said,
                      about=about, instances=instances, keys=keys)
         if child is not None:
@@ -213,8 +226,9 @@ def _keys_of(cluster: list[dict]) -> tuple[str, ...]:
 
 
 def _named(shapes: rdflib.Graph, scopes: dict | None, desire: str, said,
-           found: list[dict], coupled=None) -> set[str]:
-    """The names the clusters of `found` come to — what minting would call them.
+           found: list[dict], coupled=None, standing: set[str] = frozenset()) -> set[str]:
+    """The names the clusters of `found` come to — what minting would call them, or the want
+    among `standing` that is already about every instance of a cluster, as `_derive_under` reads it.
 
     One namer for both halves: `_derive_under` mints under these names and `_withdraw_under`
     keeps what is under them, so the two can never disagree about which want a cluster is.
@@ -222,10 +236,32 @@ def _named(shapes: rdflib.Graph, scopes: dict | None, desire: str, said,
     out = set()
     for cluster in _clusters(scopes, found, coupled):
         about = tuple(sorted({w["about"] for w in cluster if w["about"]}))
-        instances = {w["instance"] for w in cluster}
-        out.add(_name_of(shapes, desire, said, about,
-                        next(iter(instances)) if len(instances) == 1 else None, _keys_of(cluster)))
+        instances = tuple(sorted({w["instance"] for w in cluster}))
+        name = _name_of(shapes, desire, said, about, instances[0] if len(instances) == 1 else None, _keys_of(cluster))
+        out.add(name if name in standing else (_covering(shapes, standing, instances, about) or name))
     return out
+
+
+def _covering(shapes: rdflib.Graph, standing: set[str], instances: tuple, about: tuple) -> str | None:
+    """The want among `standing` whose met-test targets every instance of a cluster that is about
+    those instances themselves — one a constraint coupled about these and more, still pursuing
+    them — or None. Read off the `sh:targetNode`s of the shape or the avoided state the want
+    carries, which is where `_narrowed` wrote what a want is about. A cluster about a PROPERTY
+    of an instance is never covered this way: a tank's level want targets the tank, and the
+    tank's temperature out beside it is a second want, as `a_second_cluster_beside_a_standing_want`
+    has always said; and a cluster about no instance is nobody's but its own."""
+    from rdflib import URIRef
+    from rdflib.namespace import SH
+
+    if not instances or not set(about) <= set(instances):
+        return None
+    wanted = set(instances)
+    for want in sorted(standing):
+        for polarity in (MET_WHEN, UNMET_WHEN):
+            shape = shapes.value(URIRef(want), URIRef(polarity))
+            if shape is not None and wanted <= {str(t) for t in shapes.objects(shape, SH.targetNode)}:
+                return want
+    return None
 
 
 def _clusters(scopes: dict | None, witnesses: list, coupled=None) -> list[list]:
@@ -239,9 +275,10 @@ def _clusters(scopes: dict | None, witnesses: list, coupled=None) -> list[list]:
     stretch are two groups — two parcels, two wants, two searches that cannot see each other's
     plan — unless `coupled` says a constraint the holder holds can join them: then they are ONE
     group, one want about both and one search, which finds the plan optimal for both by
-    construction and in which the invariant can refuse the colliding world. The two-vans
-    aversion joins two parcels whose vans can meet on a cell and leaves two on disjoint grids
-    apart (`couplings`, one-mind-couples-the-wants-a-constraint-can-make-collide).
+    construction and in which the constraint makes the colliding world impossible. The two-vans
+    constraint joins two parcels whose vans can meet on a cell and leaves two on disjoint grids
+    apart (`couplings`, one-mind-couples-the-wants-a-constraint-can-make-collide). A desire
+    couples nothing: what it reads unmet is minted here, never held against a plan.
 
     THE SCOPES ARE READ, NEVER COMPUTED: `scope_actions` wrote them (scope-actions), read
     once per call and handed in, and a store holding no scope graph is refused rather than

@@ -26,6 +26,16 @@ courier:Drive a orexis:Action ;
             FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    #  HOW LONG A DRIVE TAKES TO SHOW, as a BAND (#901): a van is on the road to the next cell
+    #  between half a minute and a minute, which is the courier's figure for its own grid, stated
+    #  here as the dose states the cadence of the sensor that shows it — a world that knows its
+    #  streets better is where a truer figure would come from, never the search. The band is what
+    #  makes a drive an ACT IN FLIGHT rather than a move in a puzzle: a step lands as long after it
+    #  is taken as this says, the executor looks for the van at `$to` from the least and gives up
+    #  a patience past the most, and two drives' windows can overlap only once they have a length
+    #  (a-landing-is-a-band-and-a-world-holds-over-a-period). Declared as nothing, every world of a
+    #  delivery stood at the pass's one instant, and a fleet had no time axis to be scheduled on.
+    planning:landsAfter """SELECT ?least ?most WHERE { BIND(30 AS ?least) BIND(60 AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $van courier:at ?old  }
@@ -47,6 +57,9 @@ courier:Pick a orexis:Action ;
             ?van a courier:Van .
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    #  A PICK SHOWS AT ONCE: the parcel is aboard as the door shuts, nought twice — declared rather
+    #  than left out, since an action that says nothing of its landing claims immediacy by silence.
+    planning:landsAfter """SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $parcel courier:at ?cell  }
@@ -65,6 +78,8 @@ courier:Drop a orexis:Action ;
             ?parcel a courier:Parcel .
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    #  A DROP SHOWS AT ONCE, as the pick does: nought twice, declared.
+    planning:landsAfter """SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $parcel courier:carriedBy ?van  }
