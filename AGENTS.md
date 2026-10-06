@@ -527,6 +527,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **What the documents leave out is derived into a document, and a renderer only formats** —
   `infra/installation.derived.ttl` is committed and held to a fresh derivation (#827).
 - **A world's wiring is its society, and its world graph speaks no MQTT4SSN** (#823).
+- **What lasts says so in its compose file, and the host starts what says so** — the installation's
+  services said nothing and podman's restart unit starts only `always`, so a power cut left every
+  container down for two days ([run-a-world](knowledge/runbooks/run-a-world.md)).
 - **An agent's own documents are under `beliefs/<id>`.**
 - **A step of onboarding runs where the world has what it serves, and says so where it does not**
   (#824).

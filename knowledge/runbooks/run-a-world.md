@@ -281,18 +281,48 @@ two agents on it and both ingest every reading. Nothing prevents this; it is you
 
 # Unattended, across reboots
 
-There are no orexis services. Every agent that lasts already declares `restart: unless-stopped`
-— one that finishes says `"no"`, and a reboot has nothing to bring back for it — so the only
-thing missing after a reboot is something to start them again, and podman ships that:
+There are no orexis services. Everything that lasts declares `restart: unless-stopped` — every
+agent that does, each world's broker and simulator, and the installation's series store and
+Grafana; an agent that finishes says `"no"`, and a reboot has nothing to bring back for it. So the
+only thing missing after a reboot is something to start them again, and podman ships most of it:
 
 ```bash
 loginctl enable-linger $USER                 # user services run without a login session
+mkdir -p ~/.config/systemd/user/podman-restart.service.d
+cat > ~/.config/systemd/user/podman-restart.service.d/unless-stopped.conf <<'UNIT'
+[Service]
+ExecStart=
+ExecStart=/usr/bin/podman $LOGGING start --all --filter restart-policy=always --filter restart-policy=unless-stopped
+ExecStop=
+ExecStop=/usr/bin/podman $LOGGING stop --all --filter restart-policy=always --filter restart-policy=unless-stopped
+UNIT
+systemctl --user daemon-reload
 systemctl --user enable podman-restart.service
 ```
 
-`podman-restart` brings back every container whose policy restarts it, which is exactly the
-set you want and nothing else. Bring each world up once by hand and reboots take care of
-themselves.
+**The drop-in is not optional.** The unit podman ships starts only `restart-policy=always`, and
+nothing here says `always`: measured on podman 5.4.2, the shipped filter selected none of seven
+containers, so the unit enabled as it stands brings back nothing. podman documents
+`unless-stopped` as identical to `always`, and two filters on one key are either-or, which is what
+the drop-in leans on. This page said the shipped unit brought back "every container whose policy
+restarts it" until a power cut on 2026-10-03 left an installation down for two days.
+
+What a boot will start is one read, and what a boot does can be run by hand:
+
+```bash
+podman ps -a --filter restart-policy=always --filter restart-policy=unless-stopped
+systemctl --user start podman-restart.service
+```
+
+Three things follow from it being the policy that decides:
+
+- **A world is kept down by removing it**, `podman compose down`. A container stopped with
+  `podman stop` still exists and still says it lasts, so the next boot starts it.
+- **A container keeps the policy it was created with.** One made before its compose file said
+  `unless-stopped` is brought into line with `podman update --restart unless-stopped <name>`, or
+  by `podman compose up -d`, which makes it again.
+- **Bring each world up once by hand**, and the installation before it; reboots take care of
+  themselves after that.
 
 We shipped per-agent systemd units before and removed them. They ran agents as **host
 processes**, which is no longer a deployment mode — and worse, a unit left enabled would put a
