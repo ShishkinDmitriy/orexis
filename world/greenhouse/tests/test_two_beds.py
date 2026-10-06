@@ -142,6 +142,7 @@ def test_two_dry_beds_are_two_wants_in_two_scopes_and_both_pumps_are_commanded_i
         f"each want planned in its own imaginarium, and the air's plans nothing: {satisfied}"
     assert sorted(broker.published) == ["actuators/pump/command", "actuators/pump2/command"]
     assert len(runtime.parts["execution"].executor.walking()) == 2
-    #  AND THE NEXT PASS BLOCKS NOTHING: each dose is judged in the imaginarium that admitted it.
+    #  AND THE NEXT PASS BLOCKS NOTHING: each dose was checked as it was taken, in the present the
+    #  beliefs hold, both beds' readings among them (#916).
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     assert planner.blocked == [] and len(broker.published) == 2, "one dose each, and nothing more"

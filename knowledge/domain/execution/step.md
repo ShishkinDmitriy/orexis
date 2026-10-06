@@ -40,8 +40,9 @@ with the action's own [precondition](/domain/planning/precondition.md).
 # How it is taken
 
 An [intention](/domain/execution/intention.md) stands at one step at a time. When it falls due the
-[executor](/domain/execution/executor.md) takes it — by command, by saying, kept below, or fictively
-— writes an [act](/domain/execution/act.md), and holds the world to what it predicted, from the
+[executor](/domain/execution/executor.md) takes it, unless the present no longer admits it — checked
+at that moment, whether it fell due at a pass's start or inside a walk — by command, by saying, kept
+below, or fictively; writes an [act](/domain/execution/act.md), and holds the world to what it predicted, from the
 earliest landing to a patience past the latest. The
 kernel reads no value bound to a parameter; a domain's texts read them as `$tokens`, which is why a
 parameter's local part is its variable, its token and its predicate at once.

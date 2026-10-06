@@ -24,8 +24,8 @@ action restates it.
 # What a step does not carry
 
 A [step](/domain/execution/step.md) keeps no copy of what its precondition read in the world it was
-planned from. Whether a step an intention stands at can still be taken is asked of the present by
-running the action's precondition there again (`Planner._blocked`), and a row carrying the step's own
-filling is the answer; a stored copy of the facts the search read was declared once, written by
+planned from. Whether a step an intention stands at can still be taken is asked of the present, as
+the executor is about to take it, by running the action's precondition there again (`Planner.check`,
+#916), and a row carrying the step's own filling is the answer; a stored copy of the facts the search read was declared once, written by
 nothing, and retired
 ([a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md)).

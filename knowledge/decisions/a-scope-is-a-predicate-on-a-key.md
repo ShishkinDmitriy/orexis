@@ -113,7 +113,9 @@ scope that admitted its filling**: the planner asked every imaginarium whether t
 admits each step an intention stands at, which was harmless while every ground held every reading
 and would call the heater's step blocked in the soil's imaginarium now; it asks only where the
 action is the scope's and no value of the filling is another's, the lamp's step in the light's
-alone. **And a desire about two scopes is judged in each on that scope's readings**: in the air's
+alone. *Since #916 (2026-10-06) a head is judged as it is taken, in the present the beliefs hold,
+every scope's readings among them, so no scope has to be found for it and this clause has nothing
+left to guard.* **And a desire about two scopes is judged in each on that scope's readings**: in the air's
 imaginarium the comfortable bed reads met when the air is warm, since the dry soil it is also about
 is not there to read; the soil's want is minted where the soil is. The shapes shipped read an
 absence as met — `sh:qualifiedMaxCount 0` of readings below — so no want is minted from a reading

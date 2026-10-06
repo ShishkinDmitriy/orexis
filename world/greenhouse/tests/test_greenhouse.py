@@ -324,9 +324,10 @@ def test_a_cold_dry_bed_is_two_wants_planned_apart(monkeypatch):
               for im in imaginaria.values()]
     assert worlds == [1, 1], f"one step each, searched apart: {worlds}"
     assert len(runtime.parts["execution"].executor.walking()) == 2
-    #  AND EACH HEAD IS JUDGED IN ITS OWN SCOPE: the soil's imaginarium holds the soil's reading
-    #  alone, so the heater's step asked there would read no air and be called blocked. A second
-    #  pass, both steps standing, blocks neither.
+    #  AND EACH HEAD IS CHECKED AS IT IS TAKEN, in the present the beliefs hold (#916): the soil's
+    #  imaginarium holds the soil's reading alone, and the heater's step asked there would read no air
+    #  and be called blocked; asked of the beliefs, every scope's readings are there, and both commands
+    #  went out above. A second pass, both steps standing, blocks neither.
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     assert runtime.parts["planning"].planner.blocked == []
     assert len(runtime.parts["execution"].executor.walking()) == 2

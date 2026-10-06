@@ -38,6 +38,9 @@ process is told:
 And before any of it, every step an intention stands at that is kept below and has fallen due is
 given the want that keeps it (`refine`), which the executor then waits on.
 
+And outside the pass, `check`: a head about to be taken is asked of the present whether its action's
+precondition still admits it, as the executor is about to hand it over (#916).
+
 Nothing comes back but the graphs written: everything a pass finds it WRITES, and
 `self.imaginaria` is how a reader reaches it. Nothing here commits and nothing here calls the
 executor: planning and execution meet at the store (a-package-starts-itself) — the plans handed
@@ -187,17 +190,14 @@ SELECT ?step WHERE {
   FILTER NOT EXISTS { GRAPH ?h { ?step execution:keptBy ?w } } }
 ORDER BY ?step"""
 
-#  EVERY STEP AN INTENTION STANDS AT THAT HAS FALLEN DUE, NOT BEEN TAKEN AND IS NOT KEPT BELOW, with
-#  the action it fills — what the present must still admit for it to be taken.
-_DUE_HEADS_Q = """
-SELECT ?step ?action WHERE {
-  GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
-             FILTER NOT EXISTS { ?i execution:resolvedAt ?done }
-             FILTER NOT EXISTS { ?act execution:of ?step } }
-  GRAPH ?plan { ?step planning:fills ?action . OPTIONAL { ?step execution:notBefore ?due }
-                FILTER NOT EXISTS { ?step execution:keptBelow true } }
-  FILTER(!BOUND(?due) || ?due <= $now) }
-ORDER BY ?step"""
+#  THE ACTION A HEAD ABOUT TO BE TAKEN FILLS — what the present must still admit for it to be taken
+#  — unless it is kept below, whose own facts a want one level down answers. Asked of any graph for
+#  each half: the step's filling is stated in its plan and in its committed step, and the mark that
+#  keeps it below in the plan alone, so a read inside one graph would find the committed step's row
+#  and call a step kept below one to check.
+_HEAD_Q = """
+SELECT ?action WHERE { GRAPH ?p { $step planning:fills ?action }
+  FILTER NOT EXISTS { GRAPH ?k { $step execution:keptBelow true } } } LIMIT 1"""
 
 #  AN ACTION'S PRECONDITION AND THE PARAMETERS IT TAKES, and a step's value for each.
 _PRECONDITION_Q = """SELECT ?text ?takes WHERE { $action planning:precondition ?text . OPTIONAL { $action orexis:takes ?takes } }"""
@@ -374,7 +374,7 @@ class Planner:
         self.superseded: list[Reconsidered] = []
         #  WHAT THE PLANNER SAYS HAPPENED, its own words for whoever connects, each carrying an event
         #  of `events.py`: a plan published; a want an intention walks that the present meets; a
-        #  step an intention stands at that the present no longer admits; an intention a
+        #  head about to be taken that the present no longer admits (`check`); an intention a
         #  reconsideration replaced, to end after its step in flight; a want nothing reaches;
         #  and, made only where heard, a search ended, a pass, a re-root and what an imaginarium holds.
         self.plan_published = Signal("plan_published")
@@ -459,8 +459,9 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         #  want (knowledge/domain/execution/commitment.md, #905): a holder with none pays one query.
         flights = self._flights(at) if self._holds_a_constraint() else {}
         #  WHAT THE PASS SAYS, for whoever runs it to signal: the plans it published with their wants,
-        #  the wants an intention walks that the present meets, the steps it can no longer take, and
-        #  the intentions a reconsideration replaced, to end after their steps in flight.
+        #  the wants an intention walks that the present meets, and the intentions a reconsideration
+        #  replaced, to end after their steps in flight — and, from here to the next pass, the heads
+        #  `check` refused as they were about to be taken.
         self.handed, self.reached, self.blocked, self.superseded = [], set(), [], []
         #  HOW LONG EACH PART OF THE PASS TOOK, where anybody hears the pass: in real seconds by
         #  `perf_counter`, since the agent's clock may run fast and a test's ticks per read.
@@ -518,7 +519,6 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             for constraint, broken in self._contradictions(store, present, constraints, memo):
                 log.warning("%s: the present violates %s, a constraint of this world, and nothing repairs it: %s",
                             self.id, local_of(constraint), _said(broken))
-            self.blocked += self._blocked(store, present, at, memo, only, elsewhere)
             for pair in unweighed(store, memo=memo):
                 #  GROUNDS ONLY. A candidate the budget left untaken in a world it cut is
                 #  unweighed too, and weighed here it would never be offered to the expansion
@@ -585,8 +585,6 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             written += self.planned.emit(Planned(wants=len(searched), **lap.spent))
         for want in sorted(self.reached):
             written += self.want_reached.emit(WantReached(want))
-        for step in self.blocked:
-            written += self.step_blocked.emit(StepBlocked(step))
         for event in self.superseded:
             written += self.reconsidered.emit(event)
         return written
@@ -611,34 +609,40 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 minted += [g["g"] for g in rows(self.beliefs, _REFINED_Q, ()) if g["want"] == want]
         return minted
 
-    def _blocked(self, store: ox.Store, present: str, at: datetime, memo: Memo, only, elsewhere) -> list[str]:
-        """Every step an intention stands at, fallen due and not yet taken, that the `present` ground
-        of `store` no longer admits: its action's precondition answers there with no row carrying
-        the step's own value for every parameter the action takes. A step is judged in the scope
-        that admitted its filling and nowhere else — its action among `only`, and no value of its
-        filling a member of another scope, `elsewhere` — since the imaginarium holds the scope's
-        readings alone, and the lamp's step asked in the air's search would read no light and be
-        called blocked by a world that was never its."""
-        blocked = []
-        actions = graphs_of(store, ACTION)
-        world = None
-        for head in rows(self.beliefs, _DUE_HEADS_Q, (), now=instant(at)):
-            if only is not None and head["action"] not in only:
-                continue
-            found = rows(store, _PRECONDITION_Q, actions, action=head["action"])
-            if not found:
-                continue
-            takes = {r["takes"] for r in found if r.get("takes")}
-            filling = {local_of(r["p"]): r["v"] for r in rows(self.beliefs, _FILLING_Q, (), step=head["step"])
-                       if r["p"] in takes}
-            if any(v in elsewhere for v in filling.values()):
-                continue
-            world = world or world_at(store, present, memo=memo)
-            answers = bindings(query(store, bind(found[0]["text"], me=self.uri), world))
-            if not any(all(row.get(k) == v for k, v in filling.items()) for row in answers):
-                log.info("%s: %s can no longer be taken — the present admits it no more", self.id, local_of(head["step"]))
-                blocked.append(head["step"])
-        return blocked
+    def check(self, step: str, at: datetime) -> list[str]:
+        """Check `step`, a head about to be handed to its taker at `at`, against the present: where
+        its action's precondition, asked there with `$me` bound, answers no row carrying the step's
+        own value for every parameter the action takes, the step is BLOCKED — said by `step_blocked`,
+        for execution to end the intention before the step is taken, and planning plans again. The
+        graphs the handlers wrote. A step kept below, or whose action states no precondition, is
+        not checked.
+
+        WHEN IT IS TAKEN, AND ONLY THEN (#916). This asked once a pass, of every head due at the
+        pass's start, in the scope's present ground; a head that fell due inside a walk — the step
+        before it answered, or a fictive step landing as it was taken — was handed over unasked, and
+        a fictive one then wrote its own effect and landed, so the driver world walked van A with its
+        driver aboard van B. A head due at a pass's start is taken by the walk that follows the pass,
+        so asking at the taking asks of every head the pass would have, and of the rest.
+
+        IN THE PRESENT THE BELIEFS HOLD, not a ground: between passes the beliefs are where a step
+        just taken wrote, and the present is every reading as it stands (`world_at` with no world),
+        which is what the present ground is laid from. Every scope's readings are there, so a step
+        is judged by its own filling wherever it was admitted, and the scope that admitted it need
+        not be found again."""
+        head = rows(self.beliefs, _HEAD_Q, (), step=step)
+        if not head:
+            return []
+        found = rows(self.beliefs, _PRECONDITION_Q, graphs_of(self.beliefs, ACTION), action=head[0]["action"])
+        if not found:
+            return []
+        takes = {r["takes"] for r in found if r.get("takes")}
+        filling = {local_of(r["p"]): r["v"] for r in rows(self.beliefs, _FILLING_Q, (), step=step) if r["p"] in takes}
+        answers = bindings(query(self.beliefs, bind(found[0]["text"], me=self.uri), world_at(self.beliefs, None, now=at)))
+        if any(all(row.get(k) == v for k, v in filling.items()) for row in answers):
+            return []
+        log.info("%s: %s is not taken — the present admits it no more", self.id, local_of(step))
+        self.blocked.append(step)
+        return self.step_blocked.emit(StepBlocked(step))
 
     # --- commitment: the step in flight, and the one trigger that reopens a walking want --------
 

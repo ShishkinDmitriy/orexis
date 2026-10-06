@@ -64,10 +64,16 @@ amortisation (an-intention-is-an-amortised-deliberation). The planner does not g
 this door — it never plans for a want being walked — but a caller that wants the absorption
 asks here.
 
+**A STEP IS CHECKED WHEN IT IS TAKEN, AND NOT BY THIS LAYER** (#916). Before a head is handed to its
+taker the executor says it is about to be, `taking`; whether the present still admits it is the
+precondition's question, a word of the layer above that this one does not speak, and the answer
+comes back through the door a step blocked always came by — `end_at` — so a head whose intention
+ended as it was about to be taken is not taken.
+
 **AND WHAT HAPPENED IS SAID**, by the executor's own signals, each carrying an event of
-`events.py`: an intention resolved, a command, a saying, and — made only where heard — a step taken
-when its act is recorded, the verdict on it, and how many stand after a walk. The executor decides
-each, so it says each; whoever writes history and metrics hears them.
+`events.py`: an intention resolved, a head about to be taken, a command, a saying, and — made only
+where heard — a step taken when its act is recorded, the verdict on it, and how many stand after a
+walk. The executor decides each, so it says each; whoever writes history and metrics hears them.
 """
 
 from __future__ import annotations
@@ -86,7 +92,7 @@ from agent.ontology import ACTION, OREXIS, STATE, local_of
 from agent.store import (NAMESPACES, Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant,
                          quads, quads_for_pattern, revisions_of, rows, update)
 
-from .events import Commanded, IntentionResolved, Said, StepAnswered, StepTaken, Walked  # noqa: F401 — the events it says
+from .events import Commanded, IntentionResolved, Said, StepAnswered, StepTaken, Taking, Walked  # noqa: F401 — the events it says
 from .implementation import FICTIVE, operations
 from .ontology import (ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, LANDS_WITHIN_S, RETRACTS_GRAPH,
                        committed_graph, intentions_graph)
@@ -244,6 +250,9 @@ _COMMITTED_Q = """SELECT ?step WHERE { GRAPH $intentions { $intention execution:
 #  WHETHER A STEP HAS BEEN TAKEN — an act on record saying so; at an intention's head, a step in flight.
 _IN_FLIGHT_Q = """SELECT ?act WHERE { GRAPH $intentions { ?act execution:of $step ; execution:taken true } } LIMIT 1"""
 
+#  WHETHER AN INTENTION HAS ENDED — asked of a head's intention once `taking` has been heard.
+_RESOLVED_Q = """SELECT ?at WHERE { GRAPH $intentions { $intention execution:resolvedAt ?at } } LIMIT 1"""
+
 #  WHETHER AN INTENTION ENDS AFTER A STEP — planning reconsidered the want it pursues (#905).
 _ENDS_AFTER_Q = """SELECT ?i WHERE { GRAPH $intentions { $intention execution:endsAfter $step . BIND($intention AS ?i) } } LIMIT 1"""
 
@@ -323,10 +332,14 @@ class Executor:
         #  conclude of it is concluded.
         self.on_write = on_write
         #  WHAT THE EXECUTOR SAYS HAPPENED, its own words for whoever connects, each carrying an event
-        #  of `events.py`: an intention ended, with the want it pursued and how; a step's command,
+        #  of `events.py`: an intention ended, with the want it pursued and how; a head about to be
+        #  taken; a step's command,
         #  sized from the present, for whatever reaches the device; a document a step said, and the
         #  agents it is to; and, made only where heard, a step taken, the verdict on one, a walk.
         self.intention_resolved = Signal("intention_resolved")
+        #  AND BEFORE A HEAD IS HANDED TO ITS TAKER, that it is about to be: whoever judges whether the
+        #  present still admits it hears this, and ends the intention through a door below if not.
+        self.taking = Signal("taking")
         self.commanded = Signal("commanded")
         self.said = Signal("said")
         self.step_taken = Signal("step_taken")
@@ -751,25 +764,42 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def drain(self) -> int:
         """One pass of the executor, on the calling thread: take every step in the queue. How
-        many were taken."""
+        many were taken — a head whose intention ended as it was about to be taken is not."""
         taken = 0
         while True:
             try:
                 item = self._work.get_nowait()
             except queue.Empty:
                 return taken
-            if item is not None:
-                self._take(*item)
+            if item is not None and self._take(*item):
                 taken += 1
 
-    def _take(self, intention: str, step: str) -> None:
-        """Take one step: hand its rows to `take`, record the act, and move the intention
-        along — to the next step, or to `done`; to `failed` where the taking raised."""
-        said = self.step_of(step)
+    def _take(self, intention: str, step: str) -> bool:
+        """Take one step: say it is about to be taken, hand its rows to `take`, record the act, and
+        move the intention along — to the next step, or to `done`; to `failed` where the taking
+        raised. False where the step was not handed over at all: its intention ended as it was
+        about to be.
+
+        EVERY STEP IS CHECKED WHEN IT IS TAKEN (#916), and not here. `taking` says the head is about
+        to be handed over, at the instant it is; whoever judges whether the present still admits it
+        — planning, whose word the precondition is — hears that, and where the present does not,
+        ends the intention through the door a step blocked always came by (`end_at`). So the
+        intention is asked again after it is said: one ended takes no step, records no act and
+        writes nothing, and the want is planning's again. Asked only where somebody hears, since a
+        case driving the executor alone has nobody to judge."""
         #  THE RECORD IS THE ACT'S, NOT THE STEP'S: when the taker was handed the step and
         #  when it returned, in the one timeline. The step's own instants are the plan's
         #  requirement (`notBefore`) and prediction (`landsAt`), and stay what they were.
         taken_at = clock.now()
+        if self.taking.connected:
+            self.taking.emit(Taking(step, taken_at))
+            if rows(self.intentions, bind(_RESOLVED_Q, intentions=Raw(f"<{self.graph}>"), intention=intention)):
+                log.info("%s: %s was not taken — %s ended as it was about to be", self.id, local_of(step),
+                         intention.rsplit("#", 1)[-1])
+                self._inflight.discard(step)
+                self.wake()
+                return False
+        said = self.step_of(step)
         refined = None
         try:
             #  THE ORDER THE CORE DECIDES IN: an implementation that reaches the world is taken —
@@ -803,6 +833,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             self._advance(intention, step, done_at)
         self._inflight.discard(step)
         self.wake()
+        return True
 
     def _kept_by(self, step: str) -> str | None:
         """The want that keeps `step` one level down, where planning has minted one, or None."""

@@ -70,7 +70,8 @@ On the development container, one pass of the Planner at a budget of 128 over th
 - **What execution holds a step to.** `Executor.tick` hands a due head over unasked; `Planner._blocked`
   asks the present once a pass whether a head's precondition holds, and a drive's reads adjacency
   alone. Two intentions are walked in parallel, and nothing asks whether one actor can take two
-  steps in one drain.
+  steps in one drain. *Since #916 (2026-10-06) every head is checked as it is about to be taken,
+  `Planner.check` hearing the executor's `taking`, and nothing asks once a pass.*
 
 # The claim
 
@@ -405,7 +406,9 @@ plan down the same cells. A cluster a standing want is already about is that wan
   constraint's rows over the reach join them and on nothing else, and the two-vans constraint over
   two grids yields no row — two wants, five steps and six, measured, and walked side by side van A
   was driven with the driver aboard van B, since a head falling due inside a walk is taken without
-  its precondition asked again. So the world states the driver's own constraint, a driver aboard one
+  its precondition asked again — until #916, which checks every head as it is taken: walked side by
+  side the two plans now collide over the driver, a drive of a van the driver has left is refused,
+  and two or three intentions fail before each parcel is delivered. So the world states the driver's own constraint, a driver aboard one
   van at a time: no plan breaks it, since a boarding takes away the van left, and over the
   delete-free reach the driver is aboard both, which joins the vans and so the parcels — one want, one
   plan of eleven steps, walked one act at a time. Coupling the wants whose plans merely write one

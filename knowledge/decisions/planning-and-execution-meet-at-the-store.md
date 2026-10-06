@@ -12,9 +12,11 @@ description: >-
   execution start themselves; the intentions are a graph of the belief base,
   so a restart finds them (#842). An intention ends early where planning says its want is reached
   before it began, its next step is blocked, or - amended 2026-10-06 (#905) - a want a constraint
-  couples to it arrived and the joint plan replaced its untaken steps, after its step in flight.
+  couples to it arrived and the joint plan replaced its untaken steps, after its step in flight;
+  amended 2026-10-06 (#916), a head is checked when it is about to be taken, not once a pass.
   Refused - copying the plan into the intentions,
-  a kernel list of every package's events, events as stored facts, planning holding the executor, and ending a begun plan when its want is met.
+  a kernel list of every package's events, events as stored facts, planning holding the executor, ending a begun plan when its want is met,
+  and execution asking the precondition itself.
 ---
 
 # The claim
@@ -30,7 +32,8 @@ renaming went with the copy.
 **A package owns its signals, and they are connected when the parts are linked.** A
 [signal](/domain/kernel/signal.md) says something just happened, and it is an attribute of the
 object that says it: the Planner's `plan_published`, and the executor adopts the plan; the
-executor's `intention_resolved`, and the Planner plans again at once; the Planner's
+executor's `intention_resolved`, and the Planner plans again at once; the executor's `taking`, and
+the Planner checks the head about to be taken; the Planner's
 `want_reached`, `step_blocked` and `reconsidered`, and the executor ends an intention early; the deliberator's
 `revised`, and the executor walks, since what it waits on is the present. The runtime makes every
 [part](/domain/kernel/part.md) first, then links them, then starts them, so planning's part connects
@@ -60,10 +63,16 @@ execution, which alone writes the intentions.
 
 - *Its want is reached before it began.* Planning signals a walked want the present meets; execution
   ends the intention `reached` where none of its steps has been taken — rain before the dose.
-- *Its next step is blocked.* Planning asks the present ground, for every step an intention stands
-  at, fallen due, not taken and not kept below, whether its action's precondition still admits the
-  step's own values; where it does not, execution ends the intention `failed`, and planning plans
-  again at once.
+- *Its next step is blocked.* As the executor is about to hand a head to its taker it says so,
+  `taking`, and planning asks the present — the readings as the beliefs hold them, every scope's,
+  at the instant of taking — whether the action's precondition still admits the step's own values;
+  where it does not, planning says the step blocked, execution ends the intention `failed` before
+  the step is taken, and planning plans again at once. A step kept below is not asked: a want one
+  level down answers it. (Amended 2026-10-06, #916: planning asked this once a pass, of the heads
+  due at the pass's start in each scope's present ground, so a head that fell due inside a walk was
+  taken unasked, and a fictive one wrote its own effect and landed — the driver world drove van A
+  with its driver aboard van B. A head due at a pass's start is taken by the walk after the pass,
+  so asking at the taking asks of every head the pass did, and the once-a-pass question went.)
 
 - *Its untaken steps are replaced* (amended 2026-10-06, #905). A want a constraint couples to the
   one it pursues arrived, the joint want was searched from the ground in which its step in flight
@@ -96,11 +105,23 @@ intention where it stood (#842).
 - **Planning holding the executor.** It kept the one pair of packages that called each other.
 - **Ending a begun plan when its want is met.** The supplier's round, once opened, answers a call
   and must still be cleared; ending it there left the fern unserved.
+- **Execution asking the precondition itself** (#916). The executor already reads the action for
+  its implementation, so reading `planning:precondition` beside it looked one query away. It is
+  planning's word — `agent/execution/tests/test_layering.py` refuses a file of execution that spells
+  `planning:` at all, since naming a higher layer's word is the dependency an import scan cannot
+  see — and asking it is more than one query: the text bound with `$me`, the world it is answered
+  over, a row carrying the step's own filling. Written twice, those drift, which is what a
+  synchronous twin of a pass does. So execution says a head is about to be taken and planning
+  answers through the door a blocked step always used. Keeping the once-a-pass question beside it
+  was refused too: a second asking, in each scope's ground rather than the beliefs, of heads the
+  walk after the pass asks of anyway.
 
 # Seams left open
 
 - **A step whose own facts no bridge binds, and whose frame one does,** is taken fictively.
-- **A step becoming due within one walk** is taken before planning can say it is blocked; the next
-  pass sees only steps that stand.
+- **Two heads due at one instant, each admitted alone and not together**, are both taken: each is
+  checked as it is taken, so the second sees what a fictive first wrote, but a first whose effect
+  shows later leaves the second nothing to see. That is the order between intentions walked side
+  by side, which a constraint couples away (#905, #916).
 - **A plan whose intention is resolved stays**, as the history of what was committed.
 - **A planner with no executor** leaves its plans unadopted, and reads their wants as walked.

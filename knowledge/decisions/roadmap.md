@@ -54,8 +54,8 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    [constraint](/domain/planning/constraint.md)) — the footprint and the clustering (#900),
    impossibility (#902), reconsideration on a coupled arrival under
    [commitment](/domain/execution/commitment.md) (#905), and "one van at a time" as world state
-   (`world/driver/`, #903); the executor-held resource was built and refused. What it left is #916,
-   a head's precondition asked when it is taken and not only at a pass's start. Next is two minds:
+   (`world/driver/`, #903); the executor-held resource was built and refused; and #916, every
+   head's precondition asked as it is taken rather than once a pass. Next is two minds:
    #568, right-of-way as a lot the market allocates.
 5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays

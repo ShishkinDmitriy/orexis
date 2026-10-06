@@ -16,8 +16,8 @@ description: >-
   [committed step](/domain/execution/committed-step.md) over its landing window, closes the window when
   the step is answered or the intention ends, and `tick` forgets what has ended. A second plan for a
   want already standing is absorbed inside the patience and supersedes past it. **`end_for`** ends an intention that has taken no step
-  `reached`, when planning says its want is met; **`end_at`** ends one `failed`, when planning says its
-  next step is blocked; **`supersede_after`** ends one `superseded` once its step in flight is answered,
+  `reached`, when planning says its want is met; **`end_at`** ends one `failed`, when planning says the
+  head about to be taken is blocked; **`supersede_after`** ends one `superseded` once its step in flight is answered,
   when a reconsideration replaced the rest ([commitment](/domain/execution/commitment.md)), closing the
   untaken steps' windows at once; every intention that ends is an event planning hears
   ([planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
@@ -28,7 +28,11 @@ description: >-
 
 # Taking a step
 
-In one order, read off the action's [implementation](/domain/execution/implementation.md):
+First the executor says the head is about to be taken, `taking`, and planning checks it against the
+present: where the action's precondition no longer admits the step's own filling, planning says it
+blocked and `end_at` ends the intention before anything is handed over, so no act is recorded
+([precondition](/domain/planning/precondition.md), #916). Then, in one order, read off the action's
+[implementation](/domain/execution/implementation.md):
 
 1. an operation that reaches the world is carried out by a [signal](/domain/kernel/signal.md) of the
    executor's: an `execution:Command`'s payload by `commanded`, which execution's part hands the

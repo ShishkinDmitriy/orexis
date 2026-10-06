@@ -12,8 +12,10 @@ is held to is what was MEASURED on it:
   (`agent/planning/couplings.py`), and on disjoint grids the two-vans constraint yields no row. So
   the world states the driver's own — a driver is aboard one van at a time — whose rows over the
   delete-free reach put the driver aboard both vans and join them. Without it the parcels are two
-  wants, planned apart at five and six steps, and the two plans walked side by side drive van A with
-  the driver aboard van B, measured and pinned below;
+  wants, planned apart at five and six steps, and the two plans walked side by side collide over the
+  driver: every head is checked when it is taken (#916), so a drive of a van the driver has left is
+  refused, its intention fails and its want is searched again — two or three intentions failed on the
+  way, measured and pinned below, where before #916 van A was driven with the driver aboard van B;
 - coupled, the search finds ONE plan of eleven steps — van A's delivery, the boarding, van B's —
   optimal for both by construction, at the figures measure-the-search tabulates; the estimate reads
   ten, admissible and loose by the boarding no parcel owes;
@@ -168,7 +170,8 @@ def _walk(world: Path, passes: int = 40, budget: int = BUDGET) -> dict:
     """The runtime over the booted world, pass after pass with the clock moved on by a drive's least
     landing between passes, until no intention stands or `passes` are spent. Every executor event in
     the order it happened — a step taken with what it filled and where the driver was the moment it
-    was taken, a step answered, an intention resolved."""
+    was taken, a step answered, an intention resolved — and every head the planner said blocked as it
+    was about to be taken, with what it filled and where the driver was."""
     time = _Clock(NOW)
     clock.now = time
     beliefs = boot(world, "dispatcher")
@@ -181,7 +184,12 @@ def _walk(world: Path, passes: int = 40, budget: int = BUDGET) -> dict:
         ((action, van),) = {(_local(r["a"]), _local(r.get("van"))) for r in rows(beliefs, _STEP_Q, (), step=event.step)}
         events.append(("taken", event.step, _local(event.want), action, van, _where(beliefs).get("driver")))
         return []
+    def blocked(event):
+        ((action, van),) = {(_local(r["a"]), _local(r.get("van"))) for r in rows(beliefs, _STEP_Q, (), step=event.step)}
+        events.append(("blocked", event.step, action, van, _where(beliefs).get("driver")))
+        return []
     executor.step_taken.connect(taken)
+    runtime.parts["planning"].planner.step_blocked.connect(blocked)
     executor.step_answered.connect(lambda e: events.append(("answered", e.step, e.landed)) or [])
     executor.intention_resolved.connect(lambda e: events.append(("resolved", _local(e.want), e.outcome)) or [])
     outcome = runtime.run(passes=1, poll_s=0)
@@ -236,24 +244,49 @@ def test_one_driver_makes_two_parcels_on_disjoint_grids_one_want_and_one_plan_of
     assert (left[JOINT], spent[JOINT]) == (10.0, 11.0), f"admissible, and loose by the boarding: {left} {spent}"
 
 
-def test_without_the_drivers_constraint_the_parcels_are_two_wants_and_their_plans_drive_a_van_its_driver_has_left(ticking, tmp_path):
+def test_without_the_drivers_constraint_the_parcels_are_two_wants_and_their_plans_collide_over_the_driver(ticking, tmp_path):
     """WHY THE WORLD STATES THE DRIVER'S CONSTRAINT. The derivation couples two instances where some
     constraint's rows over the reach join them, and nothing else: with the two-vans constraint alone,
     which on two grids yields no row, the parcels are two wants, planned apart — van A's five steps,
-    and a boarding and van B's five — and both plans published. Walked side by side, the boarding is
-    taken in the first pass beside van A's first drive, and van A's later drives are taken with the
-    driver aboard van B: the fictive drive writes its own prediction and lands, and nothing between two
-    passes asks a head's precondition again. Both parcels arrive, by a walk the world says cannot be.
-    That is the state "one van at a time" is, read by no constraint, and so by no coupling."""
+    and a boarding and van B's five — and both plans published, and walked side by side they collide
+    over the one driver. That is the state "one van at a time" is, read by no constraint, and so by
+    no coupling.
+
+    WHAT HOLDS THE WALK TO THE WORLD THEN IS THE PRECONDITION ALONE, and it is asked of every head as
+    it is about to be taken (#916): van A is never driven with its driver elsewhere. Before, a head that
+    fell due inside a walk was handed over unasked, a fictive drive wrote its own effect and landed,
+    and van A's later drives were taken with the driver aboard van B — a walk the world says cannot be.
+
+    HOW IT ENDS DEPENDS ON WHICH INTENTION'S NAME SORTS FIRST, since two intentions walked side by side
+    keep no order between them and both heads open at once; measured over twenty runs, ten each way.
+    B's boarding first: van A's first drive is checked after it and refused, and A's intention ends
+    `failed`; A is searched again from van B and boards back, and B's boarding, whose answer that took
+    away before it was seen, fails by the patience; B is searched again and walked after — two failed,
+    then each want done, the driver left aboard van B, in twelve passes. Van A's drive first: it and
+    B's boarding are both admitted, van A's pick needs no driver, and A's next drive is refused; A
+    boards back, so B's next drive is refused in its turn, and B boarding back takes away the answer to
+    A's — three failed, then each done, the driver left aboard van A, in thirteen. Either way a drive
+    of van A is said blocked with the driver aboard van B, every drive refused is of a van the driver
+    has left, every drive taken is of the van the driver is aboard, both parcels arrive, and each
+    want's last intention is done."""
     unheld = variant(tmp_path, "unheld", UNHELD)
     im = _pass(unheld)
     assert _wants(im) == {A, B}
     assert _plans(im) == {A: ("Satisfied", 5), B: ("Satisfied", 6)}
     walked = _walk(unheld)
-    driven = [(van, driver) for kind, *rest in walked["events"] if kind == "taken"
+    events = walked["events"]
+    driven = [(van, driver) for kind, *rest in events if kind == "taken"
               for _, _, action, van, driver in [rest] if action == "Drive"]
-    assert ("van_a", "van_b") in driven, f"van A driven with the driver aboard van B: {driven}"
-    assert sorted(e[2] for e in walked["events"] if e[0] == "resolved") == ["done", "done"]
+    assert len(driven) >= 6 and all(van == driver for van, driver in driven), \
+        f"every drive is of the van the driver is aboard: {driven}"
+    blocked = [(action, van, driver) for kind, _, action, van, driver in (e for e in events if e[0] == "blocked")]
+    assert ("Drive", "van_a", "van_b") in blocked and all(a == "Drive" and van != driver for a, van, driver in blocked), \
+        f"a drive of van A refused as it was about to be taken, the driver aboard van B, and only drives of a van left: {blocked}"
+    resolved = [(want, outcome) for kind, want, outcome in (e for e in events if e[0] == "resolved")]
+    assert {want: outcome for want, outcome in resolved} == {A: "done", B: "done"} \
+        and len(resolved) in (4, 5), f"failed on the way, and each want's last intention done: {resolved}"
+    assert _where(walked["beliefs"]) | {"driver": None} == {"driver": None, "van_a": "c0_3", "parcel_a": "c0_3",
+                                                              "van_b": "g10_3", "parcel_b": "g10_3"}
 
 
 def test_walked_the_one_plan_moves_one_van_at_a_time(ticking):
@@ -270,6 +303,7 @@ def test_walked_the_one_plan_moves_one_van_at_a_time(ticking):
     flow = [e for e in events if e[0] in ("taken", "answered")]
     assert [e[0] for e in flow] == ["taken", "answered"] * 11, f"one act at a time: {flow}"
     assert all(t[1] == a[1] and a[2] for t, a in zip(flow[::2], flow[1::2])), "each act answered, landed, before the next is taken"
+    assert not [e for e in events if e[0] == "blocked"], "every head checked as it was taken, and none refused"
     drives = [(van, driver) for _, _, _, action, van, driver in taken if action == "Drive"]
     assert len(drives) == 6 and all(van == driver for van, driver in drives), f"every drive is of the van the driver is aboard: {drives}"
     actions = [action for _, _, _, action, _, _ in taken]
