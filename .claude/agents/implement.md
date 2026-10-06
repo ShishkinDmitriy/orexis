@@ -38,6 +38,13 @@ touches the shared bench, and stopping there is the point rather than an obstacl
 that is not what is on `main` and reach a confident wrong conclusion. `git log --oneline
 origin/main..HEAD` and `git merge-base --is-ancestor origin/main HEAD`.
 
+**In a worktree, the gates test the main checkout unless you say otherwise.** The editable
+install resolves `agent`, `onboarding` and `simulation` to the checkout `pip install -e` ran in,
+and a worktree has no `.venv` of its own, so `pytest` and `lint-imports` run from one import the
+parent's tree and pass or fail on code you did not write. Prefix every gate with `PYTHONPATH=.`
+there — measured, a test printing `footprint.__file__` read the main checkout bare and the
+worktree with it — and two agents found this only when a new test failed where it should pass.
+
 **Never `git add -A` or `git add .`.** Stage explicitly, by path. A blanket stage sweeps up whatever
 else is in the tree — another agent's worktree, someone's work in progress, a generated file
 carrying a password.
