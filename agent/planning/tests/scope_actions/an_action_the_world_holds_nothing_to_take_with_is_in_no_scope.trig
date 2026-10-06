@@ -1,0 +1,80 @@
+# an_action_the_world_holds_nothing_to_take_with_is_in_no_scope
+#
+# A ROW LEAVING UNBOUND A PARAMETER THE WORLD ALONE DECIDES IS NO FILLING (#913). The allotment's
+# shape: the keeper acts for the bed and holds nothing, the tender holds the pump over it, and no
+# heater exists — both actions come with the domain. The heating takes a heater, and every pattern
+# the heater stands in reads what no effect writes or deletes, so the public graphs are where a
+# heater is found or not at all. Asked with every pattern optional, the heating's precondition still
+# binds the keeper and the bed, and that row made a scope of its own, `(below, {bed})`, which
+# admitted nothing and minted nothing at an imaginarium a pass. The reading is no such parameter: it
+# is what the effect writes about. So one scope, the dose's; the heating is in none.
+#
+# Not this case, and a seam: had the keeper held the pump, the optional patterns would bind the
+# heater to it — `$me :hasActuator ?heater` asked alone — and the heating's row would stand.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graph: <http://example.org/orexis/graph/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix scopes: <http://example.org/orexis/graph/scopes/> .
+
+
+GRAPH :ontology {
+  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+  planning:ScopeGraph rdfs:subClassOf orexis:Graph .
+  planning:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
+}
+
+# THE WORLD, public: a keeper acting for one bed, a tender holding the pump over it, no heater.
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :bed .
+  :tender a orexis:Agent .
+  :tender :hasActuator :pump .
+  :pump :actuates :bed .
+  :pump :actuatesProperty :Moisture .
+}
+
+GRAPH :actions {
+  :dose a orexis:Action .
+  :dose orexis:takes :valve , :reading .
+  :dose planning:precondition """PREFIX : <http://example.org/test#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        SELECT DISTINCT ?valve ?reading WHERE {
+            $me :hasActuator ?valve ; orexis:actsFor ?subject .
+            ?valve :actuates ?subject ; :actuatesProperty ?property .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
+  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
+      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+  :heat a orexis:Action .
+  :heat orexis:takes :heater , :reading .
+  :heat planning:precondition """PREFIX : <http://example.org/test#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        SELECT DISTINCT ?heater ?reading WHERE {
+            $me :hasActuator ?heater ; orexis:actsFor ?subject .
+            ?heater :warms ?subject ; :warmsProperty ?property .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
+  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
+      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

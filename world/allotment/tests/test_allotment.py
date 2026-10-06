@@ -124,18 +124,45 @@ def test_a_grower_s_world_is_hashed_within_what_the_market_s_texts_read(monkeypa
         f"the same reading at a new instant is the present the last pass stood in, not a surprise: {heard}"
 
 
-def test_the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing_under_four_scopes(monkeypatch):
-    """Readable, the market's texts leave the allotment FOUR scopes, and the grower a member of two
-    — so the grower's IRI, which an observation names as whose it is and a prediction's copy does
-    not, was no longer "a member of every scope" and keyed the present's trouble apart from the
-    foreseen's: two want graphs under one name, two roots, and the plan placed from the foreseen
-    ground twenty minutes out, where the test's rounds never reached it. The holder's own IRI is
-    never part of a trouble's key (#908): one want, one open stretch, placed from the present."""
+def _scopes(runtime):
+    """Every scope the store holds, each as the set of its members' local names."""
+    held: dict = {}
+    for r in rows(runtime.beliefs, """SELECT ?m ?s WHERE {
+            GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } GRAPH ?g { ?m planning:inScope ?s } }""", ()):
+        held.setdefault(r["s"], set()).add(r["m"].rsplit("#", 1)[-1].rsplit("/", 1)[-1])
+    return list(held.values())
+
+
+def test_the_allotment_is_two_scopes_and_the_heating_it_imports_is_in_neither(monkeypatch):
+    """The allotment imports the climate domain and holds no heater, so the heating's precondition
+    binds a grower and a plot and nothing a heating is done with. Read as fillings, those made a
+    scope per plot that admitted nothing and minted nothing, at an imaginarium a pass apiece — about
+    as dear as a real scope's, measured (#913). A row leaving the heater unbound is no filling: two
+    scopes, the market plumbing with the dosing, and `Serving` alone on `discharged`, since the
+    documents and not any effect write the claims it reads."""
+    agents, _, _ = _allotment(monkeypatch)
+    for name, runtime in agents.items():
+        scopes = _scopes(runtime)
+        assert len(scopes) == 2, f"{name}: two scopes, not one per plot for a heating nothing can take: {scopes}"
+        assert not [s for s in scopes if "Heating" in s], f"{name}: the heating is in no scope: {scopes}"
+        assert {"Serving", "discharged"} <= min(scopes, key=len), f"{name}: Serving stands alone: {scopes}"
+        assert {"Dosing", "Calling", "Tendering", "Presenting", "Offering", "Clearing"} <= max(scopes, key=len), \
+            f"{name}: the market plumbing and the dosing are one scope: {scopes}"
+
+
+def test_the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing(monkeypatch):
+    """Readable, the market's texts leave the allotment more than one scope, and the grower is no
+    member of `Serving`'s — so the grower's IRI, which an observation names as whose it is and a
+    prediction's copy does not, is not "a member of every scope", and keyed the present's trouble
+    apart from the foreseen's: two want graphs under one name, two roots, and the plan placed from
+    the foreseen ground twenty minutes out, where the test's rounds never reached it. The holder's
+    own IRI is never part of a trouble's key (#908): one want, one open stretch, placed from the
+    present. Found at four scopes, the grower a member of two; it holds at two (#913)."""
     agents, _, time = _allotment(monkeypatch)
     rose = agents["rose_grower"]
-    scopes = rows(rose.beliefs, """SELECT DISTINCT ?s WHERE {
-        GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } GRAPH ?g { ?m planning:inScope ?s } }""", ())
-    assert len(scopes) == 4, f"the premise: four scopes, not the one an unreadable text joined everything into: {scopes}"
+    scopes = _scopes(rose)
+    assert len(scopes) > 1 and [s for s in scopes if "rose_grower" not in s], \
+        f"the premise: a scope the grower is no member of, so the every-scope rule does not take it out of the key: {scopes}"
     rose.deliver("sensors/rose_probe/reading", b'{"value": 0.2}', time.at)
     rose.run(passes=1, poll_s=0)
     wants = [(r["g"], r["s"], r.get("e")) for store in rose.parts["planning"].planner.imaginaria.values()
