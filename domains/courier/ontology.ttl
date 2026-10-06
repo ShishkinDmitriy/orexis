@@ -9,9 +9,11 @@
 
 #  THE COURIER GRID, A DOMAIN.
 #  The courier's words, shared by every world that poses a delivery: a cell and its coordinates,
-#  a van, a parcel and where it is owed, where each stands and what an action is filled with.
-#  Beside this document the domain ships its three actions (actions.ttl) and what delivered means
-#  and how far it is (shapes.ttl), which this document imports. The cells, the vans and the
+#  a van, a parcel and where it is owed, a driver and which van it is aboard, where each stands and
+#  what an action is filled with. Beside this document the domain ships its three actions
+#  (actions.ttl) and what delivered means and how far it is (shapes.ttl), which this document
+#  imports, and the driver's boarding (driver.ttl), which it does NOT: a world with a driver imports
+#  that beside this one, and a world without one never loads it. The cells, the vans and the
 #  parcels are a world's, since how big the grid is IS the puzzle; where they stand is a world's
 #  state. It is the smallest domain whose search NEEDS guiding — a van two cells from a parcel is
 #  closer than one five cells away, in the unit a drive costs — and the one whose effects DELETE.
@@ -34,6 +36,12 @@
 :destination a owl:ObjectProperty ; rdfs:domain :Parcel ; rdfs:range :Cell ; rdfs:label "destination" ;
     rdfs:comment "Where a parcel is owed. Authored and never moved: the world states it, no effect touches it, and it is what the desire's met-test compares against." .
 
+:Driver a owl:Class ; rdfs:label "Driver" ;
+    rdfs:comment "Someone a van needs aboard to move. A world that names none moves its vans by the agent's own hand, two at once if it likes, as the dispatcher's do; a world that names one has made 'one van at a time' a fact about where the driver is, which every plan respects by construction (#903)." .
+
+:drivenBy a owl:ObjectProperty ; rdfs:domain :Van ; rdfs:range :Driver ; rdfs:label "driven by" ;
+    rdfs:comment "Who must be aboard a van for it to drive. Authored and never moved, as a destination is: the world says which vans need a driver and whom, and a van it says none of moves as before." .
+
 #################  What is true while the world runs  #################
 
 :at a owl:ObjectProperty ; rdfs:range :Cell ; rdfs:label "at" ;
@@ -41,6 +49,9 @@
 
 :carriedBy a owl:ObjectProperty ; rdfs:domain :Parcel ; rdfs:range :Van ; rdfs:label "carried by" ;
     rdfs:comment "The other half of the deletion: a parcel is at a cell or aboard a van, never both and never neither." .
+
+:aboard a owl:ObjectProperty ; rdfs:domain :Driver ; rdfs:range :Van ; rdfs:label "aboard" ;
+    rdfs:comment "The van a driver is in. Runtime state, posed in state.ttl and rewritten by a boarding: one van, since a boarding takes away the van the driver leaves, which is what makes a driver one body in one place. A drive moves the van and the driver with it, so where a driver is aboard is all a drive needs to read." .
 
 #################  What an action is filled with  #################
 
@@ -50,3 +61,5 @@
     rdfs:comment "The parcel a pick loads or a drop sets down." .
 :to a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "to" ;
     rdfs:comment "Where a drive drives or a drop drops: a cell of the grid." .
+:driver a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "driver" ;
+    rdfs:comment "The driver a boarding moves into a van." .

@@ -13,7 +13,10 @@ description: >-
   a sensor of another scope adds nothing to it. And again: a member is written in every scope it
   is in and a reading, a witness and a want are placed where the scopes of what they name meet,
   so two beds each with a pump are two wants, each keyed by its bed off the violation's offending
-  value. Refused there: rewriting the want's shape to name the bed.
+  value. Refused there: rewriting the want's shape to name the bed. And (#913): a row leaving
+  unbound a parameter the world alone decides is no filling, so an action a world imports and holds
+  nothing to take with makes no scope; refused, keeping such a scope standing empty for the sake of
+  a partition stable while the world runs, which it already is.
 status: accepted
 timestamp: 2026-10-04T12:00:00Z
 ---
@@ -183,6 +186,43 @@ the shape cannot tell the beds apart — which is the whole reason the key is be
 `world/greenhouse/tests/test_two_beds.py` holds the world to both pumps commanded in one pass and
 nothing blocked in the next.
 
+# An action the world holds nothing to take with makes no scope (amended 2026-10-06, #913)
+
+Once the market's texts were readable (#908) the allotment was four scopes, and two of them were
+the climate domain's heating, one per plot: the world imports the domain for its words and holds no
+heater, so the precondition, asked with every pattern optional, bound a grower and a plot and left
+the heater unbound. Each such row was a filling keyed `(below, {plot})`, apart from the dose's
+`(below, {plot, SoilMoisture})`, so each made a scope of its own: it admitted nothing a search could
+take, minted no want, and cost an imaginarium a pass. Measured first, on the development container,
+booting the rose grower twice in one process and alternating the passes, the second boot's scope
+graph with those two scopes taken out: the grower's pass 273 ms against 136 idle and 299 against
+168 with a dry plot, the supplier's 278 against 143. A scope's iteration took 63–72 ms, median,
+whether it held a want or not, and 85 for the one searching the dry plot's want; in a second
+session the change itself against the tree before gave 299 against 152. Each empty imaginarium
+held 1,595 quads, copied whole at the first pass and taken back and copied again at every pass
+after. So an empty scope is not free and not cheap: it is a scope.
+
+**A row leaving unbound a parameter the world alone decides is no filling.** A parameter the world
+alone decides is one the action `orexis:takes` that is no subject its effect writes and stands in no
+pattern reading a predicate any effect writes or deletes — the valve, the heater, the cell a van
+drives to, as against the reading a dose moves or the van that drives. Asked over the public graphs,
+such a parameter binds wherever the world holds one; unbound, the world has said it holds none, and
+an action whose every row is that has no filling here and is in no scope. The allotment is two
+scopes, the market's plumbing with the dose and `Serving` alone on `discharged`; the terrace and the
+sensing world, which import the domain and hold no heater either, are none, and plan in the one
+imaginarium a store of no scope gets — the terrace's idle pass 38 ms against 19, measured the same
+way. No other shipped world changes: each of their actions binds what it takes.
+
+Refused: **the scope stands empty, a partition of the vocabulary.** It was what `scope_actions`
+did, and the argument for it was stability — a heater added later would re-partition a running
+world. It does not: the scopes are written at boot and nowhere else, a heater is a document the
+boot reads, and the boot that reads it writes the scopes again. Nor was the empty scope the
+partition a heater would bring: filled with one, the heating binds the heater and the property it
+warms and keys its atoms by them, so the scope that stood empty was never the scope that would
+stand full. And "a partition of the vocabulary belongs to the store" is a claim about whom the
+partition is FOR — nobody's agent id — not about whether it reads the world: since #593 it is read
+off what the world binds, and a filling is what the world can take an action with.
+
 # Measured
 
 - A possible world of the greenhouse is twelve quads, the scope's reading and its sides, one
@@ -199,7 +239,8 @@ nothing blocked in the next.
   scope as terms and `hanoi:on` of the puzzle's.
 - Every other shipped world and every stored scope case partitions as it did: their actions bind
   no public subject, so every atom is keyed by nothing, and the predicate partition is what falls
-  out.
+  out. Since #913 the terrace and the sensing world, which import the heating and hold no heater,
+  are no scope at all, and the allotment two (above).
 
 # Seams left open
 
@@ -266,4 +307,20 @@ nothing blocked in the next.
   imaginarium is for.
 - **The second imaginarium's price.** A scope costs a copy of the beliefs per pass. The world that
   pays more for the copies than it saves in worlds has not been built; the tower and the greenhouse
-  both come out ahead or even.
+  both come out ahead or even. The allotment's two empty scopes paid for copies that saved nothing
+  at all, about half its pass, and went (#913, above).
+- **A row the world contradicts.** Each pattern is asked alone, so a row can bind every parameter
+  the world decides and still be one the world refutes. Where the agent holds some other device —
+  a grower with a valve and no heater — `$me :hasActuator ?heater` binds the heater to the valve and
+  the heating's row stands, an empty scope again; measured on the scope case before it was given the
+  allotment's shape, the heating's scope holding the pump. And the allotment's dose binds the
+  supplier's valve through `actuation:actuates` beside a grower that holds none, though no agent
+  there holds a valve over a plot it acts for — harmless, since the scope it falls in is the
+  market's and real. What would refuse both is the public half asked WHOLE, and nothing tells the
+  world's patterns from the state's yet: a reading's `sosa:hasFeatureOfInterest` is no effect's
+  either. The trigger is the first world where such a row is a scope of its own.
+- **A parameter the state binds through words no effect touches** would be read as the world's, and
+  every row of its action dropped — the unsafe side, an action admitted nowhere. No shipped action
+  takes one: every reading taken is what the action's effect writes about. The first action taking
+  an observation it does not change — a forecast — is the trigger, and the test then wants what a
+  graph's kind says rather than what the effects touch.

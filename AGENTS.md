@@ -231,6 +231,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   the footprint couples to it arrives; two minds optimize alone and meet through prediction, the
   market and execution; sequencing the elder plan as the younger's ground was refused as the two-minds
   tool used on one (#567, one-mind-couples-the-wants-a-constraint-can-make-collide).
+- **State two plans share couples their wants only where a constraint is stated over it** — one
+  driver both parcels' plans move was two wants, and a walk that drove a van its driver had left,
+  until the world held that a driver is aboard one van: a constraint no plan breaks, held for its
+  footprint over the reach (#903, `world/driver/`).
 - **A desire weighed in a ground and a want weighed in a possible world are one judgment at two
   grains**, and `planning:Weighing` carries the `planning:violation` rows for either — and a desire
   is weighed in grounds alone, to mint; nothing weighs one against a plan.
@@ -298,6 +302,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   head is judged where its filling was admitted, and a reading keyed by another scope's term crosses
   into no imaginarium but its own, so a world is one percent of the present and a sensor added
   elsewhere adds nothing to it (`world/greenhouse/tests/test_scaling.py`).
+- **A filling is what the world can take an action WITH, so a row leaving unbound a parameter the
+  world alone decides is none, and an empty scope is not free** — the allotment imports the heating
+  and holds no heater, and its two scopes that admitted nothing cost half of every pass (#913,
+  a-scope-is-a-predicate-on-a-key).
 - **A member is in every scope it falls in, and a reading, a witness and a want are placed where
   the scopes of what they name MEET; a member of every scope tells nothing** — the bed is the pump's
   and the heater's, the soil both pumps', a reading naming both the one pump's; so two beds each

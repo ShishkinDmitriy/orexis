@@ -58,6 +58,14 @@ states, a reading's feature and property; a subject keyed by nothing keys every 
 predicate. The terms a key holds are what a scope later holds as members, so a want naming one is
 placed by it.
 
+A row is no filling where it leaves unbound a parameter the WORLD alone decides — one the action
+`orexis:takes` that is no subject its effect writes and stands in no pattern reading a predicate
+any effect writes or deletes: the valve, the heater, the cell a van drives to. Asked over the
+public graphs, such a parameter binds wherever the world holds one, so unbound it is the world
+saying there is none, and an action left with no filling is in no scope. The allotment imports
+the climate domain and holds no heater, and its heating's rows made two scopes that admitted
+nothing ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md), #913).
+
 # What it is not
 
 Not a scope: a scope is atoms joined across many fillings of many actions, and one footprint is

@@ -56,9 +56,9 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    possible world, a violating world marked and the present validated (#902, reworked 2026-10-06); the
    executor-held resource was built and refused, and reconsideration on a coupled arrival is built
    (#905) — [commitment](/domain/execution/commitment.md) hard on the step in flight and soft on the
-   plan. What is left is #903, now the driver world that makes "one van at a time" world state, and
-   #913, whether an action binding nothing to move makes a scope; then #568, right-of-way as a lot the
-   market allocates.
+   plan; and "one van at a time" is world state, a driver the plans of two parcels share
+   (`world/driver/`, #903). What is left is #913, whether an action binding nothing to move makes a
+   scope; then #568, right-of-way as a lot the market allocates.
 5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays
    it and the model that phrases a free question, then #862's recalibration walked with a person

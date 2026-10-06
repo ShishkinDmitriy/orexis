@@ -68,6 +68,8 @@ A limit on ACTS in flight — one driver drives one van at a time — is modelle
 constraint can read, a driver who must be aboard the van it drives, or not at all; an executor-held
 resource over committed steps' windows, `execution:occupies`, was built and refused
 ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)).
+`world/driver/` is that state, and its constraint that a driver is aboard one van is broken by no
+plan and held for its footprint alone, which the record's driver seam explains.
 
 # Its footprint, and why it is read over the reach
 

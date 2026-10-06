@@ -36,7 +36,9 @@ def scope_actions(store: ox.Store) -> None:
 
     An action is in every scope a filling of it lies in, and a predicate or a term in every
     scope an atom of it falls in. An action stating no effect is in no scope, as
-    no world admits it; one whose effect cannot be read joins everything and is in the one scope
+    no world admits it, and neither is one with no FILLING here — a parameter the world alone
+    decides that it holds none of, the heating where no heater is (`footprint.atoms_of`, #913);
+    one whose effect cannot be read joins everything and is in the one scope
     that holds everything. A scope is named for the graph it is written in and its place in the
     partition, largest first (`scopes.py` names both), so the same actions write the same text.
 

@@ -17,7 +17,8 @@ description: >-
   desire's bound, #902, and reworked 2026-10-06 - the corridor's colliding worlds impossible and
   the parked van served or moved rather than driven through); a walking want is reconsidered when
   a want the footprint couples to it arrives (built, #905 - the step in flight kept, the joint want
-  searched from where it lands); two minds optimize alone and meet through what they
+  searched from where it lands); a limit on acts in flight is world state - one driver aboard one
+  van, whose own constraint couples the plans that move it (built, #903); two minds optimize alone and meet through what they
   observe, what they are told and what the market allocates. Refused - the derived temporary want;
   the elder plan laid as the younger's ground, this record's own first version; independent plans
   reconciled afterwards as the default for one mind; the bound alone; execution alone; the aversion
@@ -339,6 +340,8 @@ plan down the same cells. A cluster a standing want is already about is that wan
 | parcel B arriving on the corridor, the same | 1, reopening | 87, and the constraint in 87 | 112 candidates | 7 impossible | the same, two vans on no cell; before, twelve acts for ten |
 | parcel B arriving at van B's cell, agreeing (#905) | 1, reopening | 76 | 108 candidates | 0 | the joint plan begins with van A's drive and drop: its intention stands, van B's five steps adopted beside it |
 | parcel B arriving on a disjoint grid (#905) | 1, alone | — | 37 candidates | 0 | nothing reopened; van A's intention untouched |
+| one driver, the vans on disjoint grids, the two-vans constraint alone (#903) | 2 | 18 and 26, the constraint in 37 | 22 and 34 candidates | 0 | five steps and six, the second boarding first; walked side by side, van A driven with the driver aboard van B |
+| the same, the driver's constraint held (#903) | 1 | 133, each constraint in 133 | 191 candidates | 0 | one plan of eleven: van A, the boarding, van B; walked one act at a time; 2.2 s at budget 256, `Exhausted` at 128 |
 
 # Seams left open
 
@@ -394,11 +397,22 @@ plan down the same cells. A cluster a standing want is already about is that wan
   back by the bound takes a detour where one act's wait would do — or, measured (#902), the mind moves
   the other van aside, which is one act too and is what it found; a `Wait` is the domain's to add,
   costed and banded like a drive.
-- **A limit on acts in flight as world state.** One driver, one van at a time is a constraint over a
-  fact no shipped world states — who is aboard which van — and the day a world states it, the
-  constraint reads it like any other and its footprint couples the wants that move the driver. The
-  executor-held alternative is refused above; what is left open is the first world that needs the
-  limit and has to say the state.
+- **A limit on acts in flight as world state, and coupled only by a constraint over it** (#903,
+  `world/driver/`). One driver, two vans on two grids no drive crosses: a drive needs the driver
+  aboard the van, and a boarding moves the driver to the other, so every plan moves one van at a
+  time by construction and the two-vans constraint is never at stake. It does not couple the two
+  parcels, though both their plans move the driver: the derivation couples instances where a
+  constraint's rows over the reach join them and on nothing else, and the two-vans constraint over
+  two grids yields no row — two wants, five steps and six, measured, and walked side by side van A
+  was driven with the driver aboard van B, since a head falling due inside a walk is taken without
+  its precondition asked again. So the world states the driver's own constraint, a driver aboard one
+  van at a time: no plan breaks it, since a boarding takes away the van left, and over the
+  delete-free reach the driver is aboard both, which joins the vans and so the parcels — one want, one
+  plan of eleven steps, walked one act at a time. Coupling the wants whose plans merely write one
+  fact, with no constraint saying why that collides, is the kernel change this left unbuilt: a shared
+  write is not a collision where both plans may write it in turn, and the constraint is what says
+  this one is a body that cannot be in two places. Its trigger is a world whose shared state no
+  constraint can honestly be stated over.
 - **A surprise after coupling.** A joint plan walked with one van late still holds, since it is one
   sequence; a step that fails ends the intention and the coupled want is searched again from the
   present, as any failed plan is. What is not decided is a late landing in the concurrent case

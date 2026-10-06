@@ -1,0 +1,21 @@
+@prefix : <http://example.org/orexis/world/driver#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+
+<> a planning:DesireGraph .    # this document is one graph, and this is what it is
+
+#  ONE DESIRE, the dispatcher's: every parcel where it is owed, at every instant. The shape targets
+#  every parcel, so the derivation mints a want per parcel astray unless a constraint can make their
+#  plans collide — and here one can, the driver's (`constraints.ttl`), so the two parcels are one
+#  want and one search. The estimate is the courier's, which counts the drives, the pick and the
+#  drop and not the boarding, so for the two parcels it reads ten where the plan costs eleven:
+#  admissible, and loose by the one step the driver costs and no parcel owes.
+
+:dispatcher planning:holds :every_parcel_delivered .
+
+:every_parcel_delivered a planning:Desire ;
+    rdfs:label "every parcel where it is owed" ;
+    planning:metWhen courier:delivered ;
+    planning:estimates courier:drivesOwed .

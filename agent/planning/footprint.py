@@ -72,7 +72,7 @@ from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
 #  WHAT A `$token` IS, from the module that BINDS one. It was spelled here too, a
 #  character apart, which is two definitions of one thing waiting to disagree.
 from agent import clock
-from agent.ontology import ACTION, PUBLIC
+from agent.ontology import ACTION, PUBLIC, local_of
 from agent.store import _TOKEN, NAMESPACES, PREFIXES, graphs_of, rows
 
 log = logging.getLogger("footprint")
@@ -463,6 +463,10 @@ def atoms_of(store, at: datetime | None = None) -> dict[str, list | None]:
     does bind — a reading's feature and property — and None where it binds none, which joins every
     atom of the predicate. Over-approximation is the safe side throughout: a filling the world
     alone cannot narrow is every filling, and an atom keyed by nothing is every atom.
+
+    AND A ROW THE WORLD HAS ANSWERED "NONE" IS NO FILLING: one leaving unbound a parameter the
+    world alone decides (`_decided_by_the_world`). An action every row of which is that maps to no
+    filling at all, and is in no scope (#913).
     """
     out: dict = {}
     effects = _effects(store, at)
@@ -470,16 +474,53 @@ def atoms_of(store, at: datetime | None = None) -> dict[str, list | None]:
         return out
     public = graphs_of(store, PUBLIC, at=at or clock.now())
     changeable = {str(p) for _, writes in actions_of(store, at).values() if writes is not ANYTHING for p in writes}
+    takes: dict = {}
+    for row in rows(store, _TAKES_Q, graphs_of(store, ACTION, at=at or clock.now())):
+        takes.setdefault(row["action"], set()).add(local_of(row["takes"]))
+    written = {action: _written_subjects(effect["constructs"], effect["updates"])
+               for action, effect in effects.items() if effect["constructs"]}
+    #  WHAT ANY EFFECT TOUCHES, written or deleted — the state's predicates, as against the world's.
+    touched = set(changeable)
+    for subjects in written.values():
+        if subjects is not ANYTHING:
+            touched |= {p for predicates in subjects.values() for p in predicates}
     for action, effect in effects.items():
         if not effect["constructs"]:
             continue
         parsed = _patterns(effect["precondition"]) if effect["precondition"] else []
-        written = _written_subjects(effect["constructs"], effect["updates"])
-        if parsed is ANYTHING or written is ANYTHING:
+        if parsed is ANYTHING or written[action] is ANYTHING:
             out[action] = ANYTHING
             continue
-        out[action] = _fillings(store, public, parsed, written, changeable)
+        decided = _decided_by_the_world(parsed, written[action], touched, takes.get(action, ()))
+        out[action] = _fillings(store, public, parsed, written[action], changeable, decided)
+        if decided and not out[action]:
+            log.info("%s takes %s, of which this world states none: it has no filling here, and is in no scope",
+                     action, ", ".join(sorted(decided)))
     return out
+
+
+#  WHAT AN ACTION TAKES, by local part — the variable its precondition projects (`orexis:takes`).
+_TAKES_Q = "SELECT ?action ?takes WHERE { ?action a orexis:Action ; orexis:takes ?takes }"
+
+
+def _decided_by_the_world(patterns: list, written: dict, touched: set, takes) -> frozenset[str]:
+    """The parameters an action takes that the WORLD ALONE decides: each stands in some pattern of
+    the precondition, is no subject the effect writes, and stands in no pattern reading a predicate
+    any effect writes or deletes — the valve, the heater, the cell a van drives to, as against the
+    reading a dose moves or the van that drives. Asked over the public graphs, such a parameter is
+    bound wherever the world holds one; left unbound, the world has said it holds none."""
+    out = set()
+    for param in takes:
+        var = rdflib.Variable(param)
+        stands = [(s, p, o) for s, p, o in patterns if var in (s, o)]
+        if not stands or param in written:
+            continue
+        reads: set = set()
+        for triple in stands:
+            reads |= {str(x) for x in (_read(*triple) or ())}
+        if not reads & touched:
+            out.add(param)
+    return frozenset(out)
 
 
 def _effects(store, at: datetime | None) -> dict[str, dict]:
@@ -546,10 +587,16 @@ def _collect(triples, out: dict):
     return out
 
 
-def _fillings(store, public, patterns: list, written: dict, changeable: set) -> list:
+def _fillings(store, public, patterns: list, written: dict, changeable: set, decided=frozenset()) -> list:
     """Each filling the world alone decides, as `(atoms, terms)`: the public graphs asked the
     precondition's patterns, every one OPTIONAL and no filter, so a row binds what the world states
-    and nothing else; then the atoms each filling reads of what some action writes, and writes."""
+    and nothing else; then the atoms each filling reads of what some action writes, and writes.
+
+    A ROW LEAVING UNBOUND A PARAMETER THE WORLD ALONE DECIDES IS NO FILLING (#913). The allotment
+    imports the climate domain and holds no heater, so the heating's rows bound a grower and a plot
+    and nothing the heating could be done with, and each made a scope of its own that admitted
+    nothing and minted nothing, at an imaginarium a pass apiece — about as dear as a real scope's,
+    measured. A row is kept where the query could not run, since then nothing was decided."""
     variables = sorted({str(t) for triple in patterns for t in triple if isinstance(t, rdflib.Variable)}
                        | set(written))
     rows_: list[dict] = [{}]
@@ -558,7 +605,10 @@ def _fillings(store, public, patterns: list, written: dict, changeable: set) -> 
         try:
             found = store.query(text, prefixes=NAMESPACES, default_graph=[ox.NamedNode(g) for g in public])
             names = [v.value for v in found.variables]
-            rows_ = [{n: solution[n] for n in names if solution[n] is not None} for solution in found]
+            rows_ = [{n: solution[n] for n in names if solution[n] is not None} for solution in found] or [{}]
+            rows_ = [bound for bound in rows_ if decided.issubset(bound)]
+            if not rows_:
+                return []
         except Exception as exc:                            # noqa: BLE001
             log.debug("a precondition's patterns would not run over the public graphs: %s", exc)
             rows_ = [{}]

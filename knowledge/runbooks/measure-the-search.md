@@ -569,6 +569,7 @@ fern's grower and plot and one for the rose's, over `below` and `inside` — the
 imported and no heater exists, so the filling binds the grower and the plot and nothing it would
 move, and the scope holds no want ever; scope 4 `Serving` alone, with `Claim`, `discharged`,
 `supplier` and `water`, since no action's effect writes `presented` or a claim — the documents do.
+Scopes 2 and 3 are gone since #913, in the section below.
 
 **What that broke, and the rule it taught.** A trouble is keyed by the scope members its offending
 node names, less a member of every scope. With one scope every member was one and the key empty;
@@ -587,6 +588,40 @@ member alone, beside `water` (1 and 4) and `rose_grower` (1 and 3), so no scope 
 it names and it crosses into every scope any is in — 1, 3 and 4, measured — and the supplier's
 `no_unserved_claim` is searched in scope 4, `Satisfied` at one weighing. The suspicion that it would
 be placed in scope 1 alone was wrong, and nothing in the placing was changed.
+
+# The allotment: two scopes, the heating it imports in neither (2026-10-06, #913)
+
+The two heating scopes above admitted nothing and minted nothing, and the question was whether that
+was free. Measured on the development container by booting one allotment agent twice in one process
+— A as booted, B with scopes 2 and 3 deleted from its scope graph, which is the partition the change
+writes — and alternating the passes, A then B then B then A, twelve passes each, a reading every ten
+minutes of the world's time. Wall time is `Planner.plan`'s; a scope's is from its `prepare_ground` to
+the next scope's; quads are what the imaginarium holds after the pass.
+
+| agent, pass | A, four scopes | B, two scopes | an empty scope's iteration | its imaginarium |
+|---|---|---|---|---|
+| rose grower, reading 0.45, idle | 273 ms | 136 ms | 63–66 ms | 1,595 quads |
+| rose grower, reading 0.2, a want searched in scope 1 | 299 ms | 168 ms | 68–72 ms | 1,633 quads |
+| supplier, no probe | 278 ms | 143 ms | 66–67 ms | 1,412 quads |
+
+Medians. Every scope costs about the same whether it holds a want or not — the fill, the grounds,
+every desire weighed in every ground, the derivation — and the dry plot's scope 85 ms with its
+search. In a second session the change itself against the tree before (the change switched off by
+deciding no parameter, then on), the rose grower idle: 299 against 152 ms. The terrace, which imports
+the heating and holds no heater, went from two empty scopes to none, and so to the one imaginarium a
+store of no scope gets: 38 against 19 ms idle. The sensing world was one empty scope, and is one
+imaginarium either way.
+
+So the empty scopes went: a row that leaves unbound a parameter the world alone decides is no
+filling, and the heating has none in the allotment
+([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)). Two scopes, `Calling,
+Clearing, Dosing, Offering, Presenting, Tendering` with both plots, both valves and all three agents,
+and `Serving` with `Claim`, `discharged`, `supplier` and `water`, for every agent alike —
+`world/allotment/tests/test_allotment.py` pins it. `Dosing` stays, though no agent here holds a valve
+over a plot it acts for: the optional patterns bind its valve through `actuation:actuates`, which is
+the record's seam of a row the world contradicts, and the scope it is in is a real one anyway. The
+grower is now a member of scope 1 alone, still not of every scope, so the holder-out-of-the-key test
+above keeps its premise: with `o != holder` struck out, four allotment tests failed, measured.
 
 # The dispatcher: a parcel arriving mid-walk, and the walking want reopened (2026-10-06, #905)
 
@@ -624,6 +659,40 @@ where a step in flight lands: the shipped joint walk's passes after the first re
 before against 156 and 153 after, its ground lap 37 and 36 against 36 and 36; a holder with no
 constraint pays one query a pass and lays no such ground. **On a disjoint grid** nothing is reopened:
 parcel B's want is minted alone and searched alone, 37 candidates, and van A's intention walks on.
+
+# The driver: one van at a time as world state (2026-10-06, #903)
+
+`world/driver/` is the dispatcher's two deliveries on two grids no drive crosses, and one driver who
+must be aboard a van to drive it and boards the other to move it (`domains/courier/driver.ttl`).
+Measured on the development container, alternated per case in one session, five rounds, one pass of
+the Planner over the booted world as `world/driver/tests/test_driver.py` builds it; candidates are
+every weighing but a ground's, weighings the possible worlds weighed per want. The counts did not
+move between rounds. The walk is the runtime, a drive's least landing between passes, until no
+intention stands.
+
+| case | budget | wants | candidates | weighings | plan | pass, median of five (min) | walked |
+|---|---|---|---|---|---|---|---|
+| the shipped dispatcher, the tree before | 256 | one | 228 | 148 | ten steps | 2943 ms (2608) | — |
+| the shipped dispatcher, the drive asking for a driver | 256 | one | 228 | 148 | ten steps | 3044 ms (2698) | — |
+| the driver, the two-vans constraint alone | 256 | two | 22 and 34 | 18 and 26, the constraint in 37 | five steps and six | 452 ms (399) | 11 acts, 6 passes, two at once; van A driven with the driver aboard van B |
+| the driver, its own constraint held | 128 | one | 128 of 128 | 90 | `Exhausted` | 1203 ms (1125) | — |
+| the driver, its own constraint held | 256 | one | 191 | 133, each constraint in 133 | eleven steps | 2225 ms (2182) | 11 acts, 9 passes, one at a time |
+
+**The drive's new filter costs the dispatcher nothing it can see.** A van the world names no driver
+for is refused by nothing, so every count is the tree before's and the pass is inside the drift. The
+boarding is a document the courier's ontology does not import: imported, it split the dispatcher
+into three scopes and turned eighteen of the twenty-three tests of the dispatcher, the courier and
+the tower red (#913).
+
+**One driver is one want only where a constraint says so.** With the two-vans constraint alone the
+derivation leaves the parcels two wants — over two grids it yields no row, and nothing else couples —
+and the second plan boards first, so the two walked side by side drove van A after the driver had
+left it. Holding the driver's own constraint, a driver aboard one van, couples them, and the joint
+search pays the product as the dispatcher's does: 191 candidates for eleven steps, more than three
+times the 56 of the two apart, and a budget of 128 cuts it short. The estimate is the courier's, ten against eleven
+spent, loose by the boarding; neither constraint marks a world impossible, since a boarding takes
+away the van left and no drive crosses. The walk is three passes longer than the two apart, the
+price of one act at a time.
 
 # Before Agent 0.2.0
 
