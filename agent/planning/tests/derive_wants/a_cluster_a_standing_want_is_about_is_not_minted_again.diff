@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -205,9 +205,39 @@
+@@ -211,9 +211,35 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -22,10 +22,6 @@
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ; planning:offending :c1_1 ] .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:violation [ planning:about :parcel_b ; planning:constraint 1 ; planning:instance :parcel_b ; planning:offending :c1_3 ] .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:weighs ground:2026-01-01T120000p0000 .
-+  ground:2026-01-01T120000p0000.for.keeper.no_cell_holds_two_vans a planning:Weighing .
-+  ground:2026-01-01T120000p0000.for.keeper.no_cell_holds_two_vans planning:for :keeper.no_cell_holds_two_vans .
-+  ground:2026-01-01T120000p0000.for.keeper.no_cell_holds_two_vans planning:met true .
-+  ground:2026-01-01T120000p0000.for.keeper.no_cell_holds_two_vans planning:weighs ground:2026-01-01T120000p0000 .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a orexis:Graph .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a planning:WantGraph .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .

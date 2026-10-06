@@ -1,35 +1,37 @@
-"""The dispatcher: one agent, two vans, two parcels on the courier's grid, and an aversion to two
-vans on one cell (#567). What this world is held to is what was MEASURED on it:
+"""The dispatcher: one agent, two vans, two parcels on the courier's grid, and the world's CONSTRAINT
+that no cell holds two vans (#567). What this world is held to is what was MEASURED on it:
 
 - the two vans are ONE scope, joined through the parcels, since a parcel standing where either van
   could stand is a filling value of both vans' Pick (a-scope-is-a-predicate-on-a-key, the two-vans
   seam); so every world a want's search opens admits the other van's moves too, and each is weighed;
-- two parcels astray are ONE want where a constraint can make their plans collide: the aversion reads
-  `at` on vans joined on the cell, both vans can reach every cell of the one grid, so the derivation
-  couples the two parcels into one cluster — one want about both, one search, the joint ten-step plan
-  optimal for both by construction (one-mind-couples-the-wants-a-constraint-can-make-collide, #900).
+- two parcels astray are ONE want where a constraint can make their plans collide: the constraint
+  reads `at` on vans joined on the cell, both vans can reach every cell of the one grid, so the
+  derivation couples the two parcels into one cluster — one want about both, one search, the joint
+  ten-step plan optimal for both by construction (one-mind-couples-the-wants-a-constraint-can-make-collide, #900).
   Its estimate is the desire's sum over both parcels, ten, which is what the plan costs; what the
   coupling costs is the product — 228 candidates against 50 for two wants apart, and a budget of 128
   cuts it short. Two parcels whose vans stand on DISJOINT grids are two wants as before, each named for
-  its parcel and planned alone, since the aversion over what the vans can reach yields no row there;
+  its parcel and planned alone, since the constraint over what the vans can reach yields no row there;
 - a want's estimate never overstates what its plan cost — the one promise an estimate makes, held
   here as a gate over the shipped world, the corridor, a van alone and a van parked in the way;
-- THE BOUND (#902): the aversion is a state invariant, weighed in every possible world the search
-  weighs, and a world that NEWLY enters the avoided state — a violation row with no equal in its
-  parent's weighing — is refused, off the frontier and never an achiever. On the corridor the coupled
-  search refuses 13 worlds and opens none holding two vans, and the joint plan it finds is walked
-  with two vans on no cell at any act, promised now and not pinned as luck; a van parked across the
-  other's only shortest path is not driven through, and the one mind holding both vans does better
-  than the route round: it delivers with the parked van, or moves it aside;
-- two vans on one cell at a PASS'S START are seen: the aversion — the avoided state itself, under
-  `planning:unmetWhen`, judged as a met-test is since #892 — reads unmet with a witness per van and
-  the cell as the offending value, its want is minted carrying the same select, and a one-step plan
-  parts them; an invariant already unmet in the root bounds nothing, since repair removes a row and
-  enters none. The two parcels' coupled want beside it is the product's price no budget here pays.
+- A WORLD THAT VIOLATES THE CONSTRAINT IS IMPOSSIBLE: the constraint is a `planning:Constraint`, what
+  the world says is possible and no desire, weighed in every possible world the search weighs, and a
+  world with two vans on a cell is marked `planning:impossible` on its own row — off the frontier and
+  never an achiever, with no filter asked of either read. On the corridor the coupled search marks 13
+  worlds and opens none holding two vans, and the joint plan it finds is walked with two vans on no
+  cell at any act, promised and not pinned as luck; a van parked across the other's only shortest
+  path is not driven through, and the one mind holding both vans does better than the route round:
+  it delivers with the parked van, or moves it aside;
+- two vans on one cell AS POSED is a contradiction, not a want: the constraint read in the present
+  ground yields a witness per van with the cell as the offending value, the pass says so and mints
+  nothing from it — a constraint is no desire — and `orexis-onboard` refuses the world before anything
+  is granted. It was the dispatcher's aversion, a desire a drive repaired; physics is not a preference
+  (constraint.md). The two parcels' coupled want beside it is the product's price no budget here pays.
 """
 
 from __future__ import annotations
 
+import logging
 import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -41,6 +43,7 @@ from agent.ontology import STATE
 from agent.planning.planner import Planner
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import graphs_of, rows
+from onboarding import reading
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -49,12 +52,12 @@ DESIRE = "http://example.org/orexis/planning#DesireGraph"   # planning's word; t
 #  THE ONE WANT THE TWO PARCELS ARE where the aversion couples them, named for both.
 JOINT = "every_parcel_delivered.pursued.parcel_a.parcel_b"
 #  WHAT THE COUPLED SEARCH NEEDS: 228 candidates on the shipped pose and 286 on the corridor, measured
-#  (measure-the-search), so the default budget of 128 cuts it short and the tests state their own. The
-#  bound took the corridor from 296 to 286 and the shipped pose nowhere, since no world of it collides;
-#  neither fits 128, and the budgets stand.
+#  (measure-the-search), so the default budget of 128 cuts it short and the tests state their own.
+#  Marking the colliding worlds impossible took the corridor from 296 to 286 and the shipped pose
+#  nowhere, since no world of it collides; neither fits 128, and the budgets stand.
 BUDGET, CORRIDOR_BUDGET = 256, 512
-#  THE AVERSION, the one state invariant this world's holder holds.
-AVERSION = "no_cell_holds_two_vans"
+#  THE CONSTRAINT, the one this world states: no cell holds two vans (`constraints.ttl`).
+CONSTRAINT = "no_cell_holds_two_vans"
 #  THE DRIVE'S BAND, as the courier declares it (`domains/courier/actions.ttl`, #901): a drive lands
 #  between half a minute and a minute after it is taken; a pick and a drop at once. The executor's
 #  patience past the latest landing is its own default.
@@ -101,14 +104,18 @@ SELECT ?for ?left WHERE {
 _COSTS_Q = """
 SELECT ?want ?spent WHERE { GRAPH ?p { ?p a planning:Plan ; planning:for ?want ; planning:spent ?spent } }"""
 _WORLDS_Q = "SELECT ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph } }"
-#  WHAT A WANT'S SEARCH SAYS OF EACH POSSIBLE WORLD IT WEIGHED: refused by which invariant, open, opened,
-#  met — the frontier's own rows (#902). A world the search passed over by hash has no row here.
+#  WHAT A WANT'S SEARCH SAYS OF EACH POSSIBLE WORLD IT WEIGHED — open, opened, met, the frontier's own
+#  rows — and what the WORLD says of itself: impossible, by which constraint, on its own row. A world
+#  the search passed over by hash has no row here.
 _JUDGED_Q = """
-SELECT ?w ?refused ?open ?expanded ?met WHERE {
+SELECT ?w ?impossible ?open ?expanded ?met WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?x a planning:Weighing ; planning:for $want ; planning:weighs ?w .
     ?w a planning:PossibleGraph .
-    OPTIONAL { ?x planning:refused ?refused } OPTIONAL { ?x planning:open ?open }
+    OPTIONAL { ?w planning:impossible ?impossible } OPTIONAL { ?x planning:open ?open }
     OPTIONAL { ?x planning:expanded ?expanded } OPTIONAL { ?x planning:met ?met } } }"""
+#  EVERY POSSIBLE WORLD MARKED IMPOSSIBLE, and by which constraint.
+_IMPOSSIBLE_Q = """
+SELECT ?w ?by WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph ; planning:impossible ?by } }"""
 #  TWO VANS ON ONE CELL, in one graph's facts: the vans' kinds are public and the world's facts its own.
 _SHARED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
 SELECT DISTINCT ?cell WHERE { GRAPH $w { ?a courier:at ?cell . ?b courier:at ?cell }
@@ -119,8 +126,8 @@ SELECT DISTINCT ?cell WHERE { GRAPH $w { ?a courier:at ?cell . ?b courier:at ?ce
 _AT_Q = """PREFIX courier: <http://example.org/orexis/courier#>
 SELECT ?x ?cell WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?x courier:at ?cell } }"""
 _ACTS_Q = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }"
-#  WHAT A DESIRE'S WEIGHING IN A GROUND SAYS IS IN TROUBLE, and where: each witness's instance and
-#  the value that offended — for the aversion, the van and the cell it shares.
+#  WHAT A WEIGHING IN A GROUND SAYS IS IN TROUBLE, and where: each witness's instance and the value
+#  that offended — for the constraint, the van and the cell it shares.
 _WITNESSES_Q = """
 SELECT ?x ?cell WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:Weighing ; planning:for $d ; planning:weighs ?g ; planning:violation ?v .
@@ -140,8 +147,6 @@ SELECT ?g ?s ?e ?within ?by WHERE {
   GRAPH ?g { ?step execution:landsWithinS ?within ; execution:answeredWithinS ?by } }
 ORDER BY ?s ?g"""
 _INTENTIONS_Q = "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention } }"
-#  WHICH POLARITY a want carries its met-test under, and what it points at.
-_POLARITY_Q = "SELECT ?p ?o WHERE { GRAPH ?g { $w ?p ?o FILTER(?p IN (planning:metWhen, planning:unmetWhen)) } }"
 #  WHAT A WANT'S MET-TEST TARGETS — one node per instance a coupled want is about.
 _TARGETS_Q = "SELECT ?t WHERE { GRAPH ?g { $w planning:metWhen ?m . ?m sh:targetNode ?t } }"
 
@@ -276,30 +281,33 @@ def _shared(store, graphs) -> dict[str, list[str]]:
     return {g: cells for g, cells in found.items() if cells}
 
 
-def _refused(im) -> dict[str, int]:
-    """Per want, how many of its weighings an invariant refused."""
+def _impossible(im) -> dict[str, int]:
+    """Per constraint, how many possible worlds it marked impossible — on the worlds' own rows."""
     out: dict[str, int] = {}
-    for want in {_local(r["w"]) for r in rows(im, _WANTS_Q, ())}:
-        out[want] = sum(1 for r in rows(im, _JUDGED_Q, (), want=D + want) if r.get("refused"))
-    return {w: n for w, n in out.items() if n}
+    for r in rows(im, _IMPOSSIBLE_Q, ()):
+        out[_local(r["by"])] = out.get(_local(r["by"]), 0) + 1
+    return out
 
 
-def _bounded(im, want: str) -> None:
-    """THE BOUND'S PROMISE, asserted of one want's search: no world holding two vans on a cell was
-    opened, is open, or is an achiever — every such world the search made was refused by the
-    aversion, or passed over by hash as a repeat of one, and a refused weighing is neither open nor
-    expanded. The loop is held to judging at least one world."""
+def _possible(im, want: str) -> None:
+    """THE CONSTRAINT'S PROMISE, asserted of one want's search: no world holding two vans on a cell
+    was opened, is open, or is an achiever — every such world the search made is marked impossible by
+    the constraint, or was passed over by hash as a repeat of one, and a want's weighing of an
+    impossible world is bare: neither open, nor expanded, nor met. The loop is held to judging at
+    least one world."""
     judged = {r["w"]: r for r in rows(im, _JUDGED_Q, (), want=D + want)}
     assert judged
     colliding = {g for g in (r["w"] for r in rows(im, _WORLDS_Q, ())) if rows(im, _SHARED_Q, (), w=g)}
     for w in colliding:
         row = judged.get(w)
-        assert row is None or (_local(row.get("refused")) == AVERSION and not row.get("open") and not row.get("expanded")), \
-            f"a world holding two vans was neither refused nor passed over: {_local(w)} {row}"
+        assert row is None or (_local(row.get("impossible")) == CONSTRAINT
+                               and not row.get("open") and not row.get("expanded") and row.get("met") is None), \
+            f"a world holding two vans was neither marked impossible nor passed over: {_local(w)} {row}"
     for w, row in judged.items():
-        if row.get("refused"):
-            assert w in colliding, f"refused, and holding no two vans: {_local(w)}"
-            assert not row.get("open") and not row.get("expanded"), f"refused and still on the frontier: {_local(w)}"
+        if row.get("impossible"):
+            assert w in colliding, f"marked impossible, and holding no two vans: {_local(w)}"
+            assert not row.get("open") and not row.get("expanded") and row.get("met") is None, \
+                f"impossible and still judged for the want: {_local(w)} {row}"
 
 
 def _at(store) -> dict[str, str]:
@@ -363,9 +371,9 @@ def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_te
     for two wants apart and 13 for a van alone, every interleaving of the two chains standing at ten on
     the frontier and opened in turn; at the default budget of 128 the search is cut short and the passes
     after would finish it, so this world's tests state 256 (measure-the-search). Apart, no world the
-    search visits holds two vans on a cell, so the bound (#902) refuses nothing and the count is what it
-    was before it — the aversion is weighed in every world the search weighs, 148, and reads met in all.
-    AND TWO PARCELS ON DISJOINT GRIDS ARE TWO WANTS exactly as before: the aversion over what the vans
+    search visits holds two vans on a cell, so the constraint marks nothing and the count is what it
+    was before it — the constraint is weighed in every world the search weighs, 148, and is kept in all.
+    AND TWO PARCELS ON DISJOINT GRIDS ARE TWO WANTS exactly as before: the constraint over what the vans
     can reach yields no row, nothing couples them, and each is planned alone at 23 weighings with its
     own estimate, five."""
     cut = _pass(WORLD, budget=128)
@@ -390,7 +398,7 @@ def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_te
     assert left[JOINT] == sum(halves_left.values()) == 10.0, f"the coupled want's estimate is the sum of its instances': {left} against {halves_left}"
     assert halves_paid == {"every_parcel_delivered.pursued.parcel_a": 13, "every_parcel_delivered.pursued.parcel_b": 13}
     assert (spent[JOINT], paid[JOINT]) == (228, 148), f"the product's price, measured: {spent} candidates, {paid} worlds"
-    assert _refused(im) == {} and paid[AVERSION] == 148, "the invariant weighed in every world, refusing none: " + str(paid)
+    assert _impossible(im) == {} and paid[CONSTRAINT] == 148, "the constraint weighed in every world, marking none: " + str(paid)
     runtime, outcome, trace = _run(WORLD)
     assert outcome == UNFINISHED and len(trace) == 10, "a desire holds the agent, and the one plan is walked, a drive a pass"
     assert _at(runtime.beliefs) == {"van_a": "c0_3", "parcel_a": "c0_3", "van_b": "c3_3", "parcel_b": "c3_3"}
@@ -402,55 +410,55 @@ def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_te
                              "every_parcel_delivered.pursued.parcel_b": "every_parcel_delivered"}
     assert _plans(apart) == {"every_parcel_delivered.pursued.parcel_a": ("Satisfied", 5),
                              "every_parcel_delivered.pursued.parcel_b": ("Satisfied", 5)}
-    assert _weighed(apart) == {"every_parcel_delivered.pursued.parcel_a": 23, "every_parcel_delivered.pursued.parcel_b": 23, AVERSION: 42}, \
-        "the aversion reads `at`, which the drive writes, so it is weighed in every world though no world of two grids can enter it: " + str(_weighed(apart))
-    assert _refused(apart) == {}
+    assert _weighed(apart) == {"every_parcel_delivered.pursued.parcel_a": 23, "every_parcel_delivered.pursued.parcel_b": 23, CONSTRAINT: 42}, \
+        "the constraint reads `at`, which the drive writes, so it is weighed in every world though no world of two grids can violate it: " + str(_weighed(apart))
+    assert _impossible(apart) == {}
     assert _remaining(apart) == {"every_parcel_delivered.pursued.parcel_a": 5.0, "every_parcel_delivered.pursued.parcel_b": 5.0}
 
 
-def test_corridor_the_coupled_search_refuses_the_worlds_holding_two_vans_and_the_joint_plan_shares_no_cell(ticking, tmp_path):
+def test_corridor_the_coupled_search_marks_the_worlds_holding_two_vans_impossible_and_the_joint_plan_shares_no_cell(ticking, tmp_path):
     """One want, one plan of ten steps over both vans, 286 candidates. The search REACHES worlds holding
-    two vans on one cell — a van driven onto the cell the other stands on — and the bound (#902) refuses
-    every one: the aversion, weighed in each of the 210 possible worlds the want is weighed in, carries
-    a violation row there its parent's weighing does not, so the world is off the frontier and never an
-    achiever, `planning:refused` naming the aversion. Thirteen are refused; three more worlds holding
-    two vans were forked and passed over by hash as repeats of a refused one, which is what `take`
-    leaves and `weigh` says. No world opened, open or met holds two vans. The plan is the one the
-    search found before the bound — the colliding interleavings were never on the shortest path, so the
-    bound cost it ten candidates and no steps — and WALKED, one head at a time, it puts both vans on no
-    cell at any act: promised by the bound now, where before it was pinned as what happened to be true.
-    Before the coupling each plan drove its van through `c2_1` at its third step and the two were walked
-    in lockstep, both on the cell for one act (measure-the-search)."""
+    two vans on one cell — a van driven onto the cell the other stands on — and every one is IMPOSSIBLE:
+    the constraint, weighed in each of the 210 possible worlds the want is weighed in, yields a row per
+    van there, so the world is marked `planning:impossible` on its own row and the want's weighing of it
+    is bare — off the frontier and never an achiever. Thirteen are marked; three more worlds holding two
+    vans were forked and passed over by hash as repeats of a marked one, which is what `take` leaves and
+    `weigh` says. No world opened, open or met holds two vans. The plan is the one the search found
+    before any world was marked — the colliding interleavings were never on the shortest path, so the
+    constraint cost it ten candidates and no steps — and WALKED, one head at a time, it puts both vans on
+    no cell at any act: promised, where before #902 it was pinned as what happened to be true. Before the
+    coupling each plan drove its van through `c2_1` at its third step and the two were walked in
+    lockstep, both on the cell for one act (measure-the-search)."""
     corridor = variant(tmp_path, "corridor", CORRIDOR)
     im = _pass(corridor, budget=CORRIDOR_BUDGET)
     plans, steps = _plans(im), _steps(im)
     assert _wants(im) == {JOINT: "every_parcel_delivered"}
     assert plans == {JOINT: ("Satisfied", 10)}
     assert _spent(im)[JOINT] == 286, f"measured: {_spent(im)}"
-    assert _weighed(im) == {JOINT: 210, AVERSION: 210}, "the invariant is weighed in every world the want is: " + str(_weighed(im))
+    assert _weighed(im) == {JOINT: 210, CONSTRAINT: 210}, "the constraint is weighed in every world the want is: " + str(_weighed(im))
     assert ("Drive", "van_a", None, "c2_1") in steps[JOINT] and ("Drive", "van_b", None, "c2_1") in steps[JOINT], \
         "both chains still cross the shared cell, one van at a time"
     held = _shared(im, [r["w"] for r in rows(im, _WORLDS_Q, ())])
     assert len(held) == 16 and {cell for cells in held.values() for cell in cells} == {"c1_1", "c2_0", "c2_1", "c2_2", "c3_1"}, \
         f"worlds the coupled search reached with two vans on one cell: {held}"
-    assert _refused(im) == {JOINT: 13}, f"refused by the aversion, measured: {_refused(im)}"
-    _bounded(im, JOINT)
+    assert _impossible(im) == {CONSTRAINT: 13}, f"marked impossible by the constraint, measured: {_impossible(im)}"
+    _possible(im, JOINT)
     runtime, outcome, trace = _run(corridor, budget=CORRIDOR_BUDGET)
     assert outcome == UNFINISHED and len(trace) == 10
     met = [(step, shared) for step, _, _, shared in trace if shared]
-    assert met == [], f"walked, the joint plan puts two vans on no cell at any act — the bound's promise: {trace}"
+    assert met == [], f"walked, the joint plan puts two vans on no cell at any act — the constraint's promise: {trace}"
     assert _at(runtime.beliefs) == {"van_a": "c3_1", "parcel_a": "c3_1", "van_b": "c2_0", "parcel_b": "c2_0"}
 
 
-@pytest.mark.parametrize("name, edits, steps, spent, refused, by, at", [
+@pytest.mark.parametrize("name, edits, steps, spent, impossible, by, at", [
     ("parked", PARKED, 5, 56, 7, {"van_b"}, {"van_a": "c0_1", "van_b": "c3_1", "parcel_a": "c3_1"}),
     ("carrying", CARRYING, 4, 66, 5, {"van_a", "van_b"}, {"van_a": "c3_1", "van_b": "c2_0", "parcel_a": "c3_1"}),
 ])
-def test_a_van_parked_across_the_only_shortest_path_is_not_driven_through(ticking, tmp_path, name, edits, steps, spent, refused, by, at):
+def test_a_van_parked_across_the_only_shortest_path_is_not_driven_through(ticking, tmp_path, name, edits, steps, spent, impossible, by, at):
     """Van B stands on `c2_1` with nothing to do, parcel A is owed at `c3_1` from `c1_1`, and the only
-    two-drive route runs through B. Before the bound the search drove through — five steps, eleven of
-    66 worlds holding two vans, judged by nobody, and the walk put both vans on `c2_1` for an act
-    (measure-the-search). With it, every world that puts van A on B's cell is refused, and the ONE MIND
+    two-drive route runs through B. Before #902 the search drove through — five steps, eleven of 66
+    worlds holding two vans, judged by nobody, and the walk put both vans on `c2_1` for an act
+    (measure-the-search). Now every world that puts van A on B's cell is impossible, and the ONE MIND
     holding both vans does better than the seven-step route round the record expected: PARKED, with
     the parcel on the ground beside van B, it delivers with van B itself in five steps and van A
     never moves; CARRYING, with the parcel already aboard van A so only A can deliver it, it moves
@@ -462,8 +470,8 @@ def test_a_van_parked_across_the_only_shortest_path_is_not_driven_through(tickin
     assert _wants(im) == {want: "every_parcel_delivered"}
     assert _plans(im) == {want: ("Satisfied", steps)}
     assert {van for _, van, _, _ in _steps(im)[want] if van} == by, _steps(im)[want]
-    assert (_spent(im)[want], _refused(im)) == (spent, {want: refused}), f"measured: {_spent(im)} {_refused(im)}"
-    _bounded(im, want)
+    assert (_spent(im)[want], _impossible(im)) == (spent, {CONSTRAINT: impossible}), f"measured: {_spent(im)} {_impossible(im)}"
+    _possible(im, want)
     runtime, outcome, trace = _run(world, budget=128)
     assert outcome == UNFINISHED and len(trace) == steps
     assert [(step, shared) for step, _, _, shared in trace if shared] == [], f"two vans on one cell at an act: {trace}"
@@ -482,10 +490,10 @@ def test_a_wants_estimate_at_the_present_never_exceeds_what_its_plan_cost(tickin
     one, since an empty frontier would pass an `all` over nothing. Mostly the figure is TIGHT — ten
     against ten for the coupled want, five against five for a van alone: the drive, the pick, the two
     drives and the drop of each parcel are each certain, and the estimate counts each once. NOT WHERE
-    THE BOUND COSTS A STEP THE WANT DOES NOT OWE: with the parcel aboard van A and van B parked on the
-    only short route, the estimate reads three — two drives and the drop — and the plan costs four,
-    since moving van B aside is a step of the aversion's and not the parcel's; admissible, loose by
-    one, which is the slack the invariant makes and the search pays for with its frontier (#902)."""
+    THE CONSTRAINT COSTS A STEP THE WANT DOES NOT OWE: with the parcel aboard van A and van B parked on
+    the only short route, the estimate reads three — two drives and the drop — and the plan costs four,
+    since moving van B aside is a step the constraint makes necessary and the parcel does not owe;
+    admissible, loose by one, which is the slack the search pays for with its frontier (#902)."""
     im = _pass(variant(tmp_path, name, edits) if edits else WORLD, budget=budget)
     left, costs = _remaining(im), _costs(im)
     judged = {w: (left[w], costs[w]) for w in costs if w in left}
@@ -540,30 +548,38 @@ def test_a_drive_lands_within_its_band_and_the_steps_and_worlds_advance_along_th
         "six drives land within the least; a pick or a drop opens where its drive landed"
 
 
-def test_two_vans_on_one_cell_at_a_pass_start_mint_the_aversions_want_and_a_drive_parts_them(ticking, tmp_path):
-    """The aversion, the avoided state under `planning:unmetWhen` (#892): both vans on c0_0 as posed, it
-    reads unmet with a witness per van, each offending with c0_0, one want is minted under it — about
-    both, targeting both, carrying the same select under the same term — and a one-step plan, a
-    drive, satisfies it; run, the vans stand apart. AN INVARIANT UNMET IN THE ROOT BOUNDS NOTHING (#902):
-    the aversion's own search refuses no world, since every child either keeps the root's two rows or
-    removes them, and a repair enters no state. BESIDE IT THE TWO PARCELS ARE ONE COUPLED WANT, and
-    from one cell the joint delivery is thirteen steps whose product no budget tried pays — Exhausted
-    at 128 here and at 512, measured — which is the record's seam on the product's budget and the
-    trigger for its fallback, not this test's to settle; the bound refuses seven of its 128 candidates,
-    the worlds that part the vans and bring them together again on another cell, and the aversion's
-    want is found beside it in 4 weighings as before."""
+def test_two_vans_on_one_cell_as_posed_is_a_contradiction_said_and_refused_and_never_a_want(ticking, tmp_path, caplog):
+    """A CONSTRAINT VIOLATED IN THE PRESENT IS A CONTRADICTION, NOT A WANT. Both vans on c0_0 as posed:
+    the constraint, weighed in the present ground, yields a witness per van with c0_0 offending — the
+    same rows the aversion wrote when it was a desire — and nothing is minted from it, since the
+    derivation reads desires alone; the pass says so, a warning naming the constraint and its rows;
+    `Planner.contradictions` answers the same rows to whoever asks; and `orexis-onboard` refuses the
+    world as posed through `reading.contradicted`, where the shipped pose passes. It was the
+    dispatcher's AVERSION, a desire a one-step drive repaired (#892, #902): physics repaired as a
+    preference, the modality this change refuses; an aversion that is a desire is still repaired, in
+    `agent/planning/tests/plans/an_aversions_want_is_repaired_by_a_step`. BESIDE IT THE TWO PARCELS
+    ARE ONE COUPLED WANT, and from one cell the joint delivery is thirteen steps whose product no budget
+    tried pays — Exhausted at 128 here and at 512, measured — which is the record's seam on the
+    product's budget and the trigger for its fallback, not this test's to settle; its search marks seven
+    of its 128 candidates impossible, the worlds that part the vans and bring them together again on
+    another cell, since nothing compares a world to its parent, and the present's own violation is not
+    a world the search made."""
     together = variant(tmp_path, "together", TOGETHER)
-    im = _pass(together, budget=128)
-    assert {(_local(r["x"]), _local(r["cell"])) for r in rows(im, _WITNESSES_Q, (), d=D + "no_cell_holds_two_vans")} == \
-        {("van_a", "c0_0"), ("van_b", "c0_0")}, "the avoided state is judged in the present: a row per van, the cell offending"
-    assert _wants(im) == {"no_cell_holds_two_vans.pursued": "no_cell_holds_two_vans", JOINT: "every_parcel_delivered"}
-    assert [(_local(r["p"]), _local(r["o"])) for r in rows(im, _POLARITY_Q, (), w=D + "no_cell_holds_two_vans.pursued")] == \
-        [("unmetWhen", "no_cell_holds_two_vans.pursued.avoided")]
-    assert _plans(im)["no_cell_holds_two_vans.pursued"] == ("Satisfied", 1)
-    assert _plans(im)[JOINT] == ("Exhausted", 0), "the product's budget: the record's seam, pinned"
-    assert {a for a, *_ in _steps(im)["no_cell_holds_two_vans.pursued"]} == {"Drive"}
-    assert _weighed(im)["no_cell_holds_two_vans.pursued"] == 4, "what the met-test form cost, measured: " + str(_weighed(im))
-    assert _refused(im) == {JOINT: 7}, "the aversion's own want is refused nothing; the joint want, the worlds that meet again: " + str(_refused(im))
-    runtime, outcome, trace = _run(together, budget=128)
-    at = _at(runtime.beliefs)
-    assert at["van_a"] != at["van_b"], at
+    with caplog.at_level(logging.WARNING, logger="planner"):
+        im = _pass(together, budget=128)
+    assert {(_local(r["x"]), _local(r["cell"])) for r in rows(im, _WITNESSES_Q, (), d=D + CONSTRAINT)} == \
+        {("van_a", "c0_0"), ("van_b", "c0_0")}, "the constraint is judged in the present: a row per van, the cell offending"
+    said = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING and "constraint" in r.getMessage()]
+    assert len(said) == 1 and CONSTRAINT in said[0] and "van_a" in said[0] and "c0_0" in said[0], said
+    assert _wants(im) == {JOINT: "every_parcel_delivered"}, "nothing is minted from a constraint: " + str(_wants(im))
+    assert _plans(im) == {JOINT: ("Exhausted", 0)}, "the product's budget: the record's seam, pinned"
+    assert _weighed(im) == {JOINT: 75, CONSTRAINT: 75} and _spent(im)[JOINT] == 128, f"measured: {_weighed(im)} {_spent(im)}"
+    assert _impossible(im) == {CONSTRAINT: 7}, "the worlds that meet again on another cell: " + str(_impossible(im))
+    _possible(im, JOINT)
+    planner = Planner(boot(together, "dispatcher"), "dispatcher")
+    (found,) = planner.contradictions(NOW)
+    assert _local(found[0]) == CONSTRAINT and {(_local(i), _local(o)) for i, _, _, o in found[1]} == {("van_a", "c0_0"), ("van_b", "c0_0")}
+    assert reading.contradicted(together, "dispatcher") == ["no_cell_holds_two_vans: (van_a, 0, c0_0), (van_b, 0, c0_0)"], \
+        "onboarding refuses the world as posed, naming the constraint and its rows"
+    assert reading.contradicted(WORLD, "dispatcher") == [], "the shipped pose is possible"
+    assert Planner(boot(WORLD, "dispatcher"), "dispatcher").contradictions(NOW) == []

@@ -2,12 +2,15 @@
 read off the constraint's footprint over what the actions can reach from the present
 (knowledge/domain/planning/constraint.md, one-mind-couples-the-wants-a-constraint-can-make-collide).
 
-A constraint is a standing desire in its `planning:unmetWhen` form: one select whose rows are the
-instances in the avoided state. Its footprint is what a scope's is, one level up — the predicates it
-reads and the key it joins them on — and the derivation couples two instances into one want where
-the constraint can join an atom some plan for the one may write to an atom some plan for the other
-may write: the two-vans aversion reads `courier:at` on vans and joins on the cell, so two parcels
-whose vans can meet on a cell are one cluster, and two whose vans never can are two.
+A constraint is a `planning:Constraint` the holder holds — what the world says is POSSIBLE, stated
+in a desire's words, a shape under `planning:metWhen` or an avoided state under `planning:unmetWhen`,
+and compiled by `violation.select_of` into the one select whose rows are its violations. Its
+footprint is what a scope's is, one level up — the predicates it reads and the key it joins them on
+— and the derivation couples two instances into one want where the constraint can join an atom some
+plan for the one may write to an atom some plan for the other may write: the two-vans constraint
+reads `courier:at` on vans and joins on the cell, so two parcels whose vans can meet on a cell are
+one cluster, and two whose vans never can are two. A desire couples nothing, however it is
+authored: an aversion is a state the agent may enter and must leave, not one no plan may make.
 
 **READ OVER THE REACH, NOT OVER THE PUBLIC GRAPHS.** `footprint.atoms_of` reads a scope's atoms
 off the public graphs alone, every pattern optional, which is right for a partition that must stand
@@ -47,9 +50,10 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent.ontology import ACTION, GRAPH_PREFIX
-from agent.store import NAMESPACES, Unbound, bind, graphs_of, rows
+from agent.store import NAMESPACES, Unbound, bind, graphs_of, rdflib_view, rows
 
-from .ontology import DESIRE, SHAPES
+from . import violation
+from .ontology import CONSTRAINT_GRAPH, SHAPES
 from .world_at import world_at
 
 log = logging.getLogger("couplings")
@@ -64,11 +68,9 @@ REACH_GRAPH = GRAPH_PREFIX + "reach"
 #  per row would not, and no shipped effect does, so the ceiling is a guard and never reached.
 ROUNDS = 64
 
-#  THE HOLDER'S CONSTRAINTS: every desire it holds in the avoided-state form, with the one select
-#  the avoided state carries — read where a desire lives and where a domain's shapes do.
-_CONSTRAINTS_Q = """
-SELECT ?d ?text WHERE { $holder planning:holds ?d . ?d a planning:Desire ; planning:unmetWhen ?node . ?node sh:select ?text }
-ORDER BY ?d"""
+#  THE HOLDER'S CONSTRAINTS: every `planning:Constraint` it holds, read where a world states them;
+#  the select each compiles to is read off the shapes crossed, under either polarity.
+_CONSTRAINTS_Q = """SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c"""
 
 #  THE ACTIONS' PRECONDITIONS AND THE CONSTRUCTS OF THEIR EFFECTS — what the reach is closed over.
 #  A rule's `planning:update` is a delete, and the reach deletes nothing.
@@ -109,9 +111,22 @@ def couplings(store: ox.Store, holder: str, present: str, now: datetime, *, memo
     """What `holder`'s constraints can make collide, read over the reach from the `present` ground
     of `store` — or None where the holder holds no constraint, which costs one query and couples
     nothing. `now` is the pass's instant; `memo` the pass's, for the graph lists `world_at` keeps."""
-    constraints = rows(store, _CONSTRAINTS_Q, graphs_of(store, DESIRE, SHAPES), holder=holder)
+    constraints = rows(store, _CONSTRAINTS_Q, graphs_of(store, CONSTRAINT_GRAPH), holder=holder)
     if not constraints:
         return None
+    #  WHAT EACH COMPILES TO, off the shapes a constraint's test lives among — its own graph's, or
+    #  a domain's. One that will not compile couples everything, as one that will not run does:
+    #  what cannot be read cannot be proven not to collide.
+    shapes = rdflib_view(store, *graphs_of(store, CONSTRAINT_GRAPH, SHAPES))
+    selects = []
+    for c in constraints:
+        try:
+            text = violation.select_of(shapes, c["c"])
+        except violation.Unsupported as exc:
+            log.warning("a constraint cannot be compiled; every instance is coupled: %s", exc)
+            return Couplings([], {}, anything=True)
+        if text is not None:
+            selects.append(text)
     graphs = world_at(store, present, now=now, memo=memo)
     actions = rows(store, _ACTIONS_Q, graphs_of(store, ACTION, at=now))
     default = [ox.NamedNode(g) for g in graphs] + [ox.NamedNode(REACH_GRAPH)]
@@ -130,7 +145,7 @@ def couplings(store: ox.Store, holder: str, present: str, now: datetime, *, memo
             #  joined, and a pass that died here over it found nothing (#902, measured).
             log.warning("a construct could not be run over the reach; every instance is coupled: %s", exc)
             return Couplings([], {}, anything=True)
-        parts = _parts(store, [c["text"] for c in constraints], holder, default)
+        parts = _parts(store, selects, holder, default)
         if parts is None:
             return Couplings([], {}, anything=True)
         bound = _bound(store, [a["precondition"] for a in actions], holder, default)

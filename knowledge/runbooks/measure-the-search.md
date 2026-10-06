@@ -376,7 +376,10 @@ trigger the record's first seam names, pinned `Exhausted` beside the aversion's 
 
 # The dispatcher: the invariant weighed in every possible world, and the worlds it refuses (2026-10-05, #902)
 
-The bound [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)
+*Superseded the next day: the aversion became a `planning:Constraint` and a refused world an
+impossible one (the section after this). The figures below are the bound's as measured on the
+desire's form, and `planning:refused` is retired; they are kept because the section after compares
+to them.* The bound [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)
 decided: `Planner.expand` weighs each state [invariant](/domain/planning/constraint.md) of the holder
 whose select reads a predicate the scope's actions write in every possible world it weighs a want in,
 and a world whose weighing carries a violation row its parent's lacks is refused — `planning:refused`
@@ -441,6 +444,60 @@ nothing a repair does; the joint want is still `Exhausted` at 128 and at 512, 39
 product's seam stands as written. **Disjoint grids** pay the aversion's weighing in all 42 worlds
 though none can hold two vans: the bound reads the invariant's footprint by predicate, and `at` is
 the drive's, where the reach would have told it nothing collides — the record's seam.
+
+# The dispatcher: the constraint a kind of its own, and the worlds it makes impossible (2026-10-06)
+
+The rework of the section above, decided with the sovereign: a [constraint](/domain/planning/constraint.md)
+is a check that a world is POSSIBLE and a met-test that it is DESIRED, so the dispatcher's two-vans
+rule is a `planning:Constraint` and no desire (`world/dispatcher/constraints.ttl`), `Planner.expand`
+weighs it in every possible world it weighs a want in, and a world where it yields a row is
+`planning:impossible` on its own row with the want's weighing of it bare — no parent compared, no
+repair — while a present that violates it is a contradiction the pass says and `orexis-onboard`
+refuses, and mints nothing. Measured on the development container, the tree before — `10f32c49`, the
+courier's band, which is the section above's code — exported to the scratchpad and this tree
+alternated per round in one session, five rounds, one pass of the Planner over the booted world as
+`world/dispatcher/tests/test_dispatcher.py` builds it; candidates, weighings and two-van worlds as the
+sections above count them, impossible the possible worlds marked. The counts did not move between
+rounds on either tree.
+
+| pose | tree | budget | candidates | weighings per want | impossible | two-van worlds | plan | pass, median of five (min) |
+|---|---|---|---|---|---|---|---|---|
+| apart, as shipped | before | 256 | 228 | 148, and the aversion in 148 | 0 refused | 0 | one of ten steps | 3110 ms (2955) |
+| apart, as shipped | after | 256 | 228 | 148, and the constraint in 148 | 0 | 0 | the same | 3317 ms (3132) |
+| the corridor | before | 512 | 286 | 210, and the aversion in 210 | 13 refused | 16 | one of ten steps, sharing no cell | 6152 ms (6113) |
+| the corridor | after | 512 | 286 | 210, and the constraint in 210 | 13 | 16, 13 impossible and 3 passed over by hash; none opened | the same | 6695 ms (6188) |
+| van B parked on `c2_1` | before | 128 | 56 | 49, and the aversion in 49 | 7 refused | 8 | five steps BY VAN B | 373 ms (364) |
+| the same | after | 128 | 56 | 49, and the constraint in 49 | 7 | 8; none opened | the same | 434 ms (389) |
+| parcel A aboard van A, van B parked | before | 128 | 66 | 52, and the aversion in 52 | 5 refused | 8 | four steps: B aside, A through | 402 ms (387) |
+| the same | after | 128 | 66 | 52, and the constraint in 52 | 5 | 8; none opened | the same | 435 ms (372) |
+| both vans on `c0_0` | before | 128 | 4 and 128 | 4 and 75, and the aversion in 75 | 7 refused | 14 | the aversion's one-step drive; the joint `Exhausted` | 966 ms (837) |
+| both vans on `c0_0` | after | 128 | 128 | 75, and the constraint in 75 | 7 | 14 | NO want from the constraint; the present a contradiction, said; the joint `Exhausted` | 916 ms (891) |
+| the vans on disjoint grids | before | 128 | 27 and 27 | 23 and 23, and the aversion in 42 | 0 | 0 | two of five steps | 378 ms (362) |
+| the vans on disjoint grids | after | 128 | 27 and 27 | 23 and 23, and the constraint in 42 | 0 | 0 | the same | 357 ms (343) |
+
+**Every count held, and one pose changed meaning.** On every pose where the bound refused a world,
+impossibility marks the same world: on the dispatcher's grid no world the search makes keeps a
+violation the present had, so "never newly enter" and "impossible" name the same thirteen worlds on
+the corridor, seven on the parked van, five with the parcel aboard. The together pose is where the
+two differ: the aversion's one-step want and its 4 weighings are gone, the pass warns `the present
+violates no_cell_holds_two_vans, a constraint of this world, and nothing repairs it: (van_a, 0, c0_0),
+(van_b, 0, c0_0)`, `reading.contradicted` answers the same row to `orexis-onboard`, and the joint
+want's search still marks the seven worlds that part the vans and bring them together again — those
+are worlds the search made, and the present's own violation is not one. The timings lean a few
+percent slower on the searched poses and faster on two, all inside the drift this machine shows
+between rounds of one tree (the shipped pose's five base passes ran 2955 to 3447 ms). What was added
+per candidate is one `OPTIONAL` in `weigh`'s `_ABOUT_Q`, reading the world's mark, and one in the
+planner's `_REACHED_Q`; what was removed is the parent's rows read once per pass per world. The
+search bench (`agent/planning/tests/test_bench.py`), a holder with no constraint, alternated twice,
+read 61, 182 and 183 ms before against 76, 198 and 175 after, then 74, 167 and 177 against 79, 175
+and 198 — two disks, three disks, the courier's corner, 225, 475 and 548 queries a pass on both
+trees, so no query was added to a holder with none — and the greenhouse pass bench
+(`world/greenhouse/tests/test_bench.py`) read its search lap 78, 28, 108 and 35 ms before against 68,
+28, 87 and 33 after, then 61, 51, 108 and 31 against 57, 33, 88 and 30, its four cases in order,
+seven quads more for the three terms declared. **What stands from the section above:** the mark takes
+the verdict back rather than filtering the frontier's read, since the filter cost a quarter of every
+pass; the marked world and its weighings are kept, not forgotten; and the parked van is still
+delivered by van B, or van B moved aside, with the estimate loose by the step the constraint costs.
 
 # The courier's drives take a stretch (2026-10-05, #901)
 

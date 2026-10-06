@@ -139,12 +139,17 @@ GRAPH :desires {
           } GROUP BY ?p
       }""" .
   :keeper planning:holds :keeper.every_parcel_delivered .
-  :keeper planning:holds :keeper.no_cell_holds_two_vans .
   :keeper.every_parcel_delivered a planning:Desire .
   :keeper.every_parcel_delivered planning:estimates :drivesOwed .
   :keeper.every_parcel_delivered planning:metWhen :delivered .
   :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
-  :keeper.no_cell_holds_two_vans a planning:Desire .
+}
+
+# THE WORLD'S CONSTRAINT, a `planning:Constraint` and no desire: two vans cannot share a cell. What
+# couples the two parcels — and never minted, since a world violating it is impossible, not unwanted.
+GRAPH :constraints {
+  :keeper planning:holds :keeper.no_cell_holds_two_vans .
+  :keeper.no_cell_holds_two_vans a planning:Constraint .
   :keeper.no_cell_holds_two_vans planning:unmetWhen :two_vans_on_one_cell .
   :keeper.no_cell_holds_two_vans rdfs:label "no cell holds two vans" .
   :two_vans_on_one_cell sh:select """PREFIX courier: <http://example.org/orexis/courier#>
@@ -192,6 +197,9 @@ GRAPH :catalogue {
   :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :constraints a orexis:Graph .
+  :constraints a orexis:PublicGraph .
+  :constraints a planning:ConstraintGraph .
   :desires a orexis:Graph .
   :desires a planning:DesireGraph .
   :ontology a orexis:Graph .

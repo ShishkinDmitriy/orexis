@@ -226,16 +226,21 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **One mind couples the wants a constraint can make collide, and searches them as one** — a
   constraint's footprint, read over what the actions can REACH from the present (off the public
   graphs alone, as a scope's is, it is grid-blind, measured), says which wants' plans may interfere; those are one
-  cluster, one want, one search, optimal for both by construction, and the invariant is weighed in
-  every possible world to refuse one that newly enters it; a walking want is reconsidered when a want
+  cluster, one want, one search, optimal for both by construction, and the constraint is weighed in
+  every possible world, one that violates it being impossible; a walking want is reconsidered when a want
   the footprint couples to it arrives; two minds optimize alone and meet through prediction, the
   market and execution; sequencing the elder plan as the younger's ground was refused as the two-minds
   tool used on one (#567, one-mind-couples-the-wants-a-constraint-can-make-collide).
 - **A desire weighed in a ground and a want weighed in a possible world are one judgment at two
   grains**, and `planning:Weighing` carries the `planning:violation` rows for either — and a desire
-  is weighed in grounds to mint and, where it is a state invariant the scope's actions can write, in
-  every possible world to bound: a world whose rows newly enter the avoided state is `planning:refused`,
-  off the frontier and never an achiever, and one already unmet in the root bounds nothing (#902).
+  is weighed in grounds alone, to mint; nothing weighs one against a plan.
+- **A constraint says a world is possible and a met-test that it is desired, and an impossible world
+  is never repaired** — `planning:Constraint` is its own kind, stated by the world in a desire's words,
+  weighed in every possible world the scope's actions can write it in, and a world violating one is
+  `planning:impossible` on its own row, the want's weighing of it bare; a present violating one is a
+  contradiction said in the log and refused by `orexis-onboard`, never a want; the aversion that was
+  the dispatcher's desire was physics, and a desire's bound over worlds and an executor-held resource
+  were both built and refused (#902, constraint, one-mind-couples-the-wants-a-constraint-can-make-collide).
 - **A derivation asks nothing the met-tests do not answer** — how far ahead the agent sees is the
   horizons each drift predicts at.
 - **Two readings of one met-test are not a duplicate when the compiler, the source and the cache

@@ -129,11 +129,13 @@ derivation itself wrote — it was
   today; the ∀/∃ difference lives in the planner's treatment rather than in anything that checks
   it. Whether a maintenance constraint should be judged at every state of a candidate plan — which
   is what `always` meant and what no reader ever implemented — is the first thing to measure when
-  a Desire with a period is first written. Decided 2026-10-05 for the standing aversion: yes, as a
-  bound and never a score — a world that newly enters the avoided state is refused
-  ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)),
-  and built the same day (#902): `Planner.expand` weighs the aversion in every possible world and
-  writes `planning:refused` where its rows are new.
+  a Desire with a period is first written. Decided 2026-10-05 for the standing aversion and settled
+  2026-10-06 by modality: a desire, aversion included, is weighed in grounds alone and never held
+  against a plan; what is judged at every state of a candidate plan is a `planning:Constraint`, what
+  the world says is possible, and a world violating one is impossible rather than scored or refused
+  ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md),
+  [constraint](/domain/planning/constraint.md)). `Planner.expand` weighs every constraint in every
+  possible world and marks `planning:impossible` where one yields a row.
 - **A world cannot state a window on a want it ratifies.** Every want a world authors shares
   `graph/want/asserted`, so per-want periods need per-want graphs, minted at genesis. That is the
   only part of taking this model that is work rather than subtraction. (The authored desires and

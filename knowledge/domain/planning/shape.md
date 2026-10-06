@@ -33,7 +33,9 @@ mints is exactly that, the bridge's WHERE bound and negated.
 
 An aversion is the other polarity and no shape: what a desire points at with `planning:unmetWhen`
 is one select, and [desire](/domain/planning/desire.md) says what it is; `violation.entered_select`
-puts its rows in this same report, unnegated.
+puts its rows in this same report, unnegated. A [constraint](/domain/planning/constraint.md) carries
+either polarity in the same words, and `violation.select_of` reads whichever a subject carries; what
+a row then means — trouble to repair, or a world that cannot be — is the modality's and not the compiler's.
 
 A met-test is a boolean by nature. How far a world still is belongs to `planning:estimates`, a
 separate select the domain promises never overstates, which orders the frontier and judges nothing.

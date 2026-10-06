@@ -70,8 +70,8 @@ def test_two_parcels_on_disjoint_grids_are_not_joined(laid):
 
 
 def test_a_holder_with_no_constraint_couples_nothing_and_pays_no_reach(laid):
-    """A desire in its met-test form is no constraint: the two-parcels case without the aversion
-    answers None before any reach is computed."""
+    """A desire is no constraint, in either polarity: the two-parcels case that states none answers
+    None before any reach is computed."""
     store = laid("two_parcels_two_estimates")
     assert couplings(store, T + "keeper", _present(store), NOW) is None
 

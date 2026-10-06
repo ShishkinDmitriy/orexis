@@ -76,6 +76,24 @@ def test_an_avoided_state_narrowed_by_a_target_node_answers_for_that_instance_al
     assert [r["this"] for r in _rows(violation.entered_select(shapes, node))] == [T + "low"]
 
 
+def test_select_of_reads_either_polarity_off_the_subject_and_refuses_both():
+    """ONE READER FOR A DESIRE, A WANT AND A CONSTRAINT: `select_of` takes the subject and answers
+    the select its polarity compiles to — a shape under `planning:metWhen` through `report_select`,
+    an avoided state under `planning:unmetWhen` through `entered_select` — the same rows either way,
+    the low tank here. None for a subject carrying neither; a subject carrying both is refused,
+    since judged by whichever a read found first a thing wrongly judged met is withdrawn."""
+    shapes = rdflib.Graph().parse(data=SHAPE + AVOIDED, format="turtle")
+    wanted, averse, bare = (rdflib.URIRef(T + s) for s in ("wanted", "averse", "bare"))
+    shapes.add((wanted, violation.PLANNING.metWhen, rdflib.URIRef(T + "full")))
+    shapes.add((averse, violation.PLANNING.unmetWhen, rdflib.URIRef(T + "low_tank")))
+    assert [r["this"] for r in _rows(violation.select_of(shapes, wanted))] == [T + "low"]
+    assert [r["this"] for r in _rows(violation.select_of(shapes, str(averse)))] == [T + "low"]
+    assert violation.select_of(shapes, bare) is None
+    shapes.add((wanted, violation.PLANNING.unmetWhen, rdflib.URIRef(T + "low_tank")))
+    with pytest.raises(violation.Unsupported, match="both"):
+        violation.select_of(shapes, wanted)
+
+
 def test_an_avoided_state_that_is_not_one_select_refuses():
     """A node with no select would read as met for ever; a shape where an avoided state was
     expected is not compiled inside out — both refuse, named, and `weigh` leaves the desire

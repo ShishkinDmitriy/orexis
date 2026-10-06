@@ -1,49 +1,28 @@
 @prefix : <http://example.org/orexis/world/dispatcher#> .
 @prefix courier: <http://example.org/orexis/courier#> .
 @prefix orexis: <http://example.org/orexis#> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
 
 <> a planning:DesireGraph .    # this document is one graph, and this is what it is
 
-#  TWO DESIRES, and desires rather than wants: the dispatcher runs for good, asking at every
-#  instant that every parcel stand where it is owed and that no cell hold two vans.
+#  ONE DESIRE, and a desire rather than a want: the dispatcher runs for good, asking at every
+#  instant that every parcel stand where it is owed.
 #
 #  THE DELIVERY points at the domain's shape and the domain's estimate, as the courier's want
 #  does. The shape targets every parcel, so the derivation mints one want PER PARCEL — two
-#  instances in trouble are two wants, as two debts are — and each is searched on its own.
+#  instances in trouble are two wants, as two debts are — unless the world's constraint can make
+#  their plans collide, and here it can: both vans reach every cell of the one grid, so the two
+#  parcels are ONE want and one search (one-mind-couples-the-wants-a-constraint-can-make-collide).
 #
-#  THE AVERSION is the world's own, since no domain says that two vans may not share a cell, and
-#  it is authored as `planning:unmetWhen`, as #567 asks: the AVOIDED STATE itself, one select
-#  whose rows are the vans sharing a cell, unmet where it yields a row (#892). It was a met-test
-#  over a `sh:sparql` constraint — a shape named `apart` wrapping this same select — because on
-#  the tree that shipped it `weigh` read `planning:metWhen` alone and an aversion so authored was
-#  weighed in no ground. The select projects the cell as `?value`, the offending value, so each
-#  witness says where the two stand; it says nothing of what it is about, so the want minted from
-#  it is about both vans and named for neither, and a one-step plan — either van's drive — parts
-#  them (`tests/test_dispatcher.py`). It is also the world's one STATE INVARIANT: weighed in every
-#  possible world a search here weighs, and a world that newly puts two vans on a cell is refused
-#  (#902), which is what keeps the two parcels' joint plan off the other van's cell.
+#  THAT NO CELL HOLDS TWO VANS IS NOT A DESIRE and is stated in `constraints.ttl`: it is what the
+#  world says is possible, and a world violating it is impossible rather than unwanted. It was a
+#  desire here, the aversion `no_cell_holds_two_vans`, and two vans posed on one cell minted a want
+#  a drive satisfied — physics repaired as a preference, which is the wrong modality.
 
-:dispatcher planning:holds :every_parcel_delivered , :no_cell_holds_two_vans .
+:dispatcher planning:holds :every_parcel_delivered .
 
 :every_parcel_delivered a planning:Desire ;
     rdfs:label "every parcel where it is owed" ;
     planning:metWhen courier:delivered ;
     planning:estimates courier:drivesOwed .
-
-:no_cell_holds_two_vans a planning:Desire ;
-    rdfs:label "no cell holds two vans" ;
-    planning:unmetWhen :two_vans_on_one_cell .
-
-:two_vans_on_one_cell
-    sh:message "two vans stand on one cell" ;
-    sh:select """PREFIX courier: <http://example.org/orexis/courier#>
-        SELECT $this ?value WHERE {
-            $this a courier:Van ;
-                courier:at ?value .
-            ?other a courier:Van ;
-                courier:at ?value .
-            FILTER(?other != $this)
-        }""" .

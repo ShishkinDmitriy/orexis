@@ -17,13 +17,15 @@ it targets must conform to. `planning:unmetWhen` points at the AVOIDED STATE: a 
 `sh:select`, `SELECT $this ?value WHERE { … }`, whose rows are the instances in it — `$this` the
 instance, `?value` where projected the offending value, `planning:about` on the node what the
 trouble is about — and the desire is unmet where it yields a row. That is the aversion's honest
-form: "unmet when two vans stand on one cell" reads as it evaluates, where a shape named for the
+form: "unmet when two tanks stand on one stand" reads as it evaluates, where a shape named for the
 bad state reads inverted. `weigh` judges either in every ground and writes the same witnesses, so a
 want is minted from an aversion exactly as from a met-test and carries the same select under the
-same term, held to its instances by a `sh:targetNode` each (the dispatcher's
-`no_cell_holds_two_vans`, #892). One of the two, never both: a desire carrying both is not judged.
-An aversion is also a [constraint](/domain/planning/constraint.md), read as one by the derivation
-and the search.
+same term, held to its instances by a `sh:targetNode` each (the keeper's
+`two_tanks_on_one_stand`, #892). One of the two, never both: a desire carrying both is not judged.
+An aversion is a state the agent MAY enter and must then leave — repaired when entered, weighed in
+grounds and never in possible worlds. What the world says cannot be at all is a
+[constraint](/domain/planning/constraint.md), stated in the same words and of another modality, which
+is where the dispatcher's two-vans rule went once it was asked which it was.
 And, where its domain has one, `planning:estimates`, a select saying how far a world still is in
 the unit actions cost. It is about every instance at every instant, so it is never met once and
 for all and never handed to a search. A world authors it, in a `planning:DesireGraph`.

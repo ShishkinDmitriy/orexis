@@ -36,6 +36,7 @@ services:
       # its own belief base, and nobody else can name it
       - orexis-dispatcher-dispatcher:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./constraints.ttl:/app/world/dispatcher/constraints.ttl:ro
       - ./desires.ttl:/app/world/dispatcher/desires.ttl:ro
       - ./state.ttl:/app/world/dispatcher/state.ttl:ro
       - ./world.ttl:/app/world/dispatcher/world.ttl:ro
