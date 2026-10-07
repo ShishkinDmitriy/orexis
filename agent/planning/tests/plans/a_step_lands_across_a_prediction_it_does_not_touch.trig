@@ -1,17 +1,21 @@
-# a_fill_lands_in_a_later_ground
+# a_step_lands_across_a_prediction_it_does_not_touch
 #
-# One tank a single fill short of its floor NOW — six, where the floor is ten and a fill raises
-# the level by five — and a prediction that it drains to four from half a minute on. The fill
-# lands a minute after the turn at the least, so the world it reaches holds in the LATER ground,
-# where the tank reads four: forked from that ground with the fill replayed there, the world reads
-# nine, unmet, and the search chains a second fill (#596). Forked from the present, as every world
-# was, one fill read eleven and the plan was one step the world would have proved wrong.
+# Two tanks. The first is a single fill short of its floor NOW — six, where the floor is ten and a
+# fill raises the level by five; the second reads fifteen, in range, and a prediction says it
+# drains to twelve from half a minute on, still in range. The fill lands a minute after the turn
+# at the least, so the world it reaches is forked from the LATER ground, where the second tank
+# reads twelve, with the fill applied there (#596).
 #
-# WHAT THE DIFF SHOWS beyond a_low_tank_is_filled: two grounds, the present and the one the
-# prediction makes; the first fill's world under the second ground's facts, with the two graphs
-# derived from it saying what the fill changed THERE — four leaving for nine, not the present's six,
-# whose leaving for four is the drain's and no part of the step (#919); and a two-step plan whose
-# steps land from 12:01 and from 12:02.
+# WHAT THE STEP PREDICTS IS THE FILL'S ALONE (#919): the first tank leaves six for eleven, and
+# nothing of the second. Diffed against the world it was taken in, the present, the step also
+# carried the second tank's fifteen leaving for twelve — the drain a prediction foresaw, which no
+# act of this agent makes — so a fictive fill wrote the drain into the readings, and the landing
+# check held the fill to the second tank's drain. The other van's next cell, in the prototype of
+# #568, is the same shape.
+#
+# WHAT THE DIFF SHOWS: two grounds, the present and the one the prediction makes; the fill's
+# world under the second ground's facts, with the two graphs derived from it that say what the
+# fill changed there; and a one-step plan whose two graphs copy those.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -39,15 +43,15 @@ GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:localId "keeper" .
   :tank1 a :Tank .
+  :tank2 a :Tank .
 }
 
-# ONE LEVER: fill a tank that is below its floor, raising the level by five. The precondition
-# names the world it reads through no GRAPH clause at all — the runner hands it its graphs.
+# ONE LEVER: fill a tank that is below its floor, raising the level by five. It is FICTIVE, so an
+# executor takes it by writing what the step predicts into the readings.
 GRAPH :actions {
   :fill a orexis:Action .
+  :fill execution:implementation [ a execution:Implementation ; execution:operation [ a execution:Fictive ] ] .
   :fill orexis:takes :tank .
-  #  A FILL SHOWS WITHIN THREE MINUTES OF THE TURN, a minute at the least: the band a world reached by it holds over.
-  :fill planning:landsAfter """SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }""" .
   :fill planning:costs """PREFIX : <http://example.org/test#>
       SELECT (1 AS ?cost) WHERE { }""" .
   :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>
@@ -56,6 +60,8 @@ GRAPH :actions {
       CONSTRUCT { ?tank :level ?next } WHERE {
       $tank :level ?l .
       BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
+  #  A FILL SHOWS WITHIN THREE MINUTES OF THE TURN, a minute at the least: the band a world reached by it holds over.
+  :fill planning:landsAfter "SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }" .
   :fill planning:precondition """PREFIX : <http://example.org/test#>
       SELECT ?tank WHERE {
       ?tank a :Tank ; :level ?l .
@@ -76,11 +82,12 @@ GRAPH :desires {
 
 GRAPH :sensed {
   :tank1 :level 6 .
+  :tank2 :level 15 .
 }
 
-# WHAT THE TANK WILL READ from half past the minute: the drain the prediction foresees.
+# WHAT THE SECOND TANK WILL READ from half past the minute: a drain no act of this agent makes.
 GRAPH :predicted-0 {
-  :tank1 :level 4 .
+  :tank2 :level 12 .
 }
 
 GRAPH :scopes {
@@ -103,7 +110,7 @@ GRAPH :catalogue {
   :predicted-0 a orexis:Graph .
   :predicted-0 a orexis:PredictionGraph .
   :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:30+00:00"^^xsd:dateTime ] .
-  :predicted-0 orexis:retracts "PREFIX : <http://example.org/test#> DELETE { GRAPH $state { :tank1 :level ?was } } WHERE { GRAPH $state { :tank1 :level ?was } }" .
+  :predicted-0 orexis:retracts "PREFIX : <http://example.org/test#> DELETE { GRAPH $state { :tank2 :level ?was } } WHERE { GRAPH $state { :tank2 :level ?was } }" .
   :scopes a orexis:Graph .
   :scopes a orexis:WorkingGraph .
   :scopes a planning:ScopeGraph .

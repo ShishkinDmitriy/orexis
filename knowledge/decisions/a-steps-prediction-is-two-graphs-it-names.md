@@ -13,6 +13,18 @@ status: accepted
 timestamp: 2026-10-04T18:00:00Z
 ---
 
+> **Amended 2026-10-07** (#919): what the two graphs hold is what the step's effect changed in the
+> world it was applied to, and nothing else. Diffing the world the step reaches against the one it
+> leaves is that only where the first was forked from the second. Since #596 a world landing in a
+> later ground is forked from that ground with the path replayed, and the two worlds then differ by
+> everything the predictions moved between their periods as well: with another van's route laid
+> as predictions, every drive carried that van's next cell, a fictive drive wrote it into the
+> readings and the landing check held the drive to it. `take` now writes the replayed child
+> against the ground it was forked from, each way, into two graphs derived from the child before
+> that ground is cleared, and `extract_plan` copies those where they exist. The first two bullets
+> under *What it is now* describe the diff of the two worlds, which is still what every world
+> forked from its parent gives.
+
 # What was wrong
 
 Since #510 a [step](/domain/execution/step.md) said what taking it changes, and the
@@ -58,7 +70,8 @@ is the same move at one grain finer.
   { ?s ?p ?o } } }`, once per world on the ancestry, and the mirror for the retracts. The docstring
   that said "a diff of two graphs is not a pattern" was wrong: it is one `FILTER NOT EXISTS`. A blank
   node keeps its identity across a fork (`copy_graph` is the engine's), so a term diff is at least as
-  faithful as the canonical-form diff it replaces.
+  faithful as the canonical-form diff it replaces. (Amended: where the world was forked from a
+  later ground, the diff is against that ground, as `take` wrote it before the ground went.)
 - **The verdict is one `ASK`.** The executor asks, over the readings and their revisions as the
   default graph, whether any fact of the adds graph has no equal in the present or any fact of the
   retracts graph has one; the step is answered when the ask is false. Equality is SPARQL's `=`, so
@@ -127,6 +140,15 @@ is the same move at one grain finer.
 - **A predicted fact hanging off a blank node** is compared by the node's identity, which survives
   the copy into the belief base but never equals a node the world mints; such a step waits out its
   patience. Nothing shipped predicts one, and the fictive writer used to refuse one outright.
+- **A step whose effect replaces what a prediction moved retracts the foreseen value** (2026-10-07,
+  #919). The fill in `a_fill_lands_in_a_later_ground` lands where the drain has made the tank four,
+  so it retracts four and adds nine, which is what the world is held to at the landing. A FICTIVE
+  step writes that at take time, into a present still reading six, and the delete finds nothing:
+  the readings would hold six and nine. A step's prediction is facts and the effect's delete a
+  pattern, and the pattern does not survive into the facts. Nothing shipped has met it: across the
+  suite the only shipped steps whose worlds are forked in a later ground are the courier's fictive
+  drives and boardings in the dispatcher and the driver, and there the later ground holds what the
+  parent's does, so their two graphs were the same before #919 as after.
 - **Equality is exact.** The rounded canonical form compared numbers to six decimals; `=` compares
   values. No step predicts a sensed number — a dose predicts `sensing:inside`, which the rules
   conclude — so nothing has met the difference, and a tolerance belongs in the rule that would

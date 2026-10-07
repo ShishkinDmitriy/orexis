@@ -418,3 +418,73 @@ def test_a_want_the_world_meets_before_the_plan_begins_is_reached(monkeypatch, s
     monkeypatch.setattr(clock, "now", lambda: later)
     held.planner.plan(later)
     assert held.planner.reached == {standing.want}
+
+
+#  WHAT EVERY STEP OF A PLAN PREDICTS — each fact in either of its two graphs, by side.
+_PREDICTED_Q = """
+SELECT DISTINCT ?side ?s ?o WHERE {
+  GRAPH ?p { ?step a execution:Step ; ?side ?g . VALUES ?side { execution:adds execution:retracts } }
+  GRAPH ?g { ?s ?pred ?o } }"""
+
+
+def test_a_step_landing_across_a_prediction_predicts_its_own_effect_alone(monkeypatch, snapshots):
+    """#919. The fill lands a minute after the turn, so its world is forked from the ground the
+    prediction makes half a minute in, where the OTHER tank has drained from fifteen to twelve. What
+    the step predicts is what the fill changed there — the first tank from six to eleven — and
+    nothing the prediction moved: diffed against the world it was taken in, the step carried the
+    second tank's drain as its own, a fictive fill wrote it into the readings, and the landing check
+    held the fill to it. The other van's next cell in #568's prototype is the same shape.
+
+    Taken fictively, the fill writes the first tank's eleven and leaves the second tank reading the
+    fifteen it reads, and at its landing the present holds what the step predicted, so the
+    intention is done."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    T = "http://example.org/test#"
+    store = snapshots.stand_in(CASES_DIR / "a_step_lands_across_a_prediction_it_does_not_touch.trig")
+    held = _Held(store, snapshots.AGENT, fictive=True)
+    held.plan(snapshots.NOW)
+    predicted = {(r["side"].rsplit("#", 1)[1], r["s"].rsplit("#", 1)[1], r["o"]) for r in rows(store, _PREDICTED_Q, ())}
+    assert predicted == {("adds", "tank1", "11"), ("retracts", "tank1", "6")}, \
+        "the fill's own change, and nothing of the tank the prediction drains"
+    assert held.executor.walk(snapshots.NOW) == 1
+    levels = {r["s"].rsplit("#", 1)[1]: r["o"] for r in rows(
+        store, f"SELECT ?s ?o WHERE {{ GRAPH <{T}sensed> {{ ?s <{T}level> ?o }} }}")}
+    assert levels == {"tank1": "11", "tank2": "15"}, "the fictive fill wrote nothing the prediction moved"
+    landed = snapshots.NOW + timedelta(minutes=1)
+    monkeypatch.setattr(clock, "now", lambda: landed)
+    held.executor.walk(landed)
+    assert [r["o"] for r in rows(store, _OUTCOMES_Q, ())] == ["done"]
+
+
+#  THE GRAPHS SAYING WHAT A STEP'S EFFECT CHANGED IN A LATER GROUND, each with the world it was
+#  derived from.
+_CHANGES_Q = """
+SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+  ?g prov:wasDerivedFrom ?w ; a ?side . VALUES ?side { execution:AddsGraph execution:RetractsGraph } } }"""
+
+
+def test_a_world_the_re_root_drops_takes_what_its_step_changed_with_it(monkeypatch, snapshots):
+    """The two graphs `take` derives from a world forked in a later ground are that world's, and
+    nothing without it: a surprise drops every world the last pass made, and with them the graphs
+    that said what their steps changed — quads and rows — where left standing they would be litter
+    no reader asks for and the imaginarium would grow by two graphs a replayed fork for ever."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    T = "http://example.org/test#"
+    store = snapshots.stand_in(CASES_DIR / "a_step_lands_across_a_prediction_it_does_not_touch.trig")
+    planner = Planner(store, snapshots.AGENT)
+    planner.plan(snapshots.NOW)
+    (im,) = planner.imaginaria.values()
+    first = {r["g"] for r in rows(im, _CHANGES_Q, ())}
+    assert len(first) == 2, "the fill's world was forked in the later ground, and says what the fill changed there"
+    store.update(f"DELETE DATA {{ GRAPH <{T}sensed> {{ <{T}tank1> <{T}level> 6 }} }} ; "
+                 f"INSERT DATA {{ GRAPH <{T}sensed> {{ <{T}tank1> <{T}level> 7 }} }}")
+    later = snapshots.NOW + timedelta(minutes=1)
+    monkeypatch.setattr(clock, "now", lambda: later)
+    planner.plan(later)
+    (im,) = planner.imaginaria.values()
+    #  A MINUTE ON, the drain has begun and the present ground holds it, so the fill searched afresh
+    #  lands in the ground it is taken in and nothing is forked in a later one: any such graph left
+    #  standing is the last pass's.
+    assert rows(im, _CHANGES_Q, ()) == [], "no graph of what a step changed outlives its world"
+    for g in first:
+        assert not list(im.quads_for_pattern(None, None, None, ox.NamedNode(g))), g

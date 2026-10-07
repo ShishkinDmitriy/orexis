@@ -26,6 +26,13 @@ replace its value, so a filling naming the reading finds it in every ground. Whe
 stays inside the parent's period — hanoi, the courier, a dose landing within a cadence — nothing
 is replayed and the child is forked from its parent, as it always was.
 
+**AND WHAT THE EFFECT CHANGED IS SAID BEFORE THE REPLAYED GROUND GOES** (#919). Such a child differs
+from its parent by the step's effect AND by everything the predictions moved between the two
+periods; the step's prediction is the first alone, so the child against the replayed ground, each
+way, is written into `<child>.adds` and `<child>.retracts`, derived from the child, and
+`extract_plan` copies those where it would otherwise diff the child against its parent. A child
+forked from its parent needs nothing written: the two differ by the effect and nothing else.
+
 AN EFFECT IS RULES, GROUPED BY ORDER. An action's `planning:effect` holds `sh:rule`s, each a
 `sh:SPARQLRule` whose `sh:construct` yields what applying it ADDS, or whose `planning:update` is a
 `DELETE … WHERE` taking away whatever stands in the place the step changes, which nobody can name
@@ -55,6 +62,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
+from agent.execution.ontology import ADDS_GRAPH, RETRACTS_GRAPH
 from agent.hash_named_graph import digest_of
 from agent.ontology import ACTION, PUBLIC, local_of
 import pyoxigraph as ox
@@ -129,6 +137,18 @@ INSERT { GRAPH ?cat { $world a $kinds ; orexis:arrivedBy orexis:Derived ; orexis
                       dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ; orexis:end $end ] } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"""
 
+#  WHAT THE EFFECT CHANGED, IN THE WORLD IT WAS APPLIED TO, where that world is not the one the
+#  candidate was taken in and is about to go (#919): the child against the ground at its landing
+#  with the path replayed, `$base`, each way, into two graphs the child's row cannot hold and
+#  whose rows say they were derived from it — the kinds a step's prediction is, since that is what
+#  `extract_plan` makes of them. The diff is the engine's, as the step's own is.
+_CHANGED_U = """
+INSERT { GRAPH $adds { ?s ?p ?o } } WHERE { GRAPH $world { ?s ?p ?o } FILTER NOT EXISTS { GRAPH $base { ?s ?p ?o } } } ;
+INSERT { GRAPH $retracts { ?s ?p ?o } } WHERE { GRAPH $base { ?s ?p ?o } FILTER NOT EXISTS { GRAPH $world { ?s ?p ?o } } } ;
+INSERT { GRAPH ?cat { $adds a $addskinds ; orexis:arrivedBy orexis:Derived ; prov:wasDerivedFrom $world .
+                      $retracts a $retractskinds ; orexis:arrivedBy orexis:Derived ; prov:wasDerivedFrom $world } }
+WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"""
+
 
 
 def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = None) -> bool:
@@ -162,6 +182,8 @@ def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = Non
         base = _replayed(store, cand, child, lands_in, me, memo)
         made = _apply(store, cand, child, me, memo, base=base,
                       graphs=[base if g == lands_in else g for g in world_at(store, lands_in, memo=memo)])
+        if made:
+            _changed(store, child, base, memo)
         clear_graph(store, base)
     if not made:
         return False
@@ -241,6 +263,24 @@ def _replayed(store, cand: str, child: str, ground: str, me: str, memo) -> str:
             _change(store, base, added, deletes)
     log.debug("%s lands in %s: %d step(s) replayed there", local_of(child), ground.rsplit("/", 1)[-1], len(path))
     return base
+
+
+def _changed(store, world: str, base: str, memo) -> None:
+    """Say what the effect changed in `base`, the world `world` was forked from, as two graphs
+    derived from `world` — `<world>.adds` and `<world>.retracts` — before `base` is cleared.
+
+    ONLY WHERE THE CHILD WAS REPLAYED. Forked from its parent, a world differs from the world its
+    candidate was taken in by the effect and nothing else, so that diff IS the effect's change and
+    `extract_plan` takes it there. Forked from a later ground, it differs also by everything the
+    predictions moved between the two periods — another van's next cell, the drain of a tank — and
+    the one graph that told the two apart, the base, is gone by the time a plan is read. Written
+    for every fork it would cost two diffs and four rows on every candidate taken, to say what the
+    parent already says."""
+    adds = remember(memo, ("closed", ADDS_GRAPH), lambda: closed(store, ADDS_GRAPH))
+    retracts = remember(memo, ("closed", RETRACTS_GRAPH), lambda: closed(store, RETRACTS_GRAPH))
+    update(store, bind(_CHANGED_U, world=world, base=base, adds=f"{world}.adds", retracts=f"{world}.retracts",
+                       addskinds=Raw(" , ".join(f"<{k}>" for k in adds)),
+                       retractskinds=Raw(" , ".join(f"<{k}>" for k in retracts))))
 
 
 def _change(store, into: str, added, deletes) -> None:

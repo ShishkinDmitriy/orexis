@@ -351,6 +351,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   there** — forked from its parent, a fill landing after a predicted drain read eleven where the
   world would read nine; a landing straddling a boundary is judged at its earliest alone, which is
   what #596 still asks.
+- **A step predicts its effect's change alone, never what the ground moved between its parent's
+  period and its own** — a world forked in a later ground says what its effect changed there before
+  that ground goes, since diffed against its parent every drive carried the other van's next cell,
+  wrote it fictively and was held to it (#919).
 - **A step lands as long after it is taken as its plan placed it after its opening.**
 - **A want's view is parsed off its met-test, never declared beside it**, and a want spanning
   scopes is searched in the first of them.

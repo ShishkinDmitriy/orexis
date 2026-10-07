@@ -34,7 +34,7 @@ predict a moisture value: the step is sized from the present when it is taken, b
 
 # What it is held to
 
-The diff between the world a step reaches and the one it leaves is what the step predicts, held in
+The effect's own change, in the world it was applied to, is what the step predicts, held in
 the two graphs it `execution:adds` and `execution:retracts`, and the
 [executor](/domain/execution/executor.md) waits at the landing for the
 present — readings and their revisions — to hold every addition and none of the retractions, asked

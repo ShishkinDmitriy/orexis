@@ -103,6 +103,13 @@ DELETE { GRAPH $cat { ?c planning:from $match } }
 INSERT { GRAPH $cat { ?c planning:from $ground } }
 WHERE  { GRAPH $cat { ?c planning:from $match } }"""
 
+#  WHAT A WORLD THAT WENT TAKES WITH IT: the two graphs `take` derived from a world forked from a
+#  later ground, saying what its step's effect changed there (#919) — a world's, and nothing
+#  without it.
+_CHANGES_Q = """
+SELECT ?g WHERE { GRAPH $cat { VALUES ?w { $worlds } ?g prov:wasDerivedFrom ?w ; a ?kind .
+                               VALUES ?kind { execution:AddsGraph execution:RetractsGraph } } }"""
+
 #  WHAT THE CATALOGUE SAID OF THE GRAPHS THAT WENT, their periods with them — one text for all
 #  of them, where `forget_graph` would be two round trips each over tens of worlds.
 _DROP_GRAPHS_U = """
@@ -161,10 +168,12 @@ def reroot(store, ground: str) -> Rerooting:
         update(store, bind(_RESTAMP_U, ground=ground, match=match, cat=cat))
         update(store, bind(_REPARENT_U, ground=ground, match=match, cat=cat))
     gone = sorted(r["w"] for r in rows(store, _MADE_Q, (), cat=cat) if r["w"] not in kept)
-    for graph in gone:
+    changes = sorted(r["g"] for r in rows(store, _CHANGES_Q, (), cat=cat,
+                                          worlds=Raw(" ".join(f"<{g}>" for g in gone)))) if gone else []
+    for graph in (*gone, *changes):
         clear_graph(store, graph)
     if gone:
-        update(store, bind(_DROP_GRAPHS_U, cat=cat, graphs=Raw(" ".join(f"<{g}>" for g in gone))))
+        update(store, bind(_DROP_GRAPHS_U, cat=cat, graphs=Raw(" ".join(f"<{g}>" for g in (*gone, *changes)))))
         update(store, bind(_DROP_ROWS_U, cat=cat))
     #  SAID AT INFO ONLY WHERE SOMETHING HAPPENED: a step landed as a world predicted, or a surprise
     #  took the cone. The present repeating the last ground is every idle pass — once a second on
