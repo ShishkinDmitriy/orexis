@@ -233,9 +233,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (#567, one-mind-couples-the-wants-a-constraint-can-make-collide).
 - **Where defecting pays, a resource has an owner who issues and checks claims; where a collision
   harms both, peers keep a convention, and a symmetric conflict is settled by lots drawn by commit and
-  reveal** — nobody owns a cell, so vans in range say their routes and the loser lays the winner's as
-  a prediction; a market lot, a reservation table and a rank were refused (#568,
-  two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict).
+  reveal** — nobody owns a cell, so a van in range asks what its constraint reads and a peer answers
+  only under a constraint it shares; a market lot, a reservation table, a rank and telling the whole
+  route were refused (#568, two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict).
 - **State two plans share couples their wants only where a constraint is stated over it** — one
   driver both parcels' plans move was two wants, and a walk that drove a van its driver had left,
   until the world held that a driver is aboard one van: a constraint no plan breaks, held for its

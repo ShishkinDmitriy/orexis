@@ -32,8 +32,8 @@ timestamp: 2026-10-05T09:00:00Z
 
 > **Superseded in part, 2026-10-07.** How two minds meet is
 > [two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict](/decisions/two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict.md)'s:
-> vans in range say their routes, draw lots by commit and reveal on a conflict, and the loser lays
-> the winner's route as a prediction. "What the market allocates (right-of-way as a lot, #568)" below
+> vans in range ask each other what their constraint reads and draw lots by commit and reveal on a
+> conflict. "What the market allocates (right-of-way as a lot, #568)" below
 > is refused there, since nobody owns a cell. Everything about ONE mind stands.
 
 # The question
@@ -236,8 +236,8 @@ laid into the grounds like any other), and what the market allocates (right-of-w
 Laying another's plan as a prediction into one's grounds is the two-minds tool, and that is why this
 record's first version was wrong for one mind: it used the tool for strangers on plans one mind sees
 both of. *Amended 2026-10-07: the market is not one of the channels for a cell, which nobody owns;
-two minds meet by sensing each other, saying their routes and drawing lots on a conflict, the loser
-laying the winner's route as that prediction
+two minds meet by sensing each other, asking what their constraint reads and drawing lots on a
+conflict
 ([two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict](/decisions/two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict.md)).*
 
 **A world whose steps land at once composes no future, where the vans move at once.** A coupled plan

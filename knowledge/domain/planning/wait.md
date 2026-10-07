@@ -68,5 +68,5 @@ every want of the scope shares, so no want can yet say that waiting is dear to i
 Nothing. Its [step](/domain/execution/step.md) names two graphs, both empty, since the effect changed
 nothing in the ground it was replayed into — the refill or the other van's move is not its to
 predict. The executor holds it to its `execution:landsAt` and answers it there, and taking it sends
-nothing, there being no operation to run. Measured on the dispatcher with a peer's route laid ahead
+nothing, there being no operation to run. Measured on the dispatcher with a peer's cells laid as predictions ahead
 and on the shipped worlds, in [measure-the-search](/runbooks/measure-the-search.md).
