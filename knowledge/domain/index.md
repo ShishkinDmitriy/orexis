@@ -60,7 +60,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [footprint](/domain/planning/footprint.md) - What one text reads and what it writes, as predicates, taken from the text; unreadable is anything.
 * [precondition](/domain/planning/precondition.md) - The select whose rows in a world are the steps it admits; asked of the present again, never copied onto a step.
 * [effect](/domain/planning/effect.md) - Rules run on the possible world a step makes, a delete among them; the one declaration the world is held to.
-* [wait](/domain/planning/wait.md) - The search's own move, every agent's: does nothing, and lands where the next ground the search can tell apart begins.
+* [wait](/domain/planning/wait.md) - The search's own move, every agent's: does nothing, and lands at the next ground that is a different world.
 * [plan](/domain/planning/plan.md) - One want's steps on the winning path, what they spent, and why the search ended — an empty plan is an answer.
 * [budget](/domain/planning/budget.md) - A ceiling each call states in the unit it spends: candidates for a search, rule executions for revision.
 * [bridge](/domain/planning/bridge.md) - A rule concluding one domain's fact from another's, authored by the world combining them; run forwards over beliefs, backwards to refine a step.
