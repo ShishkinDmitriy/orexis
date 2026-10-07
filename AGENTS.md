@@ -56,7 +56,7 @@ If it is unavailable, the rules are short enough to follow by hand:
 
 **`knowledge/domain/` is the shared dictionary, filed by the package that owns each word** —
 `kernel/`, `sensing/`, `transport/`, `belief/`, `prediction/`, `planning/`, `execution/`,
-`speech/`, `market/`, `actuation/`, `courier/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
+`speech/`, `market/`, `actuation/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
 live terms in its folder's namespace, so retiring a term fails until its page follows. A record
 stays in `knowledge/decisions/` while something current cites it; 0.1.0's are filed under
 `decisions/0.1.0/`. **And a term is defined before it is used.** The
@@ -356,10 +356,6 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   that ground goes, since diffed against its parent every drive carried the other van's next cell,
   wrote it fictively and was held to it (#919).
 - **A step lands as long after it is taken as its plan placed it after its opening.**
-- **A step that waits rewrites what it keeps, and waits for a prediction, never for the clock** —
-  `courier:Wait` deletes and re-adds its van's cell, since an effect coming to nothing makes no world
-  and is in no scope, and its world is new only where it lands in a later ground; counting such a
-  landing as a move in `take` was refused as a kernel change buying nothing the domain cannot say (#920, wait).
 - **A want's view is parsed off its met-test, never declared beside it**, and a want spanning
   scopes is searched in the first of them.
 

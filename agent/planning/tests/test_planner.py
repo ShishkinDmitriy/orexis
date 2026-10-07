@@ -457,7 +457,7 @@ def test_a_step_landing_across_a_prediction_predicts_its_own_effect_alone(monkey
 
 
 def test_a_wait_whose_effect_nets_to_nothing_predicts_nothing_and_lands_at_its_landing(monkeypatch, snapshots):
-    """#919 with #920's shape. A wait deletes the tank's level and puts the same level back, and lands
+    """#919 with a wait's shape. A wait deletes the tank's level and puts the same level back, and lands
     a minute on, in the ground where a prediction has refilled the tank to twelve: the want is met
     there, by the refill and not by the wait. The step's two graphs are taken per fact, so a fact
     deleted and put back is in neither, and they are EMPTY — the refill is not the wait's to predict.
