@@ -56,13 +56,13 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    [commitment](/domain/execution/commitment.md) (#905), and "one van at a time" as world state
    (`world/driver/`, #903); the executor-held resource was built and refused; and #916, every
    head's precondition asked as it is taken rather than once a pass. Next is two minds, #568: nobody
-   owns a cell and nothing oversees the vans, so they sense each other in range, say their routes and
-   draw lots on a conflict, and the loser plans around the winner
+   owns a cell and nothing oversees the vans, so they sense each other in range, ask each other what
+   their constraint reads, answered only under a constraint both hold, and draw lots on a conflict
    ([two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict](/decisions/two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict.md);
    right-of-way as a market lot is refused there). Its pieces, in the order each unlocks the next:
    #919, a step predicts its own effect; #920, `planning:Wait`, landing at the next ground; #921, a
    belief that makes a walking plan's next worlds impossible reopens it; #922, attention, the vans
-   within a radius; and #923, the route and the draw, which depends on the other three.
+   within a radius; and #923, the question, the answer and the draw, which depends on the other three.
 5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays
    it and the model that phrases a free question, then #862's recalibration walked with a person

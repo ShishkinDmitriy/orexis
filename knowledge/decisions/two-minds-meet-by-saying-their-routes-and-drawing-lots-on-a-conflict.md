@@ -17,10 +17,39 @@ description: >-
   the resource has an owner and the market, where colliding hurts both a convention suffices. Refused -
   right-of-way as a lot or an owner per cell, a reservation table or intersection manager, cost
   negotiation in two rounds, a rank the world states, a seen van believed anywhere it can reach, and
-  the world refusing a drive. A world with peers owes well-formed infrastructure.
+  the world refusing a drive. A world with peers owes well-formed infrastructure. Amended the same
+  day - a van no longer says its route; it ASKS what its own constraint reads, only when its untaken
+  steps touch the constraint's footprint, and a peer answers from its committed steps only under a
+  constraint it shares. Telling everything was refused as unsafe.
 status: accepted
 timestamp: 2026-10-07T20:00:00Z
 ---
+
+> **Amended 2026-10-07, again** (#923 rewritten a third time): **ask, never tell.** A van saying its
+> whole route tells a peer everything it will do, and a peer has no need of most of it — a van
+> driving has no business learning that its peer is on the water. The sovereign refused it as unsafe.
+> Need-to-know replaces it, in the distributed-constraint shape (DisCSP, Yokoo et al., ~1998), where
+> each agent holds its own variables and values cross only over the constraints that link them:
+>
+> - **An agent ASKS only what its own constraint reads**, and only when a peer is sensed in range
+>   (#922) and its walking plan's untaken steps touch the constraint's footprint (#900). The question
+>   has a fixed shape — the footprint's predicates, the keys they join on, and the values and periods
+>   its untaken steps put there; for the courier, *will your van be on any of these cells during these
+>   periods?* It is never a query text, and the answerer runs nothing a peer wrote.
+> - **A peer ANSWERS from its committed steps** ([committed-step](/domain/execution/committed-step.md),
+>   #849) and its intention's untaken steps, restricted to the asked predicates, keys and periods,
+>   **and only under a constraint it shares**: a question over predicates no constraint it holds
+>   reads gets no answer, which the asker takes as silence.
+> - **There is no route.** What is heard is an answer, a document of a kind of its own that
+>   prediction derives from as the amendment below says of a route. The check, the draw, the draw
+>   laying nothing, the loser reopened, silence, backoff and sensing as the safety net all stand; a
+>   loser whose untaken steps changed asks again.
+>
+> Where the text below says a van says its route, read that it asks and is answered; the route of
+> piece 2 is the asked cells and the answered ones, and the *words* paragraph's "route" is the
+> question and the answer, speech's pages to write in #923. The refusal of a seen van believed
+> "anywhere it can reach" stands for a peer that answers; for a silent one, what sightings predict
+> is #923's to settle.
 
 > **Amended 2026-10-07** (#923 rewritten): **speech hears, prediction predicts.** Speech stores a
 > peer's route as testimony of a kind of its own, neither state nor prediction, and writes no
