@@ -255,6 +255,8 @@ _RESOLVED_Q = """SELECT ?at WHERE { GRAPH $intentions { $intention execution:res
 
 #  WHETHER AN INTENTION ENDS AFTER A STEP — planning reconsidered the want it pursues (#905).
 _ENDS_AFTER_Q = """SELECT ?i WHERE { GRAPH $intentions { $intention execution:endsAfter $step . BIND($intention AS ?i) } } LIMIT 1"""
+#  WHETHER AN INTENTION ENDS AFTER ANY STEP — given up but for its step in flight (#921).
+_ENDING_Q = """SELECT ?step WHERE { GRAPH $intentions { $intention execution:endsAfter ?step } } LIMIT 1"""
 
 #  WHEN A COMMITTED STEP'S WINDOW CLOSES, on the catalogue row of the graph this executor wrote for it.
 _WINDOW_Q = """SELECT ?end WHERE { GRAPH $cat { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }"""
@@ -593,8 +595,16 @@ class Executor:
 
     def standing_for(self, want: str) -> Standing | None:
         """The commitment standing for this want, or None. One or none: a second plan for one
-        want while the first stands is the thing `commit` absorbs."""
-        return next((s for s in self.standing() if s.want == want), None)
+        want while the first stands is the thing `commit` absorbs.
+
+        AN INTENTION ENDING AFTER ITS STEP IN FLIGHT IS NOT IT (#921). Marked so (`supersede_after`),
+        it has given its untaken steps up and stands only until the world answers the step it took,
+        so it absorbs nothing: where a belief arriving reopened the want it walks, the plan planning
+        then publishes for the same want is its replacement, and is adopted beside it, opening where
+        the step in flight lands."""
+        mine = Raw(f"<{self.graph}>")
+        return next((s for s in self.standing() if s.want == want
+                     and not rows(self.intentions, bind(_ENDING_Q, intentions=mine, intention=s.uri))), None)
 
     # --- resolving ----------------------------------------------------------------------------
 

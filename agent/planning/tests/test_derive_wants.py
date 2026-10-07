@@ -72,6 +72,44 @@ def test_every_case_is_read_and_no_snapshot_is_orphaned(snapshots):
     assert not snapshots.orphans_in(CASES_DIR)
 
 
+#  EVERY WANT, THE GRAPH IT LIVES IN, WHEN THAT GRAPH'S STRETCH BEGINS AND WHAT THE WANT REOPENS.
+_HOMES_Q = """
+SELECT ?w ?g ?start ?reopens WHERE {
+  GRAPH ?g { ?w a planning:Want . OPTIONAL { ?w planning:reopens ?reopens } }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph .
+               OPTIONAL { ?g dcterms:temporal/orexis:start ?start } } }"""
+
+
+@pytest.mark.parametrize("reopened", [False, True], ids=["walking", "reopened"])
+def test_a_walking_want_a_belief_reopened_is_minted_again_where_its_step_in_flight_lands(monkeypatch, snapshots, reopened):
+    """THE SECOND TRIGGER OF SOFT COMMITMENT, THE DERIVATION'S HALF (#921). `a_standing_want_is_left_alone`
+    with tank1's want WALKING and its step in flight landing half a minute on. Handed to the derivation as
+    a want a belief has reopened, it is taken out of the graph of the stretch it was minted over — which
+    held it alone, and goes — and minted again under its own name over a stretch from that landing,
+    saying it `planning:reopens` itself, which is the row the Planner holds the plan its search finds to
+    the walking intention's untaken steps by. Handed as walking alone, it stands where it was, reopening
+    nothing: the case's own snapshot says so of the store."""
+    from agent.store import rows
+    from datetime import datetime, timedelta
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(CASES_DIR / "a_standing_want_is_left_alone.trig")
+    lay_ground(store, snapshots.NOW)
+    for pair in unweighed(store):
+        weigh(store, pair["for"], pair["about"])
+    want, lands = "http://example.org/test#keeper.in_range.pursued.tank1.level", snapshots.NOW + timedelta(seconds=30)
+    before = {r["w"]: r["g"] for r in rows(store, _HOMES_Q, ())}
+    wanted = derive_wants(store, snapshots.NOW, {want: lands}, {want} if reopened else set())
+    homes = [(r["w"], r["g"], r.get("start"), r.get("reopens")) for r in rows(store, _HOMES_Q, ()) if r["w"] == want]
+    assert want in wanted and len(homes) == 1, homes
+    ((_, graph, start, reopens),) = homes
+    if not reopened:
+        assert (graph, reopens) == (before[want], None), "a walking want nothing reopened stands where it was"
+        return
+    assert (datetime.fromisoformat(start), reopens) == (lands, want), f"minted again where its step in flight lands, reopening itself: {homes}"
+    assert graph != before[want] and not rows(store, "SELECT ?s WHERE { GRAPH $g { ?s ?p ?o } } LIMIT 1", (), g=before[want]), \
+        "the graph of the stretch it was minted over held it alone, and goes"
+
+
 #  WHAT EACH WANT'S ESTIMATE READS IN THE PRESENT GROUND — written by `weigh` on the want's
 #  weighing there, off the select the want's `planning:estimates` points at.
 _REMAINING_Q = """

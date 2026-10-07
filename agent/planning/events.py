@@ -52,9 +52,10 @@ class StepBlocked:
 
 @dataclass(frozen=True)
 class Reconsidered:
-    """A walking want reopened by a want a constraint couples to it, whose joint plan does not begin
-    with the intention's untaken steps: the intention standing at `step` ends after it — after the
-    step in flight, never before — its untaken steps replaced by the plan published for `by`."""
+    """A walking want reopened — by a want a constraint couples to it, or by itself where a belief
+    arriving made a world of its plan impossible, and then `by` is `want` — whose new plan does not
+    begin with the intention's untaken steps: the intention standing at `step` ends after it — after
+    the step in flight, never before — its untaken steps replaced by the plan published for `by`."""
     step: str
     want: str
     by: str

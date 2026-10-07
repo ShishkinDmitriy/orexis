@@ -68,10 +68,16 @@ SELECT ?w WHERE {
                ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }"""
 
 
-def withdraw(store, wanted, now: datetime, *, reached=()) -> list[str]:
+def withdraw(store, wanted, now: datetime, *, reached=(), afresh=()) -> list[str]:
     """Drop every derived want standing at `now` that `wanted` does not name, and every want in
     `reached` however it arrived. Returns what went. `wanted` None judges no derived want, which
     is how the Planner withdraws from the beliefs, where the derivation writes none.
+
+    `afresh` are wants whose SEARCH alone is withdrawn and which stay: a walking want a belief
+    arriving has reopened (#921), searched again from the ground where its step in flight lands.
+    What its search wrote before stood on grounds the belief has since changed, and kept, the
+    plan's read would take the old achiever and `unweighed` would find the old root beside the new
+    one — two roots on one frontier, each spent nought. They are not returned: nothing went.
 
     `wanted` IS `derive_wants`' ANSWER, and that is the whole contract between them. A want
     exists because its desire read unmet, so a want the decomposition no longer produces is
@@ -110,6 +116,9 @@ def withdraw(store, wanted, now: datetime, *, reached=()) -> list[str]:
         log.info("%s withdrawn: %s", uri.rsplit("#", 1)[-1],
                  "reached" if uri in done else "its desire no longer reads it unmet")
         gone.append(uri)
+    for uri in sorted(set(afresh) - set(gone)):
+        _forget_search(store, uri)
+        log.info("%s searched afresh: a belief arriving reopened it", uri.rsplit("#", 1)[-1])
     return gone
 
 

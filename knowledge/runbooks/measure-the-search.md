@@ -720,6 +720,47 @@ collides first follows which intention's name sorts first, ten runs of twenty ea
 and thirteen acts with two intentions failed, or thirteen and fourteen with three. Every drive taken
 is of the van the driver is aboard, and both parcels arrive.
 
+# A belief that makes a walking plan impossible (2026-10-07, #921)
+
+[Commitment](/domain/execution/commitment.md)'s second trigger: where a belief has arrived — a ground
+holds what no world the last pass left held — each walking plan is replayed on the grounds and its
+worlds weighed for the constraints. Measured on the development container, the tree before
+(`bb4b4a12`) exported to the scratchpad and this one alternated per run in one session, six runs of
+each case per tree, one process per run, budget 256, a drive's least landing between passes. *Shipped*
+is the dispatcher's joint walk with nothing arriving; *peer* and *aside* are the pose
+`world/dispatcher/tests/test_dispatcher.py` builds — van A and parcel A alone, owed at `c2_2` — with van
+C, a peer's, predicted after two steps answered on the cell van A drives to next (`c1_2`), or on
+`c3_0`, which no step enters, and the next pass run at once. Medians; the asks and the worlds replayed
+did not move between runs, nor in two more rounds on the tree as committed, whose one difference is
+that a pass with nothing walked does not read the hashes at all.
+
+| case | tree | passes | acts | each pass after the first | the arrival pass | the whole (min) | asked | worlds replayed | asking, in all |
+|---|---|---|---|---|---|---|---|---|---|
+| shipped | before | 7 | 10 | 183 ms | — | 3842 ms (3756) | — | — | — |
+| shipped | after | 7 | 10 | 183 ms | — | 3855 ms (3614) | 0 | 0 | 0 ms |
+| aside | before | 6 | 6 | 105 ms | 103 ms | 905 ms (789) | — | — | — |
+| aside | after | 6 | 6 | 103 ms | 112 ms | 871 ms (814) | 1 | 3 | 8 ms |
+| peer | before | 6 | 6 | 107 ms | 97 ms | 908 ms (821) | — | — | — |
+| peer | after | 8 | 8 | 111 ms | 326 ms | 1398 ms (1261) | 4 | 7 | 22 ms |
+
+**A walk nothing interrupts pays nothing.** Every step of the shipped walk lands in a world of the cone
+its plan was found in, so no pass asks; the passes are the tree before's to the millisecond. The first
+reading of *arrived* — a ground holding what no ground of the last pass held — asked at every pass of
+the same walk, since every step taken moves the present: 6 asks, 31 worlds replayed, 103 ms over the
+walk, measured on one walk and not kept. **A belief off the plan's path costs one ask**: three worlds replayed,
+8 ms, inside the drift of the pass. **A belief across it costs the re-search**: the arrival pass is
+326 ms against 97, of which the asking is a few milliseconds — the first world replayed is impossible —
+and the rest the walking want searched again from the ground where its drive in flight lands, 38
+candidates, 25 worlds, two of them impossible. The tree before walks van A onto `c1_2` with van C
+predicted there, six acts; this one turns van A back down the first column and round by `c2_1`, eight.
+The three later asks are the re-root's, and not what the trigger asks for: the replacement was
+searched from the ground where the drive in flight lands, and in the pass after, the present holds
+what the last pass's present ground held as well, which the re-root takes first by name — so the
+replacement's cone goes, and every step after lands in a world no pass left, each asking, replaying a
+world or two and finding nothing. Measured with van C observed rather than predicted, the same: five
+asks, eleven worlds. The tie is between two grounds of one hash, so any want searched from a landing
+ground meets it, #905's coupled want among them — read off the re-root, not measured there.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

@@ -111,7 +111,8 @@ plan's cost where the coupled instances are all there are - and counts a third i
 neither, the overstatement the record below carries as a seam. Instances no constraint joins stay
 apart exactly as [a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astray-is-a-want-of-its-own.md)
 left them. A coupled cluster that takes in an instance a walking want is about reopens that want,
-which is the one trigger of soft [commitment](/domain/execution/commitment.md).
+the first trigger of soft [commitment](/domain/execution/commitment.md); the second is the
+constraint marking a world of the walking plan impossible once a belief has changed the grounds.
 `agent/planning/tests/derive_wants/two_parcels_a_constraint_joins_are_one_want.trig`
 and `two_parcels_on_disjoint_grids_are_two_wants.trig` hold the derivation to both;
 `world/dispatcher/tests/test_dispatcher.py` holds the world to the joint ten-step plan and to the

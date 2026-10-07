@@ -17,7 +17,8 @@ description: >-
   desire's bound, #902, and reworked 2026-10-06 - the corridor's colliding worlds impossible and
   the parked van served or moved rather than driven through); a walking want is reconsidered when
   a want the footprint couples to it arrives (built, #905 - the step in flight kept, the joint want
-  searched from where it lands); a limit on acts in flight is world state - one driver aboard one
+  searched from where it lands), or a belief makes a world of its plan impossible (built, #921);
+  a limit on acts in flight is world state - one driver aboard one
   van, whose own constraint couples the plans that move it (built, #903); two minds optimize alone and meet through what they
   observe, what they are told and what the market allocates. Refused - the derived temporary want;
   the elder plan laid as the younger's ground, this record's own first version; independent plans
@@ -208,6 +209,25 @@ took twelve acts for ten; after, the walking intention ends `superseded` after i
 stands where the joint plan begins with its steps, and ten acts deliver both parcels with two vans on
 no cell (`world/dispatcher/tests/test_dispatcher.py`, [measure-the-search](/runbooks/measure-the-search.md)).*
 
+*A second trigger, built 2026-10-07 (#921), decided in the discussion of #568, where a walking plan
+is made impossible by no want at all: a peer's route laid as a prediction, or a peer's van seen on a
+cell the plan enters. Where a belief has arrived, each walking plan is held to the grounds as now laid
+— its untaken steps replayed off what each says it changes, each on the ground holding where it lands
+— and a want one of whose worlds a constraint marks impossible reopens ITSELF, minted again at the
+instant its step in flight lands, and from there it goes the #905 path unchanged. Three choices were
+measured or weighed on the way. ARRIVED was first read as "a ground holds what no ground of the last
+pass held", and the shipped joint walk then asked at every pass, since every step taken moves the
+present — 6 asks, 31 worlds, 103 ms over a walk; read as "what no WORLD the last pass left held", a
+step landing as its plan said lands in a world of the cone and asks nothing, and the same walk asks
+none. The worlds are the plan's claim replayed, its steps' `execution:adds` and `execution:retracts`,
+and not its effects' rules run again from the landing ground, which would be the search's `take`
+without a search, a second path to a world each step already describes. And the walking want reopens
+itself rather than being reopened by a new want: the cluster is the same, so a second want for it
+would be a second plan down the same cells, the failure `_covering` was written for — so the
+replacement plan is for the very want the ending intention walks, which absorbs nothing
+(`commitment`). Weighing constraints as a head is taken stays refused; the take-time check is the
+precondition's (#916).*
+
 **Two minds optimize alone and meet through prediction, the market and execution.** Two agents each
 hold their own desire and neither sees the other's plan. Their channels are what the other did
 (execution: a blocked step, patience, a re-search), what the other said (a peer's announced route is
@@ -257,7 +277,8 @@ plan down the same cells. A cluster a standing want is already about is that wan
 - *A want an intention is walking is neither searched nor handed down again* — AMENDED: it is
   searched again, coupled, when a want the footprint joins to it arrives; the default stays
   commitment and the trigger is the constraint. Built (#905): the step in flight is kept and only
-  the untaken steps are reopened.
+  the untaken steps are reopened. And searched again, alone, when a belief arriving makes a world its
+  untaken steps reach impossible (#921) — the constraint again, by the other door.
 - *A plan begun is walked to its end* (planning-and-execution-meet-at-the-store) — AMENDED: unless
   a reconsideration replaces its untaken steps, and then it ends after its step in flight.
 - *Nothing ranks a want before the search that could rank it* — KEPT, and this is what the first

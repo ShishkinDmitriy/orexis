@@ -31,7 +31,13 @@ that no cell holds two vans (#567). What this world is held to is what was MEASU
   else (#905, commitment): the coupled want is searched from the ground in which van A's step in
   flight lands, that step is answered and never cancelled, and van A's intention either ends after it,
   `superseded`, the joint plan adopted whole, or — where the joint plan begins with its untaken steps —
-  stands untouched beside the new part; on disjoint grids nothing is reopened.
+  stands untouched beside the new part; on disjoint grids nothing is reopened;
+- A BELIEF THAT MAKES THE WALKING PLAN'S NEXT WORLD IMPOSSIBLE REOPENS IT TOO (#921, commitment's second
+  trigger): a peer's van predicted, or seen, on the cell van A drives to next — the walking plan's
+  untaken steps replayed on the grounds as now laid, the world after the next drive holding two vans,
+  and the walking want minted again where its drive in flight lands, reopening itself; it turns van A
+  back after that drive, never cancelled, and parcel A is delivered round the peer. A peer's van on a
+  cell the plan never enters is asked about and reopens nothing.
 """
 
 from __future__ import annotations
@@ -44,10 +50,10 @@ from pathlib import Path
 import pytest
 
 from agent import clock
-from agent.ontology import STATE
+from agent.ontology import OREXIS, PREDICTION, STATE
 from agent.planning.planner import Planner
 from agent.runtime import UNFINISHED, Runtime, boot
-from agent.store import graphs_of, rows, update
+from agent.store import entry, graphs_of, rows, update
 from onboarding import reading
 
 WORLD = Path(__file__).resolve().parents[1]
@@ -580,13 +586,25 @@ A = "every_parcel_delivered.pursued.parcel_a"
 B = "every_parcel_delivered.pursued.parcel_b"
 
 
-def _arrival(world: Path, cell: str, owed: str, *, budget: int = BUDGET, after: int = 2, passes: int = 40) -> dict:
+def _parcel_b(cell: str, owed: str):
+    """Parcel B ARRIVING at `cell`, owed at `owed`, written into the state as a consignment arriving at the
+    depot would be: what `_arrival` writes for soft commitment's first trigger."""
+    def arrive(beliefs, walking, at):
+        (state,) = graphs_of(beliefs, STATE)
+        update(beliefs, f"""PREFIX courier: <http://example.org/orexis/courier#>
+INSERT DATA {{ GRAPH <{state}> {{ <{D}parcel_b> courier:at <{D}{cell}> ; courier:destination <{D}{owed}> }} }}""")
+        return [state]
+    return arrive
+
+
+def _arrival(world: Path, arrive, *, budget: int = BUDGET, after: int = 2, passes: int = 40) -> dict:
     """The runtime over `world`, a drive's least landing between passes as `_run` moves it, until van A's
-    plan has had `after` steps answered; then parcel B ARRIVES — at `cell`, owed at `owed`, written into the
-    state and said written — and the next pass runs AT ONCE, so the step van A's walk took in the pass
-    before is still in flight when the arrival is planned for. Then on until no intention stands. What
-    happened, in order: every step taken with where the vans stood, every verdict, every intention
-    resolved, every plan published, every reconsideration, every search said, and the passes."""
+    plan has had `after` steps answered; then a belief ARRIVES — `arrive(beliefs, walking, at)` writes it
+    and answers the graphs it wrote, which are said written — and the next pass runs AT ONCE, so the step
+    van A's walk took in the pass before is still in flight when the arrival is planned for. Then on until
+    no intention stands. What happened, in order: every step taken with where the vans stood, every
+    verdict, every intention resolved, every plan published, every reconsideration, every search said,
+    and the passes."""
     time = _Clock(NOW)
     clock.now = time
     beliefs = boot(world, "dispatcher")
@@ -619,13 +637,11 @@ def _arrival(world: Path, cell: str, owed: str, *, budget: int = BUDGET, after: 
                                    planned=seen["planned"][-1])
         if "arrived" not in seen and sum(1 for k, e in seen["events"] if k == "answered" and e.landed) >= after:
             seen["before"] = list(seen["searched"])
-            (state,) = graphs_of(beliefs, STATE)
-            update(beliefs, f"""PREFIX courier: <http://example.org/orexis/courier#>
-INSERT DATA {{ GRAPH <{state}> {{ <{D}parcel_b> courier:at <{D}{cell}> ; courier:destination <{D}{owed}> }} }}""")
             (walking,) = executor.standing()
+            written = arrive(beliefs, walking, time.at)
             seen["arrived"] = {"pass": n + 1, "at": time.at, "events": len(seen["events"]), "intention": walking.uri,
                                "adopted": rows(beliefs, _ADOPTED_Q, (), i=walking.uri)[0]["at"], "head": walking.at}
-            runtime.wrote([state])
+            runtime.wrote(written)
             continue
         if outcome != UNFINISHED or ("arrived" in seen and not executor.standing()):
             break
@@ -673,7 +689,7 @@ def test_a_parcel_arriving_mid_walk_reopens_the_walking_want_and_the_joint_plan_
     the joint plan's first step is taken; none of its untaken steps is ever taken. On the corridor van
     B's road crosses c2_1 as van A leaves it, and walked, the vans share no cell at any act; both parcels
     are delivered. The re-search costs what the coupled search from that ground costs, measured."""
-    seen = _arrival(variant(tmp_path, name, edits), cell, owed)
+    seen = _arrival(variant(tmp_path, name, edits), _parcel_b(cell, owed))
     arrived, beliefs = seen["arrived"], seen["beliefs"]
     head, joint = arrived["head"], D + JOINT
     (act,) = rows(beliefs, _ACT_Q, (), step=head)
@@ -712,7 +728,7 @@ def test_a_joint_plan_that_begins_with_the_walking_intentions_untaken_steps_leav
     published for the coupled want is the part that is NEW, van B's five steps, opening after van A's last
     kept step lands in the joint plan, so the two intentions walked side by side keep the joint plan's
     order. Both parcels are delivered and no intention ends but `done`."""
-    seen = _arrival(variant(tmp_path, "agree", ARRIVING), "c3_0", "c3_3")
+    seen = _arrival(variant(tmp_path, "agree", ARRIVING), _parcel_b("c3_0", "c3_3"))
     arrived, beliefs = seen["arrived"], seen["beliefs"]
     assert _of(seen, "reconsidered") == []
     published = _published(seen)
@@ -734,7 +750,7 @@ def test_a_parcel_arriving_where_the_walking_van_can_never_meet_its_van_reopens_
     what the vans can reach yields no row, nothing couples B to A, and the walking want is neither searched
     nor reconsidered — B's want is minted alone, under its own name, and searched alone, and van A's
     intention walks on untouched to `done`."""
-    seen = _arrival(variant(tmp_path, "disjoint", DISJOINT_ARRIVING), "g10_1", "g10_3")
+    seen = _arrival(variant(tmp_path, "disjoint", DISJOINT_ARRIVING), _parcel_b("g10_1", "g10_3"))
     arrived = seen["arrived"]
     assert _of(seen, "reconsidered") == []
     assert {_local(e.want) for e in arrived["searched"]} == {B}, "B's want searched alone, A's walking want not at all"
@@ -742,6 +758,124 @@ def test_a_parcel_arriving_where_the_walking_van_can_never_meet_its_van_reopens_
     assert rows(seen["beliefs"], _ADOPTED_Q, (), i=arrived["intention"])[0]["at"] == arrived["adopted"]
     assert {(_local(e.want), e.outcome) for e in _of(seen, "resolved")} == {(A, "done"), (B, "done")}
     assert _at(seen["beliefs"]) == {"van_a": "c0_3", "parcel_a": "c0_3", "van_b": "g10_3", "parcel_b": "g10_3"}
+
+
+#  A PEER'S VAN (#921): van A and parcel A alone, the parcel owed at `c2_2` so three drives remain after the
+#  pick and more than one way runs there, and VAN C, a van of the world's that this agent does not drive —
+#  `courier:drivenBy` a peer who is not aboard it, so the drive's own filter refuses it (#903) — standing
+#  nowhere the agent knows of until a belief says where.
+PEER = {"world.ttl": [*HALF_A["world.ttl"], ("courier:destination :c0_3", "courier:destination :c2_2"),
+                      (':van_a a courier:Van ; rdfs:label "van A" .',
+                       ':van_a a courier:Van ; rdfs:label "van A" .\n'
+                       ':van_c a courier:Van ; courier:drivenBy :peer ; rdfs:label "a peer\'s van" .')],
+        "state.ttl": HALF_A["state.ttl"]}
+#  WHERE VAN C IS SAID TO STAND, as a prediction laid in the beliefs.
+PEER_GRAPH = "http://example.org/orexis/graph/prediction/dispatcher/van_c"
+_PLAN_OF_Q = "SELECT ?p WHERE { GRAPH ?g { $i execution:adopts ?p } }"
+
+
+def _next_cell(beliefs, walking) -> str:
+    """The cell van A's plan drives to first after its step in flight — the first untaken drive's."""
+    (plan,) = rows(beliefs, _PLAN_OF_Q, (), i=walking.uri)
+    steps = [(r["step"], _local(r["a"]), _local(r.get("to"))) for r in rows(beliefs, _PUBLISHED_Q, (), p=plan["p"])]
+    at = next(i for i, (step, _, _) in enumerate(steps) if step == walking.at)
+    return next(to for _, action, to in steps[at + 1:] if action == "Drive")
+
+
+def _van_c(cell=None, *, observed: bool = False):
+    """VAN C, said to stand on `cell` — or, where none is named, on the cell van A's plan drives to first
+    after its step in flight: OBSERVED, a fact written into the state as #922 would write a peer van seen
+    standing; or PREDICTED, an `orexis:PredictionGraph` holding from ten seconds on, as #923 would lay a
+    peer's route this agent lost a draw to. Neither is built here; what is held is what the agent does
+    with such a belief once it has it."""
+    def arrive(beliefs, walking, at):
+        where = cell or _next_cell(beliefs, walking)
+        said = f"<{D}van_c> courier:at <{D}{where}>"
+        if observed:
+            (state,) = graphs_of(beliefs, STATE)
+            update(beliefs, f"PREFIX courier: <http://example.org/orexis/courier#>\nINSERT DATA {{ GRAPH <{state}> {{ {said} }} }}")
+            written = [state]
+        else:
+            update(beliefs, f"""PREFIX courier: <http://example.org/orexis/courier#>
+INSERT DATA {{ {entry(beliefs, PEER_GRAPH, PREDICTION, OREXIS + "Recorded", D + "dispatcher", start=at + timedelta(seconds=10))}
+  GRAPH <{PEER_GRAPH}> {{ {said} }} }}""")
+            written = [PEER_GRAPH]
+        arrive.cell = where
+        return written
+    return arrive
+
+
+@pytest.mark.parametrize("observed", [False, True], ids=["predicted", "observed"])
+def test_a_belief_that_makes_the_walking_plans_next_world_impossible_reopens_it_after_the_step_in_flight(
+        ticking, tmp_path, observed):
+    """SOFT COMMITMENT'S SECOND TRIGGER (#921). Van A has driven to parcel A and picked it, and its next
+    drive is IN FLIGHT, when a belief arrives that van C will stand — or stands — on the cell van A's plan
+    drives to next. No want arrives and nothing couples; what changed is the ground. The pass holds the
+    walking plan to the grounds as now laid — its untaken steps replayed from where the step in flight
+    lands, off what each says it changes — and the world after the next drive holds two vans on one cell,
+    which the constraint makes impossible: so the walking want REOPENS ITSELF. It is minted again under its
+    own name at the instant the step in flight lands, searched from that ground, and its plan is held
+    against the untaken steps as #905 holds a joint plan: it does not begin with them, so the intention
+    ends AFTER its step in flight, `superseded`, and the new plan — for the same want, adopted beside the
+    intention that is ending, which absorbs nothing — opens where that step lands and drives through the
+    cell van C holds at no step. The step in flight is never cancelled: it is answered by the world before
+    the intention resolves and before the new plan's first step is taken, and none of the untaken steps is
+    ever taken. Parcel A is delivered."""
+    arrive = _van_c(observed=observed)
+    seen = _arrival(variant(tmp_path, "peer", PEER), arrive)
+    arrived, beliefs, blocked = seen["arrived"], seen["beliefs"], arrive.cell
+    head = arrived["head"]
+    (act,) = rows(beliefs, _ACT_Q, (), step=head)
+    assert _dt(act["taken"]) < arrived["at"], "the step reconsidered around was in flight when the belief arrived"
+    landing = _dt(act["lands"]) + max(timedelta(0), _dt(act["taken"]) - _dt(act["due"]))
+    (reconsidered,) = _of(seen, "reconsidered")
+    assert (reconsidered.step, _local(reconsidered.want), _local(reconsidered.by)) == (head, A, A), "the walking want reopens itself"
+    published = _published(seen)
+    assert list(published) == [A], f"one plan, for the same want, published whole: {published}"
+    assert published[A][0][4] == landing, f"the new plan opens where the step in flight lands: {published[A][0]} against {landing}"
+    assert ("Drive", "van_a", None, blocked) not in [s[:4] for s in published[A]], f"the new plan never drives onto {blocked}: {published[A]}"
+    order = seen["events"][arrived["events"]:]
+    answered = next(i for i, (k, e) in enumerate(order) if k == "answered" and e.step == head)
+    assert order[answered][1].landed, "the step in flight is answered by the world, never cancelled"
+    ended = next(i for i, (k, e) in enumerate(order) if k == "resolved" and e.intention == arrived["intention"])
+    assert order[ended][1].outcome == "superseded" and answered < ended, "the intention ends AFTER its step in flight"
+    (plan,) = [e.plan for k, e in order if k == "published"]
+    first = next(i for i, (k, e) in enumerate(order) if k == "taken" and e.step.startswith(plan))
+    assert ended < first, "the new plan's first step is taken once the step in flight has landed"
+    untaken = [s for s in rows(beliefs, "SELECT ?s WHERE { GRAPH ?g { $i execution:step ?s } }", (), i=arrived["intention"])
+               if not rows(beliefs, _ACTS_OF_Q, (), step=s["s"])]
+    assert untaken, "the reconsidered intention had untaken steps, and none of them was ever taken"
+    assert sorted(e.outcome for e in _of(seen, "resolved")) == ["done", "superseded"]
+    walked = [t for t in seen["trace"][len([k for k, _ in seen["events"][:arrived["events"]] if k == "taken"]):]]
+    assert walked and all(van_a != blocked for _, van_a, _, _ in walked), f"van A never stands on {blocked}: {walked}"
+    assert [t for t in seen["trace"] if t[3]] == [], f"walked, two vans on no cell at any act: {seen['trace']}"
+    assert _at(beliefs)["parcel_a"] == "c2_2", "parcel A delivered"
+    assert (blocked, [s[:4] for s in published[A]]) == ("c1_2", [
+        ("Drive", "van_a", None, "c0_1"), ("Drive", "van_a", None, "c1_1"), ("Drive", "van_a", None, "c2_1"),
+        ("Drive", "van_a", None, "c2_2"), ("Drop", None, "parcel_a", "c2_2")]), \
+        f"van A was driving up the first column; it turns back, found by the search and decided by nobody: {published[A]}"
+    searched = {_local(e.want): e.weighed for e in arrived["searched"]}
+    assert (searched, arrived["weighed"].get(A), arrived["impossible"]) == ({A: 38}, 25, {CONSTRAINT: 2}), \
+        f"the re-search from the landing ground, measured: {searched} candidates, {arrived['weighed']} worlds, {arrived['impossible']} impossible"
+
+
+def test_a_belief_that_touches_nothing_the_walking_plans_worlds_read_reopens_nothing(ticking, tmp_path, caplog):
+    """THE SECOND TRIGGER ASKS, AND ANSWERS NO. Van C is predicted on `c3_0`, a cell van A's plan enters
+    at no step: a belief has arrived — a ground holds what none did before — so the walking plan's untaken
+    steps are replayed and weighed for the constraint, and none of their worlds is impossible. The walking
+    want is neither searched nor reconsidered, and van A's intention, adopted when it was, walks on to
+    `done`."""
+    with caplog.at_level(logging.DEBUG, logger="planner"):
+        seen = _arrival(variant(tmp_path, "aside", PEER), _van_c("c3_0"))
+    arrived = seen["arrived"]
+    asked = [r.getMessage() for r in caplog.records if "untaken steps foreseen" in r.getMessage() and A in r.getMessage()]
+    assert asked, "the walking plan was held to the grounds the belief changed"
+    assert _of(seen, "reconsidered") == []
+    assert arrived["searched"] == [], "the walking want is not searched again"
+    assert _published(seen) == {}
+    assert rows(seen["beliefs"], _ADOPTED_Q, (), i=arrived["intention"])[0]["at"] == arrived["adopted"]
+    assert {(_local(e.want), e.outcome) for e in _of(seen, "resolved")} == {(A, "done")}
+    assert _at(seen["beliefs"])["parcel_a"] == "c2_2"
 
 
 def test_two_vans_on_one_cell_as_posed_is_a_contradiction_said_and_refused_and_never_a_want(ticking, tmp_path, caplog):

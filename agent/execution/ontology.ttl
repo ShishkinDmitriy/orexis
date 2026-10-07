@@ -48,7 +48,7 @@ execution:Intention a owl:Class ; rdfs:label "Intention" ;
 
 execution:pursues a owl:ObjectProperty ;
     rdfs:label "pursues" ;
-    rdfs:comment "The want an intention — or a plan handed down, on its root — was found for. A want an intention walks is neither searched nor handed a second plan until the intention resolves, or a want a constraint couples to it arrives and reopens it (knowledge/domain/execution/commitment.md)." .
+    rdfs:comment "The want an intention — or a plan handed down, on its root — was found for. A want an intention walks is neither searched nor handed a second plan until the intention resolves, or a trigger of soft commitment reopens it — a want a constraint couples to it arriving, or a belief arriving that makes a world of its plan impossible (knowledge/domain/execution/commitment.md)." .
 
 execution:by a owl:ObjectProperty ; rdfs:domain execution:Intention ; rdfs:range execution:Step ;
     rdfs:label "by" ;

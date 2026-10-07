@@ -28,7 +28,9 @@ points at it, or none reached it inside the budget — and an answer is not a co
 **A PLAN FOR A WANT BEING WALKED DOES NOT CROSS EITHER**: the plan graph of a want an intention
 pursues, or a plan published and not yet adopted pursues, is still in the imaginarium, since that outlives the
 pass, and it is not the pass's to hand down twice. Absorbing a second plan by the agent's
-patience is the executor's, when it commits.
+patience is the executor's, when it commits. The Planner's `walking` leaves out a walking want a
+belief reopened and searched this pass (#921): its plan replaces the untaken steps of the intention
+walking it, which is ending after its step in flight and absorbs nothing.
 """
 
 from __future__ import annotations

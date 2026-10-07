@@ -394,9 +394,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   its path collided once, needed escaping, grew with depth and was read back by nothing; the
   counter is the store's, so a cone kept across passes is never named over (#486).
 - **A walking want is neither searched nor handed down again until a want a constraint couples to it
-  arrives, and then only its untaken steps are reopened** — commitment is hard on the step in flight,
-  which nothing planning decides cancels, and soft on the plan, which that one trigger re-searches
-  from the ground the step lands in (#905, commitment); and **a plan whose want is gone is nobody's**.
+  arrives, or a belief arrives that makes a world its untaken steps reach impossible, and then only
+  its untaken steps are reopened** — commitment is hard on the step in flight, which nothing planning
+  decides cancels, and soft on the plan, which either trigger re-searches from the ground the step
+  lands in by the one path; a belief has arrived where a ground holds what no world the last pass
+  left did, so a plan landing as it said asks nothing (#905, #921, commitment); and **a plan whose
+  want is gone is nobody's**.
 - **A prediction is a diff, and only a ground has applied it** — one reader answers the derivation
   and the search (`world_at`), and refuses a world that says no period; the present, where no
   prediction has applied, it reads off a store with no ground as the readings themselves (#916).
