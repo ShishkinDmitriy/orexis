@@ -27,7 +27,7 @@ stays inside the parent's period — hanoi, the courier, a dose landing within a
 is replayed and the child is forked from its parent, as it always was.
 
 **A WAIT IS A MOVE THOUGH NO EFFECT RUNS** (#920). `planning:Wait`, the planning package's own
-action, states no effect and no landing: it lands at the next ground that is a different world
+action, states no effect and no landing: it lands at the next ground whose identity differs
 from the one its parent stands in (`next_ground`), and its world is that ground with the path
 replayed — what the predictions moved between the two is the whole of what it reaches. Every other
 action whose effect comes to nothing is no move wherever it lands, so a step that does nothing
@@ -179,7 +179,7 @@ def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = Non
     cost = _figure(store, cand, me, memo, "costs", "cost") or 0.0
     waits = binding["action"] == WAIT
     if waits:
-        #  A WAIT LANDS WHERE THE NEXT GROUND BEGINS — the next that is a different world from the one
+        #  A WAIT LANDS WHERE THE NEXT GROUND BEGINS — the next whose identity differs from the one
         #  its parent stands in (`next_ground`) — an instant and not a stretch after the act: a
         #  path reaching its parent sooner waits the longer, and one reaching it later than that
         #  instant is there already, so the child holds from the instant to the later of the two.

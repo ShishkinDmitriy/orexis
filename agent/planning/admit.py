@@ -130,7 +130,7 @@ def admit(store, world: str, me: str, *, only=None, elsewhere=frozenset(), memo=
                 continue
             if (action["action"], filling) not in fillings:
                 fillings.append((action["action"], filling))
-    #  AND A WAIT, where a ground that is a different world from the one this world stands in is laid after
+    #  AND A WAIT, where a ground whose identity differs from the one this world stands in is laid after
     #  it (#920, `next_ground`): the planning package's own action, filled with nothing, in every
     #  scope, and stating no precondition, since what admits it is the timeline and no fact a world
     #  holds. Where nothing read is predicted to change there is nothing to wait for, and a wait

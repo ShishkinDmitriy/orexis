@@ -362,7 +362,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   wrote it fictively and was held to it (#919).
 - **A step lands as long after it is taken as its plan placed it after its opening.**
 - **A plan lets time pass only by `planning:Wait`, the planning package's one action, in every scope**
-  — it lands at the next ground that is a different world — a ground being time and a world's identity its hash within what is read, two concepts it composes and coins none — and is a move though no effect
+  — it lands at the next ground whose identity differs from its own — a ground being the present with the predictions applied over its period, and its identity its hash within what is read, so the wait coins no concept — and is a move though no effect
   ran, while any other effect that comes to nothing stays no move; the courier's own wait was built
   and refused, since it could not outwait a stretch longer than its band (#920, wait).
 - **A want's view is parsed off its met-test, never declared beside it**, and a want spanning

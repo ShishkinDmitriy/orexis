@@ -3,8 +3,8 @@ type: Domain Concept
 title: Wait
 description: >-
   The search's own move - `planning:Wait`, the one action the planning package ships, which every
-  agent loads and no world imports. It does nothing; it lands at the next ground that is a
-  different world, so a plan can let the predictions move the world rather than act on it.
+  agent loads and no world imports. It does nothing; it lands at the next ground whose identity
+  differs from its own, so a plan can let the predictions move the world rather than act on it.
 ---
 
 # What it is
@@ -22,14 +22,15 @@ declared in a graph of actions and the term gate reads ontologies alone.
 
 At the start of the next ground: the [prediction](/domain/prediction/prediction.md) lays one ground
 per stretch in which nothing predicted changes, and a world stands in the one holding at its start.
-The ground a wait reaches is the next ground that is a different WORLD. Two concepts meet there
-and neither is the wait's: a ground is time, a period the prediction lays; a world's identity is
-its hash within what is read ([cone](/domain/planning/cone.md)). A later ground that differs only
-by a reading's number inside its band is a new period but the same world, and a wait landing there
-would reach the world it left, so `agent/planning/next_ground.py` walks the grounds and returns the
-first whose identity differs. It coins nothing: merging such grounds into one was tried and refused,
-since a ground's boundaries carry time that a world's identity does not (the foreseen crossing
-of #858 read reached before its instant). So a single wait spans every stretch in which nothing
+The ground a wait reaches is the next one whose IDENTITY differs from the ground its world stands
+in. A ground is a world — the present with the predictions applied, holding over the period in which
+none of them changes — and a world's identity is its hash within what is read
+([cone](/domain/planning/cone.md)). A later ground that differs only by a reading's number inside its
+band is a ground of its own but the same place to the search, and a wait landing there would reach
+the world it left, so `agent/planning/next_ground.py` walks the grounds and returns the first whose
+identity differs. It coins nothing: merging such grounds into one was tried and refused, since a
+ground's boundaries are also read as instants — where a want holds, where it is reached — and the
+foreseen crossing of #858 read reached before its instant. So a single wait spans every stretch in which nothing
 read is predicted to change, and no wait is offered at all where nothing is.
 
 It lands at an INSTANT, not after a band: a path that reached its parent early waits the longer, and

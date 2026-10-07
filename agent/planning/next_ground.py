@@ -1,4 +1,4 @@
-"""The instant the next ground that is a different world begins — where a wait lands (#920).
+"""The instant the next ground whose identity differs begins — where a wait lands (#920).
 
 A GROUND IS A PERIOD IN WHICH NOTHING PREDICTED CHANGES (`lay_ground`): the present, and the present
 with each prediction applied at its instant, a boundary that changes nothing being no period at
@@ -17,9 +17,9 @@ whose hash on its row — taken within what is read — is not the hash of the g
 in; one wait then spans every stretch in which nothing read changes, and none is offered where
 nothing read is predicted to change at all.
 
-IT COMPOSES TWO CONCEPTS AND COINS NONE: a ground is time, laid by `lay_ground` and read by
-whatever asks when a want holds or a window opens; a world's identity is its hash within what is read
-([cone](knowledge/domain/planning/cone.md)). Merging the grounds that share an identity, so that a
+IT COINS NOTHING: a ground is a world, the present with the predictions applied over its period
+(`lay_ground`), and a world's identity is its hash within what is read
+([cone](knowledge/domain/planning/cone.md)); this read asks the second of the first. Merging the grounds that share an identity, so that a
 wait could land at its ground's end, was built and refused: after a plan is adopted the foreseen
 crossing of #858 no longer changes anything read, the merged present's period swallowed the want's
 instant, and the want read reached before it held.

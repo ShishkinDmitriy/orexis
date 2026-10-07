@@ -432,7 +432,7 @@ plan down the same cells. A cluster a standing want is already about is that wan
 - ~~**A step that waits.**~~ Closed 2026-10-07 (#920), and not as this seam said. A wait is not the
   domain's to add: every world has one — a van letting a peer pass, a grower letting the rain come —
   so it is the planning package's [wait](/domain/planning/wait.md), loaded by every agent and in every
-  scope, landing at the next ground that is a different world. The domain's own was built
+  scope, landing at the next ground whose identity differs from its own. The domain's own was built
   first, `courier:Wait`, costed and banded like a drive, an effect deleting and re-adding the van's
   cell so that the search, which forks for a delete, would count it a move; it found the crossing's
   wait in 27 worlds and was refused for what it could not do, a van could not wait out a stretch

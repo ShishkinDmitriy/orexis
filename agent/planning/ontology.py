@@ -72,7 +72,7 @@ BY = PLANNING + "by"
 CANDIDATE = PLANNING + "Candidate"
 #  THE SEARCH'S OWN MOVE (#920): the one action the planning package ships, in `wait.ttl` beside its
 #  ontology, so every agent loads it and no world imports it. A candidate filling it is admitted
-#  wherever a later ground that is a different world is laid, makes no change of its own, and lands
+#  wherever a later ground whose identity differs is laid, makes no change of its own, and lands
 #  where that ground begins (`next_ground`); it is in every scope. The one action whose step may pass
 #  time with no effect.
 WAIT = PLANNING + "Wait"
