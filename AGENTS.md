@@ -228,9 +228,14 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   graphs alone, as a scope's is, it is grid-blind, measured), says which wants' plans may interfere; those are one
   cluster, one want, one search, optimal for both by construction, and the constraint is weighed in
   every possible world, one that violates it being impossible; a walking want is reconsidered when a want
-  the footprint couples to it arrives; two minds optimize alone and meet through prediction, the
-  market and execution; sequencing the elder plan as the younger's ground was refused as the two-minds
-  tool used on one (#567, one-mind-couples-the-wants-a-constraint-can-make-collide).
+  the footprint couples to it arrives; two minds optimize alone and meet by what they sense and say;
+  sequencing the elder plan as the younger's ground was refused as the two-minds tool used on one
+  (#567, one-mind-couples-the-wants-a-constraint-can-make-collide).
+- **Where defecting pays, a resource has an owner who issues and checks claims; where a collision
+  harms both, peers keep a convention, and a symmetric conflict is settled by lots drawn by commit and
+  reveal** — nobody owns a cell, so vans in range say their routes and the loser lays the winner's as
+  a prediction; a market lot, a reservation table and a rank were refused (#568,
+  two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict).
 - **State two plans share couples their wants only where a constraint is stated over it** — one
   driver both parcels' plans move was two wants, and a walk that drove a van its driver had left,
   until the world held that a driver is aboard one van: a constraint no plan breaks, held for its
