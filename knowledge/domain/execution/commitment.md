@@ -4,8 +4,9 @@ title: Commitment
 description: >-
   What an intention holds the agent to, in two grains. HARD on the step in flight - handed to its
   taker and not yet answered, it is never cancelled by planning. SOFT on the plan - a walking want is
-  neither searched again nor withdrawn, until its one trigger - a want a constraint couples to it
-  arriving - reopens it, and the untaken steps are open to replacement.
+  neither searched again nor withdrawn, until one of its two triggers - a want a constraint couples
+  to it arriving, or a belief arriving that makes a world its untaken steps reach impossible - reopens
+  it, and the untaken steps are open to replacement.
 ---
 
 # Two grains
@@ -35,14 +36,38 @@ intention yet pursues it — read off execution's rows by `Planner.walking`. It 
 the soft grain: a walking want is not searched again, its plan is not handed down again, and its
 desire reading met or unmet does not withdraw it, since the world has not answered yet.
 
-# The one trigger, and what follows it
+# Two triggers, and what follows them
 
-**A want a constraint's footprint couples to a walking one arrives.** In the derivation that is a
-cluster the [constraint](/domain/planning/constraint.md) coupled which is about every instance a
-walking want under the same desire is about, and more — a parcel arriving whose van can meet the one
-a plan is driving. The want minted for it **reopens** the walking want, `planning:reopens`, and is
-minted at the instant the walking want's step in flight lands. Nothing else reopens a walking want:
-a cheaper plan found, a second want no constraint couples, or a desire read again leaves it walking.
+Both are about a [constraint](/domain/planning/constraint.md), since only what the world says is
+possible can make a plan the agent is walking one it must not walk; a holder of none has no trigger
+and pays one query a pass.
+
+**A want a constraint's footprint couples to a walking one arrives** (#905). In the derivation that
+is a cluster the constraint coupled which is about every instance a walking want under the same
+desire is about, and more — a parcel arriving whose van can meet the one a plan is driving. The want
+minted for it **reopens** the walking want, `planning:reopens`, and is minted at the instant the
+walking want's step in flight lands.
+
+**A belief arrives that makes a world the walking plan's untaken steps reach impossible** (#921). No
+want arrives and nothing couples; what moved is the ground — a peer's van predicted on a cell the
+plan enters, or seen standing there. A belief has ARRIVED where a ground the pass lays holds what no
+world the last pass left in the imaginarium held, by the hash each is written with: a step of the
+walking plan landing as the plan said lands in a world of the cone it was found in, and is no news.
+Then each walking plan the scope walks is held to the grounds as now laid — its untaken steps
+replayed in order off what each says it changes, `execution:adds` and `execution:retracts`, each on
+the ground holding where it lands, and each world weighed for the holder's constraints — and where
+one is impossible the walking want reopens ITSELF: the derivation mints it again under its own name
+at the instant its step in flight lands, saying `planning:reopens` of itself, and what its search
+wrote before goes, since it stood on grounds the belief has changed. A want the world ratified is
+not asked, since its instant is the world's and the derivation did not mint it. Replaying the plan's
+own claim, and not the effects' rules, is the point: the question is whether what the plan says will
+happen is possible given what is now believed, and a replayed step is what the executor holds the
+world to anyway. The take-time check stays the precondition's (#916); weighing constraints as a head
+is taken was considered and refused.
+
+Nothing else reopens a walking want: a cheaper plan found, a second want no constraint couples, a
+desire read again, or a belief that leaves every world of the plan possible leaves it walking.
+Either trigger is then followed by the one path below.
 
 1. **The search starts where the step in flight has landed.** A pass lays a ground boundary at each
    such landing — its `execution:landsAt`, shifted by how late it was taken, as the executor reads it
@@ -54,15 +79,21 @@ a cheaper plan found, a second want no constraint couples, or a desire read agai
    untouched — adopted when it was, ended by nothing — and only the new part of the joint plan is
    published, opening where the joint plan put it, after the kept steps. A joint plan that walks the
    same steps later does not agree: two intentions are walked side by side, and nothing holds a step
-   of one after a step of the other.
+   of one after a step of the other. A want that reopens itself agrees only where its plan IS the
+   untaken steps, since a new part would be a second plan for the want the intention walks.
 3. **Otherwise the walking intention ends after its step in flight**, `superseded` — planning
    decides, execution ends, as for a step blocked — and the joint plan is adopted whole. A van turning
-   back is a legitimate outcome, found by the search and decided by nobody.
+   back is a legitimate outcome, found by the search and decided by nobody. Where the plan is for the
+   very want the intention walks, it is adopted BESIDE the intention that is ending, which absorbs no
+   plan: `reconsidered` is said before the plan is published, so the executor has marked the intention
+   to end after its step in flight before the replacement reaches it.
 
 Why this and not the alternatives — the elder plan as the younger's ground, conflicts reconciled
 afterwards — is [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md);
 how planning and execution say these things to each other is
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md).
-The derivation's half is held by `agent/planning/tests/derive_wants/a_coupled_arrival_reopens_the_walking_want.trig`,
-the dispatcher's arrivals by `world/dispatcher/tests/test_dispatcher.py`, and what a reconsideration
-costs is in [measure-the-search](/runbooks/measure-the-search.md).
+The derivation's half of the first trigger is held by `agent/planning/tests/derive_wants/a_coupled_arrival_reopens_the_walking_want.trig`
+and of the second by `agent/planning/tests/test_derive_wants.py`; the dispatcher's arrivals — a
+parcel, and a peer's van predicted or seen — by `world/dispatcher/tests/test_dispatcher.py`; and what
+a reconsideration costs, and what asking the second trigger costs, is in
+[measure-the-search](/runbooks/measure-the-search.md).

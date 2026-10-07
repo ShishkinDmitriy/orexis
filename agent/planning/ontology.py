@@ -70,6 +70,12 @@ POSSIBLE_GRAPH = PLANNING + "PossibleGraph"
 #  reached was the tuple a node happened to hold. Now `extract_plan` reads the chain back.
 BY = PLANNING + "by"
 CANDIDATE = PLANNING + "Candidate"
+#  THE SEARCH'S OWN MOVE (#920): the one action the planning package ships, in `wait.ttl` beside its
+#  ontology, so every agent loads it and no world imports it. A candidate filling it is admitted
+#  wherever a later ground whose identity differs is laid, makes no change of its own, and lands
+#  where that ground begins (`next_ground`); it is in every scope. The one action whose step may pass
+#  time with no effect.
+WAIT = PLANNING + "Wait"
 FILLS = PLANNING + "fills"
 OF = PLANNING + "of"
 FROM = PLANNING + "from"

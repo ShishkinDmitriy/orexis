@@ -34,7 +34,7 @@ import pyoxigraph as ox
 import rdflib
 
 from agent.ontology import OREXIS, RECORD
-from agent.store import NAMESPACES, Memo, Raw, bind, graphs_of, rdflib_view, remember, rows
+from agent.store import NAMESPACES, Memo, Raw, bind, forget_graph, graphs_of, rdflib_view, remember, rows
 
 from .ontology import DESIRE, PLANNING, SHAPES, WANT
 from .withdraw import FORGET_ONE_U
@@ -86,21 +86,29 @@ SELECT ?w WHERE {
 ORDER BY ?w"""
 
 
-def derive_wants(store: ox.Store, now: datetime, walking: dict[str, datetime] | None = None) -> set[str]:
+def derive_wants(store: ox.Store, now: datetime, walking: dict[str, datetime] | None = None,
+                 reopen=frozenset()) -> set[str]:
     """Mint a want under every desire for every cluster of what its met-test reads unmet, and
     answer with EVERY want those desires imply — the ones minted here and the ones already
     standing under the same name.
 
     `walking` is the CALLER'S, as it is for `withdraw`: every want an intention or a plan
     published is walking, each with the instant its step in flight lands — the present where none
-    is in flight. The intentions are another store's, and this reads none of them. It is read at
-    one place, the one trigger of soft commitment: a cluster a constraint COUPLED that is about
-    every instance a walking want under the same desire is about, and more, REOPENS that want —
-    it is minted saying so (`planning:reopens`) and at the instant the walking want's step in
-    flight lands, so its search starts from the ground in which that step has landed and the plan
-    it finds begins after it (knowledge/domain/execution/commitment.md, #905). Nothing else here
-    asks what is walked: a cluster no constraint couples to a walking want is minted as it always
-    was, and a walking want is kept by `withdraw`, not here.
+    is in flight. The intentions are another store's, and this reads none of them. It is read where
+    soft commitment's two triggers reopen a walking want, and nowhere else
+    (knowledge/domain/execution/commitment.md). THE FIRST: a cluster a constraint COUPLED that is
+    about every instance a walking want under the same desire is about, and more, REOPENS that
+    want — it is minted saying so (`planning:reopens`) and at the instant the walking want's step
+    in flight lands, so its search starts from the ground in which that step has landed and the
+    plan it finds begins after it (#905). THE SECOND is `reopen`, the Planner's: the walking wants
+    a belief arriving has made impossible ahead, a world their untaken steps reach violating a
+    constraint in the grounds as now laid (#921). Each is RE-MINTED under its own name at the
+    instant its step in flight lands, saying it reopens itself — the same row and the same instant
+    as the first, so the Planner holds what its search finds against its untaken steps by the one
+    path — and one a cluster no longer names but is about every instance of (`_covering`) is
+    reopened by that cluster's want, minted under its own name as the first trigger mints one.
+    Nothing else here asks what is walked: a cluster no constraint couples to a walking want is
+    minted as it always was, and a walking want is kept by `withdraw`, not here.
 
     IT READS THE WEIGHINGS THE PLANNER WROTE. A desire is judged where the search judges a
     want, by `weigh`, which the Planner calls for every desire in every ground before this —
@@ -148,7 +156,8 @@ def derive_wants(store: ox.Store, now: datetime, walking: dict[str, datetime] | 
             continue
         if holder not in coupled:
             coupled[holder] = couplings(store, holder, present, now, memo=memo)
-        _derive_under(store, shapes, scopes, holder, desire, found, now, coupled[holder], walking or {})
+        _derive_under(store, shapes, scopes, holder, desire, found, now, coupled[holder], walking or {},
+                      frozenset(reopen))
         wanted |= _named(shapes, scopes, desire, _said(store, desire), found, coupled[holder],
                          _standing_under(store, desire, now))
     return wanted
@@ -161,12 +170,13 @@ def _standing_under(store: ox.Store, desire: str, now: datetime) -> set[str]:
 
 def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, holder: str,
                   desire: str, found: list[dict], now: datetime, coupled=None,
-                  walking: dict[str, datetime] | None = None) -> list[str]:
+                  walking: dict[str, datetime] | None = None, reopen=frozenset()) -> list[str]:
     """The wants one desire's witnesses imply, minted where none stands. `found` is what its
     met-test read over time: one witness per way of failing, each carrying the boundary it
     first reads unmet at and the one it lifts at; `coupled` what the holder's constraints can
     make collide, which joins two instances into one want; `walking` the wants walked, each with
-    the instant its step in flight lands, which a coupled cluster reopens."""
+    the instant its step in flight lands, which a coupled cluster reopens; `reopen` the walking
+    wants a belief arriving reopened, which are minted again at that instant."""
     #  ONE WANT PER SCOPE OF WHAT IS IN TROUBLE, and per INSTANCE — UNLESS A CONSTRAINT COUPLES
     #  TWO: the results clustered by which of them some action can move together, and a want
     #  minted per cluster about exactly those, holding at the earliest instant among them. Every
@@ -211,7 +221,9 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
         #  want carried the instant it must hold at and the present outranked it; the stretch
         #  is on the graph now and a want in trouble from three is in trouble from three
         #  whether it is two o'clock or four.
-        if child in standing:
+        #  UNLESS A BELIEF ARRIVING HAS REOPENED IT, the second trigger (#921): then it is re-minted
+        #  below, under its own name, at the instant its step in flight lands.
+        if child in standing and child not in reopen:
             continue
         #  AND SO IS A WANT ALREADY ABOUT EVERY INSTANCE OF IT. A want a constraint coupled is
         #  about two parcels; once the plan has delivered one, the cluster still in trouble is
@@ -219,9 +231,10 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
         #  about an instance the coupled want still pursues, and a second plan drove the same
         #  van down the same cells (measured on the dispatcher the day the courier's drives took
         #  time to land, #901). The coupled want is one-shot and carries where it has got to; the
-        #  cluster is its, and it is kept under the name it has.
-        covering = _covering(shapes, standing, instances, about)
-        if covering is not None:
+        #  cluster is its, and it is kept under the name it has — unless a belief has reopened
+        #  it, and then the cluster's own want is minted reopening it, as the first trigger mints one.
+        covering = None if child in standing else _covering(shapes, standing, instances, about)
+        if covering is not None and covering not in reopen:
             log.debug("%s is still pursued by %s, which is about every instance of it",
                       child.rsplit("#", 1)[-1], covering.rsplit("#", 1)[-1])
             continue
@@ -234,18 +247,51 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
         #  beside the walking want and searched from the present, as it was, the joint plan drove
         #  the walking van as if its plan were not there, and the drop the walking plan still owed
         #  was planned and taken twice (measured on the dispatcher).
-        reopened = _reopened(shapes, standing & set(walking or ()), instances, about) if coupled is not None else []
+        #
+        #  THE SECOND TRIGGER (#921) READS THE SAME ROW AND TAKES THE SAME INSTANT: a walking want a
+        #  belief arriving has made impossible ahead is taken out of the graph of the stretch it was
+        #  minted over and minted again under its own name, saying it reopens ITSELF — the want is
+        #  one-shot and carries where it has got to, so a second want for the cluster would be a
+        #  second plan down the same cells; and one whose cluster no longer bears its name is
+        #  reopened by that cluster's want. The Planner withdrew what its search wrote before.
+        if child in standing:
+            reopened, why = [child], "a belief arriving made its untaken steps' worlds impossible"
+            _unhome(store, child)
+        elif covering is not None:
+            reopened, why = [covering], "a belief arriving made its untaken steps' worlds impossible"
+        else:
+            reopened = _reopened(shapes, standing & set(walking or ()), instances, about) if coupled is not None else []
+            why = "a want a constraint couples to it has arrived"
         if reopened:
-            opens = max([at, *(walking[w] for w in reopened)])
+            opens = max([at, *((walking or {}).get(w, now) for w in reopened)])
             if until is None or until > opens:
                 at = opens
-            log.info("%s reopens %s: a want a constraint couples to it has arrived",
-                     child.rsplit("#", 1)[-1], ", ".join(w.rsplit("#", 1)[-1] for w in reopened))
+            log.info("%s reopens %s: %s", child.rsplit("#", 1)[-1],
+                     ", ".join(w.rsplit("#", 1)[-1] for w in reopened), why)
         child = _mint(store, shapes, holder, desire, now, at, until, said,
                      about=about, instances=instances, keys=keys, reopens=tuple(reopened))
         if child is not None:
             minted.append(child)
     return minted
+
+
+#  EVERY GRAPH OF WANTS THE DERIVATION WROTE THAT HOLDS ONE WANT, and how many wants each holds.
+_HOMES_Q = """
+SELECT ?g (COUNT(DISTINCT ?w) AS ?wants) WHERE {
+  GRAPH ?g { $want a planning:Want . ?w a planning:Want }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }
+GROUP BY ?g"""
+
+
+def _unhome(store: ox.Store, want: str) -> None:
+    """Take `want` out of the graph of the stretch it was minted over, to be minted again over
+    another: the graph goes where it held this want alone, since a graph of wants is its wants and
+    a period nobody holds is litter, and only the want goes where it shares the stretch."""
+    for r in rows(store, _HOMES_Q, (), want=want):
+        if int(r["wants"]) == 1:
+            forget_graph(store, r["g"])
+        else:
+            store.update(bind(FORGET_ONE_U, graph=Raw(f"<{r['g']}>"), want=Raw(f"<{want}>")), prefixes=NAMESPACES)
 
 
 def _keys_of(cluster: list[dict]) -> tuple[str, ...]:

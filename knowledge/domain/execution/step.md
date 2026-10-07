@@ -22,14 +22,18 @@ candidate that was picked, and adds at least the values it was picked with:
 | `execution:adds` | the graph of facts its world gains — an `execution:AddsGraph`, stated and not believed |
 | `execution:retracts` | the graph of facts its world loses — an `execution:RetractsGraph` |
 | `execution:notBefore` | the start of the period of the world it is taken in — a requirement |
-| `execution:landsAt` | the earliest the world can show its change — the least the action's `planning:landsAfter` says |
+| `execution:landsAt` | the earliest the world can show its change — the least the action's `planning:landsAfter` says, or for a [wait](/domain/planning/wait.md) the instant the next ground begins |
 | `execution:notAfter` | the latest — the most it says, summed along the plan; a dose's a cadence past the step, since its sensor's next reading is due within one |
 | `execution:then` | the next step of the plan |
 
 # What it predicts
 
-The diff of the possible world the step reaches against the one it leaves, as two graphs named
-`<step>.adds` and `<step>.retracts`, which the engine fills when the plan is extracted. Their kinds
+What its action's [effect](/domain/planning/effect.md) changed in the world it was applied to, and
+nothing else, as two graphs named `<step>.adds` and `<step>.retracts`, which the engine fills when
+the plan is extracted. Where the world the step reaches was forked from the world it leaves, that is
+the diff of the two; where it was forked from the later ground the step lands in, the two also
+differ by what the predictions moved between their periods — another van's next cell — which is no
+part of the step (#919). Their kinds
 are beneath `orexis:Graph` alone, so a reader of the present is never handed them: a world where the
 dose has landed is not this world
 ([a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md)).

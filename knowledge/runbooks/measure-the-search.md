@@ -720,6 +720,99 @@ collides first follows which intention's name sorts first, ten runs of twenty ea
 and thirteen acts with two intentions failed, or thirteen and fourteen with three. Every drive taken
 is of the van the driver is aboard, and both parcels arrive.
 
+# A belief that makes a walking plan impossible (2026-10-07, #921)
+
+[Commitment](/domain/execution/commitment.md)'s second trigger: where a belief has arrived — a ground
+holds what no world the last pass left held — each walking plan is replayed on the grounds and its
+worlds weighed for the constraints. Measured on the development container, the tree before
+(`bb4b4a12`) exported to the scratchpad and this one alternated per run in one session, six runs of
+each case per tree, one process per run, budget 256, a drive's least landing between passes. *Shipped*
+is the dispatcher's joint walk with nothing arriving; *peer* and *aside* are the pose
+`world/dispatcher/tests/test_dispatcher.py` builds — van A and parcel A alone, owed at `c2_2` — with van
+C, a peer's, predicted after two steps answered on the cell van A drives to next (`c1_2`), or on
+`c3_0`, which no step enters, and the next pass run at once. Medians; the asks and the worlds replayed
+did not move between runs, nor in two more rounds on the tree as committed, whose one difference is
+that a pass with nothing walked does not read the hashes at all.
+
+| case | tree | passes | acts | each pass after the first | the arrival pass | the whole (min) | asked | worlds replayed | asking, in all |
+|---|---|---|---|---|---|---|---|---|---|
+| shipped | before | 7 | 10 | 183 ms | — | 3842 ms (3756) | — | — | — |
+| shipped | after | 7 | 10 | 183 ms | — | 3855 ms (3614) | 0 | 0 | 0 ms |
+| aside | before | 6 | 6 | 105 ms | 103 ms | 905 ms (789) | — | — | — |
+| aside | after | 6 | 6 | 103 ms | 112 ms | 871 ms (814) | 1 | 3 | 8 ms |
+| peer | before | 6 | 6 | 107 ms | 97 ms | 908 ms (821) | — | — | — |
+| peer | after | 8 | 8 | 111 ms | 326 ms | 1398 ms (1261) | 4 | 7 | 22 ms |
+
+**A walk nothing interrupts pays nothing.** Every step of the shipped walk lands in a world of the cone
+its plan was found in, so no pass asks; the passes are the tree before's to the millisecond. The first
+reading of *arrived* — a ground holding what no ground of the last pass held — asked at every pass of
+the same walk, since every step taken moves the present: 6 asks, 31 worlds replayed, 103 ms over the
+walk, measured on one walk and not kept. **A belief off the plan's path costs one ask**: three worlds replayed,
+8 ms, inside the drift of the pass. **A belief across it costs the re-search**: the arrival pass is
+326 ms against 97, of which the asking is a few milliseconds — the first world replayed is impossible —
+and the rest the walking want searched again from the ground where its drive in flight lands, 38
+candidates, 25 worlds, two of them impossible. The tree before walks van A onto `c1_2` with van C
+predicted there, six acts; this one turns van A back down the first column and round by `c2_1`, eight.
+The three later asks are the re-root's, and not what the trigger asks for: the replacement was
+searched from the ground where the drive in flight lands, and in the pass after, the present holds
+what the last pass's present ground held as well, which the re-root takes first by name — so the
+replacement's cone goes, and every step after lands in a world no pass left, each asking, replaying a
+world or two and finding nothing. Measured with van C observed rather than predicted, the same: five
+asks, eleven worlds. The tie is between two grounds of one hash, so any want searched from a landing
+ground meets it, #905's coupled want among them — read off the re-root, not measured there.
+
+# The wait: the search lets the world move (2026-10-07, #920)
+
+`planning:Wait`, the planning package's own action, lands where the next ground the search can tell
+apart begins ([wait](/domain/planning/wait.md)). Measured on the development container, the tree
+before (`bb4b4a12`) and this one alternated in one session, five rounds, a process per tree per round,
+one pass of the Planner over the booted world timed — the greenhouse's foreseen crossing as two passes
+of the runtime, the allotment as the whole dry-plot exchange of three agents. Candidates are every
+weighing but a ground's for the want; worlds the possible worlds it weighed.
+
+| case | tree | plan | candidates | worlds | pass, median of five (min) |
+|---|---|---|---|---|---|
+| a tank, rain predicted to fill the empty butt | before | `NoCandidate` | 0 | 0 | 51 ms (45) |
+| the same | this | the wait, then the fill — 1.1 | 2 | 2 | 56 ms (54) |
+| a tank a prediction refills | before | the fill — 1.0 | 1 | 1 | 56 ms (46) |
+| the same | this | the wait — 0.1 | 2 | 2 | 50 ms (49) |
+| a tank, nothing predicted | before | the fill | 1 | 1 | 47 ms (44) |
+| the same | this | the fill, no wait admitted | 1 | 1 | 48 ms (43) |
+| the crossing, van B's route laid | before | six steps, back and in again — 6 | 61 | 42 | 431 ms (394) |
+| the same | this | a drive, a wait, two drives, the drop — 4.1 | 31 | 27 | 266 ms (258) |
+| the corridor, van B standing ahead | before | `Exhausted` | 25 | 13 | 191 ms (189) |
+| the same | this | six steps, two waits — 4.2 | 24 | 18 | 205 ms (191) |
+| the shipped dispatcher | before | ten steps | 228 | 148 | 2551 ms (2413) |
+| the same | this | ten steps | 228 | 148 | 2705 ms (2467) |
+| the greenhouse's cold dry bed | before | a step each | 1 + 1 | 1 + 1 | 112 ms (105) |
+| the same | this | a step each | 1 + 1 | 1 + 1 | 117 ms (113) |
+| the greenhouse's foreseen crossing, two passes of the runtime | before | the dose | — | — | 404 ms (394) |
+| the same | this | the dose | — | — | 412 ms (376) |
+| the allotment's dry plot, the whole exchange | before | the rose's three steps | 4 | — | 5659 ms (5636) |
+| the same | this | the rose's three steps | 4 | — | 5770 ms (5646) |
+
+**Nothing shipped admits a wait, and every shipped figure is the tree before's.** Held by a probe
+rather than read: `admit` raising the moment it admitted one, the whole suite went red on the new tests
+alone. The dispatcher predicts nothing; the greenhouse's and the allotment's grounds ahead differ from
+the present only by a reading's number inside its band, which no text reads, so to the search there is
+nowhere to wait for. Built first to land at the literal next ground, the wait was offered there and
+passed over as a repeat every time: one fork in the greenhouse soil's scope a pass, three candidates
+more in an allotment grower's search, seven where it weighed four, the plan the same. What this tree
+adds to a pass where no ground ahead can be told apart is one read of the grounds per imaginarium and
+one of whether the store holds the wait; the shipped cases read 1 to 6 per cent slower at the median
+over this session and an earlier one, and within 2 per cent at the minimum, which nothing here
+separates from the drift — said as possibly real rather than as nothing.
+
+**Where something is predicted, the wait is the cheaper plan and often the cheaper search.** The
+crossing — van B a peer's, its route down the third column laid as predictions — is a drive, a wait,
+two drives and the drop at 31 candidates where the tree before drove back a cell and in again at 61;
+27 worlds where the courier's own wait, built and refused, took 27 too, at 33 candidates. The
+corridor with van B standing on the cell ahead for a minute and a half is found, six steps at 24
+candidates, where the tree before ended `Exhausted` at 25 and the courier's wait at 42. The tank
+cases weigh one candidate more, the wait, and answer differently: the rain filling an empty butt
+is waited for and then the tank filled, where the tree before had `NoCandidate`; the tank a
+prediction refills is met by the wait at a tenth, where the tree before filled it at one.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

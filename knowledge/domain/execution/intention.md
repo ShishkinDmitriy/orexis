@@ -37,7 +37,7 @@ it was kept below for ended undone. A plan that has begun is not ended because i
 # What it holds the agent to
 
 Its [commitment](/domain/execution/commitment.md): the step in flight is never cancelled, and the plan
-is kept until the one trigger reopens the want it pursues. When it ends, planning hears it and the
+is kept until one of commitment's two triggers reopens the want it pursues. When it ends, planning hears it and the
 want is the search's again at once, from wherever the world then stands.
 
 # Several at once

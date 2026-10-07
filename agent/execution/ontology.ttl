@@ -48,7 +48,7 @@ execution:Intention a owl:Class ; rdfs:label "Intention" ;
 
 execution:pursues a owl:ObjectProperty ;
     rdfs:label "pursues" ;
-    rdfs:comment "The want an intention — or a plan handed down, on its root — was found for. A want an intention walks is neither searched nor handed a second plan until the intention resolves, or a want a constraint couples to it arrives and reopens it (knowledge/domain/execution/commitment.md)." .
+    rdfs:comment "The want an intention — or a plan handed down, on its root — was found for. A want an intention walks is neither searched nor handed a second plan until the intention resolves, or a trigger of soft commitment reopens it — a want a constraint couples to it arriving, or a belief arriving that makes a world of its plan impossible (knowledge/domain/execution/commitment.md)." .
 
 execution:by a owl:ObjectProperty ; rdfs:domain execution:Intention ; rdfs:range execution:Step ;
     rdfs:label "by" ;
@@ -138,16 +138,16 @@ execution:partOf a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range 
 #  dose has landed is not this world (a-steps-prediction-is-two-graphs-it-names). The kinds are
 #  beneath orexis:Graph alone, so no reader of the present, the public knowledge or a package's
 #  scratch is handed one; a reader reaches them through the step, by `execution:adds` and
-#  `execution:retracts`. The engine computes the diff when the plan is extracted, compares the
+#  `execution:retracts`. The engine computes the effect's diff when a world is forked or the plan is extracted, compares the
 #  present to it when the step is held to the world, and writes a fictive step from it. They
 #  were one JSON literal of canonical triples, which nothing could query, abbreviate or compare
 #  in a pattern (#759).
 
 execution:AddsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Adds graph" ;
-    rdfs:comment "The facts a step predicts its world GAINS: every triple the possible world the step reaches states that the world it leaves does not, as the terms they are. One graph per step, named by the step's `execution:adds`, written by the plan's extraction beside the step and copied with the plan; the executor holds the world to it — the step is answered once the present holds every one of them — and a fictive step writes them into the state. Not a belief and not public: what it says is what WOULD hold, and no reader asking for the present is handed it." .
+    rdfs:comment "The facts a step predicts its world GAINS: every triple its action's effect added to the world it was applied to, as the terms they are — and nothing a prediction moved between the world the step is taken in and the one it lands in, which is no act of the agent's (#919). One graph per step, named by the step's `execution:adds`, written by the plan's extraction beside the step and copied with the plan; the executor holds the world to it — the step is answered once the present holds every one of them — and a fictive step writes them into the state. In an imaginarium, also one per possible world forked in a later ground than its parent's, derived from that world (`prov:wasDerivedFrom`), which the extraction copies. Not a belief and not public: what it says is what WOULD hold, and no reader asking for the present is handed it." .
 
 execution:RetractsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Retracts graph" ;
-    rdfs:comment "The facts a step predicts its world LOSES: every triple the world the step leaves states that the world it reaches does not. The other half of the prediction, a graph of its own because a graph is classified per kind it holds and a retraction is a different claim from an addition; named by the step's `execution:retracts`, and the step is answered only while the present holds none of them." .
+    rdfs:comment "The facts a step predicts its world LOSES: every triple its action's effect took away from the world it was applied to. The other half of the prediction, a graph of its own because a graph is classified per kind it holds and a retraction is a different claim from an addition; named by the step's `execution:retracts`, and the step is answered only while the present holds none of them." .
 
 execution:adds a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range execution:AddsGraph ;
     rdfs:label "adds" ;

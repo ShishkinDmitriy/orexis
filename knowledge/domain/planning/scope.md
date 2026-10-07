@@ -89,7 +89,8 @@ spent the puzzle's budget and moved no disk.
 
 `scope_actions` writes the partition to the store's scope graph at boot — a `planning:Scope`
 per part, and each action, each predicate and each TERM a filling binds — the property, the valve,
-the bed — `planning:inScope` every scope it falls in. `find_scopes` reads it back as a map of
+the bed — `planning:inScope` every scope it falls in; and the [wait](/domain/planning/wait.md),
+which touches no atom and so falls in none, `planning:inScope` every one. `find_scopes` reads it back as a map of
 member to scopes, and a reader places a reading, a witness or a want where the scopes of what it
 names MEET: the bed is the pump's and the heater's, the soil's property each pump's, and a reading
 naming both is the one pump's. `derive_wants` clusters a desire's witnesses by the scope of what

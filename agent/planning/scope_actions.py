@@ -20,11 +20,12 @@ import logging
 import pyoxigraph as ox
 
 from agent import clock
-from agent.ontology import OREXIS
+from agent.ontology import ACTION, OREXIS
 from agent.store import NAMESPACES, graphs_of, rows
 
 from . import footprint
-from .ontology import DERIVATION_GRAPH
+from .admit import WAIT_Q
+from .ontology import DERIVATION_GRAPH, WAIT
 from .footprint import ANYTHING
 from .find_scopes import STANDING_Q
 
@@ -35,8 +36,9 @@ def scope_actions(store: ox.Store) -> None:
     """Cluster every action the store holds into scopes and write them, replacing what stood.
 
     An action is in every scope a filling of it lies in, and a predicate or a term in every
-    scope an atom of it falls in. An action stating no effect is in no scope, as
-    no world admits it, and neither is one with no FILLING here — a parameter the world alone
+    scope an atom of it falls in. An action stating no effect is in no scope, as no world
+    admits it — save the planning package's wait, which is in every one (#920) — and neither
+    is one with no FILLING here — a parameter the world alone
     decides that it holds none of, the heating where no heater is (`footprint.atoms_of`, #913);
     one whose effect cannot be read joins everything and is in the one scope
     that holds everything. A scope is named for the graph it is written in and its place in the
@@ -72,13 +74,17 @@ def scope_actions(store: ox.Store) -> None:
             scopes_of = {part_of[a] for a in atoms_ if a in part_of}
             for term in terms:
                 where.setdefault(("t", term), set()).update(scopes_of or set(range(1, len(parts) + 1)))
+    #  AND THE WAIT IN EVERY SCOPE (#920): it touches nothing, so it has no atom to fall in and the
+    #  partition would place it in none — yet it is how a search in any scope lets the predictions
+    #  move the world, and what it reaches is a later ground of that scope's own readings.
+    waits = {WAIT} if rows(store, WAIT_Q, graphs_of(store, ACTION, at=now), wait=WAIT) else set()
     written = []
     for n, part in enumerate(parts, 1):
         scope = _scope_name(n)
         members = {m for (kind, m), scopes in where.items() if n in scopes}
         actions = {action for action, fillings in atoms.items()
                    if fillings is ANYTHING or any(atom in part for atoms_, _ in fillings for atom in atoms_)}
-        written.append((scope, members, actions))
+        written.append((scope, members, actions | waits))
     _save_scopes(store, written)
     log.info("%d action(s) in %d scope(s)", len(atoms), len(parts))
 

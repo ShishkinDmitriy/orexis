@@ -228,9 +228,14 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   graphs alone, as a scope's is, it is grid-blind, measured), says which wants' plans may interfere; those are one
   cluster, one want, one search, optimal for both by construction, and the constraint is weighed in
   every possible world, one that violates it being impossible; a walking want is reconsidered when a want
-  the footprint couples to it arrives; two minds optimize alone and meet through prediction, the
-  market and execution; sequencing the elder plan as the younger's ground was refused as the two-minds
-  tool used on one (#567, one-mind-couples-the-wants-a-constraint-can-make-collide).
+  the footprint couples to it arrives; two minds optimize alone and meet by what they sense and say;
+  sequencing the elder plan as the younger's ground was refused as the two-minds tool used on one
+  (#567, one-mind-couples-the-wants-a-constraint-can-make-collide).
+- **Where defecting pays, a resource has an owner who issues and checks claims; where a collision
+  harms both, peers keep a convention, and a symmetric conflict is settled by lots drawn by commit and
+  reveal** — nobody owns a cell, so vans in range say their routes and the loser lays the winner's as
+  a prediction; a market lot, a reservation table and a rank were refused (#568,
+  two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict).
 - **State two plans share couples their wants only where a constraint is stated over it** — one
   driver both parcels' plans move was two wants, and a walk that drove a van its driver had left,
   until the world held that a driver is aboard one van: a constraint no plan breaks, held for its
@@ -351,7 +356,15 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   there** — forked from its parent, a fill landing after a predicted drain read eleven where the
   world would read nine; a landing straddling a boundary is judged at its earliest alone, which is
   what #596 still asks.
+- **A step predicts its effect's change alone, never what the ground moved between its parent's
+  period and its own** — a world forked in a later ground says what its effect changed there before
+  that ground goes, since diffed against its parent every drive carried the other van's next cell,
+  wrote it fictively and was held to it (#919).
 - **A step lands as long after it is taken as its plan placed it after its opening.**
+- **A plan lets time pass only by `planning:Wait`, the planning package's one action, in every scope**
+  — it lands at the next ground whose identity differs from its own — a ground being the present with the predictions applied over its period, and its identity its hash within what is read, so the wait coins no concept — and is a move though no effect
+  ran, while any other effect that comes to nothing stays no move; the courier's own wait was built
+  and refused, since it could not outwait a stretch longer than its band (#920, wait).
 - **A want's view is parsed off its met-test, never declared beside it**, and a want spanning
   scopes is searched in the first of them.
 
@@ -385,9 +398,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   its path collided once, needed escaping, grew with depth and was read back by nothing; the
   counter is the store's, so a cone kept across passes is never named over (#486).
 - **A walking want is neither searched nor handed down again until a want a constraint couples to it
-  arrives, and then only its untaken steps are reopened** — commitment is hard on the step in flight,
-  which nothing planning decides cancels, and soft on the plan, which that one trigger re-searches
-  from the ground the step lands in (#905, commitment); and **a plan whose want is gone is nobody's**.
+  arrives, or a belief arrives that makes a world its untaken steps reach impossible, and then only
+  its untaken steps are reopened** — commitment is hard on the step in flight, which nothing planning
+  decides cancels, and soft on the plan, which either trigger re-searches from the ground the step
+  lands in by the one path; a belief has arrived where a ground holds what no world the last pass
+  left did, so a plan landing as it said asks nothing (#905, #921, commitment); and **a plan whose
+  want is gone is nobody's**.
 - **A prediction is a diff, and only a ground has applied it** — one reader answers the derivation
   and the search (`world_at`), and refuses a world that says no period; the present, where no
   prediction has applied, it reads off a store with no ground as the readings themselves (#916).

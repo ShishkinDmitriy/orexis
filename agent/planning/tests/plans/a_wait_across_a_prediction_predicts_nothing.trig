@@ -1,17 +1,16 @@
-# a_fill_lands_in_a_later_ground
+# a_wait_across_a_prediction_predicts_nothing
 #
-# One tank a single fill short of its floor NOW — six, where the floor is ten and a fill raises
-# the level by five — and a prediction that it drains to four from half a minute on. The fill
-# lands a minute after the turn at the least, so the world it reaches holds in the LATER ground,
-# where the tank reads four: forked from that ground with the fill replayed there, the world reads
-# nine, unmet, and the search chains a second fill (#596). Forked from the present, as every world
-# was, one fill read eleven and the plan was one step the world would have proved wrong.
+# One tank, reading six where its floor is ten, and a prediction that it reads twelve from half a
+# minute on: something no act of this agent does will refill it. The one action is a WAIT, the shape
+# of the courier's refused wait (#920): its effect deletes the tank's level and puts the same level back, so it
+# changes nothing of its own, and it lands a minute after the turn at the least. Its world is forked
+# from the LATER ground, where the tank reads twelve and the want is met.
 #
-# WHAT THE DIFF SHOWS beyond a_low_tank_is_filled: two grounds, the present and the one the
-# prediction makes; the first fill's world under the second ground's facts, with the two graphs
-# derived from it saying what the fill changed THERE — four leaving for nine, not the present's six,
-# whose leaving for four is the drain's and no part of the step (#919); and a two-step plan whose
-# steps land from 12:01 and from 12:02.
+# WHAT THE STEP PREDICTS IS NOTHING (#919): the diff of the world it lands in against the base it was
+# replayed into is taken per fact, each way, and a fact deleted and put back is in both, so the two
+# graphs the step names are EMPTY — and still named, with their catalogue rows, since the rows are
+# what make `extract_plan` copy them rather than diff the world against its parent, which would carry
+# the refill. A fictive wait then writes nothing, and the executor holds the step to its landing.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -41,26 +40,27 @@ GRAPH :world {
   :tank1 a :Tank .
 }
 
-# ONE LEVER: fill a tank that is below its floor, raising the level by five. The precondition
-# names the world it reads through no GRAPH clause at all — the runner hands it its graphs.
+# ONE LEVER: wait beside a tank below its floor — delete its level and put the same level back. It is
+# FICTIVE, so an executor takes it by writing what the step predicts into the readings.
 GRAPH :actions {
-  :fill a orexis:Action .
-  :fill orexis:takes :tank .
-  #  A FILL SHOWS WITHIN THREE MINUTES OF THE TURN, a minute at the least: the band a world reached by it holds over.
-  :fill planning:landsAfter """SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }""" .
-  :fill planning:costs """PREFIX : <http://example.org/test#>
+  :tank a orexis:Parameter .
+  :wait a orexis:Action .
+  :wait execution:implementation [ a execution:Implementation ; execution:operation [ a execution:Fictive ] ] .
+  :wait orexis:takes :tank .
+  :wait planning:costs """PREFIX : <http://example.org/test#>
       SELECT (1 AS ?cost) WHERE { }""" .
-  :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>
+  :wait planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>
       DELETE { $tank :level ?l  }
       WHERE  { $tank :level ?l  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?tank :level ?next } WHERE {
       $tank :level ?l .
-      BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
-  :fill planning:precondition """PREFIX : <http://example.org/test#>
+      BIND($tank AS ?tank) BIND(?l AS ?next) }""" ] ] .
+  #  A WAIT LANDS WITHIN THREE MINUTES OF THE TURN, a minute at the least: the band a world reached by it holds over.
+  :wait planning:landsAfter "SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }" .
+  :wait planning:precondition """PREFIX : <http://example.org/test#>
       SELECT ?tank WHERE {
       ?tank a :Tank ; :level ?l .
       FILTER(?l < 10) }""" .
-  :tank a orexis:Parameter .
 }
 
 GRAPH :desires {
@@ -78,15 +78,15 @@ GRAPH :sensed {
   :tank1 :level 6 .
 }
 
-# WHAT THE TANK WILL READ from half past the minute: the drain the prediction foresees.
+# WHAT THE TANK WILL READ from half past the minute: a refill no act of this agent makes.
 GRAPH :predicted-0 {
-  :tank1 :level 4 .
+  :tank1 :level 12 .
 }
 
 GRAPH :scopes {
-  :fill planning:inScope :keeper.scope.1 .
   :keeper.scope.1 a planning:Scope .
   :level planning:inScope :keeper.scope.1 .
+  :wait planning:inScope :keeper.scope.1 .
 }
 
 GRAPH :catalogue {

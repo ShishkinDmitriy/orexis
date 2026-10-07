@@ -113,7 +113,10 @@ more of them is finer foresight bought with more worlds.
   commitment is background a new option is filtered against, earliest committed first. Two plans
   drawing one barrel still interfere only where a drift of the barrel's level reads the committed
   draws; no shipped world observes a source's level yet. A PEER's announced route is a prediction
-  graph laid the same way, and that is the two-minds tool; one mind's own second want is coupled
+  graph laid the same way, and that is the two-minds tool — laid by the agent that lost a draw to it,
+  since 2026-10-07
+  ([two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict](/decisions/two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict.md));
+  one mind's own second want is coupled
   into one search instead, decided 2026-10-05
   ([one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)).
 - **A possible world is judged in the ground at its earliest landing, not in every ground its

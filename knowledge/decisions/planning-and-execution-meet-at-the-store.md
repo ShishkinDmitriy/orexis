@@ -48,8 +48,8 @@ was linked to. The runtime keeps the parts and no longer runs a pass of its own.
 
 **What is walked is read, not asked.** Planning reads the intentions by pattern: a want a standing
 intention pursues, or a plan published and adopted by no intention yet pursues, is walked — neither
-searched again nor withdrawn, until the one trigger of soft [commitment](/domain/execution/commitment.md)
-reopens it (#905).
+searched again nor withdrawn, until a trigger of soft [commitment](/domain/execution/commitment.md)
+reopens it (#905, #921).
 
 **A step kept below is marked, then answered.** Planning marks, when it publishes a plan, every step
 taken fictively whose predicted fact a bridge's head binds (`bridge.keeps`) as `execution:keptBelow`;

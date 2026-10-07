@@ -13,9 +13,11 @@ replaces rather than extends. One pipeline, and the package is what it is made o
 3. **the imaginarium** — a store per scope, filled from the beliefs by `prepare_ground` and
    given its timeline by `lay_ground`, one ground per period a prediction makes;
 4. **the search** — the Planner's own methods, `search` per want and `expand` per
-   iteration, sequencing the acts: `admit` writes what the cheapest open world admits, `take`
-   forks each candidate and writes the world's row, `weigh` judges what was reached and
-   writes what it found, and `extract_plan` writes what the want's weighings come to. THE
+   iteration, sequencing the acts: `admit` writes what the cheapest open world admits — a
+   wait among it, the package's own action (`wait.ttl`), where `next_ground` finds a later ground
+   the search can tell apart — `take` forks each candidate and writes the world's row, `weigh`
+   judges what was reached and writes what it found, and `extract_plan` writes what the want's
+   weighings come to. THE
    FRONTIER IS A QUERY: what is true of a world whoever asks is on its row, what a want's
    search worked out about it is a `planning:Weighing` — met there, on the frontier, opened —
    and a candidate passed over is weighed too, so a search called again on the same

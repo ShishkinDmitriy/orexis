@@ -31,7 +31,18 @@ that no cell holds two vans (#567). What this world is held to is what was MEASU
   else (#905, commitment): the coupled want is searched from the ground in which van A's step in
   flight lands, that step is answered and never cancelled, and van A's intention either ends after it,
   `superseded`, the joint plan adopted whole, or — where the joint plan begins with its untaken steps —
-  stands untouched beside the new part; on disjoint grids nothing is reopened.
+  stands untouched beside the new part; on disjoint grids nothing is reopened;
+- A BELIEF THAT MAKES THE WALKING PLAN'S NEXT WORLD IMPOSSIBLE REOPENS IT TOO (#921, commitment's second
+  trigger): a peer's van predicted, or seen, on the cell van A drives to next — the walking plan's
+  untaken steps replayed on the grounds as now laid, the world after the next drive holding two vans,
+  and the walking want minted again where its drive in flight lands, reopening itself; it turns van A
+  back after that drive, never cancelled, and parcel A is delivered round the peer. A peer's van on a
+  cell the plan never enters is asked about and reopens nothing.
+- A VAN WAITS FOR A PEER'S ROUTE LAID AS A PREDICTION (#920): the planning package's wait, which no
+  document here names, lands where the next ground begins, so van A waits a cell short while van B
+  crosses ahead rather than drive back and in again, and waits out van B standing in a corridor in
+  one wait for the whole stretch, where the courier's own wait, a drive's band long, could not. With
+  nothing predicted no wait is admitted, and every figure above is what it was.
 """
 
 from __future__ import annotations
@@ -44,10 +55,10 @@ from pathlib import Path
 import pytest
 
 from agent import clock
-from agent.ontology import STATE
+from agent.ontology import OREXIS, PREDICTION, STATE
 from agent.planning.planner import Planner
 from agent.runtime import UNFINISHED, Runtime, boot
-from agent.store import graphs_of, rows, update
+from agent.store import catalogue_of, entry, graphs_of, rows, update
 from onboarding import reading
 
 WORLD = Path(__file__).resolve().parents[1]
@@ -580,13 +591,25 @@ A = "every_parcel_delivered.pursued.parcel_a"
 B = "every_parcel_delivered.pursued.parcel_b"
 
 
-def _arrival(world: Path, cell: str, owed: str, *, budget: int = BUDGET, after: int = 2, passes: int = 40) -> dict:
+def _parcel_b(cell: str, owed: str):
+    """Parcel B ARRIVING at `cell`, owed at `owed`, written into the state as a consignment arriving at the
+    depot would be: what `_arrival` writes for soft commitment's first trigger."""
+    def arrive(beliefs, walking, at):
+        (state,) = graphs_of(beliefs, STATE)
+        update(beliefs, f"""PREFIX courier: <http://example.org/orexis/courier#>
+INSERT DATA {{ GRAPH <{state}> {{ <{D}parcel_b> courier:at <{D}{cell}> ; courier:destination <{D}{owed}> }} }}""")
+        return [state]
+    return arrive
+
+
+def _arrival(world: Path, arrive, *, budget: int = BUDGET, after: int = 2, passes: int = 40) -> dict:
     """The runtime over `world`, a drive's least landing between passes as `_run` moves it, until van A's
-    plan has had `after` steps answered; then parcel B ARRIVES — at `cell`, owed at `owed`, written into the
-    state and said written — and the next pass runs AT ONCE, so the step van A's walk took in the pass
-    before is still in flight when the arrival is planned for. Then on until no intention stands. What
-    happened, in order: every step taken with where the vans stood, every verdict, every intention
-    resolved, every plan published, every reconsideration, every search said, and the passes."""
+    plan has had `after` steps answered; then a belief ARRIVES — `arrive(beliefs, walking, at)` writes it
+    and answers the graphs it wrote, which are said written — and the next pass runs AT ONCE, so the step
+    van A's walk took in the pass before is still in flight when the arrival is planned for. Then on until
+    no intention stands. What happened, in order: every step taken with where the vans stood, every
+    verdict, every intention resolved, every plan published, every reconsideration, every search said,
+    and the passes."""
     time = _Clock(NOW)
     clock.now = time
     beliefs = boot(world, "dispatcher")
@@ -619,13 +642,11 @@ def _arrival(world: Path, cell: str, owed: str, *, budget: int = BUDGET, after: 
                                    planned=seen["planned"][-1])
         if "arrived" not in seen and sum(1 for k, e in seen["events"] if k == "answered" and e.landed) >= after:
             seen["before"] = list(seen["searched"])
-            (state,) = graphs_of(beliefs, STATE)
-            update(beliefs, f"""PREFIX courier: <http://example.org/orexis/courier#>
-INSERT DATA {{ GRAPH <{state}> {{ <{D}parcel_b> courier:at <{D}{cell}> ; courier:destination <{D}{owed}> }} }}""")
             (walking,) = executor.standing()
+            written = arrive(beliefs, walking, time.at)
             seen["arrived"] = {"pass": n + 1, "at": time.at, "events": len(seen["events"]), "intention": walking.uri,
                                "adopted": rows(beliefs, _ADOPTED_Q, (), i=walking.uri)[0]["at"], "head": walking.at}
-            runtime.wrote([state])
+            runtime.wrote(written)
             continue
         if outcome != UNFINISHED or ("arrived" in seen and not executor.standing()):
             break
@@ -673,7 +694,7 @@ def test_a_parcel_arriving_mid_walk_reopens_the_walking_want_and_the_joint_plan_
     the joint plan's first step is taken; none of its untaken steps is ever taken. On the corridor van
     B's road crosses c2_1 as van A leaves it, and walked, the vans share no cell at any act; both parcels
     are delivered. The re-search costs what the coupled search from that ground costs, measured."""
-    seen = _arrival(variant(tmp_path, name, edits), cell, owed)
+    seen = _arrival(variant(tmp_path, name, edits), _parcel_b(cell, owed))
     arrived, beliefs = seen["arrived"], seen["beliefs"]
     head, joint = arrived["head"], D + JOINT
     (act,) = rows(beliefs, _ACT_Q, (), step=head)
@@ -712,7 +733,7 @@ def test_a_joint_plan_that_begins_with_the_walking_intentions_untaken_steps_leav
     published for the coupled want is the part that is NEW, van B's five steps, opening after van A's last
     kept step lands in the joint plan, so the two intentions walked side by side keep the joint plan's
     order. Both parcels are delivered and no intention ends but `done`."""
-    seen = _arrival(variant(tmp_path, "agree", ARRIVING), "c3_0", "c3_3")
+    seen = _arrival(variant(tmp_path, "agree", ARRIVING), _parcel_b("c3_0", "c3_3"))
     arrived, beliefs = seen["arrived"], seen["beliefs"]
     assert _of(seen, "reconsidered") == []
     published = _published(seen)
@@ -734,7 +755,7 @@ def test_a_parcel_arriving_where_the_walking_van_can_never_meet_its_van_reopens_
     what the vans can reach yields no row, nothing couples B to A, and the walking want is neither searched
     nor reconsidered — B's want is minted alone, under its own name, and searched alone, and van A's
     intention walks on untouched to `done`."""
-    seen = _arrival(variant(tmp_path, "disjoint", DISJOINT_ARRIVING), "g10_1", "g10_3")
+    seen = _arrival(variant(tmp_path, "disjoint", DISJOINT_ARRIVING), _parcel_b("g10_1", "g10_3"))
     arrived = seen["arrived"]
     assert _of(seen, "reconsidered") == []
     assert {_local(e.want) for e in arrived["searched"]} == {B}, "B's want searched alone, A's walking want not at all"
@@ -742,6 +763,124 @@ def test_a_parcel_arriving_where_the_walking_van_can_never_meet_its_van_reopens_
     assert rows(seen["beliefs"], _ADOPTED_Q, (), i=arrived["intention"])[0]["at"] == arrived["adopted"]
     assert {(_local(e.want), e.outcome) for e in _of(seen, "resolved")} == {(A, "done"), (B, "done")}
     assert _at(seen["beliefs"]) == {"van_a": "c0_3", "parcel_a": "c0_3", "van_b": "g10_3", "parcel_b": "g10_3"}
+
+
+#  A PEER'S VAN (#921): van A and parcel A alone, the parcel owed at `c2_2` so three drives remain after the
+#  pick and more than one way runs there, and VAN C, a van of the world's that this agent does not drive —
+#  `courier:drivenBy` a peer who is not aboard it, so the drive's own filter refuses it (#903) — standing
+#  nowhere the agent knows of until a belief says where.
+PEER = {"world.ttl": [*HALF_A["world.ttl"], ("courier:destination :c0_3", "courier:destination :c2_2"),
+                      (':van_a a courier:Van ; rdfs:label "van A" .',
+                       ':van_a a courier:Van ; rdfs:label "van A" .\n'
+                       ':van_c a courier:Van ; courier:drivenBy :peer ; rdfs:label "a peer\'s van" .')],
+        "state.ttl": HALF_A["state.ttl"]}
+#  WHERE VAN C IS SAID TO STAND, as a prediction laid in the beliefs.
+PEER_GRAPH = "http://example.org/orexis/graph/prediction/dispatcher/van_c"
+_PLAN_OF_Q = "SELECT ?p WHERE { GRAPH ?g { $i execution:adopts ?p } }"
+
+
+def _next_cell(beliefs, walking) -> str:
+    """The cell van A's plan drives to first after its step in flight — the first untaken drive's."""
+    (plan,) = rows(beliefs, _PLAN_OF_Q, (), i=walking.uri)
+    steps = [(r["step"], _local(r["a"]), _local(r.get("to"))) for r in rows(beliefs, _PUBLISHED_Q, (), p=plan["p"])]
+    at = next(i for i, (step, _, _) in enumerate(steps) if step == walking.at)
+    return next(to for _, action, to in steps[at + 1:] if action == "Drive")
+
+
+def _van_c(cell=None, *, observed: bool = False):
+    """VAN C, said to stand on `cell` — or, where none is named, on the cell van A's plan drives to first
+    after its step in flight: OBSERVED, a fact written into the state as #922 would write a peer van seen
+    standing; or PREDICTED, an `orexis:PredictionGraph` holding from ten seconds on, as #923 would lay a
+    peer's route this agent lost a draw to. Neither is built here; what is held is what the agent does
+    with such a belief once it has it."""
+    def arrive(beliefs, walking, at):
+        where = cell or _next_cell(beliefs, walking)
+        said = f"<{D}van_c> courier:at <{D}{where}>"
+        if observed:
+            (state,) = graphs_of(beliefs, STATE)
+            update(beliefs, f"PREFIX courier: <http://example.org/orexis/courier#>\nINSERT DATA {{ GRAPH <{state}> {{ {said} }} }}")
+            written = [state]
+        else:
+            update(beliefs, f"""PREFIX courier: <http://example.org/orexis/courier#>
+INSERT DATA {{ {entry(beliefs, PEER_GRAPH, PREDICTION, OREXIS + "Recorded", D + "dispatcher", start=at + timedelta(seconds=10))}
+  GRAPH <{PEER_GRAPH}> {{ {said} }} }}""")
+            written = [PEER_GRAPH]
+        arrive.cell = where
+        return written
+    return arrive
+
+
+@pytest.mark.parametrize("observed", [False, True], ids=["predicted", "observed"])
+def test_a_belief_that_makes_the_walking_plans_next_world_impossible_reopens_it_after_the_step_in_flight(
+        ticking, tmp_path, observed):
+    """SOFT COMMITMENT'S SECOND TRIGGER (#921). Van A has driven to parcel A and picked it, and its next
+    drive is IN FLIGHT, when a belief arrives that van C will stand — or stands — on the cell van A's plan
+    drives to next. No want arrives and nothing couples; what changed is the ground. The pass holds the
+    walking plan to the grounds as now laid — its untaken steps replayed from where the step in flight
+    lands, off what each says it changes — and the world after the next drive holds two vans on one cell,
+    which the constraint makes impossible: so the walking want REOPENS ITSELF. It is minted again under its
+    own name at the instant the step in flight lands, searched from that ground, and its plan is held
+    against the untaken steps as #905 holds a joint plan: it does not begin with them, so the intention
+    ends AFTER its step in flight, `superseded`, and the new plan — for the same want, adopted beside the
+    intention that is ending, which absorbs nothing — opens where that step lands and drives through the
+    cell van C holds at no step. The step in flight is never cancelled: it is answered by the world before
+    the intention resolves and before the new plan's first step is taken, and none of the untaken steps is
+    ever taken. Parcel A is delivered."""
+    arrive = _van_c(observed=observed)
+    seen = _arrival(variant(tmp_path, "peer", PEER), arrive)
+    arrived, beliefs, blocked = seen["arrived"], seen["beliefs"], arrive.cell
+    head = arrived["head"]
+    (act,) = rows(beliefs, _ACT_Q, (), step=head)
+    assert _dt(act["taken"]) < arrived["at"], "the step reconsidered around was in flight when the belief arrived"
+    landing = _dt(act["lands"]) + max(timedelta(0), _dt(act["taken"]) - _dt(act["due"]))
+    (reconsidered,) = _of(seen, "reconsidered")
+    assert (reconsidered.step, _local(reconsidered.want), _local(reconsidered.by)) == (head, A, A), "the walking want reopens itself"
+    published = _published(seen)
+    assert list(published) == [A], f"one plan, for the same want, published whole: {published}"
+    assert published[A][0][4] == landing, f"the new plan opens where the step in flight lands: {published[A][0]} against {landing}"
+    assert ("Drive", "van_a", None, blocked) not in [s[:4] for s in published[A]], f"the new plan never drives onto {blocked}: {published[A]}"
+    order = seen["events"][arrived["events"]:]
+    answered = next(i for i, (k, e) in enumerate(order) if k == "answered" and e.step == head)
+    assert order[answered][1].landed, "the step in flight is answered by the world, never cancelled"
+    ended = next(i for i, (k, e) in enumerate(order) if k == "resolved" and e.intention == arrived["intention"])
+    assert order[ended][1].outcome == "superseded" and answered < ended, "the intention ends AFTER its step in flight"
+    (plan,) = [e.plan for k, e in order if k == "published"]
+    first = next(i for i, (k, e) in enumerate(order) if k == "taken" and e.step.startswith(plan))
+    assert ended < first, "the new plan's first step is taken once the step in flight has landed"
+    untaken = [s for s in rows(beliefs, "SELECT ?s WHERE { GRAPH ?g { $i execution:step ?s } }", (), i=arrived["intention"])
+               if not rows(beliefs, _ACTS_OF_Q, (), step=s["s"])]
+    assert untaken, "the reconsidered intention had untaken steps, and none of them was ever taken"
+    assert sorted(e.outcome for e in _of(seen, "resolved")) == ["done", "superseded"]
+    walked = [t for t in seen["trace"][len([k for k, _ in seen["events"][:arrived["events"]] if k == "taken"]):]]
+    assert walked and all(van_a != blocked for _, van_a, _, _ in walked), f"van A never stands on {blocked}: {walked}"
+    assert [t for t in seen["trace"] if t[3]] == [], f"walked, two vans on no cell at any act: {seen['trace']}"
+    assert _at(beliefs)["parcel_a"] == "c2_2", "parcel A delivered"
+    assert (blocked, [s[:4] for s in published[A]]) == ("c1_2", [
+        ("Drive", "van_a", None, "c0_1"), ("Drive", "van_a", None, "c1_1"), ("Drive", "van_a", None, "c2_1"),
+        ("Drive", "van_a", None, "c2_2"), ("Drop", None, "parcel_a", "c2_2")]), \
+        f"van A was driving up the first column; it turns back, found by the search and decided by nobody: {published[A]}"
+    searched = {_local(e.want): e.weighed for e in arrived["searched"]}
+    assert (searched, arrived["weighed"].get(A), arrived["impossible"]) == ({A: 38}, 25, {CONSTRAINT: 2}), \
+        f"the re-search from the landing ground, measured: {searched} candidates, {arrived['weighed']} worlds, {arrived['impossible']} impossible"
+
+
+def test_a_belief_that_touches_nothing_the_walking_plans_worlds_read_reopens_nothing(ticking, tmp_path, caplog):
+    """THE SECOND TRIGGER ASKS, AND ANSWERS NO. Van C is predicted on `c3_0`, a cell van A's plan enters
+    at no step: a belief has arrived — a ground holds what none did before — so the walking plan's untaken
+    steps are replayed and weighed for the constraint, and none of their worlds is impossible. The walking
+    want is neither searched nor reconsidered, and van A's intention, adopted when it was, walks on to
+    `done`."""
+    with caplog.at_level(logging.DEBUG, logger="planner"):
+        seen = _arrival(variant(tmp_path, "aside", PEER), _van_c("c3_0"))
+    arrived = seen["arrived"]
+    asked = [r.getMessage() for r in caplog.records if "untaken steps foreseen" in r.getMessage() and A in r.getMessage()]
+    assert asked, "the walking plan was held to the grounds the belief changed"
+    assert _of(seen, "reconsidered") == []
+    assert arrived["searched"] == [], "the walking want is not searched again"
+    assert _published(seen) == {}
+    assert rows(seen["beliefs"], _ADOPTED_Q, (), i=arrived["intention"])[0]["at"] == arrived["adopted"]
+    assert {(_local(e.want), e.outcome) for e in _of(seen, "resolved")} == {(A, "done")}
+    assert _at(seen["beliefs"])["parcel_a"] == "c2_2"
 
 
 def test_two_vans_on_one_cell_as_posed_is_a_contradiction_said_and_refused_and_never_a_want(ticking, tmp_path, caplog):
@@ -779,3 +918,123 @@ def test_two_vans_on_one_cell_as_posed_is_a_contradiction_said_and_refused_and_n
         "onboarding refuses the world as posed, naming the constraint and its rows"
     assert reading.contradicted(WORLD, "dispatcher") == [], "the shipped pose is possible"
     assert Planner(boot(WORLD, "dispatcher"), "dispatcher").contradictions(NOW) == []
+
+
+#  A PEER'S VAN CROSSING THE CELL AHEAD (#920, #568). Van A at c0_1 carries parcel A, owed at c3_1, so its
+#  shortest chain drives c1_1, c2_1, c3_1 and drops; van B is a PEER'S — driven by somebody this agent
+#  never holds aboard, so no move of it is admitted (#903's filter) — and its route down the third
+#  column is laid as predictions, as speech will lay a peer's route ahead (#568). A drive lands half a
+#  minute to a minute after it is taken. The constraint stays the world's own: van B is a van.
+_PEERS_VAN = (':van_b a courier:Van ; rdfs:label "van B" .',
+              ':van_b a courier:Van ; courier:drivenBy :peer ; rdfs:label "van B" .\n'
+              ':peer a courier:Driver ; rdfs:label "the peer driving van B, aboard it in no belief of this agent" .')
+_CROSSING_WORLD = [_PEERS_VAN,
+                   (':parcel_b a courier:Parcel ; courier:destination :c3_3 ;\n    rdfs:label "the parcel owed at the top of the last column" .', ""),
+                   ("courier:destination :c0_3", "courier:destination :c3_1")]
+_CROSSING_STATE = [(":van_a courier:at :c0_0 .", ":van_a courier:at :c0_1 ."),
+                   (":parcel_a courier:at :c0_1 .", ":parcel_a courier:carriedBy :van_a ."),
+                   (":van_b courier:at :c3_0 .", ":van_b courier:at :c2_3 ."),
+                   (":parcel_b courier:at :c3_1 .", "")]
+CROSSING = {"world.ttl": _CROSSING_WORLD, "state.ttl": _CROSSING_STATE}
+#  VAN B'S ROUTE, from the instant each cell holds: the first is the present, posed in the state. It
+#  stands on c2_1 from a minute to a minute and a half.
+CROSSING_ROUTE = [(0, "c2_3"), (30, "c2_2"), (60, "c2_1"), (90, "c2_0")]
+#  THE SAME IN A CORRIDOR — the second row and the third column alone, so no cell is beside the row to
+#  pull aside into — with van B STANDING on c2_1 from a minute to two and a half before it drives on.
+_CORRIDOR_CELLS = {"c0_1", "c1_1", "c2_1", "c3_1", "c2_0", "c2_2", "c2_3"}
+STANDING = {"world.ttl": [*_CROSSING_WORLD,
+                          *((f":c{x}_{y} a courier:Cell ; courier:x {x} ; courier:y {y} .\n", "")
+                            for x in range(4) for y in range(4) if f"c{x}_{y}" not in _CORRIDOR_CELLS)],
+            "state.ttl": _CROSSING_STATE}
+STANDING_ROUTE = [(0, "c2_3"), (30, "c2_2"), (60, "c2_1"), (150, "c2_0")]
+PARCEL_A = "every_parcel_delivered.pursued.parcel_a"
+#  THE PLAN'S STEPS IN THE ORDER THEY ARE TAKEN, each with where a drive goes and the instants it may
+#  be taken and lands at the earliest.
+_ORDERED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
+SELECT ?a ?to ?nb ?la WHERE {
+  GRAPH ?p { ?p a planning:Plan ; planning:for $want . ?step a execution:Step ; execution:partOf ?p ; planning:fills ?a ;
+             execution:notBefore ?nb ; execution:landsAt ?la . OPTIONAL { ?step courier:to ?to } } }
+ORDER BY ?nb ?la"""
+#  THE WAITS A WANT'S SEARCH WEIGHED, and how many repeated a world already weighed. A wait that made a
+#  world is weighed through that world, `planning:by` it; one passed over is weighed itself.
+_WAITS_Q = """
+SELECT (COUNT(?x) AS ?weighed) (COUNT(?seen) AS ?repeated) WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?x a planning:Weighing ; planning:for $want ; planning:weighs ?u .
+               ?u planning:by?/planning:fills planning:Wait . OPTIONAL { ?x planning:repeats ?seen } } }"""
+#  VAN B'S CELL FROM AN INSTANT, a prediction: what it retracts is whatever cell van B stands on.
+_ROUTE_RETRACTS = (f"DELETE {{ GRAPH $state {{ <{D}van_b> <http://example.org/orexis/courier#at> ?cell }} }} "
+                   f"WHERE {{ GRAPH $state {{ <{D}van_b> <http://example.org/orexis/courier#at> ?cell }} }}")
+
+
+def _lay_route(beliefs, route) -> None:
+    """Van B's route laid as predictions, one graph per cell after the first, each from its instant —
+    the peer's word about where it will be, as a forecast is another party's word: received, and
+    believed as it stands."""
+    for n, (offset, cell) in enumerate(route[1:], start=1):
+        graph = f"http://example.org/orexis/graph/route/van_b/{n}"
+        update(beliefs, f"""INSERT DATA {{
+  GRAPH <{graph}> {{ <{D}van_b> <http://example.org/orexis/courier#at> <{D}{cell}> . }}
+  {entry(beliefs, graph, PREDICTION, OREXIS + "Received", D + "dispatcher", start=NOW + timedelta(seconds=offset))}
+  GRAPH <{catalogue_of(beliefs)}> {{ <{graph}> orexis:retracts "{_ROUTE_RETRACTS}" }} }}""")
+
+
+def _crossed(world: Path, route) -> object:
+    """One pass of the Planner over `world` booted with van B's `route` laid ahead. The one imaginarium."""
+    beliefs = boot(world, "dispatcher")
+    _lay_route(beliefs, route)
+    planner = Planner(beliefs, "dispatcher", budget=BUDGET)
+    planner.plan(NOW)
+    (im,) = planner.imaginaria.values()
+    return im
+
+
+def _ordered(im, want: str) -> list[tuple]:
+    """The plan's steps in order as (action, where to, seconds after the pass it may be taken, seconds
+    after the pass it lands at the earliest)."""
+    return [(_local(r["a"]), _local(r.get("to")), (_dt(r["nb"]) - NOW).total_seconds(), (_dt(r["la"]) - NOW).total_seconds())
+            for r in rows(im, _ORDERED_Q, (), want=D + want)]
+
+
+def _waits(im, want: str) -> tuple[int, int]:
+    """(waits weighed, of them repeats) in `want`'s search."""
+    (r,) = rows(im, _WAITS_Q, (), want=D + want)
+    return int(r["weighed"]), int(r["repeated"])
+
+
+def test_a_van_waits_for_a_peers_van_to_clear_the_cell_its_route_crosses(ticking, tmp_path):
+    """WAIT, THEN DRIVE. Van A, a cell short of c2_1 at half a minute, would land on it straight on at a
+    minute, when van B does — a world the constraint makes impossible — so it waits for the next
+    ground, where van B has moved onto c2_1, and drives in landing at a minute and a half, when van B has
+    gone on to c2_0. Four acts and a tenth spent against an estimate of four: the tenth is the wait,
+    `planning:Wait`, which no document of this world names (#920). The courier's own wait, built and
+    reverted, found this plan in five steps at 33 candidates and 27 worlds; the planning package's finds
+    it at 31 and the same 27, its waits landing where a ground begins and not a drive's band later, and
+    a wait that lands where nothing read has moved is never offered rather than passed over."""
+    im = _crossed(variant(tmp_path, "crossing", CROSSING), CROSSING_ROUTE)
+    assert _plans(im) == {PARCEL_A: ("Satisfied", 5)}
+    assert _ordered(im, PARCEL_A) == [("Drive", "c1_1", 0, 30), ("Wait", None, 30, 60), ("Drive", "c2_1", 60, 90),
+                                       ("Drive", "c3_1", 90, 120), ("Drop", "c3_1", 120, 120)], _ordered(im, PARCEL_A)
+    assert _costs(im) == {PARCEL_A: 4.1} and _remaining(im)[PARCEL_A] == 4.0
+    assert (_spent(im)[PARCEL_A], _weighed(im)[PARCEL_A]) == (31, 27), f"measured: {_spent(im)} {_weighed(im)}"
+    assert _impossible(im) == {CONSTRAINT: 2}
+    assert _waits(im, PARCEL_A) == (4, 1), "one wait of four repeated a world: " + str(_waits(im, PARCEL_A))
+    _possible(im, PARCEL_A)
+
+
+def test_a_van_waits_out_a_peer_standing_on_the_cell_ahead(ticking, tmp_path):
+    """THE SEAM THE COURIER'S WAIT LEFT, CLOSED. In the corridor van B stands on c2_1 from a minute to two
+    and a half, and van A has nowhere to pull aside. The courier's wait landed half a minute to a minute
+    after it was taken, so a second wait landed in the ground the first did, repeated its world, and the
+    search ended `Exhausted` with this plan there to find. A wait lands where the next ground begins, so
+    one wait spans the whole of van B's standing: a drive, a wait to the minute van B arrives, a wait to
+    the instant it leaves, two drives and the drop."""
+    im = _crossed(variant(tmp_path, "standing", STANDING), STANDING_ROUTE)
+    assert _plans(im) == {PARCEL_A: ("Satisfied", 6)}, _plans(im)
+    assert _ordered(im, PARCEL_A) == [("Drive", "c1_1", 0, 30), ("Wait", None, 30, 60), ("Wait", None, 60, 150),
+                                       ("Drive", "c2_1", 150, 180), ("Drive", "c3_1", 180, 210),
+                                       ("Drop", "c3_1", 210, 210)], _ordered(im, PARCEL_A)
+    assert _costs(im) == {PARCEL_A: 4.2}
+    assert (_spent(im)[PARCEL_A], _weighed(im)[PARCEL_A]) == (24, 18), f"measured: {_spent(im)} {_weighed(im)}"
+    assert _impossible(im) == {CONSTRAINT: 2}
+    assert _waits(im, PARCEL_A) == (4, 1), str(_waits(im, PARCEL_A))
+    _possible(im, PARCEL_A)

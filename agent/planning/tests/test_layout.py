@@ -108,7 +108,7 @@ def test_outside_the_package_only_the_planner_is_imported():
 #  THE READS: modules that write nothing, which any act may ask. `couplings` writes a working
 #  graph for the reach and takes it away before it answers, so nothing it does outlives the call.
 READS = {"ontology", "world_at", "find_wants", "find_scopes", "unweighed", "footprint", "violation", "bridge",
-         "couplings"}
+         "couplings", "next_ground"}
 
 
 def test_an_act_calls_no_other_act_and_the_planner_sequences_them():

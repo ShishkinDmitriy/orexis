@@ -32,8 +32,10 @@ refreshes it:
   [prediction](/domain/prediction/prediction.md) applied at its instant.
 
 What it makes for itself: a `planning:PossibleGraph` per world a candidate reached, each forked from
-its parent and never mutated, since the search holds siblings open at once; the weighings and
-candidates on the catalogue; and a `planning:PlanGraph` per want.
+its parent — or from the ground its step lands in, the path replayed there — and never mutated,
+since the search holds siblings open at once; for a world forked from a ground, the two graphs
+derived from it that say what its step's effect changed there, which go when it goes; the
+weighings and candidates on the catalogue; and a `planning:PlanGraph` per want.
 
 A candidate and the world it makes are named by one mint number — `possible/17.by` makes
 `possible/17` — drawn from the store's own counter, the highest `planning:minted` anything in it
