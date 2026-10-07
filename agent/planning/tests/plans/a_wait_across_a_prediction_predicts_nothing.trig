@@ -2,7 +2,7 @@
 #
 # One tank, reading six where its floor is ten, and a prediction that it reads twelve from half a
 # minute on: something no act of this agent does will refill it. The one action is a WAIT, the shape
-# of `courier:Wait` (#920): its effect deletes the tank's level and puts the same level back, so it
+# of the courier's refused wait (#920): its effect deletes the tank's level and puts the same level back, so it
 # changes nothing of its own, and it lands a minute after the turn at the least. Its world is forked
 # from the LATER ground, where the tank reads twelve and the want is met.
 #

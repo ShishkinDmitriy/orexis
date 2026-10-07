@@ -22,7 +22,7 @@ candidate that was picked, and adds at least the values it was picked with:
 | `execution:adds` | the graph of facts its world gains — an `execution:AddsGraph`, stated and not believed |
 | `execution:retracts` | the graph of facts its world loses — an `execution:RetractsGraph` |
 | `execution:notBefore` | the start of the period of the world it is taken in — a requirement |
-| `execution:landsAt` | the earliest the world can show its change — the least the action's `planning:landsAfter` says |
+| `execution:landsAt` | the earliest the world can show its change — the least the action's `planning:landsAfter` says, or for a [wait](/domain/planning/wait.md) the instant the next ground begins |
 | `execution:notAfter` | the latest — the most it says, summed along the plan; a dose's a cadence past the step, since its sensor's next reading is due within one |
 | `execution:then` | the next step of the plan |
 

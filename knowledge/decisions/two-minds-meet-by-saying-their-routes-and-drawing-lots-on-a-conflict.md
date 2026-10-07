@@ -59,9 +59,12 @@ is built, and nothing here was run on a bench.
   state would be copied into the present ground, which is false — the van is not yet where its route
   goes — so a route the agent lost to becomes an `orexis:PredictionGraph` only by this decision, and
   #923 argues the refusal it relaxes.
-- **There is no wait.** `planning:Wait` is declared nowhere. A courier-only `courier:Wait` was built
-  and taken back out the same day, both within PR #924 (the revert is `bb4b4a12`), because waiting
-  is every world's and is #920's, rewritten.
+- **There was no wait.** A courier-only `courier:Wait` was built and taken back out the same day,
+  both within PR #924 (the revert is `bb4b4a12`), because waiting is every world's and is #920's,
+  rewritten. *Amended 2026-10-07: built by #920 — `planning:Wait`, the planning package's own
+  [wait](/domain/planning/wait.md), in every scope, landing where the next ground the search can tell
+  apart begins; with a peer's route laid as predictions, the crossing is waited out and the corridor
+  with the peer standing ahead is found (`world/dispatcher/tests/test_dispatcher.py`).*
 - **Soft commitment has one trigger** — a want a constraint couples to the walking one arriving
   (`derive_wants`, `planning:reopens`; [commitment](/domain/execution/commitment.md)). A route laid as
   a prediction that makes a walking plan's next worlds impossible reopens nothing; that is #921.

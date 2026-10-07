@@ -41,7 +41,13 @@ from __future__ import annotations
 from agent.ontology import ACTION, GRAPH_PREFIX, local_of
 from agent.store import Raw, bind, bindings, catalogue_of, graphs_of, query, remember, render, rows, update
 
+from .next_ground import next_ground
+from .ontology import WAIT
 from .world_at import world_at
+
+#  WHETHER THE STORE HOLDS THE WAIT, among the actions: every agent's does, since the planning package
+#  ships it, and a case standing a store in from its own documents holds it only where it says so.
+WAIT_Q = """SELECT ?w WHERE { $wait a orexis:Action BIND($wait AS ?w) } LIMIT 1"""
 
 #  Where a possible world's readings sit. Under the same root as every other graph, because a
 #  graph IRI is a graph IRI — but in a store nothing else can open, which is what keeps
@@ -124,6 +130,15 @@ def admit(store, world: str, me: str, *, only=None, elsewhere=frozenset(), memo=
                 continue
             if (action["action"], filling) not in fillings:
                 fillings.append((action["action"], filling))
+    #  AND A WAIT, where a ground the search can tell from the one this world stands in is laid after
+    #  it (#920, `next_ground`): the planning package's own action, filled with nothing, in every
+    #  scope, and stating no precondition, since what admits it is the timeline and no fact a world
+    #  holds. Where nothing read is predicted to change there is nothing to wait for, and a wait
+    #  landing where nothing read has moved would be the world it left.
+    if (only is None or WAIT in only) and (WAIT, frozenset()) not in already \
+            and remember(memo, ("waits",), lambda: bool(rows(store, WAIT_Q, graphs_of(store, ACTION), wait=WAIT))) \
+            and next_ground(store, world, memo=memo) is not None:
+        fillings.append((WAIT, []))
     if not fillings:
         return
     #  THE MINT COUNTER IS THE STORE'S: read off it once per pass, advanced per candidate written,

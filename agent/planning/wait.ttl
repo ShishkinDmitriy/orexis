@@ -1,0 +1,29 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:ActionGraph .    # this document is one graph, and this is what it is
+
+#  THE SEARCH'S OWN MOVE: doing nothing while the agent's predictions move the world (#920,
+#  knowledge/domain/planning/wait.md). A van waits for another to pass, a grower for the forecast
+#  rain instead of a dose, a bidder for the next round to open — every world has it, so it is the
+#  planning package's and ships beside its ontology, read by every agent at boot as the package's
+#  documents are, and imported by no world.
+#
+#  IT STATES NO PRECONDITION, NO EFFECT, NO LANDING AND NO IMPLEMENTATION, and each absence is the
+#  kernel's to read for this one action alone. A world admits a wait where a ground holding something
+#  else, as the search reads it, is laid after the one the world stands in, and it lands where that
+#  ground begins (`agent/planning/next_ground.py`), so one wait spans any stretch in which nothing read
+#  is predicted to change and none is offered where nothing is predicted at all. It changes nothing of its own, and its world is the later ground with the
+#  path replayed there, a move though no effect ran (`agent/planning/take.py`); its step predicts
+#  nothing and is answered at its landing; taking it sends nothing. It is in every scope, since it
+#  touches no atom (`agent/planning/scope_actions.py`). Any other action whose effect comes to
+#  nothing is no move, so this node is the one way a plan lets time pass.
+#
+#  ITS COST, A TENTH OF THE CHEAPEST ACT ANY DOMAIN SHIPS: more than nothing, so a plan is never
+#  padded with a wait that buys nothing, and less than an act, so standing still is chosen where it
+#  meets the want as well as acting would. Asked over the world it is taken in, as any action's is.
+
+planning:Wait a orexis:Action ;
+    rdfs:label "wait for the next ground" ;
+    planning:costs """SELECT ?cost WHERE { BIND(0.1 AS ?cost) }""" .

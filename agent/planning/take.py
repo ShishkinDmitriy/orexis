@@ -26,6 +26,14 @@ replace its value, so a filling naming the reading finds it in every ground. Whe
 stays inside the parent's period — hanoi, the courier, a dose landing within a cadence — nothing
 is replayed and the child is forked from its parent, as it always was.
 
+**A WAIT IS A MOVE THOUGH NO EFFECT RUNS** (#920). `planning:Wait`, the planning package's own
+action, states no effect and no landing: it lands where the next ground the search can tell from
+the one its parent stands in begins (`next_ground`), and its world is that ground with the path
+replayed — what the predictions moved between the two is the whole of what it reaches. Every other
+action whose effect comes to nothing is no move wherever it lands, so a step that does nothing
+passes time only where it is the declared wait, and the search's way of letting the world move is
+one node somebody can read.
+
 **AND WHAT THE EFFECT CHANGED IS SAID BEFORE THE REPLAYED GROUND GOES** (#919). Such a child differs
 from its parent by the step's effect AND by everything the predictions moved between the two
 periods; the step's prediction is the first alone, so the child against the replayed ground, each
@@ -71,7 +79,8 @@ from agent.store import (Raw, add_quads, bind, bindings, catalogue_of, clear_gra
                                 graphs_of, instant, query, remember, render, rows, scoped, update)
 
 from .admit import POSSIBLE
-from .ontology import GROUND_GRAPH, POSSIBLE_GRAPH
+from .next_ground import next_ground
+from .ontology import GROUND_GRAPH, POSSIBLE_GRAPH, WAIT
 from .world_at import world_at
 
 #  THE CATALOGUE IS BOUND, NOT FOUND, IN THE HOT READS: `GRAPH ?cat { ?cat a
@@ -153,7 +162,8 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"""
 
 def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = None) -> bool:
     """Fork the world `cand` reaches and write its row. False, and nothing made, where the
-    candidate's effect changes nothing in the world it leaves. `within` is what a world of this
+    candidate's effect changes nothing in the world it leaves, or where it is a wait and nothing
+    laid after the ground it is taken in holds anything else. `within` is what a world of this
     imaginarium is identified by, and the child is hashed within it as `lay_ground` hashed its
     ground — or the two never match.
 
@@ -167,16 +177,36 @@ def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = Non
     minted = binding["minted"]
     child = f"{POSSIBLE}{minted}"
     cost = _figure(store, cand, me, memo, "costs", "cost") or 0.0
-    least, most = _landing(store, cand, me, memo)
-    start = datetime.fromisoformat(binding["start"]) + timedelta(seconds=least)
-    end = datetime.fromisoformat(binding["end"]) + timedelta(seconds=most)
+    waits = binding["action"] == WAIT
+    if waits:
+        #  A WAIT LANDS WHERE THE NEXT GROUND BEGINS — the next the search can tell from the one its
+        #  parent stands in (`next_ground`) — an instant and not a stretch after the act: a
+        #  path reaching its parent sooner waits the longer, and one reaching it later than that
+        #  instant is there already, so the child holds from the instant to the later of the two.
+        at = next_ground(store, binding["from"], memo=memo)
+        if at is None:
+            return False                # nothing laid ahead: the wait would be the world it left
+        start, end = at, max(at, datetime.fromisoformat(binding["end"]))
+    else:
+        least, most = _landing(store, cand, me, memo)
+        start = datetime.fromisoformat(binding["start"]) + timedelta(seconds=least)
+        end = datetime.fromisoformat(binding["end"]) + timedelta(seconds=most)
     #  THE GROUND THE CHILD LANDS IN, against the one its parent stands in: the same, and the child
     #  is forked from its parent; a later one, and it is forked from that ground with the path
     #  replayed, since what holds there is what the step's effect changes.
     lands_in = _ground_at(store, start, memo)
     stands_in = binding["from"] if binding["from"] in _grounds(store, memo) else \
         _ground_at(store, datetime.fromisoformat(binding["start"]), memo)
-    if lands_in is None or lands_in == stands_in:
+    if waits:
+        #  THE WAIT'S WORLD IS THE LATER GROUND WITH THE PATH REPLAYED THERE, and a move though no
+        #  effect ran: what the predictions moved between the two grounds is what a wait is for. It
+        #  is replayed straight into the child, there being no effect to apply after, and what it
+        #  changed there is said as for any replayed fork — nothing, both graphs named and empty
+        #  (#919), so the step predicts nothing and is answered at its landing.
+        _replayed(store, cand, child, lands_in, me, memo, into=child)
+        _changed(store, child, child, memo)
+        made = True
+    elif lands_in is None or lands_in == stands_in:
         made = _apply(store, cand, child, me, memo)
     else:
         base = _replayed(store, cand, child, lands_in, me, memo)
@@ -196,7 +226,7 @@ def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = Non
     update(store, bind(_WORLD_U, world=child, cand=cand,
                        kinds=Raw(" , ".join(f"<{k}>" for k in kinds)),
                        hash=Raw(f'"{digest_of(store, child, within)}"'),
-                       spent=binding["spent"] + cost, start=instant(start), end=instant(end), minted=minted))
+                       spent=round(binding["spent"] + cost, 6), start=instant(start), end=instant(end), minted=minted))
     return True
 
 
@@ -213,7 +243,7 @@ def _apply(store, cand: str, into: str, me: str, memo, *, base: str | None = Non
     known until it runs."""
     binding = _binding(store, cand, me, memo)
     rule = _rule(store, binding["action"], memo)
-    if rule is None:
+    if rule is None or not rule["rules"]:
         return False
     source = base or binding["from"]
     leaves = graphs if graphs is not None else world_at(store, binding["from"], memo=memo)
@@ -235,15 +265,16 @@ def _apply(store, cand: str, into: str, me: str, memo, *, base: str | None = Non
     return forked
 
 
-def _replayed(store, cand: str, child: str, ground: str, me: str, memo) -> str:
+def _replayed(store, cand: str, child: str, ground: str, me: str, memo, *, into: str | None = None) -> str:
     """A copy of `ground` with every step on the path to `cand`'s world applied onto it in order,
     each with its own filling — the world the step `cand` is taken in, as it stands in the ground
     the step lands in. Named `<child>.base`, and the caller's to clear once the child is forked
-    from it. Measured on the two-tank plans case: a replayed fork costs two copies of a ground
-    where a plain fork costs one, and nothing is replayed where the landing stays in the parent's
-    period, which is every shipped world's today."""
+    from it — or `into`, where the copy is itself the child, as a wait's is. Measured on the
+    two-tank plans case: a replayed fork costs two copies of a ground where a plain fork costs one,
+    and nothing is replayed where the landing stays in the parent's period, which is every shipped
+    world's today. A wait on the path changed nothing, and replays as nothing."""
     binding = _binding(store, cand, me, memo)
-    base = f"{child}.base"
+    base = into or f"{child}.base"
     clear_graph(store, base)
     fork(store, ground, base, [], [])
     graphs = [base if g == ground else g for g in world_at(store, ground, memo=memo)]
@@ -371,8 +402,9 @@ def _binding(store, cand: str, me: str, memo) -> dict:
 
 
 def _rule(store, action: str, memo) -> dict | None:
-    """What an action carries for a search: its texts, and its effect's rules in order — or None
-    for an action that states no effect, which no world is made by.
+    """What an action carries for a search: its texts, and its effect's rules in order — none for
+    an action that states no effect, which no world is made by but the wait's — or None for no
+    action at all.
 
     REMEMBERED FOR THE PASS (#552): the text is public knowledge and only a write can
     change it, yet it was fetched on every fork by three callers each.
@@ -381,7 +413,7 @@ def _rule(store, action: str, memo) -> dict | None:
         found = bindings(query(store, _RULE_Q, graphs_of(store, ACTION), {"rule": action}))
         rules = [{"order": float(r["order"]), "construct": r.get("construct"), "update": r.get("update")}
                  for r in bindings(query(store, _EFFECT_Q, graphs_of(store, ACTION), {"rule": action}))]
-        return {**found[0], "rules": rules} if found and rules else None
+        return {**found[0], "rules": rules} if found else None
     return remember(memo, ("rule", action), fetch)
 
 

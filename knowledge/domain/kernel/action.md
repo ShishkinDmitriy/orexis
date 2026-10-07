@@ -15,7 +15,8 @@ description: >-
 The STRIPS operator, whole, and the KIND of act: a [step](/domain/execution/step.md) is an action
 picked with its parameters filled, a plan is steps, and an intention walks them. Twelve ship across
 the domains — `hanoi:Move`, the courier's `Drive`, `Pick` and `Drop`, `actuation:Dosing`,
-`climate:Heating`, and the market's six — and each is a node like this:
+`climate:Heating`, and the market's six — and each is a node like this; a thirteenth, the
+[wait](/domain/planning/wait.md), is the planning package's own and states its cost alone:
 
 ```turtle
 courier:Pick a orexis:Action ;
@@ -48,8 +49,8 @@ The first two and the last are planning's words and the implementation is execut
 
 # How it is read
 
-A domain's `actions.ttl` says it is an `orexis:ActionGraph`, and the planner reads actions from
-graphs of that kind alone. `admit` runs each precondition in a world and writes a candidate per
+A domain's `actions.ttl` says it is an `orexis:ActionGraph`, as the planning package's `wait.ttl`
+does, and the planner reads actions from graphs of that kind alone. `admit` runs each precondition in a world and writes a candidate per
 row; `take` forks the world and runs the effect's rules; the executor reads the implementation off
 the action a step fills when the step comes due. Adding a way of acting is a node in a domain's
 `actions.ttl` and nothing else: no Python, no registry.

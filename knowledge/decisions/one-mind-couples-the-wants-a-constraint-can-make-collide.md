@@ -395,9 +395,9 @@ plan down the same cells. A cluster a standing want is already about is that wan
   other van is not on, so no shipped want is unreachable for it; the courier, the tower, the
   greenhouse and the market worlds state none and pay one query a pass. The trigger is the first
   world that poses a corridor one cell wide with a van at each end, where the honest answer is a
-  `Wait` (the seam below) or the market's right-of-way (#568). *Amended 2026-10-07: with no passing
-  place no wait helps either, and for two agents it is the world that is badly formed, the author's
-  to fix
+  [wait](/domain/planning/wait.md) (the seam below) or the market's right-of-way (#568). *Amended
+  2026-10-07: with no passing place no wait helps either, and for two agents it is the world that is
+  badly formed, the author's to fix
   ([two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict](/decisions/two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict.md));
   right-of-way as a lot is refused there.*
 - **A present that violates a constraint is searched from as it stands.** The present is said and
@@ -429,13 +429,21 @@ plan down the same cells. A cluster a standing want is already about is that wan
   band it needs is declared since #901 — a drive is a stretch, a step opens where the one before it
   lands — so what is left is the order alone: a step whose window may overlap the one before it,
   which `execution:then` cannot say.
-- **A step that waits.** The courier has no action that does nothing for a stretch, so a van held
-  back by the bound takes a detour where one act's wait would do — or, measured (#902), the mind moves
-  the other van aside, which is one act too and is what it found; a `Wait` is the domain's to add,
-  costed and banded like a drive. *Amended 2026-10-07: not the domain's — waiting is every world's,
-  `planning:Wait`, a step that does nothing and lands at the next ground
-  ([#920](https://github.com/ShishkinDmitriy/orexis/issues/920), rewritten after a courier `Wait` was
-  built and reverted), and the loser of a draw is its first user.*
+- ~~**A step that waits.**~~ Closed 2026-10-07 (#920), and not as this seam said. A wait is not the
+  domain's to add: every world has one — a van letting a peer pass, a grower letting the rain come —
+  so it is the planning package's [wait](/domain/planning/wait.md), loaded by every agent and in every
+  scope, landing where the next ground the search can tell apart begins. The domain's own was built
+  first, `courier:Wait`, costed and banded like a drive, an effect deleting and re-adding the van's
+  cell so that the search, which forks for a delete, would count it a move; it found the crossing's
+  wait in 27 worlds and was refused for what it could not do, a van could not wait out a stretch
+  longer than its band, since two waits landing in one ground are one world. Its builder refused the
+  kernel route for three reasons. It buys the same worlds: it does, 27 again. It costs two kernel
+  changes: it does, `take` counting a fork into a later ground as a move though no effect ran, and the
+  wait in every scope though it touches no atom; that is the price. And any action whose effect comes
+  to nothing would become a way to pass time: it does not, since `take` reads the action filled and
+  only the declared wait is forked where no effect ran — a no-op of a domain's stays no move. The
+  loser of a draw is its first user
+  ([two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict](/decisions/two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict.md)).
 - **A limit on acts in flight as world state, and coupled only by a constraint over it** (#903,
   `world/driver/`). One driver, two vans on two grids no drive crosses: a drive needs the driver
   aboard the van, and a boarding moves the driver to the other, so every plan moves one van at a

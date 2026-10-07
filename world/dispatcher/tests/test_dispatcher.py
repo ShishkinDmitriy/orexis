@@ -38,6 +38,11 @@ that no cell holds two vans (#567). What this world is held to is what was MEASU
   and the walking want minted again where its drive in flight lands, reopening itself; it turns van A
   back after that drive, never cancelled, and parcel A is delivered round the peer. A peer's van on a
   cell the plan never enters is asked about and reopens nothing.
+- A VAN WAITS FOR A PEER'S ROUTE LAID AS A PREDICTION (#920): the planning package's wait, which no
+  document here names, lands where the next ground begins, so van A waits a cell short while van B
+  crosses ahead rather than drive back and in again, and waits out van B standing in a corridor in
+  one wait for the whole stretch, where the courier's own wait, a drive's band long, could not. With
+  nothing predicted no wait is admitted, and every figure above is what it was.
 """
 
 from __future__ import annotations
@@ -53,7 +58,7 @@ from agent import clock
 from agent.ontology import OREXIS, PREDICTION, STATE
 from agent.planning.planner import Planner
 from agent.runtime import UNFINISHED, Runtime, boot
-from agent.store import entry, graphs_of, rows, update
+from agent.store import catalogue_of, entry, graphs_of, rows, update
 from onboarding import reading
 
 WORLD = Path(__file__).resolve().parents[1]
@@ -913,3 +918,123 @@ def test_two_vans_on_one_cell_as_posed_is_a_contradiction_said_and_refused_and_n
         "onboarding refuses the world as posed, naming the constraint and its rows"
     assert reading.contradicted(WORLD, "dispatcher") == [], "the shipped pose is possible"
     assert Planner(boot(WORLD, "dispatcher"), "dispatcher").contradictions(NOW) == []
+
+
+#  A PEER'S VAN CROSSING THE CELL AHEAD (#920, #568). Van A at c0_1 carries parcel A, owed at c3_1, so its
+#  shortest chain drives c1_1, c2_1, c3_1 and drops; van B is a PEER'S — driven by somebody this agent
+#  never holds aboard, so no move of it is admitted (#903's filter) — and its route down the third
+#  column is laid as predictions, as speech will lay a peer's route ahead (#568). A drive lands half a
+#  minute to a minute after it is taken. The constraint stays the world's own: van B is a van.
+_PEERS_VAN = (':van_b a courier:Van ; rdfs:label "van B" .',
+              ':van_b a courier:Van ; courier:drivenBy :peer ; rdfs:label "van B" .\n'
+              ':peer a courier:Driver ; rdfs:label "the peer driving van B, aboard it in no belief of this agent" .')
+_CROSSING_WORLD = [_PEERS_VAN,
+                   (':parcel_b a courier:Parcel ; courier:destination :c3_3 ;\n    rdfs:label "the parcel owed at the top of the last column" .', ""),
+                   ("courier:destination :c0_3", "courier:destination :c3_1")]
+_CROSSING_STATE = [(":van_a courier:at :c0_0 .", ":van_a courier:at :c0_1 ."),
+                   (":parcel_a courier:at :c0_1 .", ":parcel_a courier:carriedBy :van_a ."),
+                   (":van_b courier:at :c3_0 .", ":van_b courier:at :c2_3 ."),
+                   (":parcel_b courier:at :c3_1 .", "")]
+CROSSING = {"world.ttl": _CROSSING_WORLD, "state.ttl": _CROSSING_STATE}
+#  VAN B'S ROUTE, from the instant each cell holds: the first is the present, posed in the state. It
+#  stands on c2_1 from a minute to a minute and a half.
+CROSSING_ROUTE = [(0, "c2_3"), (30, "c2_2"), (60, "c2_1"), (90, "c2_0")]
+#  THE SAME IN A CORRIDOR — the second row and the third column alone, so no cell is beside the row to
+#  pull aside into — with van B STANDING on c2_1 from a minute to two and a half before it drives on.
+_CORRIDOR_CELLS = {"c0_1", "c1_1", "c2_1", "c3_1", "c2_0", "c2_2", "c2_3"}
+STANDING = {"world.ttl": [*_CROSSING_WORLD,
+                          *((f":c{x}_{y} a courier:Cell ; courier:x {x} ; courier:y {y} .\n", "")
+                            for x in range(4) for y in range(4) if f"c{x}_{y}" not in _CORRIDOR_CELLS)],
+            "state.ttl": _CROSSING_STATE}
+STANDING_ROUTE = [(0, "c2_3"), (30, "c2_2"), (60, "c2_1"), (150, "c2_0")]
+PARCEL_A = "every_parcel_delivered.pursued.parcel_a"
+#  THE PLAN'S STEPS IN THE ORDER THEY ARE TAKEN, each with where a drive goes and the instants it may
+#  be taken and lands at the earliest.
+_ORDERED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
+SELECT ?a ?to ?nb ?la WHERE {
+  GRAPH ?p { ?p a planning:Plan ; planning:for $want . ?step a execution:Step ; execution:partOf ?p ; planning:fills ?a ;
+             execution:notBefore ?nb ; execution:landsAt ?la . OPTIONAL { ?step courier:to ?to } } }
+ORDER BY ?nb ?la"""
+#  THE WAITS A WANT'S SEARCH WEIGHED, and how many repeated a world already weighed. A wait that made a
+#  world is weighed through that world, `planning:by` it; one passed over is weighed itself.
+_WAITS_Q = """
+SELECT (COUNT(?x) AS ?weighed) (COUNT(?seen) AS ?repeated) WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?x a planning:Weighing ; planning:for $want ; planning:weighs ?u .
+               ?u planning:by?/planning:fills planning:Wait . OPTIONAL { ?x planning:repeats ?seen } } }"""
+#  VAN B'S CELL FROM AN INSTANT, a prediction: what it retracts is whatever cell van B stands on.
+_ROUTE_RETRACTS = (f"DELETE {{ GRAPH $state {{ <{D}van_b> <http://example.org/orexis/courier#at> ?cell }} }} "
+                   f"WHERE {{ GRAPH $state {{ <{D}van_b> <http://example.org/orexis/courier#at> ?cell }} }}")
+
+
+def _lay_route(beliefs, route) -> None:
+    """Van B's route laid as predictions, one graph per cell after the first, each from its instant —
+    the peer's word about where it will be, as a forecast is another party's word: received, and
+    believed as it stands."""
+    for n, (offset, cell) in enumerate(route[1:], start=1):
+        graph = f"http://example.org/orexis/graph/route/van_b/{n}"
+        update(beliefs, f"""INSERT DATA {{
+  GRAPH <{graph}> {{ <{D}van_b> <http://example.org/orexis/courier#at> <{D}{cell}> . }}
+  {entry(beliefs, graph, PREDICTION, OREXIS + "Received", D + "dispatcher", start=NOW + timedelta(seconds=offset))}
+  GRAPH <{catalogue_of(beliefs)}> {{ <{graph}> orexis:retracts "{_ROUTE_RETRACTS}" }} }}""")
+
+
+def _crossed(world: Path, route) -> object:
+    """One pass of the Planner over `world` booted with van B's `route` laid ahead. The one imaginarium."""
+    beliefs = boot(world, "dispatcher")
+    _lay_route(beliefs, route)
+    planner = Planner(beliefs, "dispatcher", budget=BUDGET)
+    planner.plan(NOW)
+    (im,) = planner.imaginaria.values()
+    return im
+
+
+def _ordered(im, want: str) -> list[tuple]:
+    """The plan's steps in order as (action, where to, seconds after the pass it may be taken, seconds
+    after the pass it lands at the earliest)."""
+    return [(_local(r["a"]), _local(r.get("to")), (_dt(r["nb"]) - NOW).total_seconds(), (_dt(r["la"]) - NOW).total_seconds())
+            for r in rows(im, _ORDERED_Q, (), want=D + want)]
+
+
+def _waits(im, want: str) -> tuple[int, int]:
+    """(waits weighed, of them repeats) in `want`'s search."""
+    (r,) = rows(im, _WAITS_Q, (), want=D + want)
+    return int(r["weighed"]), int(r["repeated"])
+
+
+def test_a_van_waits_for_a_peers_van_to_clear_the_cell_its_route_crosses(ticking, tmp_path):
+    """WAIT, THEN DRIVE. Van A, a cell short of c2_1 at half a minute, would land on it straight on at a
+    minute, when van B does — a world the constraint makes impossible — so it waits for the next
+    ground, where van B has moved onto c2_1, and drives in landing at a minute and a half, when van B has
+    gone on to c2_0. Four acts and a tenth spent against an estimate of four: the tenth is the wait,
+    `planning:Wait`, which no document of this world names (#920). The courier's own wait, built and
+    reverted, found this plan in five steps at 33 candidates and 27 worlds; the planning package's finds
+    it at 31 and the same 27, its waits landing where a ground begins and not a drive's band later, and
+    a wait that lands where nothing read has moved is never offered rather than passed over."""
+    im = _crossed(variant(tmp_path, "crossing", CROSSING), CROSSING_ROUTE)
+    assert _plans(im) == {PARCEL_A: ("Satisfied", 5)}
+    assert _ordered(im, PARCEL_A) == [("Drive", "c1_1", 0, 30), ("Wait", None, 30, 60), ("Drive", "c2_1", 60, 90),
+                                       ("Drive", "c3_1", 90, 120), ("Drop", "c3_1", 120, 120)], _ordered(im, PARCEL_A)
+    assert _costs(im) == {PARCEL_A: 4.1} and _remaining(im)[PARCEL_A] == 4.0
+    assert (_spent(im)[PARCEL_A], _weighed(im)[PARCEL_A]) == (31, 27), f"measured: {_spent(im)} {_weighed(im)}"
+    assert _impossible(im) == {CONSTRAINT: 2}
+    assert _waits(im, PARCEL_A) == (4, 1), "one wait of four repeated a world: " + str(_waits(im, PARCEL_A))
+    _possible(im, PARCEL_A)
+
+
+def test_a_van_waits_out_a_peer_standing_on_the_cell_ahead(ticking, tmp_path):
+    """THE SEAM THE COURIER'S WAIT LEFT, CLOSED. In the corridor van B stands on c2_1 from a minute to two
+    and a half, and van A has nowhere to pull aside. The courier's wait landed half a minute to a minute
+    after it was taken, so a second wait landed in the ground the first did, repeated its world, and the
+    search ended `Exhausted` with this plan there to find. A wait lands where the next ground begins, so
+    one wait spans the whole of van B's standing: a drive, a wait to the minute van B arrives, a wait to
+    the instant it leaves, two drives and the drop."""
+    im = _crossed(variant(tmp_path, "standing", STANDING), STANDING_ROUTE)
+    assert _plans(im) == {PARCEL_A: ("Satisfied", 6)}, _plans(im)
+    assert _ordered(im, PARCEL_A) == [("Drive", "c1_1", 0, 30), ("Wait", None, 30, 60), ("Wait", None, 60, 150),
+                                       ("Drive", "c2_1", 150, 180), ("Drive", "c3_1", 180, 210),
+                                       ("Drop", "c3_1", 210, 210)], _ordered(im, PARCEL_A)
+    assert _costs(im) == {PARCEL_A: 4.2}
+    assert (_spent(im)[PARCEL_A], _weighed(im)[PARCEL_A]) == (24, 18), f"measured: {_spent(im)} {_weighed(im)}"
+    assert _impossible(im) == {CONSTRAINT: 2}
+    assert _waits(im, PARCEL_A) == (4, 1), str(_waits(im, PARCEL_A))
+    _possible(im, PARCEL_A)

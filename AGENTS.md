@@ -361,6 +361,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   that ground goes, since diffed against its parent every drive carried the other van's next cell,
   wrote it fictively and was held to it (#919).
 - **A step lands as long after it is taken as its plan placed it after its opening.**
+- **A plan lets time pass only by `planning:Wait`, the planning package's one action, in every scope**
+  — it lands where the next ground the search can tell apart begins and is a move though no effect
+  ran, while any other effect that comes to nothing stays no move; the courier's own wait was built
+  and refused, since it could not outwait a stretch longer than its band (#920, wait).
 - **A want's view is parsed off its met-test, never declared beside it**, and a want spanning
   scopes is searched in the first of them.
 

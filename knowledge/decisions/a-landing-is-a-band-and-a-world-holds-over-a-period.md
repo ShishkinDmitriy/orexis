@@ -19,6 +19,12 @@ timestamp: 2026-10-03T22:00:00Z
 > and what a world reads beside its facts is what holds THROUGHOUT its period. The seam below that
 > said the world was still judged at its earliest, in its parent's ground, is closed to that
 > extent; what it leaves is stated in its place.
+>
+> **Amended 2026-10-07 (#920):** one action lands at an instant and declares no band — the planning
+> package's [wait](/domain/planning/wait.md), which lands where the next ground the search can tell
+> apart begins, and whose world holds from that instant to the later of it and its parent's latest.
+> A band a stretch long was what the courier's own wait declared, and a van could not wait out a
+> stretch longer than it.
 
 # The claim
 

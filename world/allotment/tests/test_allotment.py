@@ -148,6 +148,9 @@ def test_the_allotment_is_two_scopes_and_the_heating_it_imports_is_in_neither(mo
         assert {"Serving", "discharged"} <= min(scopes, key=len), f"{name}: Serving stands alone: {scopes}"
         assert {"Dosing", "Calling", "Tendering", "Presenting", "Offering", "Clearing"} <= max(scopes, key=len), \
             f"{name}: the market plumbing and the dosing are one scope: {scopes}"
+        #  AND THE WAIT IN BOTH (#920): the planning package's own action, which no document of this
+        #  world names and which touches no atom, is in every scope the partition makes.
+        assert all("Wait" in s for s in scopes), f"{name}: the wait is in every scope: {scopes}"
 
 
 def test_the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing(monkeypatch):

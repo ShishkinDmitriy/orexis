@@ -761,6 +761,58 @@ world or two and finding nothing. Measured with van C observed rather than predi
 asks, eleven worlds. The tie is between two grounds of one hash, so any want searched from a landing
 ground meets it, #905's coupled want among them — read off the re-root, not measured there.
 
+# The wait: the search lets the world move (2026-10-07, #920)
+
+`planning:Wait`, the planning package's own action, lands where the next ground the search can tell
+apart begins ([wait](/domain/planning/wait.md)). Measured on the development container, the tree
+before (`bb4b4a12`) and this one alternated in one session, five rounds, a process per tree per round,
+one pass of the Planner over the booted world timed — the greenhouse's foreseen crossing as two passes
+of the runtime, the allotment as the whole dry-plot exchange of three agents. Candidates are every
+weighing but a ground's for the want; worlds the possible worlds it weighed.
+
+| case | tree | plan | candidates | worlds | pass, median of five (min) |
+|---|---|---|---|---|---|
+| a tank, rain predicted to fill the empty butt | before | `NoCandidate` | 0 | 0 | 51 ms (45) |
+| the same | this | the wait, then the fill — 1.1 | 2 | 2 | 56 ms (54) |
+| a tank a prediction refills | before | the fill — 1.0 | 1 | 1 | 56 ms (46) |
+| the same | this | the wait — 0.1 | 2 | 2 | 50 ms (49) |
+| a tank, nothing predicted | before | the fill | 1 | 1 | 47 ms (44) |
+| the same | this | the fill, no wait admitted | 1 | 1 | 48 ms (43) |
+| the crossing, van B's route laid | before | six steps, back and in again — 6 | 61 | 42 | 431 ms (394) |
+| the same | this | a drive, a wait, two drives, the drop — 4.1 | 31 | 27 | 266 ms (258) |
+| the corridor, van B standing ahead | before | `Exhausted` | 25 | 13 | 191 ms (189) |
+| the same | this | six steps, two waits — 4.2 | 24 | 18 | 205 ms (191) |
+| the shipped dispatcher | before | ten steps | 228 | 148 | 2551 ms (2413) |
+| the same | this | ten steps | 228 | 148 | 2705 ms (2467) |
+| the greenhouse's cold dry bed | before | a step each | 1 + 1 | 1 + 1 | 112 ms (105) |
+| the same | this | a step each | 1 + 1 | 1 + 1 | 117 ms (113) |
+| the greenhouse's foreseen crossing, two passes of the runtime | before | the dose | — | — | 404 ms (394) |
+| the same | this | the dose | — | — | 412 ms (376) |
+| the allotment's dry plot, the whole exchange | before | the rose's three steps | 4 | — | 5659 ms (5636) |
+| the same | this | the rose's three steps | 4 | — | 5770 ms (5646) |
+
+**Nothing shipped admits a wait, and every shipped figure is the tree before's.** Held by a probe
+rather than read: `admit` raising the moment it admitted one, the whole suite went red on the new tests
+alone. The dispatcher predicts nothing; the greenhouse's and the allotment's grounds ahead differ from
+the present only by a reading's number inside its band, which no text reads, so to the search there is
+nowhere to wait for. Built first to land at the literal next ground, the wait was offered there and
+passed over as a repeat every time: one fork in the greenhouse soil's scope a pass, three candidates
+more in an allotment grower's search, seven where it weighed four, the plan the same. What this tree
+adds to a pass where no ground ahead can be told apart is one read of the grounds per imaginarium and
+one of whether the store holds the wait; the shipped cases read 1 to 6 per cent slower at the median
+over this session and an earlier one, and within 2 per cent at the minimum, which nothing here
+separates from the drift — said as possibly real rather than as nothing.
+
+**Where something is predicted, the wait is the cheaper plan and often the cheaper search.** The
+crossing — van B a peer's, its route down the third column laid as predictions — is a drive, a wait,
+two drives and the drop at 31 candidates where the tree before drove back a cell and in again at 61;
+27 worlds where the courier's own wait, built and refused, took 27 too, at 33 candidates. The
+corridor with van B standing on the cell ahead for a minute and a half is found, six steps at 24
+candidates, where the tree before ended `Exhausted` at 25 and the courier's wait at 42. The tank
+cases weigh one candidate more, the wait, and answer differently: the rain filling an empty butt
+is waited for and then the tank filled, where the tree before had `NoCandidate`; the tank a
+prediction refills is met by the wait at a tenth, where the tree before filled it at one.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge
