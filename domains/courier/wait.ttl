@@ -1,0 +1,52 @@
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+
+<> a orexis:ActionGraph .    # this document is one graph, and this is what it is
+
+#  THE WAIT, a document of the courier's that its ontology does NOT import, as the boarding's is not
+#  (`driver.ttl`): a world that has something to wait FOR — a peer's route laid as a prediction —
+#  imports it beside the ontology, and a world without one never loads it (#920). Imported by every
+#  courier world, a wait is a candidate per van in every world a search opens, each a fork that is
+#  then passed over by hash, since in a ground nothing moves it repeats the world it left; measured
+#  on the shipped dispatcher (knowledge/runbooks/measure-the-search.md), that is a price with nothing
+#  bought, so the world that needs the step is the world that asks for it.
+#
+#  A WAIT KEEPS THE VAN ON ITS CELL FOR A STRETCH, so a plan can let another van clear a cell
+#  rather than drive round it (knowledge/domain/courier/wait.md). It is costed and banded like a
+#  drive: one, and half a minute to a minute, the courier's figure for a van standing a stretch as
+#  for one on the road — a world that knows its traffic better is where a truer figure comes from.
+#
+#  ITS EFFECT REWRITES THE VAN'S OWN CELL: the delete takes `$van courier:at ?here` away and the
+#  construct, asked of the same world before either is applied, puts it back. That is a change by
+#  the search's reading — `take` forks for a delete — and nothing by the world's: in the ground the
+#  wait is taken in the child is its parent again and is passed over by hash, and in a later ground,
+#  where a prediction moved something, it is a world of its own. An effect stating nothing would not
+#  do: an action with no effect rule is no move (`agent/planning/take.py`) and in no scope
+#  (`agent/planning/footprint.py`, an action an event adopts), so the search would never see it.
+#
+#  A VAN SOMEBODY DRIVES WAITS ONLY WITH THEM ABOARD, as it drives (#903): the wait is the driver's,
+#  holding the van, and a van whose driver is elsewhere is standing already and needs no step.
+
+courier:Wait a orexis:Action ;
+    rdfs:label "keep the van on its cell for a stretch" ;
+    orexis:takes courier:van ;
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Fictive ] ] ;
+    planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT ?van WHERE {
+            ?van courier:at ?here .
+            ?van a courier:Van .
+            FILTER NOT EXISTS { ?van courier:drivenBy ?driver . FILTER NOT EXISTS { ?driver courier:aboard ?van } }
+        }""" ;
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:landsAfter """SELECT ?least ?most WHERE { BIND(30 AS ?least) BIND(60 AS ?most) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { $van courier:at ?here  }
+        WHERE  { $van courier:at ?here  }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { $van courier:at ?here } WHERE { $van courier:at ?here }""" ] ] .

@@ -584,6 +584,7 @@ FOLDERS = {
     "speech": (),
     "market": (f"{_O}/market#",),
     "actuation": (f"{_O}/actuation#", f"{_O}/climate#"),
+    "courier": (f"{_O}/courier#",),
     "onboarding": (f"{_O}/onboarding#",),
 }
 

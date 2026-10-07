@@ -364,7 +364,7 @@ plan down the same cells. A cluster a standing want is already about is that wan
   other van is not on, so no shipped want is unreachable for it; the courier, the tower, the
   greenhouse and the market worlds state none and pay one query a pass. The trigger is the first
   world that poses a corridor one cell wide with a van at each end, where the honest answer is a
-  `Wait` (the seam below) or the market's right-of-way (#568).
+  `Wait` (the seam below, built since for the worlds that import it) or the market's right-of-way (#568).
 - **A present that violates a constraint is searched from as it stands.** The present is said and
   refused at onboarding, never marked, so a want is still searched from it and a world that keeps the
   violation is impossible while one that happens to repair it is not: the search may mend the
@@ -394,10 +394,30 @@ plan down the same cells. A cluster a standing want is already about is that wan
   band it needs is declared since #901 — a drive is a stretch, a step opens where the one before it
   lands — so what is left is the order alone: a step whose window may overlap the one before it,
   which `execution:then` cannot say.
-- **A step that waits.** The courier has no action that does nothing for a stretch, so a van held
-  back by the bound takes a detour where one act's wait would do — or, measured (#902), the mind moves
-  the other van aside, which is one act too and is what it found; a `Wait` is the domain's to add,
-  costed and banded like a drive.
+- **A step that waits** (built for the worlds that import it, 2026-10-07, #920). The courier had no
+  action that does nothing for a stretch, so a van held back took a detour where one act's wait would
+  do — or, measured (#902), the mind moved the other van aside, which is one act too. `courier:Wait` is
+  the domain's now, costed and banded like a drive, in `domains/courier/wait.ttl`, which no shipped
+  world imports ([wait](/domain/courier/wait.md)): with a peer's van's route laid as a prediction
+  across the cell ahead, the plan is a drive, a wait, two drives and the drop, five steps over 33
+  candidates, where without it the van drives back a cell and returns, six over 61. Its effect deletes
+  the van's cell and puts the same cell back, and that self-rewrite is the shape chosen. Refused:
+  **`take` counting a landing in a later ground as a move**, so that a wait could state no effect. It
+  is a kernel change that buys the same worlds — a fork of the later ground with the path replayed,
+  hashed as the self-rewrite's is — and is not enough alone, since an action stating no construct is
+  in no scope (`footprint.actions_of`, an action an event adopts) and would never be admitted, measured:
+  the crossing with an effectless wait plans as though there were none. And it would make any action
+  whose effect comes to nothing where it is taken a way to let time pass, bought at that action's
+  cost and carried out with whatever its implementation sends, where the domain's wait says in its
+  own words that standing still is the act.
+  What is left open is the identification by hash: a world is told by what it holds and not by when,
+  so a wait landing in the ground it was taken in repeats its parent and two waits in one ground are
+  one world. A van standing on the cell ahead for longer than a wait's least landing, with nothing
+  predicted to change inside that stretch, cannot be waited out — measured in a corridor, three
+  stretches of standing, `Exhausted` with a seven-step plan there to find, pinned in
+  `world/dispatcher/tests/test_dispatcher.py`. The trigger is the first world where that stretch is
+  posed for real — two agents meeting in a corridor (#568) — and the question it asks is the cone's
+  (whether a world is told by its period where a ground's prediction is pending), not the wait's.
 - **A limit on acts in flight as world state, and coupled only by a constraint over it** (#903,
   `world/driver/`). One driver, two vans on two grids no drive crosses: a drive needs the driver
   aboard the van, and a boarding moves the driver to the other, so every plan moves one van at a

@@ -720,6 +720,53 @@ collides first follows which intention's name sorts first, ten runs of twenty ea
 and thirteen acts with two intentions failed, or thirteen and fourteen with three. Every drive taken
 is of the van the driver is aboard, and both parcels arrive.
 
+# The courier's wait, across a peer's crossing (2026-10-07, #920)
+
+`courier:Wait` keeps a van on its cell for half a minute to a minute at a cost of one, in
+`domains/courier/wait.ttl`, which no shipped world imports ([wait](/domain/courier/wait.md)). The
+crossing is the dispatcher with van B a peer's — driven by somebody this agent never holds aboard, so
+none of its steps is admitted — and its route down the third column laid as predictions, c2_2 from
+half a minute, c2_1 from a minute, c2_0 from a minute and a half; van A at c0_1 carries parcel A,
+owed at c3_1, across c2_1. The standing case is the same crossing in a corridor of the second row and
+the third column, with van B on c2_1 from a minute to two and a half. Measured on the development
+container, one pass of the Planner over the booted variant as `world/dispatcher/tests/test_dispatcher.py`
+builds it, the cases alternated in one session, five rounds, one process per run, and the whole
+repeated in a second session; candidates are every weighing but a ground's, worlds the possible
+worlds weighed, waits the waits weighed with how many repeated a world. The counts did not move.
+
+| case | wait | budget | candidates | worlds | impossible | waits, repeats | plan | pass, median of five (min), two sessions |
+|---|---|---|---|---|---|---|---|---|
+| the crossing | imported | 256 | 33 | 27 | 2 | 6, 3 | a drive, a wait, two drives, the drop | 340 ms (260), then 410 (340) |
+| the crossing | not imported | 256 | 61 | 42 | 3 | — | a drive, a drive back and again, two drives, the drop | 460 ms (410), then 460 (320) |
+| the standing case | imported | 256 | 42 | 15 | 3 | 13, 11 | `Exhausted` | 330 ms (270), second session only |
+| the shipped dispatcher | imported | 512 | 296 | 148 | 0 | 68, 68 | the joint ten steps | 6080 ms (5270), then 6240 (5090) |
+| the shipped dispatcher | not imported | 512 | 228 | 148 | 0 | — | the joint ten steps | 2790 ms (2380), then 3150 (3120) |
+
+**Standing still is found where it is cheapest.** With the wait the plan is five steps and five spent,
+the estimate at the root reading four, and the wait landing at the minute in the ground where van B
+has reached c2_1 — a world of its own, since the prediction moved van B there. Without it the same
+pose drives back a cell and returns, six steps, the search spending 61 candidates where 33 did; the
+pass is inside the drift either way. Neither search opens a world holding two vans.
+
+**A wait buys nothing where nothing is predicted.** On the shipped dispatcher every one of the 68
+waits weighed repeated a world, and the joint plan and its 148 worlds are the tree's without it; the
+68 forks more than double the pass and take the candidates past the 256 its tests state. Profiled,
+4.4 s of the 6.0 is `take` reading its candidate's row, 15 ms a take against 9 without the waits,
+since that read grows with the catalogue. Imported by the courier's ontology rather than a document of
+its own, it turned nine of the dispatcher's tests that stood before it and one of the driver's red;
+the courier's and the tower's did not move.
+
+**And it waits for a prediction, never for the clock.** In the standing case the first wait lands in
+the minute's ground and is a world; every wait after it lands in the same ground, holds what the
+first holds and repeats it, as does a drive back and a drive again, so nothing reaches the instant van
+B leaves, and the search ends `Exhausted` with seven steps there to find. A world is told by what it
+holds and not by when — the seam this leaves is
+[one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md)'s.
+
+**What a wait predicts when walked is not measured here.** A step's predicted change is its world
+less its parent's, so a wait in the crossing carries van B's move between the two grounds (#919); no
+figure above reads it.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

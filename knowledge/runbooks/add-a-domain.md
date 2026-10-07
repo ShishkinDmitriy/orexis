@@ -41,7 +41,9 @@ and `<../courier/ontology.ttl>` beside its own rules.
 transitively and loads only what a world asks for. An action only some of a domain's worlds have goes
 in a document the ontology does not import, and those worlds import it beside the ontology — the
 courier's boarding, `domains/courier/driver.ttl`, which `world/driver/` asks for and the dispatcher
-never loads, since an action admitting nothing still splits a world's scopes (#913). Nothing in `agent/` or `onboarding/` may name a
+never loads, since an action admitting nothing still splits a world's scopes (#913); and the courier's
+wait, `domains/courier/wait.ttl`, which no shipped world asks for, since an action admitted in every
+world a search opens is a fork for each even where it buys nothing (#920). Nothing in `agent/` or `onboarding/` may name a
 domain's IRI — `tests/test_layout.py` fails one that does — so the domain stays a plug-in.
 
 # How it is held
