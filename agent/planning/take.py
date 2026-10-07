@@ -275,7 +275,12 @@ def _changed(store, world: str, base: str, memo) -> None:
     predictions moved between the two periods — another van's next cell, the drain of a tank — and
     the one graph that told the two apart, the base, is gone by the time a plan is read. Written
     for every fork it would cost two diffs and four rows on every candidate taken, to say what the
-    parent already says."""
+    parent already says.
+
+    PER FACT, AND NAMED WHEN EMPTY. Each side is one graph less the other, so a fact the effect
+    deleted and put back is in neither and a wait predicts nothing. The rows are written even then:
+    they are what makes `extract_plan` copy these graphs rather than diff the world against its
+    parent, which would carry everything the predictions moved."""
     adds = remember(memo, ("closed", ADDS_GRAPH), lambda: closed(store, ADDS_GRAPH))
     retracts = remember(memo, ("closed", RETRACTS_GRAPH), lambda: closed(store, RETRACTS_GRAPH))
     update(store, bind(_CHANGED_U, world=world, base=base, adds=f"{world}.adds", retracts=f"{world}.retracts",

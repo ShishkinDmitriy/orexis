@@ -456,6 +456,26 @@ def test_a_step_landing_across_a_prediction_predicts_its_own_effect_alone(monkey
     assert [r["o"] for r in rows(store, _OUTCOMES_Q, ())] == ["done"]
 
 
+def test_a_wait_whose_effect_nets_to_nothing_predicts_nothing_and_lands_at_its_landing(monkeypatch, snapshots):
+    """#919 with #920's shape. A wait deletes the tank's level and puts the same level back, and lands
+    a minute on, in the ground where a prediction has refilled the tank to twelve: the want is met
+    there, by the refill and not by the wait. The step's two graphs are taken per fact, so a fact
+    deleted and put back is in neither, and they are EMPTY — the refill is not the wait's to predict.
+    Walked fictively, the wait writes nothing; the executor holds it to its `landsAt`, since it names
+    two graphs even when both are empty, and answers it there, the empty prediction holding."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(CASES_DIR / "a_wait_across_a_prediction_predicts_nothing.trig")
+    held = _Held(store, snapshots.AGENT, fictive=True)
+    held.plan(snapshots.NOW)
+    assert _steps(held) == 1
+    assert rows(store, _PREDICTED_Q, ()) == [], "a wait predicts nothing: net per fact, and not the refill"
+    assert held.executor.walk(snapshots.NOW) == 1
+    for at, outcomes in ((snapshots.NOW + timedelta(seconds=59), []), (snapshots.NOW + timedelta(minutes=1), ["done"])):
+        monkeypatch.setattr(clock, "now", lambda at=at: at)
+        held.executor.walk(at)
+        assert [r["o"] for r in rows(store, _OUTCOMES_Q, ())] == outcomes, at
+
+
 #  THE GRAPHS SAYING WHAT A STEP'S EFFECT CHANGED IN A LATER GROUND, each with the world it was
 #  derived from.
 _CHANGES_Q = """

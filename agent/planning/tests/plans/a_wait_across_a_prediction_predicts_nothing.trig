@@ -1,0 +1,117 @@
+# a_wait_across_a_prediction_predicts_nothing
+#
+# One tank, reading six where its floor is ten, and a prediction that it reads twelve from half a
+# minute on: something no act of this agent does will refill it. The one action is a WAIT, the shape
+# of `courier:Wait` (#920): its effect deletes the tank's level and puts the same level back, so it
+# changes nothing of its own, and it lands a minute after the turn at the least. Its world is forked
+# from the LATER ground, where the tank reads twelve and the want is met.
+#
+# WHAT THE STEP PREDICTS IS NOTHING (#919): the diff of the world it lands in against the base it was
+# replayed into is taken per fact, each way, and a fact deleted and put back is in both, so the two
+# graphs the step names are EMPTY — and still named, with their catalogue rows, since the rows are
+# what make `extract_plan` copy them rather than diff the world against its parent, which would carry
+# the refill. A fictive wait then writes nothing, and the executor holds the step to its landing.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
+
+GRAPH :ontology {
+  :level a rdf:Property .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :tank1 a :Tank .
+}
+
+# ONE LEVER: wait beside a tank below its floor — delete its level and put the same level back. It is
+# FICTIVE, so an executor takes it by writing what the step predicts into the readings.
+GRAPH :actions {
+  :tank a orexis:Parameter .
+  :wait a orexis:Action .
+  :wait execution:implementation [ a execution:Implementation ; execution:operation [ a execution:Fictive ] ] .
+  :wait orexis:takes :tank .
+  :wait planning:costs """PREFIX : <http://example.org/test#>
+      SELECT (1 AS ?cost) WHERE { }""" .
+  :wait planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>
+      DELETE { $tank :level ?l  }
+      WHERE  { $tank :level ?l  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?tank :level ?next } WHERE {
+      $tank :level ?l .
+      BIND($tank AS ?tank) BIND(?l AS ?next) }""" ] ] .
+  #  A WAIT LANDS WITHIN THREE MINUTES OF THE TURN, a minute at the least: the band a world reached by it holds over.
+  :wait planning:landsAfter "SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }" .
+  :wait planning:precondition """PREFIX : <http://example.org/test#>
+      SELECT ?tank WHERE {
+      ?tank a :Tank ; :level ?l .
+      FILTER(?l < 10) }""" .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:targetClass :Tank .
+  :keeper planning:holds :keeper.in_range .
+  :keeper.in_range a planning:Desire .
+  :keeper.in_range planning:about :level .
+  :keeper.in_range planning:metWhen :in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+}
+
+GRAPH :sensed {
+  :tank1 :level 6 .
+}
+
+# WHAT THE TANK WILL READ from half past the minute: a refill no act of this agent makes.
+GRAPH :predicted-0 {
+  :tank1 :level 12 .
+}
+
+GRAPH :scopes {
+  :keeper.scope.1 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+  :wait planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions a orexis:PublicGraph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :predicted-0 a orexis:Graph .
+  :predicted-0 a orexis:PredictionGraph .
+  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:30+00:00"^^xsd:dateTime ] .
+  :predicted-0 orexis:retracts "PREFIX : <http://example.org/test#> DELETE { GRAPH $state { :tank1 :level ?was } } WHERE { GRAPH $state { :tank1 :level ?was } }" .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

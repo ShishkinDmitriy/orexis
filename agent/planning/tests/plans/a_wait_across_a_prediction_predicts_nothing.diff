@@ -1,0 +1,107 @@
+--- case
++++ expected
+@@ -95,4 +95,104 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:2b1994e49806dbcbbc608e03fdce86e5e0356e4a300b560597ffca3cdd2bbf42" .
++  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 6 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:expanded true .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 6 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T120030p0000 a planning:GroundGraph .
++  ground:2026-01-01T120030p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:30+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120030p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120030p0000 orexis:hash "sha256:d84b75404087b7c5ea6e9665368c1f26570d90f82e86511a10fbfb1f1db586d1" .
++  ground:2026-01-01T120030p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T120030p0000.for.keeper.in_range a planning:Weighing .
++  ground:2026-01-01T120030p0000.for.keeper.in_range planning:for :keeper.in_range .
++  ground:2026-01-01T120030p0000.for.keeper.in_range planning:met true .
++  ground:2026-01-01T120030p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120030p0000 .
++  plan:keeper.in_range.pursued.tank1 a planning:PlanGraph .
++  plan:keeper.in_range.pursued.tank1 orexis:arrivedBy orexis:Derived .
++  plan:keeper.in_range.pursued.tank1.1.adds a execution:AddsGraph .
++  plan:keeper.in_range.pursued.tank1.1.adds orexis:arrivedBy orexis:Derived .
++  plan:keeper.in_range.pursued.tank1.1.retracts a execution:RetractsGraph .
++  plan:keeper.in_range.pursued.tank1.1.retracts orexis:arrivedBy orexis:Derived .
++  possible:1 a planning:PossibleGraph .
++  possible:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:03:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:00+00:00"^^xsd:dateTime ] .
++  possible:1 orexis:arrivedBy orexis:Derived .
++  possible:1 orexis:hash "sha256:d84b75404087b7c5ea6e9665368c1f26570d90f82e86511a10fbfb1f1db586d1" .
++  possible:1 planning:by possible:1.by .
++  possible:1 planning:minted 1 .
++  possible:1 planning:spent 1.0 .
++  possible:1.adds a execution:AddsGraph .
++  possible:1.adds orexis:arrivedBy orexis:Derived .
++  possible:1.adds prov:wasDerivedFrom possible:1 .
++  possible:1.by :tank :tank1 .
++  possible:1.by a planning:Candidate .
++  possible:1.by planning:fills :wait .
++  possible:1.by planning:from ground:2026-01-01T120000p0000 .
++  possible:1.by planning:minted 1 .
++  possible:1.for.keeper.in_range.pursued.tank1 a planning:Weighing .
++  possible:1.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
++  possible:1.for.keeper.in_range.pursued.tank1 planning:met true .
++  possible:1.for.keeper.in_range.pursued.tank1 planning:weighs possible:1 .
++  possible:1.retracts a execution:RetractsGraph .
++  possible:1.retracts orexis:arrivedBy orexis:Derived .
++  possible:1.retracts prov:wasDerivedFrom possible:1 .
++  pursued:2026-01-01T120000p0000--2026-01-01T120030p0000 a orexis:Graph .
++  pursued:2026-01-01T120000p0000--2026-01-01T120030p0000 a planning:WantGraph .
++  pursued:2026-01-01T120000p0000--2026-01-01T120030p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--2026-01-01T120030p0000 orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T120000p0000--2026-01-01T120030p0000 orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :tank1 :level 6 .
++}
++
++GRAPH ground:2026-01-01T120030p0000 {
++  :tank1 :level 12 .
++}
++
++GRAPH plan:keeper.in_range.pursued.tank1 {
++  plan:keeper.in_range.pursued.tank1 a planning:Plan .
++  plan:keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
++  plan:keeper.in_range.pursued.tank1 planning:outcome planning:Satisfied .
++  plan:keeper.in_range.pursued.tank1 planning:spent 1.0 .
++  plan:keeper.in_range.pursued.tank1.1 :tank :tank1 .
++  plan:keeper.in_range.pursued.tank1.1 a execution:Step .
++  plan:keeper.in_range.pursued.tank1.1 execution:adds plan:keeper.in_range.pursued.tank1.1.adds .
++  plan:keeper.in_range.pursued.tank1.1 execution:landsAt "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.1 execution:notAfter "2026-01-01T12:03:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.1 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.1 execution:partOf plan:keeper.in_range.pursued.tank1 .
++  plan:keeper.in_range.pursued.tank1.1 execution:retracts plan:keeper.in_range.pursued.tank1.1.retracts .
++  plan:keeper.in_range.pursued.tank1.1 planning:fills :wait .
++  plan:keeper.in_range.pursued.tank1.1 planning:of possible:1.by .
++}
++
++GRAPH possible:1 {
++  :tank1 :level 12 .
++}
++
++GRAPH pursued:2026-01-01T120000p0000--2026-01-01T120030p0000 {
++  :keeper planning:holds :keeper.in_range.pursued.tank1 .
++  :keeper.in_range.pursued.tank1 a planning:Want .
++  :keeper.in_range.pursued.tank1 planning:metWhen :keeper.in_range.pursued.tank1.met .
++  :keeper.in_range.pursued.tank1 planning:state planning:Recognized .
++  :keeper.in_range.pursued.tank1 prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.in_range.pursued.tank1 prov:wasDerivedFrom :keeper.in_range .
++  :keeper.in_range.pursued.tank1 rdfs:label "pursued: every tank in range" .
++  :keeper.in_range.pursued.tank1.met a sh:NodeShape .
++  :keeper.in_range.pursued.tank1.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
++  :keeper.in_range.pursued.tank1.met sh:targetNode :tank1 .
++}
