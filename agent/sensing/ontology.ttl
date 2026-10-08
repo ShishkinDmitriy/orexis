@@ -1,8 +1,10 @@
 @prefix : <http://example.org/orexis/sensing#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
@@ -24,6 +26,31 @@
 #  prediction package's — and concludes nothing itself: the sides are revisions, concluded by the
 #  three rules this layer ships (rules.ttl beside this file) and run by the deliberator over
 #  the present. No word of any transport is spoken here.
+
+#  THE ROLE THIS LAYER SERVES (knowledge/domain/sensing/observer.md): an agent declared an observer
+#  runs sensing's part, and the boot loads this layer for it and for nothing else. BENEATH THE
+#  DELIBERATOR, because an observation's sides are revisions: the rules this layer ships conclude
+#  them and the deliberator runs those rules, so an observer that were no deliberator would hold
+#  numbers that are of nothing. That is how this layer says what it needs of the belief package
+#  without the runtime knowing it (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+#  What the role needs of the world is a sensor reporting to the agent — hosted by what it acts for,
+#  by a sample of it, or by a place that contains it — and `orexis-onboard` refuses an observer
+#  whose world states none, as it refuses a sensor reporting to an agent that is no observer.
+
+:Observer a owl:Class ;
+    rdfs:subClassOf orexis:Role , belief:Deliberator ;
+    rdfs:label "Observer" ;
+    rdfs:comment """An agent that turns its sensors' numbers into observations: the role whose part is
+    sensing's, which writes an observation per reading and says a sensor silent or stuck. Declared,
+    never derived; it needs a sensor reporting to it.""" .
+
+[] a sh:NodeShape ;
+    sh:targetClass :Observer ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "an observer no sensor reports to: it would observe nothing" ;
+        sh:select """SELECT ?me WHERE { ?me a orexis:Self
+            FILTER NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
+                                ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host } }""" ] .
 
 :ObservationGraph a owl:Class ;
     rdfs:subClassOf orexis:StateGraph ;

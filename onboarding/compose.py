@@ -68,7 +68,6 @@ log = logging.getLogger("compose")
 IMAGE = "orexis:local"
 PUBLIC = "http://example.org/orexis#PublicGraph"
 
-_ROSTER_Q = "SELECT ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id } ORDER BY ?id"
 _IDS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.
@@ -90,8 +89,7 @@ SELECT DISTINCT ?id WHERE {
 
 def roster(world: str) -> list[str]:
     """Every agent the world states, by id."""
-    store = reading.world(world_dir(world))
-    return [r["id"] for r in rows(store, _ROSTER_Q, graphs_of(store, PUBLIC))]
+    return reading.agents(world_dir(world))
 
 
 def read_by_an_agent(world: str) -> dict[Path, frozenset[str] | None]:

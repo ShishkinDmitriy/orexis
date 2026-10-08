@@ -66,3 +66,16 @@ sh:RulesGraph rdfs:subClassOf orexis:Graph .
     states it of itself in its self graph and the deliberator reads it when it is made; where it
     states none, two hundred and fifty-six. One source's share of a pass stays `revise`'s own
     constant, which says how a pass's budget is spent and not how much.""" .
+
+#  THE ROLE THIS PACKAGE SERVES (knowledge/domain/belief/deliberator.md). An agent declared a
+#  deliberator — in its self graph, or by a role a domain puts beneath this one — runs the
+#  deliberator, which revises what it believes by the rules it holds; the boot loads this package
+#  for it and for nothing else. It needs nothing of the world: an agent holding no rules graph may
+#  still be declared one, and revises nothing.
+
+:Deliberator a owl:Class ;
+    rdfs:subClassOf orexis:Role ;
+    rdfs:label "Deliberator" ;
+    rdfs:comment """An agent that revises what it believes by the rules it holds: the role whose
+    part is the deliberator, one concept with it. Declared, never derived; a role beneath this
+    one — the observer's, a market host's — loads this package with its own.""" .

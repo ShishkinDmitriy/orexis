@@ -20,15 +20,31 @@ status: accepted
 timestamp: 2026-10-08T12:00:00Z
 ---
 
-> **Recorded before the code.** Nothing below is built. Where this record says how the tree IS, it
-> was read on `e99731d0` (2026-10-08) and the measurements were run in memory there; where it says
-> how the tree WILL be, the issues at the end carry it. The pages that describe loading today —
-> [package](/domain/kernel/package.md), [agent](/domain/kernel/agent.md),
-> [runtime](/domain/kernel/runtime.md) — stay true of the code until those issues land, and are
-> rewritten with it.
+> **Recorded before the code; §1 to §6 are built since (#927).** Where this record says how the tree
+> IS, it was read on `e99731d0` (2026-10-08) and the measurements were run in memory there. The
+> roles, their declarations, the boot that loads by them, the transports and the onboarding refusals
+> are in the tree; [role](/domain/kernel/role.md) and [package](/domain/kernel/package.md) say how
+> they are now. §7, Hanoi planning only, is still #928's: its mover is a planner and an executor,
+> and no deliberator, its world shipping no rules.
 
 > **Amended 2026-10-08** (#929): §4's courier relation is confirmed and built — `courier:hasDriver`,
-> owned by [driver](/domain/courier/driver.md); the rest of this record is still unbuilt.
+> owned by [driver](/domain/courier/driver.md).
+
+> **Amended with the code (#927), where building it found the record short.** Three things, none
+> reversing a decision. (1) **A need is shipped by whoever owns the words it is stated in**, which
+> is the declarer except twice: the executor's need, being a planner, is planning's word, and
+> execution beneath planning may not speak it, so planning ships that shape; the speaker's, a topic
+> it listens to, is MQTT4SSN, the transport's, which speech may not speak — §3's own reason its
+> premise could not live in speech — so the MQTT transport ships it. (2) **The observer beneath the
+> deliberator** contradicted sensing's layout test, which held belief ABOVE sensing and refused any
+> `belief:` word in its files; §3 says belief is below, so the test now allows that one word in the
+> ontology and nothing else. (3) **The parts are still made in one order** — belief, planning,
+> execution, sensing, prediction, speech, the transports — since a pass needs the deliberator to hear
+> a graph first and the planner to publish before the executor walks; that order is `PASS` in
+> `agent/runtime.py`, which orders what the roles load and decides none of it, a package it does not
+> name loading after the rest. The terrace's agent and the sensing world's fern agent want nothing,
+> so by §5's planner need they are observers and predictors and no planner — their dashboards lose
+> the planner's and the executor's, which they never fed.
 
 # The question
 

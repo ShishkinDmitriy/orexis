@@ -1,12 +1,24 @@
 ---
 type: Service
 title: Deliberator
+term: http://example.org/orexis/belief#Deliberator
 description: >-
-  The belief package's pass - the D of BDI in its first sense, facts following from facts. A
-  writer says a graph changed; the pass revises every changed graph in turn, within a budget of
-  rule executions, and a graph the budget cut short is continued by the next pass, across a
-  restart too. It searches nothing - finding a plan is the planner's. `agent/belief/deliberator.py`.
+  The belief package's pass - the D of BDI in its first sense, facts following from facts - and the
+  role of an agent that runs it. A writer says a graph changed; the pass revises every changed graph
+  in turn, within a budget of rule executions, and a graph the budget cut short is continued by the
+  next pass, across a restart too. It searches nothing - finding a plan is the planner's.
+  `agent/belief/deliberator.py`.
 ---
+
+# Who runs it
+
+Whoever its self graph states is a `belief:Deliberator`, directly or through a
+[role](/domain/kernel/role.md) beneath this one — the [observer](/domain/sensing/observer.md), the
+market's host and bidder. Role and part are one concept under one word, and belief is loaded for
+such agents alone. It needs nothing of the world, and an agent holding no rules may still be declared one; but
+an agent holding a rules graph that is no deliberator is refused at onboarding, since nothing it
+runs would revise by those rules. Hanoi's mover is none — its world ships no rules — and the tower's
+is one, for the rules that conclude Hanoi's facts from the grid's.
 
 # What it does
 

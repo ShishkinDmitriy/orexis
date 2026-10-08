@@ -1,9 +1,14 @@
 @prefix : <http://example.org/orexis/world/hanoi#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix execution: <http://example.org/orexis/execution#> .
 
 <> a orexis:SelfGraph .    # this document is one graph, and this is what it is
 
 #  WHO THIS AGENT IS: the agent solving the tower, and this document is its own by the self it
 #  states. Booted as "hanoi", the agent checks that this is so.
+#
+#  WHAT IT RUNS: it plans the tower and walks the plan, in the packages' words, since no domain has
+#  one for what it is. Its world ships no rules, so it is no deliberator.
 
-:hanoi a orexis:Self .
+:hanoi a orexis:Self , planning:Planner , execution:Executor .

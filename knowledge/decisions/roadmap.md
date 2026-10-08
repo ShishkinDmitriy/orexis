@@ -66,7 +66,7 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    Both need a public fact saying which agent has a driver, #929, filed from
    [a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md).
 5. **What an agent runs** — declared, not derived: an agent's roles in its self graph, where #876
-   put its stances, and a package loaded only for a role it serves (#927); then Hanoi's mover
+   put its stances, and a package loaded only for a role it serves (#927, built); then Hanoi's mover
    planning only, with an ending of its own (#928). The record carries the argument
    ([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).
 6. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and

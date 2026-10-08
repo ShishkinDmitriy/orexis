@@ -7,7 +7,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Kernel — what every package meets at
 
-* [agent](/domain/kernel/agent.md) - One process, one store, one world, told its local id; acts for a subject and holds its desires. Nothing is granted.
+* [agent](/domain/kernel/agent.md) - One process, one store, one world, told its local id; acts for a subject, holds its desires, and runs what its roles call for.
+* [role](/domain/kernel/role.md) - What an agent runs, declared in its self graph beside its self; a package is loaded only for one. No default.
 * [self](/domain/kernel/self.md) - The one agent a store is this agent's, authored in its self graph and checked at boot; a text asks `?me a orexis:Self`.
 * [stance](/domain/kernel/stance.md) - A figure the agent holds about itself, a triple about the self in its self graph; the package's constant where none is stated.
 * [world](/domain/kernel/world.md) - A directory of documents, each saying which graph it is; imports its domains, and its tests live beside it.
@@ -34,6 +35,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; the rules say which side a reading is on.
 * [stuck](/domain/sensing/stuck.md) - A sensor reporting one number for a limit of its cadences is said stuck until a differing number ends it; the doubt beside age.
+* [observer](/domain/sensing/observer.md) - The role sensing serves, beneath the deliberator since sides are revisions; needs a sensor reporting to it.
 
 # Transport — reaching the society
 
@@ -43,19 +45,20 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 * [belief-base](/domain/belief/belief-base.md) - One store per agent, and a catalogue describing every graph: its kind, owner, arrival and period.
 * [revision](/domain/belief/revision.md) - A belief derived from beliefs by SHACL 1.2's rules, adopted as they stand, into a graph of the source's own, on the present only.
-* [deliberator](/domain/belief/deliberator.md) - The revision pass over what changed, within a budget of rule executions; a cut is continued, across a restart too.
+* [deliberator](/domain/belief/deliberator.md) - The revision pass over what changed, within a budget of rule executions, and the role of an agent running it.
 
 # Prediction — the stretches ahead
 
 * [prediction](/domain/prediction/prediction.md) - Drifts answer rates that add, accumulated between happenings; one graph per stretch between range crossings; a ground per stretch.
 * [corridor](/domain/prediction/corridor.md) - A rate known as a range gives the lowest and highest trajectory; a stretch is the corridor's worst side.
+* [predictor](/domain/prediction/predictor.md) - The role prediction serves; needs a sensor of the agent's and a drift. A drift nobody foresees by is not refused.
 
 # Planning — what is wanted, and how to get there
 
 * [desire](/domain/planning/desire.md) - A desire stands and is never searched; a want is minted where it bites, searched, and withdrawn once met.
 * [constraint](/domain/planning/constraint.md) - What the world says is possible, stated as a desire is; a world violating it is impossible, never repaired, and its footprint couples wants.
 * [shape](/domain/planning/shape.md) - A met-test is a SHACL shape a domain declares, compiled to the select whose rows are its violations.
-* [planner](/domain/planning/planner.md) - One pass: grounds laid, wants derived, each searched best-first within a budget, the plans published down.
+* [planner](/domain/planning/planner.md) - One pass: grounds laid, wants derived, each searched best-first within a budget, the plans published down; and the role running it.
 * [imaginarium](/domain/planning/imaginarium.md) - The in-memory store a search forks worlds in, one per scope, kept from pass to pass.
 * [cone](/domain/planning/cone.md) - The worlds and weighings a search leaves; the next pass finds the present among them by hash, or drops them.
 * [scope](/domain/planning/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.
@@ -70,7 +73,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Execution — carrying a plan out
 
-* [executor](/domain/execution/executor.md) - Commits plans as intentions, takes each step when due, moves on only when the world answers.
+* [executor](/domain/execution/executor.md) - Commits plans as intentions, takes each step when due, moves on only when the world answers; and the role running it.
 * [intention](/domain/execution/intention.md) - One plan committed to for one want, standing at a step until done, failed, superseded or abandoned.
 * [commitment](/domain/execution/commitment.md) - Hard on the step in flight, never cancelled; soft on the plan, kept until a want a constraint couples to it arrives.
 * [step](/domain/execution/step.md) - An action picked with its values: the two graphs it predicts in, when it may be taken and lands.
@@ -82,6 +85,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Speech — what peers say
 
 * [speech](/domain/speech/speech.md) - A peer's word is a document: heard where it is state and replaces only a peer's word, and what the agent said, believed as said.
+* [speaker](/domain/speech/speaker.md) - The role speech serves; needs a topic the agent listens to, a shape the MQTT transport ships.
 
 # Market — a domain of documents
 
@@ -90,7 +94,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [call](/domain/market/call.md) - A bidder in trouble asks for a round; to the host it is a want arriving.
 * [round](/domain/market/round.md) - One allocation of the lot, open until it closes, then cleared pay-as-bid.
 * [claim](/domain/market/claim.md) - What a winner holds and the host owes: issued, presented when needed, served and said discharged.
-* [host](/domain/market/host.md) - Whoever holds the good: two desires, no call unanswered and no presented claim unserved.
+* [host](/domain/market/host.md) - The role of whoever holds the good, founded on `market:hosts`: two desires, no call unanswered and no presented claim unserved.
+* [bidder](/domain/market/bidder.md) - The role of an agent bidding in a venue, founded on `market:bidsIn`; beneath the four package roles a market agent needs.
 * [supplier](/domain/market/supplier.md) - The allotment's host, acting for the water and holding the valves; the only agent able to pour.
 
 # Actuation — touching the world

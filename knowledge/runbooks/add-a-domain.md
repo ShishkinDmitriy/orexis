@@ -23,6 +23,13 @@ kind on `<>`; the file's name is for eyes.
 A domain that combines others imports them: the tower's ontology imports `<../hanoi/ontology.ttl>`
 and `<../courier/ontology.ttl>` beside its own rules.
 
+A domain whose agents play a part only its words can name declares that as a
+[role](/domain/kernel/role.md) in its `ontology.ttl`, `rdfs:subClassOf` each package role it needs —
+the market's `market:Host` is beneath the planner, the executor, the speaker and, since it ships
+`rules.ttl`, the deliberator — and beside it a SHACL shape targeting the role whose `sh:sparql`
+select returns a row where the world lacks what the role is founded on, `market:hosts` for the host.
+A world's agents are then declared in the domain's word, and nobody lists what it runs.
+
 # The rules its texts live by
 
 - **Every SPARQL text declares its own prefixes.** The store's dictionary never learns a domain's

@@ -16,6 +16,14 @@
 #  in, how an action is carried out — and nothing the executor does not read or write. A term
 #  returns with the thing that reads it and not before (a-term-nobody-reads-is-annotation).
 
+#  THE ROLE THIS PACKAGE SERVES (knowledge/domain/execution/executor.md): an agent declared an
+#  executor runs the executor, and the boot loads this package for it and for nothing else. What
+#  the role needs — being a planner too, while a plan crosses no agent — is said in planning's
+#  word, so it is planning's shape to ship and not this package's.
+
+execution:Executor a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Executor" ;
+    rdfs:comment "An agent that walks intentions and takes their steps: the role whose part is the executor, one concept with it. Declared, never derived; a role beneath this one — a market host's, a bidder's — loads this package with its own." .
+
 execution:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
     rdfs:comment "What the agent is DOING: commitments adopted, standing and resolved, kept in the belief base's volume as a graph of the agent's own, not public, so a restart finds them and planning reads what is walked by this kind." .
 

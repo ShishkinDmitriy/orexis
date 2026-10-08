@@ -159,8 +159,9 @@ def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
     of a unit together, its count and flags together and each value's mean, max and sum together — and
     every panel reads the bucket of the agent the dashboards' variable picks. A dashboard per package
     that reports, the runtime's first, each a row per measurement and linked to the rest: sensing's
-    because the terrace loads it, so its silence and its readings are drawn, and no panel draws a
-    measurement nothing writes."""
+    and belief's because the terrace's agent is an observer, so its silence and its readings are
+    drawn — and no planner's or executor's, since it is declared neither (#927) — and no panel draws
+    a measurement nothing writes."""
     from agent.metrics import window as metrics
     from agent.series import METRICS
     from onboarding.dashboards import AGENT_VARIABLE, render_health
@@ -178,7 +179,7 @@ def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
         metrics.reset()
     health = render_health("terrace")
     files = [name for name, _ in health]
-    assert files[0] == "runtime.json" and {"planning.json", "execution.json", "sensing.json", "belief.json"} <= set(files), files
+    assert files[0] == "runtime.json" and set(files) == {"runtime.json", "sensing.json", "belief.json"}, files
     for name, dashboard in health:
         (variable,) = dashboard["templating"]["list"]
         assert variable["name"] == AGENT_VARIABLE and variable["query"] == "terrace"
@@ -190,7 +191,8 @@ def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
     queries = [[t["query"] for t in p["targets"]] for p in panels]
     assert queries and all('from(bucket: "terrace-${agent}-metrics")' in q for qs in queries for q in qs)
     wanted = {(p["measurement"], f) for p in written for f in p["fields"]}
-    assert {("silence", "silent"), ("received", "interval_s_mean"), ("reroot", "count"), ("pass", "plan_s_max")} <= wanted, wanted
+    assert {("silence", "silent"), ("received", "interval_s_mean"), ("revisions", "revisions"), ("pass", "drain_s_max")} <= wanted, wanted
+    assert not {m for m, _ in wanted} & {"planner", "reroot", "imaginarium", "intentions"}, "no planner or executor runs here"
     for measurement, field in wanted:
         hits = [i for i, qs in enumerate(queries) if any(
             f'r._measurement == "{measurement}"' in q and (f'r._field == "{field}"' in q or "r._field ==" not in q)

@@ -11,8 +11,8 @@ timestamp: 2026-08-03T12:00:00Z
 > declared" falls to
 > [a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md):
 > an agent's roles are declared, and a package loads for a role it serves. Its claim that a package
-> is found by looking stands, and is untrue of the runtime until that record's issue lands:
-> `MIND` and `PREMISES` in `agent/runtime.py` are a list, and a package in neither loads nowhere.
+> is found by looking stands, and is true of the runtime again since #927 landed: `MIND` and
+> `PREMISES` are gone, and a package is the directory whose `ontology.ttl` declares a role.
 
 > **Current statement: [package](/domain/kernel/package.md).** This record is how the model got
 > there and why; the domain concept is what it is now. Four records amend each other on

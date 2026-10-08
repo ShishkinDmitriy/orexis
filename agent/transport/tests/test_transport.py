@@ -1,6 +1,7 @@
 """The contract every transport answers, at the family's level: what the container needs of any
 member — open, handle, cadence, nudge, a step's command — and nothing about bytes, which are
-sensing's, and nothing about whether it is loaded, which is its premise and read before it is."""
+sensing's, and nothing about whether it is loaded, which the runtime reads off the roles and the
+world before it is."""
 
 from __future__ import annotations
 
@@ -14,7 +15,7 @@ def test_the_contract_is_connect_open_handle_cadence_nudge_and_tell_and_nothing_
     assert names == {"connect", "start", "stop", "open", "handle", "reaches", "set_cadence", "sense_now", "actuate", "tell",
                      "command", "tell_to"}
     assert "parse" not in names, "bytes to number is sensing's pipeline"
-    assert "claims" not in names, "whether a member is loaded is its premise, asked before it is imported"
+    assert "claims" not in names, "whether a member is loaded is the runtime's to read, before it is imported"
     with pytest.raises(NotImplementedError):
         Transport.connect("me", lambda *a: None)
     t = Transport()

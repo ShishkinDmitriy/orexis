@@ -1,12 +1,23 @@
 ---
 type: Service
 title: Executor
+term: http://example.org/orexis/execution#Executor
 description: >-
   The owner of the intentions - it commits the plans a pass hands down, takes each step when it
-  falls due, and moves an intention only when the world answers what the step predicted. Two
-  doors, `tick` for time and `drain` for taking, called on one thread by the runtime and by a
-  test alike. `agent/execution/executor.py`.
+  falls due, and moves an intention only when the world answers what the step predicted - and the
+  role of an agent that runs it. Two doors, `tick` for time and `drain` for taking, called on one
+  thread by the runtime and by a test alike. `agent/execution/executor.py`.
 ---
+
+# Who runs it
+
+Execution is loaded where `execution:Executor` is among the [roles](/domain/kernel/role.md) the self
+is declared in, itself or by a domain's role under it, and nowhere else; the part keeps the role's
+word. While a plan crosses no agent, an executor must be a [planner](/domain/planning/planner.md)
+too — it walks what planning published in the same store, and planning checks each step as it is
+taken — and onboarding refuses one that is not. A planner that is no executor is not refused, and
+imports this package's term module for the words a plan is written in, which loads nothing of it;
+such an agent does not yet end, since a plan published counts as walked (#928).
 
 # What it does
 

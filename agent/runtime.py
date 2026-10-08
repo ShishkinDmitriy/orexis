@@ -35,24 +35,30 @@ and a store's selves, counted in every graph, are that agent alone — a volume 
 another agent is the right id handed the wrong volume, and two selves would answer every text for
 both without a word. The loader keeps the self to its one home, and refuses it from a peer.
 
-**A PACKAGE IS LOADED WHERE THE WORLD NEEDS IT (#824).** Belief, planning and execution are the
-mind and every agent has them. Every other package — sensing, prediction, speech, the MQTT
-transport — has its documents read and its modules imported only where its PREMISE holds: an
-ASK in `PREMISES`, read off the world's public graphs and the self. So the boot reads
-the kernel, the mind and the world first, finds who the agent is, asks each premise, and only
-then reads the documents of the packages whose premise held — closing the vocabulary again, and
-taking a second look at any graph of the world passed over for a kind only such a package
-declares. A premise is stated here, in the words of whoever CALLS the package, and not in the
-package: speech's is in the transport's words and in execution's, the layer above it, whose words
-speech may not speak; and what a premise decides is an `import` this file makes. Hanoi's mover
-loads the mind and nothing else.
+**A PACKAGE IS LOADED ONLY FOR A ROLE THE AGENT IS DECLARED IN
+(a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).** The self graph states the
+agent's roles beside its self — `:supplier a orexis:Self , market:Host` — and each package declares
+the roles it serves in its own `ontology.ttl`, beneath `orexis:Role`; a domain declares roles in its
+own words beneath the packages'. So the boot reads the kernel and the world first, finds who the
+agent is and puts its self graph in, closes its roles over `rdfs:subClassOf` — the steps the
+world's domains state, and the steps each package's ontology states, READ APART so that no
+unloaded package's documents enter the store — and only then reads the documents of each package
+whose ontology declares a role in that closure: the directory it was read from, found by looking
+and never listed. It closes the vocabulary again and takes a second look at any graph of the
+world passed over for a kind only such a package declares. There is no default set and no fixed
+mind: an agent declaring no role loads nothing, said in the log, and `orexis-onboard` refuses it.
+A TRANSPORT IS NO ROLE: it is loaded where a loaded role needs bytes and the society wires a bus
+(`TRANSPORTS`) — the one derivation left, since which bus reaches a device is wiring. History and
+metrics are deployment's, read from the environment. Hanoi's mover is a planner and an executor,
+and loads planning and execution and nothing else — no belief, since its world ships no rules.
 
 **A VOLUME LIVED IN** — a store that already holds a catalogue — forgets every graph a document
 put in and nobody owns, and the closure, and reads the documents again: the kernel's, the
 packages' and the world's public ones are asserted and replaced at every boot, which is how an
-updated ontology reaches a running agent, and the premises are asked again, so a world that
-stops needing a package stops loading it. The agent's own are left as they are, because they
-are its beliefs from the first boot on (an-amendment-endows-what-it-grants).
+updated ontology reaches a running agent, and the roles are read again, so a package a role
+stops calling for stops loading. The agent's own are left as they are, because they are its
+beliefs from the first boot on (an-amendment-endows-what-it-grants) — the self graph among them, so
+a role declared after birth reaches only a fresh volume, which is a seam the record leaves open.
 
 **A PASS DRAINS, AND THE RUN ENDS WHEN NOBODY HOLDS THE AGENT.** A pass runs every job queued and
 what its writes set off, then what is due — planning's pass, execution's walk, a transport's poll,
@@ -63,8 +69,8 @@ holds reaches — so Hanoi's mover solves its tower and exits. Nothing here is t
 moved nothing sleeps the poll before the next, unless a package asked to go again.
 
 **A PACKAGE HAS A PART, CREATED, LINKED AND STARTED (a-package-starts-itself,
-planning-and-execution-meet-at-the-store).** Every package the agent loads, the mind's three among
-them, that has a `create` module makes its part; the parts link, each connecting the signals it owns
+planning-and-execution-meet-at-the-store).** Every package the agent loads that has a `create`
+module makes its part, in the order a pass runs them (`PASS`); the parts link, each connecting the signals it owns
 to what lies beneath it — the Planner's `plan_published` to the executor, the executor's `commanded`
 to the transports and `said` to speech, the deliberator's `revised` heard by the executor; then each
 starts, by jobs it `submit`s, timers it asks for (`every`) and graphs written it hears (`on`). The
@@ -93,6 +99,7 @@ import signal
 import sys
 import time
 from datetime import timedelta
+from functools import cache
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -102,10 +109,9 @@ from agent import clock
 from agent import series
 from agent.lifecycle import MET, UNFINISHED, UNREACHABLE, Signal  # noqa: F401 — the outcomes, re-exported
 from agent.metrics import Laps, Level, Value, window
-from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, SELF, SELF_GRAPH
-from agent.planning.planner import Planner
-from agent.store import (answer, catalogue_of, close_catalogue, closed, classify, document, forget_graph, graphs_of,
-                         imports_of, kinds_in, put_document, rows, update, whose, DocumentRefused, Raw)
+from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, ROLE, SELF_GRAPH
+from agent.store import (NAMESPACES, answer, catalogue_of, close_catalogue, closed, classify, document, forget_graph,
+                         graphs_of, imports_of, kinds_in, put_document, rows, update, whose, DocumentRefused, Raw)
 
 log = logging.getLogger("runtime")
 
@@ -152,51 +158,49 @@ DOCUMENTS = (".ttl", ".trig")
 SECRETS = "secrets"
 BELIEFS = "beliefs"
 
-#  THE MIND: belief, planning and execution, which every agent has, since the container builds the
-#  mind whatever the world (a-layer-is-a-package-and-need-loads-it). A package is named by its
-#  directory under `agent/`, which is what rule 2 says a package is.
-MIND = ("belief", "planning", "execution")
-SENSING, PREDICTION, SPEECH, MQTT, HTTP = "sensing", "prediction", "speech", "transport/mqtt", "transport/http"
+#  A PACKAGE IS A DIRECTORY OF `agent/` HOLDING AN `ontology.ttl` — rule 2's package, found by
+#  looking and never listed: the roles it serves are declared there, and so is every word it owns.
+#  It is named by its directory, which is what `packages_of` answers and `parts` is keyed by.
+VOCABULARY = "ontology.ttl"
+MQTT, HTTP = "transport/mqtt", "transport/http"
+#  THE ONE PACKAGE THE BOOT ITSELF CALLS INTO, where it is loaded: the planner writes the scopes.
+PLANNING = "planning"
+
+#  WHERE EACH LOADED PART STANDS IN A PASS, and nothing else: WHICH packages load is the agent's
+#  roles' to say, and this only orders the ones that do, as their parts are created and started.
+#  Belief first, so its rules have concluded of a graph written before anything else hears it; the
+#  planner's pass before the executor's walk, which takes what the pass published; then what
+#  answers the world — sensing's ask, prediction's answer to an observation — and speech, and the
+#  transports last. A package not named here is still found and loaded where a role calls for it,
+#  after these, by its name.
+PASS = ("belief", "planning", "execution", "sensing", "prediction", "speech", MQTT, HTTP)
 
 #  A SENSOR OF THE AGENT'S: hosted by what it acts for, by a sample of it, or by a place that
 #  contains it — the one relation sensing's callers read a sensor as the agent's by (the MQTT
-#  driver's `open` and `handle`, the HTTP driver's, sensing's `missed` of a series).
-_MINE = ("?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host . "
-         "?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host .")
+#  driver's `open` and `handle`, the HTTP driver's, sensing's `missed` of a series), and the one
+#  the observer's shape asks for.
+MINE = ("?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host . "
+        "?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host .")
 
-#  EVERY OTHER PACKAGE, AND WHAT IN THE WORLD MAKES THE AGENT NEED IT: a pattern about `?me`, asked
-#  over the world's public graphs and the self as `ASK { ?me a orexis:Self . <premise> }` — each
-#  package's callers' reads answered in advance. `packages_of` puts the self at the head, so an
-#  operator's tool reading a world with no self in it asks the same premise of every agent instead.
-#  - SENSING, where a sensor is the agent's: `received` is called for such a sensor's message and
-#    its part asks after its readings, and nothing else writes the observations its rules read;
-#  - PREDICTION, where a sensor is the agent's AND a drift is declared: its part answers every
-#    observation written, and moves a reading only by a drift — the record's table said a
-#    drift alone, and a market agent in a world importing climate would have loaded it for nothing;
-#  - SPEECH, where the agent listens to a topic — a peer's document arrives there for `heard` — or
-#    an action holds an `execution:Saying`, whose documents `said` believes when a step is taken.
-#    Speech reads nothing of the world itself, so its premise is its callers' and in their words;
-#  - THE MQTT TRANSPORT, where the agent listens to a topic or a sensor of its publishes on one —
-#    what `_transports_of` asked of MQTT, narrowed from any sensor in the world to the agent's own, which is
-#    what the member subscribes to. Where the agent commands an actuator and neither holds, no
-#    member is loaded: which actuators are the agent's is a domain's word, and no world has one;
-#  - THE HTTP TRANSPORT, where a sensor of the agent's is a thing with a form (WoT's `td:hasForm`)
-#    — a service it fetches, a forecast.
-#  Every word here is a T-Box term and the world's things are variables, so a premise names no
-#  instance (rule 1); a new package under `agent/` loads nowhere until it is listed here or in
-#  MIND, which `agent/tests/test_premises.py` holds the tree to.
-PREMISES = {
-    SENSING: _MINE,
-    PREDICTION: f"{_MINE} ?drift a prediction:Drift",
-    SPEECH: """{ ?me mqtt4ssn:listensToTopic ?topic }
-               UNION { ?action execution:implementation/execution:operation ?op . ?op a execution:Saying }""",
-    MQTT: f"""{{ ?me mqtt4ssn:listensToTopic ?topic }}
-              UNION {{ {_MINE} ?sensor mqtt4ssn:observesTopic ?topic }}""",
-    HTTP: f"{_MINE} ?sensor td:hasForm ?form",
+#  THE ROLES THAT NEED BYTES, which the transports are loaded for: a transport is no role and no
+#  author declares one, so it is the one derivation left — where a loaded role needs bytes and the
+#  society wires a bus, which device a bus reaches being wiring and not a choice. For each
+#  transport, the role and a pattern about `?me` asked over the world's public graphs and the self:
+#  - THE MQTT TRANSPORT, for an observer one of whose sensors publishes on a topic, and for a speaker
+#    listening to one — what the member subscribes to. Where the agent commands an actuator and
+#    neither holds, no member is loaded: which actuators are the agent's is a domain's word;
+#  - THE HTTP TRANSPORT, for an observer one of whose sensors is a thing with a form (WoT's
+#    `td:hasForm`) — a service it fetches, a forecast.
+#  Every word here is a T-Box term and the world's things are variables, so nothing here names an
+#  instance (rule 1).
+OBSERVER, SPEAKER = NAMESPACES["sensing"] + "Observer", NAMESPACES["speech"] + "Speaker"
+TRANSPORTS = {
+    MQTT: {OBSERVER: f"{MINE} ?sensor mqtt4ssn:observesTopic ?topic",
+           SPEAKER: "?me mqtt4ssn:listensToTopic ?topic"},
+    HTTP: {OBSERVER: f"{MINE} ?sensor td:hasForm ?form"},
 }
-EVERY = (*MIND, *PREMISES)
 #  WHAT WATCHES THE AGENT: a package created where the environment names a store for it, which is a
-#  premise of deployment and not of the world, so no ASK decides it (`agent.series`).
+#  fact of deployment and not of the world, so no role decides it (`agent.series`).
 WATCHERS = ("history", "metrics")
 
 #  WHO THIS PROCESS IS: the AGENT with the id it was told. The id alone is not enough — the
@@ -204,6 +208,11 @@ WATCHERS = ("history", "metrics")
 #  of the society graph, where a world with a bus states its principals, and of the world graph,
 #  where a world with none states its one agent beside what it acts on.
 _ME_Q = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }"
+#  EVERY KIND THE SELF IS STATED, in its self graph: `orexis:Self` and the roles beside it.
+_DECLARED_Q = "SELECT DISTINCT ?kind WHERE { ?me a orexis:Self , ?kind }"
+_SUBCLASS = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
+_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+_CLASS = "http://www.w3.org/2002/07/owl#Class"
 #  EVERY AGENT THE WORLD STATES, where the same two graphs state them: whom a graph of an agent's
 #  own may say it is.
 _AGENTS_Q = "SELECT DISTINCT ?a WHERE { ?a a orexis:Agent }"
@@ -222,9 +231,9 @@ INSERT {{ GRAPH <{closure}> {{ ?a rdfs:subClassOf ?c }} }}
 WHERE  {{ ?a rdfs:subClassOf+ ?c FILTER(isIRI(?a) && isIRI(?c) && ?a != ?c) }}"""
 
 
-def documents(world: Path, packages=EVERY) -> list[Path]:
+def documents(world: Path, packages=None) -> list[Path]:
     """What a boot reads: the kernel's T-Box first, then the documents of `packages` — every
-    package by default, which is what the operator's tools read — then every document in the
+    package of the tree where none are named, which is what the operator's tools read — then every document in the
     world's directory, under its `secrets/` and under its `beliefs/`. Found by looking, never
     listed, and never a test's.
 
@@ -239,6 +248,7 @@ def documents(world: Path, packages=EVERY) -> list[Path]:
     def under(directory: Path) -> list[Path]:
         return sorted(p for p in directory.glob("*") if p.is_file() and p.suffix in DOCUMENTS)
     world = Path(world)
+    packages = every_package() if packages is None else packages
     return [KERNEL / "ontology.ttl", *_documents_of(packages), *under(world), *under(world / SECRETS), *under(world / BELIEFS)]
 
 
@@ -248,17 +258,79 @@ def _documents_of(packages) -> list[Path]:
             if p.suffix in DOCUMENTS and "tests" not in p.relative_to(KERNEL / package).parts]
 
 
-def packages_of(store: ox.Store, who: str = SELF) -> tuple[str, ...]:
-    """Every package the self loads, read off the world `store` holds: the mind, and each whose
-    premise holds over the world's public graphs and the self, in `PREMISES`' order.
+@cache
+def every_package() -> tuple[str, ...]:
+    """Every package of the tree — each directory of `agent/` but the kernel's own holding an
+    `ontology.ttl`, its tests' apart — in the order a pass runs their parts (`PASS`), and any
+    package that order does not name after, by its name. Found by looking, never listed."""
+    found = {p.parent.relative_to(KERNEL).as_posix() for p in KERNEL.rglob(VOCABULARY)
+             if p.parent != KERNEL and "tests" not in p.relative_to(KERNEL).parts}
+    return tuple(sorted(found, key=lambda package: (PASS.index(package) if package in PASS else len(PASS), package)))
 
-    `who` is the CLASS the premise's `?me` is asked as — the self, which is what an agent's store
-    answers for. A store holding a whole world and no self, the operator's, asks `orexis:Agent`
-    instead, and is answered every package SOME agent of the world loads: one question about every
-    agent, where binding each in turn would be the token the self retired."""
+
+@cache
+def _vocabularies() -> tuple[dict[str, str], dict[str, frozenset[str]]]:
+    """What every package's ontology says of roles, READ APART — never put into an agent's store,
+    since which packages' documents go in is what this decides: each role a package declares, with
+    the package, and every `rdfs:subClassOf` step the packages' ontologies state, by class. A class
+    is a role where those steps reach `orexis:Role`, and it is the role of the package whose
+    ontology declares it an `owl:Class` — the directory it was read from, which is a package by
+    rule 2 and no instance. Hanoi's store holding no sensing ontology is what reading them apart
+    keeps (#824)."""
+    above: dict[str, set[str]] = {}
+    declared: dict[str, str] = {}
+    for package in every_package():
+        doc = document(KERNEL / package / VOCABULARY)
+        for q in doc.quads_for_pattern(None, ox.NamedNode(_SUBCLASS), None, None):
+            if isinstance(q.subject, ox.NamedNode) and isinstance(q.object, ox.NamedNode):
+                above.setdefault(q.subject.value, set()).add(q.object.value)
+        for q in doc.quads_for_pattern(None, ox.NamedNode(_TYPE), ox.NamedNode(_CLASS), None):
+            if isinstance(q.subject, ox.NamedNode):
+                declared.setdefault(q.subject.value, package)
+    steps = {cls: frozenset(supers) for cls, supers in above.items()}
+    return {cls: package for cls, package in declared.items() if ROLE in _beneath(cls, steps)}, steps
+
+
+def _beneath(cls: str, steps, store: ox.Store | None = None) -> set[str]:
+    """`cls` and every class it is beneath, by the packages' own steps (`steps`) and, where a store
+    is given, by the closure the store holds — a domain's role is beneath a package's by a step the
+    domain states, and a package's beneath `orexis:Role` by a step only its own ontology states."""
+    reached, frontier = set(), {cls}
+    while frontier:
+        c = frontier.pop()
+        if c in reached:
+            continue
+        reached.add(c)
+        frontier |= set(steps.get(c, ())) | (set(closed(store, c)) if store is not None else set())
+    return reached
+
+
+def roles_of(store: ox.Store) -> frozenset[str]:
+    """Every role the self of `store` is in: each kind its self graph states it beside
+    `orexis:Self`, and every class those are beneath, that is beneath `orexis:Role` — read off the
+    self graph alone, as a stance is, since a role is the agent's word about itself and nothing a
+    peer or the public world may say of it. Empty where it declares none."""
+    _, steps = _vocabularies()
+    stated = {r["kind"] for r in rows(store, _DECLARED_Q, graphs_of(store, SELF_GRAPH))}
+    reached = set().union(*(_beneath(kind, steps, store) for kind in stated)) if stated else set()
+    return frozenset(c for c in reached if c != ROLE and ROLE in _beneath(c, steps, store))
+
+
+def packages_of(store: ox.Store) -> tuple[str, ...]:
+    """Every package the self of `store` loads, in the order a pass runs their parts: each package
+    whose ontology declares a role the self is in (`roles_of`), and each transport a loaded role
+    needs bytes from (`TRANSPORTS`), asked over the world's public graphs and the self. Nothing
+    where the self declares no role — no default and no fixed mind
+    (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in)."""
+    roles = roles_of(store)
+    serving, _ = _vocabularies()
+    loaded = {package for role, package in serving.items() if role in roles}
     known = graphs_of(store, PUBLIC, SELF_GRAPH)
-    return (*MIND, *(package for package, premise in PREMISES.items()
-                     if answer(store, f"ASK {{ ?me a <{who}> . {premise} }}", known)["boolean"]))
+    for transport, needs in TRANSPORTS.items():
+        if any(role in roles and answer(store, f"ASK {{ ?me a orexis:Self . {pattern} }}", known)["boolean"]
+               for role, pattern in needs.items()):
+            loaded.add(transport)
+    return tuple(package for package in every_package() if package in loaded)
 
 
 def known(store: ox.Store, kinds) -> bool:
@@ -319,32 +391,35 @@ def _put_public(store: ox.Store, world: Path, agent_id: str | None = None,
     (a-documents-kind-says-who-reads-it). A misspelled kind is passed over the same way, which is
     why onboarding, knowing every reader's vocabulary, refuses a world that holds one.
 
-    THE MIND FIRST, AND A PACKAGE WHERE ITS PREMISE HOLDS. For an agent, the kernel, the mind and
-    the world go in first, then the self, and the premises are asked of what that put in — the
-    world's public graphs, which are the kernel's and the mind's kinds, and the self, so no premise
-    waits on the package it decides. The documents of the packages whose premise held go in next, and a world graph passed
-    over for a kind only such a package declares is looked at again. With no agent, every package
-    is read at once: the operator's tools read every reader's vocabulary.
+    THE KERNEL AND THE WORLD FIRST, AND A PACKAGE FOR A ROLE. For an agent, the kernel and the world
+    go in first — the domains it imports among them, whose roles sit beneath the packages' — then the
+    self, and its roles are read off its self graph (`roles_of`), so nothing waits on the package it
+    decides. The documents of the packages those roles call for go in next (`packages_of`), and a
+    world graph passed over for a kind only such a package declares is looked at again. With no
+    agent, every package is read at once: the operator's tools read every reader's vocabulary.
 
     WHAT IS PASSED OVER IS SAID, and quietly only for a kind in `others`: the kinds a caller
     declares itself and reads next, onboarding's for a world it reads as the first half of its
     own read. Anything else is a kind no reader declares, or one this reader cannot tell from
     it, and that is logged where it is seen."""
-    read = read_with_imports(documents(world, MIND if agent_id else EVERY))
+    read = read_with_imports(documents(world, () if agent_id else None))
     own, passed = _put(store, world, read, [])
     own = _owned(store, own)
     if agent_id:
-        close_catalogue(store)          # the rows say every kind they are beneath, so a premise reads the public graphs
+        close_catalogue(store)          # the rows say every kind they are beneath, so a transport's need reads the public graphs
         me = _identity(store, agent_id)
         self_graph = _hold_the_self(store, agent_id, me, [(doc, graph) for doc, graph, owner in own if owner == me])
-        loaded = packages_of(store)     # and the self, which every premise asks
+        loaded = packages_of(store)     # off the self graph, which states the roles
         seen = {path for path, _ in read}
-        more = [(path, doc) for path, doc in read_with_imports(_documents_of(p for p in loaded if p not in MIND))
-                if path not in seen]
+        more = [(path, doc) for path, doc in read_with_imports(_documents_of(loaded)) if path not in seen]
         if more:
             also, passed = _put(store, world, more, passed)
             own += _owned(store, also)
-        log.info("%s loads %s", agent_id, ", ".join(loaded))
+        if loaded:
+            log.info("%s loads %s", agent_id, ", ".join(loaded))
+        else:
+            log.warning("%s is declared in no role, so it loads no package and runs nothing: its self graph "
+                        "says what it runs, `<agent> a orexis:Self , <role>`", agent_id)
     for _path, _doc, graph, kinds in passed:
         log.log(logging.DEBUG if others & set(kinds) else logging.INFO,
                 "passed over %s: %s is no kind this agent reads", graph, ", ".join(sorted(kinds)))
@@ -407,8 +482,8 @@ def world_of(world: Path, others=frozenset()) -> ox.Store:
     """What a world says publicly, read as a boot reads it and closed, with no agent in it — what
     the simulator reads, and what the operator's tools read before the kinds they read and no
     agent does: its agents, its devices, its topics — and never where its broker listens, which
-    is a deployment graph, a kind only onboarding reads. With no agent there is no premise to
-    ask, so every package's documents are read: this is every reader's world, not one agent's.
+    is a deployment graph, a kind only onboarding reads. With no agent there are no roles to read,
+    so every package's documents are read: this is every reader's world, not one agent's.
     A graph of a kind in `others`, which the caller reads itself, is passed over at DEBUG."""
     store = ox.Store()
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
@@ -436,7 +511,11 @@ def boot(world: Path, agent_id: str, store: ox.Store | None = None, others=froze
         for doc, graph in own:
             put_document(store, doc, owner=me, graphs={graph})
     close_catalogue(store)
-    Planner.scope(store)
+    #  THE SCOPES ARE THE PLANNER'S, written once the vocabulary is in, and only where the agent runs
+    #  one: imported here and nowhere else, so a process that plans nothing imports no Planner.
+    if PLANNING in packages_of(store):
+        from agent.planning.planner import Planner
+        Planner.scope(store)
     log.info("%s booted from %s%s", agent_id, world, " (a volume lived in: its own graphs kept)" if lived_in else "")
     return store
 
@@ -490,8 +569,8 @@ class Runtime:
     """One agent's process: a lifecycle container for its packages, run pass by pass.
 
     A PACKAGE HAS A PART, CREATED, LINKED AND STARTED (a-package-starts-itself, `agent.lifecycle`).
-    Every package the agent loads — the mind's three and each whose premise holds — that has a
-    `create` module makes its part; then each part links to the others, connecting its own signals
+    Every package the agent loads — each its declared roles call for, and the transports they need —
+    that has a `create` module makes its part; then each part links to the others, connecting its own signals
     to what lies beneath it; then each starts: belief revises what is written, planning plans every
     pass, execution walks what is due, a transport listens or polls, sensing asks after silence,
     prediction answers an observation. The parts are kept in `parts`, by package, and the runtime
@@ -642,7 +721,7 @@ class Runtime:
 
     def _assemble(self, transport, connect: bool) -> None:
         """A package's life in three phases (`agent.lifecycle`): every package that has a `create`
-        module creates its part, the mind first — a transport package only where the runtime is told
+        module creates its part, in the order of a pass (`PASS`) — a transport package only where the runtime is told
         to `connect`, a member handed in standing for it; then every part links to the others; then
         every part starts, and its stop is kept for the end."""
         #  WHAT WATCHES THE AGENT, where the environment names a store for it — last, so it is linked

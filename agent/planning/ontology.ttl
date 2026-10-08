@@ -182,6 +182,44 @@ planning:for a owl:ObjectProperty ;
     rdfs:label "for" ;
     rdfs:comment "What this was worked out FOR: the want a plan was found for, or the want or DESIRE a weighing was made for. NO RANGE, because a desire is not a want and both are weighed — a desire in every ground, a want in every world its search reaches — and NO DOMAIN, because a PLAN and a WEIGHING both say it. It was `forWant`, and the name lied the moment a desire was weighed. A plan's is the one thing about a plan execution has no word for, because the intentions keep commitments and not the reasoning that produced them; and it was declared twice with a domain each in the predecessor, which in RDFS is the intersection of the two: a property nothing could legally carry. A plan is named for its want and replaced whole, so a second pass over the same want leaves one plan and not two — and a reader that holds a want asks for its plan by this rather than by the name, which is a convention." .
 
+#################  The role this package serves, and what it needs  #################
+#
+#  An agent declared a planner — in its self graph, or by a role a domain puts beneath this one —
+#  runs the Planner, and the boot loads this package for it and for nothing else
+#  (knowledge/domain/planning/planner.md). What the role needs of the world is a shape this package
+#  ships, and `orexis-onboard` refuses an agent declared in the role whose world lacks it: a SHACL
+#  shape targeting the role, its `sh:sparql` constraint a select over the agent's store as its boot
+#  leaves it, whose every row is a violation, said with its message. The text asks the self, as
+#  every text here does, and is bound nothing.
+
+planning:Planner a owl:Class ;
+    rdfs:subClassOf orexis:Role ;
+    rdfs:label "Planner" ;
+    rdfs:comment """An agent that derives wants and searches for plans: the role whose part is the
+    Planner, one concept with it. Declared, never derived; it needs a desire or a want the agent
+    holds, since a planner with nothing to pursue plans nothing.""" .
+
+[] a sh:NodeShape ;
+    sh:targetClass planning:Planner ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a planner holds no desire and no want: it would plan nothing" ;
+        sh:select """SELECT ?me WHERE { ?me a orexis:Self
+            FILTER NOT EXISTS { ?desire a planning:Desire }
+            FILTER NOT EXISTS { ?want a planning:Want } }""" ] .
+
+#  AN EXECUTOR IS A PLANNER TOO, while a plan crosses no agent: the executor walks what planning
+#  published in the same store, and a step is checked against the present by the Planner when it is
+#  taken (#916). Stated HERE and not in execution's ontology because being a planner is planning's
+#  word, and execution, beneath it, speaks none of planning's; the seam that would lift it is a plan
+#  crossing agents (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+
+[] a sh:NodeShape ;
+    sh:targetClass execution:Executor ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "an executor is no planner: nothing would publish a plan for it to walk" ;
+        sh:select """SELECT ?me WHERE { ?me a orexis:Self
+            FILTER NOT EXISTS { { ?me a planning:Planner } UNION { ?me a ?role . ?role rdfs:subClassOf planning:Planner } } }""" ] .
+
 #################  Desires, wants and the searched half of an action — planning's  #################
 
 planning:Desire

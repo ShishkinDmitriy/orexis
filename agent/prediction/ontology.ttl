@@ -3,6 +3,7 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
@@ -17,6 +18,29 @@
 #  predicted sosa:Observation with its number. The observation is found by the kernel's kind and
 #  SOSA's words, a range is SSN-System's, and which side a stretch is on is a revision the sensing
 #  layer's rules conclude of it; nothing of sensing is imported or spoken here.
+
+#  THE ROLE THIS PACKAGE SERVES (knowledge/domain/prediction/predictor.md): an agent declared a
+#  predictor runs prediction's part, and the boot loads this package for it and for nothing else.
+#  What it needs of the world is a sensor of the agent's and a drift; `orexis-onboard` refuses a
+#  predictor whose world states neither, and does NOT refuse a drift with no predictor to read it —
+#  foresight is the author's to decline, and refusing it would make the declaration the derivation
+#  restated (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+
+:Predictor a owl:Class ;
+    rdfs:subClassOf orexis:Role ;
+    rdfs:label "Predictor" ;
+    rdfs:comment """An agent that foresees its readings by the drifts: the role whose part is
+    prediction's, which answers every observation written with the stretches ahead. Declared, never
+    derived; it needs a sensor of the agent's and a drift.""" .
+
+[] a sh:NodeShape ;
+    sh:targetClass :Predictor ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a predictor with no sensor of its own or no drift: it would foresee nothing" ;
+        sh:select """SELECT ?me WHERE { ?me a orexis:Self
+            FILTER (NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
+                                 ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host }
+                    || NOT EXISTS { ?drift a prediction:Drift }) }""" ] .
 
 :Drift a owl:Class ;
     rdfs:label "Drift" ;

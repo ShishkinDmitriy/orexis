@@ -17,7 +17,7 @@ import pyoxigraph as ox
 import pytest
 
 from agent.ontology import BELIEF, OREXIS, PUBLIC, SELF, SELF_GRAPH
-from agent.runtime import MIND, SENSING, boot, packages_of, selves, world_of
+from agent.runtime import boot, packages_of, selves, world_of
 from agent.store import DocumentRefused, forget_graph, graphs_of, rows, update
 
 T = "http://example.org/test#"
@@ -29,14 +29,17 @@ _HEAD = """@prefix : <http://example.org/test#> .
 @prefix planning: <http://example.org/orexis/planning#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 """
-#  TWO AGENTS OF ONE WORLD, and a sensor of bob's alone: ann loads no sensing, bob does.
+#  TWO AGENTS OF ONE WORLD, and a sensor of bob's alone: bob observes it, ann observes nothing.
 _WORLD = (_HEAD + "<> a orexis:WorldGraph .\n"
           ':ann a orexis:Agent ; orexis:localId "ann" ; orexis:actsFor :pot .\n'
           ':bob a orexis:Agent ; orexis:localId "bob" ; orexis:actsFor :fern .\n'
           ":probe a sosa:Sensor ; sosa:isHostedBy :fern .\n")
 #  EACH AGENT'S SELF GRAPH AND DESIRES, under names that say nothing of whose they are: the content
-#  says, and a boot reading the names would take the wrong one.
-_SELF = _HEAD + "<> a orexis:SelfGraph .\n:{who} a orexis:Self .\n"
+#  says, and a boot reading the names would take the wrong one. Each is a planner, which is what reads
+#  a graph of desires; bob is an observer too.
+_ROLES = {"ann": "planning:Planner", "bob": "planning:Planner , sensing:Observer"}
+_SELF = (_HEAD + "@prefix sensing: <http://example.org/orexis/sensing#> .\n"
+         "<> a orexis:SelfGraph .\n:{who} a orexis:Self , {roles} .\n")
 _DESIRES = _HEAD + "<> a planning:DesireGraph ; orexis:beliefsOf :{who} .\n:{who} planning:holds :{who}_wish .\n"
 
 _ROW_Q = """SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
@@ -48,8 +51,8 @@ _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 def world(tmp_path: Path) -> Path:
     (tmp_path / "world.ttl").write_text(_WORLD)
     (tmp_path / "beliefs").mkdir()
-    (tmp_path / "beliefs" / "one.ttl").write_text(_SELF.format(who="bob"))
-    (tmp_path / "beliefs" / "two.ttl").write_text(_SELF.format(who="ann"))
+    (tmp_path / "beliefs" / "one.ttl").write_text(_SELF.format(who="bob", roles=_ROLES["bob"]))
+    (tmp_path / "beliefs" / "two.ttl").write_text(_SELF.format(who="ann", roles=_ROLES["ann"]))
     (tmp_path / "beliefs" / "ann.ttl").write_text(_DESIRES.format(who="bob"))
     (tmp_path / "beliefs" / "bob.ttl").write_text(_DESIRES.format(who="ann"))
     return tmp_path
@@ -82,11 +85,12 @@ def test_the_boot_keeps_the_graphs_whose_content_names_it_whatever_they_are_call
     assert graphs_of(boot(world, "bob"), DESIRE_GRAPH) == [_uri(world, "ann.ttl")]
 
 
-def test_every_premise_asks_the_self_and_not_every_agent_the_world_states(world):
-    """The sensor is bob's: booted as ann, no premise of sensing's holds, though the world holds a
-    sensor of an agent's; booted as bob, it does."""
-    assert packages_of(boot(world, "ann")) == MIND
-    assert packages_of(boot(world, "bob")) == (*MIND, SENSING)
+def test_the_roles_read_are_the_selfs_and_not_every_agent_the_world_states(world):
+    """Bob is declared an observer in his self graph and ann is not: booted as ann, sensing is not
+    loaded, though the world holds a sensor and an observer among its agents; booted as bob, it is,
+    and belief with it, since the observer is beneath the deliberator."""
+    assert packages_of(boot(world, "ann")) == ("planning",)
+    assert packages_of(boot(world, "bob")) == ("belief", "planning", "sensing")
 
 
 def test_an_agent_its_world_authored_no_self_graph_for_refuses_to_boot(world):
@@ -97,7 +101,7 @@ def test_an_agent_its_world_authored_no_self_graph_for_refuses_to_boot(world):
 
 def test_an_agent_its_world_authored_two_self_graphs_for_refuses_to_boot(world):
     """Two documents saying the same agent is the self is still two homes for it: neither is picked."""
-    (world / "beliefs" / "three.ttl").write_text(_SELF.format(who="ann"))
+    (world / "beliefs" / "three.ttl").write_text(_SELF.format(who="ann", roles=_ROLES["ann"]))
     with pytest.raises(RuntimeError, match="2 self graphs of the world say who 'ann' is"):
         boot(world, "ann")
 
@@ -173,8 +177,8 @@ def test_a_private_document_of_another_kind_saying_who_the_self_is_is_refused_at
 def test_a_world_read_whole_holds_no_self_though_its_documents_state_two(world):
     """What the operator's tools and the simulator read: no agent's store, so every graph of an
     agent's own is passed over, the self graphs among them — a text asking for the self there
-    answers nothing, and a premise is asked of every `orexis:Agent` instead (`dashboards`)."""
+    answers nothing, and no role is read where no self graph is — what some agent of the world loads
+    is asked of each agent booted, by the operator's tools (`onboarding.reading.loaded`)."""
     store = world_of(world)
     assert selves(store) == [] and graphs_of(store, SELF_GRAPH) == [] and graphs_of(store, DESIRE_GRAPH) == []
-    assert packages_of(store) == MIND, "the self asked where none is: nothing holds"
-    assert SENSING in packages_of(store, OREXIS + "Agent"), "some agent of the world loads sensing"
+    assert packages_of(store) == (), "the roles asked where no self graph is: none is read"

@@ -1,6 +1,8 @@
 """What the deliberator says happened, as events: a revision pass said with what it spent, and the
-revisions the catalogue describes counted apart from the unsettled — over Hanoi's mover, whose state
-is revised at its start."""
+revisions the catalogue describes counted apart from the unsettled — over the tower's mover, a
+deliberator whose world ships rules, whose state is revised at its start. It was Hanoi's mover until
+an agent's packages were loaded by its roles (#927): Hanoi ships no rules, so its mover is no
+deliberator and runs no belief part."""
 
 from __future__ import annotations
 
@@ -17,14 +19,14 @@ from agent.store import catalogue_of, graphs_of
 
 RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
-HANOI = Path(__file__).resolve().parents[3] / "world" / "hanoi"
+TOWER = Path(__file__).resolve().parents[3] / "world" / "tower"
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 STATE = "http://example.org/orexis#StateGraph"
 
 
 def _revised_again(monkeypatch, before=None) -> list:
     monkeypatch.setattr(clock, "now", lambda: NOW)
-    runtime = Runtime(boot(HANOI, "hanoi"), "hanoi")
+    runtime = Runtime(boot(TOWER, "mover"), "mover")
     deliberator = runtime.parts["belief"].deliberator
     heard = []
     deliberator.revised.connect(heard.append)

@@ -124,7 +124,7 @@ _PEERS_STAND = ":peer_driver courier:aboard :van_c .\n:van_c courier:at :c3_0 .\
 TWO_AGENTS = {"world.ttl": [(_PEER_WORLD, _PEERS)],
               "state.ttl": [(":driver courier:aboard :van_a .", ":driver courier:aboard :van_a .\n" + _PEERS_STAND)]}
 _PEER_DOCUMENTS = {
-    "peer.self.ttl": "<> a orexis:SelfGraph .\n:peer a orexis:Self .\n",
+    "peer.self.ttl": "<> a orexis:SelfGraph .\n:peer a orexis:Self , planning:Planner .\n",
     "peer.state.ttl": "<> a orexis:StateGraph .\n<> orexis:beliefsOf :peer .\n"
                       ":driver courier:aboard :van_a .\n:van_a courier:at :c0_0 .\n:parcel_a courier:at :c0_1 .\n"
                       ":van_b courier:at :g10_0 .\n:parcel_b courier:at :g10_1 .\n" + _PEERS_STAND,

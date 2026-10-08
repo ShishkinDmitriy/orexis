@@ -15,3 +15,19 @@
 #  stated in a graph of a kind no agent loads, and is never read off the world. The adoption is by prefix: this file names MQTT4SSN's namespace
 #  and speaks its words, and the vendored copy the tests read is
 #  tests/fixtures/vocabularies/mqtt4ssn.ttl.
+#
+#  A TRANSPORT IS NO ROLE, so it declares none: it is loaded where a loaded role needs bytes and the
+#  society wires a bus (agent/runtime.py, `TRANSPORTS`). What it ships is the one need a role states
+#  in this transport's words — a SPEAKER HEARS ON A TOPIC IT LISTENS TO — since speech, beneath the
+#  transport, speaks none of them; `orexis-onboard` refuses a speaker whose world names no topic it
+#  listens to, as it refuses a topic an agent listens to that no speaker hears
+#  (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+
+[] a sh:NodeShape ;
+    sh:targetClass speech:Speaker ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a speaker listens to no topic: no peer's document would reach it" ;
+        sh:select """SELECT ?me WHERE { ?me a orexis:Self FILTER NOT EXISTS { ?me mqtt4ssn:listensToTopic ?topic } }""" ] .

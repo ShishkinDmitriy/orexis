@@ -23,7 +23,7 @@ what it is with `<> a <a graph kind>` on its own IRI, or, in TriG, of each graph
 | `deployment.ttl` | `onboarding:DeploymentGraph` | where the broker listens, its `schema:url`s — only where the world pins them | onboarding alone |
 | `state.ttl` | `orexis:StateGraph` | where things stand at the start, for a world nothing senses | the agent it names |
 | `wants.ttl`, `desires.ttl` | `planning:WantGraph`, `planning:DesireGraph` | what an agent is to bring about, once or for good | the agent it names |
-| `beliefs/<id>.self.ttl` | `orexis:SelfGraph` | who one agent is, `:fern_grower a orexis:Self` | that agent alone |
+| `beliefs/<id>.self.ttl` | `orexis:SelfGraph` | who one agent is and the roles it runs, `:fern_grower a orexis:Self , market:Bidder , sensing:Observer , prediction:Predictor`, and its stances | that agent alone, and onboarding |
 | `beliefs/<id>.ttl` | any agent-owned kind | one agent's own documents, in a world of several | the agent it names |
 | `hardware.ttl` | `onboarding:HardwareGraph` | pins, parts and boards | `orexis-firmware` alone |
 
@@ -46,9 +46,11 @@ just as quietly, so `orexis-onboard` refuses a world holding a graph no reader d
 A **society graph** holds the principals and how they reach one another, in MQTT4SSN's words —
 every one of them a world with a bus states, since its world graph speaks none. The agents read it
 and so does the simulator, which plays the devices on their topics; `orexis-mqtt` derives the ACL
-from it. It is the kernel's kind: the boot finds who the agent is there, and reads off it — and
-off the world graph — the premises that decide which [packages](/domain/kernel/package.md) the
-agent loads, before any of them is. A broker is named here only as what
+from it. It is the kernel's kind: the boot finds who the agent is there, before any
+[package](/domain/kernel/package.md) is loaded, and reads off it — and off the world graph — the
+wiring that decides which transport a loaded [role](/domain/kernel/role.md) needs. Which packages
+the agent loads is not the world's to say: its roles are declared in its own self graph, under
+`beliefs/`, never here. A broker is named here only as what
 clients are connected to. Where it listens is a [deployment](/domain/onboarding/deployment.md)
 graph, onboarding's kind, which the agent's T-Box cannot name, so no agent's boot holds its address
 and no container mounts the document. A world may assert it there, and a world that does not is

@@ -33,7 +33,8 @@ If it is unavailable, the rules are short enough to follow by hand:
   called itself "the STEP that…", `onboarding` "the PHASE between…" — three pages naming their own
   type in prose because the field could not hold it. **A type that falls to one member is a type
   to fold back**, not to defend: `Capability`, rule 2's unit, fell to none once the dictionary was
-  filed by package, and folded (#828); the rest stand at 41 / 8 / 7 / 4 / 3 / 3, concept to repository;
+  filed by package, and folded (#828); the rest stand at 48 / 3 / 8 / 8 / 3, concept to repository in
+  the table's order, counted when the roles came (#927);
 - a **decision** additionally carries `status` (`accepted`, `superseded`, `superseded-in-part`)
   and `timestamp`, and a superseded one carries `superseded-by`. **No other type carries any of
   those**: a concept, a process, a role, a service and a repository have no state to be in,
@@ -550,9 +551,17 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   brings; **a vocabulary two worlds speak is a domain**, and the shapes are `planning:ShapesGraph`.
 - **A graph of actions is an `orexis:ActionGraph` and a graph of drifts an `orexis:DriftGraph`, and the
   planner and the predictor read each from those alone** — typed bare `orexis:PublicGraph`, every public
-  graph was scanned for them; and the drifts' kind is the kernel's, not prediction's, because prediction's
-  premise finds the drift rows before prediction is loaded, and a kind only it declared left it unloaded.
-- **A package beyond the mind is loaded where its premise, read off the world, holds** (#824).
+  graph was scanned for them; and the drifts' kind is the kernel's, not prediction's, because a domain
+  ships drifts every agent reads, predictor or not, and a kind only prediction declared would be refused
+  for every agent that is none.
+- **A package is loaded only for a role the agent is declared in, in its self graph, and there is no
+  default** — each package declares its roles in its own ontology, read apart from the store, a domain's
+  roles sit beneath them, and a transport is loaded where a loaded role needs bytes and the society
+  wires a bus; a premise read off the world was refused, since it cannot write an assignment no fact
+  implies (#927, a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+- **A role's need is a shape shipped by whoever owns the words it is stated in, and onboarding holds a
+  declaration to its world both ways** — the executor's need to be a planner is planning's shape, the
+  speaker's topic the MQTT transport's, since a package beneath may not speak them (#927).
 - **The runtime stops when no desire is held, no transport reaches it and every want is reached** —
   wants standing with nothing walking is `planning:Exhausted` or unreachable; a clock that does not
   tick is a test's mistake.
@@ -622,8 +631,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    owns the concept.** belief, sensing, prediction, planning, execution, speech and the MQTT
    transport each declare their words in their own `ontology.ttl`, beside the code that reads
    them; the kernel's `orexis:` keeps only what packages meet at. A package imports what lies
-   beneath it and never above — the mind imports nothing of prediction, and outside planning the
-   one name imported is `Planner` — and each package's layout test holds it to that.
+   beneath it and never above — belief, planning and execution import nothing of prediction, and
+   outside planning the one name imported is `Planner` — and each package's layout test holds it to
+   that. Which packages an agent runs is the [roles](knowledge/domain/kernel/role.md) its self graph
+   declares, each served by the package whose ontology declares it.
    `agent/runtime.py` is the container that assembles them all. **A domain is documents and no
    code**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
    with `owl:imports`. Adding a way of acting is a node in a domain's `actions.ttl` — a
@@ -668,8 +679,8 @@ peer's document. See
 [the-agent-stack-is-a-second-axis](knowledge/decisions/the-agent-stack-is-a-second-axis.md).
 
 **A package starts itself, and a pass drains, on one thread.** The runtime creates a part of every
-loaded package that has a `create` module, the mind's three among them, links the parts, then starts
-them, and knows no word of what they do:
+package the agent's roles load that has a `create` module, in the order a pass runs them, links the
+parts, then starts them, and knows no word of what they do:
 belief revises what is written, planning plans every pass and publishes, execution adopts and walks,
 a transport listens or polls, sensing asks after what has fallen due, prediction answers an
 observation — each through jobs it submits, timers it asks for and the signals of the parts it
