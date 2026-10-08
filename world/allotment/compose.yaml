@@ -89,6 +89,7 @@ services:
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro
+      - ./beliefs/fern_grower.self.ttl:/app/world/allotment/beliefs/fern_grower.self.ttl:ro
       - ./beliefs/fern_grower.ttl:/app/world/allotment/beliefs/fern_grower.ttl:ro
       - ./secrets/fern_grower.crt:/app/secrets/agent.crt:ro
       - ./secrets/fern_grower.key:/app/secrets/agent.key:ro
@@ -130,6 +131,7 @@ services:
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro
+      - ./beliefs/rose_grower.self.ttl:/app/world/allotment/beliefs/rose_grower.self.ttl:ro
       - ./beliefs/rose_grower.ttl:/app/world/allotment/beliefs/rose_grower.ttl:ro
       - ./secrets/rose_grower.crt:/app/secrets/agent.crt:ro
       - ./secrets/rose_grower.key:/app/secrets/agent.key:ro
@@ -171,6 +173,7 @@ services:
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro
+      - ./beliefs/supplier.self.ttl:/app/world/allotment/beliefs/supplier.self.ttl:ro
       - ./beliefs/supplier.ttl:/app/world/allotment/beliefs/supplier.ttl:ro
       - ./secrets/supplier.crt:/app/secrets/agent.crt:ro
       - ./secrets/supplier.key:/app/secrets/agent.key:ro

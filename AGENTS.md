@@ -557,9 +557,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A package starts itself, and the runtime is a lifecycle container** — each part says what it
   does by jobs it submits, kinds it hears and timers it asks for (a-package-starts-itself).
 - **A process is the AGENT with the id it was told, never whatever carries that id.**
-- **The store says once which agent it is, and a text asks rather than being told** — the boot writes
-  `<agent> a orexis:Self` and refuses any count but one, every door refuses a document saying it, and
-  a singleton IRI for the self was refused as an instance in code and a second name for the agent
+- **The store says once which agent it is, and a text asks rather than being told** — the world
+  authors `<agent> a orexis:Self` in the agent's self graph, the boot checks it against the told id
+  and refuses any count but one, and minting it at boot and a singleton IRI were both refused
   (the-self-is-a-class-held-to-one-instance).
 - **The 0.2.0 kernel's T-Box is what the tree reads**; **0.1.0 was amended into 0.2.0, not copied,
   and then retired whole** (2026-09-26), its vocabulary kept under `tests/fixtures/retired/` for
@@ -578,7 +578,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **What lasts says so in its compose file, and the host starts what says so** — the installation's
   services said nothing and podman's restart unit starts only `always`, so a power cut left every
   container down for two days ([run-a-world](knowledge/runbooks/run-a-world.md)).
-- **An agent's own documents are under `beliefs/<id>`.**
+- **A graph of an agent's own says whose it is, and its file's name is for eyes** — `<> orexis:beliefsOf`
+  beside its kind, or the self a self graph states; the boot and `orexis-compose` keep a document by
+  what it says, and a world keeps such documents under `beliefs/` (the-self-is-a-class-held-to-one-instance).
 - **A step of onboarding runs where the world has what it serves, and says so where it does not**
   (#824).
 - **The simulator is a process of the world, not a pretend board** — it plays every system marked
@@ -642,8 +644,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    from them at boot and holds it in a volume of its own, so isolation is structural rather than
    enforced. An agent is told its id and given one world, mounted — it never learns that other
    worlds exist. See [where-the-belief-base-lives](knowledge/decisions/where-the-belief-base-lives.md).
-5. **There is no config file for the model.** Topology lives in the world's documents, desires
-   in each agent's own `beliefs/<id>.ttl`, both authored in `world/<world>/`. Deployment facts
+5. **There is no config file for the model.** Topology lives in the world's documents, who each
+   agent is and what it desires in documents of its own that say they are its, both authored in
+   `world/<world>/`. Deployment facts
    (service URLs) are environment, because they are not beliefs anyone holds. See
    [world-graph](knowledge/decisions/world-graph.md).
 

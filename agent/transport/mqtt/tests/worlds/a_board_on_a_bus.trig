@@ -94,7 +94,8 @@ GRAPH :world {
   :zamioculcas a :Pot .
 }
 
-# THE SELF, as the boot writes it: this is the keeper's store, and the neighbour's lamp is not its.
+# THE SELF, its world's self graph as the boot puts it in: this is the keeper's store, and the
+# neighbour's lamp is not its.
 GRAPH :self {
   :keeper a orexis:Self .
 }
@@ -108,7 +109,7 @@ GRAPH :catalogue {
   :self a orexis:BeliefGraph .
   :self a orexis:Graph .
   :self a orexis:SelfGraph .
-  :self orexis:arrivedBy orexis:Recorded .
+  :self orexis:arrivedBy orexis:Asserted .
   :self orexis:beliefsOf :keeper .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .

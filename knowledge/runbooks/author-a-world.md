@@ -29,11 +29,17 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
    write it when something is flashed with the port, as the terrace's board is. A port another
    world holds is refused. Onboarding reads either to run the broker and to write each agent's
    environment; no agent loads them and no container mounts them.
-4. **`state.ttl`** — `<> a orexis:StateGraph`, where things stand, for a world nothing senses.
-5. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or
+4. **who each agent is** — `beliefs/<id>.self.ttl`, `<> a orexis:SelfGraph` and the one row
+   `:fern_grower a orexis:Self`, for every agent the world states: an agent whose world authored
+   none, or two, refuses to boot, and the boot checks this one against the id it is told
+   ([self](/domain/kernel/self.md)).
+5. **`state.ttl`** — `<> a orexis:StateGraph`, where things stand, for a world nothing senses.
+6. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or
    `<> a planning:WantGraph` for a want that is met once; in a world of several agents, one
    document per agent under `beliefs/<id>.ttl`, since every desire a store holds is derived for.
-6. **`hardware.ttl`** — `<> a onboarding:HardwareGraph`, pins and boards, if there are any: read
+   Every document of a kind that is an agent's own — the state, the desires, the wants — says whose
+   beside its kind, `<> orexis:beliefsOf :fern_grower`; the file's name says nothing to any reader.
+7. **`hardware.ttl`** — `<> a onboarding:HardwareGraph`, pins and boards, if there are any: read
    by `orexis-firmware`, and a kind no agent declares, so a boot passes over it and no container
    mounts it. A document of a kind no reader declares is refused by `orexis-onboard`.
 

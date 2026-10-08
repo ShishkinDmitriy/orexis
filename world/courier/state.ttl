@@ -3,6 +3,7 @@
 @prefix orexis: <http://example.org/orexis#> .
 
 <> a orexis:StateGraph .    # this document is one graph, and this is what it is
+<> orexis:beliefsOf :courier .    # and whose it is — said here, never by the file's name
 
 #  THE DELIVERY AS POSED: the van at the origin, the parcel two cells away. The first state
 #  graph, and the only file here the runtime never reloads — from the first boot on, where the

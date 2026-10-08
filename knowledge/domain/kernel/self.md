@@ -3,26 +3,28 @@ type: Domain Concept
 title: Self
 term: http://example.org/orexis#Self
 description: >-
-  The one agent a store is this agent's - written by the boot alone, once, as `<agent> a
-  orexis:Self` in a graph of the agent's own, for the agent the process was told to be. A text
-  asks `?me a orexis:Self` and is handed nobody. A class held to one instance at every door an
-  instance could come through, never a singleton IRI.
+  The one agent a store is this agent's - authored by its world in the agent's self graph,
+  `<agent> a orexis:Self`, and checked by the boot against the identifier the process was told,
+  never minted from it. A text asks `?me a orexis:Self` and is handed nobody. A class held to one
+  instance at every door an instance could come through, never a singleton IRI.
 ---
 
 # What it is
 
 `orexis:Self` is a class, and an agent's store holds one instance of it: the
-[agent](/domain/kernel/agent.md) the process was told to be. The [runtime](/domain/kernel/runtime.md)
-writes it at boot, once it has found that agent by the identifier it was handed and before it asks
-any premise, into a graph of its own:
+[agent](/domain/kernel/agent.md) the process was told to be. The [sovereign](/domain/kernel/sovereign.md)
+says which, as it says what the agent desires: in a document of the agent's own, its **self
+graph**, written in the [world](/domain/kernel/world.md) under `beliefs/`:
 
-```trig
-<…/graph/self/fern_grower> { :fern_grower a orexis:Self }
-# catalogue: an orexis:SelfGraph, orexis:beliefsOf :fern_grower, orexis:arrivedBy orexis:Recorded
+```turtle
+<> a orexis:SelfGraph .
+:fern_grower a orexis:Self .
+# put in by the boot: an orexis:SelfGraph, orexis:beliefsOf :fern_grower, orexis:arrivedBy orexis:Asserted
 ```
 
-The agent keeps the name its world gave it. Being the self is something that agent IS in this
-store — the agent's own word about itself, recorded — and not a second name for it.
+The agent keeps the name its world gave it. Being the self is something that agent IS in its own
+store, and not a second name for it. The self graph is the one graph of an agent's own that is its
+owner's by what it holds — the self it states; every other says whose beside its kind.
 
 # How it is used
 
@@ -43,22 +45,28 @@ A [footprint](/domain/planning/footprint.md) reads the self's pattern as absent,
 
 A class does not hold itself to one instance, so every door an instance could come through is held:
 
-- **a document** — a world's file, a peer's message heard, the agent's own saying — stating that
-  anything is `orexis:Self`, or that a graph of its is an `orexis:SelfGraph`, is refused whole
-  (`store.refuse_the_self`);
+- **a world's file** states a self only in a graph saying it is a self graph and nothing else,
+  exactly once there, and an owner stated beside it is that self (`store.document`);
+- **a peer's message heard, and the agent's own saying,** state no self and no self graph, nor
+  whose any graph is (`store.refuse_the_sovereigns`);
+- **the boot** finds exactly one self graph among the documents that say they are the agent's,
+  or does not start: none is a world that never said who the agent is, two are two homes for it;
 - **a lived-in volume** whose self is another agent does not boot: the right id was handed the
   wrong volume;
-- **any count but one** does not boot either. Two selves are never picked between, since a text
-  asking over two answers for both and says nothing.
+- **any count of selves but one**, counted in every graph, does not boot either. Two selves are
+  never picked between, since a text asking over two answers for both and says nothing.
 
-A volume lived in before the self existed holds none, and the boot writes it then.
+A volume lived in before its world authored a self graph holds none, and the boot puts the
+authored one in then.
 
 # Where there is none
 
 A store holding a whole world — what the operator's tools and the simulator read (`world_of`), a
-test standing several agents side by side — is no agent's, and holds no self. A text asking for
-the self there answers nothing; such a store names the agent it means as a holder, or, for a
-premise, asks of every `orexis:Agent` at once.
+test standing several agents side by side — is no agent's: it passes over every graph of an
+agent's own, the self graphs among them, so it holds no self however many its documents state. A
+text asking for the self there answers nothing; such a store names the agent it means as a holder,
+or, for a premise, asks of every `orexis:Agent` at once.
 
-Why a class held to one instance and not a singleton IRI, and why a belief and not a public graph:
+Why authored and checked rather than minted, why a class held to one instance and not a singleton
+IRI, and why a belief and not a public graph:
 [the-self-is-a-class-held-to-one-instance](/decisions/the-self-is-a-class-held-to-one-instance.md).

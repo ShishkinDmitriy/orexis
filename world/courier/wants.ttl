@@ -5,6 +5,7 @@
 @prefix planning: <http://example.org/orexis/planning#> .
 
 <> a planning:WantGraph .    # this document is one graph, and this is what it is
+<> orexis:beliefsOf :courier .    # and whose it is — said here, never by the file's name
 
 #  THE GOAL, as a WANT: every parcel standing where it is owed. A want is one-shot — met once, it is reached, withdrawn,
 #  and the agent holding no desire stops — where a desire is universal and would ask for it at

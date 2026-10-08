@@ -1,0 +1,10 @@
+@prefix : <http://example.org/orexis/world/sensing#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:SelfGraph .    # this document is one graph, and this is what it is
+
+#  WHO THIS AGENT IS: the agent acting for the fern, and this document is its own by the self it
+#  states. Booted as "fern" — an id the fern itself shares, which is why the self is an agent's IRI
+#  and never the id — the agent checks that this is so.
+
+:fern_agent a orexis:Self .

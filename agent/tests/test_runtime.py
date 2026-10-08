@@ -23,6 +23,8 @@ def _as_a_desire(tmp_path: Path) -> Path:
     (world / "state.ttl").write_text((HANOI / "state.ttl").read_text())
     (world / "desires.ttl").write_text((HANOI / "wants.ttl").read_text()
                                        .replace("planning:WantGraph", "planning:DesireGraph").replace("a planning:Want ;", "a planning:Desire ;"))
+    (world / "beliefs").mkdir()
+    (world / "beliefs" / "hanoi.self.ttl").write_text((HANOI / "beliefs" / "hanoi.self.ttl").read_text())
     return world
 
 
@@ -53,15 +55,15 @@ def test_a_graph_of_a_kind_the_agent_does_not_declare_is_passed_over(tmp_path):
         "a graph of a kind it does declare is read beside it"
 
 
-def test_an_agent_reads_its_own_beliefs_file_and_no_other_agents(tmp_path):
-    """A world of several agents states each one's desires under `beliefs/<id>`: the boot reads the
-    world's own files and the agent's, never a peer's."""
+def test_the_boot_reads_every_document_of_the_world_and_asks_none_by_its_name(tmp_path):
+    """Every document beside the world, under `secrets/` and under `beliefs/` is read, whatever it is
+    called and whoever it is for: whose a graph is, is what it says (agent/tests/test_self.py), so
+    no reader picks a file by an agent's id."""
     from agent.runtime import documents
     (tmp_path / "world.ttl").write_text("")
     (tmp_path / "beliefs").mkdir()
-    for name in ("rose.ttl", "fern.ttl", "rose.txt"):
-        (tmp_path / "beliefs" / name).write_text("")
-    read = [p.relative_to(tmp_path).as_posix() for p in documents(tmp_path, "rose") if tmp_path in p.parents]
-    assert read == ["world.ttl", "beliefs/rose.ttl"]
-    assert [p for p in documents(tmp_path) if tmp_path in p.parents] == [tmp_path / "world.ttl"], \
-        "what the world says to nobody in particular — the operator's tools — is its own files alone"
+    (tmp_path / "secrets").mkdir()
+    for name in ("beliefs/rose.ttl", "beliefs/fern.trig", "beliefs/rose.txt", "secrets/place.ttl"):
+        (tmp_path / name).write_text("")
+    read = [p.relative_to(tmp_path).as_posix() for p in documents(tmp_path) if tmp_path in p.parents]
+    assert read == ["world.ttl", "secrets/place.ttl", "beliefs/fern.trig", "beliefs/rose.ttl"]

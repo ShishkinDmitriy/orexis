@@ -21,7 +21,8 @@ wake -> read -> publish  sensors/<subject>/moisture  {"value":0.183,"sensor":"..
 Realizes [agent-driven sensing](../../knowledge/decisions/agent-centric-epistemics.md):
 **cadence ≠ content** — the agent chooses *when* to look; the reading is what the sensor
 measured. The board emits **numbers only** — the band/threshold judgement is the agent's, and
-lives in that agent's own beliefs (`world/<name>/beliefs/<agent>.ttl`), never in firmware. An agent
+lives in that agent's own beliefs (a document under `world/<name>/beliefs/` that says it is the
+agent's), never in firmware. An agent
 with no region want holds no band at all and simply records the number.
 
 ## The agent sets the interval

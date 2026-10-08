@@ -53,10 +53,10 @@ import argparse
 import logging
 from pathlib import Path
 
-from agent.runtime import known, world_of
+from agent.runtime import documents, known, world_of
 from agent.metrics.window import INTERVAL_KEY
 from agent.series import HISTORY, METRICS
-from agent.store import document, graphs_of, kinds_in, rows
+from agent.store import closed, document, graphs_of, kinds_in, rows, whose
 from . import installation, reading
 from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
@@ -69,6 +69,7 @@ IMAGE = "orexis:local"
 PUBLIC = "http://example.org/orexis#PublicGraph"
 
 _ROSTER_Q = "SELECT ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id } ORDER BY ?id"
+_IDS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.
 _SIMULATED_Q = """
@@ -81,8 +82,10 @@ SELECT DISTINCT ?id WHERE {
 #  never its secrets, and never a document of a kind no agent's vocabulary declares, which is the
 #  hardware `orexis-firmware` reads on the host. The boot would pass over such a document anyway;
 #  not mounting it keeps it out of the container's filesystem as well, and it is the kind that
-#  decides, never the file's name (a-documents-kind-says-who-reads-it).
-DOCUMENTS = (".ttl", ".trig")
+#  decides, never the file's name (a-documents-kind-says-who-reads-it). And a document of an
+#  agent's own goes to the agent its content names, and to no other container: the boot would
+#  pass over another agent's, and not mounting it keeps one agent's desires out of another's
+#  filesystem — again by what the document says, never by what it is called.
 
 
 def roster(world: str) -> list[str]:
@@ -91,16 +94,27 @@ def roster(world: str) -> list[str]:
     return [r["id"] for r in rows(store, _ROSTER_Q, graphs_of(store, PUBLIC))]
 
 
-def read_by_an_agent(world: str) -> set[Path]:
-    """Every document in the world's directory, under `beliefs/` and under `secrets/` holding a graph of a kind an
-    agent reads — asked of the agent's own vocabulary as its boot has it, and not of onboarding's,
-    whose kinds are exactly the ones an agent is not to be handed."""
+def read_by_an_agent(world: str) -> dict[Path, frozenset[str] | None]:
+    """Every document the boot reads in the world's directory, under `beliefs/` and under
+    `secrets/` (`runtime.documents`), holding a graph of a kind an agent reads — asked of the
+    agent's own vocabulary as its boot has it, and not of onboarding's, whose kinds are exactly the
+    ones an agent is not to be handed — with whom it is FOR: None where it holds a public graph,
+    which every agent and the simulator read, and otherwise the ids of the agents whose own
+    graphs it holds, by what it says (`store.whose`) and never by its name."""
     here = world_dir(world).resolve()
     store = world_of(here, others=reading.ours())
-    candidates = [*here.iterdir(), *((here / "beliefs").iterdir() if (here / "beliefs").is_dir() else []),
-                  *((here / "secrets").iterdir() if (here / "secrets").is_dir() else [])]
-    return {p for p in candidates if p.is_file() and p.suffix in DOCUMENTS
-            and any(known(store, kinds) for kinds in kinds_in(document(p)).values())}
+    ids = {r["a"]: r["id"] for r in rows(store, _IDS_Q, graphs_of(store, PUBLIC))}
+    out: dict[Path, frozenset[str] | None] = {}
+    for path in documents(here):
+        if here not in path.parents:
+            continue
+        doc = document(path)
+        held = {graph: kinds for graph, kinds in kinds_in(doc).items() if known(store, kinds)}
+        if not held:
+            continue
+        public = any(PUBLIC in closed(store, kind) for kinds in held.values() for kind in kinds)
+        out[path] = None if public else frozenset(ids[whose(doc, graph)] for graph in held)
+    return out
 
 
 def agent_ids(world: str) -> list[str]:
@@ -145,16 +159,15 @@ def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) 
 """
 
 
-def _documents(world: str, read: set[Path], agent_id: str | None = None) -> str:
+def _documents(world: str, read: dict[Path, frozenset[str] | None], agent_id: str | None = None) -> str:
     """The world's documents an agent reads, file by file — those it keeps in `secrets/` among them,
-    which are not committed — and an agent's own beliefs file where it has one, never another
-    agent's."""
+    which are not committed — each public one, and each holding a graph that says it is this
+    agent's own, never another agent's: whose a document is, is what it says (`read_by_an_agent`),
+    so a document is mounted where its owner boots whatever its file is called. The simulator,
+    `agent_id` None, is no agent and is handed the public documents alone."""
     here = world_dir(world).resolve()
-    files = [p for p in sorted(here.iterdir()) if p in read]
-    files += [p for p in sorted((here / "secrets").glob("*")) if p in read]
-    if agent_id is not None:
-        files += [p for p in sorted((here / "beliefs").glob(f"{agent_id}.*")) if p in read]
-    return "".join(f"\n      - ./{p.relative_to(here)}:/app/world/{world}/{p.relative_to(here)}:ro" for p in files)
+    return "".join(f"\n      - ./{p.relative_to(here)}:/app/world/{world}/{p.relative_to(here)}:ro"
+                   for p, owners in read.items() if owners is None or agent_id in owners)
 
 
 def _restart(lasting: bool) -> str:

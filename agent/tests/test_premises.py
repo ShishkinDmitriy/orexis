@@ -65,6 +65,7 @@ CASES = {
 
 def _world(tmp_path: Path, facts: str, drift: str, action: str) -> Path:
     (tmp_path / "world.ttl").write_text(_HEAD + "<> a orexis:WorldGraph .\n" + _AGENT + facts)
+    (tmp_path / "self.ttl").write_text(_HEAD + "<> a orexis:SelfGraph .\n:me a orexis:Self .\n")
     if drift:
         (tmp_path / "drifts.ttl").write_text(_HEAD + "<> a orexis:PublicGraph .\n" + drift)
     if action:
@@ -108,7 +109,7 @@ def test_a_world_graph_of_a_kind_a_loaded_package_declares_is_read_after_it(tmp_
     stays passed over."""
     world = _world(tmp_path, facts, "", "")
     (world / "reading.ttl").write_text(_HEAD + "@prefix sensing: <http://example.org/orexis/sensing#> .\n"
-                                       "<> a sensing:ObservationGraph .\n"
+                                       "<> a sensing:ObservationGraph ; orexis:beliefsOf :me .\n"
                                        ":reading a sosa:Observation ; sosa:hasFeatureOfInterest :pot .\n")
     store = boot(world, "me")
     name = ox.NamedNode((world / "reading.ttl").resolve().as_uri())

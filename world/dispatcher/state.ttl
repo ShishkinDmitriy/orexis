@@ -3,6 +3,7 @@
 @prefix orexis: <http://example.org/orexis#> .
 
 <> a orexis:StateGraph .    # this document is one graph, and this is what it is
+<> orexis:beliefsOf :dispatcher .    # and whose it is — said here, never by the file's name
 
 #  THE TWO DELIVERIES AS POSED, APART: each van at the foot of its own column, its parcel one
 #  cell up it, owed at the top. Five steps each — a drive, the pick, two drives, the drop — and

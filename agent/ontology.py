@@ -108,8 +108,9 @@ RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believin
 ACTION = OREXIS + "ActionGraph"          # actions
 DRIFT_GRAPH = OREXIS + "DriftGraph"      # drifts — a domain's, read by the predictor, found by its premise
 SELF_GRAPH = OREXIS + "SelfGraph"        # who the self is — a belief, so read beside PUBLIC by whoever asks it
-#  THE SELF: the one agent a store is this agent's, written by the boot alone. A text asks
-#  `?me a orexis:Self` and is bound nothing (knowledge/domain/kernel/self.md).
+#  THE SELF: the one agent a store is this agent's, authored by its world in a self graph and
+#  checked by the boot. A text asks `?me a orexis:Self` and is bound nothing
+#  (knowledge/domain/kernel/self.md).
 SELF = OREXIS + "Self"
 #  What a text is answered over: everyone's knowledge, what is, and the records. Stated once
 #  here and named at every runner, so a runner says what it hands a text; a package that owns

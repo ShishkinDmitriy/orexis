@@ -1,0 +1,9 @@
+@prefix : <http://example.org/orexis/world/hanoi#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:SelfGraph .    # this document is one graph, and this is what it is
+
+#  WHO THIS AGENT IS: the agent solving the tower, and this document is its own by the self it
+#  states. Booted as "hanoi", the agent checks that this is so.
+
+:hanoi a orexis:Self .

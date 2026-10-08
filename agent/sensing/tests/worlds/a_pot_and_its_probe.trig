@@ -4,7 +4,7 @@
 # quarter-hour frequency, and the pot's operating and survival ranges in SSN-System's words. Nothing
 # about sides: those are the rules this layer registers, concluded by the deliberator. No reading:
 # `received` writes those. No drift: the prediction package's world carries one. And the keeper's
-# store, so the self is stated as the boot writes it: what a limit the world states of the agent
+# store, so its self graph is in as the boot puts the authored one in: what a limit the world states of the agent
 # is read of.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
@@ -70,7 +70,7 @@ GRAPH :catalogue {
   :self a orexis:BeliefGraph .
   :self a orexis:Graph .
   :self a orexis:SelfGraph .
-  :self orexis:arrivedBy orexis:Recorded .
+  :self orexis:arrivedBy orexis:Asserted .
   :self orexis:beliefsOf :keeper .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .

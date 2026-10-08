@@ -5,6 +5,7 @@
 @prefix planning: <http://example.org/orexis/planning#> .
 
 <> a planning:DesireGraph .    # this document is one graph, and this is what it is
+<> orexis:beliefsOf :dispatcher .    # and whose it is — said here, never by the file's name
 
 #  ONE DESIRE, the dispatcher's: every parcel where it is owed, at every instant. The shape targets
 #  every parcel, so the derivation mints a want per parcel astray unless a constraint can make their

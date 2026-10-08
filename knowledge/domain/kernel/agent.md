@@ -25,8 +25,8 @@ the agent acting for it may share a local id, and only one of them is an agent.
 # What is its own
 
 Its store, held in a volume nothing else mounts, and in it the graphs the catalogue says are its
-(`orexis:beliefsOf`): the one saying it is the [self](/domain/kernel/self.md), the documents under
-`beliefs/<id>` in its world, the state it senses and revises, the wants derived for it, the
+(`orexis:beliefsOf`): the one saying it is the [self](/domain/kernel/self.md), the documents of its
+world that say they are its, the state it senses and revises, the wants derived for it, the
 intentions it walks. A world of several agents states each
 one's desires apart for that reason — the derivation mints a want under every desire a store holds.
 

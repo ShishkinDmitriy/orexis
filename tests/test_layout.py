@@ -155,11 +155,43 @@ def test_a_compose_file_mounts_a_document_because_an_agent_reads_its_kind():
         mounted = {(here / m).resolve() for m in re.findall(rf"- \./([^:]+):/app/world/{world}/", compose)
                    if not m.startswith("secrets/") or (here / m).exists()}
         assert mounted, f"{world}/compose.yaml mounts no document — the pattern stopped matching"
-        read = read_by_an_agent(world)
+        read = set(read_by_an_agent(world))
         assert mounted <= read, (f"{world}/compose.yaml mounts {sorted(p.name for p in mounted - read)}, of a "
                                  f"kind no agent reads — regenerate with `orexis-compose {world}`")
         unmounted += sorted(p for p in here.glob("*.ttl") if p.resolve() not in read)
     assert unmounted, "every document of every composed world is read by an agent — the guard withholds nothing"
+
+
+def test_a_compose_file_mounts_an_agents_own_documents_into_its_container_alone():
+    """Whose a document is, is what it says (`store.whose`), never what it is called: each agent's
+    container is handed every public document and exactly the documents that say they are its own —
+    its self graph among them — and the simulator, which is no agent, none of anybody's."""
+    import yaml
+
+    from onboarding.compose import read_by_an_agent, roster
+
+    composed = sorted(p.parent.name for p in (REPO_ROOT / "world").glob("*/compose.yaml"))
+    held, simulated = 0, 0
+    for world in composed:
+        here = (REPO_ROOT / "world" / world).resolve()
+        services = yaml.safe_load((here / "compose.yaml").read_text())["services"]
+        read = read_by_an_agent(world)
+        for service, spec in services.items():
+            mounted = {(here / m).resolve() for volume in spec.get("volumes", [])
+                       for m in re.findall(rf"^\./([^:]+):/app/world/{world}/", volume)}
+            private = {p for p in mounted if read.get(p) is not None}
+            if service == "simulation":
+                assert not private, f"{world}: the simulator is handed {sorted(p.name for p in private)}, an agent's own"
+                simulated += 1
+            elif service.startswith("agent-"):
+                agent = service.removeprefix("agent-")
+                assert agent in roster(world), f"{world}: {service} is no agent of the roster"
+                own = {p for p, owners in read.items() if owners is not None and agent in owners}
+                assert private == own, (f"{world}/{service} is handed {sorted(p.name for p in private)}, and the "
+                                        f"documents saying they are {agent}'s are {sorted(p.name for p in own)}")
+                held += bool(own)
+    assert held >= 10, f"only {held} agents are handed a document of their own — the guard checks almost nothing"
+    assert simulated, "no world has a simulator — half the guard checks nothing"
 
 
 # --- a document's kind says who reads it, and a kind nobody reads is refused ------------------
@@ -222,12 +254,16 @@ def _installed(tmp_path, monkeypatch, edit=None, installation=lambda text: text,
     for name in names:
         here, there = REPO_ROOT / "world" / name, root / name
         there.mkdir(parents=True)
-        files = {p.name: p.read_text() for p in (here.glob("*.ttl") if here.is_dir() else [])}
+        #  ITS AGENTS' OWN DOCUMENTS TOO, under `beliefs/`: a world copied without them holds no self
+        #  graph, and no agent of it boots.
+        files = {p.relative_to(here).as_posix(): p.read_text()
+                 for p in ([*here.glob("*.ttl"), *here.glob("beliefs/*.ttl")] if here.is_dir() else [])}
         for (w, file), change in edit.items():
             if w == name:
                 files[file] = change(files.get(file, ""))
         for file, text in files.items():
             if text is not None:
+                (there / file).parent.mkdir(parents=True, exist_ok=True)
                 (there / file).write_text(text.replace("<../../domains/", f"<{_DOMAINS}/"))
     infra = tmp_path / "infra"
     infra.mkdir()
@@ -1088,7 +1124,8 @@ def test_an_agent_holding_a_desire_is_restarted_with_no_transport(tmp_path, monk
     desire = ("@prefix : <http://example.org/orexis/world/hanoi#> .\n"
               "@prefix hanoi: <http://example.org/orexis/hanoi#> .\n"
               "@prefix planning: <http://example.org/orexis/planning#> .\n"
-              "<> a planning:DesireGraph .\n"
+              "@prefix orexis: <http://example.org/orexis#> .\n"
+              "<> a planning:DesireGraph ; orexis:beliefsOf :hanoi .\n"
               ":hanoi planning:holds :the_tower_stands .\n"
               ":the_tower_stands a planning:Desire ; planning:metWhen hanoi:solved .\n")
     root = _installed(tmp_path, monkeypatch, {("hanoi", "desires.ttl"): lambda _text: desire})

@@ -3,6 +3,7 @@
 @prefix orexis: <http://example.org/orexis#> .
 
 <> a orexis:StateGraph .    # this document is one graph, and this is what it is
+<> orexis:beliefsOf :mover .    # and whose it is — said here, never by the file's name
 
 #  WHERE THINGS STAND, and nothing else: every disk in peg A's cell and the van in the middle. What
 #  each disk is ON is not stated — the tower's rules conclude it from this.

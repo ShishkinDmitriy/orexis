@@ -8,6 +8,7 @@
 @prefix planning: <http://example.org/orexis/planning#> .
 
 <> a planning:DesireGraph .    # this document is one graph, and this is what it is
+<> orexis:beliefsOf :rose_grower .    # and whose it is — said here, never by the file's name
 
 #  THE ROSE GROWER'S ONE DESIRE: its plot's soil is not read below a range the plot states. It holds
 #  no valve, so what repairs a dry plot is a claim on the supplier's water, presented.

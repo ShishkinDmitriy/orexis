@@ -11,7 +11,7 @@ said, since the world made no promise the absence could break.
 
 A LIMIT is the agent's: `sensing:silentAfter` and `sensing:stuckAfter`, each a count of the doubted
 sensor's cadences, stated of the agent by its world as `orexis:actsFor` is, in a public graph the
-agent believes, and read of the self (`orexis:Self`) the boot wrote. The figure in code (`missed.SILENT_AFTER`, `received.STUCK_AFTER`) is what holds where
+agent believes, and read of the self (`orexis:Self`) its self graph states. The figure in code (`missed.SILENT_AFTER`, `received.STUCK_AFTER`) is what holds where
 the world states none — a default, never a second place the figure lives.
 """
 

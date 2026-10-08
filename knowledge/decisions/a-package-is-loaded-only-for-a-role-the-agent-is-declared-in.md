@@ -148,8 +148,9 @@ from the relation to the role, which is founded on it.
 
 ## 4. A role is internal; what a peer needs is a public relation
 
-**Roles are the agent's own knowledge.** They are stated in the agent's own stances document — the
-kernel graph kind #876 introduces for the agent's stances, beside its `orexis:Self` — authored by
+**Roles are the agent's own knowledge.** They are stated in the agent's own stances document — its
+self graph, the kernel kind holding its `orexis:Self`, where #876's stances go as well
+([the-self-is-a-class-held-to-one-instance](/decisions/the-self-is-a-class-held-to-one-instance.md)) — authored by
 the sovereign under `world/<name>/` for that agent and mounted into that agent's container alone.
 Not in the public world graph: a peer does not learn another agent's roles, as #923 refuses a van
 learning that its peer controls a water supply. The stances kind must be the kernel's, as the

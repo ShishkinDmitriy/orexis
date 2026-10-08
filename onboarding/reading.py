@@ -128,9 +128,8 @@ def unread(here: Path) -> list[str]:
     `document: graph (kinds)`. Empty for a world every one of whose graphs somebody reads."""
     here = Path(here).resolve()
     store = world(here)
-    beliefs = sorted(p for p in (here / "beliefs").glob("*") if p.suffix in DOCUMENTS)
     out = []
-    for path, doc in read_with_imports([*documents(here), *beliefs]):
+    for path, doc in read_with_imports(documents(here)):
         for graph, kinds in sorted(kinds_in(doc).items()):
             if not known(store, kinds):
                 out.append(f"{path.name}: {graph} ({', '.join(sorted(kinds))})")

@@ -22,7 +22,8 @@ One graph describes every graph, itself included, and is found by its own row, `
 orexis:CatalogueGraph`. Per graph it says:
 
 - **what it is** — its kind, and every kind that kind is beneath ([modality](/domain/kernel/modality.md));
-- **whose it is** — `orexis:beliefsOf`, the owner that created it; a graph saying none is nobody's;
+- **whose it is** — `orexis:beliefsOf`, the owner that created it, or that the world's document
+  of it names ([world](/domain/kernel/world.md)); a graph saying none is nobody's;
 - **how it arrived** — `orexis:arrivedBy`, one of Asserted, Derived, Received, Recorded;
 - **when it holds** — `orexis:start` and `orexis:end`, a period; absent is always.
 

@@ -91,7 +91,7 @@ _PARSE_TOKENS = {
 _INTO = re.compile(r"\$into\([^)]*\)")
 
 #  THE SELF IS NO FACT OF THE WORLD. A text asks for the agent as `?me a orexis:Self`, the one row
-#  the boot writes into a graph of the agent's own (knowledge/domain/kernel/self.md): no public graph
+#  of the self graph its world authors for it (knowledge/domain/kernel/self.md): no public graph
 #  holds it and no action writes it, so a footprint — a text read as the world alone would answer
 #  it — reads the text without it, `?me` the free variable the agent always was here. Read with it,
 #  the anchor binds nothing over the public graphs, stands first in rdflib's order since it is the

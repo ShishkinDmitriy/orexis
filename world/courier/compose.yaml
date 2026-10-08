@@ -41,6 +41,7 @@ services:
       - ./state.ttl:/app/world/courier/state.ttl:ro
       - ./wants.ttl:/app/world/courier/wants.ttl:ro
       - ./world.ttl:/app/world/courier/world.ttl:ro
+      - ./beliefs/courier.self.ttl:/app/world/courier/beliefs/courier.self.ttl:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME ones
       # the Containerfile copies, which `tests/test_layout.py` holds the two lists to.
       - ../../agent:/app/agent:ro
