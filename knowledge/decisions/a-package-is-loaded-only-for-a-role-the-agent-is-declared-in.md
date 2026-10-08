@@ -118,27 +118,31 @@ what to load, so it reads them apart — Hanoi's store holding no sensing ontolo
 measurement this must keep. The package is the directory the declaration was read from, which is
 what rule 2 says a package is.
 
-**The words.** The owners are decided; the spellings are the implementing change's, under one
-constraint this record found: a role's word may not be one a page already owns for another concept.
-"Planner" and "Executor", the examples the decision was given in, title the Service pages for the
-Python objects ([planner](/domain/planning/planner.md), [executor](/domain/execution/executor.md)), and a
-class of AGENTS under the same word is one word for two concepts — the reader of "the planner checks
-the head" could not tell which. Proposed, for the sovereign to confirm before anything declares them:
+**The words are the ones the dictionary already has.** A role and the part that plays it are one
+concept: an agent declared `a planning:Planner` is an agent that runs the
+[planner](/domain/planning/planner.md), and the planner is what plans in it. A second word for the role —
+"decider" beside "planner" — would send every reader looking for a difference that is not there, which
+is the synonym the dictionary refuses. So the page that defines the part is bound with `term:` to the
+role class and says both what the part does and that an agent declared in the role runs it; the
+Python class keeps its name, since code speaks the term. (A first draft of this record proposed new
+words to keep "a class of agents" apart from "the Python object"; the sovereign refused it on
+2026-10-08 for that reason.) Where the dictionary has no agent-noun for a package yet, the word is
+new and its page is written first:
 
 | owner | role | an agent in it | needs, as a shape over the world |
 |---|---|---|---|
 | kernel | `orexis:Role` | the kind every role is beneath; its page says what a role is | — |
-| belief | `belief:Reviser` | revises what it believes by the rules it holds | nothing |
-| sensing | `sensing:Observer`, beneath the reviser | turns its sensors' numbers into observations | a sensor reporting to it, as sensing's premise reads one |
-| prediction | `prediction:Predictor` | foresees its readings by the drifts | a sensor of its, and a drift |
-| planning | `planning:Decider` | derives wants and searches for plans | a desire or a want it holds |
-| execution | `execution:Actor` | walks intentions and takes steps | being a decider too, while a plan crosses no agent (seam below) |
-| speech | `speech:Speaker`, in a vocabulary speech does not yet have | hears peers' documents and says its own | a topic it listens to |
-| market | `market:Host`, beneath decider, actor, speaker and reviser | holds a venue and serves it | `market:hosts` a venue |
+| belief | `belief:Deliberator` ([deliberator](/domain/belief/deliberator.md)) | revises what it believes by the rules it holds | nothing |
+| sensing | `sensing:Observer`, beneath the deliberator — new | turns its sensors' numbers into observations | a sensor reporting to it, as sensing's premise reads one |
+| prediction | `prediction:Predictor` — new | foresees its readings by the drifts | a sensor of its, and a drift |
+| planning | `planning:Planner` ([planner](/domain/planning/planner.md)) | derives wants and searches for plans | a desire or a want it holds |
+| execution | `execution:Executor` ([executor](/domain/execution/executor.md)) | walks intentions and takes steps | being a planner too, while a plan crosses no agent (seam below) |
+| speech | `speech:Speaker`, in a vocabulary speech does not yet have — new | hears peers' documents and says its own | a topic it listens to |
+| market | `market:Host`, beneath planner, executor, speaker and deliberator | holds a venue and serves it | `market:hosts` a venue |
 | market | `market:Bidder`, beneath the same four | bids in a venue | `market:bidsIn` a venue |
 
-Decider and actor are the split the seam below is about — one agent deciding, another acting —
-and "act" is already execution's word for a step taken. Each new word gets its page under
+Planner and executor are the split the seam below is about — one agent planning, another
+executing. Each new word gets its page under
 `knowledge/domain/<package>/` in the change that declares it; [host](/domain/market/host.md) is rebound
 from the relation to the role, which is founded on it.
 
@@ -181,7 +185,7 @@ already refuses a graph no reader declares. The converse, read here from the sov
 - **a topic an agent listens to, and no speaker**;
 - **a document of a kind none of the agent's loaded packages declares**, per agent — the existing
   refusal, narrowed from "no reader at all" to "no reader this agent loads", which is how a rules
-  graph held by an agent that is no reviser is caught.
+  graph held by an agent that is no deliberator is caught.
 
 **Not refused**, and why: a drift with no predictor — foresight an author may decline, so refusing
 it would make the declaration the derivation restated; and an action with an `execution:Saying`
@@ -201,17 +205,17 @@ wiring and not a choice. History and metrics stay deployment facts, read from th
 
 ## 7. Hanoi becomes planning only
 
-Its mover is declared a decider and nothing else. Measured above, that already plans; what follows
+Its mover is declared a planner and nothing else. Measured above, that already plans; what follows
 is what it costs:
 
 - **The plan is the output.** A published plan is nobody's to adopt, so Hanoi's tests are held to
   the plan — seven steps in the textbook order, at the cost the estimate admits — rather than to a
   solved tower. The cases that use Hanoi to exercise execution, belief and the metrics of a walked
-  plan move to a world with an actor, the courier's.
-- **An agent with no actor needs an ending of its own, `planned`**: planning lets go when every want
+  plan move to a world with an executor, the courier's.
+- **An agent with no executor needs an ending of its own, `planned`**: planning lets go when every want
   standing has a plan published and no part will walk it. Without it the agent never stops, because
   a published plan counts as walked (measured above).
-- **No reviser is needed**: Hanoi ships no rules, and the planner-only run planned without belief.
+- **No deliberator is needed**: Hanoi ships no rules, and the planner-only run planned without belief.
 
 # Why
 
@@ -241,7 +245,7 @@ directory whose ontology declared it, which is a package by rule 2 and no instan
 **0.1.0's refusal of `market:Host`, engaged.** [a-role-needs-something-to-be-a-role-in](/decisions/0.1.0/a-role-needs-something-to-be-a-role-in.md)
 kept market positions as predicates: a role nothing could vary independently of its predicate is a
 synonym. Its premise was that every capability was derived from a position. That premise is what
-falls here: a role now varies independently of every predicate — a decider holds no relation at all
+falls here: a role now varies independently of every predicate — a planner holds no relation at all
 — and loads code, which no predicate does. For the host the old point still bites: the role and
 `market:hosts` coincide in every shipped world. They are kept as two facts because they have two
 readers, the agent and its peers, and onboarding refuses them apart. The auction-object question
@@ -292,8 +296,8 @@ From memory; the years are approximate.
 
 - **A plan crossing agents.** A dispatcher decides and each van's agent only acts. Rule 4 means the
   plan crosses by speech, and #916's take-time check — the executor's `taking` answered by
-  `Planner.check` in one store — becomes a question back to the deciding agent. Until then an actor
-  needs to be a decider. **The trigger: the first world in which one agent decides for steps another
+  `Planner.check` in one store — becomes a question back to the planning agent. Until then an executor
+  needs to be a planner. **The trigger: the first world in which one agent plans steps another
   agent takes** — a dispatcher whose vans are other agents', which `world/dispatcher/` is not: its one
   agent decides and acts.
 - **A role declared after birth.** The stances document is the agent's own, and a volume lived in
@@ -303,7 +307,7 @@ From memory; the years are approximate.
   ([an-amendment-endows-what-it-grants](/decisions/an-amendment-endows-what-it-grants.md)). **The trigger:
   the first role change the sovereign wants on a running agent.**
 - **A role loads; it does not narrow.** Of two agents that could command one pump, the role says which
-  runs an actor; which actions an actor may take is still its actions' preconditions over public
+  runs an executor; which actions an executor may take is still its actions' preconditions over public
   relations (`actuation:hasActuator`). A role that narrows its holder's actions — Gaia's permissions
   taken all the way — is not decided. **The trigger: two agents in one world whose actions both admit
   a step only one of them may take, with no relation to tell them apart.**
