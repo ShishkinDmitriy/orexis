@@ -63,11 +63,11 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    #919, a step predicts its own effect; #920, `planning:Wait`, landing at the next ground; #921, a
    belief that makes a walking plan's next worlds impossible reopens it; #922, attention, the vans
    within a radius; and #923, the question, the answer and the draw, which depends on the other three.
-   Both need a public fact saying which agent has a driver, filed from
+   Both need a public fact saying which agent has a driver, #929, filed from
    [a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md).
 5. **What an agent runs** — declared, not derived: an agent's roles in its own stances document,
-   which #876 introduces, and a package loaded only for a role it serves; then Hanoi's mover planning
-   only, with an ending of its own. The record carries the argument and lists the issues it files
+   which #876 introduces, and a package loaded only for a role it serves (#927); then Hanoi's mover
+   planning only, with an ending of its own (#928). The record carries the argument
    ([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).
 6. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays

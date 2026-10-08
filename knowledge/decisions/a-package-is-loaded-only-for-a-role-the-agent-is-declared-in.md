@@ -343,7 +343,10 @@ issue settles that agent by agent; and the literature, cited from memory.
 
 # Issues it files
 
-- Declare roles per package and per domain, load packages by the agent's declared roles, remove
-  `PREMISES` and `MIND`, and check roles both ways at onboarding.
-- Make Hanoi's mover planning only, with an ending of its own.
-- State which agent has the courier's driver, so two minds can find whom to ask.
+- [#927](https://github.com/ShishkinDmitriy/orexis/issues/927) — declare roles per package and per
+  domain, load packages by the agent's declared roles, remove `PREMISES` and `MIND`, and check roles
+  both ways at onboarding.
+- [#928](https://github.com/ShishkinDmitriy/orexis/issues/928) — make Hanoi's mover planning only,
+  with an ending of its own.
+- [#929](https://github.com/ShishkinDmitriy/orexis/issues/929) — state which agent has the courier's
+  driver, so two minds can find whom to ask.
