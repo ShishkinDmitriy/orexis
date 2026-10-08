@@ -3,10 +3,10 @@ type: Domain Concept
 title: Driver
 term: http://example.org/orexis/courier#hasDriver
 description: >-
-  Someone a van needs aboard to move, and the agent whose it is - `courier:hasDriver`, agent to
-  driver, public, stated by the world. A drive of a van somebody drives, and a boarding, are admitted
-  only through a driver the agent has, so two agents in one world never move each other's vans; and
-  a peer is found as the agent that has the driver of the van in range.
+  Someone a van needs aboard to move, load or unload, and the agent whose it is - `courier:hasDriver`,
+  agent to driver, public, stated by the world. A drive, a pick or a drop with a van somebody drives,
+  and a boarding, are admitted only through a driver the agent has, so two agents in one world never
+  act with each other's vans; and a peer is found as the agent that has the driver of the van in range.
 ---
 
 # What a world states
@@ -25,15 +25,27 @@ another van, and what an agent can move goes with its driver.
 
 # What the search does with it
 
-The courier's drive admits a van the world names a driver for only where that driver is aboard it
-AND the agent asking — `?me a orexis:Self`, as every text finds the [self](/domain/kernel/self.md) — has
-that driver; the boarding moves only a driver the agent has. A van no driver is named for is driven
-by the agent's own hand, as in the courier's, the dispatcher's and the tower's worlds, which state no
-driver. A driver no agent has is nobody's to move, the same refusal as a driver aboard another van.
+Four actions read it, and they hold it two ways:
+
+| action | what it asks of a van the world names a driver for |
+|---|---|
+| `courier:Drive` | the driver aboard that van, and the agent having the driver |
+| `courier:Pick` | the same, of the van the parcel is loaded into |
+| `courier:Drop` | the same, of the van carrying the parcel |
+| `courier:Board` | the agent having the driver it moves |
+
+The agent asking is found as `?me a orexis:Self`, as every text finds the
+[self](/domain/kernel/self.md). The pick and the drop ask for the driver ABOARD and not only had
+(#931), because the driver is the one body at a van's cell and is never on foot: a van it has left
+stands where nobody is, and a pick or a drop there is what a drive there already was, an act with
+nobody to take it. The boarding asks for no driver aboard the van it names, being the act that
+changes which van that is. A van no driver is named for is driven, loaded and unloaded by the agent's own hand, as in the
+courier's, the dispatcher's and the tower's worlds, which state no driver. A driver no agent has is
+nobody's to act through, the same refusal as a driver aboard another van.
 
 So in `world/driver/` the dispatcher reaches both vans because it has the one driver, one van at a
-time; and in a world of two agents with a driver each, each search admits the drives and boardings
-of its own driver and none of the other's — held by
+time; and in a world of two agents with a driver each, each search admits the drives, picks, drops
+and boardings of its own driver and none of the other's — held by
 `world/driver/tests/test_driver.py`. A [footprint](/domain/planning/footprint.md) reads the self as
 absent, so a scope still sees every agent's driver; what narrows is the precondition, asked in each
 possible world with the self in it.

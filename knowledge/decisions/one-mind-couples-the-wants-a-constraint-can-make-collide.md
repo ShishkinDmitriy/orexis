@@ -374,6 +374,7 @@ plan down the same cells. A cluster a standing want is already about is that wan
 | parcel B arriving on a disjoint grid (#905) | 1, alone | — | 37 candidates | 0 | nothing reopened; van A's intention untouched |
 | one driver, the vans on disjoint grids, the two-vans constraint alone (#903) | 2 | 18 and 26, the constraint in 37 | 22 and 34 candidates | 0 | five steps and six, the second boarding first; walked side by side, van A driven with the driver aboard van B |
 | the same, the driver's constraint held (#903) | 1 | 133, each constraint in 133 | 191 candidates | 0 | one plan of eleven: van A, the boarding, van B; walked one act at a time; 2.2 s at budget 256, `Exhausted` at 128 |
+| the same, the pick and the drop asking for the driver aboard (#931) | 1 | 128, each constraint in 128 | 166 candidates | 0 | the same plan of eleven; 1.7 s against 2.1 alternated, `Exhausted` at 128 |
 
 # Seams left open
 
@@ -454,8 +455,9 @@ plan down the same cells. A cluster a standing want is already about is that wan
   two grids yields no row — two wants, five steps and six, measured, and walked side by side van A
   was driven with the driver aboard van B, since a head falling due inside a walk is taken without
   its precondition asked again — until #916, which checks every head as it is taken: walked side by
-  side the two plans now collide over the driver, a drive of a van the driver has left is refused,
-  and two or three intentions fail before each parcel is delivered. So the world states the driver's own constraint, a driver aboard one
+  side the two plans now collide over the driver, a drive, a pick or a drop with a van the driver
+  has left is refused, and four or five intentions fail before each parcel is delivered (two or
+  three before #931 held the pick and the drop to the driver aboard). So the world states the driver's own constraint, a driver aboard one
   van at a time: no plan breaks it, since a boarding takes away the van left, and over the
   delete-free reach the driver is aboard both, which joins the vans and so the parcels — one want, one
   plan of eleven steps, walked one act at a time. Coupling the wants whose plans merely write one

@@ -814,6 +814,34 @@ cases weigh one candidate more, the wait, and answer differently: the rain filli
 is waited for and then the tank filled, where the tree before had `NoCandidate`; the tank a
 prediction refills is met by the wait at a tenth, where the tree before filled it at one.
 
+# The driver: a pick and a drop asking for the driver aboard (2026-10-08, #931)
+
+`courier:Pick` and `courier:Drop` now hold a van the world names a driver for as the drive does
+([driver](/domain/courier/driver.md)). Measured on the development container, one pass of the
+Planner over the shipped `world/driver/` at budget 256, the tree before and this one alternated per
+round in one process, five rounds; the counts did not move between rounds.
+
+| case | candidates | weighings | plan | pass, median of five (min) |
+|---|---|---|---|---|
+| the driver, its own constraint held, the tree before | 191 | 133, each constraint in 133 | eleven steps | 2055 ms (1929) |
+| the same, the pick and the drop asking for the driver | 166 | 128, each constraint in 128 | the same eleven steps, estimate ten | 1705 ms (1529) |
+
+**The 25 candidates gone are acts nobody could take**: a van loaded or unloaded while the driver sat
+in the other, which the search admitted and no plan it returned used. The pass is a sixth shorter,
+every round of this tree faster than every round of the one before. Budget 128 still cuts it short.
+The courier's, the dispatcher's and the tower's worlds state no driver, and their tests hold their
+figures unchanged.
+
+**Walked apart, the two wants now fight over the driver longer, and never through a van it left.**
+With the driver's constraint taken out, twenty walks of the two plans side by side: fifteen ran B's
+boarding first, four intentions failed and fifteen acts were taken; five ran van A's drive first,
+five failed and sixteen acts. Both parcels arrived in all twenty, and every drive, pick and drop
+taken was with the van the driver was aboard. The tree before failed two or three on the way, as
+the #916 section says, but only because van A was loaded with the driver aboard van B, or a parcel
+set down from one van with the driver in the other — a pick or drop the drive's precondition would
+have refused. The walk now runs until no intention has stood for two passes running, since a want
+whose intention failed with nothing else standing is searched again only on the pass after.
+
 # Before Agent 0.2.0
 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge

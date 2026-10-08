@@ -61,11 +61,16 @@ courier:Pick a orexis:Action ;
     orexis:takes courier:parcel , courier:van ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Fictive ] ] ;
+    #  A VAN SOMEBODY DRIVES IS LOADED ONLY WITH THEM ABOARD, AND ONLY BY THE AGENT THAT HAS THEM (#931):
+    #  the drive's last filter, word for word, since the driver is the one body at a van's cell and a
+    #  van it has left stands where nobody is to load it. A van no driver is named for is refused nothing.
     planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?parcel ?van WHERE {
             ?van courier:at ?cell . ?parcel courier:at ?cell .
             ?parcel a courier:Parcel .
             ?van a courier:Van .
+            FILTER NOT EXISTS { ?van courier:drivenBy ?driver .
+                FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; courier:hasDriver ?driver } }
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  A PICK SHOWS AT ONCE: the parcel is aboard as the door shuts, nought twice — declared rather
@@ -83,10 +88,14 @@ courier:Drop a orexis:Action ;
     orexis:takes courier:parcel , courier:to ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Fictive ] ] ;
+    #  AND UNLOADED THE SAME WAY (#931): the van is the one carrying the parcel, bound by the first
+    #  pattern though the drop does not take it, and the filter is the pick's.
     planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?parcel ?to WHERE {
             ?parcel courier:carriedBy ?van . ?van courier:at ?to .
             ?parcel a courier:Parcel .
+            FILTER NOT EXISTS { ?van courier:drivenBy ?driver .
+                FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; courier:hasDriver ?driver } }
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  A DROP SHOWS AT ONCE, as the pick does: nought twice, declared.

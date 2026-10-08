@@ -104,7 +104,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Courier — a domain of documents
 
-* [driver](/domain/courier/driver.md) - Whom a van needs aboard, and whose: a search drives and boards only through a driver its agent has, and a peer is found by it.
+* [driver](/domain/courier/driver.md) - Whom a van needs aboard, and whose: a search acts with a van only through a driver its agent has; a peer is found by it.
 
 # Onboarding — from a world to a society
 
