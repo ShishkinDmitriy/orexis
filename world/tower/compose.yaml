@@ -31,8 +31,9 @@ services:
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
     # can write its own belief-base volume.
     userns_mode: "keep-id:uid=10001,gid=10001"
-    # it holds no desire and no transport reaches it, so it exits once every want is reached,
-    # or as unreachable — restarted, it would only exit again
+    # it holds no desire and no transport reaches it, so it exits once every want is reached —
+    # or has a plan published, where it is no executor — or as unreachable; restarted, it
+    # would only exit again
     restart: "no"
     volumes:
       # its own belief base, and nobody else can name it

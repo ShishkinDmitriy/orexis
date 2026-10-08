@@ -8,7 +8,7 @@ from pathlib import Path
 
 from agent import clock
 from agent.execution.events import Taking
-from agent.lifecycle import MET, Signal
+from agent.lifecycle import MET, PLANNED, Signal
 from agent.planning.ontology import BUDGET_TERM
 from agent.planning.planner import Planner
 from agent.planning.create import create
@@ -62,7 +62,26 @@ def test_its_part_plans_every_pass_links_its_signals_down_and_holds_the_agent(mo
     assert execution.executor.heard == [(kind, published, want)], "a head the present admits is not ended"
     execution.executor.intention_resolved.emit(type("Resolved", (), {"want": want, "outcome": "failed"})())
     assert runtime.pressed, "an intention that ended asks for the next pass at once"
-    assert runtime.outcome != MET
+    assert runtime.outcome not in (MET, PLANNED)
+
+
+def test_linked_to_no_executor_it_holds_an_agent_holding_a_desire_once_every_want_has_a_plan(monkeypatch, snapshots, stand_in_runtime):
+    """Nothing to link to, so nothing walks what it publishes (#928): the pass publishes the plan and
+    the want is walked by it as `walking` counts, which is as far as this agent takes it — but the
+    case's keeper holds the desire the want was minted under, and a desire holds any agent, so
+    planning neither lets go `planned` nor says the want unreachable. An agent holding wants alone
+    lets go `planned` (world/hanoi/tests/, agent/tests/test_runtime.py)."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    runtime = stand_in_runtime(snapshots.stand_in(BENCH / "two_disk_hanoi.trig"), None, snapshots.NOW,
+                               agent_id=snapshots.AGENT, budget=64)
+    part = create(runtime)
+    part.link({"planning": part})
+    part.start(runtime)
+    [(_, plan)] = runtime.timers
+    plan()
+    assert part.planner.walking() and part.planner.standing(snapshots.NOW), "a plan published, its want standing"
+    assert part.planner.holds_a_desire() and part.planner in runtime.held and runtime.outcome is None
+    assert not runtime.pressed, "nothing is cut short, so nothing asks for the next pass at once"
 
 
 def test_its_planner_spends_the_agents_stance_unless_the_runtime_was_handed_a_budget(snapshots, stand_in_runtime):

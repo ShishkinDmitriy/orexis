@@ -36,7 +36,8 @@ about a venue. A role over something keeps the relation it is founded on, and as
   [host](/domain/market/host.md) and [bidder](/domain/market/bidder.md) sit beneath the four package
   roles a market agent needs, so an author declares a host and never lists what a host runs.
 - **An author declares a package role directly** where no domain has a word for what the agent is:
-  Hanoi's mover is a planner and an executor.
+  Hanoi's mover is a planner and nothing else, its plan its output — and planning, finding no
+  executor to link to, lets it go `planned` once the plan is published ([runtime](/domain/kernel/runtime.md)).
 
 # What it is held to
 

@@ -24,10 +24,13 @@ package's words and no package imports either (`agent/metrics/`, `agent/history/
 
 from __future__ import annotations
 
-#  HOW A RUN ENDS, said by whoever lets go of the agent last (`runtime.release`) — planning, when
-#  every want is reached and no desire holds it, or when a want stands that nothing reaches — or
-#  the runtime's own, when its passes run out.
-MET, UNREACHABLE, UNFINISHED = "met", "unreachable", "unfinished"
+#  HOW A RUN ENDS, said by whoever lets go of the agent last (`runtime.release`), where no desire
+#  holds it — or the runtime's own, `unfinished`, when its passes run out. Planning says the rest:
+#  - `met`: every want is reached, and none is walked;
+#  - `planned`: every want standing has a plan published, and no part the agent runs will walk one —
+#    an agent that is a planner and no executor (#928), whose plan is what it was declared for;
+#  - `unreachable`: a want stands that nothing this agent holds reaches.
+MET, PLANNED, UNREACHABLE, UNFINISHED = "met", "planned", "unreachable", "unfinished"
 
 
 class Signal:

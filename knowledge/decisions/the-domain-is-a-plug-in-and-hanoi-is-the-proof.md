@@ -152,3 +152,15 @@ are the [domain](/domain/kernel/domain.md) `domains/hanoi/`, and `world/hanoi/` 
 the mover, the disks, the tower as posed and a WANT rather than a desire: a desire is
 universal and would ask for the tower at every instant for ever, while the puzzle is one-shot,
 so the mover stops once the want is reached.
+
+# Amended 2026-10-08: the mover plans the tower and walks nothing (#928)
+
+Two sentences above no longer hold: the runtime does not take the moves, and the mover does not
+stop when every disk is home. Once an agent's packages were loaded only for the
+[roles](/domain/kernel/role.md) its self graph declares, the mover was declared a planner and
+nothing else, so the PLAN is its output and the tower stays as posed: it publishes the seven moves
+in the textbook order above, at a cost of seven against an estimate of three, and the runtime lets
+it go `planned` ([runtime](/domain/kernel/runtime.md)). The claim this record proves is a planner's
+claim, and it stands as it was measured. A plan walked to a solved world is the courier's to show,
+and the cases that walked Hanoi's moves moved there
+([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).

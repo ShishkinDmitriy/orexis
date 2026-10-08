@@ -40,7 +40,7 @@ Whatever its [roles](/domain/kernel/role.md) call for, and nothing else. Its sel
 beside its self — `:grower a orexis:Self , planning:Planner , execution:Executor , sensing:Observer ,
 prediction:Predictor` — and the boot loads exactly the packages those roles are served by: the
 greenhouse's grower runs belief, planning, execution, sensing and prediction, the terrace's agent
-belief, sensing and prediction, Hanoi's mover planning and execution. Two agents of one world may
+belief, sensing and prediction, Hanoi's mover planning alone. Two agents of one world may
 therefore run different things though their world is the same, and an agent declaring no role runs
 nothing and is refused at onboarding. This was a premise read off the world until #927; it is a
 declaration now, because an assignment no fact implies — a planner that does not act, one of two

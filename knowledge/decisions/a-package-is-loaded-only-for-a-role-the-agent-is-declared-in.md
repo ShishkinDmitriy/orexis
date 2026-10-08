@@ -24,8 +24,8 @@ timestamp: 2026-10-08T12:00:00Z
 > IS, it was read on `e99731d0` (2026-10-08) and the measurements were run in memory there. The
 > roles, their declarations, the boot that loads by them, the transports and the onboarding refusals
 > are in the tree; [role](/domain/kernel/role.md) and [package](/domain/kernel/package.md) say how
-> they are now. §7, Hanoi planning only, is still #928's: its mover is a planner and an executor,
-> and no deliberator, its world shipping no rules.
+> they are now. §7, Hanoi planning only, is built too (#928): its mover is a planner alone, and
+> planning lets it go `planned`.
 
 > **Amended 2026-10-08** (#929): §4's courier relation is confirmed and built — `courier:hasDriver`,
 > owned by [driver](/domain/courier/driver.md).
@@ -236,6 +236,19 @@ is what it costs:
   standing has a plan published and no part will walk it. Without it the agent never stops, because
   a published plan counts as walked (measured above).
 - **No deliberator is needed**: Hanoi ships no rules, and the planner-only run planned without belief.
+
+> **Built (#928).** `planned` is the fourth outcome in `agent/lifecycle.py`, beside `met`,
+> `unreachable` and `unfinished`, and `runtime.main` exits nought on it, as on `met`. Planning knows
+> nothing will walk its plan by what its part's `link` already looked for: the part it connects
+> `plan_published` to, found or not. Reading the self's roles was the other way, and was not taken —
+> whether the self is an executor is a closure (the market's host is one by its domain's step), which
+> the runtime computes with every package's ontology read apart, so planning would have imported the
+> runtime above it or computed the closure twice, and the parts are what the runtime already made of
+> the roles. Measured in memory: the mover publishes the seven textbook moves in one pass at 64 and in
+> two at the stance's constant of 32, three at 20 (two searches `exhausted` at twenty candidates, the
+> third satisfied at ten), and a lived-in volume keeps the plan and searches nothing. The cases moved
+> as said, with one exception kept on purpose: the case contrasting the two endings declares Hanoi's
+> mover an executor in a world written for it, so the one role is all that differs.
 
 # Why
 

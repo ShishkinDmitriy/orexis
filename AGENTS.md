@@ -566,8 +566,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   declaration to its world both ways** — the executor's need to be a planner is planning's shape, the
   speaker's topic the MQTT transport's, since a package beneath may not speak them (#927).
 - **The runtime stops when no desire is held, no transport reaches it and every want is reached** —
-  wants standing with nothing walking is `planning:Exhausted` or unreachable; a clock that does not
-  tick is a test's mistake.
+  `met` — **or, where no executor is linked, has a plan published** — `planned`, since a plan nobody
+  will adopt is no walk (#928); wants standing with nothing walking is `planning:Exhausted` or
+  unreachable; a clock that does not tick is a test's mistake.
 - **A package starts itself, and the runtime is a lifecycle container** — each part says what it
   does by jobs it submits, kinds it hears and timers it asks for (a-package-starts-itself).
 - **A process is the AGENT with the id it was told, never whatever carries that id.**

@@ -34,8 +34,8 @@ saying an agent is in no role to take, which is the search's to say and not onbo
 **Whether an agent lasts is read off the agent, as its boot reads it.** `lasts` boots the agent
 from the world's documents and asks the two things the runtime's own stop rule asks
 (`Runtime._pass`): a desire it holds, which asks at every instant, and a transport, whose
-readings go on arriving. Holding neither, it exits once every want is reached, or as
-unreachable, and its compose service is not restarted — a restart would only boot, find nothing
+readings go on arriving. Holding neither, it exits once every want is reached — or planned, where
+it is no executor — or as unreachable, and its compose service is not restarted — a restart would only boot, find nothing
 to pursue and exit again. Per agent and not per world, since a desire is in an agent's own graphs.
 """
 

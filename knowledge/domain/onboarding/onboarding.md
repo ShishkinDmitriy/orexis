@@ -47,7 +47,7 @@ be neither onboarded nor run in a container.
 lets an agent finish that holds no desire and that no transport reaches, so `orexis-compose` boots
 each agent from the documents as its container would (`lasts` in `onboarding/reading.py`) and asks
 the runtime's two questions of it. One that lasts is written `restart: unless-stopped`; one that
-finishes — hanoi's, the courier's, the tower's mover — `restart: "no"`, since restarted it would
+finishes — hanoi's, `planned`, the courier's and the tower's mover, `met` — `restart: "no"`, since restarted it would
 find nothing to pursue and exit again, over and over. Per agent and not per world, because a
 desire is in an agent's own graphs.
 

@@ -102,3 +102,53 @@ def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeyp
     assert _parcel_at(beliefs) == ["c3_3"], "the delivered parcel is the agent's belief, not the file's"
     assert len(graphs_of(beliefs, STATE)) == 1
     assert graphs_of(beliefs, WANT) == [], "the want was reached and withdrawn, and a restart does not bring it back"
+
+
+def test_a_window_a_pass_writes_the_executors_levels_and_tallies_every_act_and_landing(monkeypatch):
+    """THE METRICS OF A WALKED PLAN, moved here from Hanoi's mover, which is a planner and no executor
+    and walks nothing (#928). A window a pass (#826, amended), on the run above: in the first, the plan
+    found and adopted — the imaginarium's forty-five worlds, one satisfied, and one intention standing;
+    across the run, eight acts taken, by the action each filled — six drives, the pick and the drop —
+    each landing within its band and none timed out, and the one intention done, so the last window
+    stands none. Neither sensing nor belief is loaded, so no silence and no revisions are said."""
+    from agent.metrics import window as metrics
+    from agent.runtime import world_name
+    from agent.series import METRICS, Sink, install
+
+    _ticking(monkeypatch)
+    writes = []
+    install(METRICS, Sink(METRICS, "courier-courier-metrics", lambda bucket, record: writes.append(list(record))))
+    metrics.configure(interval_s=0)
+    metrics.identify(world=world_name(WORLD), agent="courier")
+    try:
+        runtime = Runtime(boot(WORLD, "courier"), "courier", budget=128)
+        assert runtime.run(poll_s=0) == MET
+        runtime.stop()
+    finally:
+        install(METRICS, None)
+        metrics.reset()
+        metrics.identify()
+    windows = [w for w in writes if w]
+    first = {p["measurement"]: p for p in windows[0]}
+    assert {"pass", "planner", "imaginarium", "search", "published", "intentions", "act"} <= set(first), sorted(first)
+    assert first["imaginarium"]["fields"] == {"worlds": 45, "weighings": 46, "open": 14, "met": 1,
+                                              "satisfied": 1, "exhausted": 0, "no_candidate": 0}
+    assert first["intentions"]["fields"] == {"standing": 1}
+    every = [p for w in windows for p in w]
+    assert not {p["measurement"] for p in every} & {"silence", "revisions"}
+    by_action = {}
+    for p in every:
+        if p["measurement"] in ("act", "landing"):
+            tally = by_action.setdefault((p["measurement"], p["tags"]["action"]), {})
+            for k, v in p["fields"].items():
+                if not k.endswith(("_mean", "_max", "_sum")):
+                    tally[k] = tally.get(k, 0) + v
+    assert by_action == {("act", "Drive"): {"count": 6, "taken": 6}, ("act", "Pick"): {"count": 1, "taken": 1},
+                         ("act", "Drop"): {"count": 1, "taken": 1},
+                         ("landing", "Drive"): {"count": 6, "landed": 6, "timed_out": 0},
+                         ("landing", "Pick"): {"count": 1, "landed": 1, "timed_out": 0},
+                         ("landing", "Drop"): {"count": 1, "landed": 1, "timed_out": 0}}, by_action
+    ended = [(p["tags"]["outcome"], p["fields"]["count"]) for p in every if p["measurement"] == "intention"]
+    assert ended == [("done", 1)]
+    last = {p["measurement"]: p for p in windows[-1]}
+    assert last["intentions"]["fields"] == {"standing": 0}
