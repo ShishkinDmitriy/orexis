@@ -58,6 +58,12 @@ states, a reading's feature and property; a subject keyed by nothing keys every 
 predicate. The terms a key holds are what a scope later holds as members, so a want naming one is
 placed by it.
 
+A pattern asking for the [self](/domain/kernel/self.md) is read as absent, in every half and every
+reading: no public graph holds the self and no action writes it, so it can say nothing of what a
+step reads or writes. Kept, it bound nothing, stood first in the order rdflib asks optional patterns
+in, being the pattern with fewest variables, and changed what the chain after it bound — the
+greenhouse's dose came to be filled with the heater, measured.
+
 A row is no filling where it leaves unbound a parameter the WORLD alone decides — one the action
 `orexis:takes` that is no subject its effect writes and stands in no pattern reading a predicate
 any effect writes or deletes: the valve, the heater, the cell a van drives to. Asked over the

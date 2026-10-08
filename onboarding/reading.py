@@ -105,7 +105,7 @@ def lasts(here: Path, agent_id: str) -> bool:
     transport, which the runtime lets finish."""
     beliefs = boot(Path(here).resolve(), agent_id, others=ours())
     planner = Planner(beliefs, agent_id)
-    return planner.holds_a_desire() or MQTT in packages_of(beliefs, planner.uri)
+    return planner.holds_a_desire() or MQTT in packages_of(beliefs)
 
 
 def contradicted(here: Path, agent_id: str) -> list[str]:

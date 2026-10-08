@@ -81,7 +81,9 @@ def test_put_again_replaces_the_graph_and_its_row(store, tmp_path):
     ("<> a orexis:CatalogueGraph .\n", "catalogue"),
     ("<> a orexis:StateGraph ; orexis:arrivedBy orexis:Derived .\n", "only the loader"),
     ("<> a orexis:StateGraph ; orexis:beliefsOf <urn:someone> .\n", "only the loader"),
-], ids=["no kind", "the catalogue", "an arrival", "an owner"])
+    ("<> a orexis:WorldGraph .\n<urn:someone> a orexis:Self .\n", "only the boot"),
+    ("<> a orexis:SelfGraph .\n", "only the boot"),
+], ids=["no kind", "the catalogue", "an arrival", "an owner", "who the self is", "the self's graph"])
 def test_a_document_is_refused_where_it_says_too_little_or_what_only_the_loader_says(tmp_path, text, refusal):
     with pytest.raises(DocumentRefused, match=refusal):
         document(_write(tmp_path, "bad.ttl", text))

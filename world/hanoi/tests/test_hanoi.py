@@ -50,7 +50,7 @@ def test_the_mover_loads_the_mind_and_nothing_else():
     from agent.runtime import MIND, packages_of
 
     beliefs = boot(WORLD, "hanoi")
-    assert packages_of(beliefs, "http://example.org/orexis/world/hanoi#hanoi") == MIND
+    assert packages_of(beliefs) == MIND
     agent = WORLD.parents[1] / "agent"
     absent = [agent / "sensing" / "ontology.ttl", agent / "sensing" / "rules.ttl",
               agent / "prediction" / "ontology.ttl", agent / "transport" / "mqtt" / "ontology.ttl"]

@@ -27,7 +27,7 @@ import urllib.parse
 import urllib.request
 
 from agent import clock
-from agent.ontology import PUBLIC, local_of
+from agent.ontology import PUBLIC, SELF_GRAPH, local_of
 from agent.sensing.cadence import cadence_of
 from agent.store import answer, graphs_of, rows
 from agent.transport.transport import Transport
@@ -37,10 +37,10 @@ log = logging.getLogger("http")
 #  HOW LONG ONE FETCH MAY TAKE, in real seconds.
 TIMEOUT_S = 30.0
 
-#  EVERY SENSOR OF THE AGENT'S THAT IS A THING WITH A FORM.
+#  EVERY SENSOR OF THE SELF'S THAT IS A THING WITH A FORM.
 _MINE_Q = """
 SELECT DISTINCT ?sensor WHERE {
-  $me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
+  ?me a orexis:Self ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
   ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host ; td:hasForm ?form }
 ORDER BY ?sensor"""
 
@@ -104,7 +104,7 @@ class Http(Transport):
 
     def open(self, store) -> list[str]:
         """The sensors of the agent's this member reads."""
-        sensors = [r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me)]
+        sensors = [r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC, SELF_GRAPH))]
         log.info("%s reads %s over HTTP", local_of(self.me), [local_of(s) for s in sensors] or "nothing")
         return sensors
 

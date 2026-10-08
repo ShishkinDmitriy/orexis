@@ -5,7 +5,7 @@ from __future__ import annotations
 import pyoxigraph as ox
 
 from agent.ontology import OREXIS, local_of
-from agent.store import DocumentRefused, kinds_in, put_document, rows
+from agent.store import DocumentRefused, kinds_in, put_document, refuse_the_self, rows
 
 RECORDED = OREXIS + "Recorded"
 
@@ -18,7 +18,9 @@ def said(store: ox.Store, me: str, doc: ox.Store) -> list[str]:
     """Believe the document `doc` as this agent said it: every graph put in, recorded and its
     own, each replacing what it said under that name before. The names written, sorted. A graph
     of the name that arrived any other way is refused — what the agent was told or what its
-    world asserts is not rewritten by its own word — and so is the whole document with it."""
+    world asserts is not rewritten by its own word — and so is the whole document with it, as is
+    one saying who the self is, which the boot alone says (`refuse_the_self`)."""
+    refuse_the_self(doc, f"what {local_of(me)} said")
     for graph in kinds_in(doc):
         for r in rows(store, _ARRIVED_Q, (), graph=graph):
             if r["arrival"] != RECORDED or r.get("owner") != me:

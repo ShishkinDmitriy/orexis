@@ -48,7 +48,7 @@ import os
 from datetime import datetime
 
 from agent import clock
-from agent.ontology import PUBLIC, local_of
+from agent.ontology import PUBLIC, SELF_GRAPH, local_of
 from agent.store import Raw, answer, catalogue_of, graphs_of, instant, rows
 from agent.transport.transport import Transport
 
@@ -79,10 +79,10 @@ SELECT ?pattern WHERE {
   ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
 ORDER BY ?pattern"""
 
-#  EVERY SENSOR OF THE AGENT'S THAT PUBLISHES ON A TOPIC, with each pattern that names it.
+#  EVERY SENSOR OF THE SELF'S THAT PUBLISHES ON A TOPIC, with each pattern that names it.
 _MINE_Q = """
 SELECT ?sensor ?pattern WHERE {
-  $me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
+  ?me a orexis:Self ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
   ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host ; mqtt4ssn:observesTopic ?topic .
   ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
 ORDER BY ?sensor ?pattern"""
@@ -178,7 +178,7 @@ class Mqtt(Transport):
     def nudge(self, store, now: datetime) -> list[str]:
         """Tell the board of every sensor of this member's whose reading has fallen due to sense now;
         the sensors asked. Writes nothing."""
-        mine = {r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me)}
+        mine = {r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC, SELF_GRAPH))}
         lapsed = [r["sensor"] for r in rows(store, _LAPSED_Q, (), cat=Raw(f"<{catalogue_of(store)}>"), now=instant(now))]
         asked = [sensor for sensor in lapsed if sensor in mine]
         for sensor in asked:
@@ -228,7 +228,7 @@ class Mqtt(Transport):
     def open(self, store) -> list[str]:
         """Subscribe to every pattern the world implies for the agent's sensors, and to the topic
         it listens to itself; the patterns."""
-        patterns = sorted({r["pattern"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me)}
+        patterns = sorted({r["pattern"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC, SELF_GRAPH))}
                           | {r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=self.me)})
         for pattern in patterns:
             self.client.subscribe(pattern)
@@ -249,7 +249,7 @@ class Mqtt(Transport):
         if any(matches(r["pattern"], topic) for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=self.me)):
             from agent.speech.heard import heard
             return [(None, graph) for graph in heard(store, self.me, payload)]
-        mine = list(dict.fromkeys(r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC), me=self.me)
+        mine = list(dict.fromkeys(r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC, SELF_GRAPH))
                                   if matches(r["pattern"], topic)))
         if not mine:
             log.debug("%s: a message on %s is nobody's of mine", local_of(self.me), topic)

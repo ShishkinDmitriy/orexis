@@ -109,7 +109,7 @@ intention where it stood (#842).
   its implementation, so reading `planning:precondition` beside it looked one query away. It is
   planning's word — `agent/execution/tests/test_layering.py` refuses a file of execution that spells
   `planning:` at all, since naming a higher layer's word is the dependency an import scan cannot
-  see — and asking it is more than one query: the text bound with `$me`, the world it is answered
+  see — and asking it is more than one query: the text asked of the self, the world it is answered
   over, a row carrying the step's own filling. Written twice, those drift, which is what a
   synchronous twin of a pass does. So execution says a head is about to be taken and planning
   answers through the door a blocked step always used. Keeping the once-a-pass question beside it

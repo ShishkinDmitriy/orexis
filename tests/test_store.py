@@ -60,6 +60,23 @@ def _queries(text: str) -> list[str]:
     return [block for block in re.findall(r'"""(.*?)"""', text, re.S) if _SPARQL.search(block)]
 
 
+#  THE TOKEN THE SELF RETIRED. Every text about the agent was handed `$me`, threaded by hand from the
+#  one identifier a process is told into every query that mentioned it, because nothing in the store
+#  said who the agent was. The boot says it now — `<agent> a orexis:Self`, once, in a graph of the
+#  agent's own (knowledge/domain/kernel/self.md) — so a text asks `?me a orexis:Self` and is bound
+#  nothing. A `$me` left anywhere would be a text somebody must bind, and `store.bind` refuses a
+#  token nobody binds only when the text is RUN; this refuses it when it is WRITTEN.
+_ME_TOKEN = re.compile(r"\$me\b")
+
+
+@pytest.mark.parametrize("path", _SOURCES, ids=lambda p: str(p.relative_to(REPO_ROOT)))
+def test_no_text_is_handed_who_the_agent_is(path):
+    found = [n for n, line in enumerate(path.read_text().splitlines(), 1) if _ME_TOKEN.search(line)]
+    assert not found, (
+        f"{path.relative_to(REPO_ROOT)} carries a `$me` token at line(s) {found}: a text asks the self, "
+        f"`?me a orexis:Self`, and nothing hands it the agent.")
+
+
 @pytest.mark.parametrize("path", _SOURCES, ids=lambda p: str(p.relative_to(REPO_ROOT)))
 def test_queries_use_only_declared_prefixes(path):
     for query in _queries(path.read_text()):

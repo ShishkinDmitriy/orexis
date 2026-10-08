@@ -29,7 +29,7 @@ def test_admit_writes_the_candidates_the_patch_says(case, monkeypatch, request, 
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
     (present,) = rows(store, _PRESENT_Q, ())
-    admit(store, present["g"], snapshots.ME)
+    admit(store, present["g"])
     snapshots.held_to_diff(case, request, "admit", snapshots.snapshot_of(store))
 
 
@@ -48,12 +48,12 @@ def test_a_filling_the_world_admits_under_another_name_is_not_admitted_twice(mon
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(CASES_DIR / "one_lever_two_tanks.trig")
     (present,) = rows(store, _PRESENT_Q, ())
-    admit(store, present["g"], snapshots.ME)
-    written = {r["c"] for r in rows(store, _CANDIDATES_Q, ())}
+    admit(store, present["g"])
+    written ={r["c"] for r in rows(store, _CANDIDATES_Q, ())}
     assert len(written) == 2, "one lever, two tanks: two fillings"
     first = sorted(written)[0]
     update(store, f"""
 DELETE {{ GRAPH ?cat {{ <{first}> ?p ?o }} }} INSERT {{ GRAPH ?cat {{ <urn:test:handed> ?p ?o }} }}
 WHERE  {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{first}> ?p ?o }} }}""")
-    admit(store, present["g"], snapshots.ME)
+    admit(store, present["g"])
     assert {r["c"] for r in rows(store, _CANDIDATES_Q, ())} == (written - {first}) | {"urn:test:handed"}

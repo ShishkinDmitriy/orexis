@@ -82,7 +82,7 @@ def _held(store: ox.Store, package: str) -> list[bool]:
 def test_a_package_is_loaded_where_its_premise_holds_and_nowhere_else(tmp_path, case):
     facts, drift, action, expected = CASES[case]
     store = boot(_world(tmp_path, facts, drift, action), "me")
-    assert packages_of(store, ME) == (*MIND, *expected)
+    assert packages_of(store) == (*MIND, *expected)
     for package in EVERY:
         documents = _held(store, package)
         if package in (*MIND, *expected):
@@ -90,7 +90,7 @@ def test_a_package_is_loaded_where_its_premise_holds_and_nowhere_else(tmp_path, 
         else:
             assert not any(documents), f"{package}'s documents are in the store, and nothing asked for them"
     runtime = Runtime(store, "me")
-    assert runtime.packages == packages_of(store, ME)
+    assert runtime.packages == packages_of(store)
     #  WHAT HAS A PART: the mind, and every loaded package with a `create` module but a transport,
     #  which is created only where the runtime is told to connect; a transport package has its `create`
     #  all the same.

@@ -494,9 +494,16 @@ WHERE  {{ GRAPH <{catalogue}> {{ }}
 #  `orexis:arrivedBy orexis:Asserted` and, where the caller says so, `orexis:beliefsOf` — and
 #  that it is the catalogue, which is created and never loaded. A graph stating no kind is
 #  refused rather than guessed at, since a graph with no row is invisible to every reader.
+#
+#  NOR WHO THE SELF IS. `orexis:Self` is the boot's to write, once, for the agent the process was
+#  told to be (knowledge/domain/kernel/self.md): a world file saying it would make every agent of
+#  the world that agent, and a peer saying it would be a peer telling this agent who it is. So a
+#  document stating that anything is the self — in its content or in its rows — is refused whole,
+#  and so is one saying a graph of its is the self graph, which only the boot creates.
 
 _RDF_TYPE_IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 _LOADERS_OWN = (OREXIS + "arrivedBy", OREXIS + "beliefsOf")
+_BOOTS_OWN = (OREXIS + "Self", OREXIS + "SelfGraph")
 _TRIG = (".trig",)
 
 
@@ -564,6 +571,16 @@ def checked(doc: ox.Store, name: str) -> ox.Store:
             raise DocumentRefused(f"{name} says {q.predicate.value} of a graph, which only the loader says")
         if q.predicate.value == _RDF_TYPE_IRI and q.object.value == CATALOGUE:
             raise DocumentRefused(f"{name} says a graph is the catalogue, which is created and never loaded")
+    return refuse_the_self(doc, name)
+
+
+def refuse_the_self(doc: ox.Store, name: str) -> ox.Store:
+    """`doc`, where nothing in it — content or rows — says that anything is the self or that a graph
+    is the self graph; refused otherwise, since only the boot says either. The door every document
+    comes through — a file, a peer's message — and the one an agent's own word is held to as well."""
+    for kind in _BOOTS_OWN:
+        for q in doc.quads_for_pattern(None, ox.NamedNode(_RDF_TYPE_IRI), ox.NamedNode(kind), None):
+            raise DocumentRefused(f"{name} says {q.subject} is {kind.rsplit('#', 1)[-1]}, which only the boot says")
     return doc
 
 

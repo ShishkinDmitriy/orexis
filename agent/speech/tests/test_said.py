@@ -41,3 +41,14 @@ def test_what_the_agent_said_is_recorded_and_its_own_and_may_be_said_again(store
 def test_the_agent_cannot_say_again_what_a_peer_told_it(store):
     with pytest.raises(DocumentRefused):
         said(store, ME, _doc(T + "heard", "overwritten"))
+
+
+def test_the_agent_s_own_word_cannot_say_who_the_self_is(store):
+    """A saying is a text a domain wrote, and what it constructs the agent believes: a document
+    of its that says somebody is the self would be a second self no boot wrote. Refused whole."""
+    doc = _doc(T + "round", "open")
+    doc.add(ox.Quad(ox.NamedNode(T + "someone"), ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+                    ox.NamedNode(OREXIS + "Self"), ox.NamedNode(T + "round")))
+    with pytest.raises(DocumentRefused, match="only the boot says"):
+        said(store, ME, doc)
+    assert not list(store.quads_for_pattern(None, None, None, ox.NamedNode(T + "round")))

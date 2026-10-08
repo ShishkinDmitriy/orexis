@@ -39,13 +39,16 @@ def test_no_frequency_or_a_unit_nothing_converts_is_no_cadence(snapshots, caplog
 
 def test_a_limit_is_the_agents_where_its_world_states_one_and_the_default_where_not(snapshots, caplog):
     """The keeper's world states no `sensing:stuckAfter`, so the figure handed in holds; told one,
-    the keeper's is read — of the keeper, as `orexis:actsFor` is stated — and told two, neither is."""
+    the keeper's is read — of the self, the keeper the store is, as `orexis:actsFor` is stated —
+    told one of another agent, that is not the keeper's, and told two, neither is."""
     store = snapshots.stand_in(POT)
-    assert limit_of(store, snapshots.ME, STUCK_AFTER_TERM, 6) == 6
+    assert limit_of(store, STUCK_AFTER_TERM, 6) == 6
+    update(store, f"INSERT DATA {{ GRAPH <{TEST}world> {{ <{TEST}somebody> sensing:stuckAfter 9 }} }}")
+    assert limit_of(store, STUCK_AFTER_TERM, 6) == 6, "another agent's figure is not the self's"
     update(store, f"INSERT DATA {{ GRAPH <{TEST}world> {{ <{snapshots.ME}> sensing:stuckAfter 2 }} }}")
-    assert limit_of(store, snapshots.ME, STUCK_AFTER_TERM, 6) == 2
-    assert limit_of(store, snapshots.ME, SILENT_AFTER_TERM, 3) == 3, "each limit is its own word"
+    assert limit_of(store, STUCK_AFTER_TERM, 6) == 2
+    assert limit_of(store, SILENT_AFTER_TERM, 3) == 3, "each limit is its own word"
     update(store, f"INSERT DATA {{ GRAPH <{TEST}world> {{ <{snapshots.ME}> sensing:stuckAfter 4 }} }}")
     with caplog.at_level("WARNING", logger="cadence"):
-        assert limit_of(store, snapshots.ME, STUCK_AFTER_TERM, 6) == 6
+        assert limit_of(store, STUCK_AFTER_TERM, 6) == 6
     assert "states 2 figures for stuckAfter" in caplog.text

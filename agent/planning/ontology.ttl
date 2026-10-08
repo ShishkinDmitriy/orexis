@@ -315,7 +315,7 @@ planning:precondition
     rdfs:domain orexis:Action ;
     rdfs:range xsd:string ;
     rdfs:label "precondition" ;
-    rdfs:comment "When an action may be taken, as a SELECT over the world binding one variable per parameter the action `orexis:takes`, named for the parameter's local part; `$me` is substituted by whoever asks. A row is a step the world admits: it exists only where every hop of the walk holds, which is why chaining needs no `requires` of its own. The facts a step's precondition read in the world it was planned from are the step's precondition too (knowledge/domain/planning/precondition.md)." .
+    rdfs:comment "When an action may be taken, as a SELECT over the world binding one variable per parameter the action `orexis:takes`, named for the parameter's local part; the agent is asked as `?me a orexis:Self` and nothing is substituted for it. A row is a step the world admits: it exists only where every hop of the walk holds, which is why chaining needs no `requires` of its own. The facts a step's precondition read in the world it was planned from are the step's precondition too (knowledge/domain/planning/precondition.md)." .
 
 
 planning:effect

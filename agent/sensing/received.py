@@ -174,7 +174,7 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
            phenomenon_at)
     log.info("%s: %s reads %s%s", local_of(me), local_of(sensor), number,
              "".join(f", and read {n:g} {a:g}s before" for n, a in readings[:-1]))
-    _stuck(store, me, sensor, cat, since[-1], when, cadence, limit_of(store, me, STUCK_AFTER_TERM, STUCK_AFTER, memo))
+    _stuck(store, me, sensor, cat, since[-1], when, cadence, limit_of(store, STUCK_AFTER_TERM, STUCK_AFTER, memo))
     return [*written, graph]
 
 

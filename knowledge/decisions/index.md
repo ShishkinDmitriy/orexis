@@ -45,6 +45,7 @@ Who may author what, and why isolation here is structural rather than enforced.
 * [authn-authz-capabilities](/decisions/authn-authz-capabilities.md) - Cert is who you are and is durable; a signed grant is what you may do now and is ephemeral.
 * [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) - The world is TTL files and each agent holds its own store, so isolation is structural rather than enforced.
 * [series-and-bus-isolation](/decisions/series-and-bus-isolation.md) - A bucket and scoped token per agent; broker credentials and ACL derived from the same wiring that derives capability.
+* [the-self-is-a-class-held-to-one-instance](/decisions/the-self-is-a-class-held-to-one-instance.md) - The boot writes which agent a store is, once; a text asks `orexis:Self`, and every door refuses a second.
 
 # The mind — what an agent wants
 

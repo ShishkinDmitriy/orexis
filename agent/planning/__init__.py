@@ -31,7 +31,8 @@ rows the other wrote — `unweighed` says what a pass weighs next, `world_at` wh
 in a world. `tests/test_layout.py` holds that as imports.
 
 **A FUNCTION STARTS IN THE STORE AND ENDS IN IT**, and takes the names of what it is about:
-`weigh(store, want, world)`, `take(store, candidate, me)`, `admit(store, world, me)`. What one
+`weigh(store, want, world)`, `take(store, candidate)`, `admit(store, world)` — and who is
+asking is no name at all, since a text asks the self (`orexis:Self`) the store holds. What one
 act needs from another it reads off the rows the other wrote, so nothing is a Python value in
 flight and the two classes that were (a candidate, a witness) are rows.
 

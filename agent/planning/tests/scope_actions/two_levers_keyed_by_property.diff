@@ -26,7 +26,7 @@
    :dose planning:precondition """PREFIX : <http://example.org/test#>
          PREFIX sensing: <http://example.org/orexis/sensing#>
          SELECT DISTINCT ?valve ?reading WHERE {
-             $me :hasActuator ?valve ; orexis:actsFor ?subject .
+             ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
              ?valve :actuates ?subject ; :actuatesProperty ?property .
              ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
 -  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
@@ -40,7 +40,7 @@
    :heat planning:precondition """PREFIX : <http://example.org/test#>
          PREFIX sensing: <http://example.org/orexis/sensing#>
          SELECT DISTINCT ?heater ?reading WHERE {
-             $me :hasActuator ?heater ; orexis:actsFor ?subject .
+             ?me a orexis:Self ; :hasActuator ?heater ; orexis:actsFor ?subject .
              ?heater :warms ?subject ; :warmsProperty ?property .
              ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
 -  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>

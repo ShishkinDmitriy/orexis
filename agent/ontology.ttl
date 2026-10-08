@@ -87,6 +87,18 @@ orexis:SocietyGraph
     rdfs:label "Society graph" ;
     rdfs:comment "Who a world's principals are and how they reach one another: the agents and the client each is, the brokers as what clients are connected to, the topics and the filters that name them, and which device speaks on which. Public and sovereign-authored, beside the world graph and apart from it, and read by the agents, the simulator and `orexis-mqtt`, which derives the ACL from it. The KERNEL'S kind, since the boot finds who the agent is on it, and a package loaded by a premise (#824) would be read off it before that package is loaded. Where a broker listens is not here: that is a deployment graph, onboarding's kind, which no agent loads (knowledge/decisions/a-documents-kind-says-who-reads-it.md)." .
 
+orexis:Self
+    a owl:Class ;
+    rdfs:subClassOf orexis:Agent ;
+    rdfs:label "Self" ;
+    rdfs:comment "The one agent a store is THIS agent's — the agent the process was told to be, by the one identifier it is handed (knowledge/domain/kernel/self.md). Written by the boot alone, once, in an `orexis:SelfGraph` of the agent's own, so a text asks `?me a orexis:Self` and is bound nothing. A class held to one instance, and never a singleton IRI: the agent keeps the name its world gives it, and a document or a peer saying of anything that it is the self is refused, as is a store holding any count of selves but one." .
+
+orexis:SelfGraph
+    a owl:Class ;
+    rdfs:subClassOf orexis:BeliefGraph ;
+    rdfs:label "Self graph" ;
+    rdfs:comment "Which agent is the self: the one row the boot writes, `<agent> a orexis:Self`, owned by that agent and recorded, since it is the agent's word about itself. A belief, so a text answered over what is known reads it and it crosses into an imaginarium; NOT public, since it is true of one agent's store and of no other's, so a reader that reads the public graphs and asks the self states this kind beside them." .
+
 orexis:StateGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph , orexis:Graph ;

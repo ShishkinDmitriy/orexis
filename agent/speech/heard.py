@@ -21,7 +21,8 @@ def heard(store: ox.Store, me: str, payload: bytes) -> list[str]:
     """Believe the document `payload` holds, as a peer said it: every graph it names put in, each
     replacing what a peer said under that name before, received and this agent's. The names
     written, sorted — and none, said in the log, where the document is no document, a graph is
-    no state or a graph of its name arrived another way."""
+    no state or a graph of its name arrived another way, or it says who the self is: the loader's
+    refusal (`refuse_the_self`), since no peer tells this agent who it is."""
     try:
         doc = document_of(payload)
         for graph, kinds in kinds_in(doc).items():

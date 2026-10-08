@@ -39,6 +39,11 @@ that holds no constraint pays one query; the dispatcher pays the reach, measured
 
 A READ, and a function over the store: it writes a working graph for the reach and takes it away
 before it answers, so nothing it does outlives the call and no catalogue row is written for it.
+
+THE HOLDER CHOOSES THE CONSTRAINTS AND NOTHING ELSE. A precondition asks for the agent as the self
+(`?me a orexis:Self`), which crossed into the imaginarium the reach is read in; in an agent's store
+the one holder is the self. A store holding several holders and no self — a test's world — reads
+every precondition that names the agent as admitting nothing in the reach, which couples less.
 """
 
 from __future__ import annotations
@@ -131,7 +136,7 @@ def couplings(store: ox.Store, holder: str, present: str, now: datetime, *, memo
     actions = rows(store, _ACTIONS_Q, graphs_of(store, ACTION, at=now))
     default = [ox.NamedNode(g) for g in graphs] + [ox.NamedNode(REACH_GRAPH)]
     try:
-        texts = [_composed(a["construct"], bind(a["precondition"], me=holder)) for a in actions]
+        texts = [_composed(a["construct"], bind(a["precondition"])) for a in actions]
     except (ValueError, Unbound) as exc:
         log.warning("a construct could not be closed over its precondition; every instance is coupled: %s", exc)
         return Couplings([], {}, anything=True)
@@ -145,10 +150,10 @@ def couplings(store: ox.Store, holder: str, present: str, now: datetime, *, memo
             #  joined, and a pass that died here over it found nothing (#902, measured).
             log.warning("a construct could not be run over the reach; every instance is coupled: %s", exc)
             return Couplings([], {}, anything=True)
-        parts = _parts(store, selects, holder, default)
+        parts = _parts(store, selects, default)
         if parts is None:
             return Couplings([], {}, anything=True)
-        bound = _bound(store, [a["precondition"] for a in actions], holder, default)
+        bound = _bound(store, [a["precondition"] for a in actions], default)
     finally:
         store.remove_graph(ox.NamedNode(REACH_GRAPH))
     return Couplings(parts, bound)
@@ -193,7 +198,7 @@ def _reach(store: ox.Store, texts: list[str], default: list) -> int:
     return rounds
 
 
-def _parts(store: ox.Store, selects: list[str], holder: str, default: list) -> list[frozenset[str]] | None:
+def _parts(store: ox.Store, selects: list[str], default: list) -> list[frozenset[str]] | None:
     """The components of what the constraints' rows join over the reach: every IRI one row binds is
     joined to every other, across every row of every constraint. The select is asked with every
     variable projected, since the join key may be one the head left out — `?other`, in the
@@ -209,7 +214,7 @@ def _parts(store: ox.Store, selects: list[str], holder: str, default: list) -> l
         return x
 
     for text in selects:
-        text = re.sub(r"\$this\b", "?this", bind(text, me=holder))
+        text = re.sub(r"\$this\b", "?this", bind(text))
         solutions = None
         for attempt in (_HEAD.sub(r"\1SELECT * WHERE", text, count=1), text):
             try:
@@ -234,7 +239,7 @@ def _parts(store: ox.Store, selects: list[str], holder: str, default: list) -> l
     return [frozenset(v) for v in sorted(out.values(), key=lambda s: sorted(s))]
 
 
-def _bound(store: ox.Store, preconditions: list[str], holder: str, default: list) -> dict[str, frozenset[str]]:
+def _bound(store: ox.Store, preconditions: list[str], default: list) -> dict[str, frozenset[str]]:
     """Each term to every term some filling admitted in the reach binds it with — the parcel to the
     vans that can pick it and the cells it can be dropped on. A precondition is asked as `admit`
     asks it, over the reach in the present's place; one that will not run binds nothing, which is
@@ -242,7 +247,7 @@ def _bound(store: ox.Store, preconditions: list[str], holder: str, default: list
     out: dict[str, set[str]] = {}
     for text in preconditions:
         try:
-            found = store.query(bind(text, me=holder), prefixes=NAMESPACES, default_graph=default)
+            found = store.query(bind(text), prefixes=NAMESPACES, default_graph=default)
             names = [v.value for v in found.variables]
             for solution in found:
                 terms = {str(solution[n].value) for n in names

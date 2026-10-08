@@ -11,7 +11,7 @@ said, since the world made no promise the absence could break.
 
 A LIMIT is the agent's: `sensing:silentAfter` and `sensing:stuckAfter`, each a count of the doubted
 sensor's cadences, stated of the agent by its world as `orexis:actsFor` is, in a public graph the
-agent believes. The figure in code (`missed.SILENT_AFTER`, `received.STUCK_AFTER`) is what holds where
+agent believes, and read of the self (`orexis:Self`) the boot wrote. The figure in code (`missed.SILENT_AFTER`, `received.STUCK_AFTER`) is what holds where
 the world states none — a default, never a second place the figure lives.
 """
 
@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import logging
 
-from agent.ontology import PUBLIC, local_of
+from agent.ontology import PUBLIC, SELF_GRAPH, local_of
 from agent.store import graphs_of, remember, rows
 
 log = logging.getLogger("cadence")
@@ -34,21 +34,21 @@ SELECT ?every ?unit WHERE {
 _SECONDS = {"SEC": 1.0, "MIN": 60.0, "HR": 3600.0, "HUR": 3600.0, "DAY": 86400.0}
 
 
-_LIMIT_Q = "SELECT ?n WHERE { $me $limit ?n }"
+_LIMIT_Q = "SELECT ?n WHERE { ?me a orexis:Self ; $limit ?n }"
 
 
-def limit_of(store, me: str, limit: str, default: int, memo=None) -> int:
-    """How many cadences `me` allows before the doubt `limit` names — `sensing:silentAfter`,
+def limit_of(store, limit: str, default: int, memo=None) -> int:
+    """How many cadences the self allows before the doubt `limit` names — `sensing:silentAfter`,
     `sensing:stuckAfter` — as its world states of it, or `default` where it states none or several.
     Remembered per pass where a memo is given."""
     def read():
-        found = rows(store, _LIMIT_Q, graphs_of(store, PUBLIC), me=me, limit=limit)
+        found = rows(store, _LIMIT_Q, graphs_of(store, PUBLIC, SELF_GRAPH), limit=limit)
         if len(found) != 1:
             if found:
-                log.warning("%s states %d figures for %s: the default, %d, holds", local_of(me), len(found), local_of(limit), default)
+                log.warning("the self states %d figures for %s: the default, %d, holds", len(found), local_of(limit), default)
             return default
         return int(float(found[0]["n"]))
-    return remember(memo, ("limit", me, limit), read)
+    return remember(memo, ("limit", limit), read)
 
 
 def cadence_of(store, sensor: str, memo=None) -> float | None:

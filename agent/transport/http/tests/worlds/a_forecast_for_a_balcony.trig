@@ -19,6 +19,8 @@
 
 GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:SelfGraph rdfs:subClassOf orexis:Graph .
   sensing:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
   sensing:ForecastGraph rdfs:subClassOf orexis:Graph .
 }
@@ -45,12 +47,22 @@ GRAPH :world {
   :weather_form hctl:hasTarget "https://forecast.example/v1?latitude={latitude}&longitude={longitude}&hourly=precipitation" .
 }
 
+# THE SELF, as the boot writes it: this is the keeper's store.
+GRAPH :self {
+  :keeper a orexis:Self .
+}
+
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :self orexis:arrivedBy orexis:Recorded .
+  :self orexis:beliefsOf :keeper .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
 }

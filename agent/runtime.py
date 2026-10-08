@@ -15,13 +15,21 @@ GRAPH OF A KIND THE VOCABULARY DOES NOT DECLARE IS PASSED OVER**: the kind says 
 document, and a world's hardware and where its broker listens are onboarding's to read and not
 the agent's (#820, #823). Then the world's public graphs, then who the agent is — off the
 society graph, or the world graph of a world with no society, by the one identifier the
-process is told — then the world's other graphs, the agent's own, owned by it. The
-catalogue is closed and the Planner's `scope` writes the scopes.
+process is told — and THE SELF, written once in a graph of the agent's own; then the world's
+other graphs, the agent's own, owned by it. The catalogue is closed and the Planner's `scope`
+writes the scopes.
+
+**THE SELF IS ONE, AND THE BOOT ALONE SAYS WHICH (knowledge/domain/kernel/self.md).** Every text
+about the agent asks `?me a orexis:Self` and is bound nothing, so the boot is where the self is
+held to one instance: it writes `<agent> a orexis:Self` where the store holds none, for the agent
+it was told to be, and refuses a volume whose self is another agent — the right id handed the
+wrong volume — and any count of selves but one, since a text asking over two would answer for both
+without a word. No document and no peer can say it: the loader refuses one that does.
 
 **A PACKAGE IS LOADED WHERE THE WORLD NEEDS IT (#824).** Belief, planning and execution are the
 mind and every agent has them. Every other package — sensing, prediction, speech, the MQTT
 transport — has its documents read and its modules imported only where its PREMISE holds: an
-ASK in `PREMISES`, read off the world's public graphs with `$me` the agent. So the boot reads
+ASK in `PREMISES`, read off the world's public graphs and the self. So the boot reads
 the kernel, the mind and the world first, finds who the agent is, asks each premise, and only
 then reads the documents of the packages whose premise held — closing the vocabulary again, and
 taking a second look at any graph of the world passed over for a kind only such a package
@@ -85,16 +93,17 @@ from agent import clock
 from agent import series
 from agent.lifecycle import MET, UNFINISHED, UNREACHABLE, Signal  # noqa: F401 — the outcomes, re-exported
 from agent.metrics import Laps, Level, Value, window
-from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS
+from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, GRAPH_PREFIX, OREXIS, SELF, SELF_GRAPH
 from agent.planning.planner import Planner
-from agent.store import (answer, catalogue_of, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of,
-                         kinds_in, put_document, rows, update, Raw)
+from agent.store import (answer, catalogue_of, classify, close_catalogue, closed, document, entry, forget_graph, graphs_of,
+                         imports_of, kinds_in, put_document, rows, update, Raw)
 
 log = logging.getLogger("runtime")
 
 KERNEL = Path(__file__).resolve().parent
 ASSERTED = OREXIS + "Asserted"
 DERIVED = OREXIS + "Derived"
+RECORDED = OREXIS + "Recorded"
 ONTOLOGY = OREXIS + "OntologyGraph"
 WORLD = OREXIS + "WorldGraph"
 SOCIETY = OREXIS + "SocietyGraph"
@@ -144,11 +153,13 @@ SENSING, PREDICTION, SPEECH, MQTT, HTTP = "sensing", "prediction", "speech", "tr
 #  A SENSOR OF THE AGENT'S: hosted by what it acts for, by a sample of it, or by a place that
 #  contains it — the one relation sensing's callers read a sensor as the agent's by (the MQTT
 #  driver's `open` and `handle`, the HTTP driver's, sensing's `missed` of a series).
-_MINE = ("$me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host . "
+_MINE = ("?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host . "
          "?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host .")
 
-#  EVERY OTHER PACKAGE, AND WHAT IN THE WORLD MAKES THE AGENT NEED IT: an ASK over the world's
-#  public graphs, `$me` the agent, which is each package's callers' reads answered in advance.
+#  EVERY OTHER PACKAGE, AND WHAT IN THE WORLD MAKES THE AGENT NEED IT: a pattern about `?me`, asked
+#  over the world's public graphs and the self as `ASK { ?me a orexis:Self . <premise> }` — each
+#  package's callers' reads answered in advance. `packages_of` puts the self at the head, so an
+#  operator's tool reading a world with no self in it asks the same premise of every agent instead.
 #  - SENSING, where a sensor is the agent's: `received` is called for such a sensor's message and
 #    its part asks after its readings, and nothing else writes the observations its rules read;
 #  - PREDICTION, where a sensor is the agent's AND a drift is declared: its part answers every
@@ -167,13 +178,13 @@ _MINE = ("$me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host 
 #  instance (rule 1); a new package under `agent/` loads nowhere until it is listed here or in
 #  MIND, which `agent/tests/test_premises.py` holds the tree to.
 PREMISES = {
-    SENSING: f"ASK {{ {_MINE} }}",
-    PREDICTION: f"ASK {{ {_MINE} ?drift a prediction:Drift }}",
-    SPEECH: """ASK { { $me mqtt4ssn:listensToTopic ?topic }
-                     UNION { ?action execution:implementation/execution:operation ?op . ?op a execution:Saying } }""",
-    MQTT: f"""ASK {{ {{ $me mqtt4ssn:listensToTopic ?topic }}
-                     UNION {{ {_MINE} ?sensor mqtt4ssn:observesTopic ?topic }} }}""",
-    HTTP: f"ASK {{ {_MINE} ?sensor td:hasForm ?form }}",
+    SENSING: _MINE,
+    PREDICTION: f"{_MINE} ?drift a prediction:Drift",
+    SPEECH: """{ ?me mqtt4ssn:listensToTopic ?topic }
+               UNION { ?action execution:implementation/execution:operation ?op . ?op a execution:Saying }""",
+    MQTT: f"""{{ ?me mqtt4ssn:listensToTopic ?topic }}
+              UNION {{ {_MINE} ?sensor mqtt4ssn:observesTopic ?topic }}""",
+    HTTP: f"{_MINE} ?sensor td:hasForm ?form",
 }
 EVERY = (*MIND, *PREMISES)
 #  WHAT WATCHES THE AGENT: a package created where the environment names a store for it, which is a
@@ -185,6 +196,9 @@ WATCHERS = ("history", "metrics")
 #  of the society graph, where a world with a bus states its principals, and of the world graph,
 #  where a world with none states its one agent beside what it acts on.
 _ME_Q = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }"
+#  EVERY SELF THE STORE HOLDS, in any graph at all — COUNTED, never picked: a self in a graph the
+#  boot did not write is a self all the same to a text that asks for one.
+_SELVES_Q = "SELECT DISTINCT ?self WHERE { GRAPH ?g { ?self a orexis:Self } } ORDER BY ?self"
 #  WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner — the kernel's,
 #  the packages' and the world's public graphs — and the closure derived from them.
 _FILES_Q = """
@@ -221,12 +235,17 @@ def _documents_of(packages) -> list[Path]:
             if p.suffix in DOCUMENTS and "tests" not in p.relative_to(KERNEL / package).parts]
 
 
-def packages_of(store: ox.Store, me: str) -> tuple[str, ...]:
-    """Every package the agent `me` loads, read off the world `store` holds: the mind, and each
-    whose premise holds over the world's public graphs, in `PREMISES`' order."""
-    public = graphs_of(store, PUBLIC)
+def packages_of(store: ox.Store, who: str = SELF) -> tuple[str, ...]:
+    """Every package the self loads, read off the world `store` holds: the mind, and each whose
+    premise holds over the world's public graphs and the self, in `PREMISES`' order.
+
+    `who` is the CLASS the premise's `?me` is asked as — the self, which is what an agent's store
+    answers for. A store holding a whole world and no self, the operator's, asks `orexis:Agent`
+    instead, and is answered every package SOME agent of the world loads: one question about every
+    agent, where binding each in turn would be the token the self retired."""
+    known = graphs_of(store, PUBLIC, SELF_GRAPH)
     return (*MIND, *(package for package, premise in PREMISES.items()
-                     if answer(store, premise, public, me=me)["boolean"]))
+                     if answer(store, f"ASK {{ ?me a <{who}> . {premise} }}", known)["boolean"]))
 
 
 def known(store: ox.Store, kinds) -> bool:
@@ -285,9 +304,9 @@ def _put_public(store: ox.Store, world: Path, agent_id: str | None = None,
     why onboarding, knowing every reader's vocabulary, refuses a world that holds one.
 
     THE MIND FIRST, AND A PACKAGE WHERE ITS PREMISE HOLDS. For an agent, the kernel, the mind and
-    the world go in first, and the premises are asked of what that put in — the world's public
-    graphs, which are the kernel's and the mind's kinds, so no premise waits on the package it
-    decides. The documents of the packages whose premise held go in next, and a world graph passed
+    the world go in first, then the self, and the premises are asked of what that put in — the
+    world's public graphs, which are the kernel's and the mind's kinds, and the self, so no premise
+    waits on the package it decides. The documents of the packages whose premise held go in next, and a world graph passed
     over for a kind only such a package declares is looked at again. With no agent, every package
     is read at once: the operator's tools read every reader's vocabulary.
 
@@ -299,7 +318,8 @@ def _put_public(store: ox.Store, world: Path, agent_id: str | None = None,
     own, passed = _put(store, world, read, [])
     if agent_id:
         close_catalogue(store)          # the rows say every kind they are beneath, so a premise reads the public graphs
-        loaded = packages_of(store, _identity(store, agent_id))
+        _hold_the_self(store, agent_id)  # and the self, which every premise asks
+        loaded = packages_of(store)
         seen = {path for path, _ in read}
         more = [(path, doc) for path, doc in read_with_imports(_documents_of(p for p in loaded if p not in MIND))
                 if path not in seen]
@@ -384,6 +404,38 @@ def _identity(store: ox.Store, agent_id: str) -> str:
     return found[0]["me"]
 
 
+def selves(store: ox.Store) -> list[str]:
+    """Every agent the store says is the self, in any graph, sorted — one in an agent's store, none
+    in a store holding a whole world, and anything else a store no boot will run."""
+    return [r["self"] for r in rows(store, _SELVES_Q)]
+
+
+def _hold_the_self(store: ox.Store, agent_id: str) -> str:
+    """The self: the agent this process was told to be, written as `orexis:Self` in a graph of its
+    own where the store holds no self — a fresh store, or a volume lived in before the self was
+    written — and held to that everywhere else. The agent's IRI.
+
+    REFUSED, NEVER PICKED. A volume whose self is another agent is the right id handed the wrong
+    volume, and is not lived in by somebody else; a store saying two agents are the self — which
+    no door this side of the boot admits — would have every text asking `?me a orexis:Self`
+    answer for both, silently, so it does not boot at all. The gate stands here, once, and not in
+    each text."""
+    me = _identity(store, agent_id)
+    held = selves(store)
+    if not held:
+        graph = GRAPH_PREFIX + "self/" + agent_id
+        update(store, f"INSERT DATA {{ GRAPH <{graph}> {{ <{me}> a <{SELF}> }} "
+                      f"{entry(store, graph, SELF_GRAPH, RECORDED, owner=me)} }}")
+        held = selves(store)
+    if held != [me]:
+        raise RuntimeError(
+            f"this store's self is {held[0]}, and the process was told to be {agent_id!r}: a volume is "
+            f"one agent's, and it is not lived in by another" if len(held) == 1 else
+            f"this store says {len(held)} agents are the self ({', '.join(held)}): a self is one, and a "
+            f"text asking for it would answer for all of them")
+    return me
+
+
 class Runtime:
     """One agent's process: a lifecycle container for its packages, run pass by pass.
 
@@ -408,7 +460,7 @@ class Runtime:
                  intentions: ox.Store | None = None, transport=None, connect: bool = False):
         self.beliefs, self.id = beliefs, agent_id
         self.me = _identity(beliefs, agent_id)
-        self.packages = packages_of(beliefs, self.me)
+        self.packages = packages_of(beliefs)
         self.budget, self.intentions = budget, intentions      # what planning and execution are handed
         self._laps: Laps | None = None                    # the parts of the pass in progress, where heard
         self._jobs: queue.SimpleQueue = queue.SimpleQueue()

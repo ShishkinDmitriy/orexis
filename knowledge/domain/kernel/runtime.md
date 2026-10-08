@@ -23,7 +23,7 @@ catalogue, where every reader asks, and not into the graph, where a rule would r
 about the world. A document says what its graphs are and nothing about how they arrived or whose
 they are: the loader writes `orexis:Asserted`, and the owner where a graph is the agent's. A
 graph stating no kind, one claiming to be the catalogue and one stating an arrival or an owner are
-refused (`store.document`).
+refused (`store.document`), and so is a document saying who the [self](/domain/kernel/self.md) is.
 
 A document may import others, `owl:imports` with a relative IRI that resolves to the imported
 file's `file:` IRI, which is the name its graph is loaded under; the boot reads every import too,
@@ -35,7 +35,8 @@ is every kind it is beneath. A graph whose kind that closure does not put beneat
 is passed over, neither its quads nor its row read in: a kind says who reads a document, and one
 the agent's vocabulary does not declare is another reader's, such as the hardware
 [onboarding](/domain/onboarding/onboarding.md) reads. Then the world's public graphs, then the agent's identity, read off
-`orexis:localId` in the society graph, or in the world graph of a world with no society. That is
+`orexis:localId` in the society graph, or in the world graph of a world with no society, and
+written as the self — or held to the self a lived-in volume already has. That is
 the first half, read with the mind's documents alone; the premises are asked of it, and the
 documents of each [package](/domain/kernel/package.md) whose premise held go in after, the
 closure taken again and any world graph passed over for a kind only such a package declares
