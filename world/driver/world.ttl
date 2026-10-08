@@ -8,7 +8,7 @@
     owl:imports <../../domains/courier/ontology.ttl> ,    # the domain this world poses
                 <../../domains/courier/driver.ttl> .      # and the boarding, since this world has a driver
 
-#  THE DRIVER (#903): the dispatcher's two vans and two parcels, and ONE DRIVER the agent controls,
+#  THE DRIVER (#903): the dispatcher's two vans and two parcels, and ONE DRIVER the agent has,
 #  who sits in a van, drives it, and must board the other before it can move. The dispatcher is a
 #  child with two hands and two toy cars, moving both vans at once if it likes; here "one van at a
 #  time" is a fact about the world — where the driver is — and every plan respects it by
@@ -21,9 +21,14 @@
 #  the driver is what makes them one plan: drive one van, board the other, drive it
 #  (`constraints.ttl` says how the derivation is told so).
 
+#  WHOSE THE DRIVER IS, `courier:hasDriver` (#929): public, as a grower's actuator is, since it is
+#  what admits a drive or a boarding in the dispatcher's search and what a peer would find it by.
+#  Without it the driver is nobody's, and nothing here moves.
+
 :dispatcher a orexis:Agent ;
     orexis:localId "dispatcher" ;
-    rdfs:comment "The dispatcher: a mind with the courier's actions and one driver to act through, acting for nothing and owing nobody." .
+    courier:hasDriver :driver ;
+    rdfs:comment "The dispatcher: a mind with the courier's actions and one driver to act through, acting for no subject and owing nobody." .
 
 :driver a courier:Driver ; rdfs:label "the driver" .
 

@@ -24,6 +24,10 @@ RULES_GRAPH = SH + "RulesGraph"
 REVISION_GRAPH = BELIEF + "RevisionGraph"
 SETTLED = BELIEF + "settled"
 
+#  HOW MANY RULE EXECUTIONS ONE PASS MAY SPEND: a stance the agent states of itself in its self
+#  graph, read by the deliberator when it is made (knowledge/domain/kernel/stance.md).
+BUDGET_TERM = BELIEF + "budget"
+
 PROV = "http://www.w3.org/ns/prov#"
 DERIVED_FROM = PROV + "wasDerivedFrom"
 

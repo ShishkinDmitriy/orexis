@@ -50,7 +50,8 @@ A taken step waits for its earliest landing, `execution:landsAt` — shifted by 
 — and then for the present, readings and their revisions, to hold every fact of the graph it
 `execution:adds` and none of the one it `execution:retracts`, which is one `ASK` over the present with
 the two graphs named. Then `execution:by` moves; the last step resolves the intention `done`.
-Past its latest landing, `execution:notAfter`, by the patience with no answer, the intention
+Past its latest landing, `execution:notAfter`, by the patience — `execution:patienceS`, a
+[stance](/domain/kernel/stance.md) — with no answer, the intention
 resolves `failed`, and the want is the search's again. A step kept below waits on the intention walking its want instead of the
 clock, fails when that one does, and what hangs below an intention that ended undone is abandoned
 with it.

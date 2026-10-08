@@ -56,7 +56,7 @@ If it is unavailable, the rules are short enough to follow by hand:
 
 **`knowledge/domain/` is the shared dictionary, filed by the package that owns each word** —
 `kernel/`, `sensing/`, `transport/`, `belief/`, `prediction/`, `planning/`, `execution/`,
-`speech/`, `market/`, `actuation/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
+`speech/`, `market/`, `actuation/`, `courier/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
 live terms in its folder's namespace, so retiring a term fails until its page follows. A record
 stays in `knowledge/decisions/` while something current cites it; 0.1.0's are filed under
 `decisions/0.1.0/`. **And a term is defined before it is used.** The
@@ -483,9 +483,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   own** — `received` writes one `sosa:Observation` per sensor holding until the next is due and a
   grace past it, `missed` says `sensing:silentSince`, the sides are revisions; `agent/prediction/`
   accumulates the drifts' rates and imports nothing of sensing.
-- **A limit on how long a sensor may be silent or stuck is the agent's, stated of it by its world,
-  and the figure in code is what holds where it states none** — `sensing:silentAfter` and
-  `sensing:stuckAfter`, read as a cadence is; where an agent's word about itself lives is #876's.
+- **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
+  read there alone, and the package's constant holds where none is stated** — the patience, both
+  budgets, the silent and stuck limits and the horizon, each declared by its reader's package and
+  read through `agent/stance.py`; never a flag or public knowledge, and a grace or a metrics window
+  is none (a-stance-is-the-agents-word-about-itself).
 - **A reading late is not a reading missing** — ended exactly at the next one's due, a late reading
   left no present, and a dose sized from it commanded nothing (#870,
   a-reading-late-is-not-a-reading-missing).

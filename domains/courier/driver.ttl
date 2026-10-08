@@ -16,7 +16,7 @@
 #  again, which #913 asks whether to keep. A document a world asks for is the
 #  domain's way of saying an action belongs to some of its worlds and not all, whichever #913 decides.
 #
-#  THE BOARDING: the driver leaves the van it is aboard and boards another it drives, wherever that
+#  THE BOARDING: a driver the agent has leaves the van it is aboard and boards another it drives, wherever that
 #  van stands — the ride across is the world's to have, and no cell of either grid says how it is
 #  made. It DELETES as the pick does, the van left and the van boarded being two pairs, so a driver
 #  is aboard one van in every possible world a plan reaches, and a drive (`actions.ttl`) moves only
@@ -28,12 +28,15 @@ courier:Board a orexis:Action ;
     orexis:takes courier:driver , courier:van ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Fictive ] ] ;
+    #  ONLY A DRIVER THE AGENT HAS BOARDS (#929): `courier:hasDriver`, the world's word for whose a
+    #  driver is, so of two agents in one world neither's search moves the other's driver into a van.
     planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?driver ?van WHERE {
             ?driver courier:aboard ?from .
             ?driver a courier:Driver .
             ?van courier:drivenBy ?driver .
             ?van a courier:Van .
+            ?me a orexis:Self ; courier:hasDriver ?driver .
             FILTER(?van != ?from)
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;

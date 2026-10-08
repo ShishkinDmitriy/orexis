@@ -25,6 +25,10 @@ status: accepted
 timestamp: 2026-10-07T20:00:00Z
 ---
 
+> **Amended 2026-10-08** (#929): **whom to ask is the agent that has the driver of the van in range**,
+> `courier:hasDriver`, which the world states and the [driver](/domain/courier/driver.md) page owns. A
+> world posing #922 names a driver for each van and whose it is, or each agent's search drives both.
+
 > **Amended 2026-10-07, again** (#923 rewritten a third time): **ask, never tell.** A van saying its
 > whole route tells a peer everything it will do, and a peer has no need of most of it — a van
 > driving has no business learning that its peer is on the water. The sovereign refused it as unsafe.

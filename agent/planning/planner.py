@@ -93,6 +93,7 @@ from agent import clock
 from agent.lifecycle import Signal
 from agent.metrics import Laps
 from agent.ontology import ACTION, PUBLIC, RECORD, local_of
+from agent.stance import stance
 from agent.store import (Memo, Raw, add_quads, copy_graph, forget_graph, bind, bindings, catalogue_of, graphs_of, instant,
                          query, rdflib_view, remember, rows, update)
 
@@ -107,7 +108,8 @@ from .find_scopes import find_scopes
 from .refine import refine
 from .find_wants import find_wants
 from .lay_ground import lay_ground
-from .ontology import CONSTRAINT_GRAPH, DESIRE, GROUND_GRAPH, PLAN_GRAPH, PLANNING, SATISFIED, SCOPE_GRAPH, SHAPES, WANT
+from .ontology import (BUDGET_TERM, CONSTRAINT_GRAPH, DESIRE, GROUND_GRAPH, PLAN_GRAPH, PLANNING, SATISFIED, SCOPE_GRAPH,
+                       SHAPES, WANT)
 from .prepare_ground import prepare_ground
 from .publish_plan import publish_plan
 from .reroot import reroot
@@ -122,10 +124,11 @@ log = logging.getLogger("planner")
 
 #  THE CEILING ON WHAT A SEARCH MAY SPEND, in the unit it spends: candidates weighed for one
 #  want — every fork made, and every candidate passed over because its fork repeated a world
-#  already seen, since both cost a copy and a rule (#494). It is a ceiling on COMPUTE and so
-#  not a preference an agent may revise — the predecessor made it a pick a sovereign could
-#  state, and that pick is one of the things that returns with the machinery for reading
-#  picks. Sized for a plant, whose pass forks a handful.
+#  already seen, since both cost a copy and a rule (#494). What holds where the agent's self graph
+#  states no `planning:budget`: a STANCE, sized by the world's author from a measured cost per
+#  candidate for the agent it is stated of, and revised by nothing — a ceiling on compute is not a
+#  preference a review moves (knowledge/domain/kernel/stance.md). Sized for a plant, whose pass
+#  forks a handful.
 BUDGET = 32
 
 #  THE WORLD OF A STORE THAT SCOPED NOTHING. A name for eyes like any other scope's, and the
@@ -386,11 +389,12 @@ class Planner:
     """One agent's planning: the pass, one want's search, and one iteration of it, each a
     method that sequences the package's acts and reads the store between them."""
 
-    def __init__(self, beliefs: ox.Store, agent_id: str, budget: int = BUDGET):
+    def __init__(self, beliefs: ox.Store, agent_id: str, budget: int | None = None):
         """The beliefs store, the one identifier a process is told, and how much a search may
-        spend — a ceiling on compute in the unit the search spends,
-        which is a container's to size from a measured cost per candidate and not the
-        agent's to revise.
+        spend — a ceiling on compute in the unit the search spends. Where the caller hands none,
+        as a running agent's planning part does, it is the agent's stance, `planning:budget` read
+        off its self graph, and `BUDGET` where it states none; a caller handing one — a test sizing
+        a search — says the call's own, as `search` and `revise` take theirs.
 
         Everything else is discovered from the graph, which is rule 1: the world says
         `?a orexis:localId "<id>"`, and who I am is the answer rather than an argument.
@@ -400,7 +404,7 @@ class Planner:
         """
         self.beliefs = beliefs
         self.id = agent_id
-        self.budget = budget
+        self.budget = budget if budget is not None else stance(beliefs, BUDGET_TERM, BUDGET)
         self.uri = self._identity(agent_id)
         #  THE PLANNER'S IMAGINARIA, one per scope, kept from pass to pass and refreshed at
         #  every `plan`. They are where a pass wrote what it found, so this is how a caller

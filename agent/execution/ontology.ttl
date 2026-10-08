@@ -156,9 +156,9 @@ execution:adds a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range ex
 execution:retracts a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range execution:RetractsGraph ;
     rdfs:label "retracts" ;
     rdfs:comment "The graph of facts this step predicts the world loses — the reading that stood before the dose, the peg the disk was on. The present must hold none of them for the step to be answered." .
-execution:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:integer ;
+execution:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
     rdfs:label "patience seconds" ;
-    rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second plan for the same want is absorbed; past it, the new one supersedes the old. Also how long past its latest landing (`execution:notAfter`) a step may go unanswered before its intention fails. The executor's default stands until an agent states its own." .
+    rdfs:comment "How long a standing intention blocks re-adoption of the same one. Within it, a second plan for the same want is absorbed; past it, the new one supersedes the old. Also how long past its latest landing (`execution:notAfter`) a step may go unanswered before its intention fails, and how far past it a committed step's window holds. A stance: the agent states it of itself in its self graph, read by the executor when it is made; where it states none, sixty seconds (knowledge/domain/kernel/stance.md)." .
 
 #################  How an action is carried out — execution's  #################
 

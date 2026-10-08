@@ -532,16 +532,14 @@ rendezvous stays public, its address does not.
   that ground in series-and-bus-isolation), and it never reads a deployment graph. Within them,
   environment keyed by the broker's IRI and a mounted file per broker are both open. The trigger
   is the first world stating two brokers; until then onboarding refuses such a world (#821).
-- **A sovereign-owned graph of tuning figures**, re-read at boot, for what is hard-coded now:
-  `BUDGET` in `agent/planning/planner.py` (32), `agent/belief/revise.py` (64) and
-  `agent/belief/deliberator.py` (256), `DEFAULT_PATIENCE_S` in `agent/execution/executor.py`, and
-  `SILENT_AFTER` in `agent/sensing/missed.py`; only the planner's has an override, `--budget`.
-  Settled for sensing's two, 2026-10-03: `sensing:silentAfter` and `sensing:stuckAfter` are stated
-  of the agent by its world, in a public graph as `orexis:actsFor` is, and the figure in code holds
-  where it states none — they decide when a `silentSince` or `stuckSince` row exists, which a
-  met-test may read, so a plan does branch on them. The rest stay in code, and where an agent's
-  word about itself lives — one node, one graph — is #876's. What is still not settled is whether a
-  figure no plan branches on is a belief at all
+- **A sovereign-owned graph of tuning figures**, for what was hard-coded: settled by #876, 2026-10-08.
+  An agent's figures about itself — the planner's and the deliberator's budgets, the executor's
+  patience, sensing's two limits, prediction's horizon — are stances, stated of the self in its self
+  graph and read there alone, the figure in code holding where none is stated; the `--budget` flag is
+  gone ([a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md)).
+  The interim of 2026-10-03, sensing's limits stated in a public graph as `orexis:actsFor` is, was
+  refused there. A figure no plan branches on — one source's share of a revision pass,
+  `agent/belief/revise.py`'s 64 — stays in code
   ([model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)).
 - **A wrong world is not caught by derivation.** A premise misstated loads the wrong packages as
   confidently as a right one loads the right ones; what would catch it is a world's own tests.

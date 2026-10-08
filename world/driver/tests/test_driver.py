@@ -1,9 +1,9 @@
 """The driver world (#903): the dispatcher's two vans and two parcels on two DISJOINT grids, and one
-driver the agent controls, who sits in a van and must board the other before it can move. "One van
-at a time" is world state here and not a mechanism: a drive's precondition needs the driver aboard
-the van (`domains/courier/actions.ttl`), a boarding moves the driver between vans
-(`domains/courier/driver.ttl`), and every plan respects the limit by construction. What this world
-is held to is what was MEASURED on it:
+driver the agent has (`courier:hasDriver`, #929), who sits in a van and must board the other before it
+can move. "One van at a time" is world state here and not a mechanism: a drive's precondition needs
+the driver aboard the van and the agent to have the driver (`domains/courier/actions.ttl`), a boarding
+moves a driver the agent has between vans (`domains/courier/driver.ttl`), and every plan respects the
+limit by construction. What this world is held to is what was MEASURED on it:
 
 - it boots and is possible: one scope, the driver aboard van A, and no constraint the present
   violates, so `orexis-onboard` refuses nothing (`tests/test_layout.py` onboards it whole);
@@ -21,7 +21,9 @@ is held to is what was MEASURED on it:
   ten, admissible and loose by the boarding no parcel owes;
 - WALKED, the plan is one act at a time: every step is taken only once the step before it has been
   answered, every drive moves the van the driver is aboard at that act, and both parcels are
-  delivered by one intention.
+  delivered by one intention;
+- with a PEER in the world, a driver and two vans of its own, neither agent's search admits a drive
+  or a boarding of the other's van, since the world says whose each driver is.
 """
 
 from __future__ import annotations
@@ -101,6 +103,40 @@ _STEP_Q = """PREFIX courier: <http://example.org/orexis/courier#>
 SELECT ?a ?van ?driver WHERE { GRAPH ?p { $step planning:fills ?a .
   OPTIONAL { $step courier:van ?van } OPTIONAL { $step courier:driver ?driver } } }"""
 _INTENTIONS_Q = "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention } }"
+#  EVERY DRIVE AND BOARDING A SEARCH ADMITTED, in any world it opened: the candidate's action, its van,
+#  and the driver a boarding moves.
+_ADMITTED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
+SELECT ?a ?van ?driver WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+  ?c a planning:Candidate ; planning:fills ?a ; courier:van ?van . OPTIONAL { ?c courier:driver ?driver }
+  FILTER(?a IN (courier:Drive, courier:Board)) } }"""
+
+#  TWO AGENTS IN ONE WORLD, a driver each (#929): the dispatcher's driver and two vans as shipped, and a
+#  PEER with a driver of its own and two vans of its own, one on each grid, its driver aboard van C. Both
+#  agents believe where all four vans and both drivers stand, as #922 would have them sensed, and the
+#  peer desires what the dispatcher does; the world states whose each driver is, `courier:hasDriver`.
+_PEER_WORLD = ':driver a courier:Driver ; rdfs:label "the driver" .'
+_PEERS = (_PEER_WORLD + '\n'
+          ':peer a orexis:Agent ; orexis:localId "peer" ; courier:hasDriver :peer_driver .\n'
+          ':peer_driver a courier:Driver ; rdfs:label "the peer\'s driver" .\n'
+          ':van_c a courier:Van ; courier:drivenBy :peer_driver ; rdfs:label "van C, the peer\'s, on the first grid" .\n'
+          ':van_d a courier:Van ; courier:drivenBy :peer_driver ; rdfs:label "van D, the peer\'s, on the second grid" .\n')
+_PEERS_STAND = ":peer_driver courier:aboard :van_c .\n:van_c courier:at :c3_0 .\n:van_d courier:at :g13_0 .\n"
+TWO_AGENTS = {"world.ttl": [(_PEER_WORLD, _PEERS)],
+              "state.ttl": [(":driver courier:aboard :van_a .", ":driver courier:aboard :van_a .\n" + _PEERS_STAND)]}
+_PEER_DOCUMENTS = {
+    "peer.self.ttl": "<> a orexis:SelfGraph .\n:peer a orexis:Self .\n",
+    "peer.state.ttl": "<> a orexis:StateGraph .\n<> orexis:beliefsOf :peer .\n"
+                      ":driver courier:aboard :van_a .\n:van_a courier:at :c0_0 .\n:parcel_a courier:at :c0_1 .\n"
+                      ":van_b courier:at :g10_0 .\n:parcel_b courier:at :g10_1 .\n" + _PEERS_STAND,
+    "peer.desires.ttl": "<> a planning:DesireGraph .\n<> orexis:beliefsOf :peer .\n"
+                        ":peer planning:holds :every_parcel_delivered .\n"
+                        ":every_parcel_delivered a planning:Desire ; planning:metWhen courier:delivered ;\n"
+                        "    planning:estimates courier:drivesOwed .\n",
+}
+_PREFIXES = ("@prefix : <http://example.org/orexis/world/driver#> .\n"
+             "@prefix courier: <http://example.org/orexis/courier#> .\n"
+             "@prefix orexis: <http://example.org/orexis#> .\n"
+             "@prefix planning: <http://example.org/orexis/planning#> .\n\n")
 
 
 def _local(iri: str | None) -> str | None:
@@ -143,6 +179,15 @@ def _pass(world: Path, budget: int = BUDGET):
     planner.plan(NOW)
     (im,) = planner.imaginaria.values()
     return im
+
+
+def two_agents(tmp_path: Path) -> Path:
+    """The driver world with the peer in it: the world's documents rewritten, and the peer's own beside
+    the dispatcher's under `beliefs/`."""
+    world = variant(tmp_path, "two_agents", TWO_AGENTS)
+    for name, text in _PEER_DOCUMENTS.items():
+        (world / "beliefs" / name).write_text(_PREFIXES + text)
+    return world
 
 
 def _wants(im) -> set[str]:
@@ -214,6 +259,31 @@ def test_the_driver_is_world_state_and_the_world_as_posed_is_possible(ticking):
     assert {"driver", "van_a", "van_b", "parcel_a", "parcel_b", "Drive", "Pick", "Drop", "Board", "aboard", "at"} <= set(members)
     assert reading.contradicted(WORLD, "dispatcher") == []
     assert Planner(boot(WORLD, "dispatcher"), "dispatcher").contradictions(NOW) == []
+
+
+@pytest.mark.parametrize("agent, own, other", [
+    ("dispatcher", {"driver": {"van_a", "van_b"}}, {"van_c", "van_d"}),
+    ("peer", {"peer_driver": {"van_c", "van_d"}}, {"van_a", "van_b"}),
+])
+def test_of_two_agents_in_one_world_neither_search_drives_or_boards_the_others_van(ticking, tmp_path, agent, own, other):
+    """WHOSE A DRIVER IS DECIDES WHOSE SEARCH MOVES IT (#929). One world, two agents, a driver and two
+    vans each, every van and driver believed where it stands by both, each agent booted from the one set
+    of documents as the boot would for it alone. Each agent's search admits drives of the van its own
+    driver is aboard and a boarding of its own other van, and NOTHING of the other's: the peer's driver
+    is aboard van C in the dispatcher's beliefs as much as in its own, and before `courier:hasDriver`
+    the dispatcher's search admitted drives of van C and van C's driver boarding van D — the drive's
+    and the boarding's preconditions named no agent. A short budget suffices: the root alone admits a
+    drive and a boarding of each driver's, and every world the search opens is held as the root is."""
+    world = two_agents(tmp_path)
+    planner = Planner(boot(world, agent), agent, budget=32)
+    planner.plan(NOW)
+    admitted = {(_local(r["a"]), _local(r["van"]), _local(r.get("driver")))
+                for im in planner.imaginaria.values() for r in rows(im, _ADMITTED_Q, ())}
+    (driver, vans), = own.items()
+    assert {a for a, _, _ in admitted} == {"Drive", "Board"}, f"{agent}'s search admits drives and boardings: {admitted}"
+    assert {van for _, van, _ in admitted} <= vans, f"{agent}'s search moves its own vans alone: {admitted}"
+    assert not {van for _, van, _ in admitted} & other
+    assert {d for a, _, d in admitted if a == "Board"} == {driver}, f"{agent} boards its own driver alone: {admitted}"
 
 
 def test_one_driver_makes_two_parcels_on_disjoint_grids_one_want_and_one_plan_of_eleven_steps(ticking):

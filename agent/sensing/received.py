@@ -41,7 +41,8 @@ number on time all night was believed all night. Each observation carries `sensi
 the instant of the earliest reading in the unbroken run of its number — its own where the number
 differs from the one it replaced, the replaced one's where it is identical — so the run's start is
 in the store and not in a count a restart loses. A sensor whose run has lasted `sensing:stuckAfter`
-of its cadences — the agent's limit, `STUCK_AFTER` where its world states none — is said
+of its cadences — the agent's limit, a stance in its self graph, `STUCK_AFTER` where it states
+none — is said
 `sensing:stuckSince` the run's start, once, in a graph of the agent's own classified
 `orexis:StateGraph` as a silence is, holding from that instant; the first reading whose
 number differs takes the graph back here, as a reading takes a silence back. Identical means the
@@ -70,9 +71,10 @@ import logging
 from datetime import datetime, timedelta
 
 from agent.ontology import PUBLIC, STATE, local_of
+from agent.stance import stance
 from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
-from .cadence import cadence_of, limit_of
+from .cadence import cadence_of
 from .ontology import (DERIVED, FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, STUCK_AFTER_TERM, earlier_graph, forecast_graph,
                        observation_by, observation_graph, observation_of, stuck_graph)
 from .pipeline import decode, decode_series, reads_series
@@ -80,11 +82,15 @@ from .pipeline import decode, decode_series, reads_series
 log = logging.getLogger("received")
 
 #  HOW LATE A READING MAY BE, in its sensor's cadences: the observation before it stays the present
-#  until its successor arrives or this long past the instant the successor was due.
+#  until its successor arrives or this long past the instant the successor was due. NOT A STANCE:
+#  how late a reading arrives is the instrument's and the path its bytes take, not the agent's word
+#  about itself, and it is written into the observation's period, which is what the observation IS
+#  to every reader after; were it ever to vary, the world would state it of the sensor
+#  (knowledge/domain/kernel/stance.md).
 GRACE = 1
 
 #  HOW LONG A SENSOR'S NUMBER MAY STAY THE SAME before the sensor is said stuck, in its own cadences,
-#  where the agent's world states no `sensing:stuckAfter` of it: twice the silence limit. A live
+#  where the agent's self graph states no `sensing:stuckAfter`: twice the silence limit. A live
 #  instrument's count moves by a bit within a few readings even in still soil, and soil itself
 #  drifts within an hour, so a number unchanged through six cadences —
 #  an hour at the greenhouse's ten minutes, two at the terrace's twenty — is the signature of a
@@ -174,7 +180,7 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
            phenomenon_at)
     log.info("%s: %s reads %s%s", local_of(me), local_of(sensor), number,
              "".join(f", and read {n:g} {a:g}s before" for n, a in readings[:-1]))
-    _stuck(store, me, sensor, cat, since[-1], when, cadence, limit_of(store, STUCK_AFTER_TERM, STUCK_AFTER, memo))
+    _stuck(store, me, sensor, cat, since[-1], when, cadence, stance(store, STUCK_AFTER_TERM, STUCK_AFTER, memo))
     return [*written, graph]
 
 

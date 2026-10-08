@@ -25,8 +25,8 @@ import pyoxigraph as ox
 
 from agent import clock
 from agent.execution.executor import Executor
-from agent.planning.ontology import GROUND_GRAPH, PLAN_GRAPH, POSSIBLE_GRAPH
-from agent.planning.planner import Planner
+from agent.planning.ontology import BUDGET_TERM, GROUND_GRAPH, PLAN_GRAPH, POSSIBLE_GRAPH
+from agent.planning.planner import BUDGET, Planner
 from agent.store import forget_graph, graphs_of, rows
 
 CASES_DIR = Path(__file__).parent / "plans"
@@ -290,6 +290,21 @@ def test_a_search_the_budget_cuts_short_is_finished_by_the_passes_after(monkeypa
     assert _steps(planner) == 7
     (im,) = planner.imaginaria.values()
     assert int(rows(im, _WEIGHED_Q, ())[0]["n"]) == whole, "no candidate weighed twice, and none skipped"
+
+
+def test_the_budget_is_the_agents_stance_where_its_self_graph_states_one(monkeypatch, snapshots):
+    """`planning:budget 20` in the keeper's self graph (knowledge/domain/kernel/stance.md): a Planner
+    handed no budget weighs twenty candidates on three disks and is cut short there. With none
+    stated, `BUDGET`; a caller sizing the search says the call's own."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    assert Planner(snapshots.stand_in(BENCH / "three_disk_hanoi.trig"), snapshots.AGENT).budget == BUDGET
+    store = snapshots.stating(snapshots.stand_in(BENCH / "three_disk_hanoi.trig"), {BUDGET_TERM: 20})
+    assert Planner(store, snapshots.AGENT, budget=64).budget == 64
+    planner = Planner(store, snapshots.AGENT)
+    assert planner.budget == 20
+    planner.plan(snapshots.NOW)
+    (im,) = planner.imaginaria.values()
+    assert (_outcome(planner), int(rows(im, _WEIGHED_Q, ())[0]["n"])) == ("Exhausted", 20)
 
 
 def test_standing_and_exhausted_are_what_a_runtime_asks_after_a_pass(monkeypatch, snapshots):

@@ -75,10 +75,12 @@ which the loader does not have.
 
 **A graph kind of its own, beneath `orexis:BeliefGraph`.** A belief, so every text answered over
 what is known reads it — a precondition in a possible world, a command over the present — and it
-crosses into an imaginarium with the beliefs; not public, so the five readers of the public graphs
-alone that ask the self (the premises, the two drivers' sensors, sensing's limits, the planner's
-subject) state its kind beside `orexis:PublicGraph`. #876's stances and #927's roles are to be
-stated in it too.
+crosses into an imaginarium with the beliefs; not public, so the readers of the public graphs
+alone that ask the self (the premises, the two drivers' sensors, the planner's subject) state its
+kind beside `orexis:PublicGraph`. Sensing's limits were a fifth such reader until #876's second half
+made them stances, read off the self graph alone
+([a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md));
+#927's roles are to be stated in it too.
 
 # What was refused
 
@@ -153,5 +155,6 @@ the self and no action writes it.
   arrival apart: the agent's own graphs are its beliefs from the first boot on
   (an-amendment-endows-what-it-grants), and a stance or a role added later reaches it on a fresh
   volume only.
-- **What the agent's own stances are, and the roles it holds**, are #876's second half and #927,
-  stated in the self graph when they are built.
+- **The roles an agent holds** are #927's, to be stated in the self graph when they are built. Its
+  stances are stated there already
+  ([a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md)).

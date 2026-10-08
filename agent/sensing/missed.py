@@ -11,8 +11,8 @@ through the driver (`sense_now`); it writes nothing for a reading merely missed,
 period's end already says it, and a mark would say it twice.
 
 **A SENSOR SILENT PAST THE LIMIT IS SAID SO.** One whose reading has been missing for
-`sensing:silentAfter` cadences and more — the agent's limit, `SILENT_AFTER` where its world states
-none — gets `sensing:silentSince` the instant its last reading fell
+`sensing:silentAfter` cadences and more — the agent's limit, a stance in its self graph, and
+`SILENT_AFTER` where it states none — gets `sensing:silentSince` the instant its last reading fell
 due — named for the state, not for the tick that noticed — in a graph of the agent's own
 classified `orexis:StateGraph`, the kernel's kind, since a silence is a fact a plan may
 change, holding from that instant and present while the silence lasts; the sensor's next
@@ -32,15 +32,16 @@ import logging
 from datetime import datetime, timedelta
 
 from agent.ontology import STATE, local_of
+from agent.stance import stance
 from agent.store import Raw, catalogue_of, entry, instant, remember, rows, update
 
-from .cadence import cadence_of, limit_of
+from .cadence import cadence_of
 from .ontology import DERIVED, SILENT_AFTER_TERM, silent_graph
 
 log = logging.getLogger("missed")
 
 #  HOW LONG A READING MAY BE MISSING before its sensor is said silent, in its own cadences, where the
-#  agent's world states no `sensing:silentAfter` of it.
+#  agent's self graph states no `sensing:silentAfter` of it.
 SILENT_AFTER = 3
 
 #  EVERY SENSOR WHOSE OBSERVATION HAS LAPSED, with the instant it did and whether it is said
@@ -61,7 +62,7 @@ def missed(store, me: str, now: datetime, *, memo=None) -> list[str]:
     """
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
     lapsed = rows(store, _MISSING_Q, (), cat=cat, now=instant(now))
-    limit = limit_of(store, SILENT_AFTER_TERM, SILENT_AFTER, memo)
+    limit = stance(store, SILENT_AFTER_TERM, SILENT_AFTER, memo)
     out: list[str] = []
     for r in lapsed:
         sensor, fell_due = r["sensor"], datetime.fromisoformat(r["end"])

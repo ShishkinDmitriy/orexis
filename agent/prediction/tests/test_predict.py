@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from agent import clock
+from agent.prediction.ontology import HORIZON_TERM
 from agent.prediction.predict import predict
 from agent.store import rows
 
@@ -67,6 +68,20 @@ def test_the_stretches_are_rewritten_whole_by_the_next_prediction(monkeypatch, s
     again = predict(store, snapshots.ME, PROBE)
     assert first == again
     assert [r["g"] for r in rows(store, _WINDOWS_Q, ())] == again
+
+
+def test_the_horizon_is_the_agents_stance_where_its_self_graph_states_one(monkeypatch, snapshots):
+    """`prediction:horizonS 28800` in the keeper's self graph (knowledge/domain/kernel/stance.md):
+    the slow dryer is predicted for eight hours past its observation, so the floor at seven hours
+    and twelve minutes is foreseen and the survival floor at eleven is not, and nothing is written
+    past eight. Its case, which states none, is held to a day."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stating(snapshots.stand_in(CASES_DIR / "a_slow_dryer_crosses_the_floor_after_seven_hours.trig"),
+                              {HORIZON_TERM: 28800})
+    predict(store, snapshots.ME, PROBE)
+    windows = [((datetime.fromisoformat(r["start"]) - snapshots.NOW).total_seconds() / 60,
+                (datetime.fromisoformat(r["end"]) - snapshots.NOW).total_seconds() / 60) for r in rows(store, _WINDOWS_Q, ())]
+    assert [(round(a, 1), round(b, 1)) for a, b in windows] == [(15.0, 432.0), (432.0, 480.0)], windows
 
 
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):

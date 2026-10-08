@@ -32,7 +32,9 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
 4. **who each agent is** — `beliefs/<id>.self.ttl`, `<> a orexis:SelfGraph` and the one row
    `:fern_grower a orexis:Self`, for every agent the world states: an agent whose world authored
    none, or two, refuses to boot, and the boot checks this one against the id it is told
-   ([self](/domain/kernel/self.md)).
+   ([self](/domain/kernel/self.md)). Beside that row, any figure the agent holds of itself — its
+   patience, a budget, a sensor's limits, its horizon — as a triple about the self; stated in any
+   other document it is not read ([stance](/domain/kernel/stance.md)).
 5. **`state.ttl`** — `<> a orexis:StateGraph`, where things stand, for a world nothing senses.
 6. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or
    `<> a planning:WantGraph` for a want that is met once; in a world of several agents, one

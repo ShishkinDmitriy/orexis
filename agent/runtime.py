@@ -511,7 +511,9 @@ class Runtime:
         self.beliefs, self.id = beliefs, agent_id
         self.me = _identity(beliefs, agent_id)
         self.packages = packages_of(beliefs)
-        self.budget, self.intentions = budget, intentions      # what planning and execution are handed
+        #  WHAT PLANNING AND EXECUTION ARE HANDED: a search's budget only where a caller sizes one — a
+        #  test; otherwise None, and the Planner reads the agent's stance — and the intentions' store.
+        self.budget, self.intentions = budget, intentions
         self._laps: Laps | None = None                    # the parts of the pass in progress, where heard
         self._jobs: queue.SimpleQueue = queue.SimpleQueue()
         self.written = Signal("written")                  # a graph written, and its kinds
@@ -688,7 +690,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("world", type=Path, help="the world's directory")
     parser.add_argument("agent", help="this agent's id — the one identifier a process is told")
     parser.add_argument("--volume", type=Path, help="where the store persists; in memory when absent")
-    parser.add_argument("--budget", type=int, help="candidates a search may weigh per pass; the Planner's own where absent")
     parser.add_argument("--passes", type=int, help="stop after this many passes whatever stands")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -705,7 +706,9 @@ def main(argv: list[str] | None = None) -> int:
     #  the world's directory, which it is handed — the name its buckets, its compose project and its
     #  dashboards' folder go by. Neither is an instance the code names: both arrive as arguments.
     window.identify(world=world_name(args.world), agent=args.agent)
-    runtime = Runtime(beliefs, args.agent, budget=args.budget, connect=True)
+    #  NO BUDGET IS HANDED: how much a search may spend is the agent's stance, in its self graph, and a
+    #  flag beside it would be a second place the figure lives (knowledge/domain/kernel/stance.md).
+    runtime = Runtime(beliefs, args.agent, connect=True)
     #  A STOP IS AN EXIT, so every part is stopped and the last window written: `podman stop` sends
     #  SIGTERM, whose default ends the process where it stands and would lose up to a window of metrics.
     signal.signal(signal.SIGTERM, _stopped)
