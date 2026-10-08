@@ -96,6 +96,10 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 * [actuation](/domain/actuation/actuation.md) - Devices an agent holds change its subject; an action predicts the side, its command sizes the act when taken.
 
+# Courier — a domain of documents
+
+* [driver](/domain/courier/driver.md) - Whom a van needs aboard, and whose: a search drives and boards only through a driver its agent has, and a peer is found by it.
+
 # Onboarding — from a world to a society
 
 * [onboarding](/domain/onboarding/onboarding.md) - Buckets, credentials, the ACL, compose and dashboards, each read off the world; decides nothing, so re-running is safe.

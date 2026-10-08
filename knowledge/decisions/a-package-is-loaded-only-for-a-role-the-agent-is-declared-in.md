@@ -27,6 +27,9 @@ timestamp: 2026-10-08T12:00:00Z
 > [runtime](/domain/kernel/runtime.md) — stay true of the code until those issues land, and are
 > rewritten with it.
 
+> **Amended 2026-10-08** (#929): §4's courier relation is confirmed and built — `courier:hasDriver`,
+> owned by [driver](/domain/courier/driver.md); the rest of this record is still unbuilt.
+
 # The question
 
 What an agent runs was not anybody's choice. `PREMISES` in `agent/runtime.py` holds one ASK per

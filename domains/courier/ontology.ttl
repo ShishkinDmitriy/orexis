@@ -9,7 +9,7 @@
 
 #  THE COURIER GRID, A DOMAIN.
 #  The courier's words, shared by every world that poses a delivery: a cell and its coordinates,
-#  a van, a parcel and where it is owed, a driver and which van it is aboard, where each stands and
+#  a van, a parcel and where it is owed, a driver, whose it is and which van it is aboard, where each stands and
 #  what an action is filled with. Beside this document the domain ships its three actions
 #  (actions.ttl) and what delivered means and how far it is (shapes.ttl), which this document
 #  imports, and the driver's boarding (driver.ttl), which it does NOT: a world with a driver imports
@@ -41,6 +41,9 @@
 
 :drivenBy a owl:ObjectProperty ; rdfs:domain :Van ; rdfs:range :Driver ; rdfs:label "driven by" ;
     rdfs:comment "Who must be aboard a van for it to drive. Authored and never moved, as a destination is: the world says which vans need a driver and whom, and a van it says none of moves as before." .
+
+:hasDriver a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range :Driver ; rdfs:label "has driver" ;
+    rdfs:comment "The driver an agent may drive and board through, stated by the world, public, as actuation:hasActuator is agent to actuator. To the driver and not the van, because a driver boards another van and the agent's reach goes with the driver. A drive of a van somebody drives and a boarding are admitted only through a driver the agent has, so of two agents in one world neither's search moves the other's van; and a peer is found as the agent that has the driver of the van in range (knowledge/domain/courier/driver.md)." .
 
 #################  What is true while the world runs  #################
 

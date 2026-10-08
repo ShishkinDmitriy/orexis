@@ -56,7 +56,7 @@ If it is unavailable, the rules are short enough to follow by hand:
 
 **`knowledge/domain/` is the shared dictionary, filed by the package that owns each word** —
 `kernel/`, `sensing/`, `transport/`, `belief/`, `prediction/`, `planning/`, `execution/`,
-`speech/`, `market/`, `actuation/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
+`speech/`, `market/`, `actuation/`, `courier/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
 live terms in its folder's namespace, so retiring a term fails until its page follows. A record
 stays in `knowledge/decisions/` while something current cites it; 0.1.0's are filed under
 `decisions/0.1.0/`. **And a term is defined before it is used.** The

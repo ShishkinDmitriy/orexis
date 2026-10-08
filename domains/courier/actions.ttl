@@ -17,11 +17,15 @@ courier:Drive a orexis:Action ;
     orexis:takes courier:van , courier:to ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Fictive ] ] ;
-    #  A VAN SOMEBODY DRIVES MOVES ONLY WITH THEM ABOARD (#903): the last filter refuses a van
-    #  `drivenBy` a driver who is not `aboard` it, and asks nothing of a van the world names no
-    #  driver for, which is every van of the dispatcher's and the courier's — so their drives are
+    #  A VAN SOMEBODY DRIVES MOVES ONLY WITH THEM ABOARD (#903), AND ONLY BY THE AGENT THAT HAS THEM
+    #  (#929): the last filter refuses a van `drivenBy` a driver who is not `aboard` it or whom the
+    #  agent does not `courier:hasDriver`, and asks nothing of a van the world names no driver for,
+    #  which is every van of the dispatcher's, the courier's and the tower's — so their drives are
     #  the fillings they were. Where a world names one driver for two vans, one van at a time is
-    #  where the driver is, and no plan can drive the other without a boarding first.
+    #  where the driver is, and no plan can drive the other without a boarding first; where two
+    #  agents each have a driver, neither's search drives the other's van. A driver no agent has is
+    #  nobody's to drive, the same refusal as a driver elsewhere. The inner filter opens on the
+    #  pattern both its variables are bound in, since a `NOT EXISTS` is evaluated per row from there.
     planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?van ?to WHERE {
             ?van courier:at ?here .
@@ -29,7 +33,8 @@ courier:Drive a orexis:Action ;
             ?here courier:x ?hx ; courier:y ?hy .
             ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
             FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
-            FILTER NOT EXISTS { ?van courier:drivenBy ?driver . FILTER NOT EXISTS { ?driver courier:aboard ?van } }
+            FILTER NOT EXISTS { ?van courier:drivenBy ?driver .
+                FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; courier:hasDriver ?driver } }
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  HOW LONG A DRIVE TAKES TO SHOW, as a BAND (#901): a van is on the road to the next cell
