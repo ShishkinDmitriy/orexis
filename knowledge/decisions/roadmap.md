@@ -5,7 +5,7 @@ description: >-
   Direction, not a task list: the open chains of issues in the order each unlocks the next, and the
   parked extensions with the record whose seam opens each.
 status: accepted
-timestamp: 2026-10-03T00:00:00Z
+timestamp: 2026-10-08T12:00:00Z
 ---
 
 # Where it stands
@@ -63,11 +63,17 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
    #919, a step predicts its own effect; #920, `planning:Wait`, landing at the next ground; #921, a
    belief that makes a walking plan's next worlds impossible reopens it; #922, attention, the vans
    within a radius; and #923, the question, the answer and the draw, which depends on the other three.
-5. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
+   Both need a public fact saying which agent has a driver, filed from
+   [a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md).
+5. **What an agent runs** — declared, not derived: an agent's roles in its own stances document,
+   which #876 introduces, and a package loaded only for a role it serves; then Hanoi's mover planning
+   only, with an ending of its own. The record carries the argument and lists the issues it files
+   ([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).
+6. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
    its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays
    it and the model that phrases a free question, then #862's recalibration walked with a person
    ([an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md)).
-6. **The edge** — #865, #868, #322, #323, #461, #328 and #25, the boards and their firmware.
+7. **The edge** — #865, #868, #322, #323, #461, #328 and #25, the boards and their firmware.
 
 # Parked, with the seam that unlocks each
 

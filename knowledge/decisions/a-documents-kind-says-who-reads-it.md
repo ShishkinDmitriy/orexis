@@ -12,9 +12,17 @@ description: >-
   superseded since by events every package says and two parts hear - and the shared services stated
   in an installation document. Supersedes metrics-are-an-aspect.
 status: superseded-in-part
-superseded-by: metrics-and-history-are-what-events-say
+superseded-by: a-package-is-loaded-only-for-a-role-the-agent-is-declared-in
 timestamp: 2026-09-27T12:00:00Z
 ---
+
+> **Superseded in part, twice.** 2026-10-08: what an agent loads is
+> [a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)'s —
+> roles declared in the agent's own document, no mind every agent has; §2 below, its #824 amendment and
+> the refusal of the agent's own file declaring its packages are engaged and refused there. Before
+> that, 2026-09-29: how history and metrics are written is
+> [metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md)'s.
+> The field above can name one successor and names the later. The kinds, the readers and the rest stand.
 
 # What was true (measured 2026-09-27, on main at 90e5b00b)
 
