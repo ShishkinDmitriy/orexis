@@ -1,0 +1,9 @@
+@prefix : <http://example.org/orexis/world/tower#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:SelfGraph .    # this document is one graph, and this is what it is
+
+#  WHO THIS AGENT IS: the mover, and this document is its own by the self it states. Booted as
+#  "mover", the agent checks that this is so.
+
+:mover a orexis:Self .

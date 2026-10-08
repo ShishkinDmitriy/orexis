@@ -24,9 +24,10 @@ agents' to find (control-the-derivative-not-the-value).
 
 Write what `knowledge/runbooks/author-a-world.md` lists, each document saying which graph it is on
 its first line, importing its domains with `owl:imports` and speaking no word a domain does not
-declare: `world.ttl`; `society.ttl` only where there is a bus; `state.ttl` for a world nothing
-senses; the desires or wants per agent; `deployment.ttl` only to pin a port; `hardware.ttl` only
-where a board is flashed. Model the nearest shipped world — `world/greenhouse/` with a bus and
+declare: `world.ttl`; `society.ttl` only where there is a bus; a self graph for every agent,
+`beliefs/<id>.self.ttl`, saying who it is; `state.ttl` for a world nothing senses; the desires or
+wants per agent; `deployment.ttl` only to pin a port; `hardware.ttl` only where a board is flashed.
+Every document of an agent's own says whose it is in what it states, never in its file's name. Model the nearest shipped world — `world/greenhouse/` with a bus and
 sensors, `world/dispatcher/` or `world/courier/` without, `world/tower/` for two levels — and
 copy its layout, not its words. A word the bundle does not have is written as a domain page in the
 same change, first (AGENTS.md).

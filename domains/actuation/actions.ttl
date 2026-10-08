@@ -20,7 +20,7 @@ actuation:Dosing a orexis:Action ;
     planning:precondition """PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT DISTINCT ?valve ?reading WHERE {
-            $me actuation:hasActuator ?valve ; orexis:actsFor ?subject .
+            ?me a orexis:Self ; actuation:hasActuator ?valve ; orexis:actsFor ?subject .
             ?valve actuation:actuates ?subject ; actuation:actuatesProperty ?property .
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ;
                      sensing:below ?range .

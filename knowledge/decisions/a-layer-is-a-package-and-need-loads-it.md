@@ -11,9 +11,16 @@ description: >-
   already there. The layering itself, the contract-only downward imports and the tested
   arrows all stand from the superseded record; what fell is where the trees live and the
   claim that every agent carries all of them.
-status: accepted
+status: superseded-in-part
+superseded-by: a-package-is-loaded-only-for-a-role-the-agent-is-declared-in
 timestamp: 2026-08-30T18:00:00Z
 ---
+
+> **Superseded in part, 2026-10-08.** "The container builds the mind for every agent", which this
+> record kept by ruling, and a roster derived from grants are refused by
+> [a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md):
+> what an agent runs is declared, and nothing is loaded for every agent. Need still pulls — a
+> domain role pulls the package roles beneath it — and the layering stands.
 
 # Context
 

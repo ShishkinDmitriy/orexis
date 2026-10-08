@@ -72,7 +72,7 @@ from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
 #  WHAT A `$token` IS, from the module that BINDS one. It was spelled here too, a
 #  character apart, which is two definitions of one thing waiting to disagree.
 from agent import clock
-from agent.ontology import ACTION, PUBLIC, local_of
+from agent.ontology import ACTION, PUBLIC, SELF, local_of
 from agent.store import _TOKEN, NAMESPACES, PREFIXES, graphs_of, rows
 
 log = logging.getLogger("footprint")
@@ -90,12 +90,23 @@ _PARSE_TOKENS = {
 }
 _INTO = re.compile(r"\$into\([^)]*\)")
 
+#  THE SELF IS NO FACT OF THE WORLD. A text asks for the agent as `?me a orexis:Self`, the one row
+#  of the self graph its world authors for it (knowledge/domain/kernel/self.md): no public graph
+#  holds it and no action writes it, so a footprint — a text read as the world alone would answer
+#  it — reads the text without it, `?me` the free variable the agent always was here. Read with it,
+#  the anchor binds nothing over the public graphs, stands first in rdflib's order since it is the
+#  pattern with the fewest variables, and reorders the OPTIONAL chain a filling is asked as: measured
+#  on the greenhouse, the dose came to be filled with the heater as its valve and the scopes moved.
+_SELF_ANCHOR = re.compile(r"(\?\w+)\s+(?:a|rdf:type)\s+(?:orexis:Self|<" + re.escape(SELF) + r">)\s*(;|\.|(?=\}))")
+
 
 def parseable(text: str) -> str:
-    """The text with every `$token` made parseable — see `_PARSE_TOKENS`."""
+    """The text with every `$token` made parseable — see `_PARSE_TOKENS` — and the self's anchor
+    read as absent (`_SELF_ANCHOR`)."""
     text = _INTO.sub("<urn:parse:into>", text)
     for token, stand_in in _PARSE_TOKENS.items():
         text = text.replace(token, stand_in)
+    text = _SELF_ANCHOR.sub(lambda m: m.group(1) if m.group(2) == ";" else "", text)
     return _TOKEN.sub(lambda m: "?" + m.group(1), text)
 
 

@@ -313,7 +313,7 @@ off what the world binds, and a filling is what the world can take an action wit
   at all, about half its pass, and went (#913, above).
 - **A row the world contradicts.** Each pattern is asked alone, so a row can bind every parameter
   the world decides and still be one the world refutes. Where the agent holds some other device —
-  a grower with a valve and no heater — `$me :hasActuator ?heater` binds the heater to the valve and
+  a grower with a valve and no heater — `?me :hasActuator ?heater` binds the heater to the valve and
   the heating's row stands, an empty scope again; measured on the scope case before it was given the
   allotment's shape, the heating's scope holding the pump. And the allotment's dose binds the
   supplier's valve through `actuation:actuates` beside a grower that holds none, though no agent

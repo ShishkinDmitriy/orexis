@@ -18,9 +18,9 @@ description: >-
 - **`execution:Fictive`** carries no text: the step's predicted diff is written into the readings,
   because the world is the store and nothing else could answer — a hanoi move, a courier's drive.
 
-Each is made from the present when the step is taken, with the step's parameters as `$tokens`,
-`$me` and `$now`, and the [implementation](/domain/execution/implementation.md) it belongs to says in which
-order.
+Each is made from the present when the step is taken, with the step's parameters as `$tokens` and
+`$now`, asking for the agent as the [self](/domain/kernel/self.md); the
+[implementation](/domain/execution/implementation.md) it belongs to says in which order.
 
 # Not an act
 

@@ -5,6 +5,7 @@
 @prefix planning: <http://example.org/orexis/planning#> .
 
 <> a planning:DesireGraph .    # this document is one graph, and this is what it is
+<> orexis:beliefsOf :supplier .    # and whose it is — said here, never by the file's name
 
 #  THE SUPPLIER'S TWO DESIRES, and they are all it does: no call on a venue it hosts goes
 #  unanswered, and no claim presented to it goes unserved. A call is answered by a round offered

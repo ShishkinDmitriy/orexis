@@ -685,7 +685,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
     def check(self, step: str, at: datetime) -> list[str]:
         """Check `step`, a head about to be handed to its taker at `at`, against the present: where
-        its action's precondition, asked there with `$me` bound, answers no row carrying the step's
+        its action's precondition, asked there of the self, answers no row carrying the step's
         own value for every parameter the action takes, the step is BLOCKED — said by `step_blocked`,
         for execution to end the intention before the step is taken, and planning plans again. The
         graphs the handlers wrote. A step kept below, or whose action states no precondition, is
@@ -711,7 +711,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             return []
         takes = {r["takes"] for r in found if r.get("takes")}
         filling = {local_of(r["p"]): r["v"] for r in rows(self.beliefs, _FILLING_Q, (), step=step) if r["p"] in takes}
-        answers = bindings(query(self.beliefs, bind(found[0]["text"], me=self.uri), world_at(self.beliefs, None, now=at)))
+        answers = bindings(query(self.beliefs, bind(found[0]["text"]), world_at(self.beliefs, None, now=at)))
         if any(all(row.get(k) == v for k, v in filling.items()) for row in answers):
             return []
         log.info("%s: %s is not taken — the present admits it no more", self.id, local_of(step))
@@ -1107,13 +1107,13 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         world = top["w"]
         constraints = remember(memo, ("constraints",),
                                lambda: _constraints(store, _shapes(store, memo), self.uri, only, at or clock.now()))
-        admit(store, world, self.uri, only=only, elsewhere=elsewhere, memo=memo)
+        admit(store, world, only=only, elsewhere=elsewhere, memo=memo)
         spent = int(top.get("used") or 0)
         for pair in unweighed(store, for_=want, leaving=world, memo=memo):
             if spent >= budget:
                 return spent            # cut: the world stays open, to be taken up next time
             if not pair.get("child"):
-                take(store, pair["about"], self.uri, memo=memo, within=within)
+                take(store, pair["about"], memo=memo, within=within)
             weighing = weigh(store, want, pair["about"], memo=memo)
             if constraints:
                 self._mark(store, weighing, constraints, memo)

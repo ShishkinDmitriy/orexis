@@ -107,6 +107,11 @@ PLAN = OREXIS + "PlanGraph"              # a plan published, adopted by referenc
 RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period
 ACTION = OREXIS + "ActionGraph"          # actions
 DRIFT_GRAPH = OREXIS + "DriftGraph"      # drifts — a domain's, read by the predictor, found by its premise
+SELF_GRAPH = OREXIS + "SelfGraph"        # who the self is — a belief, so read beside PUBLIC by whoever asks it
+#  THE SELF: the one agent a store is this agent's, authored by its world in a self graph and
+#  checked by the boot. A text asks `?me a orexis:Self` and is bound nothing
+#  (knowledge/domain/kernel/self.md).
+SELF = OREXIS + "Self"
 #  What a text is answered over: everyone's knowledge, what is, and the records. Stated once
 #  here and named at every runner, so a runner says what it hands a text; a package that owns
 #  more kinds a text of its reads — planning's desires and wants — adds them to its own list.

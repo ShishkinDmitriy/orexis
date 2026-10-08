@@ -52,7 +52,6 @@ services:
     userns_mode: "keep-id:uid=10001,gid=10001"
     restart: unless-stopped
     volumes:
-      - ./desires.ttl:/app/world/greenhouse/desires.ttl:ro
       - ./society.ttl:/app/world/greenhouse/society.ttl:ro
       - ./world.ttl:/app/world/greenhouse/world.ttl:ro
       - ../../agent:/app/agent:ro
@@ -95,6 +94,7 @@ services:
       - ./desires.ttl:/app/world/greenhouse/desires.ttl:ro
       - ./society.ttl:/app/world/greenhouse/society.ttl:ro
       - ./world.ttl:/app/world/greenhouse/world.ttl:ro
+      - ./beliefs/grower.self.ttl:/app/world/greenhouse/beliefs/grower.self.ttl:ro
       - ./secrets/grower.crt:/app/secrets/agent.crt:ro
       - ./secrets/grower.key:/app/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro

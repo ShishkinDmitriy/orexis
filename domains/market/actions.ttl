@@ -27,9 +27,9 @@ market:Calling a orexis:Action ;
     orexis:takes market:venue ;
     planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE {
-            $me market:bidsIn ?venue .
+            ?me a orexis:Self ; market:bidsIn ?venue .
             FILTER NOT EXISTS { ?venue market:open true }
-            FILTER NOT EXISTS { ?call market:calledBy $me ; market:calledOn ?venue .
+            FILTER NOT EXISTS { ?call market:calledBy ?me ; market:calledOn ?venue .
                                 FILTER NOT EXISTS { ?call market:answered true } }
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
@@ -38,18 +38,18 @@ market:Calling a orexis:Action ;
         CONSTRUCT { $venue market:open true } WHERE {}""" ] ] ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
-        CONSTRUCT { ?call a market:Call , market:CallGraph ; market:calledOn $venue ; market:calledBy $me ;
+        CONSTRUCT { ?call a market:Call , market:CallGraph ; market:calledOn $venue ; market:calledBy ?me ;
                           market:calledAt $now ; execution:to ?host }
-        WHERE { ?host market:hosts $venue .
-                BIND(IRI(CONCAT(STR($me), "-call-", REPLACE(STR($now), "[^0-9]", ""))) AS ?call) }""" ] ] .
+        WHERE { ?me a orexis:Self . ?host market:hosts $venue .
+                BIND(IRI(CONCAT(STR(?me), "-call-", REPLACE(STR($now), "[^0-9]", ""))) AS ?call) }""" ] ] .
 
 market:Tendering a orexis:Action ;
     rdfs:label "tender a bid into the round open on a venue" ;
     orexis:takes market:venue ;
     planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE {
-            $me market:bidsIn ?venue . ?venue market:open true .
-            FILTER NOT EXISTS { ?bid market:bidder $me ; market:inRound ?round .
+            ?me a orexis:Self ; market:bidsIn ?venue . ?venue market:open true .
+            FILTER NOT EXISTS { ?bid market:bidder ?me ; market:inRound ?round .
                                 ?round market:onVenue ?venue .
                                 FILTER NOT EXISTS { ?round market:clearedAt ?at } }
         }""" ;
@@ -62,18 +62,18 @@ market:Tendering a orexis:Action ;
         DELETE { $venue market:open true  }
         WHERE  { $venue market:open true  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
-        CONSTRUCT { $me market:holdsClaimOn $venue } WHERE {}""" ] ] ;
+        CONSTRUCT { ?me market:holdsClaimOn $venue } WHERE { ?me a orexis:Self }""" ] ] ;
     #  THE BID, SIZED FROM THE PRESENT: as many litres as bring the reading to the middle of its
     #  range by the subject's litres per fraction, at the price a litre is worth to me.
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         PREFIX climate: <http://example.org/orexis/climate#>
-        CONSTRUCT { ?bid a market:Bid , market:BidGraph ; market:inRound ?round ; market:bidder $me ;
+        CONSTRUCT { ?bid a market:Bid , market:BidGraph ; market:inRound ?round ; market:bidder ?me ;
                          market:litres ?litres ; market:pricePerL ?price ; execution:to ?host }
         WHERE {
             ?host market:hosts $venue .
             ?round a market:Round ; market:onVenue $venue . FILTER NOT EXISTS { ?round market:clearedAt ?at }
-            $me orexis:actsFor ?subject ; market:valuePerL ?price .
+            ?me a orexis:Self ; orexis:actsFor ?subject ; market:valuePerL ?price .
             $venue market:aboutProperty ?property .
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
             ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition ; climate:litresPerFraction ?perFraction .
@@ -81,7 +81,7 @@ market:Tendering a orexis:Action ;
             BIND((((xsd:double(?lo) + xsd:double(?hi)) / 2.0) - xsd:double(?value)) * xsd:double(?perFraction) AS ?wanted)
             FILTER(?wanted > 0.0)
             BIND(xsd:decimal(ROUND(?wanted * 1000.0) / 1000.0) AS ?litres)
-            BIND(IRI(CONCAT(STR(?round), "-bid-", REPLACE(STR($me), "^.*[#/]", ""))) AS ?bid)
+            BIND(IRI(CONCAT(STR(?round), "-bid-", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?bid)
         }""" ] ] .
 
 market:Presenting a orexis:Action ;
@@ -90,7 +90,7 @@ market:Presenting a orexis:Action ;
     planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT DISTINCT ?venue ?reading WHERE {
-            $me market:holdsClaimOn ?venue ; orexis:actsFor ?subject .
+            ?me a orexis:Self ; market:holdsClaimOn ?venue ; orexis:actsFor ?subject .
             ?venue market:aboutProperty ?property .
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range .
         }""" ;
@@ -98,8 +98,8 @@ market:Presenting a orexis:Action ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX market: <http://example.org/orexis/market#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { $reading sensing:below ?range . $me market:holdsClaimOn $venue  }
-        WHERE  { $reading sensing:below ?range . $me market:holdsClaimOn $venue  }""" ] ,
+        DELETE { $reading sensing:below ?range . ?me market:holdsClaimOn $venue  }
+        WHERE  { ?me a orexis:Self ; market:holdsClaimOn $venue . $reading sensing:below ?range  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
         CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
@@ -107,7 +107,7 @@ market:Presenting a orexis:Action ;
         CONSTRUCT { ?presentation a market:Presentation , market:PresentationGraph ; market:presents ?claim ;
                                   execution:to ?host }
         WHERE { ?host market:hosts $venue .
-                ?claim a market:Claim ; market:heldBy $me ; market:onVenue $venue .
+                ?me a orexis:Self . ?claim a market:Claim ; market:heldBy ?me ; market:onVenue $venue .
                 FILTER NOT EXISTS { ?claim market:discharged true }
                 BIND(IRI(CONCAT(STR(?claim), "-presented")) AS ?presentation) }""" ] ] .
 
@@ -118,7 +118,7 @@ market:Offering a orexis:Action ;
     orexis:takes market:venue ;
     planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE {
-            $me market:hosts ?venue .
+            ?me a orexis:Self ; market:hosts ?venue .
             FILTER NOT EXISTS { ?venue market:open true }
             ?call market:calledOn ?venue . FILTER NOT EXISTS { ?call market:answered true }
         }""" ;
@@ -150,7 +150,7 @@ market:Clearing a orexis:Action ;
     rdfs:label "clear the round open on a venue I host" ;
     orexis:takes market:venue ;
     planning:precondition """PREFIX market: <http://example.org/orexis/market#>
-        SELECT DISTINCT ?venue WHERE { $me market:hosts ?venue . ?venue market:open true }""" ;
+        SELECT DISTINCT ?venue WHERE { ?me a orexis:Self ; market:hosts ?venue . ?venue market:open true }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX market: <http://example.org/orexis/market#>
@@ -200,7 +200,7 @@ market:Serving a orexis:Action ;
     orexis:takes market:claim ;
     planning:precondition """PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?claim WHERE {
-            $me market:hosts ?venue .
+            ?me a orexis:Self ; market:hosts ?venue .
             ?claim a market:Claim ; market:onVenue ?venue ; market:presented true .
             FILTER NOT EXISTS { ?claim market:discharged true }
         }""" ;
@@ -215,7 +215,7 @@ market:Serving a orexis:Action ;
         SELECT ?actuator ?payload WHERE {
             $claim market:heldBy ?holder ; market:amountL ?litres .
             ?holder orexis:actsFor ?subject .
-            $me actuation:hasActuator ?actuator . ?actuator actuation:actuates ?subject ; actuation:maxDoseMl ?cap .
+            ?me a orexis:Self ; actuation:hasActuator ?actuator . ?actuator actuation:actuates ?subject ; actuation:maxDoseMl ?cap .
             BIND(xsd:double(?litres) * 1000.0 AS ?wanted)
             BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), ?wanted) AS ?ml)
             BIND(CONCAT('{"dose_ml": ', STR(xsd:integer(ROUND(?ml))), '}') AS ?payload)

@@ -88,7 +88,7 @@ def test_a_candidate_leaving_a_weighed_world_is_offered_with_what_it_reached(sto
     derive_wants(store, snapshots.NOW)
     (want,) = find_wants(store, snapshots.NOW)
     (root,) = _sweep(store)
-    admit(store, root["about"], snapshots.ME)
+    admit(store, root["about"])
     (pair,) = unweighed(store)
     from agent.store import Raw, rows
     assert pair["for"] == want and pair["from"] == root["about"]
@@ -103,7 +103,7 @@ def test_the_read_narrows_to_a_want_and_to_a_world(store, snapshots):
     derive_wants(store, snapshots.NOW)
     (want,) = find_wants(store, snapshots.NOW)
     (root,) = _sweep(store)
-    admit(store, root["about"], snapshots.ME)
+    admit(store, root["about"])
     assert unweighed(store, for_=want, leaving=root["about"]) == unweighed(store)
     assert unweighed(store, for_="urn:test:nobody") == []
     assert unweighed(store, leaving="urn:test:nowhere") == []

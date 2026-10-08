@@ -39,7 +39,7 @@ def store(monkeypatch):
 
 
 def test_a_step_tells_one_document_to_every_agent_it_is_to(store):
-    told = says(store, {"step": T + "s", "fills": T + "Noting", "topic": T + "rain"}, T + "me")
+    told = says(store, {"step": T + "s", "fills": T + "Noting", "topic": T + "rain"})
     assert len(told) == 1
     agents, doc = told[0]
     assert agents == [T + "ann", T + "bob"]
@@ -53,4 +53,4 @@ def test_a_step_tells_one_document_to_every_agent_it_is_to(store):
 
 
 def test_a_step_whose_action_says_nothing_tells_nothing(store):
-    assert says(store, {"step": T + "s", "fills": T + "Looking", "topic": T + "rain"}, T + "me") == []
+    assert says(store, {"step": T + "s", "fills": T + "Looking", "topic": T + "rain"}) == []

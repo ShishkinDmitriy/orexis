@@ -45,6 +45,7 @@ Who may author what, and why isolation here is structural rather than enforced.
 * [authn-authz-capabilities](/decisions/authn-authz-capabilities.md) - Cert is who you are and is durable; a signed grant is what you may do now and is ephemeral.
 * [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) - The world is TTL files and each agent holds its own store, so isolation is structural rather than enforced.
 * [series-and-bus-isolation](/decisions/series-and-bus-isolation.md) - A bucket and scoped token per agent; broker credentials and ACL derived from the same wiring that derives capability.
+* [the-self-is-a-class-held-to-one-instance](/decisions/the-self-is-a-class-held-to-one-instance.md) - The world authors who an agent is in its self graph and the boot checks it; a document says whose it is, never its file's name.
 
 # The mind — what an agent wants
 
@@ -135,10 +136,11 @@ What the store holds, which engine reads it, and how a fact says who put it ther
 A directory is a package. What that buys, and what the tree is not allowed to imply.
 
 * [a-family-is-closed-and-that-is-a-choice](/decisions/a-family-is-closed-and-that-is-a-choice.md) - Only the package declaring a family may add members, so an external repo brings new abilities and not alternative implementations.
-* [capability-packages](/decisions/capability-packages.md) - A package is one directory holding its own ontology, shapes, rules, code and namespace — found by looking, never listed.
+* [capability-packages](/decisions/capability-packages.md) - SUPERSEDED IN PART — a package is one directory holding its own ontology, rules, code and namespace, found by looking; what loads it moved.
 * [one-tree-and-one-mechanic](/decisions/one-tree-and-one-mechanic.md) - One tree, `packages/<family>/<name>/`, with the family read off the path and declared nowhere.
 * [every-package-is-a-project](/decisions/every-package-is-a-project.md) - Each package is its own distribution with its own dependencies, held to what it imports in both directions.
-* [a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md) - A layer is a family in the one tree, pulled by hard dependency from what is granted; a soft need injects and never loads.
+* [a-layer-is-a-package-and-need-loads-it](/decisions/a-layer-is-a-package-and-need-loads-it.md) - SUPERSEDED IN PART — a layer is a family pulled by hard dependency; the mind built for every agent is refused.
+* [a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md) - An agent's roles are declared in its own document, never derived or defaulted; a package loads only for a role it serves.
 * [a-term-nobody-reads-is-annotation](/decisions/a-term-nobody-reads-is-annotation.md) - The confirmation route is retired; the cognitive rows survive the same audit, because assembly reads them.
 * [repository-layout](/decisions/repository-layout.md) - One convention across the Python trees, one distribution, and a packaging boundary replaced by a test and an import contract.
 
@@ -184,7 +186,7 @@ Authoring a world, ratifying it, and what an amendment may do to a running agent
 * [two-worlds-were-one](/decisions/two-worlds-were-one.md) - Two worlds differed by 45 lines with identical beliefs, so the one that needs no hardware stayed.
 * [an-amendment-endows-what-it-grants](/decisions/an-amendment-endows-what-it-grants.md) - Never-held terms arrive with their structures; held terms stay the agent's whatever their value.
 * [a-dead-session-is-resigned-not-endured](/decisions/a-dead-session-is-resigned-not-endured.md) - An agent cut off from its bus sends itself SIGTERM; the container's restart policy is the recovery.
-* [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md) - Every reader, the boot included, loads only the kinds it reads; packages, brokers, series and deployment follow.
+* [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md) - SUPERSEDED IN PART — every reader, the boot included, loads only the kinds it reads; premise-loaded packages moved to declared roles.
 * [reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md) - No model in a pass; reflection is the sovereign's slow process over the series, never the beliefs, and its output is a proposal to ratify.
 
 # Gates and guards

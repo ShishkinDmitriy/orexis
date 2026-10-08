@@ -12,8 +12,9 @@ description: >-
 # What it is
 
 `planning:precondition` on an [action](/domain/kernel/action.md): a select naming no graph, whose
-projected variables are the local parts of what the action `orexis:takes`, with `$me` for the agent
-asking. `admit` runs it in a world through `world_at` — the world's own graphs and every public one —
+projected variables are the local parts of what the action `orexis:takes`, asking for the agent as the
+[self](/domain/kernel/self.md), `?me a orexis:Self`, and handed nothing. `admit` runs it in a world through
+`world_at` — the world's own graphs, every public one and the beliefs, the self's among them —
 and writes a `planning:Candidate` per row: the world it leaves, the action it fills, and a triple per
 parameter under the parameter's own IRI.
 

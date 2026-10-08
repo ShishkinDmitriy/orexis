@@ -20,7 +20,7 @@ climate:Heating a orexis:Action ;
         PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT DISTINCT ?heater ?reading WHERE {
-            $me actuation:hasActuator ?heater ; orexis:actsFor ?subject .
+            ?me a orexis:Self ; actuation:hasActuator ?heater ; orexis:actsFor ?subject .
             ?heater climate:warms ?subject ; climate:warmsProperty ?property .
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ;
                      sensing:below ?range .

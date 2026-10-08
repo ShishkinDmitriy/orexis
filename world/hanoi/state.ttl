@@ -3,6 +3,7 @@
 @prefix hanoi: <http://example.org/orexis/hanoi#> .
 
 <> a orexis:StateGraph .    # this document is one graph, and this is what it is
+<> orexis:beliefsOf :hanoi .    # and whose it is — said here, never by the file's name
 
 #  THE TOWER AS POSED: three disks on peg A, smallest on top. The first state graph, and the
 #  only file here the runtime never reloads — from the first boot on, where the disks rest is

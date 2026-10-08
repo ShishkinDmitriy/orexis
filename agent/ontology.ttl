@@ -87,6 +87,18 @@ orexis:SocietyGraph
     rdfs:label "Society graph" ;
     rdfs:comment "Who a world's principals are and how they reach one another: the agents and the client each is, the brokers as what clients are connected to, the topics and the filters that name them, and which device speaks on which. Public and sovereign-authored, beside the world graph and apart from it, and read by the agents, the simulator and `orexis-mqtt`, which derives the ACL from it. The KERNEL'S kind, since the boot finds who the agent is on it, and a package loaded by a premise (#824) would be read off it before that package is loaded. Where a broker listens is not here: that is a deployment graph, onboarding's kind, which no agent loads (knowledge/decisions/a-documents-kind-says-who-reads-it.md)." .
 
+orexis:Self
+    a owl:Class ;
+    rdfs:subClassOf orexis:Agent ;
+    rdfs:label "Self" ;
+    rdfs:comment "The one agent a store is THIS agent's (knowledge/domain/kernel/self.md). AUTHORED by the agent's world, in an `orexis:SelfGraph` of the agent's own, as a desire is — a belief the sovereign gives at birth — and CHECKED by the boot against the one identifier the process is handed, never minted from it. A text asks `?me a orexis:Self` and is bound nothing. A class held to one instance, and never a singleton IRI: the agent keeps the name its world gives it; a self stated anywhere but a self graph, or by a peer or the agent's own saying, is refused, and so is a boot whose own documents state any count of self graphs but one." .
+
+orexis:SelfGraph
+    a owl:Class ;
+    rdfs:subClassOf orexis:BeliefGraph ;
+    rdfs:label "Self graph" ;
+    rdfs:comment "Which agent is the self, and the one private graph whose owner is read off what it holds rather than stated beside it: `<agent> a orexis:Self`, exactly once, in a document of this kind and no other, authored in the world under `beliefs/` and owned by the self it states. A belief, so a text answered over what is known reads it and it crosses into an imaginarium; NOT public, since it is true of one agent's store and of no other's, so a reader that reads the public graphs and asks the self states this kind beside them." .
+
 orexis:StateGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph , orexis:Graph ;
@@ -124,7 +136,7 @@ orexis:beliefsOf
     rdfs:domain orexis:Graph ;
     rdfs:range orexis:Agent ;
     rdfs:label "beliefs of" ;
-    rdfs:comment "Which agent owns this graph — said by the owner in the classification it writes when it creates the graph, beside what the graph is and how it arrived, so a reader that means its OWN graphs of a kind asks by owner as well as by class. In a deployed volume every graph is the one agent's; a test standing several agents in one store is kept apart by this, never by a graph's name." .
+    rdfs:comment "Which agent owns this graph — said by the owner in the classification it writes when it creates the graph, beside what the graph is and how it arrived, so a reader that means its OWN graphs of a kind asks by owner as well as by class; and stated by a document the WORLD authors of a graph of an agent's own (`<> orexis:beliefsOf :rose_grower`), which is how a boot tells its own documents from another agent's by what they say and never by a file's name. A peer's document and the agent's own saying never state it: the hearer and the sayer are the owner. In a deployed volume every graph is the one agent's; a test standing several agents in one store is kept apart by this, never by a graph's name." .
 
 orexis:end
     a owl:DatatypeProperty ;

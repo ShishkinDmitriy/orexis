@@ -59,7 +59,8 @@ knowledge/     OKF knowledge bundle (architecture decisions + domain model)
 
 **A world is documents, and each says which graph it is.** A Turtle file is one graph, and
 `<> a orexis:WorldGraph` in it says what; a world imports the domains it speaks with
-`owl:imports`, and an agent's desires are its own file under `beliefs/`. Adding a way of acting
+`owl:imports`, and who an agent is and what it desires are documents under `beliefs/` that say
+they are its. Adding a way of acting
 is a node in a domain's `actions.ttl` — a precondition, an effect and an implementation — and a
 world that imports the domain has it. See [`domain/world`](knowledge/domain/kernel/world.md) and
 [`domain/action`](knowledge/domain/kernel/action.md).

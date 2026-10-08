@@ -105,7 +105,7 @@ def lasts(here: Path, agent_id: str) -> bool:
     transport, which the runtime lets finish."""
     beliefs = boot(Path(here).resolve(), agent_id, others=ours())
     planner = Planner(beliefs, agent_id)
-    return planner.holds_a_desire() or MQTT in packages_of(beliefs, planner.uri)
+    return planner.holds_a_desire() or MQTT in packages_of(beliefs)
 
 
 def contradicted(here: Path, agent_id: str) -> list[str]:
@@ -128,9 +128,8 @@ def unread(here: Path) -> list[str]:
     `document: graph (kinds)`. Empty for a world every one of whose graphs somebody reads."""
     here = Path(here).resolve()
     store = world(here)
-    beliefs = sorted(p for p in (here / "beliefs").glob("*") if p.suffix in DOCUMENTS)
     out = []
-    for path, doc in read_with_imports([*documents(here), *beliefs]):
+    for path, doc in read_with_imports(documents(here)):
         for graph, kinds in sorted(kinds_in(doc).items()):
             if not known(store, kinds):
                 out.append(f"{path.name}: {graph} ({', '.join(sorted(kinds))})")

@@ -61,7 +61,7 @@ def missed(store, me: str, now: datetime, *, memo=None) -> list[str]:
     """
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
     lapsed = rows(store, _MISSING_Q, (), cat=cat, now=instant(now))
-    limit = limit_of(store, me, SILENT_AFTER_TERM, SILENT_AFTER, memo)
+    limit = limit_of(store, SILENT_AFTER_TERM, SILENT_AFTER, memo)
     out: list[str] = []
     for r in lapsed:
         sensor, fell_due = r["sensor"], datetime.fromisoformat(r["end"])

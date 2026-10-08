@@ -26,6 +26,8 @@ GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:SelfGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
   sensing:ObservationGraph rdfs:subClassOf orexis:BeliefGraph .
@@ -92,12 +94,23 @@ GRAPH :world {
   :zamioculcas a :Pot .
 }
 
+# THE SELF, its world's self graph as the boot puts it in: this is the keeper's store, and the
+# neighbour's lamp is not its.
+GRAPH :self {
+  :keeper a orexis:Self .
+}
+
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :self orexis:arrivedBy orexis:Asserted .
+  :self orexis:beliefsOf :keeper .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
 }

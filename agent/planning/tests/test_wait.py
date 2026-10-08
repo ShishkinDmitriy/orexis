@@ -59,7 +59,7 @@ _ACTIONS = _HEAD + '''<> a orexis:ActionGraph .
                 [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
         CONSTRUCT { $tank :level ?next } WHERE { $tank :level ?l . BIND(?l + 6 AS ?next) }""" ] ] .
 '''
-_DESIRES = _HEAD + """<> a planning:DesireGraph .
+_DESIRES = _HEAD + """<> a planning:DesireGraph ; orexis:beliefsOf :keeper .
 :keeper planning:holds :full .
 :full a planning:Desire ; planning:about :level ; planning:metWhen :at_least_ten .
 :at_least_ten a sh:NodeShape ; sh:targetClass :Tank ;
@@ -88,8 +88,10 @@ def _tank(tmp_path, butt: int, *predicted):
     (tmp_path / "beliefs").mkdir()
     (tmp_path / "world.ttl").write_text(_WORLD)
     (tmp_path / "actions.ttl").write_text(_ACTIONS)
-    (tmp_path / "state.ttl").write_text(_HEAD + f"<> a orexis:StateGraph .\n:tank1 :level 4 .\n:butt :holds {butt} .\n")
+    (tmp_path / "state.ttl").write_text(_HEAD + "<> a orexis:StateGraph ; orexis:beliefsOf :keeper .\n"
+                                        f":tank1 :level 4 .\n:butt :holds {butt} .\n")
     (tmp_path / "beliefs" / "keeper.ttl").write_text(_DESIRES)
+    (tmp_path / "beliefs" / "keeper.self.ttl").write_text(_HEAD + "<> a orexis:SelfGraph .\n:keeper a orexis:Self .\n")
     beliefs = boot(tmp_path, "keeper")
     for name, adds, retracts in predicted:
         graph = f"{T}{name}"

@@ -1,8 +1,8 @@
 """`command`: what taking a step sends, sized from the present.
 
 An action a device takes has an `execution:Command` among its operations, an `sh:select` over the
-beliefs as they stand when the step is taken, with the step's parameters as `$tokens`, `$me` and
-`$now`, answering `?actuator` and `?payload`. The search never sizes an act — a dose's effect is the side it reaches, not litres —
+beliefs as they stand when the step is taken, with the step's parameters as `$tokens` and `$now`,
+asking the self (`?me a orexis:Self`) where it means the agent, answering `?actuator` and `?payload`. The search never sizes an act — a dose's effect is the side it reaches, not litres —
 so how much to pour, or how long to heat, is decided here, from the reading in hand, by the text
 the domain declares. The answer is what the container hands the transport; execution names no
 transport, and a step whose action carries no command sends nothing.
@@ -24,7 +24,7 @@ log = logging.getLogger("command")
 _TAKES_Q = """SELECT ?takes WHERE { $action orexis:takes ?takes }"""
 
 
-def command(store, said: dict, me: str, *, order: float | None = None) -> list[tuple[str, dict]]:
+def command(store, said: dict, *, order: float | None = None) -> list[tuple[str, dict]]:
     """Every `(actuator, payload)` the step `said` sends — the executor's rows for it, keyed by
     local part as `Executor.step_of` answers them — asked over the beliefs holding now: every
     command of the action's implementation, or those of one `order`. Empty where it has none or
@@ -37,7 +37,7 @@ def command(store, said: dict, me: str, *, order: float | None = None) -> list[t
     if not texts:
         return []
     now = clock.now()
-    tokens = {"me": me, "now": instant(now)}
+    tokens = {"now": instant(now)}
     for r in rows(store, _TAKES_Q, graphs_of(store, ACTION), action=action):
         local = r["takes"].rsplit("#", 1)[-1].rsplit("/", 1)[-1]
         if local in said:

@@ -43,7 +43,7 @@ SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:Grou
 def test_take_forks_the_worlds_the_patch_says(case, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
-    taken = [take(store, r["cand"], snapshots.ME) for r in rows(store, _UNTAKEN_Q, ())]
+    taken = [take(store, r["cand"]) for r in rows(store, _UNTAKEN_Q, ())]
     assert taken, f"{case.name} admits no candidate to take"
     snapshots.held_to_diff(case, request, "take", snapshots.snapshot_of(store))
 
@@ -65,9 +65,9 @@ def test_siblings_differing_in_one_value_never_share_a_graph(monkeypatch, snapsh
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(ADMIT_CASES / "one_lever_two_tanks.trig")
     (present,) = rows(store, _PRESENT_Q, ())
-    admit(store, present["g"], snapshots.ME)
+    admit(store, present["g"])
     for r in rows(store, _UNTAKEN_Q, ()):
-        assert take(store, r["cand"], snapshots.ME)
+        assert take(store, r["cand"])
     edges = rows(store, _EDGES_Q, ())
     assert len(edges) == 2 and all(e.get("w") for e in edges), edges
     worlds = [e["w"] for e in edges]
@@ -87,15 +87,15 @@ def test_a_second_pass_over_one_store_mints_above_everything_it_holds(monkeypatc
     store = snapshots.stand_in(ADMIT_CASES / "one_lever_two_tanks.trig")
     (present,) = rows(store, _PRESENT_Q, ())
     first = Memo()
-    admit(store, present["g"], snapshots.ME, memo=first)
+    admit(store, present["g"], memo=first)
     for r in rows(store, _UNTAKEN_Q, ()):
-        take(store, r["cand"], snapshots.ME, memo=first)
+        take(store, r["cand"], memo=first)
     before = rows(store, _EDGES_Q, ())
     names = {e["cand"] for e in before} | {e["w"] for e in before}
     second = Memo()
-    admit(store, before[0]["w"], snapshots.ME, memo=second)
+    admit(store, before[0]["w"], memo=second)
     for r in rows(store, _UNTAKEN_Q, ()):
-        take(store, r["cand"], snapshots.ME, memo=second)
+        take(store, r["cand"], memo=second)
     after = rows(store, _EDGES_Q, ())
     new = [e for e in after if e["cand"] not in names]
     assert new and all(e.get("w") for e in new), "the world the first pass made admits the lever again"

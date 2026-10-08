@@ -53,3 +53,22 @@ def test_a_peer_cannot_rewrite_what_this_agent_said(store):
 
 def test_what_is_no_document_is_not_believed(store):
     assert heard(store, ME, b"this is not TriG {") == []
+
+
+def test_a_peer_cannot_say_who_the_self_is(store):
+    """A state the peer may say, and in it the one thing no peer tells this agent: that somebody is
+    its self. The whole document is refused, as the loader refuses a file saying it."""
+    doc = (f"<{T}round> {{ <{T}round> <{T}says> \"open\" . <{T}someone> a <{OREXIS}Self> }}\n"
+           f"<{T}round> a <{T}RoundGraph> .").encode()
+    assert heard(store, ME, doc) == []
+    assert not list(store.quads_for_pattern(None, None, ox.NamedNode(OREXIS + "Self"), None))
+    assert not list(store.quads_for_pattern(None, None, None, ox.NamedNode(T + "round"))), "refused whole"
+
+
+def test_a_peer_cannot_say_whose_a_graph_is(store):
+    """The hearer owns what it hears: a peer naming an owner would be a peer saying whose beliefs
+    this agent holds. Refused whole, as the loader refuses it from anything but a world's file."""
+    doc = (f"<{T}round> {{ <{T}round> <{T}says> \"open\" }}\n"
+           f"<{T}round> a <{T}RoundGraph> ; <{OREXIS}beliefsOf> <{T}someone> .").encode()
+    assert heard(store, ME, doc) == []
+    assert not list(store.quads_for_pattern(ox.NamedNode(T + "round"), None, None)), "refused whole, and no row"

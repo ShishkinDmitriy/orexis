@@ -22,8 +22,10 @@ kinds in its default graph, as a nanopublication's head does. The rows about a g
 catalogue, where every reader asks, and not into the graph, where a rule would read them as a fact
 about the world. A document says what its graphs are and nothing about how they arrived or whose
 they are: the loader writes `orexis:Asserted`, and the owner where a graph is the agent's. A
-graph stating no kind, one claiming to be the catalogue and one stating an arrival or an owner are
-refused (`store.document`).
+graph stating no kind, one claiming to be the catalogue and one stating an arrival are refused
+(`store.document`), and so is one stating the [self](/domain/kernel/self.md) anywhere but once in a
+self graph. Whose a graph of an agent's own is, its document says — `<> orexis:beliefsOf` beside its
+kind, or the self a self graph states — and never its file's name.
 
 A document may import others, `owl:imports` with a relative IRI that resolves to the imported
 file's `file:` IRI, which is the name its graph is loaded under; the boot reads every import too,
@@ -35,12 +37,16 @@ is every kind it is beneath. A graph whose kind that closure does not put beneat
 is passed over, neither its quads nor its row read in: a kind says who reads a document, and one
 the agent's vocabulary does not declare is another reader's, such as the hardware
 [onboarding](/domain/onboarding/onboarding.md) reads. Then the world's public graphs, then the agent's identity, read off
-`orexis:localId` in the society graph, or in the world graph of a world with no society. That is
+`orexis:localId` in the society graph, or in the world graph of a world with no society, and the
+self graph the world authored for that agent put in and checked — or held to the self a lived-in
+volume already has. That is
 the first half, read with the mind's documents alone; the premises are asked of it, and the
 documents of each [package](/domain/kernel/package.md) whose premise held go in after, the
 closure taken again and any world graph passed over for a kind only such a package declares
-looked at a second time. Hanoi's mover loads the mind and nothing else. Then the world's other graphs — the desires with their
-met-tests and estimates, the first state — owned by the agent. The catalogue is closed and
+looked at a second time. Hanoi's mover loads the mind and nothing else. Then the world's other
+graphs that say they are this agent's — the desires with their met-tests and estimates, the first
+state — owned by it; another agent's are passed over, and one naming nobody, or no agent of the
+world, is refused. The catalogue is closed and
 `scope_actions` writes the scopes. A store that already holds a catalogue is a volume the agent
 has lived in: every graph a document put in and nobody owns is forgotten and read again, with the
 closure, which is how an updated ontology or rule set reaches an agent that has lived; the graphs

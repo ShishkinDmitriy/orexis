@@ -420,7 +420,8 @@ plan down the same cells. A cluster a standing want is already about is that wan
   `$this` to several instances is a `VALUES` block in a text whose inner group the derivation cannot
   find without owning the select's grammar; the first world with three parcels decides how.
 - **A reach is one scope's actions wide and the holder's own.** The reach is closed over every action
-  the store holds with `$me` the holder, in the imaginarium of the scope the derivation runs in; a
+  the store holds, each precondition asking the [self](/domain/kernel/self.md) — in an agent's store
+  the one holder — in the imaginarium of the scope the derivation runs in; a
   scope whose actions another scope's constraint reads is already one scope with it, so nothing is
   lost, and a coupling across two holders' desires in one store is not asked.
 - **Concurrent steps.** A plan is a sequence and is walked one head at a time, so a coupled plan

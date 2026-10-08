@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import rdflib
 from rdflib import RDF, URIRef
 from rdflib.namespace import SH
@@ -104,7 +105,7 @@ def test_the_market_s_calling_and_tendering_are_read_and_answer_what_they_read()
     g = rdflib.Graph().parse(Path(__file__).resolve().parents[3] / "domains" / "market" / "actions.ttl")
     precondition = rdflib.URIRef("http://example.org/orexis/planning#precondition")
     calling, tendering = (str(g.value(market[a], precondition)) for a in ("Calling", "Tendering"))
-    assert "FILTER NOT EXISTS { ?call market:calledBy $me ; market:calledOn ?venue ." in calling \
+    assert "FILTER NOT EXISTS { ?call market:calledBy ?me ; market:calledOn ?venue ." in calling \
         and "FILTER NOT EXISTS { ?call market:answered true }" in calling, "the text has moved; so has this test's premise"
     assert footprint.reads_of_select(calling) == frozenset(
         {market.bidsIn, market.open, market.calledBy, market.calledOn, market.answered})
@@ -147,8 +148,24 @@ def test_a_variable_predicate_a_values_block_bounds_writes_those_and_nothing_mor
 
 
 def test_a_rule_text_is_made_parseable_and_nothing_more():
-    assert "?me" in footprint.parseable("SELECT ?x WHERE { $me <urn:test:p> ?x }")
+    assert "?venue" in footprint.parseable("SELECT ?x WHERE { $venue <urn:test:p> ?x }")
     assert "$into(" not in footprint.parseable("INSERT { GRAPH $into(x:G) { ?s ?p ?o } } WHERE { ?s ?p ?o }")
+
+
+@pytest.mark.parametrize("anchored", [
+    "SELECT ?x WHERE { ?me a orexis:Self ; <urn:test:p> ?x . ?x <urn:test:q> ?y }",
+    "SELECT ?x WHERE { ?me a orexis:Self . ?me <urn:test:p> ?x . ?x <urn:test:q> ?y }",
+    "SELECT ?x WHERE { ?me <urn:test:p> ?x . ?x <urn:test:q> ?y . ?me a <http://example.org/orexis#Self> }",
+], ids=["in a predicate list", "a statement of its own", "last, by full IRI"])
+def test_the_self_s_anchor_is_no_fact_of_the_world_and_a_footprint_reads_the_text_without_it(anchored):
+    """A text asks for the agent as `?me a orexis:Self`, a row no public graph holds and no action
+    writes. Read with it, the anchor stood first in rdflib's order and reordered the OPTIONAL chain a
+    filling is asked as — the greenhouse's dose was filled with the heater (measured). A footprint
+    reads such a text as it read the text with `?me` free: the same patterns, in the same order."""
+    free = "SELECT ?x WHERE { ?me <urn:test:p> ?x . ?x <urn:test:q> ?y }"
+    assert "orexis:Self" not in footprint.parseable(anchored) and "#Self" not in footprint.parseable(anchored)
+    assert footprint._patterns(anchored) == footprint._patterns(free)
+    assert footprint.reads_of_select(anchored) == frozenset({URIRef("urn:test:p"), Q})
 
 
 def test_what_a_shape_reads_is_its_paths_and_its_target_class():

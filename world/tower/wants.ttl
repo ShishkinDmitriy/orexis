@@ -1,9 +1,11 @@
 @prefix : <http://example.org/orexis/world/tower#> .
 @prefix hanoi: <http://example.org/orexis/hanoi#> .
+@prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
 
 <> a planning:WantGraph .    # this document is one graph, and this is what it is
+<> orexis:beliefsOf :mover .    # and whose it is — said here, never by the file's name
 
 #  HANOI'S SENTENCE, on the grid: every disk home on peg C. The mover holds this want and no
 #  desire, so it stops when the tower stands.

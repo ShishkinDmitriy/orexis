@@ -490,24 +490,38 @@ WHERE  {{ GRAPH <{catalogue}> {{ }}
 #  the catalogue when the document is put: a rule reading the graph would otherwise read
 #  `<> a planning:DesireGraph` as a fact about the world.
 #
-#  WHAT A DOCUMENT MAY NOT SAY is how it arrived and whose it is — the loader writes
-#  `orexis:arrivedBy orexis:Asserted` and, where the caller says so, `orexis:beliefsOf` — and
-#  that it is the catalogue, which is created and never loaded. A graph stating no kind is
-#  refused rather than guessed at, since a graph with no row is invisible to every reader.
+#  WHAT NO DOCUMENT MAY SAY is how it arrived — the loader writes `orexis:arrivedBy` — or that it
+#  is the catalogue, which is created and never loaded. A graph stating no kind is refused rather
+#  than guessed at, since a graph with no row is invisible to every reader.
+#
+#  WHOSE A GRAPH IS, AND WHO THE SELF IS, ONLY THE WORLD SAYS (knowledge/domain/kernel/self.md).
+#  A document the world authors — a FILE — says of a graph of an agent's own whose it is,
+#  `<> orexis:beliefsOf :rose_grower`, the way it says what the graph is, and a self graph says
+#  who the self is, `:rose_grower a orexis:Self`, and is the self's by that: the boot keeps as its
+#  own exactly the graphs whose content says they are its, and never asks a file's name. A file is
+#  held to one home for the self: a self is stated in a graph that says it is a self graph and
+#  nothing else, once, and an owner stated beside it is that self or the file is refused — a
+#  graph says one owner, so one fact has one source. A PEER'S document and the agent's own SAYING
+#  state neither (`refuse_the_sovereigns`): the hearer and the sayer are the owner, and no peer
+#  tells this agent who it is.
 
 _RDF_TYPE_IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-_LOADERS_OWN = (OREXIS + "arrivedBy", OREXIS + "beliefsOf")
+_ARRIVED_BY = OREXIS + "arrivedBy"
+_BELIEFS_OF = OREXIS + "beliefsOf"
+_SELF, _SELF_GRAPH = OREXIS + "Self", OREXIS + "SelfGraph"
 _TRIG = (".trig",)
 
 
 class DocumentRefused(ValueError):
-    """A document that says nothing of what its graphs are, or says what only the loader may."""
+    """A document that says nothing of what its graphs are, or says what only the loader, or only
+    the world, may."""
 
 
 def document(path) -> ox.Store:
     """The document at `path` as a dataset: its graphs named, its rows about them in the default
     graph. Refused where a graph states no kind, where the rows speak of anything but the
-    document's graphs, or where they say the catalogue, an arrival or an owner."""
+    document's graphs, or where they say the catalogue or an arrival — and where they say an
+    owner or a self the world may not (`checked`): a file is a document the world authors."""
     path = Path(path)
     base = path.resolve().as_uri()
     doc = ox.Store()
@@ -525,12 +539,13 @@ def document(path) -> ox.Store:
         for q in about:
             doc.remove(q)
             doc.add(ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()))
-    return checked(doc, path.name)
+    return checked(doc, path.name, authored=True)
 
 
 def document_of(data: bytes) -> ox.Store:
     """A document handed as TriG bytes — what a peer says, as the transport received it — read
-    and refused as a file is."""
+    and refused as a file is, and refused besides where it says whose a graph is or who the self
+    is, which no peer says."""
     doc = ox.Store()
     try:
         doc.load(data, format=ox.RdfFormat.TRIG)
@@ -539,9 +554,11 @@ def document_of(data: bytes) -> ox.Store:
     return checked(doc, "a document")
 
 
-def checked(doc: ox.Store, name: str) -> ox.Store:
+def checked(doc: ox.Store, name: str, *, authored: bool = False) -> ox.Store:
     """`doc`, where it says what each of its graphs is and nothing only the loader may say;
-    refused otherwise."""
+    refused otherwise. `authored` where the world wrote it — a file — which may then say whose a
+    graph is and, in a self graph, who the self is (`_one_home`); a document from anywhere else
+    may say neither (`refuse_the_sovereigns`)."""
     graphs = {g.value for g in doc.named_graphs()}
     rows_ = list(doc.quads_for_pattern(None, None, None, ox.DefaultGraph()))
     kinds = {q.subject.value: q.object.value for q in rows_
@@ -560,11 +577,81 @@ def checked(doc: ox.Store, name: str) -> ox.Store:
     if unkinded:
         raise DocumentRefused(f"{name} says of {', '.join(unkinded)} no kind — `<> a <a graph kind>` says it")
     for q in rows_:
-        if q.predicate.value in _LOADERS_OWN:
+        if q.predicate.value == _ARRIVED_BY:
             raise DocumentRefused(f"{name} says {q.predicate.value} of a graph, which only the loader says")
         if q.predicate.value == _RDF_TYPE_IRI and q.object.value == CATALOGUE:
             raise DocumentRefused(f"{name} says a graph is the catalogue, which is created and never loaded")
+    return _one_home(doc, name) if authored else refuse_the_sovereigns(doc, name)
+
+
+def refuse_the_sovereigns(doc: ox.Store, name: str) -> ox.Store:
+    """`doc`, where nothing in it says whose a graph is, that anything is the self, or that a graph
+    is a self graph; refused otherwise. What a document the world did not author is held to — a
+    peer's message, heard, and the agent's own saying (`said`): the world's author, the sovereign,
+    says whose a graph is and who the self is, and the hearer and the sayer are the owner of
+    what they put in."""
+    for q in doc.quads_for_pattern(None, ox.NamedNode(_BELIEFS_OF), None, ox.DefaultGraph()):
+        raise DocumentRefused(f"{name} says whose {q.subject} is, which only the world's own documents say")
+    for kind in (_SELF, _SELF_GRAPH):
+        for q in doc.quads_for_pattern(None, ox.NamedNode(_RDF_TYPE_IRI), ox.NamedNode(kind), None):
+            raise DocumentRefused(f"{name} says {q.subject} is {kind.rsplit('#', 1)[-1]}, "
+                                  f"which only the world's own documents say")
     return doc
+
+
+def _one_home(doc: ox.Store, name: str) -> ox.Store:
+    """`doc`, a document the world authored, where every graph says at most one owner, a self is
+    stated only in a graph that says it is a self graph and nothing else, every self graph states
+    exactly one self, and an owner stated of a self graph is that self; refused otherwise.
+
+    THE SELF HAS ONE HOME. A self stated in a public graph would make every agent of the world
+    that agent, and one in a desire graph would be a second place to look for it; asked here, by
+    the kinds the document states, it needs no vocabulary, which the loader does not have."""
+    stated = kinds_in(doc)
+    owners: dict[str, set[str]] = {}
+    for q in doc.quads_for_pattern(None, ox.NamedNode(_BELIEFS_OF), None, ox.DefaultGraph()):
+        if not isinstance(q.object, ox.NamedNode):
+            raise DocumentRefused(f"{name} says {q.subject} is {q.object}'s, and an owner is an agent, named")
+        owners.setdefault(q.subject.value, set()).add(q.object.value)
+    for graph, said in sorted(owners.items()):
+        if len(said) > 1:
+            raise DocumentRefused(f"{name} says {graph} is {' and '.join(sorted(said))}'s — a graph has one owner")
+    for q in doc.quads_for_pattern(None, ox.NamedNode(_RDF_TYPE_IRI), ox.NamedNode(_SELF_GRAPH), None):
+        if q.graph_name != ox.DefaultGraph():
+            raise DocumentRefused(f"{name} says inside {q.graph_name} that {q.subject} is a self graph, "
+                                  f"which a document says of its own graph, in its rows")
+    selves: dict[str, set[str]] = {}
+    for q in doc.quads_for_pattern(None, ox.NamedNode(_RDF_TYPE_IRI), ox.NamedNode(_SELF), None):
+        graph = q.graph_name.value if isinstance(q.graph_name, ox.NamedNode) else None
+        if graph is None or _SELF_GRAPH not in stated.get(graph, ()):
+            raise DocumentRefused(f"{name} says {q.subject} is Self {f'in {graph}, which is no self graph' if graph else 'of a graph'}"
+                                  f" — the self is stated in a self graph and nowhere else")
+        selves.setdefault(graph, set()).add(q.subject.value)
+    for graph, kinds in sorted(stated.items()):
+        if _SELF_GRAPH not in kinds:
+            continue
+        if kinds != {_SELF_GRAPH}:
+            raise DocumentRefused(f"{name} says {graph} is a self graph and {', '.join(sorted(kinds - {_SELF_GRAPH}))} "
+                                  f"too — a self graph is nothing else")
+        held = selves.get(graph, set())
+        if len(held) != 1:
+            raise DocumentRefused(f"{name} states {len(held)} selves in the self graph {graph} — a self graph states one")
+        if graph in owners and owners[graph] != held:
+            raise DocumentRefused(f"{name} says {graph} is {next(iter(owners[graph]))}'s, and its self is "
+                                  f"{next(iter(held))} — a self graph is its self's")
+    return doc
+
+
+def whose(doc: ox.Store, graph: str) -> str | None:
+    """Whose the graph `graph` of the document `doc` is, by what the document says: the owner it
+    states, `<> orexis:beliefsOf <agent>`, or, for a self graph, the self it states — which the
+    loader has held to agree (`_one_home`). None where it says neither. Never the file's name."""
+    for q in doc.quads_for_pattern(ox.NamedNode(graph), ox.NamedNode(_BELIEFS_OF), None, ox.DefaultGraph()):
+        return q.object.value
+    if _SELF_GRAPH in kinds_in(doc).get(graph, ()):
+        for q in doc.quads_for_pattern(None, ox.NamedNode(_RDF_TYPE_IRI), ox.NamedNode(_SELF), ox.NamedNode(graph)):
+            return q.subject.value
+    return None
 
 
 def kinds_in(doc: ox.Store) -> dict[str, set[str]]:

@@ -33,7 +33,8 @@ steps fork worlds the met-test cannot tell apart — a courier's drive, taken in
 once a world combined the two domains, spent the budget and moved no disk. None asks every
 action, which a store of one scope is.
 
-`me` is the one identifier a process is handed, and the one token a precondition may read.
+A precondition reads NO token: it asks for the agent as `?me a orexis:Self`, the self the boot
+wrote and the imaginarium copied in with the beliefs, so nobody hands it who is asking.
 """
 
 from __future__ import annotations
@@ -81,8 +82,8 @@ _MINTED_Q = """
 SELECT (MAX(?m) AS ?n) WHERE { GRAPH $cat { ?w planning:minted ?m } }"""
 
 
-def admit(store, world: str, me: str, *, only=None, elsewhere=frozenset(), memo=None) -> None:
-    """Write every candidate `world` admits for the agent `me`: one per action per row its
+def admit(store, world: str, *, only=None, elsewhere=frozenset(), memo=None) -> None:
+    """Write every candidate `world` admits for the self: one per action per row its
     precondition binds there, each saying which world it leaves (`planning:from`), which
     action it fills, where it came in the order of minting (`planning:minted`, which names it)
     and, one triple per parameter under the parameter's own IRI, what it is filled with.
@@ -122,9 +123,9 @@ def admit(store, world: str, me: str, *, only=None, elsewhere=frozenset(), memo=
         if only is not None and action["action"] not in only:
             continue
         #  A precondition carrying a token nobody binds REFUSES rather than reaching the engine
-        #  as a free variable (#500), so what is offered is what a premise may read: `$me`.
+        #  as a free variable (#500), and a precondition is offered none: it asks the self for the agent.
         params = {local_of(p): p for p in (action.get("takes_") or "").split()}
-        for row in bindings(query(store, bind(action["precondition"], me=me), graphs)):
+        for row in bindings(query(store, bind(action["precondition"]), graphs)):
             filling = sorted((iri, row[local]) for local, iri in params.items() if row.get(local))
             if (action["action"], frozenset(filling)) in already or any(v in elsewhere for _, v in filling):
                 continue

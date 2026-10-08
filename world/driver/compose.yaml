@@ -40,6 +40,7 @@ services:
       - ./desires.ttl:/app/world/driver/desires.ttl:ro
       - ./state.ttl:/app/world/driver/state.ttl:ro
       - ./world.ttl:/app/world/driver/world.ttl:ro
+      - ./beliefs/dispatcher.self.ttl:/app/world/driver/beliefs/dispatcher.self.ttl:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME ones
       # the Containerfile copies, which `tests/test_layout.py` holds the two lists to.
       - ../../agent:/app/agent:ro

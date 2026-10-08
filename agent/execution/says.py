@@ -2,7 +2,7 @@
 
 An action whose taking tells somebody something has an `execution:Saying` among its operations,
 an `sh:construct` over the beliefs as they stand when the step is taken, with the step's
-parameters as `$tokens`, `$me` and `$now`. Its result is read as documents, the shape a world's files and a peer's messages
+parameters as `$tokens` and `$now`, asking the self where it means the agent. Its result is read as documents, the shape a world's files and a peer's messages
 share: an IRI the result says is `execution:to` an agent is a graph, what is said of it and of
 the blank nodes hanging off it is its content, and its kind, its period and whom it is to are
 the rows about it — `rdf:type` of a class the vocabulary puts beneath `orexis:Graph`,
@@ -34,7 +34,7 @@ _TEMPORAL = "http://purl.org/dc/terms/temporal"
 _GRAPH = OREXIS + "Graph"
 
 
-def says(store, said: dict, me: str, *, order: float | None = None) -> list[tuple[list[str], ox.Store]]:
+def says(store, said: dict, *, order: float | None = None) -> list[tuple[list[str], ox.Store]]:
     """Every document the step `said` tells, with the agents it is to — the executor's rows for
     the step, keyed by local part as `Executor.step_of` answers them — made over the beliefs
     holding now: every saying of the action's implementation, or those of one `order`. Empty
@@ -47,7 +47,7 @@ def says(store, said: dict, me: str, *, order: float | None = None) -> list[tupl
     if not texts:
         return []
     now = clock.now()
-    tokens = {"me": me, "now": instant(now)}
+    tokens = {"now": instant(now)}
     for r in rows(store, _TAKES_Q, graphs_of(store, ACTION), action=action):
         if local_of(r["takes"]) in said:
             tokens[local_of(r["takes"])] = said[local_of(r["takes"])]

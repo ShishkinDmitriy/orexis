@@ -148,7 +148,9 @@ board before it can connect.
 The compose file is **generated, never hand-edited**: one service per agent, named for its id,
 plus a `simulation` service where the world marks systems `sim:simulatedBy`. Adding an agent is
 adding it to the world and regenerating; a hand-edit is a second roster waiting to drift from the
-documents. Each container mounts exactly one store credential per purpose — its own.
+documents. Each container mounts exactly one store credential per purpose — its own — and of the
+world's documents the public ones and those that say they are its agent's; the simulator's, the
+public ones alone.
 
 # Monitor a world, or stop
 
@@ -351,7 +353,8 @@ real one.
 
 | symptom | cause |
 |---|---|
-| agent refuses to start, `DocumentRefused` | a document states no kind, claims to be the catalogue, or states an arrival or an owner. The message names the file |
+| agent refuses to start, `DocumentRefused` | a document states no kind, claims to be the catalogue or states an arrival; states a self anywhere but once in a self graph; or a graph of an agent's own names nobody, or no agent of the world. The message names the file |
+| agent refuses to start, `self graph` | its own documents hold no self graph, or two — the world authors exactly one per agent, under `beliefs/` — or its volume's self is another agent |
 | agent never logs `a volume lived in` | it is not keeping its volume — check the `orexis-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |

@@ -2,9 +2,17 @@
 type: Decision
 title: A package is a directory — discovered, never listed
 description: Each package is one self-contained directory (ontology, shapes, derivation rules, code, beliefs, and its own namespace) found by looking rather than named in a registry; capabilities reach each other through T-Box terms, never through Python imports. Adding one is adding a directory. A package may provide SEVERAL capabilities — that distinction was added later.
-status: accepted
+status: superseded-in-part
+superseded-by: a-package-is-loaded-only-for-a-role-the-agent-is-declared-in
 timestamp: 2026-08-03T12:00:00Z
 ---
+
+> **Superseded in part, 2026-10-08.** Its premise that what an agent runs is "derived ... rather than
+> declared" falls to
+> [a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md):
+> an agent's roles are declared, and a package loads for a role it serves. Its claim that a package
+> is found by looking stands, and is untrue of the runtime until that record's issue lands:
+> `MIND` and `PREMISES` in `agent/runtime.py` are a list, and a package in neither loads nowhere.
 
 > **Current statement: [package](/domain/kernel/package.md).** This record is how the model got
 > there and why; the domain concept is what it is now. Four records amend each other on

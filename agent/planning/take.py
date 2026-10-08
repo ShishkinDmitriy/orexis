@@ -9,8 +9,9 @@ its parts, and a reader who wants to know what taking a candidate does opens one
 
 **EVERYTHING IT NEEDS IS ON THE CANDIDATE'S ROW OR THE PARENT'S**, read in ONE query: which
 world it is taken in, what it fills, what that world spent and when it is; the action's texts
-off public knowledge; the next mint number off the pass's memo, read from the store once. `me` is the one
-identifier a process is handed. False where the action's rules say nothing about this world
+off public knowledge; the next mint number off the pass's memo, read from the store once. Who
+is taking it is nobody's argument: a text about the agent asks `?me a orexis:Self`, and the self
+crossed into the imaginarium with the beliefs. False where the action's rules say nothing about this world
 — no effect stated, or a construct and a retraction that both come to nothing — which is not
 a move, and the caller's weighing then says the candidate repeats the world it left.
 
@@ -72,7 +73,7 @@ from datetime import datetime, timedelta
 
 from agent.execution.ontology import ADDS_GRAPH, RETRACTS_GRAPH
 from agent.hash_named_graph import digest_of
-from agent.ontology import ACTION, PUBLIC, local_of
+from agent.ontology import ACTION, PUBLIC, SELF_GRAPH, local_of
 import pyoxigraph as ox
 
 from agent.store import (Raw, add_quads, bind, bindings, catalogue_of, clear_graph, closed, construct, fork,
@@ -126,8 +127,8 @@ SELECT ?from ?start ?end ?spent ?action ?minted ?p ?v WHERE {
     OPTIONAL { $cand ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, planning:minted, rdf:type)) } }
   BIND(COALESCE(?e, ?start) AS ?end) BIND(COALESCE(?s, 0.0) AS ?spent) }"""
 
-#  WHOM THE AGENT ACTS FOR, off the world graph — `$subject` in a rule text.
-_ACTS_FOR_Q = """SELECT ?for WHERE { $me orexis:actsFor ?for } LIMIT 1"""
+#  WHOM THE SELF ACTS FOR, off the world graph — `$subject` in a rule text.
+_ACTS_FOR_Q = """SELECT ?for WHERE { ?me a orexis:Self ; orexis:actsFor ?for } LIMIT 1"""
 
 
 #  THE PATH TO A WORLD: every candidate taken from the ground down to the world itself, in the
@@ -160,7 +161,7 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"""
 
 
 
-def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = None) -> bool:
+def take(store, cand: str, *, memo=None, within: frozenset | None = None) -> bool:
     """Fork the world `cand` reaches and write its row. False, and nothing made, where the
     candidate's effect changes nothing in the world it leaves, or where it is a wait and nothing
     laid after the ground it is taken in holds anything else. `within` is what a world of this
@@ -173,10 +174,10 @@ def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = Non
     by the least, its end by the most — written and not derived, because this engine binds
     nothing for duration arithmetic; a landing declared as nothing is nought twice.
     """
-    binding = _binding(store, cand, me, memo)
+    binding = _binding(store, cand, memo)
     minted = binding["minted"]
     child = f"{POSSIBLE}{minted}"
-    cost = _figure(store, cand, me, memo, "costs", "cost") or 0.0
+    cost = _figure(store, cand, memo, "costs", "cost") or 0.0
     waits = binding["action"] == WAIT
     if waits:
         #  A WAIT LANDS WHERE THE NEXT GROUND BEGINS — the next whose identity differs from the one
@@ -188,7 +189,7 @@ def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = Non
             return False                # nothing laid ahead: the wait would be the world it left
         start, end = at, max(at, datetime.fromisoformat(binding["end"]))
     else:
-        least, most = _landing(store, cand, me, memo)
+        least, most = _landing(store, cand, memo)
         start = datetime.fromisoformat(binding["start"]) + timedelta(seconds=least)
         end = datetime.fromisoformat(binding["end"]) + timedelta(seconds=most)
     #  THE GROUND THE CHILD LANDS IN, against the one its parent stands in: the same, and the child
@@ -203,14 +204,14 @@ def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = Non
         #  is replayed straight into the child, there being no effect to apply after, and what it
         #  changed there is said as for any replayed fork — nothing, both graphs named and empty
         #  (#919), so the step predicts nothing and is answered at its landing.
-        _replayed(store, cand, child, lands_in, me, memo, into=child)
+        _replayed(store, cand, child, lands_in, memo, into=child)
         _changed(store, child, child, memo)
         made = True
     elif lands_in is None or lands_in == stands_in:
-        made = _apply(store, cand, child, me, memo)
+        made = _apply(store, cand, child, memo)
     else:
-        base = _replayed(store, cand, child, lands_in, me, memo)
-        made = _apply(store, cand, child, me, memo, base=base,
+        base = _replayed(store, cand, child, lands_in, memo)
+        made = _apply(store, cand, child, memo, base=base,
                       graphs=[base if g == lands_in else g for g in world_at(store, lands_in, memo=memo)])
         if made:
             _changed(store, child, base, memo)
@@ -230,7 +231,7 @@ def take(store, cand: str, me: str, *, memo=None, within: frozenset | None = Non
     return True
 
 
-def _apply(store, cand: str, into: str, me: str, memo, *, base: str | None = None, graphs=None) -> bool:
+def _apply(store, cand: str, into: str, memo, *, base: str | None = None, graphs=None) -> bool:
     """Make `into` out of `base` — the world `cand` is taken in, unless the caller hands the ground
     at its landing with the path replayed — with the action's effect applied, order by order,
     reading `graphs`, the world's at its instant. False, and no graph made, where the effect says
@@ -241,7 +242,7 @@ def _apply(store, cand: str, into: str, me: str, memo, *, base: str | None = Non
     of the world the candidate leaves, which is the world it would read anyway, so a candidate
     changing nothing costs no copy. A delete is taken as a change, since what it matches is not
     known until it runs."""
-    binding = _binding(store, cand, me, memo)
+    binding = _binding(store, cand, memo)
     rule = _rule(store, binding["action"], memo)
     if rule is None or not rule["rules"]:
         return False
@@ -265,7 +266,7 @@ def _apply(store, cand: str, into: str, me: str, memo, *, base: str | None = Non
     return forked
 
 
-def _replayed(store, cand: str, child: str, ground: str, me: str, memo, *, into: str | None = None) -> str:
+def _replayed(store, cand: str, child: str, ground: str, memo, *, into: str | None = None) -> str:
     """A copy of `ground` with every step on the path to `cand`'s world applied onto it in order,
     each with its own filling — the world the step `cand` is taken in, as it stands in the ground
     the step lands in. Named `<child>.base`, and the caller's to clear once the child is forked
@@ -273,7 +274,7 @@ def _replayed(store, cand: str, child: str, ground: str, me: str, memo, *, into:
     two-tank plans case: a replayed fork costs two copies of a ground where a plain fork costs one,
     and nothing is replayed where the landing stays in the parent's period, which is every shipped
     world's today. A wait on the path changed nothing, and replays as nothing."""
-    binding = _binding(store, cand, me, memo)
+    binding = _binding(store, cand, memo)
     base = into or f"{child}.base"
     clear_graph(store, base)
     fork(store, ground, base, [], [])
@@ -281,7 +282,7 @@ def _replayed(store, cand: str, child: str, ground: str, me: str, memo, *, into:
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
     path = [r["c"] for r in rows(store, _PATH_Q, (), world=binding["from"], cat=cat)]
     for step in path:
-        taken = _binding(store, step, me, memo)
+        taken = _binding(store, step, memo)
         rule = _rule(store, taken["action"], memo)
         if rule is None:
             continue
@@ -372,9 +373,9 @@ def _run(store, text: str | None, tokens: dict, graphs) -> list:
         return []
 
 
-def _binding(store, cand: str, me: str, memo) -> dict:
+def _binding(store, cand: str, memo) -> dict:
     """The `$tokens` a candidate's rule texts take: which world (`$state`, the one it is
-    taken in), who is asking (`$me`), whom for (`$subject`), when (`$now`, the start of that
+    taken in), whom the self acts for (`$subject`), when (`$now`, the start of that
     world's period) and what it is filled with, one token per parameter under the parameter's
     local part — one spelling serving three places (an-action-takes-parameters). With
     `action`, which the texts are read off, `from`, for the caller asking about that world,
@@ -388,9 +389,9 @@ def _binding(store, cand: str, me: str, memo) -> dict:
         found = rows(store, _CANDIDATE_Q, (), cand=cand, cat=cat)
         if not found:
             raise LookupError(f"no candidate {cand} — was it admitted?")
-        subject = remember(memo, ("acts_for", me), lambda: next(
-            (r["for"] for r in rows(store, _ACTS_FOR_Q, graphs_of(store, PUBLIC), me=me)), None))
-        out = {"state": Raw(f"<{found[0]['from']}>"), "me": me, "subject": subject or "urn:nobody",
+        subject = remember(memo, ("acts_for",), lambda: next(
+            (r["for"] for r in rows(store, _ACTS_FOR_Q, graphs_of(store, PUBLIC, SELF_GRAPH))), None))
+        out = {"state": Raw(f"<{found[0]['from']}>"), "subject": subject or "urn:nobody",
                "now": instant(datetime.fromisoformat(found[0]["start"])),
                "action": found[0]["action"], "from": found[0]["from"], "minted": int(found[0]["minted"]),
                "start": found[0]["start"], "end": found[0]["end"], "spent": float(found[0]["spent"])}
@@ -417,13 +418,13 @@ def _rule(store, action: str, memo) -> dict | None:
     return remember(memo, ("rule", action), fetch)
 
 
-def _landing(store, cand: str, me: str, memo) -> tuple[float, float]:
+def _landing(store, cand: str, memo) -> tuple[float, float]:
     """How long after the act the world change can show, as the band the action's `landsAfter`
     answers — `?least` and `?most`, in seconds — asked over the world the candidate is taken in.
     Nought twice where the action declares none or the text declines, which is a step the world
     shows the instant it is taken; a text binding only one of the two, or an older `?seconds`,
     is a package's bug, said in the log and read as nought."""
-    row = _answer(store, cand, me, memo, "lands")
+    row = _answer(store, cand, memo, "lands")
     if row is None:
         return 0.0, 0.0
     least, most = _bound(row, "least"), _bound(row, "most")
@@ -433,12 +434,12 @@ def _landing(store, cand: str, me: str, memo) -> tuple[float, float]:
     return min(least, most), max(least, most)
 
 
-def _figure(store, cand: str, me: str, memo, text: str, column: str) -> float | None:
+def _figure(store, cand: str, memo, text: str, column: str) -> float | None:
     """One of a rule's SELECTs that answers with a number — `costs`, what taking the act would
     spend in the wallet's unit (#466) — asked, never computed, so the figure a planner plans
     against is the package's own. None where the rule declines — no text, or premises that do
     not hold — which the caller reads as free."""
-    row = _answer(store, cand, me, memo, text)
+    row = _answer(store, cand, memo, text)
     return None if row is None else _bound(row, column)
 
 
@@ -452,12 +453,12 @@ def _bound(row, column: str) -> float | None:
     return None if term is None else float(term.value)
 
 
-def _answer(store, cand: str, me: str, memo, text: str):
+def _answer(store, cand: str, memo, text: str):
     """The first row of one of the action's SELECTs — `costs`, `lands` — asked over the world the
     candidate is taken in, through the rules' own door, so it sees exactly what the CONSTRUCT
     sees (#472); None where the action states no such text, the text yields no row, or it will
     not run, which is a package's bug and must not take an agent down."""
-    binding = _binding(store, cand, me, memo)
+    binding = _binding(store, cand, memo)
     rule = _rule(store, binding["action"], memo)
     if rule is None or not rule.get(text):
         return None

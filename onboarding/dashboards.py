@@ -276,9 +276,6 @@ def render(world: str) -> dict:
     }
 
 
-#  EVERY AGENT OF A WORLD, as the node a premise is asked of and the id its bucket is named by.
-_AGENTS_Q = f"SELECT ?a ?id WHERE {{ ?a a <{OREXIS}Agent> ; <{OREXIS}localId> ?id }} ORDER BY ?id"
-
 #  THE DASHBOARD'S ONE VARIABLE: whose metrics bucket every panel reads.
 AGENT_VARIABLE = "agent"
 
@@ -288,7 +285,9 @@ def reporting(world: str) -> list[tuple[str, list[type]]]:
     some agent of the world loads whose `events.py` has an event that reports, in the order an agent
     loads them — read off the event classes themselves, so this file names no metric."""
     store = reading.world(world_dir(world))
-    loaded = {p for r in rows(store, _AGENTS_Q, graphs_of(store, PUBLIC)) for p in packages_of(store, r["a"])}
+    #  A WORLD'S STORE HOLDS NO SELF, so a premise is asked of every agent at once — `?me` an
+    #  `orexis:Agent` — and answers the packages some agent of the world loads.
+    loaded = set(packages_of(store, OREXIS + "Agent"))
     out = [("runtime", reported(the_runtime))]
     for package in EVERY:
         if package in loaded and (KERNEL / package / "events.py").exists():

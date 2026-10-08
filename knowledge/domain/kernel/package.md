@@ -32,9 +32,9 @@ exports that act alone.
 
 **Belief, planning and execution are the mind, and every agent has them.** Any other package is
 loaded — its documents put in the store, its modules imported — only where its **premise** holds:
-an ASK over the world's public graphs with `$me` bound to the agent, written in `PREMISES` in
-`agent/runtime.py`. A premise answers in advance what the package's callers will read, so it is
-in their words:
+an ASK over the world's public graphs and the [self](/domain/kernel/self.md), whom it asks about as
+`?me`, written in `PREMISES` in `agent/runtime.py`. A premise answers in advance what the package's
+callers will read, so it is in their words:
 
 | package | its premise holds where |
 |---|---|

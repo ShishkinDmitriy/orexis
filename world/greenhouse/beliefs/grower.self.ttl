@@ -1,0 +1,9 @@
+@prefix : <http://example.org/orexis/world/greenhouse#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:SelfGraph .    # this document is one graph, and this is what it is
+
+#  WHO THIS AGENT IS: the grower, and this document is its own by the self it states. Booted as
+#  "grower", the agent checks that this is so.
+
+:grower a orexis:Self .
