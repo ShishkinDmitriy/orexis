@@ -56,7 +56,7 @@ def test_the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops(monkeypatc
     the drives-owed estimate guides — and walked a drive at a time, each landing half a minute
     after it is taken, so the run is passes until the last lands and the want is reached."""
     _ticking(monkeypatch)
-    runtime = Runtime(boot(WORLD, "courier"), "courier", budget=128)
+    runtime = Runtime(boot(WORLD, "courier"), "courier")
     assert runtime.run(poll_s=0) == MET
     assert _acts(runtime) == 8 and _parcel_at(runtime.beliefs) == ["c3_3"]
     assert runtime.run(poll_s=0) == MET and _acts(runtime) == 8, "met stays met, and nothing moves again"
@@ -68,13 +68,18 @@ def test_the_wants_estimate_at_the_present_never_exceeds_what_the_plan_cost(monk
     with a dearer plan than exists, and nothing in the suite held one to the promise before — the
     domain's comment stated it and eyes checked. The figure here is tight, eight against eight: three
     drives to the parcel, the pick, three drives to the door and the drop, each certain and each
-    counted once, where the drives alone read six."""
+    counted once, where the drives alone read six.
+
+    AND THE BUDGET THE COURIER STATES OF ITSELF IS ENOUGH (#932): the Planner is handed none, so it
+    reads `planning:budget` off the self graph, and the plan is found in this one pass. The delivery
+    costs 45 candidates; stating nothing, the agent searches at planning's 32 and this pass ends
+    `Exhausted` with no plan to judge."""
     monkeypatch.setattr(clock, "now", lambda: NOW)
-    planner = Planner(boot(WORLD, "courier"), "courier", budget=128)
+    planner = Planner(boot(WORLD, "courier"), "courier")
     planner.plan(NOW)
     (im,) = planner.imaginaria.values()
     judged = [(float(r["left"]), float(r["spent"])) for r in rows(im, _ESTIMATE_AGAINST_COST_Q, ())]
-    assert len(judged) == 1, f"the one want, its estimate and its plan: {judged}"
+    assert len(judged) == 1, f"the one want, its estimate and its plan, in one pass at the budget the self states: {judged}"
     assert all(left <= spent for left, spent in judged), f"an estimate never overstates what the plan cost: {judged}"
     assert judged == [(8.0, 8.0)], f"and here it is tight: {judged}"
 
@@ -92,7 +97,7 @@ def test_a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after(mon
 def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeypatch):
     _ticking(monkeypatch)
     beliefs = boot(WORLD, "courier")
-    Runtime(beliefs, "courier", budget=128).run(poll_s=0)
+    Runtime(beliefs, "courier").run(poll_s=0)
     boot(WORLD, "courier", beliefs)                   # a restart on the same volume
     assert _parcel_at(beliefs) == ["c3_3"], "the delivered parcel is the agent's belief, not the file's"
     assert len(graphs_of(beliefs, STATE)) == 1

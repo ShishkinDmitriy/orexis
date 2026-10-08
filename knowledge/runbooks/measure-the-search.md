@@ -356,8 +356,9 @@ the shipped pose, against the 674 the same coupled want cost before the estimate
 instances and counted the pick and the drop (a-parcel-astray-is-a-want-of-its-own): the joint want's
 estimate is the desire's sum, ten at the root and the plan's own cost, so every interleaving of the
 two five-step chains stands at ten on the frontier and is opened in turn, and the 80 candidates beyond
-the 148 worlds weighed are interleavings that reached a world already made. The default budget of 128
-cuts it short, so the world's tests state 256 and the corridor's 512. Twelve times the pass, for a
+the 148 worlds weighed are interleavings that reached a world already made. A budget of 128 cuts it
+short, so the tests stated 256 and the corridor's 512 — since #932 the dispatcher's self graph states
+the 256 and the corridor's its 512, and the tests hand none. Twelve times the pass, for a
 plan that is optimal for both parcels by construction where two plans apart could only be optimal
 each; the pass still ends inside a cadence.
 
@@ -431,8 +432,8 @@ the other's cell and opened none of the sixteen that hold two vans — the other
 passed over by hash as repeats of a refused one — and the plan is the one found before, since the
 colliding interleavings were never on the shortest path: ten candidates fewer, no step changed, and
 the walk now shares no cell by promise. On the shipped pose it refused nothing, because no world of
-it collides, so 228 stands and the default budget of 128 still does not suffice; neither did the
-corridor's 286 fall under 256, so the tests' budgets stand. **The parked van was the surprise.** The
+it collides, so 228 stands and a budget of 128 still does not suffice; neither did the
+corridor's 286 fall under 256, so the budgets stand. **The parked van was the surprise.** The
 record expected the seven-step route round; the one mind holding both vans found better twice over —
 with the parcel on the ground beside van B it delivers with van B, five steps and van A never moves,
 and with the parcel already aboard van A it moves van B aside first and drives through, four steps.

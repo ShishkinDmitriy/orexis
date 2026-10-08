@@ -28,9 +28,9 @@ declare: `world.ttl`; `society.ttl` only where there is a bus; a self graph for 
 `beliefs/<id>.self.ttl`, saying who it is, the ROLES it runs beside its self — in a domain's words
 where the domain has them (`market:Host`), otherwise the packages' (`planning:Planner`,
 `sensing:Observer`, …), since an agent declaring none loads nothing and is refused — and any
-stance it holds of itself — a search's
-`planning:budget` sized from what the world's own test measured, say — and stating no stance
-anywhere else, where nothing reads it; `state.ttl` for a world nothing senses; the desires or
+stance it holds of itself, stating none anywhere else, where nothing reads it. Above all a planner
+whose pass needs more than planning's 32 candidates states the search's `planning:budget` it needs,
+at the figure the world's own test measured; `state.ttl` for a world nothing senses; the desires or
 wants per agent; `deployment.ttl` only to pin a port; `hardware.ttl` only where a board is flashed.
 Every document of an agent's own says whose it is in what it states, never in its file's name. Model the nearest shipped world — `world/greenhouse/` with a bus and
 sensors, `world/dispatcher/` or `world/courier/` without, `world/tower/` for two levels — and
@@ -49,7 +49,8 @@ pytest -q && lint-imports && ./tools/validate-okf.sh knowledge
 
 Write `world/<name>/tests/test_<name>.py` as the runbook says — `Runtime(boot(WORLD, "<id>"), "<id>")`
 with a clock that ticks, run, and the claim asserted — and break it on purpose once so it is a
-guard. `orexis-onboard <name>` is the full onboarding and needs the series store and the broker up;
+guard. Hand it no budget: it then searches at the one the self graph states, as the container will,
+and lowering that figure is one way to break it. `orexis-onboard <name>` is the full onboarding and needs the series store and the broker up;
 on a bench without them, the compose generator and the tests above are what hold the draft.
 Measure what the runbooks measure where the world is about the search
 (`knowledge/runbooks/measure-the-search.md`, `measure-a-pass.md`): a new world's figures go there.

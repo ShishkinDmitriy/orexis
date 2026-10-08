@@ -48,9 +48,10 @@ A = "every_parcel_delivered.pursued.parcel_a"
 B = "every_parcel_delivered.pursued.parcel_b"
 #  THE TWO CONSTRAINTS this world states (`constraints.ttl`).
 TWO_VANS, ONE_VAN = "no_cell_holds_two_vans", "a_driver_is_aboard_one_van"
-#  WHAT THE COUPLED SEARCH NEEDS: 191 candidates, measured, so the default budget of 128 cuts it
-#  short and the passes after would finish it; the tests state 256, as the dispatcher's do.
-BUDGET = 256
+#  WHAT THE COUPLED SEARCH NEEDS: 191 candidates, measured, so a budget of 128 cuts it short and the
+#  passes after would finish it. The dispatcher states 256 of itself in its self graph, and a case
+#  hands no budget unless it is about one, so the figure it passes at is the one a deployed agent
+#  searches at (#932).
 #  THE BANDS, as the courier declares them: a drive lands half a minute to a minute after it is taken,
 #  a boarding one minute to two, a pick and a drop at once.
 DRIVE_LEAST_S = 30
@@ -173,7 +174,7 @@ def ticking(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW)
 
 
-def _pass(world: Path, budget: int = BUDGET):
+def _pass(world: Path, budget: int | None = None):
     """One pass of the Planner over the booted world, from the present. The one imaginarium."""
     planner = Planner(boot(world, "dispatcher"), "dispatcher", budget=budget)
     planner.plan(NOW)
@@ -211,7 +212,7 @@ def _where(store) -> dict[str, str]:
     return {_local(r["x"]): _local(r["o"]) for r in rows(store, _WHERE_Q, ()) if r["x"].startswith(D)}
 
 
-def _walk(world: Path, passes: int = 40, budget: int = BUDGET) -> dict:
+def _walk(world: Path, passes: int = 40) -> dict:
     """The runtime over the booted world, pass after pass with the clock moved on by a drive's least
     landing between passes, until no intention stands or `passes` are spent. Every executor event in
     the order it happened — a step taken with what it filled and where the driver was the moment it
@@ -220,7 +221,7 @@ def _walk(world: Path, passes: int = 40, budget: int = BUDGET) -> dict:
     time = _Clock(NOW)
     clock.now = time
     beliefs = boot(world, "dispatcher")
-    runtime = Runtime(beliefs, "dispatcher", budget=budget)
+    runtime = Runtime(beliefs, "dispatcher")
     executor = runtime.parts["execution"].executor
     events: list[tuple] = []
 
@@ -292,7 +293,7 @@ def test_one_driver_makes_two_parcels_on_disjoint_grids_one_want_and_one_plan_of
     the one boarding and every drive of van B after it, since a drive needs the driver aboard. THE
     FIGURES, measured: 191 candidates, 133 possible worlds, each constraint weighed in all 133 and
     marking none — the boarding deletes the van left, so no world a plan reaches has the driver in
-    two, and no drive crosses between the grids; the default budget of 128 cuts the search short.
+    two, and no drive crosses between the grids; a budget of 128 cuts the search short.
     The estimate reads ten, the courier's drives, picks and drops of both parcels, against eleven
     spent: admissible, and loose by the one boarding no parcel owes."""
     cut = _pass(WORLD, budget=128)

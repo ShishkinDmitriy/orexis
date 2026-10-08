@@ -43,8 +43,12 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
    role whose needs the world lacks, a sensor reporting to no observer and a topic no speaker hears.
    Beside that row, any figure the agent holds of itself — its patience, a budget, a sensor's limits,
    its horizon — as a triple about the self; stated in any other document it is not read
-   ([stance](/domain/kernel/stance.md)). Neither reaches a volume already lived in: a role or a stance
-   changed after birth needs a fresh volume.
+   ([stance](/domain/kernel/stance.md)). **A planner whose search needs more than planning's 32
+   candidates a pass states the budget it needs**, `:courier planning:budget 128`, at the figure the
+   world's own test measured — and that test hands the Planner and the Runtime no budget of its own,
+   so it reads the stated one and fails if it is too low; a test handing its own proves a figure no
+   container searches at. Neither reaches a volume already lived in: a role or a stance changed after
+   birth needs a fresh volume.
 5. **`state.ttl`** — `<> a orexis:StateGraph`, where things stand, for a world nothing senses.
 6. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or
    `<> a planning:WantGraph` for a want that is met once; in a world of several agents, one

@@ -13,3 +13,9 @@
 #  is no deliberator.
 
 :dispatcher a orexis:Self , planning:Planner , execution:Executor .
+
+#  WHAT ITS SEARCH MAY SPEND IN A PASS, a stance (knowledge/domain/kernel/stance.md): the two parcels
+#  are one want, coupled through the one driver, whose search costs 191 candidates (measure-the-search),
+#  past planning's 32 and past 128 too. `tests/test_driver.py` boots this world with no budget of its
+#  own and finds the eleven-step plan in one pass at this figure, and walks it.
+:dispatcher planning:budget 256 .

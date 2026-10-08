@@ -68,10 +68,13 @@ DESIRE = "http://example.org/orexis/planning#DesireGraph"   # planning's word; t
 #  THE ONE WANT THE TWO PARCELS ARE where the aversion couples them, named for both.
 JOINT = "every_parcel_delivered.pursued.parcel_a.parcel_b"
 #  WHAT THE COUPLED SEARCH NEEDS: 228 candidates on the shipped pose and 286 on the corridor, measured
-#  (measure-the-search), so the default budget of 128 cuts it short and the tests state their own.
-#  Marking the colliding worlds impossible took the corridor from 296 to 286 and the shipped pose
-#  nowhere, since no world of it collides; neither fits 128, and the budgets stand.
-BUDGET, CORRIDOR_BUDGET = 256, 512
+#  (measure-the-search), so a budget of 128 cuts it short. Marking the colliding worlds impossible
+#  took the corridor from 296 to 286 and the shipped pose nowhere, since no world of it collides.
+#  THE BUDGET IS THE DISPATCHER'S OWN WORD (#932): 256, `planning:budget` in its self graph, which
+#  every case here reads by handing the Planner and the Runtime none, so the figure a deployed agent
+#  searches at is the one these cases pass at; the corridor is a world whose search needs more, and
+#  says so in its own self graph. A case that hands a budget is about that budget.
+CORRIDOR_BUDGET = (":dispatcher planning:budget 256 .", ":dispatcher planning:budget 512 .")
 #  THE CONSTRAINT, the one this world states: no cell holds two vans (`constraints.ttl`).
 CONSTRAINT = "no_cell_holds_two_vans"
 #  THE DRIVE'S BAND, as the courier declares it (`domains/courier/actions.ttl`, #901): a drive lands
@@ -173,7 +176,8 @@ CORRIDOR = {"world.ttl": [("courier:destination :c0_3", "courier:destination :c3
             "state.ttl": [(":van_a courier:at :c0_0 .", ":van_a courier:at :c0_1 ."),
                           (":parcel_a courier:at :c0_1 .", ":parcel_a courier:at :c1_1 ."),
                           (":van_b courier:at :c3_0 .", ":van_b courier:at :c2_3 ."),
-                          (":parcel_b courier:at :c3_1 .", ":parcel_b courier:at :c2_2 .")]}
+                          (":parcel_b courier:at :c3_1 .", ":parcel_b courier:at :c2_2 .")],
+            "beliefs/dispatcher.self.ttl": [CORRIDOR_BUDGET]}
 #  ONE VAN AND ITS PARCEL ALONE, either half of the shipped delivery.
 HALF_A = {"world.ttl": [(':van_b a courier:Van ; rdfs:label "van B" .', ""),
                         (':parcel_b a courier:Parcel ; courier:destination :c3_3 ;\n    rdfs:label "the parcel owed at the top of the last column" .', "")],
@@ -241,8 +245,9 @@ class _Clock:
         return self.at
 
 
-def _pass(world: Path, budget: int = BUDGET):
-    """One pass of the Planner over the booted world, from the present. The one imaginarium."""
+def _pass(world: Path, budget: int | None = None):
+    """One pass of the Planner over the booted world, from the present, at the budget the world's self
+    graph states unless the case is about another. The one imaginarium."""
     planner = Planner(boot(world, "dispatcher"), "dispatcher", budget=budget)
     planner.plan(NOW)
     (im,) = planner.imaginaria.values()
@@ -330,7 +335,7 @@ def _at(store) -> dict[str, str]:
     return {_local(r["x"]): _local(r["cell"]) for r in rows(store, _AT_Q, ()) if r["x"].startswith(D)}
 
 
-def _run(world: Path, passes: int = 40, budget: int = BUDGET):
+def _run(world: Path, passes: int = 40):
     """The runtime over the booted world, pass after pass with the clock moved on by a drive's least
     landing between passes, until no intention stands or `passes` are spent; every step taken traced
     as (step, van A's cell, van B's cell, the cells two vans share) read off the beliefs the moment it
@@ -339,7 +344,7 @@ def _run(world: Path, passes: int = 40, budget: int = BUDGET):
     time = _Clock(NOW)
     clock.now = time
     beliefs = boot(world, "dispatcher")
-    runtime = Runtime(beliefs, "dispatcher", budget=budget)
+    runtime = Runtime(beliefs, "dispatcher")
     executor = runtime.parts["execution"].executor
     trace: list[tuple] = []
 
@@ -385,8 +390,9 @@ def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_te
     reads added, which is the joint plan's own cost — the A* key the coupled search wants, admissible and
     tight. WHAT THE COUPLING COSTS IS THE PRODUCT: 228 candidates weighed, 148 of them worlds, against 50
     for two wants apart and 13 for a van alone, every interleaving of the two chains standing at ten on
-    the frontier and opened in turn; at the default budget of 128 the search is cut short and the passes
-    after would finish it, so this world's tests state 256 (measure-the-search). Apart, no world the
+    the frontier and opened in turn; at a budget of 128 the search is cut short and the passes after
+    would finish it, so the dispatcher states 256 of itself, which this case reads by handing the
+    Planner none (measure-the-search, #932). Apart, no world the
     search visits holds two vans on a cell, so the constraint marks nothing and the count is what it
     was before it — the constraint is weighed in every world the search weighs, 148, and is kept in all.
     AND TWO PARCELS ON DISJOINT GRIDS ARE TWO WANTS exactly as before: the constraint over what the vans
@@ -394,7 +400,7 @@ def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_te
     own estimate, five."""
     cut = _pass(WORLD, budget=128)
     assert _plans(cut) == {JOINT: ("Exhausted", 0)} and _spent(cut)[JOINT] == 128, \
-        "the default budget cuts the coupled search short; the passes after finish it"
+        "a budget of 128 cuts the coupled search short; the passes after finish it"
     im = _pass(WORLD)
     assert _wants(im) == {JOINT: "every_parcel_delivered"}
     assert _targets(im, JOINT) == {"parcel_a", "parcel_b"}, "a coupled want's met-test targets each instance"
@@ -406,7 +412,7 @@ def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_te
     paid, left, spent = _weighed(im), _remaining(im), _spent(im)
     halves_paid, halves_left = {}, {}
     for name, edits in (("a", HALF_A), ("b", HALF_B)):
-        half = _pass(variant(tmp_path, name, edits), budget=128)
+        half = _pass(variant(tmp_path, name, edits))
         (want,) = _plans(half)
         assert _plans(half)[want] == ("Satisfied", 5)
         halves_paid[want] = _weighed(half)[want]
@@ -421,7 +427,7 @@ def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_te
     executor = runtime.parts["execution"].executor
     assert int(rows(executor.intentions, _INTENTIONS_Q, ())[0]["n"]) == 1 and executor.walking() == [], \
         "one plan, one intention, done: the cluster left once parcel A was delivered is the coupled want's, not a second want's"
-    apart = _pass(variant(tmp_path, "disjoint", DISJOINT), budget=128)
+    apart = _pass(variant(tmp_path, "disjoint", DISJOINT))
     assert _wants(apart) == {"every_parcel_delivered.pursued.parcel_a": "every_parcel_delivered",
                              "every_parcel_delivered.pursued.parcel_b": "every_parcel_delivered"}
     assert _plans(apart) == {"every_parcel_delivered.pursued.parcel_a": ("Satisfied", 5),
@@ -444,9 +450,10 @@ def test_corridor_the_coupled_search_marks_the_worlds_holding_two_vans_impossibl
     constraint cost it ten candidates and no steps — and WALKED, one head at a time, it puts both vans on
     no cell at any act: promised, where before #902 it was pinned as what happened to be true. Before the
     coupling each plan drove its van through `c2_1` at its third step and the two were walked in
-    lockstep, both on the cell for one act (measure-the-search)."""
+    lockstep, both on the cell for one act (measure-the-search). The 286 is past the 256 the shipped
+    dispatcher states, so the corridor states 512 in its own self graph, and the search reads that."""
     corridor = variant(tmp_path, "corridor", CORRIDOR)
-    im = _pass(corridor, budget=CORRIDOR_BUDGET)
+    im = _pass(corridor)
     plans, steps = _plans(im), _steps(im)
     assert _wants(im) == {JOINT: "every_parcel_delivered"}
     assert plans == {JOINT: ("Satisfied", 10)}
@@ -459,7 +466,7 @@ def test_corridor_the_coupled_search_marks_the_worlds_holding_two_vans_impossibl
         f"worlds the coupled search reached with two vans on one cell: {held}"
     assert _impossible(im) == {CONSTRAINT: 13}, f"marked impossible by the constraint, measured: {_impossible(im)}"
     _possible(im, JOINT)
-    runtime, outcome, trace = _run(corridor, budget=CORRIDOR_BUDGET)
+    runtime, outcome, trace = _run(corridor)
     assert outcome == UNFINISHED and len(trace) == 10
     met = [(step, shared) for step, _, _, shared in trace if shared]
     assert met == [], f"walked, the joint plan puts two vans on no cell at any act — the constraint's promise: {trace}"
@@ -481,23 +488,23 @@ def test_a_van_parked_across_the_only_shortest_path_is_not_driven_through(tickin
     van B aside first and drives A through — four steps, where the route round is five. In neither
     does an opened world hold two vans, and walked, the vans share no cell at any act."""
     world = variant(tmp_path, name, edits)
-    im = _pass(world, budget=128)
+    im = _pass(world)
     want = "every_parcel_delivered.pursued.parcel_a"
     assert _wants(im) == {want: "every_parcel_delivered"}
     assert _plans(im) == {want: ("Satisfied", steps)}
     assert {van for _, van, _, _ in _steps(im)[want] if van} == by, _steps(im)[want]
     assert (_spent(im)[want], _impossible(im)) == (spent, {CONSTRAINT: impossible}), f"measured: {_spent(im)} {_impossible(im)}"
     _possible(im, want)
-    runtime, outcome, trace = _run(world, budget=128)
+    runtime, outcome, trace = _run(world)
     assert outcome == UNFINISHED and len(trace) == steps
     assert [(step, shared) for step, _, _, shared in trace if shared] == [], f"two vans on one cell at an act: {trace}"
     assert _at(runtime.beliefs) == at
 
 
-@pytest.mark.parametrize("name, edits, budget, tight", [("apart", {}, BUDGET, True), ("corridor", CORRIDOR, CORRIDOR_BUDGET, True),
-                                                        ("half_a", HALF_A, 128, True), ("parked", PARKED, 128, True),
-                                                        ("carrying", CARRYING, 128, False)])
-def test_a_wants_estimate_at_the_present_never_exceeds_what_its_plan_cost(ticking, tmp_path, name, edits, budget, tight):
+@pytest.mark.parametrize("name, edits, tight", [("apart", {}, True), ("corridor", CORRIDOR, True),
+                                                ("half_a", HALF_A, True), ("parked", PARKED, True),
+                                                ("carrying", CARRYING, False)])
+def test_a_wants_estimate_at_the_present_never_exceeds_what_its_plan_cost(ticking, tmp_path, name, edits, tight):
     """THE ONE PROMISE AN ESTIMATE MAKES, as a gate: what a want's estimate read in the present ground
     (`planning:remaining` on the ground's weighing) is at most what the plan the search found spent
     (`planning:spent` on the plan). An estimate that overstates lets a pass end with a dearer plan
@@ -510,7 +517,7 @@ def test_a_wants_estimate_at_the_present_never_exceeds_what_its_plan_cost(tickin
     the only short route, the estimate reads three — two drives and the drop — and the plan costs four,
     since moving van B aside is a step the constraint makes necessary and the parcel does not owe;
     admissible, loose by one, which is the slack the search pays for with its frontier (#902)."""
-    im = _pass(variant(tmp_path, name, edits) if edits else WORLD, budget=budget)
+    im = _pass(variant(tmp_path, name, edits) if edits else WORLD)
     left, costs = _remaining(im), _costs(im)
     judged = {w: (left[w], costs[w]) for w in costs if w in left}
     assert judged and set(judged) == {w for w, (outcome, _) in _plans(im).items() if outcome == "Satisfied"}, \
@@ -602,7 +609,7 @@ INSERT DATA {{ GRAPH <{state}> {{ <{D}parcel_b> courier:at <{D}{cell}> ; courier
     return arrive
 
 
-def _arrival(world: Path, arrive, *, budget: int = BUDGET, after: int = 2, passes: int = 40) -> dict:
+def _arrival(world: Path, arrive, *, after: int = 2, passes: int = 40) -> dict:
     """The runtime over `world`, a drive's least landing between passes as `_run` moves it, until van A's
     plan has had `after` steps answered; then a belief ARRIVES — `arrive(beliefs, walking, at)` writes it
     and answers the graphs it wrote, which are said written — and the next pass runs AT ONCE, so the step
@@ -613,7 +620,7 @@ def _arrival(world: Path, arrive, *, budget: int = BUDGET, after: int = 2, passe
     time = _Clock(NOW)
     clock.now = time
     beliefs = boot(world, "dispatcher")
-    runtime = Runtime(beliefs, "dispatcher", budget=budget)
+    runtime = Runtime(beliefs, "dispatcher")
     executor, planner = runtime.parts["execution"].executor, runtime.parts["planning"].planner
     seen: dict = {"events": [], "trace": [], "searched": [], "planned": []}
 
@@ -982,7 +989,7 @@ def _crossed(world: Path, route) -> object:
     """One pass of the Planner over `world` booted with van B's `route` laid ahead. The one imaginarium."""
     beliefs = boot(world, "dispatcher")
     _lay_route(beliefs, route)
-    planner = Planner(beliefs, "dispatcher", budget=BUDGET)
+    planner = Planner(beliefs, "dispatcher")
     planner.plan(NOW)
     (im,) = planner.imaginaria.values()
     return im

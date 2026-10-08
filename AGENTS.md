@@ -489,6 +489,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   budgets, the silent and stuck limits and the horizon, each declared by its reader's package and
   read through `agent/stance.py`; never a flag or public knowledge, and a grace or a metrics window
   is none (a-stance-is-the-agents-word-about-itself).
+- **A world's test hands its agent no budget, so the figure it passes at is the one the self graph
+  states** — handed by the tests, 128 and 256 were proved while every container searched at 32, at
+  which the tower's two disks were not walked home in the test's passes (#932).
 - **A reading late is not a reading missing** — ended exactly at the next one's due, a late reading
   left no present, and a dose sized from it commanded nothing (#870,
   a-reading-late-is-not-a-reading-missing).

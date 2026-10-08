@@ -12,3 +12,9 @@
 #  has none for an agent. Its world ships no rules, so it is no deliberator.
 
 :courier a orexis:Self , planning:Planner , execution:Executor .
+
+#  WHAT ITS SEARCH MAY SPEND IN A PASS, a stance (knowledge/domain/kernel/stance.md): the delivery
+#  costs 45 candidates (measure-the-search), past planning's 32, so a pass at the constant publishes
+#  nothing. `tests/test_courier.py` boots this world with no budget of its own and finds the plan in
+#  one pass at this figure; at 32 it finds none.
+:courier planning:budget 128 .

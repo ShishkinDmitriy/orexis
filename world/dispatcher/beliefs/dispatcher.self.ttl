@@ -12,3 +12,9 @@
 #  courier's domain has none for an agent. Its world ships no rules, so it is no deliberator.
 
 :dispatcher a orexis:Self , planning:Planner , execution:Executor .
+
+#  WHAT ITS SEARCH MAY SPEND IN A PASS, a stance (knowledge/domain/kernel/stance.md): the two parcels
+#  are one coupled want whose search costs 228 candidates (measure-the-search), past planning's 32 and
+#  past 128 too. `tests/test_dispatcher.py` boots this world with no budget of its own and finds the
+#  joint plan in one pass at this figure, and walks it.
+:dispatcher planning:budget 256 .
