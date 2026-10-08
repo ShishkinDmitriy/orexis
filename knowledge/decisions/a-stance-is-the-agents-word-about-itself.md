@@ -82,7 +82,7 @@ so its word about itself had two homes and the world's could stand in for it sil
 document per agent saying who it is about — its own owner row, its own count at boot, its own door
 at the loader — for a content the self graph already is: what the agent holds about itself. The
 self graph's kind was made the kernel's for this (the-self-is-a-class-held-to-one-instance), and
-#927's roles are to be stated there too.
+#927's roles are stated there too ([role](/domain/kernel/role.md)).
 
 **A flag, environment, or a file of figures.** Rule 5: there is no config file for the model. A
 figure the agent believes about itself is a belief; a flag beside it is a second place the figure

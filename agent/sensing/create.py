@@ -5,8 +5,9 @@ it, `received` writes; nothing else here is called.
 
 WHAT SENSING SAYS HAPPENED, by the part's own signals, each carrying an event of `events.py` and made
 only where heard: `observed`, an observation graph written — heard as it is written, whoever wrote
-it, and said with what the rules concluded of it, which is written by then, since belief's part
-starts before any package beyond the mind and so hears the graph first; and with how long after the
+it, and said with what the rules concluded of it, which is written by then, since an observer is a
+deliberator too and belief's part starts first in a pass (`agent.runtime.PASS`), so it hears the
+graph first; and with how long after the
 reading it replaced it came, which the part remembers per sensor since the reading replaced is gone
 by then — `silence`, how many sensors are said silent after each ask — and `doubted`, which sensors
 are said silent or stuck after each ask, one event per sensor doubted, and one saying neither for a

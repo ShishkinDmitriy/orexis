@@ -17,11 +17,12 @@ from agent import clock, runtime as runtime_module
 from agent.metrics import Flag, Level, Tag, Value, measurement, reported
 from agent.metrics import window as metrics
 from agent.metrics.window import due, flush
-from agent.runtime import EVERY, Runtime, boot
+from agent.runtime import Runtime, boot, every_package
 from agent.series import METRICS, Sink, install
 
 AGENT = Path(__file__).resolve().parents[2]
 HANOI = AGENT.parent / "world" / "hanoi"
+TOWER = AGENT.parent / "world" / "tower"
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 WALL = datetime(2030, 6, 1, 8, 0, tzinfo=timezone.utc)
 
@@ -164,7 +165,7 @@ def _every_module() -> dict:
     """The runtime's module and every package's `events.py`, by the package — what the dashboards
     import. Importing sensing's here is a test's, not a boot's."""
     out = {"runtime": runtime_module}
-    for package in EVERY:
+    for package in every_package():
         if (AGENT / package / "events.py").exists():
             out[package] = importlib.import_module("agent." + package.replace("/", ".") + ".events")
     return out
@@ -221,7 +222,8 @@ def test_a_timing_never_reads_the_agents_clock(monkeypatch):
 def test_the_last_window_is_written_as_the_process_stops(monkeypatch):
     """A stop is an exit: SIGTERM raises, and whatever ends the run, `main` stops every part and the
     metrics part writes the window it was in — the pass tallied, every level as it last stood — rather
-    than losing up to a minute of it."""
+    than losing up to a minute of it. The tower's mover, which plans, walks and deliberates, so the
+    window holds every one of those three packages' figures."""
     written = []
     monkeypatch.setattr(runtime_module.series, "load",
                         lambda: install(METRICS, Sink(METRICS, "m", lambda bucket, record: written.extend(record))) or (METRICS,))
@@ -235,7 +237,7 @@ def test_the_last_window_is_written_as_the_process_stops(monkeypatch):
     monkeypatch.setattr(Runtime, "run", stopped)
     try:
         with pytest.raises(SystemExit):
-            runtime_module.main([str(HANOI), "hanoi"])
+            runtime_module.main([str(TOWER), "mover"])
         assert signal.getsignal(signal.SIGTERM) is runtime_module._stopped
     finally:
         signal.signal(signal.SIGTERM, before)
@@ -243,4 +245,4 @@ def test_the_last_window_is_written_as_the_process_stops(monkeypatch):
     assert by["pass"]["fields"]["count"] == 1, "the one pass, tallied and written at the stop"
     assert by["pass"]["fields"]["quads"] > 0 and by["pass"]["fields"]["uptime_s"] > 0
     assert {"planner", "imaginarium", "search", "revise", "revisions", "intentions"} <= set(by), sorted(by)
-    assert {p["tags"]["world"] for p in written} == {"hanoi"}
+    assert {p["tags"]["world"] for p in written} == {"tower"}

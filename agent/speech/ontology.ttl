@@ -1,0 +1,24 @@
+@prefix : <http://example.org/orexis/speech#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS SPEECH, AGENT 0.2.0.
+#  The speech package's own words, and the first it has had: until an agent's packages were loaded
+#  by the roles it is declared in, speech was loaded by a premise the runtime stated in its callers'
+#  words, and needed no vocabulary. What a peer says and what the agent says are documents in the
+#  kernel's and the domains' words (knowledge/domain/speech/speech.md); this package declares only
+#  the role it serves. What the role needs of the world — a topic the agent listens to — is said in
+#  MQTT4SSN, the transport's words, which speech beneath it does not speak, so the MQTT transport
+#  ships that shape (agent/transport/mqtt/ontology.ttl).
+
+:Speaker a owl:Class ;
+    rdfs:subClassOf orexis:Role ;
+    rdfs:label "Speaker" ;
+    rdfs:comment """An agent that hears its peers' documents and says its own: the role whose part is
+    speech's (knowledge/domain/speech/speaker.md). Declared, never derived; the boot loads this
+    package for it and for nothing else, and a role beneath it — a market host's, a bidder's — loads
+    it with its own.""" .

@@ -80,7 +80,7 @@ alone that ask the self (the premises, the two drivers' sensors, the planner's s
 kind beside `orexis:PublicGraph`. Sensing's limits were a fifth such reader until #876's second half
 made them stances, read off the self graph alone
 ([a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md));
-#927's roles are to be stated in it too.
+#927's roles are stated in it too, read off it alone, before any package is loaded.
 
 # What was refused
 
@@ -155,6 +155,6 @@ the self and no action writes it.
   arrival apart: the agent's own graphs are its beliefs from the first boot on
   (an-amendment-endows-what-it-grants), and a stance or a role added later reaches it on a fresh
   volume only.
-- **The roles an agent holds** are #927's, to be stated in the self graph when they are built. Its
-  stances are stated there already
+- **The roles an agent holds** are #927's, stated in the self graph beside the self
+  ([role](/domain/kernel/role.md)). Its stances are stated there too
   ([a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md)).

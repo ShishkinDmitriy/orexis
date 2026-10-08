@@ -11,9 +11,10 @@ answered as the sensor and the graph written), and the two commands a device may
 (`set_cadence`, `sense_now`), and the command a step sends an actuator (`actuate`). What differs is the member's: how a channel is named in the
 world, in the vocabulary it adopts, what a device publishes on, and what its library is.
 
-WHETHER A MEMBER IS LOADED AT ALL is not asked of the member, since asking would import it: it is
-the member's premise, which the runtime reads off the world before anything of the member is
-imported (`agent.runtime.PREMISES`, #824). It was `claims`, a question the member answered of a
+WHETHER A MEMBER IS LOADED AT ALL is not asked of the member, since asking would import it: a
+transport is no role, and the runtime loads a member where a role the agent is declared in needs
+bytes and the society wires a bus, read off the world before anything of the member is imported
+(`agent.runtime.TRANSPORTS`, #824, #927). It was `claims`, a question the member answered of a
 sensor, and its one caller imported the member to ask it.
 
 THE ARROW POINTS ONE WAY. A member imports this contract, sensing's `received` and speech's

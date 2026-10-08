@@ -40,20 +40,22 @@ the agent's vocabulary does not declare is another reader's, such as the hardwar
 `orexis:localId` in the society graph, or in the world graph of a world with no society, and the
 self graph the world authored for that agent put in and checked — or held to the self a lived-in
 volume already has. That is
-the first half, read with the mind's documents alone; the premises are asked of it, and the
-documents of each [package](/domain/kernel/package.md) whose premise held go in after, the
-closure taken again and any world graph passed over for a kind only such a package declares
-looked at a second time. Hanoi's mover loads the mind and nothing else. Then the world's other
+the first half, read with the kernel's and the world's documents alone; the agent's
+[roles](/domain/kernel/role.md) are read off the self graph it put in, and the documents of each
+[package](/domain/kernel/package.md) a role calls for go in after, the closure taken again and any
+world graph passed over for a kind only such a package declares looked at a second time. Hanoi's
+mover, a planner and an executor, loads those two packages and nothing else. Then the world's other
 graphs that say they are this agent's — the desires with their met-tests and estimates, the first
 state — owned by it; another agent's are passed over, and one naming nobody, or no agent of the
-world, is refused. The catalogue is closed and
-`scope_actions` writes the scopes. A store that already holds a catalogue is a volume the agent
+world, is refused. The catalogue is closed and, for a planner, `scope_actions` writes the scopes. A
+store that already holds a catalogue is a volume the agent
 has lived in: every graph a document put in and nobody owns is forgotten and read again, with the
 closure, which is how an updated ontology or rule set reaches an agent that has lived; the graphs
-the agent owns are left as they are, since they are its beliefs now.
+the agent owns are left as they are, since they are its beliefs now — the self graph among them, so
+a role declared after birth reaches only a fresh volume.
 
-**A package's part is created, linked and started.** Every package the agent loads — the mind's
-three and each whose premise holds — that has a `create` module makes a
+**A package's part is created, linked and started.** Every package the agent loads — each a
+declared role calls for, and each transport a loaded role needs — that has a `create` module makes a
 [part](/domain/kernel/part.md) of the runtime; when all exist, each links to the others, connecting
 its [signals](/domain/kernel/signal.md) to what lies beneath it; then each starts and says what it
 does: belief revises what is written, planning plans every pass, execution walks what is due and
@@ -87,8 +89,8 @@ one of two things, told apart by the plan's `planning:outcome`: a search the bud
 `planning:Exhausted`, which the next pass continues, or nothing this agent holds reaching the
 want, which such an agent exits as unreachable rather than looping on.
 
-**A sensed world runs through its transport.** Where the member's premise holds — the agent
-listens to a topic, or a sensor of its publishes on one — the
+**A sensed world runs through its transport.** Where a loaded role needs the member — a speaker
+listens to a topic, or a sensor of an observer's publishes on one — the
 [transport](/domain/transport/transport.md) is imported and the runtime brings the member up from the environment and
 starts it: a message arrives on the member's thread and is submitted, and each pass drains it on
 the one executing thread — [sensing](/domain/sensing/sensing.md) writes the observation, the

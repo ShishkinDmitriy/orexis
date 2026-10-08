@@ -1,12 +1,24 @@
 ---
 type: Service
 title: Planner
+term: http://example.org/orexis/planning#Planner
 description: >-
   The service that runs a pass - derive the wants, then for each a bounded best-first search over
   possible worlds, ordered by what a path spent plus what the want's estimate says is left, and
-  the plans handed to the executor. The one name the rest of the tree imports from planning;
-  every act it sequences starts in the store and ends in it. `agent/planning/planner.py`.
+  the plans handed to the executor - and the role of an agent that runs it. The one name the rest
+  of the tree imports from planning; every act it sequences starts in the store and ends in it.
+  `agent/planning/planner.py`.
 ---
+
+# Who runs it
+
+Each agent that is a `planning:Planner` by its [roles](/domain/kernel/role.md) — stated so, or a
+market host or bidder, both under it — has planning loaded, its scopes written at boot and its part
+made; no other agent has any of it. One concept, one word, for the role and the part.
+It needs a desire or a want the agent holds — a shape planning ships beside the role — so the
+terrace's agent, which wants nothing, is no planner. Planning also ships the
+[executor](/domain/execution/executor.md)'s one need, being a planner too, since that need is said
+in planning's word.
 
 # A pass
 

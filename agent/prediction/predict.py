@@ -98,8 +98,8 @@ SELECT ?feature ?property ?value WHERE {
 #  this package binds a label for its namespace and a query needs none.
 #  Read from the graphs of drifts alone (`orexis:DriftGraph`), as the planner reads actions from
 #  `orexis:ActionGraph` alone: named for what it holds, and asked for, it is a term somebody reads. The
-#  kind is the kernel's and not this package's, since this package's premise reads the drift rows off
-#  the world before this package is loaded, and a premise reads only the kernel's and the mind's kinds.
+#  kind is the kernel's and not this package's: a domain ships drifts whether or not any of its agents
+#  is a predictor, and every agent of the world reads the drift graph as a public one.
 _DRIFTS_Q = "SELECT ?drift ?rate WHERE { ?drift a $drift ; $moves $property ; $rate_of ?rate } ORDER BY ?drift"
 
 #  THE PREDICTIONS WRITTEN FOR THIS KEY BEFORE: every one derived from the observation's graph.

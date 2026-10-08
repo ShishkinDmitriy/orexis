@@ -35,7 +35,8 @@ agent holds, and answers reflection's fixed questions over a season
 **A step runs where the world has what it serves.** History is every agent's, so every world is
 granted it, and metrics are where the world says it is monitored. The **bus** is a broker the
 world's society names — a premise read off the world, an ASK over its public graphs in `PREMISES`
-of `onboarding/reading.py`, the shape the runtime gives a package's. A world naming none — hanoi,
+of `onboarding/reading.py`, onboarding's own and the one kind of premise left, since what an agent
+runs is declared and not derived. A world naming none — hanoi,
 the courier, the tower, the dispatcher — is onboarded without the MQTT step, which says in one line that it was
 skipped, and its compose file holds its agents and nothing of a bus; `orexis-mqtt` run on it grants
 nothing and says so. `broker` still refuses an address such a world does not have, so the tools ask
@@ -99,6 +100,32 @@ choice made here is a port no world asserted, and it is made once: the allocatio
 re-running changes nothing, and a sovereign who cares asserts the port instead. The world is
 read as the [runtime](/domain/kernel/runtime.md) boots it, so onboarding refuses a world whose documents
 will not load.
+
+# What an agent is declared to run, held to its world
+
+What an agent runs is its [roles](/domain/kernel/role.md), declared in its own self graph — the one
+thing here the sovereign chose rather than wired — so before anything is granted `orexis-onboard`
+boots every agent as its container would and holds the declaration to the world both ways
+(`refused` in `onboarding/reading.py`). It refuses:
+
+- **an agent declaring no role**, which would boot, load nothing and run nothing;
+- **a declared role whose needs the world lacks** — each need a SHACL shape targeting the role, its
+  `sh:sparql` select's every row a violation, shipped by the package or domain whose words the need
+  is stated in: a planner holding no desire or want, an executor that is no planner, an observer no
+  sensor reports to, a predictor with no sensor or no drift, a speaker listening to no topic, a host
+  hosting no venue, a bidder bidding in none;
+- **a sensor reporting to an agent that is no observer**, and **a topic an agent listens to with no
+  speaker**, each something that would arrive and be read by none of its roles;
+- **a graph the agent would read of a kind none of the packages it loads declares** — the refusal of
+  a kind no reader declares, below, narrowed to the agent, which is how rules held by an agent that
+  is no deliberator are caught.
+
+It does not refuse a drift no predictor reads, since foresight is the author's to decline, nor an
+action that says a document an agent is in no role to take, since whether an action admits a step
+for this agent is the search's to say
+([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).
+The dashboards ask the same booted agents which packages some agent of the world loads, since a
+world's store holds no self graph to read a role from.
 
 # What it reads that no agent does
 

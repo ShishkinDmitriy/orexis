@@ -1,9 +1,15 @@
 @prefix : <http://example.org/orexis/world/allotment#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix market: <http://example.org/orexis/market#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
 
 <> a orexis:SelfGraph .    # this document is one graph, and this is what it is
 
 #  WHO THIS AGENT IS: the fern grower, and this document is its own by the self it states. Booted
 #  as "fern_grower", the agent checks that this is so; booted as any other, this is not its document.
+#
+#  WHAT IT RUNS: a bidder, in the market's word, and an observer of its plot's probe and a predictor
+#  of its soil, in the packages' own, since no domain has a word for those.
 
-:fern_grower a orexis:Self .
+:fern_grower a orexis:Self , market:Bidder , sensing:Observer , prediction:Predictor .

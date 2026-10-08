@@ -3,7 +3,12 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
@@ -47,6 +52,41 @@
 
 :valuePerL a owl:DatatypeProperty ; rdfs:domain orexis:Agent ; rdfs:range xsd:decimal ; rdfs:label "value per litre" ;
     rdfs:comment "What a litre of the good is worth to a bidder, and so what it bids per litre: the agent's own belief, picked by the world and never by the search." .
+
+#################  The roles, as an agent's self graph declares them  #################
+#
+#  What an agent RUNS on the market, declared in its own self graph — `:supplier a orexis:Self ,
+#  market:Host` — and never in the public world: a peer needs the relation, `market:hosts`, to find
+#  whom to call, and nothing of what the callee runs. Each role is beneath the package roles it
+#  needs, so an author declares the host and the boot's closure loads the planner, the executor,
+#  speech, and belief for the rules this domain ships; nobody lists a host's packages by hand. A
+#  role over a venue keeps the relation it is founded on, and its shape asks for it: a host that
+#  hosts nothing and a bidder that bids nowhere are refused at onboarding
+#  (knowledge/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md).
+
+:Host a owl:Class ;
+    rdfs:subClassOf planning:Planner , execution:Executor , speech:Speaker , belief:Deliberator ;
+    rdfs:label "Host" ;
+    rdfs:comment "An agent that holds a venue's good and serves it: offers and clears the rounds, serves the claims, and commands its own valve. Founded on `market:hosts`, which says which venue; this says what the agent runs." .
+
+:Bidder a owl:Class ;
+    rdfs:subClassOf planning:Planner , execution:Executor , speech:Speaker , belief:Deliberator ;
+    rdfs:label "Bidder" ;
+    rdfs:comment "An agent that bids in a venue: calls for a round, tenders into it and presents the claim it wins. Founded on `market:bidsIn`, which says which venue; this says what the agent runs." .
+
+[] a sh:NodeShape ;
+    sh:targetClass :Host ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a host that hosts no venue: there is nothing for it to hold" ;
+        sh:select """PREFIX market: <http://example.org/orexis/market#>
+SELECT ?me WHERE { ?me a orexis:Self FILTER NOT EXISTS { ?me market:hosts ?venue } }""" ] .
+
+[] a sh:NodeShape ;
+    sh:targetClass :Bidder ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a bidder that bids in no venue: there is nowhere for it to bid" ;
+        sh:select """PREFIX market: <http://example.org/orexis/market#>
+SELECT ?me WHERE { ?me a orexis:Self FILTER NOT EXISTS { ?me market:bidsIn ?venue } }""" ] .
 
 #################  What the documents are  #################
 

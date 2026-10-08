@@ -40,21 +40,22 @@ def test_the_boot_says_what_each_graph_is():
     assert int(scopes["n"]) >= 1, "scope_actions ran at boot"
 
 
-def test_the_mover_loads_the_mind_and_nothing_else():
-    """No sensor, no drift, no topic, no saying: no premise holds, so neither sensing's ontology nor
-    its three rules, nor prediction's ontology, nor the MQTT transport's is in the store (#824);
-    that none of their modules is imported either is asked of a whole process, in
-    agent/tests/test_premises.py."""
+def test_the_mover_loads_what_its_roles_call_for_and_nothing_else():
+    """Declared a planner and an executor in its self graph, and nothing else — its world ships no
+    rules, so it is no deliberator: neither belief's ontology, nor sensing's and its three rules, nor
+    prediction's, nor speech's, nor the MQTT transport's is in the store (#824, #927); that none of
+    their parts is imported either is asked of a whole process, in agent/tests/test_roles.py."""
     import pyoxigraph as ox
 
-    from agent.runtime import MIND, packages_of
+    from agent.runtime import packages_of
 
     beliefs = boot(WORLD, "hanoi")
-    assert packages_of(beliefs) == MIND
+    assert packages_of(beliefs) == ("planning", "execution")
     agent = WORLD.parents[1] / "agent"
-    absent = [agent / "sensing" / "ontology.ttl", agent / "sensing" / "rules.ttl",
-              agent / "prediction" / "ontology.ttl", agent / "transport" / "mqtt" / "ontology.ttl"]
-    present = [agent / "ontology.ttl", agent / "planning" / "ontology.ttl"]
+    absent = [agent / "belief" / "ontology.ttl", agent / "sensing" / "ontology.ttl", agent / "sensing" / "rules.ttl",
+              agent / "prediction" / "ontology.ttl", agent / "speech" / "ontology.ttl",
+              agent / "transport" / "mqtt" / "ontology.ttl"]
+    present = [agent / "ontology.ttl", agent / "planning" / "ontology.ttl", agent / "execution" / "ontology.ttl"]
     assert all(p.exists() for p in absent + present), "a document this test names has moved"
     held = {p: bool(list(beliefs.quads_for_pattern(ox.NamedNode(p.as_uri()), None, None))) for p in absent + present}
     assert not any(held[p] for p in absent), [p.name for p in absent if held[p]]
@@ -81,17 +82,17 @@ def test_a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after(mon
     assert _acts(runtime) == 7
 
 
-def test_a_window_a_pass_writes_the_minds_levels_and_the_runtimes_own(monkeypatch):
+def test_a_window_a_pass_writes_the_planners_and_executors_levels_and_the_runtimes_own(monkeypatch):
     """The levels, each as it last stood in a window, and here a window a pass (#826, amended). The
-    mind's packages say what they hold — the first pass's search cut short, `exhausted`, with the cone
+    packages its two roles load say what they hold — the first pass's search cut short, `exhausted`, with the cone
     it left in the imaginarium: twenty worlds, twenty-one weighings, three still on the frontier; no
     intention standing yet — and across the run seven acts taken and one intention done; the runtime
-    adds its own, the store's size and the uptime on its pass. Sensing is not loaded, so no silence is
-    said: a package's metrics are where the package is."""
+    adds its own, the store's size and the uptime on its pass. Neither sensing nor belief is loaded,
+    so no silence and no revisions are said: a package's metrics are where the package is."""
     runtime, windows = _metered(monkeypatch, interval_s=0)
     first = {p["measurement"]: p for p in windows[0]}
     assert {"pass", "planner", "imaginarium", "search", "reroot", "intentions"} <= set(first), sorted(first)
-    assert "silence" not in first
+    assert "silence" not in first and "revisions" not in first
     assert first["imaginarium"]["fields"] == {"worlds": 20, "weighings": 21, "open": 3, "met": 0,
                                               "satisfied": 0, "exhausted": 1, "no_candidate": 0}
     assert first["imaginarium"]["tags"]["scope"] and first["intentions"]["fields"] == {"standing": 0}

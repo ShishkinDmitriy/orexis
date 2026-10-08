@@ -14,7 +14,8 @@ description: >-
 for an instrument's. A message from a peer is a speech act and not an observation
 ([the-agent-stack-is-a-second-axis](/decisions/the-agent-stack-is-a-second-axis.md)), and in
 Agent 0.2.0 it is already a document when it arrives: its graphs are named, and its default graph
-says what each one is. So there is no pipeline, only a door.
+says what each one is. So there is no pipeline, only a door. It is loaded for an agent declared a
+[speaker](/domain/speech/speaker.md), and for no other.
 
 - **`heard(store, me, payload)`** believes a document a transport received on the agent's own
   topic. Every graph in it must be a kind beneath `orexis:StateGraph` — a peer reports what IS,

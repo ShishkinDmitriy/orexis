@@ -17,6 +17,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[3]
 SPEECH = ROOT / "agent" / "speech"
 FILES = sorted(p for p in SPEECH.glob("*.py"))
+VOCABULARY = sorted(SPEECH.glob("*.ttl"))
 ABOVE = ("planning", "execution", "belief", "sensing", "prediction", "transport")
 
 
@@ -31,9 +32,12 @@ def test_the_package_imports_nothing_above_it():
     assert not reaching, f"the speech package imports a layer above it at {reaching}"
 
 
-@pytest.mark.parametrize("path", FILES, ids=lambda p: p.name)
+@pytest.mark.parametrize("path", FILES + VOCABULARY, ids=lambda p: p.name)
 def test_no_file_of_this_package_speaks_a_higher_layers_words(path):
-    said = re.findall(r"\b(?:planning|execution|sensing|belief|market):\w+", path.read_text())
+    """Its vocabulary too, which it has had since its role needed one (#927): the speaker is beneath
+    `orexis:Role` alone, and what it needs of the world — a topic it listens to — is the transport's
+    words and the transport's shape, not this package's."""
+    said = re.findall(r"\b(?:planning|execution|sensing|belief|market|mqtt4ssn):\w+", path.read_text())
     assert not said, f"{path.name} names another package's words: {sorted(set(said))}"
 
 

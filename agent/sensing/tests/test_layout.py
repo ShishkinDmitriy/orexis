@@ -1,10 +1,14 @@
 """What the sensing tree's SHAPE promises, and the one direction its arrows may point.
 
-Sensing is the translation row and BENEATH everything: the prediction package reads the
-observations it writes and the executor too, both by kind, and neither imports a line of it;
-it imports nothing of theirs, nor of the belief package whose deliberator concludes over what
-it writes, and speaks none of their words — and not one word of any transport, which is the
-decoupling this layer exists for. A module named for an act exports that act alone, a module
+Sensing is the translation row and beneath everything but belief: the prediction package reads
+the observations it writes and the executor too, both by kind, and neither imports a line of it;
+it imports nothing of theirs and speaks none of their words — and not one word of any transport,
+which is the decoupling this layer exists for. BELIEF IS BENEATH IT, and that is said in one word:
+an observation's sides are revisions the deliberator concludes by this layer's rules, so its role,
+the observer, is beneath the deliberator (#927), which its ontology states as
+`rdfs:subClassOf belief:Deliberator` — the one word of belief's it speaks, since a package's need is
+said by its role sitting beneath the role of a package below it. It still imports nothing of
+belief, having no use for its code. A module named for an act exports that act alone, a module
 named for a thing may answer several questions about it, and every public function has a test
 named for it. A TEST here may import the belief package, to hold this layer's rules to what
 they conclude; the code may not.
@@ -43,9 +47,18 @@ def test_the_layer_imports_nothing_above_it_and_no_transport():
 
 
 @pytest.mark.parametrize("path", CODE + VOCABULARY, ids=lambda p: p.name)
-def test_no_file_of_this_layer_speaks_the_minds_words_or_a_transports(path):
-    said = re.findall(r"\b(?:prediction|planning|execution|belief|mqtt):\w+", path.read_text())
+def test_no_file_of_this_layer_speaks_a_higher_layers_words_or_a_transports(path):
+    said = re.findall(r"\b(?:prediction|planning|execution|speech|mqtt):\w+", path.read_text())
     assert not said, f"{path.name} names another layer's or a transport's words: {sorted(set(said))}"
+
+
+def test_the_one_word_of_belief_this_layer_speaks_is_the_role_its_own_is_beneath():
+    """Belief is beneath sensing by one claim alone — the observer is a deliberator — and that claim
+    is the whole of what sensing says in belief's words: no other file speaks one, and the ontology
+    speaks exactly the role."""
+    said = {p.name: set(re.findall(r"\bbelief:\w+", p.read_text())) for p in CODE + VOCABULARY}
+    assert said.get("ontology.ttl") == {"belief:Deliberator"}, said
+    assert not any(words for name, words in said.items() if name != "ontology.ttl"), said
 
 
 #  A TRANSPORT IS BENEATH SENSING AND IMPORTS ITS CALLBACK, `received`, and nothing else of it;

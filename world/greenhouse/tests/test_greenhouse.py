@@ -216,8 +216,8 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     failed, and planning, hearing it end, plans a second dose in that same pass. The probe is past its
     cadences, so it is silent and the present holds no reading to size that dose from: its command
     answers nothing, the step is not taken and the intention fails at once (#869) — it was counted
-    taken before, having sent nothing. Sensing is loaded here, so silence is said beside the mind's
-    figures."""
+    taken before, having sent nothing. The grower is an observer, so silence is said beside the
+    planner's and the executor's figures."""
     runtime, broker, windows = _unanswered(monkeypatch, interval_s=0)
     dosed, a_day_later = windows[:2]
     of = lambda window, name: [p for p in window if p["measurement"] == name]

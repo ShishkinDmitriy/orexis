@@ -56,7 +56,7 @@ import logging
 
 from agent import runtime as the_runtime
 from agent.metrics import FLAG, LEVEL, VALUE, counted, fields_of, measurement, reported
-from agent.runtime import EVERY, KERNEL, packages_of
+from agent.runtime import KERNEL, every_package
 from agent.sensing.events import FIELD, measurement_of, tag_of
 from agent.series import METRICS
 from agent.store import graphs_of, rows
@@ -284,12 +284,12 @@ def reporting(world: str) -> list[tuple[str, list[type]]]:
     """What the agents of `world` report, by who reports it: the runtime's own, then each package
     some agent of the world loads whose `events.py` has an event that reports, in the order an agent
     loads them — read off the event classes themselves, so this file names no metric."""
-    store = reading.world(world_dir(world))
-    #  A WORLD'S STORE HOLDS NO SELF, so a premise is asked of every agent at once — `?me` an
-    #  `orexis:Agent` — and answers the packages some agent of the world loads.
-    loaded = set(packages_of(store, OREXIS + "Agent"))
+    #  WHAT AN AGENT RUNS IS ITS ROLES', declared in its own self graph, which a world's store does not
+    #  hold — so each agent is booted as its container boots it, and the packages are those SOME agent
+    #  of the world loads.
+    loaded = reading.loaded(world_dir(world))
     out = [("runtime", reported(the_runtime))]
-    for package in EVERY:
+    for package in every_package():
         if package in loaded and (KERNEL / package / "events.py").exists():
             said = reported(importlib.import_module("agent." + package.replace("/", ".") + ".events"))
             if said:
@@ -412,7 +412,7 @@ def generate(world: str) -> None:
     #  A HEALTH DASHBOARD NOT WRITTEN NOW IS STALE — a package no longer loaded, a world no longer
     #  monitored, or the one `health.json` a world had before a dashboard was a package's — and goes.
     written = {name for name, _ in docs}
-    for name in ["health.json", *(health_file(p) for p in ("runtime", *EVERY))]:
+    for name in ["health.json", *(health_file(p) for p in ("runtime", *every_package()))]:
         if name not in written and (stale := out_dir / name).exists():
             stale.unlink()
             log.info("  removed %s, which nothing reports any more", stale.relative_to(REPO_ROOT))

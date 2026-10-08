@@ -225,6 +225,140 @@ def test_onboarding_refuses_a_world_holding_a_kind_no_reader_declares(tmp_path, 
         onboard.onboard("hanoi")
 
 
+# --- what an agent runs is declared, and onboarding holds the declaration to the world both ways ---
+#
+# knowledge/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md, #927. Each
+# refusal is held on a world written for it, of one agent `me`, and each shape a role's need is
+# stated by is found by looking — so a need added to a package or a domain is a case here.
+
+_ROLE_HEAD = """@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+"""
+
+
+def _declared(tmp_path, roles, facts: str = "", **documents) -> Path:
+    """A world of one agent, `me`, importing the market, declared in `roles` in its self graph."""
+    market = (REPO_ROOT / "domains" / "market" / "ontology.ttl").as_uri()
+    (tmp_path / "world.ttl").write_text(_ROLE_HEAD + f"<> a orexis:WorldGraph ; owl:imports <{market}> .\n"
+                                        ':me a orexis:Agent ; orexis:localId "me" ; orexis:actsFor :pot .\n' + facts)
+    (tmp_path / "beliefs").mkdir(exist_ok=True)
+    (tmp_path / "beliefs" / "me.self.ttl").write_text(
+        _ROLE_HEAD + "<> a orexis:SelfGraph .\n:me a orexis:Self" + "".join(f" , <{r}>" for r in roles) + " .\n")
+    for name, text in documents.items():
+        (tmp_path / f"{name}.ttl").write_text(_ROLE_HEAD + text)
+    return tmp_path
+
+
+def _needs() -> list[tuple[str, str]]:
+    """Every need a vocabulary ships, as (the role it targets, what it says), off a world importing
+    every domain that declares roles — the market — and every package, as onboarding reads them."""
+    import tempfile
+
+    from onboarding import reading
+    from agent.store import graphs_of, rows
+
+    with tempfile.TemporaryDirectory() as here:
+        store = reading.world(_declared(Path(here), []))
+        return sorted({(r["role"], r["message"]) for r in rows(store, reading._NEEDS_Q, graphs_of(store, reading.PUBLIC))})
+
+
+NEEDS = _needs()
+
+
+def test_every_shipped_world_declares_its_agents_and_its_world_bears_them_out():
+    from onboarding import reading
+
+    worlds = _worlds()
+    assert worlds, "no world found — the guard would check nothing"
+    for world in worlds:
+        assert reading.refused(REPO_ROOT / "world" / world) == [], world
+
+
+def test_onboarding_refuses_an_agent_declaring_no_role(tmp_path, monkeypatch):
+    """Booted, it would load no package and run nothing — no default, no fixed mind — so nothing is
+    granted for it."""
+    from onboarding import onboard, reading
+
+    world = _declared(tmp_path, [])
+    assert [line.split(":", 1)[0] for line in reading.refused(world)] == ["me"]
+    assert "declares no role" in reading.refused(world)[0]
+    monkeypatch.setattr(onboard, "world_dir", lambda name: world)
+    with pytest.raises(SystemExit, match="declares no role"):
+        onboard.onboard("me")
+
+
+@pytest.mark.parametrize("role, message", NEEDS, ids=[role.rsplit("#", 1)[-1] for role, _ in NEEDS])
+def test_onboarding_refuses_a_declared_role_whose_needs_its_world_lacks(tmp_path, role, message):
+    """Declared in the role alone, in a world holding nothing the role needs: the shape its need is
+    stated by comes back with a row, and onboarding says what it says."""
+    from onboarding import reading
+
+    refused = reading.refused(_declared(tmp_path, [role]))
+    assert f"me: {message}" in refused, refused
+
+
+def test_every_role_but_the_deliberators_states_a_need():
+    """The deliberator needs nothing — an agent holding no rules may be declared one and revises
+    nothing — and every other role a package or the market declares has a need, so a role added with
+    none is a decision someone has to make here."""
+    from agent.runtime import _vocabularies
+
+    targeted = {role for role, _ in NEEDS}
+    roles = set(_vocabularies()[0]) | {"http://example.org/orexis/market#Host", "http://example.org/orexis/market#Bidder"}
+    assert roles - targeted == {"http://example.org/orexis/belief#Deliberator"}, sorted(roles - targeted)
+
+
+def test_onboarding_refuses_a_sensor_reporting_to_an_agent_that_is_no_observer(tmp_path):
+    from onboarding import reading
+
+    deliberator = "http://example.org/orexis/belief#Deliberator"
+    refused = reading.refused(_declared(tmp_path, [deliberator], ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n"))
+    assert refused == ["me: a sensor reports to it, and it is no observer: no package it loads would read the sensor"]
+
+
+def test_onboarding_refuses_a_topic_an_agent_listens_to_with_no_speaker(tmp_path):
+    from onboarding import reading
+
+    deliberator = "http://example.org/orexis/belief#Deliberator"
+    refused = reading.refused(_declared(tmp_path, [deliberator], ":me mqtt4ssn:listensToTopic :inbox .\n"))
+    assert refused == ["me: it listens to a topic, and it is no speaker: no package it loads would hear what arrives there"]
+
+
+def test_onboarding_refuses_a_graph_of_a_kind_no_package_this_agent_loads_declares(tmp_path):
+    """The refusal of a kind nobody reads, narrowed to the agent: the market ships a rules graph, which
+    the deliberator reads, so an agent of a world importing it that is no deliberator would hold rules
+    nothing it runs revises by — though another agent's belief package declares the kind."""
+    from onboarding import reading
+
+    planner = "http://example.org/orexis/planning#Planner"
+    world = _declared(tmp_path, [planner], wants="@prefix planning: <http://example.org/orexis/planning#> .\n"
+                      "<> a planning:WantGraph ; orexis:beliefsOf :me .\n:wanted a planning:Want .\n")
+    assert reading.unread(world) == [], "every reader together declares the kind: only this agent does not"
+    refused = reading.refused(world)
+    assert len(refused) == 1 and refused[0].startswith("me: rules.ttl: ") and "shacl#RulesGraph" in refused[0], refused
+
+
+def test_onboarding_does_not_refuse_a_drift_no_predictor_reads_nor_a_saying_no_speaker_takes(tmp_path):
+    """Foresight is the author's to decline, and whether an action admits this agent is the search's
+    to say: a world holding a drift and an action that says, whose one agent is a deliberator alone,
+    is onboarded."""
+    from onboarding import reading
+
+    deliberator = "http://example.org/orexis/belief#Deliberator"
+    world = _declared(tmp_path, [deliberator],
+                      drifts="<> a orexis:DriftGraph .\n:Drying a prediction:Drift ; prediction:moves :moisture .\n",
+                      actions="<> a orexis:ActionGraph .\n:Telling a orexis:Action ; execution:implementation [ "
+                              "a execution:Implementation ; execution:operation [ a execution:Saying ; "
+                              "sh:construct \"CONSTRUCT {} WHERE {}\" ] ] .\n")
+    assert reading.refused(world) == []
+
+
 def test_the_firmware_generator_reads_the_hardware_beside_the_society():
     """What the agent is not handed, onboarding still reads: a board's pins join the topics its
     sensors publish on, so the generator finds every board a hardware graph states."""
@@ -719,8 +853,8 @@ def test_every_shipped_world_with_a_bus_states_one_broker_address():
 # --- a step runs where the world has what it serves: the bus is a premise -----------------------
 
 def test_the_bus_is_a_premise_that_holds_exactly_where_a_world_names_a_broker():
-    """`reading.PREMISES` answers the bus off the world, as the runtime's premises answer a package
-    (#824): it holds for every world whose society names a broker, and for no other — and there is
+    """`reading.PREMISES` answers the bus off the world (#824): it holds for every world whose
+    society names a broker, and for no other — and there is
     a world of each kind, or the steps it gates would be checked on one side alone."""
     from onboarding import installation, reading
 

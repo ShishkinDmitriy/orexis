@@ -17,6 +17,11 @@ granted it; the bus is a broker the world's society names, so `orexis-mqtt` runs
 named (`reading.PREMISES`), and a world with none — Hanoi, the courier, the tower — is onboarded
 without it and told so in one line; metrics are where the world says it is monitored.
 
+**What an agent runs is declared, and checked here before anything is granted.** Each agent's roles
+are stated in its own self graph; `reading.refused` boots every agent as its container would and
+refuses an agent declaring no role, a role whose needs its world lacks, and what would arrive for an
+agent and be read by none of its roles (#927).
+
 Calling that phase **onboarding** is not decoration. It names the moment an agent stops being a
 description and acquires the means to act: an account of its own on the series store, a
 credential of its own on the bus, and a container to run in. That is what onboarding means for a
@@ -82,6 +87,15 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
         if unread:
             raise SystemExit(f"orexis-onboard: world {world!r} holds graphs of a kind no reader declares — "
                              f"{'; '.join(unread)}; nothing granted")
+        # What an agent runs is declared — its roles, in its own self graph — and held to its world
+        # both ways before anything is granted: a role whose needs the world lacks, and what would
+        # arrive for an agent and be read by none of its roles. An agent declaring no role would boot,
+        # load nothing and run nothing, which no credential should be minted for
+        # (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+        refused = reading.refused(world_dir(world))
+        if refused:
+            raise SystemExit(f"orexis-onboard: world {world!r} declares its agents' roles in a way it does not "
+                             f"bear out — {'; '.join(refused)}; nothing granted")
         # And a world posed in a state its own constraints say cannot be is refused the same way: a
         # constraint is what the world says is possible, so this is the world contradicting itself,
         # which no agent repairs — it would say so in every pass and mend nothing (constraint.md).

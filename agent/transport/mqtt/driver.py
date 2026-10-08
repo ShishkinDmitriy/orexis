@@ -243,9 +243,9 @@ class Mqtt(Transport):
         none where the topic is nobody's of the agent's.
 
         EACH CALLBACK IS IMPORTED WHERE A MESSAGE IS FOR IT. A message on the agent's own topic
-        comes only where speech's premise holds, and one for a sensor of its only where sensing's
-        does, so an agent that only listens never loads sensing and one that only senses never
-        loads speech (#824)."""
+        comes only to a speaker, and one for a sensor of its only to an observer — `orexis-onboard`
+        refuses a topic listened to by no speaker and a sensor reporting to no observer — so an agent
+        that only listens never loads sensing and one that only senses never loads speech (#824, #927)."""
         if any(matches(r["pattern"], topic) for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=self.me)):
             from agent.speech.heard import heard
             return [(None, graph) for graph in heard(store, self.me, payload)]

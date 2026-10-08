@@ -355,6 +355,8 @@ real one.
 |---|---|
 | agent refuses to start, `DocumentRefused` | a document states no kind, claims to be the catalogue or states an arrival; states a self anywhere but once in a self graph; or a graph of an agent's own names nobody, or no agent of the world. The message names the file |
 | agent refuses to start, `self graph` | its own documents hold no self graph, or two — the world authors exactly one per agent, under `beliefs/` — or its volume's self is another agent |
+| agent starts, logs `declared in no role`, and exits at once | its self graph states no role beside its self, so it loads no package — or its volume was born before the world declared one, and keeps the self graph it had: a role reaches only a fresh volume. `orexis-onboard` refuses the first; the second needs the volume removed (`tear-down`) |
+| `orexis-onboard` refuses, `declares its agents' roles in a way it does not bear out` | a role whose need the world lacks, a sensor reporting to an agent that is no observer, a topic listened to by no speaker, or a graph of a kind none of the agent's packages declares — each line names the agent and the reason |
 | agent never logs `a volume lived in` | it is not keeping its volume — check the `orexis-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |

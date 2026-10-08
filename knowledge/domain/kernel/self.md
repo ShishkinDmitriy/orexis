@@ -29,12 +29,13 @@ owner's by what it holds — the self it states; every other says whose beside i
 # How it is used
 
 Every text that means the agent asks for it, and is handed nothing: a precondition
-(`?me a orexis:Self ; actuation:hasActuator ?valve`), an effect, a command, a saying, a premise,
-a [stance](/domain/kernel/stance.md). The `$me` token each of those texts was handed is gone, and
-`tests/test_store.py` refuses one written back.
+(`?me a orexis:Self ; actuation:hasActuator ?valve`), an effect, a command, a saying, a role's
+need, a transport's, a [stance](/domain/kernel/stance.md). The `$me` token each of those texts was
+handed is gone, and `tests/test_store.py` refuses one written back.
 
 The self graph is also where the agent's word about itself lives: each stance is a triple about the
-self there, and is read in no other graph.
+self there, and each [role](/domain/kernel/role.md) a kind the self is stated in beside
+`orexis:Self`; both are read in no other graph.
 
 The self graph is a BELIEF and not public. A reader answering a text over what is known — a
 precondition in a possible world, a command over the present — reads it as it reads any belief,
@@ -67,8 +68,9 @@ authored one in then.
 A store holding a whole world — what the operator's tools and the simulator read (`world_of`), a
 test standing several agents side by side — is no agent's: it passes over every graph of an
 agent's own, the self graphs among them, so it holds no self however many its documents state. A
-text asking for the self there answers nothing; such a store names the agent it means as a holder,
-or, for a premise, asks of every `orexis:Agent` at once.
+text asking for the self there answers nothing, and no role is read there either; such a store
+names the agent it means as a holder, and a tool asking what some agent of the world runs boots
+each agent as its container would (`onboarding.reading.loaded`).
 
 Why authored and checked rather than minted, why a class held to one instance and not a singleton
 IRI, and why a belief and not a public graph:

@@ -1,9 +1,15 @@
 @prefix : <http://example.org/orexis/world/allotment#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix market: <http://example.org/orexis/market#> .
 
 <> a orexis:SelfGraph .    # this document is one graph, and this is what it is
 
 #  WHO THIS AGENT IS: the supplier, and this document is its own by the self it states. Booted as
 #  "supplier", the agent checks that this is so; booted as any other, this is not its document.
+#
+#  WHAT IT RUNS: the market's host, in the market's word — beneath the planner, the executor, the
+#  speaker and the deliberator, which the boot loads for it. Its own word about itself, here and never
+#  in the public world: a peer finds the host by `market:hosts`, which the society states, and learns
+#  nothing of what the host runs.
 
-:supplier a orexis:Self .
+:supplier a orexis:Self , market:Host .

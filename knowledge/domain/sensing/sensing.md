@@ -47,8 +47,9 @@ their cadences (`sensing:silentAfter`) — said by `sensing:silentSince` until a
 What the rules conclude is a [revision](/domain/belief/revision.md), run by the
 [deliberator](/domain/belief/deliberator.md) when the container says a graph changed: layers 0 and 1
 what an observation is of and its reading, layer 2 which side of a [region](/domain/sensing/region.md) the
-reading is on — `sensing:below`, `sensing:inside` or `sensing:above`. Belief's part hears a graph written before
-any package beyond the mind, so sensing's own `Observed` and the prediction find it concluded. When the reading will change range is the
+reading is on — `sensing:below`, `sensing:inside` or `sensing:above`. That is why an
+[observer](/domain/sensing/observer.md) is a deliberator too, and belief's part, first in a pass, hears a
+graph written before any other part, so sensing's own `Observed` and the prediction find it concluded. When the reading will change range is the
 [prediction](/domain/prediction/prediction.md) package's. How the bytes arrived is the
 [transport](/domain/transport/transport.md)'s: sensing imports nothing of one and speaks no word of
 one, so the contract points one way.

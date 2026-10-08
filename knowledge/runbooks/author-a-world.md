@@ -29,12 +29,22 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
    write it when something is flashed with the port, as the terrace's board is. A port another
    world holds is refused. Onboarding reads either to run the broker and to write each agent's
    environment; no agent loads them and no container mounts them.
-4. **who each agent is** — `beliefs/<id>.self.ttl`, `<> a orexis:SelfGraph` and the one row
-   `:fern_grower a orexis:Self`, for every agent the world states: an agent whose world authored
-   none, or two, refuses to boot, and the boot checks this one against the id it is told
-   ([self](/domain/kernel/self.md)). Beside that row, any figure the agent holds of itself — its
-   patience, a budget, a sensor's limits, its horizon — as a triple about the self; stated in any
-   other document it is not read ([stance](/domain/kernel/stance.md)).
+4. **who each agent is, and what it runs** — `beliefs/<id>.self.ttl`, `<> a orexis:SelfGraph` and
+   the one row stating the self and its ROLES, `:fern_grower a orexis:Self , market:Bidder ,
+   sensing:Observer , prediction:Predictor`, for every agent the world states: an agent whose world
+   authored none, or two, refuses to boot, and the boot checks this one against the id it is told
+   ([self](/domain/kernel/self.md)). The roles are what the agent runs, and nothing loads without
+   one ([role](/domain/kernel/role.md)): in a domain's words where the domain has them — the market's
+   `market:Host` and `market:Bidder` — and otherwise in the packages' own: `planning:Planner` and
+   `execution:Executor` for an agent with a desire or a want to plan and walk, `sensing:Observer` for
+   one a sensor reports to, `prediction:Predictor` for one that foresees by a drift,
+   `speech:Speaker` for one that hears on a topic, `belief:Deliberator` for one holding rules (an
+   observer and a market role are one already). `orexis-onboard` refuses an agent declaring none, a
+   role whose needs the world lacks, a sensor reporting to no observer and a topic no speaker hears.
+   Beside that row, any figure the agent holds of itself — its patience, a budget, a sensor's limits,
+   its horizon — as a triple about the self; stated in any other document it is not read
+   ([stance](/domain/kernel/stance.md)). Neither reaches a volume already lived in: a role or a stance
+   changed after birth needs a fresh volume.
 5. **`state.ttl`** — `<> a orexis:StateGraph`, where things stand, for a world nothing senses.
 6. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or
    `<> a planning:WantGraph` for a want that is met once; in a world of several agents, one

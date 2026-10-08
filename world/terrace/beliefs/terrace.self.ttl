@@ -1,9 +1,14 @@
 @prefix : <http://example.org/orexis/world/terrace#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
 
 <> a orexis:SelfGraph .    # this document is one graph, and this is what it is
 
 #  WHO THIS AGENT IS: the agent acting for the terrace bed, and this document is its own by the self
 #  it states. Booted as "terrace", the agent checks that this is so.
+#
+#  WHAT IT RUNS: it observes the bed's probe and the forecast and foresees them, and wants nothing,
+#  so it is no planner and no executor; an observer is a deliberator too, so its sides are concluded.
 
-:terrace_agent a orexis:Self .
+:terrace_agent a orexis:Self , sensing:Observer , prediction:Predictor .

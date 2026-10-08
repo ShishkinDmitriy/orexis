@@ -1,9 +1,14 @@
 @prefix : <http://example.org/orexis/world/dispatcher#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix execution: <http://example.org/orexis/execution#> .
 
 <> a orexis:SelfGraph .    # this document is one graph, and this is what it is
 
 #  WHO THIS AGENT IS: the dispatcher, and this document is its own by the self it states. Booted as
 #  "dispatcher", the agent checks that this is so.
+#
+#  WHAT IT RUNS: it plans both vans' routes and walks them, in the packages' words, since the
+#  courier's domain has none for an agent. Its world ships no rules, so it is no deliberator.
 
-:dispatcher a orexis:Self .
+:dispatcher a orexis:Self , planning:Planner , execution:Executor .

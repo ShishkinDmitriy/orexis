@@ -1,9 +1,17 @@
 @prefix : <http://example.org/orexis/world/greenhouse#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
 
 <> a orexis:SelfGraph .    # this document is one graph, and this is what it is
 
 #  WHO THIS AGENT IS: the grower, and this document is its own by the self it states. Booted as
 #  "grower", the agent checks that this is so.
+#
+#  WHAT IT RUNS, in the packages' words, since no domain has one for a grower: it observes its bed's
+#  sensors and foresees them, plans for the bed it wants comfortable and walks the plans through its
+#  pump and heater. An observer is a deliberator too, so its sides are concluded.
 
-:grower a orexis:Self .
+:grower a orexis:Self , planning:Planner , execution:Executor , sensing:Observer , prediction:Predictor .

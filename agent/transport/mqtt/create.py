@@ -1,5 +1,5 @@
 """`create`: the MQTT transport brought up from the environment — its part, which the runtime makes
-where this package's premise holds and it is told to connect, then starts and stops
+where a role it is loaded for needs it (`agent.runtime.TRANSPORTS`) and it is told to connect, then starts and stops
 (a-package-starts-itself)."""
 
 from __future__ import annotations

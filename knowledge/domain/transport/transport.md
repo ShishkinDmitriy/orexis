@@ -22,10 +22,15 @@ execution's part and speech's, linked to it, hand it a step's command (`command`
 told (`tell_to`), which it sends where it reaches the recipient. Several are held behind
 `Transports`, which sends a nudge or a command to the member that reaches its device.
 
-Whether a member is loaded at all is not asked of it, since asking would import it: it is the
-member's premise, read off the world before anything of the member is
-([package](/domain/kernel/package.md)). A member imports sensing's `received` and speech's `heard`
-only where a message is for one of them, so an agent that only listens never loads sensing.
+Whether a member is loaded at all is not asked of it, since asking would import it. A transport is
+no [role](/domain/kernel/role.md) and no author declares one: the runtime loads a member where a role
+the agent is declared in needs bytes and the society wires a bus — MQTT for an
+[observer](/domain/sensing/observer.md)'s sensor on a topic or a [speaker](/domain/speech/speaker.md)
+listening to one, HTTP for an observer's sensor with a form — read off the world before anything of
+the member is ([package](/domain/kernel/package.md)). A member imports sensing's `received` and
+speech's `heard` only where a message is for one of them, so an agent that only listens never loads
+sensing. The MQTT member's ontology ships the speaker's one need, a topic it listens to, since a
+topic is its word.
 
 # The member that ships: MQTT
 
