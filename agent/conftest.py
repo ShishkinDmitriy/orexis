@@ -32,12 +32,29 @@ import pyoxigraph as ox
 
 from agent.ontology import OREXIS
 from agent.store import (catalogue_of, close_catalogue, dump_nt,
-                                          graph_names, graphs_of, put_graph)
+                                          graph_names, graphs_of, put_graph, update)
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 AGENT, ME = "keeper", "http://example.org/test#keeper"
 WORLD, ACTIONS = "http://example.org/test#world", "http://example.org/test#actions"
+SELF = "http://example.org/test#self"
 UPDATE = "pytest --update-snapshots"
+
+
+def stating(store: ox.Store, stances: dict) -> ox.Store:
+    """`store` with the keeper's self graph stating each STANCE — a term and its figure — as a
+    world's self graph states one: `<keeper> a orexis:Self ; <term> figure`, in a graph the catalogue
+    types `orexis:SelfGraph` (knowledge/domain/kernel/stance.md). Added to the self graph a case
+    already holds under the same name; a store holding no catalogue is given one."""
+    cat = catalogue_of(store)
+    if cat is None:
+        cat = "http://example.org/test#catalogue"
+        update(store, f"INSERT DATA {{ GRAPH <{cat}> {{ <{cat}> a orexis:CatalogueGraph }} }}")
+    figures = "".join(f" ; <{term}> {figure}" for term, figure in stances.items())
+    update(store, f"""INSERT DATA {{
+  GRAPH <{SELF}> {{ <{ME}> a orexis:Self{figures} }}
+  GRAPH <{cat}> {{ <{SELF}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:beliefsOf <{ME}> }} }}""")
+    return store
 
 
 def cases_in(directory: Path) -> list[Path]:

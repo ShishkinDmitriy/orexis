@@ -9,6 +9,7 @@ from pathlib import Path
 from agent import clock
 from agent.execution.events import Taking
 from agent.lifecycle import MET, Signal
+from agent.planning.ontology import BUDGET_TERM
 from agent.planning.planner import Planner
 from agent.planning.create import create
 from agent.store import rows
@@ -62,3 +63,11 @@ def test_its_part_plans_every_pass_links_its_signals_down_and_holds_the_agent(mo
     execution.executor.intention_resolved.emit(type("Resolved", (), {"want": want, "outcome": "failed"})())
     assert runtime.pressed, "an intention that ended asks for the next pass at once"
     assert runtime.outcome != MET
+
+
+def test_its_planner_spends_the_agents_stance_unless_the_runtime_was_handed_a_budget(snapshots, stand_in_runtime):
+    """The process's runtime is handed no budget, so the Planner reads `planning:budget` off the self
+    graph; a runtime a test sized hands its own down (knowledge/domain/kernel/stance.md)."""
+    store = snapshots.stating(snapshots.stand_in(BENCH / "two_disk_hanoi.trig"), {BUDGET_TERM: 12})
+    assert create(stand_in_runtime(store, None, snapshots.NOW, agent_id=snapshots.AGENT)).planner.budget == 12
+    assert create(stand_in_runtime(store, None, snapshots.NOW, agent_id=snapshots.AGENT, budget=64)).planner.budget == 64

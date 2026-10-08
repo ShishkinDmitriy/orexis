@@ -7,7 +7,8 @@ that `prediction:moves` the observed property answers a RATE for the subject at 
 per second of the one timeline, a package's select over whatever holds then — and the drifts
 ADD: drying and rain are two drifts and the value moves by their sum, which is PDDL+'s
 trajectory semantics, a drift being a process (a-prediction-accumulates-rates-between-happenings).
-The sum is accumulated from the observation for `HORIZON_S`, split at every HAPPENING — the
+The sum is accumulated from the observation for the agent's horizon — `prediction:horizonS`, a
+stance in its self graph, and `HORIZON_S`, a day, where it states none — split at every HAPPENING — the
 start or end of a public or belief graph holding in that stretch, since only there can what a
 drift reads change, which is how a forecast hour and a step the executor committed to become
 one without this package learning either word — and held for at most `SEGMENT_S` between, so a
@@ -48,10 +49,11 @@ from datetime import datetime, timedelta
 import pyoxigraph as ox
 
 from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, PUBLIC, RECORD, local_of
+from agent.stance import stance
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
                          remember, revisions_of, rows, update)
 
-from .ontology import DRIFT, FEATURE, MOVES, PROPERTY, RATE, RECORDED, RESULT, prediction_graph
+from .ontology import DRIFT, FEATURE, HORIZON_TERM, MOVES, PROPERTY, RATE, RECORDED, RESULT, prediction_graph
 from .ranges import ranges_of, side
 
 log = logging.getLogger("predict")
@@ -60,7 +62,10 @@ _XSD = "http://www.w3.org/2001/XMLSchema#"
 _SOSA = "http://www.w3.org/ns/sosa/"
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
-#  HOW FAR PAST THE OBSERVATION THE AGENT LOOKS, in the timeline's seconds: a day.
+#  HOW FAR PAST THE OBSERVATION THE AGENT LOOKS, in the timeline's seconds, where its self graph
+#  states no `prediction:horizonS`: a day. A stance, since how far ahead the agent sees is which
+#  foreseen crossings it mints a want for, and so which plans it selects now
+#  (knowledge/domain/kernel/stance.md).
 HORIZON_S = 86400.0
 
 #  THE LONGEST A RATE IS HELD before the drifts are asked again: an hour, so a rate that
@@ -140,7 +145,8 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
     for old in rows(store, _WRITTEN_Q, (), cat=cat, graph=graph):
         forget_graph(store, old["g"])
     base = (opens - taken).total_seconds()
-    if base >= HORIZON_S:
+    horizon = stance(store, HORIZON_TERM, HORIZON_S, memo)
+    if base >= horizon:
         return []
     drifts = remember(memo, ("drifts", observed_property), lambda: rows(
         store, _DRIFTS_Q, graphs_of(store, DRIFT_GRAPH), drift=Raw(f"<{DRIFT}>"), moves=Raw(f"<{MOVES}>"),
@@ -172,14 +178,14 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
                 said.append((min(low, high), max(low, high), float(row["until"]) if row.get("until") else None))
         return said
 
-    knots, moved = _accumulate(rates, reading, _happenings(store, cat, taken), memo)
+    knots, moved = _accumulate(rates, reading, _happenings(store, cat, taken, horizon), memo)
     if not moved:
         #  NO DRIFT MOVES THIS KEY: it is predicted to stay as it reads, for an hour alone.
         if CARRIED_S <= base:
             return []
         stretches = [(base, CARRIED_S, None)]
     else:
-        stretches = _stretches(knots, ranges, base)
+        stretches = _stretches(knots, ranges, base, horizon)
     own = [ox.Triple(q.subject, q.predicate, q.object) for g in believed for q in quads(store, g)]
     written = []
     for n, (begins, closes, value) in enumerate(stretches):
@@ -200,12 +206,12 @@ INSERT DATA {{
     return written
 
 
-def _happenings(store, cat, taken: datetime) -> list[float]:
+def _happenings(store, cat, taken: datetime, horizon: float) -> list[float]:
     """The seconds past the observation at which a public or belief graph begins or stops
-    holding inside the horizon, earliest first, with the horizon's end."""
+    holding inside the `horizon`, earliest first, with the horizon's end."""
     found = rows(store, _HAPPENINGS_Q, (), cat=cat, kinds=Raw(f"<{PUBLIC}> <{BELIEF}>"),
-                 **{"from": instant(taken), "to": instant(taken + timedelta(seconds=HORIZON_S))})
-    return sorted({*((datetime.fromisoformat(r["t"]) - taken).total_seconds() for r in found), HORIZON_S})
+                 **{"from": instant(taken), "to": instant(taken + timedelta(seconds=horizon))})
+    return sorted({*((datetime.fromisoformat(r["t"]) - taken).total_seconds() for r in found), horizon})
 
 
 def _accumulate(rates, reading: float, happenings: list[float], memo) -> tuple[list[tuple[float, float, float]], bool]:
@@ -263,14 +269,14 @@ def _move(value: float, rate: float, step: float, stops: list[float]) -> float:
     return moved
 
 
-def _stretches(knots, ranges, base: float) -> list[tuple[float, float, tuple[float, float]]]:
-    """The stretches from `base` to the horizon between the instants the corridor's side
+def _stretches(knots, ranges, base: float, horizon: float) -> list[tuple[float, float, tuple[float, float]]]:
+    """The stretches from `base` to the `horizon` between the instants the corridor's side
     changes, each with the instant its number is read at and the number: the last instant of
     the stretch whose number, as written, lies on its side — its end, a minute before where the
     end lies across a bound or rounding carries it there, or its middle."""
     crossings = sorted({c for (t0, lo0, hi0), (t1, lo1, hi1) in zip(knots, knots[1:])
-                        for c in _crossed(t0, lo0, hi0, t1, lo1, hi1, ranges) if base < c < HORIZON_S})
-    starts, ends = [base, *crossings], [*crossings, HORIZON_S]
+                        for c in _crossed(t0, lo0, hi0, t1, lo1, hi1, ranges) if base < c < horizon})
+    starts, ends = [base, *crossings], [*crossings, horizon]
     out = []
     for begins, closes in zip(starts, ends):
         sides = _sides(knots, ranges, (begins + closes) / 2)

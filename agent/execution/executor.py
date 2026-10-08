@@ -89,16 +89,18 @@ import pyoxigraph as ox
 from agent import clock
 from agent.lifecycle import Signal
 from agent.ontology import ACTION, OREXIS, STATE, local_of
+from agent.stance import stance
 from agent.store import (NAMESPACES, Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant,
                          quads, quads_for_pattern, revisions_of, rows, update)
 
 from .events import Commanded, IntentionResolved, Said, StepAnswered, StepTaken, Taking, Walked  # noqa: F401 — the events it says
 from .implementation import FICTIVE, operations
-from .ontology import (ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, LANDS_WITHIN_S, RETRACTS_GRAPH,
-                       committed_graph, intentions_graph)
+from .ontology import (ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, LANDS_WITHIN_S, PATIENCE_S,
+                       RETRACTS_GRAPH, committed_graph, intentions_graph)
 
 log = logging.getLogger("executor")
 
+#  THE PATIENCE, in seconds, where the agent's self graph states no `execution:patienceS`.
 DEFAULT_PATIENCE_S = 60.0
 
 INTENTION = EXECUTION + "Intention"
@@ -315,8 +317,10 @@ class Executor:
     Handed the beliefs engine and the one identifier a process is told. The intentions are a graph
     of the belief base unless another store is handed in, as a case may; a plan arrives through
     the beliefs, never through a call. It holds no beliefs of its own: the patience is a
-    PICK, read off the beliefs store where the agent's picks are, because how stubborn to be is
-    the agent's own belief and not the executor's constant.
+    STANCE, `execution:patienceS` read off the agent's self graph when the executor is made,
+    because how stubborn to be is the agent's own word about itself and not the executor's
+    constant — `DEFAULT_PATIENCE_S` is what holds where the agent states none. Read once, since
+    the self graph is authored at birth and nothing revises a stance.
     """
 
     def __init__(self, beliefs: ox.Store, agent_id: str, intentions: ox.Store | None = None,
@@ -330,6 +334,9 @@ class Executor:
         self.take = take if take is not None else self.say
         self.all_fictive = fictive
         self.poll_s = poll_s
+        #  HOW LONG A STANDING COMMITMENT ABSORBS ANOTHER FOR ITS WANT, and how long past its latest
+        #  landing a step may go unanswered: the agent's stance, the default where it states none.
+        self.patience_s = stance(beliefs, PATIENCE_S, DEFAULT_PATIENCE_S)
         #  `on_write(graph)`, told of every graph the executor writes as the world, so what the rules
         #  conclude of it is concluded.
         self.on_write = on_write
@@ -987,21 +994,6 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
                 if self._next_due is not None:
                     wait = min(wait, max(0.0, (self._next_due - clock.now()).total_seconds()))
                 self._cv.wait(clock.real_delay(wait))
-
-    # --- the one figure -----------------------------------------------------------------------
-
-    @property
-    def patience_s(self) -> float:
-        """How long a standing commitment blocks re-adoption of one for the same want.
-
-        A CONSTANT HERE, AND IT SHOULD NOT STAY ONE. It is an OPINION — the agent's own
-        belief, which a review may move inside whatever room its world leaves — and it was
-        read from the graph an agent's picks live in. That graph is reached by NAME and has no
-        class, nothing in this tree writes one, and the mechanism that would is review, which
-        this tree does not load. So the read is gone with the rest of picks and the figure is
-        `DEFAULT_PATIENCE_S` until something can revise it (a-pick-is-read-not-guessed).
-        """
-        return DEFAULT_PATIENCE_S
 
     def __len__(self) -> int:
         return len(self.standing())

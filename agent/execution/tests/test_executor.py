@@ -17,7 +17,7 @@ import pytest
 
 from agent import clock
 from agent.execution.executor import DEFAULT_PATIENCE_S, Executor
-from agent.execution.ontology import EXECUTION, intentions_graph
+from agent.execution.ontology import EXECUTION, PATIENCE_S, intentions_graph
 from agent.store import bindings, put_graph, query_over, rows, update
 
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -330,6 +330,22 @@ def test_a_world_that_does_not_answer_by_the_patience_fails_the_intention():
     x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S - 1))
     assert _resolved(x, intention) == [] and len(x.standing()) == 1
     x.tick(NOW + timedelta(seconds=DEFAULT_PATIENCE_S))
+    assert _resolved(x, intention) == [{"o": "failed"}]
+
+
+def test_the_patience_is_the_agents_stance_where_its_self_graph_states_one(snapshots):
+    """`execution:patienceS 5` in the keeper's self graph (knowledge/domain/kernel/stance.md): a step
+    unanswered five seconds past its landing fails, where the default would have waited a minute.
+    With none stated, the default holds."""
+    assert Executor(_beliefs(PEG_A), AGENT, ox.Store()).patience_s == DEFAULT_PATIENCE_S
+    x = Executor(snapshots.stating(_beliefs(PEG_A), {PATIENCE_S: 5}), AGENT, ox.Store())
+    assert x.patience_s == 5.0
+    intention = x.commit(_predicting(1), PLAN, WANT)
+    x.tick(NOW)
+    x.drain()
+    x.tick(NOW + timedelta(seconds=4))
+    assert _resolved(x, intention) == [] and len(x.standing()) == 1
+    x.tick(NOW + timedelta(seconds=5))
     assert _resolved(x, intention) == [{"o": "failed"}]
 
 

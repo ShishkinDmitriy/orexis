@@ -204,9 +204,10 @@ measurement the issue asks for, the containers at pace 600 for a real hour, is s
   it is the sovereign picking, which the sovereign may; what reflection may propose on its own
   authority is what is missing or wrong — an action, a desire, a band, a calibration — never a
   figure inside a desire ([control-the-derivative-not-the-value](/decisions/control-the-derivative-not-the-value.md)).
-- **Whether an agent's own word about itself is what reflection reads about the agent.** #876 would
-  give the agent a document of its own stances — its patience, its budget, its silence limit. Those
-  are beliefs, so by this record reflection does not read them; but a budget exhausted every pass is
+- **Whether an agent's own word about itself is what reflection reads about the agent.** #876 states
+  the agent's stances — its patience, its budgets, its silence limit — in its self graph
+  ([a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md)).
+  Those are beliefs, so by this record reflection does not read them; but a budget exhausted every pass is
   a proposal ABOUT one, and a stance is authored in the world, so the proposal is an edit to a world
   document as any other is. Whether the tool is handed the world's documents as well as the series
   — public, ratified, nobody's belief — was open, and #894 took the honest default: the tool reads
@@ -214,4 +215,5 @@ measurement the issue asks for, the containers at pace 600 for a real hour, is s
   since a desire never read unmet leaves no trace on the series, booted from the documents in memory
   as onboarding's `lasts` boots them; and which sensors read a fraction of one, since "past 1.0" is a
   calibration point for a probe and nothing for a thermometer — and still opens no volume. A stance
-  of the agent's, once #876 gives it a document, is the same kind of read.
+  of the agent's is the same kind of read: the tool boots the agent's documents in memory, its self
+  graph among them, so its stances are in what the tool holds, and no question it answers asks one yet.

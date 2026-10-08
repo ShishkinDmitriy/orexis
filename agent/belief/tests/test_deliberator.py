@@ -11,8 +11,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from agent import clock
-from agent.belief.deliberator import Deliberator
-from agent.belief.ontology import SETTLED
+from agent.belief.deliberator import BUDGET, Deliberator
+from agent.belief.ontology import BUDGET_TERM, SETTLED
 from agent.store import rows
 
 CASES_DIR = Path(__file__).parent / "revise"
@@ -55,6 +55,20 @@ def test_a_budget_cuts_the_pass_and_the_next_continues(monkeypatch, snapshots):
     assert deliberator.deliberate() > 0
     assert deliberator.pending == [] and _settled(store) == "true"
     assert {r["p"].rsplit("#", 1)[-1] for r in rows(store, _CONCLUDED_Q, (), g=SENSED + "/revisions")} == {"side", "isDry"}
+
+
+def test_the_budget_is_the_agents_stance_where_its_self_graph_states_one(monkeypatch, snapshots):
+    """`belief:budget 2` in the keeper's self graph (knowledge/domain/kernel/stance.md): a deliberator
+    handed no budget spends two rule executions and the source stays queued, where the default would
+    have settled it. With none stated, `BUDGET`; a caller sizing the pass says its own."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    assert Deliberator(snapshots.stand_in(CASES_DIR / "a_chain_settles_in_a_later_round.trig"), snapshots.AGENT).budget == BUDGET
+    store = snapshots.stating(snapshots.stand_in(CASES_DIR / "a_chain_settles_in_a_later_round.trig"), {BUDGET_TERM: 2})
+    assert Deliberator(store, snapshots.AGENT, budget=64).budget == 64
+    deliberator = Deliberator(store, snapshots.AGENT)
+    deliberator.changed(SENSED)
+    assert deliberator.deliberate() == 2
+    assert deliberator.pending == [SENSED] and _settled(store) == "false"
 
 
 def test_a_cut_survives_a_new_deliberator_over_the_store(monkeypatch, snapshots):

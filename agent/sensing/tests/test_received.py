@@ -20,7 +20,7 @@ from agent import clock
 from agent.ontology import STATE
 from agent.sensing.ontology import STUCK_AFTER_TERM
 from agent.sensing.received import STUCK_AFTER, received
-from agent.store import graphs_of, rows, update
+from agent.store import graphs_of, rows
 
 CASES_DIR = Path(__file__).parent / "received"
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
@@ -213,12 +213,11 @@ def test_a_sensor_stating_no_frequency_is_never_said_stuck(monkeypatch, snapshot
     assert _stuck(store) == [] and _run_of(store, PROBE, at) == snapshots.NOW
 
 
-def test_the_stuck_limit_is_the_agents_where_its_world_states_one(monkeypatch, snapshots):
-    """The keeper's world says `sensing:stuckAfter 2` of it: the probe's number, unchanged through two
-    cadences, is stuck where the figure in code would have waited six."""
+def test_the_stuck_limit_is_the_agents_where_its_self_graph_states_one(monkeypatch, snapshots):
+    """The keeper's self graph says `sensing:stuckAfter 2`, a stance: the probe's number, unchanged
+    through two cadences, is stuck where the figure in code would have waited six."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    store = snapshots.stand_in(WORLD)
-    update(store, f"INSERT DATA {{ GRAPH <{TEST}world> {{ <{snapshots.ME}> <{STUCK_AFTER_TERM}> 2 }} }}")
+    store = snapshots.stating(snapshots.stand_in(WORLD), {STUCK_AFTER_TERM: 2})
     last = _every_cadence(store, snapshots, 0.25, 2)
     assert _stuck(store) == [], "two readings are one cadence unchanged"
     received(store, snapshots.ME, PROBE, b'{"value": 0.25}', last + CADENCE)

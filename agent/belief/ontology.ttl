@@ -56,3 +56,13 @@ sh:RulesGraph rdfs:subClassOf orexis:Graph .
     short keeps what was concluded with this false on its row; the deliberator continues it on
     the next pass, and at boot re-queues every row that says false, so a cut survives a restart
     and a rule set that never settles is reported every pass rather than looped on.""" .
+
+:budget a owl:DatatypeProperty ;
+    rdfs:domain orexis:Self ;
+    rdfs:range xsd:integer ;
+    rdfs:label "budget" ;
+    rdfs:comment """How many rule executions one pass of revision may spend, across every source it
+    revises; a source the budget cuts short is continued by the next pass. A stance: the agent
+    states it of itself in its self graph and the deliberator reads it when it is made; where it
+    states none, two hundred and fifty-six. One source's share of a pass stays `revise`'s own
+    constant, which says how a pass's budget is spent and not how much.""" .

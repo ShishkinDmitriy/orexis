@@ -79,8 +79,8 @@ Read on `e99731d0`; each measurement was an in-memory boot, nothing started, not
   agent's search admits drives of the peer's van whenever the peer's driver is aboard it — #922's
   "the other van admits no Drive in this agent's search" holds only once a fact says whose the driver is.
 - **An agent's own documents are read once.** `boot` puts the agent's own graphs in only where the
-  volume is fresh; a volume lived in keeps them as they are. #876's stances document is to be loaded
-  the same way.
+  volume is fresh; a volume lived in keeps them as they are. #876's stances, in the self graph, are
+  loaded the same way.
 - **#876 says the opposite of this record** about packages: "Which packages an agent has is NOT one
   of these: that is derived from the world by each package's premise (#824) and stays so." This
   decision reverses that sentence.

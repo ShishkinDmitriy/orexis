@@ -26,8 +26,8 @@ observation `sensing:unchangedSince`, the instant of the earliest reading in the
 this number - its own instant where the number differs from the one before - so the run's start
 survives the replacement of the observation and a restart alike, and nothing is counted in Python.
 
-A sensor whose run has lasted `sensing:stuckAfter` of its cadences — the limit the agent's world
-states of it, six where it states none — is said stuck: one row,
+A sensor whose run has lasted `sensing:stuckAfter` of its cadences — a
+[stance](/domain/kernel/stance.md), six where the agent's self graph states none — is said stuck: one row,
 `sensing:stuckSince` the run's start, in a graph of the agent's own classified `orexis:StateGraph`,
 holding from that instant - named for the state and never for the reading that tipped it - and
 said once. A reading whose number differs ends the run and takes the graph with it, at the writer.
@@ -57,6 +57,6 @@ The premise is the instrument's to keep, and a simulated one keeps it too. The s
 (`simulation/simulator.py`) publishes each number with the instrument's noise — a seeded draw
 within the model's `sim:jitter` either way, never the number that sensor published last — because
 the model's reading moves only where the physics moves it, and a thermometer in a greenhouse
-nobody heats was said stuck an hour into its world (#879). The limit is the agent's, stated of it
-by its world; a simulated world that read as stuck was a quiet instrument, not a low limit, and
+nobody heats was said stuck an hour into its world (#879). The limit is the agent's word about
+itself; a simulated world that read as stuck was a quiet instrument, not a low limit, and
 `sensing:stuckAfter` is not where that is fixed.

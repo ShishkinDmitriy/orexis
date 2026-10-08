@@ -97,7 +97,7 @@ orexis:SelfGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Self graph" ;
-    rdfs:comment "Which agent is the self, and the one private graph whose owner is read off what it holds rather than stated beside it: `<agent> a orexis:Self`, exactly once, in a document of this kind and no other, authored in the world under `beliefs/` and owned by the self it states. A belief, so a text answered over what is known reads it and it crosses into an imaginarium; NOT public, since it is true of one agent's store and of no other's, so a reader that reads the public graphs and asks the self states this kind beside them." .
+    rdfs:comment "Which agent is the self, and the one private graph whose owner is read off what it holds rather than stated beside it: `<agent> a orexis:Self`, exactly once, in a document of this kind and no other, authored in the world under `beliefs/` and owned by the self it states. A belief, so a text answered over what is known reads it and it crosses into an imaginarium; NOT public, since it is true of one agent's store and of no other's, so a reader that reads the public graphs and asks the self states this kind beside them. And where the agent's STANCES are: a figure a package reads of the agent — its patience, a budget, a limit — stated as a triple about the self here and read off this kind alone, the package's constant where none is stated (knowledge/domain/kernel/stance.md)." .
 
 orexis:StateGraph
     a owl:Class ;

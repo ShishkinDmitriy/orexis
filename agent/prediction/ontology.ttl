@@ -8,7 +8,8 @@
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
 #  OREXIS PREDICTION, AGENT 0.2.0.
-#  What the prediction package of Agent 0.2.0 declares: the drift and the two things it says. A
+#  What the prediction package of Agent 0.2.0 declares: the drift and the two things it says, and
+#  how far ahead the agent looks, a stance of its own. A
 #  prediction is the calculation of when a reading changes range — the rates of every drift moving
 #  the observed property, summed and accumulated from the observation a sensor last made, between
 #  the happenings at which what a drift reads may change, every crossing of a range bound placed
@@ -36,3 +37,11 @@
     timeline, for $feature holding $value at the instant $at: ?rate, or ?low and ?high where the rate
     is known only as a range — the two ends of a corridor — and ?until, the value past which it
     contributes nothing. Read over whatever holds at $at; one row per contribution, and rows add.""" .
+
+:horizonS a owl:DatatypeProperty ;
+    rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
+    rdfs:label "horizon seconds" ;
+    rdfs:comment """How far past an observation the agent looks, in the timeline's seconds: the drifts'
+    sum is accumulated that far and no prediction is written past it, so a crossing beyond it is not
+    foreseen and no want is minted for it yet. A stance: the agent states it of itself in its self
+    graph and `predict` reads it; where it states none, a day.""" .

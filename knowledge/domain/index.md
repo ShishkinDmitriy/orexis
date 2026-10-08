@@ -9,6 +9,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 * [agent](/domain/kernel/agent.md) - One process, one store, one world, told its local id; acts for a subject and holds its desires. Nothing is granted.
 * [self](/domain/kernel/self.md) - The one agent a store is this agent's, authored in its self graph and checked at boot; a text asks `?me a orexis:Self`.
+* [stance](/domain/kernel/stance.md) - A figure the agent holds about itself, a triple about the self in its self graph; the package's constant where none is stated.
 * [world](/domain/kernel/world.md) - A directory of documents, each saying which graph it is; imports its domains, and its tests live beside it.
 * [domain](/domain/kernel/domain.md) - A vocabulary, its actions, shapes and rules as documents in `domains/<name>/`, imported by the worlds that speak it.
 * [action](/domain/kernel/action.md) - One way of acting as one node: what it takes, its precondition, its effect, its implementation, its cost.

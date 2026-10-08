@@ -174,6 +174,10 @@ planning:NoCandidate a planning:Outcome ; rdfs:label "no candidate" ;
 planning:Exhausted a planning:Outcome ; rdfs:label "exhausted" ;
     rdfs:comment "Levers exist and no bounded sequence of them lands inside the region: the budget in worlds ran out, or the frontier emptied. MY DOSES ARE TOO COARSE, or my region is too tight for them." .
 
+planning:budget a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
+    rdfs:label "budget" ;
+    rdfs:comment "How many candidates one want's search may weigh in a pass — the ceiling on what a search spends, in the unit it spends; a search it cuts short ends `Exhausted` and is continued by the passes after. A stance: the agent states it of itself in its self graph, sized by its world's author from a measured cost per candidate, and the Planner reads it when it is made; where it states none, thirty-two (knowledge/domain/kernel/stance.md, knowledge/domain/planning/budget.md)." .
+
 planning:for a owl:ObjectProperty ;
     rdfs:label "for" ;
     rdfs:comment "What this was worked out FOR: the want a plan was found for, or the want or DESIRE a weighing was made for. NO RANGE, because a desire is not a want and both are weighed — a desire in every ground, a want in every world its search reaches — and NO DOMAIN, because a PLAN and a WEIGHING both say it. It was `forWant`, and the name lied the moment a desire was weighed. A plan's is the one thing about a plan execution has no word for, because the intentions keep commitments and not the reasoning that produced them; and it was declared twice with a domain each in the predecessor, which in RDFS is the intersection of the two: a property nothing could legally carry. A plan is named for its want and replaced whole, so a second pass over the same want leaves one plan and not two — and a reader that holds a want asks for its plan by this rather than by the name, which is a convention." .

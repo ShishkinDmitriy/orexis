@@ -30,15 +30,17 @@ import pyoxigraph as ox
 from agent import clock
 from agent.lifecycle import Signal
 from agent.ontology import KNOWN
+from agent.stance import stance
 from agent.store import Raw, catalogue_of, graphs_of, rows
 
 from .events import Revised, RevisionsHeld
-from .ontology import REVISION_GRAPH, SETTLED
+from .ontology import BUDGET_TERM, REVISION_GRAPH, SETTLED
 from .revise import BUDGET as PER_SOURCE, revise
 
 log = logging.getLogger("deliberator")
 
-#  RULE EXECUTIONS one pass may spend, across every source it revises.
+#  RULE EXECUTIONS one pass may spend, across every source it revises, where the agent's self graph
+#  states no `belief:budget` (knowledge/domain/kernel/stance.md).
 BUDGET = 256
 
 #  EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
@@ -57,10 +59,12 @@ WHERE {{ GRAPH $cat {{ ?g a <{REVISION_GRAPH}> ; <{SETTLED}> ?settled }} }}"""
 class Deliberator:
     """The pass over what was written since the last one, within a budget."""
 
-    def __init__(self, beliefs: ox.Store, agent_id: str, *, budget: int = BUDGET):
+    def __init__(self, beliefs: ox.Store, agent_id: str, *, budget: int | None = None):
+        """The beliefs and the one identifier a process is told. The budget is the agent's stance,
+        read off its self graph, `BUDGET` where it states none — or the caller's, where one sizes it."""
         self.beliefs = beliefs
         self.id = agent_id
-        self.budget = budget
+        self.budget = budget if budget is not None else stance(beliefs, BUDGET_TERM, BUDGET)
         #  SOURCE TO WHAT STANDS BESIDE IT, in the order changes arrived; None means the
         #  beliefs holding at the pass's instant, which is what a reading is revised beside.
         self.queue: dict[str, tuple | None] = {}

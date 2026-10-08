@@ -26,6 +26,10 @@ DRIFT = PREDICTION + "Drift"
 MOVES = PREDICTION + "moves"
 RATE = PREDICTION + "rate"
 
+#  HOW FAR PAST AN OBSERVATION THE AGENT LOOKS: a stance the agent states of itself in its self
+#  graph, read by `predict` (knowledge/domain/kernel/stance.md).
+HORIZON_TERM = PREDICTION + "horizonS"
+
 #  SOSA'S, on an observation — the key a drift's answer is matched by, and the number.
 FEATURE = SOSA + "hasFeatureOfInterest"
 PROPERTY = SOSA + "observedProperty"

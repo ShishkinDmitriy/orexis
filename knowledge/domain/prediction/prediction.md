@@ -29,14 +29,16 @@ predictions, any other - a committed step written or closed - by rewriting every
 drift reads has changed ([a-package-starts-itself](/decisions/a-package-starts-itself.md)). `predict`
 (`agent/prediction/predict.py`) takes the observation a sensor last made - found by the
 kernel's kind and `sosa:madeBySensor`, so nothing of sensing is imported - and accumulates the
-drifts' sum from it for a day. Time is split at every **happening**, the start or end of a public
-or belief graph holding inside that day, since only there can what a drift reads change; between
+drifts' sum from it as far as the agent looks - `prediction:horizonS`, a
+[stance](/domain/kernel/stance.md), a day where it states none. Time is split at every **happening**,
+the start or end of a public or belief graph holding inside that horizon, since only there can what a
+drift reads change; between
 two, the rates are asked once and held, at most for an hour. Within a segment the value is a
 straight line, so a crossing of a bound of every [region](/domain/sensing/region.md) that applies to
 what the sensor observes is placed exactly, by division.
 
 What is written is one `orexis:PredictionGraph` per stretch - from the observation's horizon to the
-first crossing, crossing to crossing, the last to the day's end - holding a predicted
+first crossing, crossing to crossing, the last to the horizon's end - holding a predicted
 `sosa:Observation` with the number at the last instant of the stretch known to lie on its side,
 and carrying on its catalogue row `orexis:retracts`, the text that takes out of a ground the
 reading it replaces. Where a rate is a range the value is a [corridor](/domain/prediction/corridor.md),

@@ -31,7 +31,9 @@ log = logging.getLogger("planning")
 
 class _Planning:
     def __init__(self, runtime):
-        self.planner = Planner(runtime.beliefs, runtime.id, **({"budget": runtime.budget} if runtime.budget else {}))
+        #  THE BUDGET IS THE AGENT'S STANCE, read by the Planner off the self graph, unless whoever
+        #  made the runtime handed one — a test sizing a search; the process's `main` hands none.
+        self.planner = Planner(runtime.beliefs, runtime.id, budget=runtime.budget)
         self.runtime = runtime
 
     def link(self, parts) -> None:

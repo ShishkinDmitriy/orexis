@@ -110,11 +110,16 @@ def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     assert not snapshots.orphans_in(CASES_DIR)
 
 
-def test_the_silence_limit_is_the_agents_where_its_world_states_one(pot, snapshots):
-    """The keeper's world says `sensing:silentAfter 1` of it: one cadence past the reading's grace,
-    the probe is silent, where the figure in code would have waited three."""
+def test_the_silence_limit_is_the_agents_where_its_self_graph_states_one(pot, snapshots):
+    """The keeper's world says `sensing:silentAfter 1` of it in the public world graph, which is the
+    world's word and not the keeper's: three cadences hold. Its self graph says the same, a stance:
+    one cadence past the reading's grace, the probe is silent, where the figure in code would have
+    waited three."""
     update(pot, f"INSERT DATA {{ GRAPH <http://example.org/test#world> {{ <{snapshots.ME}> <{SILENT_AFTER_TERM}> 1 }} }}")
     fell_due = snapshots.NOW + LAPSE
+    assert missed(pot, snapshots.ME, fell_due + CADENCE) == [PROBE] and _silences(pot) == [], \
+        "stated in a public graph, the limit is not the keeper's stance"
+    snapshots.stating(pot, {SILENT_AFTER_TERM: 1})
     assert missed(pot, snapshots.ME, fell_due + CADENCE - timedelta(seconds=1)) == [PROBE] and _silences(pot) == []
     assert missed(pot, snapshots.ME, fell_due + CADENCE) == [PROBE]
     assert _silences(pot) == [(PROBE, fell_due, fell_due)]

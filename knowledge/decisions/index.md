@@ -46,6 +46,7 @@ Who may author what, and why isolation here is structural rather than enforced.
 * [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) - The world is TTL files and each agent holds its own store, so isolation is structural rather than enforced.
 * [series-and-bus-isolation](/decisions/series-and-bus-isolation.md) - A bucket and scoped token per agent; broker credentials and ACL derived from the same wiring that derives capability.
 * [the-self-is-a-class-held-to-one-instance](/decisions/the-self-is-a-class-held-to-one-instance.md) - The world authors who an agent is in its self graph and the boot checks it; a document says whose it is, never its file's name.
+* [a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md) - Patience, budgets, a sensor's limits and the horizon are triples about the self in its self graph, read there alone; never a flag or public knowledge.
 
 # The mind — what an agent wants
 

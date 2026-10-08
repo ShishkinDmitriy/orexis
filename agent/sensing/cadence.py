@@ -1,6 +1,5 @@
 """How often a sensor reports, in SSN-System's words — read by `received` to say until when an
-observation stands, and by `missed` to say when a silence has lasted long enough to be one — and
-how many of those cadences the agent allows before it doubts the sensor, in sensing's own words.
+observation stands, and by `missed` to say when a silence has lasted long enough to be one.
 
 A sensor's `ssn-system:hasSystemCapability` carries an `ssn-system:hasSystemProperty` typed
 `ssn-system:Frequency`, whose `schema:value` is the time between one observation and the
@@ -9,17 +8,16 @@ or the UN/CEFACT code spelled the same — seconds where it states none. A senso
 frequency has no cadence: its observation stands until replaced and its silence is never
 said, since the world made no promise the absence could break.
 
-A LIMIT is the agent's: `sensing:silentAfter` and `sensing:stuckAfter`, each a count of the doubted
-sensor's cadences, stated of the agent by its world as `orexis:actsFor` is, in a public graph the
-agent believes, and read of the self (`orexis:Self`) its self graph states. The figure in code (`missed.SILENT_AFTER`, `received.STUCK_AFTER`) is what holds where
-the world states none — a default, never a second place the figure lives.
+How many of those cadences the agent allows before it doubts the sensor — `sensing:silentAfter`,
+`sensing:stuckAfter` — is the agent's own word about itself, a stance in its self graph, read by
+`missed` and `received` through the kernel's `stance` with the figure in code where it states none.
 """
 
 from __future__ import annotations
 
 import logging
 
-from agent.ontology import PUBLIC, SELF_GRAPH, local_of
+from agent.ontology import PUBLIC, local_of
 from agent.store import graphs_of, remember, rows
 
 log = logging.getLogger("cadence")
@@ -32,23 +30,6 @@ SELECT ?every ?unit WHERE {
 
 #  A unit of time as its seconds, by the local name QUDT and UN/CEFACT spell it under.
 _SECONDS = {"SEC": 1.0, "MIN": 60.0, "HR": 3600.0, "HUR": 3600.0, "DAY": 86400.0}
-
-
-_LIMIT_Q = "SELECT ?n WHERE { ?me a orexis:Self ; $limit ?n }"
-
-
-def limit_of(store, limit: str, default: int, memo=None) -> int:
-    """How many cadences the self allows before the doubt `limit` names — `sensing:silentAfter`,
-    `sensing:stuckAfter` — as its world states of it, or `default` where it states none or several.
-    Remembered per pass where a memo is given."""
-    def read():
-        found = rows(store, _LIMIT_Q, graphs_of(store, PUBLIC, SELF_GRAPH), limit=limit)
-        if len(found) != 1:
-            if found:
-                log.warning("the self states %d figures for %s: the default, %d, holds", len(found), local_of(limit), default)
-            return default
-        return int(float(found[0]["n"]))
-    return remember(memo, ("limit", limit), read)
 
 
 def cadence_of(store, sensor: str, memo=None) -> float | None:

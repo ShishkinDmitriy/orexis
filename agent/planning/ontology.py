@@ -44,6 +44,10 @@ SATISFIED = PLANNING + "Satisfied"
 NO_CANDIDATE = PLANNING + "NoCandidate"
 EXHAUSTED = PLANNING + "Exhausted"
 
+#  HOW MUCH A SEARCH MAY SPEND, in candidates weighed: a stance the agent states of itself in its
+#  self graph, read by the Planner when it is made (knowledge/domain/kernel/stance.md).
+BUDGET_TERM = PLANNING + "budget"
+
 
 #  A DERIVATION (scope-actions): one INSERT of one loaded rule, as the edge it makes. Written
 #  at every refresh of public knowledge, so the partition is a function of the store and not of
