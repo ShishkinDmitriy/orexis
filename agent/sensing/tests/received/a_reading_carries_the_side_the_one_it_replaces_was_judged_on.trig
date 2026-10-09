@@ -1,0 +1,101 @@
+# a_reading_carries_the_side_the_one_it_replaces_was_judged_on
+#
+# A reading of 0.09 stood from a quarter to twelve, and the rules judged it below the pot's operating
+# range, whose condition states a margin of 0.002, and inside its survival range, which states none.
+# Bytes for 0.101 arrive at noon. The new observation carries `orexis:wasBelow` of the operating range
+# — read from the replaced one's revisions before they go with it — and nothing of the survival
+# range: a range stating no margin holds no side, and inside is no side to hold. Which side 0.101 is
+# on is the rules' to conclude, not this act's (test_rules.py).
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
+@prefix revised: <http://example.org/orexis/graph/observed/keeper/probe/> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
+
+GRAPH :ontology {
+  belief:RevisionGraph rdfs:subClassOf orexis:BeliefGraph .
+  belief:RevisionGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:BeliefGraph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:StateGraph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :zamioculcas .
+  :keeper orexis:localId "keeper" .
+  :probe a sosa:Sensor .
+  :probe sosa:isHostedBy :zamioculcas .
+  :probe sosa:observes :moisture .
+  :probe ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; schema:unitCode unit:SEC ; schema:value 900 ] ] .
+  :zamioculcas :driesPerDay 0.5 .
+  :zamioculcas a :Pot .
+  :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
+  :zamioculcas ssn-system:hasSurvivalRange :zamioculcas.survival .
+  :zamioculcas.operating a ssn-system:OperatingRange .
+  :zamioculcas.operating ssn-system:inCondition [ orexis:margin 0.002 ; schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture ] .
+  :zamioculcas.survival a ssn-system:SurvivalRange .
+  :zamioculcas.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
+}
+
+GRAPH observed:probe {
+  orexis:obs_probe a sosa:Observation .
+  orexis:obs_probe prov:wasGeneratedBy :keeper .
+  orexis:obs_probe sensing:rawResult 0.09 .
+  orexis:obs_probe sensing:unchangedSince "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
+  orexis:obs_probe sosa:madeBySensor :probe .
+  orexis:obs_probe sosa:resultTime "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
+}
+
+GRAPH revised:revisions {
+  orexis:obs_probe sensing:below :zamioculcas.operating .
+  orexis:obs_probe sensing:inside :zamioculcas.survival .
+  orexis:obs_probe sensing:scaledResult 0.09 .
+  orexis:obs_probe sosa:hasFeatureOfInterest :zamioculcas .
+  orexis:obs_probe sosa:hasSimpleResult 0.09 .
+  orexis:obs_probe sosa:observedProperty :moisture .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  observed:probe a orexis:BeliefGraph .
+  observed:probe a orexis:Graph .
+  observed:probe a orexis:StateGraph .
+  observed:probe a sensing:ObservationGraph .
+  observed:probe dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
+  observed:probe orexis:arrivedBy orexis:Received .
+  observed:probe orexis:beliefsOf :keeper .
+  revised:revisions a belief:RevisionGraph .
+  revised:revisions a orexis:BeliefGraph .
+  revised:revisions a orexis:Graph .
+  revised:revisions belief:settled true .
+  revised:revisions dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
+  revised:revisions orexis:arrivedBy orexis:Derived .
+  revised:revisions orexis:beliefsOf :keeper .
+  revised:revisions prov:wasDerivedFrom observed:probe .
+}

@@ -27,7 +27,16 @@
 #  its binary error (1.100000000000000128) unless rounded after the cast.
 #
 #  LAYER 2, WHICH SIDE of each of its subject's ranges an observation's reading lies on — over what
-#  layer 1 concluded, and over a predicted observation, which the prediction writes whole.
+#  layer 1 concluded, and over a predicted observation, which the prediction writes whole. A side is
+#  the judgment of the subject against its range, given the instrument's noise: where the range's
+#  condition states a margin (`orexis:margin`), a reading whose predecessor was judged below —
+#  `orexis:wasBelow`, carried onto the observation by whoever wrote it — stays below until it reaches
+#  the floor and the margin, and one judged above stays above until it falls to the ceiling less it;
+#  a reading coming from inside crosses at the bound itself. Each rule reads the observation's own
+#  facts and nothing else, so none remembers: the memory is the side carried, as the run of an
+#  unchanged number is `sensing:unchangedSince` (knowledge/domain/kernel/margin.md). A margin no
+#  condition states is nought, coalesced, since a comparison with an unbound term binds nothing and
+#  would leave the observation with no side at all.
 
 :observation a sh:RuleSet ;
     rdfs:label "what an observation is of, its quantity, and its reading" ;
@@ -101,7 +110,7 @@
 
 :belowRule a sh:SPARQLRule ;
     sh:layer 2 ;
-    rdfs:label "under the floor" ;
+    rdfs:label "under the floor, or short of the floor and its margin coming from below" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:below ?range } WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
@@ -109,12 +118,14 @@
             ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:minValue ?low .
-            FILTER(?value < ?low)
+            OPTIONAL { ?condition orexis:margin ?margin }
+            FILTER(?value < ?low
+                   || (?value < ?low + COALESCE(?margin, 0) && EXISTS { ?obs orexis:wasBelow ?range }))
         }""" .
 
 :insideRule a sh:SPARQLRule ;
     sh:layer 2 ;
-    rdfs:label "within the range, bounds included" ;
+    rdfs:label "within the range, bounds included, and clear of the margin a side carried holds" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:inside ?range } WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
@@ -122,12 +133,15 @@
             ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:minValue ?low ; schema:maxValue ?high .
+            OPTIONAL { ?condition orexis:margin ?margin }
             FILTER(?value >= ?low && ?value <= ?high)
+            FILTER(!(?value < ?low + COALESCE(?margin, 0) && EXISTS { ?obs orexis:wasBelow ?range }))
+            FILTER(!(?value > ?high - COALESCE(?margin, 0) && EXISTS { ?obs orexis:wasAbove ?range }))
         }""" .
 
 :aboveRule a sh:SPARQLRule ;
     sh:layer 2 ;
-    rdfs:label "over the ceiling" ;
+    rdfs:label "over the ceiling, or past the ceiling less its margin coming from above" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:above ?range } WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
@@ -135,5 +149,7 @@
             ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:maxValue ?high .
-            FILTER(?value > ?high)
+            OPTIONAL { ?condition orexis:margin ?margin }
+            FILTER(?value > ?high
+                   || (?value > ?high - COALESCE(?margin, 0) && EXISTS { ?obs orexis:wasAbove ?range }))
         }""" .

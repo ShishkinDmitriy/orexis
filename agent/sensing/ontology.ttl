@@ -244,18 +244,24 @@
 :below a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;
     rdfs:label "below" ;
-    rdfs:comment """The observation's result lies under the floor of this range — an
-    ssn-system:OperatingRange or ssn-system:SurvivalRange stated for the observed property by what
-    hosts the sensor, by what that is a sample of, or by the sensor itself. Concluded by this
-    layer's rule as a revision, read by a desire's met-test, and written by an effect that predicts
-    a reading. One triple per observation and range; nothing is minted per subject.""" .
+    rdfs:comment """The subject is judged under the floor of this range — an ssn-system:OperatingRange
+    or ssn-system:SurvivalRange stated for the observed property by what hosts the sensor, by what
+    that is a sample of, or by the sensor itself: its result lies under the floor, or, where the
+    range states a margin (orexis:margin) and the reading before was judged below
+    (orexis:wasBelow), short of the floor and the margin. A judgment given the instrument's noise,
+    not a bare comparison of one number. Concluded by this layer's rule as a revision, read by a
+    desire's met-test, and written by an effect that predicts a reading. One triple per observation
+    and range; nothing is minted per subject.""" .
 
 :inside a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;
     rdfs:label "inside" ;
-    rdfs:comment "The observation's result lies within this range, its bounds included." .
+    rdfs:comment """The subject is judged within this range: its result lies within the bounds,
+    included, and is neither below nor above the range as a margin and the side carried hold it.""" .
 
 :above a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;
     rdfs:label "above" ;
-    rdfs:comment "The observation's result lies over the ceiling of this range." .
+    rdfs:comment """The subject is judged over the ceiling of this range: its result lies over the
+    ceiling, or, where the range states a margin and the reading before was judged above
+    (orexis:wasAbove), past the ceiling less the margin.""" .

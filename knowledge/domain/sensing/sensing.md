@@ -21,7 +21,9 @@ from its instant until the next is due by the sensor's `ssn-system:Frequency` an
 [observation](/domain/sensing/observation.md)'s grace past it — and all it says is
 the number the sensor gave (`sensing:rawResult`), who made it and when, and since when the number has been
 that one - the run a sensor is said [stuck](/domain/sensing/stuck.md) from, once it has lasted the agent's
-limit of the sensor's cadences (`sensing:stuckAfter`), by `sensing:stuckSince` until a differing number ends it. Where the pointer finds an array of readings,
+limit of the sensor's cadences (`sensing:stuckAfter`), by `sensing:stuckSince` until a differing number ends it -
+and, of each range stating a [margin](/domain/kernel/margin.md), the side the rules judged the observation it
+replaces on, read from that one's revisions before they go. Where the pointer finds an array of readings,
 each with how many seconds before the message it was taken — a sentinel's alarm carries its watcher's
 last quiet sample before the reading that broke the window — each is an observation of its own, an
 earlier one holding only until the next one's instant: a step in the history, not a slope.
@@ -47,7 +49,7 @@ their cadences (`sensing:silentAfter`) — said by `sensing:silentSince` until a
 What the rules conclude is a [revision](/domain/belief/revision.md), run by the
 [deliberator](/domain/belief/deliberator.md) when the container says a graph changed: layers 0 and 1
 what an observation is of and its reading, layer 2 which side of a [region](/domain/sensing/region.md) the
-reading is on — `sensing:below`, `sensing:inside` or `sensing:above`. That is why an
+subject is judged on — `sensing:below`, `sensing:inside` or `sensing:above`. That is why an
 [observer](/domain/sensing/observer.md) is a deliberator too, and belief's part, first in a pass, hears a
 graph written before any other part, so sensing's own `Observed` and the prediction find it concluded. When the reading will change range is the
 [prediction](/domain/prediction/prediction.md) package's. How the bytes arrived is the

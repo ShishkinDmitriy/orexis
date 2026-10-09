@@ -35,7 +35,9 @@ the start or end of a public or belief graph holding inside that horizon, since 
 drift reads change; between
 two, the rates are asked once and held, at most for an hour. Within a segment the value is a
 straight line, so a crossing of a bound of every [region](/domain/sensing/region.md) that applies to
-what the sensor observes is placed exactly, by division.
+what the sensor observes is placed exactly, by division — and where the region states a
+[margin](/domain/kernel/margin.md), the crossing out of a side is placed at the bound and its margin,
+walked from the side the observation is on ([corridor](/domain/prediction/corridor.md)).
 
 What is written is one `orexis:PredictionGraph` per stretch - from the observation's horizon to the
 first crossing, crossing to crossing, the last to the horizon's end - holding a predicted
@@ -48,8 +50,8 @@ observation, and no further: a package that declares no drift has claimed nothin
 # What is made of it
 
 - **Its side**, by [revision](/domain/belief/revision.md): sensing's rules conclude `below`, `inside`
-  or `above` of a predicted observation exactly as of a real one, so a stretch reads as the side it
-  is and no width is ever added to a number.
+  or `above` of a predicted observation exactly as of a real one — of its number and the side it
+  carries — so a stretch reads as the side it is and no width is ever added to a number.
 - **A ground per stretch**, by the [planner](/domain/planning/planner.md)'s `lay_ground`: the present,
   and the present with each prediction applied at its instant - a prediction is a diff, and only a
   ground has applied it. The derivation judges every desire in every ground, so a crossing

@@ -486,9 +486,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   accumulates the drifts' rates and imports nothing of sensing.
 - **A belief is a crisp triple, and probability lives only inside an estimator** — sensing and
   prediction may keep a mean and a spread while they work, and write a value, a side or a band as
-  two numbers; a side flipping on noise is held by the want, minted on the range and reached only
-  inside a narrower one, never by a rule that remembers (#944,
-  a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
+  two numbers; a side flipping on noise is held by sensing — one margin on a range's condition, a
+  reading judged below staying below until it clears the floor by it, the side before carried onto
+  the observation by `received` as the run is — never by a rule that remembers, a want, a second
+  range or the last N readings (#944, a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
   read there alone, and the package's constant holds where none is stated** — the patience, both
   budgets, the silent and stuck limits and the horizon, each declared by its reader's package and

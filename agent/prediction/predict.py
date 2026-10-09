@@ -26,6 +26,18 @@ trajectory is under the floor, above where the high one is over the ceiling — 
 written is the trajectory that side was read from, so the rules conclude of it the side the
 corridor has.
 
+**A MARGIN HOLDS A SIDE, AND THE CORRIDOR IS WALKED FROM THE OBSERVATION'S (#944).** Where a range's
+condition states a margin (`orexis:margin`), a side is left only once the value has cleared the
+bound by it, as sensing's rules judge a reading: below is entered where the low trajectory falls
+under the floor and left only where it reaches the floor and the margin, above entered over the
+ceiling and left only at the ceiling less the margin. A side then depends on the side before, so
+the corridor is walked from the observation in hand — its side of each range judged as the rules
+judge it, from its reading and the side it carries (`orexis:wasBelow`, `orexis:wasAbove`) — and a
+crossing is placed where a trigger turns, by division as before. Each predicted observation carries
+its stretch's own side of every range stating a margin: its number is read inside the stretch, so
+the reading before it was on that side too, and the rules conclude of number and side together the
+side the stretch is on. A range stating none turns at every crossing of a bound, and carries nothing.
+
 **WHAT IS WRITTEN IS ONE PREDICTION PER STRETCH**: from the observation's horizon to the first
 crossing, crossing to crossing, and from the last to the horizon's end — each an
 `orexis:PredictionGraph` holding during its stretch, carrying a predicted `sosa:Observation` in
@@ -48,13 +60,13 @@ from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
-from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, PUBLIC, RECORD, local_of
+from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, PUBLIC, RECORD, WAS_ABOVE, WAS_BELOW, local_of
 from agent.stance import stance
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
                          remember, revisions_of, rows, update)
 
 from .ontology import DRIFT, FEATURE, HORIZON_TERM, MOVES, PROPERTY, RATE, RECORDED, RESULT, prediction_graph
-from .ranges import ranges_of, side
+from .ranges import cleared, ranges_of, side
 
 log = logging.getLogger("predict")
 
@@ -178,17 +190,23 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
                 said.append((min(low, high), max(low, high), float(row["until"]) if row.get("until") else None))
         return said
 
+    own = [ox.Triple(q.subject, q.predicate, q.object) for g in believed for q in quads(store, g)]
     knots, moved = _accumulate(rates, reading, _happenings(store, cat, taken, horizon), memo)
     if not moved:
-        #  NO DRIFT MOVES THIS KEY: it is predicted to stay as it reads, for an hour alone.
+        #  NO DRIFT MOVES THIS KEY: it is predicted to stay as it reads, for an hour alone — the
+        #  observation copied whole, the side it carries with it.
         if CARRIED_S <= base:
             return []
-        stretches = [(base, CARRIED_S, None)]
+        stretches = [(base, CARRIED_S, None, ())]
     else:
-        stretches = _stretches(knots, ranges, base, horizon)
-    own = [ox.Triple(q.subject, q.predicate, q.object) for g in believed for q in quads(store, g)]
+        #  THE OBSERVATION'S OWN SIDE OF EVERY RANGE, judged as the rules judge it: its reading, and
+        #  the side it carries where the range states a margin.
+        held = {t.object.value: -1 if t.predicate.value == WAS_BELOW else 1 for t in own
+                if t.subject == ox.NamedNode(node) and t.predicate.value in (WAS_BELOW, WAS_ABOVE)}
+        start = tuple(side(r.low, r.high, reading, r.margin, held.get(r.iri, 0)) for r in ranges)
+        stretches = _stretches(knots, ranges, base, horizon, start)
     written = []
-    for n, (begins, closes, value) in enumerate(stretches):
+    for n, (begins, closes, value, sides) in enumerate(stretches):
         graph_n = prediction_graph(local_of(me), feature, observed_property, n)
         update(store, f"""
 INSERT DATA {{
@@ -196,13 +214,14 @@ INSERT DATA {{
   GRAPH <{catalogue_of(store)}> {{
     <{graph_n}> prov:wasDerivedFrom <{graph}> ;
                 orexis:retracts {_literal(_RETRACTS % (feature, observed_property))} . }} }}""")
-        triples = own if value is None else _observation(own, node, value[1], taken + timedelta(seconds=value[0]))
+        triples = own if value is None else _observation(own, node, value[1], taken + timedelta(seconds=value[0]),
+                                                         _carried(ranges, sides))
         store.extend(ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(graph_n)) for t in triples)
         written.append(graph_n)
     log.info("predicted %s of %s in %d stretch(es) from %s%s", local_of(observed_property), local_of(feature),
              len(written), opens.isoformat(timespec="seconds"),
              "".join(f", crossing at {(taken + timedelta(seconds=b)).isoformat(timespec='seconds')}"
-                     for b, _, _ in stretches[1:]))
+                     for b, _, _, _ in stretches[1:]))
     return written
 
 
@@ -269,43 +288,76 @@ def _move(value: float, rate: float, step: float, stops: list[float]) -> float:
     return moved
 
 
-def _stretches(knots, ranges, base: float, horizon: float) -> list[tuple[float, float, tuple[float, float]]]:
+def _stretches(knots, ranges, base: float, horizon: float,
+               start: tuple[int, ...]) -> list[tuple[float, float, tuple[float, float], tuple[int, ...]]]:
     """The stretches from `base` to the `horizon` between the instants the corridor's side
-    changes, each with the instant its number is read at and the number: the last instant of
-    the stretch whose number, as written, lies on its side — its end, a minute before where the
-    end lies across a bound or rounding carries it there, or its middle."""
-    crossings = sorted({c for (t0, lo0, hi0), (t1, lo1, hi1) in zip(knots, knots[1:])
-                        for c in _crossed(t0, lo0, hi0, t1, lo1, hi1, ranges) if base < c < horizon})
+    changes, walked from the observation's side of each range, `start` — each with the instant
+    its number is read at, the number, and its side of every range: the last instant of the
+    stretch whose number, as written and carrying that side, lies on it — its end, a minute before
+    where the end lies across a bound or rounding carries it there, or its middle."""
+    turns = _turns(knots, ranges, start)
+    crossings = sorted({c for c in (float(math.ceil(at)) for at, _, _, _ in turns) if base < c < horizon})
     starts, ends = [base, *crossings], [*crossings, horizon]
     out = []
     for begins, closes in zip(starts, ends):
-        sides = _sides(knots, ranges, (begins + closes) / 2)
+        sides = _sides(turns, start, (begins + closes) / 2)
         for at in (closes, closes - min(_EDGE_S, (closes - begins) / 2), (begins + closes) / 2):
             lo, hi = _at(knots, at)
             value = round(hi if 1 in sides and -1 not in sides else lo, PLACES)
-            if tuple(side(low, high, value) for low, high in ranges) == sides:
+            if tuple(side(r.low, r.high, value, r.margin, s) for r, s in zip(ranges, sides)) == sides:
                 break                                   # the number as written reads the stretch's side
-        out.append((begins, closes, (at, value)))
+        out.append((begins, closes, (at, value), sides))
     return out
 
 
-def _crossed(t0, lo0, hi0, t1, lo1, hi1, ranges) -> list[float]:
-    """Every instant in one straight segment at which the low trajectory crosses a floor or the
-    high one crosses a ceiling, to the whole second after it."""
+def _turns(knots, ranges, start: tuple[int, ...]) -> list[tuple[float, int, int, bool]]:
+    """Every instant the corridor's side of a range may turn, walked from `start`, earliest first:
+    the instant, the range's index, which trigger turned — the floor's (-1), on the low trajectory,
+    or the ceiling's (+1), on the high — and whether it is now on. The floor's turns on where the low
+    trajectory falls under the floor and off only where it reaches the floor and the margin; the
+    ceiling's on where the high one passes the ceiling and off only where it falls to the ceiling
+    less the margin. With no margin, every crossing of a bound, both ways. A trajectory is straight
+    between two knots, so a trigger turns at most once between them and the instant is a division."""
     out = []
-    for low, high in ranges:
-        if (lo0 < low) != (lo1 < low):
-            out.append(float(math.ceil(t0 + (low - lo0) / (lo1 - lo0) * (t1 - t0))))
-        if (hi0 > high) != (hi1 > high):
-            out.append(float(math.ceil(t0 + (high - hi0) / (hi1 - hi0) * (t1 - t0))))
-    return out
+    for i, r in enumerate(ranges):
+        below, above = start[i] < 0, start[i] > 0
+        floor_off, ceiling_off = cleared(r.low, r.margin), cleared(r.high, -r.margin)
+        for (t0, lo0, hi0), (t1, lo1, hi1) in zip(knots, knots[1:]):
+            if not below and lo1 < r.low:
+                below = True
+                out.append((_reached(t0, lo0, t1, lo1, r.low), i, -1, True))
+            elif below and lo1 >= floor_off:
+                below = False
+                out.append((_reached(t0, lo0, t1, lo1, floor_off), i, -1, False))
+            if not above and hi1 > r.high:
+                above = True
+                out.append((_reached(t0, hi0, t1, hi1, r.high), i, 1, True))
+            elif above and hi1 <= ceiling_off:
+                above = False
+                out.append((_reached(t0, hi0, t1, hi1, ceiling_off), i, 1, False))
+    return sorted(out)
 
 
-def _sides(knots, ranges, elapsed: float) -> tuple[int, ...]:
-    """The corridor's worst side of every range at `elapsed`: below where the low trajectory is
-    under the floor, above where the high one is over the ceiling."""
-    lo, hi = _at(knots, elapsed)
-    return tuple(-1 if side(low, high, lo) < 0 else 1 if side(low, high, hi) > 0 else 0 for low, high in ranges)
+def _reached(t0: float, v0: float, t1: float, v1: float, bound: float) -> float:
+    """The instant a straight line from `v0` at `t0` to `v1` at `t1` reaches `bound`."""
+    return t0 if v1 == v0 else t0 + (bound - v0) / (v1 - v0) * (t1 - t0)
+
+
+def _sides(turns, start: tuple[int, ...], elapsed: float) -> tuple[int, ...]:
+    """The corridor's side of every range at `elapsed`, as `start` and every turn up to then left the
+    triggers: below where the floor's is on, above where the ceiling's is, inside where neither."""
+    below, above = [s < 0 for s in start], [s > 0 for s in start]
+    for at, i, trigger, on in turns:
+        if at > elapsed:
+            break
+        (below if trigger < 0 else above)[i] = on
+    return tuple(-1 if b else 1 if a else 0 for b, a in zip(below, above))
+
+
+def _carried(ranges, sides: tuple[int, ...]) -> list[tuple[str, str]]:
+    """The side a predicted observation carries of every named range stating a margin: its
+    stretch's own, which the reading before the instant its number is read at was on too."""
+    return [(WAS_BELOW if s < 0 else WAS_ABOVE, r.iri) for r, s in zip(ranges, sides) if s and r.iri and r.margin > 0]
 
 
 def _at(knots, elapsed: float) -> tuple[float, float]:
@@ -317,12 +369,14 @@ def _at(knots, elapsed: float) -> tuple[float, float]:
     return knots[-1][1], knots[-1][2]
 
 
-def _observation(own, node: str, value: float, at: datetime) -> list:
-    """The predicted observation: the one in hand's key and sensor, with `value` at `at`."""
+def _observation(own, node: str, value: float, at: datetime, carried: list[tuple[str, str]]) -> list:
+    """The predicted observation: the one in hand's key and sensor, with `value` at `at`, carrying
+    the side of each range `carried` names."""
     subject = ox.NamedNode(node)
     kept = {FEATURE, PROPERTY, _SOSA + "madeBySensor"}
     out = [ox.Triple(subject, _RDF_TYPE, ox.NamedNode(_SOSA + "Observation"))]
     out += [t for t in own if t.subject == subject and t.predicate.value in kept]
+    out += [ox.Triple(subject, ox.NamedNode(word), ox.NamedNode(iri)) for word, iri in carried]
     number = f"{round(value, PLACES) + 0.0:.{PLACES}f}".rstrip("0")
     out.append(ox.Triple(subject, ox.NamedNode(RESULT), ox.Literal(number + ("0" if number.endswith(".") else ""),
                                                                   datatype=ox.NamedNode(_XSD + "decimal"))))

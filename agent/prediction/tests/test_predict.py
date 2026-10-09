@@ -43,6 +43,12 @@ OPENS = {
     "a_forecast_shower_lifts_the_reading_back_inside": [(15, 0), (28.8, 0.02), (144, 0.02), (316.8, 0.02), (432, 0.02)],
     "a_forecast_range_opens_a_corridor_on_its_dry_side": [(15, 0), (28.8, 0.02), (144, 0.02)],
     "a_committed_dose_lifts_the_reading_over_its_window": [(15, 0), (61.2, 0.02), (90, 0.02)],
+    #  A MARGIN OF 0.01 on the operating range: left from below at 0.11, not 0.10 — the shower's
+    #  crossing back inside 0.0733 / 0.1583 hours after two, not 0.0633 / 0.1583 — and, walked from an
+    #  observation of 0.105 held below, left at 12:30 by a seep of a hundredth an hour.
+    "a_shower_lifts_the_reading_inside_only_past_the_floor_and_its_margin":
+        [(15, 0), (28.8, 0.02), (147.8, 0.02), (316.8, 0.02), (432, 0.02)],
+    "a_reading_held_below_is_predicted_below_until_it_clears_the_margin": [(15, 0), (30, 0.02), (1170, 0.02)],
 }
 
 

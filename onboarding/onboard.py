@@ -87,6 +87,14 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
         if unread:
             raise SystemExit(f"orexis-onboard: world {world!r} holds graphs of a kind no reader declares — "
                              f"{'; '.join(unread)}; nothing granted")
+        # A margin its range cannot hold is refused before anyone reads it: a negative one would have
+        # prediction leave a side before its bound, one of half the range or more would hold a step
+        # aimed at the middle on the side it came from for ever, and one on a range with no name could
+        # not be carried (knowledge/domain/kernel/margin.md). Every reader would take it as stated.
+        unholdable = reading.unholdable(world_dir(world))
+        if unholdable:
+            raise SystemExit(f"orexis-onboard: world {world!r} states a margin its range cannot hold — "
+                             f"{'; '.join(unholdable)}; nothing granted")
         # What an agent runs is declared — its roles, in its own self graph — and held to its world
         # both ways before anything is granted: a role whose needs the world lacks, and what would
         # arrive for an agent and be read by none of its roles. An agent declaring no role would boot,

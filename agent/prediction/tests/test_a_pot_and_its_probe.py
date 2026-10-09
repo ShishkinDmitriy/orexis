@@ -84,3 +84,28 @@ def test_a_second_reading_replaces_the_first_and_its_predictions(pot, snapshots)
     standing = [r["g"] for r in rows(store, _PREDICTIONS_Q, ())]
     assert standing == second and len(first) == 3 and first[2] not in standing, "the first stretches went whole"
     assert _sides(store, graph) >= {("below", "zamioculcas.operating"), ("inside", "zamioculcas.survival")}
+
+
+#  THE PREDICT CASES WHOSE RANGES STATE A MARGIN, and the side of the operating range each stretch is
+#  on: the shower's dip, held below until 0.11 — its number, 0.107389, short of the floor and its
+#  margin and over the floor — and the reading held below, walked from that side.
+MARGINED = [
+    ("a_shower_lifts_the_reading_inside_only_past_the_floor_and_its_margin", ["inside", "below", "inside", "below", "below"]),
+    ("a_reading_held_below_is_predicted_below_until_it_clears_the_margin", ["below", "inside", "above"]),
+]
+
+
+@pytest.mark.parametrize("case, sides", MARGINED, ids=[case for case, _ in MARGINED])
+def test_the_rules_conclude_of_every_predicted_observation_the_side_its_stretch_is_on(monkeypatch, snapshots, case, sides):
+    """`predict` places a stretch on a side by its own walk and writes the number and the side carried;
+    sensing's rules, run over what it wrote, conclude the side on their own. They agree, the stretch
+    whose number lies between the floor and its margin included — read alone, that number is inside."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(Path(__file__).parent / "predict" / f"{case}.trig")
+    put_document(store, document(SENSING_RULES))
+    written = predict(store, snapshots.ME, PROBE)
+    read = graphs_of(store, PUBLIC, at=snapshots.NOW)
+    for graph in written:
+        revise(store, graph, read=read)
+    concluded = [[p for p, r in _sides(store, graph) if r == "zamioculcas.operating"] for graph in written]
+    assert concluded == [[side] for side in sides], concluded

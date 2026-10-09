@@ -1,0 +1,46 @@
+--- case
++++ expected
+@@ -49,21 +49,15 @@
+ 
+ GRAPH observed:probe {
+   orexis:obs_probe a sosa:Observation .
++  orexis:obs_probe orexis:wasBelow :zamioculcas.operating .
+   orexis:obs_probe prov:wasGeneratedBy :keeper .
+-  orexis:obs_probe sensing:rawResult 0.09 .
+-  orexis:obs_probe sensing:unchangedSince "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
++  orexis:obs_probe sensing:rawResult 0.101 .
++  orexis:obs_probe sensing:unchangedSince "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+   orexis:obs_probe sosa:madeBySensor :probe .
+-  orexis:obs_probe sosa:resultTime "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
++  orexis:obs_probe sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+ }
+ 
+-GRAPH revised:revisions {
+-  orexis:obs_probe sensing:below :zamioculcas.operating .
+-  orexis:obs_probe sensing:inside :zamioculcas.survival .
+-  orexis:obs_probe sensing:scaledResult 0.09 .
+-  orexis:obs_probe sosa:hasFeatureOfInterest :zamioculcas .
+-  orexis:obs_probe sosa:hasSimpleResult 0.09 .
+-  orexis:obs_probe sosa:observedProperty :moisture .
+-}
++
+ 
+ GRAPH :catalogue {
+   :catalogue a orexis:CatalogueGraph .
+@@ -77,15 +71,7 @@
+   observed:probe a orexis:Graph .
+   observed:probe a orexis:StateGraph .
+   observed:probe a sensing:ObservationGraph .
+-  observed:probe dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
++  observed:probe dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+   observed:probe orexis:arrivedBy orexis:Received .
+   observed:probe orexis:beliefsOf :keeper .
+-  revised:revisions a belief:RevisionGraph .
+-  revised:revisions a orexis:BeliefGraph .
+-  revised:revisions a orexis:Graph .
+-  revised:revisions belief:settled true .
+-  revised:revisions dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
+-  revised:revisions orexis:arrivedBy orexis:Derived .
+-  revised:revisions orexis:beliefsOf :keeper .
+-  revised:revisions prov:wasDerivedFrom observed:probe .
+ }

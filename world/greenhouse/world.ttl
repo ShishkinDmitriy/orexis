@@ -28,6 +28,16 @@
 
 #  THE BED. The soil is comfortable between 0.30 and 0.60 and survives between 0.10 and 0.85; the
 #  air is comfortable between 18 and 24 degrees and survives between 5 and 35.
+#
+#  EACH COMFORTABLE BOUND IS LEFT FROM BEYOND IT ONLY PAST A MARGIN (#944,
+#  knowledge/domain/kernel/margin.md): a reading judged below the soil's floor stays below until it
+#  reaches 0.3002, and one judged below the air's until 18.02 degrees, so a bed resting at its floor
+#  is one want and not one per reading its noise carries across. Each margin is its instrument's whole
+#  spread, twice what a reading strays either way: the probe strays a count of the four places it is
+#  published to, 0.0001, and the thermometer its `sim:jitter`, a hundredth of a degree. A margin of
+#  the one-way figure would be cleared by one extreme draw of a value resting at the floor. The
+#  survival ranges state none: each lies outside the comfortable one, so where its side flipped the
+#  desire, which reads below any range the bed states, is already unmet by the comfortable floor.
 :bed a sosa:FeatureOfInterest ;
     rdfs:label "the heated bed" ;
     climate:driesPerDay 0.04 ;
@@ -37,9 +47,11 @@
 
 :bed_operating a ssn-system:OperatingRange ;
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
-                             schema:minValue 0.30 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] ,
+                             schema:minValue 0.30 ; schema:maxValue 0.60 ; orexis:margin 0.0002 ;
+                             schema:unitCode unit:UNITLESS ] ,
                            [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:AirTemperature ;
-                             schema:minValue 18.0 ; schema:maxValue 24.0 ; schema:unitCode unit:DEG_C ] .
+                             schema:minValue 18.0 ; schema:maxValue 24.0 ; orexis:margin 0.02 ;
+                             schema:unitCode unit:DEG_C ] .
 
 :bed_survival a ssn-system:SurvivalRange ;
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;

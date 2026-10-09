@@ -24,6 +24,7 @@
 @prefix prediction: <http://example.org/orexis/prediction#> .
 
 GRAPH :ontology {
+  belief:RevisionGraph rdfs:subClassOf orexis:BeliefGraph .
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .

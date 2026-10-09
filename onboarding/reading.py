@@ -15,6 +15,10 @@ vocabulary, then every graph in the world's directory of a kind that vocabulary 
 kind makes a misspelled one silent in every reader; onboarding knows every reader's vocabulary, so
 `unread` names the graphs none of them reads, and `orexis-onboard` refuses a world that has any.
 
+**A margin its range cannot hold is refused here, for the same reason** (`unholdable`,
+knowledge/domain/kernel/margin.md): every reader of `orexis:margin` takes it as stated, so one that is
+negative, of half its range's width or more, or on a range with no name, is caught here or nowhere.
+
 **A step runs where the world has what it serves.** `premises` answers which of `PREMISES` hold of
 a world (#824): the broker's credentials and its ACL, the agents' certificates and the broker in a
 compose file are granted to a world whose society names a broker, and a world naming none is
@@ -153,6 +157,43 @@ def unread(here: Path) -> list[str]:
         for graph, kinds in sorted(kinds_in(doc).items()):
             if not known(store, kinds):
                 out.append(f"{path.name}: {graph} ({', '.join(sorted(kinds))})")
+    return out
+
+
+#  EVERY MARGIN A RANGE CANNOT HOLD (knowledge/domain/kernel/margin.md), with its range's name where
+#  it has one and the bounds it widens: one that is no number; a negative one, which widens nothing
+#  and would have prediction leave a side before its bound; one of half its range's width or more,
+#  since every act here aims at a range's middle and a step landing there would still be held on the
+#  side it came from; and one on a range with no IRI, since the side a reading carries names its range.
+_MARGINS_Q = """
+SELECT ?named ?margin ?low ?high WHERE {
+  ?range ssn-system:inCondition ?condition . ?condition orexis:margin ?margin .
+  OPTIONAL { ?condition schema:minValue ?low } OPTIONAL { ?condition schema:maxValue ?high }
+  BIND(IF(isIRI(?range), STR(?range), "") AS ?named)
+  FILTER(!isIRI(?range) || !isNumeric(?margin) || ?margin < 0
+         || (BOUND(?low) && BOUND(?high) && 2 * ?margin >= ?high - ?low)) }
+ORDER BY ?named ?margin"""
+
+
+def unholdable(here: Path) -> list[str]:
+    """Every margin the world in `here` states that its range cannot hold, as `range: why`. Empty for a
+    world each of whose margins is a number from nought to less than half its range's width, on a range
+    with a name — every world stating none among them."""
+    store = world(here)
+    out = []
+    for r in rows(store, _MARGINS_Q, graphs_of(store, PUBLIC)):
+        said = f"a margin of {r['margin']}"
+        if not r["named"]:
+            out.append(f"a range with no name: {said} on it, and the side a reading carries names its range")
+            continue
+        try:
+            margin = float(r["margin"])
+        except ValueError:
+            out.append(f"{r['named']}: {said}, which is no number")
+            continue
+        out.append(f"{r['named']}: {said}, which is negative and widens nothing" if margin < 0 else
+                   f"{r['named']}: {said}, half the width of [{r['low']}, {r['high']}] or more — a step aimed at its "
+                   f"middle would land still held on the side it came from")
     return out
 
 
