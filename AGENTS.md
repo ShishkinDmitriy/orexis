@@ -160,6 +160,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A term belongs to the package that owns the concept, and the kernel keeps what packages meet
   at** — `orexis:Action`, `orexis:takes` and `orexis:PredictionGraph` are the kernel's; one word is
   one concept, so `planning:spent` and `planning:costs` are two.
+- **The kernel speaks no SOSA or SSN, and a word two packages seem to meet at is lowered only once
+  the second is shown to need it** — the margin went into the kernel so prediction could read it,
+  and prediction needed none, a predicted number having no instrument's noise (#944).
 - **The core's word has priority, and a package speaks around it** (#640).
 - **"Ledger" is the market's word, for the book of what an agent owes; the intentions are called the
   intentions.**
@@ -486,9 +489,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   accumulates the drifts' rates and imports nothing of sensing.
 - **A belief is a crisp triple, and probability lives only inside an estimator** — sensing and
   prediction may keep a mean and a spread while they work, and write a value, a side or a band as
-  two numbers; a side flipping on noise is held by the want, minted on the range and reached only
-  inside a narrower one, never by a rule that remembers (#944,
-  a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
+  two numbers (a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
+- **An observation is a percept and the mind reads only beliefs, in the domain's words** — sensing
+  keeps a sensor's percepts, named per reading and linked to the one before, as deep as its rules
+  read; revision makes of the latest one belief about the subject, judged beside the belief it
+  replaces, so a held state is the belief and no summary is carried onto the present; a predicted
+  number is judged the same way; one rule judges every range with its margin and the domain names
+  the states (#944, an-observation-is-a-percept-and-the-mind-reads-only-beliefs).
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
   read there alone, and the package's constant holds where none is stated** — the patience, both
   budgets, the silent and stuck limits and the horizon, each declared by its reader's package and
