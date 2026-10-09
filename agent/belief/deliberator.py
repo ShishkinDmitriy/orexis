@@ -65,13 +65,16 @@ class Deliberator:
         self.beliefs = beliefs
         self.id = agent_id
         self.budget = budget if budget is not None else stance(beliefs, BUDGET_TERM, BUDGET)
-        #  SOURCE TO WHAT STANDS BESIDE IT, in the order changes arrived; None means the
-        #  beliefs holding at the pass's instant, which is what a reading is revised beside.
+        #  SOURCE TO WHAT STANDS BESIDE IT, in the order changes arrived — kept as it was handed, so a
+        #  source the budget cuts short is continued beside what it was begun beside; None means the
+        #  beliefs holding at the pass's instant, which is what a source re-queued at a restart is
+        #  revised beside, what it was handed being gone with the process.
         self.queue: dict[str, tuple | None] = {}
         for source in self._unsettled():
             self.queue[source] = None
         #  WHAT IT SAYS HAPPENED (`events.py`): `revised`, what a pass revised, for whoever is
-        #  interested in the present changing — the executor, whose steps the world answers there;
+        #  interested in the present changing — the executor, whose steps the world answers there,
+        #  and sensing, which writes the subject belief of each observation the rules judged;
         #  and, made only where heard, `revisions_held`, what the catalogue describes after it.
         self.revised = Signal("revised")
         self.revisions_held = Signal("revisions_held")

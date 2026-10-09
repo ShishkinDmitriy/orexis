@@ -25,7 +25,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
 * [series](/domain/kernel/series.md) - What a person watches and the agent never reads: history and metrics, both what the packages' events say, written by a part hearing every signal.
 
-# Sensing — bytes become observations
+# Sensing — bytes become observations, and observations subject beliefs
 
 * [scaling](/domain/sensing/scaling.md) - A rescale, a probe's count a moisture: two points the world states beside the sensor, applied by sensing's rule.
 * [sensing](/domain/sensing/sensing.md) - A transport's bytes become one observation per key, holding until the next is due; says when a sensor falls silent.
@@ -34,6 +34,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [calibration](/domain/sensing/calibration.md) - A correction within one unit, two points the world states beside the sensor, applied by sensing's rule after any scaling.
 * [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; the rules say which side a reading is on.
+* [subject belief](/domain/sensing/subject-belief.md) - What the agent holds of a subject for one property, its state and value in the domain's words; judged beside the one it replaces.
+* [margin](/domain/sensing/margin.md) - How far past a bound a value must go to leave the state a subject belief holds; on the operating range's condition.
 * [stuck](/domain/sensing/stuck.md) - A sensor reporting one number for a limit of its cadences is said stuck until a differing number ends it; the doubt beside age.
 * [observer](/domain/sensing/observer.md) - The role sensing serves, beneath the deliberator since sides are revisions; needs a sensor reporting to it.
 
@@ -101,6 +103,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Actuation — touching the world
 
 * [actuation](/domain/actuation/actuation.md) - Devices an agent holds change its subject; an action predicts the side, its command sizes the act when taken.
+* [soil](/domain/actuation/soil.md) - Climate's words for a subject's soil as believed: dry, moist or wet, and its moisture.
+* [air](/domain/actuation/air.md) - Climate's words for a subject's air as believed: cold, comfortable or hot, and its temperature.
 
 # Courier — a domain of documents
 

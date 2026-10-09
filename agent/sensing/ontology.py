@@ -5,15 +5,17 @@ THE VOCABULARY IS SOSA'S AND SSN'S, AND THIS LAYER'S WHERE THEY HAVE NONE. A sen
 key an observation is written under; how often it reports is its `ssn-system:Frequency`, and
 a range is SSN-System's. What this layer declares is in `ontology.ttl` beside this file — the
 graph an observation is kept in and a forecast's, the silence, the three sides its rules
-conclude, and the pipeline's concepts: a codec, the binding of a sensor to one, the JSON member
+conclude, the subject belief — its graph, the state an observation is judged in, the words a
+domain says it in and the margin a range holds it by — and the pipeline's concepts: a codec, the
+binding of a sensor to one, the JSON member
 that ships, the pointer and the two a series is read by, the number a sensor gave, and the
 scaling and calibration the rules make a quantity of it by — and nothing of the 0.1.0 packages' own: what an agent polled, what a sensor monitored or sampled,
 a device's sense mode and a drift's horizons were SSN restated or read by nothing, and 0.2.0
 speaks none of them. The drift is the prediction package's. Not one word of any transport.
 
-THE NAMES ARE FOR EYES. An observation's graph, a silence's and a stuck sensor's are spelled here for the
-writer, from the one identifier a process is handed and the key an observation is written
-under; every reader asks the catalogue by class and by pattern, and renaming one here would
+THE NAMES ARE FOR EYES. An observation's graph, a silence's, a stuck sensor's and a subject belief's
+are spelled here for the writer, from the one identifier a process is handed and the key each is
+written under; every reader asks the catalogue by class and by pattern, and renaming one here would
 change nothing a reader sees.
 """
 
@@ -37,6 +39,17 @@ UNCHANGED_SINCE = SENSING + "unchangedSince"
 BELOW = SENSING + "below"
 INSIDE = SENSING + "inside"
 ABOVE = SENSING + "above"
+
+#  THE SUBJECT BELIEF'S: the graph it is held in, the state an observation is judged in, the words a
+#  domain says it in, and the margin a range holds a state by.
+SUBJECT_BELIEF_GRAPH = SENSING + "SubjectBeliefGraph"
+JUDGED = SENSING + "judged"
+VALUE_AS = SENSING + "valueAs"
+STATE_AS = SENSING + "stateAs"
+BELOW_AS = SENSING + "belowAs"
+INSIDE_AS = SENSING + "insideAs"
+ABOVE_AS = SENSING + "aboveAs"
+MARGIN = SENSING + "margin"
 
 #  THE PIPELINE'S: the codec family, a sensor's binding to a member, the member that ships, the
 #  pointers, the number a sensor gave, and the scaling and calibration the rules make a quantity of it by.
@@ -83,6 +96,11 @@ def observation_graph(agent_id: str, sensor: str) -> str:
 def earlier_graph(agent_id: str, sensor: str, n: int) -> str:
     """Where the `n`th reading a message carries from before its latest stands, until the next."""
     return f"{GRAPH_PREFIX}observed/{agent_id}/{slug(sensor)}_earlier_{n}"
+
+
+def subject_belief_graph(agent_id: str, subject: str, observed_property: str) -> str:
+    """Where what the agent holds true of `subject` for one property stands, until the next replaces it."""
+    return f"{GRAPH_PREFIX}believed/{agent_id}/{slug(subject)}_{slug(observed_property)}"
 
 
 def silent_graph(agent_id: str, sensor: str) -> str:

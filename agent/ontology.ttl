@@ -109,7 +109,7 @@ orexis:StateGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph , orexis:Graph ;
     rdfs:label "State graph" ;
-    rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing writes observations into it, RECEIVED, since a reading is an instrument's word rather than this agent's). It was `orexis:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. What sensors read — a belief graph whose content RECEIVED, since a reading is an instrument's word rather than this agent's. Measurement only; never a judgment. NOT public: an agent's readings are its own." .
+    rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing writes observations into it, RECEIVED, since a reading is an instrument's word rather than this agent's; and of them it writes the subject beliefs, DERIVED, and says a sensor silent or stuck). It was `orexis:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. A graph of this kind the agent DERIVED is a conclusion it keeps about the present, and the belief package reads it beside every graph it revises. NOT public: an agent's readings are its own." .
 
 orexis:WorkingGraph
     a owl:Class ;

@@ -476,8 +476,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A rule concludes and never deletes, and what replaces a revision is its source rewritten** —
   the revisions live in a graph derived from the source and go when it goes; the rules are SHACL's
   draft adopted as it stands (`agent/belief/revise.py`).
-- **A graph is revised beside what the world states and nothing else** — revised beside everything
-  believed, the first of two readings took the second's side.
+- **A graph is revised beside what the world states and the state the agent derived, and never beside
+  another testimony** — revised beside everything believed, the first of two readings took the
+  second's side; a subject belief is what the next reading of its key is judged beside (#944).
+- **A conclusion a rule shares with a graph it reads is no inference, so a judgment that replaces
+  what it reads is concluded about something else and replaced by a writer** — the state a reading
+  is judged in sits on the observation, and sensing writes the subject belief of it (#944).
 - **Any belief is accepted, and revised** — dropping testimony over a shape is a gate wearing
   revision's name; **a state that served a gate goes with the gate**.
 - **Revision's ceiling is a budget in rule executions, and a source the budget cuts short is
@@ -961,7 +965,8 @@ hand-rolled walk was once refused for exactly that reason. See
   bound zero, measured in #642 — cast a factor that may be zero to `xsd:double`), so a
   column computed that way reads empty for every row and no query errors, no test goes red.
   And `a / b * c` is evaluated as `a / (b * c)` — measured, `0.02 / 0.375 * 1000000` gave
-  five hundred-millionths — so parenthesise every chain of two operators. And `GROUP_CONCAT`
+  five hundred-millionths — and `a - b + c` as `a - (b + c)`, `10 - 2 - 3` giving 11 on 0.5.11 (#944),
+  so parenthesise every chain of two operators. And `GROUP_CONCAT`
   over an IRI binds nothing — no column at all, measured — where `GROUP_CONCAT(STR(?x))`
   binds; `find_wants` reads a want's several abouts that way and `test_wants.py` pins it. And a
   `SUM(IF(?o = "failed", 1, 0))` over a row whose `?o` is unbound binds nothing for the WHOLE

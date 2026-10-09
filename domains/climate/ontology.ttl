@@ -3,6 +3,7 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
@@ -14,7 +15,8 @@
 #  its water comes from, how its soil dries and how rain wets it while nobody waters it (drifts.ttl),
 #  and a heater that warms its air, taken through the heating
 #  (actions.ttl). The ranges a subject should be in are SSN-System's, stated by a world; the side
-#  a reading is on is a revision sensing's rules conclude. It was two 0.1.0 packages, water and
+#  a reading is on is a revision sensing's rules conclude, and what is believed of a subject's soil
+#  and air is said in this domain's words, below. It was two 0.1.0 packages, water and
 #  climate; the market good, the bands and the revisable conversion stayed behind, since the
 #  market waits, a band is a side now and 0.2.0 revises no setting. The vent, what it opens onto
 #  and the air's drift toward the outside wait until an agent can listen to a feature it does not
@@ -23,14 +25,48 @@
 #################  What is observed, and where water comes from  #################
 
 :SoilMoisture a sosa:ObservableProperty ; rdfs:label "Soil moisture" ;
-    rdfs:comment "How wet the soil is, as a fraction of saturation." .
+    rdfs:comment "How wet the soil is, as a fraction of saturation." ;
+    sensing:valueAs :moisture ; sensing:stateAs :soil ;
+    sensing:belowAs :Dry ; sensing:insideAs :Moist ; sensing:aboveAs :Wet .
 :AirTemperature a sosa:ObservableProperty ; rdfs:label "Air temperature" ;
-    rdfs:comment "In degrees Celsius." .
+    rdfs:comment "In degrees Celsius." ;
+    sensing:valueAs :temperature ; sensing:stateAs :air ;
+    sensing:belowAs :Cold ; sensing:insideAs :Comfortable ; sensing:aboveAs :Hot .
 :AirHumidity a sosa:ObservableProperty ; rdfs:label "Air humidity" ;
     rdfs:comment "Relative humidity, as a fraction." .
 :AirPressure a sosa:ObservableProperty ; rdfs:label "Air pressure" .
 :Precipitation a sosa:ObservableProperty ; rdfs:label "Precipitation" ;
     rdfs:comment "Rain falling on a place, in millimetres an hour: what a forecast hour says, of the place a subject is contained in (schema:containedInPlace)." .
+
+#################  What is believed of a subject  #################
+
+#  THE SOIL AND THE AIR AS THE AGENT BELIEVES THEM (knowledge/domain/actuation/soil.md and air.md,
+#  #944): sensing makes of the latest observation of a subject's soil moisture, or of its air
+#  temperature, one subject belief in these words — its state, judged against the subject's operating
+#  range, and its value, the reading — and the two properties above say which word is which. Humidity,
+#  pressure and precipitation say none yet, and nothing is believed of them in this domain's words.
+
+:soil a owl:ObjectProperty ; rdfs:label "soil" ;
+    rdfs:comment "The state a subject's soil is believed in: dry, moist or wet, by where its moisture lies against the subject's operating range." .
+:moisture a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "moisture" ;
+    rdfs:comment "A subject's soil moisture as believed, a fraction of saturation: the reading its soil's state was judged of." .
+:Dry a owl:NamedIndividual ; rdfs:label "dry" ;
+    rdfs:comment "Soil believed under the floor of its subject's operating range." .
+:Moist a owl:NamedIndividual ; rdfs:label "moist" ;
+    rdfs:comment "Soil believed within its subject's operating range." .
+:Wet a owl:NamedIndividual ; rdfs:label "wet" ;
+    rdfs:comment "Soil believed over the ceiling of its subject's operating range." .
+
+:air a owl:ObjectProperty ; rdfs:label "air" ;
+    rdfs:comment "The state a subject's air is believed in: cold, comfortable or hot, by where its temperature lies against the subject's operating range." .
+:temperature a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "temperature" ;
+    rdfs:comment "A subject's air temperature as believed, in degrees Celsius: the reading its air's state was judged of." .
+:Cold a owl:NamedIndividual ; rdfs:label "cold" ;
+    rdfs:comment "Air believed under the floor of its subject's operating range." .
+:Comfortable a owl:NamedIndividual ; rdfs:label "comfortable" ;
+    rdfs:comment "Air believed within its subject's operating range." .
+:Hot a owl:NamedIndividual ; rdfs:label "hot" ;
+    rdfs:comment "Air believed over the ceiling of its subject's operating range." .
 
 :WaterSource a owl:Class ; rdfs:label "Water source" ;
     rdfs:comment "Where a dose draws from: a butt, a tank." .

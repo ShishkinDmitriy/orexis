@@ -1,0 +1,20 @@
+--- case
++++ expected
+@@ -75,7 +75,7 @@
+ }
+ 
+ GRAPH believed:bed_SoilMoisture {
+-  :bed :moisture 0.299 .
++  :bed :moisture 0.3001 .
+   :bed :soil :Dry .
+ }
+ 
+@@ -111,7 +111,7 @@
+   believed:bed_SoilMoisture a orexis:Graph .
+   believed:bed_SoilMoisture a orexis:StateGraph .
+   believed:bed_SoilMoisture a sensing:SubjectBeliefGraph .
+-  believed:bed_SoilMoisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:10:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:50:00+00:00"^^xsd:dateTime ] .
++  believed:bed_SoilMoisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:20:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+   believed:bed_SoilMoisture orexis:arrivedBy orexis:Derived .
+   believed:bed_SoilMoisture orexis:beliefsOf :keeper .
+ }

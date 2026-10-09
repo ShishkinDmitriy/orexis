@@ -11,9 +11,9 @@ description: >-
 
 # What it is
 
-A **revision** is a belief derived from beliefs: *this reading is Below*, *this pot is dry*,
-*this observation is a kind of sample*, concluded by a rule from what a graph says beside what
-stands. The rules are SHACL 1.2 Inference Rules' and no word of ours is added: a graph in the
+A **revision** is a belief derived from beliefs: *this reading is Below*, *this observation judges
+its pot dry*, *this observation is a kind of sample*, concluded by a rule from what a graph says
+beside what stands. The rules are SHACL 1.2 Inference Rules' and no word of ours is added: a graph in the
 role of a rules graph is typed `sh:RulesGraph`, which the belief package puts beneath
 `orexis:Graph` so that a boot reads it as a kind it knows; a package ships its rules as a `sh:RuleSet`,
 an IRI with `sh:hasRule` and `sh:includesRuleSet`; a rule is a `sh:SPARQLRule` with one
@@ -28,13 +28,18 @@ standing beside the source, the source itself, and what has been concluded of it
 Within a layer one iteration runs the run-once rules first, then the iterating rules are run
 again while an iteration concludes something new; within an iteration the rules run in order,
 and rules of one order see none of each other's inferences until they have all run. What is
-inferred is what the base graph does not already hold. The runtime hands public knowledge alone
-as what stands beside a graph it wrote — a reading, a prediction, a peer's document — because every
-rule shipped reads one graph and what the world states, and a revision is replaced only when its
+inferred is what the base graph does not already hold. The runtime hands public knowledge as what
+stands beside a graph it wrote — a reading, a prediction, a peer's document — and every state graph
+the agent DERIVED, whatever its period, and no other testimony: every rule shipped reads one graph,
+what the world states and what the agent has concluded of the present — the
+[subject belief](/domain/sensing/subject-belief.md) the next reading of its key is judged beside —
+and a revision is replaced only when its
 own source is written again, and goes when its source is forgotten (`forget_graph` takes
 `revisions_of` the graph with it): handed everything believed, the first of two readings arriving
 together took the second's side into its own revision, where the second's next reading never
-reached it. All of that is section 8 of the draft,
+reached it. Because a conclusion equal to a fact the evaluation graph holds is not inferred, a
+judgment that replaces a fact it reads is concluded about something else — the subject belief's
+is concluded on the observation — and the replacing is a writer's. All of that is section 8 of the draft,
 within a **budget** of rule executions, the unit revision spends, which the
 [deliberator](/domain/belief/deliberator.md) states per pass. A source the budget cuts short keeps what was concluded, its row saying the rules
 did not settle, and the next pass continues it; a rule minting new content every iteration,

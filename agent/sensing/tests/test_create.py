@@ -74,3 +74,28 @@ def test_where_heard_it_says_each_observation_with_its_interval_and_the_silence(
     assert heard[-2:] == [Silence(silent=0), Doubted(sensor="probe", silent=0, stuck=0)], "the doubt taken back, said once"
     ask()
     assert heard[-1] == Silence(silent=0), "and then nothing of a sensor nobody doubts"
+
+
+def test_linked_to_the_belief_part_it_believes_what_the_deliberator_revised(monkeypatch, snapshots, stand_in_runtime):
+    """Linked, the part hears the deliberator's `revised` and writes the subject belief of every
+    observation the rules judged — of the graphs the event names, and of nothing it does not; a graph
+    that is no observation is believed of nothing (knowledge/domain/sensing/subject-belief.md)."""
+    from types import SimpleNamespace
+
+    from agent.belief.events import Revised
+    from agent.lifecycle import Signal
+    from agent.sensing.ontology import SUBJECT_BELIEF_GRAPH
+
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(Path(__file__).parent / "worlds" / "a_bed_and_its_instruments.trig")
+    put_document(store, document(RULES))
+    runtime = stand_in_runtime(store, snapshots.ME, snapshots.NOW)
+    part = create(runtime)
+    revised = Signal("revised")
+    part.link({"belief": SimpleNamespace(deliberator=SimpleNamespace(revised=revised))})   # the belief part, as far as it is heard
+    (graph,) = received(store, snapshots.ME, "http://example.org/test#probe", b'{"value": 0.2}', snapshots.NOW)
+    revise(store, graph, read=graphs_of(store, PUBLIC))
+    assert revised.emit(Revised(("urn:test:nothing",))) == []
+    assert graphs_of(store, SUBJECT_BELIEF_GRAPH) == []
+    (written,) = revised.emit(Revised((graph,)))
+    assert graphs_of(store, SUBJECT_BELIEF_GRAPH) == [written]

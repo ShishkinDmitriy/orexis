@@ -5,7 +5,8 @@ term: http://example.org/orexis/sensing#ObservationGraph
 description: >-
   The translation row of the agent stack: a transport hands it an instrument's bytes, and it keeps
   the number they hold as the sensor's observation, in a graph per sensor that holds until the next
-  reading is due and a grace past it; its rules conclude what that number is an observation of and what quantity it is.
+  reading is due and a grace past it; its rules conclude what that number is an observation of and what quantity it is,
+  and it writes what the agent holds true of the observation's subject, replacing what it held.
   It says when a sensor has gone silent and when one is stuck on a number - it predicts nothing and
   names no transport. `agent/sensing/`.
 ---
@@ -36,6 +37,12 @@ does not decode writes nothing and says so in the log. A sensor reading a SERIES
 `sensing:endsPointer` or `sensing:startsPointer` beside its reading pointer - writes one
 [forecast](/domain/sensing/forecast.md) per stretch still ahead instead, and replaces its last.
 
+**`believe`** writes what the agent holds true of a subject: for every observation graph the
+[deliberator](/domain/belief/deliberator.md) says it revised and the rule judged, the
+[subject belief](/domain/sensing/subject-belief.md) of the key, in the domain's words, replacing the
+one before it whole. Sensing's part hears it there, by the deliberator's `revised`, so a revision a
+budget cut short is believed when a later pass finishes it.
+
 **`missed`** is what sensing's own `start` asks every minute of the timeline, whether or not anything
 arrived ([a-package-starts-itself](/decisions/a-package-starts-itself.md)): which sensors' readings have gone missing,
 past their grace with nothing arrived, for the container to ask again, and which have been silent past the agent's limit of
@@ -47,7 +54,8 @@ their cadences (`sensing:silentAfter`) — said by `sensing:silentSince` until a
 What the rules conclude is a [revision](/domain/belief/revision.md), run by the
 [deliberator](/domain/belief/deliberator.md) when the container says a graph changed: layers 0 and 1
 what an observation is of and its reading, layer 2 which side of a [region](/domain/sensing/region.md) the
-reading is on — `sensing:below`, `sensing:inside` or `sensing:above`. That is why an
+reading is on — `sensing:below`, `sensing:inside` or `sensing:above` — and the state its subject is
+judged in, `sensing:judged`, beside the subject belief it replaces. That is why an
 [observer](/domain/sensing/observer.md) is a deliberator too, and belief's part, first in a pass, hears a
 graph written before any other part, so sensing's own `Observed` and the prediction find it concluded. When the reading will change range is the
 [prediction](/domain/prediction/prediction.md) package's. How the bytes arrived is the
@@ -59,5 +67,7 @@ one, so the contract points one way.
 SOSA's and SSN's wherever they have one — a sensor `sosa:observes` a property and
 `sosa:isHostedBy` what it is mounted in, and that pair is the key — and its own for what neither
 standard says: the observation graph's kind and the forecast's, the silence, the three sides, the
+subject belief's kind, the state judged and the five words a domain says a subject belief in, the
+[margin](/domain/sensing/margin.md), the
 pipeline's binding and the two pointers a series is read by, the number a sensor gave and the quantity
 scaled from it, and the two-point scaling and calibration with their points.

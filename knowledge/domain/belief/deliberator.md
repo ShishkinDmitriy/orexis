@@ -25,8 +25,10 @@ is one, for the rules that conclude Hanoi's facts from the grid's.
 It owns a queue. Whoever writes a graph — sensing an observation, prediction a stretch, speech a
 peer's document, the executor a fictive step — says `changed(graph)`, and nothing happens then.
 `deliberate()` is the pass: it runs [revise](/domain/belief/revision.md) over each queued graph beside
-public knowledge, spending at most a budget of rule executions across all of them, and answers
-what it spent. The [runtime](/domain/kernel/runtime.md) calls it where a pass needs the conclusions:
+public knowledge and the state graphs the agent derived, spending at most a budget of rule executions
+across all of them, and answers what it spent; and says by `revised` which graphs it revised, which
+the executor hears to walk and sensing to write each [subject belief](/domain/sensing/subject-belief.md)
+the rules judged. The [runtime](/domain/kernel/runtime.md) calls it where a pass needs the conclusions:
 after what the transport delivered, before the planner.
 
 A graph whose rules settled leaves the queue. One the budget cut short stays, its revision

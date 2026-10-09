@@ -27,7 +27,23 @@
 #  its binary error (1.100000000000000128) unless rounded after the cast.
 #
 #  LAYER 2, WHICH SIDE of each of its subject's ranges an observation's reading lies on — over what
-#  layer 1 concluded, and over a predicted observation, which the prediction writes whole.
+#  layer 1 concluded, and over a predicted observation, which the prediction writes whole. The sides
+#  are the bare comparison of one reading with the bounds, and remember nothing.
+#
+#  AND, BESIDE THEM, THE STATE ITS SUBJECT IS JUDGED IN (knowledge/domain/sensing/subject-belief.md,
+#  #944): one rule for every range and every property, reading the observation's reading, the
+#  subject's operating range for the property, the margin its condition states, the words the
+#  property's domain names the states in, and the subject belief it will replace — which the
+#  deliberator hands beside the observation, as a conclusion the agent drew of the present. The
+#  subject belief is the memory: a subject believed below stays below until the reading reaches the
+#  floor and the margin, one believed above until it falls to the ceiling less it, and any other
+#  crosses at the bound; no margin stated is nought, coalesced, and no subject belief before — the
+#  first reading — is the bare bounds. The judgment is concluded on the OBSERVATION, never as the
+#  subject's state: a conclusion the rule shares with a graph it reads is no inference (`revise`),
+#  and the state judged is most often the state believed before. `believe` writes the subject belief
+#  of it. Only of a number a sensor gave (`sensing:rawResult`), so a predicted number is judged into
+#  nothing here; a prediction that carries the observation in hand forward whole carries its judgment
+#  with it, and judged again beside the subject belief that judgment made, it comes to the same state.
 
 :observation a sh:RuleSet ;
     rdfs:label "what an observation is of, its quantity, and its reading" ;
@@ -136,4 +152,26 @@
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:maxValue ?high .
             FILTER(?value > ?high)
+        }""" .
+
+:beliefs a sh:RuleSet ;
+    rdfs:label "the state an observation's subject is judged in, held by the subject belief it replaces" ;
+    sh:hasRule :judgedRule .
+
+:judgedRule a sh:SPARQLRule ;
+    sh:layer 2 ;
+    rdfs:label "below, inside or above the operating range, in the domain's words, a held state left past the margin" ;
+    sh:construct """
+        CONSTRUCT { ?obs sensing:judged ?state } WHERE {
+            ?obs a sosa:Observation ; sensing:rawResult ?raw ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
+            ?obs sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
+            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty ?property ; schema:minValue ?low ; schema:maxValue ?high .
+            ?property sensing:stateAs ?stateAs ; sensing:belowAs ?below ; sensing:insideAs ?inside ; sensing:aboveAs ?above .
+            OPTIONAL { ?condition sensing:margin ?stated }
+            OPTIONAL { ?subject ?stateAs ?before }
+            BIND(COALESCE(?stated, 0) AS ?margin)
+            BIND(IF(?value < ?low || (BOUND(?before) && sameTerm(?before, ?below) && ?value < ?low + ?margin), ?below,
+                 IF(?value > ?high || (BOUND(?before) && sameTerm(?before, ?above) && ?value > ?high - ?margin), ?above,
+                    ?inside)) AS ?state)
         }""" .

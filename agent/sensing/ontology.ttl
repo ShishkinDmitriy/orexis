@@ -2,7 +2,9 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix belief: <http://example.org/orexis/belief#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -16,16 +18,19 @@
 #  and how often it reports is its ssn-system:Frequency; a range is SSN-System's, stated by the
 #  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph an
 #  observation is kept in, the silence of a sensor that has stopped reporting, the three sides
-#  this layer's rules conclude, and the pipeline's own concepts, since neither standard says how
+#  this layer's rules conclude, the subject belief made of an observation with the words a domain
+#  says it in and the margin a range holds it by, and the pipeline's own concepts, since neither
+#  standard says how
 #  bytes become a number: a codec, the binding of a sensor to one, the member that ships, and the
 #  pointer; and how a number becomes a quantity, which is a scaling and a calibration the world states,
 #  and the rules. Sensing is the translation row of the agent stack and
 #  nothing above it: a transport hands it bytes, it makes a number of them and writes one
 #  sosa:Observation holding until the next is due and a grace past it, and on the container's tick it says which
 #  readings are missing and which sensors have gone silent. It predicts nothing — that is the
-#  prediction package's — and concludes nothing itself: the sides are revisions, concluded by the
-#  three rules this layer ships (rules.ttl beside this file) and run by the deliberator over
-#  the present. No word of any transport is spoken here.
+#  prediction package's — and judges nothing itself: the sides and the state an observation's
+#  subject is judged in are revisions, concluded by the rules this layer ships (rules.ttl beside
+#  this file) and run by the deliberator over the present; what sensing writes of a judgment is the
+#  subject belief, replacing the one before. No word of any transport is spoken here.
 
 #  THE ROLE THIS LAYER SERVES (knowledge/domain/sensing/observer.md): an agent declared an observer
 #  runs sensing's part, and the boot loads this layer for it and for nothing else. BENEATH THE
@@ -259,3 +264,78 @@
     rdfs:domain sosa:Observation ;
     rdfs:label "above" ;
     rdfs:comment "The observation's result lies over the ceiling of this range." .
+
+#  THE SUBJECT BELIEF (knowledge/domain/sensing/subject-belief.md, #944): what the agent holds true
+#  of a subject for one observable property, in the words of the domain that owns the property — the
+#  bed is dry, its moisture 0.3001. The domain says on the property which of its words carry the
+#  value and the state, and which state each side of the subject's operating range is; this layer's
+#  one rule judges an observation into a state beside the subject belief it replaces, holding that
+#  state by the range's margin (knowledge/domain/sensing/margin.md); and `believe` writes the subject
+#  belief of the judgment, replacing the one before whole. A property whose domain says nothing gets
+#  none, and a survival range is judged into none: nothing in the mind reads it.
+
+:SubjectBeliefGraph a owl:Class ;
+    rdfs:subClassOf orexis:StateGraph ;
+    rdfs:label "Subject belief graph" ;
+    rdfs:comment """One graph per subject and observable property, holding its subject belief: two
+    triples about the subject in its domain's words, its state and its value. Named for what it
+    holds. Written by `believe` of the state an observation is judged in, holding over that
+    observation's period, the agent's own and derived, and replaced whole by the next — never
+    re-derived from an observation alone, since one of its premises is the subject belief it
+    replaced. Beneath orexis:StateGraph, the state a met-test reads.""" .
+
+:valueAs a owl:ObjectProperty ;
+    rdfs:domain sosa:ObservableProperty ;
+    rdfs:range rdf:Property ;
+    rdfs:label "value as" ;
+    rdfs:comment """The predicate a subject's value of this property is believed in, stated by the
+    domain that owns the property; the value is the reading of the observation the subject belief
+    was made of.""" .
+
+:stateAs a owl:ObjectProperty ;
+    rdfs:domain sosa:ObservableProperty ;
+    rdfs:range rdf:Property ;
+    rdfs:label "state as" ;
+    rdfs:comment """The predicate a subject's state for this property is believed in, stated by the
+    domain that owns the property; what the rule judging an observation reads the state before
+    in.""" .
+
+:belowAs a owl:ObjectProperty ;
+    rdfs:domain sosa:ObservableProperty ;
+    rdfs:label "below as" ;
+    rdfs:comment "The state a subject is in for this property when judged under the floor of its operating range." .
+
+:insideAs a owl:ObjectProperty ;
+    rdfs:domain sosa:ObservableProperty ;
+    rdfs:label "inside as" ;
+    rdfs:comment "The state a subject is in for this property when judged within its operating range." .
+
+:aboveAs a owl:ObjectProperty ;
+    rdfs:domain sosa:ObservableProperty ;
+    rdfs:label "above as" ;
+    rdfs:comment "The state a subject is in for this property when judged over the ceiling of its operating range." .
+
+:judged a owl:ObjectProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:label "judged" ;
+    rdfs:comment """The state an observation's subject is judged in for the property observed, as the
+    property's domain names it: under the floor of the subject's operating range, within it, or over
+    its ceiling — a value coming from another state crossing at the bound itself, and a state the
+    subject belief before holds left only past the range's margin. Concluded by this layer's one
+    rule as a revision, of a number a sensor gave, beside the subject belief it will replace; what
+    `believe` makes the next subject belief of. On the observation and not the subject, because a
+    conclusion the rule shares with a graph it reads is no inference, and the state judged is often
+    the state before.""" .
+
+:margin a owl:DatatypeProperty ;
+    rdfs:domain ssn-system:Condition ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "margin" ;
+    rdfs:comment """How far past a bound of an operating range a value must go to leave the state a
+    subject belief holds: a subject believed below stays below until its value reaches the floor and
+    this, one believed above until its value falls to the ceiling less this, and a value coming from
+    another state crosses at the bound itself. One number for both ends, stated by the world on the
+    range's condition beside the bounds it widens and sized from the instrument's noise. Absent, nought,
+    and the state is the bare comparison with the bounds. Read by the rule judging an observation and
+    by nothing else; the sides ignore it. `orexis-onboard` refuses one that is no number, a negative
+    one, one of half the range's width or more, and one on a range with no name.""" .
