@@ -99,7 +99,8 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
   recursive least squares with the constant in the state, and proposing the figure to the
   sovereign as a range the corridor can take (#862); the estimate may be Gaussian, since it is a
   fit over history and never a belief, and the mind's own uncertainty stays an interval
-  ([a-prediction-accumulates-rates-between-happenings](/decisions/a-prediction-accumulates-rates-between-happenings.md)).
+  ([a-prediction-accumulates-rates-between-happenings](/decisions/a-prediction-accumulates-rates-between-happenings.md),
+  [a-belief-is-crisp-and-an-estimator-may-reason-with-probability](/decisions/a-belief-is-crisp-and-an-estimator-may-reason-with-probability.md)).
 - **Futures** — partly here already: a claim is held and presented within its own window (#625),
   so winning and acting are decoupled. A forward venue distinct from the spot round is not, and
   its seam is the claim's expiry ([authn-authz-capabilities](/decisions/authn-authz-capabilities.md)).
