@@ -18,7 +18,10 @@ description: >-
 
 `ssn-system:hasOperatingRange` for where the subject does well, `ssn-system:hasSurvivalRange` for
 where it merely lives, each with the property it is about and two bounds. A world states them on
-the subject or on an instrument that watches it; nothing derives or picks one.
+the subject or on an instrument that watches it; nothing derives or picks one. A third kind, the
+[narrower range](/domain/kernel/narrower-range.md), sits inside the operating range by the noise of
+the reading, in the kernel's word: the rules and the prediction package read it as they read these
+two, and a desire reads it where it says its wants are reached.
 
 # What reads it
 

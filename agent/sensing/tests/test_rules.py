@@ -17,7 +17,7 @@ from agent.ontology import KNOWN
 from agent.belief.ontology import RULES_GRAPH
 from agent.sensing.ontology import ABOVE, BELOW, INSIDE
 from agent.sensing.received import received
-from agent.store import document, graphs_of, put_document, rows
+from agent.store import NAMESPACES, document, graphs_of, put_document, rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 RULES = Path(__file__).parents[1] / "rules.ttl"
@@ -82,3 +82,22 @@ def test_a_samples_observation_is_judged_by_its_subjects_ranges(monkeypatch, sna
     (of,) = rows(world, "SELECT ?f WHERE { GRAPH $g { ?o sosa:hasFeatureOfInterest ?f } }", (), g=graph + "/revisions")
     assert of["f"].endswith("#patch")
     assert ("below", "zamioculcas.operating") in _sides(world, graph)
+
+
+#  A NARROWER RANGE THE POT STATES inside its operating range of 0.1 to 0.3, put in the world's graph.
+_NARROWER_U = """INSERT DATA { GRAPH <http://example.org/test#world> {
+  <http://example.org/test#zamioculcas> orexis:hasNarrowerRange <http://example.org/test#zamioculcas.narrower> .
+  <http://example.org/test#zamioculcas.narrower> ssn-system:inCondition
+      [ ssn:forProperty <http://example.org/test#moisture> ; schema:minValue 0.12 ; schema:maxValue 0.28 ] } }"""
+
+
+@pytest.mark.parametrize("value, side", [(0.11, "below"), (0.2, "inside"), (0.29, "above")])
+def test_a_narrower_range_is_judged_by_the_same_rules_as_any_range(world, snapshots, value, side):
+    """#944. A range the pot states inside its operating range, `orexis:hasNarrowerRange`, has its side
+    concluded by the three rules every range has, of the reading alone: 0.11 is inside the operating
+    range and below the narrower one, 0.29 inside the one and above the other."""
+    world.update(_NARROWER_U, prefixes=NAMESPACES)
+    graph = _read(world, snapshots, PROBE, value)
+    sides = _sides(world, graph)
+    assert (side, "zamioculcas.narrower") in sides and ("inside", "zamioculcas.operating") in sides, sides
+    assert len({p for p, r in sides if r == "zamioculcas.narrower"}) == 1, sides

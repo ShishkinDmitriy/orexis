@@ -1,0 +1,75 @@
+# an_aversion_s_want_is_reached_by_a_shape
+#
+# AN AVERSION WITH A REACHING TEST (#944). The keeper's desire is authored as the avoided state — a
+# tank whose level is over ninety, through planning:unmetWhen — and says its wants are reached only
+# at eighty-five and under (`planning:reachedWhen`): the complement of a wider avoided state, said
+# positively, a shape as every reaching test is. tank1 reads ninety-two, so the aversion reads
+# unmet, and ONE want is minted for tank1 — carrying the reaching test, narrowed to tank1, under
+# planning:metWhen, and not the avoided state it was minted by. tank2, at forty, is in no trouble.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+
+GRAPH :ontology {
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+}
+
+GRAPH :desires {
+  :keeper planning:holds :keeper.not_overflowing .
+  :keeper.not_overflowing a planning:Desire .
+  :keeper.not_overflowing planning:reachedWhen :well_short_of_the_brim .
+  :keeper.not_overflowing planning:unmetWhen :overflowing .
+  :keeper.not_overflowing rdfs:label "no tank over the brim" .
+  :overflowing sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :level ?value . FILTER(?value > 90) }" .
+  :well_short_of_the_brim a sh:NodeShape .
+  :well_short_of_the_brim sh:property [ sh:maxInclusive 85 ; sh:path :level ] .
+  :well_short_of_the_brim sh:targetClass :Tank .
+}
+
+GRAPH :sensed {
+  :tank1 :level 92 .
+  :tank2 :level 40 .
+}
+
+GRAPH :scopes {
+  :drain planning:inScope :keeper.scope.1 .
+  :keeper.scope.1 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

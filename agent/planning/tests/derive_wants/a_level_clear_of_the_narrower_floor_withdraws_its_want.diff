@@ -1,0 +1,45 @@
+--- case
++++ expected
+@@ -45,16 +45,7 @@
+   :tank2 :temperature 20 .
+ }
+ 
+-GRAPH pursued:keeper.in_range.pursued.tank1.level {
+-  :keeper planning:holds :keeper.in_range.pursued.tank1.level .
+-  :keeper.in_range.pursued.tank1.level a planning:Want .
+-  :keeper.in_range.pursued.tank1.level planning:metWhen :keeper.in_range.pursued.tank1.level.met .
+-  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
+-  :keeper.in_range.pursued.tank1.level rdfs:label "pursued: every tank in range" .
+-  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
+-  :keeper.in_range.pursued.tank1.level.met sh:property [ planning:about :level ; sh:minInclusive 12 ; sh:path :level ] .
+-  :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
+-}
++
+ 
+ GRAPH :scopes {
+   :fill planning:inScope :keeper.scope.1 .
+@@ -83,8 +74,20 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
+-  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
+-  pursued:keeper.in_range.pursued.tank1.level a planning:WantGraph .
+-  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
+-  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:2f99030347c6c9390a1887a3aab46e6364a4fee8b2525ce5caeec3c19180aedf" .
++  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met true .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :tank1 :level 13 .
++  :tank1 :temperature 20 .
++  :tank2 :level 20 .
++  :tank2 :temperature 20 .
++}

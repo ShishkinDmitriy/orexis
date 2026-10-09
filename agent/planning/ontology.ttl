@@ -318,6 +318,14 @@ planning:metWhen
     rdfs:comment "The met-test: a SHACL node shape whose conformance says nothing is wanted here right now — met where every instance it targets conforms, and each violation an instance in trouble. Boolean by nature — it governs the outcome LABEL and a duty's discharge, never how hard to try. Never validated: compiled by `violation.report_select` into the select whose rows are its violations and run by `weigh` on the store's own engine over whichever world is judged. Its negative twin is `planning:unmetWhen`; a desire or a want carries one of the two, never both, and one carrying both is not judged at all (#892). NO DOMAIN: a desire, a want and a `planning:Constraint` all carry it, and a constraint carrying it is held to a shape that says what is POSSIBLE, not what is wanted — the same compiler, the same rows, a different modality. A domain naming the desire would have entailed that a constraint is one, which is the claim its page refuses." .
 
 
+planning:reachedWhen
+    a owl:ObjectProperty ;
+    rdfs:domain planning:Desire ;
+    rdfs:range sh:NodeShape ;
+    rdfs:label "reached when" ;
+    rdfs:comment """The test a want minted under this desire is REACHED by, where it is narrower than the one that mints it (#944): a SHACL node shape, which the derivation narrows to the want's instance and writes onto the want as ITS met-test, under `planning:metWhen`, in place of the desire's own. The hysteresis that keeps a reading near a bound from minting a want and withdrawing it on its noise, held by the want and by nothing else, both tests stateless: the desire's met-test mints where its range is left, as it always did; a standing want is weighed by this in the ground holding at its instant, implied while it reads unmet there, and reached, and withdrawn, only once it reads met — inside the narrower range the world states (`orexis:hasNarrowerRange`). Which side the agent was on is the want's existence. A desire stating none mints wants that carry its own met-test, exactly as before this word. A SHAPE, whichever polarity the desire mints by: an aversion's wants are reached by the complement of a wider avoided state, said positively, and a reaching test authored as an avoided state would want a word of its own, unbuilt (knowledge/domain/planning/reached.md).""" .
+
+
 planning:state
     a owl:ObjectProperty ;
     rdfs:domain planning:Want ;

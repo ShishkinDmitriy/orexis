@@ -27,7 +27,11 @@
 #  its binary error (1.100000000000000128) unless rounded after the cast.
 #
 #  LAYER 2, WHICH SIDE of each of its subject's ranges an observation's reading lies on — over what
-#  layer 1 concluded, and over a predicted observation, which the prediction writes whole.
+#  layer 1 concluded, and over a predicted observation, which the prediction writes whole. A range
+#  is SSN-System's two kinds and the narrower range a holder states inside its operating range
+#  (`orexis:hasNarrowerRange`), whose sides are concluded as the others' are: a rule with no memory,
+#  true of the reading alone, since what a narrower range is FOR is the hysteresis a desire's wants
+#  hold and never a side that remembers (a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
 
 :observation a sh:RuleSet ;
     rdfs:label "what an observation is of, its quantity, and its reading" ;
@@ -106,7 +110,7 @@
         CONSTRUCT { ?obs sensing:below ?range } WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
             ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
-            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
+            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange|orexis:hasNarrowerRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:minValue ?low .
             FILTER(?value < ?low)
@@ -119,7 +123,7 @@
         CONSTRUCT { ?obs sensing:inside ?range } WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
             ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
-            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
+            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange|orexis:hasNarrowerRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:minValue ?low ; schema:maxValue ?high .
             FILTER(?value >= ?low && ?value <= ?high)
@@ -132,7 +136,7 @@
         CONSTRUCT { ?obs sensing:above ?range } WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
             ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
-            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
+            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange|orexis:hasNarrowerRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:maxValue ?high .
             FILTER(?value > ?high)

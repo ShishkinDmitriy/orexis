@@ -1,0 +1,33 @@
+--- case
++++ expected
+@@ -83,8 +83,30 @@
+   :sensed a orexis:StateGraph .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:0ccc9743932eb7ffeca820a21a2acdaad6f9572193eb1e5d2e1134128863f8b4" .
++  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met true .
++  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:for :keeper.in_range.pursued.tank1.level .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:open true .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 11 ] .
++  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:weighs ground:2026-01-01T120000p0000 .
+   pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
+   pursued:keeper.in_range.pursued.tank1.level a planning:WantGraph .
+   pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
+   pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :tank1 :level 11 .
++  :tank1 :temperature 20 .
++  :tank2 :level 20 .
++  :tank2 :temperature 20 .
++}

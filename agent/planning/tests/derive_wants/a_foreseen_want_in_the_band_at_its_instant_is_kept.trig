@@ -1,0 +1,112 @@
+# a_foreseen_want_in_the_band_at_its_instant_is_kept
+#
+# THE HYSTERESIS AT A FORESEEN INSTANT (#944, #858). tank1's want was minted for half past twelve,
+# when a drift foresaw its level below the floor of ten there; the drift reads differently now and
+# foresees eleven at half past — back above the floor, short of the twelve the desire's wants are
+# reached at (`planning:reachedWhen`). The desire reads MET in every ground, so its weighings imply
+# nothing. The want is weighed where it always is, in the ground holding at ITS instant, half past,
+# by its own met-test, the narrower one: UNMET there, so it is KEPT, under its own stretch. A
+# forecast wavering about the floor on a reading's noise is a want minted once, not one per reading.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
+
+
+GRAPH :ontology {
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ planning:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
+  :in_range sh:targetClass :Tank .
+  :keeper planning:holds :keeper.in_range .
+  :keeper.in_range a planning:Desire .
+  :keeper.in_range planning:about :level .
+  :keeper.in_range planning:about :temperature .
+  :keeper.in_range planning:metWhen :in_range .
+  :keeper.in_range planning:reachedWhen :well_in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+  :well_in_range a sh:NodeShape .
+  :well_in_range sh:property [ planning:about :level ; sh:minInclusive 12 ; sh:path :level ] .
+  :well_in_range sh:property [ planning:about :temperature ; sh:maxInclusive 28 ; sh:path :temperature ] .
+  :well_in_range sh:targetClass :Tank .
+}
+
+GRAPH :sensed {
+  :tank1 :level 20 .
+  :tank1 :temperature 20 .
+  :tank2 :level 20 .
+  :tank2 :temperature 20 .
+}
+
+#  ELEVEN FROM HALF PAST: above the floor, short of the narrower one.
+GRAPH :predicted-0 {
+  :tank1 :level 11 .
+}
+
+GRAPH pursued:keeper.in_range.pursued.tank1.level {
+  :keeper planning:holds :keeper.in_range.pursued.tank1.level .
+  :keeper.in_range.pursued.tank1.level a planning:Want .
+  :keeper.in_range.pursued.tank1.level planning:metWhen :keeper.in_range.pursued.tank1.level.met .
+  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
+  :keeper.in_range.pursued.tank1.level rdfs:label "foreseen: every tank in range at 2026-01-01T12:30+00:00" .
+  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
+  :keeper.in_range.pursued.tank1.level.met sh:property [ planning:about :level ; sh:minInclusive 12 ; sh:path :level ] .
+  :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
+}
+
+GRAPH :scopes {
+  :fill planning:inScope :keeper.scope.1 .
+  :heat planning:inScope :keeper.scope.2 .
+  :keeper.scope.1 a planning:Scope .
+  :keeper.scope.2 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+  :temperature planning:inScope :keeper.scope.2 .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :predicted-0 a orexis:Graph .
+  :predicted-0 a orexis:PredictionGraph .
+  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+  :predicted-0 orexis:retracts "PREFIX : <http://example.org/test#> DELETE { GRAPH $state { :tank1 :level ?was } } WHERE { GRAPH $state { :tank1 :level ?was } }" .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
+  pursued:keeper.in_range.pursued.tank1.level a planning:WantGraph .
+  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
+}

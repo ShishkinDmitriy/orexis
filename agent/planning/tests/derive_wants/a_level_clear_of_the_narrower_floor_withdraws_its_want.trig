@@ -1,0 +1,100 @@
+# a_level_clear_of_the_narrower_floor_withdraws_its_want
+#
+# THE HYSTERESIS, THE HALF THAT LETS GO (#944). `a_level_back_above_the_floor_keeps_its_want` with
+# tank1's level at thirteen: clear of the narrower floor of twelve its desire's wants are reached
+# at. The want's own met-test reads MET in the present ground, nothing implies it any more, and it
+# is WITHDRAWN — graph, catalogue row and the weighing of it alike — exactly as a want is under a
+# desire with one test once its rows read met.
+#
+# The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+
+GRAPH :ontology {
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:property [ planning:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
+  :in_range sh:targetClass :Tank .
+  :keeper planning:holds :keeper.in_range .
+  :keeper.in_range a planning:Desire .
+  :keeper.in_range planning:about :level .
+  :keeper.in_range planning:about :temperature .
+  :keeper.in_range planning:metWhen :in_range .
+  :keeper.in_range planning:reachedWhen :well_in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+  :well_in_range a sh:NodeShape .
+  :well_in_range sh:property [ planning:about :level ; sh:minInclusive 12 ; sh:path :level ] .
+  :well_in_range sh:property [ planning:about :temperature ; sh:maxInclusive 28 ; sh:path :temperature ] .
+  :well_in_range sh:targetClass :Tank .
+}
+
+GRAPH :sensed {
+  :tank1 :level 13 .
+  :tank1 :temperature 20 .
+  :tank2 :level 20 .
+  :tank2 :temperature 20 .
+}
+
+GRAPH pursued:keeper.in_range.pursued.tank1.level {
+  :keeper planning:holds :keeper.in_range.pursued.tank1.level .
+  :keeper.in_range.pursued.tank1.level a planning:Want .
+  :keeper.in_range.pursued.tank1.level planning:metWhen :keeper.in_range.pursued.tank1.level.met .
+  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
+  :keeper.in_range.pursued.tank1.level rdfs:label "pursued: every tank in range" .
+  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
+  :keeper.in_range.pursued.tank1.level.met sh:property [ planning:about :level ; sh:minInclusive 12 ; sh:path :level ] .
+  :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
+}
+
+GRAPH :scopes {
+  :fill planning:inScope :keeper.scope.1 .
+  :heat planning:inScope :keeper.scope.2 .
+  :keeper.scope.1 a planning:Scope .
+  :keeper.scope.2 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+  :temperature planning:inScope :keeper.scope.2 .
+}
+
+# What each graph IS, and when it holds — said once each, beside the data.
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :scopes a orexis:Graph .
+  :scopes a orexis:WorkingGraph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:beliefsOf :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
+  pursued:keeper.in_range.pursued.tank1.level a planning:WantGraph .
+  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
+  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
+}

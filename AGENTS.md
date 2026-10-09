@@ -174,7 +174,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   and at each foreseen instant and mints a want per cluster of what the met-tests read unmet, in one
   function; `scope_actions` writes the scopes at boot.
 - **A want exists because its desire read unmet, so the same rows withdraw it** — against the whole
-  decomposition, present and foreseen; a want a plan is walking is kept whatever its desire reads.
+  decomposition, present and foreseen; a want a plan is walking is kept whatever its desire reads,
+  and one whose desire hands its wants a reaching test (`planning:reachedWhen`) is kept until that
+  reads met where the want is weighed — the hysteresis, held by the want's existence (#944, reached).
 - **A want is judged by its met-test, and nothing scores a world by degree** — the search sees no
   partial progress, and the met-test is the one judgment path.
 - **A met-test asked by band says it once per way of failing, and tests no topology** — a reading is

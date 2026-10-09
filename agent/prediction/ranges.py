@@ -1,13 +1,18 @@
-"""The ranges that apply to what a sensor observes, in SSN-System's words — read by `predict`
-to place a crossing, and by the rules sensing ships to conclude a side. Nothing is
+"""The ranges that apply to what a sensor observes, in SSN-System's words and the kernel's — read
+by `predict` to place a crossing, and by the rules sensing ships to conclude a side. Nothing is
 minted: a range is what the world says, and what is answered is its two numbers.
 
 A range is stated by what hosts the sensor (`sosa:isHostedBy` — the subject, or a `sosa:Sample`
 of it, which stands for it), by what that host is a sample of, or by the sensor itself: an
 operating range or a survival range whose condition is for the property and states a floor and
-a ceiling. Both kinds are answered together, since a number crosses either, and the crossing
-needs nothing but the bounds — which range it is, and of which kind, stays in the store for
-whoever asks, and the rules bind the range themselves.
+a ceiling, or the narrower range one of them states inside its operating range
+(`orexis:hasNarrowerRange`). Every kind is answered together, since a number crosses any, and the
+crossing needs nothing but the bounds — which range it is, and of which kind, stays in the store
+for whoever asks, and the rules bind the range themselves. The narrower range's crossing is
+placed as the others' are because a side the rules conclude of a predicted number is only as true
+as the stretch it was written for: a stretch straddling a bound nobody placed writes one number
+for both sides of it, and a desire whose wants are reached inside the narrower range would read
+the foreseen ground across it by whichever end the number was taken at (#944).
 """
 
 from __future__ import annotations
@@ -18,7 +23,7 @@ from agent.store import graphs_of, remember, rows
 _BOUNDS_Q = """
 SELECT DISTINCT ?low ?high WHERE {
   $sensor (sosa:isHostedBy/(sosa:isSampleOf)?)? ?holder .
-  ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
+  ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange|orexis:hasNarrowerRange ?range .
   ?range ssn-system:inCondition ?condition .
   ?condition ssn:forProperty $property ; schema:minValue ?low ; schema:maxValue ?high }
 ORDER BY ?low ?high"""

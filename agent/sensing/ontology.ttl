@@ -14,7 +14,8 @@
 #  sensor sosa:observes a property and sosa:isHostedBy what it is mounted in — the feature of
 #  interest, or a sosa:Sample that sosa:isSampleOf one — its board reaches it by ssn:hasSubSystem,
 #  and how often it reports is its ssn-system:Frequency; a range is SSN-System's, stated by the
-#  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph an
+#  host, by what the host is a sample of, or by the sensor itself, or the narrower range one of
+#  them states inside it in the kernel's word, `orexis:hasNarrowerRange`. Declared here is the graph an
 #  observation is kept in, the silence of a sensor that has stopped reporting, the three sides
 #  this layer's rules conclude, and the pipeline's own concepts, since neither standard says how
 #  bytes become a number: a codec, the binding of a sensor to one, the member that ships, and the
@@ -246,9 +247,10 @@
     rdfs:label "below" ;
     rdfs:comment """The observation's result lies under the floor of this range — an
     ssn-system:OperatingRange or ssn-system:SurvivalRange stated for the observed property by what
-    hosts the sensor, by what that is a sample of, or by the sensor itself. Concluded by this
-    layer's rule as a revision, read by a desire's met-test, and written by an effect that predicts
-    a reading. One triple per observation and range; nothing is minted per subject.""" .
+    hosts the sensor, by what that is a sample of, or by the sensor itself, or a narrower range
+    any of them states inside one (`orexis:hasNarrowerRange`). Concluded by this layer's rule as a
+    revision, read by a desire's met-test, and written by an effect that predicts a reading. One
+    triple per observation and range; nothing is minted per subject.""" .
 
 :inside a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;
