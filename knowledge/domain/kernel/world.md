@@ -31,7 +31,8 @@ The file's NAME is for eyes; the kind in the document is what the loader reads, 
 graph of an agent's own is — `<> orexis:beliefsOf :fern_grower` beside its kind, or, in a self
 graph, the self it states — which is what the boot keeps its own by and `orexis-compose` mounts by
 ([self](/domain/kernel/self.md)). Eight ship:
-`hanoi`, `courier` and `tower` plan and exit; `dispatcher` drives two vans for good; `greenhouse`
+`hanoi` plans and exits, its plan published and walked by nobody; `courier` and `tower` plan, walk
+and exit; `dispatcher` drives two vans for good; `greenhouse`
 doses and heats; `allotment` trades water on a market; `sensing` and `terrace` observe.
 
 # Who reads which kind

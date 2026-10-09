@@ -48,8 +48,9 @@ The boot reads the kernel and the world, finds the agent and puts its self graph
 declared roles over `rdfs:subClassOf` — the steps the world's domains state, and each package's own,
 read off its ontology APART from the store — and loads exactly the packages whose ontology declares a
 role in that closure, its documents put in and its part created. A package's ontology never enters an
-agent's store to answer whether the package is needed: Hanoi's mover, a planner and an executor,
-holds no sensing, prediction, speech or belief document, as the #824 measurement found. A domain that
+agent's store to answer whether the package is needed: Hanoi's mover, a planner alone, holds no
+execution, sensing, prediction, speech or belief document, as the #824 measurement found for all
+but execution, which #928 took away. A domain that
 speaks a package's words, as climate's drifts speak prediction's, is read whether the package is
 loaded or not.
 

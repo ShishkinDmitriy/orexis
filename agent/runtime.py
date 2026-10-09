@@ -49,8 +49,9 @@ world passed over for a kind only such a package declares. There is no default s
 mind: an agent declaring no role loads nothing, said in the log, and `orexis-onboard` refuses it.
 A TRANSPORT IS NO ROLE: it is loaded where a loaded role needs bytes and the society wires a bus
 (`TRANSPORTS`) — the one derivation left, since which bus reaches a device is wiring. History and
-metrics are deployment's, read from the environment. Hanoi's mover is a planner and an executor,
-and loads planning and execution and nothing else — no belief, since its world ships no rules.
+metrics are deployment's, read from the environment. Hanoi's mover is a planner alone, and loads
+planning and nothing else — no execution, since its plan is its output, and no belief, since its
+world ships no rules (#928).
 
 **A VOLUME LIVED IN** — a store that already holds a catalogue — forgets every graph a document
 put in and nobody owns, and the closure, and reads the documents again: the kernel's, the
@@ -64,9 +65,11 @@ a role declared after birth reaches only a fresh volume, which is a seam the rec
 what its writes set off, then what is due — planning's pass, execution's walk, a transport's poll,
 sensing's ask — each a job a package asked for when it started. A listening transport holds the
 agent, and planning holds it while a desire is held or a want stands; planning lets go `met` when
-every want is reached and none is walked, and `unreachable` when some stand that nothing this agent
-holds reaches — so Hanoi's mover solves its tower and exits. Nothing here is threaded: a pass that
-moved nothing sleeps the poll before the next, unless a package asked to go again.
+every want is reached and none is walked, `planned` when every want standing has a plan published
+and no part the agent runs will walk one, and `unreachable` when some stand that nothing this agent
+holds reaches (`agent.lifecycle`) — so the courier delivers its parcel and exits `met`, and Hanoi's
+mover, a planner alone, publishes its plan and exits `planned`. Nothing here is threaded: a pass
+that moved nothing sleeps the poll before the next, unless a package asked to go again.
 
 **A PACKAGE HAS A PART, CREATED, LINKED AND STARTED (a-package-starts-itself,
 planning-and-execution-meet-at-the-store).** Every package the agent loads that has a `create`
@@ -107,7 +110,7 @@ import pyoxigraph as ox
 
 from agent import clock
 from agent import series
-from agent.lifecycle import MET, UNFINISHED, UNREACHABLE, Signal  # noqa: F401 — the outcomes, re-exported
+from agent.lifecycle import MET, PLANNED, UNFINISHED, UNREACHABLE, Signal  # noqa: F401 — the outcomes, re-exported
 from agent.metrics import Laps, Level, Value, window
 from agent.ontology import CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, ROLE, SELF_GRAPH
 from agent.store import (NAMESPACES, answer, catalogue_of, close_catalogue, closed, classify, document, forget_graph,
@@ -693,8 +696,8 @@ class Runtime:
             self.wrote(job() or ())
 
     def run(self, *, passes: int | None = None, poll_s: float = 1.0) -> str:
-        """Pass after pass until nobody holds the agent — ending as the last to let go said, `met`
-        or `unreachable` — or `passes` ran out (`unfinished`). A pass that moved nothing waits the
+        """Pass after pass until nobody holds the agent — ending as the last to let go said, `met`,
+        `planned` or `unreachable` — or `passes` ran out (`unfinished`). A pass that moved nothing waits the
         poll before the next, unless a package asked to go `again`."""
         n = 0
         while passes is None or n < passes:
@@ -795,7 +798,9 @@ def main(argv: list[str] | None = None) -> int:
         outcome = runtime.run(passes=args.passes)
     finally:
         runtime.stop()
-    return {MET: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
+    #  `planned` IS AN EXIT OF NOUGHT: an agent declared a planner and no executor has done all it
+    #  was declared for once a plan is published for every want, as one that walks them has once met.
+    return {MET: 0, PLANNED: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
 
 
 def _stopped(signum, frame) -> None:

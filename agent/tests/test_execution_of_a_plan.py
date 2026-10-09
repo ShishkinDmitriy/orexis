@@ -108,25 +108,27 @@ def test_a_world_that_does_not_move_fails_the_intention_after_the_patience(monke
 
 def test_an_agent_restarted_mid_plan_finds_its_intention_where_it_stood(tmp_path, monkeypatch, snapshots):
     """The intentions are a graph of the belief base, the agent's own (#842): a plan committed and
-    its head not yet taken, the process gone, and Hanoi booted again on the same volume — the
-    intention stands at the same step, and the executor would take it from there."""
+    its head not yet taken, the process gone, and the courier booted again on the same volume — the
+    intention stands at the same step, and the executor would take it from there. The courier's, an
+    executor, since Hanoi's mover is a planner alone and its store holds no word of execution's
+    (#928)."""
     import gc
 
     from agent.runtime import boot
 
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    world, volume = Path(__file__).resolve().parents[2] / "world" / "hanoi", str(tmp_path / "volume")
-    beliefs = boot(world, "hanoi", ox.Store(volume))
-    Planner(beliefs, "hanoi", budget=256).plan(snapshots.NOW)
+    world, volume = Path(__file__).resolve().parents[2] / "world" / "courier", str(tmp_path / "volume")
+    beliefs = boot(world, "courier", ox.Store(volume))
+    Planner(beliefs, "courier", budget=128).plan(snapshots.NOW)
     before = [(s.want, s.at) for s in _committed(beliefs)]
     assert len(before) == 1, "one plan, committed, its head not taken"
     del beliefs
     gc.collect()
-    again = boot(world, "hanoi", ox.Store(volume))
-    assert [(s.want, s.at) for s in Executor(again, "hanoi").standing()] == before
+    again = boot(world, "courier", ox.Store(volume))
+    assert [(s.want, s.at) for s in Executor(again, "courier").standing()] == before
 
 
 def _committed(beliefs):
-    x = Executor(beliefs, "hanoi")
+    x = Executor(beliefs, "courier")
     x.commit_plans()
     return x.standing()

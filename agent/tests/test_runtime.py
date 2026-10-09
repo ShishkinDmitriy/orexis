@@ -1,41 +1,102 @@
 """The runtime runs until nothing is left to pursue: an agent holding only wants stops when each
-is reached, and one holding a desire never does, since a desire asks at every instant."""
+is reached — or, where it walks no plan, when each has a plan published — and one holding a desire
+never does, since a desire asks at every instant."""
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
 from agent import clock
-from agent.runtime import UNFINISHED, Runtime, boot
+from agent.runtime import MET, PLANNED, UNFINISHED, Runtime, boot
+from agent.store import graphs_of
 
 ROOT = Path(__file__).resolve().parents[2]
 HANOI = ROOT / "world" / "hanoi"
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+EXECUTOR = "http://example.org/orexis/execution#Executor"
+PLAN = "http://example.org/orexis#PlanGraph"
 
 
-def _as_a_desire(tmp_path: Path) -> Path:
-    """Hanoi's world with its want authored as a DESIRE — the same met-test, held for ever."""
-    world = tmp_path / "hanoi_desired"
+def _hanoi(tmp_path: Path, *, desired: bool = False, walks: bool = False) -> Path:
+    """Hanoi's world, its mover a planner as shipped — and, `walks`, an executor beside, so the same
+    plan is walked to a solved tower; `desired`, its want authored as a DESIRE, the same met-test held
+    for ever."""
+    world = tmp_path / "hanoi"
     world.mkdir()
     domain = (ROOT / "domains" / "hanoi" / "ontology.ttl").as_uri()
     (world / "world.ttl").write_text((HANOI / "world.ttl").read_text().replace("<../../domains/hanoi/ontology.ttl>", f"<{domain}>"))
     (world / "state.ttl").write_text((HANOI / "state.ttl").read_text())
-    (world / "desires.ttl").write_text((HANOI / "wants.ttl").read_text()
-                                       .replace("planning:WantGraph", "planning:DesireGraph").replace("a planning:Want ;", "a planning:Desire ;"))
+    wants = (HANOI / "wants.ttl").read_text()
+    if desired:
+        (world / "desires.ttl").write_text(wants.replace("planning:WantGraph", "planning:DesireGraph")
+                                           .replace("a planning:Want ;", "a planning:Desire ;"))
+    else:
+        (world / "wants.ttl").write_text(wants)
+    self_graph = (HANOI / "beliefs" / "hanoi.self.ttl").read_text()
+    assert ":hanoi a orexis:Self , planning:Planner ." in self_graph, "the shipped mover is a planner alone"
     (world / "beliefs").mkdir()
-    (world / "beliefs" / "hanoi.self.ttl").write_text((HANOI / "beliefs" / "hanoi.self.ttl").read_text())
+    (world / "beliefs" / "hanoi.self.ttl").write_text(
+        self_graph.replace(":hanoi a orexis:Self , planning:Planner .", f":hanoi a orexis:Self , planning:Planner , <{EXECUTOR}> .")
+        if walks else self_graph)
     return world
 
 
-def test_an_agent_holding_a_desire_keeps_running_once_it_is_met(tmp_path, monkeypatch):
-    """The tower is solved, the want the desire minted is withdrawn — and the runtime does not
-    exit: a desire is universal, so the agent waits for the world to move."""
+def _ticking(monkeypatch) -> None:
     ticks = iter(range(1, 10_000))
     monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=next(ticks)))
-    runtime = Runtime(boot(_as_a_desire(tmp_path), "hanoi"), "hanoi", budget=64)
+
+
+@pytest.mark.parametrize("walks, ending", [(False, PLANNED), (True, MET)], ids=["a planner alone", "a planner and an executor"])
+def test_an_agent_holding_wants_alone_ends_planned_where_nothing_walks_its_plan_and_met_where_something_does(
+        tmp_path, monkeypatch, walks, ending):
+    """THE ENDING IS THE ROLES' (#928). One world, one want, one plan of seven moves: declared a
+    planner alone, the mover publishes it and lets go `planned`, the tower as posed; declared an
+    executor too, the same plan is adopted and walked, and the mover lets go `met` — never `planned`,
+    since the plan published is walked by something and the want stands until it is reached."""
+    _ticking(monkeypatch)
+    runtime = Runtime(boot(_hanoi(tmp_path, walks=walks), "hanoi"), "hanoi", budget=64)
+    assert runtime.run(passes=20, poll_s=0) == ending
+    assert ("execution" in runtime.parts) is walks
+    planner = runtime.parts["planning"].planner
+    if walks:
+        assert planner.standing() == [] and planner.walking() == set(), "reached, and nothing walked"
+    else:
+        assert len(graphs_of(runtime.beliefs, PLAN)) == 1 and set(planner.standing()) == planner.walking(), \
+            "the want stands, walked by the one plan published"
+
+
+def test_the_process_exits_nought_on_planned_as_on_met(monkeypatch):
+    """`planned` is the mover doing all it was declared for, so its container exits as one that met
+    its wants does, at the budget its stance sets."""
+    import signal
+
+    from agent import runtime as runtime_module
+
+    _ticking(monkeypatch)
+    monkeypatch.setattr(runtime_module.series, "load", lambda: ())     # no series, whatever the environment says
+    before = signal.getsignal(signal.SIGTERM)
+    try:
+        assert runtime_module.main([str(HANOI), "hanoi", "--passes", "20"]) == 0
+    finally:
+        signal.signal(signal.SIGTERM, before)
+
+
+@pytest.mark.parametrize("walks", [False, True], ids=["a planner alone", "a planner and an executor"])
+def test_an_agent_holding_a_desire_keeps_running(tmp_path, monkeypatch, walks):
+    """A desire is universal, so it holds the agent whatever its roles. Walked, the tower is solved and
+    the want the desire minted withdrawn, and the runtime waits for the world to move; planned alone,
+    the plan is published and nothing walks it, and the runtime still does not let go `planned`."""
+    _ticking(monkeypatch)
+    runtime = Runtime(boot(_hanoi(tmp_path, desired=True, walks=walks), "hanoi"), "hanoi", budget=64)
     assert runtime.run(passes=6, poll_s=0) == UNFINISHED
-    assert runtime.parts["planning"].planner.standing() == [] and runtime.parts["execution"].executor.walking() == [], "met, and waiting"
+    planner = runtime.parts["planning"].planner
+    if walks:
+        assert planner.standing() == [] and runtime.parts["execution"].executor.walking() == [], "met, and waiting"
+    else:
+        assert planner.standing() and set(planner.standing()) <= planner.walking(), "planned, and waiting"
 
 
 def test_a_graph_of_a_kind_the_agent_does_not_declare_is_passed_over(tmp_path):
@@ -44,7 +105,7 @@ def test_a_graph_of_a_kind_the_agent_does_not_declare_is_passed_over(tmp_path):
     neither its quads nor a row about it into the store, where it once went in as the agent's own."""
     import pyoxigraph as ox
 
-    world = _as_a_desire(tmp_path)
+    world = _hanoi(tmp_path, desired=True)
     (world / "elsewhere.ttl").write_text("<> a <http://example.org/elsewhere#SomeoneElsesGraph> .\n"
                                          "<http://example.org/elsewhere#pin> <http://example.org/elsewhere#gpio> 34 .\n")
     store = boot(world, "hanoi")

@@ -14,3 +14,10 @@
 #  courier's steps beneath it.
 
 :mover a orexis:Self , planning:Planner , execution:Executor , belief:Deliberator .
+
+#  WHAT ITS SEARCH MAY SPEND IN A PASS, a stance (knowledge/domain/kernel/stance.md).
+#  `tests/test_tower.py` walks two disks home with no budget of its own, reading this one; measured
+#  on that case, it walked at 128 and 256 and failed at 64 and at planning's 32, the moves' refined
+#  wants re-searched as their intentions failed one after another. The three disks as authored are
+#  not run by the gate.
+:mover planning:budget 256 .

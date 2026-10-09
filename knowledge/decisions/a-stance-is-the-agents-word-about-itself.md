@@ -54,9 +54,13 @@ through the pass's memo, as the limits were read before.
 **The flag is gone.** `--budget` is no longer an argument of the agent's process. `Runtime`,
 `Planner` and `Deliberator` still take a budget a caller hands them — a test sizing a search, as
 `revise` and `search` take theirs per call — and the process's `main` hands none, so a running agent
-spends what it states of itself. No shipped world states a stance yet, so every agent still runs its
-packages' constants, the dispatcher's search at 32 among them: which figure a world states is that
-world's change, held by its own tests, and not this one's.
+spends what it states of itself. No shipped world stated a stance when this was decided, so every
+agent still ran its packages' constants, the dispatcher's search at 32 among them: which figure a
+world states is that world's change, held by its own tests, and not this one's. #932 made it: the
+courier states a search's budget of 128, the dispatcher and the driver world's dispatcher 256, the
+tower's mover 256, each the figure its world's tests had handed the Planner, and those tests now hand
+none, so a figure stated too low fails the world's own case. The greenhouse states none, its
+searches passing at 32.
 
 **Per figure, by the test of [model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)
 and by whose word it is:**

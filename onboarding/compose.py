@@ -33,8 +33,9 @@ broker credential and its certificates. A world with no bus — Hanoi, the couri
 its agents alone, each told of its series stores and nothing else, which is all its runtime asks.
 
 **An agent that finishes is not restarted.** The runtime stops an agent that holds no desire and
-that no transport reaches once every want is reached — Hanoi's, the courier's, the tower's mover
-— and `unless-stopped` would start it again for ever, each time to find nothing and exit. Whether
+that no transport reaches once every want is reached — the courier's, the tower's mover — or, for
+one that is no executor, once every want has a plan published — Hanoi's — and `unless-stopped`
+would start it again for ever, each time to find nothing and exit. Whether
 an agent lasts is read per agent, off the agent booted from its documents (`reading.lasts`), and
 only an agent that does not is written `restart: "no"`.
 
@@ -174,8 +175,9 @@ def _restart(lasting: bool) -> str:
     to pursue and exit again, for as long as the policy allowed."""
     if lasting:
         return "restart: unless-stopped"
-    return ("# it holds no desire and no transport reaches it, so it exits once every want is reached,\n"
-            "    # or as unreachable — restarted, it would only exit again\n"
+    return ("# it holds no desire and no transport reaches it, so it exits once every want is reached —\n"
+            "    # or has a plan published, where it is no executor — or as unreachable; restarted, it\n"
+            "    # would only exit again\n"
             '    restart: "no"')
 
 

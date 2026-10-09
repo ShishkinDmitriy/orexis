@@ -356,8 +356,9 @@ the shipped pose, against the 674 the same coupled want cost before the estimate
 instances and counted the pick and the drop (a-parcel-astray-is-a-want-of-its-own): the joint want's
 estimate is the desire's sum, ten at the root and the plan's own cost, so every interleaving of the
 two five-step chains stands at ten on the frontier and is opened in turn, and the 80 candidates beyond
-the 148 worlds weighed are interleavings that reached a world already made. The default budget of 128
-cuts it short, so the world's tests state 256 and the corridor's 512. Twelve times the pass, for a
+the 148 worlds weighed are interleavings that reached a world already made. A budget of 128 cuts it
+short, so the tests stated 256 and the corridor's 512 — since #932 the dispatcher's self graph states
+the 256 and the corridor's its 512, and the tests hand none. Twelve times the pass, for a
 plan that is optimal for both parcels by construction where two plans apart could only be optimal
 each; the pass still ends inside a cadence.
 
@@ -431,8 +432,8 @@ the other's cell and opened none of the sixteen that hold two vans — the other
 passed over by hash as repeats of a refused one — and the plan is the one found before, since the
 colliding interleavings were never on the shortest path: ten candidates fewer, no step changed, and
 the walk now shares no cell by promise. On the shipped pose it refused nothing, because no world of
-it collides, so 228 stands and the default budget of 128 still does not suffice; neither did the
-corridor's 286 fall under 256, so the tests' budgets stand. **The parked van was the surprise.** The
+it collides, so 228 stands and a budget of 128 still does not suffice; neither did the
+corridor's 286 fall under 256, so the budgets stand. **The parked van was the surprise.** The
 record expected the seven-step route round; the one mind holding both vans found better twice over —
 with the parcel on the ground beside van B it delivers with van B, five steps and van A never moves,
 and with the parcel already aboard van A it moves van B aside first and drives through, four steps.
@@ -812,6 +813,34 @@ candidates, where the tree before ended `Exhausted` at 25 and the courier's wait
 cases weigh one candidate more, the wait, and answer differently: the rain filling an empty butt
 is waited for and then the tank filled, where the tree before had `NoCandidate`; the tank a
 prediction refills is met by the wait at a tenth, where the tree before filled it at one.
+
+# The driver: a pick and a drop asking for the driver aboard (2026-10-08, #931)
+
+`courier:Pick` and `courier:Drop` now hold a van the world names a driver for as the drive does
+([driver](/domain/courier/driver.md)). Measured on the development container, one pass of the
+Planner over the shipped `world/driver/` at budget 256, the tree before and this one alternated per
+round in one process, five rounds; the counts did not move between rounds.
+
+| case | candidates | weighings | plan | pass, median of five (min) |
+|---|---|---|---|---|
+| the driver, its own constraint held, the tree before | 191 | 133, each constraint in 133 | eleven steps | 2055 ms (1929) |
+| the same, the pick and the drop asking for the driver | 166 | 128, each constraint in 128 | the same eleven steps, estimate ten | 1705 ms (1529) |
+
+**The 25 candidates gone are acts nobody could take**: a van loaded or unloaded while the driver sat
+in the other, which the search admitted and no plan it returned used. The pass is a sixth shorter,
+every round of this tree faster than every round of the one before. Budget 128 still cuts it short.
+The courier's, the dispatcher's and the tower's worlds state no driver, and their tests hold their
+figures unchanged.
+
+**Walked apart, the two wants now fight over the driver longer, and never through a van it left.**
+With the driver's constraint taken out, twenty walks of the two plans side by side: fifteen ran B's
+boarding first, four intentions failed and fifteen acts were taken; five ran van A's drive first,
+five failed and sixteen acts. Both parcels arrived in all twenty, and every drive, pick and drop
+taken was with the van the driver was aboard. The tree before failed two or three on the way, as
+the #916 section says, but only because van A was loaded with the driver aboard van B, or a parcel
+set down from one van with the driver in the other — a pick or drop the drive's precondition would
+have refused. The walk now runs until no intention has stood for two passes running, since a want
+whose intention failed with nothing else standing is searched again only on the pass after.
 
 # Before Agent 0.2.0
 

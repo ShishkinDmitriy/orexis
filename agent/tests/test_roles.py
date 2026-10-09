@@ -220,9 +220,9 @@ print(json.dumps({"outcome": outcome, "loaded": list(runtime.packages), "held": 
 """
 
 
-def _planner_alone(tmp_path: Path) -> Path:
-    """Hanoi's world with its mover declared a planner and nothing else — what #928 will ship, here
-    run no pass, so the question is only what such a process imports."""
+def _walked(tmp_path: Path) -> Path:
+    """Hanoi's world with its mover declared an executor beside the planner it ships as — the same
+    plan, walked to a solved tower, so the two cases differ by the one role alone."""
     world = tmp_path / "hanoi"
     world.mkdir()
     hanoi = ROOT / "world" / "hanoi"
@@ -231,8 +231,11 @@ def _planner_alone(tmp_path: Path) -> Path:
     for name in ("state.ttl", "wants.ttl"):
         (world / name).write_text((hanoi / name).read_text())
     (world / "beliefs").mkdir()
-    (world / "beliefs" / "hanoi.self.ttl").write_text((hanoi / "beliefs" / "hanoi.self.ttl").read_text()
-                                                      .replace(" , execution:Executor", ""))
+    shipped = (hanoi / "beliefs" / "hanoi.self.ttl").read_text()
+    assert ":hanoi a orexis:Self , planning:Planner ." in shipped, "the shipped mover is a planner alone"
+    (world / "beliefs" / "hanoi.self.ttl").write_text(shipped.replace(
+        ":hanoi a orexis:Self , planning:Planner .",
+        ":hanoi a orexis:Self , planning:Planner , <http://example.org/orexis/execution#Executor> ."))
     return world
 
 
@@ -241,18 +244,19 @@ _TERMS = {"ontology"}
 
 
 @pytest.mark.parametrize("world, agent, passes, loaded, outcome", [
-    ("hanoi", "hanoi", 20, {"planning", "execution"}, "met"),
+    ("hanoi", "hanoi", 20, {"planning"}, "planned"),
+    (None, "hanoi", 20, {"planning", "execution"}, "met"),
     ("terrace", "terrace", 0, {"belief", "sensing", "prediction", MQTT, HTTP}, None),
     ("allotment", "fern_grower", 0, {"belief", "planning", "execution", "sensing", "prediction", "speech", MQTT}, None),
-    (None, "hanoi", 0, {"planning"}, None),
-], ids=["hanoi's planner and executor, run to met", "the terrace's observer and predictor",
-        "the allotment's fern grower, everything", "a planner that is no executor"])
+], ids=["hanoi's planner, run to planned", "hanoi's planner made an executor too, run to met",
+        "the terrace's observer and predictor", "the allotment's fern grower, everything"])
 def test_a_process_runs_the_parts_its_roles_call_for_and_no_other(tmp_path, world, agent, passes, loaded, outcome):
     """Each process boots and runs as its container would. A package its roles call for has its part
     imported; one they do not has none — at most its term module, imported by a package above it for
     the words it declares, as planning imports execution's. The fern grower loading everything is what
-    makes the others' absences a measurement and not a probe that sees nothing."""
-    where = _planner_alone(tmp_path) if world is None else ROOT / "world" / world
+    makes the others' absences a measurement and not a probe that sees nothing; and Hanoi's mover, run
+    as shipped and again declared an executor too, ends `planned` and `met` by that one role (#928)."""
+    where = _walked(tmp_path) if world is None else ROOT / "world" / world
     env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(ROOT), os.environ.get("PYTHONPATH", "")])}
     done = subprocess.run([sys.executable, "-c", _PROBE_SCRIPT, str(where), agent, str(passes)],
                           capture_output=True, text=True, env=env, cwd=ROOT, timeout=300)

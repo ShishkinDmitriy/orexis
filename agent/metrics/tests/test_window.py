@@ -1,7 +1,8 @@
 """The window: an event tallied in memory by what its class marks and written once a window, a level
 written as it last stood, every point at the flush's real instant — and nothing tallied or written
 where no metrics sink is loaded. What each package's figures ARE on a real run is held by the worlds'
-own tests, hanoi's, the greenhouse's and the terrace's."""
+own tests, hanoi's for a planner alone, the courier's for a plan walked, the greenhouse's and the
+terrace's."""
 
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ from agent.runtime import Runtime, boot, every_package
 from agent.series import METRICS, Sink, install
 
 AGENT = Path(__file__).resolve().parents[2]
-HANOI = AGENT.parent / "world" / "hanoi"
+COURIER = AGENT.parent / "world" / "courier"
 TOWER = AGENT.parent / "world" / "tower"
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 WALL = datetime(2030, 6, 1, 8, 0, tzinfo=timezone.utc)
@@ -194,11 +195,14 @@ def test_a_flush_reads_no_agent_clock(monkeypatch, written):
 
 
 def test_a_timing_never_reads_the_agents_clock(monkeypatch):
-    """COMPUTE TIME IS `perf_counter` AND THE WINDOW IS REAL. The same hanoi run, with a metrics sink
+    """COMPUTE TIME IS `perf_counter` AND THE WINDOW IS REAL. The same courier run, with a metrics sink
     flushing every pass and without one, on a clock that ticks per read as the allotment's does: the
-    clock is read as often either way and the tower is solved the same, so no timing, tally or flush
-    read the agent's timeline — where one had, the counts differ, and on a ticking clock the run
-    itself would too."""
+    clock is read as often either way and the run ends the same, so no timing, tally or flush read
+    the agent's timeline — where one had, the counts differ, and on a ticking clock the run itself
+    would too. The courier's, and no longer Hanoi's, since a planner that is no executor walks
+    nothing (#928): in twelve passes the plan is found, adopted and its first steps taken, so the
+    executor's tallies — the act, the landing, the intentions standing — are in it beside the
+    planner's."""
     def run(sink_loaded: bool) -> tuple[int, int, str]:
         reads = [0]
         def tick():
@@ -210,12 +214,13 @@ def test_a_timing_never_reads_the_agents_clock(monkeypatch):
             install(METRICS, Sink(METRICS, "m", lambda bucket, record: written.extend(record)))
             metrics.configure(interval_s=0)
         try:
-            outcome = Runtime(boot(HANOI, "hanoi"), "hanoi", budget=20).run(passes=12, poll_s=0)
+            outcome = Runtime(boot(COURIER, "courier"), "courier", budget=128).run(passes=12, poll_s=0)
         finally:
             install(METRICS, None)
-        return reads[0], len(written), outcome
+        return reads[0], len(written), outcome, {p["measurement"] for p in written}
     without, with_ = run(False), run(True)
     assert with_[1] > 0 and without[1] == 0, "the sink was loaded for one run and not the other"
+    assert {"search", "published", "intentions", "act", "landing"} <= with_[3], sorted(with_[3])
     assert (with_[0], with_[2]) == (without[0], without[2]), f"clock reads {with_[0]} with a sink, {without[0]} without"
 
 

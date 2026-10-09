@@ -41,7 +41,7 @@ def _pass(world: Path, readings: dict) -> tuple[int, int, dict]:
     present = sum(1 for _ in store)
     readings = graphs_of(store, STATE)
     state = sum(len(list(quads(store, g))) for g in [*readings, *revisions_of(store, *readings)])
-    planner = Planner(store, "grower", budget=128)
+    planner = Planner(store, "grower")
     planner.plan(NOW)
     out = {}
     for scope, im in planner.imaginaria.items():
@@ -165,7 +165,7 @@ def test_a_drift_outside_a_wants_scope_keeps_its_cone(monkeypatch, lit_greenhous
         return found["s"].rsplit("/", 1)[-1]
 
     heard: list = []
-    planner = Planner(store, "grower", budget=128)
+    planner = Planner(store, "grower")
     planner.rerooted.connect(lambda event: heard.append(event) or [])
     for sensor, value in {"thermometer": 21.0, "moisture_probe": 0.2, "light_sensor": 100}.items():
         deliver(sensor, value, NOW)

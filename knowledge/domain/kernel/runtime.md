@@ -5,7 +5,8 @@ description: >-
   The process of Agent 0.2.0: one agent, one world, booted from the world's files into a store
   whose catalogue says what every graph is, then run pass by pass — the planner's pass, then the
   executor walked until nothing is due — and stopped when no desire is held, no want stands and
-  no intention walks; an agent holding a desire runs for good. `agent/runtime.py`.
+  no intention walks, or, for a planner that is no executor, when every want standing has a plan
+  published; an agent holding a desire runs for good. `agent/runtime.py`.
 ---
 
 # Runtime
@@ -44,7 +45,7 @@ the first half, read with the kernel's and the world's documents alone; the agen
 [roles](/domain/kernel/role.md) are read off the self graph it put in, and the documents of each
 [package](/domain/kernel/package.md) a role calls for go in after, the closure taken again and any
 world graph passed over for a kind only such a package declares looked at a second time. Hanoi's
-mover, a planner and an executor, loads those two packages and nothing else. Then the world's other
+mover, a planner alone, loads planning and nothing else. Then the world's other
 graphs that say they are this agent's — the desires with their met-tests and estimates, the first
 state — owned by it; another agent's are passed over, and one naming nobody, or no agent of the
 world, is refused. The catalogue is closed and, for a planner, `scope_actions` writes the scopes. A
@@ -82,9 +83,14 @@ watches for good. Planning holds it while a desire is held or a want stands. A [
 pass with nothing to do waits for the world to move, and so does one whose wants nothing
 reaches, since the world may yet open a way. A want is one-shot: a pass that weighs one met in
 the present ground withdraws it, from the planner's imaginaria and from the beliefs, where a want
-a world authored lives. So an agent holding wants and no desire —
-[Hanoi](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md)'s mover, the courier —
-exits once every want is reached and no intention walks. Wants standing with nothing walking is
+a world authored lives. So an agent holding wants and no desire — the courier, the tower's mover —
+exits `met` once every want is reached and no intention walks. An agent that is a planner and no
+executor walks nothing, so a plan it publishes is as far as a want goes:
+[Hanoi](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md)'s mover exits `planned` once
+every want standing has a plan published, which `walking` would otherwise count as walked for ever
+— planning knows nothing will walk it because its part found no executor's to link to (#928).
+`planned` exits nought, as `met` does: the agent did all it was declared for. Wants standing with
+nothing walking or planned is
 one of two things, told apart by the plan's `planning:outcome`: a search the budget cut short,
 `planning:Exhausted`, which the next pass continues, or nothing this agent holds reaching the
 want, which such an agent exits as unreachable rather than looping on.
@@ -102,4 +108,4 @@ the present, to the transport reaching the device; the [greenhouse](/domain/kern
 and heater are taken so.
 
 **A world's tests live with the world.** `world/hanoi/tests/` boots the world from the files
-beside it and runs it to met.
+beside it and runs it to `planned`, held to the plan; `world/courier/tests/` runs its world to met.

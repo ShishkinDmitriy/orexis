@@ -56,7 +56,7 @@ def test_the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops(monkeypatc
     the drives-owed estimate guides — and walked a drive at a time, each landing half a minute
     after it is taken, so the run is passes until the last lands and the want is reached."""
     _ticking(monkeypatch)
-    runtime = Runtime(boot(WORLD, "courier"), "courier", budget=128)
+    runtime = Runtime(boot(WORLD, "courier"), "courier")
     assert runtime.run(poll_s=0) == MET
     assert _acts(runtime) == 8 and _parcel_at(runtime.beliefs) == ["c3_3"]
     assert runtime.run(poll_s=0) == MET and _acts(runtime) == 8, "met stays met, and nothing moves again"
@@ -68,13 +68,18 @@ def test_the_wants_estimate_at_the_present_never_exceeds_what_the_plan_cost(monk
     with a dearer plan than exists, and nothing in the suite held one to the promise before — the
     domain's comment stated it and eyes checked. The figure here is tight, eight against eight: three
     drives to the parcel, the pick, three drives to the door and the drop, each certain and each
-    counted once, where the drives alone read six."""
+    counted once, where the drives alone read six.
+
+    AND THE BUDGET THE COURIER STATES OF ITSELF IS ENOUGH (#932): the Planner is handed none, so it
+    reads `planning:budget` off the self graph, and the plan is found in this one pass. The delivery
+    costs 45 candidates; stating nothing, the agent searches at planning's 32 and this pass ends
+    `Exhausted` with no plan to judge."""
     monkeypatch.setattr(clock, "now", lambda: NOW)
-    planner = Planner(boot(WORLD, "courier"), "courier", budget=128)
+    planner = Planner(boot(WORLD, "courier"), "courier")
     planner.plan(NOW)
     (im,) = planner.imaginaria.values()
     judged = [(float(r["left"]), float(r["spent"])) for r in rows(im, _ESTIMATE_AGAINST_COST_Q, ())]
-    assert len(judged) == 1, f"the one want, its estimate and its plan: {judged}"
+    assert len(judged) == 1, f"the one want, its estimate and its plan, in one pass at the budget the self states: {judged}"
     assert all(left <= spent for left, spent in judged), f"an estimate never overstates what the plan cost: {judged}"
     assert judged == [(8.0, 8.0)], f"and here it is tight: {judged}"
 
@@ -92,8 +97,58 @@ def test_a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after(mon
 def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeypatch):
     _ticking(monkeypatch)
     beliefs = boot(WORLD, "courier")
-    Runtime(beliefs, "courier", budget=128).run(poll_s=0)
+    Runtime(beliefs, "courier").run(poll_s=0)
     boot(WORLD, "courier", beliefs)                   # a restart on the same volume
     assert _parcel_at(beliefs) == ["c3_3"], "the delivered parcel is the agent's belief, not the file's"
     assert len(graphs_of(beliefs, STATE)) == 1
     assert graphs_of(beliefs, WANT) == [], "the want was reached and withdrawn, and a restart does not bring it back"
+
+
+def test_a_window_a_pass_writes_the_executors_levels_and_tallies_every_act_and_landing(monkeypatch):
+    """THE METRICS OF A WALKED PLAN, moved here from Hanoi's mover, which is a planner and no executor
+    and walks nothing (#928). A window a pass (#826, amended), on the run above: in the first, the plan
+    found and adopted — the imaginarium's forty-five worlds, one satisfied, and one intention standing;
+    across the run, eight acts taken, by the action each filled — six drives, the pick and the drop —
+    each landing within its band and none timed out, and the one intention done, so the last window
+    stands none. Neither sensing nor belief is loaded, so no silence and no revisions are said."""
+    from agent.metrics import window as metrics
+    from agent.runtime import world_name
+    from agent.series import METRICS, Sink, install
+
+    _ticking(monkeypatch)
+    writes = []
+    install(METRICS, Sink(METRICS, "courier-courier-metrics", lambda bucket, record: writes.append(list(record))))
+    metrics.configure(interval_s=0)
+    metrics.identify(world=world_name(WORLD), agent="courier")
+    try:
+        runtime = Runtime(boot(WORLD, "courier"), "courier", budget=128)
+        assert runtime.run(poll_s=0) == MET
+        runtime.stop()
+    finally:
+        install(METRICS, None)
+        metrics.reset()
+        metrics.identify()
+    windows = [w for w in writes if w]
+    first = {p["measurement"]: p for p in windows[0]}
+    assert {"pass", "planner", "imaginarium", "search", "published", "intentions", "act"} <= set(first), sorted(first)
+    assert first["imaginarium"]["fields"] == {"worlds": 45, "weighings": 46, "open": 14, "met": 1,
+                                              "satisfied": 1, "exhausted": 0, "no_candidate": 0}
+    assert first["intentions"]["fields"] == {"standing": 1}
+    every = [p for w in windows for p in w]
+    assert not {p["measurement"] for p in every} & {"silence", "revisions"}
+    by_action = {}
+    for p in every:
+        if p["measurement"] in ("act", "landing"):
+            tally = by_action.setdefault((p["measurement"], p["tags"]["action"]), {})
+            for k, v in p["fields"].items():
+                if not k.endswith(("_mean", "_max", "_sum")):
+                    tally[k] = tally.get(k, 0) + v
+    assert by_action == {("act", "Drive"): {"count": 6, "taken": 6}, ("act", "Pick"): {"count": 1, "taken": 1},
+                         ("act", "Drop"): {"count": 1, "taken": 1},
+                         ("landing", "Drive"): {"count": 6, "landed": 6, "timed_out": 0},
+                         ("landing", "Pick"): {"count": 1, "landed": 1, "timed_out": 0},
+                         ("landing", "Drop"): {"count": 1, "landed": 1, "timed_out": 0}}, by_action
+    ended = [(p["tags"]["outcome"], p["fields"]["count"]) for p in every if p["measurement"] == "intention"]
+    assert ended == [("done", 1)]
+    last = {p["measurement"]: p for p in windows[-1]}
+    assert last["intentions"]["fields"] == {"standing": 0}

@@ -56,12 +56,14 @@ def test_the_runtime_concludes_what_each_disk_is_on_from_where_it_stands(monkeyp
 def test_the_puzzle_is_planned_above_and_carried_out_by_the_van_below(monkeypatch):
     """The clock moves on five seconds at every read: a drive lands half a minute after it is taken
     (#901, `domains/courier/actions.ttl`), so each of the van's drives below a move is a pass or two
-    of waiting, and the passes are sized for three moves' worth of them."""
+    of waiting, and the passes are sized for three moves' worth of them. The runtime is handed no
+    budget: the mover's search spends what it states of itself, `planning:budget` in its self graph,
+    so this case holds that figure to the walk (#932) — at planning's 32, stated nowhere, it fails."""
     ticks = iter(range(1, 1_000_000))
     monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=5 * next(ticks)))
     beliefs = boot(WORLD, "mover")
     _two_disks(beliefs)
-    runtime = Runtime(beliefs, "mover", budget=256)
+    runtime = Runtime(beliefs, "mover")
     assert runtime.run(passes=120, poll_s=0) == MET
     at = {_local(r["x"]): _local(r["cell"]) for r in rows(runtime.beliefs, _AT_Q, ())
           if r["x"].startswith(TOWER)}

@@ -1211,7 +1211,8 @@ _FINISHING = {("courier", "courier"), ("hanoi", "hanoi"), ("tower", "mover")}
 
 def test_an_agent_that_finishes_is_not_restarted():
     """The runtime stops an agent holding no desire and reached by no transport once every want is
-    reached, so `unless-stopped` would boot it again for ever to find nothing and exit. Rendered for
+    reached — or, where it is no executor, has a plan published, as Hanoi's mover does (#928) — so
+    `unless-stopped` would boot it again for ever to find nothing and exit. Rendered for
     every world: `restart: "no"` for exactly those agents, and `unless-stopped` for every other —
     those holding a desire, and the sensing world's and the terrace's, which hold none and are kept
     running by their transport alone."""
