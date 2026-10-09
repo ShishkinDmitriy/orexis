@@ -49,9 +49,7 @@ observation, and no further: a package that declares no drift has claimed nothin
 
 - **Its side**, by [revision](/domain/belief/revision.md): sensing's rules conclude `below`, `inside`
   or `above` of a predicted observation exactly as of a real one, so a stretch reads as the side it
-  is and no width is ever added to a number. It is judged by its number alone: a predicted reading
-  carries no side for a [margin](/domain/sensing/margin.md) to hold, the model's number having no
-  instrument's noise, and a crossing is placed at the bare bound.
+  is and no width is ever added to a number.
 - **A ground per stretch**, by the [planner](/domain/planning/planner.md)'s `lay_ground`: the present,
   and the present with each prediction applied at its instant - a prediction is a diff, and only a
   ground has applied it. The derivation judges every desire in every ground, so a crossing

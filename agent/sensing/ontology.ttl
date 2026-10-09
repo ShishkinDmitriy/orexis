@@ -2,7 +2,6 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix belief: <http://example.org/orexis/belief#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
@@ -17,8 +16,7 @@
 #  and how often it reports is its ssn-system:Frequency; a range is SSN-System's, stated by the
 #  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph an
 #  observation is kept in, the silence of a sensor that has stopped reporting, the three sides
-#  this layer's rules conclude with the margin that holds one against the instrument's noise, and
-#  the pipeline's own concepts, since neither standard says how
+#  this layer's rules conclude, and the pipeline's own concepts, since neither standard says how
 #  bytes become a number: a codec, the binding of a sensor to one, the member that ships, and the
 #  pointer; and how a number becomes a quantity, which is a scaling and a calibration the world states,
 #  and the rules. Sensing is the translation row of the agent stack and
@@ -246,60 +244,18 @@
 :below a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;
     rdfs:label "below" ;
-    rdfs:comment """The subject is judged under the floor of this range — an ssn-system:OperatingRange
-    or ssn-system:SurvivalRange stated for the observed property by what hosts the sensor, by what
-    that is a sample of, or by the sensor itself: its result lies under the floor, or, where the
-    range states a margin (:margin) and the reading before was judged below (:wasBelow), short of
-    the floor and the margin. A judgment given the instrument's noise, not a bare comparison of one
-    number. Concluded by this layer's rule as a revision, read by a desire's met-test, and written
-    by an effect that predicts a reading. One triple per observation and range; nothing is minted
-    per subject.""" .
+    rdfs:comment """The observation's result lies under the floor of this range — an
+    ssn-system:OperatingRange or ssn-system:SurvivalRange stated for the observed property by what
+    hosts the sensor, by what that is a sample of, or by the sensor itself. Concluded by this
+    layer's rule as a revision, read by a desire's met-test, and written by an effect that predicts
+    a reading. One triple per observation and range; nothing is minted per subject.""" .
 
 :inside a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;
     rdfs:label "inside" ;
-    rdfs:comment """The subject is judged within this range: its result lies within the bounds,
-    included, and is neither below nor above the range as a margin and the side carried hold it.""" .
+    rdfs:comment "The observation's result lies within this range, its bounds included." .
 
 :above a owl:ObjectProperty ;
     rdfs:domain sosa:Observation ;
     rdfs:label "above" ;
-    rdfs:comment """The subject is judged over the ceiling of this range: its result lies over the
-    ceiling, or, where the range states a margin and the reading before was judged above
-    (:wasAbove), past the ceiling less the margin.""" .
-
-#  A RANGE'S MARGIN, AND THE SIDE AN OBSERVATION CARRIES (knowledge/domain/sensing/margin.md, #944).
-#  Hysteresis against an instrument's noise, which SSN-System's conditions have no word for, so this
-#  layer declares it: the world states the margin on a range's condition, `received` carries the
-#  side onto each reading, and the side rules read both. A predicted reading is the model's number
-#  and carries no instrument's noise, so nothing predicted reads a margin or carries a side; the
-#  doubt of a prediction is its corridor.
-
-:margin a owl:DatatypeProperty ;
-    rdfs:domain ssn-system:Condition ;
-    rdfs:range xsd:decimal ;
-    rdfs:label "margin" ;
-    rdfs:comment """How far past a bound of a range a reading must go to leave the side the reading
-    before it was judged on: one judged below stays below until it reaches the floor and this, one
-    judged above stays above until it falls to the ceiling less this, and one coming from inside
-    crosses at the bound itself. One number, the same at both ends, stated by the world on the
-    range's condition beside the bounds it widens, and sized from the instrument's noise — the
-    whole spread, twice what a reading strays either way. Absent, nought, and a side is the bare
-    comparison of the reading with the bounds. `orexis-onboard` refuses one that is negative, one of
-    half the range's width or more, and one on a range with no name.""" .
-
-:wasBelow a owl:ObjectProperty ;
-    rdfs:domain sosa:Observation ;
-    rdfs:label "was below" ;
-    rdfs:comment """The range the reading before this observation's was judged below, carried onto
-    the observation by `received` where the range states a margin (:margin), from what the rules
-    concluded of the observation it replaces. What the side rules read to hold a reading below until
-    it clears the floor and the margin: the memory hysteresis needs is on the observation, as the run
-    of an unchanged number is (:unchangedSince), and no rule keeps one.""" .
-
-:wasAbove a owl:ObjectProperty ;
-    rdfs:domain sosa:Observation ;
-    rdfs:label "was above" ;
-    rdfs:comment """As :wasBelow, at the ceiling: the range the reading before this observation's was
-    judged above, carried onto it where the range states a margin, so the side rules hold the reading
-    above until it falls to the ceiling less the margin.""" .
+    rdfs:comment "The observation's result lies over the ceiling of this range." .

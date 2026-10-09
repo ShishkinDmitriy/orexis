@@ -32,7 +32,7 @@ timestamp: 2026-10-09T12:00:00Z
 > a narrower range the world stated, so the sides stayed a bare comparison and the want's existence was
 > the memory. That was built, and the sovereign refused it the same day: planning works on crisp
 > triples and does not decide whether a value is inside a range — sensing does, so the hysteresis is
-> sensing's. A range's condition states ONE number, its [margin](/domain/sensing/margin.md)
+> sensing's. A range's condition states ONE number, its margin
 > (`sensing:margin`); a reading judged below stays below until it reaches the floor and the margin, one
 > judged above stays above until the ceiling less it, and one coming from inside crosses at the bound
 > itself. The memory that needs is the side the reading before was judged on, carried onto the new
@@ -112,7 +112,7 @@ carrying no side, and the rules judge it by its number alone. `sensing:margin`, 
 condition, and `sensing:wasBelow` and `sensing:wasAbove`, on an observation, are read by sensing's
 rules and `received`, and by onboarding, which refuses a margin its range cannot hold.
 
-What that costs, measured on the greenhouse at rest (`world/greenhouse/tests/test_hysteresis.py`): a
+What that costs, measured on the greenhouse at rest in #946's build: a
 reading held below inside the margin, 0.3001 against a floor of 0.30, is predicted inside while the
 present reads below. The want is minted by the present and kept by it; nothing the stretch ahead
 reads withdraws it or mints it again. The planner believes the stretch ahead: holding no pump, it
@@ -155,8 +155,8 @@ observation's side with a trigger kept in Python — a second judge of a side th
 # What the refused build measured
 
 The hysteresis held by the want was built in full before it was refused, and two of its findings
-stand whichever package holds the hysteresis; both are measured again on this one
-(`world/greenhouse/tests/test_hysteresis.py`).
+stand whichever package holds the hysteresis; both were measured again on the build that
+held it in sensing (#946).
 
 - **The margin is the noise's WHOLE spread**, twice what a reading strays either way. A value resting
   exactly at the floor is read anywhere within the noise on either side of it, so a margin of the

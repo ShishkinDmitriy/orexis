@@ -4,7 +4,6 @@
 @prefix market: <http://example.org/orexis/market#> .
 @prefix sim: <http://example.org/orexis/sim#> .
 @prefix orexis: <http://example.org/orexis#> .
-@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -40,12 +39,7 @@
     market:reservePerL 1.0 ;
     market:bidWindowS 30 .
 
-#  THE PLOTS, comfortable between 0.30 and 0.60 and surviving between 0.10 and 0.85. A comfortable
-#  bound is left from beyond it only past a margin of 0.0002 (#944, knowledge/domain/sensing/margin.md):
-#  each plot's probe strays a count of the four places the simulator publishes to, 0.0001 either
-#  way, and the margin is that whole spread, twice the one-way figure, so a plot resting at its floor
-#  is one claim and not one per reading its noise carries across. The survival range states none: it
-#  lies outside the comfortable one, whose floor already holds the desire unmet wherever it flips.
+#  THE PLOTS, comfortable between 0.30 and 0.60 and surviving between 0.10 and 0.85.
 :rose_plot a sosa:FeatureOfInterest ;
     rdfs:label "the rose's plot" ;
     climate:driesPerDay 0.05 ;
@@ -62,8 +56,7 @@
 
 :plot_operating a ssn-system:OperatingRange ;
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
-                             schema:minValue 0.30 ; schema:maxValue 0.60 ; sensing:margin 0.0002 ;
-                             schema:unitCode unit:UNITLESS ] .
+                             schema:minValue 0.30 ; schema:maxValue 0.60 ; schema:unitCode unit:UNITLESS ] .
 
 :plot_survival a ssn-system:SurvivalRange ;
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;

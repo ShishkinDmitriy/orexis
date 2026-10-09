@@ -37,7 +37,6 @@ FORECAST = "http://example.org/orexis/graph/forecast/keeper/"     # the writer's
 BYTES = {
     "a_first_reading_becomes_an_observation": (b'{"value": 0.22}', [OBSERVED + "probe"]),
     "a_second_reading_replaces_the_first": (b'{"value": 0.08}', [OBSERVED + "probe"]),
-    "a_reading_carries_the_side_the_one_it_replaces_was_judged_on": (b'{"value": 0.101}', [OBSERVED + "probe"]),
     "a_number_unchanged_past_the_limit_says_the_sensor_stuck": (b'{"value": 0.25}', [OBSERVED + "probe"]),
     "a_forecast_is_a_graph_per_stretch_ahead": (
         b'{"hourly": {"time": ["2026-01-01T11:00", "2026-01-01T12:00", "2026-01-01T13:00", "2026-01-01T14:00",'
@@ -223,48 +222,3 @@ def test_the_stuck_limit_is_the_agents_where_its_self_graph_states_one(monkeypat
     assert _stuck(store) == [], "two readings are one cadence unchanged"
     received(store, snapshots.ME, PROBE, b'{"value": 0.25}', last + CADENCE)
     assert _stuck(store) == [(PROBE, snapshots.NOW, snapshots.NOW)]
-
-
-#  WHAT THE NEW OBSERVATION CARRIES: each side the one before was judged on, and the range.
-CARRIES = CASES_DIR / "a_reading_carries_the_side_the_one_it_replaces_was_judged_on.trig"
-_CARRIED_Q = "SELECT ?word ?range WHERE { GRAPH ?g { ?o sosa:madeBySensor $sensor ; ?word ?range . VALUES ?word { sensing:wasBelow sensing:wasAbove } } }"
-
-
-def _carried(store) -> set[tuple[str, str]]:
-    return {(r["word"].rsplit("#", 1)[-1], r["range"].rsplit("#", 1)[-1]) for r in rows(store, _CARRIED_Q, (), sensor=PROBE)}
-
-
-def _carrying(snapshots, text: str):
-    """The case `CARRIES` describes, its text edited, and 0.101 received at noon."""
-    store = snapshots.stand_in(CARRIES, text)
-    received(store, snapshots.ME, PROBE, b'{"value": 0.101}', snapshots.NOW)
-    return store
-
-
-@pytest.mark.parametrize("edit, carried", [
-    (("", ""), {("wasBelow", "zamioculcas.operating")}),
-    (("sensing:margin 0.002 ; ", ""), set()),
-    (("sensing:margin 0.002 ; ", "sensing:margin 0.0 ; "), set()),
-    (("  orexis:obs_probe sensing:below :zamioculcas.operating .\n", ""), set()),
-    (("sensing:below :zamioculcas.operating", "sensing:above :zamioculcas.operating"), {("wasAbove", "zamioculcas.operating")}),
-], ids=["below-a-range-stating-a-margin", "no-margin", "a-margin-of-nought", "no-side-concluded", "above"])
-def test_a_reading_carries_the_side_of_a_range_stating_a_margin_and_nothing_else(monkeypatch, snapshots, edit, carried):
-    """Only a range stating a margin above nought is carried for, and only where the rules concluded
-    the replaced observation below or above it. Where its revisions say no side — the revision cut
-    short by its budget — nothing is carried and the reading is judged alone, as a range stating no
-    margin judges every reading: the store is handed no side it has no evidence for."""
-    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    text = CARRIES.read_text()
-    assert edit[0] in text
-    assert _carried(_carrying(snapshots, text.replace(*edit))) == carried
-
-
-def test_every_reading_of_one_message_carries_the_side_the_store_last_concluded(monkeypatch, snapshots):
-    """No rule runs between two readings one message carries, so the earlier one's side is not
-    concluded when the later is written: both carry what the observation they replace was judged."""
-    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    store = snapshots.stand_in(CARRIES)
-    alarm = b'{"value": [{"value": 0.095, "age_s": 25}, {"value": 0.101, "age_s": 0}]}'
-    assert received(store, snapshots.ME, PROBE, alarm, snapshots.NOW) == [OBSERVED + "probe_earlier_0", OBSERVED + "probe"]
-    found = rows(store, "SELECT ?g ?range WHERE { GRAPH ?g { ?o sensing:wasBelow ?range } }", ())
-    assert sorted(r["g"].rsplit("/", 1)[-1] for r in found) == ["probe", "probe_earlier_0"], found

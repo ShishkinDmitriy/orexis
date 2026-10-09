@@ -49,20 +49,6 @@ number differs takes the graph back here, as a reading takes a silence back. Ide
 raw number, the count the pointer found, since a clamp or a rescale can make two different counts
 one reading; and a sensor stating no frequency is never said stuck, as it is never said silent.
 
-**THE SIDE THE READING BEFORE WAS JUDGED ON IS CARRIED, AS THE RUN IS (#944).** A reading resting
-near a bound strays across it on the instrument's noise, and judged alone its side flipped at every
-crossing and a want was minted and withdrawn with it. Where a range's condition states a margin
-(`sensing:margin`), the new observation carries `sensing:wasBelow` or `sensing:wasAbove` of that range
-— what the rules concluded of the observation it replaces, read from that one's revisions before the
-graph goes — and the side rules hold the reading on that side until it clears the bound by the
-margin. Carried, never concluded here: which side THIS reading is on is still the rules'. Where the
-replaced observation's revisions say no side — a revision its budget cut short — nothing is carried
-and the reading is judged alone, as a range stating no margin judges every reading, so the store is
-never handed a side it holds no evidence for; a silence between carries it still, the observation
-before it standing until replaced, and so does a restart. Every reading one message carries is
-judged against the side the store last concluded, since no rule runs between them
-(knowledge/domain/sensing/margin.md).
-
 **AND IT IS SAID.** The graph written is answered to whoever runs the transport, and sensing's
 part, hearing an observation graph written, says it as an `Observed` (`events.py`), which history
 writes as a point and metrics tallies: sensing decides what an observation is, so sensing says
@@ -86,7 +72,7 @@ from datetime import datetime, timedelta
 
 from agent.ontology import PUBLIC, STATE, local_of
 from agent.stance import stance
-from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, revisions_of, rows, update
+from agent.store import Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
 from .cadence import cadence_of
 from .ontology import (DERIVED, FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, STUCK_AFTER_TERM, earlier_graph, forecast_graph,
@@ -129,19 +115,6 @@ SELECT ?g ?raw ?t ?since WHERE {
              OPTIONAL { ?o sensing:unchangedSince ?since } } }
 ORDER BY ?t"""
 
-#  WHICH SIDE THE OBSERVATION BEFORE WAS JUDGED ON, of every named range whose condition for the
-#  property it is of states a margin — asked of its graph, its revisions and the public graphs — and
-#  the word that carries each onto the next. A margin of nought widens nothing, so it carries
-#  nothing.
-_CARRIED_Q = """
-SELECT DISTINCT ?carried ?range WHERE {
-  ?o sosa:madeBySensor $sensor ; sosa:observedProperty ?property ; ?side ?range .
-  VALUES (?side ?carried) { (sensing:below sensing:wasBelow) (sensing:above sensing:wasAbove) }
-  ?range ssn-system:inCondition ?condition .
-  ?condition ssn:forProperty ?property ; sensing:margin ?margin .
-  FILTER(isIRI(?range) && ?margin > 0) }
-ORDER BY ?carried ?range"""
-
 #  WHETHER THIS SENSOR IS SAID STUCK — the graph holding the row, found by its content.
 _STUCK_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { $sensor sensing:stuckSince ?since } }"""
@@ -178,14 +151,11 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     for silence in rows(store, _SILENCE_Q, (), cat=cat, sensor=sensor):
         forget_graph(store, silence["g"])
     #  THE RUN SO FAR: the number the latest observation replaced gave, and since when it had given
-    #  it — and the side the rules judged it on, of every range stating a margin — read before the
-    #  graph goes, since those are the two things the replacement carries over.
-    run, carried = None, []
+    #  it — read before the graph goes, since the run is the one thing the replacement carries over.
+    run = None
     for old in rows(store, _OBSERVED_Q, (), cat=cat, sensor=sensor):
         if old.get("raw") is not None and old.get("t"):
             run = (float(old["raw"]), datetime.fromisoformat(old.get("since") or old["t"]))
-            carried = [(r["carried"], r["range"]) for r in rows(
-                store, _CARRIED_Q, [old["g"], *revisions_of(store, old["g"]), *graphs_of(store, PUBLIC)], sensor=sensor)]
         forget_graph(store, old["g"])
     #  EVERY READING THE MESSAGE CARRIES, oldest first, each placed that long before it arrived: an
     #  earlier one — a sentinel's last quiet sample before its alarm — holds only until the next one's
@@ -200,15 +170,14 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     written = []
     for n, ((number, _), when, then) in enumerate(zip(readings[:-1], instants[:-1], instants[1:])):
         graph = earlier_graph(local_of(me), sensor, n)
-        _write(store, me, sensor, graph, f"{observation_by(sensor)}_earlier_{n}", number, when, then, since[n], carried,
-               procedure)
+        _write(store, me, sensor, graph, f"{observation_by(sensor)}_earlier_{n}", number, when, then, since[n], procedure)
         written.append(graph)
     number, when = readings[-1][0], instants[-1]
     graph = observation_graph(local_of(me), sensor)
     cadence = cadence_of(store, sensor, memo)
     _write(store, me, sensor, graph, observation_by(sensor), number, when,
-           when + timedelta(seconds=(1 + GRACE) * cadence) if cadence is not None else None, since[-1], carried,
-           procedure, phenomenon_at)
+           when + timedelta(seconds=(1 + GRACE) * cadence) if cadence is not None else None, since[-1], procedure,
+           phenomenon_at)
     log.info("%s: %s reads %s%s", local_of(me), local_of(sensor), number,
              "".join(f", and read {n:g} {a:g}s before" for n, a in readings[:-1]))
     _stuck(store, me, sensor, cat, since[-1], when, cadence, stance(store, STUCK_AFTER_TERM, STUCK_AFTER, memo))
@@ -237,18 +206,16 @@ INSERT DATA {{
 
 
 def _write(store, me: str, sensor: str, graph: str, node: str, number: float, at: datetime,
-           until: datetime | None, since: datetime, carried: list[tuple[str, str]], procedure: str | None = None,
+           until: datetime | None, since: datetime, procedure: str | None = None,
            phenomenon_at: datetime | None = None) -> None:
     """One observation of what `sensor` gave, `number` at `at`, standing until `until` or for good,
-    the number unchanged since `since`, carrying the side the observation before was judged on of
-    each range `carried` names."""
+    the number unchanged since `since`."""
     said = [f'<{node}> a sosa:Observation',
             f'<{node}> sensing:rawResult "{round(float(number), 6)}"^^xsd:decimal',
             f'<{node}> sensing:unchangedSince "{since.isoformat()}"^^xsd:dateTime',
             f'<{node}> sosa:resultTime "{at.isoformat()}"^^xsd:dateTime',
             f'<{node}> sosa:madeBySensor <{sensor}>',
-            f'<{node}> prov:wasGeneratedBy <{me}>',
-            *(f'<{node}> <{word}> <{range_}>' for word, range_ in carried)]
+            f'<{node}> prov:wasGeneratedBy <{me}>']
     if phenomenon_at is not None:
         said.append(f'<{node}> sosa:phenomenonTime "{phenomenon_at.isoformat()}"^^xsd:dateTime')
     if procedure:

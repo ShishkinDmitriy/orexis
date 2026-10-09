@@ -27,19 +27,7 @@
 #  its binary error (1.100000000000000128) unless rounded after the cast.
 #
 #  LAYER 2, WHICH SIDE of each of its subject's ranges an observation's reading lies on — over what
-#  layer 1 concluded, and over a predicted observation, which the prediction writes whole. A side is
-#  the judgment of the subject against its range, given the instrument's noise: where the range's
-#  condition states a margin (`sensing:margin`), a reading whose predecessor was judged below —
-#  `sensing:wasBelow`, carried onto the observation by `received` — stays below until it reaches the
-#  floor and the margin, and one judged above stays above until it falls to the ceiling less it; a
-#  reading coming from inside crosses at the bound itself. Each rule reads the observation's own
-#  facts and nothing else, so none remembers: the memory is the side carried, as the run of an
-#  unchanged number is `sensing:unchangedSince` (knowledge/domain/sensing/margin.md). A margin no
-#  condition states is nought, coalesced, since a comparison with an unbound term binds nothing and
-#  would leave the observation with no side at all. A predicted observation is the model's number,
-#  with no instrument's noise to hold a side against, so the prediction writes it carrying no side
-#  and it is judged by its number alone — save where no drift moves its key and the observation in
-#  hand is carried forward whole, the side it carries with it.
+#  layer 1 concluded, and over a predicted observation, which the prediction writes whole.
 
 :observation a sh:RuleSet ;
     rdfs:label "what an observation is of, its quantity, and its reading" ;
@@ -113,7 +101,7 @@
 
 :belowRule a sh:SPARQLRule ;
     sh:layer 2 ;
-    rdfs:label "under the floor, or short of the floor and its margin coming from below" ;
+    rdfs:label "under the floor" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:below ?range } WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
@@ -121,14 +109,12 @@
             ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:minValue ?low .
-            OPTIONAL { ?condition sensing:margin ?margin }
-            FILTER(?value < ?low
-                   || (?value < ?low + COALESCE(?margin, 0) && EXISTS { ?obs sensing:wasBelow ?range }))
+            FILTER(?value < ?low)
         }""" .
 
 :insideRule a sh:SPARQLRule ;
     sh:layer 2 ;
-    rdfs:label "within the range, bounds included, and clear of the margin a side carried holds" ;
+    rdfs:label "within the range, bounds included" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:inside ?range } WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
@@ -136,15 +122,12 @@
             ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:minValue ?low ; schema:maxValue ?high .
-            OPTIONAL { ?condition sensing:margin ?margin }
             FILTER(?value >= ?low && ?value <= ?high)
-            FILTER(!(?value < ?low + COALESCE(?margin, 0) && EXISTS { ?obs sensing:wasBelow ?range }))
-            FILTER(!(?value > ?high - COALESCE(?margin, 0) && EXISTS { ?obs sensing:wasAbove ?range }))
         }""" .
 
 :aboveRule a sh:SPARQLRule ;
     sh:layer 2 ;
-    rdfs:label "over the ceiling, or past the ceiling less its margin coming from above" ;
+    rdfs:label "over the ceiling" ;
     sh:construct """
         CONSTRUCT { ?obs sensing:above ?range } WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
@@ -152,7 +135,5 @@
             ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
             ?range ssn-system:inCondition ?condition .
             ?condition ssn:forProperty ?property ; schema:maxValue ?high .
-            OPTIONAL { ?condition sensing:margin ?margin }
-            FILTER(?value > ?high
-                   || (?value > ?high - COALESCE(?margin, 0) && EXISTS { ?obs sensing:wasAbove ?range }))
+            FILTER(?value > ?high)
         }""" .
