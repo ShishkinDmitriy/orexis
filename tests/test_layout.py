@@ -251,13 +251,15 @@ _RANGES = """@prefix ssn: <http://www.w3.org/ns/ssn/> .
     (True, "-0.0002", "negative and widens nothing"),
     (True, "0.15", "half the width of [0.3, 0.6] or more"),
     (True, '"wide"', "no number"),
-    (False, "0.0002", "a range with no name"),
-], ids=["twice-a-count", "just-under-half", "negative", "half", "no-number", "unnamed"])
+    (False, "0.0002", None),
+    (False, "0.15", "half the width of [0.3, 0.6] or more"),
+], ids=["twice-a-count", "just-under-half", "negative", "half", "no-number", "unnamed", "unnamed-half"])
 def test_onboarding_refuses_a_margin_its_range_cannot_hold(tmp_path, monkeypatch, named, margin, why):
     """A margin that is no number leaves a subject believed below or above judged in no state; a negative
     one widens nothing, so the rule would read as nought a figure the world stated; one of half the range
-    or more would leave a subject a step brought to the middle believed in the state it came from; one on
-    a blank range is a range nothing can name. Each is refused, and nothing is granted."""
+    or more would leave a subject a step brought to the middle believed in the state it came from. Each is
+    refused, and nothing is granted; a range with no name is judged like any other, and said as one with
+    no name."""
     from onboarding import onboard, reading
 
     observer = "http://example.org/orexis/sensing#Observer"

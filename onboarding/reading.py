@@ -17,8 +17,8 @@ kind makes a misspelled one silent in every reader; onboarding knows every reade
 
 **A margin its range cannot hold is refused here, for the same reason** (`unholdable`,
 knowledge/domain/sensing/margin.md): the rule judging an observation into a subject belief takes
-`sensing:margin` as stated, so one that is no number, negative, of half its range's width or more,
-or on a range with no name is caught here or nowhere.
+`sensing:margin` as stated, so one that is no number, negative, or of half its range's width or more
+is caught here or nowhere.
 
 **A step runs where the world has what it serves.** `premises` answers which of `PREMISES` hold of
 a world (#824): the broker's credentials and its ACL, the agents' certificates and the broker in a
@@ -162,40 +162,38 @@ def unread(here: Path) -> list[str]:
 
 
 #  EVERY MARGIN A RANGE CANNOT HOLD (knowledge/domain/sensing/margin.md), with its range's name where it
-#  has one and the bounds it widens: one that is no number, which the rule's sum binds nothing with,
-#  so a subject believed below or above would be judged in no state at all; a negative one, which widens nothing, so the
-#  rule would read as nought a figure the world stated; one of half its range's width
-#  or more, since every act here aims at a range's middle and a subject a step brought there would still
-#  be believed in the state it came from; and one on a range with no IRI, which no refusal and no log can
-#  name.
+#  has one — a blank range is said as one with no name, and judged like any other — and the bounds it
+#  widens: one that is no number, which the rule's sum binds nothing with, so a subject believed below
+#  or above would be judged in no state at all; a negative one, which widens nothing, so the rule would
+#  read as nought a figure the world stated; and one of half its range's width or more, since every act
+#  here aims at a range's middle and a subject a step brought there would still be believed in the
+#  state it came from.
 _MARGINS_Q = """
 SELECT ?named ?margin ?low ?high WHERE {
   ?range ssn-system:inCondition ?condition . ?condition sensing:margin ?margin .
   OPTIONAL { ?condition schema:minValue ?low } OPTIONAL { ?condition schema:maxValue ?high }
   BIND(IF(isIRI(?range), STR(?range), "") AS ?named)
-  FILTER(!isIRI(?range) || !isNumeric(?margin) || ?margin < 0
+  FILTER(!isNumeric(?margin) || ?margin < 0
          || (BOUND(?low) && BOUND(?high) && 2 * ?margin >= ?high - ?low)) }
 ORDER BY ?named ?margin"""
 
 
 def unholdable(here: Path) -> list[str]:
     """Every margin the world in `here` states that its range cannot hold, as `range: why`. Empty for a
-    world each of whose margins is a number from nought to less than half its range's width, on a range
-    with a name — every world stating none among them."""
+    world each of whose margins is a number from nought to less than half its range's width — every
+    world stating none among them."""
     store = world(here)
     out = []
     for r in rows(store, _MARGINS_Q, graphs_of(store, PUBLIC)):
         said = f"a margin of {r['margin']}"
-        if not r["named"]:
-            out.append(f"a range with no name: {said} on it, and a margin is said of a range that can be named")
-            continue
+        named = r["named"] or "a range with no name"
         try:
             margin = float(r["margin"])
         except ValueError:
-            out.append(f"{r['named']}: {said}, which is no number")
+            out.append(f"{named}: {said}, which is no number")
             continue
-        out.append(f"{r['named']}: {said}, which is negative and widens nothing" if margin < 0 else
-                   f"{r['named']}: {said}, half the width of [{r['low']}, {r['high']}] or more — a subject a step "
+        out.append(f"{named}: {said}, which is negative and widens nothing" if margin < 0 else
+                   f"{named}: {said}, half the width of [{r['low']}, {r['high']}] or more — a subject a step "
                    f"brought to its middle would still be believed in the state it came from")
     return out
 

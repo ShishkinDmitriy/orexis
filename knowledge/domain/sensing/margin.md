@@ -48,8 +48,9 @@ value itself has left the floor's noise. The greenhouse's probe strays a count o
 is published to and its thermometer a hundredth of a degree, so its soil states 0.0002 and its air
 0.02; the allotment's plots state 0.0002 for the same probe.
 
-`orexis-onboard` refuses four (`onboarding/reading.py`, `unholdable`): one that is no number, with
+`orexis-onboard` refuses three (`onboarding/reading.py`, `unholdable`): one that is no number, with
 which the rule's sum binds nothing, so a subject held in a state would be judged in none; a negative
 one, which widens nothing, so the rule would read as nought a figure the world stated; one of half
 its range's width or more, since every act here aims at the middle of a range and a subject a step
-brought there would still be believed in the state it came from; and one on a range with no name.
+brought there would still be believed in the state it came from. A range with no name is judged like
+any other, and said as one with no name where its margin is refused.
