@@ -32,8 +32,7 @@ for all and never handed to a search. A world authors it, in a `planning:DesireG
 
 A **want** is a `planning:Want`, `prov:wasDerivedFrom` its desire, bound to the instances in
 trouble and holding during a period of its own — its graph's — with `planning:holdsAt` where it
-must hold at a foreseen instant. It carries the desire's met-test narrowed to its instance — or the
-desire's reaching test, where it states one — and the
+must hold at a foreseen instant. It carries the desire's met-test narrowed to its instance, and the
 desire's estimate with `$this` bound to it, under names of its own
 ([shape](/domain/planning/shape.md)), so a want about one parcel is judged and measured on that
 parcel alone. It is one-shot: it carries where it has got to
@@ -55,15 +54,12 @@ joins every cluster, so a shape ranging over instances says `planning:about sh:t
 instances a [constraint](/domain/planning/constraint.md) the holder holds can make collide are one
 cluster and one want about both — and
 one the rows no longer imply is withdrawn by the same pass — unless it is walking, which a
-[commitment](/domain/execution/commitment.md) keeps until one of its triggers reopens it, or its desire
-states a reaching test, the one its wants are [reached](/domain/planning/reached.md) by, and the want
-has not yet passed it where it is weighed. Nothing ranks one
+[commitment](/domain/execution/commitment.md) keeps until one of its triggers reopens it. Nothing ranks one
 want before the search that could rank it: every want is searched, and what their plans cost is
 the comparison.
 
 # What it is judged by
 
 Its met-test, and nothing else: the search sees no partial progress, and a want is reached where a
-world passes the shape ([shape](/domain/planning/shape.md)) — its desire's, or the reaching test its
-desire hands its wants with `planning:reachedWhen` ([reached](/domain/planning/reached.md)). The core compares triples — a plant wants
+world passes the shape ([shape](/domain/planning/shape.md)). The core compares triples — a plant wants
 its soil `sensing:inside` its range, a side the rules concluded — and interprets no number.

@@ -3,7 +3,6 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
@@ -12,46 +11,19 @@
 <> orexis:beliefsOf :grower .    # and whose it is — said here, never by the file's name
 
 #  THE DESIRE THIS WORLD EXISTS FOR, about TWO properties: the bed is comfortable when neither its
-#  soil nor its air is read below the operating range the bed states. A desire and not a want, since
-#  it asks at every instant — the grower runs for good. Asked BY SIDE: what the met-test reads is what
-#  the rules concluded of a reading, `sensing:below`, never the number, and a step's effect speaks the
+#  soil nor its air is read below a range the bed states. A desire and not a want, since it asks at
+#  every instant — the grower runs for good. Asked BY SIDE: what the met-test reads is what the
+#  rules concluded of a reading, `sensing:below`, never the number, and a step's effect speaks the
 #  same concept. Each property shape says which property and which way it broke, so the want
 #  minted from a dry bed is about the soil and a cold one about the air.
-#
-#  TWO TESTS, ONE EACH WAY (#944). The met-test mints: a reading below a range the bed states AS ITS
-#  OPERATING RANGE, which the path says by walking back from the range to whatever has it as one. The
-#  reaching test is what a want minted here is reached by: no reading below ANY range the bed states,
-#  the narrower one among them (world.ttl), so a want minted at the floor stands until the reading is
-#  back inside the narrower range, and a reading straying across the floor on its noise mints once and
-#  withdraws nothing. A bed stating no narrower range is reached at its operating range, as before.
 
 :grower planning:holds :the_bed_is_comfortable .
 
 :the_bed_is_comfortable a planning:Desire ;
     rdfs:label "the bed is comfortable — soil and air both inside the ranges the bed states" ;
-    planning:metWhen :comfortable ;
-    planning:reachedWhen :comfortable_again .
+    planning:metWhen :comfortable .
 
 :comfortable a sh:NodeShape ;
-    sh:targetNode :grower ;
-    sh:property [
-        sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-        planning:about climate:SoilMoisture ;
-        sh:qualifiedMaxCount 0 ;
-        sh:qualifiedValueShape [
-            sh:property [ sh:path sosa:observedProperty ; sh:hasValue climate:SoilMoisture ] ;
-            sh:property [ sh:path ( sensing:below [ sh:inversePath ssn-system:hasOperatingRange ] ) ; sh:minCount 1 ] ] ;
-        sh:message "the bed's soil is below its operating range" ] ;
-    sh:property [
-        sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
-        planning:about climate:AirTemperature ;
-        sh:qualifiedMaxCount 0 ;
-        sh:qualifiedValueShape [
-            sh:property [ sh:path sosa:observedProperty ; sh:hasValue climate:AirTemperature ] ;
-            sh:property [ sh:path ( sensing:below [ sh:inversePath ssn-system:hasOperatingRange ] ) ; sh:minCount 1 ] ] ;
-        sh:message "the bed's air is below its operating range" ] .
-
-:comfortable_again a sh:NodeShape ;
     sh:targetNode :grower ;
     sh:property [
         sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;

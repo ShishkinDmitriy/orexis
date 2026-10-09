@@ -24,7 +24,6 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
 * [series](/domain/kernel/series.md) - What a person watches and the agent never reads: history and metrics, both what the packages' events say, written by a part hearing every signal.
-* [narrower-range](/domain/kernel/narrower-range.md) - A range a subject states inside its operating range by its reading's noise; sides and crossings as any range's, read where wants are reached.
 
 # Sensing — bytes become observations
 
@@ -34,7 +33,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [reading](/domain/sensing/reading.md) - The number an observation carries: what a side is concluded of, what a drift predicts, what a dose is sized from.
 * [calibration](/domain/sensing/calibration.md) - A correction within one unit, two points the world states beside the sensor, applied by sensing's rule after any scaling.
 * [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
-* [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, and a narrower range inside, stated by the world; the rules say which side a reading is on.
+* [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; the rules say which side a reading is on.
 * [stuck](/domain/sensing/stuck.md) - A sensor reporting one number for a limit of its cadences is said stuck until a differing number ends it; the doubt beside age.
 * [observer](/domain/sensing/observer.md) - The role sensing serves, beneath the deliberator since sides are revisions; needs a sensor reporting to it.
 
@@ -57,7 +56,6 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Planning — what is wanted, and how to get there
 
 * [desire](/domain/planning/desire.md) - A desire stands and is never searched; a want is minted where it bites, searched, and withdrawn once met.
-* [reached](/domain/planning/reached.md) - A want is reached where its met-test reads met; a desire may hand its wants a reaching test narrower than it mints by.
 * [constraint](/domain/planning/constraint.md) - What the world says is possible, stated as a desire is; a world violating it is impossible, never repaired, and its footprint couples wants.
 * [shape](/domain/planning/shape.md) - A met-test is a SHACL shape a domain declares, compiled to the select whose rows are its violations.
 * [planner](/domain/planning/planner.md) - One pass: grounds laid, wants derived, each searched best-first within a budget, the plans published down; and the role running it.

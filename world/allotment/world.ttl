@@ -45,16 +45,14 @@
     climate:driesPerDay 0.05 ;
     climate:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange :plot_operating ;
-    ssn-system:hasSurvivalRange :plot_survival ;
-    orexis:hasNarrowerRange :plot_narrower .
+    ssn-system:hasSurvivalRange :plot_survival .
 
 :fern_plot a sosa:FeatureOfInterest ;
     rdfs:label "the fern's plot" ;
     climate:driesPerDay 0.03 ;
     climate:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange :plot_operating ;
-    ssn-system:hasSurvivalRange :plot_survival ;
-    orexis:hasNarrowerRange :plot_narrower .
+    ssn-system:hasSurvivalRange :plot_survival .
 
 :plot_operating a ssn-system:OperatingRange ;
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
@@ -63,16 +61,6 @@
 :plot_survival a ssn-system:SurvivalRange ;
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
                              schema:minValue 0.10 ; schema:maxValue 0.85 ; schema:unitCode unit:UNITLESS ] .
-
-#  THE NARROWER RANGE, inside the operating range by the whole spread of the probes' noise — twice the
-#  ten-thousandth the simulator's number strays either way, which no `sim:jitter` below overrides. A dry
-#  plot's grower wants water from the operating range's floor, as ever, and its want is reached only
-#  back in here, so a reading straying across the floor on its noise mints one want and withdraws none
-#  until it clears (#944, knowledge/domain/kernel/narrower-range.md). Its middle is the operating
-#  range's, which a bid is sized to.
-:plot_narrower ssn-system:inCondition
-        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
-          schema:minValue 0.3002 ; schema:maxValue 0.5998 ; schema:unitCode unit:UNITLESS ] .
 
 :tap a climate:WaterSource ; rdfs:label "the supplier's tap" ; climate:capacityL 50.0 .
 

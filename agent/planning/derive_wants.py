@@ -34,7 +34,7 @@ import pyoxigraph as ox
 import rdflib
 
 from agent.ontology import OREXIS, RECORD
-from agent.store import NAMESPACES, Memo, Raw, bind, catalogue_of, forget_graph, graphs_of, rdflib_view, remember, rows
+from agent.store import NAMESPACES, Memo, Raw, bind, forget_graph, graphs_of, rdflib_view, remember, rows
 
 from .ontology import DESIRE, PLANNING, SHAPES, WANT
 from .withdraw import FORGET_ONE_U
@@ -51,15 +51,9 @@ MET_WHEN = PLANNING + "metWhen"
 #  (#892); `weigh` judges either and the witnesses read the same, so nothing below this line
 #  but `_mint` and `_targets_one_node` knows which a desire spoke.
 UNMET_WHEN = PLANNING + "unmetWhen"
-#  THE TEST A WANT IS REACHED BY, where its desire states one narrower than the test that mints it
-#  (#944): a shape, carried onto every want minted under the desire as the want's own met-test in
-#  place of the desire's, so the want is weighed by it and by nothing else; and the one thing that
-#  keeps a standing want implied once its desire reads met again (`_reached`). A desire stating
-#  none mints as it always did, and nothing below this line reads it but `derive_wants` and `_mint`.
-REACHED_WHEN = PLANNING + "reachedWhen"
 #  THE TWO OF A DESIRE'S OWN WORDS THIS FILE SORTS BY. They were matched as string SUFFIXES —
 #  `p.endswith("#about")` at three sites — which is safe only because `_SAID_Q` four hundred
-#  lines away filters to a handful of named predicates, so nothing else can end in those letters. That
+#  lines away filters to five named predicates, so nothing else can end in those letters. That
 #  coupling was invisible at every site, and a sixth predicate whose local name ended in
 #  `about` or `label` would have been read as one of these, silently.
 ABOUT = PLANNING + "about"
@@ -74,7 +68,7 @@ RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
 _SAID_Q = """
 SELECT ?p ?o WHERE {
   GRAPH ?g { $desire ?p ?o
-    FILTER(?p IN (planning:metWhen, planning:unmetWhen, planning:reachedWhen, planning:estimates, planning:about, rdfs:label)) }
+    FILTER(?p IN (planning:metWhen, planning:unmetWhen, planning:estimates, planning:about, rdfs:label)) }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
                VALUES ?kind { planning:DesireGraph planning:WantGraph } } }"""
 
@@ -133,17 +127,6 @@ def derive_wants(store: ox.Store, now: datetime, walking: dict[str, datetime] | 
     implies any more; a caller that withdraws against a set it did not derive has a bug this
     signature makes visible.
 
-    **A WANT EXISTS BECAUSE ITS DESIRE READ UNMET, AND IS KEPT UNTIL IT IS REACHED** — two tests,
-    one each way, both stateless (#944). Where a desire states only its met-test the two are one,
-    so a want is implied while the rows that minted it still read unmet and no longer: the same
-    rows withdraw it. Where it states `planning:reachedWhen` too, a shape narrower than its
-    met-test — a reading back inside the narrower range its subject states, not merely inside
-    the range — its wants carry that as their met-test, a standing want is implied while that
-    reads unmet where `weigh` weighed the want (`_reached`), and its stretch is open, since what
-    ends the trouble is the want reached and no ground of the desire's says when. A reading
-    oscillating across the floor then mints once and withdraws nothing until it clears the
-    narrower range; a real drop mints at the floor exactly as before.
-
     WHOSE, FROM THE DESIRE: the graph a desire lives in says who holds it, so the wants it
     implies are written to graphs that holder owns. THE PRESENT IS THE CALLER'S, the one
     thing besides the store this takes, for when the agent found what it minted.
@@ -162,7 +145,6 @@ def derive_wants(store: ox.Store, now: datetime, walking: dict[str, datetime] | 
     present = grounds[0]["g"]
     coupled: dict = {}
     wanted: set[str] = set()
-    reached: set[str] | None = None
     for holder, desire in _desires_in(store):
         found = _troubles(store, desire, scopes, holder)
         if found is None:
@@ -172,52 +154,13 @@ def derive_wants(store: ox.Store, now: datetime, walking: dict[str, datetime] | 
             #  on a bad shape.
             wanted |= _standing_under(store, desire, now)
             continue
-        said = _said(store, desire)
-        reaching = any(p == REACHED_WHEN for p, _ in said)
-        if reaching:
-            #  A TROUBLE UNDER A REACHING TEST LIFTS WHERE ITS WANT IS REACHED, which the met-test
-            #  that mints it cannot see: read off the desire's weighings, a dip below the floor
-            #  that a forecast lifts back inside the range — and no further — lifts there while the
-            #  want minted for it is still unreached, and a want whose period closed there would be
-            #  kept, handed to no search past its end (`find_wants` reads the period), and left
-            #  standing under the same name when the next dip came, so that dip would go unsearched
-            #  too. Open, the want holds until it is reached (#944,
-            #  `a_dip_a_forecast_lifts_only_into_the_band_is_wanted_until_reached`).
-            found = [{**w, "until": None} for w in found]
         if holder not in coupled:
             coupled[holder] = couplings(store, holder, present, now, memo=memo)
         _derive_under(store, shapes, scopes, holder, desire, found, now, coupled[holder], walking or {},
                       frozenset(reopen))
-        standing = _standing_under(store, desire, now)
-        wanted |= _named(shapes, scopes, desire, said, found, coupled[holder], standing)
-        if reaching:
-            #  AND A STANDING WANT UNDER IT IS IMPLIED UNTIL IT IS REACHED (#944). The desire's
-            #  met-test mints, and reads met again the moment a reading near the floor strays
-            #  back above it; the want's own met-test is the desire's reaching test, and the weighing
-            #  `weigh` wrote of the want where it is weighed is what says whether it reads met
-            #  there yet. So a reading oscillating across the floor mints once and withdraws
-            #  nothing until it clears the narrower range — the hysteresis, held by the want's
-            #  existence and by nothing that remembers a side.
-            if reached is None:
-                reached = _reached(store)
-            wanted |= standing - reached
+        wanted |= _named(shapes, scopes, desire, _said(store, desire), found, coupled[holder],
+                         _standing_under(store, desire, now))
     return wanted
-
-
-#  EVERY WANT REACHED WHERE IT IS WEIGHED: a weighing of it in a ground — the ground holding at its
-#  instant, the one ground `unweighed` weighs a want in — whose verdict is met. Asked once per call,
-#  and only where a desire states a reaching test.
-_REACHED_Q = """
-SELECT DISTINCT ?w WHERE {
-  GRAPH $cat { ?x planning:met true ; planning:for ?w ; planning:weighs ?g . ?g a planning:GroundGraph } }"""
-
-
-def _reached(store: ox.Store) -> set[str]:
-    """Every want whose own met-test reads met in the ground it was weighed in. A want with no
-    verdict there — not yet weighed, or a weighing the engine refused — is not reached: not judged
-    is not met, here as for a desire."""
-    cat = catalogue_of(store)
-    return {r["w"] for r in rows(store, _REACHED_Q, (), cat=Raw(f"<{cat}>"))} if cat else set()
 
 
 def _standing_under(store: ox.Store, desire: str, now: datetime) -> set[str]:
@@ -363,8 +306,8 @@ def _named(shapes: rdflib.Graph, scopes: dict | None, desire: str, said,
     """The names the clusters of `found` come to — what minting would call them, or the want
     among `standing` that is already about every instance of a cluster, as `_derive_under` reads it.
 
-    One namer for both halves: `_derive_under` mints under these names and `withdraw`, handed
-    them, keeps what is under them, so the two can never disagree about which want a cluster is.
+    One namer for both halves: `_derive_under` mints under these names and `_withdraw_under`
+    keeps what is under them, so the two can never disagree about which want a cluster is.
     """
     out = set()
     for cluster in _clusters(scopes, found, coupled):
@@ -735,7 +678,7 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
     #  where its scope's imaginarium is.
     child = _name_of(shapes, desire, said, about, instance, keys)
     points = [(KEYED_BY, k) for k in keys] + [(REOPENS, w) for w in reopens]
-    met_test = estimate = reaching = None
+    met_test = estimate = None
     for p, o in said:
         if isinstance(o, ox.BlankNode):
             log.warning("%s states its %s inline; it is pursued itself", desire.rsplit("#", 1)[-1],
@@ -750,23 +693,12 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
         if p in (MET_WHEN, UNMET_WHEN):
             met_test = (p, str(o.value))
             continue
-        if p == REACHED_WHEN:
-            reaching = str(o.value)
-            continue
         if p == ESTIMATES:
             estimate = str(o.value)
             continue
         points.append((p, str(o.value)))
-    #  WHERE THE DESIRE STATES A REACHING TEST, THAT IS THE WANT'S MET-TEST (#944): the shape it is
-    #  reached by, narrower than the one it was minted by, carried in the desire's place and judged
-    #  as any met-test is. "A want is judged by its met-test" holds as it always did; what changed
-    #  is which test the want was handed. A shape, so the want carries it as one, whichever polarity
-    #  the desire mints by.
-    if reaching is not None and met_test is not None:
-        met_test = (MET_WHEN, reaching)
-    #  THE MET-TEST IS THE DESIRE'S INSTANTIATED AT THE WITNESS — its reaching test where it states
-    #  one: carved from where the desire's shape lives and _narrowed to this cluster — the
-    #  instance as its target, the blocks about
+    #  THE MET-TEST IS THE DESIRE'S INSTANTIATED AT THE WITNESS: carved from where the desire's
+    #  shape lives and _narrowed to this cluster — the instance as its target, the blocks about
     #  what the want is about — and written into the want's own graph under its own name, so
     #  the want is judged on its instance and a plan for one tank is not refused for another's.
     #  UNDER THE DESIRE'S OWN POLARITY: a shape it is met when stays a shape, `.met`; an avoided
@@ -802,10 +734,8 @@ def _mint(store: ox.Store, shapes: rdflib.Graph, holder: str, desire: str, now: 
     if at > now:
         label = f"foreseen: {label[len('pursued: '):]} at {at.isoformat(timespec='minutes')}"
     #  IT HOLDS FROM ITS DERIVATION AND IT DOES NOT END BY THE CLOCK. A want minted here
-    #  ends when the decomposition stops producing it — `withdraw`, handed `derive_wants`' answer:
-    #  the same rows that minted it, or, under a desire stating a reaching test, the want's own
-    #  met-test reading met where it is weighed — and that is the whole of what ends one. It
-    #  used to carry a period end
+    #  ends when the decomposition stops producing it — `_withdraw_under`, on the same rows
+    #  that minted it — and that is the whole of what ends one. It used to carry a period end
     #  as well, at its instant plus the KEEPER'S PATIENCE, and that was wrong three ways: the
     #  patience answers how long a commitment blocks re-adoption of itself, which is a
     #  different question from how long after its instant a want stays readable; it made the

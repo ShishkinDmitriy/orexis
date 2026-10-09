@@ -81,11 +81,8 @@ def withdraw(store, wanted, now: datetime, *, reached=(), afresh=()) -> list[str
 
     `wanted` IS `derive_wants`' ANSWER, and that is the whole contract between them. A want
     exists because its desire read unmet, so a want the decomposition no longer produces is
-    met — and the rows that say so are the ones the derivation has just read. Where its desire
-    states a reaching test (#944) the decomposition goes on producing a standing want until the
-    want's own met-test, that reaching test, reads met where `weigh` weighed it — a verdict
-    already written, which the derivation reads and this never asks again. Asking each
-    standing want's own met-test here would be a second evaluation of what one pass had
+    met — and the rows that say so are the ones the derivation has just read. Asking each
+    standing want's own met-test again would be a second evaluation of what one pass had
     already concluded, which is what handing the conclusion on avoids.
 
     THE TWO ACTS ARE APART ON PURPOSE. This used to live inside the derivation, per desire, so
@@ -116,12 +113,8 @@ def withdraw(store, wanted, now: datetime, *, reached=(), afresh=()) -> list[str
     for uri in sorted(stale | done):
         _forget_want(store, uri)
         _forget_search(store, uri)
-        #  SAID REACHED WHEREVER IT WAS, whether or not the decomposition still names it: a want under
-        #  a desire stating a reaching test (#944) is both when it goes, since the decomposition stops
-        #  naming it once it is reached, and its desire read met passes before — so the other
-        #  reason would name the wrong one.
         log.info("%s withdrawn: %s", uri.rsplit("#", 1)[-1],
-                 "reached" if uri in reached else "its desire no longer reads it unmet")
+                 "reached" if uri in done else "its desire no longer reads it unmet")
         gone.append(uri)
     for uri in sorted(set(afresh) - set(gone)):
         _forget_search(store, uri)

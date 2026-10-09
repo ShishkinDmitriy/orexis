@@ -33,8 +33,7 @@
     climate:driesPerDay 0.04 ;
     climate:litresPerFraction 2.0 ;
     ssn-system:hasOperatingRange :bed_operating ;
-    ssn-system:hasSurvivalRange :bed_survival ;
-    orexis:hasNarrowerRange :bed_narrower .
+    ssn-system:hasSurvivalRange :bed_survival .
 
 :bed_operating a ssn-system:OperatingRange ;
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
@@ -47,19 +46,6 @@
                              schema:minValue 0.10 ; schema:maxValue 0.85 ; schema:unitCode unit:UNITLESS ] ,
                            [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:AirTemperature ;
                              schema:minValue 5.0 ; schema:maxValue 35.0 ; schema:unitCode unit:DEG_C ] .
-
-#  THE NARROWER RANGE, inside the operating range by the whole spread of the reading's noise — twice
-#  what an instrument strays either way, the most two readings of one value can differ by: the
-#  probe's number strays a ten-thousandth (the simulator's count, stated by no `sim:jitter`), the
-#  thermometer's a hundredth (its `sim:jitter`). A dry or cold bed is wanted from the operating range's
-#  floor, as ever, and the want is reached only back in here, so a reading straying across a floor
-#  on its noise mints one want and withdraws none (#944, knowledge/domain/kernel/narrower-range.md).
-#  Both middles are the operating range's, where the dose and the heating aim.
-:bed_narrower ssn-system:inCondition
-        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
-          schema:minValue 0.3002 ; schema:maxValue 0.5998 ; schema:unitCode unit:UNITLESS ] ,
-        [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:AirTemperature ;
-          schema:minValue 18.02 ; schema:maxValue 23.98 ; schema:unitCode unit:DEG_C ] .
 
 :water_butt a climate:WaterSource ; rdfs:label "the water butt" ; climate:capacityL 20.0 .
 

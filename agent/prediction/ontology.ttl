@@ -16,8 +16,7 @@
 #  the happenings at which what a drift reads may change, every crossing of a range bound placed
 #  exactly, and one orexis:PredictionGraph written per stretch between crossings, holding a
 #  predicted sosa:Observation with its number. The observation is found by the kernel's kind and
-#  SOSA's words, a range is SSN-System's or the kernel's narrower one (`orexis:hasNarrowerRange`),
-#  and which side a stretch is on is a revision the sensing
+#  SOSA's words, a range is SSN-System's, and which side a stretch is on is a revision the sensing
 #  layer's rules conclude of it; nothing of sensing is imported or spoken here.
 
 #  THE ROLE THIS PACKAGE SERVES (knowledge/domain/prediction/predictor.md): an agent declared a

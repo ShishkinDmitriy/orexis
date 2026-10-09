@@ -13,7 +13,7 @@ start or end of a public or belief graph holding in that stretch, since only the
 drift reads change, which is how a forecast hour and a step the executor committed to become
 one without this package learning either word — and held for at most `SEGMENT_S` between, so a
 rate that depends on the value is asked again. Within a segment the value is a straight line, and a crossing of a bound of every range
-that applies to what the sensor observes (SSN-System's and the kernel's narrower one, `ranges_of`) is placed exactly, by
+that applies to what the sensor observes (SSN-System's, `ranges_of`) is placed exactly, by
 division: no scan looks for it, so a value that dips below a floor and comes back inside an hour
 later is seen. A drift answering `?until` contributes nothing past it, and a segment is split
 where the value reaches it, so the soil dries to nothing and not below.

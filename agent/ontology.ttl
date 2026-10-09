@@ -151,11 +151,6 @@ orexis:end
     rdfs:label "end" ;
     rdfs:comment "When the period closes, exclusive: an instant equal to this is outside. Absent means the period does not close on its own." .
 
-orexis:hasNarrowerRange
-    a owl:ObjectProperty ;
-    rdfs:label "has narrower range" ;
-    rdfs:comment "A range the holder states inside its operating range for a property, narrower by the noise of the reading that watches it: a node carrying `ssn-system:inCondition` as an operating range does, stated beside `ssn-system:hasOperatingRange` and never with it, since stated as a second operating range it would be one more middle every dose and bid aims at and one more floor every met-test mints on. Sensing's rules conclude its sides as they conclude an operating range's and prediction places a crossing at its bounds, so the KERNEL'S, where the two meet, as SSN-System's two kinds are no package's; what it is FOR is a desire's to say, in the test its wants are reached by (`planning:reachedWhen`, #944, knowledge/domain/kernel/narrower-range.md)." .
-
 orexis:hash
     a owl:DatatypeProperty ;
     rdfs:domain orexis:Graph ;

@@ -15,16 +15,6 @@ status: accepted
 timestamp: 2026-10-09T12:00:00Z
 ---
 
-**Amended by the build (#944), on two points the record had wrong.** The margin between a range and
-the narrower one is the reading's whole spread — twice what one reading strays either way, the most
-two readings of one value differ by — and not its one-way amplitude, at which a single extreme draw
-clears the narrower floor and the chatter resumes a step further up
-([narrower-range](/domain/kernel/narrower-range.md)). And a reading near a bound mints and withdraws a
-want only where nothing foresees the crossing: measured on the simulator, a bed resting at its floor
-minted and withdrew seven wants in thirty readings, while a bed drying through it was held by its
-foreseen crossing to one want before the narrower range existed. How a desire names the two tests is
-[reached](/domain/planning/reached.md)'s.
-
 # The question
 
 The mind says what it does not know as an interval. A drift that knows its rate only as a range

@@ -239,30 +239,3 @@ def test_one_lot_goes_to_the_dearer_bid_and_the_other_grower_calls_again(monkeyp
     assert bus.commands() == [("actuators/rose_valve/command", {"dose_ml": 500}),
                               ("actuators/fern_valve/command", {"dose_ml": 400})], \
         "the fern called again, won the second round alone, and was served four tenths of a litre"
-
-
-#  EVERY NARROWER RANGE A PLOT STATES, with the operating range it lies inside for the same property.
-_NARROWER_Q = """
-PREFIX orexis: <http://example.org/orexis#>
-PREFIX ssn: <http://www.w3.org/ns/ssn/>
-PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
-PREFIX schema: <https://schema.org/>
-SELECT ?subject ?property ?lo ?hi ?nlo ?nhi WHERE {
-  ?subject orexis:hasNarrowerRange/ssn-system:inCondition ?n .
-  ?n ssn:forProperty ?property ; schema:minValue ?nlo ; schema:maxValue ?nhi .
-  OPTIONAL { ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?c .
-             ?c ssn:forProperty ?property ; schema:minValue ?lo ; schema:maxValue ?hi } }"""
-
-
-def test_each_plot_s_narrower_range_lies_inside_its_operating_range_and_holds_its_middle():
-    """The rose's and the fern's (#944). Inside, or it is no narrower; holding the middle, since a bid
-    is sized to it, and a claim served there that left the plot short of the narrower range would leave
-    its want unreached and the grower buying for ever."""
-    import rdflib
-
-    found = list(rdflib.Graph().parse(WORLD / "world.ttl").query(_NARROWER_Q))
-    assert len(found) == 2, found
-    for r in found:
-        assert r.lo is not None, f"{r.subject}: a narrower range with no operating range to narrow"
-        lo, hi, nlo, nhi = (float(v) for v in (r.lo, r.hi, r.nlo, r.nhi))
-        assert lo < nlo < (lo + hi) / 2 < nhi < hi, (r.subject, lo, nlo, nhi, hi)
