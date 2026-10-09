@@ -1,5 +1,5 @@
 """The greenhouse's hysteresis (#944): a reading judged below the bed's comfortable floor stays below
-until it clears the floor and its margin (`orexis:margin`, knowledge/domain/kernel/margin.md), so a
+until it clears the floor and its margin (`sensing:margin`, knowledge/domain/sensing/margin.md), so a
 reading the probe's noise carries back and forth across the floor mints one want, and the want is
 withdrawn once the value has cleared it.
 
@@ -10,6 +10,10 @@ at REST in the straying cases, since a drying bed's want is held by foresight wh
 stated or not: a want minted for a foreseen crossing is weighed at its instant, and a desire reading
 unmet at a ground ahead keeps it whatever the present reads. The chatter is a bed at rest at its
 floor, or a want rooted in the present — which is what is held here.
+
+The margin is the instrument's, so only a reading is held by it: a predicted reading is the model's
+number and carries no side, and a stretch ahead is judged by its number alone — which the case of a
+reading held below says, and what the grower makes of it.
 """
 
 from __future__ import annotations
@@ -24,7 +28,9 @@ from pathlib import Path
 import pytest
 
 from agent import clock
+from agent.ontology import PREDICTION, STATE
 from agent.runtime import Runtime, boot
+from agent.store import graphs_of, revisions_of, rows
 from agent.transport.mqtt.driver import Mqtt
 
 WORLD = Path(__file__).resolve().parents[1]
@@ -34,7 +40,7 @@ SOIL = "sensors/moisture_probe/reading"
 AIR = "sensors/thermometer/reading"
 
 #  THE MARGINS THE BED STATES, as the world spells them.
-MARGINS = ("orexis:margin 0.0002 ;", "orexis:margin 0.02 ;")
+MARGINS = ("sensing:margin 0.0002 ;", "sensing:margin 0.02 ;")
 
 
 class Broker:
@@ -116,6 +122,79 @@ def test_a_reading_straying_across_the_floor_mints_one_want_and_withdraws_it_onc
     assert life == (["minted", "withdrawn"] if margin else ["minted", "withdrawn"] * 3), life
 
 
+#  UNDER THE FLOOR ONCE, THEN A TEN-THOUSANDTH OVER IT FOR AN HOUR, never reaching 0.3002.
+HELD = [0.2999, 0.3001, 0.3001, 0.3001, 0.3001, 0.3001, 0.3001]
+
+#  THE SIDE OF THE BED'S COMFORTABLE RANGE THE SOIL IS JUDGED ON, in a graph and its revisions.
+_SIDE_Q = f"""
+SELECT ?side WHERE {{
+  ?o sosa:observedProperty <http://example.org/orexis/climate#SoilMoisture> ; ?side <{GH}bed_operating> .
+  VALUES ?side {{ sensing:below sensing:inside sensing:above }} }}"""
+
+
+def _sides(store, kind: str) -> list[str]:
+    """The side the soil is judged on in every graph of `kind` observing it — the present, or each
+    stretch predicted — read with what the rules concluded of it."""
+    return [r["side"].rsplit("#", 1)[-1] for graph in graphs_of(store, kind)
+            for r in rows(store, _SIDE_Q, [graph, *revisions_of(store, graph)])]
+
+
+def _held(tmp_path, monkeypatch, caplog, *, pump: bool):
+    """The bed at rest, read `HELD` a cadence apart with a pass after each: the grower, what it
+    published, and the side of the soil in the present and in the stretch ahead after each pass."""
+    time = {"at": NOW}
+    monkeypatch.setattr(clock, "now", lambda: time["at"])
+    caplog.set_level(logging.INFO)
+    runtime, broker = _grower(_world(tmp_path, pump=pump, dries=0.0))
+    present, ahead = [], []
+    for n, value in enumerate(HELD):
+        time["at"] = NOW + timedelta(minutes=10 * n)
+        runtime.deliver(SOIL, json.dumps({"value": value}).encode(), time["at"])
+        runtime.deliver(AIR, json.dumps({"value": 21.0 + n / 100}).encode(), time["at"])
+        runtime.run(passes=1, poll_s=0)
+        present.append(_sides(runtime.beliefs, STATE))
+        ahead.append(_sides(runtime.beliefs, PREDICTION))
+    return broker.published, present, ahead
+
+
+def _waits(caplog) -> int:
+    """How many `planning:Wait` steps the executor took."""
+    return sum(1 for r in caplog.records if r.name == "executor" and "fills=Wait" in r.getMessage())
+
+
+def test_a_reading_held_below_is_predicted_by_its_number_and_its_want_is_kept(tmp_path, monkeypatch, caplog):
+    """A PREDICTION READS NO MARGIN. No pump, the bed at rest, the probe read under the floor once and
+    then a ten-thousandth over it for an hour: the present is held below by the margin, each reading
+    carrying the side the one before was judged on, while the stretch predicted from it is judged by
+    its number alone — a predicted reading is the model's number, with no instrument's noise to hold
+    a side against, and carries none — so 0.3001 ahead reads inside. The want is minted by the present
+    at the first reading and kept by it: the stretch ahead reading inside withdraws nothing, and
+    nothing is minted again.
+
+    WHAT THE PLANNER MAKES OF THE STRETCH AHEAD, measured and pinned so that a change to it is seen:
+    nothing else reaching the want, it commits a `planning:Wait` toward the stretch it believes reads
+    inside; the wait lands, the want still reads unmet in the present, and another is committed —
+    three in the hour, each sending nothing. Holding the bed below in the prediction too would mean
+    prediction reading the margin, which is what was refused (#944)."""
+    published, present, ahead = _held(tmp_path, monkeypatch, caplog, pump=False)
+    assert present == [["below"]] * len(HELD), present
+    assert ahead == [["below"]] + [["inside"]] * (len(HELD) - 1), ahead
+    assert _life(caplog) == ["minted"]
+    assert (_waits(caplog), published) == (3, [])
+
+
+def test_a_reading_held_below_beside_a_pump_is_dosed_again_and_never_waited_for(tmp_path, monkeypatch, caplog):
+    """THE WAIT IS NOT CHOSEN OVER THE DOSE. The same readings with the pump: 0.2999 is dosed, the
+    readings held below say the dose did not take, and each time its patience runs out the want, still
+    standing, is dosed again — four doses in the hour, as when the stretch ahead was held below with
+    the present, and no wait, though a wait costs a tenth of a dose and the bare number ahead reads
+    inside. The want is minted once."""
+    published, present, _ = _held(tmp_path, monkeypatch, caplog, pump=True)
+    assert present == [["below"]] * len(HELD), present
+    assert _life(caplog) == ["minted"]
+    assert (_waits(caplog), published) == (0, [("actuators/pump/command", {"dose_ml": 300})] * 4)
+
+
 def test_a_dose_aimed_at_the_middle_lands_inside_though_the_reading_before_was_below(tmp_path, monkeypatch):
     """THE DOSE STILL LANDS. 0.2998, below the floor: the dose is sized to the range's middle, 0.45 — its
     effect says the reading comes to be inside the range, in the possible world the search stands in,
@@ -193,7 +272,7 @@ def _noisy(world: Path, *, dries: float, starts: float, margin: bool) -> None:
               f"sim:initialValue {starts} ; sim:minValue 0.0 ; sim:maxValue 1.0 ; sim:jitter {JITTER} ]"),
              ("climate:driesPerDay 0.04 ;", f"climate:driesPerDay {dries} ;")]
     if margin:
-        edits.append(("orexis:margin 0.0002 ;", f"orexis:margin {2 * JITTER} ;"))
+        edits.append(("sensing:margin 0.0002 ;", f"sensing:margin {2 * JITTER} ;"))
     for old, new in edits:
         assert old in text, old
         text = text.replace(old, new)

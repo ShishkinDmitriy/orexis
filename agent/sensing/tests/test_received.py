@@ -227,7 +227,7 @@ def test_the_stuck_limit_is_the_agents_where_its_self_graph_states_one(monkeypat
 
 #  WHAT THE NEW OBSERVATION CARRIES: each side the one before was judged on, and the range.
 CARRIES = CASES_DIR / "a_reading_carries_the_side_the_one_it_replaces_was_judged_on.trig"
-_CARRIED_Q = "SELECT ?word ?range WHERE { GRAPH ?g { ?o sosa:madeBySensor $sensor ; ?word ?range . VALUES ?word { orexis:wasBelow orexis:wasAbove } } }"
+_CARRIED_Q = "SELECT ?word ?range WHERE { GRAPH ?g { ?o sosa:madeBySensor $sensor ; ?word ?range . VALUES ?word { sensing:wasBelow sensing:wasAbove } } }"
 
 
 def _carried(store) -> set[tuple[str, str]]:
@@ -243,8 +243,8 @@ def _carrying(snapshots, text: str):
 
 @pytest.mark.parametrize("edit, carried", [
     (("", ""), {("wasBelow", "zamioculcas.operating")}),
-    (("orexis:margin 0.002 ; ", ""), set()),
-    (("orexis:margin 0.002 ; ", "orexis:margin 0.0 ; "), set()),
+    (("sensing:margin 0.002 ; ", ""), set()),
+    (("sensing:margin 0.002 ; ", "sensing:margin 0.0 ; "), set()),
     (("  orexis:obs_probe sensing:below :zamioculcas.operating .\n", ""), set()),
     (("sensing:below :zamioculcas.operating", "sensing:above :zamioculcas.operating"), {("wasAbove", "zamioculcas.operating")}),
 ], ids=["below-a-range-stating-a-margin", "no-margin", "a-margin-of-nought", "no-side-concluded", "above"])
@@ -266,5 +266,5 @@ def test_every_reading_of_one_message_carries_the_side_the_store_last_concluded(
     store = snapshots.stand_in(CARRIES)
     alarm = b'{"value": [{"value": 0.095, "age_s": 25}, {"value": 0.101, "age_s": 0}]}'
     assert received(store, snapshots.ME, PROBE, alarm, snapshots.NOW) == [OBSERVED + "probe_earlier_0", OBSERVED + "probe"]
-    found = rows(store, "SELECT ?g ?range WHERE { GRAPH ?g { ?o orexis:wasBelow ?range } }", ())
+    found = rows(store, "SELECT ?g ?range WHERE { GRAPH ?g { ?o sensing:wasBelow ?range } }", ())
     assert sorted(r["g"].rsplit("/", 1)[-1] for r in found) == ["probe", "probe_earlier_0"], found

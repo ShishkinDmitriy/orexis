@@ -52,7 +52,7 @@ one reading; and a sensor stating no frequency is never said stuck, as it is nev
 **THE SIDE THE READING BEFORE WAS JUDGED ON IS CARRIED, AS THE RUN IS (#944).** A reading resting
 near a bound strays across it on the instrument's noise, and judged alone its side flipped at every
 crossing and a want was minted and withdrawn with it. Where a range's condition states a margin
-(`orexis:margin`), the new observation carries `orexis:wasBelow` or `orexis:wasAbove` of that range
+(`sensing:margin`), the new observation carries `sensing:wasBelow` or `sensing:wasAbove` of that range
 — what the rules concluded of the observation it replaces, read from that one's revisions before the
 graph goes — and the side rules hold the reading on that side until it clears the bound by the
 margin. Carried, never concluded here: which side THIS reading is on is still the rules'. Where the
@@ -61,7 +61,7 @@ and the reading is judged alone, as a range stating no margin judges every readi
 never handed a side it holds no evidence for; a silence between carries it still, the observation
 before it standing until replaced, and so does a restart. Every reading one message carries is
 judged against the side the store last concluded, since no rule runs between them
-(knowledge/domain/kernel/margin.md).
+(knowledge/domain/sensing/margin.md).
 
 **AND IT IS SAID.** The graph written is answered to whoever runs the transport, and sensing's
 part, hearing an observation graph written, says it as an `Observed` (`events.py`), which history
@@ -131,14 +131,14 @@ ORDER BY ?t"""
 
 #  WHICH SIDE THE OBSERVATION BEFORE WAS JUDGED ON, of every named range whose condition for the
 #  property it is of states a margin — asked of its graph, its revisions and the public graphs — and
-#  the kernel's word that carries each onto the next. A margin of nought widens nothing, so it
-#  carries nothing.
+#  the word that carries each onto the next. A margin of nought widens nothing, so it carries
+#  nothing.
 _CARRIED_Q = """
 SELECT DISTINCT ?carried ?range WHERE {
   ?o sosa:madeBySensor $sensor ; sosa:observedProperty ?property ; ?side ?range .
-  VALUES (?side ?carried) { (sensing:below orexis:wasBelow) (sensing:above orexis:wasAbove) }
+  VALUES (?side ?carried) { (sensing:below sensing:wasBelow) (sensing:above sensing:wasAbove) }
   ?range ssn-system:inCondition ?condition .
-  ?condition ssn:forProperty ?property ; orexis:margin ?margin .
+  ?condition ssn:forProperty ?property ; sensing:margin ?margin .
   FILTER(isIRI(?range) && ?margin > 0) }
 ORDER BY ?carried ?range"""
 

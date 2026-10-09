@@ -115,11 +115,6 @@ SELF = OREXIS + "Self"
 #  THE KIND EVERY ROLE IS BENEATH: what the agent runs, declared beside the self in its self graph,
 #  and the one question the boot asks before any package is loaded (knowledge/domain/kernel/role.md).
 ROLE = OREXIS + "Role"
-#  THE SIDE AN OBSERVATION CARRIES: the range the reading before it was judged below or above,
-#  where the range states a margin — written onto a reading by sensing and onto a predicted one by
-#  prediction, and read by sensing's side rules (knowledge/domain/kernel/margin.md).
-WAS_BELOW = OREXIS + "wasBelow"
-WAS_ABOVE = OREXIS + "wasAbove"
 #  What a text is answered over: everyone's knowledge, what is, and the records. Stated once
 #  here and named at every runner, so a runner says what it hands a text; a package that owns
 #  more kinds a text of its reads — planning's desires and wants — adds them to its own list.

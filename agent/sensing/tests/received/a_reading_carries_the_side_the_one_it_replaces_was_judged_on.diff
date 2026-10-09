@@ -1,15 +1,14 @@
 --- case
 +++ expected
-@@ -49,21 +49,15 @@
- 
+@@ -50,20 +50,14 @@
  GRAPH observed:probe {
    orexis:obs_probe a sosa:Observation .
-+  orexis:obs_probe orexis:wasBelow :zamioculcas.operating .
    orexis:obs_probe prov:wasGeneratedBy :keeper .
 -  orexis:obs_probe sensing:rawResult 0.09 .
 -  orexis:obs_probe sensing:unchangedSince "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
 +  orexis:obs_probe sensing:rawResult 0.101 .
 +  orexis:obs_probe sensing:unchangedSince "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  orexis:obs_probe sensing:wasBelow :zamioculcas.operating .
    orexis:obs_probe sosa:madeBySensor :probe .
 -  orexis:obs_probe sosa:resultTime "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
 +  orexis:obs_probe sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .

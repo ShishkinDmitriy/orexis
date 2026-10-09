@@ -87,13 +87,13 @@ def test_a_samples_observation_is_judged_by_its_subjects_ranges(monkeypatch, sna
 #  THE POT'S OPERATING RANGE MOVED TO A BED'S, 0.30 to 0.60, stating a margin of 0.0002 — twice
 #  what the simulator's probe strays either way — or stating none.
 BED = ("schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture",
-       "orexis:margin 0.0002 ; schema:maxValue 0.6 ; schema:minValue 0.3 ; ssn:forProperty :moisture")
+       "sensing:margin 0.0002 ; schema:maxValue 0.6 ; schema:minValue 0.3 ; ssn:forProperty :moisture")
 
 
 def _bed(snapshots, margin: bool):
     text = WORLD.read_text()
     assert BED[0] in text
-    store = snapshots.stand_in(WORLD, text.replace(BED[0], BED[1] if margin else BED[1].replace("orexis:margin 0.0002 ; ", "")))
+    store = snapshots.stand_in(WORLD, text.replace(BED[0], BED[1] if margin else BED[1].replace("sensing:margin 0.0002 ; ", "")))
     put_document(store, document(RULES))
     return store
 

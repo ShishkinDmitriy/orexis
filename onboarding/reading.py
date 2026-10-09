@@ -16,7 +16,7 @@ kind makes a misspelled one silent in every reader; onboarding knows every reade
 `unread` names the graphs none of them reads, and `orexis-onboard` refuses a world that has any.
 
 **A margin its range cannot hold is refused here, for the same reason** (`unholdable`,
-knowledge/domain/kernel/margin.md): every reader of `orexis:margin` takes it as stated, so one that is
+knowledge/domain/sensing/margin.md): every reader of `sensing:margin` takes it as stated, so one that is
 negative, of half its range's width or more, or on a range with no name, is caught here or nowhere.
 
 **A step runs where the world has what it serves.** `premises` answers which of `PREMISES` hold of
@@ -160,14 +160,14 @@ def unread(here: Path) -> list[str]:
     return out
 
 
-#  EVERY MARGIN A RANGE CANNOT HOLD (knowledge/domain/kernel/margin.md), with its range's name where
-#  it has one and the bounds it widens: one that is no number; a negative one, which widens nothing
-#  and would have prediction leave a side before its bound; one of half its range's width or more,
-#  since every act here aims at a range's middle and a step landing there would still be held on the
-#  side it came from; and one on a range with no IRI, since the side a reading carries names its range.
+#  EVERY MARGIN A RANGE CANNOT HOLD (knowledge/domain/sensing/margin.md), with its range's name where
+#  it has one and the bounds it widens: one that is no number; a negative one, which widens nothing,
+#  so the world said a figure the rules read as nought; one of half its range's width or more, since
+#  every act here aims at a range's middle and a step landing there would still be held on the side it
+#  came from; and one on a range with no IRI, since the side a reading carries names its range.
 _MARGINS_Q = """
 SELECT ?named ?margin ?low ?high WHERE {
-  ?range ssn-system:inCondition ?condition . ?condition orexis:margin ?margin .
+  ?range ssn-system:inCondition ?condition . ?condition sensing:margin ?margin .
   OPTIONAL { ?condition schema:minValue ?low } OPTIONAL { ?condition schema:maxValue ?high }
   BIND(IF(isIRI(?range), STR(?range), "") AS ?named)
   FILTER(!isIRI(?range) || !isNumeric(?margin) || ?margin < 0

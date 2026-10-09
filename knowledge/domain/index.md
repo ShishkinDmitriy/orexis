@@ -24,7 +24,6 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
 * [series](/domain/kernel/series.md) - What a person watches and the agent never reads: history and metrics, both what the packages' events say, written by a part hearing every signal.
-* [margin](/domain/kernel/margin.md) - How far past a bound a reading must go to leave the side its predecessor was on; that side is carried onto the observation.
 
 # Sensing — bytes become observations
 
@@ -35,6 +34,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [calibration](/domain/sensing/calibration.md) - A correction within one unit, two points the world states beside the sensor, applied by sensing's rule after any scaling.
 * [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; the rules judge which side the subject is on, given the noise.
+* [margin](/domain/sensing/margin.md) - How far past a bound a reading must go to leave its predecessor's side; that side is carried onto the reading, and a prediction carries none.
 * [stuck](/domain/sensing/stuck.md) - A sensor reporting one number for a limit of its cadences is said stuck until a differing number ends it; the doubt beside age.
 * [observer](/domain/sensing/observer.md) - The role sensing serves, beneath the deliberator since sides are revisions; needs a sensor reporting to it.
 

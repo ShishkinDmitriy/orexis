@@ -3,6 +3,7 @@
 @prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix sim: <http://example.org/orexis/sim#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
@@ -30,7 +31,7 @@
 #  air is comfortable between 18 and 24 degrees and survives between 5 and 35.
 #
 #  EACH COMFORTABLE BOUND IS LEFT FROM BEYOND IT ONLY PAST A MARGIN (#944,
-#  knowledge/domain/kernel/margin.md): a reading judged below the soil's floor stays below until it
+#  knowledge/domain/sensing/margin.md): a reading judged below the soil's floor stays below until it
 #  reaches 0.3002, and one judged below the air's until 18.02 degrees, so a bed resting at its floor
 #  is one want and not one per reading its noise carries across. Each margin is its instrument's whole
 #  spread, twice what a reading strays either way: the probe strays a count of the four places it is
@@ -47,10 +48,10 @@
 
 :bed_operating a ssn-system:OperatingRange ;
     ssn-system:inCondition [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:SoilMoisture ;
-                             schema:minValue 0.30 ; schema:maxValue 0.60 ; orexis:margin 0.0002 ;
+                             schema:minValue 0.30 ; schema:maxValue 0.60 ; sensing:margin 0.0002 ;
                              schema:unitCode unit:UNITLESS ] ,
                            [ a ssn-system:Condition , schema:PropertyValue ; ssn:forProperty climate:AirTemperature ;
-                             schema:minValue 18.0 ; schema:maxValue 24.0 ; orexis:margin 0.02 ;
+                             schema:minValue 18.0 ; schema:maxValue 24.0 ; sensing:margin 0.02 ;
                              schema:unitCode unit:DEG_C ] .
 
 :bed_survival a ssn-system:SurvivalRange ;

@@ -22,7 +22,7 @@ from its instant until the next is due by the sensor's `ssn-system:Frequency` an
 the number the sensor gave (`sensing:rawResult`), who made it and when, and since when the number has been
 that one - the run a sensor is said [stuck](/domain/sensing/stuck.md) from, once it has lasted the agent's
 limit of the sensor's cadences (`sensing:stuckAfter`), by `sensing:stuckSince` until a differing number ends it -
-and, of each range stating a [margin](/domain/kernel/margin.md), the side the rules judged the observation it
+and, of each range stating a [margin](/domain/sensing/margin.md), the side the rules judged the observation it
 replaces on, read from that one's revisions before they go. Where the pointer finds an array of readings,
 each with how many seconds before the message it was taken — a sentinel's alarm carries its watcher's
 last quiet sample before the reading that broke the window — each is an observation of its own, an

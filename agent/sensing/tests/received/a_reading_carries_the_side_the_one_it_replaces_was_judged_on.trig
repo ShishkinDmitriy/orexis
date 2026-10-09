@@ -2,7 +2,7 @@
 #
 # A reading of 0.09 stood from a quarter to twelve, and the rules judged it below the pot's operating
 # range, whose condition states a margin of 0.002, and inside its survival range, which states none.
-# Bytes for 0.101 arrive at noon. The new observation carries `orexis:wasBelow` of the operating range
+# Bytes for 0.101 arrive at noon. The new observation carries `sensing:wasBelow` of the operating range
 # — read from the replaced one's revisions before they go with it — and nothing of the survival
 # range: a range stating no margin holds no side, and inside is no side to hold. Which side 0.101 is
 # on is the rules' to conclude, not this act's (test_rules.py).
@@ -52,7 +52,7 @@ GRAPH :world {
   :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
   :zamioculcas ssn-system:hasSurvivalRange :zamioculcas.survival .
   :zamioculcas.operating a ssn-system:OperatingRange .
-  :zamioculcas.operating ssn-system:inCondition [ orexis:margin 0.002 ; schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture ] .
+  :zamioculcas.operating ssn-system:inCondition [ schema:maxValue 0.3 ; schema:minValue 0.1 ; sensing:margin 0.002 ; ssn:forProperty :moisture ] .
   :zamioculcas.survival a ssn-system:SurvivalRange .
   :zamioculcas.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
 }

@@ -9,10 +9,12 @@ description: >-
   a Kalman filter or a least-squares fit, so long as what they write is crisp. The flip of a side on
   a reading's noise is settled by hysteresis in sensing - a range's condition states one margin, a
   reading judged below stays below until it clears the floor by it, and the side the reading before
-  was judged on is carried onto the observation by its writer, so no rule remembers. Amended the same
-  day from a hysteresis held by the want, refused with a narrower second range and the last N
-  observations. Refused - Gaussian beliefs, planning in belief space, a rule that remembers, a dwell
-  in time (#615), and a filtered value written over the observation.
+  was judged on is carried onto the observation by its writer, so no rule remembers. The words are
+  sensing's, and a prediction reads none of them, a predicted number having no instrument's noise.
+  Amended the same day from a hysteresis held by the want, refused with a narrower second range, the
+  last N observations, and the margin's words in the kernel for prediction to read. Refused -
+  Gaussian beliefs, planning in belief space, a rule that remembers, a dwell in time (#615), and a
+  filtered value written over the observation.
 status: accepted
 timestamp: 2026-10-09T12:00:00Z
 ---
@@ -22,15 +24,18 @@ timestamp: 2026-10-09T12:00:00Z
 > a narrower range the world stated, so the sides stayed a bare comparison and the want's existence was
 > the memory. That was built, and the sovereign refused it the same day: planning works on crisp
 > triples and does not decide whether a value is inside a range — sensing does, so the hysteresis is
-> sensing's. A range's condition states ONE number, its [margin](/domain/kernel/margin.md)
-> (`orexis:margin`); a reading judged below stays below until it reaches the floor and the margin, one
+> sensing's. A range's condition states ONE number, its [margin](/domain/sensing/margin.md)
+> (`sensing:margin`); a reading judged below stays below until it reaches the floor and the margin, one
 > judged above stays above until the ceiling less it, and one coming from inside crosses at the bound
 > itself. The memory that needs is the side the reading before was judged on, carried onto the new
-> observation by `received` (`orexis:wasBelow`, `orexis:wasAbove`) exactly as it carries the run of an
-> unchanged number (`sensing:unchangedSince`), and the side rules read the observation's own facts and
-> remember nothing. Prediction places a crossing out of a side at the bound and its margin, and each
-> predicted observation carries its stretch's side. Planning is untouched. The body below is amended to
-> that; what was refused, and what the refused build measured, are in their own sections.
+> observation by `received` (`sensing:wasBelow`, `sensing:wasAbove`) exactly as it carries the run of
+> an unchanged number (`sensing:unchangedSince`), and the side rules read the observation's own facts
+> and remember nothing. The three words were first declared in the kernel, so that prediction could
+> place a crossing out of a side at the bound and its margin and carry each stretch's side; the
+> sovereign refused that too, the kernel speaking no SOSA or SSN, and the words are sensing's.
+> Prediction reads no margin: a predicted number carries no instrument's noise. Planning is untouched.
+> The body below is amended to that; what was refused, and what the refused builds measured, are in
+> their own sections.
 
 # The question
 
@@ -92,6 +97,23 @@ one number. The rules read the observation's own facts — the reading, the boun
 side carried — and keep no state. A range that states no margin behaves exactly as it did, and a
 want, a desire and the search are as they were.
 
+**A prediction reads no margin, and the words are sensing's.** Hysteresis corrects the instrument's
+noise, a reading wobbling about a bound; a predicted value is the model's number, and its doubt is
+the corridor. So prediction places a crossing at the bare bound and writes a predicted observation
+carrying no side, and the rules judge it by its number alone. `sensing:margin`, on a range's
+condition, and `sensing:wasBelow` and `sensing:wasAbove`, on an observation, are read by sensing's
+rules and `received`, and by onboarding, which refuses a margin its range cannot hold.
+
+What that costs, measured on the greenhouse at rest (`world/greenhouse/tests/test_hysteresis.py`): a
+reading held below inside the margin, 0.3001 against a floor of 0.30, is predicted inside while the
+present reads below. The want is minted by the present and kept by it; nothing the stretch ahead
+reads withdraws it or mints it again. The planner believes the stretch ahead: holding no pump, it
+commits a `planning:Wait` toward it, the wait lands, the want still stands, and another is committed
+— three in an hour of readings held at 0.3001, twelve in thirty cadences of the noisy simulator over
+a bed resting at 0.3005, where the build that held the stretch ahead below committed none. Each
+sends nothing. Holding a pump, the grower doses as that build did, four doses in that hour and no
+wait.
+
 # Why
 
 **What bands give up is "likely", and nothing in the mind reads "likely".** A met-test is crisp,
@@ -115,6 +137,12 @@ needs no distribution behind it.
 
 **One number goes wrong in fewer ways than two.** A margin is a figure beside the bounds it widens;
 whether it is sane is one comparison with half the range's width, and `orexis-onboard` makes it.
+
+**A predicted number has no noise to hold a side against.** A margin is sized from what an
+instrument strays; the model's number strays by nothing, and how much the agent does not know about
+it is the corridor's width, which leaves prediction as a worst side and never as a widened number.
+Holding a predicted stretch on a side by a margin made prediction walk the corridor from the
+observation's side with a trigger kept in Python — a second judge of a side the rules already judge.
 
 # What the refused build measured
 
@@ -144,6 +172,16 @@ stand whichever package holds the hysteresis; both are measured again on this on
   shape per desire (`planning:reachedWhen`). Built and refused on 2026-10-09. Planning works on crisp
   triples and does not decide whether a value is inside a range; and a second shape per desire is a
   second met-test, which drifts from the first as two ranges do.
+- **The margin's words in the kernel, for prediction to read.** Built and refused on 2026-10-09: the
+  margin and the two sides carried, declared in the kernel's namespace under `sosa:` and
+  `ssn-system:` prefixes it had never bound, because prediction placed a crossing out of a side at
+  the bound and its margin and wrote each stretch's side, and prediction's layout forbids sensing's
+  words. The kernel speaks no SOSA or SSN — `sosa:` reaches a query because sensing's ontology
+  declares it, not because the kernel knows what a reading is (#378) — so a word about a
+  `ssn-system:Condition` or a `sosa:Observation` is sensing's; and prediction needed none of it.
+  Carrying the side onto a predicted reading without the margin is no middle way: the rules would
+  hold below a number prediction had placed inside, and the two would disagree about where a stretch
+  begins.
 - **A second, narrower range per subject.** Two ranges give many ways to go wrong — a narrower range
   not inside its wider one, inverted, one side forgotten, the two edited apart — where one number
   does not.

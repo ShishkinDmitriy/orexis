@@ -21,8 +21,6 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix planning: <http://example.org/orexis/planning#> .
 @prefix execution: <http://example.org/orexis/execution#> .
-@prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -166,18 +164,6 @@ orexis:localId
     rdfs:label "local id" ;
     rdfs:comment "The short name a resource is known by outside RDF, stated so nothing has to infer it from the shape of a URI: an agent's, the ONE instance identifier a process is given and the string that is also its broker principal, its bucket, its container and its directory — everything else it discovers — and a board's, for the firmware generator. A sensor and a subject need none: the series tags them by the local name of their IRI (agent/sensing/events.py, tag_of), which every world gives them, where a stated id was missing in the one world that mattered (#885)." .
 
-#  A RANGE'S MARGIN, AND THE SIDE AN OBSERVATION CARRIES (knowledge/domain/kernel/margin.md). The
-#  kernel's because two packages meet at them and neither may speak the other's words: sensing's
-#  side rules read both, `received` writes the side carried onto a reading, and `predict` reads the
-#  margin to place a crossing and writes the side carried onto a predicted reading.
-
-orexis:margin
-    a owl:DatatypeProperty ;
-    rdfs:domain ssn-system:Condition ;
-    rdfs:range xsd:decimal ;
-    rdfs:label "margin" ;
-    rdfs:comment "How far past a bound of a range a reading must go to leave the side the reading before it was judged on: one judged below stays below until it reaches the floor and this, one judged above stays above until it falls to the ceiling less this, and one coming from inside crosses at the bound itself. One number, the same at both ends, stated by the world on the range's condition beside the bounds it widens, and sized from the instrument's noise — the whole spread, twice what a reading strays either way. Absent, nought, and a side is the bare comparison of the reading with the bounds. `orexis-onboard` refuses one that is negative, one of half the range's width or more, and one on a range with no name." .
-
 orexis:start
     a owl:DatatypeProperty ;
     rdfs:domain dcterms:PeriodOfTime ;
@@ -190,18 +176,6 @@ orexis:takes
     rdfs:domain orexis:Action ;
     rdfs:label "takes" ;
     rdfs:comment "A parameter this action is filled with, by IRI. Its local part is the variable its precondition projects, the `$token` its rules read and the predicate a step writes it under. An action may take none — it is then filled with nothing and affords at most one row." .
-
-orexis:wasAbove
-    a owl:ObjectProperty ;
-    rdfs:domain sosa:Observation ;
-    rdfs:label "was above" ;
-    rdfs:comment "As `orexis:wasBelow`, at the ceiling: the range the reading before this observation's was judged above, carried onto it where the range states a margin, so the side rules hold the reading above until it falls to the ceiling less the margin." .
-
-orexis:wasBelow
-    a owl:ObjectProperty ;
-    rdfs:domain sosa:Observation ;
-    rdfs:label "was below" ;
-    rdfs:comment "The range the reading before this observation's was judged below, carried onto the observation where the range states a margin (`orexis:margin`) — by `received`, from what the rules concluded of the observation it replaces, and by `predict`, from the side of the stretch a predicted observation stands for. What the side rules read to hold a reading below until it clears the floor and the margin: the memory hysteresis needs is on the observation, as the run of an unchanged number is, and no rule keeps one." .
 
 orexis:Asserted
     a orexis:Arrival ;

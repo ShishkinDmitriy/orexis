@@ -160,6 +160,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A term belongs to the package that owns the concept, and the kernel keeps what packages meet
   at** — `orexis:Action`, `orexis:takes` and `orexis:PredictionGraph` are the kernel's; one word is
   one concept, so `planning:spent` and `planning:costs` are two.
+- **The kernel speaks no SOSA or SSN, and a word two packages seem to meet at is lowered only once
+  the second is shown to need it** — the margin went into the kernel so prediction could read it,
+  and prediction needed none, a predicted number having no instrument's noise (#944).
 - **The core's word has priority, and a package speaks around it** (#640).
 - **"Ledger" is the market's word, for the book of what an agent owes; the intentions are called the
   intentions.**
@@ -486,10 +489,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   accumulates the drifts' rates and imports nothing of sensing.
 - **A belief is a crisp triple, and probability lives only inside an estimator** — sensing and
   prediction may keep a mean and a spread while they work, and write a value, a side or a band as
-  two numbers; a side flipping on noise is held by sensing — one margin on a range's condition, a
-  reading judged below staying below until it clears the floor by it, the side before carried onto
-  the observation by `received` as the run is — never by a rule that remembers, a want, a second
-  range or the last N readings (#944, a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
+  two numbers; a side flipping on noise is held by sensing alone — one `sensing:margin` on a range's
+  condition, a reading judged below staying below until it clears the floor by it, the side before
+  carried onto the observation by `received` as the run is — never by a rule that remembers, a want,
+  a second range, the last N readings or a prediction, whose number has no instrument's noise (#944,
+  a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
   read there alone, and the package's constant holds where none is stated** — the patience, both
   budgets, the silent and stuck limits and the horizon, each declared by its reader's package and

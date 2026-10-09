@@ -225,7 +225,7 @@ def test_onboarding_refuses_a_world_holding_a_kind_no_reader_declares(tmp_path, 
         onboard.onboard("hanoi")
 
 
-# --- a margin its range cannot hold is refused (knowledge/domain/kernel/margin.md, #944) ---------
+# --- a margin its range cannot hold is refused (knowledge/domain/sensing/margin.md, #944) --------
 
 def test_every_shipped_world_states_margins_its_ranges_hold():
     from onboarding.reading import unholdable
@@ -239,8 +239,9 @@ def test_every_shipped_world_states_margins_its_ranges_hold():
 _RANGES = """@prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix schema: <https://schema.org/> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 :pot ssn-system:hasOperatingRange %s .
-%s ssn-system:inCondition [ ssn:forProperty :moisture ; schema:minValue 0.30 ; schema:maxValue 0.60 ; orexis:margin %s ] .
+%s ssn-system:inCondition [ ssn:forProperty :moisture ; schema:minValue 0.30 ; schema:maxValue 0.60 ; sensing:margin %s ] .
 """
 
 
@@ -253,9 +254,10 @@ _RANGES = """@prefix ssn: <http://www.w3.org/ns/ssn/> .
     (False, "0.0002", "a range with no name"),
 ], ids=["twice-a-count", "just-under-half", "negative", "half", "no-number", "unnamed"])
 def test_onboarding_refuses_a_margin_its_range_cannot_hold(tmp_path, monkeypatch, named, margin, why):
-    """A negative margin would have prediction leave a side before its bound; one of half the range or
-    more would hold a step aimed at the middle on the side it came from; one on a blank range could not
-    be carried, since the side carried names its range. Each is refused and nothing is granted."""
+    """A negative margin widens nothing, so the rules would read as nought a figure the world stated; one
+    of half the range or more would hold a step aimed at the middle on the side it came from; one on a
+    blank range could not be carried, since the side carried names its range. Each is refused and
+    nothing is granted."""
     from onboarding import onboard, reading
 
     observer = "http://example.org/orexis/sensing#Observer"

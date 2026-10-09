@@ -19,7 +19,7 @@ description: >-
 `ssn-system:hasOperatingRange` for where the subject does well, `ssn-system:hasSurvivalRange` for
 where it merely lives, each with the property it is about and two bounds. A world states them on
 the subject or on an instrument that watches it; nothing derives or picks one. A condition may
-state a [margin](/domain/kernel/margin.md) beside its bounds, and a range that does is named, since
+state a [margin](/domain/sensing/margin.md) beside its bounds, and a range that does is named, since
 the side an observation carries names it.
 
 # What a side is
@@ -38,8 +38,8 @@ margin, a side is exactly the comparison it always was.
 
 - **A desire's met-test** reads the side: a plant wants its soil `inside` its operating range, and
   a dose's effect predicts it will be.
-- **The prediction package** places every crossing where its accumulated rates reach a bound — or,
-  leaving a side, the bound and its margin — so a stretch begins where the side changes.
+- **The prediction package** places every crossing of a bound where its accumulated rates reach it,
+  so a stretch begins where the side changes.
 
 Membership is crisp: a reading is inside or it is not, and how far it is from a bound is the
 command's business when it sizes a dose, never the met-test's.
