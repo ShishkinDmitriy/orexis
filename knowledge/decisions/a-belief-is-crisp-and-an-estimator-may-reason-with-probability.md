@@ -15,9 +15,17 @@ description: >-
   last N observations, and the margin's words in the kernel for prediction to read. Refused -
   Gaussian beliefs, planning in belief space, a rule that remembers, a dwell in time (#615), and a
   filtered value written over the observation.
-status: accepted
+status: superseded-in-part
+superseded-by: an-observation-is-a-percept-and-the-mind-reads-only-beliefs
 timestamp: 2026-10-09T12:00:00Z
 ---
+
+> **Superseded in part, 2026-10-09: the hysteresis is belief revision's, held by the belief.** What a
+> belief is — a crisp triple, with probability only inside an estimator — stands. Where a side is
+> held does not: [an-observation-is-a-percept-and-the-mind-reads-only-beliefs](/decisions/an-observation-is-a-percept-and-the-mind-reads-only-beliefs.md)
+> makes an observation a percept the mind never reads, and a state is held by revision judging a
+> percept beside the belief it replaces. The side carried onto the observation and the predicted
+> number judged bare, both below, are refused there.
 
 > **Amended 2026-10-09 (#944): the hysteresis is sensing's, and the want holds none of it.** As first
 > decided, a desire minted a want where its range was left and a standing want was reached only inside

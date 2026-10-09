@@ -46,7 +46,7 @@ Who may author what, and why isolation here is structural rather than enforced.
 * [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) - The world is TTL files and each agent holds its own store, so isolation is structural rather than enforced.
 * [series-and-bus-isolation](/decisions/series-and-bus-isolation.md) - A bucket and scoped token per agent; broker credentials and ACL derived from the same wiring that derives capability.
 * [the-self-is-a-class-held-to-one-instance](/decisions/the-self-is-a-class-held-to-one-instance.md) - The world authors who an agent is in its self graph and the boot checks it; a document says whose it is, never its file's name.
-* [a-belief-is-crisp-and-an-estimator-may-reason-with-probability](/decisions/a-belief-is-crisp-and-an-estimator-may-reason-with-probability.md) - A belief is a crisp triple; sensing and prediction may estimate with probability inside; sensing alone holds the hysteresis, one margin per range, no rule remembering.
+* [a-belief-is-crisp-and-an-estimator-may-reason-with-probability](/decisions/a-belief-is-crisp-and-an-estimator-may-reason-with-probability.md) - SUPERSEDED IN PART — a belief is a crisp triple, and an estimator may reason with probability inside; the hysteresis moved to belief revision.
 * [a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md) - Patience, budgets, a sensor's limits and the horizon are triples about the self in its self graph, read there alone; never a flag or public knowledge.
 
 # The mind — what an agent wants
@@ -172,6 +172,7 @@ From bytes on a topic to a quantity an agent believes — and who holds the cloc
 * [sensing-owns-the-reading-pipeline](/decisions/sensing-owns-the-reading-pipeline.md) - Codec, pointer, scaling, the sensed writer, observations and `readings.rq` move to sensing; what is known is a choir hook.
 * [the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md) - Sensing derives the region want and answers what a reading looks like; the kernel derives no want and keys nothing by property.
 * [one-agent-many-sensors](/decisions/one-agent-many-sensors.md) - Three of four combinations work, measured rather than assumed. Both failures come from a second kind of sensor on one subject.
+* [an-observation-is-a-percept-and-the-mind-reads-only-beliefs](/decisions/an-observation-is-a-percept-and-the-mind-reads-only-beliefs.md) - An observation is a percept sensing keeps; belief revision turns it into a belief in the domain's words, and the mind reads nothing else.
 
 # Firmware, alarms and stand-ins
 

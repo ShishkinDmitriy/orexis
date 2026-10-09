@@ -489,11 +489,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   accumulates the drifts' rates and imports nothing of sensing.
 - **A belief is a crisp triple, and probability lives only inside an estimator** — sensing and
   prediction may keep a mean and a spread while they work, and write a value, a side or a band as
-  two numbers; a side flipping on noise is held by sensing alone — one `sensing:margin` on a range's
-  condition, a reading judged below staying below until it clears the floor by it, the side before
-  carried onto the observation by `received` as the run is — never by a rule that remembers, a want,
-  a second range, the last N readings or a prediction, whose number has no instrument's noise (#944,
-  a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
+  two numbers (a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
+- **An observation is a percept and the mind reads only beliefs, in the domain's words** — sensing
+  keeps a sensor's percepts, named per reading and linked to the one before, as deep as its rules
+  read; revision makes of the latest one belief about the subject, judged beside the belief it
+  replaces, so a held state is the belief and no summary is carried onto the present; a predicted
+  number is judged the same way; one rule judges every range with its margin and the domain names
+  the states (#944, an-observation-is-a-percept-and-the-mind-reads-only-beliefs).
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
   read there alone, and the package's constant holds where none is stated** — the patience, both
   budgets, the silent and stuck limits and the horizon, each declared by its reader's package and
