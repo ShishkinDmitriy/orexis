@@ -16,7 +16,10 @@ description: >-
   value. Refused there: rewriting the want's shape to name the bed. And (#913): a row leaving
   unbound a parameter the world alone decides is no filling, so an action a world imports and holds
   nothing to take with makes no scope; refused, keeping such a scope standing empty for the sake of
-  a partition stable while the world runs, which it already is.
+  a partition stable while the world runs, which it already is. And (#944): the actions take the
+  subject and speak its state, the property is still bound by the world so it stays the scope's
+  term, and a graph names a member as its subject too, since a subject belief names its bed there
+  alone.
 status: accepted
 timestamp: 2026-10-04T12:00:00Z
 ---
@@ -225,15 +228,52 @@ stand full. And "a partition of the vocabulary belongs to the store" is a claim 
 partition is FOR — nobody's agent id — not about whether it reads the world: since #593 it is read
 off what the world binds, and a filling is what the world can take an action with.
 
+# The actions take the subject, and a graph names its members as its subject too (amended 2026-10-10, #944)
+
+The dose, the heating and the market's presenting take the [subject](/domain/actuation/subject.md)
+and speak its state — `climate:soil`, `climate:air` — where they took a reading and spoke its side
+([an-observation-is-a-percept-and-the-mind-reads-only-beliefs](/decisions/an-observation-is-a-percept-and-the-mind-reads-only-beliefs.md)).
+Nothing in this record's mechanism moved, and three things it reads did.
+
+**The greenhouse's two scopes are two predicates now, and two beds are still two keys.** The subject
+is bound by the world (`orexis:actsFor`, `actuation:actuates`), so it keys its own atom: the pump
+writes `(climate:soil, bed)` and the heater `(climate:air, bed)`, which a predicate partition would
+already part; a second bed with a pump writes `(climate:soil, bed2)`, which only the key parts.
+
+**The property is still a term of the scope, bound by the world.** The actions are each about one
+property now — the soil's state is the soil's moisture's — and a precondition reading
+`actuation:actuatesProperty climate:SoilMoisture` would bind no term, since a footprint keeps what a
+row BINDS. Measured: the soil's readings then named only the bed, of both scopes, and crossed into
+the air's imaginarium. So the property is a variable the world binds, held to its one value by a
+`VALUES` block — SPARQL's own way of bounding a variable — and the soil's moisture is a member of
+the dose's scope, as it was.
+
+**A graph names a member as its subject, a predicate or an object.** A subject belief,
+`:bed2 climate:soil climate:Dry`, names its bed as its subject alone; read by its predicates and
+objects, as `prepare_ground` read every graph, it named `climate:soil`, which both beds' scopes hold,
+and crossed into both — measured on the two-beds world, the first bed's imaginarium minted the
+second bed's want beside its own. A reading named its bed as an object, `sosa:hasFeatureOfInterest`,
+which is why nothing showed it before.
+
+**The lamp heats a cold frame's air.** The section above measured a lamp on the bed's light, a
+second filling of the one heating action; the heating speaks the air's state now, which no light
+reading is judged into, so the fixture's lamp warms a cold frame beside the bed — the heating's second
+filling still, keyed by the frame, admitted in the frame's scope alone
+(`world/greenhouse/tests/conftest.py`, `test_scaling.py`).
+
 # Measured
 
-- A possible world of the greenhouse is twelve quads, the scope's reading and its sides, one
-  percent of the present; with a light sensor, a lamp and a desire that the bed be lit, the soil's
-  world is the same twelve, where it was thirty-five against twenty-four before. The three grounds
-  together are the state, and none is
+- A possible world of the greenhouse is thirteen quads, the scope's reading, its sides and what the
+  agent believes of its bed (twelve before #944, the reading and its sides), one percent of the
+  present; with a cold frame, its thermometer and a heat lamp, the soil's world is the same thirteen
+  (with a light sensor, a lamp and a desire that the bed be lit, before #944, the same twelve, where
+  it was thirty-five against twenty-four before #593). The three grounds together are the state,
+  and none is
   ([measure-the-search](/runbooks/measure-the-search.md), `world/greenhouse/tests/test_scaling.py`).
-- The greenhouse boots to two scopes, `{SoilMoisture, Dosing}` and `{AirTemperature, Heating}`,
-  with the shared `sensing:below` and `sensing:inside`, the bed and the grower in both. A cold dry bed is two
+- The greenhouse boots to two scopes, `{climate:soil, SoilMoisture, Dosing, pump}` and
+  `{climate:air, AirTemperature, Heating, heater}`, the bed, the grower and the wait in both
+  (before #944 `{SoilMoisture, Dosing}` and `{AirTemperature, Heating}`, with the shared
+  `sensing:below` and `sensing:inside`). A cold dry bed is two
   wants in two imaginaria of one world each where it was one want over four worlds; the pass costs
   107 ms against 58, the whole difference the second imaginarium's filling
   ([measure-the-search](/runbooks/measure-the-search.md)).

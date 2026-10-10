@@ -1,7 +1,8 @@
 """The greenhouse in the 0.2.0 runtime: readings arrive over MQTT, sensing writes them and the rules
-conclude their sides, the grower's desire mints a want where a side is below, the plan's step is
-taken by sending the device a command sized from the reading, and the next reading answers it.
-The broker is a fake client: what is subscribed to and published is what is held."""
+conclude their sides, climate's transitions make the bed's soil and air of them, the grower's desire
+mints a want where the bed is believed dry or cold, the plan's step takes the bed and is taken by
+sending the device a command sized from the bed's latest reading, and the next reading's transition
+answers it. The broker is a fake client: what is subscribed to and published is what is held."""
 
 from __future__ import annotations
 
@@ -81,7 +82,7 @@ def test_a_reading_is_written_and_its_side_concluded(monkeypatch):
 def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_reading_answers_it(monkeypatch):
     """0.2 against a range of 0.30 to 0.60: the middle is 0.45, two litres a fraction make half a
     litre, which is the pump's cap. The dose goes out on the pump's topic, not retained; the next
-    reading, 0.45, is revised inside and the intention is done — the dose lands when that reading is
+    reading, 0.45, makes the bed believed moist and the intention is done — the dose lands when that reading is
     due, a cadence after the step's instant, so an answer is looked for from then and not before: the
     clock here ticks per read, so the step stands a few seconds after NOW and the reading comes a
     minute past the cadence."""
@@ -94,7 +95,7 @@ def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
     runtime.time.at = NOW + timedelta(minutes=11)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
-    assert runtime.parts["execution"].executor.walking() == [], "the reading was revised inside and answered the dose"
+    assert runtime.parts["execution"].executor.walking() == [], "the reading made the bed moist and answered the dose"
     assert ("SoilMoisture", "inside") in _sides(runtime.beliefs)
     assert len(broker.published) == 1, "one dose, and nothing more once the bed is comfortable"
 
@@ -156,8 +157,9 @@ def history():
 def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, history):
     """Both kinds of point, each from the package that decided it (#825): sensing's three readings,
     measured under their properties, and execution's dose — taken when the command went out, and
-    landed when the next reading was revised inside — tagged with the action, the want it was for
-    and the values the action takes."""
+    landed when the next reading made the bed moist — tagged with the action, the want it was for
+    and the values the action takes, the valve and the bed (#944: the reading, until the dose took the
+    subject)."""
     runtime, broker = _grower(monkeypatch)
     runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
@@ -182,8 +184,8 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     assert [p["fields"] for p in steps] == [{"taken": True}, {"landed": True}]
     (taken, landed) = steps
     assert taken["tags"] == landed["tags"], "one step, said twice"
-    assert taken["tags"]["action"] == "Dosing" and set(taken["tags"]) == {"action", "want", "valve", "reading"}
-    assert taken["tags"]["valve"] == "pump"
+    assert taken["tags"]["action"] == "Dosing" and set(taken["tags"]) == {"action", "want", "valve", "subject"}
+    assert (taken["tags"]["valve"], taken["tags"]["subject"]) == ("pump", "bed"), "the dose takes the bed, not a reading (#944)"
     assert taken["time"] < landed["time"], "taken, then answered"
     assert len(broker.published) == 1
 
@@ -308,11 +310,11 @@ def test_a_cold_bed_is_heated_for_as_long_as_the_gap_takes(monkeypatch):
 
 
 def test_a_cold_dry_bed_is_two_wants_planned_apart(monkeypatch):
-    """#593: the pump and the heater write the same predicates — a reading's side — and over
+    """#593: the pump and the heater wrote the same predicates — a reading's side — and over
     predicates alone they were one scope, so a cold dry bed was one want searched over both levers
-    at once, four worlds for two steps. Over keys the pump's reading is the soil's and the heater's
-    the air's, so the bed is two wants in two imaginaria of one world each, and both commands go
-    out in the one pass."""
+    at once, four worlds for two steps. Over keys the pump's reading was the soil's and the heater's
+    the air's; since #944 the two write the bed's soil and its air, two predicates. The bed is two
+    wants in two imaginaria of one world each, and both commands go out in the one pass."""
     runtime, broker = _grower(monkeypatch)
     runtime.deliver("sensors/thermometer/reading", b'{"value": 12.0}', NOW)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
@@ -338,7 +340,8 @@ def test_a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives(monkeypa
     The want minted for that instant was weighed in the present ground, read met there and was
     withdrawn in the pass that minted it — every pass, thirty log lines a minute, and the foresight
     never became a dose. It is weighed in the ground holding at its instant now: the search roots
-    there, where the predicted reading is below, finds the dose, and the executor holds the step
+    there, where the bed is foreseen dry — the predicted reading's transition run in that ground (#944)
+    — finds the dose, and the executor holds the step
     until it is due. Nothing is sent while the bed is comfortable, the plan survives the passes
     between, and the dose goes out once the crossing has come and the present admits it."""
     runtime, broker = _grower(monkeypatch)

@@ -32,5 +32,5 @@ cold at 17.99.
 
 # Who reads it
 
-Nothing yet: the heating still takes the reading and asks its side, and the air is the word it is to
-speak.
+The greenhouse's desire, which asks that no subject its grower acts for is believed cold, and the
+heating, admitted where one is and replacing `climate:Cold` by `climate:Comfortable` (#944).

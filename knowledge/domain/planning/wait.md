@@ -25,8 +25,8 @@ per stretch in which nothing predicted changes, and a world stands in the one ho
 The ground a wait reaches is the next one whose IDENTITY differs from the ground its world stands
 in. A ground is a world — the present with the predictions applied, holding over the period in which
 none of them changes — and a world's identity is its hash within what is read
-([cone](/domain/planning/cone.md)). A later ground that differs only by a reading's number inside its
-band is a ground of its own but the same place to the search, and a wait landing there would reach
+([cone](/domain/planning/cone.md)). A later ground that differs only by a reading's number, the
+subject's state unchanged, is a ground of its own but the same place to the search, and a wait landing there would reach
 the world it left, so `agent/planning/next_ground.py` walks the grounds and returns the first whose
 identity differs. It coins nothing: merging such grounds into one was tried and refused, since a
 ground's boundaries are also read as instants — where a want holds, where it is reached — and the

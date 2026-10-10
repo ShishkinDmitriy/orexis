@@ -16,12 +16,12 @@ description: >-
 | `market:Offering` | the host | a [round](/domain/market/round.md), open until it closes | the venue is `market:open`; the call is `market:offered` |
 | `market:Tendering` | each bidder | a bid: litres at a price per litre | — |
 | `market:Clearing` | the host, at the round's close | the round again, cleared, and a [claim](/domain/market/claim.md) to each winner | the call is `market:answered`; a winner `market:holdsClaimOn` the venue |
-| `market:Presenting` | a holder whose reading is below its range | a presentation of its claim | the claim is `market:presented` |
+| `market:Presenting` | a holder whose subject's soil is believed dry | a presentation of its claim | the claim is `market:presented` |
 | `market:Serving` | the host | the claim again, discharged — and a command to its valve | the holder's claim is discharged |
 
 # Why nobody runs it
 
-Each side is only searching for its own desires. A grower wants its soil inside its range; the
+Each side is only searching for its own desires. A grower wants its plot's soil not believed dry; the
 cheapest plan it finds is to call, tender and present, since it holds no water. The
 [host](/domain/market/host.md) wants no call unanswered and no presented claim unserved; its plans are
 to offer, clear and serve. The documents are the only contact between them, and each plan waits on

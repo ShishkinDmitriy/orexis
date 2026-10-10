@@ -43,20 +43,11 @@ from dataclasses import dataclass
 from agent.ontology import OREXIS, PUBLIC, STATE
 from agent.store import Raw, bind, catalogue_of, entry, forget_graph, graphs_of, revisions_of, rows, update
 
-from .ontology import RULES_GRAPH, state_graph
+from .ontology import state_graph
 from .revise import BUDGET
-from .transition import Rule, applied, asked, ordered
+from .transition import applied, asked, transitions
 
 log = logging.getLogger("trigger")
-
-#  EVERY TRANSITION, over the rules graphs: each active one, with its order, its construct and its delete.
-_TRANSITIONS_Q = """
-SELECT DISTINCT ?rule ?order ?construct ?delete WHERE {
-  ?rule a belief:Transition .
-  FILTER NOT EXISTS { ?rule sh:deactivated true }
-  OPTIONAL { ?rule sh:order ?o } OPTIONAL { ?rule sh:construct ?construct } OPTIONAL { ?rule belief:delete ?delete }
-  BIND(COALESCE(?o, 0) AS ?order) }
-ORDER BY ?order ?rule"""
 
 #  WHETHER THE ARRIVAL IS TESTIMONY, WHOSE IT IS AND WHEN IT HOLDS, off its row: the state graph it is
 #  given has the same owner and period.
@@ -98,8 +89,7 @@ def trigger(store, arrival: str, *, budget: int = BUDGET, done: int = 0) -> Trig
     row = next(iter(rows(store, _ARRIVAL_Q, (), cat=Raw(f"<{cat}>"), arrival=arrival)), None)
     if row is None:
         return Triggered(0, done, True)
-    found = rows(store, _TRANSITIONS_Q, graphs_of(store, RULES_GRAPH))
-    orders = ordered(Rule(float(r["order"]), r.get("construct"), r.get("delete"), r["rule"]) for r in found)
+    orders = transitions(store)
     if done >= len(orders):
         return Triggered(0, done, True)
     into = state_graph(arrival)

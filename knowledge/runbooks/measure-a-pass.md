@@ -34,11 +34,13 @@ the pass DID and never on what it cost:
 |---|---|---|
 | `cold_dry_bed` | 12 degrees, 0.2 | two wants in two scopes, the pump's and the heater's commands |
 | `comfortable_bed` | 21 degrees, 0.45 | nothing — the price of a quiet pass |
-| `lit_cold_dry_bed` | the cold dry bed and a light at 100 lux | three scopes, the lamp's command with the other two |
+| `framed_cold_dry_bed` | the cold dry bed and a cold frame beside it at 5 degrees | three scopes, the heat lamp's command with the other two |
 | `dose_and_heating_answered` | the cold dry bed dosed, then 21 and 0.45 eleven minutes on | both intentions `done`, nothing new sent — the warm pass of a running agent |
 
-The light is `world/greenhouse/tests/conftest.py`'s `lit_greenhouse`, the copy
-`world/greenhouse/tests/test_scaling.py` holds the soil's search flat under.
+The frame is `world/greenhouse/tests/conftest.py`'s `framed_greenhouse`, the copy
+`world/greenhouse/tests/test_scaling.py` holds the soil's search flat under. The ledger's rows before
+2026-10-10 name the third case `lit_cold_dry_bed`, a light on the bed and a lamp raising it, which
+the heating could fill until it came to speak the air's state (#944); the two are not one series.
 
 **The clocks are the agent's own.** Nothing here times a second way: the bench connects to the
 runtime's `passed` and the Planner's `planned` exactly as the metrics part does, so what it reads

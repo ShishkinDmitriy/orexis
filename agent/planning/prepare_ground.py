@@ -76,6 +76,7 @@ import logging
 
 import pyoxigraph as ox
 
+from agent.belief.ontology import RULES_GRAPH
 from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD, STATE
 from agent.store import catalogue_of, forget_graph, graphs_of, revisions_of, rows
 
@@ -94,7 +95,7 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
     to every scope it is in; a reading or a prediction whose named members meet in other scopes
     alone is theirs and stays behind. Handed neither, everything crosses.
 
-    THREE THINGS CROSS, and then a fourth is BUILT:
+    FOUR THINGS CROSS, and then a fifth is BUILT:
 
     1. **Every public graph, asked rather than listed.** The record budgeted for four — world,
        derived, entailed, beliefs, 486 quads — on the reasoning that those are what the shipped
@@ -118,8 +119,10 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
        every world forked from it their size, whatever sensors the agent grows elsewhere. Safe
        where narrowing the public graphs was not, because the same test already refuses every
        filling that could reach such a reading: no candidate of this scope binds another scope's
-       key, so no rule of this scope's search reaches the reading left out. Named is a predicate
-       or an object: the tower's one state graph says where every disk and the van stand in the
+       key, so no rule of this scope's search reaches the reading left out. Named is a subject, a
+       predicate or an object — a subject belief, `:bed2 climate:soil climate:Dry`, names its bed
+       as its subject alone, and read by predicates and objects it named only the soil, held by
+       both beds' scopes, and crossed into both (#944): the tower's one state graph says where every disk and the van stand in the
        courier's cells, and its revisions conclude `hanoi:on` of it, the puzzle's word, which no
        scope holds together, so it is both scopes' and crosses into both; a bed's soil reading
        names the bed, of the pump's scope and the heater's, and the soil's property, of this
@@ -132,7 +135,10 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
        and a desire broken in two scopes minted one want about both — which the plans case's
        diff showed as a `DROPPED` graph, and no case of the derivation's could, since those
        run on a store the scopes were never taken from.
-    4. **The GROUND WORLDS** are `lay_ground`'s, called next: one graph per period the agent can
+    4. **The rules graphs**, every one, for the transitions in them: a predicted observation
+       arriving in a ground triggers them there as a received one does in the present, so the
+       state a ground holds is judged by the rules the beliefs hold (#944).
+    5. **The GROUND WORLDS** are `lay_ground`'s, called next: one graph per period the agent can
        see, classified `planning:GroundGraph` with the stretch it holds over.
 
     QUADS AND NOT TEXT, which is why this is not a `dump`-and-`load`: a serialise-and-reparse
@@ -160,11 +166,12 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
 def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset[str]:
     """Every reading and prediction that is other scopes' alone, with its revisions: a graph of
     the kinds the ground is made of whose quads, taken with what was concluded of it, name — as a
-    predicate or an object — members whose scopes meet without `scope`. The test is `admit`'s on
-    a filling's values, asked of a reading's: a sensing observation names its feature and its
+    subject, a predicate or an object — members whose scopes meet without `scope`. The test is
+    `admit`'s on a filling's values, asked of a reading's: a sensing observation names its feature and its
     property in its revisions and a prediction copies the node whole, so the one that names the
     air's property is the air's, and one naming a bed of two scopes and a property of two is the
-    one scope's they share; the tower's state names the courier's cells and its revisions the
+    one scope's they share; a subject belief names its bed as its subject and its state's word as
+    its predicate, and is the scope's they meet in; the tower's state names the courier's cells and its revisions the
     puzzle's `on`, which meet nowhere, and is both scopes'. Nothing, in a store of one scope or
     for a caller naming none."""
     if scope is None or not scopes or len(scopes.all()) < 2:
@@ -176,16 +183,19 @@ def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset
         for g in group:
             for q in beliefs.quads_for_pattern(None, None, None, ox.NamedNode(g)):
                 named.add(q.predicate.value)
-                if isinstance(q.object, ox.NamedNode):
-                    named.add(q.object.value)
+                for term in (q.subject, q.object):
+                    if isinstance(term, ox.NamedNode):
+                        named.add(term.value)
         home = scopes.meet(named)
         if home and scope not in home:
             behind.update(group)
     return frozenset(behind)
 
 
-#  THE KINDS THAT CROSS, spelled once for the filling and the refresh.
-CROSSING = (PUBLIC, STATE, PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH)
+#  THE KINDS THAT CROSS, spelled once for the filling and the refresh — the rules graphs among them,
+#  since a ground laid here runs the transitions a predicted observation triggers (`lay_ground`, #944),
+#  and they are the rules the beliefs hold, read where they lie.
+CROSSING = (PUBLIC, STATE, PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH, RULES_GRAPH)
 
 #  WHAT THE STORE MADE FOR ITSELF, which a refresh keeps: the grounds, the possible worlds and
 #  the plans, which are planning's kinds, and the wants the derivation minted, which are a

@@ -4,8 +4,11 @@ revising the observation and then applying the transitions it triggers, climate'
 (`domains/climate/rules.ttl`) — and held by the margins the bed's operating range states, 0.0002 on
 the soil and 0.02 on the air (a-transition-changes-the-state-and-an-inference-only-concludes).
 
-Nothing the grower does reads a subject belief yet, so this holds the belief alone: every other
-greenhouse figure is the suite's beside it, unchanged.
+The grower's mind reads nothing else (#944's second slice): its desire asks the bed's soil and air, the
+dose and the heating take the bed and speak its state, and only a command sizing a step and a drift
+read a reading's number. And a ground the planner lays ahead holds the states a predicted observation's
+transitions make there, beside the state the ground before it held (#944's third slice, in part), so
+the hold reaches the forecast: the last cases here say what that does to a bed held dry at its floor.
 """
 
 from __future__ import annotations
@@ -235,3 +238,95 @@ def test_a_subject_belief_is_kept_in_a_volume_lived_in(monkeypatch):
     assert _believed(again.beliefs, "soil") == "Dry"
     later["at"] = NOW + CADENCE
     assert _read(again, later, SOIL, [0.3001]) == ["Dry"]
+
+
+#  UNDER THE FLOOR ONCE, THEN A TEN-THOUSANDTH OVER IT FOR AN HOUR, never reaching 0.3002.
+HELD = [0.2999, 0.3001, 0.3001, 0.3001, 0.3001, 0.3001, 0.3001]
+
+#  WHAT EACH GROUND THE GROWER LAID HOLDS OF THE BED'S SOIL, in every imaginarium, earliest first.
+_FORESEEN_Q = f"""
+SELECT ?start ?state WHERE {{
+  GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start }}
+  GRAPH ?g {{ <{GH}bed> <{CLIMATE}soil> ?state }} }} ORDER BY ?start"""
+
+
+class _Published:
+    """What the grower publishes, and nothing else of MQTT."""
+
+    def __init__(self):
+        self.published = []
+
+    def subscribe(self, pattern):
+        pass
+
+    def publish(self, topic, payload, retain=False):
+        self.published.append((topic, json.loads(payload)))
+
+
+def _at_rest(tmp_path: Path, *, pump: bool) -> Path:
+    """The greenhouse, copied, with its bed at rest — nothing dries it — and, where `pump` is false, a
+    grower holding the heater alone, so a dry bed stands unrepaired."""
+    import shutil
+    world = tmp_path / "world" / "greenhouse"
+    shutil.copytree(WORLD, world, ignore=shutil.ignore_patterns("tests", "secrets", "__pycache__"))
+    (tmp_path / "domains").symlink_to(WORLD.parents[1] / "domains")
+    text = (world / "world.ttl").read_text()
+    assert "climate:driesPerDay 0.04 ;" in text
+    (world / "world.ttl").write_text(text.replace("climate:driesPerDay 0.04 ;", "climate:driesPerDay 0.0 ;"))
+    if not pump:
+        society = (world / "society.ttl").read_text()
+        assert "actuation:hasActuator :pump , :heater ." in society
+        (world / "society.ttl").write_text(society.replace("actuation:hasActuator :pump , :heater .",
+                                                           "actuation:hasActuator :heater ."))
+    return world
+
+
+def _held(tmp_path, monkeypatch, *, pump: bool):
+    """The bed at rest, read `HELD` a cadence apart, the air comfortable, a pass after each: what the
+    grower published, the actions of the steps it took, and after each pass the bed's soil as believed
+    and as each ground ahead holds it."""
+    time = {"at": NOW}
+    monkeypatch.setattr(clock, "now", lambda: time["at"])
+    broker = _Published()
+    runtime = Runtime(boot(_at_rest(tmp_path, pump=pump), "grower"), "grower", transport=Mqtt(GH + "grower", broker))
+    taken: list = []
+    runtime.parts["execution"].executor.step_taken.connect(lambda event: taken.append(event.action) or [])
+    present, ahead = [], []
+    for n, value in enumerate(HELD):
+        time["at"] = NOW + n * CADENCE
+        runtime.deliver(SOIL, json.dumps({"value": value}).encode(), time["at"])
+        runtime.deliver(AIR, json.dumps({"value": 21.0 + n / 100}).encode(), time["at"])
+        runtime.run(passes=1, poll_s=0)
+        present.append(_believed(runtime.beliefs, "soil"))
+        laid = [(r["start"], r["state"].rsplit("#", 1)[-1])
+                for im in runtime.parts["planning"].planner.imaginaria.values() for r in rows(im, _FORESEEN_Q, ())]
+        ahead.append(sorted({state for start, state in laid if datetime.fromisoformat(start) > time["at"]}))
+    return broker.published, [local for local in (str(a).rsplit("#", 1)[-1] for a in taken)], present, ahead
+
+
+def test_a_bed_held_dry_is_foreseen_dry_and_a_grower_with_no_pump_commits_no_wait(tmp_path, monkeypatch):
+    """THE HOLD REACHES THE FORECAST. No pump, the bed at rest, its probe read under the floor once and
+    then a ten-thousandth over it for an hour: the present is held dry by the margin, and so is every
+    ground the grower lays ahead — the predicted 0.3001 is judged there by climate's soil transition,
+    beside the state the ground before it held, as the reading is in the present. Nothing ahead reads
+    the bed moist, so no `planning:Wait` reaches a world where the want is met, and none is committed.
+
+    Measured on #946's build, where a predicted number was judged bare, the stretch ahead read inside
+    and the grower committed three waits in this hour, each sending nothing; and on this tree with the
+    ground's transitions handed no state before — the predicted number judged bare again — three, the
+    same, which is what this case is red at."""
+    published, taken, present, ahead = _held(tmp_path, monkeypatch, pump=False)
+    assert present == ["Dry"] * len(HELD), present
+    assert all(seen == ["Dry"] for seen in ahead), f"every ground ahead holds the bed dry: {ahead}"
+    assert ("Wait" not in taken, published) == (True, []), (taken, published)
+
+
+def test_a_bed_held_dry_beside_a_pump_is_dosed_again_and_never_waited_for(tmp_path, monkeypatch):
+    """THE DOSE IS NOT HELD UP BY IT. The same readings with the pump: 0.2999 is dosed 300 ml, to the
+    middle of the range by two litres a fraction; the readings held dry say the dose did not take, so
+    the step is not answered, its patience runs out, and the want, still standing, is dosed again —
+    four doses in the hour, and no wait, as on #946's build."""
+    published, taken, present, _ = _held(tmp_path, monkeypatch, pump=True)
+    assert present == ["Dry"] * len(HELD), present
+    assert "Wait" not in taken, taken
+    assert published == [("actuators/pump/command", {"dose_ml": 300})] * 4, published

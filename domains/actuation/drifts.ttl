@@ -16,7 +16,10 @@
 #
 #  SIZED TO THE AIM THE COMMAND SIZES TO (actions.ttl): the rise is the dose in millilitres the
 #  command will send — to the middle of the subject's operating range, at most the valve's cap —
-#  back in fractions, by the subject's litres per fraction. Spread over the window it is a rate: the
+#  back in fractions, by the subject's litres per fraction. The step names the subject it acts on, and
+#  the number is read off the observation of that subject's soil moisture the prediction is made
+#  from: prediction is an estimator at the boundary and reads the number, where the mind reads only
+#  the subject's soil (#944). Spread over the window it is a rate: the
 #  high trajectory has the whole rise in by the earliest landing (`execution:landsWithinS`), the low
 #  one by the latest (`execution:answeredWithinS`), which is how a late landing widens the corridor;
 #  a dose lands at the least at once (#596), and a rise over no time is no rate, so a second stands
@@ -32,7 +35,7 @@ actuation:Dosed a prediction:Drift ;
         PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?low ?high ?until WHERE {
-            ?step actuation:valve ?valve ; actuation:reading ?reading ;
+            ?step actuation:valve ?valve ; actuation:subject $feature ;
                   execution:landsWithinS ?soon ; execution:answeredWithinS ?late .
             ?valve actuation:actuates $feature ; actuation:actuatesProperty climate:SoilMoisture ;
                    actuation:maxDoseMl ?cap .

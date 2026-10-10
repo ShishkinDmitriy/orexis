@@ -1,0 +1,43 @@
+--- case
++++ expected
+@@ -110,4 +110,40 @@
+   :sensed orexis:beliefsOf :keeper .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:20:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:e1d60a9ede6f20186aae45ee9428bbd6fcb5cd50e688d92fa56b9fcf3efb7731" .
++  ground:2026-01-01T122000p0000 a planning:GroundGraph .
++  ground:2026-01-01T122000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:20:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T122000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T122000p0000 orexis:hash "sha256:e5009a463916e177311e5fcf069b85c59fa08e6e432dae5f5af1fd097bf6d257" .
++  ground:2026-01-01T122000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T130000p0000 a planning:GroundGraph .
++  ground:2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T130000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T130000p0000 orexis:hash "sha256:56bdca270ff08c9fadae15d707a892a2bbca513b01a360d4559983c3c011a77c" .
++  ground:2026-01-01T130000p0000 prov:wasDerivedFrom ground:2026-01-01T122000p0000 .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :bed :soil :Dry .
++  :soil a sosa:Observation .
++  :soil sosa:hasFeatureOfInterest :bed .
++  :soil sosa:hasSimpleResult 0.2999 .
++}
++
++GRAPH ground:2026-01-01T122000p0000 {
++  :bed :soil :Dry .
++  :soil a sosa:Observation .
++  :soil sosa:hasFeatureOfInterest :bed .
++  :soil sosa:hasSimpleResult 0.3001 .
++}
++
++GRAPH ground:2026-01-01T130000p0000 {
++  :bed :soil :Moist .
++  :soil a sosa:Observation .
++  :soil sosa:hasFeatureOfInterest :bed .
++  :soil sosa:hasSimpleResult 0.35 .
++}

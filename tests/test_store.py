@@ -86,3 +86,60 @@ def test_queries_use_only_declared_prefixes(path):
         assert not undeclared, (
             f"{path.relative_to(REPO_ROOT)} sends a query using {sorted(undeclared)}, which neither "
             f"the store declares nor the text does. A harness that pre-binds it would let this pass.")
+
+
+#  THE MIND READS ONLY BELIEFS (#944, an-observation-is-a-percept-and-the-mind-reads-only-beliefs): what
+#  a search and a derivation read — a desire's or a want's met-test, an estimate, an action's
+#  precondition, its cost, when it lands and its effect — speaks what the agent holds of a subject, in a
+#  domain's words, and never what a sensor said: no side a rule concluded of a reading, and no number a
+#  reading carries. The number's two readers stand at the boundary, and neither is held here: a command,
+#  sizing a step when it is taken (an implementation), and a drift, prediction's rate.
+_READ_BY_THE_MIND = ("precondition", "costs", "landsAfter", "effect", "metWhen", "unmetWhen", "estimates")
+_PERCEPT = re.compile(r"sensing[:#](?:below|inside|above)\b|sosa(?::|/)hasSimpleResult\b")
+
+
+def _read_by_the_mind(path: Path) -> list[tuple[str, str]]:
+    """Every `(what, said)` a text of `path` the mind reads says — each IRI and literal reachable from
+    the node a `planning:` term above points at, through its blank nodes, its lists and the shapes it
+    names in the same document, never through a target."""
+    import rdflib
+
+    g = rdflib.Graph()
+    g.parse(path, format="turtle")
+    planning = rdflib.Namespace("http://example.org/orexis/planning#")
+    skip = {rdflib.URIRef("http://www.w3.org/ns/shacl#targetNode")}
+    out = []
+    for term in _READ_BY_THE_MIND:
+        for holder, start in g.subject_objects(planning[term]):
+            seen, todo = set(), [start]
+            while todo:
+                node = todo.pop()
+                if node in seen:
+                    continue
+                seen.add(node)
+                if isinstance(node, rdflib.Literal):
+                    out.append((f"{holder} {term}", str(node)))
+                    continue
+                out.append((f"{holder} {term}", str(node)))
+                for p, o in g.predicate_objects(node):
+                    if p in skip:
+                        continue
+                    out.append((f"{holder} {term}", str(p)))
+                    todo.append(o)
+    return out
+
+
+def test_the_mind_reads_no_side_and_no_number_of_a_reading():
+    """Held over every document a domain or a world ships. Two figures say it is looking: the dose's
+    precondition is among what it read, and so is the greenhouse's desire."""
+    read = {path: _read_by_the_mind(path) for path in _GROUPS["domains"] + [p for p in _GROUPS["worlds"] if p.suffix == ".ttl"]}
+    said = [(path, what, text) for path, found in read.items() for what, text in found]
+    assert any(path.parts[-2:] == ("actuation", "actions.ttl") and "precondition" in what for path, what, _ in said), \
+        "the dose's precondition was not read — the glob or the walk stopped finding it"
+    assert any(path.parts[-2:] == ("greenhouse", "desires.ttl") and "metWhen" in what for path, what, _ in said), \
+        "the greenhouse's desire was not read"
+    offending = sorted({f"{path.relative_to(REPO_ROOT)}: {what} reads {m.group(0)}"
+                        for path, what, text in said for m in _PERCEPT.finditer(text)})
+    assert not offending, (
+        "a text the mind reads speaks a reading's side or its number; it reads what the agent holds of the "
+        "subject, in the domain's words, and only a command or a drift reads the number:\n" + "\n".join(offending))

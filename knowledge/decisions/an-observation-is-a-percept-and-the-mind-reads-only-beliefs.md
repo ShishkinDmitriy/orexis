@@ -13,7 +13,8 @@ description: >-
   Desires, preconditions and effects speak the belief, an action takes the subject and not a
   reading, and the number is read off the percept by its two readers at the boundary alone,
   prediction and a command sizing its step when it is taken; planning's and execution's code are
-  untouched. Amended the next day - the belief holds no value. Refused - the observation as the
+  untouched. Amended the next day - the belief holds no value; and, built, planning's code was
+  touched once, where a ground is laid. Refused - the observation as the
   belief, summaries a writer carries onto the present, a side re-derived from the last N numbers,
   the hold read off the previous percept, a predicted number judged bare, and a hold written once
   per property.
@@ -29,6 +30,19 @@ timestamp: 2026-10-09T20:00:00Z
 > per property — [a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md)
 > makes the belief a domain's transition, triggered once by the observation arriving, deleting the state
 > before and inserting the new one, and engages that refusal there.
+
+> **Amended 2026-10-10 (#944's second slice): the mind reads the subject belief, and planning's code
+> was not untouched.** The desires, preconditions and effects speak the subject's state and the
+> actions take the [subject](/domain/actuation/subject.md), as decided. But "a predicted number becomes a
+> predicted belief the same way" could not wait for the third slice: once a desire read the bed's soil,
+> every ground ahead kept the present's state and a foreseen crossing read met. So `lay_ground` runs
+> the transitions a predicted observation triggers in the ground it lays
+> ([a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md)),
+> the imaginarium crosses the rules graphs to do it, and `prepare_ground` reads a member as a graph's
+> subject too, since a subject belief names its bed there alone
+> ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)). Execution's code is
+> untouched. Measured: the grower with no pump, held dry at its floor for an hour, foresees the bed dry
+> and commits no wait, where #946's build committed three.
 
 > **Amended 2026-10-10 (#947): the belief is the state, and holds no number.** As first decided, the
 > belief carried the subject's value beside its state — "its moisture is 0.3001" — so that a command

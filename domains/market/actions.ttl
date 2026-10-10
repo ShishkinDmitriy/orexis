@@ -17,7 +17,7 @@
 #  the round's closing instant and the clearing's matching are decided there and never searched.
 #
 #  A bidder in trouble plans call, tender, present: presenting is the one act that brings its
-#  reading inside, it needs a claim held, a tender makes one, and a tender needs an open venue,
+#  subject's soil to be believed moist, it needs a claim held, a tender makes one, and a tender needs an open venue,
 #  which a call makes. A host with an unanswered call plans offer, clear: the offer lands when
 #  its window closes, so the clearing is not taken before. A presented claim it plans to serve.
 
@@ -85,24 +85,29 @@ market:Tendering a orexis:Action ;
             BIND(IRI(CONCAT(STR(?round), "-bid-", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?bid)
         }""" ] ] .
 
+#  PRESENTING TAKES THE SUBJECT, as the dose does (#944): a claim on a venue whose water is for the
+#  soil's moisture, presented for a subject the agent acts for whose soil is believed dry, brings it
+#  to be believed moist. The property is bound by the world — the venue's — and held to the soil's
+#  moisture, since the soil is the state the effect speaks.
 market:Presenting a orexis:Action ;
-    rdfs:label "present a claim I hold on a venue for my reading below its range" ;
-    orexis:takes market:venue , actuation:reading ;
+    rdfs:label "present a claim I hold on a venue for my subject whose soil is believed dry" ;
+    orexis:takes market:venue , actuation:subject ;
     planning:precondition """PREFIX market: <http://example.org/orexis/market#>
-        PREFIX sensing: <http://example.org/orexis/sensing#>
-        SELECT DISTINCT ?venue ?reading WHERE {
+        PREFIX climate: <http://example.org/orexis/climate#>
+        SELECT DISTINCT ?venue ?subject WHERE {
+            VALUES ?property { climate:SoilMoisture }
             ?me a orexis:Self ; market:holdsClaimOn ?venue ; orexis:actsFor ?subject .
             ?venue market:aboutProperty ?property .
-            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range .
+            ?subject climate:soil climate:Dry .
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX market: <http://example.org/orexis/market#>
-        PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { $reading sensing:below ?range . ?me market:holdsClaimOn $venue  }
-        WHERE  { ?me a orexis:Self ; market:holdsClaimOn $venue . $reading sensing:below ?range  }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
-        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] ;
+        PREFIX climate: <http://example.org/orexis/climate#>
+        DELETE { $subject climate:soil climate:Dry . ?me market:holdsClaimOn $venue  }
+        WHERE  { ?me a orexis:Self ; market:holdsClaimOn $venue . $subject climate:soil climate:Dry  }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
+        CONSTRUCT { $subject climate:soil climate:Moist } WHERE { $subject climate:soil climate:Dry }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?presentation a market:Presentation , market:PresentationGraph ; market:presents ?claim ;

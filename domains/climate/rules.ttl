@@ -26,8 +26,10 @@
 #  per property, since what a state is and when it holds is this domain's meaning and not sensing's:
 #  the cost is the hold said twice, and the two must be kept alike by hand.
 #
-#  A predicted observation is the agent's own, recorded, and triggers nothing (the record's seam: a
-#  predicted arrival's transition is slice 3's). A forecast is testimony and triggers both, and an
+#  A predicted observation is the agent's own, recorded, and triggers nothing in the belief base; in a
+#  ground the planner lays ahead it is an arrival, and both transitions run there beside the state the
+#  ground before held, so the hold reaches what is foreseen (#944, `agent/planning/lay_ground.py`).
+#  A forecast is testimony and triggers both, and an
 #  observation in it of soil moisture or air temperature would be judged as a reading is; the shipped
 #  forecast is the terrace's precipitation, which neither is about. Each chain of two operators is
 #  parenthesised, since this engine reads `a - b + c` as `a - (b + c)`.

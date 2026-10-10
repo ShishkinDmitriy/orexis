@@ -7,7 +7,7 @@ description: >-
   between the instants the reading changes range. The drifts moving the property answer rates that
   add, accumulated from the observation between happenings; each stretch holds a predicted
   observation, its side concluded by the same rules as a real reading's, and the planner lays a
-  ground per stretch.
+  ground per stretch, where the observation's transitions make the subject's foreseen state.
 ---
 
 # What a drift is
@@ -54,6 +54,10 @@ observation, and no further: a package that declares no drift has claimed nothin
   and the present with each prediction applied at its instant - a prediction is a diff, and only a
   ground has applied it. The derivation judges every desire in every ground, so a crossing
   foreseen at noon mints a want at noon.
+- **The subject's state in that ground.** The predicted observation arrives in the ground it is laid
+  into and triggers the [transitions](/domain/belief/transition.md) there, beside the state the ground
+  before held, so the margin holds what is foreseen as it holds the present. The prediction itself
+  holds the number and no state (#944).
 - **Nothing of the present.** A prediction and a revision are derived from the same observation,
   and only the revision is a belief; the executor answers a step over the readings and their
   revisions, never over what was foreseen.

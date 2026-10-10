@@ -1,0 +1,135 @@
+# a_predicted_reading_is_judged_beside_the_state_the_ground_before_held
+#
+# A PREDICTED OBSERVATION IS AN ARRIVAL IN THE GROUND IT IS LAID INTO (#944). The bed is believed dry
+# — `:believed`, the state the soil's transition wrote when the reading arrived, a state graph the
+# agent DERIVED — and the reading in hand is 0.2999, under the floor. Three predictions of the soil
+# follow it:
+#
+# - `:held_ahead` at 12:20 says 0.3001, a ten-thousandth over the floor and short of the floor and its
+#   margin. Its transition reads the predicted reading beside the state the present holds, dry, and
+#   the bed is foreseen dry: held by the margin as the present would hold it. A period of its own,
+#   since the number moved. Judged bare, the number would have read moist.
+# - `:held_later` at 12:40 says exactly what `:held_ahead` said, and its transition changes nothing, so
+#   the ground it would make holds what the one before holds: the grounds still COLLAPSE, and 12:40 is
+#   no period and no ground.
+# - `:rising` at 13:00 says 0.35, past the floor and its margin, and the bed is foreseen moist: the
+#   state before is deleted from the ground and the new one inserted.
+#
+# What a transition changes is the ground being laid, and the present is never written to:
+# `:believed` still says dry after the fill. The working graph the agent's own state is kept in while
+# the grounds are laid is gone once they are.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
+
+GRAPH :ontology {
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :bed :floor 0.3 .
+  :bed :margin 0.0002 .
+  :bed a sosa:FeatureOfInterest .
+  :keeper a orexis:Agent .
+}
+
+GRAPH :rules {
+  :soilRule a belief:Transition .
+  :soilRule belief:delete """PREFIX : <http://example.org/test#>
+      DELETE { ?subject :soil ?before }
+      WHERE  { ?obs sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value . ?subject :soil ?before }""" .
+  :soilRule sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?subject :soil ?state }
+      WHERE {
+        ?obs sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value .
+        ?subject :floor ?floor ; :margin ?margin .
+        OPTIONAL { ?subject :soil ?before }
+        BIND(IF(?value < ?floor || (BOUND(?before) && sameTerm(?before, :Dry) && ?value < (?floor + ?margin)), :Dry, :Moist) AS ?state)
+      }""" .
+}
+
+GRAPH :sensed {
+  :soil a sosa:Observation .
+  :soil sosa:hasFeatureOfInterest :bed .
+  :soil sosa:hasSimpleResult 0.2999 .
+}
+
+GRAPH :believed {
+  :bed :soil :Dry .
+}
+
+GRAPH :held_ahead {
+  :soil a sosa:Observation .
+  :soil sosa:hasFeatureOfInterest :bed .
+  :soil sosa:hasSimpleResult 0.3001 .
+}
+
+GRAPH :held_later {
+  :soil a sosa:Observation .
+  :soil sosa:hasFeatureOfInterest :bed .
+  :soil sosa:hasSimpleResult 0.3001 .
+}
+
+GRAPH :rising {
+  :soil a sosa:Observation .
+  :soil sosa:hasFeatureOfInterest :bed .
+  :soil sosa:hasSimpleResult 0.35 .
+}
+
+GRAPH :catalogue {
+  :believed a orexis:Graph .
+  :believed a orexis:StateGraph .
+  :believed orexis:arrivedBy orexis:Derived .
+  :believed orexis:beliefsOf :keeper .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :held_ahead a orexis:Graph .
+  :held_ahead a orexis:PredictionGraph .
+  :held_ahead dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:40:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:20:00+00:00"^^xsd:dateTime ] .
+  :held_ahead orexis:beliefsOf :keeper .
+  :held_ahead orexis:retracts """PREFIX : <http://example.org/test#>
+      DELETE { GRAPH $state { :soil ?p ?o } }
+      WHERE  { GRAPH $state { :soil ?p ?o } }""" .
+  :held_ahead prov:wasDerivedFrom :sensed .
+  :held_later a orexis:Graph .
+  :held_later a orexis:PredictionGraph .
+  :held_later dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:40:00+00:00"^^xsd:dateTime ] .
+  :held_later orexis:beliefsOf :keeper .
+  :held_later orexis:retracts """PREFIX : <http://example.org/test#>
+      DELETE { GRAPH $state { :soil ?p ?o } }
+      WHERE  { GRAPH $state { :soil ?p ?o } }""" .
+  :held_later prov:wasDerivedFrom :sensed .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :rising a orexis:Graph .
+  :rising a orexis:PredictionGraph .
+  :rising dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+  :rising orexis:beliefsOf :keeper .
+  :rising orexis:retracts """PREFIX : <http://example.org/test#>
+      DELETE { GRAPH $state { :soil ?p ?o } }
+      WHERE  { GRAPH $state { :soil ?p ?o } }""" .
+  :rising prov:wasDerivedFrom :sensed .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :sensed a orexis:Graph .
+  :sensed a orexis:StateGraph .
+  :sensed orexis:arrivedBy orexis:Received .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

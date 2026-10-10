@@ -1,8 +1,6 @@
 @prefix : <http://example.org/orexis/world/greenhouse#> .
 @prefix climate: <http://example.org/orexis/climate#> .
 @prefix orexis: <http://example.org/orexis#> .
-@prefix sensing: <http://example.org/orexis/sensing#> .
-@prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
@@ -10,34 +8,31 @@
 <> a planning:DesireGraph .    # this document is one graph, and this is what it is
 <> orexis:beliefsOf :grower .    # and whose it is — said here, never by the file's name
 
-#  THE DESIRE THIS WORLD EXISTS FOR, about TWO properties: the bed is comfortable when neither its
-#  soil nor its air is read below a range the bed states. A desire and not a want, since it asks at
-#  every instant — the grower runs for good. Asked BY SIDE: what the met-test reads is what the
-#  rules concluded of a reading, `sensing:below`, never the number, and a step's effect speaks the
-#  same concept. Each property shape says which property and which way it broke, so the want
-#  minted from a dry bed is about the soil and a cold one about the air.
+#  THE DESIRE THIS WORLD EXISTS FOR, about TWO properties: the bed is comfortable when its soil is not
+#  believed dry and its air not believed cold. A desire and not a want, since it asks at every instant
+#  — the grower runs for good. Asked of the SUBJECT, in climate's words (#944): what the met-test reads
+#  is what the agent holds of the bed — its soil, its air — as climate's transitions make it of each
+#  reading, never a reading, its side or its number, and a step's effect speaks the same state. Each
+#  property shape says which property and which way it broke, and offends with the bed itself, so the
+#  want minted from a dry bed is about the soil, keyed by that bed, and a cold one about the air.
 
 :grower planning:holds :the_bed_is_comfortable .
 
 :the_bed_is_comfortable a planning:Desire ;
-    rdfs:label "the bed is comfortable — soil and air both inside the ranges the bed states" ;
+    rdfs:label "the bed is comfortable — its soil not dry and its air not cold" ;
     planning:metWhen :comfortable .
 
 :comfortable a sh:NodeShape ;
     sh:targetNode :grower ;
     sh:property [
-        sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+        sh:path orexis:actsFor ;
         planning:about climate:SoilMoisture ;
         sh:qualifiedMaxCount 0 ;
-        sh:qualifiedValueShape [
-            sh:property [ sh:path sosa:observedProperty ; sh:hasValue climate:SoilMoisture ] ;
-            sh:property [ sh:path sensing:below ; sh:minCount 1 ] ] ;
-        sh:message "the bed's soil is below a range the bed states" ] ;
+        sh:qualifiedValueShape [ sh:property [ sh:path climate:soil ; sh:hasValue climate:Dry ] ] ;
+        sh:message "the bed's soil is believed dry" ] ;
     sh:property [
-        sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+        sh:path orexis:actsFor ;
         planning:about climate:AirTemperature ;
         sh:qualifiedMaxCount 0 ;
-        sh:qualifiedValueShape [
-            sh:property [ sh:path sosa:observedProperty ; sh:hasValue climate:AirTemperature ] ;
-            sh:property [ sh:path sensing:below ; sh:minCount 1 ] ] ;
-        sh:message "the bed's air is below a range the bed states" ] .
+        sh:qualifiedValueShape [ sh:property [ sh:path climate:air ; sh:hasValue climate:Cold ] ] ;
+        sh:message "the bed's air is believed cold" ] .

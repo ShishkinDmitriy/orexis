@@ -14,8 +14,9 @@ here times a second way.
 - `cold_dry_bed`: the thermometer at 12 and the probe at 0.2, both below the bed's ranges, two
   wants in two scopes, the pump's and the heater's commands in one pass;
 - `comfortable_bed`: 21 and 0.45, inside — nothing to do, which is the price of a quiet pass;
-- `lit_cold_dry_bed`: the cold dry bed with a light on it (`conftest.lit_greenhouse`), a third
-  scope and the lamp's command with the other two;
+- `framed_cold_dry_bed`: the cold dry bed with a cold frame beside it at 5 degrees
+  (`conftest.framed_greenhouse`), a third scope and the heat lamp's command with the other two —
+  `lit_cold_dry_bed` in the ledger's older rows, when the third scope was a light on the bed (#944);
 - `dose_and_heating_answered`: the cold dry bed dosed and heated, and the pass eleven minutes
   later in which the readings answer both — on a kept imaginarium, which is what a running agent
   pays once it is warm.
@@ -153,15 +154,15 @@ def _record(row: dict) -> None:
 HEATER, LAMP, PUMP = "actuators/heater/command", "actuators/lamp/command", "actuators/pump/command"
 
 
-@pytest.mark.parametrize("case, lit, before, readings, commands, wants, walking, ended", [
+@pytest.mark.parametrize("case, framed, before, readings, commands, wants, walking, ended", [
     ("cold_dry_bed", False, None, COLD_DRY, [HEATER, PUMP], 2, 2, []),
     ("comfortable_bed", False, None, COMFORTABLE, [], 0, 0, []),
-    ("lit_cold_dry_bed", True, None, {**COLD_DRY, "light_sensor": 100}, [HEATER, LAMP, PUMP], 3, 3, []),
+    ("framed_cold_dry_bed", True, None, {**COLD_DRY, "frame_thermometer": 5.0}, [HEATER, LAMP, PUMP], 3, 3, []),
     ("dose_and_heating_answered", False, COLD_DRY, COMFORTABLE, [], 0, 0, ["done", "done"]),
 ])
 def test_the_grower_does_what_the_bed_needs_in_one_pass_and_says_what_it_cost(
-        case, lit, before, readings, commands, wants, walking, ended, monkeypatch, request):
-    world = request.getfixturevalue("lit_greenhouse") if lit else WORLD
+        case, framed, before, readings, commands, wants, walking, ended, monkeypatch, request):
+    world = request.getfixturevalue("framed_greenhouse") if framed else WORLD
     passes = [_pass(world, monkeypatch, readings, before=before) for _ in range(RUNS)]
     #  WHAT THE PASS DID is the same every run, and asserted of the last; what it cost is the median.
     done = passes[-1]

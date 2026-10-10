@@ -39,9 +39,9 @@ observation with it on every reading, nothing reads it, and hashed whole every r
 surprise — the greenhouse grower's cone went every ten minutes with the soil and the air
 unchanged, and a step landing as predicted could never match, since the real landing always
 carried an instant the effect never wrote (2026-10-03). The number a reading gave is left out the
-same way, since the texts read its side: a reading that moves inside its band is the old present,
-and one that crosses a bound is a child where a plan predicted the crossing and a surprise where
-none did.
+same way, since the texts read the state the agent believes its subject in and no reading at all
+(#944): a reading that leaves the state as it was is the old present, and one that changes it is a
+child where a plan predicted the change and a surprise where none did.
 
 Two things the projection does not reach. Which boundary ahead is a period is still told by
 everything a ground holds: folded by what is read, the grounds a plan's own prediction had

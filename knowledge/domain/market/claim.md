@@ -20,8 +20,8 @@ bid.
 
 1. **Issued** at a clearing, said by the host to the winner — the host's own said copy is what it
    owes, and the one the host will serve against.
-2. **Presented** — `market:Presenting` says a presentation when the holder's reading is below its
-   range; the claim is then `market:presented`, and the host's desire *no presented claim unserved*
+2. **Presented** — `market:Presenting` says a presentation when the holder's subject's soil is
+   believed dry; the claim is then `market:presented`, and the host's desire *no presented claim unserved*
    reads unmet.
 3. **Served** — `market:Serving` sends the dose to the host's valve through its command and says
    the claim again with `market:discharged true` and `market:dischargedAt`.

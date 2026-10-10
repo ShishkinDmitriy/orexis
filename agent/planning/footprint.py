@@ -40,10 +40,11 @@ what this reads and this deciding nothing.
 predicates move together, and a want belongs to the scope of what it reads. It returns with the thing that needs it (an-agent-is-four-things).
 
 **AND A PREDICATE ON A KEY** (`atoms_of`, #593). A predicate alone separates a vocabulary and
-never two instances of one: a pump and a heater both write `sensing:below` of a reading, and over
-predicates they are one scope though nothing either does reaches the other's property. What tells
-their writes apart is WHOM the reading is of — the subject and the property the precondition binds
-it by, both public facts. So an action's footprint is read per FILLING: its precondition is asked
+never two instances of one: two pumps on two beds both write `climate:soil` of a subject (and, until
+#944 made the actions take the subject, a pump and a heater both wrote a reading's side), and over
+predicates they are one scope though nothing either does reaches the other's bed. What tells
+their writes apart is WHOM they are of — the subject the precondition binds, a public fact, or where
+it binds none the values it binds it by. So an action's footprint is read per FILLING: its precondition is asked
 over the public graphs with every pattern optional, which binds what the world states and leaves
 what the state would have bound unbound; each row is one filling as far as the world alone decides
 it; and each pattern a filling reads or writes is an atom `(predicate, key)`, the key being the
