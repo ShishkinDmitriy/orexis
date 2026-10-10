@@ -123,6 +123,27 @@ def test_the_bed_believed_cold_stays_cold_until_its_air_clears_the_floor_and_the
     assert believed == ["Cold", "Cold", "Comfortable", "Hot", "Hot", "Comfortable", "Cold"], believed
 
 
+def test_each_transition_is_triggered_by_every_reading_and_changes_only_its_own_propertys_state(monkeypatch):
+    """Every reading triggers both of climate's transitions, and each one's WHERE asks for an observation
+    of its own property, which only the arrival can be: a soil reading leaves the air as it stood and an
+    air reading the soil, each state still in the graph of the reading that made it. The soil believed
+    dry stays where the soil reading put it through an air reading of 17.99, and the next soil reading,
+    0.3001 in the margin, is judged beside it — dry, not moist."""
+    runtime, time = _grower(monkeypatch)
+    holding = lambda words: [g for g in _own_state(runtime.beliefs)
+                             if rows(runtime.beliefs, _BELIEVED_Q, [g], bed=GH + "bed", state_as=CLIMATE + words)]
+    assert _read(runtime, time, SOIL, [0.2990]) == ["Dry"]
+    (soil_held,) = holding("soil")
+    assert holding("air") == [] and _believed(runtime.beliefs, "air") is None, "a soil reading says nothing of the air"
+    assert _read(runtime, time, AIR, [17.99]) == ["Cold"]
+    assert _believed(runtime.beliefs, "soil") == "Dry"
+    assert holding("soil") == [soil_held], "the air reading took nothing out of the soil's graph and put nothing in its own"
+    (air_held,) = holding("air")
+    assert air_held != soil_held and _believed(runtime.beliefs, "air") == "Cold"
+    assert _read(runtime, time, SOIL, [0.3001]) == ["Dry"]
+    assert holding("air") == [air_held] and _believed(runtime.beliefs, "air") == "Cold", "nor the soil reading the air's"
+
+
 def test_the_subject_belief_says_the_state_and_no_number(monkeypatch):
     """The bed's soil is one triple, its state: the number stays the observation's, where prediction
     and a command sizing its step read it, and nothing about the bed in the subject belief is a literal."""

@@ -1,9 +1,9 @@
 """`trigger`, one case per file, held to a PATCH of the store it leaves
 (knowledge/domain/belief/transition.md, a-transition-changes-the-state-and-an-inference-only-concludes).
 
-A case in `trigger/` is a store with a tick that has arrived — a graph of a kind a transition is
-`belief:triggeredBy` — the agent's own state before it, public knowledge, and the transitions in a
-rules graph, as a domain would ship them. The test triggers the tick's transitions and `<case>.diff` is
+A case in `trigger/` is a store with a tick that has arrived — testimony, a graph received — the
+agent's own state before it, public knowledge, and the transitions in a rules graph, each typed
+`belief:Transition`, as a domain would ship them. The test triggers the tick's transitions and `<case>.diff` is
 what that changed: the state taken out where it stood, a graph left empty forgotten, and what was
 inserted in the state graph the runner prepares for the tick, over the tick's period. The words are
 this test's own — a counter and its ticks — so that what is held is the machine and no domain's
@@ -53,11 +53,17 @@ def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     assert not snapshots.orphans_in(CASES_DIR)
 
 
-def test_a_graph_of_a_kind_no_transition_declares_triggers_nothing(snapshots):
-    """The world graph is no tick: triggering on it applies nothing, spends nothing, and is done."""
+def test_a_graph_that_is_no_testimony_triggers_nothing(snapshots):
+    """The world graph, which the sovereign asserted, and the state an earlier tick's transition wrote,
+    which the agent derived, are no testimony: neither triggers a transition, spends anything, or
+    changes the count — so what a transition writes can never trigger it again. The tick, received,
+    does."""
     store = snapshots.stand_in(CASES_DIR / "a_state_is_replaced_where_it_stood.trig")
     assert trigger(store, T + "world") == Triggered(0, 0, True)
+    assert trigger(store, T + "tick1/believed") == Triggered(0, 0, True)
     assert _held(store) == {"count": "1"}
+    assert trigger(store, TICK) == Triggered(1, 1, True)
+    assert _held(store) == {"count": "2"}
 
 
 def test_an_order_is_applied_whole_and_a_cut_is_continued_to_the_same_state(snapshots):
@@ -76,9 +82,11 @@ def test_an_order_is_applied_whole_and_a_cut_is_continued_to_the_same_state(snap
 
 
 def test_a_transition_is_no_inference(snapshots):
-    """Revision runs the default rule set to a fixpoint and never deletes; a rule saying what triggers
-    it is no part of it, so revising the tick concludes nothing and leaves the count as it was."""
+    """Revision runs the default rule set to a fixpoint and never deletes; a rule typed
+    `belief:Transition` is no part of it, even stating `sh:SPARQLRule` beside, so revising the tick
+    concludes nothing and leaves the count as it was."""
     store = snapshots.stand_in(CASES_DIR / "a_state_is_replaced_where_it_stood.trig")
+    update(store, "INSERT DATA { GRAPH <http://example.org/test#rules> { <http://example.org/test#countRule> a sh:SPARQLRule } }")
     assert revise(store, TICK, read=graphs_of(store, *KNOWN)) == 0
     assert _held(store) == {"count": "1"}
     assert not rows(store, "SELECT ?g WHERE { GRAPH ?c { ?g a belief:RevisionGraph } }")

@@ -32,21 +32,18 @@ GRAPH :world {
 }
 
 GRAPH :rules {
-  :countRule a sh:SPARQLRule .
+  :countRule a belief:Transition .
   :countRule belief:delete """PREFIX : <http://example.org/test#>
       DELETE { ?c :count ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
-  :countRule belief:triggeredBy :TickGraph .
   :countRule rdfs:label "a tick counts one more than the count before" .
   :countRule sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?c :count ?next } WHERE { ?t a :Tick . ?c a :Counter . OPTIONAL { ?c :count ?n } BIND((COALESCE(?n, 0) + 1) AS ?next) }""" .
-  :echoRule a sh:SPARQLRule .
-  :echoRule belief:triggeredBy :TickGraph .
+  :echoRule a belief:Transition .
   :echoRule rdfs:label "a later order echoes the count the earlier made" .
   :echoRule sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?c :echo ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
   :echoRule sh:order 1 .
-  :sawRule a sh:SPARQLRule .
-  :sawRule belief:triggeredBy :TickGraph .
+  :sawRule a belief:Transition .
   :sawRule rdfs:label "a witness of the same order says the count it saw" .
   :sawRule sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?c :saw ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .

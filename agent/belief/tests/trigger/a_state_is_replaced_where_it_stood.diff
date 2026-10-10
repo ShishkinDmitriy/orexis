@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -38,9 +38,7 @@
+@@ -37,9 +37,7 @@
    :t2 a :Tick .
  }
  
@@ -11,7 +11,7 @@
  
  GRAPH :catalogue {
    :catalogue a orexis:CatalogueGraph .
-@@ -59,10 +57,15 @@
+@@ -58,10 +56,15 @@
    :tick2 orexis:beliefsOf :keeper .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .

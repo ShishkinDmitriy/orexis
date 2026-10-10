@@ -6,26 +6,37 @@ description: >-
   actions, predictions and belief revision all change triples rather than only add them. Decided -
   two kinds of rule, told apart by whether the result depends on what it replaces. An inference
   constructs, runs to a fixpoint, only adds, and is re-derivable from its source, as SHACL's draft
-  says. A transition deletes and inserts, is triggered once by the arrival of a graph of a kind it
-  declares, reads the arrival and the state before, and changes the agent's own state, in orders as
-  an effect's rules already run, into a state graph the runner prepares. An action's effect is a transition the agent causes in a possible
-  world; a percept's transition is one the world causes in the belief state; one machine runs both,
-  belief's. Testimony is never a transition's target. The hysteresis becomes the domain's
-  transition, written per property, and sensing's mapping words, `sensing:judged` and `believe` go.
-  Refused - change done by a Python writer per need, a functional property replaced by the
-  deliberator, rules that delete run to a fixpoint, and one rule judging every range.
+  says. A transition deletes and inserts, is a typed rule triggered once by each arrival of
+  testimony, its WHERE saying what it is about, reads the arrival and the state before, and changes
+  the agent's own state, in orders as an effect's rules already run, into a state graph the runner
+  prepares. An action's effect is a transition the agent causes in a possible world; a percept's
+  transition is one the world causes in the belief state; one machine runs both, belief's.
+  Testimony is never a transition's target. The hysteresis becomes the domain's transition, written
+  per property, and sensing's mapping words, `sensing:judged` and `believe` go. Amended the same
+  day - a transition declares no trigger and no target. Refused - change done by a Python writer
+  per need, a functional property replaced by the deliberator, rules that delete run to a fixpoint,
+  and one rule judging every range.
 status: accepted
 timestamp: 2026-10-10T12:00:00Z
 ---
 
-> **Amended 2026-10-10 (#947): a transition declares only what triggers it, and its target is a
-> state graph, the kernel's kind.** As first built, the graph a transition inserts into was a kind
-> of the belief package's own, `belief:SubjectBeliefGraph`, and the property was `belief:firesOn`.
-> A rule never knows the kind of graph it writes: each runner prepares its target — inference the
-> source's revision graph, an effect the possible world it forked, and `trigger` a state graph of the
-> arrival's own, `orexis:StateGraph`, derived and holding over the arrival's period — so the belief
-> package's kind went, and the property became `belief:triggeredBy`, after a database trigger, which
-> runs once when a row is inserted and may delete and insert. The body below is amended to both.
+> **Amended 2026-10-10 (#947): a transition declares no trigger and no target.** As first built, a
+> transition declared the kind of graph whose arrival set it off, and inserted into a graph of a
+> kind of the belief package's own. Both went. A transition is a typed rule, `belief:Transition`,
+> beneath `sh:SPARQLRule`, and that type is how the runner finds it and how revision and planning's
+> bridge reader pass over it. **Each arrival of testimony — a graph received or heard — triggers
+> every transition once**, as a database trigger runs once on each row inserted; the agent's own
+> graphs, derived or recorded, trigger none, so a transition's output can never trigger it again.
+> Its WHERE says what it is about: it is handed the arrival and no other testimony, so climate's
+> soil transition, asking for an observation of soil moisture, matches only a soil reading that has
+> just arrived and changes nothing on an air reading. **The runner prepares the target**, as every
+> runner does — inference the source's revision graph, an effect the possible world it forked, and
+> `trigger` a state graph of the arrival's own, the kernel's `orexis:StateGraph`, derived and
+> holding over the arrival's period; a rule never knows the kind of graph it writes. Measured on
+> the greenhouse over 24 readings, its only testimony is its two sensors' observations, two rule
+> executions and about 3 ms each — what an observation already cost when both of climate's
+> transitions declared the observation's kind — and its predictions and committed steps spend none.
+> The body below is amended to all of it.
 
 # The question
 
@@ -68,8 +79,8 @@ replaces.**
   source. A side, a quantity from a raw count, a calibration, the closure. Unchanged.
 - **A transition changes the state.** A rule that deletes and inserts — the shape an effect's rules
   already have, a delete's `DELETE … WHERE` beside a construct's additions, grouped by `sh:order` —
-  triggered **once** by the arrival of a graph of a kind it declares, reading the arrival and the state
-  before it, and changing the agent's own state. Not to a fixpoint. Its result is not re-derivable
+  typed `belief:Transition` and triggered **once** by each arrival of testimony, reading the arrival
+  and the state before it, and changing the agent's own state. Not to a fixpoint. Its result is not re-derivable
   from anything still held, since one of its premises is the state it replaced: it IS the state.
 
 **An action's effect and a percept's transition are one thing seen from two sides.** An effect is a
@@ -80,15 +91,15 @@ becomes what is believed ([the-agent-stack-is-a-second-axis](/decisions/the-agen
 Planning, above belief, applies an effect through it in the world it forks. The delete's word moves
 with the machine.
 
-**A transition declares only what triggers it, and the runner prepares where it writes.** The kind
-whose arrival triggers a transition is the transition's to declare — an observation graph, a
-predicted one — a class and never an instance, as every reader here names a kind. Where it reads and
-writes is the runner's, as a rule's world is ([a-rule-does-not-say-which-world-it-reads](/decisions/a-rule-does-not-say-which-world-it-reads.md)):
-it reads the arrival with its revisions, the public graphs and the agent's own state; what it
+**A transition declares no trigger, and the runner prepares where it writes.** Every arrival of
+testimony triggers every transition once, and the agent's own graphs trigger none; the WHERE says
+what a transition is about. Where it reads and writes is the runner's, as a rule's world is
+([a-rule-does-not-say-which-world-it-reads](/decisions/a-rule-does-not-say-which-world-it-reads.md)):
+it reads the arrival with its revisions, the public graphs and the agent's own state, and no other
+testimony, so a WHERE asking for an observation of a property can match only the arrival; what it
 inserts goes into a state graph the runner prepares of the arrival's own, the kernel's kind, holding
-over the arrival's period, and what it
-deletes is taken out of whichever of the agent's own state graphs holds it, a graph left empty
-forgotten. So a state replaced is replaced wherever it stood, a state written lasts as long as the
+over the arrival's period, and what it deletes is taken out of whichever of the agent's own state
+graphs holds it, a graph left empty forgotten. So a state replaced is replaced wherever it stood, a state written lasts as long as the
 reading it was made of, and a silence ends it as it ends the observation.
 
 **In the order an effect's rules run, and inference first.** An arrival is concluded on before it is
@@ -124,8 +135,8 @@ belief revision, there would be two engines for one shape; written in Python per
 
 **Once per arrival, in a stated order, is bounded where deleting to a fixpoint is not.** Rules that
 delete and run until nothing changes can undo each other for ever, and what they leave depends on
-the order they fire in. A transition is triggered once by each arrival and runs in an order the
-rules state, so what it leaves is a function of the state before and what arrived.
+the order they fire in. A transition is triggered once by each arrival of testimony, never by its
+own output, and runs in an order the rules state, so what it leaves is a function of the state before and what arrived.
 
 **The domain's state need not be a side of a range.** One rule judging every range made every state
 "below, inside or above the operating range" and had sensing name it. A domain's transition can say
@@ -156,21 +167,26 @@ frost below nought whatever the range, waterlogged after rain, or a state read o
   stands: an observation is a percept, the mind reads beliefs in the domain's words, and a state is
   held by the belief it replaces. How that belief is made is this record's — the domain's
   transition, where it said one rule of sensing's.
-- **A rule does not say which world it reads** — a transition says what triggers it, a kind, and the
-  runner says where it reads and writes.
-- **The search runs no rules** — a transition is triggered by an arrival in the present or a
-  prediction written, never in a search; an effect in a search is applied by planning, as before.
+- **A rule does not say which world it reads** — a transition says neither what triggers it nor where
+  it writes; the runner says where it reads and writes.
+- **The search runs no rules** — a transition is triggered by testimony arriving in the present,
+  never in a search; an effect in a search is applied by planning, as before.
 
 # Seams left open
 
-- **A predicted arrival's transition changes only the foreseen.** A predicted stretch triggers the
-  same transition, beside the state before it — the present's for the first stretch, the stretch
-  before for the rest — and what it writes and deletes is confined to its prediction's own graphs,
-  never the present's. Slice 3 builds it; what would reopen anything more is a prediction that needs
-  to delete from the present.
+- **Whether a prediction arriving triggers transitions.** A prediction is the agent's own, recorded,
+  and no testimony, so today it triggers nothing. Slice 3 decides whether a predicted stretch
+  triggers the transitions too, beside the state before it — the present's for the first stretch,
+  the stretch before for the rest — with what it writes and deletes confined to its prediction's own
+  graphs, the foreseen, never the present's; what would reopen anything more is a prediction that
+  needs to delete from the present.
+- **A forecast is testimony, and triggers every transition.** An observation in it of a property a
+  transition is about would be judged as a reading is, over the forecast's stretch. The one shipped
+  forecast, the terrace's precipitation, is about nothing a transition judges; what would reopen it
+  is a domain forecasting a property it judges, whose WHERE must then say which of the two it means.
 - **Prediction's rates and the executor's intentions stay Python.** Integrating rates is arithmetic
   over a trajectory, and the intentions are the executor's to write alone; neither is a triple
   changed because something arrived. What would reopen it is either one coming to be stated in rules.
-- **A transition triggered by something other than an arrival** — a timer, a silence as such. None
-  is needed: a state ends with its arrival's period. What would reopen it is a state that must
-  change when nothing arrives.
+- **A transition triggered by something other than an arrival of testimony** — a timer, a silence
+  as such. None is needed: a state ends with its arrival's period. What would reopen it is a state
+  that must change when nothing arrives.

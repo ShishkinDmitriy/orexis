@@ -1,18 +1,22 @@
-"""`trigger`: the transitions an arrival triggers, applied once to the agent's own state, order by
-order, within a budget (knowledge/domain/belief/transition.md,
+"""`trigger`: an arrival of testimony triggers every transition once, applied to the agent's own
+state, order by order, within a budget (knowledge/domain/belief/transition.md,
 a-transition-changes-the-state-and-an-inference-only-concludes).
 
-**WHAT IS TRIGGERED.** Every `sh:SPARQLRule` of a rules graph whose `belief:triggeredBy` names a kind
-the arrival's catalogue row carries — a class, closed on the row, so a transition triggered by a kind
-is triggered by every kind beneath it — and is not `sh:deactivated`. A transition declares only what
-triggers it; where it reads and writes is this runner's, which prepares the target.
+**WHAT TRIGGERS, AND WHAT IS TRIGGERED.** An arrival of TESTIMONY — a graph whose catalogue row says
+it arrived `orexis:Received`, an instrument's reading or a peer's word heard — triggers every
+`belief:Transition` of a rules graph that is not `sh:deactivated`. A transition declares no trigger.
+Nothing that arrived another way triggers one: the agent's own — a prediction or a committed step,
+which it records, the very state a transition writes, which it derives — and what the sovereign
+asserted trigger none, so a transition's output can never trigger it again.
 
-**WHAT IT READS**: the arrival with its revisions — which have settled by the time this is called, so
-a transition reads the quantity the pipeline concluded and not the raw count — the public graphs, and
-the agent's own DERIVED state graphs, whatever their period: the state a transition replaces is a
-premise of the one it writes, and a state ended by a silence is still the state the next arrival is
-judged beside. Never another testimony: an observation received, a forecast, a peer's word is not read
-beside an arrival it is not.
+**WHAT IT READS, AND SO WHAT IT IS ABOUT**: the arrival with its revisions — which have settled by the
+time this is called, so a transition reads the quantity the pipeline concluded and not the raw count —
+the public graphs, and the agent's own DERIVED state graphs, whatever their period: the state a
+transition replaces is a premise of the one it writes, and a state ended by a silence is still the
+state the next arrival is judged beside. Never another testimony: an observation received, a forecast,
+a peer's word is not read beside an arrival it is not. So a WHERE asking for an observation of a
+property can match only the arrival, and on any other arrival it matches nothing and changes nothing:
+the rule's WHERE says what it is about.
 
 **WHERE IT WRITES.** What an order inserts goes into a state graph of the arrival's own — the kernel's
 `orexis:StateGraph`, the arrival's owner's and derived, holding over the arrival's period — so a state
@@ -45,21 +49,21 @@ from .transition import Rule, applied, asked, ordered
 
 log = logging.getLogger("trigger")
 
-#  THE TRANSITIONS THE ARRIVAL TRIGGERS, over the rules graphs: every active SPARQL rule triggered by a
-#  kind the arrival's row carries, with its order, its construct and its delete.
-_TRIGGERED_Q = """
+#  EVERY TRANSITION, over the rules graphs: each active one, with its order, its construct and its delete.
+_TRANSITIONS_Q = """
 SELECT DISTINCT ?rule ?order ?construct ?delete WHERE {
-  ?rule a sh:SPARQLRule ; belief:triggeredBy ?kind .
-  GRAPH $cat { $arrival a ?kind }
+  ?rule a belief:Transition .
   FILTER NOT EXISTS { ?rule sh:deactivated true }
   OPTIONAL { ?rule sh:order ?o } OPTIONAL { ?rule sh:construct ?construct } OPTIONAL { ?rule belief:delete ?delete }
   BIND(COALESCE(?o, 0) AS ?order) }
 ORDER BY ?order ?rule"""
 
-#  WHOSE THE ARRIVAL IS AND WHEN IT HOLDS, off its row: the state graph it is given has the same.
+#  WHETHER THE ARRIVAL IS TESTIMONY, WHOSE IT IS AND WHEN IT HOLDS, off its row: the state graph it is
+#  given has the same owner and period.
 _ARRIVAL_Q = """
 SELECT ?owner ?start ?end WHERE {
-  GRAPH $cat { OPTIONAL { $arrival orexis:beliefsOf ?owner }
+  GRAPH $cat { $arrival orexis:arrivedBy orexis:Received .
+               OPTIONAL { $arrival orexis:beliefsOf ?owner }
                OPTIONAL { $arrival dcterms:temporal ?p .
                           OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1"""
@@ -86,16 +90,19 @@ class Triggered:
 
 def trigger(store, arrival: str, *, budget: int = BUDGET, done: int = 0) -> Triggered:
     """Apply the transitions `arrival` triggers to the agent's own state, from its `done`th order on,
-    spending at most `budget` rule executions — an order begun while any is left, and applied whole."""
+    spending at most `budget` rule executions — an order begun while any is left, and applied whole.
+    An arrival that is no testimony triggers nothing, spends nothing, and is done."""
     cat = catalogue_of(store)
     if cat is None:
         return Triggered(0, done, True)
-    found = rows(store, _TRIGGERED_Q, graphs_of(store, RULES_GRAPH), cat=Raw(f"<{cat}>"), arrival=arrival)
+    row = next(iter(rows(store, _ARRIVAL_Q, (), cat=Raw(f"<{cat}>"), arrival=arrival)), None)
+    if row is None:
+        return Triggered(0, done, True)
+    found = rows(store, _TRANSITIONS_Q, graphs_of(store, RULES_GRAPH))
     orders = ordered(Rule(float(r["order"]), r.get("construct"), r.get("delete"), r["rule"]) for r in found)
     if done >= len(orders):
         return Triggered(0, done, True)
     into = state_graph(arrival)
-    row = next(iter(rows(store, _ARRIVAL_Q, (), cat=Raw(f"<{cat}>"), arrival=arrival)), {})
     spent = 0
     for n in range(done, len(orders)):
         if spent >= budget:

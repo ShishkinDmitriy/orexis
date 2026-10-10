@@ -18,7 +18,7 @@ role of a rules graph is typed `sh:RulesGraph`, which the belief package puts be
 `orexis:Graph` so that a boot reads it as a kind it knows; a package ships its rules as a `sh:RuleSet`,
 an IRI with `sh:hasRule` and `sh:includesRuleSet`; a rule is a `sh:SPARQLRule` with one
 `sh:construct`, placed by `sh:layer` and `sh:order`, taken out by `sh:deactivated`, run once
-by `sh:runOnce`. A rule saying what triggers it (`belief:triggeredBy`) is no part of what revision runs: it
+by `sh:runOnce`. A rule typed `belief:Transition` is no part of what revision runs: it
 is a [transition](/domain/belief/transition.md), which changes a state once and is applied after its
 arrival's revision settles. An [action](/domain/kernel/action.md)'s [effect](/domain/planning/effect.md)
 is one too, applied once, by a search, to the world a step leaves.

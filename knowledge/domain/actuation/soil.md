@@ -23,8 +23,8 @@ under the floor of the subject's operating range for it, `climate:Moist` within,
 the ceiling. It is a [subject belief](/domain/belief/transition.md), one state per subject.
 
 Climate makes it: `climate:soilRule` (`domains/climate/rules.ttl`) is a
-[transition](/domain/belief/transition.md) triggered by an observation, acting where the observation is
-of soil moisture. It reads the reading, the operating range of the observation's feature of interest
+[transition](/domain/belief/transition.md) triggered by every reading, acting where the observation
+is of soil moisture. It reads the reading, the operating range of the observation's feature of interest
 or what that is a sample of, the range's [margin](/domain/sensing/margin.md), and the soil held
 before; it deletes that and inserts the new state. Words, hold and all are climate's, since what
 a dry bed is, and when it stops being one, is climate's meaning.

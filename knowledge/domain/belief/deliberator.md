@@ -27,7 +27,8 @@ It owns a queue. Whoever writes a graph — sensing an observation, prediction a
 peer's document, the executor a fictive step — says `changed(graph)`, and nothing happens then.
 `deliberate()` is the pass, and it takes each queued graph as an ARRIVAL, in two steps: it runs
 [revise](/domain/belief/revision.md) over it beside public knowledge until its rules settle, and then
-applies the [transitions](/domain/belief/transition.md) it triggers (`trigger`), so what is concluded
+applies the [transitions](/domain/belief/transition.md) it triggers (`trigger`) — every one, where it
+is testimony, and none where it is the agent's own — so what is concluded
 of an arrival is there before anything changes the state on it. Both spend from one budget of rule
 executions across the pass, and it answers what it spent; and it says by `revised` which graphs it
 revised or transitioned on, which the executor hears to walk. The

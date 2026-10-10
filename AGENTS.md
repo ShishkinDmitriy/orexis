@@ -474,15 +474,19 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 ### Belief, sensing and prediction
 
 - **An inference concludes and never deletes, and a transition changes the state, triggered once by
-  what arrives** — an inference's revisions live in a graph derived from its source and go when it
+  each arrival of testimony** — an inference's revisions live in a graph derived from its source and go when it
   goes, SHACL's draft adopted as it stands (`agent/belief/revise.py`); a transition deletes and
   inserts in the agent's own state, in `sh:order` groups as an effect does, never in testimony, and
   is told from an inference by whether its result depends on what it replaces
   (a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A rule never knows the kind of graph it writes, and each runner prepares its target** — revision
   the source's revision graph, an effect the world it forked, `trigger` a kernel `orexis:StateGraph` of
-  the arrival's own; a transition declares only what triggers it, and the belief package's own kind
-  for the target was a second name for the state (#947, transition).
+  the arrival's own; the belief package's own kind for the target was a second name for the state
+  (#947, transition).
+- **A transition is a typed rule and declares no trigger: every arrival of testimony triggers every
+  one, the agent's own graphs none, and its WHERE says what it is about** — handed the arrival and no
+  other testimony, a soil transition can match only the soil reading just arrived, and its own output
+  can never trigger it again (#947, transition).
 - **A graph is revised beside what the world states alone, and the agent's own state is a transition's
   premise** — revised beside everything believed, the first of two readings took the second's side; a
   transition reads its arrival, the world and every state the agent derived, and deletes from that

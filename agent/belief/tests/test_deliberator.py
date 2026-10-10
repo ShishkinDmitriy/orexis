@@ -168,7 +168,8 @@ def test_arrivals_are_transitioned_on_in_turn_whatever_the_budget_cuts(monkeypat
 
 
 def test_an_arrival_that_triggers_nothing_holds_no_turn(monkeypatch, snapshots):
-    """A graph of a kind no transition declares, cut in its revision, changes no state whenever it is
+    """A graph the agent derived — a prediction, here holding a loud tick its transitions would count
+    were it testimony — cut in its revision, triggers nothing and changes no state whenever it is
     done, so the tick queued after it is transitioned on in the same pass — where waiting on it, a
     prediction rewritten and cut every pass would hold every reading's transitions for ever."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
@@ -176,7 +177,7 @@ def test_an_arrival_that_triggers_nothing_holds_no_turn(monkeypatch, snapshots):
     store = snapshots.stand_in(TICKS)
     note = T + "note"
     update(store, f"""INSERT DATA {{ GRAPH <{note}> {{ <{T}note_t> a <{T}Tick> ; <{T}loud> true }}
-  {entry(store, note, "http://example.org/orexis#StateGraph", "http://example.org/orexis#Received", T + "keeper")} }}""")
+  {entry(store, note, "http://example.org/orexis#PredictionGraph", "http://example.org/orexis#Derived", T + "keeper")} }}""")
     deliberator = Deliberator(store, snapshots.AGENT, budget=50)
     deliberator.changed(note)
     deliberator.changed(_tick(store, "quiet", snapshots.NOW, loud=False))

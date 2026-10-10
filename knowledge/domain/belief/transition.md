@@ -2,31 +2,32 @@
 type: Domain Concept
 title: Transition
 term:
-  - http://example.org/orexis/belief#triggeredBy
+  - http://example.org/orexis/belief#Transition
   - http://example.org/orexis/belief#delete
 description: >-
   A rule that changes a state rather than concluding of it - a construct for what it inserts, a
-  delete for what it takes out, grouped by order - triggered once by the arrival of a graph of the
-  kind it declares, and applied by the belief package's one machine into a state graph the runner
-  prepares. An action's effect is a transition the agent causes; a percept's is one the world
-  causes. Testimony is never its target. What a percept's transition writes is a subject belief.
+  delete for what it takes out, grouped by order - typed belief:Transition and declaring no trigger.
+  Every arrival of testimony triggers every transition once, its WHERE saying what it is about, and
+  the belief package's one machine applies it into a state graph the runner prepares. An action's
+  effect is a transition the agent causes; a percept's is one the world causes. Testimony is never
+  its target. What a percept's transition writes is a subject belief.
 ---
 
 # What it is
 
 ```turtle
-climate:soilRule a sh:SPARQLRule ;
-    belief:triggeredBy sensing:ObservationGraph ;
-    belief:delete """DELETE { ?subject climate:soil ?before } WHERE { … ?subject climate:soil ?before }""" ;
-    sh:construct """CONSTRUCT { ?subject climate:soil ?state } WHERE { … }""" .
+climate:soilRule a belief:Transition ;
+    belief:delete """DELETE { ?subject climate:soil ?before } WHERE { ?obs sosa:observedProperty climate:SoilMoisture … }""" ;
+    sh:construct """CONSTRUCT { ?subject climate:soil ?state } WHERE { ?obs sosa:observedProperty climate:SoilMoisture … }""" .
 ```
 
-A **transition** is a `sh:SPARQLRule` whose `sh:construct` says what applying it inserts, whose
-`belief:delete` — a `DELETE … WHERE` naming no graph — says what it takes out, or both. Its result
-is not re-derivable from anything still held, since one of its premises is the state it replaced: it
-is the state. That is what tells it from a [revision](/domain/belief/revision.md), which only adds,
-runs to a fixpoint and is a function of its source; `revise` passes over any rule stating
-`belief:triggeredBy`, and so does planning's [bridge](/domain/planning/bridge.md) reader.
+A **transition** is a `belief:Transition`, a SPARQL rule — the class is beneath `sh:SPARQLRule` —
+whose `sh:construct` says what applying it inserts, whose `belief:delete` — a `DELETE … WHERE`
+naming no graph — says what it takes out, or both. Its result is not re-derivable from anything
+still held, since one of its premises is the state it replaced: it is the state. That is what tells
+it from a [revision](/domain/belief/revision.md), which only adds, runs to a fixpoint and is a
+function of its source. The type is how the runner finds a transition, and how `revise` and
+planning's [bridge](/domain/planning/bridge.md) reader pass over it, whatever other type it states.
 
 # One machine, two callers
 
@@ -41,18 +42,24 @@ is no `DELETE … WHERE` change nothing and are said in the log.
 - **Planning** applies an action's [effect](/domain/planning/effect.md) through it, in the possible
   world a step makes: the world's graphs are read, and the new world is both what is taken from and
   what is added to.
-- **The belief package** applies a percept's transition (`trigger`), once, when an arrival triggers
-  it.
+- **The belief package** applies a percept's transition (`trigger`), once, when an arrival of
+  testimony triggers it.
 
 # What triggers it
 
-As a database trigger runs once when a row of its table is inserted, and may delete and insert, **an
-arrival triggers the transitions whose `belief:triggeredBy` names a kind its catalogue row
-carries** — a class, never an instance, so a transition triggered by a kind is triggered by every kind
-beneath it. That is all a transition declares. The [deliberator](/domain/belief/deliberator.md)
-takes an arrival in two steps: it is revised until its rules settle, so a transition reads the
-quantity the pipeline concluded and not the raw count, and then the transitions it triggers are
-applied.
+As a database trigger runs once on each row inserted into its table, and may delete and insert,
+**an arrival of testimony triggers every transition once.** Testimony is a graph whose catalogue row
+says it arrived `orexis:Received` — an instrument's observation, a forecast, a peer's document heard.
+Nothing else triggers one: the agent's own graphs, derived or recorded — a prediction, a committed
+step, the very state a transition writes — and what the sovereign asserted trigger none, so a
+transition's output can never trigger it again. A transition declares no trigger at all.
+
+**Its WHERE says what it is about.** It is handed the arrival and no other testimony, so climate's
+`?obs sosa:observedProperty climate:SoilMoisture` can match only a soil reading that has just
+arrived; on an air reading it matches nothing and changes nothing, though both of climate's
+transitions run on every reading. The [deliberator](/domain/belief/deliberator.md) takes an arrival
+in two steps: it is revised until its rules settle, so a transition reads the quantity the pipeline
+concluded and not the raw count, and then the transitions it triggers are applied.
 
 # Where it reads and writes: the runner's
 
@@ -101,7 +108,9 @@ they did, so no world's behaviour moved with it; making the mind read it instead
 
 # Once, in turn, within a budget
 
-Each order costs one rule execution per rule, revision's unit, and is applied whole or not at all;
+Every transition is asked on every arrival of testimony, whether its WHERE matches or not, so what
+the transitions cost is their number times the testimony that arrives. Each order costs one rule
+execution per rule, revision's unit, and is applied whole or not at all;
 an order begins while any of the budget is left. Where the budget runs out between orders the
 deliberator keeps the arrival queued with the orders done, and the next pass applies the rest, never
 an order twice. Arrivals are transitioned on in the order they came: one whose revision or
@@ -110,10 +119,14 @@ and a graph written again is a new arrival and joins the end of the queue.
 
 # Seams
 
-- **A predicted arrival triggers nothing yet.** Climate's transitions are triggered by an
-  observation, and a prediction's graph is of another kind; a predicted stretch's transition,
-  confined to the prediction's own graphs, is #944's third slice
+- **A predicted arrival triggers nothing yet.** A prediction is the agent's own, recorded, and no
+  testimony; whether a prediction arriving triggers transitions, confined to the prediction's own
+  graphs, is #944's third slice
   ([a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md)).
+- **A forecast is testimony, and triggers every transition.** An observation in it of a property a
+  transition is about would be judged as a reading is, over the forecast's stretch. The one shipped
+  forecast is the terrace's precipitation, which no transition is about; a domain forecasting a
+  property it judges says in its WHERE which it means.
 - **A restart repeats a cut between orders.** The revision row says an arrival unfinished, and a
   deliberator made again revises it and applies its transitions from the first order. Every shipped
   transition is one order, which makes that exact; a set of several cut between them would apply

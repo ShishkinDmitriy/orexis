@@ -38,11 +38,10 @@ GRAPH :world {
 }
 
 GRAPH :rules {
-  :spoilRule a sh:SPARQLRule .
+  :spoilRule a belief:Transition .
   :spoilRule belief:delete """PREFIX : <http://example.org/test#>
       DELETE { ?t a :Tick ; :ticked true . ?c a :Counter ; :count ?n . :Counter rdfs:label ?l }
       WHERE  { ?t a :Tick ; :ticked true . ?c a :Counter ; :count ?n . :Counter rdfs:label ?l }""" .
-  :spoilRule belief:triggeredBy :TickGraph .
   :spoilRule rdfs:label "a transition that tries to delete testimony" .
 }
 

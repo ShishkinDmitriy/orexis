@@ -32,25 +32,22 @@ GRAPH :world {
 }
 
 GRAPH :rules {
-  :countRule a sh:SPARQLRule .
+  :countRule a belief:Transition .
   :countRule belief:delete """PREFIX : <http://example.org/test#>
       DELETE { ?c :count ?n } WHERE { ?t a :Tick ; :ticked true . ?c a :Counter ; :count ?n }""" .
-  :countRule belief:triggeredBy :TickGraph .
   :countRule rdfs:label "a tick revision concluded ticked counts one more than the count before" .
   :countRule sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?c :count ?next } WHERE { ?t a :Tick ; :ticked true . ?c a :Counter . OPTIONAL { ?c :count ?n } BIND((COALESCE(?n, 0) + 1) AS ?next) }""" .
-  :echoRule a sh:SPARQLRule .
+  :echoRule a belief:Transition .
   :echoRule belief:delete """PREFIX : <http://example.org/test#>
       DELETE { ?c :echo ?n } WHERE { ?t a :Tick . ?c a :Counter ; :echo ?n }""" .
-  :echoRule belief:triggeredBy :TickGraph .
   :echoRule rdfs:label "a later order echoes the count the earlier made" .
   :echoRule sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?c :echo ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
   :echoRule sh:order 1 .
-  :lastRule a sh:SPARQLRule .
+  :lastRule a belief:Transition .
   :lastRule belief:delete """PREFIX : <http://example.org/test#>
       DELETE { ?c :last ?was } WHERE { ?t a :Tick . ?c a :Counter ; :last ?was }""" .
-  :lastRule belief:triggeredBy :TickGraph .
   :lastRule rdfs:label "the last tick taken" .
   :lastRule sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?c :last ?t } WHERE { ?t a :Tick . ?c a :Counter }""" .

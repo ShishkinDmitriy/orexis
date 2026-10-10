@@ -32,10 +32,9 @@ GRAPH :world {
 }
 
 GRAPH :rules {
-  :countRule a sh:SPARQLRule .
+  :countRule a belief:Transition .
   :countRule belief:delete """PREFIX : <http://example.org/test#>
       DELETE { ?c :count ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
-  :countRule belief:triggeredBy :TickGraph .
   :countRule rdfs:label "a tick counts one more than the count before" .
   :countRule sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?c :count ?next } WHERE { ?t a :Tick . ?c a :Counter . OPTIONAL { ?c :count ?n } BIND((COALESCE(?n, 0) + 1) AS ?next) }""" .
