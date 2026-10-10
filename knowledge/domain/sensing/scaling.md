@@ -21,7 +21,7 @@ description: >-
 One object per instrument it rescales, two points apiece: what the sensor reads there and what that
 stands for. [Sensing](/domain/sensing/sensing.md)'s rule places the number the sensor gave on the
 straight line through them at layer 0, as `sensing:scaledResult`, unclamped — a probe in water past the
-wet point reads past one, which a [side](/domain/sensing/region.md) then says, rather than a saturated
+wet point reads past one, which a transition then judges against its [region](/domain/sensing/region.md), rather than a saturated
 one hiding a flooded or frozen probe. A thermometer already reports degrees and states no scaling.
 
 What a scaling changes is the UNIT; what corrects an instrument's error within its own unit is a

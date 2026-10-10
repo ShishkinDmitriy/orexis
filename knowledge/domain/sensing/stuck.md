@@ -1,19 +1,20 @@
 ---
 type: Domain Concept
 title: Stuck
-term: http://example.org/orexis/sensing#stuckSince
+term: http://example.org/orexis/sensing#stuckOn
 description: >-
   A sensor that keeps reporting and reports the same number every time - a frozen oscillator, a
-  half-lost wire - is stuck. Said by sensing of a sensor whose number has not changed for a limit of
-  its cadences, in a graph of the agent's own that a differing reading drops. The second doubt the
-  belief base holds about a reading, beside its age.
+  half-lost wire - is stuck. Said by sensing's rule of a sensor whose last sensing:stuckAfter readings,
+  every percept of it kept, all gave one raw number, in the revision of the latest, so it holds while
+  that percept does. It counts readings, not time. The second doubt the agent holds about a reading,
+  beside its age.
 ---
 
 # What it is
 
 ```turtle
-# the keeper's graph for the probe, an orexis:StateGraph holding from the run's start
-:probe sensing:stuckSince "2026-01-01T12:00:00Z"^^xsd:dateTime .
+# the revision of the probe's latest percept, as sensing's rule concludes it
+:probe sensing:stuckOn 2412 .
 ```
 
 A sensor's number is `sensing:rawResult` on its [observation](/domain/sensing/observation.md),
@@ -21,19 +22,25 @@ the count or degrees the pointer found in its bytes before any
 [scaling](/domain/sensing/scaling.md). Two readings are **indistinguishable** when that number is
 identical - not the [reading](/domain/sensing/reading.md) concluded from it, which a clamp or a
 rescale could make identical out of two different counts, and not close, since a live instrument
-jitters by at least a count and that jitter is what a stuck one lacks. `received` writes on each
-observation `sensing:unchangedSince`, the instant of the earliest reading in the unbroken run of
-this number - its own instant where the number differs from the one before - so the run's start
-survives the replacement of the observation and a restart alike, and nothing is counted in Python.
+jitters by at least a count and that jitter is what a stuck one lacks.
 
-A sensor whose run has lasted `sensing:stuckAfter` of its cadences — a
-[stance](/domain/kernel/stance.md), six where the agent's self graph states none — is said stuck: one row,
-`sensing:stuckSince` the run's start, in a graph of the agent's own classified `orexis:StateGraph`,
-holding from that instant - named for the state and never for the reading that tipped it - and
-said once. A reading whose number differs ends the run and takes the graph with it, at the writer.
-A sensor stating no `ssn-system:Frequency` is never said stuck, as it is never said silent: the
-limit is in cadences, and the world made no promise about how often its number would have the
-chance to move.
+Sensing keeps a sensor's last `sensing:stuckAfter` [percepts](/domain/kernel/percept.md) — a
+[stance](/domain/kernel/stance.md), six where the agent's self graph states none — and **a rule says
+the sensor stuck when every one of them gave one number**: `:probe sensing:stuckOn 2412`, the number
+it is stuck on, concluded in the revision of the percept arriving (`agent/sensing/rules.ttl`). It
+holds while that percept does, so the first reading whose number differs ends it — the kept percepts
+no longer agree — and so does a silence, since a silent sensor has no percept holding. Nothing counts
+a run and nothing carries one onto the present: the premise is the percepts themselves, and the rule
+reads them where sensing keeps them, with the limit off the self graph, the one rule of sensing's
+that reaches past the arrival it is revised for. A sensor stating no `ssn-system:Frequency` is never
+said stuck, as it is never said silent: its readings are no samples on a cadence the world promised.
+
+**It counts readings, not time** (#944). Six readings of one number on time are stuck at the sixth,
+fifty minutes after the first at the greenhouse's ten; a sensor that misses readings is said stuck
+later than one that never misses, and two readings a day apart are two readings. As it was counted
+before the percepts were kept, from the start of an unbroken run carried onto each observation, the
+run had to last the limit in cadences, which on time was a reading later, and with readings missed,
+sooner.
 
 # Why it is its own doubt
 
@@ -42,16 +49,16 @@ held about a sensor until #462: a probe that keeps REPORTING was trusted for as 
 reported. The terrace's probe lost half its wire at mounting and gave a plausible number, on time,
 all night, and every gate stayed green. Stuck is the other failure of an instrument, the signal
 being wrong while it is fresh, and it is said beside the silence and not inside it: a silent
-sensor has no present, a stuck one has a present not to be believed, and a plan that branches on
-either branches on a different row.
+sensor has no present, a stuck one has a present not to be believed.
 
 # What it leaves to others
 
-Nothing here says what to DO about a stuck sensor. The row is a belief a desire's met-test may
-read and a plan may branch on, and what a world makes of one is the world's. Two readings a count
-apart are two readings, so a connection that creeps rather than freezes is not caught here: that
-is what publishing the raw number unclamped (#462's first detector) and the board's other sensors
-moving while this one does not (its third) are for.
+Nothing here says what to DO about a stuck sensor. It is said of a percept, so no reader of the mind
+is handed it: sensing's part says it as `doubted`, which the metrics carry and reflection reads, and a world
+whose plans should branch on it would need it believed — a transition making a state of it — which
+none does yet. Two readings a count apart are two readings, so a connection that creeps rather than
+freezes is not caught here: that is what publishing the raw number unclamped (#462's first detector)
+and the board's other sensors moving while this one does not (its third) are for.
 
 The premise is the instrument's to keep, and a simulated one keeps it too. The simulator
 (`simulation/simulator.py`) publishes each number with the instrument's noise — a seeded draw

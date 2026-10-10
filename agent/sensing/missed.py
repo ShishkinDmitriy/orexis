@@ -1,11 +1,13 @@
 """`missed`: which sensors' readings are missing at an instant, and which of them have gone
 silent — asked every minute of the timeline by sensing's own `start`, which the runtime waits for.
 
-**A READING IS MISSING WHEN ITS OBSERVATION'S PERIOD HAS ENDED AND NOTHING REPLACED IT.** The
-observation `received` writes holds from its instant until the next is due by the sensor's
-`ssn-system:Frequency` and a grace past it (`received.GRACE`), so its graph's period ending IS the
-reading going missing — later than due, since a reading a little late is not missing (#870): a reader
-asking at a later instant is handed no observation of the key, which is what unmeasured is.
+**A READING IS MISSING WHEN THE LATEST PERCEPT'S PERIOD HAS ENDED.** The percept `received` writes
+holds from its instant until the next is due by the sensor's `ssn-system:Frequency` and a grace past
+it (`received.GRACE`), or until the next arrives, so the period of the LATEST — the percept no percept
+names as its previous — ending IS the reading going missing — later than due, since a reading a little
+late is not missing (#870): a reader asking at a later instant is handed no percept of the sensor,
+which is what unmeasured is. An older percept's period ended when its successor arrived, and says
+nothing missed (#944).
 This act answers the sensors in that state, earliest lapse first, for the container to nudge
 through the driver (`sense_now`); it writes nothing for a reading merely missed, since the
 period's end already says it, and a mark would say it twice.
@@ -22,8 +24,9 @@ has stopped, so this is one of sensing's own words.
 
 **A SENSOR THAT HAS NEVER REPORTED IS NOT HERE.** Its absence is, in the store, the same as
 a sensor not yet due; that fault is the container's to count from boot, and is the seam this
-leaves open — as is the sweep: this reads the ended observation's row off the catalogue, so
-an upkeep that dropped ended graphs would have to leave a sensor's last observation standing.
+leaves open — as is the sweep: this reads the ended percept's row off the catalogue, so an upkeep
+that dropped ended graphs would have to leave a sensor's latest percept standing. None does: a
+percept is forgotten by `received` alone, past the depth sensing keeps, and never the latest.
 """
 
 from __future__ import annotations
@@ -44,12 +47,14 @@ log = logging.getLogger("missed")
 #  agent's self graph states no `sensing:silentAfter` of it.
 SILENT_AFTER = 3
 
-#  EVERY SENSOR WHOSE OBSERVATION HAS LAPSED, with the instant it did and whether it is said
-#  silent already — asked of the catalogue by kind, and of the graphs by pattern.
+#  EVERY SENSOR WHOSE LATEST PERCEPT HAS LAPSED, with the instant it did and whether it is said
+#  silent already — asked of the catalogue by kind, and of the graphs by pattern: the latest is the
+#  one no percept names as its previous.
 _MISSING_Q = """
 SELECT ?sensor ?end ?since WHERE {
   GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end < $now) }
   GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
+  FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } }
   OPTIONAL { GRAPH $cat { ?sg a orexis:StateGraph } GRAPH ?sg { ?sensor sensing:silentSince ?since } } }
 ORDER BY ?end ?sensor"""
 

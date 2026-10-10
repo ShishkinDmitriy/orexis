@@ -1,5 +1,5 @@
 """The ranges that apply to what a sensor observes, in SSN-System's words — read by `predict`
-to place a crossing, and by the rules sensing ships to conclude a side. Nothing is
+to place a crossing, as a domain's transitions read them to judge a subject's state. Nothing is
 minted: a range is what the world says, and what is answered is its two numbers.
 
 A range is stated by what hosts the sensor (`sosa:isHostedBy` — the subject, or a `sosa:Sample`

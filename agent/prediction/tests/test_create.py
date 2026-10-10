@@ -1,6 +1,6 @@
-"""Prediction's part: once started it answers every belief a job writes — an observation, a graph
-of the kernel's state kind holding a node a sensor made, revised by then, belief's part hearing it
-first — by rewriting that sensor's predictions; and a belief holding no sensor's node, a step the
+"""Prediction's part: once started it answers every percept a job writes — a graph of the kernel's
+percept kind holding a node a sensor made, revised by then, belief's part hearing it first — by
+rewriting that sensor's predictions; and every belief, holding no sensor's node, a step the
 executor committed to, by rewriting every key's, since what a drift reads may have changed."""
 
 from __future__ import annotations
@@ -9,7 +9,7 @@ from pathlib import Path
 
 from agent import clock
 from agent.belief.revise import revise
-from agent.ontology import BELIEF, PUBLIC
+from agent.ontology import BELIEF, PERCEPT, PUBLIC
 from agent.prediction.create import create
 from agent.sensing.received import received
 from agent.store import close_catalogue, document, entry, graphs_of, put_document, update
@@ -30,8 +30,9 @@ def test_its_part_predicts_from_every_observation_written(monkeypatch, snapshots
     close_catalogue(store)
     runtime = stand_in_runtime(store, snapshots.ME, snapshots.NOW)
     create(runtime).start(runtime)
-    [(kind, predicted)] = runtime.heard
-    assert kind == BELIEF
+    heard = dict(runtime.heard)
+    assert set(heard) == {PERCEPT, BELIEF}, "a percept is no belief, and is heard by its own kind (#944)"
+    predicted = heard[PERCEPT]
     assert len(predicted(graph)) == 3, "three stretches: inside, below the floor, below survival"
     #  A BELIEF THAT IS NO SENSOR'S OBSERVATION — a committed step, here a bare graph of the kernel's
     #  kind — rewrites every key's predictions: the probe's three again, and nothing of a key nobody

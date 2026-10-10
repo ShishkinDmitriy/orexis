@@ -1,0 +1,27 @@
+--- case
++++ expected
+@@ -64,7 +64,23 @@
+   observed:probe_20260101T114500Z a orexis:Graph .
+   observed:probe_20260101T114500Z a orexis:PerceptGraph .
+   observed:probe_20260101T114500Z a sensing:ObservationGraph .
+-  observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
++  observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
+   observed:probe_20260101T114500Z orexis:arrivedBy orexis:Received .
+   observed:probe_20260101T114500Z orexis:beliefsOf :keeper .
++  observed:probe_20260101T120000Z a orexis:Graph .
++  observed:probe_20260101T120000Z a orexis:PerceptGraph .
++  observed:probe_20260101T120000Z a sensing:ObservationGraph .
++  observed:probe_20260101T120000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  observed:probe_20260101T120000Z orexis:arrivedBy orexis:Received .
++  observed:probe_20260101T120000Z orexis:beliefsOf :keeper .
+ }
++
++
++GRAPH observed:probe_20260101T120000Z {
++  orexis:obs_probe_20260101T120000Z a sosa:Observation .
++  orexis:obs_probe_20260101T120000Z prov:wasGeneratedBy :keeper .
++  orexis:obs_probe_20260101T120000Z sensing:previous orexis:obs_probe_20260101T114500Z .
++  orexis:obs_probe_20260101T120000Z sensing:rawResult 0.08 .
++  orexis:obs_probe_20260101T120000Z sosa:madeBySensor :probe .
++  orexis:obs_probe_20260101T120000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++}

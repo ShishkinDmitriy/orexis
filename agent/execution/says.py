@@ -1,7 +1,9 @@
 """`says`: what taking a step tells a peer, as documents, made from the present.
 
 An action whose taking tells somebody something has an `execution:Saying` among its operations,
-an `sh:construct` over the beliefs as they stand when the step is taken, with the step's
+an `sh:construct` over the beliefs as they stand when the step is taken — and the percepts holding
+then, since a saying sized from the present, as a bid's litres are, reads the reading as a command
+does, at the boundary (#944) — with the step's
 parameters as `$tokens` and `$now`, asking the self where it means the agent. Its result is read as documents, the shape a world's files and a peer's messages
 share: an IRI the result says is `execution:to` an agent is a graph, what is said of it and of
 the blank nodes hanging off it is its content, and its kind, its period and whom it is to are
@@ -18,7 +20,7 @@ import logging
 import pyoxigraph as ox
 
 from agent import clock
-from agent.ontology import ACTION, KNOWN, OREXIS, local_of
+from agent.ontology import ACTION, KNOWN, OREXIS, PERCEPT, local_of
 from agent.store import bind, closed, construct, graphs_of, instant, rows
 
 from .implementation import SAYING, operations
@@ -53,7 +55,7 @@ def says(store, said: dict, *, order: float | None = None) -> list[tuple[list[st
             tokens[local_of(r["takes"])] = said[local_of(r["takes"])]
     triples: list = []
     for text in texts:
-        triples += construct(store, bind(text, **tokens), graphs_of(store, *KNOWN, at=now, now=now))
+        triples += construct(store, bind(text, **tokens), graphs_of(store, *KNOWN, PERCEPT, at=now, now=now))
     return _documents(store, triples, action)
 
 

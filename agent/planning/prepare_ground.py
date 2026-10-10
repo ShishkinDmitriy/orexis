@@ -153,8 +153,9 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
     for iri in graphs_of(into, *CROSSING):
         if iri not in made:
             forget_graph(into, iri)           # what the last filling brought across
-    #  A READING'S REVISIONS CROSS BY KIND: what the rules concluded of it is a belief, in a graph
-    #  derived from the reading's, and a met-test asks the side it holds.
+    #  A STATE'S REVISIONS CROSS BY KIND: what the rules concluded of it is a belief, in a graph
+    #  derived from the state's. A PERCEPT'S DO NOT: what the rules conclude of what a sensor said is a
+    #  percept too, and neither is a kind that crosses (#944).
     behind = _of_another_scope(beliefs, scope, scopes)
     for iri in dict.fromkeys([*graphs_of(beliefs, *CROSSING), catalogue_of(beliefs)]):
         if iri is None or iri in behind:
@@ -164,13 +165,13 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
 
 
 def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset[str]:
-    """Every reading and prediction that is other scopes' alone, with its revisions: a graph of
+    """Every state and prediction that is other scopes' alone, with its revisions: a graph of
     the kinds the ground is made of whose quads, taken with what was concluded of it, name — as a
     subject, a predicate or an object — members whose scopes meet without `scope`. The test is
-    `admit`'s on a filling's values, asked of a reading's: a sensing observation names its feature and its
-    property in its revisions and a prediction copies the node whole, so the one that names the
-    air's property is the air's, and one naming a bed of two scopes and a property of two is the
-    one scope's they share; a subject belief names its bed as its subject and its state's word as
+    `admit`'s on a filling's values, asked of a graph's: a predicted observation names its feature
+    and its property, so the one that names the air's property is the air's, and one naming a bed of
+    two scopes and a property of two is the one scope's they share — a percept is no kind the ground
+    is made of, and is asked nothing (#944); a subject belief names its bed as its subject and its state's word as
     its predicate, and is the scope's they meet in; the tower's state names the courier's cells and its revisions the
     puzzle's `on`, which meet nowhere, and is both scopes'. Nothing, in a store of one scope or
     for a caller naming none."""

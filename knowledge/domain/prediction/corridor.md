@@ -23,9 +23,9 @@ the value that trajectory has reached.
 The corridor's worst, range by range: **below** where the low trajectory is under the floor,
 **above** where the high one is over the ceiling, **inside** where neither is. The number written
 is the low trajectory's where any range reads below and the high one's where any reads above, so
-sensing's rules conclude of it exactly the side the corridor has. A stretch therefore begins at the
+a domain's transition judges of it exactly the side the corridor has. A stretch therefore begins at the
 earliest instant the value MAY cross, which is the safe side for a desire that wants it inside:
 nothing is left unwatered on the strength of rain that may not come.
 
 The width at an instant is how much the agent does not know about the value then. It is never
-written: what leaves prediction is a side and a number on it, and the search reads the side.
+written: what leaves prediction is a number on a side, and the search reads the state a transition makes of it.

@@ -1,24 +1,22 @@
 --- case
 +++ expected
-@@ -53,4 +53,21 @@
+@@ -53,4 +53,19 @@
    :ontology a orexis:PublicGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
-+  observed:probe a orexis:BeliefGraph .
-+  observed:probe a orexis:Graph .
-+  observed:probe a orexis:StateGraph .
-+  observed:probe a sensing:ObservationGraph .
-+  observed:probe dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-+  observed:probe orexis:arrivedBy orexis:Received .
-+  observed:probe orexis:beliefsOf :keeper .
++  observed:probe_20260101T120000Z a orexis:Graph .
++  observed:probe_20260101T120000Z a orexis:PerceptGraph .
++  observed:probe_20260101T120000Z a sensing:ObservationGraph .
++  observed:probe_20260101T120000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  observed:probe_20260101T120000Z orexis:arrivedBy orexis:Received .
++  observed:probe_20260101T120000Z orexis:beliefsOf :keeper .
  }
 +
 +
-+GRAPH observed:probe {
-+  orexis:obs_probe a sosa:Observation .
-+  orexis:obs_probe prov:wasGeneratedBy :keeper .
-+  orexis:obs_probe sensing:rawResult 0.22 .
-+  orexis:obs_probe sensing:unchangedSince "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-+  orexis:obs_probe sosa:madeBySensor :probe .
-+  orexis:obs_probe sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++GRAPH observed:probe_20260101T120000Z {
++  orexis:obs_probe_20260101T120000Z a sosa:Observation .
++  orexis:obs_probe_20260101T120000Z prov:wasGeneratedBy :keeper .
++  orexis:obs_probe_20260101T120000Z sensing:rawResult 0.22 .
++  orexis:obs_probe_20260101T120000Z sosa:madeBySensor :probe .
++  orexis:obs_probe_20260101T120000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +}

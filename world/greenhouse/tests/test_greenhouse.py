@@ -1,5 +1,5 @@
 """The greenhouse in the 0.2.0 runtime: readings arrive over MQTT, sensing writes them and the rules
-conclude their sides, climate's transitions make the bed's soil and air of them, the grower's desire
+conclude what they are of, climate's transitions make the bed's soil and air of them, the grower's desire
 mints a want where the bed is believed dry or cold, the plan's step takes the bed and is taken by
 sending the device a command sized from the bed's latest reading, and the next reading's transition
 answers it. The broker is a fake client: what is subscribed to and published is what is held."""
@@ -17,7 +17,7 @@ from agent.execution.executor import DEFAULT_PATIENCE_S
 from agent.ontology import OREXIS
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.series import HISTORY, Sink, install
-from agent.store import graphs_of, revisions_of, rows
+from agent.store import graphs_of, rows
 from agent.transport.mqtt.driver import Mqtt
 
 WORLD = Path(__file__).resolve().parents[1]
@@ -60,11 +60,13 @@ def _grower(monkeypatch):
     return runtime, broker
 
 
-def _sides(beliefs) -> set[tuple[str, str]]:
-    q = """SELECT ?p ?side WHERE { ?obs sosa:observedProperty ?p ; ?side ?range .
-           VALUES ?side { sensing:below sensing:inside sensing:above } }"""
-    return {(r["p"].rsplit("#", 1)[-1], r["side"].rsplit("#", 1)[-1])
-            for r in rows(beliefs, q, graphs_of(beliefs, OREXIS + "BeliefGraph"))}
+def _held(beliefs) -> set[tuple[str, str]]:
+    """What the grower holds of the bed — its soil and its air, in climate's words — read where the mind
+    reads it, the state graphs (#944)."""
+    q = """PREFIX climate: <http://example.org/orexis/climate#>
+           SELECT ?p ?state WHERE { ?bed ?p ?state . VALUES ?p { climate:soil climate:air } }"""
+    return {(r["p"].rsplit("#", 1)[-1], r["state"].rsplit("#", 1)[-1])
+            for r in rows(beliefs, q, graphs_of(beliefs, OREXIS + "StateGraph"))}
 
 
 def test_the_grower_listens_to_the_instruments_of_the_bed_it_acts_for(monkeypatch):
@@ -72,11 +74,14 @@ def test_the_grower_listens_to_the_instruments_of_the_bed_it_acts_for(monkeypatc
     assert sorted(broker.subscribed) == ["sensors/moisture_probe/reading", "sensors/thermometer/reading"]
 
 
-def test_a_reading_is_written_and_its_side_concluded(monkeypatch):
+def test_a_reading_is_written_and_the_bed_believed_dry(monkeypatch):
+    """A reading is a percept, kept and handed to no reader of the mind; what the grower holds of the bed
+    is the soil its transition made of it (#944)."""
     runtime, _ = _grower(monkeypatch)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
     runtime.drain(NOW)
-    assert ("SoilMoisture", "below") in _sides(runtime.beliefs), "under the bed's floor of 0.30"
+    assert _held(runtime.beliefs) == {("soil", "Dry")}, "under the bed's floor of 0.30"
+    assert len(graphs_of(runtime.beliefs, OREXIS + "PerceptGraph")) == 2, "the percept and what the rules concluded of it"
 
 
 def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_reading_answers_it(monkeypatch):
@@ -96,7 +101,7 @@ def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert runtime.parts["execution"].executor.walking() == [], "the reading made the bed moist and answered the dose"
-    assert ("SoilMoisture", "inside") in _sides(runtime.beliefs)
+    assert ("soil", "Moist") in _held(runtime.beliefs)
     assert len(broker.published) == 1, "one dose, and nothing more once the bed is comfortable"
 
 
@@ -128,22 +133,12 @@ def test_a_committed_dose_is_a_flow_the_beds_prediction_accumulates(monkeypatch)
     predicted = [(datetime.fromisoformat(r["start"]), float(r["value"])) for r in rows(runtime.beliefs, _PREDICTED_Q, ())]
     assert [(s >= closes - timedelta(seconds=DEFAULT_PATIENCE_S), round(v, 2)) for s, v in predicted] == [(True, 0.41)], \
         f"one stretch from where the reading is due, risen to the aim and dried a day, not dried from 0.2: {predicted}"
-    sides = _predicted_sides(runtime.beliefs)
-    assert ("SoilMoisture", "inside") in sides and ("SoilMoisture", "below") not in sides, f"foreseen inside, never below: {sides}"
+    assert all(0.30 <= v <= 0.60 for _, v in predicted), f"foreseen inside the bed's range, never below: {predicted}"
     runtime.time.at = NOW + timedelta(minutes=11)
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert runtime.parts["execution"].executor.walking() == []
     assert graphs_of(runtime.beliefs, committed) == [], "answered: closed, then swept"
-
-
-def _predicted_sides(beliefs) -> set[tuple[str, str]]:
-    """The sides of every predicted observation, read with its revisions as a reader of a prediction does."""
-    q = """SELECT ?p ?side WHERE { ?obs sosa:observedProperty ?p ; ?side ?range .
-           VALUES ?side { sensing:below sensing:inside sensing:above } }"""
-    predicted = graphs_of(beliefs, OREXIS + "PredictionGraph")
-    return {(r["p"].rsplit("#", 1)[-1], r["side"].rsplit("#", 1)[-1])
-            for r in rows(beliefs, q, [*predicted, *revisions_of(beliefs, *predicted)])}
 
 
 @pytest.fixture
@@ -228,19 +223,25 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     assert one(dosed, "intentions") == {"standing": 1} and one(dosed, "silence") == {"silent": 0}
     assert one(dosed, "act")["count"] == one(dosed, "act")["taken"] == 1
     assert sum(p["fields"]["satisfied"] for p in of(dosed, "imaginarium")) == 1
-    #  TWO MET: the soil want in the world its dose made, and the desire in the air's ground, which
-    #  holds the air's reading alone — the soil the desire is also about is not there to read dry.
-    assert sum(p["fields"]["met"] for p in of(dosed, "imaginarium")) == 2
+    #  THREE MET: the soil want in the world its dose made, and the desire in each of the air's two
+    #  grounds, which hold the air's state alone — the soil the desire is also about is not there to read
+    #  dry. TWO GROUNDS where there was one (#944): the present ground holds no reading, a percept being
+    #  handed to no reader of the mind, and the air's carried prediction brings a predicted observation
+    #  into the ground a quarter-hour on, so that boundary no longer restates the present and is a period
+    #  of its own. Two met before.
+    assert sum(p["fields"]["met"] for p in of(dosed, "imaginarium")) == 3
     assert one(dosed, "revisions")["unsettled"] == 0 < one(dosed, "revisions")["revisions"]
     assert [(p["tags"]["outcome"], p["fields"]["count"]) for p in of(a_day_later, "intention")] == [("failed", 2)]
     assert one(a_day_later, "intentions") == {"standing": 0}
     assert one(a_day_later, "act") == {"count": 1, "taken": 0}, "the second dose, sized from no reading"
     assert one(a_day_later, "silence") == {"silent": 1}, "the probe, and not the thermometer that reported"
-    #  AND WHICH (#894): the series names the probe silent, so reflection reads which and not how many —
-    #  and the thermometer stuck, since this test hands it 21.0 exactly twice a day apart, which is the
-    #  unchanged number sensing says stuck of (#462); a simulated instrument jitters so that it is not.
+    #  AND WHICH (#894): the series names the probe silent, so reflection reads which and not how many.
+    #  The thermometer is NOT stuck, though this test hands it 21.0 exactly twice a day apart: stuck counts
+    #  readings, not time (#944), and two readings of one number are short of the six it takes. Counted
+    #  as time, the day between them was six cadences and more, and it was said stuck here; it is said
+    #  stuck at its sixth reading of one number (agent/sensing/tests/test_rules.py).
     assert [(p["tags"]["sensor"], p["fields"]) for p in of(a_day_later, "doubted")] == \
-        [("moisture_probe", {"silent": 1, "stuck": 0}), ("thermometer", {"silent": 0, "stuck": 1})]
+        [("moisture_probe", {"silent": 1, "stuck": 0})]
     assert of(dosed, "doubted") == [], "a sensor nobody doubts is on no point"
     assert len(broker.published) == 1
 

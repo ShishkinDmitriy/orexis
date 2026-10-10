@@ -9,15 +9,20 @@
 
 <> a sh:RulesGraph .    # this document is one graph, and this is what it is
 
-#  THE RULES SENSING REGISTERS, in three layers, as SHACL 1.2 Inference Rules defines them, run by the
-#  deliberator over every observation and every predicted observation.
+#  THE RULES SENSING REGISTERS, in two layers, as SHACL 1.2 Inference Rules defines them, run by the
+#  deliberator over every percept as it arrives. What they conclude is the percept's revision, and a
+#  percept's revision is a percept too (`orexis:PerceptGraph`): handed to no reader of the mind, which
+#  reads what a domain's TRANSITION makes of the percept arriving — the subject belief, held past a
+#  margin by the state it replaces — and no rule here
+#  (an-observation-is-a-percept-and-the-mind-reads-only-beliefs).
 #
 #  LAYER 0, WHAT AN OBSERVATION IS OF, AND ITS QUANTITY IN ITS PROPERTY'S UNIT. `received` writes
-#  only what a sensor gave — its number (`sensing:rawResult`), who made it and when — and these
-#  conclude the rest: from the topology, the feature of interest (what the sensor is hosted by, a
-#  sample or the subject itself) and the property (what it observes); and the scaled quantity
-#  (`sensing:scaledResult`), the number as it is or, where a two-point scaling the world states
-#  scales the sensor — a RESCALE, the unit changing — on the straight line through its points.
+#  only what a sensor gave — its number (`sensing:rawResult`), who made it and when, and the percept
+#  before it — and these conclude the rest: from the topology, the feature of interest (what the
+#  sensor is hosted by, a sample or the subject itself) and the property (what it observes); and the
+#  scaled quantity (`sensing:scaledResult`), the number as it is or, where a two-point scaling the
+#  world states scales the sensor — a RESCALE, the unit changing — on the straight line through its
+#  points. And whether the sensor is STUCK, from the percepts kept.
 #
 #  LAYER 1, ITS READING: the scaled quantity as it is or, where a two-point calibration corrects the
 #  sensor — the unit staying, the instrument's error taken out — on the line through its points.
@@ -26,14 +31,9 @@
 #  division whose dividend is an exact zero binds nothing, and a double cast to a decimal carries
 #  its binary error (1.100000000000000128) unless rounded after the cast.
 #
-#  LAYER 2, WHICH SIDE of each of its subject's ranges an observation's reading lies on — over what
-#  layer 1 concluded, and over a predicted observation, which the prediction writes whole. The sides
-#  are the bare comparison of one reading with the bounds, and remember nothing: what the agent holds
-#  true of the subject, held past a margin by the state it replaces, is a domain's TRANSITION
-#  triggered by the observation arriving, and no rule here (a-transition-changes-the-state-and-an-inference-only-concludes).
-#  NOTHING OF THE MIND READS A SIDE since #944's second slice: a desire, a precondition, a cost and an
-#  effect read the subject's state in a domain's words (`tests/test_store.py` holds them to it). The
-#  sides stand until #944's fourth slice takes them out with the rest of sensing's words in the mind.
+#  THE SIDES ARE GONE (#944): which side of each of its subject's ranges a reading lay on was concluded
+#  here at a third layer until nothing read it — the mind reads the subject's state in a domain's words,
+#  and `tests/test_store.py` holds a text the mind reads off a reading's number.
 
 :observation a sh:RuleSet ;
     rdfs:label "what an observation is of, its quantity, and its reading" ;
@@ -101,45 +101,45 @@
                                                    / (xsd:double(?rb) - xsd:double(?ra))) * 1000000) / 1000000 AS ?value)
         }""" .
 
-:sides a sh:RuleSet ;
-    rdfs:label "which side of each of its subject's ranges an observation is on" ;
-    sh:hasRule :belowRule , :insideRule , :aboveRule .
+#  STUCK (knowledge/domain/sensing/stuck.md, #462, #944): a sensor whose last `sensing:stuckAfter`
+#  readings all gave one number is stuck on it. A rule over the PERCEPTS KEPT — `received` keeps that
+#  many of a sensor's and forgets the rest — concluded in the revision of the percept arriving, so it
+#  holds while that percept does and the next reading, differing, finds the kept ones no longer
+#  agree. The percepts before the one arriving are no testimony a revision is handed, so this rule
+#  reads them where they lie, by the kind sensing keeps them in, as it reads the limit off the agent's
+#  self graph — the one rule here that reaches past its arrival, and only into what this layer keeps;
+#  `received` reads the same stance with the same figure, six, where none is stated. Identical is the
+#  RAW number, since a clamp or a rescale can make two counts one reading, and a sensor stating no
+#  frequency is never said stuck, as it is never said silent. Run once: it reads no conclusion.
 
-:belowRule a sh:SPARQLRule ;
-    sh:layer 2 ;
-    rdfs:label "under the floor" ;
-    sh:construct """
-        CONSTRUCT { ?obs sensing:below ?range } WHERE {
-            ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
-            ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
-            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
-            ?range ssn-system:inCondition ?condition .
-            ?condition ssn:forProperty ?property ; schema:minValue ?low .
-            FILTER(?value < ?low)
-        }""" .
+:stuck a sh:RuleSet ;
+    rdfs:label "whether a sensor keeps giving one number" ;
+    sh:hasRule :stuckRule .
 
-:insideRule a sh:SPARQLRule ;
-    sh:layer 2 ;
-    rdfs:label "within the range, bounds included" ;
+:stuckRule a sh:SPARQLRule ;
+    rdfs:label "a sensor whose last stuckAfter readings all gave one number" ;
+    sh:layer 0 ;
+    sh:runOnce true ;
     sh:construct """
-        CONSTRUCT { ?obs sensing:inside ?range } WHERE {
-            ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
-            ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
-            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
-            ?range ssn-system:inCondition ?condition .
-            ?condition ssn:forProperty ?property ; schema:minValue ?low ; schema:maxValue ?high .
-            FILTER(?value >= ?low && ?value <= ?high)
-        }""" .
-
-:aboveRule a sh:SPARQLRule ;
-    sh:layer 2 ;
-    rdfs:label "over the ceiling" ;
-    sh:construct """
-        CONSTRUCT { ?obs sensing:above ?range } WHERE {
-            ?obs a sosa:Observation ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
-            ?obs (sosa:hasFeatureOfInterest/(sosa:isSampleOf)?)|sosa:madeBySensor ?holder .
-            ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
-            ?range ssn-system:inCondition ?condition .
-            ?condition ssn:forProperty ?property ; schema:maxValue ?high .
-            FILTER(?value > ?high)
+        CONSTRUCT { ?sensor sensing:stuckOn ?raw }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:rawResult ?raw .
+            ?sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?frequency .
+            ?frequency a ssn-system:Frequency .
+            {
+                SELECT ?sensor (COUNT(DISTINCT ?kept) AS ?readings) (COUNT(DISTINCT ?number) AS ?numbers) WHERE {
+                    GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?percept a sensing:ObservationGraph }
+                    GRAPH ?percept { ?kept sosa:madeBySensor ?sensor ; sensing:rawResult ?number }
+                } GROUP BY ?sensor
+            }
+            {
+                SELECT (COUNT(?stated) AS ?statements) (SAMPLE(?stated) AS ?figure) WHERE {
+                    OPTIONAL {
+                        GRAPH ?catalogue { ?catalogue a orexis:CatalogueGraph . ?self a orexis:SelfGraph }
+                        GRAPH ?self { ?me a orexis:Self ; sensing:stuckAfter ?stated }
+                    }
+                }
+            }
+            BIND(IF(?statements = 1 && isNumeric(?figure), ?figure, 6) AS ?limit)
+            FILTER(?numbers = 1 && ?readings >= ?limit)
         }""" .

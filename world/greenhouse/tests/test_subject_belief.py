@@ -33,7 +33,7 @@ STATE = "http://example.org/orexis#StateGraph"
 SOIL, AIR = "sensors/moisture_probe/reading", "sensors/thermometer/reading"
 
 #  THE GROWER'S OWN STATE: every state graph it derived, which is where a transition writes and where
-#  sensing says a sensor silent or stuck — never an observation, which is a state graph it received.
+#  sensing says a sensor silent — never a percept, which is no state at all (#944).
 _DERIVED_Q = """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     ?g a orexis:StateGraph ; orexis:arrivedBy orexis:Derived } }"""
 

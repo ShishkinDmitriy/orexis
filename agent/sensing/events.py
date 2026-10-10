@@ -22,7 +22,7 @@ beliefs, and two of its questions — a count that has not moved for days, a rea
 calibration point — could be asked of the reading alone only through the very scaling under doubt.
 The dashboards keep drawing `value`; a point written before carries `value` alone.
 
-AND IT IS A METRIC: how long after the reading it replaced it came, in the agent's seconds, beside
+AND IT IS A METRIC: how long after the percept before it it came, in the agent's seconds, beside
 the cadence the world states, tagged by the sensor. So is how many sensors are said silent now, which
 is made only where heard — and WHICH sensors the agent doubts, `Doubted`, a level per sensor tagged
 `sensor`: silent, stuck, each as it stands at the ask. `silence` counts; `doubted` names.
@@ -55,7 +55,7 @@ def tag_of(iri: str) -> str:
 class Observed:
     """An observation of `observed_property` by the sensor, reading `value` at `at`: the sensor's and
     its feature of interest's tags, the local names of their IRIs, the raw number the sensor gave
-    where the observation has one, and how long after the reading it replaced it came beside the
+    where the observation has one, and how long after the percept before it it came beside the
     cadence the world states, where either is known."""
     metric = "received"
     observed_property: str
@@ -92,7 +92,7 @@ class Silence:
 @dataclass(frozen=True)
 class Doubted:
     """A sensor the agent doubts, as it stands at the ask: said silent (`sensing:silentSince`), said
-    stuck (`sensing:stuckSince`), each one or nought; and nought on both once, for a sensor doubted
+    stuck (`sensing:stuckOn`, concluded of the percept holding now), each one or nought; and nought on both once, for a sensor doubted
     at the last ask and no longer. Named by the sensor, so the series says WHICH where `silence` says
     how many."""
     metric = "doubted"

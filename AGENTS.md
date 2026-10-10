@@ -353,7 +353,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   in one is CRISP**.
 - **A step is sized when it is taken, from the present, and the search only says the state it
   reaches** — an action takes the subject, and the `execution:Command` reads its latest observation
-  over the beliefs as they stand: with a drift, the one reader of a reading's number (#944).
+  over the beliefs and the percepts holding as the step is taken: with a drift, the one reader of a
+  reading's number (#944).
 - **A step lands when the world can SHOW its effect, and a landing is a BAND** — the least and the
   most, so a dose lands within a cadence of the step, a market act when its round's window closes,
   both ends agreeing; declared as nothing, a step landed the instant it was taken and failed a
@@ -418,10 +419,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A prediction is a diff, and only a ground has applied it** — one reader answers the derivation
   and the search (`world_at`), and refuses a world that says no period; the present, where no
   prediction has applied, it reads off a store with no ground as the readings themselves (#916).
-- **A world speaks for its readings' revisions**, and **the search runs no rules, so a reading's
-  revisions travel with it and an effect speaks the state a transition concludes** — a revision is a
-  belief and a drift's prediction is not, which keeps the foreseen reading out of the present; the
-  foreseen state is made where a ground is laid, before any search stands in it.
+- **A world speaks for its state's revisions**, and **the search runs no rules, so a state's
+  revisions travel with it and an effect speaks the state a transition concludes** — a revision is of
+  its source's kind and a drift's prediction is neither, which keeps the foreseen reading out of the
+  present; the foreseen state is made where a ground is laid, before any search stands in it; and no
+  reading crosses at all, a percept and what was concluded of it being no kind a world is made of (#944).
 - **A graph forgotten takes its revisions with it, and an orphan revision is a side with no
   reading** — one said `below` for a day in every possible world, and the dose read unmet in the
   world it made; `forget_graph` forgets `revisions_of` first.
@@ -514,15 +516,18 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   whole or not at all.
 - **A belief kind enters through `propose`, and a package's working graph is not a belief.**
 - **Sensing observes and says when a sensor has gone silent, and prediction is a package of its
-  own** — `received` writes one `sosa:Observation` per sensor holding until the next is due and a
-  grace past it, `missed` says `sensing:silentSince`, the sides are revisions; `agent/prediction/`
-  accumulates the drifts' rates and imports nothing of sensing.
+  own** — `received` writes one `sosa:Observation` per reading, a percept linked to the one before by
+  `sensing:previous`, the latest holding until the next is due and a grace past it and every older one
+  ended where the next began; it keeps a sensor's last `sensing:stuckAfter` and nothing sweeps the rest
+  but it; `missed` says `sensing:silentSince` of a sensor whose latest has ended; `agent/prediction/`
+  accumulates the drifts' rates from the latest and imports nothing of sensing (#944).
 - **A belief is a crisp triple, and probability lives only inside an estimator** — sensing and
   prediction may keep a mean and a spread while they work, and write a value, a side or a band as
   two numbers (a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
 - **An observation is a percept and the mind reads only beliefs, in the domain's words** — sensing
   keeps a sensor's percepts, named per reading and linked to the one before, as deep as its rules
-  read; revision makes of the latest one belief about the subject, judged beside the belief it
+  read, in a kind beneath `orexis:Graph` alone and what is concluded of one a percept too, so no reader
+  of the mind is handed one; revision makes of the latest one belief about the subject, judged beside the belief it
   replaces, so a held state is the belief and no summary is carried onto the present; a predicted
   number is judged the same way, in its ground; the domain's transition judges its states with the
   range's margin; and no desire, precondition, cost or effect reads a side or a number, an action
@@ -541,16 +546,16 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   left no present, and a dose sized from it commanded nothing (#870,
   a-reading-late-is-not-a-reading-missing).
 - **A sensor that keeps reporting one number is stuck, and age is not the only doubt about a
-  reading** — each observation carries `sensing:unchangedSince`, the start of the unbroken run of
-  its raw number, and `received` says `sensing:stuckSince` once the run has lasted `sensing:stuckAfter`
-  cadences, in a state graph the first differing number takes back; identical is the raw number,
-  since a clamp can make two counts one reading, and a count that creeps is the other two
-  detectors' (#462).
+  reading** — sensing's rule says `sensing:stuckOn` the number when every percept kept of the sensor,
+  its last `sensing:stuckAfter`, gave it, in the revision of the latest, so the first differing number
+  and a silence end it; it counts readings, not time, and nothing carries a run onto the present;
+  identical is the raw number, since a clamp can make two counts one reading, and a count that creeps
+  is the other two detectors' (#462, #944).
 - **Sensing speaks SOSA and SSN, and declares only what they lack** — the observation graph's kind,
-  the silence, the sides and the pipeline's words; a transport hands `received` bytes and sensing
-  knows no transport.
+  the link to the percept before, the silence, the number a stuck sensor gives and the pipeline's
+  words; a transport hands `received` bytes and sensing knows no transport.
 - **An observation is concluded from the number a sensor gave** — its quantity through the scaling,
-  its reading through the calibration, then its sides
+  its reading through the calibration; what the subject is then is a domain's transition's
   (an-observation-is-concluded-from-the-number-a-sensor-gave).
 - **A drift answers a rate, and a prediction accumulates them** — rates add, a happening is where
   one may change, a crossing is on a straight line (a-prediction-accumulates-rates-between-happenings);

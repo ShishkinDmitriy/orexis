@@ -6,14 +6,14 @@
    observed:zamioculcas_moisture orexis:beliefsOf :keeper .
 +  predicted:zamioculcas_moisture_0 a orexis:Graph .
 +  predicted:zamioculcas_moisture_0 a orexis:PredictionGraph .
-+  predicted:zamioculcas_moisture_0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:26:24+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
++  predicted:zamioculcas_moisture_0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:26:25+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
 +  predicted:zamioculcas_moisture_0 orexis:arrivedBy orexis:Recorded .
 +  predicted:zamioculcas_moisture_0 orexis:beliefsOf :keeper .
 +  predicted:zamioculcas_moisture_0 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
 +  predicted:zamioculcas_moisture_0 prov:wasDerivedFrom observed:zamioculcas_moisture .
 +  predicted:zamioculcas_moisture_1 a orexis:Graph .
 +  predicted:zamioculcas_moisture_1 a orexis:PredictionGraph .
-+  predicted:zamioculcas_moisture_1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T13:26:24+00:00"^^xsd:dateTime ] .
++  predicted:zamioculcas_moisture_1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T13:26:25+00:00"^^xsd:dateTime ] .
 +  predicted:zamioculcas_moisture_1 orexis:arrivedBy orexis:Recorded .
 +  predicted:zamioculcas_moisture_1 orexis:beliefsOf :keeper .
 +  predicted:zamioculcas_moisture_1 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
@@ -22,19 +22,19 @@
 +
 +
 +GRAPH predicted:zamioculcas_moisture_0 {
-+  orexis:obs_zamioculcas_moisture a sosa:Observation .
-+  orexis:obs_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
-+  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.02 .
-+  orexis:obs_zamioculcas_moisture sosa:madeBySensor :probe .
-+  orexis:obs_zamioculcas_moisture sosa:observedProperty :moisture .
-+  orexis:obs_zamioculcas_moisture sosa:resultTime "2026-01-01T13:26:24+00:00"^^xsd:dateTime .
++  orexis:predicted_zamioculcas_moisture_0 a sosa:Observation .
++  orexis:predicted_zamioculcas_moisture_0 sosa:hasFeatureOfInterest :zamioculcas .
++  orexis:predicted_zamioculcas_moisture_0 sosa:hasSimpleResult 0.020341 .
++  orexis:predicted_zamioculcas_moisture_0 sosa:madeBySensor :probe .
++  orexis:predicted_zamioculcas_moisture_0 sosa:observedProperty :moisture .
++  orexis:predicted_zamioculcas_moisture_0 sosa:resultTime "2026-01-01T13:25:25+00:00"^^xsd:dateTime .
 +}
 +
 +GRAPH predicted:zamioculcas_moisture_1 {
-+  orexis:obs_zamioculcas_moisture a sosa:Observation .
-+  orexis:obs_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
-+  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.0 .
-+  orexis:obs_zamioculcas_moisture sosa:madeBySensor :probe .
-+  orexis:obs_zamioculcas_moisture sosa:observedProperty :moisture .
-+  orexis:obs_zamioculcas_moisture sosa:resultTime "2026-01-02T12:00:00+00:00"^^xsd:dateTime .
++  orexis:predicted_zamioculcas_moisture_1 a sosa:Observation .
++  orexis:predicted_zamioculcas_moisture_1 sosa:hasFeatureOfInterest :zamioculcas .
++  orexis:predicted_zamioculcas_moisture_1 sosa:hasSimpleResult 0.0 .
++  orexis:predicted_zamioculcas_moisture_1 sosa:madeBySensor :probe .
++  orexis:predicted_zamioculcas_moisture_1 sosa:observedProperty :moisture .
++  orexis:predicted_zamioculcas_moisture_1 sosa:resultTime "2026-01-02T12:00:00+00:00"^^xsd:dateTime .
 +}

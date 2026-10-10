@@ -14,7 +14,8 @@ description: >-
   reading, and the number is read off the percept by its two readers at the boundary alone,
   prediction and a command sizing its step when it is taken; planning's and execution's code are
   untouched. Amended the next day - the belief holds no value; and, built, planning's code was
-  touched once, where a ground is laid. Refused - the observation as the
+  touched once, where a ground is laid; and the percepts built - a kind beneath orexis:Graph alone,
+  what is concluded of a percept a percept too, stuck the number every percept kept agrees on. Refused - the observation as the
   belief, summaries a writer carries onto the present, a side re-derived from the last N numbers,
   the hold read off the previous percept, a predicted number judged bare, and a hold written once
   per property.
@@ -30,6 +31,37 @@ timestamp: 2026-10-09T20:00:00Z
 > per property — [a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md)
 > makes the belief a domain's transition, triggered once by the observation arriving, deleting the state
 > before and inserting the new one, and engages that refusal there.
+
+> **Amended 2026-10-10 (#944's fourth slice): the percepts, built, and what building them decided.**
+> Each reading is its own node and graph, named for its sensor and instant, linked to the one before by
+> `sensing:previous`; the latest is the one nothing names, and a reading arriving ends the one before
+> at its own instant, so a reader standing at an instant is handed one per sensor. Sensing keeps a
+> sensor's last `sensing:stuckAfter` and forgets the rest itself: no sweep drops a graph for its period
+> having ended, so what was said survives as long as sensing's rules read it. The decisions the build
+> made, none of which the body names:
+> - **The kind is the kernel's, `orexis:PerceptGraph`, beneath `orexis:Graph` alone** — not beneath
+>   `orexis:BeliefGraph`, which every reader of the mind names, so leaving a percept out is structural
+>   ([percept](/domain/kernel/percept.md)). The kernel's because its readers are four packages: sensing,
+>   prediction, belief's transition and execution's operations.
+> - **What is concluded of a percept is a percept.** A revision was beneath `orexis:BeliefGraph`, so
+>   a reading's quantity and feature would have reached every reader of the mind through its revision;
+>   revision now writes its graph in its source's kind, a belief's a belief.
+> - **Stuck is concluded in the latest percept's revision, as `sensing:stuckOn` the number**, by a
+>   sensing rule that reads the percepts kept where they lie, by their kind, and the limit off the self
+>   graph — the one rule that reaches past the arrival it is revised for, since a revision is handed
+>   the public graphs alone. `sensing:stuckSince` went with the run it dated. So stuck is a percept's,
+>   handed to no reader of the mind as it was not before, and a silence ends it. A sensor stating no
+>   frequency is still never said stuck.
+> - **A predicted observation is a node of its own**, and carries the key, the sensor, a number and an
+>   instant and nothing else of the percept, the carried one included: it had been the observation's
+>   node, which named a percept in every ground.
+> - **A command and a saying are handed the percepts holding as the step is taken**, the reading in hand.
+>
+> Measured: the present ground holds no reading now, so a key no drift moves — the greenhouse's air —
+> whose carried prediction brings a predicted observation into the ground a grace on is a period of its
+> own there, where it collapsed into the present before: one ground more for that scope a pass. And the
+> crossing instants of two prediction cases moved by a second each way, the observation's end no
+> longer being a happening.
 
 > **Amended 2026-10-10 (#944's second slice): the mind reads the subject belief, and planning's code
 > was not untouched.** The desires, preconditions and effects speak the subject's state and the
@@ -225,3 +257,12 @@ measured on #946's build. Judged one way, there is nothing to contradict.
   many.
 - **How deep sensing keeps percepts** is what its deepest rule reads, stuck today; a rule reading
   further back widens it, and a percept is never a series — a series is watched, never believed.
+- **Stuck is a percept's, and no plan branches on it** (#944's fourth slice). It is concluded of what
+  a sensor said, and said as `doubted`; a world whose plans should branch on a stuck sensor needs a
+  transition that makes a state of it. The trigger is such a world.
+- **A predicted observation stands in the ground it is laid into, and a received one does not.** The
+  present ground holds the state alone, while a ground ahead holds the predicted observation its
+  prediction adds beside the state its transitions made, so a prediction restating the present is a
+  period of its own where it collapsed before. The prediction's graph is what it adds
+  ([a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md)
+  says so); what would reopen it is the extra grounds costing a pass something measurable.

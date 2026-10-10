@@ -5,11 +5,12 @@ A sensor's `ssn-system:hasSystemCapability` carries an `ssn-system:hasSystemProp
 `ssn-system:Frequency`, whose `schema:value` is the time between one observation and the
 next in the `schema:unitCode` it states — QUDT's `unit:SEC`, `unit:MIN`, `unit:HR`, `unit:DAY`,
 or the UN/CEFACT code spelled the same — seconds where it states none. A sensor stating no
-frequency has no cadence: its observation stands until replaced and its silence is never
+frequency has no cadence: its percept stands until the next arrives and its silence is never
 said, since the world made no promise the absence could break.
 
-How many of those cadences the agent allows before it doubts the sensor — `sensing:silentAfter`,
-`sensing:stuckAfter` — is the agent's own word about itself, a stance in its self graph, read by
+How many of those cadences the agent allows a reading to be missing before it says the sensor
+silent, `sensing:silentAfter`, and how many of its readings may give one number before it is said
+stuck, `sensing:stuckAfter`, are the agent's own word about itself, stances in its self graph, read by
 `missed` and `received` through the kernel's `stance` with the figure in code where it states none.
 """
 

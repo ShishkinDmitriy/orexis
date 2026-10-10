@@ -57,12 +57,16 @@ log = logging.getLogger("mqtt")
 #  HOW OFTEN THE MEMBER ASKS AFTER ITS SENSORS' MISSING READINGS, in seconds of the one timeline.
 NUDGE_S = 60.0
 
-#  EVERY OBSERVATION WHOSE STANDING HAS ENDED, by the kernel's kind and SOSA's words: a sensor whose
-#  reading has fallen due with nothing arrived since, since the next replaces its graph whole.
+#  EVERY SENSOR WHOSE LATEST PERCEPT HAS ENDED, by the kernel's kind and SOSA's words: a sensor whose
+#  reading has fallen due with nothing arrived since — one percept of it ended, and none holding now,
+#  since each ends where the next begins and the latest when the next is due (#944).
 _LAPSED_Q = """
 SELECT DISTINCT ?sensor WHERE {
-  GRAPH $cat { ?g a orexis:StateGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end < $now) }
-  GRAPH ?g { ?o sosa:madeBySensor ?sensor } }"""
+  GRAPH $cat { ?g a orexis:PerceptGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end < $now) }
+  GRAPH ?g { ?o sosa:madeBySensor ?sensor }
+  FILTER NOT EXISTS { GRAPH ?h { ?x sosa:madeBySensor ?sensor }
+                      GRAPH $cat { ?h a orexis:PerceptGraph ; dcterms:temporal ?p
+                                   OPTIONAL { ?p orexis:end ?until } FILTER(!BOUND(?until) || ?until >= $now) } } }"""
 
 #  THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
 _COMMANDS_Q = """

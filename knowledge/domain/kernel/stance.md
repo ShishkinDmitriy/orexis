@@ -17,7 +17,7 @@ agent's self graph beside the row saying who it is:
 <> a orexis:SelfGraph .
 :rose_grower a orexis:Self ;
     execution:patienceS 120 ;     # a step may go two minutes unanswered past its landing
-    sensing:stuckAfter 3 .        # three unchanged cadences and a sensor is doubted
+    sensing:stuckAfter 3 .        # three readings of one number and a sensor is doubted
 ```
 
 The word is the figure's, not the triple's: `execution:patienceS` is a stance whether or not a
@@ -36,10 +36,15 @@ Each is declared by the package that reads it, in its own `ontology.ttl`, with d
 | `planning:budget` | candidates one want's search may weigh in a pass | the [planner](/domain/planning/planner.md), when it is made | `BUDGET` in `agent/planning/planner.py`, 32 |
 | `belief:budget` | rule executions one pass of revision may spend | the [deliberator](/domain/belief/deliberator.md), when it is made | `BUDGET` in `agent/belief/deliberator.py`, 256 |
 | `sensing:silentAfter` | cadences a reading may be missing before its sensor is said silent | `missed`, each pass | `SILENT_AFTER`, 3 |
-| `sensing:stuckAfter` | cadences a number may stay the same before its sensor is said [stuck](/domain/sensing/stuck.md) | `received`, each reading | `STUCK_AFTER`, 6 |
+| `sensing:stuckAfter` | readings that may give one number before their sensor is said [stuck](/domain/sensing/stuck.md), and so how many of a sensor's percepts are kept | `received`, each reading, and sensing's stuck rule off the self graph itself | `STUCK_AFTER`, 6 |
 | `prediction:horizonS` | seconds past an observation the drifts are accumulated | `predict`, each observation | `HORIZON_S`, a day |
 
 What the two budgets are, in their units, is the [budget](/domain/planning/budget.md) page's.
+
+One figure has a second reader that is no Python: sensing's stuck rule, a SPARQL text, reads
+`sensing:stuckAfter` off the self graph itself, with the same figure where none is stated and the same
+refusal of several or of one that is no number, since `received` keeps that many percepts and the rule
+says stuck when that many agree (#944). `agent/sensing/tests/test_rules.py` holds the two to one figure.
 
 # Read in the self graph, and nowhere else
 

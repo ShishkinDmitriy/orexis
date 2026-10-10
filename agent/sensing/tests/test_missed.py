@@ -18,7 +18,7 @@ import pytest
 from agent import clock
 from agent.sensing.missed import SILENT_AFTER, missed
 from agent.sensing.received import GRACE, received
-from agent.ontology import STATE
+from agent.ontology import PERCEPT
 from agent.sensing.ontology import SILENT_AFTER_TERM
 from agent.store import graphs_of, rows, update
 
@@ -69,7 +69,14 @@ def test_a_reading_late_inside_its_grace_is_still_the_present(pot, snapshots):
     late = snapshots.NOW + CADENCE + timedelta(minutes=1)
     assert missed(pot, snapshots.ME, late) == []
     assert rows(pot, "SELECT ?v WHERE { ?o sensing:rawResult ?v }",
-                graphs_of(pot, STATE, at=late, now=late)) == [{"v": "0.2"}]
+                graphs_of(pot, PERCEPT, at=late, now=late)) == [{"v": "0.2"}]
+
+
+def test_a_percept_followed_by_the_next_is_not_missing(pot, snapshots):
+    """#944: a sensor's percepts are kept, and each but the latest ended where the next began — an
+    ended period that says nothing missed, since the latest, the one no percept follows, still holds."""
+    received(pot, snapshots.ME, PROBE, b'{"value": 0.21}', snapshots.NOW + CADENCE)
+    assert missed(pot, snapshots.ME, snapshots.NOW + CADENCE + timedelta(minutes=10)) == []
 
 
 def test_a_lapsed_reading_is_missing_and_nothing_is_written_for_it(pot, snapshots):

@@ -61,7 +61,10 @@ conclusion itself.
 **CONCLUDE, THEN CLASSIFY.** A graph with no catalogue row is invisible to every reader by
 kind, so a writer that means its graph never to be seen without its revisions writes the graph,
 calls this, and classifies it last; the revision graph's row copies the source's owner and
-period where the source's row already states them, and says derived-from either way.
+period where the source's row already states them, and says derived-from either way. And it says
+the source's kind: a revision of a percept is an `orexis:PerceptGraph`, handed to no reader of the
+mind as the percept is not, and of anything else an `orexis:BeliefGraph` — so a percept is
+classified BEFORE it is revised, as `received` writes it, in one update with its row (#944).
 """
 
 from __future__ import annotations
@@ -72,8 +75,8 @@ import re
 import pyoxigraph as ox
 
 from agent.hash_named_graph import forms
-from agent.ontology import OREXIS, PUBLIC
-from agent.store import (Raw, catalogue_of, construct, entry, forget_graph, graphs_of, quads,
+from agent.ontology import BELIEF, OREXIS, PERCEPT, PUBLIC
+from agent.store import (Raw, bind, catalogue_of, construct, entry, forget_graph, graphs_of, quads,
                          remember, rows, update)
 
 from .ontology import DERIVED_FROM, REVISION_GRAPH, RULES_GRAPH, SETTLED, revision_graph
@@ -120,6 +123,9 @@ SELECT ?owner ?start ?end WHERE {
                OPTIONAL { $source dcterms:temporal ?p .
                           OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1"""
+
+#  WHETHER THE SOURCE IS A PERCEPT, off its row: its revisions are then percepts too.
+_PERCEPT_Q = """ASK { GRAPH $cat { $source a orexis:PerceptGraph } }"""
 
 #  WHETHER A REVISION GRAPH'S RULES SETTLED, off its row; no row is settled, since a source
 #  never revised has nothing to continue.
@@ -299,9 +305,12 @@ INSERT {{ GRAPH {cat} {{ <{into}> <{SETTLED}> {flag} }} }}
 WHERE  {{ GRAPH {cat} {{ <{into}> <{SETTLED}> ?was }} }}""")
         return
     row = next(iter(rows(store, _SOURCE_Q, (), cat=cat, source=source)), {})
+    #  OF ITS SOURCE'S KIND: what is concluded of a percept is a percept, handed to no reader of the
+    #  mind, and of anything else a belief (#944).
+    kind = PERCEPT if bool(store.query(bind(_PERCEPT_Q, cat=cat, source=source), prefixes=_NAMESPACES)) else BELIEF
     update(store, f"""
 INSERT DATA {{
-  {entry(store, into, REVISION_GRAPH, OREXIS + "Derived", row.get("owner"), row.get("start"), row.get("end"))}
+  {entry(store, into, (REVISION_GRAPH, kind), OREXIS + "Derived", row.get("owner"), row.get("start"), row.get("end"))}
   GRAPH {cat} {{ <{into}> <{DERIVED_FROM}> <{source}> ; <{SETTLED}> {flag} . }} }}""")
 
 

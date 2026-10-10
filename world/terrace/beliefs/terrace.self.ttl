@@ -9,6 +9,6 @@
 #  it states. Booted as "terrace", the agent checks that this is so.
 #
 #  WHAT IT RUNS: it observes the bed's probe and the forecast and foresees them, and wants nothing,
-#  so it is no planner and no executor; an observer is a deliberator too, so its sides are concluded.
+#  so it is no planner and no executor; an observer is a deliberator too, so what its percepts are of is concluded.
 
 :terrace_agent a orexis:Self , sensing:Observer , prediction:Predictor .

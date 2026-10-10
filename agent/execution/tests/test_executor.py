@@ -261,13 +261,14 @@ def test_a_step_that_predicts_something_waits_for_the_world_to_answer():
     assert _resolved(x, intention) == []
 
 
-def test_a_step_predicting_a_side_is_answered_by_the_readings_revision():
-    """A step speaks the concept the rules conclude — the soil comes to be inside its range — and
-    the side lives in the graph derived from the reading's. A new reading alone answers nothing;
+def test_a_step_predicting_a_conclusion_is_answered_by_the_states_revision():
+    """A step speaks a concept the rules conclude — here that the soil comes to be inside its range —
+    and the conclusion lives in the graph derived from the state's. A state alone answers nothing;
     once the rules conclude `inside` of it, in the revision graph the catalogue says was derived
-    from the state, the intention moves on."""
+    from the state, the intention moves on. The words are the case's own: sensing's sides, which
+    this once spoke, are retired (#944)."""
     soil, bed_range = "http://example.org/test#soil", "http://example.org/test#bed_operating"
-    below, inside = ("http://example.org/orexis/sensing#below", "http://example.org/orexis/sensing#inside")
+    below, inside = ("http://example.org/test#below", "http://example.org/test#inside")
     revisions = STATE + "/revisions"
     beliefs = _beliefs(PEG_A)
     update(beliefs, f"""INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{bed_range}> }}

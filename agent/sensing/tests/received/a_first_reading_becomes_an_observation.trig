@@ -1,8 +1,9 @@
 # a_first_reading_becomes_an_observation
 #
-# A pot nobody has read, and bytes for 0.22 of saturation at noon: one sosa:Observation of the pot's
-# moisture — feature, property, result, instant, sensor, author — in the graph of that key, received,
-# the keeper's, holding for the horizon. No side: that is a revision, the rules' to conclude.
+# A pot nobody has read, and bytes for 0.22 of saturation at noon: one sosa:Observation — the number,
+# the instant, the sensor, the author, and no percept before it — named for its sensor and its
+# instant, in a graph of its own, a percept, received, the keeper's, holding until the next is due and
+# a grace past it. What it is of and its quantity are a revision, the rules' to conclude.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -26,12 +27,12 @@
 GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:PerceptGraph rdfs:subClassOf orexis:Graph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:BeliefGraph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:StateGraph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:PerceptGraph .
 }
 
 GRAPH :world {

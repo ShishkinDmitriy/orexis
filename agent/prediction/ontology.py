@@ -48,3 +48,10 @@ def prediction_graph(agent_id: str, feature: str, observed_property: str, n: int
     underscore, since a slash cannot sit in a prefixed name's local part and a case would
     have to spell the graph in full."""
     return f"{GRAPH_PREFIX}predicted/{agent_id}/{slug(feature)}_{slug(observed_property)}_{n}"
+
+
+def predicted_of(feature: str, observed_property: str, n: int) -> str:
+    """The node the n-th prediction of one key says the reading of its stretch is — its own, and never
+    the percept's it was made from, which is what a sensor said at an instant and crosses into no
+    ground (#944). Distinct is all a reader relies on: it matches the key, never the name."""
+    return f"{OREXIS}predicted_{slug(feature)}_{slug(observed_property)}_{n}"

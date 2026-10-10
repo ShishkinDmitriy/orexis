@@ -95,7 +95,12 @@ def test_queries_use_only_declared_prefixes(path):
 #  reading carries. The number's two readers stand at the boundary, and neither is held here: a command,
 #  sizing a step when it is taken (an implementation), and a drift, prediction's rate.
 _READ_BY_THE_MIND = ("precondition", "costs", "landsAfter", "effect", "metWhen", "unmetWhen", "estimates")
-_PERCEPT = re.compile(r"sensing[:#](?:below|inside|above)\b|sosa(?::|/)hasSimpleResult\b")
+#  AND NO WORD OF A PERCEPT AT ALL (#944): what a sensor said is a graph no reader of the mind is handed,
+#  so a text the mind reads that names one of its words — the number it gave, the instant, the sensor,
+#  the link to the percept before, a stuck sensor's number — reads nothing, silently. The sides stay
+#  named: retired, they would read nothing too.
+_PERCEPT = re.compile(r"sensing[:#](?:below|inside|above|rawResult|scaledResult|previous|stuckOn)\b"
+                      r"|sosa(?::|/)(?:hasSimpleResult|madeBySensor|resultTime)\b")
 
 
 def _read_by_the_mind(path: Path) -> list[tuple[str, str]]:
@@ -129,7 +134,7 @@ def _read_by_the_mind(path: Path) -> list[tuple[str, str]]:
     return out
 
 
-def test_the_mind_reads_no_side_and_no_number_of_a_reading():
+def test_the_mind_reads_no_side_no_number_and_no_word_of_a_percept():
     """Held over every document a domain or a world ships. Two figures say it is looking: the dose's
     precondition is among what it read, and so is the greenhouse's desire."""
     read = {path: _read_by_the_mind(path) for path in _GROUPS["domains"] + [p for p in _GROUPS["worlds"] if p.suffix == ".ttl"]}
@@ -141,5 +146,5 @@ def test_the_mind_reads_no_side_and_no_number_of_a_reading():
     offending = sorted({f"{path.relative_to(REPO_ROOT)}: {what} reads {m.group(0)}"
                         for path, what, text in said for m in _PERCEPT.finditer(text)})
     assert not offending, (
-        "a text the mind reads speaks a reading's side or its number; it reads what the agent holds of the "
+        "a text the mind reads speaks a reading's side, its number or a word of a percept; it reads what the agent holds of the "
         "subject, in the domain's words, and only a command or a drift reads the number:\n" + "\n".join(offending))

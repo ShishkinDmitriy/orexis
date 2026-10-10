@@ -20,6 +20,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [level](/domain/kernel/level.md) - A reported field that is the state now, read by its store's owner and written as it last stood in a window.
 * [signal](/domain/kernel/signal.md) - A package's own word for what just happened, on its object, carrying one event; connected when parts link, never stored.
 * [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind on the catalogue.
+* [percept](/domain/kernel/percept.md) - What a sensor said, one reading a graph, chained to the one before; no belief, so no reader of the mind is handed one.
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
@@ -28,15 +29,15 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Sensing — bytes become observations, and observations subject beliefs
 
 * [scaling](/domain/sensing/scaling.md) - A rescale, a probe's count a moisture: two points the world states beside the sensor, applied by sensing's rule.
-* [sensing](/domain/sensing/sensing.md) - A transport's bytes become one observation per key, holding until the next is due; says when a sensor falls silent.
-* [observation](/domain/sensing/observation.md) - One act of observing in SOSA's words, one per key, replaced whole by the next; the premise everything else derives from.
-* [reading](/domain/sensing/reading.md) - The number an observation carries: what a side is concluded of, what a drift predicts, what a dose is sized from.
+* [sensing](/domain/sensing/sensing.md) - A transport's bytes become an observation per reading, a sensor's last few kept; says when a sensor falls silent.
+* [observation](/domain/sensing/observation.md) - One act of observing in SOSA's words, one per reading, linked to the one before; a percept, the premise everything else derives from.
+* [reading](/domain/sensing/reading.md) - The number an observation carries: what a transition judges, what a drift predicts, what a dose is sized from.
 * [calibration](/domain/sensing/calibration.md) - A correction within one unit, two points the world states beside the sensor, applied by sensing's rule after any scaling.
 * [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
-* [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; the rules say which side a reading is on.
+* [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; a transition judges a subject against the operating one.
 * [margin](/domain/sensing/margin.md) - How far past a bound a value must go to leave the state held of a subject; stated on the range's condition, read by a transition.
-* [stuck](/domain/sensing/stuck.md) - A sensor reporting one number for a limit of its cadences is said stuck until a differing number ends it; the doubt beside age.
-* [observer](/domain/sensing/observer.md) - The role sensing serves, beneath the deliberator since sides are revisions; needs a sensor reporting to it.
+* [stuck](/domain/sensing/stuck.md) - A sensor whose last readings kept all gave one number is stuck on it, by a rule over its percepts; counts readings, not time.
+* [observer](/domain/sensing/observer.md) - The role sensing serves, beneath the deliberator since what a reading is of is a revision; needs a sensor reporting to it.
 
 # Transport — reaching the society
 
@@ -45,7 +46,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Belief — what follows from what was written
 
 * [belief-base](/domain/belief/belief-base.md) - One store per agent, and a catalogue describing every graph: its kind, owner, arrival and period.
-* [revision](/domain/belief/revision.md) - A belief derived from beliefs by SHACL 1.2's rules, adopted as they stand, into a graph of the source's own, on the present only.
+* [revision](/domain/belief/revision.md) - What SHACL 1.2's rules, adopted as they stand, conclude of a graph, into one of the source's own and kind, on the present only.
 * [deliberator](/domain/belief/deliberator.md) - The pass over what arrived — revised, then transitioned on, in turn — within one budget of rule executions; and the role running it.
 * [transition](/domain/belief/transition.md) - A typed rule that changes a state, triggered once by every arrival of testimony, into a state graph the runner prepares: a subject belief.
 
