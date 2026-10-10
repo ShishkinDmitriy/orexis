@@ -6,7 +6,7 @@ description: >-
   One act of observing, as SOSA says it - which sensor, the number it gave, when - and, concluded by
   sensing's rules, which property of which feature and the quantity. One per sensor, in a graph of
   its own that the next reading replaces whole; the premise every side and every prediction is
-  derived from.
+  derived from, and what triggers a domain's transitions.
 ---
 
 # What it is
@@ -39,3 +39,8 @@ it is the premise: what a rule concludes of it is a [revision](/domain/belief/re
 graph derived from it, and what a drift makes of it is a
 [prediction](/domain/prediction/prediction.md). Both go when it is replaced, because both were
 about it. The number it carries is the [reading](/domain/sensing/reading.md).
+
+One thing made of it outlives it: the subject belief a domain's
+[transition](/domain/belief/transition.md) inserted when it arrived, which is not derived from it, and
+which the next observation of the key's transition reads as the state before and takes out. It holds
+over the observation's period, so where no next reading comes it ends with it all the same.

@@ -1,14 +1,14 @@
 --- case
 +++ expected
-@@ -28,7 +28,6 @@
+@@ -29,7 +29,6 @@
  GRAPH :actions {
    :fill a orexis:Action .
    :fill orexis:takes :tank .
 -  :fill planning:landsAfter """SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }""" .
    :fill planning:costs """PREFIX : <http://example.org/test#>
        SELECT (1 AS ?cost) WHERE { }""" .
-   :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>
-@@ -37,6 +36,7 @@
+   :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX : <http://example.org/test#>
+@@ -38,6 +37,7 @@
        CONSTRUCT { ?tank :level ?next } WHERE {
        $tank :level ?l .
        BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
@@ -16,7 +16,7 @@
    :fill planning:precondition """PREFIX : <http://example.org/test#>
        SELECT ?tank WHERE {
        ?tank a :Tank ; :level ?l .
-@@ -86,4 +86,138 @@
+@@ -87,4 +87,138 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .

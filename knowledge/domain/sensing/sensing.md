@@ -6,8 +6,8 @@ description: >-
   The translation row of the agent stack: a transport hands it an instrument's bytes, and it keeps
   the number they hold as the sensor's observation, in a graph per sensor that holds until the next
   reading is due and a grace past it; its rules conclude what that number is an observation of and what quantity it is.
-  It says when a sensor has gone silent and when one is stuck on a number - it predicts nothing and
-  names no transport. `agent/sensing/`.
+  It says when a sensor has gone silent and when one is stuck on a number - it predicts nothing,
+  holds nothing of a subject, and names no transport. `agent/sensing/`.
 ---
 
 # What it does
@@ -47,7 +47,10 @@ their cadences (`sensing:silentAfter`) — said by `sensing:silentSince` until a
 What the rules conclude is a [revision](/domain/belief/revision.md), run by the
 [deliberator](/domain/belief/deliberator.md) when the container says a graph changed: layers 0 and 1
 what an observation is of and its reading, layer 2 which side of a [region](/domain/sensing/region.md) the
-reading is on — `sensing:below`, `sensing:inside` or `sensing:above`. That is why an
+reading is on — `sensing:below`, `sensing:inside` or `sensing:above`. What the agent then holds true
+of the observation's subject is no rule of sensing's but a domain's
+[transition](/domain/belief/transition.md), triggered by the observation arriving — climate's, for
+the soil and the air — which writes a subject belief. That is why an
 [observer](/domain/sensing/observer.md) is a deliberator too, and belief's part, first in a pass, hears a
 graph written before any other part, so sensing's own `Observed` and the prediction find it concluded. When the reading will change range is the
 [prediction](/domain/prediction/prediction.md) package's. How the bytes arrived is the
@@ -59,5 +62,6 @@ one, so the contract points one way.
 SOSA's and SSN's wherever they have one — a sensor `sosa:observes` a property and
 `sosa:isHostedBy` what it is mounted in, and that pair is the key — and its own for what neither
 standard says: the observation graph's kind and the forecast's, the silence, the three sides, the
+[margin](/domain/sensing/margin.md) a domain's transition holds a state by, the
 pipeline's binding and the two pointers a series is read by, the number a sensor gave and the quantity
 scaled from it, and the two-point scaling and calibration with their points.

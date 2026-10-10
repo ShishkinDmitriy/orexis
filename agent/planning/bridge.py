@@ -5,7 +5,9 @@ what the Planner asks, when it hands a plan down, of which of its steps a level 
 
 A RULE THAT CANNOT RUN BACKWARDS IS NOT A BRIDGE. Its head must be one triple whose subject and
 object are constants or variables its WHERE binds plainly; anything else is left out and said in
-the log.
+the log. And a TRANSITION is none: a rule typed `belief:Transition` changes a state
+when something arrives, and concludes no vocabulary's facts from another's
+(a-transition-changes-the-state-and-an-inference-only-concludes).
 """
 
 from __future__ import annotations
@@ -24,7 +26,8 @@ RULES_GRAPH = "http://www.w3.org/ns/shacl#RulesGraph"
 
 _RULES_Q = """
 SELECT ?rule ?text WHERE { ?rule a sh:SPARQLRule ; sh:construct ?text .
-                           FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule"""
+                           FILTER NOT EXISTS { ?rule sh:deactivated true }
+                           FILTER NOT EXISTS { ?rule a belief:Transition } } ORDER BY ?rule"""
 
 #  THE TWO GRAPHS A STEP PREDICTS IN, wherever its plan is (a-steps-prediction-is-two-graphs-it-names).
 _PREDICTED_Q = """

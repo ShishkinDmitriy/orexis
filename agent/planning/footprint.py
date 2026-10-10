@@ -366,10 +366,10 @@ def _values_in(node) -> dict:
 
 #  ONE ROW PER RULE OF AN ACTION'S EFFECT, with the action's precondition on each.
 _ACTIONS_Q = """
-SELECT ?action ?precondition ?construct ?update WHERE {
+SELECT ?action ?precondition ?construct ?delete WHERE {
   ?action a orexis:Action .
   OPTIONAL { ?action planning:precondition ?precondition }
-  OPTIONAL { ?action planning:effect/sh:rule ?r . OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r planning:update ?update } }
+  OPTIONAL { ?action planning:effect/sh:rule ?r . OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r belief:delete ?delete } }
 }"""
 
 def written(store, at: datetime | None = None) -> frozenset[str]:
@@ -394,11 +394,11 @@ def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
     out = {}
     effects: dict[str, dict] = {}
     for row in rows(store, _ACTIONS_Q, graphs_of(store, ACTION, at=at or clock.now())):
-        held = effects.setdefault(row["action"], {"precondition": row.get("precondition"), "constructs": [], "updates": []})
+        held = effects.setdefault(row["action"], {"precondition": row.get("precondition"), "constructs": [], "deletes": []})
         if row.get("construct"):
             held["constructs"].append(row["construct"])
-        if row.get("update"):
-            held["updates"].append(row["update"])
+        if row.get("delete"):
+            held["deletes"].append(row["delete"])
     for action, effect in effects.items():
         if not effect["constructs"]:
             #  AN ACTION STATING NO EFFECT is an action an event adopts (#506) — never on a
@@ -413,7 +413,7 @@ def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
         for text in effect["constructs"]:
             part = writes_of_construct(text)
             writes = ANYTHING if part is ANYTHING or writes is ANYTHING else frozenset(writes | part)
-        for text in effect["updates"] if writes is not ANYTHING else ():
+        for text in effect["deletes"] if writes is not ANYTHING else ():
             part = writes_of_construct(text)
             if part is not ANYTHING:
                 writes = frozenset(writes | part)
@@ -488,7 +488,7 @@ def atoms_of(store, at: datetime | None = None) -> dict[str, list | None]:
     takes: dict = {}
     for row in rows(store, _TAKES_Q, graphs_of(store, ACTION, at=at or clock.now())):
         takes.setdefault(row["action"], set()).add(local_of(row["takes"]))
-    written = {action: _written_subjects(effect["constructs"], effect["updates"])
+    written = {action: _written_subjects(effect["constructs"], effect["deletes"])
                for action, effect in effects.items() if effect["constructs"]}
     #  WHAT ANY EFFECT TOUCHES, written or deleted — the state's predicates, as against the world's.
     touched = set(changeable)
@@ -537,11 +537,11 @@ def _decided_by_the_world(patterns: list, written: dict, touched: set, takes) ->
 def _effects(store, at: datetime | None) -> dict[str, dict]:
     effects: dict[str, dict] = {}
     for row in rows(store, _ACTIONS_Q, graphs_of(store, ACTION, at=at or clock.now())):
-        held = effects.setdefault(row["action"], {"precondition": row.get("precondition"), "constructs": [], "updates": []})
+        held = effects.setdefault(row["action"], {"precondition": row.get("precondition"), "constructs": [], "deletes": []})
         if row.get("construct"):
             held["constructs"].append(row["construct"])
-        if row.get("update"):
-            held["updates"].append(row["update"])
+        if row.get("delete"):
+            held["deletes"].append(row["delete"])
     return effects
 
 
@@ -559,7 +559,7 @@ def _patterns(text: str) -> list | None:
     return triples
 
 
-def _written_subjects(constructs: list[str], updates: list[str]) -> dict | None:
+def _written_subjects(constructs: list[str], deletes: list[str]) -> dict | None:
     """What an effect writes, as `subject variable -> predicates` off its CONSTRUCT templates and
     its DELETE templates — a type written is its class — or ANYTHING where a template's predicate
     is a variable or its subject is not one."""
@@ -571,7 +571,7 @@ def _written_subjects(constructs: list[str], updates: list[str]) -> dict | None:
             return ANYTHING
         if _collect(alg.get("template") or (), out) is ANYTHING:
             return ANYTHING
-    for text in updates:
+    for text in deletes:
         try:
             ops = translateUpdate(parseUpdate(PREFIXES + parseable(text))).algebra
         except Exception:                                   # noqa: BLE001

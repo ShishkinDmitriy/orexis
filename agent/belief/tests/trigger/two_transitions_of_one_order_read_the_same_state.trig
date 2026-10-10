@@ -1,0 +1,82 @@
+# two_transitions_of_one_order_read_the_same_state
+#
+# Three transitions a tick triggers. Two are of order 0: the count, which deletes the count before, 1,
+# and inserts 2, and a witness, which says what count it saw — and saw 1, since every rule of one
+# order reads the state as it stood before any of them was applied. The third is of order 1 and
+# echoes the count — 2, since a later order reads what the earlier made. The count before is deleted
+# where it stood, that graph left empty and forgotten; everything inserted is in the tick's own.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix tick1: <http://example.org/test#tick1/> .
+@prefix tick2: <http://example.org/test#tick2/> .
+
+GRAPH :ontology {
+  :TickGraph rdfs:subClassOf orexis:BeliefGraph .
+  :TickGraph rdfs:subClassOf orexis:Graph .
+  :TickGraph rdfs:subClassOf orexis:StateGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :counter a :Counter .
+  :keeper a orexis:Agent .
+}
+
+GRAPH :rules {
+  :countRule a belief:Transition .
+  :countRule belief:delete """PREFIX : <http://example.org/test#>
+      DELETE { ?c :count ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
+  :countRule rdfs:label "a tick counts one more than the count before" .
+  :countRule sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?c :count ?next } WHERE { ?t a :Tick . ?c a :Counter . OPTIONAL { ?c :count ?n } BIND((COALESCE(?n, 0) + 1) AS ?next) }""" .
+  :echoRule a belief:Transition .
+  :echoRule rdfs:label "a later order echoes the count the earlier made" .
+  :echoRule sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?c :echo ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
+  :echoRule sh:order 1 .
+  :sawRule a belief:Transition .
+  :sawRule rdfs:label "a witness of the same order says the count it saw" .
+  :sawRule sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?c :saw ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
+}
+
+GRAPH :tick2 {
+  :t2 a :Tick .
+}
+
+GRAPH tick1:believed {
+  :counter :count 1 .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :tick2 a :TickGraph .
+  :tick2 a orexis:BeliefGraph .
+  :tick2 a orexis:Graph .
+  :tick2 a orexis:StateGraph .
+  :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
+  :tick2 orexis:arrivedBy orexis:Received .
+  :tick2 orexis:beliefsOf :keeper .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+  tick1:believed a orexis:BeliefGraph .
+  tick1:believed a orexis:Graph .
+  tick1:believed a orexis:StateGraph .
+  tick1:believed orexis:arrivedBy orexis:Derived .
+  tick1:believed orexis:beliefsOf :keeper .
+}

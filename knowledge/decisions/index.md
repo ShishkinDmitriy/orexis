@@ -172,7 +172,8 @@ From bytes on a topic to a quantity an agent believes — and who holds the cloc
 * [sensing-owns-the-reading-pipeline](/decisions/sensing-owns-the-reading-pipeline.md) - Codec, pointer, scaling, the sensed writer, observations and `readings.rq` move to sensing; what is known is a choir hook.
 * [the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md) - Sensing derives the region want and answers what a reading looks like; the kernel derives no want and keys nothing by property.
 * [one-agent-many-sensors](/decisions/one-agent-many-sensors.md) - Three of four combinations work, measured rather than assumed. Both failures come from a second kind of sensor on one subject.
-* [an-observation-is-a-percept-and-the-mind-reads-only-beliefs](/decisions/an-observation-is-a-percept-and-the-mind-reads-only-beliefs.md) - An observation is a percept sensing keeps; belief revision turns it into a belief in the domain's words, and the mind reads nothing else.
+* [an-observation-is-a-percept-and-the-mind-reads-only-beliefs](/decisions/an-observation-is-a-percept-and-the-mind-reads-only-beliefs.md) - SUPERSEDED IN PART — an observation is a percept and the mind reads only beliefs in the domain's words; the domain's transition makes them.
+* [a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md) - A rule that changes the state is a transition, triggered once by an arrival; an inference only adds. Effects and belief revision share one machine.
 
 # Firmware, alarms and stand-ins
 

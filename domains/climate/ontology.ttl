@@ -6,7 +6,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
-    owl:imports <actions.ttl> , <drifts.ttl> .
+    owl:imports <actions.ttl> , <drifts.ttl> , <rules.ttl> .
 
 #  CLIMATE, A DOMAIN.
 #  A planted thing's surroundings: the properties its instruments observe — the soil's moisture,
@@ -14,7 +14,8 @@
 #  its water comes from, how its soil dries and how rain wets it while nobody waters it (drifts.ttl),
 #  and a heater that warms its air, taken through the heating
 #  (actions.ttl). The ranges a subject should be in are SSN-System's, stated by a world; the side
-#  a reading is on is a revision sensing's rules conclude. It was two 0.1.0 packages, water and
+#  a reading is on is a revision sensing's rules conclude, and what is believed of a subject's soil
+#  and air is said in this domain's words, below, by this domain's transitions (rules.ttl). It was two 0.1.0 packages, water and
 #  climate; the market good, the bands and the revisable conversion stayed behind, since the
 #  market waits, a band is a side now and 0.2.0 revises no setting. The vent, what it opens onto
 #  and the air's drift toward the outside wait until an agent can listen to a feature it does not
@@ -31,6 +32,34 @@
 :AirPressure a sosa:ObservableProperty ; rdfs:label "Air pressure" .
 :Precipitation a sosa:ObservableProperty ; rdfs:label "Precipitation" ;
     rdfs:comment "Rain falling on a place, in millimetres an hour: what a forecast hour says, of the place a subject is contained in (schema:containedInPlace)." .
+
+#################  What is believed of a subject  #################
+
+#  THE SOIL AND THE AIR AS THE AGENT BELIEVES THEM (knowledge/domain/actuation/soil.md and air.md,
+#  #944): this domain's transitions (rules.ttl), each acting on an observation of a subject's soil
+#  moisture or of its air temperature arriving, replace what the agent holds of the subject's soil or air with
+#  its state in these words, judged against the subject's operating range and held past the range's
+#  margin by the state before. The number stays the observation's: a command sizing a step and
+#  prediction read it there. Humidity, pressure and precipitation have no transition yet, and nothing
+#  is believed of them in this domain's words.
+
+:soil a owl:ObjectProperty ; rdfs:label "soil" ;
+    rdfs:comment "The state a subject's soil is believed in: dry, moist or wet, by where its moisture lies against the subject's operating range." .
+:Dry a owl:NamedIndividual ; rdfs:label "dry" ;
+    rdfs:comment "Soil believed under the floor of its subject's operating range." .
+:Moist a owl:NamedIndividual ; rdfs:label "moist" ;
+    rdfs:comment "Soil believed within its subject's operating range." .
+:Wet a owl:NamedIndividual ; rdfs:label "wet" ;
+    rdfs:comment "Soil believed over the ceiling of its subject's operating range." .
+
+:air a owl:ObjectProperty ; rdfs:label "air" ;
+    rdfs:comment "The state a subject's air is believed in: cold, comfortable or hot, by where its temperature lies against the subject's operating range." .
+:Cold a owl:NamedIndividual ; rdfs:label "cold" ;
+    rdfs:comment "Air believed under the floor of its subject's operating range." .
+:Comfortable a owl:NamedIndividual ; rdfs:label "comfortable" ;
+    rdfs:comment "Air believed within its subject's operating range." .
+:Hot a owl:NamedIndividual ; rdfs:label "hot" ;
+    rdfs:comment "Air believed over the ceiling of its subject's operating range." .
 
 :WaterSource a owl:Class ; rdfs:label "Water source" ;
     rdfs:comment "Where a dose draws from: a butt, a tank." .

@@ -5,6 +5,7 @@
 # and the rest of the last pass — its ground, the other first moves and their cones, the
 # matched world itself — goes with the weighings and candidates about it.
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix execution: <http://example.org/orexis/execution#> .
@@ -146,7 +147,7 @@ GRAPH :actions {
   hanoi:Move orexis:takes hanoi:disk .
   hanoi:Move orexis:takes hanoi:onto .
   hanoi:Move planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  hanoi:Move planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+  hanoi:Move planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       DELETE { $disk hanoi:on ?old  }
       WHERE  { $disk hanoi:on ?old  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       CONSTRUCT { $disk hanoi:on ?dest } WHERE {

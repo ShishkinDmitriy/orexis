@@ -4,6 +4,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 
 <> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
@@ -31,7 +32,7 @@ hanoi:Move a orexis:Action ;
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX hanoi: <http://example.org/orexis/hanoi#>
         DELETE { $disk hanoi:on ?old  }
         WHERE  { $disk hanoi:on ?old  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>

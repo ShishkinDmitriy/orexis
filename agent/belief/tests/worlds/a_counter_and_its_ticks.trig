@@ -1,0 +1,70 @@
+# a_counter_and_its_ticks
+#
+# THE WORLD THE DELIBERATOR'S TRANSITIONS ARE HELD IN: a counter, and ticks the test writes as they
+# arrive. One inference concludes a LOUD tick ticked. A tick triggers three transitions: of order 0,
+# the count — one more than before, of a tick the inference concluded ticked, so it counts only what
+# revision has settled — and the last tick taken; of order 1, an echo of the count. The words are this
+# test's own, standing for no domain's.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+GRAPH :ontology {
+  :TickGraph rdfs:subClassOf orexis:BeliefGraph .
+  :TickGraph rdfs:subClassOf orexis:Graph .
+  :TickGraph rdfs:subClassOf orexis:StateGraph .
+  belief:RevisionGraph rdfs:subClassOf orexis:BeliefGraph .
+  belief:RevisionGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :counter a :Counter .
+  :keeper a orexis:Agent .
+}
+
+GRAPH :rules {
+  :countRule a belief:Transition .
+  :countRule belief:delete """PREFIX : <http://example.org/test#>
+      DELETE { ?c :count ?n } WHERE { ?t a :Tick ; :ticked true . ?c a :Counter ; :count ?n }""" .
+  :countRule rdfs:label "a tick revision concluded ticked counts one more than the count before" .
+  :countRule sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?c :count ?next } WHERE { ?t a :Tick ; :ticked true . ?c a :Counter . OPTIONAL { ?c :count ?n } BIND((COALESCE(?n, 0) + 1) AS ?next) }""" .
+  :echoRule a belief:Transition .
+  :echoRule belief:delete """PREFIX : <http://example.org/test#>
+      DELETE { ?c :echo ?n } WHERE { ?t a :Tick . ?c a :Counter ; :echo ?n }""" .
+  :echoRule rdfs:label "a later order echoes the count the earlier made" .
+  :echoRule sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?c :echo ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
+  :echoRule sh:order 1 .
+  :lastRule a belief:Transition .
+  :lastRule belief:delete """PREFIX : <http://example.org/test#>
+      DELETE { ?c :last ?was } WHERE { ?t a :Tick . ?c a :Counter ; :last ?was }""" .
+  :lastRule rdfs:label "the last tick taken" .
+  :lastRule sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?c :last ?t } WHERE { ?t a :Tick . ?c a :Counter }""" .
+  :ticked a sh:RuleSet .
+  :ticked rdfs:label "a loud tick ticked" .
+  :ticked sh:hasRule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+      CONSTRUCT { ?t :ticked true } WHERE { ?t a :Tick ; :loud true }""" ] .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology a orexis:PublicGraph .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :world a orexis:Graph .
+  :world a orexis:PublicGraph .
+}

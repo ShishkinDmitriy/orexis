@@ -43,7 +43,8 @@ listens to.
 
 It concludes nothing. What a document means — a venue open, a call answered, a claim held — is a
 [revision](/domain/belief/revision.md) the rules conclude, and the runtime revises every graph it writes
-beside public knowledge alone, so a conclusion lives in the revision of the document it is about
-and goes when that document is said again. Which peer spoke is not told apart, since the
+beside public knowledge and what the agent itself derived, never beside another peer's document, so
+a conclusion lives in the revision of the document it is about and goes when that document is said
+again. Which peer spoke is not told apart, since the
 transport does not say: two bidders on one venue could each say the other's bid again. That is
 the seam signing closes, and nothing signs yet.

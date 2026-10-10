@@ -27,7 +27,10 @@
 #  its binary error (1.100000000000000128) unless rounded after the cast.
 #
 #  LAYER 2, WHICH SIDE of each of its subject's ranges an observation's reading lies on — over what
-#  layer 1 concluded, and over a predicted observation, which the prediction writes whole.
+#  layer 1 concluded, and over a predicted observation, which the prediction writes whole. The sides
+#  are the bare comparison of one reading with the bounds, and remember nothing: what the agent holds
+#  true of the subject, held past a margin by the state it replaces, is a domain's TRANSITION
+#  triggered by the observation arriving, and no rule here (a-transition-changes-the-state-and-an-inference-only-concludes).
 
 :observation a sh:RuleSet ;
     rdfs:label "what an observation is of, its quantity, and its reading" ;

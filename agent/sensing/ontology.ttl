@@ -2,6 +2,7 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix belief: <http://example.org/orexis/belief#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
@@ -16,7 +17,8 @@
 #  and how often it reports is its ssn-system:Frequency; a range is SSN-System's, stated by the
 #  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph an
 #  observation is kept in, the silence of a sensor that has stopped reporting, the three sides
-#  this layer's rules conclude, and the pipeline's own concepts, since neither standard says how
+#  this layer's rules conclude, the margin a range's condition states for a domain's transition to
+#  hold a state by, and the pipeline's own concepts, since neither standard says how
 #  bytes become a number: a codec, the binding of a sensor to one, the member that ships, and the
 #  pointer; and how a number becomes a quantity, which is a scaling and a calibration the world states,
 #  and the rules. Sensing is the translation row of the agent stack and
@@ -24,8 +26,9 @@
 #  sosa:Observation holding until the next is due and a grace past it, and on the container's tick it says which
 #  readings are missing and which sensors have gone silent. It predicts nothing — that is the
 #  prediction package's — and concludes nothing itself: the sides are revisions, concluded by the
-#  three rules this layer ships (rules.ttl beside this file) and run by the deliberator over
-#  the present. No word of any transport is spoken here.
+#  rules this layer ships (rules.ttl beside this file) and run by the deliberator over the present.
+#  What the agent holds true of a subject is a domain's transition, triggered by the observation
+#  arriving, and none of this layer's words. No word of any transport is spoken here.
 
 #  THE ROLE THIS LAYER SERVES (knowledge/domain/sensing/observer.md): an agent declared an observer
 #  runs sensing's part, and the boot loads this layer for it and for nothing else. BENEATH THE
@@ -259,3 +262,22 @@
     rdfs:domain sosa:Observation ;
     rdfs:label "above" ;
     rdfs:comment "The observation's result lies over the ceiling of this range." .
+
+#  THE MARGIN (knowledge/domain/sensing/margin.md, #944): how far past a bound of an operating range a
+#  reading must go to leave a state held. The world states it on a range's condition, beside the
+#  bounds it widens, sized from the instrument's noise; a domain's transition, judging its subject's
+#  state from an observation beside the state before, reads it. Sensing's word, since a range is
+#  SSN-System's and the noise an instrument's, whatever state a domain names.
+
+:margin a owl:DatatypeProperty ;
+    rdfs:domain ssn-system:Condition ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "margin" ;
+    rdfs:comment """How far past a bound of an operating range a value must go to leave the state the
+    agent holds of its subject: a subject held under the floor stays there until its value reaches the
+    floor and this, one held over the ceiling until its value falls to the ceiling less this, and a
+    value coming from another state crosses at the bound itself. One number for both ends, stated by
+    the world on the range's condition beside the bounds it widens and sized from the instrument's
+    noise. Absent, nought, and the state is the bare comparison with the bounds. Read by a domain's
+    transition and by nothing else; the sides ignore it. `orexis-onboard` refuses one that is no
+    number, a negative one, and one of half the range's width or more.""" .

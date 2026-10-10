@@ -16,7 +16,7 @@ asserts is its kind:
 
 | kind | force | owner |
 |---|---|---|
-| `orexis:StateGraph` | what IS, as this agent holds it | the kernel; sensing's observation graph beneath it |
+| `orexis:StateGraph` | what IS, as this agent holds it | the kernel; sensing's observation graph beneath it, and belief's transitions write one per arrival |
 | `orexis:PredictionGraph` | what WILL be, during a window | prediction writes, planning reads |
 | `planning:PossibleGraph` | what WOULD be, if a plan were taken | the planner, in its [imaginarium](/domain/planning/imaginarium.md) |
 | `execution:AddsGraph`, `execution:RetractsGraph` | what one [step](/domain/execution/step.md) WOULD make true and false | planning writes, the executor reads |

@@ -8,6 +8,7 @@
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix graph: <http://example.org/orexis/graph/> .
@@ -42,7 +43,7 @@ GRAPH :actions {
             ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
             ?valve :actuates ?subject ; :actuatesProperty ?property .
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
-  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
         DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
       [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
         CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
@@ -54,7 +55,7 @@ GRAPH :actions {
             ?heater :warms ?subject ; :warmsProperty ?property .
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range .
             ?soil sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty :Moisture . }""" .
-  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
         DELETE { $reading sensing:below ?range . $soil sensing:inside ?dry } WHERE { $reading sensing:below ?range . OPTIONAL { $soil sensing:inside ?dry } }""" ] ,
       [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
         CONSTRUCT { $reading sensing:inside ?range . $soil sensing:below ?dry } WHERE { $reading sensing:below ?range . $soil sensing:inside ?dry }""" ] ] .

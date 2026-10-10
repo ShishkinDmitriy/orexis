@@ -2,17 +2,29 @@
 sequence theirs.
 
 **WHAT IT OWNS IS A QUEUE.** A writer that wrote a graph says so, `changed(source)`, and
-nothing happens there; `deliberate()` is the pass, which revises every source in the queue in
+nothing happens there; `deliberate()` is the pass, which takes every source in the queue in
 turn, spending at most a budget of rule executions across them, and answers what it spent. A
-source whose rules settled leaves the queue; one the budget cut short stays, its revision
-graph's row saying `belief:settled false`, and the next pass continues it from what is held —
-a pass cut short is finished by the passes after, as a search cut short is. Who calls the pass
-and when is the container's, as it is for the planner and the executor; there is no thread
-here.
+source is an ARRIVAL, and an arrival is concluded on before it is transitioned on: it is revised
+(`revise`) until its rules settle, so a transition reads the quantity the pipeline concluded and
+not the raw count, and then the transitions it triggers are applied to the agent's own state
+(`trigger`), once, in their orders. One done with both leaves the queue; one the budget cut short
+stays, its revision graph's row saying `belief:settled false`, and the next pass continues it
+from where it stood — a pass cut short is finished by the passes after, as a search cut short is.
+Who calls the pass and when is the container's, as it is for the planner and the executor; there
+is no thread here.
+
+**ARRIVALS ARE TRANSITIONED ON IN TURN.** A later arrival may be revised while an earlier one is
+cut short, since a revision reads its own source; but its transitions wait until every arrival
+queued before it has had its own, so the readings one message carries change the state oldest
+first, and a state one arrival made is never replaced by an earlier arrival's finished late.
 
 **A CUT SURVIVES A RESTART.** At construction the deliberator re-queues every revision graph
 whose row says its rules did not settle, read off the catalogue, so what a pass left
-half-concluded is not left there because the process came back.
+half-concluded is not left there because the process came back. Where an arrival's transitions
+waited or were cut, its row says the same, and a restart revises it again — concluding nothing new
+— and applies its transitions from the first order. That is exact for an arrival whose transitions
+are one order, every one shipped; one cut between two orders and restarted would apply the first
+again, which is the seam `knowledge/domain/belief/transition.md` names.
 
 **DELIBERATION, IN THE B OF BDI**, is the process by which facts follow from facts; the search
 that finds a plan is the planner's and is not this. The 0.1.0 tree's deliberator was the
@@ -23,6 +35,7 @@ from __future__ import annotations
 
 import logging
 import time
+from dataclasses import dataclass
 from datetime import datetime
 
 import pyoxigraph as ox
@@ -31,11 +44,12 @@ from agent import clock
 from agent.lifecycle import Signal
 from agent.ontology import KNOWN
 from agent.stance import stance
-from agent.store import Raw, catalogue_of, graphs_of, rows
+from agent.store import Raw, bind, catalogue_of, graphs_of, rows, update
 
 from .events import Revised, RevisionsHeld
-from .ontology import BUDGET_TERM, REVISION_GRAPH, SETTLED
+from .ontology import BUDGET_TERM, REVISION_GRAPH, SETTLED, revision_graph
 from .revise import BUDGET as PER_SOURCE, revise
+from .trigger import trigger
 
 log = logging.getLogger("deliberator")
 
@@ -55,6 +69,25 @@ _HELD_Q = f"""
 SELECT (COUNT(?g) AS ?revisions) (SUM(IF(?settled, 0, 1)) AS ?unsettled)
 WHERE {{ GRAPH $cat {{ ?g a <{REVISION_GRAPH}> ; <{SETTLED}> ?settled }} }}"""
 
+#  WHETHER A REVISION GRAPH'S ARRIVAL IS DONE, said again on its row where one stands: false while its
+#  transitions wait or were cut, true once they have run.
+_SETTLE_U = """
+DELETE { GRAPH $cat { $graph $settled ?was } }
+INSERT { GRAPH $cat { $graph $settled $flag } }
+WHERE  { GRAPH $cat { $graph $settled ?was } }"""
+
+
+@dataclass
+class _Arrival:
+    """A source queued: what stands beside it — kept as it was handed, so a revision the budget cuts
+    short is continued beside what it was begun beside; None for the beliefs holding at the pass's
+    instant, which is what one re-queued at a restart is revised beside — whether its revision has
+    settled, and how many of the orders of transitions it triggers are applied."""
+    read: tuple | None = None
+    revised: bool = False
+    done: int = 0
+    said: bool = False                  # whether its row was said unsettled for its transitions
+
 
 class Deliberator:
     """The pass over what was written since the last one, within a budget."""
@@ -65,50 +98,75 @@ class Deliberator:
         self.beliefs = beliefs
         self.id = agent_id
         self.budget = budget if budget is not None else stance(beliefs, BUDGET_TERM, BUDGET)
-        #  SOURCE TO WHAT STANDS BESIDE IT, in the order changes arrived; None means the
-        #  beliefs holding at the pass's instant, which is what a reading is revised beside.
-        self.queue: dict[str, tuple | None] = {}
+        #  SOURCE TO WHERE IT STANDS (`_Arrival`), in the order changes arrived.
+        self.queue: dict[str, _Arrival] = {}
         for source in self._unsettled():
-            self.queue[source] = None
-        #  WHAT IT SAYS HAPPENED (`events.py`): `revised`, what a pass revised, for whoever is
-        #  interested in the present changing — the executor, whose steps the world answers there;
-        #  and, made only where heard, `revisions_held`, what the catalogue describes after it.
+            self.queue[source] = _Arrival()
+        #  WHAT IT SAYS HAPPENED (`events.py`): `revised`, what a pass revised or transitioned on, for
+        #  whoever is interested in the present changing — the executor, whose steps the world answers
+        #  there; and, made only where heard, `revisions_held`, what the catalogue describes after it.
         self.revised = Signal("revised")
         self.revisions_held = Signal("revisions_held")
 
     def changed(self, source: str, read=None) -> None:
-        """A graph was written: revise it on the next pass, beside `read` where the writer
-        says what stands, else beside the beliefs holding then."""
-        self.queue[source] = tuple(read) if read is not None else None
+        """A graph was written: take it on the next pass — revised beside `read` where the writer
+        says what stands, else beside the beliefs holding then, and the transitions it triggers applied.
+        Written again before it was done, it is a new arrival: it starts again, and takes its turn
+        after everything that arrived before it, since the readings a message carries reuse the name
+        of the latest one's graph and must still change the state oldest first."""
+        self.queue.pop(source, None)
+        self.queue[source] = _Arrival(tuple(read) if read is not None else None)
 
     @property
     def pending(self) -> list[str]:
-        """What the next pass will revise, in order."""
+        """What the next pass will take, in order."""
         return list(self.queue)
 
     def deliberate(self, now: datetime | None = None) -> int:
-        """Revise every queued source in turn, spending at most the budget across them. What
-        the pass spent. A source that settled leaves the queue; one cut short stays for the
-        next pass, which continues it from what is held."""
+        """Take every queued source in turn — revise it, then apply the transitions it triggers —
+        spending at most the budget across them. What the pass spent. A source done with both
+        leaves the queue; one cut short stays for the next pass, which continues it where it stood,
+        and the transitions of every source queued after it wait for it."""
         at = now or clock.now()
         left = self.budget
         spent = 0
         started = time.perf_counter()
         revised = len(self.queue)
         done = []
+        waiting = False                 # an arrival before this one is not done: its transitions go first
         for source in list(self.queue):
             if left <= 0:
                 break
-            read = self.queue[source]
-            if read is None:
-                read = tuple(graphs_of(self.beliefs, *KNOWN, at=at, now=at))
-            used = revise(self.beliefs, source, read=read, budget=min(left, PER_SOURCE))
-            done.append(source)
-            spent += used
-            left -= used
-            if source in self._unsettled():
-                self.queue[source] = read
+            arrival = self.queue[source]
+            if not arrival.revised:
+                read = arrival.read if arrival.read is not None else tuple(graphs_of(self.beliefs, *KNOWN, at=at, now=at))
+                used = revise(self.beliefs, source, read=read, budget=min(left, PER_SOURCE))
+                done.append(source)
+                spent += used
+                left -= used
+                if source in self._unsettled():
+                    #  CUT IN ITS REVISION: the arrivals after it wait for its transitions — where it
+                    #  triggers any. One that triggers none changes no state, so nothing after it waits on
+                    #  it: a prediction rewritten every pass and cut every pass would otherwise hold every
+                    #  reading's transitions for ever.
+                    arrival.read = read
+                    waiting = waiting or not trigger(self.beliefs, source, budget=0, done=arrival.done).finished
+                    continue
+                arrival.revised = True
+            #  WAITING, OR NOTHING LEFT, IS A BUDGET OF NOUGHT: an arrival triggering nothing is done all
+            #  the same, and one triggering something stays for its turn.
+            triggered = trigger(self.beliefs, source, budget=0 if waiting else max(left, 0), done=arrival.done)
+            spent += triggered.spent
+            left -= triggered.spent
+            if triggered.spent and source not in done:
+                done.append(source)
+            if not triggered.finished:
+                arrival.done = triggered.done
+                self._say(source, arrival, settled=False)
+                waiting = True
                 continue
+            if arrival.said:
+                self._say(source, arrival, settled=True)
             del self.queue[source]
         if spent:
             log.debug("%s: %d execution(s) over %d source(s), %d pending", self.id, spent,
@@ -121,6 +179,18 @@ class Deliberator:
             if self.revisions_held.connected:
                 self.revisions_held.emit(self._held())
         return spent
+
+    def _say(self, source: str, arrival: _Arrival, *, settled: bool) -> None:
+        """Say on the source's revision row whether it is done, so a restart continues an arrival
+        whose transitions waited or were cut — where a row stands; a source nothing was concluded of
+        has none, and its transitions are this process's alone to finish."""
+        if arrival.said != settled:
+            return
+        cat = catalogue_of(self.beliefs)
+        if cat is not None:
+            update(self.beliefs, bind(_SETTLE_U, cat=Raw(f"<{cat}>"), graph=revision_graph(source),
+                                      settled=SETTLED, flag=Raw("true" if settled else "false")))
+        arrival.said = not settled
 
     def _held(self) -> RevisionsHeld:
         """The revisions the catalogue describes now, and how many are unsettled."""

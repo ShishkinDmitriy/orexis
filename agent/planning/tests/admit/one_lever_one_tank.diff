@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -94,6 +94,11 @@
+@@ -95,6 +95,11 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .

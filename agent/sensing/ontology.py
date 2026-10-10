@@ -5,7 +5,8 @@ THE VOCABULARY IS SOSA'S AND SSN'S, AND THIS LAYER'S WHERE THEY HAVE NONE. A sen
 key an observation is written under; how often it reports is its `ssn-system:Frequency`, and
 a range is SSN-System's. What this layer declares is in `ontology.ttl` beside this file — the
 graph an observation is kept in and a forecast's, the silence, the three sides its rules
-conclude, and the pipeline's concepts: a codec, the binding of a sensor to one, the JSON member
+conclude, the margin a range's condition states for a domain's transition to hold a state by, and
+the pipeline's concepts: a codec, the binding of a sensor to one, the JSON member
 that ships, the pointer and the two a series is read by, the number a sensor gave, and the
 scaling and calibration the rules make a quantity of it by — and nothing of the 0.1.0 packages' own: what an agent polled, what a sensor monitored or sampled,
 a device's sense mode and a drift's horizons were SSN restated or read by nothing, and 0.2.0

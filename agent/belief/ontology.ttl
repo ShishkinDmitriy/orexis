@@ -1,4 +1,5 @@
 @prefix : <http://example.org/orexis/belief#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -27,6 +28,19 @@
 #  the one word here is the class of it. The engine is the store's own, not SHACL's. Classes only:
 #  which graph is an agent's is genesis's to create and the catalogue's to say.
 #
+#  AND A TRANSITION, WHICH IS NOT AN INFERENCE (knowledge/domain/belief/transition.md,
+#  a-transition-changes-the-state-and-an-inference-only-concludes). A rule that deletes as well as
+#  inserts — a sh:SPARQLRule whose sh:construct is what it adds and whose :delete is a `DELETE …
+#  WHERE` naming no graph, grouped by sh:order — changes a state rather than concluding of it, and
+#  this package's machine runs it: planning, above, applies an action's effect through it in a
+#  possible world; and a rule typed :Transition is applied once to the agent's own state by every
+#  arrival of testimony, after the arrival's revisions settle, its WHERE saying what it is about. A
+#  transition declares no trigger and no target: where it reads and writes is the runner's, which
+#  prepares the target — a state graph of the arrival's own, the kernel's orexis:StateGraph, holding
+#  over the arrival's period — so no word here names either. What it deletes is taken out of
+#  whichever of the agent's own derived state graphs holds it. `revise` passes over a :Transition,
+#  since a transition is run once and never to a fixpoint.
+#
 #  ONE AXIOM ON THE DRAFT'S TERM, AND NO WORD: a rules graph is a graph. A boot reads a document
 #  only where the vocabulary puts its kind beneath `orexis:Graph` — a kind says who reads the
 #  document (a-documents-kind-says-who-reads-it) — and this package is the reader of rules graphs,
@@ -51,11 +65,39 @@ sh:RulesGraph rdfs:subClassOf orexis:Graph .
     rdfs:domain :RevisionGraph ;
     rdfs:range xsd:boolean ;
     rdfs:label "settled" ;
-    rdfs:comment """Whether the rules reached a fixpoint over this graph's source. `revise` spends a
-    BUDGET of rule executions per call, the unit revision spends, and a source the budget cuts
-    short keeps what was concluded with this false on its row; the deliberator continues it on
-    the next pass, and at boot re-queues every row that says false, so a cut survives a restart
-    and a rule set that never settles is reported every pass rather than looped on.""" .
+    rdfs:comment """Whether the rules reached a fixpoint over this graph's source, and the transitions
+    its arrival triggers have run. `revise` spends a BUDGET of rule executions per call, the unit
+    revision spends, and a source the budget cuts short keeps what was concluded with this false on
+    its row; the deliberator says it false too while the source's transitions wait or were cut, and
+    continues it on the next pass, and at boot re-queues every row that says false, so a cut
+    survives a restart and a rule set that never settles is reported every pass rather than looped
+    on.""" .
+
+:delete a owl:DatatypeProperty ;
+    rdfs:domain sh:SPARQLRule ;
+    rdfs:range xsd:string ;
+    rdfs:label "delete" ;
+    rdfs:comment """On a sh:SPARQLRule that changes a state, where SHACL has only sh:construct: a
+    `DELETE … WHERE` taking out whatever stands in the place the rule changes, which nobody can name
+    in advance. It names no graph: its WHERE is matched over what the runner hands, with every rule
+    of its order reading the same state, and what it matches is taken out of the graphs the runner
+    says — the world a step makes, for an action's effect; the agent's own derived state graphs,
+    for a transition. Applied before the order's additions (knowledge/domain/belief/transition.md).""" .
+
+:Transition a owl:Class ;
+    rdfs:subClassOf sh:SPARQLRule ;
+    rdfs:label "Transition" ;
+    rdfs:comment """A SPARQL rule that changes a state rather than concluding of it: its sh:construct
+    what it inserts, its :delete what it takes out, grouped by sh:order. Triggered once by each
+    arrival of testimony — a graph received or heard — as a database trigger runs once on each row
+    inserted, after the arrival's revisions settle; the agent's own graphs, derived or recorded, and
+    what the sovereign asserted trigger none, so its own output never triggers it again. It declares no trigger: it
+    reads the arrival with its revisions, the public graphs and the agent's own derived state, so its
+    WHERE says what it is about, and on an arrival it is not about it matches nothing and changes
+    nothing. What it inserts goes into the state graph the runner prepares for the arrival, an
+    orexis:StateGraph the arrival's owner's and derived, holding over its period. This type is how
+    the runner finds it, and how `revise` and planning's bridge reader pass over it
+    (knowledge/domain/belief/transition.md).""" .
 
 :budget a owl:DatatypeProperty ;
     rdfs:domain orexis:Self ;

@@ -225,6 +225,58 @@ def test_onboarding_refuses_a_world_holding_a_kind_no_reader_declares(tmp_path, 
         onboard.onboard("hanoi")
 
 
+# --- a margin its range cannot hold is refused (knowledge/domain/sensing/margin.md, #944) --------
+
+def test_every_shipped_world_states_margins_its_ranges_hold():
+    from onboarding.reading import unholdable
+
+    worlds = _worlds()
+    assert worlds, "no world found — the guard would check nothing"
+    for world in worlds:
+        assert unholdable(REPO_ROOT / "world" / world) == [], world
+
+
+_RANGES = """@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+:pot ssn-system:hasOperatingRange %s .
+%s ssn-system:inCondition [ ssn:forProperty :moisture ; schema:minValue 0.30 ; schema:maxValue 0.60 ; sensing:margin %s ] .
+"""
+
+
+@pytest.mark.parametrize("named, margin, why", [
+    (True, "0.0002", None),
+    (True, "0.1499", None),
+    (True, "-0.0002", "negative and widens nothing"),
+    (True, "0.15", "half the width of [0.3, 0.6] or more"),
+    (True, '"wide"', "no number"),
+    (False, "0.0002", None),
+    (False, "0.15", "half the width of [0.3, 0.6] or more"),
+], ids=["twice-a-count", "just-under-half", "negative", "half", "no-number", "unnamed", "unnamed-half"])
+def test_onboarding_refuses_a_margin_its_range_cannot_hold(tmp_path, monkeypatch, named, margin, why):
+    """A margin that is no number leaves a subject believed below or above judged in no state; a negative
+    one widens nothing, so the rule would read as nought a figure the world stated; one of half the range
+    or more would leave a subject a step brought to the middle believed in the state it came from. Each is
+    refused, and nothing is granted; a range with no name is judged like any other, and said as one with
+    no name."""
+    from onboarding import onboard, reading
+
+    observer = "http://example.org/orexis/sensing#Observer"
+    range_ = ":pot_operating" if named else "_:operating"
+    world = _declared(tmp_path, [observer], ":probe a sosa:Sensor ; sosa:isHostedBy :pot ; sosa:observes :moisture .\n"
+                      + _RANGES % (range_, range_, margin))
+    said = reading.unholdable(world)
+    if why is None:
+        assert said == []
+        return
+    assert len(said) == 1 and why in said[0], said
+    assert said[0].startswith("http://example.org/test#pot_operating: " if named else "a range with no name"), said
+    monkeypatch.setattr(onboard, "world_dir", lambda name: world)
+    with pytest.raises(SystemExit, match="a margin its range cannot hold"):
+        onboard.onboard("me")
+
+
 # --- what an agent runs is declared, and onboarding holds the declaration to the world both ways ---
 #
 # knowledge/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md, #927. Each

@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -17,29 +17,31 @@
+@@ -18,29 +18,31 @@
  }
  
  GRAPH :world {
@@ -20,7 +20,7 @@
  
  GRAPH :actions {
    :dose a orexis:Action .
-+  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
++  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
 +        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
 +        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
    :dose planning:precondition """PREFIX : <http://example.org/test#>
@@ -29,29 +29,29 @@
              ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
              ?valve :actuates ?subject ; :actuatesProperty ?property .
              ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
--  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+-  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
 -        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
 -      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
 -        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
    :heat a orexis:Action .
-+  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
++  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
 +        DELETE { $reading sensing:below ?range . $soil sensing:inside ?dry } WHERE { $reading sensing:below ?range . OPTIONAL { $soil sensing:inside ?dry } }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
 +        CONSTRUCT { $reading sensing:inside ?range . $soil sensing:below ?dry } WHERE { $reading sensing:below ?range . $soil sensing:inside ?dry }""" ] ] .
    :heat planning:precondition """PREFIX : <http://example.org/test#>
          PREFIX sensing: <http://example.org/orexis/sensing#>
          SELECT DISTINCT ?heater ?reading ?soil WHERE {
-@@ -47,10 +49,6 @@
+@@ -48,10 +50,6 @@
              ?heater :warms ?subject ; :warmsProperty ?property .
              ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range .
              ?soil sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty :Moisture . }""" .
--  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+-  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
 -        DELETE { $reading sensing:below ?range . $soil sensing:inside ?dry } WHERE { $reading sensing:below ?range . OPTIONAL { $soil sensing:inside ?dry } }""" ] ,
 -      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
 -        CONSTRUCT { $reading sensing:inside ?range . $soil sensing:below ?dry } WHERE { $reading sensing:below ?range . $soil sensing:inside ?dry }""" ] ] .
  }
  
  GRAPH :catalogue {
-@@ -64,4 +62,23 @@
+@@ -65,4 +63,23 @@
    :ontology a orexis:PublicGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .

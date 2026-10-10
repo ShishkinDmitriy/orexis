@@ -1,7 +1,9 @@
 """`create`: sensing's part, and what it does of its own accord once started (a-package-starts-itself) —
 it asks, every `EVERY_S` of the one timeline, which readings have fallen due and says which
 sensors have gone silent (`missed`), whether or not anything arrived (#843). What a transport hands
-it, `received` writes; nothing else here is called.
+it, `received` writes. What the agent comes to hold true of a subject from an observation is no
+part of sensing's: a domain's transition, triggered by the observation arriving, makes it, and the
+belief package applies it (a-transition-changes-the-state-and-an-inference-only-concludes).
 
 WHAT SENSING SAYS HAPPENED, by the part's own signals, each carrying an event of `events.py` and made
 only where heard: `observed`, an observation graph written — heard as it is written, whoever wrote

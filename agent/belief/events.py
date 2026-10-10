@@ -14,8 +14,8 @@ from agent.metrics import Level, Value
 
 @dataclass(frozen=True)
 class Revised:
-    """A revision pass: the sources it revised, how many it was handed, the rule executions it spent,
-    how many it left cut short for the next pass, and its real seconds."""
+    """A revision pass: the sources it revised or transitioned on, how many it was handed, the rule
+    executions it spent on both, how many it left cut short for the next pass, and its real seconds."""
     metric = "revise"
     graphs: tuple
     sources: Value = None

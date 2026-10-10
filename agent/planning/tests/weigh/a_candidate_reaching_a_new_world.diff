@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -101,9 +101,9 @@
+@@ -102,9 +102,9 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
    possible:fill-tank1 a planning:PossibleGraph .
@@ -11,7 +11,7 @@
    possible:fill-tank1 planning:by possible:fill-tank1.by .
    possible:fill-tank1 planning:minted 1 .
    possible:fill-tank1 planning:spent 1.0 .
-@@ -112,6 +112,12 @@
+@@ -113,6 +113,12 @@
    possible:fill-tank1.by planning:fills :fill .
    possible:fill-tank1.by planning:from ground:2026-01-01T120000p0000 .
    possible:fill-tank1.by planning:minted 1 .

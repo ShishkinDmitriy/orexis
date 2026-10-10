@@ -1,0 +1,85 @@
+@prefix : <http://example.org/orexis/climate#> .
+@prefix climate: <http://example.org/orexis/climate#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a sh:RulesGraph .    # this document is one graph, and this is what it is
+
+#  WHAT AN OBSERVATION OF A SUBJECT'S SOIL OR AIR MAKES THE AGENT HOLD OF IT, in this domain's words
+#  (knowledge/domain/actuation/soil.md and air.md, #944): two TRANSITIONS, not inferences
+#  (a-transition-changes-the-state-and-an-inference-only-concludes), typed `belief:Transition`. Each
+#  is triggered once by every arrival of testimony, after its revisions settle, and declares no
+#  trigger: its WHERE says what it is about, an observation of its property — the soil's a soil
+#  moisture, the air's an air temperature — and since a transition is handed the arrival and no other
+#  testimony, that observation can only be the one that just arrived; on any other arrival, the other
+#  property's reading among them, it matches nothing and changes nothing. Each reads the reading, the
+#  subject's operating range for the property — the subject being the observation's feature of
+#  interest or what that is a sample of, whichever states one — the margin the range's condition states (`sensing:margin`, nought where none is), and
+#  the state the agent held of the subject before; it deletes that state and inserts the new one.
+#
+#  THE HOLD. A subject held under the floor stays there until its reading reaches the floor and the
+#  margin; one held over the ceiling stays there until its reading falls to the ceiling less the
+#  margin; any other crosses at the bound itself, so a real drop is believed at once. The first
+#  reading, with no state before, and a range stating no margin are both the bare bounds. Written once
+#  per property, since what a state is and when it holds is this domain's meaning and not sensing's:
+#  the cost is the hold said twice, and the two must be kept alike by hand.
+#
+#  A predicted observation is the agent's own, recorded, and triggers nothing (the record's seam: a
+#  predicted arrival's transition is slice 3's). A forecast is testimony and triggers both, and an
+#  observation in it of soil moisture or air temperature would be judged as a reading is; the shipped
+#  forecast is the terrace's precipitation, which neither is about. Each chain of two operators is
+#  parenthesised, since this engine reads `a - b + c` as `a - (b + c)`.
+
+:soilRule a belief:Transition ;
+    rdfs:label "the soil's state, held past its range's margin by the state before" ;
+    belief:delete """PREFIX climate: <http://example.org/orexis/climate#>
+        DELETE { ?subject climate:soil ?before }
+        WHERE  {
+            ?obs a sosa:Observation ; sosa:observedProperty climate:SoilMoisture ; sosa:hasSimpleResult ?value ;
+                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
+            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty climate:SoilMoisture ; schema:minValue ?low ; schema:maxValue ?high .
+            ?subject climate:soil ?before
+        }""" ;
+    sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
+        CONSTRUCT { ?subject climate:soil ?state }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty climate:SoilMoisture ; sosa:hasSimpleResult ?value ;
+                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
+            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty climate:SoilMoisture ; schema:minValue ?low ; schema:maxValue ?high .
+            OPTIONAL { ?condition sensing:margin ?stated }
+            OPTIONAL { ?subject climate:soil ?before }
+            BIND(COALESCE(?stated, 0) AS ?margin)
+            BIND(IF(?value < ?low || (BOUND(?before) && sameTerm(?before, climate:Dry) && ?value < (?low + ?margin)), climate:Dry,
+                 IF(?value > ?high || (BOUND(?before) && sameTerm(?before, climate:Wet) && ?value > (?high - ?margin)), climate:Wet,
+                    climate:Moist)) AS ?state)
+        }""" .
+
+:airRule a belief:Transition ;
+    rdfs:label "the air's state, held past its range's margin by the state before" ;
+    belief:delete """PREFIX climate: <http://example.org/orexis/climate#>
+        DELETE { ?subject climate:air ?before }
+        WHERE  {
+            ?obs a sosa:Observation ; sosa:observedProperty climate:AirTemperature ; sosa:hasSimpleResult ?value ;
+                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
+            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty climate:AirTemperature ; schema:minValue ?low ; schema:maxValue ?high .
+            ?subject climate:air ?before
+        }""" ;
+    sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
+        CONSTRUCT { ?subject climate:air ?state }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty climate:AirTemperature ; sosa:hasSimpleResult ?value ;
+                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
+            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty climate:AirTemperature ; schema:minValue ?low ; schema:maxValue ?high .
+            OPTIONAL { ?condition sensing:margin ?stated }
+            OPTIONAL { ?subject climate:air ?before }
+            BIND(COALESCE(?stated, 0) AS ?margin)
+            BIND(IF(?value < ?low || (BOUND(?before) && sameTerm(?before, climate:Cold) && ?value < (?low + ?margin)), climate:Cold,
+                 IF(?value > ?high || (BOUND(?before) && sameTerm(?before, climate:Hot) && ?value > (?high - ?margin)), climate:Hot,
+                    climate:Comfortable)) AS ?state)
+        }""" .
