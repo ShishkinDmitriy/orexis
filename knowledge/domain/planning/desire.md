@@ -61,5 +61,7 @@ the comparison.
 # What it is judged by
 
 Its met-test, and nothing else: the search sees no partial progress, and a want is reached where a
-world passes the shape ([shape](/domain/planning/shape.md)). The core compares triples — a plant wants
-its soil `sensing:inside` its range, a side the rules concluded — and interprets no number.
+world passes the shape ([shape](/domain/planning/shape.md)). The core compares triples — a grower wants
+no bed it acts for believed `climate:Dry`, the [soil](/domain/actuation/soil.md) a transition made of
+the bed's readings — and interprets no number. A met-test reads what the agent holds of a subject,
+in its domain's words, and never a reading, its side or its number (#944).

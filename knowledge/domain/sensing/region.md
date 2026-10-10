@@ -31,8 +31,9 @@ the subject or on an instrument that watches it; nothing derives or picks one.
   its OPERATING range alone, beside the [subject belief](/domain/belief/transition.md) it replaces:
   the bound crossed at itself from another state, and a held state left only past the
   [margin](/domain/sensing/margin.md) the range's condition states. None judges a survival range.
-- **A desire's met-test** reads that side: a plant wants its soil `inside` its operating range, and
-  a dose's effect predicts it will be.
+- **A desire's met-test** reads the state that transition makes, never a side: a grower wants no
+  bed it acts for believed dry, and a dose's effect predicts it will be moist (#944). Sensing's sides
+  are read by nothing of the mind, and stand until they retire.
 - **The prediction package** places every crossing of a bound where its accumulated rates reach it,
   so a stretch begins where the side changes.
 

@@ -8,34 +8,49 @@
 
 <> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
-#  THE DOSE, stated in the concepts the rules conclude: a reading of what a valve moves, below a
-#  range of the subject the valve acts on, comes to be inside it. The search runs no rules, so the
-#  effect writes the side and not a number; the executor answers the step when the next reading is
-#  revised inside, and the step lands when that reading is due. How much to pour is not the search's: its `execution:Command` is run over the
-#  present when the step is taken, and sizes the dose from how far the reading is below the middle
-#  of the range, by the subject's litres per fraction, at most the valve's cap.
+#  THE DOSE, stated in the words the agent believes its subject in (#944): a subject whose soil is
+#  believed dry, watered from a valve that moves its soil's moisture, comes to be believed moist. The
+#  action takes the SUBJECT, not a reading — the bed is what a dose acts on, and its soil is what the
+#  agent holds of it — so the precondition and the effect speak climate's state and no number: the
+#  search runs no rules, and the effect writes the state the soil's transition concludes of a reading
+#  inside the range. The executor answers the step when the next reading's transition says the soil
+#  moist, and the step lands when that reading is due. How much to pour is not the search's: its
+#  `execution:Command` is run over the present when the step is taken, reads the subject's latest
+#  observation — the one reader of the number on this side, at the boundary — and sizes the dose from
+#  how far it is below the middle of the range, by the subject's litres per fraction, at most the
+#  valve's cap.
+#
+#  THE PROPERTY IS BOUND BY THE WORLD, `?property` from the valve's own `actuatesProperty`, and held to
+#  the soil's moisture by a `VALUES` block: a footprint reads a precondition's patterns over the public
+#  graphs, and a property the world binds is a term of the dose's scope, which is what places the
+#  soil's readings and predictions in the imaginarium that searches the soil
+#  (knowledge/decisions/a-scope-is-a-predicate-on-a-key.md).
 
 actuation:Dosing a orexis:Action ;
-    rdfs:label "dose a subject from a valve until its reading is inside its range" ;
-    orexis:takes actuation:valve , actuation:reading ;
+    rdfs:label "dose a subject from a valve until its soil is believed moist" ;
+    orexis:takes actuation:valve , actuation:subject ;
     planning:precondition """PREFIX actuation: <http://example.org/orexis/actuation#>
-        PREFIX sensing: <http://example.org/orexis/sensing#>
-        SELECT DISTINCT ?valve ?reading WHERE {
+        PREFIX climate: <http://example.org/orexis/climate#>
+        SELECT DISTINCT ?valve ?subject WHERE {
+            VALUES ?property { climate:SoilMoisture }
             ?me a orexis:Self ; actuation:hasActuator ?valve ; orexis:actsFor ?subject .
             ?valve actuation:actuates ?subject ; actuation:actuatesProperty ?property .
-            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ;
-                     sensing:below ?range .
+            ?subject climate:soil climate:Dry .
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  IT LANDS AT THE NEXT READING, due within a cadence of the step — nothing at the least, the
-    #  cadence at the most, in the unit the world states it in: the effect speaks the side the rules
-    #  conclude of a reading, so nothing can show the dose before the sensor reads again, and no rule
-    #  can say how far off that reading is. The executor looks for the answer from the step, and a
-    #  patience past the cadence with no answer is a dose the world did not take.
-    planning:landsAfter """PREFIX unit: <http://qudt.org/vocab/unit/>
+    #  cadence at the most, in the unit the world states it in: the effect speaks the state the soil's
+    #  transition concludes of a reading, so nothing can show the dose before the sensor reads again,
+    #  and no rule can say how far off that reading is. The sensor is found through the world's
+    #  description — the one hosted by the subject, or by a sample of it, that observes its soil's
+    #  moisture — since no belief says when the subject is next revised. The executor looks for the
+    #  answer from the step, and a patience past the cadence with no answer is a dose the world did not
+    #  take.
+    planning:landsAfter """PREFIX climate: <http://example.org/orexis/climate#>
+        PREFIX unit: <http://qudt.org/vocab/unit/>
         SELECT ?least ?most WHERE {
-            $reading sosa:madeBySensor ?sensor .
-            ?sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f .
+            ?sensor sosa:isHostedBy/(sosa:isSampleOf)? $subject ; sosa:observes climate:SoilMoisture ;
+                    ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f .
             ?f a ssn-system:Frequency ; schema:value ?every .
             OPTIONAL { ?f schema:unitCode ?unit }
             VALUES (?u ?per) { (unit:SEC 1) (unit:MIN 60) (unit:HR 3600) (unit:HUR 3600) (unit:DAY 86400) }
@@ -44,24 +59,25 @@ actuation:Dosing a orexis:Action ;
             BIND(xsd:double(?every) * ?per AS ?most)
         }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { $reading sensing:below ?range  }
-        WHERE  { $reading sensing:below ?range  }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
-        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] ;
+        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX climate: <http://example.org/orexis/climate#>
+        DELETE { $subject climate:soil climate:Dry }
+        WHERE  { $subject climate:soil climate:Dry }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
+        CONSTRUCT { $subject climate:soil climate:Moist } WHERE { $subject climate:soil climate:Dry }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Command ; sh:select """PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX climate: <http://example.org/orexis/climate#>
         SELECT ?actuator ?payload WHERE {
-            $reading sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value ;
-                     sosa:observedProperty ?property .
-            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
-            ?condition ssn:forProperty ?property ; schema:minValue ?lo ; schema:maxValue ?hi .
-            ?subject climate:litresPerFraction ?litres .
+            ?reading sosa:hasFeatureOfInterest/(sosa:isSampleOf)? $subject ; sosa:observedProperty climate:SoilMoisture ;
+                     sosa:hasSimpleResult ?value ; sosa:resultTime ?at .
+            $subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty climate:SoilMoisture ; schema:minValue ?lo ; schema:maxValue ?hi .
+            $subject climate:litresPerFraction ?litres .
             $valve actuation:maxDoseMl ?cap .
             BIND(((xsd:double(?lo) + xsd:double(?hi)) / 2.0) AS ?aim)
             BIND((?aim - xsd:double(?value)) * xsd:double(?litres) * 1000.0 AS ?wanted)
             BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), IF(?wanted < 0.0, 0.0, ?wanted)) AS ?ml)
             BIND($valve AS ?actuator)
             BIND(CONCAT('{"dose_ml": ', STR(xsd:integer(ROUND(?ml))), '}') AS ?payload)
-        }""" ] ] .
+        }
+        ORDER BY DESC(?at) LIMIT 1""" ] ] .

@@ -12,8 +12,8 @@ description: >-
 # What it is
 
 A domain declares what its words mean when wanted. Hanoi's `hanoi:solved` says every disk's
-chain bottoms out on peg C; climate's shapes say a subject's soil is `inside` its operating range.
-A world's desire points at one:
+chain bottoms out on peg C; the greenhouse's desire says no subject its grower acts for is believed
+`climate:Dry`. A world's desire points at one:
 
 ```turtle
 :every_disk_home a planning:Want ; planning:metWhen hanoi:solved ; planning:estimates hanoi:disksAstray .
@@ -26,7 +26,7 @@ its own kind so that the planner crosses the shapes into a pass without every on
 
 `violation.py` compiles a shape to one SELECT whose rows are its violations — the focus node, the
 constraint it broke, what the constraint is about, and the value that offended where the
-constraint has one (`planning:offending`, the reading that is below) — and `weigh` runs it in a
+constraint has one (`planning:offending`, the bed believed dry) — and `weigh` runs it in a
 world and writes the rows as `planning:violation`s on the weighing. No row is met. A shape's `sh:sparql` constraint
 carries its own select and its own prefixes; one a [refinement](/domain/planning/refinement.md)
 mints is exactly that, the bridge's WHERE bound and negated.

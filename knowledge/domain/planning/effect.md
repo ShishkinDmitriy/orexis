@@ -30,9 +30,11 @@ possible world is where taking something away is the point.
 
 # What it speaks
 
-The concepts the rules conclude, not the raw numbers. A dose predicts the soil comes to be
-`sensing:inside` its range — what sensing's rules would conclude of the next reading — and does not
-predict a moisture value: the step is sized from the present when it is taken, by its command.
+The state the agent believes its [subject](/domain/actuation/subject.md) in, in the domain's words,
+not a reading and not a number. A dose deletes the bed's `climate:soil climate:Dry` and inserts
+`climate:Moist` — what climate's soil transition would make of the next reading — and does not
+predict a moisture value: the step is sized from the present when it is taken, by its command, the
+one reader of the subject's latest observation on this side (#944).
 
 # What it is held to
 

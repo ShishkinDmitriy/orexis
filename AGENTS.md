@@ -180,9 +180,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   decomposition, present and foreseen; a want a plan is walking is kept whatever its desire reads.
 - **A want is judged by its met-test, and nothing scores a world by degree** — the search sees no
   partial progress, and the met-test is the one judgment path.
-- **A met-test asked by band says it once per way of failing, and tests no topology** — a reading is
-  the band it is in; a test that walked the topology would be met by moving the sample off the
-  subject.
+- **A met-test asks the state the agent believes its subject in, says it once per way of failing,
+  and tests no topology** — the bed is believed dry, never a reading below (#944); a test that walked
+  the topology would be met by moving the sample off the subject.
 - **A want is authored positive and the kernel writes the negation** — rows are existential and a
   want universal, so one compiler turns the shape inside out, held to the judge by parity.
 - **The desire owns the term and the package owns the COST** — what the pattern means and that the
@@ -307,7 +307,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   again where a lever reaches into the other's; a term places a want only where its predicates place
   it nowhere, since the puzzle's peg is a cell the van drives to (a-scope-is-a-predicate-on-a-key).
 - **A scope admits a FILLING, not an action, and a scope's imaginarium holds the scope's readings** — a
-  lamp's heating is admitted in the light's search alone though the action is the air's too, a head
+  heat lamp's heating of a cold frame is admitted in the frame's search alone though the action is the
+  bed's air's too, a head
   is checked as it is taken in the beliefs, where every scope's readings are, and a reading keyed by another scope's term crosses
   into no imaginarium but its own, so a world is one percent of the present and a sensor added
   elsewhere adds nothing to it (`world/greenhouse/tests/test_scaling.py`).
@@ -316,8 +317,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   and holds no heater, and its two scopes that admitted nothing cost half of every pass (#913,
   a-scope-is-a-predicate-on-a-key).
 - **A member is in every scope it falls in, and a reading, a witness and a want are placed where
-  the scopes of what they name MEET; a member of every scope tells nothing** — the bed is the pump's
-  and the heater's, the soil both pumps', a reading naming both the one pump's; so two beds each
+  the scopes of what they name MEET, as subject, predicate or object; a member of every scope tells
+  nothing** — the bed is the pump's and the heater's, the soil both pumps', a reading naming both the
+  one pump's, and a subject belief names its bed as its subject alone (#944); so two beds each
   with a pump are two wants under the grower's one desire, each keyed by its bed off the violation's
   offending value, since the shape cannot say which bed came down its path
   (a-scope-is-a-predicate-on-a-key, `world/greenhouse/tests/test_two_beds.py`).
@@ -349,8 +351,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **Deliberation is on triples, and a number is not special** — the core compares triples and
   interprets no literal; **an interval is how this project says it does not know, and membership
   in one is CRISP**.
-- **A step is sized when it is taken, from the present, and the search only says the side it
-  reaches** — the `execution:Command` runs over the beliefs as they stand.
+- **A step is sized when it is taken, from the present, and the search only says the state it
+  reaches** — an action takes the subject, and the `execution:Command` reads its latest observation
+  over the beliefs as they stand: with a drift, the one reader of a reading's number (#944).
 - **A step lands when the world can SHOW its effect, and a landing is a BAND** — the least and the
   most, so a dose lands within a cadence of the step, a market act when its round's window closes,
   both ends agreeing; declared as nothing, a step landed the instant it was taken and failed a
@@ -416,8 +419,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   and the search (`world_at`), and refuses a world that says no period; the present, where no
   prediction has applied, it reads off a store with no ground as the readings themselves (#916).
 - **A world speaks for its readings' revisions**, and **the search runs no rules, so a reading's
-  revisions travel with it and an effect speaks the concept they conclude** — a revision is a belief
-  and a drift's prediction is not, which keeps the foreseen reading out of the present.
+  revisions travel with it and an effect speaks the state a transition concludes** — a revision is a
+  belief and a drift's prediction is not, which keeps the foreseen reading out of the present; the
+  foreseen state is made where a ground is laid, before any search stands in it.
 - **A graph forgotten takes its revisions with it, and an orphan revision is a side with no
   reading** — one said `below` for a day in every possible world, and the dose read unmet in the
   world it made; `forget_graph` forgets `revisions_of` first.
@@ -481,12 +485,17 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A rule never knows the kind of graph it writes, and each runner prepares its target** — revision
   the source's revision graph, an effect the world it forked, `trigger` a kernel `orexis:StateGraph` of
-  the arrival's own; the belief package's own kind for the target was a second name for the state
-  (#947, transition).
+  the arrival's own, `lay_ground` the ground it lays; the belief package's own kind for the target was
+  a second name for the state (#947, transition).
 - **A transition is a typed rule and declares no trigger: every arrival of testimony triggers every
   one, the agent's own graphs none, and its WHERE says what it is about** — handed the arrival and no
   other testimony, a soil transition can match only the soil reading just arrived, and its own output
   can never trigger it again (#947, transition).
+- **A predicted observation is an arrival in the ground it is laid into, and triggers nothing in the
+  belief base** — `lay_ground` runs its transitions there beside the agent's own state as the ground
+  before left it, kept apart from the ground's testimony, and changes the ground alone; so the hold
+  reaches the forecast, and a grower with no pump, held dry at its floor, commits none of the three
+  futile waits #946's bare judgment did (#944, transition).
 - **A graph is revised beside what the world states alone, and the agent's own state is a transition's
   premise** — revised beside everything believed, the first of two readings took the second's side; a
   transition reads its arrival, the world and every state the agent derived, and deletes from that
@@ -515,7 +524,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   keeps a sensor's percepts, named per reading and linked to the one before, as deep as its rules
   read; revision makes of the latest one belief about the subject, judged beside the belief it
   replaces, so a held state is the belief and no summary is carried onto the present; a predicted
-  number is judged the same way; the domain's transition judges its states with the range's margin
+  number is judged the same way, in its ground; the domain's transition judges its states with the
+  range's margin; and no desire, precondition, cost or effect reads a side or a number, an action
+  taking the subject, held by `tests/test_store.py`
   (#944, an-observation-is-a-percept-and-the-mind-reads-only-beliefs,
   a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,

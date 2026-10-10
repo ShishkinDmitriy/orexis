@@ -100,7 +100,8 @@ listens to a topic, or a sensor of an observer's publishes on one — the
 [transport](/domain/transport/transport.md) is imported and the runtime brings the member up from the environment and
 starts it: a message arrives on the member's thread and is submitted, and each pass drains it on
 the one executing thread — [sensing](/domain/sensing/sensing.md) writes the observation, the
-[deliberator](/domain/belief/deliberator.md) runs the rules that conclude its side, the
+[deliberator](/domain/belief/deliberator.md) runs the rules that conclude its side and the
+transitions that make its subject's state, the
 [prediction](/domain/prediction/prediction.md) package writes the stretches ahead and the rules conclude
 theirs — each hearing the graph written, where its package was loaded. A step whose action's
 implementation holds an `execution:Command` is taken by handing what the command answers, sized from

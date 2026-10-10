@@ -7,8 +7,9 @@
 
 #  WHAT MOVES A SUBJECT'S SOIL WHILE NOBODY WATERS IT, one drift per flow, each answering a rate
 #  per second of the one timeline; the prediction package adds them and accumulates the sum. A drift
-#  says nothing of a side: which side of a range a predicted number is on is what the rules conclude
-#  of the prediction, as of any reading.
+#  says nothing of a side or a state: which side of a range a predicted number is on is what the rules
+#  conclude of the prediction, as of any reading, and what the subject is foreseen to be — dry, moist —
+#  is what this domain's transitions make of it in the ground the planner lays it into (#944).
 
 #  THE DRYING: `climate:driesPerDay` a day, until nothing is left.
 climate:Drying a prediction:Drift ;

@@ -9,8 +9,10 @@ description: >-
   delete for what it takes out, grouped by order - typed belief:Transition and declaring no trigger.
   Every arrival of testimony triggers every transition once, its WHERE saying what it is about, and
   the belief package's one machine applies it into a state graph the runner prepares. An action's
-  effect is a transition the agent causes; a percept's is one the world causes. Testimony is never
-  its target. What a percept's transition writes is a subject belief.
+  effect is a transition the agent causes; a percept's is one the world causes, and a predicted
+  observation arriving in a ground the planner lays triggers it there, changing the ground alone.
+  Testimony is never its target. What a percept's transition writes is a subject belief, and the
+  mind reads nothing else.
 ---
 
 # What it is
@@ -29,7 +31,7 @@ it from a [revision](/domain/belief/revision.md), which only adds, runs to a fix
 function of its source. The type is how the runner finds a transition, and how `revise` and
 planning's [bridge](/domain/planning/bridge.md) reader pass over it, whatever other type it states.
 
-# One machine, two callers
+# One machine, three runners
 
 `agent/belief/transition.py` groups the rules by `sh:order`, an absent order nought. Each order is
 asked whole before any of it is applied: every construct is run, and every delete is asked as the
@@ -44,6 +46,8 @@ is no `DELETE … WHERE` change nothing and are said in the log.
   what is added to.
 - **The belief package** applies a percept's transition (`trigger`), once, when an arrival of
   testimony triggers it.
+- **Planning** applies the same transitions (`transitions`, the one read of them both use) in each
+  ground it lays ahead, once per predicted observation arriving there (`lay_ground`, #944). Below.
 
 # What triggers it
 
@@ -102,9 +106,27 @@ Climate's transitions make the [soil](/domain/actuation/soil.md) and the
 [air](/domain/actuation/air.md), on an observation of soil moisture or air temperature, each held
 past the range's [margin](/domain/sensing/margin.md) by the state it replaces. A subject stating no
 operating range for the property gets none, a survival range judges none, and a property with no
-transition — humidity, pressure, rain, a battery's voltage — is believed of nothing. Nothing reads a
-subject belief yet: desires, actions, drifts and prediction read the observation and its sides as
-they did, so no world's behaviour moved with it; making the mind read it instead is the rest of #944.
+transition — humidity, pressure, rain, a battery's voltage — is believed of nothing. **The mind
+reads nothing else** (#944): a [desire](/domain/planning/desire.md) asks the bed's soil and air, and
+the dose, the heating and the market's presenting take the [subject](/domain/actuation/subject.md)
+and speak its state in their preconditions and effects. A reading's number has two readers left,
+both at the boundary: a command sizing a step when it is taken, and a drift.
+
+# In a ground: a predicted observation arriving
+
+A prediction is the agent's own and no testimony, so in the belief base it triggers nothing. But a
+[ground](/domain/prediction/prediction.md) the planner lays ahead is the period before it with the
+prediction applied, and the prediction's predicted observation ARRIVES there as a received one
+arrives in the present: `lay_ground` runs every transition it triggers, once, order by order, through
+this machine. Each order reads the predicted observation with its revisions, the public graphs, and
+the agent's own state as the ground before it left it — kept apart from the ground while the grounds
+are laid, since a ground is one graph and holds testimony beside the state, and a transition is
+handed no testimony but its arrival. What an order deletes is taken out of the ground and what it
+inserts put into it: the runner's target is the ground being laid, and the present is never written
+to. So a bed believed dry and resting at 0.3001 is foreseen dry, the hold reaching the forecast, and
+a ground that comes to hold what the one before held is still no period
+(`agent/planning/tests/lay_ground/a_predicted_reading_is_judged_beside_the_state_the_ground_before_held.trig`).
+No budget is spent there: a ground holds what its predictions make of it, whole, or it is no ground.
 
 # Once, in turn, within a budget
 
@@ -119,9 +141,9 @@ and a graph written again is a new arrival and joins the end of the queue.
 
 # Seams
 
-- **A predicted arrival triggers nothing yet.** A prediction is the agent's own, recorded, and no
-  testimony; whether a prediction arriving triggers transitions, confined to the prediction's own
-  graphs, is #944's third slice
+- **A predicted arrival triggers nothing in the belief base.** It triggers its transitions in the
+  ground it is laid into and nowhere else, so the predictions in the store hold numbers and no state;
+  what would change that is a reader of a prediction that is no ground
   ([a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md)).
 - **A forecast is testimony, and triggers every transition.** An observation in it of a property a
   transition is about would be judged as a reading is, over the forecast's stretch. The one shipped

@@ -31,6 +31,9 @@
 #  are the bare comparison of one reading with the bounds, and remember nothing: what the agent holds
 #  true of the subject, held past a margin by the state it replaces, is a domain's TRANSITION
 #  triggered by the observation arriving, and no rule here (a-transition-changes-the-state-and-an-inference-only-concludes).
+#  NOTHING OF THE MIND READS A SIDE since #944's second slice: a desire, a precondition, a cost and an
+#  effect read the subject's state in a domain's words (`tests/test_store.py` holds them to it). The
+#  sides stand until #944's fourth slice takes them out with the rest of sensing's words in the mind.
 
 :observation a sh:RuleSet ;
     rdfs:label "what an observation is of, its quantity, and its reading" ;

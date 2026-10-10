@@ -16,6 +16,16 @@ the stale one still violated: measured, a tank low now and a prediction refillin
 from twelve, lifts NEVER*, because the present's 5 outlived the prediction's 20. Nothing was
 wrong with the prediction; there was no place in the pass where it REPLACED anything.
 
+**AND WHAT IT BRINGS IS AN ARRIVAL** (#944). The mind reads what the agent holds of a subject — the
+bed's soil, dry — and never the reading, so a ground that only swapped the observation would keep the
+present's state for ever, and a foreseen crossing would read met. A predicted observation arriving in
+a ground triggers the transitions there, as a received one does in the present: belief's machine and
+the rules the beliefs hold, reading the arrival with its revisions, the public graphs and the agent's
+own state as the ground before left it, and changing the ground alone. So the hold reaches the
+forecast — a bed believed dry and resting at 0.3001 is foreseen dry, as the present holds it — and a
+prediction still triggers nothing in the belief base: the runner prepares the target, and here the
+target is the ground being laid.
+
 **AND THE PERIODS COLLAPSE.** Each ground is hashed as a possible world is, and where two
 neighbouring periods reach the same facts the second is not a period at all: nothing a met-test
 can read moved, so nothing it could answer differs there. Measured on three boundaries whose
@@ -47,9 +57,11 @@ from datetime import datetime
 
 import pyoxigraph as ox
 
-from agent.ontology import OREXIS, STATE
+from agent.belief.transition import applied, asked, transitions
+from agent.ontology import OREXIS, PUBLIC, STATE
 from agent.hash_named_graph import digest_of, hash_named_graph
-from agent.store import fork, Raw, add_quads, bind, catalogue_of, classify, revisions_of, forget_graph, graphs_of, quads, rows, update
+from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, clear_graph, revisions_of, forget_graph,
+                         graphs_of, quads, rows, update)
 
 from .ontology import GROUND_GRAPH
 
@@ -123,6 +135,11 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
 
     ahead = _foreseen(store)
     here = _present(store, now)
+    #  THE TRANSITIONS A PREDICTED OBSERVATION TRIGGERS, and the agent's own state they read and change
+    #  as the grounds are laid, from the present's: asked only where something is foreseen.
+    rules = transitions(store) if ahead else []
+    own = _own_state(store) if rules else None
+    public = graphs_of(store, PUBLIC) if rules else []
     made, marks = [here], _marked(store, here, within)
     opened = [now]
     landing = {at for at in landings if at > now}
@@ -147,6 +164,8 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
             #  the hash below reaches the same answer, having laid the graph first.
             continue
         there = _fork(store, here, _name(at), added, retracts)
+        if rules:
+            _transitioned(store, there, [prediction for prediction, _ in group], rules, own, public)
         mark = _marked(store, there, within)
         if mark == marks and at not in landing:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
@@ -161,8 +180,56 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         opened.append(at)
         here, marks = there, mark
     classify(store, here, GROUND_GRAPH, OREXIS + "Derived", start=opened[-1])
+    if own is not None:
+        clear_graph(store, own)
     log.debug("%d ground world(s) over %d prediction(s)", len(made), len(ahead))
     return made
+
+
+#  THE STATE GRAPHS THE AGENT DERIVED — what the transitions wrote of each arrival of testimony, the
+#  subject beliefs among them — as against those it received, which are testimony.
+_DERIVED_Q = """
+SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                               ?g a orexis:StateGraph ; orexis:arrivedBy orexis:Derived } } ORDER BY ?g"""
+
+#  WHERE THE AGENT'S OWN STATE IS KEPT WHILE THE GROUNDS ARE LAID: a working graph, not a belief,
+#  handed by name to the transitions and taken away when the last ground is laid. Its name is for eyes.
+_OWN = "http://example.org/orexis/graph/ground/own-state"
+
+
+def _own_state(store: ox.Store) -> str:
+    """The agent's own state as the present ground holds it — every state graph the agent derived,
+    copied into a working graph of its own — and the working graph's name.
+
+    APART FROM THE GROUND because a ground is one graph and holds testimony beside the state: the
+    observations the present holds and the predicted ones each boundary brings. A transition is handed
+    the arrival and no other testimony, so that its WHERE says what it is about (#947); read over the
+    whole ground, climate's soil transition would judge every soil observation the ground holds, not
+    only the one arriving. So the state is kept here, beside the grounds, as the transitions change it
+    ground by ground — the state before a boundary being what the ground before it was left holding."""
+    clear_graph(store, _OWN)
+    for r in rows(store, _DERIVED_Q, ()):
+        update(store, f"INSERT {{ GRAPH <{_OWN}> {{ ?s ?p ?o }} }} WHERE {{ GRAPH <{r['g']}> {{ ?s ?p ?o }} }}")
+    return _OWN
+
+
+def _transitioned(store: ox.Store, ground: str, arrivals: list[str], rules, own: str, public: list[str]) -> None:
+    """Every transition each of `arrivals` triggers, applied in `ground` as it is laid (#944).
+
+    A PREDICTED OBSERVATION IS AN ARRIVAL THERE, as a received one is in the present: each triggers
+    every transition once, in the order the predictions came, order by order through belief's machine,
+    reading itself with its revisions, the public graphs and the agent's own state as the ground before
+    left it — and nothing else — so a bed believed dry and resting at 0.3001 is foreseen dry, held by the
+    margin as the present holds it. What an order deletes is taken out of the ground, and what it inserts
+    put into it; the working state follows. The runner prepares the target, as every runner does: here
+    it is the ground being laid, and the present is never written to. No budget is spent: a ground
+    holds what its predictions make of it, whole, or it is no ground."""
+    for arrival in arrivals:
+        reads = [arrival, *revisions_of(store, arrival), *public, own]
+        for order in rules:
+            change = asked(store, order, reads)
+            applied(store, change, ground, [ground])
+            applied(store, change, own, [own])
 
 
 def _present(store: ox.Store, now: datetime) -> str:
@@ -173,9 +240,10 @@ def _present(store: ox.Store, now: datetime) -> str:
     """
     name = _name(now)
     _relaid(store, name)
-    #  THE READINGS AND WHAT WAS CONCLUDED OF THEM: a side is a revision, in a graph derived from
-    #  the reading's, and the met-tests and the effects speak the side — so the ground a pass
-    #  stands on holds both, and a fork writes a side as it writes any fact.
+    #  THE READINGS, WHAT WAS CONCLUDED OF THEM AND WHAT THE AGENT HOLDS OF THEIR SUBJECTS: every state
+    #  graph, the subject beliefs the transitions derived among them, which the met-tests and the
+    #  effects speak, and each one's revisions — so the ground a pass stands on holds them all, and a
+    #  fork writes a state as it writes any fact.
     states = graphs_of(store, STATE)
     for source in [*states, *revisions_of(store, *states)]:
         update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "

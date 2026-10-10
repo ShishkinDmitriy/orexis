@@ -154,6 +154,6 @@ is the same move at one grain finer.
   drives and boardings in the dispatcher and the driver, and there the later ground holds what the
   parent's does, so their two graphs were the same before #919 as after.
 - **Equality is exact.** The rounded canonical form compared numbers to six decimals; `=` compares
-  values. No step predicts a sensed number — a dose predicts `sensing:inside`, which the rules
-  conclude — so nothing has met the difference, and a tolerance belongs in the rule that would
+  values. No step predicts a sensed number — a dose predicts the bed's soil `climate:Moist`, which
+  climate's transition concludes (#944) — so nothing has met the difference, and a tolerance belongs in the rule that would
   need it, not in the verdict.

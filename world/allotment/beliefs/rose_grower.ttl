@@ -1,8 +1,6 @@
 @prefix : <http://example.org/orexis/world/allotment#> .
 @prefix climate: <http://example.org/orexis/climate#> .
 @prefix orexis: <http://example.org/orexis#> .
-@prefix sensing: <http://example.org/orexis/sensing#> .
-@prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
@@ -10,22 +8,20 @@
 <> a planning:DesireGraph .    # this document is one graph, and this is what it is
 <> orexis:beliefsOf :rose_grower .    # and whose it is — said here, never by the file's name
 
-#  THE ROSE GROWER'S ONE DESIRE: its plot's soil is not read below a range the plot states. It holds
-#  no valve, so what repairs a dry plot is a claim on the supplier's water, presented.
+#  THE ROSE GROWER'S ONE DESIRE: its plot's soil is not believed dry, in climate's words (#944). It
+#  holds no valve, so what repairs a dry plot is a claim on the supplier's water, presented.
 
 :rose_grower planning:holds :the_rose_is_watered .
 
 :the_rose_is_watered a planning:Desire ;
-    rdfs:label "the rose's soil is inside the ranges its plot states" ;
+    rdfs:label "the rose's soil is not believed dry" ;
     planning:metWhen :rose_watered .
 
 :rose_watered a sh:NodeShape ;
     sh:targetNode :rose_grower ;
     sh:property [
-        sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ;
+        sh:path orexis:actsFor ;
         planning:about climate:SoilMoisture ;
         sh:qualifiedMaxCount 0 ;
-        sh:qualifiedValueShape [
-            sh:property [ sh:path sosa:observedProperty ; sh:hasValue climate:SoilMoisture ] ;
-            sh:property [ sh:path sensing:below ; sh:minCount 1 ] ] ;
-        sh:message "the rose's soil is below a range its plot states" ] .
+        sh:qualifiedValueShape [ sh:property [ sh:path climate:soil ; sh:hasValue climate:Dry ] ] ;
+        sh:message "the rose's soil is believed dry" ] .

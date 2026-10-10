@@ -13,7 +13,9 @@ description: >-
   transition is one the world causes in the belief state; one machine runs both, belief's.
   Testimony is never a transition's target. The hysteresis becomes the domain's transition, written
   per property, and sensing's mapping words, `sensing:judged` and `believe` go. Amended the same
-  day - a transition declares no trigger and no target. Refused - change done by a Python writer
+  day - a transition declares no trigger and no target; and (#944) a predicted observation is an
+  arrival in the ground the planner lays it into, where its transitions run, changing the ground
+  alone and never the present. Refused - change done by a Python writer
   per need, a functional property replaced by the deliberator, rules that delete run to a fixpoint,
   and one rule judging every range.
 status: accepted
@@ -88,7 +90,9 @@ transition the agent causes, applied in a possible world by planning; a percept'
 the world causes, applied to the belief state when an observation arrives. One machine runs both,
 and it is belief's — this is belief revision proper, the row of the stack where what arrives
 becomes what is believed ([the-agent-stack-is-a-second-axis](/decisions/the-agent-stack-is-a-second-axis.md)).
-Planning, above belief, applies an effect through it in the world it forks. The delete's word moves
+Planning, above belief, applies an effect through it in the world it forks — and, since #944's
+second slice, a percept's transition in each ground it lays, where a predicted observation arrives
+(the seam below). The delete's word moves
 with the machine.
 
 **A transition declares no trigger, and the runner prepares where it writes.** Every arrival of
@@ -170,16 +174,27 @@ frost below nought whatever the range, waterlogged after rain, or a state read o
 - **A rule does not say which world it reads** — a transition says neither what triggers it nor where
   it writes; the runner says where it reads and writes.
 - **The search runs no rules** — a transition is triggered by testimony arriving in the present,
-  never in a search; an effect in a search is applied by planning, as before.
+  and by a predicted observation arriving in a ground as the ground is laid, before any search
+  stands in it; never in a possible world a search forks, where an effect is applied by planning,
+  as before.
 
 # Seams left open
 
-- **Whether a prediction arriving triggers transitions.** A prediction is the agent's own, recorded,
-  and no testimony, so today it triggers nothing. Slice 3 decides whether a predicted stretch
-  triggers the transitions too, beside the state before it — the present's for the first stretch,
-  the stretch before for the rest — with what it writes and deletes confined to its prediction's own
-  graphs, the foreseen, never the present's; what would reopen anything more is a prediction that
-  needs to delete from the present.
+- **A prediction arriving triggers nothing in the present, and a ground is where its transitions
+  run** (amended 2026-10-10, #944's second slice and the part of its third the second needed). A
+  prediction is the agent's own, recorded, and no testimony, so in the belief base it still triggers
+  nothing and `trigger` is unchanged. But once the mind read the subject belief, every ground the
+  planner lays ahead kept the present's state — a ground is the period before it with the
+  prediction's retraction run and its contents added, and nothing in that made the bed foreseen dry —
+  so a foreseen crossing read met and #858's foresight was gone. So **a predicted observation is an
+  arrival in the ground it is laid into**: `lay_ground` runs the transitions it triggers there, once,
+  order by order, through this record's one machine and the same rules, reading the predicted
+  observation with its revisions, the public graphs and the agent's own state as the ground before
+  left it, and changing the ground alone. The runner prepares the target, as every runner does: here
+  the ground being laid. It is not "confined to the prediction's own graphs" as this seam first put
+  it, since a prediction's graph is what it adds and a state graph beside it would be a second thing
+  for every reader of a ground to union; the ground is already the foreseen, and never the present's.
+  What would reopen it is still a prediction that needs to delete from the present.
 - **A forecast is testimony, and triggers every transition.** An observation in it of a property a
   transition is about would be judged as a reading is, over the forecast's stretch. The one shipped
   forecast, the terrace's precipitation, is about nothing a transition judges; what would reopen it

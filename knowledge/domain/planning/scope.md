@@ -7,7 +7,7 @@ description: >-
   different scopes cannot contradict, because no action of one writes a fact the other reads,
   which is what makes it safe to plan them apart and concatenate their plans. Computed from what
   the shipped rules do over what the world states, never read off namespaces. The tower splits
-  by its words; the greenhouse by the property each lever moves.
+  by its words, the greenhouse by the state each lever changes, and two beds by the bed.
 ---
 
 # What it is
@@ -40,12 +40,15 @@ two cases that look obvious are the reason:
   [constraint](/domain/planning/constraint.md)'s.
 
 The second names what a predicate alone could not do. A scope was a set of PREDICATES until
-#593, and separated a vocabulary and never two instances of one: a pump and a heater both write a
+#593, and separated a vocabulary and never two instances of one: a pump and a heater both wrote a
 reading's side, and over predicates they were one scope though nothing the pump does reaches the
-air. The KEY is what tells them apart, and it is public: the pump moves the bed's moisture and the
-heater its temperature, each precondition keys the reading it writes by that property, and the
-atoms `(below, bed and moisture)` and `(below, bed and temperature)` share nothing. A heater that
-dried the soil as well would write an atom keyed by the soil too, and the two levers would be one
+air. The KEY is what told them apart, and it is public: the pump moved the bed's moisture and the
+heater its temperature, each precondition keyed the reading it wrote by that property, and the
+atoms `(below, bed and moisture)` and `(below, bed and temperature)` shared nothing. Since the
+actions take the [subject](/domain/actuation/subject.md) and speak its state (#944) the two write two
+predicates, `(climate:soil, bed)` and `(climate:air, bed)`; what the key still tells apart is two
+instances of one — two beds each with a pump, `(climate:soil, bed)` and `(climate:soil, bed2)`. A
+heater that dried the soil as well would write the soil's atom too, and the two levers would be one
 scope again - which they must be, since the order of dosing and heating is real there
 ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)).
 
@@ -92,15 +95,16 @@ per part, and each action, each predicate and each TERM a filling binds — the 
 the bed — `planning:inScope` every scope it falls in; and the [wait](/domain/planning/wait.md),
 which touches no atom and so falls in none, `planning:inScope` every one. `find_scopes` reads it back as a map of
 member to scopes, and a reader places a reading, a witness or a want where the scopes of what it
-names MEET: the bed is the pump's and the heater's, the soil's property each pump's, and a reading
-naming both is the one pump's. `derive_wants` clusters a desire's witnesses by the scope of what
-each is about and, where that is two scopes', by its key — the bed its offending reading names —
+names MEET — as its subject, a predicate or an object: the bed is the pump's and the heater's, the
+soil's property each pump's, and a reading naming both is the one pump's, as is the subject belief
+saying the bed's `climate:soil`. `derive_wants` clusters a desire's witnesses by the scope of what
+each is about and, where that is two scopes', by its key — the bed that offended —
 never recomputing the partition, and merges within a scope what a
 [constraint](/domain/planning/constraint.md) couples. The Planner keeps an
 imaginarium per scope, places a want by the predicates its met-test reads and, where those leave
 more than one, by the terms it names and the key it carries, and hands each search the actions
 `planning:inScope` of it and the terms that are another scope's, so a scope admits the FILLINGS
-that are its own: the lamp's heating is admitted in the light's search and not in the air's,
-though the action is in both; and two beds each with a pump are two wants under one desire, one
+that are its own: a heat lamp's heating of a cold frame is admitted in the frame's search and not
+in the bed's air's, though the action is in both; and two beds each with a pump are two wants under one desire, one
 per imaginarium ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)). The cases in
 `agent/planning/tests/scope_actions/` hold the function to a snapshot of what it writes.

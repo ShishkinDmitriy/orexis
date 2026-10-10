@@ -34,5 +34,9 @@ at 0.3002; a moist bed reading 0.2999 is dry at once.
 
 # Who reads it
 
-No desire and no action yet: the [dose](/domain/actuation/actuation.md) and the growers' desires
-still read the reading and its side. The soil is the word they are to speak.
+The mind, and nothing of it reads the soil's readings instead (#944). The greenhouse's and both
+allotment growers' desires ask that no subject they act for is believed dry; the
+[dose](/domain/actuation/actuation.md) and the market's presenting are admitted where it is, and
+their effects delete `climate:Dry` and insert `climate:Moist`. A ground the planner lays ahead holds
+the soil a predicted reading's transition makes there, beside the soil the ground before held
+([transition](/domain/belief/transition.md)).

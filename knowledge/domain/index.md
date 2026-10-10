@@ -102,7 +102,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Actuation — touching the world
 
-* [actuation](/domain/actuation/actuation.md) - Devices an agent holds change its subject; an action predicts the side, its command sizes the act when taken.
+* [actuation](/domain/actuation/actuation.md) - Devices an agent holds change its subject; an action predicts its state, its command sizes the act when taken.
+* [subject](/domain/actuation/subject.md) - What a step acts on, the parameter the dose, the heating and presenting take; never a reading.
 * [soil](/domain/actuation/soil.md) - Climate's words for a subject's soil as believed: dry, moist or wet.
 * [air](/domain/actuation/air.md) - Climate's words for a subject's air as believed: cold, comfortable or hot.
 

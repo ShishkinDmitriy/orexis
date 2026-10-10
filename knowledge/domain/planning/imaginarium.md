@@ -23,13 +23,16 @@ refreshes it:
 
 - `prepare_ground` takes back every graph the last filling brought across and copies again every
   public graph — every one, since a pattern reaching a graph nobody copied returns an empty result
-  rather than an error — the catalogue, the agent's desires, wants and records, and of its readings
-  and predictions those that are the scope's: one whose named members' scopes meet elsewhere, with
-  its revisions, stays behind, so the grounds laid here are the scope's readings and a world their size
+  rather than an error — the catalogue, the rules graphs, the agent's desires, wants and records, and
+  of its readings, predictions and subject beliefs those that are the scope's: one whose named members'
+  scopes meet elsewhere, with its revisions, stays behind, so the grounds laid here are the scope's
+  readings and a world their size
   ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)). What the
   store made for itself stays.
 - `lay_ground` lays a `planning:GroundGraph` per period: the present, and the present with each
-  [prediction](/domain/prediction/prediction.md) applied at its instant.
+  [prediction](/domain/prediction/prediction.md) applied at its instant and the
+  [transitions](/domain/belief/transition.md) its predicted observation triggers run there — which is
+  what the rules graphs cross for.
 
 What it makes for itself: a `planning:PossibleGraph` per world a candidate reached, each forked from
 its parent — or from the ground its step lands in, the path replayed there — and never mutated,

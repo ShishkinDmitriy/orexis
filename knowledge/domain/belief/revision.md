@@ -75,12 +75,13 @@ draft's answer to the same problem is `sh:runOnce`, honoured too.
 # Where it runs: on the present, and nowhere else
 
 A rule runs over a reading when it is written and over a prediction when it is predicted. It
-never runs in a search: planning speaks the derived vocabulary, a precondition reads *the
-reading is Below* and an [effect](/domain/planning/effect.md) writes *the reading is Inside* itself, so no
-fork and no ground is revised. Execution then holds a step to the present, and the present
-reaches *Inside* when the next reading arrives and a rule concludes it from the number; the wait
-is the bridge between the instrument's vocabulary and the mind's, and it is where the wait
-belongs. A graph with no catalogue row is invisible to every reader by kind, so a writer that
+never runs in a search, and no fork and no ground is revised: planning speaks the domain's words, a
+precondition reads *the bed is believed Dry* and an [effect](/domain/planning/effect.md) writes *the
+bed is believed Moist* itself. What a ground holds of a subject is a
+[transition](/domain/belief/transition.md)'s, run there when the ground is laid, and no revision.
+Execution then holds a step to the present, and the present reaches *Moist* when the next reading
+arrives and climate's transition makes it of the number; the wait is the bridge between the
+instrument's vocabulary and the mind's, and it is where the wait belongs. A graph with no catalogue row is invisible to every reader by kind, so a writer that
 means its graph never to be seen without its revisions writes the graph, revises it and
 classifies it last; that is the whole of the discipline, and it is a convention rather than a
 concept.

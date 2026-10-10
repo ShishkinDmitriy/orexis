@@ -14,7 +14,7 @@ description: >-
 ```turtle
 GRAPH <…/committed/grower/plan_s1> {
     :plan_s1 a execution:Step ;
-        planning:fills actuation:Dosing ; actuation:valve :pump ; actuation:reading :obs_bed ;
+        planning:fills actuation:Dosing ; actuation:valve :pump ; actuation:subject :bed ;
         execution:landsWithinS 600 ; execution:answeredWithinS 660 .
 }
 ```

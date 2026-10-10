@@ -30,7 +30,7 @@
 
 :actuatesProperty a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:range sosa:ObservableProperty ;
     rdfs:label "actuates property" ;
-    rdfs:comment "Which of the subject's properties the device moves: the soil's moisture for a pump. A reading of that property is what a dose answers." .
+    rdfs:comment "Which of the subject's properties the device moves: the soil's moisture for a pump. What the subject is believed of that property is what a dose changes, and a reading of it is what answers the dose." .
 
 :drawsFrom a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:label "draws from" ;
     rdfs:comment "Where what the device pours comes from." .
@@ -48,5 +48,5 @@
 :valve a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "valve" ;
     rdfs:comment "The device a dose opens." .
 
-:reading a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "reading" ;
-    rdfs:comment "The observation a step answers: the reading below its range that a dose or a heating brings inside it. Its side is what the step's effect retracts and adds." .
+:subject a owl:ObjectProperty ; rdfs:domain orexis:Action ; rdfs:label "subject" ;
+    rdfs:comment "The subject a step acts on: the bed a dose waters or a heating warms, whose state in a domain's words — its soil, its air — the step's effect replaces. Never a reading: the number a command sizes the step from is read off the subject's latest observation when the step is taken." .

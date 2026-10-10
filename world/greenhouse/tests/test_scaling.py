@@ -2,12 +2,14 @@
 unrelated to a want changes what that want's search spends (#593).
 
 Two metrics the sovereign named. A POSSIBLE WORLD'S SIZE against the present: a world is the SCOPE'S
-readings and their revisions, forked from a ground that holds those alone, never the public knowledge,
-so it is one percent of the store. And STABILITY: a lamp and a light sensor added to the greenhouse,
-with a desire that the bed be lit, are a third scope; the soil want's search forks the same one world
-over the same one candidate it did before, that world is the same twelve quads, and the lamp — a
-second filling of the heating action — is admitted in the light's scope alone and its step judged
-there alone.
+readings, their revisions and what the agent believes of their subject, forked from a ground that holds
+those alone, never the public knowledge, so it is one percent of the store. And STABILITY: a cold frame
+beside the bed, its own thermometer and a heat lamp over it, is a third scope; the soil want's search
+forks the same one world over the same one candidate it did before, that world is the same size, and
+the lamp — a second filling of the heating action, keyed by the frame — is admitted in the frame's scope
+alone and its step judged there alone. It was a lamp on the bed's light until the heating came to speak
+the air's state (#944), which no light reading is judged into; `conftest.py` says why the frame keeps
+what the light was for.
 """
 
 from __future__ import annotations
@@ -21,23 +23,43 @@ from agent.runtime import boot
 from agent.store import close_catalogue, graphs_of, quads, revisions_of, rows
 from agent.sensing.received import received
 from agent.belief.revise import revise
+from agent.belief.trigger import trigger
 from agent.planning.planner import Planner
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 GH = "http://example.org/orexis/world/greenhouse#"
 
-#  THE GREENHOUSE WITH THE LIGHT ADDED is the `lit_greenhouse` fixture of `conftest.py`, shared with the bench.
+#  THE GREENHOUSE WITH THE FRAME ADDED is the `framed_greenhouse` fixture of `conftest.py`, shared with the bench.
+
+#  WHAT EACH PLAN IS ABOUT, off the want its row names and the property the want's met-test is about — a
+#  want states no `planning:about` of its own, its shape's blocks do — and never off the plan's name,
+#  which is for eyes; and the subject each candidate is filled with, which tells the bed's air from the
+#  frame's.
+_ABOUT_Q = """
+SELECT DISTINCT ?about WHERE {
+  GRAPH ?g { ?p a planning:Plan ; planning:outcome planning:Satisfied ; planning:for ?want }
+  GRAPH ?w { ?want planning:metWhen|planning:unmetWhen ?shape . ?shape sh:property ?block . ?block planning:about ?about } }"""
+_SUBJECTS_Q = """
+SELECT DISTINCT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate ;
+                                        <http://example.org/orexis/actuation#subject> ?s } }"""
+
+
+def _deliver(store, sensor: str, value: float, at: datetime) -> None:
+    """A reading as the deliberator takes it: written, revised, and the transitions it triggers applied."""
+    for graph in received(store, GH + "grower", GH + sensor, f'{{"value": {value}}}'.encode(), at):
+        revise(store, graph, read=graphs_of(store, PUBLIC))
+        close_catalogue(store)
+        trigger(store, graph)
 
 
 def _pass(world: Path, readings: dict) -> tuple[int, int, dict]:
-    """One pass over `world` with `readings` delivered: the store's quads, the state's with its revisions, and per scope
-    `(ground quads, [world quads], candidates, actions, plans)`."""
+    """One pass over `world` with `readings` delivered: the store's quads, the state's with its revisions,
+    and per scope, keyed by what its plans are about and the subjects its candidates are filled with,
+    `(ground quads, [world quads], candidates, actions)`."""
     store = boot(world, "grower")
     for sensor, value in readings.items():
-        for graph in received(store, GH + "grower", GH + sensor, f'{{"value": {value}}}'.encode(), NOW):
-            revise(store, graph, read=graphs_of(store, PUBLIC))
-            close_catalogue(store)
+        _deliver(store, sensor, value, NOW)
     present = sum(1 for _ in store)
     readings = graphs_of(store, STATE)
     state = sum(len(list(quads(store, g))) for g in [*readings, *revisions_of(store, *readings)])
@@ -48,44 +70,45 @@ def _pass(world: Path, readings: dict) -> tuple[int, int, dict]:
         (ground,) = [r["g"] for r in rows(im, "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph } }", ())]
         worlds = [r["w"] for r in rows(im, "SELECT ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph } }", ())]
         cands = rows(im, "SELECT (COUNT(DISTINCT ?c) AS ?n) (COUNT(DISTINCT ?a) AS ?actions) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate ; planning:fills ?a } }", ())[0]
-        #  WHAT EACH PLAN IS ABOUT, off the want its row names and the property the want's met-test is
-        #  about — a want states no `planning:about` of its own, its shape's blocks do — and never off
-        #  the plan's name, which is for eyes.
-        plans = {local_of(r["about"]) for r in rows(im, """
-            SELECT DISTINCT ?about WHERE {
-              GRAPH ?g { ?p a planning:Plan ; planning:outcome planning:Satisfied ; planning:for ?want }
-              GRAPH ?w { ?want planning:metWhen|planning:unmetWhen ?shape . ?shape sh:property ?block . ?block planning:about ?about } }""", ())}
-        out[frozenset(plans) or scope] = (len(list(quads(im, ground))), sorted(len(list(quads(im, w))) for w in worlds),
-                                           int(cands["n"]), int(cands["actions"]), plans)
+        plans = frozenset(local_of(r["about"]) for r in rows(im, _ABOUT_Q, ()))
+        subjects = frozenset(local_of(r["s"]) for r in rows(im, _SUBJECTS_Q, ()))
+        out[(plans, subjects) if plans else scope] = (len(list(quads(im, ground))), sorted(len(list(quads(im, w))) for w in worlds),
+                                                      int(cands["n"]), int(cands["actions"]))
     return present, state, out
+
+
+SOIL = (frozenset({"SoilMoisture"}), frozenset({"bed"}))
 
 
 def test_a_possible_world_is_the_scopes_readings_and_a_percent_of_the_present(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW)
     present, state, scopes = _pass(WORLD, {"thermometer": 12.0, "moisture_probe": 0.2})
-    for ground, worlds, _, _, _ in scopes.values():
+    assert len(scopes) == 2, scopes
+    for ground, worlds, _, _ in scopes.values():
         assert worlds == [ground], "a world is a fork of its ground, nothing more"
         assert ground * 50 < present, f"a world of {ground} quads against a present of {present}"
-    #  THE READINGS ARE PARTED BETWEEN THE SCOPES, each reading and its sides to the one scope whose
-    #  property it names: the two grounds together are the state, and neither is.
+    #  THE READINGS ARE PARTED BETWEEN THE SCOPES, each reading, its sides and what is believed of its
+    #  subject to the one scope whose property it names: the two grounds together are the state, and
+    #  neither is.
     assert sorted(ground for ground, *_ in scopes.values()) == [state // 2, state // 2]
 
 
-def test_an_unrelated_aspect_changes_nothing_of_the_soil_wants_search(monkeypatch, lit_greenhouse):
-    """The light and the lamp are a third scope. The soil's search forks the one world over the one
-    candidate it forked without them, and that world is the same size: the light's reading is the
-    light's scope's and crosses into no other imaginarium. The lamp's heating, a second filling of the
-    heating action, is admitted in the light's scope and nowhere else."""
+def test_an_unrelated_aspect_changes_nothing_of_the_soil_wants_search(monkeypatch, framed_greenhouse):
+    """The frame and the lamp are a third scope. The soil's search forks the one world over the one
+    candidate it forked without them, and that world is the same size: the frame's reading is the
+    frame's scope's and crosses into no other imaginarium. The lamp's heating, a second filling of the
+    heating action, is admitted in the frame's scope and nowhere else."""
     monkeypatch.setattr(clock, "now", lambda: NOW)
     _, state, before = _pass(WORLD, {"thermometer": 12.0, "moisture_probe": 0.2})
-    _, lit_state, after = _pass(lit_greenhouse, {"thermometer": 12.0, "moisture_probe": 0.2, "light_sensor": 100})
-    soil_before, soil_after = before[frozenset({"SoilMoisture"})], after[frozenset({"SoilMoisture"})]
-    assert soil_before == soil_after == (soil_before[0], [soil_before[0]], 1, 1, {"SoilMoisture"}), \
-        f"the soil's search, with and without the light: {soil_before} against {soil_after}"
-    assert len(after) == 3 and {p for _, _, _, _, plans in after.values() for p in plans} == {"SoilMoisture", "AirTemperature", "Light"}
-    assert all(cands == 1 and actions == 1 for _, _, cands, actions, _ in after.values()), \
-        f"one filling per scope, the lamp's in the light's alone: {after}"
-    assert lit_state > state and sum(ground for ground, *_ in after.values()) == lit_state, \
+    _, framed_state, after = _pass(framed_greenhouse, {"thermometer": 12.0, "moisture_probe": 0.2, "frame_thermometer": 5.0})
+    soil_before, soil_after = before[SOIL], after[SOIL]
+    assert soil_before == soil_after == (soil_before[0], [soil_before[0]], 1, 1), \
+        f"the soil's search, with and without the frame: {soil_before} against {soil_after}"
+    assert set(after) == {SOIL, (frozenset({"AirTemperature"}), frozenset({"bed"})),
+                          (frozenset({"AirTemperature"}), frozenset({"frame"}))}, after
+    assert all(cands == 1 and actions == 1 for _, _, cands, actions in after.values()), \
+        f"one filling per scope, the lamp's in the frame's alone: {after}"
+    assert framed_state > state and sum(ground for ground, *_ in after.values()) == framed_state, \
         "the reading added went to its own scope's ground and to no other"
 
 
@@ -102,21 +125,21 @@ class _Broker:
         self.published.append(topic)
 
 
-def test_a_step_is_judged_by_its_own_filling_whichever_scope_admitted_it(monkeypatch, lit_greenhouse):
-    """The heating action is the air's and the light's, filled by the heater in one and the lamp in the
-    other. Asked of the lamp's step, the air's imaginarium — which holds no light reading — would answer
-    no row and call it blocked. Each head is checked as it is about to be taken, in the present the
-    beliefs hold, every scope's readings among them (#916): all three commands go out, nothing is
-    blocked in the pass after, and all three intentions walk on."""
+def test_a_step_is_judged_by_its_own_filling_whichever_scope_admitted_it(monkeypatch, framed_greenhouse):
+    """The heating action is the bed's air's and the frame's, filled by the heater in one and the lamp in
+    the other. Asked of the lamp's step, the bed's air's imaginarium — which holds no frame reading —
+    would answer no row and call it blocked. Each head is checked as it is about to be taken, in the
+    present the beliefs hold, every scope's readings among them (#916): all three commands go out,
+    nothing is blocked in the pass after, and all three intentions walk on."""
     from agent.runtime import UNFINISHED, Runtime
     from agent.transport.mqtt.driver import Mqtt
     time = _Clock(NOW)
     monkeypatch.setattr(clock, "now", time)
-    beliefs = boot(lit_greenhouse, "grower")
+    beliefs = boot(framed_greenhouse, "grower")
     broker = _Broker()
     runtime = Runtime(beliefs, "grower", transport=Mqtt(GH + "grower", broker))
     runtime.time = time
-    for sensor, value in {"thermometer": 12.0, "moisture_probe": 0.2, "light_sensor": 100}.items():
+    for sensor, value in {"thermometer": 12.0, "moisture_probe": 0.2, "frame_thermometer": 5.0}.items():
         runtime.deliver(f"sensors/{sensor}/reading", f'{{"value": {value}}}'.encode(), NOW)
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     assert sorted(broker.published) == ["actuators/heater/command", "actuators/lamp/command", "actuators/pump/command"]
@@ -137,56 +160,50 @@ class _Clock:
         return self.at
 
 
-def test_a_drift_outside_a_wants_scope_keeps_its_cone(monkeypatch, lit_greenhouse):
+def test_a_drift_outside_a_wants_scope_keeps_its_cone(monkeypatch, framed_greenhouse):
     """#565's second item, by construction since a scope's imaginarium holds the scope's readings alone
-    (#884): a present that drifts in a fact a want never reads — the light, under a soil plan — hashes
-    to the same soil ground, so the soil's re-root finds the last pass's present and keeps its cone,
-    while the light's own search finds the present among what it imagined. A drift in the soil itself
-    that nothing imagined drops the soil's cone.
-    WHAT MOVES A PRESENT IS A SIDE, NOT A NUMBER: a world is hashed within what is read, and no text
-    reads the number a reading gave inside its band, so the light going from 100 to 150 under a floor
-    of 200 would be the same place to the light's own search too. From 100 to 400 the bed is lit —
-    the world the lamp's plan predicted — so the light's present is that CHILD, a step landed as
-    predicted, which no sensed world could say while a reading's instant was part of where it stood.
-    The soil at 0.9 is over its range, which no world of the soil's imagined: a surprise."""
+    (#884): a present that drifts in a fact a want never reads — the frame's air, under a soil plan —
+    hashes to the same soil ground, so the soil's re-root finds the last pass's present and keeps its
+    cone, while the frame's own search finds the present among what it imagined. A drift in the soil
+    itself that nothing imagined drops the soil's cone.
+    WHAT MOVES A PRESENT IS A STATE, NOT A NUMBER: a world is hashed within what is read, and no text
+    reads the number a reading gave, so the frame going from 5 to 7 degrees under a floor of 10 would be
+    the same place to the frame's own search too — cold both times. From 5 to 15 the frame is believed
+    comfortable — the world the lamp's plan predicted — so the frame's present is that CHILD, a step
+    landed as predicted, which no sensed world could say while a reading's instant was part of where it
+    stood. The soil at 0.9 is believed wet, which no world of the soil's imagined: a surprise."""
     monkeypatch.setattr(clock, "now", lambda: NOW)
-    store = boot(lit_greenhouse, "grower")
-
-    def deliver(sensor: str, value: float, at: datetime) -> None:
-        for graph in received(store, GH + "grower", GH + sensor, f'{{"value": {value}}}'.encode(), at):
-            revise(store, graph, read=graphs_of(store, PUBLIC))
-            close_catalogue(store)
+    store = boot(framed_greenhouse, "grower")
 
     def scope_of(term: str) -> str:
-        """The local name of the scope `term` is a member of, as the re-root names it."""
-        (found,) = rows(store, f"""PREFIX climate: <http://example.org/orexis/climate#>
-            SELECT ?s WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph }}
-                               GRAPH ?g {{ climate:{term} planning:inScope ?s }} }}""", ())
+        """The local name of the one scope `term` is a member of, as the re-root names it."""
+        (found,) = rows(store, f"""SELECT ?s WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph }}
+                                                 GRAPH ?g {{ <{term}> planning:inScope ?s }} }}""", ())
         return found["s"].rsplit("/", 1)[-1]
 
     heard: list = []
     planner = Planner(store, "grower")
     planner.rerooted.connect(lambda event: heard.append(event) or [])
-    for sensor, value in {"thermometer": 21.0, "moisture_probe": 0.2, "light_sensor": 100}.items():
-        deliver(sensor, value, NOW)
+    for sensor, value in {"thermometer": 21.0, "moisture_probe": 0.2, "frame_thermometer": 5.0}.items():
+        _deliver(store, sensor, value, NOW)
     planner.plan(NOW)
-    soil, light = scope_of("SoilMoisture"), scope_of("Light")
+    soil, frame = scope_of(GH + "pump"), scope_of(GH + "lamp")
     assert {e.present for e in heard} == {"first"} and len(heard) == 3
-    #  THE LIGHT DRIFTS AND THE SOIL DOES NOT: the soil's imaginarium holds no light reading, so the
+    #  THE FRAME DRIFTS AND THE SOIL DOES NOT: the soil's imaginarium holds no frame reading, so the
     #  ground it lays hashes as last pass's did, and its one world is kept under it; the last pass's
     #  ground — the match itself, whose facts the new one carries — is the one graph dropped. The
-    #  light's imaginarium finds the present in the world its plan reached.
+    #  frame's imaginarium finds the present in the world its plan reached.
     heard.clear()
     later = NOW + timedelta(minutes=10)
-    deliver("light_sensor", 400, later)
+    _deliver(store, "frame_thermometer", 15.0, later)
     planner.plan(later)
     second = {e.scope: (e.present, e.kept, e.dropped) for e in heard}
     assert second[soil] == ("ground", 2, 1), f"the soil's ground and its world kept, last pass's ground gone: {second}"
-    assert second[light][0] == "child", f"lit, as the lamp's plan predicted: {second}"
-    #  THE SOIL DRIFTS where nothing imagined it: over its range, not inside it as the dose predicted.
+    assert second[frame][0] == "child", f"comfortable, as the lamp's plan predicted: {second}"
+    #  THE SOIL DRIFTS where nothing imagined it: wet, not moist as the dose predicted.
     heard.clear()
     latest = later + timedelta(minutes=10)
-    deliver("moisture_probe", 0.9, latest)
+    _deliver(store, "moisture_probe", 0.9, latest)
     planner.plan(latest)
     third = {e.scope: (e.present, e.kept, e.dropped) for e in heard}
-    assert third[soil][0] == "surprise" and third[light][0] == "ground", third
+    assert third[soil][0] == "surprise" and third[frame][0] == "ground", third

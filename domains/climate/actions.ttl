@@ -9,33 +9,38 @@
 
 <> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
-#  THE HEATING, stated in the concepts the rules conclude, as the dose is: a reading of what a
-#  heater warms, below a range of its subject, comes to be inside it. How long to heat is sized
-#  when the step is taken, from how far the reading is below the middle of the range and how fast
-#  the heater warms, at most its longest run; the step lands when the thermometer next reads.
+#  THE HEATING, stated in the words the agent believes its subject in, as the dose is (#944): a
+#  subject whose air is believed cold, warmed by a heater that moves its air's temperature, comes to
+#  be believed comfortable. It takes the subject, and its precondition and effect speak the air's
+#  state and no number. How long to heat is sized when the step is taken, from the subject's latest
+#  observation of its air — how far it is below the middle of the range and how fast the heater warms,
+#  at most its longest run; the step lands when the thermometer next reads. The property is bound by
+#  the world and held to the air's temperature by a `VALUES` block, as the dose's is, so the air's
+#  readings are placed in the scope that heats it.
 
 climate:Heating a orexis:Action ;
-    rdfs:label "heat a subject until its reading is inside its range" ;
-    orexis:takes climate:heater , actuation:reading ;
+    rdfs:label "heat a subject until its air is believed comfortable" ;
+    orexis:takes climate:heater , actuation:subject ;
     planning:precondition """PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX actuation: <http://example.org/orexis/actuation#>
-        PREFIX sensing: <http://example.org/orexis/sensing#>
-        SELECT DISTINCT ?heater ?reading WHERE {
+        SELECT DISTINCT ?heater ?subject WHERE {
+            VALUES ?property { climate:AirTemperature }
             ?me a orexis:Self ; actuation:hasActuator ?heater ; orexis:actsFor ?subject .
             ?heater climate:warms ?subject ; climate:warmsProperty ?property .
-            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ;
-                     sensing:below ?range .
+            ?subject climate:air climate:Cold .
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  IT LANDS AT THE NEXT READING, due within a cadence of the step — nothing at the least, the
-    #  cadence at the most, in the unit the world states it in: the effect speaks the side the rules
-    #  conclude of a reading, so nothing can show the heating before the sensor reads again, and no rule
-    #  can say how far off that reading is. The executor looks for the answer from the step, and a
-    #  patience past the cadence with no answer is a heating the world did not take.
-    planning:landsAfter """PREFIX unit: <http://qudt.org/vocab/unit/>
+    #  cadence at the most, in the unit the world states it in: the effect speaks the state the air's
+    #  transition concludes of a reading, so nothing can show the heating before the sensor reads
+    #  again. The sensor is the one the world says is hosted by the subject, or a sample of it, and
+    #  observes its air's temperature. The executor looks for the answer from the step, and a patience
+    #  past the cadence with no answer is a heating the world did not take.
+    planning:landsAfter """PREFIX climate: <http://example.org/orexis/climate#>
+        PREFIX unit: <http://qudt.org/vocab/unit/>
         SELECT ?least ?most WHERE {
-            $reading sosa:madeBySensor ?sensor .
-            ?sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f .
+            ?sensor sosa:isHostedBy/(sosa:isSampleOf)? $subject ; sosa:observes climate:AirTemperature ;
+                    ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f .
             ?f a ssn-system:Frequency ; schema:value ?every .
             OPTIONAL { ?f schema:unitCode ?unit }
             VALUES (?u ?per) { (unit:SEC 1) (unit:MIN 60) (unit:HR 3600) (unit:HUR 3600) (unit:DAY 86400) }
@@ -44,22 +49,23 @@ climate:Heating a orexis:Action ;
             BIND(xsd:double(?every) * ?per AS ?most)
         }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { $reading sensing:below ?range  }
-        WHERE  { $reading sensing:below ?range  }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
-        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] ;
+        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX climate: <http://example.org/orexis/climate#>
+        DELETE { $subject climate:air climate:Cold }
+        WHERE  { $subject climate:air climate:Cold }""" ] ,
+                [ a sh:SPARQLRule ; sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
+        CONSTRUCT { $subject climate:air climate:Comfortable } WHERE { $subject climate:air climate:Cold }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Command ; sh:select """PREFIX climate: <http://example.org/orexis/climate#>
         SELECT ?actuator ?payload WHERE {
-            $reading sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value ;
-                     sosa:observedProperty ?property .
-            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
-            ?condition ssn:forProperty ?property ; schema:minValue ?lo ; schema:maxValue ?hi .
+            ?reading sosa:hasFeatureOfInterest/(sosa:isSampleOf)? $subject ; sosa:observedProperty climate:AirTemperature ;
+                     sosa:hasSimpleResult ?value ; sosa:resultTime ?at .
+            $subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
+            ?condition ssn:forProperty climate:AirTemperature ; schema:minValue ?lo ; schema:maxValue ?hi .
             $heater climate:degreesPerHour ?rate ; climate:maxHeatS ?cap .
             BIND(((xsd:double(?lo) + xsd:double(?hi)) / 2.0) AS ?aim)
             BIND(((?aim - xsd:double(?value)) / xsd:double(?rate)) * 3600.0 AS ?wanted)
             BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), IF(?wanted < 0.0, 0.0, ?wanted)) AS ?seconds)
             BIND($heater AS ?actuator)
             BIND(CONCAT('{"heat_s": ', STR(xsd:integer(ROUND(?seconds))), '}') AS ?payload)
-        }""" ] ] .
+        }
+        ORDER BY DESC(?at) LIMIT 1""" ] ] .

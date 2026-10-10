@@ -158,6 +158,19 @@ and not an action. Before the readings were parted by scope the soil's world was
 search forked the lamp's heating too, two candidates where one is its own. Every figure in the
 soil's columns is now flat under the aspect added.
 
+Measured again on 2026-10-10 (#944), once the actions took the subject and spoke its state: the
+heating speaks the air's, which no light reading is judged into, so the unrelated aspect is a cold
+frame beside the bed at 5 degrees, its own thermometer and a heat lamp — the heating's second filling,
+keyed by the frame (`world/greenhouse/tests/conftest.py`).
+
+| | present store | readings + sides + subject beliefs | soil's ground / world | scopes | soil's search |
+|---|---|---|---|---|---|
+| greenhouse as shipped | 1463 quads | 26 | 13 | 2 | 1 world, 1 candidate of 1 action |
+| with the frame, its thermometer and the heat lamp | 1554 | 38 | 13 | 3 | 1 world, 1 candidate of 1 action |
+
+A world holds the subject belief beside the reading and its sides, so the soil's is thirteen quads,
+and it is thirteen with the frame as without it.
+
 # Two beds, two pumps: two instances of one property (2026-10-04)
 
 The two-instances seam of [a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md),

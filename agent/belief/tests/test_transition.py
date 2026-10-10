@@ -8,7 +8,7 @@ import logging
 
 import pyoxigraph as ox
 
-from agent.belief.transition import Change, Rule, applied, asked, ordered
+from agent.belief.transition import Change, Rule, applied, asked, ordered, transitions
 
 T = "http://example.org/test#"
 STATE, OTHER = T + "state", T + "other"
@@ -35,6 +35,23 @@ def _facts(store, graph: str) -> set[tuple[str, str, str]]:
 _DARKEN = Rule(0, _P + "CONSTRUCT { ?l :is :Dark } WHERE { :switch :says :off . ?l :is ?any }",
                _P + "DELETE { ?l :is ?was } WHERE { :switch :says :off . ?l :is ?was }", "darken")
 _WITNESS = Rule(0, _P + "CONSTRUCT { ?l :seen ?was } WHERE { ?l :is ?was }", None, "witness")
+
+
+def test_transitions_are_every_active_transition_the_rules_graphs_hold_in_their_orders(snapshots):
+    """What the present's runner and a ground's both apply (`trigger`, `lay_ground`): the trigger case
+    of two orders, read by its type off the rules graph — the count and the witness of order nought, the
+    echo of order one — and one rule deactivated or no transition is no part of them."""
+    from pathlib import Path
+    from agent.store import update
+    case = Path(__file__).parent / "trigger" / "two_transitions_of_one_order_read_the_same_state.trig"
+    store = snapshots.stand_in(case)
+    named = lambda orders: [sorted(r.name[len(T):] for r in order) for order in orders]
+    assert named(transitions(store)) == [["countRule", "sawRule"], ["echoRule"]]
+    found = transitions(store)[0][0]
+    assert found.construct and found.delete and found.order == 0.0, "its texts and its order travel with it"
+    update(store, f"""PREFIX : <{T}> PREFIX sh: <http://www.w3.org/ns/shacl#>
+        INSERT DATA {{ GRAPH :rules {{ :sawRule sh:deactivated true . :inference a sh:SPARQLRule ; sh:construct "CONSTRUCT {{}} WHERE {{}}" }} }}""")
+    assert named(transitions(store)) == [["countRule"], ["echoRule"]]
 
 
 def test_ordered_groups_the_rules_by_order_ascending():

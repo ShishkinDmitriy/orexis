@@ -11,11 +11,15 @@ taken out and its additions put in, deletions first, so a later order reads what
 No rule names a graph: what it reads is the list its caller hands, and what it changes the graphs
 its caller names (a-rule-does-not-say-which-world-it-reads).
 
-**TWO CALLERS, ONE MACHINE.** Planning applies an action's effect through it in the possible world a
+**THREE RUNNERS, ONE MACHINE.** Planning applies an action's effect through it in the possible world a
 step makes, reading that world and changing it alone (`agent/planning/take.py`). The belief package
 applies a percept's transition through it to the agent's own state, each arrival of testimony
-triggering every `belief:Transition` once (`trigger`). An effect is a transition the agent
-causes; a percept's is one the world causes. Neither runs to a fixpoint: an order is applied once.
+triggering every `belief:Transition` once (`trigger`). And planning applies the same transitions in a
+ground it lays, each predicted observation arriving there triggering every one once, reading the
+ground's own state and changing the ground alone (`agent/planning/lay_ground.py`, #944). An effect is
+a transition the agent causes; a percept's, received or predicted, is one the world causes. None runs
+to a fixpoint: an order is applied once. `transitions` answers the rules every runner of a percept's
+transition applies, so the present and a ground are changed by the same ones.
 
 **A RULE THAT WILL NOT RUN CHANGES NOTHING, LOUDLY.** A text that will not bind, a delete that names
 its own graphs or is no `DELETE … WHERE`, and a text the engine refuses are a package's bug and must
@@ -34,9 +38,20 @@ from dataclasses import dataclass, field
 
 import pyoxigraph as ox
 
-from agent.store import add_quads, bind, construct
+from agent.store import add_quads, bind, construct, graphs_of, rows
+
+from .ontology import RULES_GRAPH
 
 log = logging.getLogger("transition")
+
+#  EVERY TRANSITION, over the rules graphs: each active one, with its order, its construct and its delete.
+_TRANSITIONS_Q = """
+SELECT DISTINCT ?rule ?order ?construct ?delete WHERE {
+  ?rule a belief:Transition .
+  FILTER NOT EXISTS { ?rule sh:deactivated true }
+  OPTIONAL { ?rule sh:order ?o } OPTIONAL { ?rule sh:construct ?construct } OPTIONAL { ?rule belief:delete ?delete }
+  BIND(COALESCE(?o, 0) AS ?order) }
+ORDER BY ?order ?rule"""
 
 #  `PREFIX name: <iri>` at the head of a text, the empty name included — kept where it stands.
 _PREFIX_LINE = re.compile(r"^\s*PREFIX\s+([A-Za-z][\w.\-]*)?\s*:\s*<([^>]*)>[ \t]*\n?", re.I | re.M)
@@ -58,6 +73,14 @@ class Change:
     added: list = field(default_factory=list)
     deleted: list = field(default_factory=list)
     executions: int = 0
+
+
+def transitions(store) -> list[list[Rule]]:
+    """Every active `belief:Transition` of the rules graphs `store` holds, in the orders they are
+    applied in — what an arrival of testimony triggers in the present, and a predicted observation
+    arriving in a ground triggers there."""
+    found = rows(store, _TRANSITIONS_Q, graphs_of(store, RULES_GRAPH))
+    return ordered(Rule(float(r["order"]), r.get("construct"), r.get("delete"), r["rule"]) for r in found)
 
 
 def ordered(rules) -> list[list[Rule]]:
