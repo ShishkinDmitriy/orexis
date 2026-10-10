@@ -48,12 +48,10 @@ GRAPH :world {
   :AirTemperature sensing:belowAs :Cold .
   :AirTemperature sensing:insideAs :Comfortable .
   :AirTemperature sensing:stateAs :air .
-  :AirTemperature sensing:valueAs :temperature .
   :SoilMoisture sensing:aboveAs :Wet .
   :SoilMoisture sensing:belowAs :Dry .
   :SoilMoisture sensing:insideAs :Moist .
   :SoilMoisture sensing:stateAs :soil .
-  :SoilMoisture sensing:valueAs :moisture .
   :bed a sosa:FeatureOfInterest .
   :bed ssn-system:hasOperatingRange :bed.operating .
   :bed ssn-system:hasSurvivalRange :bed.survival .

@@ -2,9 +2,9 @@
 #
 # The probe read 0.2999 at noon, under the bed's floor of 0.30, and the rules judged its subject dry:
 # `sensing:judged :Dry`, in the observation's revision, with no subject belief before it. What is
-# written of that judgment is the bed's subject belief in the words its property names — `:soil :Dry`
-# and `:moisture 0.2999`, the reading as it is — in a graph of its own, a subject belief graph, derived
-# and the keeper's, holding over the observation's period, from noon to twenty past.
+# written of that judgment is the bed's subject belief in the words its property names — `:soil :Dry`,
+# the state alone, the number staying the observation's — in a graph of its own, a subject belief
+# graph, derived and the keeper's, holding over the observation's period, from noon to twenty past.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -43,7 +43,6 @@ GRAPH :world {
   :SoilMoisture sensing:belowAs :Dry .
   :SoilMoisture sensing:insideAs :Moist .
   :SoilMoisture sensing:stateAs :soil .
-  :SoilMoisture sensing:valueAs :moisture .
   :bed a sosa:FeatureOfInterest .
   :bed ssn-system:hasOperatingRange :bed.operating .
   :bed ssn-system:hasSurvivalRange :bed.survival .

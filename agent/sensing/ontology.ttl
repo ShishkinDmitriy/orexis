@@ -267,8 +267,9 @@
 
 #  THE SUBJECT BELIEF (knowledge/domain/sensing/subject-belief.md, #944): what the agent holds true
 #  of a subject for one observable property, in the words of the domain that owns the property — the
-#  bed is dry, its moisture 0.3001. The domain says on the property which of its words carry the
-#  value and the state, and which state each side of the subject's operating range is; this layer's
+#  bed is dry. Its state alone: the number stays the observation's, read by prediction and by a
+#  command when its step is taken, never by the mind. The domain says on the property which of its
+#  words carry the state, and which state each side of the subject's operating range is; this layer's
 #  one rule judges an observation into a state beside the subject belief it replaces, holding that
 #  state by the range's margin (knowledge/domain/sensing/margin.md); and `believe` writes the subject
 #  belief of the judgment, replacing the one before whole. A property whose domain says nothing gets
@@ -277,20 +278,11 @@
 :SubjectBeliefGraph a owl:Class ;
     rdfs:subClassOf orexis:StateGraph ;
     rdfs:label "Subject belief graph" ;
-    rdfs:comment """One graph per subject and observable property, holding its subject belief: two
-    triples about the subject in its domain's words, its state and its value. Named for what it
-    holds. Written by `believe` of the state an observation is judged in, holding over that
+    rdfs:comment """One graph per subject and observable property, holding its subject belief: one
+    triple about the subject in its domain's words, its state. Named for what it holds. Written by `believe` of the state an observation is judged in, holding over that
     observation's period, the agent's own and derived, and replaced whole by the next — never
     re-derived from an observation alone, since one of its premises is the subject belief it
     replaced. Beneath orexis:StateGraph, the state a met-test reads.""" .
-
-:valueAs a owl:ObjectProperty ;
-    rdfs:domain sosa:ObservableProperty ;
-    rdfs:range rdf:Property ;
-    rdfs:label "value as" ;
-    rdfs:comment """The predicate a subject's value of this property is believed in, stated by the
-    domain that owns the property; the value is the reading of the observation the subject belief
-    was made of.""" .
 
 :stateAs a owl:ObjectProperty ;
     rdfs:domain sosa:ObservableProperty ;

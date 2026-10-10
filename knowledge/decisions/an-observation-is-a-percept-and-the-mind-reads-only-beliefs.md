@@ -5,19 +5,31 @@ description: >-
   The sovereign, 2026-10-09 - an observation is not a belief; it is what a sensor said. Decided - an
   observation is a percept, sensing's own, named per reading, linked to the one before it, kept as
   deep as sensing's rules read and handed to no reader of the mind. Belief revision makes of the
-  latest percept of a key ONE belief, in the domain's words - the bed is dry, its moisture 0.3001 -
+  latest percept of a key ONE belief, in the domain's words - the bed is dry - and no number,
   replacing the belief before it whole, and judging the percept beside that belief, so a state is
   held by the belief itself and the hysteresis needs no previous observation. One rule judges every
   range with its margin and the domain names the states. A predicted number becomes a predicted
   belief the same way, beside the belief before it. Stuck is a rule over the last percepts kept.
-  Desires, actions, effects, commands and drifts speak the belief, an action takes the subject and
-  not a reading, and planning's and execution's code are untouched. Refused - the observation as the
+  Desires, preconditions and effects speak the belief, an action takes the subject and not a
+  reading, and the number is read off the percept by its two readers at the boundary alone,
+  prediction and a command sizing its step when it is taken; planning's and execution's code are
+  untouched. Amended the next day - the belief holds no value. Refused - the observation as the
   belief, summaries a writer carries onto the present, a side re-derived from the last N numbers,
   the hold read off the previous percept, a predicted number judged bare, and a hold written once
   per property.
 status: accepted
 timestamp: 2026-10-09T20:00:00Z
 ---
+
+> **Amended 2026-10-10 (#947): the belief is the state, and holds no number.** As first decided, the
+> belief carried the subject's value beside its state — "its moisture is 0.3001" — so that a command
+> could size a dose and a drift a rate from it. Nothing in planning reads a number: the met-tests,
+> the preconditions, the effects and the costs read the side. The number's readers are a command,
+> sizing a step when it is taken, and prediction's drifts, an estimator's rates — the effectoric and
+> the perceptual side of the boundary, neither of them the mind. So the number stays the percept's,
+> and they read it there. Copied into the belief it was the percept's testimony said twice, and it
+> moved the belief, and with it the mind's present, on every reading that wobbled inside its state.
+> The body below is amended to that.
 
 # The question
 
@@ -78,11 +90,13 @@ the mind nothing, and several percepts of one sensor leave no doubt about which 
 
 **Belief revision makes of the latest percept of a key one belief, in the domain's words, and the
 mind reads nothing else.** For a key — a subject and a property — the belief says what the agent
-holds true of the subject: its state, which the domain names (the bed is dry), and its value (its
-moisture is 0.3001). It is about the subject, whose IRI does not change, and it speaks no SOSA:
-the domain's words only. A desire asks "the bed is not dry"; the dose takes the bed, not a reading,
-and its effect turns dry into its state inside the range; its command sizes the dose from the
-believed value; the drying drift reads the believed value. The world's description of which sensor
+holds true of the subject: its state, which the domain names (the bed is dry), and no number. It is
+about the subject, whose IRI does not change, and it speaks no SOSA: the domain's words only. A
+desire asks "the bed is not dry"; the dose takes the bed, not a reading, and its effect turns dry into
+its state inside the range. The number stays the percept's [reading](/domain/sensing/reading.md),
+read there by the two readers at the boundary: the dose's command, sizing it when it is taken, and
+the drying drift, prediction's rate — the effectoric and the perceptual interface, neither of them
+the mind, which compares triples and interprets no literal. The world's description of which sensor
 a subject hosts and the ranges it states stays in SOSA and SSN, since it is sensing's
 configuration and not an observation.
 
@@ -174,8 +188,8 @@ measured on #946's build. Judged one way, there is nothing to contradict.
 
 # Seams left open
 
-- **The words.** Which state and value words each domain declares, per property, is the first
-  slice's, and each gets its page before it is used.
+- **The words.** Which state words each domain declares, per property, is the first slice's, and
+  each gets its page before it is used.
 - **A state change foreseen out of a held state is placed early.** Prediction cuts a stretch where
   the number crosses the bare bound, so a bed rising from dry is foreseen inside from the floor,
   where the present will say so only past the floor and the margin — early by the time the number

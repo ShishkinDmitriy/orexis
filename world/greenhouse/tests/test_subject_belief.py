@@ -25,9 +25,9 @@ GH = "http://example.org/orexis/world/greenhouse#"
 SUBJECT_BELIEF = "http://example.org/orexis/sensing#SubjectBeliefGraph"
 SOIL, AIR = "sensors/moisture_probe/reading", "sensors/thermometer/reading"
 
-#  WHAT THE BED IS BELIEVED, in climate's words, for one property: its state and its value.
+#  WHAT THE BED IS BELIEVED, in climate's words, for one property: its state.
 _BELIEVED_Q = """PREFIX climate: <http://example.org/orexis/climate#>
-SELECT ?state ?value WHERE { $bed $state_as ?state ; $value_as ?value }"""
+SELECT ?state WHERE { $bed $state_as ?state }"""
 
 
 class _Broker:
@@ -45,13 +45,11 @@ def _grower(monkeypatch, store=None):
     return Runtime(beliefs, "grower", transport=Mqtt(GH + "grower", _Broker())), time
 
 
-def _believed(beliefs, words: str) -> tuple[str, float] | None:
-    state_as, value_as = {"soil": ("soil", "moisture"), "air": ("air", "temperature")}[words]
-    climate = "http://example.org/orexis/climate#"
+def _believed(beliefs, words: str) -> str | None:
     found = rows(beliefs, _BELIEVED_Q, graphs_of(beliefs, SUBJECT_BELIEF), bed=GH + "bed",
-                 state_as=climate + state_as, value_as=climate + value_as)
+                 state_as="http://example.org/orexis/climate#" + words)
     assert len(found) <= 1, found
-    return (found[0]["state"].rsplit("#", 1)[-1], round(float(found[0]["value"]), 6)) if found else None
+    return found[0]["state"].rsplit("#", 1)[-1] if found else None
 
 
 def _read(runtime, time, topic: str, values) -> list:
@@ -70,8 +68,7 @@ def test_the_bed_believed_dry_stays_dry_until_its_soil_clears_the_floor_and_the_
     0.0002: dry four times, moist at the fifth; and from moist, 0.2999 is dry at once."""
     runtime, time = _grower(monkeypatch)
     believed = _read(runtime, time, SOIL, [0.2990, 0.3001, 0.3001, 0.3001, 0.3002, 0.2999])
-    assert [b[0] for b in believed] == ["Dry"] * 4 + ["Moist", "Dry"], believed
-    assert [b[1] for b in believed] == [0.299, 0.3001, 0.3001, 0.3001, 0.3002, 0.2999], "the value is the reading"
+    assert believed == ["Dry"] * 4 + ["Moist", "Dry"], believed
 
 
 def test_the_bed_believed_cold_stays_cold_until_its_air_clears_the_floor_and_the_margin(monkeypatch):
@@ -79,7 +76,7 @@ def test_the_bed_believed_cold_stays_cold_until_its_air_clears_the_floor_and_the
     comfortable; and 24.5 is hot."""
     runtime, time = _grower(monkeypatch)
     believed = _read(runtime, time, AIR, [17.99, 18.01, 18.02, 24.5])
-    assert [b[0] for b in believed] == ["Cold", "Cold", "Comfortable", "Hot"], believed
+    assert believed == ["Cold", "Cold", "Comfortable", "Hot"], believed
 
 
 def test_a_subject_belief_is_kept_in_a_volume_lived_in(monkeypatch):
@@ -89,6 +86,6 @@ def test_a_subject_belief_is_kept_in_a_volume_lived_in(monkeypatch):
     runtime, time = _grower(monkeypatch)
     _read(runtime, time, SOIL, [0.2990])
     again, later = _grower(monkeypatch, runtime.beliefs)
-    assert _believed(again.beliefs, "soil") == ("Dry", 0.299)
+    assert _believed(again.beliefs, "soil") == "Dry"
     later["at"] = NOW + timedelta(minutes=10)
-    assert _read(again, later, SOIL, [0.3001]) == [("Dry", 0.3001)]
+    assert _read(again, later, SOIL, [0.3001]) == ["Dry"]

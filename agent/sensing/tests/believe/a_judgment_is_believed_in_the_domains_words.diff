@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -102,4 +102,17 @@
+@@ -101,4 +101,16 @@
    :self orexis:beliefsOf :keeper .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
@@ -15,6 +15,5 @@
 +
 +
 +GRAPH believed:bed_SoilMoisture {
-+  :bed :moisture 0.2999 .
 +  :bed :soil :Dry .
 +}

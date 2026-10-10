@@ -8,9 +8,9 @@ it will replace, which the deliberator hands it as a conclusion the agent drew o
 hold is written once, and nothing here compares a number with a bound. What is written here is that
 judgment in the words of the domain that owns the property: for the subject — the observation's
 feature of interest, or what that is a sample of, whichever states the operating range judged — its
-state in the predicate the property's `sensing:stateAs` names, and its value, the observation's
-reading, in the one its `sensing:valueAs` names: `:bed climate:soil climate:Dry ; climate:moisture
-0.3001`. One graph per subject and property, a `sensing:SubjectBeliefGraph`, derived and the
+state in the predicate the property's `sensing:stateAs` names: `:bed climate:soil climate:Dry`. The
+state alone: the number is the observation's, and the readers of a number — prediction, and a
+command sizing its step when it is taken — read it there. One graph per subject and property, a `sensing:SubjectBeliefGraph`, derived and the
 agent's, holding over the observation's own period, so it ends with the observation — a silence
 included — and lasts in a volume lived in.
 
@@ -54,13 +54,13 @@ SELECT ?start ?end WHERE {
 
 #  WHAT THE OBSERVATION WAS JUDGED, read over the graph, its revisions and what the world states: the
 #  subject whose operating range was judged, the property, the domain's two predicates, the state and
-#  the reading — the terms as they are, so the value is the reading's literal.
+#  the reading.
 _JUDGED_Q = """
-SELECT DISTINCT ?subject ?property ?stateAs ?state ?valueAs ?value WHERE {
-  ?obs sensing:judged ?state ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value ;
+SELECT DISTINCT ?subject ?property ?stateAs ?state WHERE {
+  ?obs sensing:judged ?state ; sosa:observedProperty ?property ;
        sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
   ?subject ssn-system:hasOperatingRange/ssn-system:inCondition/ssn:forProperty ?property .
-  ?property sensing:stateAs ?stateAs ; sensing:valueAs ?valueAs .
+  ?property sensing:stateAs ?stateAs .
   FILTER EXISTS { ?property sensing:belowAs|sensing:insideAs|sensing:aboveAs ?state } }
 ORDER BY ?subject ?property"""
 
@@ -73,8 +73,8 @@ SELECT ?g ?start ?before WHERE {
 
 
 def believe(store, me: str, graph: str) -> list[str]:
-    """Write the subject belief of each subject the observation `graph` was judged of — its state and
-    its value in its domain's words, holding over the observation's period — replacing the key's
+    """Write the subject belief of each subject the observation `graph` was judged of — its state in its
+    domain's words, holding over the observation's period — replacing the key's
     subject belief before it whole. The graphs written: none where `graph` is no observation, was
     judged of nothing, or a later observation of the key is believed already.
 
@@ -91,7 +91,7 @@ def believe(store, me: str, graph: str) -> list[str]:
         judged.setdefault((r["subject"], r["property"]), []).append(r)
     written = []
     for (subject, observed_property), found in judged.items():
-        if len({(r["stateAs"], r["state"], r["valueAs"], r["value"]) for r in found}) != 1:
+        if len({(r["stateAs"], r["state"]) for r in found}) != 1:
             #  TWO STATES FOR ONE SUBJECT: a feature and what it is a sample of each stating an operating
             #  range for the property, so the observation's judgments cannot be told apart. No world does.
             log.error("%s: %s was judged %s for %s at once; no subject belief is written of it",
@@ -108,12 +108,11 @@ def believe(store, me: str, graph: str) -> list[str]:
             forget_graph(store, h["g"])
         into = subject_belief_graph(local_of(me), subject.value, observed_property.value)
         named = ox.NamedNode(into)
-        store.extend([ox.Quad(subject, r["stateAs"], r["state"], named),
-                      ox.Quad(subject, r["valueAs"], r["value"], named)])
+        store.extend([ox.Quad(subject, r["stateAs"], r["state"], named)])
         update(store, f"INSERT DATA {{ {entry(store, into, SUBJECT_BELIEF_GRAPH, DERIVED, me, observed['start'], observed.get('end'))} }}")
         before = {h["before"] for h in held}
         (log.info if before != {r["state"].value} else log.debug)(
-            "%s: %s believed %s, %s %s", local_of(me), local_of(subject.value), local_of(r["state"].value),
-            local_of(r["valueAs"].value), r["value"].value)
+            "%s: %s believed %s of %s", local_of(me), local_of(subject.value), local_of(r["state"].value),
+            local_of(observed_property.value))
         written.append(into)
     return written

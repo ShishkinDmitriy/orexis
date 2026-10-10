@@ -3,29 +3,27 @@ type: Domain Concept
 title: Soil
 term:
   - http://example.org/orexis/climate#soil
-  - http://example.org/orexis/climate#moisture
   - http://example.org/orexis/climate#Dry
   - http://example.org/orexis/climate#Moist
   - http://example.org/orexis/climate#Wet
 description: >-
   How a subject's soil is believed, in climate's words - dry, moist or wet by its moisture against
-  the subject's operating range, and the moisture itself - as sensing makes of the latest
-  soil-moisture reading. The words `climate:SoilMoisture` names for its subject belief.
+  the subject's operating range - as sensing makes of the latest soil-moisture reading.
+  The words `climate:SoilMoisture` names for its subject belief.
 ---
 
 # What it is
 
 ```turtle
-climate:SoilMoisture sensing:valueAs climate:moisture ; sensing:stateAs climate:soil ;
+climate:SoilMoisture sensing:stateAs climate:soil ;
     sensing:belowAs climate:Dry ; sensing:insideAs climate:Moist ; sensing:aboveAs climate:Wet .
 
-:bed climate:soil climate:Dry ; climate:moisture 0.3001 .
+:bed climate:soil climate:Dry .
 ```
 
 The **soil** of a subject is the state it is believed in for `climate:SoilMoisture`: `climate:Dry`
 under the floor of the subject's operating range for it, `climate:Moist` within, `climate:Wet` over
-the ceiling. Its **moisture** is the fraction of saturation the probe last read, the value the state
-was judged of. Both are a [subject belief](/domain/sensing/subject-belief.md), one per subject,
+the ceiling. It is a [subject belief](/domain/sensing/subject-belief.md), one per subject,
 which sensing writes; climate owns the words and nothing else of it, and the judgment — the bounds,
 the [margin](/domain/sensing/margin.md) and the state before — is sensing's rule.
 

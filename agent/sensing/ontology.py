@@ -44,7 +44,6 @@ ABOVE = SENSING + "above"
 #  domain says it in, and the margin a range holds a state by.
 SUBJECT_BELIEF_GRAPH = SENSING + "SubjectBeliefGraph"
 JUDGED = SENSING + "judged"
-VALUE_AS = SENSING + "valueAs"
 STATE_AS = SENSING + "stateAs"
 BELOW_AS = SENSING + "belowAs"
 INSIDE_AS = SENSING + "insideAs"

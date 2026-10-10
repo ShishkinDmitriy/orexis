@@ -1,9 +1,9 @@
 # a_subject_belief_is_replaced_whole
 #
-# The bed was believed dry at 0.299 of the reading at ten to twelve, holding to ten past. The probe read
+# The bed was believed dry of the reading of 0.299 at ten to twelve, holding to ten past. The probe read
 # 0.3001 at noon, over the floor and short of the floor and its margin, and the rules — handed that
 # subject belief beside the observation — judged the bed dry still. The subject belief before is
-# forgotten whole and the new one written in its place: dry, 0.3001, holding from noon to twenty past.
+# forgotten whole and the new one written in its place: dry still, holding from noon to twenty past.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -42,7 +42,6 @@ GRAPH :world {
   :SoilMoisture sensing:belowAs :Dry .
   :SoilMoisture sensing:insideAs :Moist .
   :SoilMoisture sensing:stateAs :soil .
-  :SoilMoisture sensing:valueAs :moisture .
   :bed a sosa:FeatureOfInterest .
   :bed ssn-system:hasOperatingRange :bed.operating .
   :bed ssn-system:hasSurvivalRange :bed.survival .
@@ -83,7 +82,6 @@ GRAPH :observed_revisions {
 }
 
 GRAPH believed:bed_SoilMoisture {
-  :bed :moisture 0.299 .
   :bed :soil :Dry .
 }
 

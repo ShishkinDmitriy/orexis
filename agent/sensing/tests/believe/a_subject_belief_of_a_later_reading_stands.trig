@@ -42,7 +42,6 @@ GRAPH :world {
   :SoilMoisture sensing:belowAs :Dry .
   :SoilMoisture sensing:insideAs :Moist .
   :SoilMoisture sensing:stateAs :soil .
-  :SoilMoisture sensing:valueAs :moisture .
   :bed a sosa:FeatureOfInterest .
   :bed ssn-system:hasOperatingRange :bed.operating .
   :bed ssn-system:hasSurvivalRange :bed.survival .
@@ -83,7 +82,6 @@ GRAPH :observed_earlier_revisions {
 }
 
 GRAPH believed:bed_SoilMoisture {
-  :bed :moisture 0.3001 .
   :bed :soil :Dry .
 }
 

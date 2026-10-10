@@ -1,15 +1,6 @@
 --- case
 +++ expected
-@@ -75,7 +75,7 @@
- }
- 
- GRAPH believed:bed_SoilMoisture {
--  :bed :moisture 0.299 .
-+  :bed :moisture 0.3001 .
-   :bed :soil :Dry .
- }
- 
-@@ -111,7 +111,7 @@
+@@ -109,7 +109,7 @@
    believed:bed_SoilMoisture a orexis:Graph .
    believed:bed_SoilMoisture a orexis:StateGraph .
    believed:bed_SoilMoisture a sensing:SubjectBeliefGraph .
