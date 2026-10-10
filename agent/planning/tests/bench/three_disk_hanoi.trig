@@ -10,6 +10,7 @@
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix hanoi: <http://example.org/orexis/hanoi#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -47,7 +48,7 @@ GRAPH :world {
 GRAPH :actions {
   hanoi:Move a orexis:Action .
   hanoi:Move planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  hanoi:Move planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+  hanoi:Move planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       DELETE { $disk hanoi:on ?old  }
       WHERE  { $disk hanoi:on ?old  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       CONSTRUCT { $disk hanoi:on ?dest } WHERE {

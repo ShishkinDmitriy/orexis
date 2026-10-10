@@ -16,9 +16,9 @@ kind makes a misspelled one silent in every reader; onboarding knows every reade
 `unread` names the graphs none of them reads, and `orexis-onboard` refuses a world that has any.
 
 **A margin its range cannot hold is refused here, for the same reason** (`unholdable`,
-knowledge/domain/sensing/margin.md): the rule judging an observation into a subject belief takes
-`sensing:margin` as stated, so one that is no number, negative, or of half its range's width or more
-is caught here or nowhere.
+knowledge/domain/sensing/margin.md): a domain's transition judging an observation into a subject
+belief takes `sensing:margin` as stated, so one that is no number, negative, or of half its range's
+width or more is caught here or nowhere.
 
 **A step runs where the world has what it serves.** `premises` answers which of `PREMISES` hold of
 a world (#824): the broker's credentials and its ACL, the agents' certificates and the broker in a
@@ -163,9 +163,9 @@ def unread(here: Path) -> list[str]:
 
 #  EVERY MARGIN A RANGE CANNOT HOLD (knowledge/domain/sensing/margin.md), with its range's name where it
 #  has one — a blank range is said as one with no name, and judged like any other — and the bounds it
-#  widens: one that is no number, which the rule's sum binds nothing with, so a subject believed below
-#  or above would be judged in no state at all; a negative one, which widens nothing, so the rule would
-#  read as nought a figure the world stated; and one of half its range's width or more, since every act
+#  widens: one that is no number, which a transition's sum binds nothing with, so a subject held below
+#  or above would be judged in no state at all; a negative one, which widens nothing, so a transition
+#  would read as nought a figure the world stated; and one of half its range's width or more, since every act
 #  here aims at a range's middle and a subject a step brought there would still be believed in the
 #  state it came from.
 _MARGINS_Q = """

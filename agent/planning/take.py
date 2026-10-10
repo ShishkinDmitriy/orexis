@@ -42,20 +42,18 @@ way, is written into `<child>.adds` and `<child>.retracts`, derived from the chi
 `extract_plan` copies those where it would otherwise diff the child against its parent. A child
 forked from its parent needs nothing written: the two differ by the effect and nothing else.
 
-AN EFFECT IS RULES, GROUPED BY ORDER. An action's `planning:effect` holds `sh:rule`s, each a
-`sh:SPARQLRule` whose `sh:construct` yields what applying it ADDS, or whose `planning:update` is a
-`DELETE … WHERE` taking away whatever stands in the place the step changes, which nobody can name
-in advance. Every rule of one `sh:order` reads the same world — the construct is asked, and the
-delete's WHERE matched, before any of that order is applied — its deletions go first and its
-additions after, and a later order reads the world the earlier ones made. A delete names no
-graph: it is run `WITH` the new world and `USING` every graph of it (`store.scoped`). What
-SHACL runs over beliefs only ever concludes; this runs over a possible world, where taking
-something away is the point.
-
-**The vocabulary is SHACL's; the engine is not.** pySHACL will execute `sh:SPARQLRule`, but
-only as forward-chaining inference to a fixpoint; a plan step is one rule against one
-hypothesis, the opposite shape. A stored `sh:construct` is just a query, and this project has
-an engine that runs queries. See knowledge/decisions/a-plan-is-a-path-of-graph-diffs.md.
+AN EFFECT IS A TRANSITION THE AGENT CAUSES, AND BELIEF'S MACHINE APPLIES IT
+(`agent/belief/transition.py`, a-transition-changes-the-state-and-an-inference-only-concludes). An
+action's `planning:effect` holds `sh:rule`s, each a `sh:SPARQLRule` whose `sh:construct` yields
+what applying it ADDS, or whose `belief:delete` is a `DELETE … WHERE` taking away whatever stands
+in the place the step changes, which nobody can name in advance. Every rule of one `sh:order`
+reads the same world — the construct is asked, and the delete's WHERE matched, before any of that
+order is applied — its deletions go first and its additions after, and a later order reads the
+world the earlier ones made. A delete names no graph: its WHERE is matched over every graph of the
+world, and what it matches is taken out of the new world alone. What revision runs over beliefs
+only ever concludes; this runs over a possible world, where taking something away is the point.
+What is this act's own is which world the rules read and change, and that the fork is made at
+the first order that changes something.
 
 THE CHILD IS NAMED BY THE CANDIDATE'S MINT NUMBER, read off the candidate's row and never off
 its name (#486): `admit` minted the candidate `possible/<n>.by` with `planning:minted n`, and
@@ -71,13 +69,13 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
+from agent.belief.transition import Rule, applied, asked, ordered
 from agent.execution.ontology import ADDS_GRAPH, RETRACTS_GRAPH
 from agent.hash_named_graph import digest_of
 from agent.ontology import ACTION, PUBLIC, SELF_GRAPH, local_of
-import pyoxigraph as ox
 
-from agent.store import (Raw, add_quads, bind, bindings, catalogue_of, clear_graph, closed, construct, fork,
-                                graphs_of, instant, query, remember, render, rows, scoped, update)
+from agent.store import (Raw, bind, bindings, catalogue_of, clear_graph, closed, construct, fork,
+                                graphs_of, instant, query, remember, render, rows, update)
 
 from .admit import POSSIBLE
 from .next_ground import next_ground
@@ -107,9 +105,9 @@ SELECT ?rule ?lands ?costs (GROUP_CONCAT(DISTINCT STR(?p); separator=" ") AS ?ta
 #  ITS EFFECT'S RULES, by order — an absent order is 0, as SHACL says. `?rule` projected, since
 #  the engine substitutes only a variable the query projects.
 _EFFECT_Q = """
-SELECT ?rule ?order ?construct ?update WHERE {
+SELECT ?rule ?order ?construct ?delete WHERE {
   ?rule planning:effect/sh:rule ?r .
-  OPTIONAL { ?r sh:order ?o } OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r planning:update ?update }
+  OPTIONAL { ?r sh:order ?o } OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r belief:delete ?delete }
   BIND(COALESCE(?o, 0) AS ?order) }
 ORDER BY ?order"""
 
@@ -240,8 +238,9 @@ def _apply(store, cand: str, into: str, memo, *, base: str | None = None, graphs
 
     THE FORK IS MADE AT THE FIRST ORDER THAT CHANGES SOMETHING: until then a construct is asked
     of the world the candidate leaves, which is the world it would read anyway, so a candidate
-    changing nothing costs no copy. A delete is taken as a change, since what it matches is not
-    known until it runs."""
+    changing nothing costs no copy. An order stating a delete is taken as a change whatever the
+    delete matched — belief's machine now asks what it matches before anything is applied, but a
+    candidate whose delete matched nothing made a world before the machine moved, and still does."""
     binding = _binding(store, cand, memo)
     rule = _rule(store, binding["action"], memo)
     if rule is None or not rule["rules"]:
@@ -250,19 +249,15 @@ def _apply(store, cand: str, into: str, memo, *, base: str | None = None, graphs
     leaves = graphs if graphs is not None else world_at(store, binding["from"], memo=memo)
     tokens = _tokens(binding)
     forked = False
-    for order in sorted({r["order"] for r in rule["rules"]}):
-        rules = [r for r in rule["rules"] if r["order"] == order]
+    for rules in ordered(rule["rules"]):
         scope = [into if g == source else g for g in leaves]
-        added = [t for r in rules for t in _run(store, r.get("construct"), tokens, scope if forked else leaves)]
-        texts = [r["update"] for r in rules if r.get("update")]
-        if not forked and not added and not texts:
+        change = asked(store, rules, scope if forked else leaves, tokens)
+        if not forked and not change.added and not any(r.delete for r in rules):
             continue
-        deletes = [d for d in (_delete(text, into, tokens, scope) for text in texts) if d is not None]
         if not forked:
-            fork(store, source, into, added, deletes)
+            fork(store, source, into, [], [])
             forked = True
-            continue
-        _change(store, into, added, deletes)
+        applied(store, change, into, [into])
     return forked
 
 
@@ -287,12 +282,8 @@ def _replayed(store, cand: str, child: str, ground: str, memo, *, into: str | No
         if rule is None:
             continue
         tokens = _tokens(taken)
-        for order in sorted({r["order"] for r in rule["rules"]}):
-            rules = [r for r in rule["rules"] if r["order"] == order]
-            added = [t for r in rules for t in _run(store, r.get("construct"), tokens, graphs)]
-            texts = [r["update"] for r in rules if r.get("update")]
-            deletes = [d for d in (_delete(text, base, tokens, graphs) for text in texts) if d is not None]
-            _change(store, base, added, deletes)
+        for rules in ordered(rule["rules"]):
+            applied(store, asked(store, rules, graphs, tokens), base, [base])
     log.debug("%s lands in %s: %d step(s) replayed there", local_of(child), ground.rsplit("/", 1)[-1], len(path))
     return base
 
@@ -320,16 +311,6 @@ def _changed(store, world: str, base: str, memo) -> None:
                        retractskinds=Raw(" , ".join(f"<{k}>" for k in retracts))))
 
 
-def _change(store, into: str, added, deletes) -> None:
-    """One order of an effect applied in place: its deletions first, its additions after."""
-    for text in deletes:
-        try:
-            update(store, text)
-        except Exception as exc:                                    # noqa: BLE001
-            log.error("an effect's delete would not run, so it deletes nothing: %s", exc)
-    add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(into)) for t in added))
-
-
 def _tokens(binding: dict) -> dict:
     """The `$tokens` a rule text takes, off a candidate's binding: everything but what the caller
     reads of the row."""
@@ -345,32 +326,6 @@ def _ground_at(store, at: datetime, memo) -> str | None:
     """The ground holding at `at`, or None before the first — remembered per instant, since every
     fork of a world landing at nought asks about the same one."""
     return remember(memo, ("ground_at", at), lambda: next(iter(graphs_of(store, GROUND_GRAPH, at=at)), None))
-
-
-def _delete(text: str, into: str, tokens: dict, graphs) -> str | None:
-    """One `planning:update` rule, bound and scoped to the world it deletes from — or None, said in
-    the log, where it will not bind or names graphs of its own.
-
-    It is not optional where a node is replaced: the sensed graph upserts one observation node
-    per (subject, property), so an effect predicting a reading that did not delete the side it
-    replaces would leave two on one node."""
-    try:
-        return scoped(bind(text, **tokens), into, graphs)
-    except Exception as exc:                                        # noqa: BLE001
-        log.error("an effect's delete would not bind, so it deletes nothing: %s", exc)
-        return None
-
-
-def _run(store, text: str | None, tokens: dict, graphs) -> list:
-    if not text:
-        return []
-    try:
-        return list(construct(store, bind(text, **tokens), graphs))
-    except Exception as exc:                                        # noqa: BLE001
-        #  A rule that will not run is a package's bug and must not take an agent down: the
-        #  lever still works, and what is lost is the ability to reason about it in advance.
-        log.error("effect rule for this action would not run: %s", exc)
-        return []
 
 
 def _binding(store, cand: str, memo) -> dict:
@@ -412,7 +367,7 @@ def _rule(store, action: str, memo) -> dict | None:
     """
     def fetch():
         found = bindings(query(store, _RULE_Q, graphs_of(store, ACTION), {"rule": action}))
-        rules = [{"order": float(r["order"]), "construct": r.get("construct"), "update": r.get("update")}
+        rules = [Rule(float(r["order"]), r.get("construct"), r.get("delete"), f"the effect of {local_of(action)}")
                  for r in bindings(query(store, _EFFECT_Q, graphs_of(store, ACTION), {"rule": action}))]
         return {**found[0], "rules": rules} if found else None
     return remember(memo, ("rule", action), fetch)

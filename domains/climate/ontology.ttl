@@ -3,11 +3,10 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
-    owl:imports <actions.ttl> , <drifts.ttl> .
+    owl:imports <actions.ttl> , <drifts.ttl> , <rules.ttl> .
 
 #  CLIMATE, A DOMAIN.
 #  A planted thing's surroundings: the properties its instruments observe — the soil's moisture,
@@ -16,7 +15,7 @@
 #  and a heater that warms its air, taken through the heating
 #  (actions.ttl). The ranges a subject should be in are SSN-System's, stated by a world; the side
 #  a reading is on is a revision sensing's rules conclude, and what is believed of a subject's soil
-#  and air is said in this domain's words, below. It was two 0.1.0 packages, water and
+#  and air is said in this domain's words, below, by this domain's transitions (rules.ttl). It was two 0.1.0 packages, water and
 #  climate; the market good, the bands and the revisable conversion stayed behind, since the
 #  market waits, a band is a side now and 0.2.0 revises no setting. The vent, what it opens onto
 #  and the air's drift toward the outside wait until an agent can listen to a feature it does not
@@ -25,13 +24,9 @@
 #################  What is observed, and where water comes from  #################
 
 :SoilMoisture a sosa:ObservableProperty ; rdfs:label "Soil moisture" ;
-    rdfs:comment "How wet the soil is, as a fraction of saturation." ;
-    sensing:stateAs :soil ;
-    sensing:belowAs :Dry ; sensing:insideAs :Moist ; sensing:aboveAs :Wet .
+    rdfs:comment "How wet the soil is, as a fraction of saturation." .
 :AirTemperature a sosa:ObservableProperty ; rdfs:label "Air temperature" ;
-    rdfs:comment "In degrees Celsius." ;
-    sensing:stateAs :air ;
-    sensing:belowAs :Cold ; sensing:insideAs :Comfortable ; sensing:aboveAs :Hot .
+    rdfs:comment "In degrees Celsius." .
 :AirHumidity a sosa:ObservableProperty ; rdfs:label "Air humidity" ;
     rdfs:comment "Relative humidity, as a fraction." .
 :AirPressure a sosa:ObservableProperty ; rdfs:label "Air pressure" .
@@ -41,11 +36,12 @@
 #################  What is believed of a subject  #################
 
 #  THE SOIL AND THE AIR AS THE AGENT BELIEVES THEM (knowledge/domain/actuation/soil.md and air.md,
-#  #944): sensing makes of the latest observation of a subject's soil moisture, or of its air
-#  temperature, one subject belief in these words — its state, judged against the subject's operating
-#  range — and the two properties above say which word carries it and which state each side is. The
-#  number stays the observation's: a command sizing a step and prediction read it there. Humidity,
-#  pressure and precipitation say none yet, and nothing is believed of them in this domain's words.
+#  #944): this domain's transitions (rules.ttl), fired by an observation of a subject's soil moisture
+#  or of its air temperature arriving, replace what the agent holds of the subject's soil or air with
+#  its state in these words, judged against the subject's operating range and held past the range's
+#  margin by the state before. The number stays the observation's: a command sizing a step and
+#  prediction read it there. Humidity, pressure and precipitation have no transition yet, and nothing
+#  is believed of them in this domain's words.
 
 :soil a owl:ObjectProperty ; rdfs:label "soil" ;
     rdfs:comment "The state a subject's soil is believed in: dry, moist or wet, by where its moisture lies against the subject's operating range." .

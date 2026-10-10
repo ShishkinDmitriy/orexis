@@ -26,10 +26,11 @@ def test_its_part_revises_beliefs_and_predictions_as_they_are_written_and_says_s
     assert heard == ["urn:test:nothing", "urn:test:nothing"], "each pass says what it revised"
 
 
-def test_a_graph_written_is_revised_beside_the_world_and_the_state_the_agent_derived(stand_in_runtime):
-    """Beside a graph written stand the public graphs and every state graph the agent DERIVED — the
-    conclusion the next reading of a key is judged beside (#944), whatever its period — and never
-    another testimony: a reading received, a peer's word, is not read beside a graph it is not."""
+def test_a_graph_written_is_revised_beside_the_world_alone(stand_in_runtime):
+    """Beside a graph written stand the public graphs and nothing else: never another testimony — a
+    reading received, a peer's word, is not read beside a graph it is not — and not a state the agent
+    derived, which is a premise of a transition and not of an inference, and which `fire` hands the
+    transitions itself (a-transition-changes-the-state-and-an-inference-only-concludes)."""
     store = ox.Store()
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} }}")
     rows_ = {"urn:test:world": "orexis:PublicGraph ; orexis:arrivedBy orexis:Asserted",
@@ -49,4 +50,4 @@ def test_a_graph_written_is_revised_beside_the_world_and_the_state_the_agent_der
     asked.clear()
     (written,) = [handler for kind, handler in runtime.heard if kind == BELIEF]
     written("urn:test:reading")
-    assert asked == [("urn:test:reading", ("urn:test:world", "urn:test:concluded"))], asked
+    assert asked == [("urn:test:reading", ("urn:test:world",))], asked

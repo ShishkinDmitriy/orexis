@@ -371,14 +371,7 @@ planning:effect
 planning:Effect
     a owl:Class ;
     rdfs:label "Effect" ;
-    rdfs:comment "An action's effect as rules, `sh:rule` to each, run by a search on the possible world a step makes and never on beliefs — which is why an effect may delete, where a revision only concludes. A rule is a `sh:SPARQLRule` with an `sh:construct`, whose result is ADDED, or with an `planning:update`, a `DELETE … WHERE` naming no graph, which is run against the new world with the world's graphs as its dataset. Rules are grouped by `sh:order` as SHACL groups them: every rule of one order reads the same world, its deletions are applied before its additions, and a later order reads what the earlier ones made." .
-
-
-planning:update
-    a owl:DatatypeProperty ;
-    rdfs:range xsd:string ;
-    rdfs:label "update" ;
-    rdfs:comment "On an effect's `sh:SPARQLRule`, where SHACL has only `sh:construct`: a `DELETE … WHERE` taking out of the world a step makes whatever stands in the place the step changes, which nobody can name in advance. It names no graph; the search runs it `WITH` the new world and `USING` every graph of it." .
+    rdfs:comment "An action's effect as rules, `sh:rule` to each: a transition the agent causes, applied by a search on the possible world a step makes and never on beliefs, through the belief package's machine (knowledge/domain/belief/transition.md). A rule is a `sh:SPARQLRule` with an `sh:construct`, whose result is ADDED, or with a `belief:delete`, a `DELETE … WHERE` naming no graph, matched over the world's graphs and taken out of the new world. Rules are grouped by `sh:order` as SHACL groups them: every rule of one order reads the same world, its deletions are applied before its additions, and a later order reads what the earlier ones made." .
 
 
 planning:costs

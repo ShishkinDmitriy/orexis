@@ -3,13 +3,14 @@
 THE RULE VOCABULARY IS SHACL 1.2 INFERENCE RULES', ADOPTED AS IT STANDS: the graph in the role
 of a rules graph, the rule set a package ships, the SPARQL rule with its construct, layer,
 order, deactivation and run-once. Every one of those is spelled by the store's dictionary in a
-text, and named here only for the two readers in Python. What is ours is one graph kind: the
-inference graph of one source, which the draft names as a role and not a class
-(`ontology.ttl` beside this file).
+text, and named here only for the two readers in Python. What is ours is the inference graph of
+one source, which the draft names as a role and not a class, and what a rule that CHANGES a state
+needs and the draft lacks: its delete, the kind whose arrival fires a transition, and the graph a
+transition's inserts go into (`ontology.ttl` beside this file).
 
-THE NAME IS FOR EYES. A source's revision graph is spelled from the source's own name; every
-reader asks the catalogue by class and by provenance, and renaming it here would change
-nothing a reader sees.
+THE NAME IS FOR EYES. A source's revision graph and an arrival's subject belief graph are spelled
+from the source's own name; every reader asks the catalogue by class and by provenance, and
+renaming one here would change nothing a reader sees.
 """
 
 from __future__ import annotations
@@ -24,6 +25,12 @@ RULES_GRAPH = SH + "RulesGraph"
 REVISION_GRAPH = BELIEF + "RevisionGraph"
 SETTLED = BELIEF + "settled"
 
+#  OURS, FOR WHAT CHANGES A STATE: a rule's delete, beside the draft's construct; the kind whose
+#  arrival fires a transition; and the graph a transition's inserts go into, one per arrival.
+DELETE = BELIEF + "delete"
+FIRES_ON = BELIEF + "firesOn"
+SUBJECT_BELIEF_GRAPH = BELIEF + "SubjectBeliefGraph"
+
 #  HOW MANY RULE EXECUTIONS ONE PASS MAY SPEND: a stance the agent states of itself in its self
 #  graph, read by the deliberator when it is made (knowledge/domain/kernel/stance.md).
 BUDGET_TERM = BELIEF + "budget"
@@ -35,3 +42,8 @@ DERIVED_FROM = PROV + "wasDerivedFrom"
 def revision_graph(source: str) -> str:
     """Where the revisions of `source` — what the rules conclude of it — are kept."""
     return source + "/revisions"
+
+
+def subject_belief_graph(arrival: str) -> str:
+    """Where what the transitions `arrival` fired inserted is kept."""
+    return arrival + "/believed"

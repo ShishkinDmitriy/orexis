@@ -5,6 +5,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 
 <> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
@@ -58,7 +59,7 @@ market:Tendering a orexis:Action ;
     planning:landsAfter """PREFIX market: <http://example.org/orexis/market#>
         SELECT ?least ?most WHERE { $venue market:bidWindowS ?least . BIND(?least AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX market: <http://example.org/orexis/market#>
+        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX market: <http://example.org/orexis/market#>
         DELETE { $venue market:open true  }
         WHERE  { $venue market:open true  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
@@ -96,7 +97,7 @@ market:Presenting a orexis:Action ;
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX market: <http://example.org/orexis/market#>
+        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX market: <http://example.org/orexis/market#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         DELETE { $reading sensing:below ?range . ?me market:holdsClaimOn $venue  }
         WHERE  { ?me a orexis:Self ; market:holdsClaimOn $venue . $reading sensing:below ?range  }""" ] ,
@@ -153,7 +154,7 @@ market:Clearing a orexis:Action ;
         SELECT DISTINCT ?venue WHERE { ?me a orexis:Self ; market:hosts ?venue . ?venue market:open true }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX market: <http://example.org/orexis/market#>
+        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX market: <http://example.org/orexis/market#>
         DELETE { $venue market:open true . ?call market:offered true  }
         WHERE  { $venue market:open true .
                                 OPTIONAL { ?call market:calledOn $venue ; market:offered true }  }""" ] ,

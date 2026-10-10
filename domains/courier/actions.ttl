@@ -4,6 +4,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 
 <> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
@@ -48,7 +49,7 @@ courier:Drive a orexis:Action ;
     #  delivery stood at the pass's one instant, and a fleet had no time axis to be scheduled on.
     planning:landsAfter """SELECT ?least ?most WHERE { BIND(30 AS ?least) BIND(60 AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $van courier:at ?old  }
         WHERE  { $van courier:at ?old  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
@@ -77,7 +78,7 @@ courier:Pick a orexis:Action ;
     #  than left out, since an action that says nothing of its landing claims immediacy by silence.
     planning:landsAfter """SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $parcel courier:at ?cell  }
         WHERE  { $parcel courier:at ?cell  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
@@ -101,7 +102,7 @@ courier:Drop a orexis:Action ;
     #  A DROP SHOWS AT ONCE, as the pick does: nought twice, declared.
     planning:landsAfter """SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $parcel courier:carriedBy ?van  }
         WHERE  { $parcel courier:carriedBy ?van  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>

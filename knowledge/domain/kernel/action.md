@@ -23,7 +23,7 @@ courier:Pick a orexis:Action ;
     orexis:takes courier:parcel , courier:van ;
     planning:precondition """SELECT ?parcel ?van WHERE { … }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; planning:update """DELETE { … } WHERE { … }""" ] ,
+        sh:rule [ a sh:SPARQLRule ; belief:delete """DELETE { … } WHERE { … }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """CONSTRUCT { … } WHERE { … }""" ] ] ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     execution:implementation [ a execution:Implementation ;
@@ -38,7 +38,8 @@ courier:Pick a orexis:Action ;
 - **When it is admitted** — the [precondition](/domain/planning/precondition.md), a SELECT whose
   rows in a world are the steps that world admits. Zero rows is ordinary.
 - **What it makes true and false** — the [effect](/domain/planning/effect.md), rules run on the
-  possible world a step makes.
+  possible world a step makes: a [transition](/domain/belief/transition.md) the agent causes, its
+  delete spoken in belief's word since belief's machine applies it.
 - **What goes out** — the [implementation](/domain/execution/implementation.md), operations the
   executor runs when a step is taken: a command, a saying, or fictively the effect itself.
 - **Cost and timing** — `planning:costs` and `planning:landsAfter`, selects the search reads to

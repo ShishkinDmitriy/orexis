@@ -8,8 +8,7 @@ an observation's sides are revisions the deliberator concludes by this layer's r
 the observer, is beneath the deliberator (#927), which its ontology states as
 `rdfs:subClassOf belief:Deliberator` — the one word of belief's it speaks, since a package's need is
 said by its role sitting beneath the role of a package below it. It still imports nothing of
-belief, having no use for its code: its part links to the belief part as every part links down, and
-hears the deliberator's `revised` to believe what the rules judged. A module named for an act exports that act alone, a module
+belief, having no use for its code. A module named for an act exports that act alone, a module
 named for a thing may answer several questions about it, and every public function has a test
 named for it. A TEST here may import the belief package, to hold this layer's rules to what
 they conclude; the code may not.

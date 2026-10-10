@@ -34,8 +34,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [calibration](/domain/sensing/calibration.md) - A correction within one unit, two points the world states beside the sensor, applied by sensing's rule after any scaling.
 * [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; the rules say which side a reading is on.
-* [subject belief](/domain/sensing/subject-belief.md) - What the agent holds of a subject for one property: its state in the domain's words, no number; judged beside the one it replaces.
-* [margin](/domain/sensing/margin.md) - How far past a bound a value must go to leave the state a subject belief holds; on the operating range's condition.
+* [margin](/domain/sensing/margin.md) - How far past a bound a value must go to leave the state held of a subject; stated on the range's condition, read by a transition.
 * [stuck](/domain/sensing/stuck.md) - A sensor reporting one number for a limit of its cadences is said stuck until a differing number ends it; the doubt beside age.
 * [observer](/domain/sensing/observer.md) - The role sensing serves, beneath the deliberator since sides are revisions; needs a sensor reporting to it.
 
@@ -47,7 +46,9 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 * [belief-base](/domain/belief/belief-base.md) - One store per agent, and a catalogue describing every graph: its kind, owner, arrival and period.
 * [revision](/domain/belief/revision.md) - A belief derived from beliefs by SHACL 1.2's rules, adopted as they stand, into a graph of the source's own, on the present only.
-* [deliberator](/domain/belief/deliberator.md) - The revision pass over what changed, within a budget of rule executions, and the role of an agent running it.
+* [deliberator](/domain/belief/deliberator.md) - The pass over what arrived — revised, then transitioned on, in turn — within one budget of rule executions; and the role running it.
+* [transition](/domain/belief/transition.md) - A rule that changes a state, fired once by an arrival of the kind it declares; belief's machine applies it, and an effect through it.
+* [subject belief](/domain/belief/subject-belief.md) - What the agent holds of a subject in a domain's words, no number; a transition's inserts, over its arrival's period.
 
 # Prediction — the stretches ahead
 
@@ -66,7 +67,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [scope](/domain/planning/scope.md) - Predicates joined wherever one action or derivation touches both; wants in different scopes cannot contradict.
 * [footprint](/domain/planning/footprint.md) - What one text reads and what it writes, as predicates, taken from the text; unreadable is anything.
 * [precondition](/domain/planning/precondition.md) - The select whose rows in a world are the steps it admits; asked of the present again, never copied onto a step.
-* [effect](/domain/planning/effect.md) - Rules run on the possible world a step makes, a delete among them; the one declaration the world is held to.
+* [effect](/domain/planning/effect.md) - A transition the agent causes, applied on the possible world a step makes; the one declaration the world is held to.
 * [wait](/domain/planning/wait.md) - The search's own move, every agent's: does nothing, and lands at the next ground whose identity differs from its own.
 * [plan](/domain/planning/plan.md) - One want's steps on the winning path, what they spent, and why the search ended — an empty plan is an answer.
 * [budget](/domain/planning/budget.md) - A ceiling each call states in the unit it spends: candidates for a search, rule executions for revision.

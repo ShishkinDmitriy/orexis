@@ -16,6 +16,7 @@
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix courier: <http://example.org/orexis/courier#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -94,7 +95,7 @@ GRAPH :actions {
   courier:Drive a orexis:Action .
   courier:Drive orexis:takes courier:to .
   courier:Drive orexis:takes courier:van .
-  courier:Drive planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Drive planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $van courier:at ?old  }
       WHERE  { $van courier:at ?old  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
       CONSTRUCT { $van courier:at $to } WHERE { }""" ] ] .
@@ -109,7 +110,7 @@ GRAPH :actions {
   courier:Drop a orexis:Action .
   courier:Drop orexis:takes courier:parcel .
   courier:Drop orexis:takes courier:to .
-  courier:Drop planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Drop planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:carriedBy ?van  }
       WHERE  { $parcel courier:carriedBy ?van  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
       CONSTRUCT { $parcel courier:at $to } WHERE { }""" ] ] .
@@ -121,7 +122,7 @@ GRAPH :actions {
   courier:Pick a orexis:Action .
   courier:Pick orexis:takes courier:parcel .
   courier:Pick orexis:takes courier:van .
-  courier:Pick planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+  courier:Pick planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:at ?cell  }
       WHERE  { $parcel courier:at ?cell  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
       CONSTRUCT { $parcel courier:carriedBy $van } WHERE { }""" ] ] .

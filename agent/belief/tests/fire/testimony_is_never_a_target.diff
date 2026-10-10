@@ -1,0 +1,26 @@
+--- case
++++ expected
+@@ -52,9 +52,7 @@
+   :counter :count 7 .
+ }
+ 
+-GRAPH tick1:believed {
+-  :counter :count 7 .
+-}
++
+ 
+ GRAPH :catalogue {
+   :catalogue a orexis:CatalogueGraph .
+@@ -78,12 +76,6 @@
+   :tick2 orexis:beliefsOf :keeper .
+   :world a orexis:Graph .
+   :world a orexis:PublicGraph .
+-  tick1:believed a belief:SubjectBeliefGraph .
+-  tick1:believed a orexis:BeliefGraph .
+-  tick1:believed a orexis:Graph .
+-  tick1:believed a orexis:StateGraph .
+-  tick1:believed orexis:arrivedBy orexis:Derived .
+-  tick1:believed orexis:beliefsOf :keeper .
+   tick2:revisions a belief:RevisionGraph .
+   tick2:revisions a orexis:BeliefGraph .
+   tick2:revisions a orexis:Graph .

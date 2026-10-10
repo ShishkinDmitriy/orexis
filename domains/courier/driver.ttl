@@ -4,6 +4,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 
 <> a orexis:ActionGraph .    # this document is one graph, and this is what it is
 
@@ -45,7 +46,7 @@ courier:Board a orexis:Action ;
     #  world that knows its roads better is where a truer one would come from.
     planning:landsAfter """SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(120 AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX courier: <http://example.org/orexis/courier#>
+        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $driver courier:aboard ?old  }
         WHERE  { $driver courier:aboard ?old  }""" ] ,
                 [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>

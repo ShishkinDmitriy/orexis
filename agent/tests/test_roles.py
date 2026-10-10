@@ -242,6 +242,11 @@ def _walked(tmp_path: Path) -> Path:
 #  A TERM MODULE: the words a package declares, which a package above it may import for them.
 _TERMS = {"ontology"}
 
+#  AND A MACHINE A PACKAGE ABOVE APPLIES THROUGH: belief's `transition`, through which planning
+#  applies an action's effect in a possible world (a-transition-changes-the-state-and-an-inference-only-concludes)
+#  — code, but no part, so a planner alone holds it and runs no deliberator.
+_MACHINES = {"belief": {"transition"}}
+
 
 @pytest.mark.parametrize("world, agent, passes, loaded, outcome", [
     ("hanoi", "hanoi", 20, {"planning"}, "planned"),
@@ -270,7 +275,12 @@ def test_a_process_runs_the_parts_its_roles_call_for_and_no_other(tmp_path, worl
         if package in loaded:
             assert "create" in beyond or not _creates(package), f"{package} is loaded and its part was never imported"
         else:
-            assert beyond <= _TERMS, f"{package} is called for by no role, and the process imported {sorted(beyond)}"
+            assert beyond <= _TERMS | _MACHINES.get(package, set()), \
+                f"{package} is called for by no role, and the process imported {sorted(beyond)}"
     if "planning" in loaded and "execution" not in loaded:
         assert "agent.execution.ontology" in said["held"]["execution"], \
             "planning imports execution's term module — the probe must see it, or this case measures nothing"
+    if "planning" in loaded and "belief" not in loaded:
+        assert "agent.belief.transition" in said["held"]["belief"], \
+            "planning applies an effect through belief's machine — the probe must see it, or this case measures nothing"
+        assert "agent.belief.create" not in said["held"]["belief"], "and no deliberator is made for it"

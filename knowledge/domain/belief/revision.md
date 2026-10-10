@@ -18,8 +18,10 @@ role of a rules graph is typed `sh:RulesGraph`, which the belief package puts be
 `orexis:Graph` so that a boot reads it as a kind it knows; a package ships its rules as a `sh:RuleSet`,
 an IRI with `sh:hasRule` and `sh:includesRuleSet`; a rule is a `sh:SPARQLRule` with one
 `sh:construct`, placed by `sh:layer` and `sh:order`, taken out by `sh:deactivated`, run once
-by `sh:runOnce`. An [action](/domain/kernel/action.md) carries a construct too and is no rule: an
-[effect](/domain/planning/effect.md) is applied once, by a search, to the world a step leaves.
+by `sh:runOnce`. A rule saying what fires it (`belief:firesOn`) is no part of what revision runs: it
+is a [transition](/domain/belief/transition.md), which changes a state once and is applied after its
+arrival's revision settles. An [action](/domain/kernel/action.md)'s [effect](/domain/planning/effect.md)
+is one too, applied once, by a search, to the world a step leaves.
 
 `revise` (`agent/belief/revise.py`) runs a rules graph's **default rule set**, every global rule
 in it — one not linked to a shape by `sh:rule`, since a shape rule runs per focus node and
@@ -29,17 +31,15 @@ Within a layer one iteration runs the run-once rules first, then the iterating r
 again while an iteration concludes something new; within an iteration the rules run in order,
 and rules of one order see none of each other's inferences until they have all run. What is
 inferred is what the base graph does not already hold. The runtime hands public knowledge as what
-stands beside a graph it wrote — a reading, a prediction, a peer's document — and every state graph
-the agent DERIVED, whatever its period, and no other testimony: every rule shipped reads one graph,
-what the world states and what the agent has concluded of the present — the
-[subject belief](/domain/sensing/subject-belief.md) the next reading of its key is judged beside —
-and a revision is replaced only when its
-own source is written again, and goes when its source is forgotten (`forget_graph` takes
-`revisions_of` the graph with it): handed everything believed, the first of two readings arriving
+stands beside a graph it wrote — a reading, a prediction, a peer's document — and nothing else:
+every rule shipped reads one graph and what the world states, and a revision is replaced only when
+its own source is written again, and goes when its source is forgotten (`forget_graph` takes
+`revisions_of` the graph with it). Handed everything believed, the first of two readings arriving
 together took the second's side into its own revision, where the second's next reading never
-reached it. Because a conclusion equal to a fact the evaluation graph holds is not inferred, a
-judgment that replaces a fact it reads is concluded about something else — the subject belief's
-is concluded on the observation — and the replacing is a writer's. All of that is section 8 of the draft,
+reached it. And because a conclusion equal to a fact the evaluation graph holds is not inferred, a
+rule cannot conclude a fact and replace the fact it read: a judgment whose premise is the state it
+replaces is a [transition](/domain/belief/transition.md), and the agent's own state is what a
+transition reads, not what a revision is handed. All of that is section 8 of the draft,
 within a **budget** of rule executions, the unit revision spends, which the
 [deliberator](/domain/belief/deliberator.md) states per pass. A source the budget cuts short keeps what was concluded, its row saying the rules
 did not settle, and the next pass continues it; a rule minting new content every iteration,
@@ -56,7 +56,10 @@ and `sh:sourceRule`.
 # It is concluded and never deleted
 
 A rule states what it adds and nothing about what it removes — the draft has no deletion, and
-neither does this. The revisions of a graph live in **a graph of the source's own**
+neither does revision. Taking a fact away is what tells a transition from an inference
+([a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md)):
+an inference is a function of its premises and re-derivable from them; a transition is fired once
+and its result is the state, one premise of which it took out. The revisions of a graph live in **a graph of the source's own**
 (`belief:RevisionGraph`, the draft's inference graph, which it names as a role and not a
 class), `prov:wasDerivedFrom` the source, the source's owner's, holding for the source's
 period. So a revision is a function of its premises: two graphs stating the same facts conclude
@@ -104,11 +107,11 @@ gate wearing revision's name, and a law's objection to a graph is a revision a r
 conclude, which the mind may then want to repair. Any belief is accepted, and revised, and
 nothing stands between a writer and the store.
 
-This structure — rules stored as triples, run over an evaluation graph the caller hands, their
-result landing in a graph of its own — is the one an effect and a
-[prediction](/domain/prediction/prediction.md) are to converge on, and the three differ only in when they
-run, where the result lands and whether they replace standing facts. Only revisions are built to
-it so far.
+This structure — rules stored as triples, run over graphs the caller hands, their result landing
+where the runner says — is shared now by revision and by transitions, an action's effect and a
+percept's alike, which differ in when they run, where the result lands and whether they replace
+standing facts. A [prediction](/domain/prediction/prediction.md)'s rates stay Python: integrating
+them is arithmetic over a trajectory, not a triple changed because something arrived.
 
 # Related
 

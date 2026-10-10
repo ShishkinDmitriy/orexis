@@ -1,14 +1,14 @@
 --- case
 +++ expected
-@@ -28,7 +28,6 @@
+@@ -29,7 +29,6 @@
  GRAPH :actions {
    :fill a orexis:Action .
    :fill orexis:takes :tank .
 -  :fill planning:landsAfter """SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }""" .
    :fill planning:costs """PREFIX : <http://example.org/test#>
        SELECT (1 AS ?cost) WHERE { }""" .
-   :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>
-@@ -37,6 +36,7 @@
+   :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX : <http://example.org/test#>
+@@ -38,6 +37,7 @@
        CONSTRUCT { ?tank :level ?next } WHERE {
        $tank :level ?l .
        BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
@@ -16,7 +16,7 @@
    :fill planning:precondition """PREFIX : <http://example.org/test#>
        SELECT ?tank WHERE {
        ?tank a :Tank ; :level ?l .
-@@ -95,6 +95,13 @@
+@@ -96,6 +96,13 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
@@ -30,7 +30,7 @@
    possible:fill-tank1.by :tank :tank1 .
    possible:fill-tank1.by a planning:Candidate .
    possible:fill-tank1.by planning:fills :fill .
-@@ -123,3 +130,8 @@
+@@ -124,3 +131,8 @@
    :keeper.in_range.pursued.tank1.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
    :keeper.in_range.pursued.tank1.met sh:targetNode :tank1 .
  }

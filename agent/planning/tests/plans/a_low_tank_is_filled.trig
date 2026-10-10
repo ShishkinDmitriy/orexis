@@ -23,6 +23,7 @@
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -55,7 +56,7 @@ GRAPH :actions {
   :fill planning:landsAfter """SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }""" .
   :fill planning:costs """PREFIX : <http://example.org/test#>
       SELECT (1 AS ?cost) WHERE { }""" .
-  :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; planning:update """PREFIX : <http://example.org/test#>
+  :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX : <http://example.org/test#>
       DELETE { $tank :level ?l  }
       WHERE  { $tank :level ?l  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?tank :level ?next } WHERE {

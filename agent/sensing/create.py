@@ -1,17 +1,9 @@
 """`create`: sensing's part, and what it does of its own accord once started (a-package-starts-itself) —
 it asks, every `EVERY_S` of the one timeline, which readings have fallen due and says which
 sensors have gone silent (`missed`), whether or not anything arrived (#843). What a transport hands
-it, `received` writes.
-
-AND WHAT THE DELIBERATOR REVISED, IT BELIEVES (#944). Linked to the belief part beneath it, it hears
-the deliberator's `revised` and writes, of every observation graph the rules judged, the subject
-belief (`believe`): heard there and not as a graph written, because a revision a budget cut short is
-continued by a later pass, and `revised` is what says it was. The pass runs on one thread and each
-graph written is revised as it is heard, so the subject belief one reading of a message makes is
-written before the next is revised beside it — unless a budget cut the first short, and then the
-next is judged beside the subject belief before the message, and the first, finished later, writes
-nothing over it. What it writes is said to nobody: nothing reads a subject belief yet, and said, it
-would have prediction rewrite every key and the executor walk for a belief no step waits on.
+it, `received` writes. What the agent comes to hold true of a subject from an observation is no
+part of sensing's: a domain's transition, fired by the observation arriving, makes it, and the
+belief package applies it (a-transition-changes-the-state-and-an-inference-only-concludes).
 
 WHAT SENSING SAYS HAPPENED, by the part's own signals, each carrying an event of `events.py` and made
 only where heard: `observed`, an observation graph written — heard as it is written, whoever wrote
@@ -32,7 +24,6 @@ from datetime import datetime
 from agent.lifecycle import Signal
 from agent.store import Raw, catalogue_of, revisions_of, rows
 
-from .believe import believe
 from .cadence import cadence_of
 from .events import Doubted, Observed, Silence, tag_of
 from .missed import missed
@@ -72,18 +63,6 @@ class _Sensing:
         self.doubted = Signal("doubted")
         self._last: dict[str, datetime] = {}          # sensor -> when its last reading was made
         self._doubts: set[str] = set()                # the sensors doubted at the last ask
-
-    def link(self, parts) -> None:
-        """Hear what the deliberator revised, to believe what it judged. An observer is a deliberator
-        (`ontology.ttl`), so the belief part is there wherever this one is."""
-        belief = parts.get("belief")
-        if belief is not None:
-            belief.deliberator.revised.connect(self._revised)
-
-    def _revised(self, revised) -> list[str]:
-        """Write the subject belief of every observation graph the pass judged."""
-        return [written for graph in revised.graphs
-                for written in believe(self.runtime.beliefs, self.runtime.me, graph)]
 
     def start(self, runtime) -> None:
         def ask():

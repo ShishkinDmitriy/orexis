@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -112,11 +112,55 @@
+@@ -113,11 +113,55 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 0 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued a planning:Weighing .
@@ -57,7 +57,7 @@
    pursued:2026-01-01T120000p0000--open a orexis:Graph .
    pursued:2026-01-01T120000p0000--open a planning:WantGraph .
    pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-@@ -141,3 +185,14 @@
+@@ -142,3 +186,14 @@
    :keeper.in_range.pursued.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
    :keeper.in_range.pursued.met sh:targetNode :tank1 .
  }

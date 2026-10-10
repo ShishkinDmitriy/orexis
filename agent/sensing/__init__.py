@@ -14,15 +14,13 @@ declares in `ontology.ttl`, and not one word of any transport: how a sensor's by
 the pipeline's binding on it, and how a device is reached is a transport's, whose contract is
 the transport family's own and which hands `received` the sensor's IRI and bytes.
 
-**IT PREDICTS NOTHING AND JUDGES NOTHING.** When the reading changes range is the prediction
+**IT PREDICTS NOTHING AND CONCLUDES NOTHING.** When the reading changes range is the prediction
 package's calculation, over the observation written here. Which side of a range an observation
-is on, and the state its subject is judged in, are revisions: the rules this layer ships
-(`rules.ttl`, a document saying it is a `sh:RulesGraph`, which a boot reads as it reads every
-document) conclude them, and the deliberator runs them when the container says a graph changed.
-What this layer writes of a judgment is the subject belief (`believe`), in the words the
-property's domain names, replacing the one before it whole — a conclusion kept because one of its
-premises, the subject belief it replaced, is gone. No side, no want, no wake is written here; a
-range is SSN-System's concept, read by the rules and by the prediction package, minted by nobody.
+is on is a revision: the rules this layer ships (`rules.ttl`, a document saying it is a
+`sh:RulesGraph`, which a boot reads as it reads every document) conclude it, and the
+deliberator runs them when the container says a graph changed. No side, no want, no wake
+is written here; a range is SSN-System's concept, read by the rules and by the prediction
+package, minted by nobody.
 
 The 0.1.0 predecessor was a module that kept the pipeline, the predictions, a freshness desire
 of its own, a timer per reading and the keeper's verdicts, and named the transport in its own

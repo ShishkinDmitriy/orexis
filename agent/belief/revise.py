@@ -40,7 +40,10 @@ in the log every pass instead of looping. The answer is what this call spent.
 **A RULE CONCLUDES AND NEVER DELETES.** What comes out is written into the source's own revision
 graph, the draft's inference graph, and never into the source. Nothing is retracted: what
 replaces a conclusion is its source being rewritten, and a source not marked unsettled begins
-by forgetting what was concluded of it before.
+by forgetting what was concluded of it before. A rule that says what fires it (`belief:firesOn`)
+is a TRANSITION and no inference — it changes a state, once, when a graph of its kind arrives —
+so it is not of the default rule set run here, and `fire` applies it after this has settled
+(a-transition-changes-the-state-and-an-inference-only-concludes).
 
 **A FACT ALREADY CONCLUDED IS NOT WRITTEN TWICE, AND A BLANK NODE IS ITS CONTENT.** A construct
 whose template mints a blank node mints a fresh one every run, so by label every iteration would
@@ -83,7 +86,8 @@ BUDGET = 64
 #  THE DEFAULT RULE SET of every rules graph: every active rule of any kind — `sh:SPARQLRule`
 #  or another type beneath `sh:Rule` — with where the draft places it, its construct where it
 #  has one, and whether a shape links it, so that what cannot be run is reported rather than
-#  passed over. Read by kind, as every reader here states the kinds it reads.
+#  passed over. Read by kind, as every reader here states the kinds it reads. A transition is no
+#  inference, and is not of it.
 _RULES_Q = """
 SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHERE {
   ?rule a ?type . FILTER(?type IN (sh:SPARQLRule, sh:TripleRule, sh:Rule))
@@ -92,7 +96,8 @@ SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHE
   OPTIONAL { ?rule sh:runOnce ?once }
   OPTIONAL { ?shape sh:rule ?rule }
   OPTIONAL { ?rule sh:condition ?condition } OPTIONAL { ?rule sh:expectedPredicate ?expects }
-  FILTER NOT EXISTS { ?rule sh:deactivated true } }"""
+  FILTER NOT EXISTS { ?rule sh:deactivated true }
+  FILTER NOT EXISTS { ?rule belief:firesOn ?kind } }"""
 
 #  WHAT A RULE'S `sh:prefixes` DECLARE, as SHACL-SPARQL spells it — the ontology node's
 #  `sh:declare` blocks, each a prefix and a namespace — read over the rules graphs and public

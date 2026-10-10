@@ -78,7 +78,7 @@ ROUNDS = 64
 _CONSTRAINTS_Q = """SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c"""
 
 #  THE ACTIONS' PRECONDITIONS AND THE CONSTRUCTS OF THEIR EFFECTS — what the reach is closed over.
-#  A rule's `planning:update` is a delete, and the reach deletes nothing.
+#  A rule's `belief:delete` is a delete, and the reach deletes nothing.
 _ACTIONS_Q = """
 SELECT ?action ?precondition ?construct WHERE {
   ?action a orexis:Action ; planning:precondition ?precondition ;
