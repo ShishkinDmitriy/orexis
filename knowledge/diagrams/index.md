@@ -1,10 +1,11 @@
 # Diagrams
 
-Agent 0.1.0's pictures: one per service of the retired kernel, the mind as a whole, and the cone.
-The [0.1.0 records](/decisions/0.1.0/index.md) embed them; nothing current does, and none depicts
-Agent 0.2.0. Each is PlantUML source with a rendered SVG beside it.
+One picture of Agent 0.2.0, and Agent 0.1.0's: one per service of the retired kernel, the mind as
+a whole, and the cone. The [0.1.0 records](/decisions/0.1.0/index.md) embed theirs. Each is
+PlantUML source with a rendered SVG beside it.
 
-* [agent-structure](./agent-structure.puml) - Six modalities, one repository each, and the services beside them — the target, with the delta from today marked.
+* [agent-structure](./agent-structure.puml) - Agent 0.2.0: each package with its services and the graph kinds it declares, who writes each — held to the ontologies by a test.
+* [agent-structure-0.1.0](./agent-structure-0.1.0.puml) - Six modalities, one repository each, and the services beside them — 0.1.0's target, with its delta marked.
 * [service-planner](./service-planner.puml) - The search: what it reads to simulate, and the two possible-modality graphs it writes.
 * [service-deliberator](./service-deliberator.puml) - The whether, and the trace it clears before each pass.
 * [service-executor](./service-executor.puml) - Plan, commit, take — a service that writes no graph because it only orchestrates.
