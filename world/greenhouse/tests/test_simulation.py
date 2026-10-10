@@ -18,11 +18,12 @@ WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 GH = "http://example.org/orexis/world/greenhouse#"
 
-#  EVERY SENSOR THE GROWER SAYS STUCK — the state graphs holding the row, found by their content.
+#  EVERY SENSOR THE GROWER SAID STUCK OF ANY PERCEPT IT KEEPS — sensing's rule concludes it of the
+#  percept arriving, in that percept's revision, of sensing's kind too (#944).
 _STUCK_Q = """
-SELECT ?sensor WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph }
-  GRAPH ?g { ?sensor sensing:stuckSince ?since } }"""
+SELECT DISTINCT ?sensor WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a sensing:ObservationGraph }
+  GRAPH ?g { ?sensor sensing:stuckOn ?number } }"""
 
 
 class Bus:

@@ -7,11 +7,12 @@ beside the prediction holding then — so a tank low now with a prediction refil
 unmet for ever, the exact failure the grounds were laid to close. Measured before it was
 believed: the grounds were right and the want was open-ended.
 
-WHAT IS LEFT OUT IS EVERYTHING THE GROUND SPEAKS FOR: the agent's own readings, every
-prediction, and every ground and possible world but the one meant. A ground IS the readings
-as they stand over a period with each prediction applied, so handing the raw state graph
+WHAT IS LEFT OUT IS EVERYTHING THE GROUND SPEAKS FOR: the agent's own state, every
+prediction, and every ground and possible world but the one meant. A ground IS the state
+as it stands over a period with each prediction applied, so handing the raw state graph
 beside it puts the present's value in the world next to the one that superseded it, and a
-shape holding over every value sees both.
+shape holding over every value sees both. A PERCEPT IS NEVER IN IT, nor anything concluded of one:
+what a sensor said is of no kind read here (#944), and the state a transition made of it is.
 
 THE PERIOD IS THE WORLD'S OWN, read off its row. A ground is read at its start, the instant the
 search stands at; a possible world at its start — the earliest the landings on its path reach it,
@@ -20,7 +21,7 @@ a record or a round that ends inside the period is not one a step landing anywhe
 on (#596). A reader names a world and nothing else.
 
 AND THE PRESENT IS A WORLD A STORE HOLDS WITHOUT A GROUND. Named as none, at an instant, the world is
-the readings as they stand and what was concluded of them — what the present ground is laid FROM
+the state as it stands and what was concluded of it — what the present ground is laid FROM
 (`lay_ground`), with no prediction applied, since the present is where none has applied yet. It is
 what a head is checked against as it is taken (`Planner.check`, #916): the belief base, between two
 passes, after a fictive step before it wrote its effect into the readings, has no ground that says
@@ -49,7 +50,7 @@ def world_at(store, world: str | None, *, holder: str | None = None, now: dateti
              memo=None) -> list[str]:
     """The graphs a rule reads in `world`: public knowledge, the records, the desires and the
     wants holding at the world's own instant, and the world itself in the state's place — or,
-    where `world` is None, the PRESENT the store holds at `now`: the readings and their revisions
+    where `world` is None, the PRESENT the store holds at `now`: the state graphs and their revisions
     in the place a ground would stand.
 
     `holder` narrows the agent's own graphs to one holder's where a store holds several
@@ -83,7 +84,7 @@ def world_at(store, world: str | None, *, holder: str | None = None, now: dateti
         g for g in graphs_of(store, *FORESEEN, at=at, until=until, holder=holder, now=now)
         if g not in spoken_for))
     if world is None:
-        #  THE PRESENT GROUND'S OWN FILLING, read where it lies: every reading and what the rules
+        #  THE PRESENT GROUND'S OWN FILLING, read where it lies: every state graph and what the rules
         #  concluded of it, as `lay_ground` copies them into the ground it lays at the present.
         states = graphs_of(store, STATE)
         return [*known, *states, *revisions_of(store, *states)]

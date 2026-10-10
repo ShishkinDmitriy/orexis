@@ -59,7 +59,7 @@ from datetime import datetime
 from pathlib import Path
 import pyoxigraph as ox
 
-from .ontology import OREXIS
+from .ontology import BELIEF, OREXIS
 
 # Which graphs are public — ASKED, not listed. A graph IRI is an instance, and code that named
 # five of them was doing what rule 1 forbids everywhere else; `orexis:PublicGraph` is the term, the
@@ -428,11 +428,12 @@ def closed(store, graph_class: str) -> list[str]:
     return sorted({graph_class} | supers)
 
 
-def entry(store, graph: str, graph_class: str, arrival: str, owner: str | None = None,
+def entry(store, graph: str, graph_class: str | tuple, arrival: str, owner: str | None = None,
           start: datetime | str | None = None, end: datetime | str | None = None) -> str:
     """What the catalogue says of a graph, as the `GRAPH … { … }` block a writer puts beside
     the graph's own in ONE update — so a graph and its description land together or not at
-    all. The writer names nothing: the catalogue is found, never spelled."""
+    all. The writer names nothing: the catalogue is found, never spelled. `graph_class` is one
+    class, or several where what the graph is is said by two (a revision and its source's kind)."""
     catalogue = catalogue_of(store)
     if catalogue is None:
         raise RuntimeError("no graph describes itself as the catalogue — nothing has said what the graphs are")
@@ -446,7 +447,8 @@ def entry(store, graph: str, graph_class: str, arrival: str, owner: str | None =
     #  EVERY KIND THE GRAPH IS, on the row, so a text that joins the catalogue asks
     #  `?g a planning:WantGraph` and walks no path across two graphs. This is what lets every
     #  read above be one query instead of an index.
-    kinds = " , ".join(f"<{c}>" for c in closed(store, graph_class))
+    classes = (graph_class,) if isinstance(graph_class, str) else graph_class
+    kinds = " , ".join(f"<{c}>" for c in sorted({k for one in classes for k in closed(store, one)}))
     return (f"GRAPH <{catalogue}> {{ <{graph}> a {kinds} ; orexis:arrivedBy <{arrival}>"
             f"{whose}{when} . }}")
 
@@ -717,21 +719,29 @@ SELECT ?g ?class WHERE {
 
 _REVISIONS_Q = """
 SELECT DISTINCT ?r WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-  VALUES ?source { $sources } ?r prov:wasDerivedFrom ?source ; a orexis:BeliefGraph } }"""
+  VALUES ?source { $sources } ?r prov:wasDerivedFrom ?source ; a $kind } }"""
 
 
-def revisions_of(store, *sources: str) -> list[str]:
-    """Every BELIEF the catalogue says was derived from one of `sources`, sorted — what the
-    belief package's rules concluded of an observation or a prediction, its revisions, which is
-    where a reading's side lives. A reader that means a graph as the agent believes it means the
-    graph and these: the side of a reading is a belief as much as its number is.
+def revisions_of(store, *sources: str, kind: str = BELIEF) -> list[str]:
+    """Every graph of `kind` the catalogue says was derived from one of `sources`, sorted — what
+    the belief package's rules concluded of a document heard, a state or a prediction, its
+    revisions, which are beliefs, unless the reader says the kind they are. A reader that means a
+    graph as the rules leave it means the graph and these: what a reading is of and its quantity
+    are concluded, as much the observation's as the number it gave.
 
-    A BELIEF, AND NOT ANY GRAPH DERIVED FROM IT. A drift's prediction says it was derived from
-    the observation it runs over too, and a prediction is what a reading WILL be: asked without
-    the kind, this handed the present ground and the executor's answer the future as the present."""
+    A REVISION IS OF THE KIND ITS RUNNER HANDED, and the reader says it: whoever has a graph revised
+    says what its revisions are (`belief.revise`), so sensing's observations are revised into
+    sensing's own kind, which no reader of the mind is handed, and a reader of observations asks for
+    their revisions in that kind (#944). The kernel names no package's word, so the kind is an
+    argument and not a list of the kinds there are.
+
+    AND NOT ANY GRAPH DERIVED FROM IT. A drift's prediction says it was derived from the observation
+    it runs over too, and a prediction is what a reading WILL be: asked without the kind, this handed
+    the present ground and the executor's answer the future as the present."""
     if not sources:
         return []
-    return sorted(r["r"] for r in rows(store, bind(_REVISIONS_Q, sources=Raw(" ".join(f"<{s}>" for s in sources)))))
+    return sorted(r["r"] for r in rows(store, bind(_REVISIONS_Q, kind=kind,
+                                                   sources=Raw(" ".join(f"<{s}>" for s in sources)))))
 
 
 def close_catalogue(store) -> None:
@@ -1041,8 +1051,10 @@ def _joined(*texts: str) -> list[str]:
     return [head + " ;\n".join(bodies)]
 
 
-def forget_graph(store, graph_iri: str) -> None:
-    """Empty one graph AND take back everything the catalogue said of it.
+def forget_graph(store, graph_iri: str, *, revisions: str = BELIEF) -> None:
+    """Empty one graph AND take back everything the catalogue said of it — and its revisions, of the
+    kind `revisions` says they are (`revisions_of`): beliefs, unless the caller's graph is revised
+    into a kind of its own, as sensing's observations are.
 
     A row pointing at a graph that no longer exists is litter every reader asking by class
     would still be handed. Two acts because `clear_graph` has callers that mean to empty a
@@ -1060,7 +1072,7 @@ def forget_graph(store, graph_iri: str) -> None:
     that day — so the greenhouse's dose read unmet in the world it made, and the search exhausted
     for a day after the bed crossed its floor.
     """
-    for revision in revisions_of(store, graph_iri):
+    for revision in revisions_of(store, graph_iri, kind=revisions):
         forget_graph(store, revision)
     clear_graph(store, graph_iri)
     catalogue = catalogue_of(store)
@@ -1069,6 +1081,32 @@ def forget_graph(store, graph_iri: str) -> None:
 DELETE {{ GRAPH <{catalogue}> {{ <{graph_iri}> ?p ?o . ?period ?pp ?po }} }}
 WHERE  {{ GRAPH <{catalogue}> {{ <{graph_iri}> ?p ?o .
           OPTIONAL {{ <{graph_iri}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}""")
+
+
+_END_U = """
+DELETE { GRAPH $cat { ?period orexis:end ?was } }
+INSERT { GRAPH $cat { ?period orexis:end ?end } }
+WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g dcterms:temporal ?period .
+                      OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?was }
+                      BIND(IF(BOUND(?start) && ?start > $at, ?start, $at) AS ?end)
+                      FILTER(!BOUND(?was) || ?was > ?end) } }"""
+
+
+def end_graph(store, graph_iri: str, at: datetime, *, revisions: str = BELIEF) -> None:
+    """Say a graph stops holding at `at`, and its revisions with it, of the kind `revisions` says
+    they are — where it held past `at`; one that has ended already is left as it stands, and one
+    that begins later ends where it begins, holding at no instant.
+
+    A PERIOD SAYS WHEN WHAT IT HOLDS IS THE PRESENT, and an observation's is said when it arrives:
+    until the next reading is due. The next arriving earlier than that ends it there, and the
+    observation is kept, as what the sensor said then, and handed to no reader standing later (#944).
+    What the rules concluded of it ends with it, as it goes with it in `forget_graph`."""
+    catalogue = catalogue_of(store)
+    if catalogue is None:
+        return
+    graphs = [graph_iri, *revisions_of(store, graph_iri, kind=revisions)]
+    update(store, bind(_END_U, cat=Raw(f"<{catalogue}>"), at=instant(at),
+                       graphs=Raw(" ".join(f"<{g}>" for g in graphs))))
 
 
 def put_graph(store, graph_iri: str, ttl: str, dataset: bool = False) -> None:

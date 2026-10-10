@@ -6,7 +6,7 @@ description: >-
   How far past a bound of an operating range a value must go to leave the state the agent holds of
   its subject - one number on the range's condition, beside the bounds it widens, sized from the
   instrument's noise. Read by a domain's transition beside the state it replaces; a value coming
-  from another state crosses at the bound itself. The sides ignore it.
+  from another state crosses at the bound itself.
 ---
 
 # What it is
@@ -37,8 +37,8 @@ that state, and a transition reads it as a premise and replaces it. No side is c
 observation and no rule remembers anything the store does not hold
 ([an-observation-is-a-percept-and-the-mind-reads-only-beliefs](/decisions/an-observation-is-a-percept-and-the-mind-reads-only-beliefs.md)).
 
-It is read on the operating range alone. The sides a [region](/domain/sensing/region.md) is
-concluded with do not read it, and no transition judges a survival range, so a margin stated there
+It is read on the operating range alone: no transition judges a survival [region](/domain/sensing/region.md),
+so a margin stated there
 is read by nothing.
 
 # How big

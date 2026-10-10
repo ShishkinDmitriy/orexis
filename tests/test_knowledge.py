@@ -1004,3 +1004,32 @@ def test_a_committed_diagram_is_not_stale():
             wrong.append(f"{svg.name}: stale — {src.name} changed since it was rendered")
     assert not wrong, ("committed diagrams are out of step with their sources. Run "
                        "`./tools/render-diagrams.sh`:\n  " + "\n  ".join(wrong))
+
+
+#  THE KINDS THE PICTURE GROUPS BY rather than draws: what a graph is beneath, never what a writer
+#  classifies one as.
+_MODALITIES = {"orexis:Graph", "orexis:BeliefGraph", "orexis:PublicGraph", "orexis:WorkingGraph"}
+
+
+def test_the_agent_structure_draws_every_graph_kind_and_no_other():
+    """`diagrams/agent-structure.puml` draws the current agent, so it is held to the ontologies both
+    ways: every graph kind a package declares (the closure beneath `orexis:Graph`, the modalities it
+    groups by aside) is named in it, and every kind it names is declared. The 0.1.0 picture drew a
+    target because a drawing of the present was a registry nobody gated; this one is gated."""
+    import rdflib
+
+    from agent.store import NAMESPACES
+
+    g = rdflib.Graph()
+    sources = [REPO_ROOT / "agent" / "ontology.ttl", *sorted((REPO_ROOT / "agent").glob("*/ontology.ttl")),
+               *sorted((REPO_ROOT / "agent").glob("*/*/ontology.ttl"))]
+    for path in sources:
+        g.parse(path, format="turtle")
+    short = lambda c: next(f"{n}:{str(c)[len(i):]}" for n, i in NAMESPACES.items() if str(c).startswith(i))
+    root = rdflib.URIRef("http://example.org/orexis#Graph")
+    declared = {short(c) for c in g.transitive_subjects(rdflib.RDFS.subClassOf, root)}
+    assert "orexis:StateGraph" in declared, "the closure stopped reaching the kernel's kinds"
+    picture = (REPO_ROOT / "knowledge" / "diagrams" / "agent-structure.puml").read_text().replace("\\n", " ")
+    drawn = set(re.findall(r"\b[a-z]+:[A-Z]\w*Graph\b", picture))
+    assert not (declared - _MODALITIES) - drawn, f"declared and not drawn: {sorted((declared - _MODALITIES) - drawn)}"
+    assert not drawn - declared, f"drawn and declared by no package: {sorted(drawn - declared)}"

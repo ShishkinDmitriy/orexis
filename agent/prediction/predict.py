@@ -29,11 +29,15 @@ corridor has.
 **WHAT IS WRITTEN IS ONE PREDICTION PER STRETCH**: from the observation's horizon to the first
 crossing, crossing to crossing, and from the last to the horizon's end — each an
 `orexis:PredictionGraph` holding during its stretch, carrying a predicted `sosa:Observation` in
-SOSA's words with the number at the last instant of the stretch known to lie on its side. Each
-says which observation it was derived from, so the next observation of the key drops them all
-before its own are written, and its row carries `orexis:retracts`, the `DELETE … WHERE` naming
-`GRAPH $state` that takes the key's standing node out of whatever ground the boundary is laid
-over — in the form `lay_ground` reads today.
+SOSA's words with the number at the last instant of the stretch known to lie on its side — its
+key, its sensor, the number and the instant, and nothing else of the percept it was made from. Each
+says which percept it was derived from, and the next percept of the sensor drops every one before
+its own are written; its row carries `orexis:retracts`, the `DELETE … WHERE` naming `GRAPH $state`
+that takes the key's predicted node out of whatever ground the boundary is laid over — in the form
+`lay_ground` reads today. THE OBSERVATION IN HAND IS A PERCEPT (`sensing:ObservationGraph`, sensing's
+kind, #944), which no reader of the mind is handed: this estimator is one of the readers at the boundary, and what a
+ground holds of the key is the prediction alone, which a domain's transition judges as it arrives
+there.
 
 **A KEY NO DRIFT MOVES** — a store declaring no drift at all is the same case — is predicted to
 stay as it reads for `CARRIED_S` past the observation alone: a package that declares no drift
@@ -53,7 +57,8 @@ from agent.stance import stance
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
                          remember, revisions_of, rows, update)
 
-from .ontology import DRIFT, FEATURE, HORIZON_TERM, MOVES, PROPERTY, RATE, RECORDED, RESULT, prediction_graph
+from .ontology import (DRIFT, FEATURE, HORIZON_TERM, MOVES, OBSERVATION_GRAPH, PROPERTY, RATE, RECORDED, RESULT,
+                       predicted_of, prediction_graph)
 from .ranges import ranges_of, side
 
 log = logging.getLogger("predict")
@@ -79,17 +84,21 @@ CARRIED_S = 3600.0
 #  or half the stretch where that is shorter.
 _EDGE_S = 60.0
 
-#  THE OBSERVATION IN HAND: the graph holding the node this sensor last made and the stretch it
-#  stands for, asked by the kernel's kind and by SOSA's pattern, never by name and never by a word
-#  of sensing's. Its key and its number are asked of the graph and its revisions together
-#  (`_KEY_Q`), since what an observation is OF and its quantity are what the rules concluded of the
-#  number the sensor gave — written by the time this runs, belief's part hearing a graph first.
+#  THE OBSERVATION IN HAND: the percept holding the node this sensor last made and the stretch it
+#  stands for, asked by sensing's kind and by SOSA's pattern, never by name — the pattern also
+#  passes over a revision, which is of the same kind and holds no `sosa:madeBySensor`. THE LATEST
+#  is the one begun last — a percept's period runs to the next one's instant, so no two of a
+#  sensor's begin at once unless it read twice in one instant, and then the one still holding,
+#  whose end is the later or none, is it (#944). Its key and its number are asked of the graph and
+#  its revisions together (`_KEY_Q`), since what an observation is OF and its quantity are what the
+#  rules concluded of the number the sensor gave — written by the time this runs, sensing's part
+#  handing a graph to belief before this package hears it.
 _OBSERVATION_Q = """
 SELECT ?graph ?node ?taken ?from ?until WHERE {
-  GRAPH $cat { ?graph a orexis:StateGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
+  GRAPH $cat { ?graph a sensing:ObservationGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
                OPTIONAL { ?p orexis:end ?until } }
   GRAPH ?graph { ?node sosa:madeBySensor $sensor . OPTIONAL { ?node sosa:resultTime ?taken } } }
-ORDER BY DESC(?from) LIMIT 1"""
+ORDER BY DESC(?from) ASC(BOUND(?until)) DESC(?until) LIMIT 1"""
 _KEY_Q = """
 SELECT ?feature ?property ?value WHERE {
   $node sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value } LIMIT 1"""
@@ -102,9 +111,12 @@ SELECT ?feature ?property ?value WHERE {
 #  is a predictor, and every agent of the world reads the drift graph as a public one.
 _DRIFTS_Q = "SELECT ?drift ?rate WHERE { ?drift a $drift ; $moves $property ; $rate_of ?rate } ORDER BY ?drift"
 
-#  THE PREDICTIONS WRITTEN FOR THIS KEY BEFORE: every one derived from the observation's graph.
+#  THE PREDICTIONS WRITTEN FOR THIS SENSOR BEFORE: every one derived from a percept of it — the one in
+#  hand, or one before it, since each reading is a percept of its own (#944) — found by the predicted
+#  observation it holds.
 _WRITTEN_Q = """
-SELECT ?g WHERE { GRAPH $cat { ?g a orexis:PredictionGraph ; prov:wasDerivedFrom $graph } }"""
+SELECT DISTINCT ?g WHERE { GRAPH $cat { ?g a orexis:PredictionGraph ; prov:wasDerivedFrom ?percept }
+                           GRAPH ?g { ?o sosa:madeBySensor $sensor } }"""
 
 #  THE HAPPENINGS: every instant inside the horizon at which a public or belief graph begins or
 #  stops holding — the only instants at which what a drift reads can change.
@@ -134,7 +146,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
         log.debug("nothing observed by %s: nothing to predict", local_of(sensor))
         return []
     graph, node = found["graph"], found["node"]
-    believed = [graph, *revisions_of(store, graph)]
+    believed = [graph, *revisions_of(store, graph, kind=OBSERVATION_GRAPH)]
     key = next(iter(rows(store, _KEY_Q, believed, node=node)), None)
     if key is None:
         log.debug("%s's observation is of nothing the rules concluded: nothing to predict", local_of(sensor))
@@ -142,7 +154,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
     feature, observed_property, reading = key["feature"], key["property"], float(key["value"])
     taken = datetime.fromisoformat(found["taken"] if found.get("taken") else found["from"])
     opens = datetime.fromisoformat(found["until"]) if found.get("until") else taken
-    for old in rows(store, _WRITTEN_Q, (), cat=cat, graph=graph):
+    for old in rows(store, _WRITTEN_Q, (), cat=cat, sensor=sensor):
         forget_graph(store, old["g"])
     base = (opens - taken).total_seconds()
     horizon = stance(store, HORIZON_TERM, HORIZON_S, memo)
@@ -196,7 +208,12 @@ INSERT DATA {{
   GRAPH <{catalogue_of(store)}> {{
     <{graph_n}> prov:wasDerivedFrom <{graph}> ;
                 orexis:retracts {_literal(_RETRACTS % (feature, observed_property))} . }} }}""")
-        triples = own if value is None else _observation(own, node, value[1], taken + timedelta(seconds=value[0]))
+        #  THE PREDICTED OBSERVATION ALONE, carried or moved, a node of its own: its key, its sensor, a
+        #  number and an instant — never the percept, whose name, link to the one before it and what the
+        #  rules concluded of its sensor are what a sensor said, and cross into no ground (#944).
+        triples = _observation(own, node, predicted_of(feature, observed_property, n),
+                               reading if value is None else value[1],
+                               taken if value is None else taken + timedelta(seconds=value[0]))
         store.extend(ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(graph_n)) for t in triples)
         written.append(graph_n)
     log.info("predicted %s of %s in %d stretch(es) from %s%s", local_of(observed_property), local_of(feature),
@@ -317,12 +334,13 @@ def _at(knots, elapsed: float) -> tuple[float, float]:
     return knots[-1][1], knots[-1][2]
 
 
-def _observation(own, node: str, value: float, at: datetime) -> list:
-    """The predicted observation: the one in hand's key and sensor, with `value` at `at`."""
-    subject = ox.NamedNode(node)
+def _observation(own, node: str, named: str, value: float, at: datetime) -> list:
+    """The predicted observation, `named`: the key and sensor of the one in hand, `node`, with `value`
+    at `at` — a node of its own, since the one in hand is a percept and crosses into no ground."""
+    source, subject = ox.NamedNode(node), ox.NamedNode(named)
     kept = {FEATURE, PROPERTY, _SOSA + "madeBySensor"}
     out = [ox.Triple(subject, _RDF_TYPE, ox.NamedNode(_SOSA + "Observation"))]
-    out += [t for t in own if t.subject == subject and t.predicate.value in kept]
+    out += [ox.Triple(subject, t.predicate, t.object) for t in own if t.subject == source and t.predicate.value in kept]
     number = f"{round(value, PLACES) + 0.0:.{PLACES}f}".rstrip("0")
     out.append(ox.Triple(subject, ox.NamedNode(RESULT), ox.Literal(number + ("0" if number.endswith(".") else ""),
                                                                   datatype=ox.NamedNode(_XSD + "decimal"))))

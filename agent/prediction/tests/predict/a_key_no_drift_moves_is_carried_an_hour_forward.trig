@@ -9,6 +9,7 @@
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix belief: <http://example.org/orexis/belief#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
@@ -29,6 +30,7 @@ GRAPH :ontology {
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -70,9 +72,9 @@ GRAPH observed:zamioculcas_moisture {
 }
 
 GRAPH :catalogue {
+  :actions a orexis:DriftGraph .
   :actions a orexis:Graph .
   :actions a orexis:PublicGraph .
-  :actions a orexis:DriftGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
   :ontology a orexis:Graph .
@@ -80,9 +82,8 @@ GRAPH :catalogue {
   :ontology a orexis:PublicGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  observed:zamioculcas_moisture a orexis:BeliefGraph .
   observed:zamioculcas_moisture a orexis:Graph .
-  observed:zamioculcas_moisture a orexis:StateGraph .
+  observed:zamioculcas_moisture a sensing:ObservationGraph .
   observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
   observed:zamioculcas_moisture orexis:beliefsOf :keeper .

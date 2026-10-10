@@ -30,9 +30,7 @@ GRAPH :ontology {
   orexis:SelfGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:BeliefGraph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:StateGraph .
 }
 
 GRAPH :world {

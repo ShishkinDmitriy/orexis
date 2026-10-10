@@ -22,7 +22,8 @@ sensor and the graph written, for whoever runs the rest of a pass over them.
 
 **IT STARTS ITSELF.** `start` subscribes, attaches, and asks after its sensors' missing readings
 every `NUDGE_S` of the timeline — a board told to sense now while its reading is missing, which the
-runtime once did on its behalf.
+runtime once did on its behalf. Which are missing it asks sensing (`cadence.lapsed`), since what an
+observation is and how they are kept are sensing's, and a transport beneath it may not name them.
 
 **THE MEMBER BRINGS ITSELF UP, AND THE THREAD IS THE CONTAINER'S.** `connect` makes the client
 from the environment, in this transport's own variables — `MQTT_HOST` and `MQTT_PORT`, the
@@ -49,20 +50,13 @@ from datetime import datetime
 
 from agent import clock
 from agent.ontology import PUBLIC, SELF_GRAPH, local_of
-from agent.store import Raw, answer, catalogue_of, graphs_of, instant, rows
+from agent.store import answer, graphs_of, rows
 from agent.transport.transport import Transport
 
 log = logging.getLogger("mqtt")
 
 #  HOW OFTEN THE MEMBER ASKS AFTER ITS SENSORS' MISSING READINGS, in seconds of the one timeline.
 NUDGE_S = 60.0
-
-#  EVERY OBSERVATION WHOSE STANDING HAS ENDED, by the kernel's kind and SOSA's words: a sensor whose
-#  reading has fallen due with nothing arrived since, since the next replaces its graph whole.
-_LAPSED_Q = """
-SELECT DISTINCT ?sensor WHERE {
-  GRAPH $cat { ?g a orexis:StateGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end < $now) }
-  GRAPH ?g { ?o sosa:madeBySensor ?sensor } }"""
 
 #  THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
 _COMMANDS_Q = """
@@ -177,10 +171,13 @@ class Mqtt(Transport):
 
     def nudge(self, store, now: datetime) -> list[str]:
         """Tell the board of every sensor of this member's whose reading has fallen due to sense now;
-        the sensors asked. Writes nothing."""
+        the sensors asked. Writes nothing. Which readings have fallen due is SENSING'S to say
+        (`cadence.lapsed`): an observation is its kind and no word of a transport's, so the member
+        asks, as it hands `received` the bytes (#944) — imported here, as `received` is, so a member
+        that only listens never loads sensing."""
+        from agent.sensing.cadence import lapsed
         mine = {r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC, SELF_GRAPH))}
-        lapsed = [r["sensor"] for r in rows(store, _LAPSED_Q, (), cat=Raw(f"<{catalogue_of(store)}>"), now=instant(now))]
-        asked = [sensor for sensor in lapsed if sensor in mine]
+        asked = list(dict.fromkeys(sensor for sensor, _ in lapsed(store, now) if sensor in mine))
         for sensor in asked:
             self.sense_now(store, sensor)
         return []

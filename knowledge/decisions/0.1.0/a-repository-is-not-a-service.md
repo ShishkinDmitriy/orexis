@@ -56,7 +56,7 @@ either would be a second owner of a claim. Pointing beats extracting, so the cou
 
 # The picture draws the target, not today
 
-[`diagrams/agent-structure.puml`](/diagrams/agent-structure.puml) draws the six modalities with
+[`diagrams/agent-structure-0.1.0.puml`](/diagrams/agent-structure-0.1.0.puml) draws the six modalities with
 one repository each and marks the delta from what runs. Drawing the current state would produce
 a registry — a list nobody gates, which the next change makes wrong in silence. A target has a
 reason to be re-read: it is either reached or amended.

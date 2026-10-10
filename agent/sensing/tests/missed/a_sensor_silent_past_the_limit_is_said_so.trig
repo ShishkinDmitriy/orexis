@@ -30,9 +30,7 @@ GRAPH :ontology {
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:BeliefGraph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:StateGraph .
 }
 
 GRAPH :world {
@@ -74,9 +72,7 @@ GRAPH :catalogue {
   :ontology a orexis:PublicGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  observed:zamioculcas_moisture a orexis:BeliefGraph .
   observed:zamioculcas_moisture a orexis:Graph .
-  observed:zamioculcas_moisture a orexis:StateGraph .
   observed:zamioculcas_moisture a sensing:ObservationGraph .
   observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .

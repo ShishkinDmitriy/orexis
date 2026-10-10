@@ -15,26 +15,30 @@
 #  sensor sosa:observes a property and sosa:isHostedBy what it is mounted in — the feature of
 #  interest, or a sosa:Sample that sosa:isSampleOf one — its board reaches it by ssn:hasSubSystem,
 #  and how often it reports is its ssn-system:Frequency; a range is SSN-System's, stated by the
-#  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph an
-#  observation is kept in, the silence of a sensor that has stopped reporting, the three sides
-#  this layer's rules conclude, the margin a range's condition states for a domain's transition to
-#  hold a state by, and the pipeline's own concepts, since neither standard says how
+#  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph a
+#  percept is kept in and the link from one percept to the one before it, the silence of a sensor
+#  that has stopped reporting and the number one that is stuck keeps giving, the margin a range's
+#  condition states for a domain's transition to hold a state by, and the pipeline's own concepts,
+#  since neither standard says how
 #  bytes become a number: a codec, the binding of a sensor to one, the member that ships, and the
 #  pointer; and how a number becomes a quantity, which is a scaling and a calibration the world states,
 #  and the rules. Sensing is the translation row of the agent stack and
 #  nothing above it: a transport hands it bytes, it makes a number of them and writes one
-#  sosa:Observation holding until the next is due and a grace past it, and on the container's tick it says which
-#  readings are missing and which sensors have gone silent. It predicts nothing — that is the
-#  prediction package's — and concludes nothing itself: the sides are revisions, concluded by the
-#  rules this layer ships (rules.ttl beside this file) and run by the deliberator over the present.
-#  What the agent holds true of a subject is a domain's transition, triggered by the observation
-#  arriving, and none of this layer's words. No word of any transport is spoken here.
+#  sosa:Observation per reading — a PERCEPT, in a graph of its own, linked to the one before it,
+#  holding until the next arrives or is due and a grace past it — keeps a sensor's last few, as deep
+#  as its rules read, and on the container's tick it says which readings are missing and which
+#  sensors have gone silent. It predicts nothing — that is the prediction package's — and concludes
+#  nothing itself: what a percept is of, its quantity and whether its sensor is stuck are revisions,
+#  concluded by the rules this layer ships (rules.ttl beside this file) and run by the deliberator.
+#  What the agent holds true of a subject is a domain's transition, triggered by the percept
+#  arriving, and none of this layer's words (an-observation-is-a-percept-and-the-mind-reads-only-beliefs).
+#  No word of any transport is spoken here.
 
 #  THE ROLE THIS LAYER SERVES (knowledge/domain/sensing/observer.md): an agent declared an observer
 #  runs sensing's part, and the boot loads this layer for it and for nothing else. BENEATH THE
-#  DELIBERATOR, because an observation's sides are revisions: the rules this layer ships conclude
-#  them and the deliberator runs those rules, so an observer that were no deliberator would hold
-#  numbers that are of nothing. That is how this layer says what it needs of the belief package
+#  DELIBERATOR, because what a percept is of and its quantity are revisions: the rules this layer
+#  ships conclude them and the deliberator runs those rules, so an observer that were no deliberator
+#  would hold numbers that are of nothing. That is how this layer says what it needs of the belief package
 #  without the runtime knowing it (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
 #  What the role needs of the world is a sensor reporting to the agent — hosted by what it acts for,
 #  by a sample of it, or by a place that contains it — and `orexis-onboard` refuses an observer
@@ -56,14 +60,28 @@
                                 ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host } }""" ] .
 
 :ObservationGraph a owl:Class ;
-    rdfs:subClassOf orexis:StateGraph ;
+    rdfs:subClassOf orexis:Graph ;
     rdfs:label "Observation graph" ;
-    rdfs:comment """One graph per feature and property, holding the whole sosa:Observation the
-    sensor last made of it — feature, property, result, instant, sensor, procedure, and the
-    instant the device says the result applies to where it says one — from its instant to the
-    horizon its period states, replaced whole by the next. Named for what it holds. Beneath
-    orexis:StateGraph so that the readers of the present find it by that kind today; that parent
-    goes when what a plan may change is the actions' footprint rather than a graph kind.""" .
+    rdfs:comment """One graph per reading, holding the sosa:Observation a sensor made — the number
+    it gave, the instant, the sensor, the procedure, the instant the device says the result applies
+    to where it says one, and the percept before it (`previous`) — from its instant until the next
+    reading's, the latest until the next is due and a grace past it; and what the rules concluded of
+    that reading, in its revision, which sensing has revised into this kind too, since what is
+    concluded of what a sensor said is still what it said. A sensor's last `stuckAfter` are kept and
+    older ones forgotten. Named for what it holds. A PERCEPT and no state, beneath `orexis:Graph`
+    alone: no reader of the mind is handed one, and what the mind reads of it is the subject belief a
+    domain's transition makes when it arrives. SENSING'S, and no kernel kind: no sensing, no
+    observations, so the readers at the boundary — prediction above, a domain's command or saying —
+    name it in sensing's word, and what lies beneath asks sensing (#944).""" .
+
+:previous a owl:ObjectProperty , owl:FunctionalProperty ;
+    rdfs:domain sosa:Observation ;
+    rdfs:range sosa:Observation ;
+    rdfs:label "previous" ;
+    rdfs:comment """The percept the same sensor made before this one: written by `received` into the
+    new percept's graph as it arrives, so a sensor's percepts are a chain, newest first, and the
+    latest is the one no percept names as its previous. Kept as deep as sensing's rules read — its
+    last `stuckAfter` — so the oldest kept names one that is gone (knowledge/domain/sensing/observation.md).""" .
 
 :ForecastGraph a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph ;
@@ -71,8 +89,8 @@
     rdfs:comment """One stretch of a forecast: the sosa:Observation a sensor reading a series made of
     one stretch ahead - of what, which property, the number, the instant it was issued, the sensor -
     holding during that stretch, and forgotten with the rest of that sensor's forecast when the
-    next arrives. Named for what it holds. A belief and not a reading: not beneath
-    orexis:StateGraph, so no plan forks it and no prediction takes it for the observation in hand.""" .
+    next arrives. Named for what it holds. A belief and not a reading: neither a percept nor a
+    state, so no prediction takes it for the observation in hand and no plan forks it.""" .
 
 :Codec a owl:Class ;
     rdfs:label "Codec" ;
@@ -98,7 +116,7 @@
     rdfs:comment """A RESCALE: the unit changes. How a sensor's number — a probe's ADC count — is a
     quantity in its property's unit — a soil-moisture fraction: the straight line through two points,
     each what the sensor reads there and what that stands for, named by its label (dry, wet).
-    Unclamped, so a count past a point is a quantity past its own, which a side then says, rather
+    Unclamped, so a count past a point is a quantity past its own, which a transition then judges, rather
     than a saturated one hiding a flooded or frozen probe. The world states one per instrument it
     rescales (`scales`), beside the sensor; this layer's rule reads it at layer 0, and a sensor no
     scaling scales gives its number as its quantity — a thermometer already reports degrees.""" .
@@ -157,7 +175,8 @@
     rdfs:range xsd:decimal ;
     rdfs:label "raw result" ;
     rdfs:comment """The number a sensor gave, as the pointer found it in the bytes — all `received`
-    writes of an observation beside who made it and when. What it is an observation OF, and the
+    writes of an observation beside who made it, when, and the percept before it. What two readings
+    are told apart by when a sensor is judged stuck (`stuckOn`). What it is an observation OF, and the
     quantity (sosa:hasSimpleResult), this layer's rules conclude from the topology and the scaling
     and calibration the world states of the sensor.""" .
 
@@ -200,10 +219,11 @@
     the agent's own and dropped by the sensor's next reading. SOSA and SSN say how often a sensor
     reports and nothing about one that has stopped, which is why this is sensing's word.""" .
 
-# TWO LIMITS THE AGENT STATES OF ITSELF, in cadences of the sensor doubted: stances, in its self
-# graph, read by `missed` and `received` through the kernel's `stance` with the figure in code where
-# none is stated; one row each, since an agent judges every sensor it hears by one standard. Stated
-# anywhere but the self graph, a limit is not read (knowledge/domain/kernel/stance.md).
+# TWO LIMITS THE AGENT STATES OF ITSELF: stances, in its self graph, read through the kernel's
+# `stance` with the figure in code where none is stated — and the stuck limit by sensing's rule too,
+# off the same graph and with the same figure; one row each, since an agent judges every sensor it
+# hears by one standard. Stated anywhere but the self graph, a limit is not read
+# (knowledge/domain/kernel/stance.md).
 :silentAfter a owl:DatatypeProperty ;
     rdfs:domain orexis:Self ;
     rdfs:range xsd:integer ;
@@ -216,52 +236,25 @@
     rdfs:domain orexis:Self ;
     rdfs:range xsd:integer ;
     rdfs:label "stuck after" ;
-    rdfs:comment """How many of a sensor's cadences its number may stay the same before `received` says
-    the sensor stuck (`stuckSince`). The agent states it of itself in its self graph; where it states
-    none, six —
-    twice the silence: a live instrument's count moves by a bit within a few readings even in still
-    soil, and soil itself drifts within an hour, so a number unchanged through six cadences is the
-    signature of a frozen oscillator or a half-lost wire rather than of equilibrium.""" .
+    rdfs:comment """How many of a sensor's readings may give the same number before its sensor is said
+    stuck (`stuckOn`) — a count of READINGS, not of time (#944): `received` keeps that many of a
+    sensor's percepts and sensing's rule says the sensor stuck when every one kept gave one number, so
+    a sensor that misses readings is said stuck later than one that never does. The agent states it
+    of itself in its self graph; where it states none, six — twice the silence: a live instrument's
+    count moves by a bit within a few readings even in still soil, and soil itself drifts within an
+    hour, so six readings of one number are the signature of a frozen oscillator or a half-lost wire
+    rather than of equilibrium.""" .
 
-:unchangedSince a owl:DatatypeProperty ;
-    rdfs:domain sosa:Observation ;
-    rdfs:range xsd:dateTime ;
-    rdfs:label "unchanged since" ;
-    rdfs:comment """The instant of the earliest reading in the unbroken run of this observation's number:
-    the observation's own instant where its rawResult differs from the one it replaced, the
-    replaced observation's where it is identical. Written by `received` beside the number, so the
-    run's start survives the replacement of the observation and a restart, and nothing counts
-    readings in Python. What a sensor is said stuck from.""" .
-
-:stuckSince a owl:DatatypeProperty ;
+:stuckOn a owl:DatatypeProperty ;
     rdfs:domain sosa:Sensor ;
-    rdfs:range xsd:dateTime ;
-    rdfs:label "stuck since" ;
-    rdfs:comment """The sensor keeps reporting one number: every reading since this instant gave the
-    same rawResult, for a limit of its cadences and more. A row present while the run lasts, named
-    for the state and not for the reading that tipped it, written by `received` into a graph of the
-    agent's own and dropped by the first reading whose number differs. The second doubt the store
-    holds about a reading, beside its age: a silent sensor has no present, a stuck one has a present
-    not to be believed (#462).""" .
-
-:below a owl:ObjectProperty ;
-    rdfs:domain sosa:Observation ;
-    rdfs:label "below" ;
-    rdfs:comment """The observation's result lies under the floor of this range — an
-    ssn-system:OperatingRange or ssn-system:SurvivalRange stated for the observed property by what
-    hosts the sensor, by what that is a sample of, or by the sensor itself. Concluded by this
-    layer's rule as a revision, read by a desire's met-test, and written by an effect that predicts
-    a reading. One triple per observation and range; nothing is minted per subject.""" .
-
-:inside a owl:ObjectProperty ;
-    rdfs:domain sosa:Observation ;
-    rdfs:label "inside" ;
-    rdfs:comment "The observation's result lies within this range, its bounds included." .
-
-:above a owl:ObjectProperty ;
-    rdfs:domain sosa:Observation ;
-    rdfs:label "above" ;
-    rdfs:comment "The observation's result lies over the ceiling of this range." .
+    rdfs:range xsd:decimal ;
+    rdfs:label "stuck on" ;
+    rdfs:comment """The sensor keeps reporting one number, and this is it: each of its last
+    `stuckAfter` readings — every percept of it sensing keeps — gave this rawResult. Concluded by
+    sensing's rule (rules.ttl) as a revision of the sensor's latest percept, so it holds while that
+    percept does: the first reading whose number differs, and a silence, end it. Named for the state,
+    not for the reading that tipped it. The second doubt the agent holds about a reading, beside its
+    age: a silent sensor has no present, a stuck one has a present not to be believed (#462).""" .
 
 #  THE MARGIN (knowledge/domain/sensing/margin.md, #944): how far past a bound of an operating range a
 #  reading must go to leave a state held. The world states it on a range's condition, beside the
@@ -279,5 +272,5 @@
     value coming from another state crosses at the bound itself. One number for both ends, stated by
     the world on the range's condition beside the bounds it widens and sized from the instrument's
     noise. Absent, nought, and the state is the bare comparison with the bounds. Read by a domain's
-    transition and by nothing else; the sides ignore it. `orexis-onboard` refuses one that is no
+    transition and by nothing else. `orexis-onboard` refuses one that is no
     number, a negative one, and one of half the range's width or more.""" .

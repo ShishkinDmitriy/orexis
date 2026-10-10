@@ -1,11 +1,11 @@
-"""Prediction over a pot, with sensing and the rules beside it: bytes become an observation
-the rules revise to its sides, predictions are the instants the reading changes range, revised
-the same, and a second reading replaces the first and its predictions.
+"""Prediction over a pot, with sensing and the rules beside it: bytes become a percept the rules
+revise to its quantity, predictions are the instants the reading changes range, and a second reading
+follows the first and replaces its predictions.
 
 Held to `worlds/a_pot_and_its_probe.trig`. The story crosses three packages — sensing's
 `received` and its rule set, this package's `predict`, the belief package's `revise` — which a
 TEST here may import and the code may not; the loop through the planner and the executor
-waits for the neighbours to read an observation's revisions.
+waits for the neighbours to read a percept's revisions.
 """
 
 from __future__ import annotations
@@ -19,22 +19,29 @@ from agent import clock
 from agent.belief.revise import revise
 from agent.ontology import PUBLIC
 from agent.prediction.predict import predict
+from agent.sensing.ontology import OBSERVATION_GRAPH
 from agent.sensing.received import received
-from agent.store import close_catalogue, document, graphs_of, put_document, rows
+from agent.store import close_catalogue, document, graphs_of, put_document, revisions_of, rows
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 SENSING_RULES = Path(__file__).parents[2] / "sensing" / "rules.ttl"
 BELIEF = Path(__file__).parents[2] / "belief" / "ontology.ttl"
 PROBE = "http://example.org/test#probe"
 
-_SIDES_Q = "SELECT ?p ?range WHERE { GRAPH $g { ?obs ?p ?range VALUES ?p { sensing:below sensing:inside sensing:above } } }"
+#  THE POT'S RANGES, as its world states them: operating 0.1 to 0.3, surviving 0.02 to 0.45.
+OPERATING, SURVIVAL = (0.1, 0.3), (0.02, 0.45)
+
+_NUMBER_Q = "SELECT ?v WHERE { ?o sosa:hasSimpleResult ?v }"
 _PREDICTIONS_Q = """
 SELECT ?g ?start WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?start } }
 ORDER BY ?start"""
 
 
-def _sides(store, graph):
-    return {(r["p"].rsplit("#", 1)[-1], r["range"].rsplit("#", 1)[-1]) for r in rows(store, _SIDES_Q, (), g=graph + "/revisions")}
+def _number(store, graph) -> float:
+    """The number a graph holds: a percept's in what the rules concluded of it, which is of sensing's
+    kind, and a prediction's in the prediction itself."""
+    (r,) = rows(store, _NUMBER_Q, [graph, *revisions_of(store, graph, kind=OBSERVATION_GRAPH)])
+    return float(r["v"])
 
 
 @pytest.fixture
@@ -47,40 +54,40 @@ def pot(monkeypatch, snapshots):
 
 
 def _reading(store, snapshots, probe, value, minutes=0):
-    """Bytes arrive: received, the reading revised — the rules conclude what it is of, its quantity
-    and its sides — then the stretches are rewritten from it and revised in turn: the order a
-    container keeps, belief's part hearing a graph before prediction's."""
+    """Bytes arrive: received, the reading revised — the rules conclude what it is of and its
+    quantity — then the stretches are rewritten from it: the order a container keeps, belief's part
+    hearing a graph before prediction's."""
     at = snapshots.NOW + timedelta(minutes=minutes)
     read = graphs_of(store, PUBLIC, at=at)          # beside what the world states, as belief's part revises
     [graph] = received(store, snapshots.ME, probe, f'{{"value": {value}}}'.encode(), at)
-    revise(store, graph, read=read)
+    revise(store, graph, read=read, kind=OBSERVATION_GRAPH)      # as sensing has belief's part revise it
     close_catalogue(store)
-    written = predict(store, snapshots.ME, probe, now=at)
-    for g in written:
-        revise(store, g, read=read)
-    return graph, written
+    return graph, predict(store, snapshots.ME, probe, now=at)
 
 
-def test_a_reading_under_the_floor_is_revised_to_its_sides(pot, snapshots):
+def test_a_reading_under_the_floor_is_revised_to_its_quantity(pot, snapshots):
     store, probe = pot
     graph, _ = _reading(store, snapshots, probe, 0.05)
-    assert _sides(store, graph) >= {("below", "zamioculcas.operating"), ("inside", "zamioculcas.survival")}
+    assert _number(store, graph) == 0.05
 
 
-def test_a_reading_inside_is_predicted_to_meet_the_floor_within_the_hour_and_each_stretch_has_its_side(pot, snapshots):
+def test_a_reading_inside_is_predicted_to_meet_the_floor_within_the_hour_and_each_stretch_lies_on_its_side(pot, snapshots):
     store, probe = pot
     _, written = _reading(store, snapshots, probe, 0.25)
     opened = [(snapshots.NOW.fromisoformat(r["start"]) - snapshots.NOW).total_seconds() / 60 for r in rows(store, _PREDICTIONS_Q, ())]
     assert len(written) == 3 and abs(opened[1] - 54) <= 1 and abs(opened[2] - 83) <= 4, opened
-    assert ("inside", "zamioculcas.operating") in _sides(store, written[0])
-    assert {("below", "zamioculcas.operating"), ("inside", "zamioculcas.survival")} <= _sides(store, written[1])
-    assert {("below", "zamioculcas.operating"), ("below", "zamioculcas.survival")} <= _sides(store, written[2])
+    numbers = [_number(store, g) for g in written]
+    assert OPERATING[0] <= numbers[0] <= OPERATING[1], numbers
+    assert SURVIVAL[0] <= numbers[1] < OPERATING[0], numbers
+    assert numbers[2] < SURVIVAL[0], numbers
 
 
-def test_a_second_reading_replaces_the_first_and_its_predictions(pot, snapshots):
+def test_a_second_reading_follows_the_first_and_replaces_its_predictions(pot, snapshots):
+    """The first percept is kept, as what the sensor said then; what was predicted from it is not, since
+    the second is the observation in hand now — every stretch of the first goes whole (#944)."""
     store, probe = pot
-    _, first = _reading(store, snapshots, probe, 0.25)
+    before, first = _reading(store, snapshots, probe, 0.25)
     graph, second = _reading(store, snapshots, probe, 0.09, minutes=16)
     standing = [r["g"] for r in rows(store, _PREDICTIONS_Q, ())]
     assert standing == second and len(first) == 3 and first[2] not in standing, "the first stretches went whole"
-    assert _sides(store, graph) >= {("below", "zamioculcas.operating"), ("inside", "zamioculcas.survival")}
+    assert _number(store, graph) == 0.09 and _number(store, before) == 0.25, "and the first percept is kept"

@@ -3,7 +3,7 @@ type: Domain Concept
 title: Revision
 term: http://example.org/orexis/belief#RevisionGraph
 description: >-
-  A belief derived from beliefs by a rule — what the rules the store holds conclude of a graph,
+  What the rules the store holds conclude of a graph — a belief of a belief, a percept of a percept —
   written into a graph of the source's own, derived from it, never deleting. The rules are SHACL
   1.2 Inference Rules' adopted as they stand: a rules graph, a package's rule set, SPARQL rules
   by layer and order. Concluded on the present only, never in a search.
@@ -11,9 +11,11 @@ description: >-
 
 # What it is
 
-A **revision** is a belief derived from beliefs: *this reading is Below*, *this observation judges
-its pot dry*, *this observation is a kind of sample*, concluded by a rule from what a graph says
-beside what stands. The rules are SHACL 1.2 Inference Rules' and no word of ours is added: a graph in the
+A **revision** is what a rule concludes of a graph: *this round's venue is open*, *this reading is of
+the pot's soil and reads 0.41*, *this probe is stuck on 2412*, concluded from what a graph says beside
+what stands. It is of its source's kind: what is concluded of a belief is a belief, and of a
+[percept](/domain/sensing/observation.md) a percept, so a reading's conclusions are handed to no reader of
+the mind, as the reading is not (#944). The rules are SHACL 1.2 Inference Rules' and no word of ours is added: a graph in the
 role of a rules graph is typed `sh:RulesGraph`, which the belief package puts beneath
 `orexis:Graph` so that a boot reads it as a kind it knows; a package ships its rules as a `sh:RuleSet`,
 an IRI with `sh:hasRule` and `sh:includesRuleSet`; a rule is a `sh:SPARQLRule` with one
@@ -32,7 +34,9 @@ again while an iteration concludes something new; within an iteration the rules 
 and rules of one order see none of each other's inferences until they have all run. What is
 inferred is what the base graph does not already hold. The runtime hands public knowledge as what
 stands beside a graph it wrote — a reading, a prediction, a peer's document — and nothing else:
-every rule shipped reads one graph and what the world states, and a revision is replaced only when
+every rule shipped reads one graph and what the world states, but sensing's stuck rule, which reads
+the percepts sensing keeps where they lie, by their kind, and the limit off the self graph
+([stuck](/domain/sensing/stuck.md)); and a revision is replaced only when
 its own source is written again, and goes when its source is forgotten (`forget_graph` takes
 `revisions_of` the graph with it). Handed everything believed, the first of two readings arriving
 together took the second's side into its own revision, where the second's next reading never

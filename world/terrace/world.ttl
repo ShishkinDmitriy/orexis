@@ -16,7 +16,7 @@
 
 #  THE TERRACE, on Agent 0.2.0. "1 esp32, 1 moisture sensor, 1 bme. For now just monitoring. All
 #  outside." One bed, one board, one agent, and nothing to pursue: the agent holds no desire, so it
-#  watches — every reading written, its side concluded, what comes next predicted — and never acts.
+#  watches — every reading kept as a percept, the bed's soil believed of it, what comes next predicted — and never acts.
 #
 #  The board is a SENTINEL (firmware/outdoor-sentinel): it takes no orders, its ULP watches the
 #  soil for movement while everything sleeps, and a heartbeat every twenty minutes keeps silence

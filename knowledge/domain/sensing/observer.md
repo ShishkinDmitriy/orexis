@@ -4,8 +4,8 @@ title: Observer
 term: http://example.org/orexis/sensing#Observer
 description: >-
   An agent that turns its sensors' numbers into observations - the role whose part is sensing's.
-  Declared in the agent's self graph, beneath the deliberator, since an observation's sides are
-  revisions; it needs a sensor reporting to the agent, and a sensor reporting to an agent that is
+  Declared in the agent's self graph, beneath the deliberator, since what an observation is of is a
+  revision; it needs a sensor reporting to the agent, and a sensor reporting to an agent that is
   no observer is refused at onboarding.
 ---
 
@@ -14,7 +14,7 @@ description: >-
 An agent stated `sensing:Observer` beside its self — the terrace's, the sensing world's fern agent,
 the greenhouse's grower, the allotment's growers. Declaring it loads [sensing](/domain/sensing/sensing.md)
 and, because the role is beneath the [deliberator](/domain/belief/deliberator.md), belief too: what
-sensing writes is a number, and which side of a range it lies on is concluded by sensing's own rules,
+sensing writes is a number, and what it is of and its quantity are concluded by sensing's own rules,
 which only a deliberator runs. Without belief an observer would hold readings that are of nothing.
 
 It is the one role the MQTT and HTTP transports are loaded for on a sensor's account: the MQTT member

@@ -77,7 +77,7 @@ writes into again takes that arrival's period.
 Each order reads the arrival with its revisions, the public graphs, and every state graph the agent
 derived, whatever its period. What it deletes is taken out of whichever of those holds it, and a
 graph emptied so is forgotten with its row. **Testimony is never a target**: a graph received or
-heard — an observation is a state graph too, and received — a public graph, an ontology and a
+heard — a percept, which is no state and is read as the arrival alone — a public graph, an ontology and a
 revision are read and never written to. The target says no `prov:wasDerivedFrom`: a revision goes
 when its source is forgotten, and this outlives the arrival it was made of, since the next arrival
 must read it, until a later transition takes its rows out.

@@ -49,10 +49,14 @@
 sh:RulesGraph rdfs:subClassOf orexis:Graph .
 
 :RevisionGraph a owl:Class ;
-    rdfs:subClassOf orexis:BeliefGraph ;
+    rdfs:subClassOf orexis:Graph ;
     rdfs:label "Revision graph" ;
-    rdfs:comment """The revisions of ONE source graph — the beliefs the rules conclude of it, and
-    nothing the source itself says; SHACL 1.2's inference graph, for one source. prov:wasDerivedFrom
+    rdfs:comment """The revisions of ONE source graph — what the rules conclude of it, and nothing
+    the source itself says; SHACL 1.2's inference graph, for one source. OF THE KIND ITS RUNNER
+    HANDS, said beside this one on its row: an `orexis:BeliefGraph` where the source is one, and
+    where a package above has its own graphs revised, the kind it says — sensing's observations'
+    are sensing's, since what the rules conclude of what a sensor said is still what it said and no
+    reader of the mind is handed it (#944). prov:wasDerivedFrom
     the source, orexis:arrivedBy orexis:Derived, the source's owner and period copied where its
     row states them. Apart from the source because a conclusion is a function of its premises —
     two sources with the same facts have the same conclusions, so a world is hashed by its own

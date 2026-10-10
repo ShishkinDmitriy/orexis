@@ -1,9 +1,10 @@
-# a_number_unchanged_past_the_limit_says_the_sensor_stuck
+# a_second_reading_follows_the_first
 #
-# The probe has given 0.25 at every reading since half past ten, and bytes for 0.25 arrive again at noon:
-# six quarter-hour cadences unchanged, the limit. The observation is replaced as any is, the run carried
-# over, and the probe is said stuck since half past ten — a graph of the keeper's own, the kernel's kind,
-# holding from the instant the run began (#462).
+# A reading of 0.25 stood from a quarter to twelve, holding until a quarter past — the next due at
+# noon and a grace past it; bytes for 0.08 arrive at noon. Each reading is a percept of its own: the
+# new one is named for its instant, in a graph of its own, and says the one before it is its
+# `sensing:previous`; the one before is KEPT, and its period ends where the new one's begins, so a
+# reader standing at noon or later is handed the new one alone (#944).
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -22,7 +23,6 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
-@prefix stuck: <http://example.org/orexis/graph/stuck/keeper/> .
 @prefix prediction: <http://example.org/orexis/prediction#> .
 
 GRAPH :ontology {
@@ -31,9 +31,7 @@ GRAPH :ontology {
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:BeliefGraph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
-  sensing:ObservationGraph rdfs:subClassOf orexis:StateGraph .
 }
 
 GRAPH :world {
@@ -54,13 +52,12 @@ GRAPH :world {
   :zamioculcas.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
 }
 
-GRAPH observed:probe {
-  orexis:obs_probe a sosa:Observation .
-  orexis:obs_probe prov:wasGeneratedBy :keeper .
-  orexis:obs_probe sensing:rawResult 0.25 .
-  orexis:obs_probe sensing:unchangedSince "2026-01-01T10:30:00+00:00"^^xsd:dateTime .
-  orexis:obs_probe sosa:madeBySensor :probe .
-  orexis:obs_probe sosa:resultTime "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
+GRAPH observed:probe_20260101T114500Z {
+  orexis:obs_probe_20260101T114500Z a sosa:Observation .
+  orexis:obs_probe_20260101T114500Z prov:wasGeneratedBy :keeper .
+  orexis:obs_probe_20260101T114500Z sensing:rawResult 0.25 .
+  orexis:obs_probe_20260101T114500Z sosa:madeBySensor :probe .
+  orexis:obs_probe_20260101T114500Z sosa:resultTime "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
 }
 
 GRAPH :catalogue {
@@ -71,11 +68,9 @@ GRAPH :catalogue {
   :ontology a orexis:PublicGraph .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  observed:probe a orexis:BeliefGraph .
-  observed:probe a orexis:Graph .
-  observed:probe a orexis:StateGraph .
-  observed:probe a sensing:ObservationGraph .
-  observed:probe dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
-  observed:probe orexis:arrivedBy orexis:Received .
-  observed:probe orexis:beliefsOf :keeper .
+  observed:probe_20260101T114500Z a orexis:Graph .
+  observed:probe_20260101T114500Z a sensing:ObservationGraph .
+  observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
+  observed:probe_20260101T114500Z orexis:arrivedBy orexis:Received .
+  observed:probe_20260101T114500Z orexis:beliefsOf :keeper .
 }

@@ -109,7 +109,7 @@ orexis:StateGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph , orexis:Graph ;
     rdfs:label "State graph" ;
-    rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing writes observations into it, RECEIVED, since a reading is an instrument's word rather than this agent's, and says a sensor silent or stuck, DERIVED; the belief package prepares one per arrival for what the transitions it triggers insert, the subject beliefs, DERIVED, a transition naming no graph of its own). It was `orexis:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. A graph of this kind the agent DERIVED is the agent's own state: what a transition reads beside the arrival that triggers it, and the one place a transition deletes from. NOT public: an agent's readings are its own." .
+    rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing says a sensor silent, DERIVED; a peer's document heard is one, RECEIVED; the belief package prepares one per arrival for what the transitions it triggers insert, the subject beliefs, DERIVED, a transition naming no graph of its own). An instrument's reading is no state: it is sensing's observation, a kind beneath `orexis:Graph` alone which no reader of the mind is handed, and what the mind reads of it is the subject belief a transition makes (#944). It was `orexis:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. A graph of this kind the agent DERIVED is the agent's own state: what a transition reads beside the arrival that triggers it, and the one place a transition deletes from. NOT public: an agent's readings are its own." .
 
 orexis:WorkingGraph
     a owl:Class ;
@@ -213,7 +213,7 @@ orexis:PredictionGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Prediction graph" ;
-    rdfs:comment "A PREDICTION: a graph holding during the stretch it predicts for, carrying a predicted `sosa:Observation` with the number a drift gives there — one graph per stretch between the instants the reading changes range, written by the prediction package (knowledge/domain/prediction/prediction.md). Its side is a revision the rules conclude as of a real reading. The planner lays a ground per stretch, applying the prediction to the present; the agent's own records never list it, and the executor answers a step over the readings, never over what was foreseen." .
+    rdfs:comment "A PREDICTION: a graph holding during the stretch it predicts for, carrying a predicted `sosa:Observation` with the number a drift gives there — one graph per stretch between the instants the reading changes range, written by the prediction package (knowledge/domain/prediction/prediction.md). What the subject is foreseen to be is what a domain's transitions make of it where it arrives, in the ground the planner lays per stretch, applying the prediction to the present (#944); its predicted observation is a node of its own and never the percept it was made from; the agent's own records never list it, and the executor answers a step over the readings, never over what was foreseen." .
 
 orexis:retracts
     a owl:DatatypeProperty ;

@@ -121,7 +121,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     predictions already. So it is not collapsed into the ground before it by hash, which is the
     one thing that makes it a boundary rather than a prediction.
 
-    The present is the first, and is the agent's readings as they stand. Each prediction that
+    The present is the first, and is the agent's state as it stands. Each prediction that
     applies later is run against the ground standing before it and the diff applied; a ground
     that hashes the same as the one before it is not a period, and is dropped.
 
@@ -156,7 +156,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         added, retracts = [], []
         for prediction, supersedes in group:
             for graph in (prediction, *revisions_of(store, prediction)):
-                added += list(_triples(store, graph))       # the predicted reading and its side
+                added += list(_triples(store, graph))       # the predicted reading, and what was concluded of it
             if supersedes:
                 retracts.append(supersedes)
         if not added and not retracts and at not in landing:
@@ -233,17 +233,18 @@ def _transitioned(store: ox.Store, ground: str, arrivals: list[str], rules, own:
 
 
 def _present(store: ox.Store, now: datetime) -> str:
-    """The agent's readings as they stand, as a ground of its own.
+    """The agent's state as it stands, as a ground of its own.
 
     COPIED RATHER THAN USED IN PLACE. The state graph is what the agent BELIEVES; a ground is
     what a pass stands on, and a pass must be able to fork one without the belief base moving.
     """
     name = _name(now)
     _relaid(store, name)
-    #  THE READINGS, WHAT WAS CONCLUDED OF THEM AND WHAT THE AGENT HOLDS OF THEIR SUBJECTS: every state
-    #  graph, the subject beliefs the transitions derived among them, which the met-tests and the
-    #  effects speak, and each one's revisions — so the ground a pass stands on holds them all, and a
-    #  fork writes a state as it writes any fact.
+    #  WHAT THE AGENT HOLDS AND WHAT WAS CONCLUDED OF IT: every state graph — the subject beliefs the
+    #  transitions derived, which the met-tests and the effects speak, a peer's word heard, a world's
+    #  own state — and each one's revisions, so the ground a pass stands on holds them all, and a fork
+    #  writes a state as it writes any fact. NO READING: what a sensor said is a percept, of no kind
+    #  read here, and crosses into no ground (#944); what the ground holds of it is the subject belief.
     states = graphs_of(store, STATE)
     for source in [*states, *revisions_of(store, *states)]:
         update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "

@@ -1,17 +1,21 @@
 """What the sensing tree's SHAPE promises, and the one direction its arrows may point.
 
 Sensing is the translation row and beneath everything but belief: the prediction package reads
-the observations it writes and the executor too, both by kind, and neither imports a line of it;
-it imports nothing of theirs and speaks none of their words — and not one word of any transport,
-which is the decoupling this layer exists for. BELIEF IS BENEATH IT, and that is said in one word:
-an observation's sides are revisions the deliberator concludes by this layer's rules, so its role,
-the observer, is beneath the deliberator (#927), which its ontology states as
-`rdfs:subClassOf belief:Deliberator` — the one word of belief's it speaks, since a package's need is
-said by its role sitting beneath the role of a package below it. It still imports nothing of
-belief, having no use for its code. A module named for an act exports that act alone, a module
-named for a thing may answer several questions about it, and every public function has a test
-named for it. A TEST here may import the belief package, to hold this layer's rules to what
-they conclude; the code may not.
+the observations it writes by sensing's own kind, `sensing:ObservationGraph`, the word and not the
+code — no sensing, no observations, so the kind is sensing's alone (#944) — and a domain's command
+names that kind in its own text; neither imports a line of it, and it imports nothing of theirs and
+speaks none of their words — and not one word of any transport, which is the decoupling this layer
+exists for. BELIEF IS BENEATH IT, and that is said in one word: what an observation is of and its
+quantity are revisions the deliberator concludes by this layer's rules, so its role, the observer,
+is beneath the deliberator (#927), which its ontology states as `rdfs:subClassOf belief:Deliberator`
+— the one word of belief's it speaks, since a package's need is said by its role sitting beneath the
+role of a package below it. Sensing RUNS that revision over its own observations — belief, beneath,
+knows no kind of them — and does it through the part it links to, handing each observation to
+belief's part with the kind its revision is to be, as execution hands a saying to speech's; so it
+still imports nothing of belief's code, having no use for it. A module named for an act exports that
+act alone, a module named for a thing may answer several questions about it, and every public
+function has a test named for it. A TEST here may import the belief package, to hold this layer's
+rules to what they conclude; the code may not.
 """
 
 from __future__ import annotations
@@ -61,16 +65,19 @@ def test_the_one_word_of_belief_this_layer_speaks_is_the_role_its_own_is_beneath
     assert not any(words for name, words in said.items() if name != "ontology.ttl"), said
 
 
-#  A TRANSPORT IS BENEATH SENSING AND IMPORTS ITS CALLBACK, `received`, and nothing else of it;
-#  the contract a transport answers is the transport family's own, not sensing's.
+#  A TRANSPORT IS BENEATH SENSING AND IMPORTS ITS CALLBACK, `received`, and its reads of a sensor's
+#  cadence, and nothing else of it; the contract a transport answers is the transport family's own,
+#  not sensing's.
 CALLBACK = ("agent.sensing.received", "agent.sensing.cadence")
 
 
 def test_nothing_above_imports_sensing():
-    """The prediction package and the executor read observations by KIND: a graph classified
-    `orexis:StateGraph` is theirs to read whoever wrote it. A transport, beneath, imports the
-    callback and sensing's read of a sensor's frequency, which a polling member polls at, and
-    nothing else of sensing's."""
+    """The prediction package reads observations by sensing's KIND, a graph classified
+    `sensing:ObservationGraph` — the word, which a package above may speak, and no line of the code —
+    and the executor reads none: a domain's command names the kind in its own text. A transport,
+    beneath, imports the callback and sensing's reads of a sensor's cadence — the frequency a polling
+    member polls at, and which sensors' latest has lapsed, which the MQTT member nudges — and nothing
+    else of sensing's."""
     for path in sorted((ROOT / "agent").rglob("*.py")):
         if SENSING in path.parents or "tests" in path.parts or path == ROOT / "agent" / "runtime.py":
             continue                  # the container assembles every layer and may import them all

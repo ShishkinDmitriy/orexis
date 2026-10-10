@@ -62,7 +62,8 @@ def test_a_graph_that_is_no_testimony_triggers_nothing(snapshots):
     assert trigger(store, T + "world") == Triggered(0, 0, True)
     assert trigger(store, T + "tick1/believed") == Triggered(0, 0, True)
     assert _held(store) == {"count": "1"}
-    assert trigger(store, TICK) == Triggered(1, 1, True)
+    assert trigger(store, TICK) == Triggered(1, 1, True, (T + "tick1/believed", T + "tick2/believed")), \
+        "the state graphs it changed: the count taken out where it stood, and put in the tick's own (#944)"
     assert _held(store) == {"count": "2"}
 
 
@@ -72,12 +73,13 @@ def test_an_order_is_applied_whole_and_a_cut_is_continued_to_the_same_state(snap
     no order is applied twice: the count is 2, not 3."""
     case = CASES_DIR / "two_transitions_of_one_order_read_the_same_state.trig"
     whole = snapshots.stand_in(case)
-    assert trigger(whole, TICK) == Triggered(3, 2, True)
+    changed = (T + "tick1/believed", T + "tick2/believed")
+    assert trigger(whole, TICK) == Triggered(3, 2, True, changed)
     store = snapshots.stand_in(case)
     first = trigger(store, TICK, budget=1)
-    assert first == Triggered(2, 1, False), first
+    assert first == Triggered(2, 1, False, changed), first
     assert _held(store) == {"count": "2", "saw": "1"}, "the first order whole, and nothing of the second"
-    assert trigger(store, TICK, done=first.done) == Triggered(1, 2, True)
+    assert trigger(store, TICK, done=first.done) == Triggered(1, 2, True, (T + "tick2/believed",))
     assert _held(store) == _held(whole) == {"count": "2", "saw": "1", "echo": "2"}
 
 

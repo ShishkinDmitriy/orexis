@@ -109,6 +109,19 @@ def test_a_board_is_asked_to_sense_where_its_readings_have_fallen_due(bus, snaps
     assert len(client.published) >= 1
 
 
+def test_a_reading_followed_by_the_next_has_not_fallen_due(bus, snapshots):
+    """#944: the board reported at noon and again three minutes past, and its sensors' noon percepts are
+    kept, each ended where the next began. At five past what holds is the second — nothing has fallen
+    due, though an ended percept of each sensor stands — so the board is told nothing."""
+    from datetime import timedelta
+
+    store, driver, client = bus
+    driver.handle(store, "sensors/board/reading", BOARD_MESSAGE, snapshots.NOW)
+    driver.handle(store, "sensors/board/reading", BOARD_MESSAGE, snapshots.NOW + timedelta(minutes=3))
+    driver.nudge(store, snapshots.NOW + timedelta(minutes=5))
+    assert client.published == []
+
+
 def test_a_sensor_whose_board_listens_nowhere_takes_no_command(bus, caplog):
     store, driver, client = bus
     with caplog.at_level("WARNING", logger="mqtt"):
@@ -120,7 +133,7 @@ def test_a_sensor_whose_board_listens_nowhere_takes_no_command(bus, caplog):
 def test_one_message_on_the_boards_topic_is_two_observations(bus, snapshots):
     store, driver, _ = bus
     written = driver.handle(store, "sensors/board/reading", BOARD_MESSAGE, snapshots.NOW)
-    assert written == [(HYGRO, OBSERVED + "hygro"), (THERMO, OBSERVED + "thermo")]
+    assert written == [(HYGRO, OBSERVED + "hygro_20260101T120000Z"), (THERMO, OBSERVED + "thermo_20260101T120000Z")]
     assert _results(store) == [("hygro", 0.61), ("thermo", 21.5)]
     taken = rows(store, "SELECT ?t WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:resultTime ?t } }", ())
     assert len(taken) == 2 and all(r["t"].startswith("2026-01-01T12:00:00") for r in taken)
@@ -139,7 +152,7 @@ def test_a_message_a_sensor_cannot_read_writes_nothing_for_it(bus, snapshots, ca
     store, driver, _ = bus
     with caplog.at_level("WARNING", logger="pipeline"):
         written = driver.handle(store, "sensors/board/reading", b'{"temperature": 21.5}', snapshots.NOW)
-    assert written == [(THERMO, OBSERVED + "thermo")], "the hygrometer's field is missing, the thermometer's is there"
+    assert written == [(THERMO, OBSERVED + "thermo_20260101T120000Z")], "the hygrometer's field is missing, the thermometer's is there"
     assert "unread" in caplog.text
 
 

@@ -101,7 +101,7 @@ CATALOGUE_GRAPH = _GRAPH + "catalogue"
 #  package's record reaches every rule without the kernel learning the package's name.
 PUBLIC = OREXIS + "PublicGraph"          # everyone's: the vocabulary, the world, the actions
 BELIEF = OREXIS + "BeliefGraph"          # what IS: the state, the instruments, a claim held
-STATE = OREXIS + "StateGraph"            # the readings — what a plan forks and an effect rewrites
+STATE = OREXIS + "StateGraph"            # what IS, as the agent holds it — what a plan forks and an effect rewrites
 PREDICTION = OREXIS + "PredictionGraph"  # what is expected, holding during its window
 PLAN = OREXIS + "PlanGraph"              # a plan published, adopted by reference
 RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period

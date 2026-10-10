@@ -14,10 +14,13 @@ from agent.metrics import Level, Value
 
 @dataclass(frozen=True)
 class Revised:
-    """A revision pass: the sources it revised or transitioned on, how many it was handed, the rule
-    executions it spent on both, how many it left cut short for the next pass, and its real seconds."""
+    """A revision pass: the sources it revised or transitioned on, the agent's own state graphs the
+    transitions they triggered changed — the present changing, whichever package's arrival triggered
+    them, a graph emptied and forgotten among them — how many it was handed, the rule executions it
+    spent on both, how many it left cut short for the next pass, and its real seconds."""
     metric = "revise"
     graphs: tuple
+    changed: tuple = ()
     sources: Value = None
     executions: Value = None
     cut: Value = None

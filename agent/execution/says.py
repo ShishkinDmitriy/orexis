@@ -1,7 +1,9 @@
 """`says`: what taking a step tells a peer, as documents, made from the present.
 
 An action whose taking tells somebody something has an `execution:Saying` among its operations,
-an `sh:construct` over the beliefs as they stand when the step is taken, with the step's
+an `sh:construct` over the beliefs as they stand when the step is taken — a saying sized from the
+present, as a bid's litres are, reads the reading as a command does, at the boundary, naming the
+kind its observation is kept in in its own text, since this package names none (#944) — with the step's
 parameters as `$tokens` and `$now`, asking the self where it means the agent. Its result is read as documents, the shape a world's files and a peer's messages
 share: an IRI the result says is `execution:to` an agent is a graph, what is said of it and of
 the blank nodes hanging off it is its content, and its kind, its period and whom it is to are

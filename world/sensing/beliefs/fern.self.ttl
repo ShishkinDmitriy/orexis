@@ -10,6 +10,6 @@
 #  and never the id — the agent checks that this is so.
 #
 #  WHAT IT RUNS: it observes the fern's probe and foresees it, and wants nothing, so it is no planner
-#  and no executor; an observer is a deliberator too, so its sides are concluded.
+#  and no executor; an observer is a deliberator too, so what its percepts are of is concluded.
 
 :fern_agent a orexis:Self , sensing:Observer , prediction:Predictor .

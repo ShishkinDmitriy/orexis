@@ -1,13 +1,18 @@
 """How often a sensor reports, read off SSN-System's frequency in the unit the world states —
 over the pot's probe and over a board whose peripherals each state theirs in a unit of their own.
 How many of those cadences the agent allows before a doubt is a stance, held where `missed` and
-`received` read it, and the reading of a stance in `agent/tests/test_stance.py`."""
+`received` read it, and the reading of a stance in `agent/tests/test_stance.py`. And when a
+sensor's cadence has lapsed — its latest percept ended with nothing arrived — the one read `missed`
+and the MQTT member both ask (#944)."""
 
 from __future__ import annotations
 
+from datetime import timedelta
 from pathlib import Path
 
-from agent.sensing.cadence import cadence_of
+from agent import clock
+from agent.sensing.cadence import cadence_of, lapsed
+from agent.sensing.received import GRACE, received
 
 WORLDS = Path(__file__).parent / "worlds"
 POT = WORLDS / "a_pot_and_its_probe.trig"
@@ -34,3 +39,25 @@ def test_no_frequency_or_a_unit_nothing_converts_is_no_cadence(snapshots, caplog
     with caplog.at_level("WARNING", logger="cadence"):
         assert cadence_of(store, TEST + "barometer") is None
     assert "nothing here converts" in caplog.text
+
+
+def test_a_sensor_has_lapsed_when_its_latest_percept_has_ended(monkeypatch, snapshots):
+    """The probe read at noon, every quarter hour: its percept holds until the next is due and a grace
+    past it, and only then has it lapsed. A second reading ends the first where it begins — an ended
+    percept that says nothing lapsed, since the latest, the one no percept follows, still holds."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(POT)
+    cadence = timedelta(seconds=900)
+    received(store, snapshots.ME, PROBE, b'{"value": 0.2}', snapshots.NOW)
+    due = snapshots.NOW + cadence * (1 + GRACE)
+    assert lapsed(store, due - timedelta(seconds=1)) == []
+    assert lapsed(store, due + timedelta(seconds=1)) == [(PROBE, due)]
+    received(store, snapshots.ME, PROBE, b'{"value": 0.21}', snapshots.NOW + cadence)
+    assert lapsed(store, due + timedelta(seconds=1)) == [], "the second reading holds"
+
+
+def test_a_sensor_stating_no_frequency_never_lapses(monkeypatch, snapshots):
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(BOARD)
+    assert received(store, snapshots.ME, PROBE, b'{"soil": {"moisture": 0.2}}', snapshots.NOW)
+    assert lapsed(store, snapshots.NOW + timedelta(days=30)) == []

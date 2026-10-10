@@ -42,7 +42,7 @@ import pyoxigraph as ox
 
 from agent import clock
 from agent.lifecycle import Signal
-from agent.ontology import KNOWN
+from agent.ontology import BELIEF, KNOWN
 from agent.stance import stance
 from agent.store import Raw, bind, catalogue_of, graphs_of, rows, update
 
@@ -82,11 +82,14 @@ class _Arrival:
     """A source queued: what stands beside it — kept as it was handed, so a revision the budget cuts
     short is continued beside what it was begun beside; None for the beliefs holding at the pass's
     instant, which is what one re-queued at a restart is revised beside — whether its revision has
-    settled, and how many of the orders of transitions it triggers are applied."""
+    settled, how many of the orders of transitions it triggers are applied, and the kind its revisions
+    are, as its writer handed it: a belief's are beliefs. One re-queued at a restart is continued, and
+    a revision continued keeps the row it was first described with, so the kind is not needed again."""
     read: tuple | None = None
     revised: bool = False
     done: int = 0
     said: bool = False                  # whether its row was said unsettled for its transitions
+    kind: str = BELIEF
 
 
 class Deliberator:
@@ -108,14 +111,14 @@ class Deliberator:
         self.revised = Signal("revised")
         self.revisions_held = Signal("revisions_held")
 
-    def changed(self, source: str, read=None) -> None:
+    def changed(self, source: str, read=None, kind: str = BELIEF) -> None:
         """A graph was written: take it on the next pass — revised beside `read` where the writer
-        says what stands, else beside the beliefs holding then, and the transitions it triggers applied.
-        Written again before it was done, it is a new arrival: it starts again, and takes its turn
-        after everything that arrived before it, since the readings a message carries reuse the name
-        of the latest one's graph and must still change the state oldest first."""
+        says what stands, else beside the beliefs holding then, its revisions classified `kind`, and
+        the transitions it triggers applied. Written again before it was done, it is a new arrival: it
+        starts again, and takes its turn after everything that arrived before it, since the readings a
+        message carries must change the state oldest first."""
         self.queue.pop(source, None)
-        self.queue[source] = _Arrival(tuple(read) if read is not None else None)
+        self.queue[source] = _Arrival(tuple(read) if read is not None else None, kind=kind)
 
     @property
     def pending(self) -> list[str]:
@@ -133,6 +136,7 @@ class Deliberator:
         started = time.perf_counter()
         revised = len(self.queue)
         done = []
+        changed: list[str] = []         # the agent's own state graphs the transitions changed
         waiting = False                 # an arrival before this one is not done: its transitions go first
         for source in list(self.queue):
             if left <= 0:
@@ -140,7 +144,7 @@ class Deliberator:
             arrival = self.queue[source]
             if not arrival.revised:
                 read = arrival.read if arrival.read is not None else tuple(graphs_of(self.beliefs, *KNOWN, at=at, now=at))
-                used = revise(self.beliefs, source, read=read, budget=min(left, PER_SOURCE))
+                used = revise(self.beliefs, source, read=read, budget=min(left, PER_SOURCE), kind=arrival.kind)
                 done.append(source)
                 spent += used
                 left -= used
@@ -160,6 +164,7 @@ class Deliberator:
             left -= triggered.spent
             if triggered.spent and source not in done:
                 done.append(source)
+            changed += [g for g in triggered.changed if g not in changed]
             if not triggered.finished:
                 arrival.done = triggered.done
                 self._say(source, arrival, settled=False)
@@ -171,11 +176,12 @@ class Deliberator:
         if spent:
             log.debug("%s: %d execution(s) over %d source(s), %d pending", self.id, spent,
                       len(self.queue), len(self.queue))
-        #  WHAT THE PASS REVISED AND SPENT: the sources, how many it was handed, the rule executions,
-        #  how many were left cut short for the next pass, and the real seconds.
+        #  WHAT THE PASS REVISED AND SPENT: the sources, the state graphs their transitions changed, how
+        #  many it was handed, the rule executions, how many were left cut short for the next pass, and
+        #  the real seconds.
         if revised:
-            self.revised.emit(Revised(tuple(done), sources=revised, executions=spent, cut=len(self.queue),
-                                      duration_s=round(time.perf_counter() - started, 6)))
+            self.revised.emit(Revised(tuple(done), changed=tuple(changed), sources=revised, executions=spent,
+                                      cut=len(self.queue), duration_s=round(time.perf_counter() - started, 6)))
             if self.revisions_held.connected:
                 self.revisions_held.emit(self._held())
         return spent
