@@ -40,6 +40,12 @@ _DERIVED_Q = """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
 #  WHAT THE BED IS BELIEVED, in climate's words, for one property: its state.
 _BELIEVED_Q = """SELECT ?state WHERE { $bed $state_as ?state }"""
 
+#  EVERY OBSERVATION RECEIVED: sensing's kind, which what the rules concluded of one is of too, so the
+#  received is told from its revision by its arrival.
+_OBSERVED_Q = """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+    ?g a sensing:ObservationGraph ; orexis:arrivedBy orexis:Received } } ORDER BY ?g"""
+OBSERVATION_GRAPH = "http://example.org/orexis/sensing#ObservationGraph"
+
 #  A GRAPH'S PERIOD, owner and arrival, off its row.
 _ROW_Q = """SELECT ?start ?end ?owner ?arrival WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     $g dcterms:temporal ?p ; orexis:beliefsOf ?owner ; orexis:arrivedBy ?arrival . ?p orexis:start ?start ; orexis:end ?end } }"""
@@ -155,8 +161,8 @@ def test_the_subject_belief_says_the_state_and_no_number(monkeypatch):
     (believed,) = _own_state(runtime.beliefs)
     said = [(q.subject.value, q.predicate.value, q.object) for q in runtime.beliefs.quads_for_pattern(None, None, None, ox.NamedNode(believed))]
     assert said == [(GH + "bed", CLIMATE + "soil", ox.NamedNode(CLIMATE + "Moist"))], said
-    (observed,) = graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph")
-    readings = [q.object.value for g in [observed, *revisions_of(runtime.beliefs, observed)]
+    (observed,) = [r["g"] for r in rows(runtime.beliefs, _OBSERVED_Q, ())]
+    readings = [q.object.value for g in [observed, *revisions_of(runtime.beliefs, observed, kind=OBSERVATION_GRAPH)]
                 for q in runtime.beliefs.quads_for_pattern(None, ox.NamedNode("http://www.w3.org/ns/sosa/hasSimpleResult"), None, ox.NamedNode(g))]
     assert readings == ["0.3104"], "the number is where it was"
 
@@ -168,7 +174,7 @@ def test_a_subject_belief_ends_with_the_observation_it_was_made_of(monkeypatch):
     runtime, time = _grower(monkeypatch)
     _read(runtime, time, SOIL, [0.25])
     (believed,) = _own_state(runtime.beliefs)
-    (observed,) = graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph")
+    (observed,) = [r["g"] for r in rows(runtime.beliefs, _OBSERVED_Q, ())]
     when = lambda row: (datetime.fromisoformat(row["start"]), datetime.fromisoformat(row["end"]))
     (held,) = rows(runtime.beliefs, _ROW_Q, (), g=believed)
     (seen,) = rows(runtime.beliefs, _ROW_Q, (), g=observed)
@@ -199,7 +205,7 @@ def test_a_revision_a_budget_cut_short_is_believed_as_it_would_have_been(monkeyp
     runtime, time = _grower(monkeypatch)
     deliberator = runtime.parts["belief"].deliberator
     deliberator.budget = 10
-    observed = lambda: set(graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph"))
+    observed = lambda: set(graphs_of(runtime.beliefs, OBSERVATION_GRAPH))
     #  WHETHER THE READING WAS LEFT UNDONE, after each pass of the deliberator's — a runtime pass runs
     #  several, one for every graph written, predictions among them.
     left: list[bool] = []

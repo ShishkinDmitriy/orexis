@@ -14,11 +14,11 @@ description: >-
   reading, and the number is read off the percept by its two readers at the boundary alone,
   prediction and a command sizing its step when it is taken; planning's and execution's code are
   untouched. Amended the next day - the belief holds no value; and, built, planning's code was
-  touched once, where a ground is laid; and the percepts built - a kind beneath orexis:Graph alone,
+  touched once, where a ground is laid; and the percepts built - sensing's own kind beneath orexis:Graph alone,
   what is concluded of a percept a percept too, stuck the number every percept kept agrees on. Refused - the observation as the
   belief, summaries a writer carries onto the present, a side re-derived from the last N numbers,
-  the hold read off the previous percept, a predicted number judged bare, and a hold written once
-  per property.
+  the hold read off the previous percept, a predicted number judged bare, a hold written once
+  per property, and a kernel kind for the percepts.
 status: superseded-in-part
 superseded-by: a-transition-changes-the-state-and-an-inference-only-concludes
 timestamp: 2026-10-09T20:00:00Z
@@ -39,13 +39,21 @@ timestamp: 2026-10-09T20:00:00Z
 > sensor's last `sensing:stuckAfter` and forgets the rest itself: no sweep drops a graph for its period
 > having ended, so what was said survives as long as sensing's rules read it. The decisions the build
 > made, none of which the body names:
-> - **The kind is the kernel's, `orexis:PerceptGraph`, beneath `orexis:Graph` alone** — not beneath
+> - **The kind is sensing's, `sensing:ObservationGraph`, beneath `orexis:Graph` alone** — not beneath
 >   `orexis:BeliefGraph`, which every reader of the mind names, so leaving a percept out is structural
->   ([percept](/domain/kernel/percept.md)). The kernel's because its readers are four packages: sensing,
->   prediction, belief's transition and execution's operations.
+>   ([observation](/domain/sensing/observation.md)). No sensing, no observations: the word is the
+>   package's that brings them, and each reader stands where it may speak it. Sensing runs belief's
+>   machinery over its own observations, handing the deliberator each as it arrives with the kind its
+>   revision is to be, so belief, beneath, names no kind of it; prediction, above sensing, speaks the
+>   one word; an operation's TEXT names it in its own `GRAPH` clause, so execution is handed none; and
+>   the MQTT member, beneath, asks sensing which readings have lapsed (`cadence.lapsed`, which `missed`
+>   asks too) instead of restating the question. Refused: a kernel kind, `orexis:PerceptGraph`, with
+>   sensing's beneath it, built first so that four packages could read observations without a word of
+>   sensing's — it made a concept sensing brings every package's word.
 > - **What is concluded of a percept is a percept.** A revision was beneath `orexis:BeliefGraph`, so
 >   a reading's quantity and feature would have reached every reader of the mind through its revision;
->   revision now writes its graph in its source's kind, a belief's a belief.
+>   revision now writes its graph in the kind its runner hands — a belief's a belief, an observation's
+>   sensing's own — and learns no word of the latter.
 > - **Stuck is concluded in the latest percept's revision, as `sensing:stuckOn` the number**, by a
 >   sensing rule that reads the percepts kept where they lie, by their kind, and the limit off the self
 >   graph — the one rule that reaches past the arrival it is revised for, since a revision is handed
@@ -55,7 +63,8 @@ timestamp: 2026-10-09T20:00:00Z
 > - **A predicted observation is a node of its own**, and carries the key, the sensor, a number and an
 >   instant and nothing else of the percept, the carried one included: it had been the observation's
 >   node, which named a percept in every ground.
-> - **A command and a saying are handed the percepts holding as the step is taken**, the reading in hand.
+> - **A command and a saying read the observation holding as the step is taken**, the reading in hand,
+>   by naming its kind in their own text.
 >
 > Measured: the present ground holds no reading now, so a key no drift moves — the greenhouse's air —
 > whose carried prediction brings a predicted observation into the ground a grace on is a period of its

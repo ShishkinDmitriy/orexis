@@ -13,7 +13,7 @@ import pyoxigraph as ox
 import pytest
 
 from agent import clock
-from agent.ontology import PERCEPT, STATE
+from agent.ontology import STATE
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import graphs_of, rows
 from agent.series import HISTORY, Sink, install
@@ -79,7 +79,7 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
     #  them; and the one thing the mind reads of them, the bed's soil, believed dry (#944).
     read = {r["p"].rsplit("#", 1)[-1]: float(r["v"]) for r in rows(
         runtime.beliefs, "SELECT ?p ?v WHERE { ?o sosa:observedProperty ?p ; sosa:hasSimpleResult ?v }",
-        graphs_of(runtime.beliefs, PERCEPT))}
+        graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph"))}
     assert read == {"SoilMoisture": 0.2, "AirTemperature": 14.5, "AirHumidity": 0.8, "AirPressure": 1012.0,
                     "BatteryVoltage": 3.91}
     held = rows(runtime.beliefs, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", graphs_of(runtime.beliefs, STATE))

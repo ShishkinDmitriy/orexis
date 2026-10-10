@@ -57,8 +57,13 @@ def test_its_part_adopts_what_is_published_and_ends_what_was_reached_untaken(mon
     #  THE WALK A REVISION QUEUED IS THE DRAIN'S, and marks no lap: a lap is from the last mark, so
     #  the one it marked took the sensing and revision before it — the drain of two readings, 52 ms
     #  by hand — as `execute`, and the pass's `drain` read nought. The walk a pass asks for marks it.
-    runtime.jobs[0]()
+    runtime.jobs.pop(0)()
     assert runtime.laps == [], "a walk run inside the drain is the drain's, not execution's"
+    #  AN ARRIVAL OF NO KIND OF THIS PACKAGE'S — what a sensor said (#944) — changes the present by the
+    #  transitions it triggers, and the deliberator says which state graphs they changed.
+    belief.deliberator.revised.emit(Revised(("urn:g",), changed=("urn:test:state",)))
+    assert len(runtime.jobs) == 1, "the transitions an arrival triggered changed the present, so a walk is queued"
+    runtime.jobs.pop(0)()
     ((_, walk),) = runtime.timers
     walk()
     assert runtime.laps == ["execute"], "the walk a pass asks for is execution's lap"

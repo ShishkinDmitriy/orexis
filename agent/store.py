@@ -59,7 +59,7 @@ from datetime import datetime
 from pathlib import Path
 import pyoxigraph as ox
 
-from .ontology import OREXIS
+from .ontology import BELIEF, OREXIS
 
 # Which graphs are public — ASKED, not listed. A graph IRI is an instance, and code that named
 # five of them was doing what rule 1 forbids everywhere else; `orexis:PublicGraph` is the term, the
@@ -719,26 +719,29 @@ SELECT ?g ?class WHERE {
 
 _REVISIONS_Q = """
 SELECT DISTINCT ?r WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-  VALUES ?source { $sources } VALUES ?kind { orexis:BeliefGraph orexis:PerceptGraph }
-  ?r prov:wasDerivedFrom ?source ; a ?kind } }"""
+  VALUES ?source { $sources } ?r prov:wasDerivedFrom ?source ; a $kind } }"""
 
 
-def revisions_of(store, *sources: str) -> list[str]:
-    """Every BELIEF or PERCEPT the catalogue says was derived from one of `sources`, sorted — what
-    the belief package's rules concluded of a percept, a document heard or a prediction, its
-    revisions. A reader that means a graph as the rules leave it means the graph and these: what a
-    reading is of and its quantity are concluded, as much the percept's as the number it gave.
+def revisions_of(store, *sources: str, kind: str = BELIEF) -> list[str]:
+    """Every graph of `kind` the catalogue says was derived from one of `sources`, sorted — what
+    the belief package's rules concluded of a document heard, a state or a prediction, its
+    revisions, which are beliefs, unless the reader says the kind they are. A reader that means a
+    graph as the rules leave it means the graph and these: what a reading is of and its quantity
+    are concluded, as much the observation's as the number it gave.
 
-    A REVISION IS OF ITS SOURCE'S KIND: a belief's revisions are beliefs, a percept's are percepts —
-    the belief package classifies them so — and what the rules conclude of what a sensor said is
-    handed to no reader a percept is not handed to (#944).
+    A REVISION IS OF THE KIND ITS RUNNER HANDED, and the reader says it: whoever has a graph revised
+    says what its revisions are (`belief.revise`), so sensing's observations are revised into
+    sensing's own kind, which no reader of the mind is handed, and a reader of observations asks for
+    their revisions in that kind (#944). The kernel names no package's word, so the kind is an
+    argument and not a list of the kinds there are.
 
-    AND NOT ANY GRAPH DERIVED FROM IT. A drift's prediction says it was derived from the percept it
-    runs over too, and a prediction is what a reading WILL be: asked without the kind, this handed
+    AND NOT ANY GRAPH DERIVED FROM IT. A drift's prediction says it was derived from the observation
+    it runs over too, and a prediction is what a reading WILL be: asked without the kind, this handed
     the present ground and the executor's answer the future as the present."""
     if not sources:
         return []
-    return sorted(r["r"] for r in rows(store, bind(_REVISIONS_Q, sources=Raw(" ".join(f"<{s}>" for s in sources)))))
+    return sorted(r["r"] for r in rows(store, bind(_REVISIONS_Q, kind=kind,
+                                                   sources=Raw(" ".join(f"<{s}>" for s in sources)))))
 
 
 def close_catalogue(store) -> None:
@@ -1048,8 +1051,10 @@ def _joined(*texts: str) -> list[str]:
     return [head + " ;\n".join(bodies)]
 
 
-def forget_graph(store, graph_iri: str) -> None:
-    """Empty one graph AND take back everything the catalogue said of it.
+def forget_graph(store, graph_iri: str, *, revisions: str = BELIEF) -> None:
+    """Empty one graph AND take back everything the catalogue said of it — and its revisions, of the
+    kind `revisions` says they are (`revisions_of`): beliefs, unless the caller's graph is revised
+    into a kind of its own, as sensing's observations are.
 
     A row pointing at a graph that no longer exists is litter every reader asking by class
     would still be handed. Two acts because `clear_graph` has callers that mean to empty a
@@ -1067,7 +1072,7 @@ def forget_graph(store, graph_iri: str) -> None:
     that day — so the greenhouse's dose read unmet in the world it made, and the search exhausted
     for a day after the bed crossed its floor.
     """
-    for revision in revisions_of(store, graph_iri):
+    for revision in revisions_of(store, graph_iri, kind=revisions):
         forget_graph(store, revision)
     clear_graph(store, graph_iri)
     catalogue = catalogue_of(store)
@@ -1087,19 +1092,19 @@ WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g dcterms:temporal ?period .
                       FILTER(!BOUND(?was) || ?was > ?end) } }"""
 
 
-def end_graph(store, graph_iri: str, at: datetime) -> None:
-    """Say a graph stops holding at `at`, and its revisions with it — where it held past `at`; one
-    that has ended already is left as it stands, and one that begins later ends where it begins,
-    holding at no instant.
+def end_graph(store, graph_iri: str, at: datetime, *, revisions: str = BELIEF) -> None:
+    """Say a graph stops holding at `at`, and its revisions with it, of the kind `revisions` says
+    they are — where it held past `at`; one that has ended already is left as it stands, and one
+    that begins later ends where it begins, holding at no instant.
 
-    A PERIOD SAYS WHEN WHAT IT HOLDS IS THE PRESENT, and a percept's is said when it arrives: until
-    the next reading is due. The next arriving earlier than that ends it there, and the percept is
-    kept, as what the sensor said then, and handed to no reader standing later (#944). What the
-    rules concluded of it ends with it, as it goes with it in `forget_graph`."""
+    A PERIOD SAYS WHEN WHAT IT HOLDS IS THE PRESENT, and an observation's is said when it arrives:
+    until the next reading is due. The next arriving earlier than that ends it there, and the
+    observation is kept, as what the sensor said then, and handed to no reader standing later (#944).
+    What the rules concluded of it ends with it, as it goes with it in `forget_graph`."""
     catalogue = catalogue_of(store)
     if catalogue is None:
         return
-    graphs = [graph_iri, *revisions_of(store, graph_iri)]
+    graphs = [graph_iri, *revisions_of(store, graph_iri, kind=revisions)]
     update(store, bind(_END_U, cat=Raw(f"<{catalogue}>"), at=instant(at),
                        graphs=Raw(" ".join(f"<{g}>" for g in graphs))))
 

@@ -4,11 +4,13 @@ An action a device takes has an `execution:Command` among its operations, an `sh
 beliefs as they stand when the step is taken, with the step's parameters as `$tokens` and `$now`,
 asking the self (`?me a orexis:Self`) where it means the agent, answering `?actuator` and `?payload`. The search never sizes an act — a dose's effect is the side it reaches, not litres —
 so how much to pour, or how long to heat, is decided here, from the reading in hand, by the text
-the domain declares. THE READING IN HAND IS A PERCEPT, handed here beside the beliefs and to no reader
-of the mind: a command sizing a step as it is taken is one of the readers at the boundary, and the
-percept it is handed is the one holding now — a sensor's latest, since each ends where the next
-begins (#944). The answer is what the container hands the transport; execution names no
-transport, and a step whose action carries no command sends nothing.
+the domain declares. THE READING IN HAND IS AN OBSERVATION, which is no belief, and this package is
+handed none and names none: a command sizing a step as it is taken is one of the readers at the
+boundary, and its TEXT names the kind its observation is kept in, sensing's, in its own `GRAPH`
+clauses joined with the catalogue, and the one holding at `$now` — a sensor's latest, since each ends
+where the next begins (#944). The text is handed the beliefs as its default graph as every operation
+is, and a `GRAPH` clause reaches past them. The answer is what the container hands the transport;
+execution names no transport, and a step whose action carries no command sends nothing.
 """
 
 from __future__ import annotations
@@ -17,7 +19,7 @@ import json
 import logging
 
 from agent import clock
-from agent.ontology import ACTION, KNOWN, PERCEPT
+from agent.ontology import ACTION, KNOWN
 from agent.store import bind, graphs_of, instant, rows
 
 from .implementation import COMMAND, operations
@@ -47,7 +49,7 @@ def command(store, said: dict, *, order: float | None = None) -> list[tuple[str,
             tokens[local] = said[local]
     out = []
     for text in texts:
-        for row in rows(store, bind(text, **tokens), graphs_of(store, *KNOWN, PERCEPT, at=now, now=now)):
+        for row in rows(store, bind(text, **tokens), graphs_of(store, *KNOWN, at=now, now=now)):
             try:
                 out.append((row["actuator"], json.loads(row["payload"])))
             except (KeyError, ValueError) as exc:

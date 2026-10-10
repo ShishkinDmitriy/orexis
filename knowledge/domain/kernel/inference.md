@@ -18,7 +18,7 @@ beneath (`store.closed`, `store.close_catalogue`).
 # Why it is materialised
 
 A query that walked `rdfs:subClassOf*` by hand was a query that had to remember to; one that asks
-`?g a orexis:PerceptGraph` reads a sensing observation graph as a percept because the closure
-already said so. Subclass closure is the one entailment built — nothing else of RDFS or OWL is
+`?g a orexis:StateGraph` reads the market's call graph as state because the closure already said
+so. Subclass closure is the one entailment built — nothing else of RDFS or OWL is
 computed, and a domain that needs a conclusion states a rule, which the
 [deliberator](/domain/belief/deliberator.md) runs as a [revision](/domain/belief/revision.md).

@@ -13,13 +13,13 @@ its caller names (a-rule-does-not-say-which-world-it-reads).
 
 **THREE RUNNERS, ONE MACHINE.** Planning applies an action's effect through it in the possible world a
 step makes, reading that world and changing it alone (`agent/planning/take.py`). The belief package
-applies a percept's transition through it to the agent's own state, each arrival of testimony
+applies an arrival's transition through it to the agent's own state, each arrival of testimony
 triggering every `belief:Transition` once (`trigger`). And planning applies the same transitions in a
 ground it lays, each predicted observation arriving there triggering every one once, reading the
 ground's own state and changing the ground alone (`agent/planning/lay_ground.py`, #944). An effect is
-a transition the agent causes; a percept's, received or predicted, is one the world causes. None runs
-to a fixpoint: an order is applied once. `transitions` answers the rules every runner of a percept's
-transition applies, so the present and a ground are changed by the same ones.
+a transition the agent causes; an arrival's, an observation received or predicted, is one the world
+causes. None runs to a fixpoint: an order is applied once. `transitions` answers the rules every
+runner of an arrival's transition applies, so the present and a ground are changed by the same ones.
 
 **A RULE THAT WILL NOT RUN CHANGES NOTHING, LOUDLY.** A text that will not bind, a delete that names
 its own graphs or is no `DELETE … WHERE`, and a text the engine refuses are a package's bug and must
@@ -94,7 +94,7 @@ def ordered(rules) -> list[list[Rule]]:
 def asked(store, rules, graphs, tokens: dict | None = None) -> Change:
     """What the rules of ONE order change, every one of them reading `graphs` as they stand: each
     construct asked, and each delete's WHERE matched, before anything is applied. `tokens` are the
-    `$tokens` a text takes — an effect's parameters; none for a percept's transition."""
+    `$tokens` a text takes — an effect's parameters; none for an arrival's transition."""
     added, deleted = [], []
     for rule in rules:
         if rule.construct:

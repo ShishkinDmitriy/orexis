@@ -14,7 +14,8 @@
 #  be believed comfortable. It takes the subject, and its precondition and effect speak the air's
 #  state and no number. How long to heat is sized when the step is taken, from the subject's latest
 #  observation of its air — how far it is below the middle of the range and how fast the heater warms,
-#  at most its longest run; the step lands when the thermometer next reads. The property is bound by
+#  at most its longest run, read where its text finds it, by sensing's kind, as the dose's command
+#  reads its own; the step lands when the thermometer next reads. The property is bound by
 #  the world and held to the air's temperature by a `VALUES` block, as the dose's is, so the air's
 #  readings are placed in the scope that heats it.
 
@@ -56,9 +57,14 @@ climate:Heating a orexis:Action ;
         CONSTRUCT { $subject climate:air climate:Comfortable } WHERE { $subject climate:air climate:Cold }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Command ; sh:select """PREFIX climate: <http://example.org/orexis/climate#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT ?actuator ?payload WHERE {
-            ?reading sosa:hasFeatureOfInterest/(sosa:isSampleOf)? $subject ; sosa:observedProperty climate:AirTemperature ;
-                     sosa:hasSimpleResult ?value ; sosa:resultTime ?at .
+            GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?held a sensing:ObservationGraph ; dcterms:temporal ?p .
+                         ?p orexis:start ?at . OPTIONAL { ?p orexis:end ?until }
+                         FILTER(?at <= $now && (!BOUND(?until) || $now < ?until)) }
+            GRAPH ?held { ?reading sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty climate:AirTemperature ;
+                                   sosa:hasSimpleResult ?value }
+            ?feature (sosa:isSampleOf)? $subject .
             $subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
             ?condition ssn:forProperty climate:AirTemperature ; schema:minValue ?lo ; schema:maxValue ?hi .
             $heater climate:degreesPerHour ?rate ; climate:maxHeatS ?cap .

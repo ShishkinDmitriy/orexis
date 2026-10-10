@@ -69,12 +69,6 @@ orexis:ActionGraph
     rdfs:label "Action graph" ;
     rdfs:comment "A graph of `orexis:Action` rows — what an agent can do, each with what it takes, when it is available, what it costs and what it adds and retracts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/actions.ttl`), and the planner reads its actions from these graphs alone rather than from every public graph, the vocabularies and the world included. Public, since what can be done is everyone's to read. The 0.1.0 kind of this spelling was also a menu graph; 0.2.0 has no menu." .
 
-orexis:PerceptGraph
-    a owl:Class ;
-    rdfs:subClassOf orexis:Graph ;
-    rdfs:label "Percept graph" ;
-    rdfs:comment "What a sensor SAID, one reading to a graph, and what the rules concluded of that reading (knowledge/domain/sensing/percept.md, #944): testimony kept as the premise, and NOT a belief. Beneath `orexis:Graph` alone, so no reader of the mind is handed one — not the planner, a desire, a precondition, the imaginarium or a world's hash, all of which read `orexis:BeliefGraph` and its kinds — and only the readers at the boundary name it: the rules of the package that writes it, prediction's estimator, a transition handed the arrival, and an operation sized from the present when a step is taken. Each holds from its reading's instant until the next reading's, the latest until the next is due, so a reader standing at an instant is handed one per sensor. The KERNEL'S, though sensing writes it, because those readers are four packages and none may name another's word; a revision of a percept is a percept too, since what the rules conclude of what a sensor said is still what it said." .
-
 orexis:PublicGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
@@ -115,7 +109,7 @@ orexis:StateGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph , orexis:Graph ;
     rdfs:label "State graph" ;
-    rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing says a sensor silent, DERIVED; a peer's document heard is one, RECEIVED; the belief package prepares one per arrival for what the transitions it triggers insert, the subject beliefs, DERIVED, a transition naming no graph of its own). An instrument's reading is no state: it is a percept (`orexis:PerceptGraph`), which no reader of the mind is handed, and what the mind reads of it is the subject belief a transition makes (#944). It was `orexis:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. A graph of this kind the agent DERIVED is the agent's own state: what a transition reads beside the arrival that triggers it, and the one place a transition deletes from. NOT public: an agent's readings are its own." .
+    rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing says a sensor silent, DERIVED; a peer's document heard is one, RECEIVED; the belief package prepares one per arrival for what the transitions it triggers insert, the subject beliefs, DERIVED, a transition naming no graph of its own). An instrument's reading is no state: it is sensing's observation, a kind beneath `orexis:Graph` alone which no reader of the mind is handed, and what the mind reads of it is the subject belief a transition makes (#944). It was `orexis:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. A graph of this kind the agent DERIVED is the agent's own state: what a transition reads beside the arrival that triggers it, and the one place a transition deletes from. NOT public: an agent's readings are its own." .
 
 orexis:WorkingGraph
     a owl:Class ;

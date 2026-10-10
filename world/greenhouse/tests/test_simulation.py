@@ -19,10 +19,10 @@ NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 GH = "http://example.org/orexis/world/greenhouse#"
 
 #  EVERY SENSOR THE GROWER SAID STUCK OF ANY PERCEPT IT KEEPS — sensing's rule concludes it of the
-#  percept arriving, in that percept's revision, a percept too (#944).
+#  percept arriving, in that percept's revision, of sensing's kind too (#944).
 _STUCK_Q = """
 SELECT DISTINCT ?sensor WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PerceptGraph }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a sensing:ObservationGraph }
   GRAPH ?g { ?sensor sensing:stuckOn ?number } }"""
 
 

@@ -1,9 +1,10 @@
 """What the prediction tree's SHAPE promises, and the one direction its arrows may point.
 
-Prediction sits ABOVE sensing and beneath the mind: it reads the observation a sensor last made
-by the kernel's kind and SOSA's words, never by a word of sensing's, and imports nothing of
-sensing, of the mind, of the belief package or of any transport; the planner reads what it
-writes by kind and imports nothing of it. A module named for an act exports that act alone, a
+Prediction sits ABOVE sensing and beneath the mind: it predicts what a sensor will read, and with
+no sensing there is nothing to predict, so it reads the observation a sensor last made by
+sensing's kind, `sensing:ObservationGraph` — the one word of sensing's it speaks (#944) — and SOSA's
+words, and imports nothing of sensing's code, of the mind, of the belief package or of any
+transport; the planner reads what it writes by kind and imports nothing of it. A module named for an act exports that act alone, a
 module named for a thing may answer several questions about it, and every public function has a
 test named for it. A TEST here may import its neighbours, to tell the whole story of a pot; the
 code may not.
@@ -42,8 +43,18 @@ def test_the_package_imports_nothing_of_its_neighbours():
 
 @pytest.mark.parametrize("path", CODE + VOCABULARY, ids=lambda p: p.name)
 def test_no_file_of_this_package_speaks_a_neighbours_words(path):
-    said = re.findall(r"\b(?:sensing|planning|execution|belief|mqtt):\w+", path.read_text())
+    said = re.findall(r"\b(?:planning|execution|belief|mqtt):\w+", path.read_text())
     assert not said, f"{path.name} names a neighbour's words: {sorted(set(said))}"
+
+
+def test_the_one_word_of_sensing_this_package_speaks_is_the_kind_an_observation_is_kept_in():
+    """Sensing is beneath prediction, and its observations are what prediction runs from, so prediction
+    names them in sensing's word — the kind, and that alone: no `sensing:` word else, by prefix or by
+    spelling, is spoken in the code or the vocabulary, and the kind is spoken somewhere."""
+    said = {p.name: set(re.findall(r"\bsensing:(\w+)", p.read_text()))
+            | set(re.findall(r'SENSING \+ "(\w+)"', p.read_text())) for p in CODE + VOCABULARY}
+    assert any("ObservationGraph" in words for words in said.values()), said
+    assert all(words <= {"ObservationGraph"} for words in said.values()), said
 
 
 def test_the_mind_imports_nothing_of_prediction():

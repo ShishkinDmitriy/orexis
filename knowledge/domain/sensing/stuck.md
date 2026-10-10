@@ -24,7 +24,7 @@ identical - not the [reading](/domain/sensing/reading.md) concluded from it, whi
 rescale could make identical out of two different counts, and not close, since a live instrument
 jitters by at least a count and that jitter is what a stuck one lacks.
 
-Sensing keeps a sensor's last `sensing:stuckAfter` [percepts](/domain/kernel/percept.md) — a
+Sensing keeps a sensor's last `sensing:stuckAfter` [percepts](/domain/sensing/observation.md) — a
 [stance](/domain/kernel/stance.md), six where the agent's self graph states none — and **a rule says
 the sensor stuck when every one of them gave one number**: `:probe sensing:stuckOn 2412`, the number
 it is stuck on, concluded in the revision of the percept arriving (`agent/sensing/rules.ttl`). It

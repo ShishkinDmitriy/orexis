@@ -19,7 +19,9 @@ family's own and which hands `received` the sensor's IRI and bytes.
 package's calculation, over the latest percept written here. What a percept is of, its quantity,
 and whether its sensor is stuck on one number are revisions: the rules this layer ships
 (`rules.ttl`, a document saying it is a `sh:RulesGraph`, which a boot reads as it reads every
-document) conclude them, and the deliberator runs them when the container says a graph changed.
+document) conclude them, and the deliberator runs them when sensing's part hands it a percept
+written, saying the revision is of this layer's kind — the runner of belief's revision over its own
+observations, since belief, beneath, knows no word of them (#944).
 No state, no want, no wake is written here; a range is SSN-System's concept, read by a domain's
 transitions and by the prediction package, minted by nobody.
 

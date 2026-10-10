@@ -10,8 +10,9 @@
 <> a sh:RulesGraph .    # this document is one graph, and this is what it is
 
 #  THE RULES SENSING REGISTERS, in two layers, as SHACL 1.2 Inference Rules defines them, run by the
-#  deliberator over every percept as it arrives. What they conclude is the percept's revision, and a
-#  percept's revision is a percept too (`orexis:PerceptGraph`): handed to no reader of the mind, which
+#  deliberator over every percept as sensing hands it in. What they conclude is the percept's revision,
+#  and a percept's revision is a percept too (`sensing:ObservationGraph`, the kind sensing hands the
+#  revision): handed to no reader of the mind, which
 #  reads what a domain's TRANSITION makes of the percept arriving — the subject belief, held past a
 #  margin by the state it replaces — and no rule here
 #  (an-observation-is-a-percept-and-the-mind-reads-only-beliefs).

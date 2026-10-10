@@ -102,7 +102,6 @@ CATALOGUE_GRAPH = _GRAPH + "catalogue"
 PUBLIC = OREXIS + "PublicGraph"          # everyone's: the vocabulary, the world, the actions
 BELIEF = OREXIS + "BeliefGraph"          # what IS: the state, the instruments, a claim held
 STATE = OREXIS + "StateGraph"            # what IS, as the agent holds it — what a plan forks and an effect rewrites
-PERCEPT = OREXIS + "PerceptGraph"        # what a sensor said, one reading each — no belief, and no reader of the mind's
 PREDICTION = OREXIS + "PredictionGraph"  # what is expected, holding during its window
 PLAN = OREXIS + "PlanGraph"              # a plan published, adopted by reference
 RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period

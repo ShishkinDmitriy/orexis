@@ -14,7 +14,7 @@ description: >-
 A **revision** is what a rule concludes of a graph: *this round's venue is open*, *this reading is of
 the pot's soil and reads 0.41*, *this probe is stuck on 2412*, concluded from what a graph says beside
 what stands. It is of its source's kind: what is concluded of a belief is a belief, and of a
-[percept](/domain/kernel/percept.md) a percept, so a reading's conclusions are handed to no reader of
+[percept](/domain/sensing/observation.md) a percept, so a reading's conclusions are handed to no reader of
 the mind, as the reading is not (#944). The rules are SHACL 1.2 Inference Rules' and no word of ours is added: a graph in the
 role of a rules graph is typed `sh:RulesGraph`, which the belief package puts beneath
 `orexis:Graph` so that a boot reads it as a kind it knows; a package ships its rules as a `sh:RuleSet`,

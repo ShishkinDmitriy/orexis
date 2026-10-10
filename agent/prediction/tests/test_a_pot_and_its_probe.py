@@ -19,6 +19,7 @@ from agent import clock
 from agent.belief.revise import revise
 from agent.ontology import PUBLIC
 from agent.prediction.predict import predict
+from agent.sensing.ontology import OBSERVATION_GRAPH
 from agent.sensing.received import received
 from agent.store import close_catalogue, document, graphs_of, put_document, revisions_of, rows
 
@@ -37,7 +38,9 @@ ORDER BY ?start"""
 
 
 def _number(store, graph) -> float:
-    (r,) = rows(store, _NUMBER_Q, [graph, *revisions_of(store, graph)])
+    """The number a graph holds: a percept's in what the rules concluded of it, which is of sensing's
+    kind, and a prediction's in the prediction itself."""
+    (r,) = rows(store, _NUMBER_Q, [graph, *revisions_of(store, graph, kind=OBSERVATION_GRAPH)])
     return float(r["v"])
 
 
@@ -57,7 +60,7 @@ def _reading(store, snapshots, probe, value, minutes=0):
     at = snapshots.NOW + timedelta(minutes=minutes)
     read = graphs_of(store, PUBLIC, at=at)          # beside what the world states, as belief's part revises
     [graph] = received(store, snapshots.ME, probe, f'{{"value": {value}}}'.encode(), at)
-    revise(store, graph, read=read)
+    revise(store, graph, read=read, kind=OBSERVATION_GRAPH)      # as sensing has belief's part revise it
     close_catalogue(store)
     return graph, predict(store, snapshots.ME, probe, now=at)
 

@@ -17,7 +17,7 @@ soil, 18.5 for the greenhouse air — the sensor's number as it is where the num
 quantity, a thermometer's degrees, or rescaled through its [scaling](/domain/sensing/scaling.md), a
 probe's count made a moisture, and corrected through its [calibration](/domain/sensing/calibration.md)
 where the world states one. It is concluded in the observation's revision, and so it is a
-[percept](/domain/kernel/percept.md)'s, as the observation is: no reader of the mind is handed it.
+[percept](/domain/sensing/observation.md)'s, as the observation is: no reader of the mind is handed it.
 
 # What is made of it
 

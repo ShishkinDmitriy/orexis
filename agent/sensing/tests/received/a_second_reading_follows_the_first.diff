@@ -1,15 +1,14 @@
 --- case
 +++ expected
-@@ -64,7 +64,23 @@
+@@ -61,7 +61,22 @@
+   :world a orexis:PublicGraph .
    observed:probe_20260101T114500Z a orexis:Graph .
-   observed:probe_20260101T114500Z a orexis:PerceptGraph .
    observed:probe_20260101T114500Z a sensing:ObservationGraph .
 -  observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
 +  observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
    observed:probe_20260101T114500Z orexis:arrivedBy orexis:Received .
    observed:probe_20260101T114500Z orexis:beliefsOf :keeper .
 +  observed:probe_20260101T120000Z a orexis:Graph .
-+  observed:probe_20260101T120000Z a orexis:PerceptGraph .
 +  observed:probe_20260101T120000Z a sensing:ObservationGraph .
 +  observed:probe_20260101T120000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  observed:probe_20260101T120000Z orexis:arrivedBy orexis:Received .

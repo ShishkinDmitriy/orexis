@@ -5,12 +5,21 @@ it, `received` writes. What the agent comes to hold true of a subject from a per
 part of sensing's: a domain's transition, triggered by the percept arriving, makes it, and the
 belief package applies it (a-transition-changes-the-state-and-an-inference-only-concludes).
 
+SENSING RUNS BELIEF'S REVISION OVER ITS OWN OBSERVATIONS (#944). An observation is no belief, and the
+belief package, beneath, knows no kind of it — no sensing, no observations — so this part, linked to
+belief's, hands it each observation graph as it is written, and at start each one nothing was
+concluded of, with the kind its revision is to be: `sensing:ObservationGraph`, this layer's own, so
+what the rules conclude of what a sensor said reaches no reader of the mind either. Belief's
+deliberator takes it in its one queue, revises it by this layer's rules and applies the transitions
+its arrival triggers, as it did when it heard the kind itself — a rule never knows the kind of graph
+it writes, and each runner prepares its target. An observer is a deliberator (`ontology.ttl`), so
+belief's part is there to link to.
+
 WHAT SENSING SAYS HAPPENED, by the part's own signals, each carrying an event of `events.py` and made
 only where heard: `observed`, an observation graph written — heard as it is written, whoever wrote
-it, and said with what the rules concluded of it, which is written by then, since an observer is a
-deliberator too and belief's part starts first in a pass (`agent.runtime.PASS`), so it hears the
-graph first; and with how long after the percept before it it came, read off that percept, which
-is kept (`sensing:previous`, #944) — `silence`, how many sensors are said silent after each ask — and
+it, and said with what the rules concluded of it, which is written by then, since this part hands
+the graph to belief before it says it; and with how long after the percept before it it came, read
+off that percept, which is kept (`sensing:previous`, #944) — `silence`, how many sensors are said silent after each ask — and
 `doubted`, which sensors are said silent or stuck after each ask, one event per sensor doubted, and
 one saying neither for a sensor doubted at the last ask and no longer, so the series' last word on it
 in a window is that it is fine (#894). Silent is a state graph `missed` writes; stuck is what
@@ -22,7 +31,6 @@ from __future__ import annotations
 from datetime import datetime
 
 from agent.lifecycle import Signal
-from agent.ontology import PERCEPT
 from agent.store import Raw, catalogue_of, graphs_of, revisions_of, rows
 
 from .cadence import cadence_of
@@ -58,14 +66,27 @@ SELECT DISTINCT ?sensor WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g {
 #  THE SENSORS STUCK NOW: what sensing's rule concluded of the percept holding now.
 _STUCK_Q = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }"
 
+#  EVERY OBSERVATION RECEIVED THAT NOTHING WAS CONCLUDED OF, oldest first: what a pass cut short of
+#  being handed to belief left — its revision is of this layer's kind, so it is asked for by it.
+_UNREVISED_Q = """
+SELECT ?g WHERE {
+  GRAPH $cat { ?g a sensing:ObservationGraph ; orexis:arrivedBy orexis:Received
+               OPTIONAL { ?g dcterms:temporal/orexis:start ?start }
+               FILTER NOT EXISTS { ?r prov:wasDerivedFrom ?g ; a sensing:ObservationGraph } } }
+ORDER BY ?start ?g"""
+
 
 class _Sensing:
     def __init__(self, runtime):
         self.runtime = runtime
+        self.belief = None                            # belief's part, beneath, which revises
         self.observed = Signal("observed")
         self.silence = Signal("silence")
         self.doubted = Signal("doubted")
         self._doubts: set[str] = set()                # the sensors doubted at the last ask
+
+    def link(self, parts) -> None:
+        self.belief = parts.get("belief")
 
     def start(self, runtime) -> None:
         def ask():
@@ -76,13 +97,24 @@ class _Sensing:
                     written += self.doubted.emit(event)
             return written
         runtime.every(EVERY_S, ask)
+        if self.belief is not None:
+            cat = catalogue_of(runtime.beliefs)
+            unrevised = [r["g"] for r in rows(runtime.beliefs, _UNREVISED_Q, (), cat=Raw(f"<{cat}>"))] if cat else []
+            if unrevised:
+                self._revise(unrevised)
+            runtime.on(OBSERVATION_GRAPH, lambda graph: self._revise([graph]))
         if self.observed.connected:
             runtime.on(OBSERVATION_GRAPH, self._observation)
+
+    def _revise(self, graphs) -> list[str]:
+        """Hand `graphs` to belief's part, which revises them by this layer's rules and applies the
+        transitions each triggers — their revisions of this layer's kind, and no belief."""
+        return self.belief.revise(graphs, kind=OBSERVATION_GRAPH)
 
     def _observation(self, graph: str) -> list[str]:
         """Say the observation `graph` holds, with how long after the percept before it it came."""
         beliefs = self.runtime.beliefs
-        found = rows(beliefs, _OBSERVED_Q, [graph, *revisions_of(beliefs, graph)])
+        found = rows(beliefs, _OBSERVED_Q, [graph, *revisions_of(beliefs, graph, kind=OBSERVATION_GRAPH)])
         if not found:
             return []
         o = found[0]
@@ -106,7 +138,7 @@ class _Sensing:
         ask and no longer — so the last word in a window on a sensor that recovered is nought."""
         beliefs = self.runtime.beliefs
         silent = {r["sensor"] for r in rows(beliefs, _SILENT_EACH_Q, (), cat=Raw(f"<{catalogue_of(beliefs)}>"))}
-        stuck = {r["sensor"] for r in rows(beliefs, _STUCK_Q, graphs_of(beliefs, PERCEPT, at=now, now=now))}
+        stuck = {r["sensor"] for r in rows(beliefs, _STUCK_Q, graphs_of(beliefs, OBSERVATION_GRAPH, at=now, now=now))}
         said = [Doubted(sensor=tag_of(sensor), silent=int(sensor in silent), stuck=int(sensor in stuck))
                 for sensor in sorted(silent | stuck)]
         said += [Doubted(sensor=tag_of(sensor)) for sensor in sorted(self._doubts - (silent | stuck))]

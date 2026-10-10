@@ -21,8 +21,8 @@ from pathlib import Path
 import pytest
 
 from agent import clock
-from agent.ontology import PERCEPT, STATE
-from agent.sensing.ontology import STUCK_AFTER_TERM
+from agent.ontology import STATE
+from agent.sensing.ontology import OBSERVATION_GRAPH, STUCK_AFTER_TERM
 from agent.sensing.received import STUCK_AFTER, received
 from agent.store import graphs_of, rows
 
@@ -152,7 +152,7 @@ def test_each_reading_names_the_one_before_it_and_only_the_last_stuck_after_are_
     assert [n for _, n, _ in chain] == numbers[-STUCK_AFTER:], "the last six, oldest first"
     assert all(previous == before for (_, _, previous), (before, _, _) in zip(chain[1:], chain)), chain
     assert chain[0][2] is not None and chain[0][2] not in {o for o, _, _ in chain}, "the oldest kept names one forgotten"
-    assert len(graphs_of(store, PERCEPT)) == STUCK_AFTER
+    assert len(graphs_of(store, OBSERVATION_GRAPH)) == STUCK_AFTER
 
 
 def test_the_depth_kept_is_the_agents_where_its_self_graph_states_one(monkeypatch, snapshots):
@@ -169,11 +169,11 @@ def test_the_latest_is_the_one_holding_now_and_every_older_one_has_ended(monkeyp
     store = snapshots.stand_in(WORLD)
     last = _every_cadence(store, snapshots, [0.2, 0.21, 0.22])
     [(latest, _, _)] = [c for c in _chain(store) if c[1] == 0.22]
-    holding = graphs_of(store, PERCEPT, at=last, now=last)
+    holding = graphs_of(store, OBSERVATION_GRAPH, at=last, now=last)
     assert holding == [OBSERVED + "probe_" + last.strftime("%Y%m%dT%H%M%SZ")], holding
-    assert graphs_of(store, PERCEPT, at=last - timedelta(seconds=1), now=last) == [OBSERVED + "probe_" + (last - CADENCE).strftime("%Y%m%dT%H%M%SZ")]
+    assert graphs_of(store, OBSERVATION_GRAPH, at=last - timedelta(seconds=1), now=last) == [OBSERVED + "probe_" + (last - CADENCE).strftime("%Y%m%dT%H%M%SZ")]
     assert _period(store, holding[0]) == (last, last + 2 * CADENCE), "until the next is due and a grace past it"
-    assert not graphs_of(store, PERCEPT, at=last + 2 * CADENCE, now=last), "and none past that"
+    assert not graphs_of(store, OBSERVATION_GRAPH, at=last + 2 * CADENCE, now=last), "and none past that"
     assert not graphs_of(store, STATE), "a percept is no state"
 
 
@@ -195,9 +195,9 @@ def test_a_message_carrying_several_readings_chains_them_in_order(monkeypatch, s
         ("obs_probe_20260101T120000Z", 361.0, "obs_probe_20260101T115935Z")]
     assert _period(store, quiet)[1] == snapshots.NOW - timedelta(seconds=25), "ended where the earlier began"
     assert _period(store, earlier) == (snapshots.NOW - timedelta(seconds=25), snapshots.NOW)
-    assert graphs_of(store, PERCEPT, at=snapshots.NOW, now=snapshots.NOW) == [reading]
+    assert graphs_of(store, OBSERVATION_GRAPH, at=snapshots.NOW, now=snapshots.NOW) == [reading]
     heartbeat = b'{"value": [{"value": 370, "age_s": 0}]}'
     [beat] = received(store, snapshots.ME, PROBE, heartbeat, snapshots.NOW)
     assert beat == OBSERVED + "probe_20260101T120000Z_2", "a second reading at one instant is named apart"
     assert [p for o, _, p in _chain(store) if o.endswith("_2")] == [TEST.replace("test#", "orexis#") + "obs_probe_20260101T120000Z"]
-    assert graphs_of(store, PERCEPT, at=snapshots.NOW, now=snapshots.NOW) == [beat]
+    assert graphs_of(store, OBSERVATION_GRAPH, at=snapshots.NOW, now=snapshots.NOW) == [beat]

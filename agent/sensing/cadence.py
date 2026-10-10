@@ -12,14 +12,21 @@ How many of those cadences the agent allows a reading to be missing before it sa
 silent, `sensing:silentAfter`, and how many of its readings may give one number before it is said
 stuck, `sensing:stuckAfter`, are the agent's own word about itself, stances in its self graph, read by
 `missed` and `received` through the kernel's `stance` with the figure in code where it states none.
+
+**WHEN A CADENCE HAS LAPSED** (`lapsed`): the sensors whose latest percept's period has ended — the
+next reading due and a grace past it, with nothing arrived. One read and one owner: `missed` asks it
+to say a sensor silent, and a transport beneath asks it to nudge a board, since what an observation
+is and how they are kept are sensing's, and a member that restated the question in its own text
+would be a second reader of a kind it may not name (#944).
 """
 
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 
 from agent.ontology import PUBLIC, local_of
-from agent.store import graphs_of, remember, rows
+from agent.store import Raw, catalogue_of, graphs_of, instant, remember, rows
 
 log = logging.getLogger("cadence")
 
@@ -31,6 +38,16 @@ SELECT ?every ?unit WHERE {
 
 #  A unit of time as its seconds, by the local name QUDT and UN/CEFACT spell it under.
 _SECONDS = {"SEC": 1.0, "MIN": 60.0, "HR": 3600.0, "HUR": 3600.0, "DAY": 86400.0}
+
+#  EVERY SENSOR WHOSE LATEST PERCEPT HAS LAPSED, with the instant it did — asked of the catalogue by
+#  kind, and of the graphs by pattern: the latest is the one no percept names as its previous, and a
+#  revision, of the same kind, holds no `sosa:madeBySensor` and is no match.
+_LAPSED_Q = """
+SELECT ?sensor ?end WHERE {
+  GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end < $now) }
+  GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
+  FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } } }
+ORDER BY ?end ?sensor"""
 
 
 def cadence_of(store, sensor: str, memo=None) -> float | None:
@@ -50,3 +67,12 @@ def cadence_of(store, sensor: str, memo=None) -> float | None:
             return None
         return float(found[0]["every"]) * seconds
     return remember(memo, ("cadence", sensor), read)
+
+
+def lapsed(store, now: datetime, memo=None) -> list[tuple[str, datetime]]:
+    """Every sensor whose latest percept had ended by `now` — its next reading due and a grace past it,
+    and nothing arrived — with the instant it ended, earliest first. A sensor stating no frequency is
+    never here: its percept has no end. Writes nothing."""
+    cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
+    return [(r["sensor"], datetime.fromisoformat(r["end"]))
+            for r in rows(store, _LAPSED_Q, (), cat=cat, now=instant(now))]

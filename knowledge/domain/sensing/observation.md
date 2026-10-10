@@ -25,7 +25,7 @@ description: >-
 ```
 
 Written by [sensing](/domain/sensing/sensing.md)'s `received` into a `sensing:ObservationGraph` of its
-own, one per reading: a [percept](/domain/kernel/percept.md), and no state. A new reading does not
+own, one per reading: a **percept**, and no state. A new reading does not
 replace the one before; it names it, by **`sensing:previous`**, and ends its period at its own
 instant, so a sensor's observations are a chain whose latest is the one nothing names. The latest
 holds until the next is due and a **grace** past it, or until the next arrives, whichever is first.
@@ -57,3 +57,26 @@ One thing made of it outlives it: the subject belief a domain's
 which the next observation of the key's transition reads as the state before and takes out. It holds
 over the observation's period as it was when it arrived, so where no next reading comes it ends at
 the grace all the same.
+
+# A percept, and who is handed one
+
+A percept is what a sensor said, kept as the premise and not believed
+([an-observation-is-a-percept-and-the-mind-reads-only-beliefs](/decisions/an-observation-is-a-percept-and-the-mind-reads-only-beliefs.md)).
+Its kind is sensing's alone, beneath `orexis:Graph` and nothing else: no sensing, no observations.
+Every reader of the mind names `orexis:BeliefGraph` or a kind beneath it — a desire, a precondition,
+an effect, the [imaginarium](/domain/planning/imaginarium.md)'s crossing, a ground, a world's hash —
+so an observation reaches none of them by construction, and nothing has to remember to leave it out.
+
+What sensing's rules conclude of one is a percept too: sensing hands each observation to belief's
+[deliberator](/domain/belief/deliberator.md) as it arrives, with the kind its revision is to be, its
+own, so belief revises it and runs the transitions it triggers knowing no word of sensing's. The
+other readers stand where they may speak the word or ask the package that has it: prediction, above
+sensing, names the kind to find the observation in hand; an [operation](/domain/execution/operation.md)
+names it in its own text, sized from the present when a step is taken; and a transport, beneath,
+asks sensing which readings have lapsed (`cadence.lapsed`).
+
+# What is not one
+
+A [forecast](/domain/sensing/forecast.md) is another party's word about a stretch ahead, and is a
+belief. A prediction's predicted observation is the agent's own, a node of its own, and crosses into
+the grounds the planner lays; the observation it was made from never does.

@@ -62,9 +62,10 @@ conclusion itself.
 kind, so a writer that means its graph never to be seen without its revisions writes the graph,
 calls this, and classifies it last; the revision graph's row copies the source's owner and
 period where the source's row already states them, and says derived-from either way. And it says
-the source's kind: a revision of a percept is an `orexis:PerceptGraph`, handed to no reader of the
-mind as the percept is not, and of anything else an `orexis:BeliefGraph` — so a percept is
-classified BEFORE it is revised, as `received` writes it, in one update with its row (#944).
+the KIND THE CALLER HANDS (`kind`), beside `belief:RevisionGraph`: a rule never knows the kind of
+graph it writes, and each runner prepares its target. A belief's revisions are beliefs, the default;
+a package whose graphs no reader of the mind may be handed revises them into a kind of its own, and
+this package learns no word of it — sensing hands its observations' (#944).
 """
 
 from __future__ import annotations
@@ -75,8 +76,8 @@ import re
 import pyoxigraph as ox
 
 from agent.hash_named_graph import forms
-from agent.ontology import BELIEF, OREXIS, PERCEPT, PUBLIC
-from agent.store import (Raw, bind, catalogue_of, construct, entry, forget_graph, graphs_of, quads,
+from agent.ontology import BELIEF, OREXIS, PUBLIC
+from agent.store import (Raw, catalogue_of, construct, entry, forget_graph, graphs_of, quads,
                          remember, rows, update)
 
 from .ontology import DERIVED_FROM, REVISION_GRAPH, RULES_GRAPH, SETTLED, revision_graph
@@ -124,18 +125,16 @@ SELECT ?owner ?start ?end WHERE {
                           OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1"""
 
-#  WHETHER THE SOURCE IS A PERCEPT, off its row: its revisions are then percepts too.
-_PERCEPT_Q = """ASK { GRAPH $cat { $source a orexis:PerceptGraph } }"""
-
 #  WHETHER A REVISION GRAPH'S RULES SETTLED, off its row; no row is settled, since a source
 #  never revised has nothing to continue.
 _SETTLED_Q = """ASK { GRAPH $cat { $graph $settled false } }"""
 
 
-def revise(store, source: str, *, read=(), budget: int = BUDGET, memo=None) -> int:
+def revise(store, source: str, *, read=(), budget: int = BUDGET, memo=None, kind: str = BELIEF) -> int:
     """Conclude what the rules the store holds say follows from `source` beside `read` — the
-    source's revisions — into its revision graph, layer by layer towards a fixpoint, spending
-    at most `budget` rule executions. What this call spent.
+    source's revisions — into its revision graph, classified `kind` beside `belief:RevisionGraph`,
+    layer by layer towards a fixpoint, spending at most `budget` rule executions. What this call
+    spent.
 
     A source whose row says its rules did not settle is CONTINUED from what is held; any
     other has what was concluded of it before forgotten first. Where nothing is concluded
@@ -196,7 +195,7 @@ def revise(store, source: str, *, read=(), budget: int = BUDGET, memo=None) -> i
             break
     if not held:
         return spent
-    _describe(store, source, into, settled, continuing)
+    _describe(store, source, into, settled, continuing, kind)
     log.debug("%d revision(s) of %s after %d execution(s)%s", len(held), source, spent,
               "" if settled else ", not settled")
     return spent
@@ -293,9 +292,10 @@ def _prefixed(rule: str, text: str, declared: dict) -> str | None:
     return "\n".join([*lines, text]) if lines else text
 
 
-def _describe(store, source: str, into: str, settled: bool, continuing: bool) -> None:
-    """The revision graph's row: derived, from `source`, the source's owner's, for the
-    source's period, and whether its rules settled — the flag replaced where the row stands."""
+def _describe(store, source: str, into: str, settled: bool, continuing: bool, kind: str) -> None:
+    """The revision graph's row: a revision and of `kind`, derived, from `source`, the source's
+    owner's, for the source's period, and whether its rules settled — the flag replaced where the
+    row stands."""
     cat = Raw(f"<{catalogue_of(store)}>")
     flag = "true" if settled else "false"
     if continuing:
@@ -305,9 +305,6 @@ INSERT {{ GRAPH {cat} {{ <{into}> <{SETTLED}> {flag} }} }}
 WHERE  {{ GRAPH {cat} {{ <{into}> <{SETTLED}> ?was }} }}""")
         return
     row = next(iter(rows(store, _SOURCE_Q, (), cat=cat, source=source)), {})
-    #  OF ITS SOURCE'S KIND: what is concluded of a percept is a percept, handed to no reader of the
-    #  mind, and of anything else a belief (#944).
-    kind = PERCEPT if bool(store.query(bind(_PERCEPT_Q, cat=cat, source=source), prefixes=_NAMESPACES)) else BELIEF
     update(store, f"""
 INSERT DATA {{
   {entry(store, into, (REVISION_GRAPH, kind), OREXIS + "Derived", row.get("owner"), row.get("start"), row.get("end"))}

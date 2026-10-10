@@ -60,15 +60,19 @@
                                 ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host } }""" ] .
 
 :ObservationGraph a owl:Class ;
-    rdfs:subClassOf orexis:PerceptGraph ;
+    rdfs:subClassOf orexis:Graph ;
     rdfs:label "Observation graph" ;
     rdfs:comment """One graph per reading, holding the sosa:Observation a sensor made — the number
     it gave, the instant, the sensor, the procedure, the instant the device says the result applies
     to where it says one, and the percept before it (`previous`) — from its instant until the next
-    reading's, the latest until the next is due and a grace past it. A sensor's last `stuckAfter`
-    are kept and older ones forgotten. Named for what it holds. A PERCEPT (`orexis:PerceptGraph`)
-    and no state: no reader of the mind is handed one, and what the mind reads of it is the subject
-    belief a domain's transition makes when it arrives (#944).""" .
+    reading's, the latest until the next is due and a grace past it; and what the rules concluded of
+    that reading, in its revision, which sensing has revised into this kind too, since what is
+    concluded of what a sensor said is still what it said. A sensor's last `stuckAfter` are kept and
+    older ones forgotten. Named for what it holds. A PERCEPT and no state, beneath `orexis:Graph`
+    alone: no reader of the mind is handed one, and what the mind reads of it is the subject belief a
+    domain's transition makes when it arrives. SENSING'S, and no kernel kind: no sensing, no
+    observations, so the readers at the boundary — prediction above, a domain's command or saying —
+    name it in sensing's word, and what lies beneath asks sensing (#944).""" .
 
 :previous a owl:ObjectProperty , owl:FunctionalProperty ;
     rdfs:domain sosa:Observation ;
@@ -77,7 +81,7 @@
     rdfs:comment """The percept the same sensor made before this one: written by `received` into the
     new percept's graph as it arrives, so a sensor's percepts are a chain, newest first, and the
     latest is the one no percept names as its previous. Kept as deep as sensing's rules read — its
-    last `stuckAfter` — so the oldest kept names one that is gone (knowledge/domain/sensing/percept.md).""" .
+    last `stuckAfter` — so the oldest kept names one that is gone (knowledge/domain/sensing/observation.md).""" .
 
 :ForecastGraph a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph ;

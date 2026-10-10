@@ -18,9 +18,9 @@ import pytest
 
 from agent import clock
 from agent.belief.revise import revise
-from agent.ontology import BELIEF, KNOWN, PERCEPT
+from agent.ontology import BELIEF, KNOWN
 from agent.belief.ontology import RULES_GRAPH
-from agent.sensing.ontology import STUCK_AFTER_TERM
+from agent.sensing.ontology import OBSERVATION_GRAPH, STUCK_AFTER_TERM
 from agent.sensing.received import STUCK_AFTER, received
 from agent.store import closed, document, graphs_of, put_document, revisions_of, rows
 
@@ -41,11 +41,11 @@ def world(monkeypatch, snapshots):
 
 
 def _read(store, sensor, value, at, me) -> list[str]:
-    """`value` read by `sensor` at `at`, and each percept written revised as the deliberator revises
-    it: beside the public graphs holding then."""
+    """`value` read by `sensor` at `at`, and each percept written revised as sensing has the deliberator
+    revise it: beside the public graphs holding then, into this layer's kind."""
     written = received(store, me, sensor, f'{{"value": {value}}}'.encode(), at)
     for graph in written:
-        revise(store, graph, read=graphs_of(store, *KNOWN, at=at))
+        revise(store, graph, read=graphs_of(store, *KNOWN, at=at), kind=OBSERVATION_GRAPH)
     return written
 
 
@@ -53,7 +53,7 @@ def _stuck(store, at) -> list[tuple[str, float]]:
     """Every sensor said stuck at `at`, and on what: read where the percept holding then is."""
     return [(r["sensor"].rsplit("#", 1)[-1], float(r["n"]))
             for r in rows(store, "SELECT ?sensor ?n WHERE { ?sensor sensing:stuckOn ?n }",
-                          graphs_of(store, PERCEPT, at=at, now=at))]
+                          graphs_of(store, OBSERVATION_GRAPH, at=at, now=at))]
 
 
 def _every_cadence(store, snapshots, numbers, start=None, sensor=PROBE):
@@ -70,15 +70,17 @@ def test_the_rules_graph_is_the_drafts_kind_and_named_by_its_document(world):
 
 
 def test_what_is_concluded_of_a_percept_is_a_percept_and_no_belief(world, snapshots):
-    """The revision of a percept is of the percept's kind, so what the rules conclude of what a sensor
-    said — what it is of, its quantity — is handed to no reader the percept is not (#944)."""
+    """The revision of a percept is of this layer's kind, handed by sensing as the runner of the
+    revision, so what the rules conclude of what a sensor said — what it is of, its quantity — is
+    handed to no reader the percept is not; and the kind is beneath `orexis:Graph` alone (#944)."""
     [graph] = _read(world, PROBE, 0.05, snapshots.NOW, snapshots.ME)
-    [revision] = revisions_of(world, graph)
+    [revision] = revisions_of(world, graph, kind=OBSERVATION_GRAPH)
+    assert revisions_of(world, graph) == [], "no belief was concluded of a percept"
     assert rows(world, "SELECT ?f ?v WHERE { ?o sosa:hasFeatureOfInterest ?f ; sosa:hasSimpleResult ?v }", [revision])
     kinds = {r["k"] for r in rows(world, "SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g a ?k } }", (), g=revision)}
-    assert PERCEPT in kinds and BELIEF not in kinds, kinds
+    assert OBSERVATION_GRAPH in kinds and BELIEF not in kinds, kinds
     assert revision not in graphs_of(world, *KNOWN, at=snapshots.NOW) and graph not in graphs_of(world, *KNOWN, at=snapshots.NOW)
-    assert BELIEF not in closed(world, PERCEPT)
+    assert closed(world, OBSERVATION_GRAPH) == sorted([OBSERVATION_GRAPH, "http://example.org/orexis#Graph"])
 
 
 def test_a_samples_observation_is_of_the_sample(monkeypatch, snapshots):
@@ -88,7 +90,7 @@ def test_a_samples_observation_is_of_the_sample(monkeypatch, snapshots):
     world = snapshots.stand_in(Path(__file__).parent / "worlds" / "a_probe_in_a_sample_of_the_pot.trig")
     put_document(world, document(RULES))
     [graph] = _read(world, PROBE, 0.05, snapshots.NOW, snapshots.ME)
-    (of,) = rows(world, "SELECT ?f WHERE { ?o sosa:hasFeatureOfInterest ?f }", revisions_of(world, graph))
+    (of,) = rows(world, "SELECT ?f WHERE { ?o sosa:hasFeatureOfInterest ?f }", revisions_of(world, graph, kind=OBSERVATION_GRAPH))
     assert of["f"].endswith("#patch")
 
 
@@ -152,7 +154,7 @@ def test_a_sensor_stating_no_frequency_is_never_said_stuck(monkeypatch, snapshot
     at = snapshots.NOW
     for _ in range(STUCK_AFTER + 2):
         for graph in received(store, snapshots.ME, PROBE, b'{"soil": {"moisture": 0.2}}', at):
-            revise(store, graph, read=graphs_of(store, *KNOWN, at=at))
+            revise(store, graph, read=graphs_of(store, *KNOWN, at=at), kind=OBSERVATION_GRAPH)
         at += timedelta(days=1)
     assert _stuck(store, at - timedelta(days=1)) == []
 

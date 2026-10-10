@@ -65,10 +65,13 @@ market:Tendering a orexis:Action ;
                 [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?me market:holdsClaimOn $venue } WHERE { ?me a orexis:Self }""" ] ] ;
     #  THE BID, SIZED FROM THE PRESENT: as many litres as bring the reading to the middle of its
-    #  range by the subject's litres per fraction, at the price a litre is worth to me.
+    #  range by the subject's litres per fraction, at the price a litre is worth to me. The reading is
+    #  the observation holding at `$now`, which the saying is not handed — it is sensing's, and no
+    #  belief — and finds by the kind it is kept in, `sensing:ObservationGraph` (#944).
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         PREFIX climate: <http://example.org/orexis/climate#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
         CONSTRUCT { ?bid a market:Bid , market:BidGraph ; market:inRound ?round ; market:bidder ?me ;
                          market:litres ?litres ; market:pricePerL ?price ; execution:to ?host }
         WHERE {
@@ -76,7 +79,10 @@ market:Tendering a orexis:Action ;
             ?round a market:Round ; market:onVenue $venue . FILTER NOT EXISTS { ?round market:clearedAt ?at }
             ?me a orexis:Self ; orexis:actsFor ?subject ; market:valuePerL ?price .
             $venue market:aboutProperty ?property .
-            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value .
+            GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?held a sensing:ObservationGraph ; dcterms:temporal ?p .
+                         ?p orexis:start ?from . OPTIONAL { ?p orexis:end ?until }
+                         FILTER(?from <= $now && (!BOUND(?until) || $now < ?until)) }
+            GRAPH ?held { ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value }
             ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition ; climate:litresPerFraction ?perFraction .
             ?condition ssn:forProperty ?property ; schema:minValue ?lo ; schema:maxValue ?hi .
             BIND((((xsd:double(?lo) + xsd:double(?hi)) / 2.0) - xsd:double(?value)) * xsd:double(?perFraction) AS ?wanted)

@@ -40,10 +40,12 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
+import pyoxigraph as ox
+
 from agent.ontology import OREXIS, PUBLIC, STATE
 from agent.store import Raw, bind, catalogue_of, entry, forget_graph, graphs_of, revisions_of, rows, update
 
-from .ontology import state_graph
+from .ontology import REVISION_GRAPH, state_graph
 from .revise import BUDGET
 from .transition import applied, asked, transitions
 
@@ -73,10 +75,12 @@ WHERE  { GRAPH $cat { $graph ?p ?o . OPTIONAL { $graph dcterms:temporal ?period 
 @dataclass(frozen=True)
 class Triggered:
     """What applying the transitions an arrival triggers did: the rule executions it spent, how many of
-    its orders are applied — those before this call included — and whether that is all of them."""
+    its orders are applied — those before this call included — whether that is all of them, and the
+    agent's own state graphs this call changed, written into or deleted from, an emptied one too."""
     spent: int = 0
     done: int = 0
     finished: bool = True
+    changed: tuple = ()
 
 
 def trigger(store, arrival: str, *, budget: int = BUDGET, done: int = 0) -> Triggered:
@@ -94,23 +98,36 @@ def trigger(store, arrival: str, *, budget: int = BUDGET, done: int = 0) -> Trig
         return Triggered(0, done, True)
     into = state_graph(arrival)
     spent = 0
+    changed: list[str] = []
     for n in range(done, len(orders)):
         if spent >= budget:
             log.debug("the transitions %s triggers are cut short after %d of %d order(s)", arrival, n, len(orders))
-            return Triggered(spent, n, False)
+            return Triggered(spent, n, False, tuple(changed))
         state = _derived(store, cat)
-        reads = list(dict.fromkeys([arrival, *revisions_of(store, arrival), *graphs_of(store, PUBLIC), *state]))
+        #  WHAT WAS CONCLUDED OF THE ARRIVAL, whatever kind its runner revised it into: every revision is
+        #  this package's `belief:RevisionGraph`, so this asks that and learns no other package's word.
+        reads = list(dict.fromkeys([arrival, *revisions_of(store, arrival, kind=REVISION_GRAPH),
+                                    *graphs_of(store, PUBLIC), *state]))
         change = asked(store, orders[n], reads)
         spent += change.executions
+        changed += [g for g in _deleted_from(store, change, state) if g not in changed]
         emptied = applied(store, change, into, state)
         for graph in emptied:
             if graph != into or not change.added:
                 forget_graph(store, graph)
         if change.added:
             _describe(store, cat, into, row)
+            if into not in changed:
+                changed.append(into)
         if change.added or change.deleted:
             log.debug("%s triggered order %d: %d deleted, %d added", arrival, n, len(change.deleted), len(change.added))
-    return Triggered(spent, len(orders), True)
+    return Triggered(spent, len(orders), True, tuple(changed))
+
+
+def _deleted_from(store, change, targets) -> list[str]:
+    """The graphs of `targets` holding something `change` deletes — what applying it will change there."""
+    return [g for g in targets if any(
+        ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(g)) in store for t in change.deleted)]
 
 
 def _derived(store, cat: str) -> list[str]:

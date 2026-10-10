@@ -1,7 +1,9 @@
 """What the transport tree's SHAPE promises, and the one direction its arrows may point.
 
 The transport is a member of a family: it imports the family's `Transport` contract, kept at
-`agent/transport/`, calls sensing's `received` and reads its `cadence_of`, the downward imports a member is allowed,
+`agent/transport/`, calls sensing's `received` and asks its `cadence` module — a sensor's frequency,
+and which sensors' latest observation has lapsed, which this member nudges, since an observation is
+sensing's kind and no word of a transport's (#944) — the downward imports a member is allowed,
 and nothing else of sensing, nor of the mind, of prediction or of the belief package; nothing
 above imports it, since the container hands it a client and calls it. It declares no word of its own — every `mqtt4ssn:` word
 it speaks is one the vendored MQTT4SSN declares — and speaks no other package's words.

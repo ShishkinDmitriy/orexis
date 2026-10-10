@@ -81,7 +81,8 @@ def test_a_reading_is_written_and_the_bed_believed_dry(monkeypatch):
     runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
     runtime.drain(NOW)
     assert _held(runtime.beliefs) == {("soil", "Dry")}, "under the bed's floor of 0.30"
-    assert len(graphs_of(runtime.beliefs, OREXIS + "PerceptGraph")) == 2, "the percept and what the rules concluded of it"
+    assert len(graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph")) == 2, \
+        "the percept and what the rules concluded of it, both of sensing's kind"
 
 
 def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_reading_answers_it(monkeypatch):

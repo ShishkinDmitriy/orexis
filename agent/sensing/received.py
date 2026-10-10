@@ -8,10 +8,10 @@ the pointer the sensor's binding names; a payload that does not decode writes no
 log, because a pointer that misses is not a measurement. Each reading is ONE `sosa:Observation`, in
 SOSA's words — the number the sensor gave, the instant it arrived, the sensor, the procedure, the
 instant the device says the result applies to where it says one — named for its sensor and its
-instant, in a graph of its own, `sensing:ObservationGraph`, an `orexis:PerceptGraph`, received, the
-agent's (knowledge/domain/sensing/percept.md, #944). A percept is no belief: no reader of the mind
-is handed one, and what the mind reads of it is the subject belief a domain's transition makes when
-it arrives.
+instant, in a graph of its own, `sensing:ObservationGraph` — this layer's kind, beneath
+`orexis:Graph` alone — received, the agent's (knowledge/domain/sensing/observation.md, #944). A
+percept is no belief: no reader of the mind is handed one, and what the mind reads of it is the
+subject belief a domain's transition makes when it arrives.
 
 **EACH LINKS TO THE ONE BEFORE IT, AND THE LATEST IS THE ONE NOTHING FOLLOWS.** A new percept says
 `sensing:previous` of the sensor's latest — the percept no percept names as its previous — so a
@@ -161,7 +161,7 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     instants = [at - timedelta(seconds=age) for _, age in readings]
     cadence = cadence_of(store, sensor, memo)
     if latest is not None:
-        end_graph(store, latest["g"], instants[0])
+        end_graph(store, latest["g"], instants[0], revisions=OBSERVATION_GRAPH)
     before = latest["o"] if latest is not None else None
     written = []
     for n, ((number, _), when) in enumerate(zip(readings, instants)):
@@ -179,7 +179,7 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     depth = max(1, stance(store, STUCK_AFTER_TERM, STUCK_AFTER, memo))
     newest_first = [*reversed(written), *(r["g"] for r in kept)]
     for old in newest_first[depth:]:
-        forget_graph(store, old)
+        forget_graph(store, old, revisions=OBSERVATION_GRAPH)
     return [g for g in written if g in newest_first[:depth]]
 
 

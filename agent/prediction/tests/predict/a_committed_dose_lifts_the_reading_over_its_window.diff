@@ -1,22 +1,21 @@
 --- case
 +++ expected
-@@ -20,13 +20,13 @@
+@@ -21,12 +21,12 @@
  
  GRAPH :ontology {
    belief:RevisionGraph rdfs:subClassOf orexis:Graph .
 +  execution:CommittedStepGraph rdfs:subClassOf orexis:BeliefGraph .
 +  execution:CommittedStepGraph rdfs:subClassOf orexis:Graph .
    orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-   orexis:PerceptGraph rdfs:subClassOf orexis:Graph .
    orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
    orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
    orexis:StateGraph rdfs:subClassOf orexis:Graph .
 -  execution:CommittedStepGraph rdfs:subClassOf orexis:BeliefGraph .
 -  execution:CommittedStepGraph rdfs:subClassOf orexis:Graph .
+   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
  }
  
- GRAPH :world {
-@@ -36,9 +36,9 @@
+@@ -37,9 +37,9 @@
    :probe a sosa:Sensor .
    :probe sosa:isHostedBy :zamioculcas .
    :probe sosa:observes :moisture .
@@ -28,7 +27,7 @@
    :zamioculcas :driesPerDay 4.0 .
    :zamioculcas a :Pot .
    :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
-@@ -50,14 +50,6 @@
+@@ -51,14 +51,6 @@
  }
  
  GRAPH :actions {
@@ -43,7 +42,7 @@
    :Dosed a prediction:Drift .
    :Dosed prediction:moves :moisture .
    :Dosed prediction:rate """PREFIX : <http://example.org/test#>
-@@ -67,6 +59,14 @@
+@@ -68,6 +60,14 @@
            ?tap :waters $feature ; :risesBy ?rise ; :aimsAt ?until .
            BIND(xsd:double(?rise) / xsd:double(?soon) AS ?high)
            BIND(xsd:double(?rise) / xsd:double(?late) AS ?low)
@@ -58,7 +57,7 @@
        }""" .
  }
  
-@@ -81,16 +81,16 @@
+@@ -82,16 +82,16 @@
  }
  
  GRAPH committed:plan_dose {
@@ -78,7 +77,7 @@
    :catalogue a orexis:CatalogueGraph .
    :catalogue a orexis:Graph .
    :ontology a orexis:Graph .
-@@ -99,6 +99,8 @@
+@@ -100,6 +100,8 @@
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
    committed:plan_dose a execution:CommittedStepGraph .
@@ -87,7 +86,7 @@
    committed:plan_dose dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:25:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:05:00+00:00"^^xsd:dateTime ] .
    committed:plan_dose orexis:arrivedBy orexis:Recorded .
    committed:plan_dose orexis:beliefsOf :keeper .
-@@ -107,4 +109,53 @@
+@@ -108,4 +110,53 @@
    observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
    observed:zamioculcas_moisture orexis:beliefsOf :keeper .

@@ -34,8 +34,8 @@ key, its sensor, the number and the instant, and nothing else of the percept it 
 says which percept it was derived from, and the next percept of the sensor drops every one before
 its own are written; its row carries `orexis:retracts`, the `DELETE … WHERE` naming `GRAPH $state`
 that takes the key's predicted node out of whatever ground the boundary is laid over — in the form
-`lay_ground` reads today. THE OBSERVATION IN HAND IS A PERCEPT (`orexis:PerceptGraph`, #944), which
-no reader of the mind is handed: this estimator is one of the readers at the boundary, and what a
+`lay_ground` reads today. THE OBSERVATION IN HAND IS A PERCEPT (`sensing:ObservationGraph`, sensing's
+kind, #944), which no reader of the mind is handed: this estimator is one of the readers at the boundary, and what a
 ground holds of the key is the prediction alone, which a domain's transition judges as it arrives
 there.
 
@@ -57,7 +57,8 @@ from agent.stance import stance
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
                          remember, revisions_of, rows, update)
 
-from .ontology import DRIFT, FEATURE, HORIZON_TERM, MOVES, PROPERTY, RATE, RECORDED, RESULT, predicted_of, prediction_graph
+from .ontology import (DRIFT, FEATURE, HORIZON_TERM, MOVES, OBSERVATION_GRAPH, PROPERTY, RATE, RECORDED, RESULT,
+                       predicted_of, prediction_graph)
 from .ranges import ranges_of, side
 
 log = logging.getLogger("predict")
@@ -84,16 +85,17 @@ CARRIED_S = 3600.0
 _EDGE_S = 60.0
 
 #  THE OBSERVATION IN HAND: the percept holding the node this sensor last made and the stretch it
-#  stands for, asked by the kernel's kind and by SOSA's pattern, never by name and never by a word
-#  of sensing's. THE LATEST is the one begun last — a percept's period runs to the next one's
-#  instant, so no two of a sensor's begin at once unless it read twice in one instant, and then the
-#  one still holding, whose end is the later or none, is it (#944). Its key and its number are asked
-#  of the graph and its revisions together (`_KEY_Q`), since what an observation is OF and its
-#  quantity are what the rules concluded of the number the sensor gave — written by the time this
-#  runs, belief's part hearing a graph first.
+#  stands for, asked by sensing's kind and by SOSA's pattern, never by name — the pattern also
+#  passes over a revision, which is of the same kind and holds no `sosa:madeBySensor`. THE LATEST
+#  is the one begun last — a percept's period runs to the next one's instant, so no two of a
+#  sensor's begin at once unless it read twice in one instant, and then the one still holding,
+#  whose end is the later or none, is it (#944). Its key and its number are asked of the graph and
+#  its revisions together (`_KEY_Q`), since what an observation is OF and its quantity are what the
+#  rules concluded of the number the sensor gave — written by the time this runs, sensing's part
+#  handing a graph to belief before this package hears it.
 _OBSERVATION_Q = """
 SELECT ?graph ?node ?taken ?from ?until WHERE {
-  GRAPH $cat { ?graph a orexis:PerceptGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
+  GRAPH $cat { ?graph a sensing:ObservationGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
                OPTIONAL { ?p orexis:end ?until } }
   GRAPH ?graph { ?node sosa:madeBySensor $sensor . OPTIONAL { ?node sosa:resultTime ?taken } } }
 ORDER BY DESC(?from) ASC(BOUND(?until)) DESC(?until) LIMIT 1"""
@@ -144,7 +146,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
         log.debug("nothing observed by %s: nothing to predict", local_of(sensor))
         return []
     graph, node = found["graph"], found["node"]
-    believed = [graph, *revisions_of(store, graph)]
+    believed = [graph, *revisions_of(store, graph, kind=OBSERVATION_GRAPH)]
     key = next(iter(rows(store, _KEY_Q, believed, node=node)), None)
     if key is None:
         log.debug("%s's observation is of nothing the rules concluded: nothing to predict", local_of(sensor))

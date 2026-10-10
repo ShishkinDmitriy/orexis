@@ -18,7 +18,9 @@
 #  `execution:Command` is run over the present when the step is taken, reads the subject's latest
 #  observation — the one reader of the number on this side, at the boundary — and sizes the dose from
 #  how far it is below the middle of the range, by the subject's litres per fraction, at most the
-#  valve's cap.
+#  valve's cap. An observation is sensing's and no belief, so the command is handed none: it names the
+#  kind the observation is kept in, `sensing:ObservationGraph`, in its own `GRAPH` clauses, and the one
+#  holding at `$now` — the observation and what the rules concluded of it alike (#944).
 #
 #  THE PROPERTY IS BOUND BY THE WORLD, `?property` from the valve's own `actuatesProperty`, and held to
 #  the soil's moisture by a `VALUES` block: a footprint reads a precondition's patterns over the public
@@ -67,9 +69,14 @@ actuation:Dosing a orexis:Action ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Command ; sh:select """PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX climate: <http://example.org/orexis/climate#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT ?actuator ?payload WHERE {
-            ?reading sosa:hasFeatureOfInterest/(sosa:isSampleOf)? $subject ; sosa:observedProperty climate:SoilMoisture ;
-                     sosa:hasSimpleResult ?value ; sosa:resultTime ?at .
+            GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?held a sensing:ObservationGraph ; dcterms:temporal ?p .
+                         ?p orexis:start ?at . OPTIONAL { ?p orexis:end ?until }
+                         FILTER(?at <= $now && (!BOUND(?until) || $now < ?until)) }
+            GRAPH ?held { ?reading sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty climate:SoilMoisture ;
+                                   sosa:hasSimpleResult ?value }
+            ?feature (sosa:isSampleOf)? $subject .
             $subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
             ?condition ssn:forProperty climate:SoilMoisture ; schema:minValue ?lo ; schema:maxValue ?hi .
             $subject climate:litresPerFraction ?litres .

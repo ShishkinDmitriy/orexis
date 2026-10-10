@@ -519,15 +519,17 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   own** — `received` writes one `sosa:Observation` per reading, a percept linked to the one before by
   `sensing:previous`, the latest holding until the next is due and a grace past it and every older one
   ended where the next began; it keeps a sensor's last `sensing:stuckAfter` and nothing sweeps the rest
-  but it; `missed` says `sensing:silentSince` of a sensor whose latest has ended; `agent/prediction/`
-  accumulates the drifts' rates from the latest and imports nothing of sensing (#944).
+  but it; `missed` says `sensing:silentSince` of a sensor whose latest has ended, asking
+  `cadence.lapsed` as the transport does; `agent/prediction/` accumulates the drifts' rates from the
+  latest, speaking sensing's kind and importing none of its code (#944).
 - **A belief is a crisp triple, and probability lives only inside an estimator** — sensing and
   prediction may keep a mean and a spread while they work, and write a value, a side or a band as
   two numbers (a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
 - **An observation is a percept and the mind reads only beliefs, in the domain's words** — sensing
   keeps a sensor's percepts, named per reading and linked to the one before, as deep as its rules
-  read, in a kind beneath `orexis:Graph` alone and what is concluded of one a percept too, so no reader
-  of the mind is handed one; revision makes of the latest one belief about the subject, judged beside the belief it
+  read, in its own kind beneath `orexis:Graph` alone — no sensing, no observations, so the kernel
+  names none — and what is concluded of one a percept too, sensing running belief's revision over its
+  own and handing the kind, so no reader of the mind is handed one; revision makes of the latest one belief about the subject, judged beside the belief it
   replaces, so a held state is the belief and no summary is carried onto the present; a predicted
   number is judged the same way, in its ground; the domain's transition judges its states with the
   range's margin; and no desire, precondition, cost or effect reads a side or a number, an action

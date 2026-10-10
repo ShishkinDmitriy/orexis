@@ -98,8 +98,10 @@ _READ_BY_THE_MIND = ("precondition", "costs", "landsAfter", "effect", "metWhen",
 #  AND NO WORD OF A PERCEPT AT ALL (#944): what a sensor said is a graph no reader of the mind is handed,
 #  so a text the mind reads that names one of its words — the number it gave, the instant, the sensor,
 #  the link to the percept before, a stuck sensor's number — reads nothing, silently. The sides stay
-#  named: retired, they would read nothing too.
-_PERCEPT = re.compile(r"sensing[:#](?:below|inside|above|rawResult|scaledResult|previous|stuckOn)\b"
+#  named: retired, they would read nothing too. And not the KIND a percept is kept in: it is sensing's
+#  and no kernel's, so nothing structural stops a text naming it in a `GRAPH` clause, which would reach
+#  past the beliefs to what a sensor said — a command may, at the boundary; a met-test may not.
+_PERCEPT = re.compile(r"sensing[:#](?:below|inside|above|rawResult|scaledResult|previous|stuckOn|ObservationGraph)\b"
                       r"|sosa(?::|/)(?:hasSimpleResult|madeBySensor|resultTime)\b")
 
 

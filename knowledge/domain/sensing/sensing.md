@@ -17,7 +17,7 @@ description: >-
 pipeline makes a number of them — the codec the sensor is bound to (`sensing:decodedBy`, JSON the
 member that ships) and the pointer to its value in the document (`sensing:readingPointer`, a JSON
 Pointer). Each reading is one [observation](/domain/sensing/observation.md), named for its sensor and
-its instant, written into a `sensing:ObservationGraph` of its own — a [percept](/domain/kernel/percept.md),
+its instant, written into a `sensing:ObservationGraph` of its own — a [percept](/domain/sensing/observation.md),
 classified `orexis:Received` — and all it says is the number the sensor gave (`sensing:rawResult`), who
 made it, when, and the observation its sensor made before it (`sensing:previous`). The latest holds
 from its instant until the next is due by the sensor's `ssn-system:Frequency` and the observation's
