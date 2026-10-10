@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -52,9 +52,7 @@
+@@ -38,9 +38,7 @@
    :t2 a :Tick .
  }
  
@@ -11,17 +11,16 @@
  
  GRAPH :catalogue {
    :catalogue a orexis:CatalogueGraph .
-@@ -73,10 +71,18 @@
+@@ -59,10 +57,15 @@
    :tick2 orexis:beliefsOf :keeper .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
--  tick1:believed a belief:SubjectBeliefGraph .
 -  tick1:believed a orexis:BeliefGraph .
 -  tick1:believed a orexis:Graph .
 -  tick1:believed a orexis:StateGraph .
+-  tick1:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:20:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 -  tick1:believed orexis:arrivedBy orexis:Derived .
 -  tick1:believed orexis:beliefsOf :keeper .
-+  tick2:believed a belief:SubjectBeliefGraph .
 +  tick2:believed a orexis:BeliefGraph .
 +  tick2:believed a orexis:Graph .
 +  tick2:believed a orexis:StateGraph .
@@ -33,6 +32,4 @@
 +
 +GRAPH tick2:believed {
 +  :counter :count 2 .
-+  :counter :echo 2 .
-+  :counter :saw 1 .
 +}

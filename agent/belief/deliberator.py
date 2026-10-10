@@ -6,8 +6,8 @@ nothing happens there; `deliberate()` is the pass, which takes every source in t
 turn, spending at most a budget of rule executions across them, and answers what it spent. A
 source is an ARRIVAL, and an arrival is concluded on before it is transitioned on: it is revised
 (`revise`) until its rules settle, so a transition reads the quantity the pipeline concluded and
-not the raw count, and then the transitions it fires are applied to the agent's own state
-(`fire`), once, in their orders. One done with both leaves the queue; one the budget cut short
+not the raw count, and then the transitions it triggers are applied to the agent's own state
+(`trigger`), once, in their orders. One done with both leaves the queue; one the budget cut short
 stays, its revision graph's row saying `belief:settled false`, and the next pass continues it
 from where it stood — a pass cut short is finished by the passes after, as a search cut short is.
 Who calls the pass and when is the container's, as it is for the planner and the executor; there
@@ -47,9 +47,9 @@ from agent.stance import stance
 from agent.store import Raw, bind, catalogue_of, graphs_of, rows, update
 
 from .events import Revised, RevisionsHeld
-from .fire import fire
 from .ontology import BUDGET_TERM, REVISION_GRAPH, SETTLED, revision_graph
 from .revise import BUDGET as PER_SOURCE, revise
+from .trigger import trigger
 
 log = logging.getLogger("deliberator")
 
@@ -82,7 +82,7 @@ class _Arrival:
     """A source queued: what stands beside it — kept as it was handed, so a revision the budget cuts
     short is continued beside what it was begun beside; None for the beliefs holding at the pass's
     instant, which is what one re-queued at a restart is revised beside — whether its revision has
-    settled, and how many of the orders of transitions it fires are applied."""
+    settled, and how many of the orders of transitions it triggers are applied."""
     read: tuple | None = None
     revised: bool = False
     done: int = 0
@@ -110,7 +110,7 @@ class Deliberator:
 
     def changed(self, source: str, read=None) -> None:
         """A graph was written: take it on the next pass — revised beside `read` where the writer
-        says what stands, else beside the beliefs holding then, and the transitions it fires applied.
+        says what stands, else beside the beliefs holding then, and the transitions it triggers applied.
         Written again before it was done, it is a new arrival: it starts again, and takes its turn
         after everything that arrived before it, since the readings a message carries reuse the name
         of the latest one's graph and must still change the state oldest first."""
@@ -123,7 +123,7 @@ class Deliberator:
         return list(self.queue)
 
     def deliberate(self, now: datetime | None = None) -> int:
-        """Take every queued source in turn — revise it, then apply the transitions it fires —
+        """Take every queued source in turn — revise it, then apply the transitions it triggers —
         spending at most the budget across them. What the pass spent. A source done with both
         leaves the queue; one cut short stays for the next pass, which continues it where it stood,
         and the transitions of every source queued after it wait for it."""
@@ -145,23 +145,23 @@ class Deliberator:
                 spent += used
                 left -= used
                 if source in self._unsettled():
-                    #  CUT IN ITS REVISION: the arrivals after it wait for its transitions — where it fires
-                    #  any. One that fires none changes no state, so nothing after it waits on it: a
-                    #  prediction rewritten every pass and cut every pass would otherwise hold every
+                    #  CUT IN ITS REVISION: the arrivals after it wait for its transitions — where it
+                    #  triggers any. One that triggers none changes no state, so nothing after it waits on
+                    #  it: a prediction rewritten every pass and cut every pass would otherwise hold every
                     #  reading's transitions for ever.
                     arrival.read = read
-                    waiting = waiting or not fire(self.beliefs, source, budget=0, done=arrival.done).finished
+                    waiting = waiting or not trigger(self.beliefs, source, budget=0, done=arrival.done).finished
                     continue
                 arrival.revised = True
-            #  WAITING, OR NOTHING LEFT, IS A BUDGET OF NOUGHT: an arrival firing nothing is done all the
-            #  same, and one firing something stays for its turn.
-            fired = fire(self.beliefs, source, budget=0 if waiting else max(left, 0), done=arrival.done)
-            spent += fired.spent
-            left -= fired.spent
-            if fired.spent and source not in done:
+            #  WAITING, OR NOTHING LEFT, IS A BUDGET OF NOUGHT: an arrival triggering nothing is done all
+            #  the same, and one triggering something stays for its turn.
+            triggered = trigger(self.beliefs, source, budget=0 if waiting else max(left, 0), done=arrival.done)
+            spent += triggered.spent
+            left -= triggered.spent
+            if triggered.spent and source not in done:
                 done.append(source)
-            if not fired.finished:
-                arrival.done = fired.done
+            if not triggered.finished:
+                arrival.done = triggered.done
                 self._say(source, arrival, settled=False)
                 waiting = True
                 continue

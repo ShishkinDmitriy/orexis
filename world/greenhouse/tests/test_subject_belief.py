@@ -1,6 +1,6 @@
-"""The greenhouse's subject beliefs (#944, knowledge/domain/belief/subject-belief.md): what the grower
+"""The greenhouse's subject beliefs (#944, knowledge/domain/belief/transition.md): what the grower
 holds true of its bed, in climate's words, made by the running agent of every reading — belief's part
-revising the observation and then applying the transitions it fires, climate's soil and air
+revising the observation and then applying the transitions it triggers, climate's soil and air
 (`domains/climate/rules.ttl`) — and held by the margins the bed's operating range states, 0.0002 on
 the soil and 0.02 on the air (a-transition-changes-the-state-and-an-inference-only-concludes).
 
@@ -26,8 +26,13 @@ NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 CADENCE = timedelta(minutes=10)
 GH = "http://example.org/orexis/world/greenhouse#"
 CLIMATE = "http://example.org/orexis/climate#"
-SUBJECT_BELIEF = "http://example.org/orexis/belief#SubjectBeliefGraph"
+STATE = "http://example.org/orexis#StateGraph"
 SOIL, AIR = "sensors/moisture_probe/reading", "sensors/thermometer/reading"
+
+#  THE GROWER'S OWN STATE: every state graph it derived, which is where a transition writes and where
+#  sensing says a sensor silent or stuck — never an observation, which is a state graph it received.
+_DERIVED_Q = """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+    ?g a orexis:StateGraph ; orexis:arrivedBy orexis:Derived } }"""
 
 #  WHAT THE BED IS BELIEVED, in climate's words, for one property: its state.
 _BELIEVED_Q = """SELECT ?state WHERE { $bed $state_as ?state }"""
@@ -52,10 +57,15 @@ def _grower(monkeypatch, store=None):
     return Runtime(beliefs, "grower", transport=Mqtt(GH + "grower", _Broker())), time
 
 
+def _own_state(beliefs, at: datetime | None = None) -> list[str]:
+    """The grower's own state graphs — holding at `at` where given."""
+    derived = {r["g"] for r in rows(beliefs, _DERIVED_Q)}
+    return [g for g in (graphs_of(beliefs, STATE, at=at) if at is not None else graphs_of(beliefs, STATE)) if g in derived]
+
+
 def _believed(beliefs, words: str, at: datetime | None = None) -> str | None:
-    """The bed's state in climate's `words`, in every subject belief graph — holding at `at` where given."""
-    graphs = graphs_of(beliefs, SUBJECT_BELIEF, at=at) if at is not None else graphs_of(beliefs, SUBJECT_BELIEF)
-    found = rows(beliefs, _BELIEVED_Q, graphs, bed=GH + "bed", state_as=CLIMATE + words)
+    """The bed's state in climate's `words`, in the grower's own state — holding at `at` where given."""
+    found = rows(beliefs, _BELIEVED_Q, _own_state(beliefs, at), bed=GH + "bed", state_as=CLIMATE + words)
     assert len(found) <= 1, f"one state of the bed's {words} at a time, and {len(found)} stand: {found}"
     return found[0]["state"].rsplit("#", 1)[-1] if found else None
 
@@ -118,7 +128,7 @@ def test_the_subject_belief_says_the_state_and_no_number(monkeypatch):
     and a command sizing its step read it, and nothing about the bed in the subject belief is a literal."""
     runtime, time = _grower(monkeypatch)
     _read(runtime, time, SOIL, [0.3104])
-    (believed,) = graphs_of(runtime.beliefs, SUBJECT_BELIEF)
+    (believed,) = _own_state(runtime.beliefs)
     said = [(q.subject.value, q.predicate.value, q.object) for q in runtime.beliefs.quads_for_pattern(None, None, None, ox.NamedNode(believed))]
     assert said == [(GH + "bed", CLIMATE + "soil", ox.NamedNode(CLIMATE + "Moist"))], said
     (observed,) = graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph")
@@ -133,7 +143,7 @@ def test_a_subject_belief_ends_with_the_observation_it_was_made_of(monkeypatch):
     reader standing past it — a silence — is handed none."""
     runtime, time = _grower(monkeypatch)
     _read(runtime, time, SOIL, [0.25])
-    (believed,) = graphs_of(runtime.beliefs, SUBJECT_BELIEF)
+    (believed,) = _own_state(runtime.beliefs)
     (observed,) = graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph")
     when = lambda row: (datetime.fromisoformat(row["start"]), datetime.fromisoformat(row["end"]))
     (held,) = rows(runtime.beliefs, _ROW_Q, (), g=believed)
@@ -152,7 +162,7 @@ def test_the_readings_one_message_carries_are_taken_in_turn(monkeypatch):
     runtime, time = _grower(monkeypatch)
     runtime.deliver(SOIL, json.dumps({"value": [{"value": 0.2990, "age_s": 25}, {"value": 0.3001, "age_s": 0}]}).encode(), NOW)
     runtime.run(passes=1, poll_s=0)
-    (believed,) = graphs_of(runtime.beliefs, SUBJECT_BELIEF)
+    (believed,) = _own_state(runtime.beliefs)
     assert _believed(runtime.beliefs, "soil") == "Dry"
     assert "earlier" not in believed, believed
 

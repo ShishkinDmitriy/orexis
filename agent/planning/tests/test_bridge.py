@@ -16,12 +16,12 @@ def test_a_rule_with_one_head_triple_is_a_bridge():
 
 
 def test_a_transition_is_no_bridge():
-    """A rule saying what fires it changes a state when something arrives, and concludes no
+    """A rule saying what triggers it changes a state when something arrives, and concludes no
     vocabulary's facts from another's: with one head triple plain in its WHERE it would read as a
     bridge, and it is left out (a-transition-changes-the-state-and-an-inference-only-concludes)."""
     store = _store()
     update(store, '''INSERT DATA { GRAPH <http://example.org/test#rules> {
-  <http://example.org/test#moved> a sh:SPARQLRule ; belief:firesOn orexis:StateGraph ;
+  <http://example.org/test#moved> a sh:SPARQLRule ; belief:triggeredBy orexis:StateGraph ;
     sh:construct """PREFIX : <http://example.org/test#>
     CONSTRUCT { ?disk :was ?cell } WHERE { ?disk :at ?cell }""" } }''')
     assert [head[1] for _, head, _, _ in heads(store)] == [":on"]

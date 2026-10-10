@@ -21,7 +21,7 @@ VOCABULARY = sorted(BELIEF.rglob("*.ttl"))
 
 #  A MODULE NAMED FOR A THING, which may export several reads of it. `transition` is the machine a
 #  transition is applied by — its orders, what one order changes, and the change applied — which
-#  planning applies an effect through and `fire` a percept's transition.
+#  planning applies an effect through and `trigger` a percept's transition.
 NOUNS = {"ontology", "deliberator", "events", "transition"}
 
 def test_the_package_imports_nothing_above_it():

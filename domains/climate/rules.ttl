@@ -9,8 +9,8 @@
 
 #  WHAT AN OBSERVATION OF A SUBJECT'S SOIL OR AIR MAKES THE AGENT HOLD OF IT, in this domain's words
 #  (knowledge/domain/actuation/soil.md and air.md, #944): two TRANSITIONS, not inferences
-#  (a-transition-changes-the-state-and-an-inference-only-concludes). Each fires once on an
-#  observation arriving (`belief:firesOn sensing:ObservationGraph`), after the observation's revisions
+#  (a-transition-changes-the-state-and-an-inference-only-concludes). Each is triggered once by an
+#  observation arriving (`belief:triggeredBy sensing:ObservationGraph`), after the observation's revisions
 #  settle, and acts only where the observation is of its property: the soil's on a soil moisture, the
 #  air's on an air temperature. Each reads the reading, the subject's operating range for the property
 #  — the subject being the observation's feature of interest or what that is a sample of, whichever
@@ -24,14 +24,14 @@
 #  per property, since what a state is and when it holds is this domain's meaning and not sensing's:
 #  the cost is the hold said twice, and the two must be kept alike by hand.
 #
-#  Only the number a sensor gave fires them: the kind is an observation's, and a predicted observation
-#  is a prediction's graph, which fires nothing here (the record's seam: a predicted arrival's
+#  Only the number a sensor gave triggers them: the kind is an observation's, and a predicted
+#  observation is a prediction's graph, which triggers nothing here (the record's seam: a predicted arrival's
 #  transition is slice 3's). Each chain of two operators is parenthesised, since this engine reads
 #  `a - b + c` as `a - (b + c)`.
 
 :soilRule a sh:SPARQLRule ;
     rdfs:label "the soil's state, held past its range's margin by the state before" ;
-    belief:firesOn sensing:ObservationGraph ;
+    belief:triggeredBy sensing:ObservationGraph ;
     belief:delete """PREFIX climate: <http://example.org/orexis/climate#>
         DELETE { ?subject climate:soil ?before }
         WHERE  {
@@ -58,7 +58,7 @@
 
 :airRule a sh:SPARQLRule ;
     rdfs:label "the air's state, held past its range's margin by the state before" ;
-    belief:firesOn sensing:ObservationGraph ;
+    belief:triggeredBy sensing:ObservationGraph ;
     belief:delete """PREFIX climate: <http://example.org/orexis/climate#>
         DELETE { ?subject climate:air ?before }
         WHERE  {

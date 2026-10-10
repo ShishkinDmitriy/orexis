@@ -14,7 +14,7 @@ its caller names (a-rule-does-not-say-which-world-it-reads).
 **TWO CALLERS, ONE MACHINE.** Planning applies an action's effect through it in the possible world a
 step makes, reading that world and changing it alone (`agent/planning/take.py`). The belief package
 applies a percept's transition through it to the agent's own state, the arrival of a graph of the
-kind the transition `belief:firesOn` firing it once (`fire`). An effect is a transition the agent
+kind the transition is `belief:triggeredBy` triggering it once (`trigger`). An effect is a transition the agent
 causes; a percept's is one the world causes. Neither runs to a fixpoint: an order is applied once.
 
 **A RULE THAT WILL NOT RUN CHANGES NOTHING, LOUDLY.** A text that will not bind, a delete that names

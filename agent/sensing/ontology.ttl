@@ -27,7 +27,7 @@
 #  readings are missing and which sensors have gone silent. It predicts nothing — that is the
 #  prediction package's — and concludes nothing itself: the sides are revisions, concluded by the
 #  rules this layer ships (rules.ttl beside this file) and run by the deliberator over the present.
-#  What the agent holds true of a subject is a domain's transition, fired by the observation
+#  What the agent holds true of a subject is a domain's transition, triggered by the observation
 #  arriving, and none of this layer's words. No word of any transport is spoken here.
 
 #  THE ROLE THIS LAYER SERVES (knowledge/domain/sensing/observer.md): an agent declared an observer

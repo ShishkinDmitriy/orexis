@@ -5,11 +5,12 @@ of a rules graph, the rule set a package ships, the SPARQL rule with its constru
 order, deactivation and run-once. Every one of those is spelled by the store's dictionary in a
 text, and named here only for the two readers in Python. What is ours is the inference graph of
 one source, which the draft names as a role and not a class, and what a rule that CHANGES a state
-needs and the draft lacks: its delete, the kind whose arrival fires a transition, and the graph a
-transition's inserts go into (`ontology.ttl` beside this file).
+needs and the draft lacks: its delete and the kind whose arrival triggers a transition (`ontology.ttl`
+beside this file). Where a transition writes is no word of ours: the runner prepares a state graph
+for it, the kernel's `orexis:StateGraph`.
 
-THE NAME IS FOR EYES. A source's revision graph and an arrival's subject belief graph are spelled
-from the source's own name; every reader asks the catalogue by class and by provenance, and
+THE NAME IS FOR EYES. A source's revision graph and an arrival's state graph are spelled from the
+source's own name; every reader asks the catalogue by class and by provenance, and
 renaming one here would change nothing a reader sees.
 """
 
@@ -25,11 +26,10 @@ RULES_GRAPH = SH + "RulesGraph"
 REVISION_GRAPH = BELIEF + "RevisionGraph"
 SETTLED = BELIEF + "settled"
 
-#  OURS, FOR WHAT CHANGES A STATE: a rule's delete, beside the draft's construct; the kind whose
-#  arrival fires a transition; and the graph a transition's inserts go into, one per arrival.
+#  OURS, FOR WHAT CHANGES A STATE: a rule's delete, beside the draft's construct; and the kind whose
+#  arrival triggers a transition.
 DELETE = BELIEF + "delete"
-FIRES_ON = BELIEF + "firesOn"
-SUBJECT_BELIEF_GRAPH = BELIEF + "SubjectBeliefGraph"
+TRIGGERED_BY = BELIEF + "triggeredBy"
 
 #  HOW MANY RULE EXECUTIONS ONE PASS MAY SPEND: a stance the agent states of itself in its self
 #  graph, read by the deliberator when it is made (knowledge/domain/kernel/stance.md).
@@ -44,6 +44,7 @@ def revision_graph(source: str) -> str:
     return source + "/revisions"
 
 
-def subject_belief_graph(arrival: str) -> str:
-    """Where what the transitions `arrival` fired inserted is kept."""
+def state_graph(arrival: str) -> str:
+    """Where what the transitions `arrival` triggered inserted is kept: the state graph the runner
+    prepares for them, one per arrival."""
     return arrival + "/believed"

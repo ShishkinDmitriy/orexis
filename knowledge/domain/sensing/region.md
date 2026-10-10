@@ -28,7 +28,7 @@ the subject or on an instrument that watches it; nothing derives or picks one.
   observation and range. A side is the bare comparison of one reading with the bounds, and
   remembers nothing.
 - **A domain's transition** — climate's, for the soil and the air — judges the subject's state against
-  its OPERATING range alone, beside the [subject belief](/domain/belief/subject-belief.md) it replaces:
+  its OPERATING range alone, beside the [subject belief](/domain/belief/transition.md) it replaces:
   the bound crossed at itself from another state, and a held state left only past the
   [margin](/domain/sensing/margin.md) the range's condition states. None judges a survival range.
 - **A desire's met-test** reads that side: a plant wants its soil `inside` its operating range, and

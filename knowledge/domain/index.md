@@ -47,8 +47,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [belief-base](/domain/belief/belief-base.md) - One store per agent, and a catalogue describing every graph: its kind, owner, arrival and period.
 * [revision](/domain/belief/revision.md) - A belief derived from beliefs by SHACL 1.2's rules, adopted as they stand, into a graph of the source's own, on the present only.
 * [deliberator](/domain/belief/deliberator.md) - The pass over what arrived — revised, then transitioned on, in turn — within one budget of rule executions; and the role running it.
-* [transition](/domain/belief/transition.md) - A rule that changes a state, fired once by an arrival of the kind it declares; belief's machine applies it, and an effect through it.
-* [subject belief](/domain/belief/subject-belief.md) - What the agent holds of a subject in a domain's words, no number; a transition's inserts, over its arrival's period.
+* [transition](/domain/belief/transition.md) - A rule that changes a state, triggered once by an arrival of the kind it declares, into a state graph the runner prepares: a subject belief.
 
 # Prediction — the stretches ahead
 

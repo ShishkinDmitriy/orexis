@@ -22,7 +22,7 @@ soil falls to the ceiling less the margin; and a value coming from any other sta
 bound itself, so a real drop out of the range is believed at once. Readings of 0.2990, 0.3001,
 0.3001 and 0.3001 are dry four times, and 0.3002 is moist. With no margin stated it is nought, and
 the state is the bare comparison of the reading with the bounds; so is the first reading of a key,
-which has no [subject belief](/domain/belief/subject-belief.md) before it to hold anything.
+which has no [subject belief](/domain/belief/transition.md) before it to hold anything.
 
 SSN-System's conditions have no word for it, so the word is sensing's: sensing speaks SOSA and SSN
 and declares what they lack. What it is read for is a domain's: climate's

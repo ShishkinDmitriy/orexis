@@ -24,9 +24,9 @@ is fictive and the executor, being the world, writes what the step predicted.
   by sensing's rules as a [revision](/domain/belief/revision.md). A met-test reads the side, not the
   number: the core compares triples and interprets no literal.
 - **A subject belief** — the state a domain's [transition](/domain/belief/transition.md) judges its
-  subject in against the operating range, beside the [subject belief](/domain/belief/subject-belief.md)
-  before it and held by the range's [margin](/domain/sensing/margin.md), in the domain's words and
-  with no number: the reading stays here.
+  subject in against the operating range, beside the subject belief before it and held by the
+  range's [margin](/domain/sensing/margin.md), in the domain's words and with no number: the
+  reading stays here.
 - **The stretches ahead** — the [prediction](/domain/prediction/prediction.md) package runs the
   domain's drift over it and writes one predicted reading per stretch between range crossings.
 - **A step's size** — a dose is sized from how far the reading is below the middle of its range,

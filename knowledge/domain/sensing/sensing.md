@@ -49,8 +49,8 @@ What the rules conclude is a [revision](/domain/belief/revision.md), run by the
 what an observation is of and its reading, layer 2 which side of a [region](/domain/sensing/region.md) the
 reading is on — `sensing:below`, `sensing:inside` or `sensing:above`. What the agent then holds true
 of the observation's subject is no rule of sensing's but a domain's
-[transition](/domain/belief/transition.md), fired by the observation arriving — climate's, for the
-soil and the air — which writes a [subject belief](/domain/belief/subject-belief.md). That is why an
+[transition](/domain/belief/transition.md), triggered by the observation arriving — climate's, for
+the soil and the air — which writes a subject belief. That is why an
 [observer](/domain/sensing/observer.md) is a deliberator too, and belief's part, first in a pass, hears a
 graph written before any other part, so sensing's own `Observed` and the prediction find it concluded. When the reading will change range is the
 [prediction](/domain/prediction/prediction.md) package's. How the bytes arrived is the

@@ -13,9 +13,9 @@ from pathlib import Path
 
 from agent import clock
 from agent.belief.deliberator import BUDGET, Deliberator
-from agent.belief.fire import fire
-from agent.belief.ontology import BUDGET_TERM, SETTLED, SUBJECT_BELIEF_GRAPH
-from agent.store import entry, forget_graph, graphs_of, rows, update
+from agent.belief.ontology import BUDGET_TERM, SETTLED
+from agent.belief.trigger import trigger
+from agent.store import entry, forget_graph, rows, update
 
 CASES_DIR = Path(__file__).parent / "revise"
 SENSED = "http://example.org/test#sensed"
@@ -90,8 +90,17 @@ def test_a_cut_survives_a_new_deliberator_over_the_store(monkeypatch, snapshots)
 TICKS = Path(__file__).parent / "worlds" / "a_counter_and_its_ticks.trig"
 T = "http://example.org/test#"
 
-#  WHAT THE COUNTER IS HELD TO, in every subject belief graph whatever its period, by local name.
+#  WHAT THE COUNTER IS HELD TO, in the keeper's own state whatever its period, by local name.
 _COUNTER_Q = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }"
+
+#  THE KEEPER'S OWN STATE: every state graph it derived, which is where a transition writes — never a
+#  tick, which is a state graph it received.
+_OWN_STATE_Q = """SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
+    ?g a orexis:StateGraph ; orexis:arrivedBy orexis:Derived } } ORDER BY ?g"""
+
+
+def _own_state(store) -> list[str]:
+    return [r["g"] for r in rows(store, _OWN_STATE_Q)]
 
 
 def _tick(store, name: str, start, *, loud: bool = True) -> str:
@@ -105,7 +114,7 @@ def _tick(store, name: str, start, *, loud: bool = True) -> str:
 
 def _counter(store) -> dict[str, str]:
     return {r["p"].rsplit("#", 1)[-1]: r["o"].rsplit("#", 1)[-1]
-            for r in rows(store, _COUNTER_Q, graphs_of(store, SUBJECT_BELIEF_GRAPH))}
+            for r in rows(store, _COUNTER_Q, _own_state(store))}
 
 
 def _row_settled(store, graph: str) -> str | None:
@@ -114,13 +123,13 @@ def _row_settled(store, graph: str) -> str | None:
 
 
 def test_an_arrival_is_revised_before_its_transitions_run_and_both_are_spent_from_one_budget(monkeypatch, snapshots):
-    """The count reads `:ticked`, which only revision concludes: fired on the tick unrevised it counts
+    """The count reads `:ticked`, which only revision concludes: triggered by the tick unrevised it counts
     nothing, and taken by the deliberator — revised, then transitioned on — it counts one. The pass
     spends both from one budget: two executions revising, three transitioning."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(TICKS)
     early = _tick(store, "early", snapshots.NOW)
-    fire(store, early)
+    trigger(store, early)
     assert "count" not in _counter(store), "nothing the transition reads is concluded yet"
     store = snapshots.stand_in(TICKS)
     deliberator = Deliberator(store, snapshots.AGENT)
@@ -153,12 +162,12 @@ def test_arrivals_are_transitioned_on_in_turn_whatever_the_budget_cuts(monkeypat
     assert _counter(store) == {"count": "1", "echo": "1", "last": "quiet_t"}
     assert _row_settled(store, loud) == "true"
     held = {g.rsplit("#", 1)[-1]: sorted(r["p"].rsplit("#", 1)[-1] for r in rows(store, _COUNTER_Q, [g]))
-            for g in graphs_of(store, SUBJECT_BELIEF_GRAPH)}
+            for g in _own_state(store)}
     assert held == {"loud/believed": ["count"], "quiet/believed": ["echo", "last"]}, \
         "what the quiet tick replaced was taken out where the loud one put it; the count, which it does not touch, stands there"
 
 
-def test_an_arrival_that_fires_nothing_holds_no_turn(monkeypatch, snapshots):
+def test_an_arrival_that_triggers_nothing_holds_no_turn(monkeypatch, snapshots):
     """A graph of a kind no transition declares, cut in its revision, changes no state whenever it is
     done, so the tick queued after it is transitioned on in the same pass — where waiting on it, a
     prediction rewritten and cut every pass would hold every reading's transitions for ever."""

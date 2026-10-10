@@ -21,8 +21,8 @@ description: >-
 A subject's **air** says which side of its operating range for `climate:AirTemperature` its
 temperature is believed on — `climate:Cold` short of the floor, `climate:Comfortable` between the
 bounds, `climate:Hot` past the ceiling. `climate:airRule`, a
-[transition](/domain/belief/transition.md) in `domains/climate/rules.ttl`, writes it as a
-[subject belief](/domain/belief/subject-belief.md) when an air temperature is observed; it is the
+[transition](/domain/belief/transition.md) in `domains/climate/rules.ttl`, writes it as a subject
+belief when an air temperature is observed; it is the
 [soil](/domain/actuation/soil.md)'s rule again over another property, the hold written a second time,
 which is the cost the record names of a domain owning its own states.
 

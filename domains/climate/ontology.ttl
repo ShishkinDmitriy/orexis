@@ -36,7 +36,7 @@
 #################  What is believed of a subject  #################
 
 #  THE SOIL AND THE AIR AS THE AGENT BELIEVES THEM (knowledge/domain/actuation/soil.md and air.md,
-#  #944): this domain's transitions (rules.ttl), fired by an observation of a subject's soil moisture
+#  #944): this domain's transitions (rules.ttl), triggered by an observation of a subject's soil moisture
 #  or of its air temperature arriving, replace what the agent holds of the subject's soil or air with
 #  its state in these words, judged against the subject's operating range and held past the range's
 #  margin by the state before. The number stays the observation's: a command sizing a step and

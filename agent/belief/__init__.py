@@ -16,10 +16,10 @@ convention two lines long, which is why it is not a concept.
 **AND THE ONE MACHINE THAT CHANGES A STATE** (`transition`,
 a-transition-changes-the-state-and-an-inference-only-concludes). A rule that deletes as well as
 inserts is a transition, not an inference: applied once, in `sh:order` groups, every rule of an
-order reading one state. Planning applies an action's effect through it in a possible world; `fire`
-applies the transitions an arrival declares a kind of to the agent's own state, after the arrival's
-revisions settle — inserting into a graph of the arrival's own, deleting only from what the agent
-derived, never from testimony.
+order reading one state. Planning applies an action's effect through it in a possible world;
+`trigger` applies the transitions an arrival triggers to the agent's own state, after the arrival's
+revisions settle — inserting into a state graph of the arrival's own, which it prepares, deleting
+only from what the agent derived, never from testimony.
 
 **IT IS THE B OF BDI.** Planning is the desires, the wants and the plans; execution is the
 intentions; this is what is believed and the process by which facts follow from facts. The

@@ -1,7 +1,7 @@
 # a_counter_and_its_ticks
 #
 # THE WORLD THE DELIBERATOR'S TRANSITIONS ARE HELD IN: a counter, and ticks the test writes as they
-# arrive. One inference concludes a LOUD tick ticked. Three transitions fire on a tick: of order 0,
+# arrive. One inference concludes a LOUD tick ticked. A tick triggers three transitions: of order 0,
 # the count — one more than before, of a tick the inference concluded ticked, so it counts only what
 # revision has settled — and the last tick taken; of order 1, an echo of the count. The words are this
 # test's own, standing for no domain's.
@@ -21,9 +21,6 @@ GRAPH :ontology {
   :TickGraph rdfs:subClassOf orexis:StateGraph .
   belief:RevisionGraph rdfs:subClassOf orexis:BeliefGraph .
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
-  belief:SubjectBeliefGraph rdfs:subClassOf orexis:BeliefGraph .
-  belief:SubjectBeliefGraph rdfs:subClassOf orexis:Graph .
-  belief:SubjectBeliefGraph rdfs:subClassOf orexis:StateGraph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
@@ -38,14 +35,14 @@ GRAPH :rules {
   :countRule a sh:SPARQLRule .
   :countRule belief:delete """PREFIX : <http://example.org/test#>
       DELETE { ?c :count ?n } WHERE { ?t a :Tick ; :ticked true . ?c a :Counter ; :count ?n }""" .
-  :countRule belief:firesOn :TickGraph .
+  :countRule belief:triggeredBy :TickGraph .
   :countRule rdfs:label "a tick revision concluded ticked counts one more than the count before" .
   :countRule sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?c :count ?next } WHERE { ?t a :Tick ; :ticked true . ?c a :Counter . OPTIONAL { ?c :count ?n } BIND((COALESCE(?n, 0) + 1) AS ?next) }""" .
   :echoRule a sh:SPARQLRule .
   :echoRule belief:delete """PREFIX : <http://example.org/test#>
       DELETE { ?c :echo ?n } WHERE { ?t a :Tick . ?c a :Counter ; :echo ?n }""" .
-  :echoRule belief:firesOn :TickGraph .
+  :echoRule belief:triggeredBy :TickGraph .
   :echoRule rdfs:label "a later order echoes the count the earlier made" .
   :echoRule sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?c :echo ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
@@ -53,7 +50,7 @@ GRAPH :rules {
   :lastRule a sh:SPARQLRule .
   :lastRule belief:delete """PREFIX : <http://example.org/test#>
       DELETE { ?c :last ?was } WHERE { ?t a :Tick . ?c a :Counter ; :last ?was }""" .
-  :lastRule belief:firesOn :TickGraph .
+  :lastRule belief:triggeredBy :TickGraph .
   :lastRule rdfs:label "the last tick taken" .
   :lastRule sh:construct """PREFIX : <http://example.org/test#>
       CONSTRUCT { ?c :last ?t } WHERE { ?t a :Tick . ?c a :Counter }""" .

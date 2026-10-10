@@ -1,10 +1,12 @@
-# a_state_is_replaced_where_it_stood
+# testimony_is_never_a_target
 #
-# A tick arrives, and the one transition its kind fires counts it: the count before, 1, held in the
-# subject belief graph an earlier tick's transition wrote, is deleted there — the graph left empty,
-# and forgotten with its row — and the count after, 2, is inserted into the arriving tick's own
-# subject belief graph, the tick's owner's and derived, holding over the tick's period. The tick
-# itself, received, is read and not touched.
+# A transition that tries to delete everything it reads: the tick that triggered it, what revision
+# concluded of the tick, what the world states, the ontology's word for a counter, and a count. The
+# same count stands in a state graph the agent derived and in a state graph it HEARD; only the
+# derived one is the agent's own state, so the count goes from there — the graph left empty, and
+# forgotten with its row — and everything else stands: the tick received, its revision, the world,
+# the ontology and the count heard. The transition inserts nothing, so no graph of the tick's own is
+# made.
 
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
@@ -14,16 +16,17 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix tick1: <http://example.org/test#tick1/> .
 @prefix tick2: <http://example.org/test#tick2/> .
 
 GRAPH :ontology {
+  :Counter rdfs:label "counter" .
   :TickGraph rdfs:subClassOf orexis:BeliefGraph .
   :TickGraph rdfs:subClassOf orexis:Graph .
   :TickGraph rdfs:subClassOf orexis:StateGraph .
-  belief:SubjectBeliefGraph rdfs:subClassOf orexis:BeliefGraph .
-  belief:SubjectBeliefGraph rdfs:subClassOf orexis:Graph .
-  belief:SubjectBeliefGraph rdfs:subClassOf orexis:StateGraph .
+  belief:RevisionGraph rdfs:subClassOf orexis:BeliefGraph .
+  belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:StateGraph rdfs:subClassOf orexis:Graph .
@@ -35,26 +38,38 @@ GRAPH :world {
 }
 
 GRAPH :rules {
-  :countRule a sh:SPARQLRule .
-  :countRule belief:delete """PREFIX : <http://example.org/test#>
-      DELETE { ?c :count ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
-  :countRule belief:firesOn :TickGraph .
-  :countRule rdfs:label "a tick counts one more than the count before" .
-  :countRule sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT { ?c :count ?next } WHERE { ?t a :Tick . ?c a :Counter . OPTIONAL { ?c :count ?n } BIND((COALESCE(?n, 0) + 1) AS ?next) }""" .
+  :spoilRule a sh:SPARQLRule .
+  :spoilRule belief:delete """PREFIX : <http://example.org/test#>
+      DELETE { ?t a :Tick ; :ticked true . ?c a :Counter ; :count ?n . :Counter rdfs:label ?l }
+      WHERE  { ?t a :Tick ; :ticked true . ?c a :Counter ; :count ?n . :Counter rdfs:label ?l }""" .
+  :spoilRule belief:triggeredBy :TickGraph .
+  :spoilRule rdfs:label "a transition that tries to delete testimony" .
 }
 
 GRAPH :tick2 {
   :t2 a :Tick .
 }
 
+GRAPH tick2:revisions {
+  :t2 :ticked true .
+}
+
+GRAPH :heard {
+  :counter :count 7 .
+}
+
 GRAPH tick1:believed {
-  :counter :count 1 .
+  :counter :count 7 .
 }
 
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :heard a orexis:BeliefGraph .
+  :heard a orexis:Graph .
+  :heard a orexis:StateGraph .
+  :heard orexis:arrivedBy orexis:Received .
+  :heard orexis:beliefsOf :keeper .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .
@@ -69,11 +84,15 @@ GRAPH :catalogue {
   :tick2 orexis:beliefsOf :keeper .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
-  tick1:believed a belief:SubjectBeliefGraph .
   tick1:believed a orexis:BeliefGraph .
   tick1:believed a orexis:Graph .
   tick1:believed a orexis:StateGraph .
-  tick1:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:20:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   tick1:believed orexis:arrivedBy orexis:Derived .
   tick1:believed orexis:beliefsOf :keeper .
+  tick2:revisions a belief:RevisionGraph .
+  tick2:revisions a orexis:BeliefGraph .
+  tick2:revisions a orexis:Graph .
+  tick2:revisions belief:settled true .
+  tick2:revisions orexis:arrivedBy orexis:Derived .
+  tick2:revisions prov:wasDerivedFrom :tick2 .
 }

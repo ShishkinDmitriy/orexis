@@ -27,7 +27,7 @@ timestamp: 2026-10-09T20:00:00Z
 > in the domain's words, and a state is held by the belief it replaces. What goes: one rule of
 > sensing's judging every range with the domain naming the states, and the refusal of a hold written
 > per property — [a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md)
-> makes the belief a domain's transition, fired once by the observation arriving, deleting the state
+> makes the belief a domain's transition, triggered once by the observation arriving, deleting the state
 > before and inserting the new one, and engages that refusal there.
 
 > **Amended 2026-10-10 (#947): the belief is the state, and holds no number.** As first decided, the
