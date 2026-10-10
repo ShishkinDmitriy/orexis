@@ -17,9 +17,18 @@ description: >-
   belief, summaries a writer carries onto the present, a side re-derived from the last N numbers,
   the hold read off the previous percept, a predicted number judged bare, and a hold written once
   per property.
-status: accepted
+status: superseded-in-part
+superseded-by: a-transition-changes-the-state-and-an-inference-only-concludes
 timestamp: 2026-10-09T20:00:00Z
 ---
+
+> **Superseded in part, 2026-10-10: the domain's transition makes the belief, and no rule of
+> sensing's judges every range.** What stands: an observation is a percept, the mind reads beliefs
+> in the domain's words, and a state is held by the belief it replaces. What goes: one rule of
+> sensing's judging every range with the domain naming the states, and the refusal of a hold written
+> per property — [a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md)
+> makes the belief a domain's transition, fired once by the observation arriving, deleting the state
+> before and inserting the new one, and engages that refusal there.
 
 > **Amended 2026-10-10 (#947): the belief is the state, and holds no number.** As first decided, the
 > belief carried the subject's value beside its state — "its moisture is 0.3001" — so that a command

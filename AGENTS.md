@@ -341,9 +341,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A step is an action PICKED for execution** — a world merely ADMITS one per action per legal
   filling and the search picks (a-row-is-a-step); **an action declares what it is filled with, and
   the kernel names no column** (an-action-takes-parameters).
-- **An action is a precondition, an effect and an implementation, and the effect is rules** — the
-  effect deletes because a possible world is where taking something away is the point; the
-  never-delete rule is belief revision's.
+- **An action is a precondition, an effect and an implementation, and the effect is a transition**
+  — rules that delete and insert, applied once in the world planning forks, on the machine belief
+  revises with (a-transition-changes-the-state-and-an-inference-only-concludes).
 - **An effect is one declaration** — the diff the search planned on rides on the step and is what
   the world is held to; **a kind said by absence is a kind two readers disagree about**.
 - **Deliberation is on triples, and a number is not special** — the core compares triples and
@@ -473,15 +473,15 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 
 ### Belief, sensing and prediction
 
-- **A rule concludes and never deletes, and what replaces a revision is its source rewritten** —
-  the revisions live in a graph derived from the source and go when it goes; the rules are SHACL's
-  draft adopted as it stands (`agent/belief/revise.py`).
+- **An inference concludes and never deletes, and a transition changes the state, fired once by
+  what arrives** — an inference's revisions live in a graph derived from its source and go when it
+  goes, SHACL's draft adopted as it stands (`agent/belief/revise.py`); a transition deletes and
+  inserts in the agent's own state, in `sh:order` groups as an effect does, never in testimony, and
+  is told from an inference by whether its result depends on what it replaces
+  (a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A graph is revised beside what the world states and the state the agent derived, and never beside
   another testimony** — revised beside everything believed, the first of two readings took the
   second's side; a subject belief is what the next reading of its key is judged beside (#944).
-- **A conclusion a rule shares with a graph it reads is no inference, so a judgment that replaces
-  what it reads is concluded about something else and replaced by a writer** — the state a reading
-  is judged in sits on the observation, and sensing writes the subject belief of it (#944).
 - **Any belief is accepted, and revised** — dropping testimony over a shape is a gate wearing
   revision's name; **a state that served a gate goes with the gate**.
 - **Revision's ceiling is a budget in rule executions, and a source the budget cuts short is
@@ -498,8 +498,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   keeps a sensor's percepts, named per reading and linked to the one before, as deep as its rules
   read; revision makes of the latest one belief about the subject, judged beside the belief it
   replaces, so a held state is the belief and no summary is carried onto the present; a predicted
-  number is judged the same way; one rule judges every range with its margin and the domain names
-  the states (#944, an-observation-is-a-percept-and-the-mind-reads-only-beliefs).
+  number is judged the same way; the domain's transition judges its states with the range's margin
+  (#944, an-observation-is-a-percept-and-the-mind-reads-only-beliefs,
+  a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
   read there alone, and the package's constant holds where none is stated** — the patience, both
   budgets, the silent and stuck limits and the horizon, each declared by its reader's package and
