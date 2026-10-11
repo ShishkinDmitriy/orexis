@@ -1,4 +1,4 @@
-"""`heard`: a peer's document is kept as what was said — every graph an utterance, whatever kind it says —
+"""`heard`: a peer's document is kept as what was said — every graph a statement, whatever kind it says —
 where a graph of its name, where one stands, was a peer's word too (#958)."""
 
 from __future__ import annotations
@@ -8,7 +8,7 @@ import pytest
 
 from agent.ontology import ACTION, BELIEF, CATALOGUE_GRAPH, OREXIS
 from agent.speech.heard import heard
-from agent.speech.ontology import UTTERANCE_GRAPH as UTTERANCE
+from agent.speech.ontology import STATEMENT_GRAPH as STATEMENT
 from agent.store import graphs_of, rows, update
 
 T = "http://example.org/test#"
@@ -22,8 +22,8 @@ def store():
     update(st, f"""INSERT DATA {{
   GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . <{T}vocabulary> a orexis:OntologyGraph .
                                <{T}mine> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded . }}
-  GRAPH <{T}vocabulary> {{ <{T}RoundGraph> rdfs:subClassOf <{UTTERANCE}> , orexis:Graph .
-                           <{UTTERANCE}> rdfs:subClassOf orexis:Graph . }} }}""")
+  GRAPH <{T}vocabulary> {{ <{T}RoundGraph> rdfs:subClassOf <{STATEMENT}> , orexis:Graph .
+                           <{STATEMENT}> rdfs:subClassOf orexis:Graph . }} }}""")
     return st
 
 
@@ -31,10 +31,10 @@ def _doc(graph, kind, fact):
     return f"<{graph}> {{ <{graph}> <{T}says> \"{fact}\" }}\n<{graph}> a <{kind}> .".encode()
 
 
-def test_a_round_heard_is_kept_as_an_utterance_the_agent_s_own_and_received(store):
+def test_a_round_heard_is_kept_as_a_statement_the_agent_s_own_and_received(store):
     assert heard(store, ME, _doc(T + "round", T + "RoundGraph", "open")) == [T + "round"]
-    assert T + "round" in graphs_of(store, UTTERANCE), "an utterance, its kinds closed on its row"
-    assert T + "round" in graphs_of(store, T + "RoundGraph"), "a kind of utterance it said is kept"
+    assert T + "round" in graphs_of(store, STATEMENT), "a statement, its kinds closed on its row"
+    assert T + "round" in graphs_of(store, T + "RoundGraph"), "a kind of statement it said is kept"
     assert T + "round" not in graphs_of(store, BELIEF), "and no belief: what was said is not what is believed"
     assert rows(store, _ARRIVAL_Q, (), g=T + "round") == [{"a": OREXIS + "Received", "o": ME}]
 
@@ -49,12 +49,12 @@ def test_a_round_said_again_replaces_the_one_before(store):
 @pytest.mark.parametrize("kind", [ACTION, "http://example.org/orexis/planning#DesireGraph", BELIEF,
                                   OREXIS + "WorldGraph"], ids=["action", "desire", "belief", "world"])
 def test_whatever_kind_a_peer_says_what_is_kept_is_what_was_said(store, kind):
-    """No kind is refused and none is kept that is not an utterance: a peer typing its graph an action
+    """No kind is refused and none is kept that is not a statement: a peer typing its graph an action
     graph, a desire, a belief or the world is kept as what it said, read by no planner, no executor and
     no rule as any of those — what the agent comes to believe of it is what its extractions conclude."""
     assert heard(store, ME, _doc(T + "wish", kind, "want")) == [T + "wish"]
     assert graphs_of(store, kind) == ([T + "mine"] if kind == BELIEF else []), "the kind it said is not kept"
-    assert graphs_of(store, UTTERANCE) == [T + "wish"]
+    assert graphs_of(store, STATEMENT) == [T + "wish"]
 
 
 def test_a_peer_cannot_rewrite_what_this_agent_said(store):

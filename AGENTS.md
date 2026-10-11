@@ -586,10 +586,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **The transport speaks MQTT4SSN, and a topic is named by the filters that match it** — the agent
   subscribes by the pattern and publishes to one with no wildcard; the broker's address stays in the
   environment.
-- **What is said is an utterance, and what is believed of it is extracted, heard or said alike** — a
-  document is kept as `speech:UtteranceGraph`, which no reader of the mind is handed, whatever kind it
-  says, and a domain's `speech:Extraction`, run by speech over the one utterance alone, makes the belief;
-  an inference restating it infers nothing and a transition would restate what earlier utterances said,
+- **What is said is a statement, and what is believed of it is extracted, heard or said alike** — a
+  document is kept as `speech:StatementGraph`, which no reader of the mind is handed, whatever kind it
+  says, and a domain's `speech:Extraction`, run by speech over the one statement alone, makes the belief;
+  an inference restating it infers nothing and a transition would restate what earlier statements said,
   and the language being the triples believed is the market's coincidence (#958,
   a-peers-word-is-testimony-and-a-rule-makes-it-a-belief); **the market is files** —
   six actions whose `execution:Saying` operations make the documents at take time (`domains/market/`).

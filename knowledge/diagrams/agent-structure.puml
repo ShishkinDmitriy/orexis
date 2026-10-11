@@ -35,7 +35,7 @@ frame "sensing" {
 
 frame "speech" {
   component "heard · said · extract" as SP
-  folder "speech:UtteranceGraph\nwhat was said, heard or said\nhanded to no reader of the mind" as utt #FFFCF2
+  folder "speech:StatementGraph\nwhat was said, heard or said\nhanded to no reader of the mind" as utt #FFFCF2
 }
 
 frame "belief" {

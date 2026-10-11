@@ -3,10 +3,10 @@
 `told` to every transport — a part that can tell a peer. What a peer says to it, `heard` keeps, called by the
 transport.
 
-STARTED, IT EXTRACTS WHAT IS BELIEVED OF EVERY UTTERANCE WRITTEN (#958). It hears its own kind, heard
+STARTED, IT EXTRACTS WHAT IS BELIEVED OF EVERY STATEMENT WRITTEN (#958). It hears its own kind, heard
 or said alike, and `extract` writes what the extractions conclude of it into a belief graph, which the
 runtime then hands whoever revises beliefs: so the agent comes to believe its own round as its bidders
-believe the round they heard, by one path, and speech names no package above it. An utterance written
+believe the round they heard, by one path, and speech names no package above it. A statement written
 before this part started — a volume lived in — is extracted from at start where nothing was.
 """
 
@@ -20,12 +20,12 @@ from agent.store import Raw, catalogue_of, rows
 
 from .events import Told
 from .extract import extract
-from .ontology import UTTERANCE_GRAPH
+from .ontology import STATEMENT_GRAPH
 from .said import said
 
-#  EVERY UTTERANCE NOTHING WAS EXTRACTED FROM YET: one no graph says it was derived from.
+#  EVERY STATEMENT NOTHING WAS EXTRACTED FROM YET: one no graph says it was derived from.
 _UNEXTRACTED_Q = """
-SELECT ?g WHERE { GRAPH $cat { ?g a speech:UtteranceGraph FILTER NOT EXISTS { ?b prov:wasDerivedFrom ?g } } } ORDER BY ?g"""
+SELECT ?g WHERE { GRAPH $cat { ?g a speech:StatementGraph FILTER NOT EXISTS { ?b prov:wasDerivedFrom ?g } } } ORDER BY ?g"""
 
 
 class _Speech:
@@ -44,7 +44,7 @@ class _Speech:
         if cat is not None:
             for r in rows(runtime.beliefs, _UNEXTRACTED_Q, (), cat=Raw(f"<{cat}>")):
                 runtime.wrote(extract(runtime.beliefs, r["g"]))
-        runtime.on(UTTERANCE_GRAPH, lambda graph: extract(runtime.beliefs, graph))
+        runtime.on(STATEMENT_GRAPH, lambda graph: extract(runtime.beliefs, graph))
 
     def say(self, document: ox.Store, to) -> list[str]:
         """Believe `document` as the agent said it, and tell it to every agent it is `to`; the graphs believed."""

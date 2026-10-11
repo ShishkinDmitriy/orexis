@@ -87,9 +87,9 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Speech — what peers say
 
-* [speech](/domain/speech/speech.md) - A peer's word is a document, kept as an utterance; what the agent said is kept the same way, and extraction makes beliefs of both.
-* [utterance](/domain/speech/utterance.md) - What was said, heard or said, kept as said and handed to no reader of the mind.
-* [extraction](/domain/speech/extraction.md) - A domain's construct speech runs over one utterance alone; what it concludes is the belief made of what was said.
+* [speech](/domain/speech/speech.md) - A peer's word is a document, kept as a statement; what the agent said is kept the same way, and extraction makes beliefs of both.
+* [statement](/domain/speech/statement.md) - What was said, heard or said, kept as said and handed to no reader of the mind.
+* [extraction](/domain/speech/extraction.md) - A domain's construct speech runs over one statement alone; what it concludes is the belief made of what was said.
 * [speaker](/domain/speech/speaker.md) - The role speech serves; needs a topic the agent listens to, a shape the MQTT transport ships.
 
 # Market — a domain of documents

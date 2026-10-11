@@ -4,7 +4,7 @@ title: Market
 term: http://example.org/orexis/market#Market
 description: >-
   A venue - one place a scarce good is traded, hosted by the agent that holds it and bid in by
-  agents that want it. A domain of files - five kinds of utterance agents say to one another, one
+  agents that want it. A domain of files - five kinds of statement agents say to one another, one
   extraction making a belief of each, five rules concluding what they mean, six actions - and no
   Python. `domains/market/`.
 ---

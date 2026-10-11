@@ -9,7 +9,7 @@ import pyoxigraph as ox
 from agent.ontology import OREXIS, local_of
 from agent.store import DocumentRefused, document_of, kinds_in, put_document, rows
 
-from .utterances import utterances
+from .statements import statements
 
 log = logging.getLogger("speech")
 
@@ -20,8 +20,8 @@ SELECT ?arrival WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexi
 
 
 def heard(store: ox.Store, me: str, payload: bytes) -> list[str]:
-    """Keep the document `payload` holds as a peer said it: every graph it names an utterance
-    (`utterances`), each replacing what a peer said under that name before, received and this agent's.
+    """Keep the document `payload` holds as a peer said it: every graph it names a statement
+    (`statements`), each replacing what a peer said under that name before, received and this agent's.
     The names written, sorted — and none, said in the log, where the document is no document, a graph of
     its name arrived another way, or it says whose a graph is or who the self is: the loader's refusal
     (`refuse_the_sovereigns`), since the hearer owns what it hears and no peer tells this agent who it is.
@@ -37,4 +37,4 @@ def heard(store: ox.Store, me: str, payload: bytes) -> list[str]:
     except DocumentRefused as exc:
         log.warning("%s: a document heard and not kept: %s", local_of(me), exc)
         return []
-    return put_document(store, utterances(store, doc), owner=me, arrival=RECEIVED, close=True)
+    return put_document(store, statements(store, doc), owner=me, arrival=RECEIVED, close=True)

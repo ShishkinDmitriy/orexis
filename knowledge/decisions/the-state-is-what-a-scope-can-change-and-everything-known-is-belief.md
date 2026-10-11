@@ -166,7 +166,7 @@ them were answering the second and third questions with a class.
 > #958); a peer may then say a committed step or a forecast, kinds the state kind kept out, as it could
 > always say a subject belief. A revision of a belief is a belief, so the readers that walk the agent's
 > own leave revisions to go with their sources. Every case reads as it did.
-> *#958 built it: a peer's word is an utterance, the interim gate is gone, and slice 4 moves no gate.*
+> *#958 built it: a peer's word is a statement, the interim gate is gone, and slice 4 moves no gate.*
 
 > **Amended 2026-10-11: what changed is a diff of names.** A graph a copy is made of is never changed
 > under its name ([a-graph-is-never-changed-under-its-name](/decisions/a-graph-is-never-changed-under-its-name.md)),

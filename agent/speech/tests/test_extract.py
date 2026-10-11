@@ -1,4 +1,4 @@
-"""`extract`: what the agent believes of one utterance is what its extractions conclude of it alone — one
+"""`extract`: what the agent believes of one statement is what its extractions conclude of it alone — one
 belief graph derived from it, the agent's own, over its period; nothing where nothing concludes."""
 
 from __future__ import annotations
@@ -29,9 +29,9 @@ def store():
     update(st, f"""INSERT DATA {{
   GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
       <{T}rules> a sh:RulesGraph . <{T}world> a orexis:PublicGraph .
-      <{ROUND}> a speech:UtteranceGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> ;
+      <{ROUND}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> ;
                 dcterms:temporal [ orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-      <{CLAIM}> a speech:UtteranceGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> .
+      <{CLAIM}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> .
       <{T}held> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived . }}
   GRAPH <{T}rules> {{ <{T}believed> a speech:Extraction ; sh:construct "{_BELIEVED}" . }}
   GRAPH <{T}world> {{ <{T}water> a <{T}Venue> . }}
@@ -56,7 +56,7 @@ def test_what_a_round_says_is_believed_the_agent_s_own_over_its_period(store):
 
 
 def test_a_claim_carries_nothing_of_the_round_it_names_believed_before(store):
-    """An extraction reads the utterance alone: the round believed already stands beside, and none of it
+    """An extraction reads the statement alone: the round believed already stands beside, and none of it
     is concluded of the claim, so the claim's belief goes with the claim and not with the round."""
     extract(store, CLAIM)
     assert _said(store, believed_graph(CLAIM)) == {("claim", "type", T + "Claim"), ("claim", "inRound", ROUND)}
@@ -80,11 +80,11 @@ def test_an_extraction_that_will_not_run_extracts_nothing_loudly(store, caplog):
 
 def test_a_peer_saying_a_subject_belief_makes_no_belief_where_no_extraction_concludes_it(store):
     """A peer says the agent's own bed is dry, in a graph it types as a belief. What was said is kept as
-    an utterance, and no extraction the agent holds is about a bed's soil, so nothing is believed of it:
+    a statement, and no extraction the agent holds is about a bed's soil, so nothing is believed of it:
     no met-test reads it, where before #958 it was read as the agent's own state of its bed."""
     said = T + "rumour"
     update(store, f"""INSERT DATA {{
-  GRAPH <{CATALOGUE_GRAPH}> {{ <{said}> a speech:UtteranceGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> . }}
+  GRAPH <{CATALOGUE_GRAPH}> {{ <{said}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> . }}
   GRAPH <{said}> {{ <{T}bed> <http://example.org/orexis/climate#soil> <http://example.org/orexis/climate#Dry> . }} }}""")
     assert extract(store, said) == []
     assert not list(store.quads_for_pattern(None, None, None, ox.NamedNode(believed_graph(said))))

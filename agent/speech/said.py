@@ -7,7 +7,7 @@ import pyoxigraph as ox
 from agent.ontology import OREXIS, local_of
 from agent.store import DocumentRefused, kinds_in, put_document, refuse_the_sovereigns, rows
 
-from .utterances import utterances
+from .statements import statements
 
 RECORDED = OREXIS + "Recorded"
 
@@ -17,7 +17,7 @@ SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $grap
 
 
 def said(store: ox.Store, me: str, doc: ox.Store) -> list[str]:
-    """Keep the document `doc` as this agent said it: every graph an utterance (`utterances`),
+    """Keep the document `doc` as this agent said it: every graph a statement (`statements`),
     recorded and its own, each replacing what it said under that name before; what the agent believes of
     its own word is what its extractions conclude, as of a peer's (`extract`, #958). The names written, sorted. A graph
     of the name that arrived any other way is refused — what the agent was told or what its
@@ -30,4 +30,4 @@ def said(store: ox.Store, me: str, doc: ox.Store) -> list[str]:
             if r["arrival"] != RECORDED or r.get("owner") != me:
                 raise DocumentRefused(f"{local_of(me)} cannot say {graph} again: it arrived "
                                       f"{local_of(r['arrival'])}, not as this agent's word")
-    return put_document(store, utterances(store, doc), owner=me, arrival=RECORDED, close=True)
+    return put_document(store, statements(store, doc), owner=me, arrival=RECORDED, close=True)
