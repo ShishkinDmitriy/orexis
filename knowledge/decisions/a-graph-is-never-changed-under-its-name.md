@@ -1,19 +1,18 @@
 ---
 type: Decision
-title: A graph is never changed under its name; a change makes a new version and ends the one before
+title: A graph is never changed under its name; a change makes a new version, and the one before is forgotten
 description: >-
   The sovereign, 2026-10-11 - instead of deleting from a graph in place, make a new graph that
-  supersedes the one it retracts from, copying it with the change applied, and track the versions in
-  provenance. Decided - the content of a graph a copy is made of, a belief or a prediction, is fixed
-  for as long as its name stands, and a name forgotten is never written again. A writer that
-  would put a triple into one that stands, or take one out, makes a new version, the old content less
-  what goes and plus what comes, ends the one before at the instant of the change, and links the two (prov:wasRevisionOf, and
-  dcterms:isVersionOf the chain's first, which is the graph's lasting identity). The version before is
-  forgotten once its successor is written, so the belief base holds the present and history stays the
-  series'. What changed since any moment is then which names came and went in the catalogue, and a
-  copy made of a name can never go stale. Refused - changing a graph in place, keeping every version
-  in the belief base, a log of changes beside mutable graphs, and a stamp each writer updates on the
-  graph's row.
+  supersedes the one it retracts from, copying it with the change applied. Decided - the content of a
+  graph a copy is made of, a belief or a prediction, is fixed for as long as its name stands, and a
+  name forgotten is never written again. A writer that would put a triple into one that stands, or take
+  one out, makes a new version under a new name, the old content less what goes and plus what comes,
+  carrying the graph's lasting identity (dcterms:isVersionOf, the name its first version had), and the
+  version before is forgotten as it is written. Nothing tracks an outdated version - nothing reads one,
+  and history is the series'. What changed since any moment is then which names came and went in the
+  catalogue, and a copy made of a name can never go stale. Refused - changing a graph in place, keeping
+  every version in the belief base, a link from each version back to the one it replaced, a log of
+  changes beside mutable graphs, and a stamp each writer updates on the graph's row.
 status: accepted
 timestamp: 2026-10-11T18:00:00Z
 ---
@@ -55,20 +54,21 @@ makes a new version of it:
 
 - **The new version** is the old content less what is taken out and plus what is put in, under a new
   name, minted from the store's counter as a possible world is. Its catalogue row carries the old one's
-  kinds, owner and period, `orexis:arrivedBy orexis:Derived`, `prov:wasRevisionOf` the version it
-  replaces, and `dcterms:isVersionOf` the chain's first version.
-- **The version before ends** at the instant of the change, as a percept ends where its successor
-  begins, and is **forgotten once its successor is written**, with its revisions. The belief base holds
-  the present; what was believed before is the series' to keep
+  kinds, owner and period, `orexis:arrivedBy orexis:Derived`, and `dcterms:isVersionOf` the graph's
+  lasting identity, the name its first version had.
+- **The version before is forgotten** as its successor is written, with its revisions and its row. It
+  is not ended and kept, and nothing links back to it: nothing reads an outdated version, and what was
+  believed before is the series' to keep
   ([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md)).
 - **Adding is a change too.** A copy made of a name lacks what is added under it later as surely as it
   keeps what is taken out, so a refresh that trusted the name would miss either. A graph written once
   and never again — a percept, a prediction, a committed step — makes no version, and those are most of
-  what is written. A graph that would be left empty is not versioned; it ends, and is forgotten.
+  what is written. A graph that would be left empty is not versioned; it is forgotten.
 - **A name forgotten is never written again.** Prediction forgets a key's stretches and writes the new
   ones under the names it used before (`agent/prediction/predict.py`), so a name a copy holds would hold
   other content; each is minted afresh, as a possible world's is.
-- **A graph's lasting identity is the chain's first name.** A reader that asks for a particular graph
+- **A graph's lasting identity is the name its first version had**, an IRI that stands on every
+  version's row though no graph of that name is held after the first change. A reader that asks for a particular graph
   rather than a kind of graph — `heard` replacing what a peer said under a name, `trigger` writing again
   into an arrival's state graph, the executor finding its own — asks for the version whose
   `dcterms:isVersionOf` is that name, or the name itself where it was never versioned.
@@ -90,10 +90,11 @@ read, and it is how a belief's change is read.
 **A name that cannot go stale makes every copy safe.** A copy keyed by name is correct for as long as
 the name stands, so nothing has to tell the imaginarium what to recopy, and no writer can forget to.
 
-**Ending is what this project already does with time.** A percept ends where its successor begins; a
-committed step ends when it is answered; a graph with a period is handed to no reader past it
-([a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md)). A version ending at
-its successor is the same act, applied to the agent's own beliefs.
+**What nothing reads is not kept.** Sensing forgets a percept past the depth its rules read; the
+executor forgets a committed step once its window has ended; a term nobody reads is annotation. An
+outdated version is read by nothing — not the search, not a reader of the present, not slice 5's diff,
+which needs only the names standing — so it is forgotten, and the one thing every version carries is
+what three readers do ask: which graph it is.
 
 # What was refused
 
@@ -104,6 +105,10 @@ its successor is the same act, applied to the agent's own beliefs.
   reader could stand at a past instant and be handed what was believed then. Nothing reads the past of a
   belief; the series already holds it, and the belief base would grow with every reading. Kept, the
   versions are the garbage the sovereign named.
+- **A link from each version back to the one it replaced**, `prov:wasRevisionOf`, as first drafted:
+  the version it names is forgotten in the same act, so the link points at a name with no row and no
+  content, and nothing follows it. Provenance that nothing reads is annotation, and the history it
+  would trace is the series'.
 - **A log of changes beside mutable graphs**: each change also written as a graph of what went and what
   came. Two records of one change, the graph and its log, which must agree; and a copy still goes stale
   until the log is replayed into it.
@@ -120,7 +125,8 @@ its successor is the same act, applied to the agent's own beliefs.
   of them that is not its owner, or a copy of one made outside its owner.**
 - **How deep a chain is kept.** None past the present, today. A rule that reads a belief's past — a
   state held for an hour, a count of changes — would keep as many as it reads, as sensing keeps a
-  sensor's percepts as deep as stuck's rule reads them. **The trigger: the first such rule.**
+  sensor's percepts as deep as stuck's rule reads them, and with them a link back from each version to
+  the one it replaced, which something would then follow. **The trigger: the first such rule.**
 
 # How it is built
 
