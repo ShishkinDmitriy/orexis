@@ -10,10 +10,27 @@ description: >-
   own saying takes the same path. So nothing a peer sends is read as an action, a rule, a world or a
   belief by its own declaration, and no gate on kinds is needed at the writer or the readers.
   Refused - the writer's gate on the kind a peer declares, the readers' gate on arrival, and the
-  peer's word as an observation of sensing's.
+  peer's word as an observation of sensing's. Amended when built (#958) - the rule is an extraction,
+  run by speech over the one utterance alone, for what was heard and what was said alike.
 status: accepted
 timestamp: 2026-10-11T15:00:00Z
 ---
+
+> **Amended 2026-10-11, as built (#958): the rule is an extraction, run by speech over the utterance
+> alone.** A peer's document and the agent's own are kept as [utterances](/domain/speech/utterance.md),
+> `speech:UtteranceGraph`, a kind a domain may name beneath (the market's round, call, bid, claim and
+> presentation are), and a kind said that is not beneath it is not kept. What the mind reads of one is
+> what an [extraction](/domain/speech/extraction.md) concludes of it alone, `speech:Extraction`, a
+> domain's construct written into one belief derived from the utterance, over its period. Neither rule
+> the body names could do it: an inference infers what the graph it reads does not already hold, and an
+> utterance restated holds it already; a transition reads its arrival beside the agent's own state, so
+> restating a claim would restate the round believed before it. **The agent's own saying is extracted
+> from by the same path**, not triggered as testimony: what the agent says is in the language agents
+> speak to each other, and what it believes of it is extracted as of a peer's. **That this language is
+> the triples the agent believes is a coincidence of the market**, not an assumption of the layer: a
+> society speaking English an LLM reads would change the extraction and no reader of the mind. A peer's
+> announced route, a prediction, is left to the first world that says one (#568). Where the body says a
+> rule the agent holds or a transition makes the belief, read an extraction.
 
 # Context
 

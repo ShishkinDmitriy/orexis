@@ -12,8 +12,8 @@ description: >-
 
 An agent stated `speech:Speaker` beside its self, or in a role beneath it: the market's
 [host](/domain/market/host.md) and [bidder](/domain/market/bidder.md) are both, so every allotment agent
-is one. Declaring it loads [speech](/domain/speech/speech.md), whose part believes what the agent
-says when a step says it, and whose `heard` believes a peer's document when the transport hands one
+is one. Declaring it loads [speech](/domain/speech/speech.md), whose part keeps what the agent
+says when a step says it, and whose `heard` keeps a peer's document when the transport hands one
 in. Before roles, speech had no vocabulary at all; this is the first word in it.
 
 # What it needs

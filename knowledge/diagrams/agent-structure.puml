@@ -1,6 +1,6 @@
 @startuml agent-structure
 !pragma layout smetana
-title Agent 0.2.0 — each package's services and the graph kinds it declares\nblue = a graph kind (passive) · cream = sensing's, handed to no reader of the mind · green = a service (logic)\nsolid = writes · dotted = reads · every graph is named by its kind alone, and the catalogue says what each one is
+title Agent 0.2.0 — each package's services and the graph kinds it declares\nblue = a graph kind (passive) · cream = sensing's and speech's, handed to no reader of the mind · green = a service (logic)\nsolid = writes · dotted = reads · every graph is named by its kind alone, and the catalogue says what each one is
 
 left to right direction
 skinparam componentStyle rectangle
@@ -34,7 +34,8 @@ frame "sensing" {
 }
 
 frame "speech" {
-  component "heard · said" as SP
+  component "heard · said · extract" as SP
+  folder "speech:UtteranceGraph\nwhat was said, heard or said\nhanded to no reader of the mind" as utt #FFFCF2
 }
 
 frame "belief" {
@@ -89,7 +90,8 @@ SEN --> st : silentSince
 SEN --> DEL : revise · trigger
 DEL --> rev
 DEL --> st : a transition
-SP  --> st : Received
+SP  --> utt
+SP  --> st : what an extraction concludes
 PRE --> pr
 PL  --> scope
 PL  --> want
