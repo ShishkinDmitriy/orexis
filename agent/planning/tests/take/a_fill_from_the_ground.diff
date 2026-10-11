@@ -16,7 +16,17 @@
    :fill planning:precondition """PREFIX : <http://example.org/test#>
        SELECT ?tank WHERE {
        ?tank a :Tank ; :level ?l .
-@@ -95,6 +95,13 @@
+@@ -55,8 +55,7 @@
+   :keeper.in_range rdfs:label "every tank in range" .
+ }
+ 
+-GRAPH :sensed {
+-}
++
+ 
+ GRAPH :scopes {
+   :fill planning:inScope :keeper.scope.1 .
+@@ -97,6 +96,13 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
@@ -30,9 +40,9 @@
    possible:fill-tank1.by :tank :tank1 .
    possible:fill-tank1.by a planning:Candidate .
    possible:fill-tank1.by planning:fills :fill .
-@@ -123,3 +130,8 @@
-   :keeper.in_range.pursued.tank1.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
-   :keeper.in_range.pursued.tank1.met sh:targetNode :tank1 .
+@@ -129,3 +135,8 @@
+ GRAPH :sensed.changeable {
+   :tank1 :level 0 .
  }
 +
 +

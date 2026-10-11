@@ -40,7 +40,6 @@ GRAPH :desires {
 }
 
 GRAPH :sensed {
-  :tank1 :level 0 .
 }
 
 GRAPH :scopes {
@@ -69,6 +68,9 @@ GRAPH :catalogue {
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
   :sensed a orexis:StateGraph .
+  :sensed.changeable a planning:ChangeableGraph .
+  :sensed.changeable orexis:arrivedBy orexis:Derived .
+  :sensed.changeable prov:wasDerivedFrom :sensed .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
   ground:2026-01-01T120000p0000 a planning:GroundGraph .
@@ -110,4 +112,8 @@ GRAPH pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 {
 
 GRAPH :refill {
   :tank1 :level 20 .
+}
+
+GRAPH :sensed.changeable {
+  :tank1 :level 0 .
 }

@@ -1,7 +1,21 @@
 --- case
 +++ expected
-@@ -89,4 +89,121 @@
+@@ -58,8 +58,6 @@
+ }
+ 
+ GRAPH :sensed {
+-  :tank1 :on :stand_a .
+-  :tank2 :on :stand_a .
+ }
+ 
+ GRAPH :scopes {
+@@ -87,6 +85,131 @@
+   :sensed a orexis:BeliefGraph .
+   :sensed a orexis:Graph .
    :sensed a orexis:StateGraph .
++  :sensed.changeable a planning:ChangeableGraph .
++  :sensed.changeable orexis:arrivedBy orexis:Derived .
++  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 -}
@@ -122,4 +136,9 @@
 +  :keeper.apart.pursued.avoided sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :on ?value . ?other a :Tank ; :on ?value . FILTER(?other != $this) }" .
 +  :keeper.apart.pursued.avoided sh:targetNode :tank1 .
 +  :keeper.apart.pursued.avoided sh:targetNode :tank2 .
++}
++
++GRAPH :sensed.changeable {
++  :tank1 :on :stand_a .
++  :tank2 :on :stand_a .
 +}

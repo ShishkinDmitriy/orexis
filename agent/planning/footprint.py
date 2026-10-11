@@ -76,7 +76,7 @@ from rdflib.plugins.sparql.parser import parseQuery
 from agent import clock
 #  AN EFFECT'S TEMPLATES AS BELIEF'S MACHINE ASKS THEM: one reading of an update text, the
 #  runner's own, so what a scope says an effect writes is what the effect is applied as.
-from agent.belief.transition import Refused, templates
+from agent.belief.transition import Refused, templates, transitions
 from agent.ontology import ACTION, PUBLIC, SELF, local_of
 from agent.store import _TOKEN, NAMESPACES, PREFIXES, graphs_of, rows
 
@@ -386,6 +386,66 @@ def written(store, at: datetime | None = None) -> frozenset[str]:
         if writes is ANYTHING:
             return frozenset()
         out |= {str(w) for w in writes}
+    return frozenset(out)
+
+
+def changeable(store, actions=None, at: datetime | None = None) -> list[tuple] | None:
+    """What a search can change, as patterns of triple: `(predicate, object)` IRIs, the object None
+    where anything stands there — one per triple of every template of every writer, each effect of
+    `actions` (every action where None) and each transition, since a ground runs the transitions a
+    predicted observation triggers. ANYTHING where a writer's templates cannot be read.
+
+    AN IRI OR A LITERAL A TEMPLATE STATES IS FIXED, so `?call a market:Call` changes calls and no other
+    type; a token, a variable or a blank node is anything, and the subject always is. A predicate
+    variable is the IRIs its own `VALUES` bounds it to, and anything where none does. So a pattern
+    matches at least what a writer writes and may match more: a triple written that no pattern caught
+    would be written into a fork while the old one stood beside it, read from the graph it was left in
+    (knowledge/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)."""
+    texts: list[str] = []
+    for action, held in _effects(store, at).items():
+        if actions is None or action in actions:
+            texts += held["constructs"] + held["deletes"]
+    for order in transitions(store):
+        for rule in order:
+            if not rule.update:
+                continue
+            try:
+                parts = templates(rule.update)
+            except Refused:
+                return ANYTHING                         # what will not run cannot be shown to write nothing
+            texts += [t for t in (parts.insert, parts.delete) if t]
+    out: set = set()
+    for text in texts:
+        found = _template_patterns(text)
+        if found is ANYTHING:
+            return ANYTHING
+        out |= found
+    return sorted(out, key=lambda pattern: (pattern[0], pattern[1] or ""))
+
+
+@functools.lru_cache(maxsize=1024)
+def _template_patterns(text: str) -> frozenset | None:
+    """The `(predicate, object)` patterns one CONSTRUCT's template writes, or ANYTHING. Remembered by
+    the text, since the actions and the rules loaded do not change while the agent runs and a parse
+    through rdflib's algebra cost a pass more than everything else it did, measured on the allotment."""
+    try:
+        alg = translateQuery(parseQuery(PREFIXES + parseable(text))).algebra
+    except Exception as exc:                            # noqa: BLE001
+        log.debug("could not parse a template for what it writes: %s", exc)
+        return ANYTHING
+    out: set = set()
+    bounded = None
+    for _, p, o in alg.get("template") or ():
+        obj = o.n3() if isinstance(o, (URIRef, rdflib.Literal)) else None
+        if isinstance(p, URIRef):
+            out.add((str(p), obj))
+            continue
+        if bounded is None:
+            bounded = _values_in(alg.get("p"))
+        iris = bounded.get(p)
+        if not iris:
+            return ANYTHING
+        out |= {(str(iri), obj) for iri in iris}
     return frozenset(out)
 
 

@@ -1,7 +1,21 @@
 --- case
 +++ expected
-@@ -87,4 +87,334 @@
+@@ -56,8 +56,6 @@
+ }
+ 
+ GRAPH :sensed {
+-  :tank1 :level 0 .
+-  :tank2 :level 0 .
+ }
+ 
+ GRAPH :scopes {
+@@ -85,6 +83,344 @@
+   :sensed a orexis:BeliefGraph .
+   :sensed a orexis:Graph .
    :sensed a orexis:StateGraph .
++  :sensed.changeable a planning:ChangeableGraph .
++  :sensed.changeable orexis:arrivedBy orexis:Derived .
++  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 -}
@@ -335,4 +349,9 @@
 +  :keeper.in_range.pursued.tank2.met a sh:NodeShape .
 +  :keeper.in_range.pursued.tank2.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
 +  :keeper.in_range.pursued.tank2.met sh:targetNode :tank2 .
++}
++
++GRAPH :sensed.changeable {
++  :tank1 :level 0 .
++  :tank2 :level 0 .
 +}

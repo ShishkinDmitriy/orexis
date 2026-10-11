@@ -1,7 +1,23 @@
 --- case
 +++ expected
-@@ -212,9 +212,35 @@
+@@ -146,10 +146,6 @@
+ }
+ 
+ GRAPH :sensed {
+-  :parcel_a courier:at :c0_3 .
+-  :parcel_b courier:at :c1_1 .
+-  :van_a courier:at :c0_3 .
+-  :van_b courier:at :c1_1 .
+ }
+ 
+ GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b {
+@@ -210,11 +206,47 @@
+   :sensed a orexis:BeliefGraph .
+   :sensed a orexis:Graph .
    :sensed a orexis:StateGraph .
++  :sensed.changeable a planning:ChangeableGraph .
++  :sensed.changeable orexis:arrivedBy orexis:Derived .
++  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
@@ -31,6 +47,13 @@
 +
 +
 +GRAPH ground:2026-01-01T120000p0000 {
++  :parcel_a courier:at :c0_3 .
++  :parcel_b courier:at :c1_1 .
++  :van_a courier:at :c0_3 .
++  :van_b courier:at :c1_1 .
++}
++
++GRAPH :sensed.changeable {
 +  :parcel_a courier:at :c0_3 .
 +  :parcel_b courier:at :c1_1 .
 +  :van_a courier:at :c0_3 .

@@ -80,7 +80,7 @@ from agent.belief.ontology import RULES_GRAPH
 from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD, STATE
 from agent.store import catalogue_of, forget_graph, graphs_of, revisions_of, rows
 
-from .ontology import DESIRE, SCOPE_GRAPH, WANT
+from .ontology import CHANGEABLE_GRAPH, DESIRE, SCOPE_GRAPH, WANT
 
 log = logging.getLogger("prepare_ground")
 
@@ -150,7 +150,9 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
     #  catalogue for a set that is unioned anyway. Measured at 107 µs a call on the plans case,
     #  which is why the list is spelled out here rather than built in pieces.
     made = {r["g"] for r in rows(into, _MADE_Q, ())}
-    for iri in graphs_of(into, *CROSSING):
+    #  AND WHAT THE LAST PASS CUT OUT OF IT: a changeable graph holds what its graph held then, and put
+    #  back beside a fresh copy it would stand a state that has since moved beside the one now (#953).
+    for iri in graphs_of(into, *CROSSING, CHANGEABLE_GRAPH):
         if iri not in made:
             forget_graph(into, iri)           # what the last filling brought across
     #  A STATE'S REVISIONS CROSS BY KIND: what the rules concluded of it is a belief, in a graph

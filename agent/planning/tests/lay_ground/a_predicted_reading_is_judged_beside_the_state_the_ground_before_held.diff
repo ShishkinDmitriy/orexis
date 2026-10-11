@@ -1,7 +1,36 @@
 --- case
 +++ expected
-@@ -108,4 +108,40 @@
+@@ -39,13 +39,9 @@
+ }
+ 
+ GRAPH :sensed {
+-  :soil a sosa:Observation .
+-  :soil sosa:hasFeatureOfInterest :bed .
+-  :soil sosa:hasSimpleResult 0.2999 .
+ }
+ 
+ GRAPH :believed {
+-  :bed :soil :Dry .
+ }
+ 
+ GRAPH :held_ahead {
+@@ -71,6 +67,9 @@
+   :believed a orexis:StateGraph .
+   :believed orexis:arrivedBy orexis:Derived .
+   :believed orexis:beliefsOf :keeper .
++  :believed.changeable a planning:ChangeableGraph .
++  :believed.changeable orexis:arrivedBy orexis:Derived .
++  :believed.changeable prov:wasDerivedFrom :believed .
+   :catalogue a orexis:CatalogueGraph .
+   :catalogue a orexis:Graph .
+   :held_ahead a orexis:Graph .
+@@ -106,6 +105,55 @@
+   :sensed a orexis:StateGraph .
+   :sensed orexis:arrivedBy orexis:Received .
    :sensed orexis:beliefsOf :keeper .
++  :sensed.changeable a planning:ChangeableGraph .
++  :sensed.changeable orexis:arrivedBy orexis:Derived .
++  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
@@ -40,4 +69,14 @@
 +  :soil a sosa:Observation .
 +  :soil sosa:hasFeatureOfInterest :bed .
 +  :soil sosa:hasSimpleResult 0.35 .
++}
++
++GRAPH :believed.changeable {
++  :bed :soil :Dry .
++}
++
++GRAPH :sensed.changeable {
++  :soil a sosa:Observation .
++  :soil sosa:hasFeatureOfInterest :bed .
++  :soil sosa:hasSimpleResult 0.2999 .
 +}

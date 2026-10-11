@@ -1,6 +1,16 @@
 --- case
 +++ expected
-@@ -66,11 +66,26 @@
+@@ -30,8 +30,7 @@
+   :keeper.in_range rdfs:label "every tank in range" .
+ }
+ 
+-GRAPH :sensed {
+-}
++
+ 
+ GRAPH :scopes {
+   :fill planning:inScope :keeper.scope.1 .
+@@ -68,11 +67,26 @@
    ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
    ground:2026-01-01T120000p0000 orexis:hash "sha256:6049dbc777f47880d902c748f455b6e2f0c0df6ee3e7cd098544d26edb928bc8" .

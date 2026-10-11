@@ -558,7 +558,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  belief no text reads moves no hash at all. Asked only where something is walked by a
             #  holder of a constraint, which is the only agent the answer is for.
             foreseen = frozenset(r["h"] for r in rows(store, _HASHES_Q, ()) if r.get("h")) if flights else frozenset()
-            present, *_ = lay_ground(store, at, within, landings)
+            present, *_ = lay_ground(store, at, within, landings, actions=only)
             arrived = bool(flights) and bool(frozenset(
                 r["h"] for r in rows(store, _GROUND_HASHES_Q, (), cat=Raw(f"<{catalogue_of(store)}>"))) - foreseen)
             rerooting = reroot(store, present)

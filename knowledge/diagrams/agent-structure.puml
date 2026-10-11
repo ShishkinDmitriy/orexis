@@ -64,6 +64,7 @@ frame "planning" {
   folder "planning:WantGraph\none-shot · what a desire read unmet" as want
   folder "planning:ScopeGraph\nthe scopes, written at boot" as scope
   folder "planning:GroundGraph · planning:PossibleGraph\nplanning:PlanGraph · the imaginarium's" as img
+  folder "planning:ChangeableGraph\nwhat a search can change, cut out of a belief graph" as cut
 }
 
 frame "execution" {
@@ -93,6 +94,7 @@ PRE --> pr
 PL  --> scope
 PL  --> want
 PL  --> img
+PL  --> cut
 PL  --> plan
 PL  --> diff
 EX  --> int

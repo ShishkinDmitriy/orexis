@@ -120,8 +120,9 @@ every reader of a text about the agent already reads the public graphs. Public m
 agent of a world may read; the self is true of one store and of no other, and a graph typed public
 is one whose content a reader may take for the world's.
 
-**An existing per-agent kind.** A state graph is spoken for by the grounds — copied into every
-world a search forks and into its hash; a record graph says how long what it states is worth
+**An existing per-agent kind.** A state graph was spoken for by the grounds — copied into every
+world a search forks and into its hash, until #953 cut out of every graph what a writer can change
+and left the rest beside the world; a record graph says how long what it states is worth
 believing; a working graph is read by its own package alone and never crosses into a possible
 world. The self is none of those.
 

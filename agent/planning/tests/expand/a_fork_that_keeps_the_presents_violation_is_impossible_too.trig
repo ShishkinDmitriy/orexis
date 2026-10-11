@@ -84,9 +84,6 @@ GRAPH :constraints {
 }
 
 GRAPH :sensed {
-  :tank1 :level 7 .
-  :tank2 :level 7 .
-  :tank3 :level 0 .
 }
 
 GRAPH :scopes {
@@ -117,6 +114,9 @@ GRAPH :catalogue {
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
   :sensed a orexis:StateGraph .
+  :sensed.changeable a planning:ChangeableGraph .
+  :sensed.changeable orexis:arrivedBy orexis:Derived .
+  :sensed.changeable prov:wasDerivedFrom :sensed .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
   ground:2026-01-01T120000p0000 a planning:GroundGraph .
@@ -164,4 +164,10 @@ GRAPH pursued:2026-01-01T120000p0000--open {
   :keeper.in_range.pursued.met a sh:NodeShape .
   :keeper.in_range.pursued.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
   :keeper.in_range.pursued.met sh:targetNode :tank3 .
+}
+
+GRAPH :sensed.changeable {
+  :tank1 :level 7 .
+  :tank2 :level 7 .
+  :tank3 :level 0 .
 }

@@ -40,6 +40,7 @@ from .ontology import DESIRE, PLANNING, SHAPES, WANT
 from .withdraw import FORGET_ONE_U
 from .couplings import couplings
 from .find_scopes import find_scopes
+from .world_at import world_at
 
 RECOGNIZED = PLANNING + "Recognized"
 
@@ -885,9 +886,11 @@ SELECT ?start ?g ?met ?instance ?constraint ?about ?offending WHERE {
 ORDER BY ?start ?instance ?constraint ?offending"""
 
 #  WHAT A NODE NAMES IN A GROUND, as the objects of its own facts — the terms a reading is keyed
-#  by, its feature and its property, among the rest. Values, never predicates: a key is values.
+#  by, its feature and its property, among the rest. Values, never predicates: a key is values. Asked
+#  of the world the ground is and not of the ground's graph alone: a ground holds what a step can
+#  change, and what the node names that nothing changes — its bed — is read beside it (#953).
 _NAMES_Q = """
-SELECT DISTINCT ?o WHERE { GRAPH $ground { $node ?p ?o } FILTER(isIRI(?o)) }"""
+SELECT DISTINCT ?o WHERE { $node ?p ?o FILTER(isIRI(?o)) }"""
 
 
 def _desires_in(store: ox.Store) -> list[tuple[str, str]]:
@@ -918,6 +921,7 @@ def _troubles(store: ox.Store, desire: str, scopes=None, holder: str | None = No
     failing across the grounds.
     """
     found = rows(store, _TROUBLES_Q, (), desire=desire)
+    read = Memo()                          # the graphs each ground's world reads, asked once a ground
     if not found or any(r.get("met") is None for r in found):
         return None
     seen: dict[tuple, dict] = {}
@@ -945,7 +949,7 @@ def _troubles(store: ox.Store, desire: str, scopes=None, holder: str | None = No
             keyed = ()
             if scopes and r.get("offending"):
                 keyed = names.setdefault((r["g"], r["offending"]), tuple(sorted(
-                    o for o in {r["offending"], *(n["o"] for n in rows(store, _NAMES_Q, (), ground=r["g"], node=r["offending"]))}
+                    o for o in {r["offending"], *(n["o"] for n in rows(store, _NAMES_Q, world_at(store, r["g"], memo=read), node=r["offending"]))}
                     if o in scopes and scopes[o] != everywhere and o != r.get("about") and o != holder)))
             key = (r["instance"], r.get("constraint", ""), keyed)
             unmet.add(key)

@@ -44,6 +44,18 @@ present only by a number, so all of them folded into the present; the want minte
 crossing was then weighed in the present ground, read met there, and its intention was ended as
 reached before the dose was due — #858 again, by another door.
 
+**AND A GROUND IS WHAT THE SEARCH CAN CHANGE, AND NOTHING ELSE** (#953). Before the present is laid,
+every graph a search reads beside its worlds is cut in two: what some writer of the scope can write —
+an effect of one of the actions handed, a transition, or a prediction, whose retraction takes out of a
+ground what stands where it adds — into a `planning:ChangeableGraph` derived from it, and the rest left
+where it was (`footprint.changeable`, `_predicted`). The present ground is laid from the
+changeable graphs, so a fork copies what a step can change, and a world reads every remainder beside
+it; the two are disjoint, so no value an effect replaced stands beside the one that replaced it. The
+cut is made here and not where the imaginarium is filled, because a case lays its grounds in its own
+store; it is taken back before it is made again, so laying twice cuts once. What defines what the agent
+can do — the vocabulary, the actions, the drifts, the shapes, the constraints, the derivations — is no
+fact a step changes and is never cut.
+
 **WHAT IS BUILT IS CLASSIFIED, NOT RETURNED.** Each ground is a graph with the stretch it holds
 over, `planning:GroundGraph`, so a reader asks `graphs_of(store, GROUND_GRAPH, at=T)` and is
 handed the one world standing then. A list handed back would be a second place the answer lived
@@ -58,14 +70,16 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent.belief.transition import applied, asked, transitions
-from agent.ontology import OREXIS, PUBLIC, STATE
+from agent.ontology import ACTION, DRIFT_GRAPH, KNOWN, OREXIS, PREDICTION, PUBLIC, STATE
 from agent.hash_named_graph import digest_of, hash_named_graph
 from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, clear_graph, revisions_of, forget_graph,
                          graphs_of, quads, rows, update)
 
-from .ontology import GROUND_GRAPH
+from . import footprint
+from .ontology import CHANGEABLE_GRAPH, CONSTRAINT_GRAPH, DERIVATION_GRAPH, GROUND_GRAPH, SHAPES
 
 _PROV = "http://www.w3.org/ns/prov#"
+_RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 log = logging.getLogger("lay_ground")
 
@@ -103,7 +117,7 @@ ORDER BY ?at ?prediction"""
 
 
 def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
-               landings=()) -> list[str]:
+               landings=(), actions=None) -> list[str]:
     """Build one ground world per period the agent can see, classified with its stretch.
 
     `within` is what a world of this imaginarium is identified by — the Planner's to say, from
@@ -125,6 +139,9 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     applies later is run against the ground standing before it and the diff applied; a ground
     that hashes the same as the one before it is not a period, and is dropped.
 
+    `actions` are the scope's — the Planner's to say — whose effects, with every transition, say what
+    is changeable and so what a ground holds; None means every action the store holds.
+
     Answers with the graphs it made, earliest first. What a READER takes is `world_at`.
 
     PUBLIC, AND IN PLACE: it lays the grounds into whichever store it is handed. `prepare_ground`
@@ -133,13 +150,14 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     among them — stays where the derivation reads it.
     """
 
+    _split(store, actions, now)
     ahead = _foreseen(store)
     here = _present(store, now)
     #  THE TRANSITIONS A PREDICTED OBSERVATION TRIGGERS, and the agent's own state they read and change
     #  as the grounds are laid, from the present's: asked only where something is foreseen.
     rules = transitions(store) if ahead else []
     own = _own_state(store) if rules else None
-    public = graphs_of(store, PUBLIC) if rules else []
+    public = _whole(store, graphs_of(store, PUBLIC)) if rules else []
     made, marks = [here], _marked(store, here, within)
     opened = [now]
     landing = {at for at in landings if at > now}
@@ -208,8 +226,8 @@ def _own_state(store: ox.Store) -> str:
     only the one arriving. So the state is kept here, beside the grounds, as the transitions change it
     ground by ground — the state before a boundary being what the ground before it was left holding."""
     clear_graph(store, _OWN)
-    for r in rows(store, _DERIVED_Q, ()):
-        update(store, f"INSERT {{ GRAPH <{_OWN}> {{ ?s ?p ?o }} }} WHERE {{ GRAPH <{r['g']}> {{ ?s ?p ?o }} }}")
+    for g in _whole(store, [r["g"] for r in rows(store, _DERIVED_Q, ())]):
+        update(store, f"INSERT {{ GRAPH <{_OWN}> {{ ?s ?p ?o }} }} WHERE {{ GRAPH <{g}> {{ ?s ?p ?o }} }}")
     return _OWN
 
 
@@ -240,16 +258,103 @@ def _present(store: ox.Store, now: datetime) -> str:
     """
     name = _name(now)
     _relaid(store, name)
-    #  WHAT THE AGENT HOLDS AND WHAT WAS CONCLUDED OF IT: every state graph — the subject beliefs the
-    #  transitions derived, which the met-tests and the effects speak, a peer's word heard, a world's
-    #  own state — and each one's revisions, so the ground a pass stands on holds them all, and a fork
-    #  writes a state as it writes any fact. NO READING: what a sensor said is a percept, of no kind
-    #  read here, and crosses into no ground (#944); what the ground holds of it is the subject belief.
-    states = graphs_of(store, STATE)
-    for source in [*states, *revisions_of(store, *states)]:
+    #  WHAT THE SEARCH CAN CHANGE OF WHAT THE AGENT HOLDS: every changeable graph `split` cut — the
+    #  subject beliefs the transitions derived, which the met-tests and the effects speak, a van's
+    #  cell, a venue's being open — so a fork writes what a step changes and copies nothing else, and
+    #  every remainder is read beside it (#953). NO READING: what a sensor said is a percept, of no
+    #  kind cut here, and crosses into no ground (#944); what the ground holds of it is the subject belief.
+    for source in graphs_of(store, CHANGEABLE_GRAPH):
         update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                        f"WHERE {{ GRAPH <{source}> {{ ?s ?p ?o }} }}")
     return name
+
+
+#  WHAT DEFINES WHAT THE AGENT CAN DO AND HOW IT REASONS, which no step changes and no split cuts.
+_DEFINING = (ACTION, DRIFT_GRAPH, OREXIS + "OntologyGraph", SHAPES, CONSTRAINT_GRAPH, DERIVATION_GRAPH)
+
+#  EVERY CHANGEABLE GRAPH AND THE GRAPH IT WAS CUT FROM.
+_CUT_Q = """
+SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+  ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }"""
+
+
+def _split(store: ox.Store, actions=None, at: datetime | None = None) -> list[str]:
+    """Cut out of every graph a search reads beside its worlds what the search can change, each into a
+    `planning:ChangeableGraph` derived from it — what `actions`' effects (every action's where None)
+    and the transitions can write (`footprint.changeable`) — leaving the rest where it was. The
+    changeable graphs made.
+
+    TAKEN BACK BEFORE IT IS MADE AGAIN: every changeable graph standing is put back into the graph it
+    was cut from, or dropped where that graph is gone — a refresh forgot it and copied it whole again —
+    so the cut is a function of what the graphs hold now and laying twice cuts once."""
+    cat = catalogue_of(store)
+    for r in rows(store, _CUT_Q, ()):
+        source = r.get("source")
+        if source and _classified(store, source):
+            add_quads(store, [ox.Quad(q.subject, q.predicate, q.object, ox.NamedNode(source))
+                              for q in store.quads_for_pattern(None, None, None, ox.NamedNode(r["piece"]))])
+        forget_graph(store, r["piece"])
+    patterns = footprint.changeable(store, actions, at)
+    if patterns is not footprint.ANYTHING:
+        patterns = sorted(set(patterns) | _predicted(store), key=lambda p: (p[0], p[1] or ""))
+    defining = set(graphs_of(store, *_DEFINING))
+    made = []
+    for graph in graphs_of(store, *KNOWN, STATE):
+        if graph in defining:
+            continue
+        g = ox.NamedNode(graph)
+        if patterns is footprint.ANYTHING:
+            cut = list(store.quads_for_pattern(None, None, None, g))
+        else:
+            cut = list(dict.fromkeys(q for p, o in patterns
+                                     for q in store.quads_for_pattern(None, ox.NamedNode(p), _term(o), g)))
+        if not cut:
+            continue
+        piece = f"{graph}.changeable"
+        for q in cut:
+            store.remove(q)
+        add_quads(store, [ox.Quad(q.subject, q.predicate, q.object, ox.NamedNode(piece)) for q in cut])
+        classify(store, piece, CHANGEABLE_GRAPH, OREXIS + "Derived")
+        add_quads(store, [ox.Quad(ox.NamedNode(piece), ox.NamedNode(_PROV + "wasDerivedFrom"),
+                                  ox.NamedNode(graph), ox.NamedNode(cat))])
+        made.append(piece)
+    log.debug("%d changeable graph(s) cut over %s pattern(s)", len(made),
+              "every" if patterns is footprint.ANYTHING else len(patterns))
+    return made
+
+
+def _predicted(store: ox.Store) -> set:
+    """What the predictions write, as patterns: each predicate a prediction or what was concluded of it
+    adds, a type with its class. A prediction is a writer too: its retraction takes out of the ground
+    what stands where it adds, so a belief in that place has to be in the ground for it to go."""
+    predictions = graphs_of(store, PREDICTION)
+    out = set()
+    for graph in (*predictions, *revisions_of(store, *predictions)):
+        for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph)):
+            typed = q.predicate.value == _RDF_TYPE and isinstance(q.object, ox.NamedNode)
+            out.add((q.predicate.value, f"<{q.object.value}>" if typed else None))
+    return out
+
+
+def _whole(store: ox.Store, graphs) -> list[str]:
+    """`graphs` and every changeable graph cut from one of them: each as it stood before the cut."""
+    graphs = list(graphs)
+    wanted = set(graphs)
+    return [*graphs, *(r["piece"] for r in rows(store, _CUT_Q, ()) if r.get("source") in wanted)]
+
+
+def _classified(store: ox.Store, graph: str) -> bool:
+    """Whether the catalogue still says what `graph` is — a graph a refresh forgot says nothing."""
+    return bool(store.query(f"ASK {{ GRAPH <{catalogue_of(store)}> {{ <{graph}> a ?kind }} }}"))
+
+
+def _term(text: str | None):
+    """The fixed object of a pattern, as the engine's term — None where anything stands there."""
+    if text is None:
+        return None
+    if text.startswith("<"):
+        return ox.NamedNode(text[1:-1])
+    return next(iter(ox.parse(f"<urn:s> <urn:p> {text} .".encode(), format=ox.RdfFormat.N_TRIPLES))).object
 
 
 def _marked(store: ox.Store, ground: str, within: frozenset | None) -> str:

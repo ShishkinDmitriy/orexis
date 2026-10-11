@@ -1,6 +1,16 @@
 --- case
 +++ expected
-@@ -112,11 +112,55 @@
+@@ -63,8 +63,7 @@
+   :one_level sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :level ?value . ?other a :Tank ; :level ?value . FILTER(?other != $this) }" .
+ }
+ 
+-GRAPH :sensed {
+-}
++
+ 
+ GRAPH :scopes {
+   :fill planning:inScope :keeper.scope.1 .
+@@ -113,11 +112,55 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 0 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued a planning:Weighing .
@@ -57,9 +67,9 @@
    pursued:2026-01-01T120000p0000--open a orexis:Graph .
    pursued:2026-01-01T120000p0000--open a planning:WantGraph .
    pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-@@ -141,3 +185,14 @@
-   :keeper.in_range.pursued.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
-   :keeper.in_range.pursued.met sh:targetNode :tank1 .
+@@ -147,3 +190,14 @@
+   :tank1 :level 0 .
+   :tank2 :level 5 .
  }
 +
 +

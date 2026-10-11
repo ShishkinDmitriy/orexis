@@ -117,6 +117,10 @@ IMPOSSIBLE = PLANNING + "impossible"
 #  list (a-reader-states-the-kinds-it-reads).
 GROUND_GRAPH = PLANNING + "GroundGraph"
 
+#  WHAT OF A BELIEF GRAPH A SEARCH CAN CHANGE, cut out of it in an imaginarium as the grounds are laid
+#  and read in the grounds alone, the graph keeping the rest (`lay_ground`, #953).
+CHANGEABLE_GRAPH = PLANNING + "ChangeableGraph"
+
 #  A SCOPE (scope-actions): which predicates some one action or derivation moves together,
 #  and the graph the store's partition is written in — nobody's, and copied into every
 #  imaginarium because the derivation clusters by it there.
