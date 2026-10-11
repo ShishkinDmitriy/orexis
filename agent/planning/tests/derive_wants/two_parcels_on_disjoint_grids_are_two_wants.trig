@@ -226,11 +226,9 @@ GRAPH :scopes {
 # What each graph IS, and when it holds — said once each, beside the data.
 GRAPH :catalogue {
   :actions a orexis:ActionGraph .
-  :actions a orexis:BeliefGraph .
   :actions a orexis:Graph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :constraints a orexis:BeliefGraph .
   :constraints a orexis:Graph .
   :constraints a planning:ConstraintGraph .
   :desires a orexis:Graph .

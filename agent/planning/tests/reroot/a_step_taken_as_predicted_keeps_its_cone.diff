@@ -78,7 +78,7 @@
  
  GRAPH pursued:2026-01-01T120000p0000--open {
    :keeper planning:holds :keeper.every_disk_home.pursued .
-@@ -187,85 +160,60 @@
+@@ -186,85 +159,60 @@
    :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
@@ -174,7 +174,7 @@
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by a planning:Candidate .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by hanoi:disk :disk_1 .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.by hanoi:onto hanoi:PegA .
-@@ -280,12 +228,12 @@
+@@ -279,12 +227,12 @@
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_1 ] .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC a planning:PossibleGraph .
@@ -189,7 +189,7 @@
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by a planning:Candidate .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by hanoi:disk :disk_1 .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by hanoi:onto hanoi:PegC .
-@@ -298,12 +246,12 @@
+@@ -297,12 +245,12 @@
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:remaining 0 .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA a planning:PossibleGraph .
@@ -204,7 +204,7 @@
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by a planning:Candidate .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by hanoi:disk :disk_2 .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA.by hanoi:onto hanoi:PegA .
-@@ -318,7 +266,7 @@
+@@ -317,7 +265,7 @@
    possible:Move-disk_1-PegB.Move-disk_2-PegC.by hanoi:disk :disk_2 .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.by hanoi:onto hanoi:PegC .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.by planning:fills hanoi:Move .
@@ -213,7 +213,7 @@
    possible:Move-disk_1-PegB.Move-disk_2-PegC.by planning:minted 8 .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued a planning:Weighing .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:expanded true .
-@@ -327,153 +275,6 @@
+@@ -326,153 +274,6 @@
    possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:remaining 1 .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_1 ] .
    possible:Move-disk_1-PegB.Move-disk_2-PegC.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegB.Move-disk_2-PegC .
@@ -367,7 +367,7 @@
    pursued:2026-01-01T120000p0000--open a orexis:Graph .
    pursued:2026-01-01T120000p0000--open a planning:WantGraph .
    pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-@@ -509,8 +310,7 @@
+@@ -508,8 +309,7 @@
    hanoi:on planning:inScope :keeper.scope.1 .
  }
  

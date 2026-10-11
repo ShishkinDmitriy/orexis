@@ -47,7 +47,8 @@ frame "belief" {
 frame "kernel" {
   component "runtime\nboot · genesis · a pass" as RT
   folder "orexis:CatalogueGraph\nwhat every graph IS, itself included" as cat
-  folder "orexis:OntologyGraph · orexis:WorldGraph\norexis:SocietyGraph · orexis:ActionGraph\norexis:DriftGraph · beliefs nobody owns,\nthe world's documents" as pub
+  folder "orexis:OntologyGraph · orexis:WorldGraph\norexis:SocietyGraph · beliefs nobody owns,\nthe world's documents" as pub
+  folder "orexis:ActionGraph · orexis:DriftGraph\nwhat the agent reads to act, no belief" as acts
   folder "orexis:SelfGraph\nwho I am · my roles · my stances" as self
   folder "orexis:BeliefGraph\nthe agent's own state · the subject beliefs\na silence · what is extracted of a statement" as st
   folder "orexis:PredictionGraph\na diff over a period" as pr
@@ -61,7 +62,7 @@ frame "prediction" {
 
 frame "planning" {
   component "Planner\nderive_wants · lay_ground · take · publish_plan" as PL
-  folder "planning:DesireGraph · planning:ShapesGraph\nplanning:ConstraintGraph · planning:DerivationGraph\nauthored" as des
+  folder "planning:DesireGraph · planning:ShapesGraph\nplanning:ConstraintGraph · planning:DerivationGraph\nauthored · no belief" as des
   folder "planning:WantGraph\none-shot · what a desire read unmet" as want
   folder "planning:ScopeGraph\nthe scopes, written at boot" as scope
   folder "planning:GroundGraph · planning:PossibleGraph\nplanning:PlanGraph · the imaginarium's" as img
@@ -79,6 +80,7 @@ frame "execution" {
 
 RT  --> cat
 RT  --> pub
+RT  --> acts
 RT  --> self
 RT  --> des
 RT  --> rules
@@ -113,6 +115,8 @@ pr  ..> PL
 rec ..> PL
 plan ..> EX
 rules ..> DEL
+acts ..> PL
+acts ..> PRE : drifts
 
 note as N1
   **The mind reads only beliefs.** An observation is sensing's:

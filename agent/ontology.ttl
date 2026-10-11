@@ -45,7 +45,7 @@ orexis:BeliefGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Belief graph" ;
-    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, what the agent's transitions conclude of what arrives, and what peers report. There is no kind beneath it for the part that can change: what a plan forks and an effect rewrites is extracted per scope from the writers, the effects, transitions and predictions, as a search's grounds are laid (knowledge/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md); and what the kind `orexis:BeliefGraph` said besides is said by provenance, how a graph arrived and whose it is. A graph of this kind the agent DERIVED, and that is no revision, is the agent's own state: what a transition reads beside the arrival that triggers it, and the one place a transition deletes from. An instrument's reading is none: it is sensing's observation, a kind beneath `orexis:Graph` alone, and what the mind reads of it is the subject belief a transition makes (#944)." .
+    rdfs:comment "What IS, and so what a possible world is made of: the world as ratified, the vocabulary and what the closure makes of it, the self, what the agent's transitions conclude of what arrives, what is extracted of what was said, a forecast and a committed step. Planning cuts every belief into what some writer of a scope can change and the rest, and reads every world against both. What the agent reads to ACT is no belief: its actions, drifts, shapes, constraints, desires, wants and rules are its program, each read by its own kind (#953). There is no kind beneath it for the part that can change: what a plan forks and an effect rewrites is extracted per scope from the writers, the effects, transitions and predictions, as a search's grounds are laid (knowledge/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md); and what the kind `orexis:BeliefGraph` said besides is said by provenance, how a graph arrived and whose it is. A graph of this kind the agent DERIVED, and that is no revision, is the agent's own state: what a transition reads beside the arrival that triggers it, and the one place a transition deletes from. An instrument's reading is none: it is sensing's observation, a kind beneath `orexis:Graph` alone, and what the mind reads of it is the subject belief a transition makes (#944)." .
 
 orexis:CatalogueGraph
     a owl:Class ;
@@ -65,9 +65,9 @@ orexis:OntologyGraph
 
 orexis:ActionGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:BeliefGraph ;
+    rdfs:subClassOf orexis:Graph ;
     rdfs:label "Action graph" ;
-    rdfs:comment "A graph of `orexis:Action` rows — what an agent can do, each with what it takes, when it is available, what it costs and what it adds and retracts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/actions.ttl`), and the planner reads its actions from these graphs alone rather than from every belief, the vocabularies and the world included. A belief nobody owns, since what can be done is everyone's to read. The 0.1.0 kind of this spelling was also a menu graph; 0.2.0 has no menu." .
+    rdfs:comment "A graph of `orexis:Action` rows — what an agent can do, each with what it takes, when it is available, what it costs and what it adds and retracts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/actions.ttl`), and the planner reads its actions from these graphs alone rather than from every graph, the vocabularies and the world included. No belief: an action is what the agent can do, read by planning and execution to act, and no possible world is made of it; nobody's, since what can be done is everyone's to read. The 0.1.0 kind of this spelling was also a menu graph; 0.2.0 has no menu." .
 
 orexis:RecordGraph
     a owl:Class ;
@@ -187,9 +187,9 @@ orexis:PlanGraph
 
 orexis:DriftGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:BeliefGraph ;
+    rdfs:subClassOf orexis:Graph ;
     rdfs:label "Drift graph" ;
-    rdfs:comment "A graph of `prediction:Drift` rows — what moves a value while nobody acts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/drifts.ttl`, `<> a orexis:DriftGraph`), and the prediction package reads its drifts from these graphs alone rather than from every belief. The KERNEL'S and not prediction's, though the rows are prediction's words: a domain ships its drifts whether or not an agent of the world is a predictor, and every agent reads them as a belief nobody owns — of a kind only prediction declared, every agent that is no predictor would pass them over and `orexis-onboard` would refuse it, which is refusing a drift with no predictor, foresight being the author's to decline (a-documents-kind-says-who-reads-it, #824, #927). Where a domain's document and the predictor meet is the kernel's to name, as the actions' graph is." .
+    rdfs:comment "A graph of `prediction:Drift` rows — what moves a value while nobody acts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/drifts.ttl`, `<> a orexis:DriftGraph`), and the prediction package reads its drifts from these graphs alone rather than from every graph. No belief, as an action is none: a drift is what prediction reads to foresee, and no possible world is made of it. The KERNEL'S and not prediction's, though the rows are prediction's words: a domain ships its drifts whether or not an agent of the world is a predictor, and every agent holds them as a graph nobody owns — of a kind only prediction declared, every agent that is no predictor would pass them over and `orexis-onboard` would refuse it, which is refusing a drift with no predictor, foresight being the author's to decline (a-documents-kind-says-who-reads-it, #824, #927). Where a domain's document and the predictor meet is the kernel's to name, as the actions' graph is." .
 
 orexis:PredictionGraph
     a owl:Class ;

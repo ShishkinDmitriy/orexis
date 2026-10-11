@@ -19,15 +19,15 @@ process is told — and THE SELF, the agent's self graph put in; then the world'
 graphs that say they are this agent's, owned by it. The catalogue is closed and the Planner's
 `scope` writes the scopes.
 
-**WHOSE A GRAPH IS, IS READ OFF WHAT IT SAYS.** A graph of the world that says whose it is is
-that agent's own, and every graph of the world that is no belief is some agent's own and says whose: `<> orexis:beliefsOf :rose_grower` beside its kind,
-or, for a self graph, the self it states (`store.whose`). The boot reads every document of the
+**WHOSE A GRAPH IS, IS READ OFF WHAT IT SAYS, AND NEVER OFF ITS KIND.** A graph of the world that
+says whose it is is that agent's own — `<> orexis:beliefsOf :rose_grower` beside its kind, or, for a
+self graph, the self it states (`store.whose`) — and one that says nobody's is shared by every agent
+of the world, a belief, a desire or a constraint alike (#953). The boot reads every document of the
 world — beside it, under `secrets/` and under `beliefs/` — and keeps as its own exactly those
 graphs whose content names the agent it was told to be; another agent's are passed over, never
 refused, since a world read from a checkout holds every agent's and a container is mounted only
 its own, and which files are present is not for the boot to rely on. A graph of an agent's own
-naming no agent of the world, or none at all, is refused; a belief of the world naming none is
-nobody's, read alike by every agent of it (#953).
+naming no agent of the world is refused.
 
 **THE SELF IS AUTHORED, AND THE BOOT CHECKS IT (knowledge/domain/kernel/self.md).** Every text
 about the agent asks `?me a orexis:Self` and is bound nothing, so the boot is where the self is
@@ -436,15 +436,12 @@ def _put_documents(store: ox.Store, world: Path, agent_id: str | None = None,
 
 def _owned(store: ox.Store, own) -> list[tuple[ox.Store, str, str]]:
     """Each graph of an agent's own in `own`, (document, graph), with whose its document says it
-    is (`store.whose`) — refused where it says nobody's, or the name of no agent the world states:
-    a graph kept by its owner and owned by nobody would be every agent's or none's, silently."""
+    is (`store.whose`) — refused where that is the name of no agent the world states: a graph kept
+    by an owner nobody is would be in no agent's store, silently."""
     agents = {r["a"] for r in rows(store, _AGENTS_Q, graphs_of(store, SOCIETY, WORLD))}
     out = []
     for doc, graph in own:
         owner = whose(doc, graph)
-        if owner is None:
-            raise DocumentRefused(f"{graph} is of a kind that is some agent's own and says nobody's — "
-                                  f"`<> orexis:beliefsOf <agent>` says whose")
         if owner not in agents:
             raise DocumentRefused(f"{graph} says it is {owner}'s, and the world states no such agent")
         out.append((doc, graph, owner))
@@ -454,10 +451,9 @@ def _owned(store: ox.Store, own) -> list[tuple[ox.Store, str, str]]:
 def _put(store: ox.Store, world: Path, read, passed) -> tuple[list, list]:
     """Put the vocabulary `read` holds and close it, then every graph of `read`, and of what was
     `passed` over before, whose kind the vocabulary now declares and that is nobody's: every graph
-    of a document outside the world's directory — a package's, a domain's — and every belief of the
-    world's that says no owner, which every agent of the world reads alike. What it says, never a
-    kind: a world's belief saying whose it is is that agent's own, and anything else of the world's
-    is some agent's own, held by `_owned` to saying whose (#953). The world's graphs of an agent's
+    of a document outside the world's directory — a package's, a domain's — and every graph of the
+    world's that says no owner, shared by every agent of the world, whatever its kind. What it says,
+    never a kind: a world's graph saying whose it is is that agent's own (#953). The world's graphs of an agent's
     own as (document, graph), and what is passed over still as (path, document, graph, kinds)."""
     vocabulary = {path for path, doc in read if any(ONTOLOGY in k for k in kinds_in(doc).values())}
     for path, doc in read:
@@ -471,8 +467,7 @@ def _put(store: ox.Store, world: Path, read, passed) -> tuple[list, list]:
         if not known(store, kinds):
             still.append((path, doc, graph, kinds))
             continue
-        believed = BELIEF in {k for kind in kinds for k in closed(store, kind)}
-        if world not in path.parents or (believed and whose(doc, graph) is None):
+        if world not in path.parents or whose(doc, graph) is None:
             nobodys.append((doc, graph))
         else:
             own.append((doc, graph))

@@ -106,13 +106,14 @@ def test_an_agent_its_world_authored_two_self_graphs_for_refuses_to_boot(world):
         boot(world, "ann")
 
 
-def test_a_graph_of_an_agents_own_that_says_nobodys_is_refused(world):
-    """Kept by its owner and owned by nobody, it would be in no agent's store, silently."""
-    (world / "beliefs" / "stray.ttl").write_text(_HEAD + "<> a planning:DesireGraph .\n")
-    with pytest.raises(DocumentRefused, match="says nobody's"):
-        boot(world, "ann")
-    with pytest.raises(DocumentRefused, match="says nobody's"):
-        world_of(world)
+def test_a_graph_the_world_authors_naming_nobody_is_shared_whatever_its_kind(world):
+    """Whose a graph is, is what it says and never its kind (#953): a graph of desires the world
+    authors naming no owner is held by every agent of the world, as its constraints are — a desire
+    in it held by whoever its rows say holds it — and a world read whole holds it too."""
+    (world / "beliefs" / "shared.ttl").write_text(_HEAD + "<> a planning:DesireGraph .\n:ann planning:holds :ann_wish .\n")
+    shared = _uri(world, "shared.ttl")
+    for store in (boot(world, "ann"), boot(world, "bob"), world_of(world)):
+        assert shared in graphs_of(store, DESIRE_GRAPH, nobodys=True), "everyone's"
 
 
 def test_a_graph_of_an_agents_own_that_names_no_agent_of_the_world_is_refused(world):

@@ -26,7 +26,7 @@
  
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
-@@ -98,6 +97,20 @@
+@@ -97,6 +96,20 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank2 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
@@ -47,7 +47,7 @@
    possible:fill-tank1.by :tank :tank1 .
    possible:fill-tank1.by a planning:Candidate .
    possible:fill-tank1.by planning:fills :fill .
-@@ -147,3 +160,14 @@
+@@ -146,3 +159,14 @@
    :tank1 :level 0 .
    :tank2 :level 0 .
  }

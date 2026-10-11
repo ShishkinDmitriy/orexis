@@ -8,7 +8,7 @@
  }
  
  GRAPH :predicted-0 {
-@@ -92,6 +91,81 @@
+@@ -91,6 +90,81 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:beliefsOf :keeper .

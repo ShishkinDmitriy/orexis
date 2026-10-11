@@ -10,7 +10,7 @@
  
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
-@@ -95,6 +94,11 @@
+@@ -94,6 +93,11 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .

@@ -23,7 +23,7 @@ a preference: two vans cannot share a cell, and a world where they do is not a b
 should mend but a world that cannot be.
 
 A constraint is **stated by the world**, in a `planning:ConstraintGraph` (`world/dispatcher/constraints.ttl`),
-a belief nobody owns as an ontology is, since what is possible is nobody's belief in particular; the agent
+no belief, as a desire is none, and shared by every agent of the world where the world names no owner for it, since what is possible is nobody's in particular; the agent
 `planning:holds` it exactly as it holds a desire, and carries its test in the same two words — a
 [shape](/domain/planning/shape.md) under `planning:metWhen`, or the avoided state under
 `planning:unmetWhen`, one select whose rows are the instances in it. Either polarity, because the

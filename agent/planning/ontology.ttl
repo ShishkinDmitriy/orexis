@@ -25,8 +25,8 @@
 
 
 
-planning:DerivationGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ; rdfs:label "Derivation graph" ;
-    rdfs:comment "What every loaded package's derivation rules READ and WRITE, one `planning:Derivation` per INSERT, written whole at every refresh of what the world states. The scope partition joins predicates wherever one action OR one derivation touches both, and the actions are in the store while the rules are texts on disk — so the edges the rules make are put in the store beside them, and `scope_actions` is a function of the store alone. NOBODY'S, because the loaded rule set is the same for everyone reading this store, exactly as the actions graph is; computed, so it is cleared and rewritten rather than added to. A BELIEF graph, as the vocabulary graph is and for the same reason: what a loaded rule reads and writes is a fact about this build, believed." .
+planning:DerivationGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Derivation graph" ;
+    rdfs:comment "What every loaded package's derivation rules READ and WRITE, one `planning:Derivation` per INSERT, written whole at every refresh of what the world states. The scope partition joins predicates wherever one action OR one derivation touches both, and the actions are in the store while the rules are texts on disk — so the edges the rules make are put in the store beside them, and `scope_actions` is a function of the store alone. NOBODY'S, because the loaded rule set is the same for everyone reading this store, exactly as the actions graph is; computed, so it is cleared and rewritten rather than added to. No belief: what a loaded rule reads and writes is the scopes' input, and no possible world is made of it." .
 planning:Derivation a owl:Class ; rdfs:label "Derivation" ;
     rdfs:comment "One INSERT of one loaded derivation rule, as the edge it makes: the predicates its WHERE reads and the predicates its template writes. Named for the rule file it came from and its place in it, so the same rules write the same text. A side whose predicates cannot be read — a variable predicate, a text the parser refuses — says `planning:Anything` and joins every predicate there is, since a rule that might touch anything cannot be proven not to." .
 planning:reads a owl:ObjectProperty ; rdfs:domain planning:Derivation ; rdfs:label "reads" ;
@@ -278,9 +278,9 @@ Its footprint is what couples: two wants whose plans a constraint could make col
 
 planning:ConstraintGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:BeliefGraph ;
+    rdfs:subClassOf orexis:Graph ;
     rdfs:label "Constraint graph" ;
-    rdfs:comment "A graph of `planning:Constraint` rows, with who holds each and the shape or avoided state each carries where no domain's shapes graph does — named for what it HOLDS, as every graph class is. A world authors one, `<> a planning:ConstraintGraph`, with no period: what is possible holds at every instant as the T-Box does. NOBODY'S, not the agent's own, because what the world says is possible is everyone's — physics is not a belief one agent holds and another may lack — so it is read again at every boot as an ontology is, and an amended constraint reaches a running agent. The planner crosses it beside the graphs of desires, wants, records and shapes wherever it reads a met-test." .
+    rdfs:comment "A graph of `planning:Constraint` rows, with who holds each and the shape or avoided state each carries where no domain's shapes graph does — named for what it HOLDS, as every graph class is. A world authors one, `<> a planning:ConstraintGraph`, with no period: what is possible holds at every instant as the T-Box does. No belief, as a desire is none: a constraint is what a world is judged by, never what one is made of. Shared by every agent of the world where the world authors it naming no owner, because what the world says is possible is everyone's — physics is not something one agent holds and another may lack — so it is read again at every boot as an ontology is, and an amended constraint reaches a running agent. The planner crosses it beside the graphs of desires, wants, records and shapes wherever it reads a met-test." .
 
 
 planning:WantState
@@ -354,9 +354,9 @@ planning:Recognized
 
 planning:ShapesGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:BeliefGraph ;
+    rdfs:subClassOf orexis:Graph ;
     rdfs:label "Shapes graph" ;
-    rdfs:comment "What a desire's met-test and estimate point at: the SHACL shapes a domain declares for what its words mean when wanted — delivered, solved — and the selects that say how far a world still is, in the unit its actions cost. SHACL's own notion of a shapes graph, typed so that the planner crosses these beside the graphs of desires, wants and records, which is where it reads a met-test, without crossing every vocabulary: all nine ontology graphs cost thirty times the crossing, measured. Nobody's, since what a word means is everyone's; a domain ships one, and a world that authors a shape of its own may put it here or beside its desire." .
+    rdfs:comment "What a desire's met-test and estimate point at: the SHACL shapes a domain declares for what its words mean when wanted — delivered, solved — and the selects that say how far a world still is, in the unit its actions cost. SHACL's own notion of a shapes graph, typed so that the planner crosses these beside the graphs of desires, wants and records, which is where it reads a met-test, without crossing every vocabulary: all nine ontology graphs cost thirty times the crossing, measured. No belief, as a desire is none, and nobody's, since what a word means is everyone's; a domain ships one, and a world that authors a shape of its own may put it here or beside its desire." .
 
 
 planning:precondition
