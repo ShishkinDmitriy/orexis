@@ -119,7 +119,7 @@ hole of that shape.
 
 # How it is built
 
-An issue holds the build, after slice 3 of #953. Speech's kind and its page first, with `heard` and
+[#958](https://github.com/ShishkinDmitriy/orexis/issues/958) holds the build, after slice 3 of #953. Speech's kind and its page first, with `heard` and
 `said` writing it and the interim gate gone; then the market's rules concluding what its actions'
 preconditions, effects and implementations read of a call, a round, a bid, a claim and a presentation,
 where today they read the documents themselves; then a peer's announced route read by a drift, which
