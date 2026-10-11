@@ -117,8 +117,8 @@ is built, and nothing here was run on a bench.
 - **A step predicts its own effect** since #919 (built on this branch, PR #924 open): before it, a
   plan taken across a laid route carried the other van's next cell in every drive, and a fictive drive
   wrote where the other van went into this agent's beliefs. Measured in the #568 prototype and pinned
-  by `a_step_lands_across_a_prediction_it_does_not_touch` and
-  `a_wait_across_a_prediction_predicts_nothing` under `agent/planning/tests/plans/`.
+  by `a_step_lands_across_a_prediction_it_does_not_touch` under `agent/planning/tests/plans/` and
+  by `agent/planning/tests/test_wait.py`.
 - **The constraint is the dispatcher's, in the avoided state's form** — a `planning:unmetWhen` select
   over `courier:at` whose rows are two vans on one cell (`world/dispatcher/constraints.ttl`). Both
   agents of a two-van world would hold that same text.

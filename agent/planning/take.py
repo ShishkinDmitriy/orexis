@@ -46,16 +46,16 @@ AN EFFECT IS A TRANSITION THE AGENT CAUSES, AND BELIEF'S MACHINE APPLIES IT
 (`agent/belief/transition.py`, a-transition-changes-the-state-and-an-inference-only-concludes). An
 action's `planning:effect` holds `sh:rule`s, each a `belief:Transition` whose `belief:update` is
 one SPARQL update: its insert template what applying it ADDS, its delete template whatever stands
-in the place the step changes, which nobody can name in advance, both over one WHERE. Every rule
-of one `sh:order` reads the same world — both templates asked before any of that order is applied
-— its deletions go first and its additions after, and a later order reads the world the earlier
-ones made. An update names no graph: its WHERE is matched over every graph of the world, and what
-its delete template matches is taken out of the new world alone. A rule of an effect that is no
-`belief:Transition` is no rule the machine runs: it changes nothing, and the log says so. What
-revision runs over beliefs only ever concludes; this runs over a possible world, where taking
+in the place the step changes, which nobody can name in advance, both over one WHERE. The world is
+forked first, and each rule is then the engine's own update, `WITH` the fork and `USING` every graph
+of the world with the fork in its place (#953): rule after rule, by `sh:order`, each reading the
+world the one before left. An update names no graph: its WHERE is matched over every graph of the
+world, and what its delete template matches is taken out of the new world alone. A rule of an effect
+that is no `belief:Transition` is no rule the machine runs: it changes nothing, and the log says so.
+What revision runs over beliefs only ever concludes; this runs over a possible world, where taking
 something away is the point.
-What is this act's own is which world the rules read and change, and that the fork is made at
-the first order that changes something.
+What is this act's own is which world the rules read and change, and whether the world they leave
+is a move: it is, where it differs from the world they found.
 
 THE CHILD IS NAMED BY THE CANDIDATE'S MINT NUMBER, read off the candidate's row and never off
 its name (#486): `admit` minted the candidate `possible/<n>.by` with `planning:minted n`, and
@@ -71,12 +71,14 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
-from agent.belief.transition import Rule, applied, asked, ordered
+import pyoxigraph as ox
+
+from agent.belief.transition import Rule, run
 from agent.execution.ontology import ADDS_GRAPH, RETRACTS_GRAPH
 from agent.hash_named_graph import digest_of
 from agent.ontology import ACTION, PUBLIC, SELF_GRAPH, local_of
 
-from agent.store import (Raw, bind, bindings, catalogue_of, clear_graph, closed, construct, fork,
+from agent.store import (Raw, bind, bindings, catalogue_of, clear_graph, closed, construct, copy_graph,
                                 graphs_of, instant, query, remember, render, rows, update)
 
 from .admit import POSSIBLE
@@ -235,35 +237,37 @@ def take(store, cand: str, *, memo=None, within: frozenset | None = None) -> boo
 
 def _apply(store, cand: str, into: str, memo, *, base: str | None = None, graphs=None) -> bool:
     """Make `into` out of `base` — the world `cand` is taken in, unless the caller hands the ground
-    at its landing with the path replayed — with the action's effect applied, order by order,
-    reading `graphs`, the world's at its instant. False, and no graph made, where the effect says
-    NOTHING about this world — no rule stated, or every rule coming to nothing — which is not a
-    move.
+    at its landing with the path replayed — with the action's effect applied, reading `graphs`, the
+    world's at its instant. False, and no graph left, where the effect says NOTHING about this world
+    — no rule stated, or the world the rules leave being the world they found — which is not a move.
 
-    THE FORK IS MADE AT THE FIRST ORDER THAT CHANGES SOMETHING: until then an order is asked of
-    the world the candidate leaves, which is the world it would read anyway, so a candidate
-    changing nothing costs no copy. An order one of whose updates states a delete template is
-    taken as a change whatever the template matched — belief's machine asks what it matches
-    before anything is applied, but a candidate whose delete matched nothing made a world before
-    the machine moved, and still does."""
+    FORKED FIRST, AND EACH RULE IS THEN ONE UPDATE OF THE ENGINE'S OWN, `WITH` the fork and `USING`
+    every graph of the world with the fork in its place (#953): the fork is the changeable part
+    alone, so copying it before knowing whether anything changes costs a handful of quads, and the
+    rule's delete and insert are matched once, by the engine, where they were two CONSTRUCTs read
+    back into Python and written again. Whether the step is a move is then read off the two worlds,
+    not off what the text states: a rule whose delete matched nothing and whose insert put back what
+    stood is no move, however it is spelled."""
     binding = _binding(store, cand, memo)
     rule = _rule(store, binding["action"], memo)
     if rule is None or not rule["rules"]:
         return False
     source = base or binding["from"]
     leaves = graphs if graphs is not None else world_at(store, binding["from"], memo=memo)
-    tokens = _tokens(binding)
-    forked = False
-    for rules in ordered(rule["rules"]):
-        scope = [into if g == source else g for g in leaves]
-        change = asked(store, rules, scope if forked else leaves, tokens)
-        if not forked and not change.added and not any(r.deletes for r in rules):
-            continue
-        if not forked:
-            fork(store, source, into, [], [])
-            forked = True
-        applied(store, change, into, [into])
-    return forked
+    copy_graph(store, source, into)
+    run(store, rule["rules"], into, [into if g == source else g for g in leaves], _tokens(binding))
+    if _same(store, source, into):
+        clear_graph(store, into)
+        return False
+    return True
+
+
+def _same(store, one: str, other: str) -> bool:
+    """Whether two graphs hold the same triples — a fork against the world it was copied from, both
+    the size of what a step can change."""
+    triples = lambda g: {(q.subject, q.predicate, q.object)                          # noqa: E731
+                         for q in store.quads_for_pattern(None, None, None, ox.NamedNode(g))}
+    return triples(one) == triples(other)
 
 
 def _replayed(store, cand: str, child: str, ground: str, memo, *, into: str | None = None) -> str:
@@ -277,7 +281,7 @@ def _replayed(store, cand: str, child: str, ground: str, memo, *, into: str | No
     binding = _binding(store, cand, memo)
     base = into or f"{child}.base"
     clear_graph(store, base)
-    fork(store, ground, base, [], [])
+    copy_graph(store, ground, base)
     graphs = [base if g == ground else g for g in world_at(store, ground, memo=memo)]
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
     path = [r["c"] for r in rows(store, _PATH_Q, (), world=binding["from"], cat=cat)]
@@ -286,9 +290,7 @@ def _replayed(store, cand: str, child: str, ground: str, memo, *, into: str | No
         rule = _rule(store, taken["action"], memo)
         if rule is None:
             continue
-        tokens = _tokens(taken)
-        for rules in ordered(rule["rules"]):
-            applied(store, asked(store, rules, graphs, tokens), base, [base])
+        run(store, rule["rules"], base, graphs, _tokens(taken))
     log.debug("%s lands in %s: %d step(s) replayed there", local_of(child), ground.rsplit("/", 1)[-1], len(path))
     return base
 

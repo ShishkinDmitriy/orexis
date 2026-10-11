@@ -5,23 +5,27 @@ them (knowledge/domain/belief/transition.md, a-transition-changes-the-state-and-
 SPARQL update — `DELETE { … } INSERT { … } WHERE { … }`, either template alone over its WHERE, or
 `DELETE WHERE { … }` — its delete template what it takes out, whatever stands in the place it
 changes, which nobody can name in advance, and its insert template what it adds, both over the one
-WHERE (#951). Rules are grouped by `sh:order`, an absent order nought as SHACL says. Every rule of
-one order reads the same state: each template is asked as the `CONSTRUCT` it and the WHERE spell
-(`templates`) before any of the order is applied, and then its deletions are taken out and its
-additions put in, deletions first, so a later order reads what the earlier made. No rule names a
+WHERE (#951). Rules are sorted by `sh:order`, an absent order nought as SHACL says. No rule names a
 graph: what it reads is the list its caller hands, and what it changes the graphs its caller names
 (a-rule-does-not-say-which-world-it-reads).
 
-**THREE RUNNERS, ONE MACHINE.** Planning applies an action's effect through it in the possible world a
-step makes, reading that world and changing it alone (`agent/planning/take.py`). The belief package
-applies an arrival's transition through it to the agent's own state, each arrival of testimony
-triggering every `belief:Transition` of a rules graph once (`trigger`). And planning applies the same
-transitions in a ground it lays, each predicted observation arriving there triggering every one once,
-reading the ground's own state and changing the ground alone (`agent/planning/lay_ground.py`, #944).
-An effect is a transition the agent causes; an arrival's, an observation received or predicted, is
-one the world causes. None runs to a fixpoint: an order is applied once. `transitions` answers the
-rules every runner of an arrival's transition applies, so the present and a ground are changed by the
-same ones.
+**TWO DOORS, BY HOW MANY GRAPHS A RULE CHANGES.** Where it changes ONE, `run` hands the engine the
+text itself, `WITH` that graph and `USING` every graph it reads (`scoped`): one update, its WHERE
+matched once, rule after rule, each reading what the one before left (#953). Where it changes
+several, the engine's update cannot say so, and `asked` asks each template as the `CONSTRUCT` it and
+the WHERE spell (`templates`) — every rule of one order of the same state — for `applied` to take
+the deletions out of every graph that holds them and put the additions into one.
+
+**THREE RUNNERS.** Planning applies an action's effect by `run` in the possible world a step makes,
+reading that world and changing it alone (`agent/planning/take.py`), and the transitions a predicted
+observation triggers by `run` in a ground it lays, changing the ground and the working state it keeps
+beside (`agent/planning/lay_ground.py`, #944). The belief package applies an arrival's transition by
+`asked` and `applied` to the agent's own state, which is several graphs, each arrival of testimony
+triggering every `belief:Transition` of a rules graph once (`trigger`) — until the agent's own state
+is one graph and takes the engine's update too (#953). An effect is a transition the agent causes; an
+arrival's, an observation received or predicted, is one the world causes. None runs to a fixpoint: a
+rule is applied once. `transitions` answers the rules every runner of an arrival's transition
+applies, so the present and a ground are changed by the same ones.
 
 **A RULE THAT WILL NOT RUN CHANGES NOTHING, LOUDLY.** A text the update grammar refuses, one that names
 its own graphs (`WITH`, `USING`, `GRAPH`) or chains a second operation with `;`, one that is no
@@ -32,10 +36,10 @@ is left as it was — the whole of it, since its two templates are one text.
 **THE TEXT IS READ BY RDFLIB'S UPDATE GRAMMAR, NEVER BY A PATTERN OVER ITS CHARACTERS.** `parseUpdate`
 says what the text is — how many operations, of which kind, naming which graphs — and the same
 grammar's own productions, each wrapped to keep the text it matched, say where its prologue, its
-templates and its WHERE stand, so each CONSTRUCT is the text's own words, its `$tokens` and its
-prefixes as written. Parsed once per text and remembered: the text is a document's, and a search asks
-it on every fork. A `$token` therefore stands where a variable may, which is every place a shipped
-text puts one.
+templates and its WHERE stand, so each CONSTRUCT, and the update `scoped` spells, is the text's own
+words, its `$tokens` and its prefixes as written. Parsed once per text and remembered: the text is a
+document's, and a search asks it on every fork. A `$token` therefore stands where a variable may,
+which is every place a shipped text puts one.
 
 **THE VOCABULARY IS SHACL'S AND THE ENGINE IS NOT.** pySHACL runs `sh:SPARQLRule` only as inference
 to a fixpoint, the opposite shape, and executes no bare `sh:Rule`, which is what a transition is
@@ -54,7 +58,7 @@ from pyparsing import CaselessKeyword, Optional, original_text_for
 from rdflib.plugins.sparql import parser as grammar
 from rdflib.plugins.sparql.parserutils import CompValue
 
-from agent.store import add_quads, bind, construct, graphs_of, rows
+from agent.store import add_quads, bind, construct, graphs_of, rows, update
 
 from .ontology import RULES_GRAPH
 
@@ -76,14 +80,6 @@ class Rule:
     order: float = 0.0
     update: str | None = None
     name: str | None = None
-
-    @property
-    def deletes(self) -> bool:
-        """Whether the rule's text states a delete template — whatever it comes to match."""
-        try:
-            return self.update is not None and templates(self.update).delete is not None
-        except Refused:
-            return False
 
 
 @dataclass(frozen=True)
@@ -191,15 +187,59 @@ _NAMING = {"QuadsNotTriples", "GraphGraphPattern"}
 def templates(text: str) -> Templates:
     """`text`, a transition's update, as the two `CONSTRUCT`s its runner asks over its one WHERE —
     raising `Refused`, saying why, where the runner will not run it."""
-    found = _templates(text)
+    head, delete, insert, where = _parts_of(text)
+    asked_as = lambda template: f"{head}\nCONSTRUCT {template}\nWHERE {where}"     # noqa: E731
+    return Templates(asked_as(delete) if delete is not None else None,
+                     asked_as(insert) if insert is not None else None)
+
+
+def scoped(text: str, into: str, graphs) -> str:
+    """`text`, a transition's update, as the engine's own update scoped to a world: `WITH <into>`, so
+    what it deletes and inserts is `into`'s alone, and a `USING` per graph of `graphs`, so its WHERE
+    reads them merged — `into` among them where the caller means it to read what it changes. What a
+    rule does not say, the runner says (a-rule-does-not-say-which-world-it-reads). A `DELETE WHERE` is
+    spelled as the `DELETE … WHERE` it abbreviates, since the abbreviation takes neither clause.
+    Raising `Refused`, saying why, where the runner will not run it."""
+    head, delete, insert, where = _parts_of(text)
+    using = "".join(f"USING <{g}>\n" for g in dict.fromkeys(graphs))
+    return (f"{head}\nWITH <{into}>\n" + (f"DELETE {delete}\n" if delete is not None else "")
+            + (f"INSERT {insert}\n" if insert is not None else "") + f"{using}WHERE {where}")
+
+
+def run(store, rules, into: str, graphs, tokens: dict | None = None) -> int:
+    """`rules` applied to `into`, one after another in their order, each as ONE update of the engine's
+    own (`scoped`), reading `graphs` as the rule before left them — and so `into` as it is changed,
+    where it is among them. Answers the rule executions spent, one a rule. `tokens` are the `$tokens`
+    a text takes — an effect's parameters; none for an arrival's transition. A rule that will not run
+    changes nothing, and the log says which."""
+    rules = [rule for group in ordered(rules) for rule in group]
+    for rule in rules:
+        if not rule.update:
+            log.error("%s: a transition states no belief:update, so it changes nothing", _named(rule))
+            continue
+        try:
+            update(store, bind(scoped(rule.update, into, graphs), **(tokens or {})))
+        except Refused as exc:
+            log.error("%s: %s, so it changes nothing", _named(rule), exc)
+        except Exception as exc:                                    # noqa: BLE001
+            #  A rule that will not run is a package's bug and must not take an agent down: what is
+            #  lost is what it would have changed, and the log says which.
+            log.error("%s: its update would not run, so it changes nothing: %s", _named(rule), exc)
+    return len(rules)
+
+
+def _parts_of(text: str) -> tuple:
+    """`text`'s prologue, its delete and insert templates — None for one it does not state — and its
+    WHERE, as the text spells them; raising `Refused`, saying why, where the runner will not run it."""
+    found = _parts(text)
     if isinstance(found, str):
         raise Refused(found)
     return found
 
 
 @functools.lru_cache(maxsize=1024)
-def _templates(text: str) -> Templates | str:
-    """`templates`, remembered per text — a refusal as the reason, so it is remembered too. The
+def _parts(text: str) -> tuple | str:
+    """`_parts_of`, remembered per text — a refusal as the reason, so it is remembered too. The
     escapes `\\u…` are expanded first, as SPARQL says and rdflib's own `parseUpdate` does."""
     text = grammar.expandUnicodeEscapes(text)
     try:
@@ -219,12 +259,9 @@ def _templates(text: str) -> Templates | str:
     except Exception as exc:                                        # noqa: BLE001 — the grammar's own
         return f"its update's parts could not be found: {str(exc).splitlines()[0]}"
     head = parts.get("prologue") or ""
-    asked_as = lambda template, where: f"{head}\nCONSTRUCT {template}\nWHERE {where}"
     if parts.get("pattern") is not None:
-        return Templates(asked_as(parts["pattern"], parts["pattern"]), None)
-    where = parts["where"]
-    return Templates(asked_as(parts["delete"], where) if parts.get("delete") is not None else None,
-                     asked_as(parts["insert"], where) if parts.get("insert") is not None else None)
+        return head, parts["pattern"], None, parts["pattern"]
+    return head, parts.get("delete"), parts.get("insert"), parts["where"]
 
 
 def _names(node, out: set | None = None) -> set:

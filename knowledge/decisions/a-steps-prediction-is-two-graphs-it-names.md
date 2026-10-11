@@ -23,11 +23,12 @@ timestamp: 2026-10-04T18:00:00Z
 > against the ground it was forked from, each way, into two graphs derived from the child before
 > that ground is cleared, and `extract_plan` copies those where they exist. The first two bullets
 > under *What it is now* describe the diff of the two worlds, which is still what every world
-> forked from its parent gives. The diff is taken per fact, so an effect that deletes a fact and
-> puts it back — the courier's wait, built and refused (#920) — predicts nothing: two graphs named
-> and empty, held to the step's landing and answered there (`a_wait_across_a_prediction_predicts_nothing`).
-> The planning package's [wait](/domain/planning/wait.md), which has no effect, is replayed into its
-> later ground and diffed against itself, and predicts nothing the same way.
+> forked from its parent gives. The diff is taken per fact, so the planning package's
+> [wait](/domain/planning/wait.md), which has no effect and is replayed into its later ground and
+> diffed against itself, predicts nothing: two graphs named and empty, held to the step's landing and
+> answered there (`agent/planning/tests/test_wait.py`). An effect that deletes a fact and puts it
+> back — the courier's wait, built and refused (#920) — predicted nothing the same way until #953,
+> and is now no move at all (`an_effect_putting_back_what_it_takes_is_no_move`).
 
 # What was wrong
 

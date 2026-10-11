@@ -511,11 +511,15 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   a graph written again joins the queue's end, since a message's latest reading reuses its graph's
   name; and a prediction rewritten and cut every pass held a reading's transitions until it was let
   pass (#944).
-- **A transition is one update text, read by rdflib's update grammar, and each of its templates is
-  asked as the CONSTRUCT it and the one WHERE spell, so one order reads one state** — run as updates
-  one after another, a second rule of an order would read what the first had taken (#944); written as
-  a construct and a delete apart, twelve rules spelled one WHERE twice; and an update inside
-  `sh:construct` was refused, one word for two grammars (#951, transition).
+- **A transition is one update text, read by rdflib's update grammar; where it changes one graph the
+  engine runs it, `WITH` that graph and `USING` what it reads, rule after rule, and where it changes
+  several each template is asked as the CONSTRUCT it and the one WHERE spell** — its delete and its
+  insert are then one match, where a construct and a delete run apart read two states (#944) and
+  twelve rules spelled one WHERE twice; an update inside `sh:construct` was refused, one word for two
+  grammars (#951, #953, transition).
+- **Whether a step is a move is read off the world it leaves and the world it makes, never off its
+  text** — a delete template made a fork a move whatever it matched, so an effect putting back what it
+  took passed time as a wait does (#953, wait).
 - **Any belief is accepted, and revised** — dropping testimony over a shape is a gate wearing
   revision's name; **a state that served a gate goes with the gate**.
 - **Revision's ceiling is a budget in rule executions, and a source the budget cuts short is

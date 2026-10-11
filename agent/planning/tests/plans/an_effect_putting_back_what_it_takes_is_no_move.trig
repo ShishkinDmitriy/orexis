@@ -1,16 +1,17 @@
-# a_wait_across_a_prediction_predicts_nothing
+# an_effect_putting_back_what_it_takes_is_no_move
 #
 # One tank, reading six where its floor is ten, and a prediction that it reads twelve from half a
-# minute on: something no act of this agent does will refill it. The one action is a WAIT, the shape
-# of the courier's refused wait (#920): its effect deletes the tank's level and puts the same level back, so it
-# changes nothing of its own, and it lands a minute after the turn at the least. Its world is forked
-# from the LATER ground, where the tank reads twelve and the want is met.
+# minute on: something no act of this agent does will refill it. The one action has the shape of the
+# courier's refused wait (#920): its effect deletes the tank's level and puts the same level back, and
+# it lands a minute after the turn at the least, in the LATER ground, where the tank reads twelve and
+# the want would be met.
 #
-# WHAT THE STEP PREDICTS IS NOTHING (#919): the diff of the world it lands in against the base it was
-# replayed into is taken per fact, each way, and a fact deleted and put back is in both, so the two
-# graphs the step names are EMPTY — and still named, with their catalogue rows, since the rows are
-# what make `extract_plan` copy them rather than diff the world against its parent, which would carry
-# the refill. A fictive wait then writes nothing, and the executor holds the step to its landing.
+# IT IS NO MOVE (#953). Each rule is one update of the engine's own, applied to the fork, and whether
+# a step moves is read off the world it leaves and the world it makes, never off its text: the world
+# this effect makes is the world it found, so no world is minted, and the search is Exhausted. What
+# the predictions move between two grounds is reached by `planning:Wait` alone, which this store does
+# not hold (`agent/planning/tests/test_wait.py`). Before #953 a delete template made a step a move
+# whatever it matched, and this case was a plan of one step predicting nothing.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 

@@ -20,10 +20,11 @@ planning:effect [ a planning:Effect ;
 ```
 
 An effect is a [transition](/domain/belief/transition.md) the agent causes, and every rule of it is
-typed one: the rules read the step's parameters as `$tokens`, and `take` hands them, order by order,
-to the belief package's machine — the world the candidate leaves is what they read, and the world the
-step makes, forked at the first order that changes something, is both what a delete template's
-matches are taken out of and where an insert template's triples go. A delete template takes away
+typed one: the rules read the step's parameters as `$tokens`, and `take` forks the world the
+candidate leaves and hands each rule in turn to the belief package's machine as the engine's own
+update — the world with the fork in its place is what it reads, and the fork is both what a delete
+template's matches are taken out of and where an insert template's triples go. A fork that comes out
+as the world it was copied from is no move, and is dropped (#953). A delete template takes away
 what stands where the step changes something nobody could name in advance. SHACL's rules only
 construct, so the update is belief's word, beside the machine that applies it. An inference never
 deletes; an effect may, because a possible world is where taking something away is the point.
