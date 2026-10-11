@@ -85,7 +85,10 @@ scopes were built for, kept.
   are read from graphs that arrived `orexis:Asserted`, or were derived from one (the closure). **A
   peer's document is believed as what it said**, a first-order belief about what the peer said, and
   can redefine nothing, since no reader of actions or rules takes a graph that arrived
-  `orexis:Received`. This is the gate speech kept by admitting only kinds beneath
+  `orexis:Received`. *Amended 2026-10-11: a peer's word becomes testimony instead, in a kind no reader of
+  the mind is handed, and only the agent's rules make it a belief
+  ([a-peers-word-is-testimony-and-a-rule-makes-it-a-belief](/decisions/a-peers-word-is-testimony-and-a-rule-makes-it-a-belief.md));
+  until that is built the gate stays at the writer, `heard`, and no reader keeps it.* This is the gate speech kept by admitting only kinds beneath
   `orexis:StateGraph`; it moves from the writer to the readers, which is where "a reader states the
   kinds it reads" already put every other choice.
 - **The executor checks a landing against the present beliefs.** A step's prediction names its
