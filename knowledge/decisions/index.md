@@ -176,6 +176,7 @@ From bytes on a topic to a quantity an agent believes — and who holds the cloc
 * [a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md) - A rule that changes the state is a transition, triggered once by an arrival; an inference only adds. Effects and belief revision share one machine.
 * [the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md) - Belief is the one kind; a scope extracts its state from what its writers can write, and provenance replaces the public and state kinds.
 * [a-role-is-an-instance-an-agent-plays](/decisions/a-role-is-an-instance-an-agent-plays.md) - A role is an instance the agent plays, carrying its context and period; where it is stated decides who sees it.
+* [a-peers-word-is-testimony-and-a-rule-makes-it-a-belief](/decisions/a-peers-word-is-testimony-and-a-rule-makes-it-a-belief.md) - A peer's document is testimony in speech's own kind; only the agent's rules make it a belief or a prediction, so no kind gate remains.
 
 # Firmware, alarms and stand-ins
 
