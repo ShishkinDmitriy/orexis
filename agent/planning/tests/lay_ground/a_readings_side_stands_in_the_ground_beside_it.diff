@@ -19,9 +19,11 @@
  }
  
  GRAPH :catalogue {
-@@ -59,12 +54,18 @@
+@@ -58,18 +53,64 @@
+   :drying_stops_revisions a orexis:Graph .
    :drying_stops_revisions orexis:arrivedBy orexis:Derived .
    :drying_stops_revisions orexis:beliefsOf :keeper .
++  :drying_stops_revisions planning:cutBy "sha256:a3e21cb902543a05acd100d3daf15b6171aade931040b9c67785b9a26c33b267" .
    :drying_stops_revisions prov:wasDerivedFrom :drying_stops .
 +  :drying_stops_revisions.changeable a planning:ChangeableGraph .
 +  :drying_stops_revisions.changeable orexis:arrivedBy orexis:Derived .
@@ -32,16 +34,19 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:beliefsOf :keeper .
++  :sensed planning:cutBy "sha256:a3e21cb902543a05acd100d3daf15b6171aade931040b9c67785b9a26c33b267" .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
 +  :sensed.changeable prov:wasDerivedFrom :sensed .
    :sensed_revisions a orexis:BeliefGraph .
    :sensed_revisions a orexis:Graph .
    :sensed_revisions orexis:arrivedBy orexis:Derived .
-@@ -72,4 +73,40 @@
+   :sensed_revisions orexis:beliefsOf :keeper .
++  :sensed_revisions planning:cutBy "sha256:a3e21cb902543a05acd100d3daf15b6171aade931040b9c67785b9a26c33b267" .
    :sensed_revisions prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
++  :world planning:cutBy "sha256:a3e21cb902543a05acd100d3daf15b6171aade931040b9c67785b9a26c33b267" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .

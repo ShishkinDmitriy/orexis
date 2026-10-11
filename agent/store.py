@@ -1020,7 +1020,7 @@ def _joined(*texts: str) -> list[str]:
     return [head + " ;\n".join(bodies)]
 
 
-def forget_graph(store, graph_iri: str, *, revisions: str = BELIEF) -> None:
+def forget_graph(store, graph_iri: str, *, revisions: str | None = BELIEF) -> None:
     """Empty one graph AND take back everything the catalogue said of it — and its revisions, of the
     kind `revisions` says they are (`revisions_of`): beliefs, unless the caller's graph is revised
     into a kind of its own, as sensing's observations are.
@@ -1039,9 +1039,10 @@ def forget_graph(store, graph_iri: str, *, revisions: str = BELIEF) -> None:
     a prediction's revisions outlived the stretch that was forgotten for a shorter forecast, kept
     the old side with the old horizon-long period, and were handed to every possible world of
     that day — so the greenhouse's dose read unmet in the world it made, and the search exhausted
-    for a day after the bed crossed its floor.
+    for a day after the bed crossed its floor. `revisions=None` takes the graph alone, for a holder of
+    copies that judges every graph by itself — an imaginarium refreshed by what changed (#953).
     """
-    for revision in revisions_of(store, graph_iri, kind=revisions):
+    for revision in (revisions_of(store, graph_iri, kind=revisions) if revisions is not None else ()):
         forget_graph(store, revision)
     clear_graph(store, graph_iri)
     catalogue = catalogue_of(store)

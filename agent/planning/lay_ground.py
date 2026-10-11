@@ -64,6 +64,7 @@ handed the one world standing then. A list handed back would be a second place t
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from datetime import datetime
 
@@ -278,6 +279,11 @@ def _present(store: ox.Store, now: datetime) -> str:
 #  and no split reaches it (#953).
 _DEFINING = (OREXIS + "OntologyGraph",)
 
+#  EVERY GRAPH CUT BY THE PATTERNS ASKED NOW, and saying which a graph was cut by: its row's alone.
+_CUT_BY_Q = """SELECT ?g WHERE { GRAPH $cat { ?g planning:cutBy $by } }"""
+_CUT_U = """DELETE { GRAPH $cat { $g planning:cutBy ?was } } INSERT { GRAPH $cat { $g planning:cutBy $by } }
+WHERE { OPTIONAL { GRAPH $cat { $g planning:cutBy ?was } } }"""
+
 #  EVERY CHANGEABLE GRAPH AND THE GRAPH IT WAS CUT FROM.
 _CUT_Q = """
 SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
@@ -290,24 +296,34 @@ def _split(store: ox.Store, actions=None, at: datetime | None = None) -> list[st
     and the transitions can write (`footprint.changeable`) — leaving the rest where it was. The
     changeable graphs made.
 
-    TAKEN BACK BEFORE IT IS MADE AGAIN: every changeable graph standing is put back into the graph it
-    was cut from, or dropped where that graph is gone — a refresh forgot it and copied it whole again —
-    so the cut is a function of what the graphs hold now and laying twice cuts once."""
+    A CUT STANDS WHILE ITS SOURCE AND ITS PATTERNS DO (#953): the source's row says the patterns it was
+    cut by (`planning:cutBy`, their digest), and a graph whose row says the patterns asked now is left as
+    it stands. Any other is taken back first — its changeable graph put back into it — and cut again, so
+    the cut is a function of what the graphs hold now and laying twice cuts once; a changeable graph
+    whose source is gone is dropped, since a refresh forgot the source and copied it whole again."""
     cat = catalogue_of(store)
-    for r in rows(store, _CUT_Q, ()):
-        source = r.get("source")
-        if source and _classified(store, source):
-            add_quads(store, [ox.Quad(q.subject, q.predicate, q.object, ox.NamedNode(source))
-                              for q in store.quads_for_pattern(None, None, None, ox.NamedNode(r["piece"]))])
-        forget_graph(store, r["piece"])
     patterns = footprint.changeable(store, actions, at)
     if patterns is not footprint.ANYTHING:
         patterns = sorted(set(patterns) | _predicted(store), key=lambda p: (p[0], p[1] or ""))
+    by = _signature(patterns)
+    pieces: dict[str, list[str]] = {}
+    for r in rows(store, _CUT_Q, ()):
+        source = r.get("source")
+        if source and _classified(store, source):
+            pieces.setdefault(source, []).append(r["piece"])
+        else:
+            forget_graph(store, r["piece"])
     defining = set(graphs_of(store, *_DEFINING))
+    standing = {r["g"] for r in rows(store, _CUT_BY_Q, (), cat=Raw(f"<{cat}>"), by=ox.Literal(by))}
     made = []
     for graph in graphs_of(store, *KNOWN):
-        if graph in defining:
+        if graph in defining or graph in standing:
             continue
+        for piece in pieces.get(graph, ()):
+            add_quads(store, [ox.Quad(q.subject, q.predicate, q.object, ox.NamedNode(graph))
+                              for q in store.quads_for_pattern(None, None, None, ox.NamedNode(piece))])
+            forget_graph(store, piece)
+        update(store, bind(_CUT_U, cat=Raw(f"<{cat}>"), g=graph, by=ox.Literal(by)))
         g = ox.NamedNode(graph)
         if patterns is footprint.ANYTHING:
             cut = list(store.quads_for_pattern(None, None, None, g))
@@ -327,6 +343,12 @@ def _split(store: ox.Store, actions=None, at: datetime | None = None) -> list[st
     log.debug("%d changeable graph(s) cut over %s pattern(s)", len(made),
               "every" if patterns is footprint.ANYTHING else len(patterns))
     return made
+
+
+def _signature(patterns) -> str:
+    """The digest of a set of patterns, as the cut a source's row says it was made by."""
+    text = "every" if patterns is footprint.ANYTHING else "\n".join(f"{p} {o or ''}" for p, o in patterns)
+    return "sha256:" + hashlib.sha256(text.encode()).hexdigest()
 
 
 def _predicted(store: ox.Store) -> set:

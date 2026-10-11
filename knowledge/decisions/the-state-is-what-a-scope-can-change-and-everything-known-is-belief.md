@@ -212,6 +212,19 @@ them were answering the second and third questions with a class.
 > so the imaginarium copies again the names that came and the names whose hash moved, forgets the names
 > that went, and keeps every other copy, hearing no signal from any writer.
 
+> **Refreshed by what changed, built 2026-10-11 (#953).** `prepare_ground` keeps a copy whose source's
+> row states the hash the copy's row was made with, reads its row again, and takes back every other graph
+> it brought across with what was cut out of it — each copy judged by itself, since forgetting a graph had
+> taken its revisions' copies with it though they had not changed. A graph whose row states no hash is
+> copied every pass; the boot stamps every document it put, so that is only what a package writes in place
+> unstamped, a record or a want. `lay_ground` leaves a graph whose row says the patterns asked now
+> (`planning:cutBy`) as it was cut. `world/conftest.py` fills the imaginarium again from nothing after
+> every pass of every world's tests and holds every graph that crossed or was cut, content and row, to
+> it; kept whatever its hash, the copies failed twelve of the greenhouse's and the tower's tests.
+> Measured within one run each, the copy's share of planning went from 19.8 to 14.5 percent on the
+> greenhouse's `test_explain` and `test_simulation`, 12.7 to 7.6 on the courier and 11.1 to 6.5 on the
+> allotment; the cut's share stayed, most of it the patterns asked again each pass.
+
 After #951, since the writers' templates are what define the state and #951 makes each writer one
 update text parsed by rdflib. Then three slices, each keeping every world's figures:
 

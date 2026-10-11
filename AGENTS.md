@@ -616,7 +616,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A belief changes in place, and its row says what it holds by hash** — every writer of a belief
   or a prediction stamps `orexis:hash` as it finishes, `world/conftest.py` holds every world's tests to
   it, and a renaming per change and a counter were refused, the test being the guarantee either way
-  (a-graph-changes-in-place-and-its-row-says-what-it-holds).
+  (a-graph-changes-in-place-and-its-row-says-what-it-holds); **so the imaginarium keeps a copy whose
+  source's hash stands and a cut whose patterns do, each copy judged by itself**, held after every pass
+  to a refresh from nothing (#953).
 - **An update takes no dataset** — what chooses which graphs are the world at an instant is Python
   or a materialised view.
 - **What ends by the clock is a graph with a period, and one sweep drops it** — what the ending

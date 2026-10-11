@@ -11,15 +11,17 @@
  }
  
  GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a {
-@@ -213,14 +209,71 @@
+@@ -213,14 +209,73 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:beliefsOf :keeper .
++  :sensed planning:cutBy "sha256:0d04982c80a681cc887f227f1dfec6d2d487ec8c9a093fd01c98713034526f06" .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
 +  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
++  :world planning:cutBy "sha256:0d04982c80a681cc887f227f1dfec6d2d487ec8c9a093fd01c98713034526f06" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .

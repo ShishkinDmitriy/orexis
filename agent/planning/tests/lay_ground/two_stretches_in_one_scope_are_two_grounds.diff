@@ -9,15 +9,17 @@
  }
  
  GRAPH :dip {
-@@ -55,6 +53,44 @@
+@@ -55,6 +53,46 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:beliefsOf :keeper .
++  :sensed planning:cutBy "sha256:2d2bc758c20d47733082d0b31615c2919929e8b533dc0b2ef7f7dcdf99c62cfa" .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
 +  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
++  :world planning:cutBy "sha256:2d2bc758c20d47733082d0b31615c2919929e8b533dc0b2ef7f7dcdf99c62cfa" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .

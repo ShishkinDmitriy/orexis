@@ -223,6 +223,9 @@ _AGENTS_Q = "SELECT DISTINCT ?a WHERE { ?a a orexis:Agent }"
 #  EVERY SELF THE STORE HOLDS, in any graph at all — COUNTED, never picked: a self in a graph the
 #  boot did not put in is a self all the same to a text that asks for one.
 _SELVES_Q = "SELECT DISTINCT ?self WHERE { GRAPH ?g { ?self a orexis:Self } } ORDER BY ?self"
+#  EVERY GRAPH A DOCUMENT PUT, whoever holds it.
+_ASSERTED_Q = """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:arrivedBy orexis:Asserted } }"""
+
 #  WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner — the kernel's,
 #  the packages' and the world's graphs nobody owns — and the closure derived from them.
 _FILES_Q = """
@@ -493,10 +496,13 @@ def world_of(world: Path, others=frozenset()) -> ox.Store:
 
 
 def _stamp(store: ox.Store) -> None:
-    """Every belief and prediction the store holds, its row stamped with the hash of what it holds:
-    the boot is the writer of every document it put, and a graph of a volume lived in is stamped
-    again as it stands (a-graph-changes-in-place-and-its-row-says-what-it-holds)."""
-    for graph in graphs_of(store, BELIEF, PREDICTION):
+    """Every belief and prediction the store holds, and every graph a document put, its row stamped
+    with the hash of what it holds: the boot is the writer of every document it put — the actions,
+    drifts, shapes, constraints, rules and desires among them, which nothing writes after — and a graph
+    of a volume lived in is stamped again as it stands
+    (a-graph-changes-in-place-and-its-row-says-what-it-holds)."""
+    for graph in dict.fromkeys([*graphs_of(store, BELIEF, PREDICTION),
+                                *(r["g"] for r in rows(store, _ASSERTED_Q, ()))]):
         hash_named_graph(store, graph)
 
 

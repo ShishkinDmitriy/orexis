@@ -149,6 +149,9 @@ THE WRITERS SAY WHAT CHANGES, not a document's kind: each template of an effect 
 
 No belief, made per pass and never in the belief base, which is not split.""" .
 
+planning:cutBy a owl:DatatypeProperty ; rdfs:domain orexis:Graph ; rdfs:range xsd:string ; rdfs:label "cut by" ;
+    rdfs:comment "On the row of a graph an imaginarium holds a copy of: the digest of the patterns its changeable graph was cut by. Laying the grounds again leaves a graph cut by the patterns asked now as it stands, and takes back and cuts again any other, so a copy a refresh kept keeps its cut while what can change of it does (#953, `lay_ground`). The imaginarium's own row, never the belief base's." .
+
 planning:ScopeGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Scope graph" ;
     rdfs:comment "THE STORE's scopes — nobody's, and one graph rather than one per agent, since every agent reading one store would compute the same partition from the same rows — written whole by `scope_actions` from the actions the store holds and the derivations loaded: which atoms — a predicate on a key — some one filling of one action reads or writes together, as `planning:Scope` nodes, and which scope each predicate, each term a key holds and each action is in. The partition is a function of the actions loaded, which do not change while the agent runs; it was recomputed in Python on every derivation and is data now, so `derive_wants` reads it and clusters the results by it. No belief: a conclusion, replaced whole per run, carried into no possible world and read beside no state, since none of it is a fact about the world a shape is written against." .
 ##  The store's scopes — written whole by `scope_actions` from the actions the store holds and

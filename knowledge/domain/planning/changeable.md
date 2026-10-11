@@ -26,7 +26,10 @@ writer of the search's [scope](/domain/planning/scope.md) can write go into a `p
 derived from the graph (`prov:wasDerivedFrom`), and the graph keeps the rest. The present ground is laid
 from the changeable graphs, a [possible world](/domain/planning/plan.md) is forked from a ground, and
 `world_at` reads every remainder beside the world. The belief base is never cut: the split exists for
-a search, and is made again each pass, the last pass's cut taken back first.
+a search. A graph's row in the imaginarium says the patterns it was cut by (`planning:cutBy`, their
+digest), and a pass leaves a graph cut by the patterns it asks now as it stands; any other has its
+changeable graph taken back into it first and is cut again, so a copy the refresh kept keeps its cut
+until what can change of it does (#953).
 
 # Who the writers are
 
