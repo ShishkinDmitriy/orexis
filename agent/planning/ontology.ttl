@@ -25,8 +25,8 @@
 
 
 
-planning:DerivationGraph a owl:Class ; rdfs:subClassOf orexis:PublicGraph , orexis:BeliefGraph ; rdfs:label "Derivation graph" ;
-    rdfs:comment "What every loaded package's derivation rules READ and WRITE, one `planning:Derivation` per INSERT, written whole at every refresh of public knowledge. The scope partition joins predicates wherever one action OR one derivation touches both, and the actions are in the store while the rules are texts on disk — so the edges the rules make are put in the store beside them, and `scope_actions` is a function of the store alone. PUBLIC, because the loaded rule set is the same for everyone reading this store, exactly as the actions graph is; computed, so it is cleared and rewritten rather than added to. A BELIEF graph, as the vocabulary graph is and for the same reason: what a loaded rule reads and writes is a fact about this build, believed, and a public graph that named no modality would leave a reader guessing at its content." .
+planning:DerivationGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ; rdfs:label "Derivation graph" ;
+    rdfs:comment "What every loaded package's derivation rules READ and WRITE, one `planning:Derivation` per INSERT, written whole at every refresh of what the world states. The scope partition joins predicates wherever one action OR one derivation touches both, and the actions are in the store while the rules are texts on disk — so the edges the rules make are put in the store beside them, and `scope_actions` is a function of the store alone. NOBODY'S, because the loaded rule set is the same for everyone reading this store, exactly as the actions graph is; computed, so it is cleared and rewritten rather than added to. A BELIEF graph, as the vocabulary graph is and for the same reason: what a loaded rule reads and writes is a fact about this build, believed." .
 planning:Derivation a owl:Class ; rdfs:label "Derivation" ;
     rdfs:comment "One INSERT of one loaded derivation rule, as the edge it makes: the predicates its WHERE reads and the predicates its template writes. Named for the rule file it came from and its place in it, so the same rules write the same text. A side whose predicates cannot be read — a variable predicate, a text the parser refuses — says `planning:Anything` and joins every predicate there is, since a rule that might touch anything cannot be proven not to." .
 planning:reads a owl:ObjectProperty ; rdfs:domain planning:Derivation ; rdfs:label "reads" ;
@@ -36,26 +36,26 @@ planning:writes a owl:ObjectProperty ; rdfs:domain planning:Derivation ; rdfs:la
 planning:Anything a owl:Thing ; rdfs:label "Anything" ;
     rdfs:comment "Said where a side's predicates cannot be read off the text: the derivation might read or write any predicate, so it joins them all. `touches`' own ANYTHING, in the store." .
 
-##  What the loaded derivations read and write — computed at every refresh of public knowledge
+##  What the loaded derivations read and write — computed at every refresh of what the world states
 ##  from the rule files, and read by `scope_actions`, which names no file.
 <http://example.org/orexis/graph/derivations> a planning:DerivationGraph ;
     orexis:arrivedBy orexis:Derived .
 
-planning:PlanGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Plan graph" ;
+planning:PlanGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Plan graph" ;
     rdfs:comment """ONE WANT'S PLAN — what a pass decided, as a graph of its own, in the imaginarium beside the worlds it decided among. One per want and replaced whole, which is the first reason it is a graph rather than a corner of the pass graph: replacing a plan is clearing this, where before it was enumerating the names a plan's steps MIGHT have taken and removing those, a step count the writer had to guess at.
 
 The second reason is the crossing. A plan goes to the execution layer to be carried out, and a graph is what `prepare_ground` showed the shape of: one function over two stores, copying what the other side needs. Copying a plan is then copying a graph, rather than walking `execution:then` and hoping the walk reaches everything a step carries.
 
-A WORKING graph, and memory: the imaginarium is not on disk. A plan is a pass's result and not yet a commitment; what survives is the intention the execution layer mints when it copies one in (`the executor's adoption`).""" .
+No belief, and memory: the imaginarium is not on disk. A plan is a pass's result and not yet a commitment; what survives is the intention the execution layer mints when it copies one in (`the executor's adoption`).""" .
 
-planning:PossibleGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Possible graph" ;
+planning:PossibleGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Possible graph" ;
     rdfs:comment """ONE NODE OF A SEARCH — what the world comes to if the steps reaching it were taken — in the imaginarium, beside the ground it was forked from and the other worlds the pass imagined. Never mutated: siblings are alive at the same time, so branching rather than backtracking is the hard case, and a world is a VALUE written once when the node is created.
 
 WHERE IT CAME FROM IS IN THE STORE, AS AN EDGE. It says which candidate reached it (`planning:by`), and the candidate says which world it was taken in (`planning:from`) — so a candidate CONNECTS two possible worlds, and the tree a pass walked is read by walking `planning:by/planning:from`. It was in the graph's NAME — a path of action segments, `<parent>.<action>-<values>` — which is a reader depending on a spelling, and a graph's name is for eyes; the name is the mint number alone since #486, `possible/<n>`, the same length at any depth, and the path is read off the rows.
 
 WHAT IS TRUE OF IT WHOEVER ASKS is written on its row: what the path to it spent (`planning:spent`), when it is (its `dcterms:temporal` period: the earliest and the latest instant the landings on its path reach it, one instant where every landing is exact), the mint number of the candidate that made it, which is its name (`planning:minted`), and what it holds (`orexis:hash`). What a want's search worked out about it — met here, on the frontier, opened — is a WEIGHING's, one per want, because one imaginarium holds the worlds of every want in a scope and a world has as many askers as there are wants.
 
-A WORKING graph, and memory: an imaginarium is not on disk, and a possible world is what a pass considered rather than anything the agent believes.""" .
+No belief, and memory: an imaginarium is not on disk, and a possible world is what a pass considered rather than anything the agent believes.""" .
 
 planning:by a owl:ObjectProperty ; rdfs:domain planning:PossibleGraph ; rdfs:range planning:Candidate ;
     rdfs:label "by" ;
@@ -133,24 +133,24 @@ planning:of a owl:ObjectProperty ; rdfs:range planning:Candidate ;
     rdfs:label "of" ;
     rdfs:comment "The candidate a step was minted from — the one link between what the search walked and what the plan holds. Execution does not read it: a commitment is what an agent is doing, not how it was found. It crosses with the rest because what a lower layer does not read it also does not drop." .
 
-planning:GroundGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Ground graph" ;
+planning:GroundGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Ground graph" ;
     rdfs:comment """WHAT THE AGENT'S OWN KNOWLEDGE COMES TO OVER ONE PERIOD — the present, or what a prediction made of the period before it — materialised in an imaginarium as one graph, classified with the stretch it holds over. Which ground holds at an instant is then the door's question and no reader is handed a list.
 
 IT EXISTS BECAUSE A PREDICTION SUPERSEDES. A prediction is a graph holding the reading it foretells, and a door handed a reader every graph holding at an instant — so a met-test asked at a foreseen instant saw the reading AND the prediction of it, and a shape holds over every value, so the stale one still violated. A tank low now with a forecast refilling it read as unmet for ever. Nothing was wrong with the forecast; there was no place in the pass where it REPLACED anything. A prediction's graph is what it ADDS, its catalogue row says when it applies and carries `orexis:retracts` — a `DELETE … WHERE` naming `GRAPH $state`, run against a fork of the period before, and what the prediction holds is added after it. The adds are concrete because a forecast is; only the retraction is a pattern, because what is standing in that place is not something a forecast can name in advance.
 
 NEIGHBOURS THAT HASH THE SAME ARE ONE. Each ground carries the same hash a possible world does, and where two periods reach the same facts the second is not a period: nothing a met-test can read moved, so nothing it could answer differs. That is what bounds the judging — a desire is asked once per distinct ground rather than once per boundary.
 
-A WORKING graph, and memory: an imaginarium is not on disk, and a ground is what a pass stands on rather than anything the agent believes.""" .
+No belief, and memory: an imaginarium is not on disk, and a ground is what a pass stands on rather than anything the agent believes.""" .
 
-planning:ChangeableGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Changeable graph" ;
+planning:ChangeableGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Changeable graph" ;
     rdfs:comment """WHAT OF A BELIEF GRAPH A SEARCH CAN CHANGE, cut out of it in an imaginarium as the grounds are laid (`lay_ground`) and derived from it (`prov:wasDerivedFrom`): every triple of the graph some writer of the search's scope can write - an effect of one of its actions, a transition a predicted observation triggers in a ground, or a prediction, whose retraction takes out of a ground what stands where it adds. The graph keeps the rest, and the two are disjoint, so a world is its own copy of every changeable graph read beside every graph's remainder, and no value an effect replaced stands beside the one that replaced it. A ground is laid from the changeable graphs, where it was laid from the state graphs, so a fork copies what a step can change and nothing else.
 
 THE WRITERS SAY WHAT CHANGES, not a document's kind: each template of an effect or a transition is a pattern, an IRI or a literal it states fixed and a token, a variable or a blank node anything, a predicate variable bounded by its own `VALUES`; a writer whose templates cannot be read makes every triple changeable. A pattern may match more than a writer ever writes and never less, since a triple written that no pattern caught would be written into the fork with the old value standing beside it, read from the remainder (knowledge/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md).
 
-A WORKING graph, made per pass and never in the belief base, which is not split.""" .
+No belief, made per pass and never in the belief base, which is not split.""" .
 
-planning:ScopeGraph a owl:Class ; rdfs:subClassOf orexis:WorkingGraph ; rdfs:label "Scope graph" ;
-    rdfs:comment "THE STORE's scopes — nobody's, and one graph rather than one per agent, since every agent reading one store would compute the same partition from the same rows — written whole by `scope_actions` from the actions the store holds and the derivations loaded: which atoms — a predicate on a key — some one filling of one action reads or writes together, as `planning:Scope` nodes, and which scope each predicate, each term a key holds and each action is in. The partition is a function of the actions loaded, which do not change while the agent runs; it was recomputed in Python on every derivation and is data now, so `derive_wants` reads it and clusters the results by it. A working graph: a conclusion, replaced whole per run, carried into no possible world and read beside no state, since none of it is a fact about the world a shape is written against." .
+planning:ScopeGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Scope graph" ;
+    rdfs:comment "THE STORE's scopes — nobody's, and one graph rather than one per agent, since every agent reading one store would compute the same partition from the same rows — written whole by `scope_actions` from the actions the store holds and the derivations loaded: which atoms — a predicate on a key — some one filling of one action reads or writes together, as `planning:Scope` nodes, and which scope each predicate, each term a key holds and each action is in. The partition is a function of the actions loaded, which do not change while the agent runs; it was recomputed in Python on every derivation and is data now, so `derive_wants` reads it and clusters the results by it. No belief: a conclusion, replaced whole per run, carried into no possible world and read beside no state, since none of it is a fact about the world a shape is written against." .
 ##  The store's scopes — written whole by `scope_actions` from the actions the store holds and
 ##  the derivations loaded, and read by `derive_wants`. Declared here because it is named: one
 ##  graph for the store, belonging to no agent, so there is no id to build it from.
@@ -278,9 +278,9 @@ Its footprint is what couples: two wants whose plans a constraint could make col
 
 planning:ConstraintGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:PublicGraph ;
+    rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Constraint graph" ;
-    rdfs:comment "A graph of `planning:Constraint` rows, with who holds each and the shape or avoided state each carries where no domain's shapes graph does — named for what it HOLDS, as every graph class is. A world authors one, `<> a planning:ConstraintGraph`, with no period: what is possible holds at every instant as the T-Box does. PUBLIC, not the agent's own, because what the world says is possible is everyone's — physics is not a belief one agent holds and another may lack — so it is read again at every boot as an ontology is, and an amended constraint reaches a running agent. The planner crosses it beside the graphs of desires, wants, records and shapes wherever it reads a met-test." .
+    rdfs:comment "A graph of `planning:Constraint` rows, with who holds each and the shape or avoided state each carries where no domain's shapes graph does — named for what it HOLDS, as every graph class is. A world authors one, `<> a planning:ConstraintGraph`, with no period: what is possible holds at every instant as the T-Box does. NOBODY'S, not the agent's own, because what the world says is possible is everyone's — physics is not a belief one agent holds and another may lack — so it is read again at every boot as an ontology is, and an amended constraint reaches a running agent. The planner crosses it beside the graphs of desires, wants, records and shapes wherever it reads a met-test." .
 
 
 planning:WantState
@@ -354,9 +354,9 @@ planning:Recognized
 
 planning:ShapesGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:PublicGraph ;
+    rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Shapes graph" ;
-    rdfs:comment "What a desire's met-test and estimate point at: the SHACL shapes a domain declares for what its words mean when wanted — delivered, solved — and the selects that say how far a world still is, in the unit its actions cost. SHACL's own notion of a shapes graph, typed so that the planner crosses these beside the graphs of desires, wants and records, which is where it reads a met-test, without crossing every vocabulary: all nine ontology graphs cost thirty times the crossing, measured. Public, since what a word means is everyone's; a domain ships one, and a world that authors a shape of its own may put it here or beside its desire." .
+    rdfs:comment "What a desire's met-test and estimate point at: the SHACL shapes a domain declares for what its words mean when wanted — delivered, solved — and the selects that say how far a world still is, in the unit its actions cost. SHACL's own notion of a shapes graph, typed so that the planner crosses these beside the graphs of desires, wants and records, which is where it reads a met-test, without crossing every vocabulary: all nine ontology graphs cost thirty times the crossing, measured. Nobody's, since what a word means is everyone's; a domain ships one, and a world that authors a shape of its own may put it here or beside its desire." .
 
 
 planning:precondition

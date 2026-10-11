@@ -15,7 +15,7 @@ import pytest
 from agent import clock
 from agent.belief.ontology import REVISION_GRAPH
 from agent.execution.ontology import COMMITTED_STEP_GRAPH
-from agent.ontology import BELIEF, PUBLIC, SELF_GRAPH
+from agent.ontology import BELIEF, SELF_GRAPH
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import graphs_of, rows
 from agent.series import HISTORY, Sink, install
@@ -25,7 +25,7 @@ from agent.transport.mqtt.driver import Mqtt
 def _own(beliefs) -> list[str]:
     """The agent's own beliefs, as the state documents were: no world's document, no self graph, no
     revision, which goes with its source, and no committed step, which is the executor's record."""
-    shared = set(graphs_of(beliefs, PUBLIC, SELF_GRAPH, REVISION_GRAPH, COMMITTED_STEP_GRAPH))
+    shared = {*graphs_of(beliefs, BELIEF, nobodys=True), *graphs_of(beliefs, SELF_GRAPH, REVISION_GRAPH, COMMITTED_STEP_GRAPH)}
     return [g for g in graphs_of(beliefs, BELIEF) if g not in shared]
 
 WORLD = Path(__file__).resolve().parents[1]

@@ -1,55 +1,10 @@
 --- case
 +++ expected
-@@ -18,35 +18,35 @@
- }
- 
- GRAPH :world {
-+  :heater :warms :bed .
-+  :heater :warmsProperty :Temperature .
-+  :keeper :hasActuator :heater .
-+  :keeper :hasActuator :pump .
-   :keeper a orexis:Agent .
-   :keeper orexis:actsFor :bed .
--  :keeper :hasActuator :pump .
--  :keeper :hasActuator :heater .
-   :pump :actuates :bed .
-   :pump :actuatesProperty :Moisture .
--  :heater :warms :bed .
--  :heater :warmsProperty :Temperature .
- }
- 
- GRAPH :actions {
-   :dose a orexis:Action .
-+  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
-+        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
-   :dose planning:precondition """PREFIX : <http://example.org/test#>
-         PREFIX sensing: <http://example.org/orexis/sensing#>
-         SELECT DISTINCT ?valve ?reading WHERE {
-             ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
-             ?valve :actuates ?subject ; :actuatesProperty ?property .
-             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
--  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
-+  :heat a orexis:Action .
-+  :heat planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
-         DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
--  :heat a orexis:Action .
-   :heat planning:precondition """PREFIX : <http://example.org/test#>
-         PREFIX sensing: <http://example.org/orexis/sensing#>
-         SELECT DISTINCT ?heater ?reading WHERE {
-             ?me a orexis:Self ; :hasActuator ?heater ; orexis:actsFor ?subject .
-             ?heater :warms ?subject ; :warmsProperty ?property .
-             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
--  :heat planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
--        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
- }
- 
- GRAPH :catalogue {
-@@ -60,4 +60,28 @@
-   :ontology a orexis:PublicGraph .
+@@ -58,4 +58,27 @@
+   :ontology a orexis:OntologyGraph .
+   :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-   :world a orexis:PublicGraph .
 +  graph:scopes a orexis:Graph .
-+  graph:scopes a orexis:WorkingGraph .
 +  graph:scopes a planning:ScopeGraph .
 +  graph:scopes orexis:arrivedBy orexis:Derived .
  }

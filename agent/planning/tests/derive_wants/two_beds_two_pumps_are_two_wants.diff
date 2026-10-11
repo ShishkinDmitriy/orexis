@@ -1,9 +1,9 @@
 --- case
 +++ expected
-@@ -83,4 +83,45 @@
-   :sensed a orexis:BeliefGraph .
+@@ -82,4 +82,45 @@
+   :sensed orexis:beliefsOf :keeper .
+   :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-   :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .

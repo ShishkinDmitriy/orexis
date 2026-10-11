@@ -36,8 +36,8 @@
 @prefix prediction: <http://example.org/orexis/prediction#> .
 
 GRAPH :ontology {
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -89,8 +89,8 @@ GRAPH :rising {
 }
 
 GRAPH :catalogue {
-  :believed a orexis:Graph .
   :believed a orexis:BeliefGraph .
+  :believed a orexis:Graph .
   :believed orexis:arrivedBy orexis:Derived .
   :believed orexis:beliefsOf :keeper .
   :catalogue a orexis:CatalogueGraph .
@@ -111,9 +111,9 @@ GRAPH :catalogue {
       DELETE { GRAPH $state { :soil ?p ?o } }
       WHERE  { GRAPH $state { :soil ?p ?o } }""" .
   :held_later prov:wasDerivedFrom :sensed .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :rising a orexis:Graph .
   :rising a orexis:PredictionGraph .
   :rising dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
@@ -124,10 +124,10 @@ GRAPH :catalogue {
   :rising prov:wasDerivedFrom :sensed .
   :rules a orexis:Graph .
   :rules a sh:RulesGraph .
-  :sensed a orexis:Graph .
   :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
   :sensed orexis:arrivedBy orexis:Received .
   :sensed orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

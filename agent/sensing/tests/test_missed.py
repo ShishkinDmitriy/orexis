@@ -124,7 +124,7 @@ def test_the_silence_limit_is_the_agents_where_its_self_graph_states_one(pot, sn
     update(pot, f"INSERT DATA {{ GRAPH <http://example.org/test#world> {{ <{snapshots.ME}> <{SILENT_AFTER_TERM}> 1 }} }}")
     fell_due = snapshots.NOW + LAPSE
     assert missed(pot, snapshots.ME, fell_due + CADENCE) == [PROBE] and _silences(pot) == [], \
-        "stated in a public graph, the limit is not the keeper's stance"
+        "stated in a belief nobody owns, the limit is not the keeper's stance"
     snapshots.stating(pot, {SILENT_AFTER_TERM: 1})
     assert missed(pot, snapshots.ME, fell_due + CADENCE - timedelta(seconds=1)) == [PROBE] and _silences(pot) == []
     assert missed(pot, snapshots.ME, fell_due + CADENCE) == [PROBE]

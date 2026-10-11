@@ -27,8 +27,8 @@
 @prefix prediction: <http://example.org/orexis/prediction#> .
 
 GRAPH :ontology {
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -60,9 +60,9 @@ GRAPH :catalogue {
   :dip orexis:retracts """PREFIX : <http://example.org/test#>
       DELETE { GRAPH $state { :tank1 :level ?l } }
       WHERE  { GRAPH $state { :tank1 :level ?l } }""" .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :refill a orexis:Graph .
   :refill a orexis:PredictionGraph .
   :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
@@ -70,9 +70,9 @@ GRAPH :catalogue {
   :refill orexis:retracts """PREFIX : <http://example.org/test#>
       DELETE { GRAPH $state { :tank1 :level ?l } }
       WHERE  { GRAPH $state { :tank1 :level ?l } }""" .
-  :sensed a orexis:Graph .
   :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
   :sensed orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

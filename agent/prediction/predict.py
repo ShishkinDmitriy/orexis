@@ -52,7 +52,7 @@ from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
-from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, PUBLIC, RECORD, local_of
+from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, RECORD, local_of
 from agent.stance import stance
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
                          remember, revisions_of, rows, update)
@@ -169,7 +169,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
         """Every contribution the drifts answer at `elapsed` seconds past the observation, for
         the subject holding `value`: (lowest rate, highest rate, the value it stops at)."""
         at = taken + timedelta(seconds=elapsed)
-        known = remember(memo, ("known", at), lambda: graphs_of(store, PUBLIC, BELIEF, RECORD, at=at, now=now or taken))
+        known = remember(memo, ("known", at), lambda: graphs_of(store, BELIEF, RECORD, at=at, now=now or taken))
         #  THE OBSERVATION IN HAND IS READ AT EVERY INSTANT, with what the rules concluded of it —
         #  its key and its number live in its revisions — since a drift sized from the reading a
         #  committed step answers reads it past the stretch the observation holds for.
@@ -224,9 +224,9 @@ INSERT DATA {{
 
 
 def _happenings(store, cat, taken: datetime, horizon: float) -> list[float]:
-    """The seconds past the observation at which a public or belief graph begins or stops
+    """The seconds past the observation at which a belief graph begins or stops
     holding inside the `horizon`, earliest first, with the horizon's end."""
-    found = rows(store, _HAPPENINGS_Q, (), cat=cat, kinds=Raw(f"<{PUBLIC}> <{BELIEF}>"),
+    found = rows(store, _HAPPENINGS_Q, (), cat=cat, kinds=Raw(f"<{BELIEF}>"),
                  **{"from": instant(taken), "to": instant(taken + timedelta(seconds=horizon))})
     return sorted({*((datetime.fromisoformat(r["t"]) - taken).total_seconds() for r in found), horizon})
 

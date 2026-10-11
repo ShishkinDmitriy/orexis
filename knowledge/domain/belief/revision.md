@@ -32,7 +32,7 @@ standing beside the source, the source itself, and what has been concluded of it
 Within a layer one iteration runs the run-once rules first, then the iterating rules are run
 again while an iteration concludes something new; within an iteration the rules run in order,
 and rules of one order see none of each other's inferences until they have all run. What is
-inferred is what the base graph does not already hold. The runtime hands public knowledge as what
+inferred is what the base graph does not already hold. The runtime hands what the world states as what
 stands beside a graph it wrote — a reading, a prediction, a peer's document — and nothing else:
 every rule shipped reads one graph and what the world states, but sensing's stuck rule, which reads
 the percepts sensing keeps where they lie, by their kind, and the limit off the self graph

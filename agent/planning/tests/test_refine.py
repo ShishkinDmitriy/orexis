@@ -28,7 +28,7 @@ _CASE = """
 
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph , orexis:Graph .
-  :rules a sh:RulesGraph , orexis:PublicGraph , orexis:Graph .
+  :rules a sh:RulesGraph , orexis:Graph .
   :state a orexis:BeliefGraph , orexis:Graph .
 }
 GRAPH :rules {

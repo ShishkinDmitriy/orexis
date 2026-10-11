@@ -33,7 +33,7 @@ and `sosa:madeBySensor` - the one word of sensing's prediction speaks, from abov
 of its code; prediction is one of the readers at the boundary a percept is handed to - and accumulates the
 drifts' sum from it as far as the agent looks - `prediction:horizonS`, a
 [stance](/domain/kernel/stance.md), a day where it states none. Time is split at every **happening**,
-the start or end of a public or belief graph holding inside that horizon, since only there can what a
+the start or end of a belief graph holding inside that horizon, since only there can what a
 drift reads change; between
 two, the rates are asked once and held, at most for an hour. Within a segment the value is a
 straight line, so a crossing of a bound of every [region](/domain/sensing/region.md) that applies to

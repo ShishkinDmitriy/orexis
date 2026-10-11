@@ -49,7 +49,7 @@ SELECT ?at ?until WHERE {
 
 def world_at(store, world: str | None, *, holder: str | None = None, now: datetime | None = None,
              memo=None) -> list[str]:
-    """The graphs a rule reads in `world`: public knowledge, the records, the desires and the
+    """The graphs a rule reads in `world`: what the world states, the records, the desires and the
     wants holding at the world's own instant, and the world itself in the state's place — or,
     where `world` is None, the PRESENT the store holds at `now`: every belief and its revisions in the
     place a ground would stand.

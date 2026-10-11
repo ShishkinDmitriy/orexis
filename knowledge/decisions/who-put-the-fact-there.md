@@ -2,9 +2,18 @@
 type: Decision
 title: Public knowledge is five graphs, split by who put the fact there
 description: Asserted, derived and entailed facts live in separate named graphs; an ordinary query still reads all of them, because the default graph is their union.
-status: accepted
+status: superseded-in-part
+superseded-by: the-state-is-what-a-scope-can-change-and-everything-known-is-belief
 timestamp: 2026-08-09T00:00:00Z
 ---
+
+> **Superseded in part, 2026-10-11 (#953): there is no public class.** `orexis:PublicGraph` folded into
+> `orexis:BeliefGraph`, and what every agent of a world reads is said by provenance, a belief nobody owns,
+> asked as `graphs_of(store, BELIEF, nobodys=True)`
+> ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)).
+> Asserted, derived and entailed in graphs of their own, a rule writing `$given` and `$derived`, and an
+> ordinary query reading their union, all stand; where the body says `orexis:PublicGraph`, read the beliefs
+> nobody owns.
 
 # Context
 

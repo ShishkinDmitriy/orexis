@@ -30,31 +30,42 @@ GRAPH :ontology {
 }
 
 GRAPH :world {
-  :van_a a courier:Van .
-  :van_b a courier:Van .
+  :c0_0 a courier:Cell .
+  :c0_0 courier:x 0 .
+  :c0_0 courier:y 0 .
+  :c0_1 a courier:Cell .
+  :c0_1 courier:x 0 .
+  :c0_1 courier:y 1 .
+  :c0_2 a courier:Cell .
+  :c0_2 courier:x 0 .
+  :c0_2 courier:y 2 .
+  :c0_3 a courier:Cell .
+  :c0_3 courier:x 0 .
+  :c0_3 courier:y 3 .
+  :c1_0 a courier:Cell .
+  :c1_0 courier:x 1 .
+  :c1_0 courier:y 0 .
+  :c1_1 a courier:Cell .
+  :c1_1 courier:x 1 .
+  :c1_1 courier:y 1 .
+  :c1_2 a courier:Cell .
+  :c1_2 courier:x 1 .
+  :c1_2 courier:y 2 .
+  :c1_3 a courier:Cell .
+  :c1_3 courier:x 1 .
+  :c1_3 courier:y 3 .
   :parcel_a a courier:Parcel .
   :parcel_a courier:destination :c0_3 .
   :parcel_b a courier:Parcel .
   :parcel_b courier:destination :c1_3 .
-  :c0_0 a courier:Cell . :c0_0 courier:x 0 . :c0_0 courier:y 0 .
-  :c0_1 a courier:Cell . :c0_1 courier:x 0 . :c0_1 courier:y 1 .
-  :c0_2 a courier:Cell . :c0_2 courier:x 0 . :c0_2 courier:y 2 .
-  :c0_3 a courier:Cell . :c0_3 courier:x 0 . :c0_3 courier:y 3 .
-  :c1_0 a courier:Cell . :c1_0 courier:x 1 . :c1_0 courier:y 0 .
-  :c1_1 a courier:Cell . :c1_1 courier:x 1 . :c1_1 courier:y 1 .
-  :c1_2 a courier:Cell . :c1_2 courier:x 1 . :c1_2 courier:y 2 .
-  :c1_3 a courier:Cell . :c1_3 courier:x 1 . :c1_3 courier:y 3 .
+  :van_a a courier:Van .
+  :van_b a courier:Van .
 }
 
 GRAPH :desires {
-  :keeper planning:holds :keeper.every_parcel_delivered .
-  :keeper.every_parcel_delivered a planning:Desire .
-  :keeper.every_parcel_delivered planning:metWhen :delivered .
-  :keeper.every_parcel_delivered planning:estimates :drivesOwed .
-  :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
   :delivered a sh:NodeShape .
+  :delivered sh:property [ planning:about sh:this ; sh:equals courier:destination ; sh:path courier:at ] .
   :delivered sh:targetClass courier:Parcel .
-  :delivered sh:property [ sh:path courier:at ; sh:equals courier:destination ; planning:about sh:this ] .
   :drivesOwed rdfs:label "drives still owed" .
   :drivesOwed sh:select """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT (SUM(?d) AS ?estimate) WHERE {
@@ -80,26 +91,21 @@ GRAPH :desires {
               }
           } GROUP BY ?p
       }""" .
+  :keeper planning:holds :keeper.every_parcel_delivered .
+  :keeper.every_parcel_delivered a planning:Desire .
+  :keeper.every_parcel_delivered planning:estimates :drivesOwed .
+  :keeper.every_parcel_delivered planning:metWhen :delivered .
+  :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
 }
 
 GRAPH :sensed {
-  :van_a courier:at :c0_0 .
   :parcel_a courier:at :c0_1 .
-  :van_b courier:at :c1_1 .
   :parcel_b courier:at :c1_1 .
+  :van_a courier:at :c0_0 .
+  :van_b courier:at :c1_1 .
 }
 
 GRAPH :scopes {
-  :keeper.scope.1 a planning:Scope .
-  courier:Drive planning:inScope :keeper.scope.1 .
-  courier:Pick planning:inScope :keeper.scope.1 .
-  courier:Drop planning:inScope :keeper.scope.1 .
-  courier:at planning:inScope :keeper.scope.1 .
-  courier:carriedBy planning:inScope :keeper.scope.1 .
-  :van_a planning:inScope :keeper.scope.1 .
-  :van_b planning:inScope :keeper.scope.1 .
-  :parcel_a planning:inScope :keeper.scope.1 .
-  :parcel_b planning:inScope :keeper.scope.1 .
   :c0_0 planning:inScope :keeper.scope.1 .
   :c0_1 planning:inScope :keeper.scope.1 .
   :c0_2 planning:inScope :keeper.scope.1 .
@@ -108,6 +114,16 @@ GRAPH :scopes {
   :c1_1 planning:inScope :keeper.scope.1 .
   :c1_2 planning:inScope :keeper.scope.1 .
   :c1_3 planning:inScope :keeper.scope.1 .
+  :keeper.scope.1 a planning:Scope .
+  :parcel_a planning:inScope :keeper.scope.1 .
+  :parcel_b planning:inScope :keeper.scope.1 .
+  :van_a planning:inScope :keeper.scope.1 .
+  :van_b planning:inScope :keeper.scope.1 .
+  courier:Drive planning:inScope :keeper.scope.1 .
+  courier:Drop planning:inScope :keeper.scope.1 .
+  courier:Pick planning:inScope :keeper.scope.1 .
+  courier:at planning:inScope :keeper.scope.1 .
+  courier:carriedBy planning:inScope :keeper.scope.1 .
 }
 
 # What each graph IS, and when it holds — said once each, beside the data.
@@ -116,17 +132,16 @@ GRAPH :catalogue {
   :catalogue a orexis:Graph .
   :desires a orexis:Graph .
   :desires a planning:DesireGraph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :scopes a orexis:Graph .
-  :scopes a orexis:WorkingGraph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:beliefsOf :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed a orexis:BeliefGraph .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

@@ -14,7 +14,7 @@ import pyoxigraph as ox
 import pytest
 
 from agent import clock
-from agent.ontology import PUBLIC
+from agent.ontology import BELIEF
 from agent.store import Memo, bindings, graphs_of, query
 from agent.planning.lay_ground import lay_ground
 from agent.planning.ontology import CHANGEABLE_GRAPH, GROUND_GRAPH
@@ -43,7 +43,7 @@ def test_the_world_stands_in_the_states_place_and_nothing_the_ground_speaks_for_
     assert changeable and not changeable & set(graphs) and PREDICTION not in graphs, \
         "what the ground was laid from of the readings, and the prediction it applied, are not"
     assert STATE in graphs, "what is left of the readings, that no step changes, is read beside the world"
-    assert set(graphs_of(imagined, PUBLIC)) <= set(graphs), "everything public is"
+    assert set(graphs_of(imagined, BELIEF, nobodys=True)) <= set(graphs), "everything public is"
 
 
 def test_a_world_is_read_at_its_own_instant(imagined):

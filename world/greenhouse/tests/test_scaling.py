@@ -3,7 +3,7 @@ unrelated to a want changes what that want's search spends (#593).
 
 Two metrics the sovereign named. A POSSIBLE WORLD'S SIZE against the present: a world is the SCOPE'S
 readings, their revisions and what the agent believes of their subject, forked from a ground that holds
-those alone, never the public knowledge, so it is one percent of the store. And STABILITY: a cold frame
+those alone, never what the world states, so it is one percent of the store. And STABILITY: a cold frame
 beside the bed, its own thermometer and a heat lamp over it, is a third scope; the soil want's search
 forks the same one world over the same one candidate it did before, that world is the same size, and
 the lamp — a second filling of the heating action, keyed by the frame — is admitted in the frame's scope
@@ -19,7 +19,7 @@ from pathlib import Path
 
 from agent import clock
 from agent.belief.ontology import REVISION_GRAPH
-from agent.ontology import BELIEF, PUBLIC, SELF_GRAPH, local_of
+from agent.ontology import BELIEF, SELF_GRAPH, local_of
 from agent.runtime import boot
 from agent.store import close_catalogue, graphs_of, quads, revisions_of, rows
 from agent.sensing.received import received
@@ -49,7 +49,7 @@ SELECT DISTINCT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a plan
 def _deliver(store, sensor: str, value: float, at: datetime) -> None:
     """A reading as the deliberator takes it: written, revised, and the transitions it triggers applied."""
     for graph in received(store, GH + "grower", GH + sensor, f'{{"value": {value}}}'.encode(), at):
-        revise(store, graph, read=graphs_of(store, PUBLIC))
+        revise(store, graph, read=graphs_of(store, BELIEF, nobodys=True))
         close_catalogue(store)
         trigger(store, graph)
 
@@ -62,7 +62,7 @@ def _pass(world: Path, readings: dict) -> tuple[int, int, dict]:
     for sensor, value in readings.items():
         _deliver(store, sensor, value, NOW)
     present = sum(1 for _ in store)
-    shared = set(graphs_of(store, PUBLIC, SELF_GRAPH, REVISION_GRAPH))
+    shared = {*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH, REVISION_GRAPH)}
     readings = [g for g in graphs_of(store, BELIEF) if g not in shared]     # the agent's own state
     state = sum(len(list(quads(store, g))) for g in [*readings, *revisions_of(store, *readings)])
     planner = Planner(store, "grower")

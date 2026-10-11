@@ -40,15 +40,14 @@ GRAPH :scratch {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :scratch a orexis:Graph .
   :scratch orexis:beliefsOf :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed a orexis:BeliefGraph .
   :sensed orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

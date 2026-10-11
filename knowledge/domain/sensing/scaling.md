@@ -30,5 +30,5 @@ What a scaling changes is the UNIT; what corrects an instrument's error within i
 # Measuring it again
 
 The points are the world's, so a new measurement is two numbers edited and the agent restarted: a
-lived-in volume reads every public graph again at boot. The count to put there is in the agent's log,
+lived-in volume reads every belief nobody owns again at boot. The count to put there is in the agent's log,
 which says what each sensor gave as it arrives ([calibrate-a-probe](/runbooks/calibrate-a-probe.md)).

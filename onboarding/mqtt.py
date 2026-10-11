@@ -109,7 +109,7 @@ class Principal:
         ]
 
 
-PUBLIC = "http://example.org/orexis#PublicGraph"
+BELIEF = "http://example.org/orexis#BeliefGraph"
 ACTUATION = "http://example.org/orexis/actuation#"
 
 #  A TOPIC IS NAMED BY THE PATTERNS OF THE FILTERS THAT MATCH IT, in every query below.
@@ -174,8 +174,8 @@ def _world(world: str):
 
 
 def _rows(store, text: str) -> list[dict]:
-    """Over the world's public graphs — the world and its society, where every grant is read."""
-    return rows(store, text, graphs_of(store, PUBLIC))
+    """Over the world's beliefs nobody owns — the world and its society, where every grant is read."""
+    return rows(store, text, graphs_of(store, BELIEF, nobodys=True))
 
 
 def broker(world: str) -> tuple[str, int, int | None]:

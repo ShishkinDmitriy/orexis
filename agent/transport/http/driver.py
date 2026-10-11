@@ -27,7 +27,7 @@ import urllib.parse
 import urllib.request
 
 from agent import clock
-from agent.ontology import PUBLIC, SELF_GRAPH, local_of
+from agent.ontology import BELIEF, SELF_GRAPH, local_of
 from agent.sensing.cadence import cadence_of
 from agent.store import answer, graphs_of, rows
 from agent.transport.transport import Transport
@@ -104,21 +104,21 @@ class Http(Transport):
 
     def open(self, store) -> list[str]:
         """The sensors of the agent's this member reads."""
-        sensors = [r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC, SELF_GRAPH))]
+        sensors = [r["sensor"] for r in rows(store, _MINE_Q, [*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH)])]
         log.info("%s reads %s over HTTP", local_of(self.me), [local_of(s) for s in sensors] or "nothing")
         return sensors
 
     def reaches(self, store, device: str) -> bool:
-        return bool(answer(store, _REACHES_Q, graphs_of(store, PUBLIC), device=device)["boolean"])
+        return bool(answer(store, _REACHES_Q, graphs_of(store, BELIEF, nobodys=True), device=device)["boolean"])
 
     def sense_now(self, store, sensor: str) -> None:
         """Fetch what `sensor` reads, on a thread of its own, unless it is being fetched already."""
         with self._lock:
             if sensor in self._fetching:
                 return
-        public = graphs_of(store, PUBLIC)
-        targets = [r["target"] for r in rows(store, _TARGET_Q, public, sensor=sensor)]
-        values = {local_of(r["property"]): r["value"] for r in rows(store, _WHERE_Q, public, sensor=sensor)}
+        stated = graphs_of(store, BELIEF, nobodys=True)
+        targets = [r["target"] for r in rows(store, _TARGET_Q, stated, sensor=sensor)]
+        values = {local_of(r["property"]): r["value"] for r in rows(store, _WHERE_Q, stated, sensor=sensor)}
         url = fill(targets[0], values) if targets else None
         if url is None:
             log.warning("%s: %s names what nothing here says — is the place's location in the world's secrets/?",

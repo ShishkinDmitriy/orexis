@@ -36,7 +36,7 @@ A world's agents are then declared in the domain's word, and nobody lists what i
   namespace, so each precondition, rule, command and select carries `PREFIX name: <…>` at its
   head; `tests/test_store.py` fails a text using a name nobody declared.
 - **A text names no graph.** The runner hands a precondition its world, scopes an effect's delete
-  `WITH` the new world, and hands a rule the source beside public knowledge.
+  `WITH` the new world, and hands a rule the source beside what the world states.
 - **Effects speak the state the domain's transitions make**, never a reading or a number: a dose
   takes the subject and predicts its soil `climate:Moist`, and its command sizes the act from the
   subject's latest reading when the step is taken; `tests/test_store.py` fails a met-test,

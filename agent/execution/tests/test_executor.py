@@ -221,7 +221,7 @@ def _beliefs(on: str) -> ox.Store:
 GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{on}> }}
 GRAPH <http://example.org/test#catalogue> {{
   <http://example.org/test#catalogue> a orexis:CatalogueGraph .
-  <{STATE}> a orexis:BeliefGraph }}""", dataset=True)
+  <{STATE}> a orexis:BeliefGraph ; orexis:beliefsOf <{ME}> }}""", dataset=True)
     return st
 
 

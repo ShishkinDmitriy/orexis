@@ -34,13 +34,6 @@ GRAPH :ontology {
 }
 
 GRAPH :world {
-  :keeper a orexis:Agent .
-  :keeper orexis:localId "keeper" .
-  :van a courier:Van .
-  :van rdfs:label "the van" .
-  :parcel a courier:Parcel .
-  :parcel courier:destination :c3_3 .
-  :parcel rdfs:label "the parcel owed at the far corner" .
   :c0_0 a courier:Cell .
   :c0_0 courier:x 0 .
   :c0_0 courier:y 0 .
@@ -89,18 +82,27 @@ GRAPH :world {
   :c3_3 a courier:Cell .
   :c3_3 courier:x 3 .
   :c3_3 courier:y 3 .
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :parcel a courier:Parcel .
+  :parcel courier:destination :c3_3 .
+  :parcel rdfs:label "the parcel owed at the far corner" .
+  :van a courier:Van .
+  :van rdfs:label "the van" .
 }
 
 # THREE LEVERS, as `packages/orexis-tool-courier/actions.ttl` states them. Neighbouring is worked
 # out, not declared: |dx| + |dy| = 1 over the cells' own coordinates.
 GRAPH :actions {
   courier:Drive a orexis:Action .
+  courier:Drive orexis:takes courier:to .
+  courier:Drive orexis:takes courier:van .
   courier:Drive planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Drive planning:landsAfter "SELECT ?least ?most WHERE { BIND(30 AS ?least) BIND(60 AS ?most) }" .
   courier:Drive planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $van courier:at ?old }
       INSERT { $van courier:at $to }
       WHERE  { $van courier:at ?old }""" ] ] .
+  courier:Drive planning:landsAfter "SELECT ?least ?most WHERE { BIND(30 AS ?least) BIND(60 AS ?most) }" .
   courier:Drive planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?van ?to WHERE {
           ?van courier:at ?here .
@@ -109,37 +111,35 @@ GRAPH :actions {
           ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
           FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
       }""" .
-  courier:Drive orexis:takes courier:to .
-  courier:Drive orexis:takes courier:van .
   courier:Drop a orexis:Action .
+  courier:Drop orexis:takes courier:parcel .
+  courier:Drop orexis:takes courier:to .
   courier:Drop planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Drop planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Drop planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:carriedBy ?van }
       INSERT { $parcel courier:at $to }
       WHERE  { $parcel courier:carriedBy ?van }""" ] ] .
+  courier:Drop planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Drop planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?parcel ?to WHERE {
           ?parcel courier:carriedBy ?van . ?van courier:at ?to .
           ?parcel a courier:Parcel .
       }""" .
-  courier:Drop orexis:takes courier:parcel .
-  courier:Drop orexis:takes courier:to .
   courier:Pick a orexis:Action .
+  courier:Pick orexis:takes courier:parcel .
+  courier:Pick orexis:takes courier:van .
   courier:Pick planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Pick planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Pick planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:at ?cell }
       INSERT { $parcel courier:carriedBy $van }
       WHERE  { $parcel courier:at ?cell }""" ] ] .
+  courier:Pick planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Pick planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?parcel ?van WHERE {
           ?van courier:at ?cell . ?parcel courier:at ?cell .
           ?parcel a courier:Parcel .
           ?van a courier:Van .
       }""" .
-  courier:Pick orexis:takes courier:parcel .
-  courier:Pick orexis:takes courier:van .
   courier:parcel a orexis:Parameter .
   courier:to a orexis:Parameter .
   courier:van a orexis:Parameter .
@@ -153,12 +153,12 @@ GRAPH :actions {
 GRAPH :desires {
   :keeper planning:holds :keeper.every_parcel_delivered .
   :keeper.every_parcel_delivered a planning:Desire .
-  :keeper.every_parcel_delivered planning:metWhen courier:delivered .
   :keeper.every_parcel_delivered planning:estimates courier:drivesOwed .
+  :keeper.every_parcel_delivered planning:metWhen courier:delivered .
   :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
   courier:delivered a sh:NodeShape .
+  courier:delivered sh:property [ sh:equals courier:destination ; sh:path courier:at ] .
   courier:delivered sh:targetClass courier:Parcel .
-  courier:delivered sh:property [ sh:path courier:at ; sh:equals courier:destination ] .
   courier:drivesOwed rdfs:label "drives still owed, and each parcel's pick and drop" .
   courier:drivesOwed sh:select """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT (SUM(?d) AS ?estimate) WHERE {
@@ -187,38 +187,37 @@ GRAPH :desires {
 }
 
 GRAPH :sensed {
-  :van courier:at :c0_0 .
   :parcel courier:at :c1_2 .
+  :van courier:at :c0_0 .
 }
 
 GRAPH :scopes {
   :keeper.scope.1 a planning:Scope .
   courier:Drive planning:inScope :keeper.scope.1 .
-  courier:Pick planning:inScope :keeper.scope.1 .
   courier:Drop planning:inScope :keeper.scope.1 .
+  courier:Pick planning:inScope :keeper.scope.1 .
   courier:at planning:inScope :keeper.scope.1 .
   courier:carriedBy planning:inScope :keeper.scope.1 .
 }
 
 GRAPH :catalogue {
   :actions a orexis:ActionGraph .
+  :actions a orexis:BeliefGraph .
   :actions a orexis:Graph .
-  :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a planning:DesireGraph .
   :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :scopes a orexis:Graph .
-  :scopes a orexis:WorkingGraph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:beliefsOf :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed a orexis:BeliefGraph .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

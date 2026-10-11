@@ -10,7 +10,7 @@
  
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
-@@ -104,6 +103,12 @@
+@@ -103,6 +102,12 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:met false .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
@@ -23,7 +23,7 @@
    possible:fill-tank1 a planning:PossibleGraph .
    possible:fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    possible:fill-tank1 orexis:arrivedBy orexis:Derived .
-@@ -180,6 +185,10 @@
+@@ -179,6 +184,10 @@
    possible:fill-tank2.fill-tank1.by planning:fills :fill .
    possible:fill-tank2.fill-tank1.by planning:from possible:fill-tank2 .
    possible:fill-tank2.fill-tank1.by planning:minted 5 .
@@ -34,7 +34,7 @@
    possible:fill-tank2.fill-tank2 a planning:PossibleGraph .
    possible:fill-tank2.fill-tank2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    possible:fill-tank2.fill-tank2 orexis:arrivedBy orexis:Derived .
-@@ -192,6 +201,12 @@
+@@ -191,6 +200,12 @@
    possible:fill-tank2.fill-tank2.by planning:fills :fill .
    possible:fill-tank2.fill-tank2.by planning:from possible:fill-tank2 .
    possible:fill-tank2.fill-tank2.by planning:minted 6 .

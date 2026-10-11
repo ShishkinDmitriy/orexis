@@ -12,12 +12,12 @@ reads `courier:at` on vans and joins on the cell, so two parcels whose vans can 
 one cluster, and two whose vans never can are two. A desire couples nothing, however it is
 authored: an aversion is a state the agent may enter and must leave, not one no plan may make.
 
-**READ OVER THE REACH, NOT OVER THE PUBLIC GRAPHS.** `footprint.atoms_of` reads a scope's atoms
-off the public graphs alone, every pattern optional, which is right for a partition that must stand
+**READ OVER THE REACH, NOT OVER WHAT THE WORLD STATES.** `footprint.atoms_of` reads a scope's atoms
+off the graphs nobody owns alone, every pattern optional, which is right for a partition that must stand
 while the agent runs. It is grid-blind: asked that way the aversion joins `van_a` to `van_b` with the
 cell unbound, on a shared grid and on two grids a continent apart alike, because which cells a van
-can stand on is the drive's precondition's FILTER over coordinates, and the public half of a text is
-its patterns. Measured on the shipped dispatcher and on a variant with the vans on disjoint grids:
+can stand on is the drive's precondition's FILTER over coordinates, and the half of a text those graphs
+answer is its patterns. Measured on the shipped dispatcher and on a variant with the vans on disjoint grids:
 the same four rows. So the constraint is asked over the REACH — every fact some sequence of the
 actions could make true from the present ground with nothing taken away, the delete-free fixpoint
 of the effects' insert templates over their preconditions, which is the planning literature's relaxed

@@ -17,8 +17,6 @@
 GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:BeliefGraph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -49,16 +47,15 @@ GRAPH :sensed {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :rules a orexis:Graph .
   :rules a sh:RulesGraph .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed a orexis:BeliefGraph .
   :sensed orexis:arrivedBy orexis:Received .
   :sensed orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

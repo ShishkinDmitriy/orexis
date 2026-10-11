@@ -30,7 +30,7 @@ import json
 import logging
 from datetime import datetime, timezone
 
-from agent.ontology import PUBLIC
+from agent.ontology import BELIEF
 from agent.store import graphs_of, rows
 
 from .ontology import JSON_CODEC
@@ -128,7 +128,7 @@ SELECT ?codec ?pointer ?starts ?ends WHERE {
 
 
 def _binding(store, sensor: str) -> dict:
-    return next(iter(rows(store, _BINDING_Q, graphs_of(store, PUBLIC), sensor=sensor)), {})
+    return next(iter(rows(store, _BINDING_Q, graphs_of(store, BELIEF, nobodys=True), sensor=sensor)), {})
 
 
 def _codec(sensor: str, binding: dict) -> Codec | None:
@@ -146,7 +146,7 @@ VALUE, AGE = "value", "age_s"
 
 
 def decode(store, sensor: str, payload: bytes) -> list[tuple[float, float]] | None:
-    """What `sensor`'s share of `payload` holds, by the binding public knowledge states for it — each
+    """What `sensor`'s share of `payload` holds, by the binding the world states for it — each
     reading as (number, seconds before the message), oldest first — or None where any stage refuses,
     said in the log, since a pointer that misses is not a measurement and nothing is written.
 

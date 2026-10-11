@@ -149,8 +149,8 @@ The compose file is **generated, never hand-edited**: one service per agent, nam
 plus a `simulation` service where the world marks systems `sim:simulatedBy`. Adding an agent is
 adding it to the world and regenerating; a hand-edit is a second roster waiting to drift from the
 documents. Each container mounts exactly one store credential per purpose — its own — and of the
-world's documents the public ones and those that say they are its agent's; the simulator's, the
-public ones alone.
+world's documents those nobody owns and those that say they are its agent's; the simulator's, the
+ones nobody owns alone.
 
 # Monitor a world, or stop
 
@@ -191,8 +191,8 @@ A world is self-contained: its topology, its agents' opening beliefs and the com
 runs it are one directory. There is no separate deploy tree to keep in step.
 
 `up` is **start**, not birth. The first boot builds the agent's store from the documents; every
-boot after that logs `booted from … (a volume lived in: its own graphs kept)`, reads the public
-documents again and leaves the agent's own graphs alone, so a restart cannot reset what it
+boot after that logs `booted from … (a volume lived in: its own graphs kept)`, reads the documents nobody owns
+again and leaves the agent's own graphs alone, so a restart cannot reset what it
 believes. The store lives in a named volume per agent and survives `up`, `down` and `restart`
 alike — see [belief-base](/domain/belief/belief-base.md).
 

@@ -1,9 +1,9 @@
 --- case
 +++ expected
-@@ -51,4 +51,18 @@
-   :ontology a orexis:PublicGraph .
+@@ -49,4 +49,18 @@
+   :ontology a orexis:OntologyGraph .
+   :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-   :world a orexis:PublicGraph .
 +  observed:probe_20260101T120000Z a orexis:Graph .
 +  observed:probe_20260101T120000Z a sensing:ObservationGraph .
 +  observed:probe_20260101T120000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .

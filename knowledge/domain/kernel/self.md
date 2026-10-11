@@ -37,11 +37,11 @@ The self graph is also where the agent's word about itself lives: each stance is
 self there, and each [role](/domain/kernel/role.md) a kind the self is stated in beside
 `orexis:Self`; both are read in no other graph.
 
-The self graph is a BELIEF and not public. A reader answering a text over what is known — a
+The self graph is a BELIEF, and the agent's own. A reader answering a text over what is known — a
 precondition in a possible world, a command over the present — reads it as it reads any belief,
-and it crosses into an [imaginarium](/domain/planning/imaginarium.md) with the rest. A reader of the
-public graphs alone that asks the self states the self graph's kind beside them
-(`graphs_of(store, PUBLIC, SELF_GRAPH)`).
+and it crosses into an [imaginarium](/domain/planning/imaginarium.md) with the rest. A reader of what the
+world states alone, the beliefs nobody owns, that asks the self states the self graph's kind beside them
+(`graphs_of(store, BELIEF, nobodys=True)` and `graphs_of(store, SELF_GRAPH)`).
 
 A [footprint](/domain/planning/footprint.md) reads the self's pattern as absent, and says why.
 
@@ -73,5 +73,5 @@ names the agent it means as a holder, and a tool asking what some agent of the w
 each agent as its container would (`onboarding.reading.loaded`).
 
 Why authored and checked rather than minted, why a class held to one instance and not a singleton
-IRI, and why a belief and not a public graph:
+IRI, and why a belief the agent owns and not one nobody owns:
 [the-self-is-a-class-held-to-one-instance](/decisions/the-self-is-a-class-held-to-one-instance.md).

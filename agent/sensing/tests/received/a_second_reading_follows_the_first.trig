@@ -29,8 +29,6 @@ GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:BeliefGraph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
 }
 
@@ -63,11 +61,11 @@ GRAPH observed:probe_20260101T114500Z {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
   observed:probe_20260101T114500Z a orexis:Graph .
   observed:probe_20260101T114500Z a sensing:ObservationGraph .
   observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .

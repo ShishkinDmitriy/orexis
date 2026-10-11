@@ -47,7 +47,7 @@ listens to.
 
 It concludes nothing past the extraction. What a document means — a venue open, a call answered, a
 claim held — is a [revision](/domain/belief/revision.md) the rules conclude of the belief extracted from
-it, beside public knowledge and never beside another peer's word, so a conclusion lives with the
+it, beside what the world states and never beside another peer's word, so a conclusion lives with the
 statement it is about and goes when that statement is said again. Which peer spoke is not told apart, since the
 transport does not say: two bidders on one venue could each say the other's bid again. That is
 the seam signing closes, and nothing signs yet.

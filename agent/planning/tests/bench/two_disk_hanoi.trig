@@ -46,6 +46,8 @@ GRAPH :world {
 # has never heard the word.
 GRAPH :actions {
   hanoi:Move a orexis:Action .
+  hanoi:Move orexis:takes hanoi:disk .
+  hanoi:Move orexis:takes hanoi:onto .
   hanoi:Move planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
   hanoi:Move planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       DELETE { $disk hanoi:on ?old }
@@ -66,8 +68,6 @@ GRAPH :actions {
               ?s (hanoi:on)+ ?onto .
               ?s hanoi:size ?ss . FILTER(?ss < ?ds) }
       }""" .
-  hanoi:Move orexis:takes hanoi:disk .
-  hanoi:Move orexis:takes hanoi:onto .
   hanoi:disk a orexis:Parameter .
   hanoi:onto a orexis:Parameter .
 }
@@ -75,9 +75,9 @@ GRAPH :actions {
 GRAPH :desires {
   :keeper planning:holds :keeper.every_disk_home .
   :keeper.every_disk_home a planning:Desire .
+  :keeper.every_disk_home planning:estimates hanoi:disksAstray .
   :keeper.every_disk_home planning:metWhen hanoi:solved .
   :keeper.every_disk_home rdfs:label "every disk home on peg C" .
-  :keeper.every_disk_home planning:estimates hanoi:disksAstray .
   hanoi:disksAstray rdfs:label "disks not yet home" .
   hanoi:disksAstray sh:select """PREFIX hanoi: <http://example.org/orexis/hanoi#>
       SELECT (COUNT(DISTINCT ?d) AS ?estimate) WHERE {
@@ -103,23 +103,22 @@ GRAPH :scopes {
 
 GRAPH :catalogue {
   :actions a orexis:ActionGraph .
+  :actions a orexis:BeliefGraph .
   :actions a orexis:Graph .
-  :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
-  :desires a planning:DesireGraph .
   :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :scopes a orexis:Graph .
-  :scopes a orexis:WorkingGraph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:beliefsOf :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed a orexis:BeliefGraph .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

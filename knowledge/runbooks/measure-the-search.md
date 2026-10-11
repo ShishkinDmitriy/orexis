@@ -149,7 +149,7 @@ that the bed be lit — an aspect nothing of the soil or the air touches:
 | with light, lamp and a lit desire, the bed dim | 1335 | 35 | 12 | 3 | 1 world, 1 candidate of 1 action |
 
 A possible world is the SCOPE's readings and the sides concluded of them, forked from a ground that
-holds those alone, and no public knowledge: one percent of the present. The unrelated aspect left the
+holds those alone, and nothing the world states: one percent of the present. The unrelated aspect left the
 soil's search as it was — the same world of the same twelve quads over the same one candidate — and
 the lamp, a second filling of the heating action, which is in the air's scope and the light's, is
 admitted in the light's search alone and its step judged there alone, since a scope admits a FILLING

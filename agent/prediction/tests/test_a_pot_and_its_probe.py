@@ -17,7 +17,7 @@ import pytest
 
 from agent import clock
 from agent.belief.revise import revise
-from agent.ontology import PUBLIC
+from agent.ontology import BELIEF
 from agent.prediction.predict import predict
 from agent.sensing.ontology import OBSERVATION_GRAPH
 from agent.sensing.received import received
@@ -25,7 +25,7 @@ from agent.store import close_catalogue, document, graphs_of, put_document, revi
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 SENSING_RULES = Path(__file__).parents[2] / "sensing" / "rules.ttl"
-BELIEF = Path(__file__).parents[2] / "belief" / "ontology.ttl"
+BELIEF_VOCABULARY = Path(__file__).parents[2] / "belief" / "ontology.ttl"
 PROBE = "http://example.org/test#probe"
 
 #  THE POT'S RANGES, as its world states them: operating 0.1 to 0.3, surviving 0.02 to 0.45.
@@ -49,7 +49,7 @@ def pot(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
     put_document(store, document(SENSING_RULES))
-    put_document(store, document(BELIEF))          # what a revision is, so its row closes as a boot's does
+    put_document(store, document(BELIEF_VOCABULARY))          # what a revision is, so its row closes as a boot's does
     return store, PROBE
 
 
@@ -58,7 +58,7 @@ def _reading(store, snapshots, probe, value, minutes=0):
     quantity — then the stretches are rewritten from it: the order a container keeps, belief's part
     hearing a graph before prediction's."""
     at = snapshots.NOW + timedelta(minutes=minutes)
-    read = graphs_of(store, PUBLIC, at=at)          # beside what the world states, as belief's part revises
+    read = graphs_of(store, BELIEF, at=at, nobodys=True)          # beside what the world states, as belief's part revises
     [graph] = received(store, snapshots.ME, probe, f'{{"value": {value}}}'.encode(), at)
     revise(store, graph, read=read, kind=OBSERVATION_GRAPH)      # as sensing has belief's part revise it
     close_catalogue(store)

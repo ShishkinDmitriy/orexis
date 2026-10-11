@@ -74,7 +74,7 @@ COMPOSE = REPO_ROOT / "infra" / "compose.yaml"
 
 SERIES_STORE = ONBOARDING + "SeriesStore"
 SERIES_VIEW = ONBOARDING + "SeriesView"
-PUBLIC = "http://example.org/orexis#PublicGraph"
+BELIEF = "http://example.org/orexis#BeliefGraph"
 MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
 _SCHEMA_URL = "https://schema.org/url"
 #  A scheme's port where a url states none — what each client library assumes, so a url stated
@@ -98,7 +98,7 @@ _INTERVAL_Q = f"SELECT ?s WHERE {{ <$purpose> <{ONBOARDING}intervalSeconds> ?s }
 _URLS_Q = f"SELECT ?s ?url WHERE {{ ?s <{_SCHEMA_URL}> ?url }}"
 
 #  A WORLD'S BROKER, as its society names it, and the urls its own documents assert on it — over
-#  its public graphs and its deployment graphs, since an assertion anywhere is an assertion.
+#  its beliefs nobody owns and its deployment graphs, since an assertion anywhere is an assertion.
 _BROKERS_Q = f"SELECT ?b WHERE {{ ?b a <{MQTT4SSN}Broker> }}"
 _ASSERTED_Q = f"SELECT ?b ?url WHERE {{ ?b a <{MQTT4SSN}Broker> ; <{_SCHEMA_URL}> ?url }}"
 
@@ -243,13 +243,13 @@ def view() -> dict:
 
 def brokers_of(world_store: ox.Store) -> list[str]:
     """Every broker a world's society names, sorted."""
-    return sorted({r["b"] for r in rows(world_store, _BROKERS_Q, graphs_of(world_store, PUBLIC))})
+    return sorted({r["b"] for r in rows(world_store, _BROKERS_Q, graphs_of(world_store, BELIEF, nobodys=True))})
 
 
 def asserted_on(world_store: ox.Store, broker: str) -> list[str]:
     """The urls a world's own documents assert on `broker`, sorted — none where it leaves them to
     the installation."""
-    graphs = graphs_of(world_store, PUBLIC, DEPLOYMENT)
+    graphs = graphs_of(world_store, BELIEF, DEPLOYMENT, nobodys=True)
     return sorted(r["url"] for r in rows(world_store, _ASSERTED_Q, graphs) if r["b"] == broker)
 
 

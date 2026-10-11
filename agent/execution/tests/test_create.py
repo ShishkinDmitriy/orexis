@@ -51,7 +51,7 @@ def test_its_part_adopts_what_is_published_and_ends_what_was_reached_untaken(mon
     assert [seconds for seconds, _ in runtime.timers] == [0], "a walk every pass"
     belief.deliberator.revised.emit(Revised(("urn:g",)))
     assert runtime.jobs == [], "a graph revised that is not the present — a prediction, a committed step — answers no step"
-    (state,) = graphs_of(store, BELIEF)
+    (state,) = sorted(set(graphs_of(store, BELIEF)) - set(graphs_of(store, BELIEF, nobodys=True)))   # the agent's own
     belief.deliberator.revised.emit(Revised((state,)))
     assert len(runtime.jobs) == 1, "the present changed, so a walk is queued"
     #  THE WALK A REVISION QUEUED IS THE DRAIN'S, and marks no lap: a lap is from the last mark, so
