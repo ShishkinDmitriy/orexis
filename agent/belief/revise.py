@@ -76,6 +76,7 @@ import re
 import pyoxigraph as ox
 
 from agent.hash_named_graph import forms
+from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, OREXIS
 from agent.store import (Raw, catalogue_of, construct, entry, forget_graph, graphs_of, quads,
                          remember, rows, update)
@@ -197,6 +198,7 @@ def revise(store, source: str, *, read=(), budget: int = BUDGET, memo=None, kind
     if not held:
         return spent
     _describe(store, source, into, settled, continuing, kind)
+    hash_named_graph(store, into)      # its row says what it holds (a-graph-changes-in-place-and-its-row-says-what-it-holds)
     log.debug("%d revision(s) of %s after %d execution(s)%s", len(held), source, spent,
               "" if settled else ", not settled")
     return spent

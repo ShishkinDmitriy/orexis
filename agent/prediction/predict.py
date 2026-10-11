@@ -52,6 +52,7 @@ from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
+from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, RECORD, local_of
 from agent.stance import stance
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
@@ -215,6 +216,7 @@ INSERT DATA {{
                                reading if value is None else value[1],
                                taken if value is None else taken + timedelta(seconds=value[0]))
         store.extend(ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(graph_n)) for t in triples)
+        hash_named_graph(store, graph_n)
         written.append(graph_n)
     log.info("predicted %s of %s in %d stretch(es) from %s%s", local_of(observed_property), local_of(feature),
              len(written), opens.isoformat(timespec="seconds"),

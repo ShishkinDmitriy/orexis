@@ -57,6 +57,7 @@ import pytest
 from agent import clock
 from agent.belief.ontology import REVISION_GRAPH
 from agent.execution.ontology import COMMITTED_STEP_GRAPH
+from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, OREXIS, PREDICTION, SELF_GRAPH
 from agent.planning.planner import Planner
 from agent.runtime import UNFINISHED, Runtime, boot
@@ -821,6 +822,8 @@ def _van_c(cell=None, *, observed: bool = False):
 INSERT DATA {{ {entry(beliefs, PEER_GRAPH, PREDICTION, OREXIS + "Recorded", D + "dispatcher", start=at + timedelta(seconds=10))}
   GRAPH <{PEER_GRAPH}> {{ {said} }} }}""")
             written = [PEER_GRAPH]
+        for graph in written:
+            hash_named_graph(beliefs, graph)     # a writer stamps what it wrote, as every writer of a belief does
         arrive.cell = where
         return written
     return arrive
@@ -992,6 +995,7 @@ def _lay_route(beliefs, route) -> None:
   GRAPH <{graph}> {{ <{D}van_b> <http://example.org/orexis/courier#at> <{D}{cell}> . }}
   {entry(beliefs, graph, PREDICTION, OREXIS + "Received", D + "dispatcher", start=NOW + timedelta(seconds=offset))}
   GRAPH <{catalogue_of(beliefs)}> {{ <{graph}> orexis:retracts "{_ROUTE_RETRACTS}" }} }}""")
+        hash_named_graph(beliefs, graph)
 
 
 def _crossed(world: Path, route) -> object:

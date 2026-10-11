@@ -138,7 +138,7 @@ orexis:hash
     rdfs:domain orexis:Graph ;
     rdfs:range xsd:string ;
     rdfs:label "hash" ;
-    rdfs:comment "The canonical digest of what a graph holds, on its catalogue row beside what it is — written by whoever lays or forks the graph (a ground, a possible world) and replaced when the graph is re-hashed, since a graph has one content. Two graphs with one hash hold the same facts whatever their names, which is how a search knows a fork repeated a world it had seen, and how the pass after identifies the present among the worlds the last one imagined: the ground just laid is the world whose hash it repeats, never the one it is named like (the-future-is-a-cone-and-the-present-is-identified-in-it)." .
+    rdfs:comment "The canonical digest of what a graph holds, on its catalogue row beside what it is — written by whoever lays or forks the graph (a ground, a possible world), and by every writer of a belief or a prediction as it finishes, the boot of every document it put included, and replaced when the graph is re-hashed, since a graph has one content. A belief changes in place under its name, so its row's hash is how a copy made of it knows it is still right, and a test after every world's tests holds every belief and prediction to hash as its row says (a-graph-changes-in-place-and-its-row-says-what-it-holds). Two graphs with one hash hold the same facts whatever their names, which is how a search knows a fork repeated a world it had seen, and how the pass after identifies the present among the worlds the last one imagined: the ground just laid is the world whose hash it repeats, never the one it is named like (the-future-is-a-cone-and-the-present-is-identified-in-it)." .
 
 orexis:localId
     a owl:DatatypeProperty ;

@@ -1,0 +1,70 @@
+# a_state_deleted_from_is_stamped_again
+#
+# A tick arrives and its transition counts it, as in `a_state_is_replaced_where_it_stood` — but the
+# state graph the count before stands in holds something else too, so taking the count out leaves it
+# standing, changed in place under its name. Its row said the hash of what it held; it is stamped again
+# with the hash of what it holds now, and the tick's own state graph is stamped as it is written
+# (a-graph-changes-in-place-and-its-row-says-what-it-holds).
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix tick1: <http://example.org/test#tick1/> .
+@prefix tick2: <http://example.org/test#tick2/> .
+
+GRAPH :ontology {
+  :TickGraph rdfs:subClassOf orexis:BeliefGraph .
+  :TickGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :counter a :Counter .
+  :keeper a orexis:Agent .
+}
+
+GRAPH :rules {
+  :countRule a belief:Transition .
+  :countRule belief:update """PREFIX : <http://example.org/test#>
+      DELETE { ?c :count ?n } INSERT { ?c :count ?next }
+      WHERE { ?t a :Tick . ?c a :Counter . OPTIONAL { ?c :count ?n } BIND((COALESCE(?n, 0) + 1) AS ?next) }""" .
+  :countRule rdfs:label "a tick counts one more than the count before" .
+}
+
+GRAPH :tick2 {
+  :t2 a :Tick .
+}
+
+GRAPH tick1:believed {
+  :counter :count 1 .
+  :counter :named "the counter" .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :tick2 a :TickGraph .
+  :tick2 a orexis:BeliefGraph .
+  :tick2 a orexis:Graph .
+  :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
+  :tick2 orexis:arrivedBy orexis:Received .
+  :tick2 orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  tick1:believed a orexis:BeliefGraph .
+  tick1:believed a orexis:Graph .
+  tick1:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:20:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  tick1:believed orexis:arrivedBy orexis:Derived .
+  tick1:believed orexis:beliefsOf :keeper .
+  tick1:believed orexis:hash "sha256:de811923f6006f19b2be93c2b6cd9765667a23a6844b47855bcfb4f2aea38844" .
+}

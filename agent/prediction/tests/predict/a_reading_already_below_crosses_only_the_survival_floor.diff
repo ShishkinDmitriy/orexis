@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -78,4 +78,37 @@
+@@ -78,4 +78,39 @@
    observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
    observed:zamioculcas_moisture orexis:beliefsOf :keeper .
@@ -9,6 +9,7 @@
 +  predicted:zamioculcas_moisture_0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:26:25+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
 +  predicted:zamioculcas_moisture_0 orexis:arrivedBy orexis:Recorded .
 +  predicted:zamioculcas_moisture_0 orexis:beliefsOf :keeper .
++  predicted:zamioculcas_moisture_0 orexis:hash "sha256:ad04affc88b3d1639b9e5f79f07a86292138071bf7e3e24097d1f04f66f0ca19" .
 +  predicted:zamioculcas_moisture_0 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
 +  predicted:zamioculcas_moisture_0 prov:wasDerivedFrom observed:zamioculcas_moisture .
 +  predicted:zamioculcas_moisture_1 a orexis:Graph .
@@ -16,6 +17,7 @@
 +  predicted:zamioculcas_moisture_1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T13:26:25+00:00"^^xsd:dateTime ] .
 +  predicted:zamioculcas_moisture_1 orexis:arrivedBy orexis:Recorded .
 +  predicted:zamioculcas_moisture_1 orexis:beliefsOf :keeper .
++  predicted:zamioculcas_moisture_1 orexis:hash "sha256:5f5234727e8d6072d8615f0958be2ab67bbbb302a51d0a2f8c88b8c15b7249a3" .
 +  predicted:zamioculcas_moisture_1 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
 +  predicted:zamioculcas_moisture_1 prov:wasDerivedFrom observed:zamioculcas_moisture .
  }

@@ -113,7 +113,8 @@ from agent import clock
 from agent import series
 from agent.lifecycle import MET, PLANNED, UNFINISHED, UNREACHABLE, Signal  # noqa: F401 — the outcomes, re-exported
 from agent.metrics import Laps, Level, Value, window
-from agent.ontology import BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, ROLE, SELF_GRAPH
+from agent.hash_named_graph import hash_named_graph
+from agent.ontology import BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, PREDICTION, ROLE, SELF_GRAPH
 from agent.store import (NAMESPACES, answer, catalogue_of, close_catalogue, closed, classify, document, forget_graph,
                          graphs_of, imports_of, kinds_in, put_document, rows, update, whose, DocumentRefused, Raw)
 
@@ -487,7 +488,16 @@ def world_of(world: Path, others=frozenset()) -> ox.Store:
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
     _put_documents(store, Path(world).resolve(), others=frozenset(others))
     close_catalogue(store)
+    _stamp(store)
     return store
+
+
+def _stamp(store: ox.Store) -> None:
+    """Every belief and prediction the store holds, its row stamped with the hash of what it holds:
+    the boot is the writer of every document it put, and a graph of a volume lived in is stamped
+    again as it stands (a-graph-changes-in-place-and-its-row-says-what-it-holds)."""
+    for graph in graphs_of(store, BELIEF, PREDICTION):
+        hash_named_graph(store, graph)
 
 
 def boot(world: Path, agent_id: str, store: ox.Store | None = None, others=frozenset()) -> ox.Store:
@@ -509,6 +519,7 @@ def boot(world: Path, agent_id: str, store: ox.Store | None = None, others=froze
         for doc, graph in own:
             put_document(store, doc, owner=me, graphs={graph})
     close_catalogue(store)
+    _stamp(store)
     #  THE SCOPES ARE THE PLANNER'S, written once the vocabulary is in, and only where the agent runs
     #  one: imported here and nowhere else, so a process that plans nothing imports no Planner.
     if PLANNING in packages_of(store):

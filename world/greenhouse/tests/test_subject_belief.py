@@ -20,6 +20,7 @@ from pathlib import Path
 import pyoxigraph as ox
 
 from agent import clock
+from agent.hash_named_graph import hash_named_graph
 from agent.runtime import Runtime, boot
 from agent.store import graphs_of, revisions_of, rows, update
 from agent.transport.mqtt.driver import Mqtt
@@ -120,6 +121,8 @@ def test_with_no_margin_the_state_follows_the_bare_bound(monkeypatch):
     say, since the transition coalesces an absent margin to nought."""
     runtime, time = _grower(monkeypatch)
     update(runtime.beliefs, "DELETE WHERE { GRAPH ?g { ?condition sensing:margin ?margin } }")
+    for graph in graphs_of(runtime.beliefs, BELIEF):
+        hash_named_graph(runtime.beliefs, graph)       # a hand that edits a belief stamps it, as every writer does
     assert not rows(runtime.beliefs, "SELECT ?m WHERE { GRAPH ?g { ?c sensing:margin ?m } }"), "the margins are gone"
     assert _read(runtime, time, SOIL, [0.2990, 0.3001]) == ["Dry", "Moist"]
 

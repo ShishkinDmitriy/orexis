@@ -11,7 +11,7 @@
  
  GRAPH :catalogue {
    :catalogue a orexis:CatalogueGraph .
-@@ -62,8 +60,16 @@
+@@ -62,8 +60,17 @@
    :tick2 orexis:beliefsOf :keeper .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
@@ -24,6 +24,7 @@
 +  tick2:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
 +  tick2:believed orexis:arrivedBy orexis:Derived .
 +  tick2:believed orexis:beliefsOf :keeper .
++  tick2:believed orexis:hash "sha256:b32dc68f8e4d5dc195952d4edf4a066798602ee26c08e66b8bd5423f3e040090" .
  }
 +
 +
