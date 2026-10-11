@@ -1,6 +1,7 @@
 @prefix : <http://example.org/orexis/market#> .
 @prefix market: <http://example.org/orexis/market#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix speech: <http://example.org/orexis/speech#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <> a sh:RulesGraph .    # this document is one graph, and this is what it is
@@ -10,6 +11,21 @@
 #  again: a round said cleared stops its venue being open, a claim said discharged stops its
 #  holder holding it. The search runs no rules, so an action's effect writes these conclusions
 #  itself, and the executor answers the step when the document arrives and is revised to them.
+
+#  WHAT A MARKET DOCUMENT SAYS IS BELIEVED, of what it is about (#958). A document heard or said is an
+#  statement, which no reader of the mind is handed, and this extraction is what the agent comes to believe
+#  of it: what a call, a round, a bid, a claim or a presentation says of itself, as said. Run by speech over
+#  the one statement and the world's documents beside it, never over what was believed before, so a claim
+#  arriving carries nothing of the round it names; and that the market says the triples its agents believe
+#  is the market's choice, not the layer's assumption. The rules below conclude of what this makes.
+
+:believed a speech:Extraction ;
+    rdfs:label "what a market document says of what it is about is believed" ;
+    sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        CONSTRUCT { ?s ?p ?o } WHERE {
+            ?s a ?class ; ?p ?o .
+            VALUES ?class { market:Call market:Round market:Bid market:Claim market:Presentation }
+        }""" .
 
 :market a sh:RuleSet ;
     rdfs:label "what the market's documents say, as the facts a plan speaks" ;

@@ -90,15 +90,18 @@ SELECT ?me WHERE { ?me a orexis:Self FILTER NOT EXISTS { ?me market:bidsIn ?venu
 
 #################  What the documents are  #################
 
-:CallGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ; rdfs:label "Call graph" ;
+#  KINDS OF STATEMENT, said between a host and its bidders: each is what was said, handed to no reader of
+#  the mind, and what an agent believes of it is what the market's extraction concludes (rules.ttl, #958).
+
+:CallGraph a owl:Class ; rdfs:subClassOf speech:StatementGraph ; rdfs:label "Call graph" ;
     rdfs:comment "A bidder's call for a round, said to the venue's host." .
-:RoundGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ; rdfs:label "Round graph" ;
+:RoundGraph a owl:Class ; rdfs:subClassOf speech:StatementGraph ; rdfs:label "Round graph" ;
     rdfs:comment "A round as its host tells it to every bidder: open, and said again once cleared." .
-:BidGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ; rdfs:label "Bid graph" ;
+:BidGraph a owl:Class ; rdfs:subClassOf speech:StatementGraph ; rdfs:label "Bid graph" ;
     rdfs:comment "One bidder's bid into one round, said to the host alone." .
-:ClaimGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ; rdfs:label "Claim graph" ;
+:ClaimGraph a owl:Class ; rdfs:subClassOf speech:StatementGraph ; rdfs:label "Claim graph" ;
     rdfs:comment "A claim as its host tells it to the winner: issued at a clearing, said again once discharged. The host's own copy is its debt." .
-:PresentationGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ; rdfs:label "Presentation graph" ;
+:PresentationGraph a owl:Class ; rdfs:subClassOf speech:StatementGraph ; rdfs:label "Presentation graph" ;
     rdfs:comment "A holder presenting its claim, said to the host." .
 
 :Call a owl:Class ; rdfs:label "Call" ;

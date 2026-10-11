@@ -3,6 +3,7 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -22,3 +23,30 @@
     speech's (knowledge/domain/speech/speaker.md). Declared, never derived; the boot loads this
     package for it and for nothing else, and a role beneath it — a market host's, a bidder's — loads
     it with its own.""" .
+
+#  WHAT IS SAID, AND WHAT IS BELIEVED OF IT (a-peers-word-is-testimony-and-a-rule-makes-it-a-belief,
+#  #958). A document heard or said is kept as what was said, in a kind beneath `orexis:Graph` alone, so
+#  no reader of the mind is handed it; what the agent comes to believe of it is what the extractions it
+#  holds conclude of it, run here over the statement alone. That the language said is the triples the
+#  agent believes is a coincidence of this society, not an assumption the layer makes.
+
+:StatementGraph a owl:Class ;
+    rdfs:subClassOf orexis:Graph ;
+    rdfs:label "Statement graph" ;
+    rdfs:comment """What was said, as it was said: one graph of a document a peer told this agent or this agent
+    told a peer, kept as testimony and handed to no reader of the mind (knowledge/domain/speech/statement.md).
+    `heard` writes one arrived `orexis:Received`, `said` one arrived `orexis:Recorded`, each holding over
+    the period the document states. Whatever kind the document says its graph is, it is this, and a kind it
+    says that is not beneath this is not kept: a peer's word becomes an action, a rule or a belief only where
+    something the agent holds makes it one. A domain names the kinds of statement it speaks beneath this.""" .
+
+:Extraction a owl:Class ;
+    rdfs:subClassOf sh:Rule ;
+    rdfs:label "Extraction" ;
+    rdfs:comment """A rule that says what the agent comes to believe of a statement
+    (knowledge/domain/speech/extraction.md): an `sh:construct`, run by speech over the one statement and
+    the world's documents beside it, and over nothing else the agent holds, so it reads what was said and
+    never what was believed before. What every extraction constructs of one statement is one belief graph
+    derived from it, the agent's own, holding over the statement's period and going when it is said again.
+    Beneath `sh:Rule` and not `sh:SPARQLRule`, so revision and the planner's bridge reader pass over it, as
+    they pass over a transition: it is run once per statement, never to a fixpoint.""" .
