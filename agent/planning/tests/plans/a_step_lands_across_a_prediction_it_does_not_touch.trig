@@ -55,10 +55,9 @@ GRAPH :actions {
   :fill orexis:takes :tank .
   :fill planning:costs """PREFIX : <http://example.org/test#>
       SELECT (1 AS ?cost) WHERE { }""" .
-  :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX : <http://example.org/test#>
-      DELETE { $tank :level ?l  }
-      WHERE  { $tank :level ?l  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT { ?tank :level ?next } WHERE {
+  :fill planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+      DELETE { $tank :level ?l }
+      INSERT { ?tank :level ?next } WHERE {
       $tank :level ?l .
       BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
   #  A FILL SHOWS WITHIN THREE MINUTES OF THE TURN, a minute at the least: the band a world reached by it holds over.

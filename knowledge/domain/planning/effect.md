@@ -4,29 +4,29 @@ title: Effect
 term: http://example.org/orexis/planning#effect
 description: >-
   What taking an action makes true and false of the world it is taken in - a `planning:Effect`
-  holding SHACL rules grouped by `sh:order`, a construct for what is added and a
-  `belief:delete` for what is taken out, applied through belief's machine on the possible world a
-  step makes and never on beliefs. The one declaration the search plans on and the world is held to.
+  holding rules grouped by `sh:order`, each a `belief:Transition` whose one `belief:update` takes out
+  and adds over one WHERE, applied through belief's machine on the possible world a step makes and
+  never on beliefs. The one declaration the search plans on and the world is held to.
 ---
 
 # What it is
 
 ```turtle
 planning:effect [ a planning:Effect ;
-    sh:rule [ a sh:SPARQLRule ; sh:order 0 ; belief:delete """PREFIX courier: <…>
-        DELETE { $parcel courier:at ?cell } WHERE { $parcel courier:at ?cell }""" ] ,
-            [ a sh:SPARQLRule ; sh:order 1 ; sh:construct """PREFIX courier: <…>
-        CONSTRUCT { $parcel courier:carriedBy $van } WHERE { }""" ] ] .
+    sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <…>
+        DELETE { $parcel courier:at ?cell }
+        INSERT { $parcel courier:carriedBy $van }
+        WHERE  { $parcel courier:at ?cell }""" ] ] .
 ```
 
-An effect is a [transition](/domain/belief/transition.md) the agent causes, and the rules have its
-shape: they read the step's parameters as `$tokens`, and `take` hands them, order by order, to the
-belief package's machine — the world the candidate leaves is what they read, and the world the step
-makes, forked at the first order that changes something, is both what a delete's matches are taken
-out of and where a construct's triples go. A delete takes away what stands where the step changes
-something nobody could name in advance. SHACL has only `sh:construct`, so the delete is belief's
-word, beside the machine that applies it. An inference never deletes; an effect may, because a
-possible world is where taking something away is the point.
+An effect is a [transition](/domain/belief/transition.md) the agent causes, and every rule of it is
+typed one: the rules read the step's parameters as `$tokens`, and `take` hands them, order by order,
+to the belief package's machine — the world the candidate leaves is what they read, and the world the
+step makes, forked at the first order that changes something, is both what a delete template's
+matches are taken out of and where an insert template's triples go. A delete template takes away
+what stands where the step changes something nobody could name in advance. SHACL's rules only
+construct, so the update is belief's word, beside the machine that applies it. An inference never
+deletes; an effect may, because a possible world is where taking something away is the point.
 
 # What it speaks
 

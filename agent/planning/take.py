@@ -12,7 +12,7 @@ world it is taken in, what it fills, what that world spent and when it is; the a
 off public knowledge; the next mint number off the pass's memo, read from the store once. Who
 is taking it is nobody's argument: a text about the agent asks `?me a orexis:Self`, and the self
 crossed into the imaginarium with the beliefs. False where the action's rules say nothing about this world
-— no effect stated, or a construct and a retraction that both come to nothing — which is not
+— no effect stated, or rules that add nothing and state no delete template — which is not
 a move, and the caller's weighing then says the candidate repeats the world it left.
 
 **THE CHILD IS FORKED FROM THE GROUND HOLDING AT ITS LANDING** (#596). The grounds are the
@@ -44,14 +44,16 @@ forked from its parent needs nothing written: the two differ by the effect and n
 
 AN EFFECT IS A TRANSITION THE AGENT CAUSES, AND BELIEF'S MACHINE APPLIES IT
 (`agent/belief/transition.py`, a-transition-changes-the-state-and-an-inference-only-concludes). An
-action's `planning:effect` holds `sh:rule`s, each a `sh:SPARQLRule` whose `sh:construct` yields
-what applying it ADDS, or whose `belief:delete` is a `DELETE … WHERE` taking away whatever stands
-in the place the step changes, which nobody can name in advance. Every rule of one `sh:order`
-reads the same world — the construct is asked, and the delete's WHERE matched, before any of that
-order is applied — its deletions go first and its additions after, and a later order reads the
-world the earlier ones made. A delete names no graph: its WHERE is matched over every graph of the
-world, and what it matches is taken out of the new world alone. What revision runs over beliefs
-only ever concludes; this runs over a possible world, where taking something away is the point.
+action's `planning:effect` holds `sh:rule`s, each a `belief:Transition` whose `belief:update` is
+one SPARQL update: its insert template what applying it ADDS, its delete template whatever stands
+in the place the step changes, which nobody can name in advance, both over one WHERE. Every rule
+of one `sh:order` reads the same world — both templates asked before any of that order is applied
+— its deletions go first and its additions after, and a later order reads the world the earlier
+ones made. An update names no graph: its WHERE is matched over every graph of the world, and what
+its delete template matches is taken out of the new world alone. A rule of an effect that is no
+`belief:Transition` is no rule the machine runs: it changes nothing, and the log says so. What
+revision runs over beliefs only ever concludes; this runs over a possible world, where taking
+something away is the point.
 What is this act's own is which world the rules read and change, and that the fork is made at
 the first order that changes something.
 
@@ -102,12 +104,14 @@ SELECT ?rule ?lands ?costs (GROUP_CONCAT(DISTINCT STR(?p); separator=" ") AS ?ta
   OPTIONAL { ?rule planning:costs ?costs }
 } GROUP BY ?rule ?lands ?costs LIMIT 1"""
 
-#  ITS EFFECT'S RULES, by order — an absent order is 0, as SHACL says. `?rule` projected, since
-#  the engine substitutes only a variable the query projects.
+#  ITS EFFECT'S RULES, by order — an absent order is 0, as SHACL says — each with its update and
+#  whether it is a transition. `?rule` projected, since the engine substitutes only a variable the
+#  query projects.
 _EFFECT_Q = """
-SELECT ?rule ?order ?construct ?delete WHERE {
+SELECT ?rule ?r ?order ?update ?transition WHERE {
   ?rule planning:effect/sh:rule ?r .
-  OPTIONAL { ?r sh:order ?o } OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r belief:delete ?delete }
+  OPTIONAL { ?r sh:order ?o } OPTIONAL { ?r belief:update ?update }
+  BIND(EXISTS { ?r a belief:Transition } AS ?transition)
   BIND(COALESCE(?o, 0) AS ?order) }
 ORDER BY ?order"""
 
@@ -236,11 +240,12 @@ def _apply(store, cand: str, into: str, memo, *, base: str | None = None, graphs
     NOTHING about this world — no rule stated, or every rule coming to nothing — which is not a
     move.
 
-    THE FORK IS MADE AT THE FIRST ORDER THAT CHANGES SOMETHING: until then a construct is asked
-    of the world the candidate leaves, which is the world it would read anyway, so a candidate
-    changing nothing costs no copy. An order stating a delete is taken as a change whatever the
-    delete matched — belief's machine now asks what it matches before anything is applied, but a
-    candidate whose delete matched nothing made a world before the machine moved, and still does."""
+    THE FORK IS MADE AT THE FIRST ORDER THAT CHANGES SOMETHING: until then an order is asked of
+    the world the candidate leaves, which is the world it would read anyway, so a candidate
+    changing nothing costs no copy. An order one of whose updates states a delete template is
+    taken as a change whatever the template matched — belief's machine asks what it matches
+    before anything is applied, but a candidate whose delete matched nothing made a world before
+    the machine moved, and still does."""
     binding = _binding(store, cand, memo)
     rule = _rule(store, binding["action"], memo)
     if rule is None or not rule["rules"]:
@@ -252,7 +257,7 @@ def _apply(store, cand: str, into: str, memo, *, base: str | None = None, graphs
     for rules in ordered(rule["rules"]):
         scope = [into if g == source else g for g in leaves]
         change = asked(store, rules, scope if forked else leaves, tokens)
-        if not forked and not change.added and not any(r.delete for r in rules):
+        if not forked and not change.added and not any(r.deletes for r in rules):
             continue
         if not forked:
             fork(store, source, into, [], [])
@@ -367,8 +372,12 @@ def _rule(store, action: str, memo) -> dict | None:
     """
     def fetch():
         found = bindings(query(store, _RULE_Q, graphs_of(store, ACTION), {"rule": action}))
-        rules = [Rule(float(r["order"]), r.get("construct"), r.get("delete"), f"the effect of {local_of(action)}")
-                 for r in bindings(query(store, _EFFECT_Q, graphs_of(store, ACTION), {"rule": action}))]
+        rules = []
+        for r in bindings(query(store, _EFFECT_Q, graphs_of(store, ACTION), {"rule": action})):
+            if r.get("transition") != "true":
+                log.error("a rule of the effect of %s is no belief:Transition, so it changes nothing", local_of(action))
+                continue
+            rules.append(Rule(float(r["order"]), r.get("update"), f"the effect of {local_of(action)}"))
         return {**found[0], "rules": rules} if found else None
     return remember(memo, ("rule", action), fetch)
 

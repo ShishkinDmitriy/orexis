@@ -6,6 +6,7 @@
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix graph: <http://example.org/orexis/graph/> .
@@ -20,11 +21,11 @@ GRAPH :ontology {
 
 GRAPH :actions {
   :fill a orexis:Action .
-  :fill planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t :level ?x . } WHERE { ?t a :Tank }""" ] ] .
+  :fill planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+        INSERT { ?t :level ?x . } WHERE { ?t a :Tank }""" ] ] .
   :heat a orexis:Action .
-  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" ] ] .
+  :heat planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+        INSERT { ?t :temperature ?x . } WHERE { ?t a :Tank }""" ] ] .
 }
 
 GRAPH :catalogue {

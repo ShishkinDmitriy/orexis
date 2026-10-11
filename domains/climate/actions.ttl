@@ -50,11 +50,10 @@ climate:Heating a orexis:Action ;
             BIND(xsd:double(?every) * ?per AS ?most)
         }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX climate: <http://example.org/orexis/climate#>
+        sh:rule [ a belief:Transition ; belief:update """PREFIX climate: <http://example.org/orexis/climate#>
         DELETE { $subject climate:air climate:Cold }
-        WHERE  { $subject climate:air climate:Cold }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
-        CONSTRUCT { $subject climate:air climate:Comfortable } WHERE { $subject climate:air climate:Cold }""" ] ] ;
+        INSERT { $subject climate:air climate:Comfortable }
+        WHERE  { $subject climate:air climate:Cold }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Command ; sh:select """PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX sensing: <http://example.org/orexis/sensing#>

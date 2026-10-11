@@ -32,11 +32,11 @@ hanoi:Move a orexis:Action ;
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX hanoi: <http://example.org/orexis/hanoi#>
-        DELETE { $disk hanoi:on ?old  }
-        WHERE  { $disk hanoi:on ?old  }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
-        CONSTRUCT { $disk hanoi:on ?dest } WHERE {
+        sh:rule [ a belief:Transition ; belief:update """PREFIX hanoi: <http://example.org/orexis/hanoi#>
+        DELETE { $disk hanoi:on ?old }
+        INSERT { $disk hanoi:on ?dest }
+        WHERE {
+            $disk hanoi:on ?old .
             OPTIONAL { ?t (hanoi:on)+ $onto . FILTER NOT EXISTS { ?z hanoi:on ?t } }
             BIND(COALESCE(?t, $onto) AS ?dest)
         }""" ] ] .

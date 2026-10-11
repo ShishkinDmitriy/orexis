@@ -33,24 +33,21 @@ GRAPH :world {
 
 GRAPH :rules {
   :countRule a belief:Transition .
-  :countRule belief:delete """PREFIX : <http://example.org/test#>
-      DELETE { ?c :count ?n } WHERE { ?t a :Tick ; :ticked true . ?c a :Counter ; :count ?n }""" .
+  :countRule belief:update """PREFIX : <http://example.org/test#>
+      DELETE { ?c :count ?n } INSERT { ?c :count ?next }
+      WHERE { ?t a :Tick ; :ticked true . ?c a :Counter . OPTIONAL { ?c :count ?n } BIND((COALESCE(?n, 0) + 1) AS ?next) }""" .
   :countRule rdfs:label "a tick revision concluded ticked counts one more than the count before" .
-  :countRule sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT { ?c :count ?next } WHERE { ?t a :Tick ; :ticked true . ?c a :Counter . OPTIONAL { ?c :count ?n } BIND((COALESCE(?n, 0) + 1) AS ?next) }""" .
   :echoRule a belief:Transition .
-  :echoRule belief:delete """PREFIX : <http://example.org/test#>
-      DELETE { ?c :echo ?n } WHERE { ?t a :Tick . ?c a :Counter ; :echo ?n }""" .
+  :echoRule belief:update """PREFIX : <http://example.org/test#>
+      DELETE { ?c :echo ?was } INSERT { ?c :echo ?n }
+      WHERE { ?t a :Tick . ?c a :Counter . OPTIONAL { ?c :echo ?was } OPTIONAL { ?c :count ?n } }""" .
   :echoRule rdfs:label "a later order echoes the count the earlier made" .
-  :echoRule sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT { ?c :echo ?n } WHERE { ?t a :Tick . ?c a :Counter ; :count ?n }""" .
   :echoRule sh:order 1 .
   :lastRule a belief:Transition .
-  :lastRule belief:delete """PREFIX : <http://example.org/test#>
-      DELETE { ?c :last ?was } WHERE { ?t a :Tick . ?c a :Counter ; :last ?was }""" .
+  :lastRule belief:update """PREFIX : <http://example.org/test#>
+      DELETE { ?c :last ?was } INSERT { ?c :last ?t }
+      WHERE { ?t a :Tick . ?c a :Counter . OPTIONAL { ?c :last ?was } }""" .
   :lastRule rdfs:label "the last tick taken" .
-  :lastRule sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT { ?c :last ?t } WHERE { ?t a :Tick . ?c a :Counter }""" .
   :ticked a sh:RuleSet .
   :ticked rdfs:label "a loud tick ticked" .
   :ticked sh:hasRule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>

@@ -50,10 +50,9 @@ GRAPH :actions {
   :wait orexis:takes :tank .
   :wait planning:costs """PREFIX : <http://example.org/test#>
       SELECT (1 AS ?cost) WHERE { }""" .
-  :wait planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX : <http://example.org/test#>
-      DELETE { $tank :level ?l  }
-      WHERE  { $tank :level ?l  }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT { ?tank :level ?next } WHERE {
+  :wait planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+      DELETE { $tank :level ?l }
+      INSERT { ?tank :level ?next } WHERE {
       $tank :level ?l .
       BIND($tank AS ?tank) BIND(?l AS ?next) }""" ] ] .
   #  A WAIT LANDS WITHIN THREE MINUTES OF THE TURN, a minute at the least: the band a world reached by it holds over.

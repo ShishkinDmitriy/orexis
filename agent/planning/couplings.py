@@ -20,7 +20,7 @@ can stand on is the drive's precondition's FILTER over coordinates, and the publ
 its patterns. Measured on the shipped dispatcher and on a variant with the vans on disjoint grids:
 the same four rows. So the constraint is asked over the REACH — every fact some sequence of the
 actions could make true from the present ground with nothing taken away, the delete-free fixpoint
-of the effects' constructs over their preconditions, which is the planning literature's relaxed
+of the effects' insert templates over their preconditions, which is the planning literature's relaxed
 reachability — and its rows are then the collisions the plans could actually make: 32 on the shared
 grid, none on disjoint grids, at twelve milliseconds and seven rounds for the courier's 4x4.
 
@@ -54,6 +54,7 @@ from datetime import datetime
 
 import pyoxigraph as ox
 
+from agent.belief.transition import templates
 from agent.ontology import ACTION, GRAPH_PREFIX
 from agent.store import NAMESPACES, Unbound, bind, graphs_of, rdflib_view, rows
 
@@ -77,13 +78,14 @@ ROUNDS = 64
 #  the select each compiles to is read off the shapes crossed, under either polarity.
 _CONSTRAINTS_Q = """SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c"""
 
-#  THE ACTIONS' PRECONDITIONS AND THE CONSTRUCTS OF THEIR EFFECTS — what the reach is closed over.
-#  A rule's `belief:delete` is a delete, and the reach deletes nothing.
+#  THE ACTIONS' PRECONDITIONS AND THE UPDATES OF THEIR EFFECTS — what the reach is closed over, each
+#  update's insert template asked as belief's machine asks it (`templates`). Its delete template is
+#  a delete, and the reach deletes nothing.
 _ACTIONS_Q = """
-SELECT ?action ?precondition ?construct WHERE {
+SELECT ?action ?precondition ?update WHERE {
   ?action a orexis:Action ; planning:precondition ?precondition ;
-          planning:effect/sh:rule ?r . ?r sh:construct ?construct }
-ORDER BY ?action ?construct"""
+          planning:effect/sh:rule ?r . ?r a belief:Transition ; belief:update ?update }
+ORDER BY ?action ?update"""
 
 _PROLOGUE = re.compile(r"^\s*(?:PREFIX\s+\S+\s+<[^>]*>\s*)+", re.I)
 _CONSTRUCT = re.compile(r"^\s*CONSTRUCT\s*\{(.*)\}\s*WHERE\s*\{(.*)\}\s*$", re.S | re.I)
@@ -136,7 +138,10 @@ def couplings(store: ox.Store, holder: str, present: str, now: datetime, *, memo
     actions = rows(store, _ACTIONS_Q, graphs_of(store, ACTION, at=now))
     default = [ox.NamedNode(g) for g in graphs] + [ox.NamedNode(REACH_GRAPH)]
     try:
-        texts = [_composed(a["construct"], bind(a["precondition"])) for a in actions]
+        #  A rule adding nothing is nothing the reach grows by; one the machine refuses is a
+        #  `Refused`, a `ValueError`, and couples everything as a construct that will not compose.
+        texts = [_composed(insert, bind(a["precondition"])) for a in actions
+                 if (insert := templates(a["update"]).insert) is not None]
     except (ValueError, Unbound) as exc:
         log.warning("a construct could not be closed over its precondition; every instance is coupled: %s", exc)
         return Couplings([], {}, anything=True)

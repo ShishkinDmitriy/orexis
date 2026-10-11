@@ -35,8 +35,8 @@ market:Calling a orexis:Action ;
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
-        CONSTRUCT { $venue market:open true } WHERE {}""" ] ] ;
+        sh:rule [ a belief:Transition ; belief:update """PREFIX market: <http://example.org/orexis/market#>
+        INSERT { $venue market:open true } WHERE {}""" ] ] ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?call a market:Call , market:CallGraph ; market:calledOn $venue ; market:calledBy ?me ;
@@ -59,11 +59,10 @@ market:Tendering a orexis:Action ;
     planning:landsAfter """PREFIX market: <http://example.org/orexis/market#>
         SELECT ?least ?most WHERE { $venue market:bidWindowS ?least . BIND(?least AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX market: <http://example.org/orexis/market#>
-        DELETE { $venue market:open true  }
-        WHERE  { $venue market:open true  }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
-        CONSTRUCT { ?me market:holdsClaimOn $venue } WHERE { ?me a orexis:Self }""" ] ] ;
+        sh:rule [ a belief:Transition ; belief:update """PREFIX market: <http://example.org/orexis/market#>
+        DELETE { $venue market:open true }
+        INSERT { ?me market:holdsClaimOn $venue }
+        WHERE  { ?me a orexis:Self . $venue market:open true }""" ] ] ;
     #  THE BID, SIZED FROM THE PRESENT: as many litres as bring the reading to the middle of its
     #  range by the subject's litres per fraction, at the price a litre is worth to me. The reading is
     #  the observation holding at `$now`, which the saying is not handed — it is sensing's, and no
@@ -108,12 +107,11 @@ market:Presenting a orexis:Action ;
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX market: <http://example.org/orexis/market#>
+        sh:rule [ a belief:Transition ; belief:update """PREFIX market: <http://example.org/orexis/market#>
         PREFIX climate: <http://example.org/orexis/climate#>
-        DELETE { $subject climate:soil climate:Dry . ?me market:holdsClaimOn $venue  }
-        WHERE  { ?me a orexis:Self ; market:holdsClaimOn $venue . $subject climate:soil climate:Dry  }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
-        CONSTRUCT { $subject climate:soil climate:Moist } WHERE { $subject climate:soil climate:Dry }""" ] ] ;
+        DELETE { $subject climate:soil climate:Dry . ?me market:holdsClaimOn $venue }
+        INSERT { $subject climate:soil climate:Moist }
+        WHERE  { ?me a orexis:Self ; market:holdsClaimOn $venue . $subject climate:soil climate:Dry }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?presentation a market:Presentation , market:PresentationGraph ; market:presents ?claim ;
@@ -144,8 +142,8 @@ market:Offering a orexis:Action ;
     #  said at such an instant had no `closesAt`, the clearing found no round to say cleared, and
     #  the bidder's venue stayed open for ever; subtraction binds at every one.
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
-        CONSTRUCT { $venue market:open true . ?call market:offered true }
+        sh:rule [ a belief:Transition ; belief:update """PREFIX market: <http://example.org/orexis/market#>
+        INSERT { $venue market:open true . ?call market:offered true }
         WHERE { ?call market:calledOn $venue . FILTER NOT EXISTS { ?call market:answered true } }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
@@ -165,12 +163,10 @@ market:Clearing a orexis:Action ;
         SELECT DISTINCT ?venue WHERE { ?me a orexis:Self ; market:hosts ?venue . ?venue market:open true }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX market: <http://example.org/orexis/market#>
-        DELETE { $venue market:open true . ?call market:offered true  }
-        WHERE  { $venue market:open true .
-                                OPTIONAL { ?call market:calledOn $venue ; market:offered true }  }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
-        CONSTRUCT { ?call market:answered true } WHERE { ?call market:calledOn $venue ; market:offered true }""" ] ] ;
+        sh:rule [ a belief:Transition ; belief:update """PREFIX market: <http://example.org/orexis/market#>
+        DELETE { $venue market:open true . ?call market:offered true }
+        INSERT { ?call market:answered true }
+        WHERE  { $venue market:open true . OPTIONAL { ?call market:calledOn $venue ; market:offered true } }""" ] ] ;
     #  THE ROUND, SAID AGAIN CLEARED, to everybody it was said to.
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
@@ -218,8 +214,8 @@ market:Serving a orexis:Action ;
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
-        CONSTRUCT { $claim market:discharged true } WHERE {}""" ] ] ;
+        sh:rule [ a belief:Transition ; belief:update """PREFIX market: <http://example.org/orexis/market#>
+        INSERT { $claim market:discharged true } WHERE {}""" ] ] ;
     #  THE DOSE, the claim's amount at most the device's cap.
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Command ; sh:select """PREFIX market: <http://example.org/orexis/market#>

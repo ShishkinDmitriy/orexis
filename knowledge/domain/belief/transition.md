@@ -3,10 +3,11 @@ type: Domain Concept
 title: Transition
 term:
   - http://example.org/orexis/belief#Transition
-  - http://example.org/orexis/belief#delete
+  - http://example.org/orexis/belief#update
 description: >-
-  A rule that changes a state rather than concluding of it - a construct for what it inserts, a
-  delete for what it takes out, grouped by order - typed belief:Transition and declaring no trigger.
+  A rule that changes a state rather than concluding of it - one SPARQL update, its delete template
+  what it takes out and its insert template what it adds over one WHERE, grouped by order - typed
+  belief:Transition and declaring no trigger.
   Every arrival of testimony triggers every transition once, its WHERE saying what it is about, and
   the belief package's one machine applies it into a state graph the runner prepares. An action's
   effect is a transition the agent causes; a percept's is one the world causes, and a predicted
@@ -19,27 +20,33 @@ description: >-
 
 ```turtle
 climate:soilRule a belief:Transition ;
-    belief:delete """DELETE { ?subject climate:soil ?before } WHERE { ?obs sosa:observedProperty climate:SoilMoisture … }""" ;
-    sh:construct """CONSTRUCT { ?subject climate:soil ?state } WHERE { ?obs sosa:observedProperty climate:SoilMoisture … }""" .
+    belief:update """DELETE { ?subject climate:soil ?before }
+                     INSERT { ?subject climate:soil ?state }
+                     WHERE  { ?obs sosa:observedProperty climate:SoilMoisture … }""" .
 ```
 
-A **transition** is a `belief:Transition`, a SPARQL rule — the class is beneath `sh:SPARQLRule` —
-whose `sh:construct` says what applying it inserts, whose `belief:delete` — a `DELETE … WHERE`
-naming no graph — says what it takes out, or both. Its result is not re-derivable from anything
-still held, since one of its premises is the state it replaced: it is the state. That is what tells
-it from a [revision](/domain/belief/revision.md), which only adds, runs to a fixpoint and is a
-function of its source. The type is how the runner finds a transition, and how `revise` and
-planning's [bridge](/domain/planning/bridge.md) reader pass over it, whatever other type it states.
+A **transition** is a `belief:Transition` — the class is beneath `sh:Rule`, keeping SHACL's order and
+deactivation, and not beneath `sh:SPARQLRule`, since it carries no `sh:construct` — whose
+`belief:update` is ONE SPARQL update naming no graph: its delete template says what it takes out, its
+insert template what applying it inserts, both over one WHERE, so the two can never read two states.
+Either template may stand alone, and `DELETE WHERE { … }` is the short form. Its result is not
+re-derivable from anything still held, since one of its premises is the state it replaced: it is the
+state. That is what tells it from a [revision](/domain/belief/revision.md), which only adds, runs to
+a fixpoint and is a function of its source. The type is how the runner finds a transition, and how
+`revise` and planning's [bridge](/domain/planning/bridge.md) reader pass over it, whatever other type
+it states. Every rule of an action's [effect](/domain/planning/effect.md) is one.
 
 # One machine, three runners
 
-`agent/belief/transition.py` groups the rules by `sh:order`, an absent order nought. Each order is
-asked whole before any of it is applied: every construct is run, and every delete is asked as the
-`CONSTRUCT` its own template and pattern spell, over the same graphs, so two rules of one order read
-one state. Then what the deletes matched is taken out of the graphs the caller names, and what the
-constructs made goes into the one graph the caller names — removals first. A later order reads what
-the earlier made. A text that will not bind or run, a delete stating `WITH` or `USING`, and one that
-is no `DELETE … WHERE` change nothing and are said in the log.
+`agent/belief/transition.py` reads an update with rdflib's update grammar and asks each of its
+templates as the `CONSTRUCT` that template and the one WHERE spell, the text's prologue kept. It
+groups the rules by `sh:order`, an absent order nought, and asks each order whole before any of it is
+applied, over the same graphs, so two rules of one order read one state. Then what the delete
+templates matched is taken out of the graphs the caller names, and what the insert templates made
+goes into the one graph the caller names — removals first. A later order reads what the earlier made.
+A text that names its graphs — `WITH`, `USING`, a `GRAPH` in a template or the WHERE — that chains a
+second operation with `;`, that is no `DELETE`/`INSERT … WHERE`, or that will not bind or run changes
+nothing, the whole of it, and is said in the log by the rule's name.
 
 - **Planning** applies an action's [effect](/domain/planning/effect.md) through it, in the possible
   world a step makes: the world's graphs are read, and the new world is both what is taken from and

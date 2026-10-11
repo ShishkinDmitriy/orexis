@@ -13,6 +13,8 @@ dependencies = [
     #  the store's engine, and rdflib where a shape is compiled or a graph compared
     "pyoxigraph",
     "rdflib>=7",
+    #  rdflib's own grammar library, where a transition's update is read by rdflib's productions
+    "pyparsing>=3.1",
     "python-dotenv>=1.0",
     "cryptography>=42",
     #  the series store and the bus, reached by the runtime and the operator's tools

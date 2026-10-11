@@ -30,10 +30,11 @@
 #
 #  AND A TRANSITION, WHICH IS NOT AN INFERENCE (knowledge/domain/belief/transition.md,
 #  a-transition-changes-the-state-and-an-inference-only-concludes). A rule that deletes as well as
-#  inserts — a sh:SPARQLRule whose sh:construct is what it adds and whose :delete is a `DELETE …
-#  WHERE` naming no graph, grouped by sh:order — changes a state rather than concluding of it, and
-#  this package's machine runs it: planning, above, applies an action's effect through it in a
-#  possible world; and a rule typed :Transition is applied once to the agent's own state by every
+#  inserts — a :Transition, whose :update is one SPARQL update naming no graph, its delete template
+#  what it takes out and its insert template what it adds over one WHERE, grouped by sh:order —
+#  changes a state rather than concluding of it, and this package's machine runs it: planning,
+#  above, applies an action's effect, whose every rule is one, through it in a possible world; and
+#  a :Transition of a rules graph is applied once to the agent's own state by every
 #  arrival of testimony, after the arrival's revisions settle, its WHERE saying what it is about. A
 #  transition declares no trigger and no target: where it reads and writes is the runner's, which
 #  prepares the target — a state graph of the arrival's own, the kernel's orexis:StateGraph, holding
@@ -77,22 +78,34 @@ sh:RulesGraph rdfs:subClassOf orexis:Graph .
     survives a restart and a rule set that never settles is reported every pass rather than looped
     on.""" .
 
-:delete a owl:DatatypeProperty ;
-    rdfs:domain sh:SPARQLRule ;
+:update a owl:DatatypeProperty ;
+    rdfs:subPropertyOf sh:construct ;
+    rdfs:domain :Transition ;
     rdfs:range xsd:string ;
-    rdfs:label "delete" ;
-    rdfs:comment """On a sh:SPARQLRule that changes a state, where SHACL has only sh:construct: a
-    `DELETE … WHERE` taking out whatever stands in the place the rule changes, which nobody can name
-    in advance. It names no graph: its WHERE is matched over what the runner hands, with every rule
-    of its order reading the same state, and what it matches is taken out of the graphs the runner
-    says — the world a step makes, for an action's effect; the agent's own derived state graphs,
-    for a transition. Applied before the order's additions (knowledge/domain/belief/transition.md).""" .
+    rdfs:label "update" ;
+    rdfs:comment """On a :Transition, the one text it is: a SPARQL update, `DELETE { … } INSERT { … }
+    WHERE { … }`, or either template alone over its WHERE, or `DELETE WHERE { … }`. Its delete
+    template is what it takes out — whatever stands in the place the rule changes, which nobody can
+    name in advance — and its insert template what it adds, both over the one WHERE, so the two can
+    never read two different states. It names no graph — no WITH, no USING, no GRAPH in a template
+    or the WHERE — and chains no second operation with `;`: what it reads is what the runner hands,
+    every rule of its order reading the same state, and what it changes the graphs the runner says
+    — the world a step makes, for an action's effect; the agent's own derived state graphs, for an
+    arrival's. The runner asks each template as a CONSTRUCT over the WHERE and applies the
+    deletions before the order's additions, and refuses, aloud, a text it cannot read so
+    (knowledge/domain/belief/transition.md). Beneath sh:construct as the sovereign asked, and the
+    axiom changes no reader, since nothing entails a subproperty at boot; read with RDFS it would
+    say an update text is a SHACL CONSTRUCT query, which it is not.""" .
 
 :Transition a owl:Class ;
-    rdfs:subClassOf sh:SPARQLRule ;
+    rdfs:subClassOf sh:Rule ;
     rdfs:label "Transition" ;
-    rdfs:comment """A SPARQL rule that changes a state rather than concluding of it: its sh:construct
-    what it inserts, its :delete what it takes out, grouped by sh:order. Triggered once by each
+    rdfs:comment """A rule that changes a state rather than concluding of it: its :update one SPARQL
+    update, what it takes out and what it inserts over one WHERE, grouped by sh:order and taken out
+    by sh:deactivated, both of which SHACL declares on sh:Rule. Beneath sh:Rule and not
+    sh:SPARQLRule, since it carries no sh:construct, and no SHACL engine executes a bare sh:Rule, so
+    nothing takes one for an inference whose text it should run. Every rule of an action's effect is
+    one; one in a rules graph is an arrival's, and is triggered once by each
     arrival of testimony — a graph received or heard — as a database trigger runs once on each row
     inserted, after the arrival's revisions settle; the agent's own graphs, derived or recorded, and
     what the sovereign asserted trigger none, so its own output never triggers it again. It declares no trigger: it

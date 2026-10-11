@@ -55,10 +55,8 @@ _ACTIONS = _HEAD + '''<> a orexis:ActionGraph .
         SELECT ?tank WHERE { ?tank a :Tank ; :level ?l . FILTER(?l < 10) :butt :holds ?w . FILTER(?w > 0) }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX : <http://example.org/test#>
-        DELETE { $tank :level ?l } WHERE { $tank :level ?l }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
-        CONSTRUCT { $tank :level ?next } WHERE { $tank :level ?l . BIND(?l + 6 AS ?next) }""" ] ] .
+        sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+        DELETE { $tank :level ?l } INSERT { $tank :level ?next } WHERE { $tank :level ?l . BIND(?l + 6 AS ?next) }""" ] ] .
 '''
 _DESIRES = _HEAD + """<> a planning:DesireGraph ; orexis:beliefsOf :keeper .
 :keeper planning:holds :full .

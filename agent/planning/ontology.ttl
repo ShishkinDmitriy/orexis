@@ -371,7 +371,7 @@ planning:effect
 planning:Effect
     a owl:Class ;
     rdfs:label "Effect" ;
-    rdfs:comment "An action's effect as rules, `sh:rule` to each: a transition the agent causes, applied by a search on the possible world a step makes and never on beliefs, through the belief package's machine (knowledge/domain/belief/transition.md). A rule is a `sh:SPARQLRule` with an `sh:construct`, whose result is ADDED, or with a `belief:delete`, a `DELETE … WHERE` naming no graph, matched over the world's graphs and taken out of the new world. Rules are grouped by `sh:order` as SHACL groups them: every rule of one order reads the same world, its deletions are applied before its additions, and a later order reads what the earlier ones made." .
+    rdfs:comment "An action's effect as rules, `sh:rule` to each: a transition the agent causes, applied by a search on the possible world a step makes and never on beliefs, through the belief package's machine (knowledge/domain/belief/transition.md). A rule is a `belief:Transition` whose `belief:update` is one SPARQL update naming no graph, matched over the world's graphs: what its insert template makes is ADDED to the new world and what its delete template matches is taken out of it. Rules are grouped by `sh:order` as SHACL groups them: every rule of one order reads the same world, its deletions are applied before its additions, and a later order reads what the earlier ones made." .
 
 
 planning:costs

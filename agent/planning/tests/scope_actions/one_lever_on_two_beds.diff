@@ -14,27 +14,24 @@
    :pump1 :actuates :bed1 .
    :pump1 :actuatesProperty :Moisture .
    :pump2 :actuates :bed2 .
-@@ -31,16 +31,15 @@
+@@ -31,14 +31,14 @@
  
  GRAPH :actions {
    :dose a orexis:Action .
-+  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
-+        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
-+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
++  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
++        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
    :dose planning:precondition """PREFIX : <http://example.org/test#>
          PREFIX sensing: <http://example.org/orexis/sensing#>
          SELECT DISTINCT ?valve ?reading WHERE {
              ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
              ?valve :actuates ?subject ; :actuatesProperty ?property .
              ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
--  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
--        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
--      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
--        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+-  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+-        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
  }
  
  GRAPH :catalogue {
-@@ -54,4 +53,28 @@
+@@ -52,4 +52,28 @@
    :ontology a orexis:PublicGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .

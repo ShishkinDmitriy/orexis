@@ -5,7 +5,7 @@ of a rules graph, the rule set a package ships, the SPARQL rule with its constru
 order, deactivation and run-once. Every one of those is spelled by the store's dictionary in a
 text, and named here only for the two readers in Python. What is ours is the inference graph of
 one source, which the draft names as a role and not a class, and what a rule that CHANGES a state
-needs and the draft lacks: its delete, and the class of a rule that is a transition (`ontology.ttl`
+needs and the draft lacks: the class of a rule that is a transition, and its one update text (`ontology.ttl`
 beside this file). What triggers a transition and where it writes are no words of ours: an arrival of
 testimony triggers every one, and the runner prepares a state graph for it, the kernel's
 `orexis:StateGraph`.
@@ -27,9 +27,9 @@ RULES_GRAPH = SH + "RulesGraph"
 REVISION_GRAPH = BELIEF + "RevisionGraph"
 SETTLED = BELIEF + "settled"
 
-#  OURS, FOR WHAT CHANGES A STATE: a rule's delete, beside the draft's construct; and the class of a
-#  rule that is a transition, beneath the draft's SPARQL rule.
-DELETE = BELIEF + "delete"
+#  OURS, FOR WHAT CHANGES A STATE: the class of a rule that is a transition, beneath the draft's rule,
+#  and its one text, a SPARQL update, where the draft's SPARQL rule has a construct.
+UPDATE = BELIEF + "update"
 TRANSITION = BELIEF + "Transition"
 
 #  HOW MANY RULE EXECUTIONS ONE PASS MAY SPEND: a stance the agent states of itself in its self
