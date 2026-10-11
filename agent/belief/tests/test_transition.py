@@ -9,7 +9,7 @@ import logging
 import pyoxigraph as ox
 import pytest
 
-from agent.belief.transition import Change, Refused, Rule, applied, asked, ordered, templates, transitions
+from agent.belief.transition import Change, Refused, Rule, applied, asked, ordered, run, scoped, templates, transitions
 
 T = "http://example.org/test#"
 STATE, OTHER = T + "state", T + "other"
@@ -53,7 +53,7 @@ def test_transitions_are_every_active_transition_the_rules_graphs_hold_in_their_
     named = lambda orders: [sorted(r.name[len(T):] for r in order) for order in orders]
     assert named(transitions(store)) == [["countRule", "sawRule"], ["echoRule"]]
     found = next(r for r in transitions(store)[0] if r.name == T + "countRule")
-    assert found.update and found.deletes and found.order == 0.0, "its text and its order travel with it"
+    assert found.update and found.order == 0.0, "its text and its order travel with it"
     update(store, f"""PREFIX : <{T}> PREFIX sh: <http://www.w3.org/ns/shacl#>
         INSERT DATA {{ GRAPH :rules {{ :sawRule sh:deactivated true . :inference a sh:SPARQLRule ; sh:construct "CONSTRUCT {{}} WHERE {{}}" }} }}""")
     assert named(transitions(store)) == [["countRule"], ["echoRule"]]
@@ -99,7 +99,6 @@ def test_an_update_of_one_template_changes_what_that_template_says():
     assert _said(change.deleted) == {("switch", "says", "off"), ("lamp", "is", "Lit")}
     applied(store, change, STATE, [STATE])
     assert _facts(store, STATE) == {("lamp", "seen", "Lit")}
-    assert [r.deletes for r in rules] == [False, True, True]
 
 
 def test_applied_deletes_from_its_targets_alone_then_adds():
@@ -116,6 +115,39 @@ def test_applied_deletes_from_its_targets_alone_then_adds():
     emptied = applied(store, asked(store, [_DARKEN], [STATE, OTHER]), T + "next", [OTHER])
     assert emptied == [OTHER] and _facts(store, OTHER) == set()
     assert _facts(store, T + "next") == {("lamp", "is", "Dark")}
+
+
+def test_scoped_says_the_world_a_rule_changes_and_every_graph_it_reads():
+    """The engine's own update, in the text's own words: `WITH` the world changed, a `USING` per graph
+    read, once each, before the one WHERE; the short `DELETE WHERE` spelled as the form it abbreviates,
+    since it takes neither clause."""
+    w = T + "w"
+    both = scoped(_P + "DELETE { $lamp :is ?was } INSERT { $lamp :is :Dark } WHERE { $lamp :is ?was }", w, [w, STATE, w])
+    assert both == _P.rstrip("\n") + (f"\nWITH <{w}>\nDELETE {{ $lamp :is ?was }}\nINSERT {{ $lamp :is :Dark }}\n"
+                                      f"USING <{w}>\nUSING <{STATE}>\nWHERE {{ $lamp :is ?was }}")
+    short = scoped(_P + "DELETE WHERE { ?l :is :Lit }", w, [w])
+    assert short.endswith(f"WITH <{w}>\nDELETE {{ ?l :is :Lit }}\nUSING <{w}>\nWHERE {{ ?l :is :Lit }}")
+    assert "DELETE" not in scoped(_P + "INSERT { ?l :is :Dark } WHERE { ?l :is ?w }", w, [w])
+
+
+def test_run_changes_the_world_it_is_handed_alone_reading_every_graph_beside_it():
+    """The switch is read where it stands, beside the world; the lamp's Lit is taken out of the world
+    alone and Dark put in, and the same fact in a graph only read stands. One execution a rule."""
+    store = _store()
+    assert run(store, [_DARKEN], OTHER, [OTHER, STATE]) == 1
+    assert _facts(store, OTHER) == {("lamp", "is", "Dark")}
+    assert _facts(store, STATE) == {("lamp", "is", "Lit"), ("switch", "says", "off")}, "read, and not changed"
+
+
+def test_run_applies_each_rule_to_what_the_rule_before_left():
+    """One rule after another, by order and then as an order lists them: the witness run after the
+    darkening sees Dark, where asked of one state with it, it saw Lit (#953)."""
+    store = _store()
+    run(store, [_DARKEN, _WITNESS], STATE, [STATE])
+    assert _facts(store, STATE) == {("lamp", "is", "Dark"), ("lamp", "seen", "Dark"), ("switch", "says", "off")}
+    store = _store()
+    run(store, [Rule(1, _DARKEN.update, "later"), _WITNESS], STATE, [STATE])
+    assert ("lamp", "seen", "Lit") in _facts(store, STATE), "an earlier order runs first, however listed"
 
 
 #  WHAT THE RUNNER REFUSES, each a package's bug: a text naming its graphs four ways, one chaining a
@@ -146,6 +178,11 @@ def test_an_update_naming_its_graphs_or_chaining_operations_changes_nothing(name
     assert change.deleted == []
     with pytest.raises(Refused):
         templates(_P + _REFUSED[name])
+    store = _store()
+    with caplog.at_level(logging.ERROR, logger="transition"):
+        run(store, [Rule(0, _P + _REFUSED[name], name), _WITNESS], STATE, [STATE])
+    assert _facts(store, STATE) == {("lamp", "is", "Lit"), ("switch", "says", "off"), ("lamp", "seen", "Lit")}, \
+        "run, the refused rule changes nothing and the witness still runs"
 
 
 def test_a_refusal_says_why():
@@ -169,4 +206,9 @@ def test_an_update_that_will_not_run_changes_nothing_whole(caplog):
     with caplog.at_level(logging.ERROR, logger="transition"):
         change = asked(store, [rule], [STATE])
     assert change.added == [] and change.deleted == []
+    assert any("unbound" in m for m in caplog.messages), caplog.messages
+    caplog.clear()
+    with caplog.at_level(logging.ERROR, logger="transition"):
+        run(store, [rule], STATE, [STATE])
+    assert _facts(store, STATE) == {("lamp", "is", "Lit"), ("switch", "says", "off")}
     assert any("unbound" in m for m in caplog.messages), caplog.messages

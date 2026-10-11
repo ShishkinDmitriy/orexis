@@ -69,7 +69,7 @@ from datetime import datetime
 
 import pyoxigraph as ox
 
-from agent.belief.transition import applied, asked, transitions
+from agent.belief.transition import run, transitions
 from agent.ontology import ACTION, DRIFT_GRAPH, KNOWN, OREXIS, PREDICTION, PUBLIC, STATE
 from agent.hash_named_graph import digest_of, hash_named_graph
 from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, clear_graph, revisions_of, forget_graph,
@@ -235,19 +235,20 @@ def _transitioned(store: ox.Store, ground: str, arrivals: list[str], rules, own:
     """Every transition each of `arrivals` triggers, applied in `ground` as it is laid (#944).
 
     A PREDICTED OBSERVATION IS AN ARRIVAL THERE, as a received one is in the present: each triggers
-    every transition once, in the order the predictions came, order by order through belief's machine,
+    every transition once, in the order the predictions came, rule by rule through belief's machine,
     reading itself with its revisions, the public graphs and the agent's own state as the ground before
     left it — and nothing else — so a bed believed dry and resting at 0.3001 is foreseen dry, held by the
-    margin as the present holds it. What an order deletes is taken out of the ground, and what it inserts
-    put into it; the working state follows. The runner prepares the target, as every runner does: here
-    it is the ground being laid, and the present is never written to. No budget is spent: a ground
-    holds what its predictions make of it, whole, or it is no ground."""
+    margin as the present holds it. Each rule is the engine's own update, run twice over the same reads:
+    `WITH` the ground, which no rule reads, and then `WITH` the working state, so what it deletes is
+    taken out of both and what it inserts put into both, and the next rule reads the state this one
+    left (#953). The runner prepares the target, as every runner does: here it is the ground being
+    laid, and the present is never written to. No budget is spent: a ground holds what its predictions
+    make of it, whole, or it is no ground."""
     for arrival in arrivals:
         reads = [arrival, *revisions_of(store, arrival), *public, own]
-        for order in rules:
-            change = asked(store, order, reads)
-            applied(store, change, ground, [ground])
-            applied(store, change, own, [own])
+        for rule in (rule for order in rules for rule in order):
+            run(store, [rule], ground, reads)
+            run(store, [rule], own, reads)
 
 
 def _present(store: ox.Store, now: datetime) -> str:

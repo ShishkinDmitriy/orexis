@@ -17,7 +17,9 @@ description: >-
   arrival in the ground the planner lays it into, where its transitions run, changing the ground
   alone and never the present. Amended 2026-10-11 (#951) - a transition is one update text,
   belief:update, its delete and insert templates over one WHERE; every effect rule is typed a
-  transition, and the class sits beneath sh:Rule. Refused - change done by a Python writer
+  transition, and the class sits beneath sh:Rule. Amended 2026-10-11 (#953) - where a rule changes one
+  graph the engine runs its update, rule after rule, and a step is a move where its world differs from
+  the one it left. Refused - change done by a Python writer
   per need, a functional property replaced by the deliberator, rules that delete run to a fixpoint,
   one rule judging every range, and an update text inside sh:construct.
 status: accepted
@@ -64,6 +66,23 @@ timestamp: 2026-10-10T12:00:00Z
 > declared beneath `sh:construct`, as the sovereign asked; nothing entails a subproperty at boot, so
 > the axiom changes no reader. Measured: every case's diff and every world's test reads as it did,
 > the rule texts carried in a case's store aside. The body below is amended to all of it.
+
+> **Amended 2026-10-11 (#953, slice 2): where a rule changes one graph, the engine runs it.** A
+> possible world is the changeable part alone since slice 1, so `take` forks it first and hands each
+> rule to the engine as its own update, `WITH` the fork and a `USING` per graph of the world with the
+> fork in its place, and `lay_ground` runs each transition a predicted observation triggers the same
+> way, twice, `WITH` the ground and `WITH` the working state beside it. The text's delete and insert
+> are one match, as #951 wanted them, and run once where they were two CONSTRUCTs read back into
+> Python. **Rules then run one after another, each reading what the one before left**, where every
+> rule of one order read one state; no shipped effect states two rules, and climate's two transitions
+> of one order are about two properties, so nothing reads differently. **A step is a move where the
+> world it makes differs from the one it found**, where a delete template made it one whatever it
+> matched: an effect putting back what it took passed time as the declared wait does, and is now no
+> move (`agent/planning/tests/plans/an_effect_putting_back_what_it_takes_is_no_move.trig`). **The
+> belief base keeps the two CONSTRUCTs**: a transition there deletes from whichever of the agent's
+> derived state graphs holds a triple, several graphs, and the engine's update deletes from the one
+> it is `WITH` — until the agent's own state is one graph (#953, slice 3), and with it one order
+> reading one state, as `agent/belief/tests/trigger/` still holds there.
 
 # The question
 

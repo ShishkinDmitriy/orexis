@@ -36,25 +36,35 @@ a fixpoint and is a function of its source. The type is how the runner finds a t
 `revise` and planning's [bridge](/domain/planning/bridge.md) reader pass over it, whatever other type
 it states. Every rule of an action's [effect](/domain/planning/effect.md) is one.
 
-# One machine, three runners
+# One machine, two doors, three runners
 
-`agent/belief/transition.py` reads an update with rdflib's update grammar and asks each of its
-templates as the `CONSTRUCT` that template and the one WHERE spell, the text's prologue kept. It
-groups the rules by `sh:order`, an absent order nought, and asks each order whole before any of it is
-applied, over the same graphs, so two rules of one order read one state. Then what the delete
-templates matched is taken out of the graphs the caller names, and what the insert templates made
-goes into the one graph the caller names — removals first. A later order reads what the earlier made.
+`agent/belief/transition.py` reads an update with rdflib's update grammar and sorts the rules by
+`sh:order`, an absent order nought. It has two doors, by how many graphs a rule changes:
+
+- **One graph: the engine's own update.** `run` hands the engine the text itself, `WITH` the graph it
+  changes and a `USING` per graph it reads, the text's prologue kept: its WHERE is matched once and
+  its delete and insert applied together, rule after rule, each reading what the rule before left
+  (#953).
+- **Several graphs: two CONSTRUCTs.** The engine's update deletes from the one graph it is `WITH`, so
+  where a rule's deletions must be taken out of whichever of several graphs holds them, `asked` asks
+  each template as the `CONSTRUCT` that template and the one WHERE spell, every rule of one order of
+  the same state, and `applied` takes what the delete templates matched out of the graphs the caller
+  names and puts what the insert templates made into the one it names — removals first. A later order
+  reads what the earlier made.
+
 A text that names its graphs — `WITH`, `USING`, a `GRAPH` in a template or the WHERE — that chains a
 second operation with `;`, that is no `DELETE`/`INSERT … WHERE`, or that will not bind or run changes
 nothing, the whole of it, and is said in the log by the rule's name.
 
-- **Planning** applies an action's [effect](/domain/planning/effect.md) through it, in the possible
-  world a step makes: the world's graphs are read, and the new world is both what is taken from and
-  what is added to.
-- **The belief package** applies a percept's transition (`trigger`), once, when an arrival of
-  testimony triggers it.
-- **Planning** applies the same transitions (`transitions`, the one read of them both use) in each
-  ground it lays ahead, once per predicted observation arriving there (`lay_ground`, #944). Below.
+- **Planning** applies an action's [effect](/domain/planning/effect.md) through `run`, in the
+  possible world a step makes: the world's graphs are read, and the new world is both what is taken
+  from and what is added to.
+- **The belief package** applies a percept's transition (`trigger`) through `asked` and `applied`,
+  once, when an arrival of testimony triggers it: what it deletes is taken out of whichever of the
+  agent's state graphs holds it, which is several graphs, until the agent's own state is one (#953).
+- **Planning** applies the same transitions (`transitions`, the one read of them both use) through
+  `run` in each ground it lays ahead, once per predicted observation arriving there (`lay_ground`,
+  #944). Below.
 
 # What triggers it
 
@@ -124,12 +134,13 @@ both at the boundary: a command sizing a step when it is taken, and a drift.
 A prediction is the agent's own and no testimony, so in the belief base it triggers nothing. But a
 [ground](/domain/prediction/prediction.md) the planner lays ahead is the period before it with the
 prediction applied, and the prediction's predicted observation ARRIVES there as a received one
-arrives in the present: `lay_ground` runs every transition it triggers, once, order by order, through
-this machine. Each order reads the predicted observation with its revisions, the public graphs, and
+arrives in the present: `lay_ground` runs every transition it triggers, once, rule by rule, through
+this machine. Each rule reads the predicted observation with its revisions, the public graphs, and
 the agent's own state as the ground before it left it — kept apart from the ground while the grounds
 are laid, since a ground is one graph and holds testimony beside the state, and a transition is
-handed no testimony but its arrival. What an order deletes is taken out of the ground and what it
-inserts put into it: the runner's target is the ground being laid, and the present is never written
+handed no testimony but its arrival. Each rule is run twice over those reads, `WITH` the ground and
+then `WITH` the working state, so what it deletes is taken out of both and what it inserts put into
+both: the runner's target is the ground being laid, and the present is never written
 to. So a bed believed dry and resting at 0.3001 is foreseen dry, the hold reaching the forecast, and
 a ground that comes to hold what the one before held is still no period
 (`agent/planning/tests/lay_ground/a_predicted_reading_is_judged_beside_the_state_the_ground_before_held.trig`).
