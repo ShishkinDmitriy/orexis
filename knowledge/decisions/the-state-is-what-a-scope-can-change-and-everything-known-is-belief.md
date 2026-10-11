@@ -167,6 +167,11 @@ them were answering the second and third questions with a class.
 > always say a subject belief. A revision of a belief is a belief, so the readers that walk the agent's
 > own leave revisions to go with their sources. Every case reads as it did.
 
+> **Amended 2026-10-11: what changed is a diff of names.** A graph a copy is made of is never changed
+> under its name ([a-graph-is-never-changed-under-its-name](/decisions/a-graph-is-never-changed-under-its-name.md)),
+> so the imaginarium refreshes the names that came and went and keeps every copy of a name that stands,
+> hearing no signal from any writer.
+
 After #951, since the writers' templates are what define the state and #951 makes each writer one
 update text parsed by rdflib. Then three slices, each keeping every world's figures:
 
