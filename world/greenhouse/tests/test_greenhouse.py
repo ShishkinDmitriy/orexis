@@ -66,7 +66,7 @@ def _held(beliefs) -> set[tuple[str, str]]:
     q = """PREFIX climate: <http://example.org/orexis/climate#>
            SELECT ?p ?state WHERE { ?bed ?p ?state . VALUES ?p { climate:soil climate:air } }"""
     return {(r["p"].rsplit("#", 1)[-1], r["state"].rsplit("#", 1)[-1])
-            for r in rows(beliefs, q, graphs_of(beliefs, OREXIS + "StateGraph"))}
+            for r in rows(beliefs, q, graphs_of(beliefs, OREXIS + "BeliefGraph"))}
 
 
 def test_the_grower_listens_to_the_instruments_of_the_bed_it_acts_for(monkeypatch):

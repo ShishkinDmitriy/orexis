@@ -18,8 +18,9 @@ a peer's word is not read beside an arrival it is not. So a WHERE asking for an 
 property can match only the arrival, and on any other arrival it matches nothing and changes nothing:
 the rule's WHERE says what it is about.
 
-**WHERE IT WRITES.** What an order inserts goes into a state graph of the arrival's own — the kernel's
-`orexis:StateGraph`, the arrival's owner's and derived, holding over the arrival's period — so a state
+**WHERE IT WRITES.** What an order inserts goes into a state graph of the arrival's own — a belief
+graph, the kernel's `orexis:BeliefGraph`, the arrival's owner's and derived, holding over the arrival's
+period, and no revision — so a state
 lasts as long as what it was made of, and a silence ends it as it ends the arrival. What an order
 deletes is taken out of whichever of the agent's own derived state graphs holds it, and one left empty
 is forgotten, row and all. Testimony is never a target: a graph received or heard, a public graph, an
@@ -42,7 +43,7 @@ from dataclasses import dataclass
 
 import pyoxigraph as ox
 
-from agent.ontology import OREXIS, PUBLIC, STATE
+from agent.ontology import BELIEF, OREXIS, PUBLIC
 from agent.store import Raw, bind, catalogue_of, entry, forget_graph, graphs_of, revisions_of, rows, update
 
 from .ontology import REVISION_GRAPH, state_graph
@@ -61,10 +62,13 @@ SELECT ?owner ?start ?end WHERE {
                           OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1"""
 
-#  EVERY STATE GRAPH THE AGENT DERIVED, of any period: its own state, which a transition reads and
-#  deletes from.
+#  EVERY BELIEF THE AGENT DERIVED, of any period, that is no revision: its own state, which a transition
+#  reads and deletes from. What an inference concluded goes with its source and is no transition's to
+#  take; and what the closure and the world's rules derived for everyone is no state of the agent's.
 _DERIVED_Q = """
-SELECT ?g WHERE { GRAPH $cat { ?g a orexis:StateGraph ; orexis:arrivedBy orexis:Derived } } ORDER BY ?g"""
+SELECT ?g WHERE { GRAPH $cat { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
+                               FILTER NOT EXISTS { ?g a belief:RevisionGraph }
+                               FILTER NOT EXISTS { ?g a orexis:PublicGraph } } } ORDER BY ?g"""
 
 #  A ROW, AND ITS PERIOD, TAKEN BACK — for an arrival's state graph said again of a later arrival.
 _UNDESCRIBE_U = """
@@ -140,4 +144,4 @@ def _describe(store, cat: str, into: str, row: dict) -> None:
     the arrival's owner's, derived, over the arrival's period — and any row it had of an earlier arrival
     taken back first, since a graph's stretch is its row's and the rows it holds are this arrival's now."""
     update(store, bind(_UNDESCRIBE_U, cat=Raw(f"<{cat}>"), graph=into))
-    update(store, f"INSERT DATA {{ {entry(store, into, STATE, OREXIS + 'Derived', row.get('owner'), row.get('start'), row.get('end'))} }}")
+    update(store, f"INSERT DATA {{ {entry(store, into, BELIEF, OREXIS + 'Derived', row.get('owner'), row.get('start'), row.get('end'))} }}")

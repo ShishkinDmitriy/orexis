@@ -20,7 +20,7 @@
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
 @@ -79,8 +69,12 @@
-   :sensed a orexis:StateGraph .
+   :sensed a orexis:BeliefGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 -  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .

@@ -76,8 +76,8 @@ import logging
 
 import pyoxigraph as ox
 
-from agent.belief.ontology import RULES_GRAPH
-from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD, STATE
+from agent.belief.ontology import REVISION_GRAPH, RULES_GRAPH
+from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD
 from agent.store import catalogue_of, forget_graph, graphs_of, revisions_of, rows
 
 from .ontology import CHANGEABLE_GRAPH, DESIRE, SCOPE_GRAPH, WANT
@@ -167,7 +167,7 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
 
 
 def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset[str]:
-    """Every state and prediction that is other scopes' alone, with its revisions: a graph of
+    """Every belief of the agent's and every prediction that is other scopes' alone, with its revisions: a graph of
     the kinds the ground is made of whose quads, taken with what was concluded of it, name — as a
     subject, a predicate or an object — members whose scopes meet without `scope`. The test is
     `admit`'s on a filling's values, asked of a graph's: a predicted observation names its feature
@@ -180,7 +180,10 @@ def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset
     if scope is None or not scopes or len(scopes.all()) < 2:
         return frozenset()
     behind: set[str] = set()
-    for graph in graphs_of(beliefs, STATE, PREDICTION):
+    #  THE AGENT'S OWN, EACH WITH ITS REVISIONS: what everyone reads is every scope's and is asked nothing,
+    #  and a revision is asked with its source, not on its own.
+    skip = set(graphs_of(beliefs, PUBLIC, REVISION_GRAPH))
+    for graph in (g for g in graphs_of(beliefs, BELIEF, PREDICTION) if g not in skip):
         group = [graph, *revisions_of(beliefs, graph)]
         named: set[str] = set()
         for g in group:
@@ -198,7 +201,7 @@ def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset
 #  THE KINDS THAT CROSS, spelled once for the filling and the refresh — the rules graphs among them,
 #  since a ground laid here runs the transitions a predicted observation triggers (`lay_ground`, #944),
 #  and they are the rules the beliefs hold, read where they lie.
-CROSSING = (PUBLIC, STATE, PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH, RULES_GRAPH)
+CROSSING = (PUBLIC, PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH, RULES_GRAPH)
 
 #  WHAT THE STORE MADE FOR ITSELF, which a refresh keeps: the grounds, the possible worlds and
 #  the plans, which are planning's kinds, and the wants the derivation minted, which are a

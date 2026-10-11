@@ -4,7 +4,7 @@ title: Speech
 description: >-
   What a peer says to an agent and what the agent says, both DOCUMENTS — TriG naming its graphs
   and saying what each one is, as a world's files do. `heard` believes a peer's document where
-  every graph it holds is a state of the world and replaces only what a peer said; `said`
+  every graph it holds is a belief a peer may say and replaces only what a peer said; `said`
   believes what the agent told a peer. Neither concludes anything; the rules do.
 ---
 
@@ -18,8 +18,9 @@ says what each one is. So there is no pipeline, only a door. It is loaded for an
 [speaker](/domain/speech/speaker.md), and for no other.
 
 - **`heard(store, me, payload)`** believes a document a transport received on the agent's own
-  topic. Every graph in it must be a kind beneath `orexis:StateGraph` — a peer reports what IS,
-  never a desire, an action or a rule — and a graph of the same name already held must have
+  topic. Every graph in it must be a kind beneath `orexis:BeliefGraph` and not beneath
+  `orexis:PublicGraph` — a peer reports what IS, never the world's documents, a desire, an action or
+  a rule; an interim gate, which #958 replaces by making a peer's word testimony — and a graph of the same name already held must have
   arrived `orexis:Received`, so a host saying its round again replaces the round its bidders
   hold, and no peer rewrites what the agent said or its world asserts. A document failing either
   is refused whole, in the log.

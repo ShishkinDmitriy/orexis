@@ -84,6 +84,11 @@ timestamp: 2026-10-10T12:00:00Z
 > it is `WITH` — until the agent's own state is one graph (#953, slice 3), and with it one order
 > reading one state, as `agent/belief/tests/trigger/` still holds there.
 
+> **Amended 2026-10-11 (#953, slice 3): the target is a belief.** `orexis:StateGraph` folded into
+> `orexis:BeliefGraph`, so the state graph `trigger` prepares for an arrival is a belief the agent
+> derived, and what a transition reads and deletes from is every belief the agent derived that is no
+> revision and nothing everyone reads. Where the body below says a kernel `orexis:StateGraph`, read that.
+
 # The question
 
 Slice 1 of #944 (#947) needed a subject's state to be replaced by the next reading's, with the state

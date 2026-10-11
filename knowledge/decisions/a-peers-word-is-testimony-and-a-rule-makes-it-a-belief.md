@@ -28,8 +28,9 @@ arrived `orexis:Received`.
 folds that kind into `orexis:BeliefGraph`, and the gate loses its footing: the ontology, the world,
 the society and the self are beliefs too. The record moved the gate to the readers, every reader of
 what defines the agent taking only what arrived asserted. Slice 3 of #953 keeps it at the writer for
-now, a kind beneath `orexis:BeliefGraph` and not beneath `orexis:PublicGraph`, which is today's safety
-with the state kind gone.
+now, a kind beneath `orexis:BeliefGraph` and not beneath `orexis:PublicGraph`: today's safety with the
+state kind gone, less two kinds the state kind kept out, a committed step and a forecast, which a peer
+may now say as it could always say a subject belief.
 
 Both shapes leave the same thing standing: a peer's document is read as belief by whatever reads its
 kind. A peer saying `:bed climate:soil climate:Dry` in a graph it types as one of the market's would be

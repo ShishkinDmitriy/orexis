@@ -19,7 +19,7 @@ _ARRIVAL_Q = "SELECT ?a ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $
 def store():
     st = ox.Store()
     update(st, f"""INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
-        <{T}heard> a orexis:StateGraph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> . }} }}""")
+        <{T}heard> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> . }} }}""")
     return st
 
 
@@ -27,7 +27,7 @@ def _doc(graph, fact):
     doc = ox.Store()
     doc.add(ox.Quad(ox.NamedNode(graph), ox.NamedNode(T + "says"), ox.Literal(fact), ox.NamedNode(graph)))
     doc.add(ox.Quad(ox.NamedNode(graph), ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                    ox.NamedNode(OREXIS + "StateGraph"), ox.DefaultGraph()))
+                    ox.NamedNode(OREXIS + "BeliefGraph"), ox.DefaultGraph()))
     return doc
 
 

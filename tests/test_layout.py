@@ -218,7 +218,7 @@ def test_onboarding_refuses_a_world_holding_a_kind_no_reader_declares(tmp_path, 
     hanoi = REPO_ROOT / "world" / "hanoi"
     (world / "world.ttl").write_text((hanoi / "world.ttl").read_text().replace("<../../domains/hanoi/ontology.ttl>", f"<{domain}>"))
     (world / "wants.ttl").write_text((hanoi / "wants.ttl").read_text())
-    (world / "state.ttl").write_text((hanoi / "state.ttl").read_text().replace("orexis:StateGraph", "orexis:StateGrpah"))
+    (world / "state.ttl").write_text((hanoi / "state.ttl").read_text().replace("orexis:BeliefGraph", "orexis:StateGrpah"))
     assert [line.split(":", 1)[0] for line in reading.unread(world)] == ["state.ttl"]
     monkeypatch.setattr(onboard, "world_dir", lambda name: world)
     with pytest.raises(SystemExit, match="StateGrpah"):
@@ -1248,7 +1248,7 @@ def test_onboarding_passes_over_its_own_kinds_quietly_and_an_unknown_kind_aloud(
     domain = (REPO_ROOT / "domains" / "hanoi" / "ontology.ttl").as_uri()
     hanoi = REPO_ROOT / "world" / "hanoi"
     (world / "world.ttl").write_text((hanoi / "world.ttl").read_text().replace("<../../domains/hanoi/ontology.ttl>", f"<{domain}>"))
-    (world / "state.ttl").write_text((hanoi / "state.ttl").read_text().replace("orexis:StateGraph", "orexis:StateGrpah"))
+    (world / "state.ttl").write_text((hanoi / "state.ttl").read_text().replace("orexis:BeliefGraph", "orexis:StateGrpah"))
     with caplog.at_level(logging.DEBUG, logger="runtime"):
         reading.world(world)
     aloud = [r for r in caplog.records if r.getMessage().startswith("passed over") and r.levelno >= logging.INFO]

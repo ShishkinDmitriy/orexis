@@ -29,7 +29,7 @@ from datetime import datetime
 
 import pyoxigraph as ox
 
-from agent.ontology import GRAPH_PREFIX, OREXIS, STATE, local_of
+from agent.ontology import BELIEF, GRAPH_PREFIX, OREXIS, local_of
 from agent.store import classify, graphs_of, instant, quads_for_pattern, revisions_of, rows, update
 
 from .bridge import binding, expand, literal, heads, predicted
@@ -55,9 +55,9 @@ def refine(store: ox.Store, me: str, step: str, now: datetime) -> str | None:
     adds, retracts = predicted(store, step)
     if not any(f[1].value in concluded for f in adds):
         return None
-    states = graphs_of(store, STATE)
+    beliefs = graphs_of(store, BELIEF)
     present = {(q.subject, q.predicate, q.object)
-               for p in concluded for g in (*states, *revisions_of(store, *states))
+               for p in concluded for g in (*beliefs, *revisions_of(store, *beliefs))
                for q in quads_for_pattern(store, None, ox.NamedNode(p), None, g)}
     target = sorted(present - set(retracts) | {f for f in adds if f[1].value in concluded}, key=str)
     prefixes, conjuncts = set(), []

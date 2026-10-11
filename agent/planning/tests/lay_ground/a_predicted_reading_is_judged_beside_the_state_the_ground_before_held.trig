@@ -37,7 +37,7 @@
 
 GRAPH :ontology {
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
-  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -90,7 +90,7 @@ GRAPH :rising {
 
 GRAPH :catalogue {
   :believed a orexis:Graph .
-  :believed a orexis:StateGraph .
+  :believed a orexis:BeliefGraph .
   :believed orexis:arrivedBy orexis:Derived .
   :believed orexis:beliefsOf :keeper .
   :catalogue a orexis:CatalogueGraph .
@@ -125,7 +125,7 @@ GRAPH :catalogue {
   :rules a orexis:Graph .
   :rules a sh:RulesGraph .
   :sensed a orexis:Graph .
-  :sensed a orexis:StateGraph .
+  :sensed a orexis:BeliefGraph .
   :sensed orexis:arrivedBy orexis:Received .
   :sensed orexis:beliefsOf :keeper .
   :world a orexis:Graph .

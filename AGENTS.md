@@ -491,7 +491,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   is told from an inference by whether its result depends on what it replaces
   (a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A rule never knows the kind of graph it writes, and each runner prepares its target** — revision
-  the source's revision graph, an effect the world it forked, `trigger` a kernel `orexis:StateGraph` of
+  the source's revision graph, an effect the world it forked, `trigger` a kernel `orexis:BeliefGraph` of
   the arrival's own, `lay_ground` the ground it lays; the belief package's own kind for the target was
   a second name for the state (#947, transition).
 - **A transition is a typed rule and declares no trigger: every arrival of testimony triggers every
@@ -586,7 +586,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **The transport speaks MQTT4SSN, and a topic is named by the filters that match it** — the agent
   subscribes by the pattern and publishes to one with no wildcard; the broker's address stays in the
   environment.
-- **A peer's word is a document, believed as it stands where it is state**; **the market is files** —
+- **A peer's word is a document, believed as it stands where it is a belief and nothing everyone
+  reads** — a gate at the writer until #958 makes a peer's word testimony; **the market is files** —
   six actions whose `execution:Saying` operations make the documents at take time (`domains/market/`).
 - **Signing is between agents, and an agent trusts itself** — the broker's ACL already admits only
   the holder to its devices' command topics.

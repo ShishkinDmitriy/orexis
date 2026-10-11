@@ -29,13 +29,14 @@ NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 CADENCE = timedelta(minutes=10)
 GH = "http://example.org/orexis/world/greenhouse#"
 CLIMATE = "http://example.org/orexis/climate#"
-STATE = "http://example.org/orexis#StateGraph"
+BELIEF = "http://example.org/orexis#BeliefGraph"
 SOIL, AIR = "sensors/moisture_probe/reading", "sensors/thermometer/reading"
 
-#  THE GROWER'S OWN STATE: every state graph it derived, which is where a transition writes and where
-#  sensing says a sensor silent — never a percept, which is no state at all (#944).
+#  THE GROWER'S OWN STATE: every belief it derived that is no revision, which is where a transition
+#  writes and where sensing says a sensor silent — never a percept, which is no belief at all (#944).
 _DERIVED_Q = """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-    ?g a orexis:StateGraph ; orexis:arrivedBy orexis:Derived } }"""
+    ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
+    FILTER NOT EXISTS { ?g a belief:RevisionGraph } FILTER NOT EXISTS { ?g a orexis:PublicGraph } } }"""
 
 #  WHAT THE BED IS BELIEVED, in climate's words, for one property: its state.
 _BELIEVED_Q = """SELECT ?state WHERE { $bed $state_as ?state }"""
@@ -69,7 +70,7 @@ def _grower(monkeypatch, store=None):
 def _own_state(beliefs, at: datetime | None = None) -> list[str]:
     """The grower's own state graphs — holding at `at` where given."""
     derived = {r["g"] for r in rows(beliefs, _DERIVED_Q)}
-    return [g for g in (graphs_of(beliefs, STATE, at=at) if at is not None else graphs_of(beliefs, STATE)) if g in derived]
+    return [g for g in (graphs_of(beliefs, BELIEF, at=at) if at is not None else graphs_of(beliefs, BELIEF)) if g in derived]
 
 
 def _believed(beliefs, words: str, at: datetime | None = None) -> str | None:

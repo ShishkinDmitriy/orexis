@@ -29,7 +29,7 @@ _CASE = """
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph , orexis:Graph .
   :rules a sh:RulesGraph , orexis:PublicGraph , orexis:Graph .
-  :state a orexis:StateGraph , orexis:Graph .
+  :state a orexis:BeliefGraph , orexis:Graph .
 }
 GRAPH :rules {
   :stands a sh:SPARQLRule ; sh:construct \"\"\"PREFIX : <http://example.org/test#>

@@ -1,7 +1,7 @@
 --- case
 +++ expected
 @@ -67,4 +67,43 @@
-   :sensed a orexis:StateGraph .
+   :sensed a orexis:BeliefGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .

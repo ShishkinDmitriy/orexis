@@ -15,7 +15,7 @@
  
  GRAPH :held_ahead {
 @@ -71,6 +67,9 @@
-   :believed a orexis:StateGraph .
+   :believed a orexis:BeliefGraph .
    :believed orexis:arrivedBy orexis:Derived .
    :believed orexis:beliefsOf :keeper .
 +  :believed.changeable a planning:ChangeableGraph .
@@ -25,7 +25,7 @@
    :catalogue a orexis:Graph .
    :held_ahead a orexis:Graph .
 @@ -106,6 +105,55 @@
-   :sensed a orexis:StateGraph .
+   :sensed a orexis:BeliefGraph .
    :sensed orexis:arrivedBy orexis:Received .
    :sensed orexis:beliefsOf :keeper .
 +  :sensed.changeable a planning:ChangeableGraph .

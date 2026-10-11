@@ -484,7 +484,7 @@ WHERE  {{ GRAPH <{catalogue}> {{ }}
 #
 #  A FILE IS READ AS THE GRAPHS IT HOLDS AND THE ROWS IT STATES ABOUT THEM. The conventions are
 #  the two RDF already has. A Turtle file is ONE graph, named by the document's own IRI, and
-#  `<> a orexis:StateGraph` in it says what that graph is — the Linked Data reading, where a
+#  `<> a orexis:BeliefGraph` in it says what that graph is — the Linked Data reading, where a
 #  document describes itself and the graph store's protocol names a graph by its document. A
 #  TriG file names its graphs in `GRAPH <…> { }` blocks and states the rows about them in its
 #  default graph, as a nanopublication's head does. Both are read into one shape, a dataset

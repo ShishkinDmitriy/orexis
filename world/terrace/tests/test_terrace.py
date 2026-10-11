@@ -13,11 +13,20 @@ import pyoxigraph as ox
 import pytest
 
 from agent import clock
-from agent.ontology import STATE
+from agent.belief.ontology import REVISION_GRAPH
+from agent.execution.ontology import COMMITTED_STEP_GRAPH
+from agent.ontology import BELIEF, PUBLIC, SELF_GRAPH
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import graphs_of, rows
 from agent.series import HISTORY, Sink, install
 from agent.transport.mqtt.driver import Mqtt
+
+
+def _own(beliefs) -> list[str]:
+    """The agent's own beliefs, as the state documents were: no world's document, no self graph, no
+    revision, which goes with its source, and no committed step, which is the executor's record."""
+    shared = set(graphs_of(beliefs, PUBLIC, SELF_GRAPH, REVISION_GRAPH, COMMITTED_STEP_GRAPH))
+    return [g for g in graphs_of(beliefs, BELIEF) if g not in shared]
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -82,7 +91,7 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
         graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph"))}
     assert read == {"SoilMoisture": 0.2, "AirTemperature": 14.5, "AirHumidity": 0.8, "AirPressure": 1012.0,
                     "BatteryVoltage": 3.91}
-    held = rows(runtime.beliefs, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", graphs_of(runtime.beliefs, STATE))
+    held = rows(runtime.beliefs, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", _own(runtime.beliefs))
     assert [(r["s"].rsplit("#", 1)[-1], r["p"].rsplit("#", 1)[-1], r["o"].rsplit("#", 1)[-1]) for r in held] == \
         [("terrace_bed", "soil", "Dry")], "under the bed's floor, and nothing of the readings themselves"
     assert broker.published == [], "nothing is wanted, so nothing is sent"
@@ -101,7 +110,7 @@ def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monke
     later = NOW + timedelta(minutes=100)
     monkeypatch.setattr(clock, "now", lambda: later)
     runtime.run(passes=1, poll_s=0)
-    silent = rows(runtime.beliefs, "SELECT ?s WHERE { ?s sensing:silentSince ?t } ORDER BY ?s", graphs_of(runtime.beliefs, STATE))
+    silent = rows(runtime.beliefs, "SELECT ?s WHERE { ?s sensing:silentSince ?t } ORDER BY ?s", _own(runtime.beliefs))
     assert [r["s"].rsplit("#", 1)[-1] for r in silent] == [
         "air_humidity_terrace", "air_pressure_terrace", "air_temp_terrace", "battery_sensor_terrace",
         "moisture_sensor_terrace"]

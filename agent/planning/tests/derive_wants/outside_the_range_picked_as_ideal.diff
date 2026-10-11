@@ -12,7 +12,7 @@
    :keeper planning:holds :keeper.ideal .
    :keeper.ideal a planning:Desire .
 @@ -114,4 +114,60 @@
-   :sensed a orexis:StateGraph .
+   :sensed a orexis:BeliefGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .

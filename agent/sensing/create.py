@@ -22,7 +22,7 @@ the graph to belief before it says it; and with how long after the percept befor
 off that percept, which is kept (`sensing:previous`, #944) — `silence`, how many sensors are said silent after each ask — and
 `doubted`, which sensors are said silent or stuck after each ask, one event per sensor doubted, and
 one saying neither for a sensor doubted at the last ask and no longer, so the series' last word on it
-in a window is that it is fine (#894). Silent is a state graph `missed` writes; stuck is what
+in a window is that it is fine (#894). Silent is a belief `missed` writes; stuck is what
 sensing's rule concluded of the latest percept, read where that percept holds now.
 """
 
@@ -54,14 +54,14 @@ SELECT ?sensor ?feature ?property ?value ?t ?raw ?previous WHERE {
 #  WHEN THE PERCEPT BEFORE IT WAS MADE, read where sensing keeps it.
 _MADE_Q = "SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1"
 
-#  THE SENSORS SAID SILENT NOW: `sensing:silentSince` in a state graph of the agent's.
+#  THE SENSORS SAID SILENT NOW: `sensing:silentSince` in a belief graph of the agent's.
 _SILENT_Q = """
 SELECT (COUNT(DISTINCT ?sensor) AS ?silent)
-WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { ?sensor sensing:silentSince ?since } }"""
+WHERE { GRAPH $cat { ?g a orexis:BeliefGraph } GRAPH ?g { ?sensor sensing:silentSince ?since } }"""
 
-#  THE SENSORS SAID SILENT NOW, each: the row in a state graph of the agent's.
+#  THE SENSORS SAID SILENT NOW, each: the row in a belief graph of the agent's.
 _SILENT_EACH_Q = """
-SELECT DISTINCT ?sensor WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { ?sensor sensing:silentSince ?since } }"""
+SELECT DISTINCT ?sensor WHERE { GRAPH $cat { ?g a orexis:BeliefGraph } GRAPH ?g { ?sensor sensing:silentSince ?since } }"""
 
 #  THE SENSORS STUCK NOW: what sensing's rule concluded of the percept holding now.
 _STUCK_Q = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }"

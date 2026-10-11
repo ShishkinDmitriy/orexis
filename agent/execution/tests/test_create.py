@@ -11,7 +11,7 @@ from agent.lifecycle import Signal
 from agent.execution.executor import Executor
 from agent.belief.events import Revised
 from agent.execution.create import create
-from agent.ontology import STATE
+from agent.ontology import BELIEF
 from agent.store import entry, graphs_of, update
 
 BENCH = Path(__file__).resolve().parents[2] / "planning" / "tests" / "bench"
@@ -51,7 +51,7 @@ def test_its_part_adopts_what_is_published_and_ends_what_was_reached_untaken(mon
     assert [seconds for seconds, _ in runtime.timers] == [0], "a walk every pass"
     belief.deliberator.revised.emit(Revised(("urn:g",)))
     assert runtime.jobs == [], "a graph revised that is not the present — a prediction, a committed step — answers no step"
-    (state,) = graphs_of(store, STATE)
+    (state,) = graphs_of(store, BELIEF)
     belief.deliberator.revised.emit(Revised((state,)))
     assert len(runtime.jobs) == 1, "the present changed, so a walk is queued"
     #  THE WALK A REVISION QUEUED IS THE DRAIN'S, and marks no lap: a lap is from the last mark, so
@@ -108,7 +108,7 @@ def _dosing(monkeypatch, snapshots, stand_in_runtime, reading: str | None):
            + entry(store, PLAN, "http://example.org/orexis#PlanGraph", "http://example.org/orexis#Recorded") + " }")
     if reading is not None:
         update(store, f"INSERT DATA {{ GRAPH <{T}sensed> {{ <{T}soil> sosa:hasSimpleResult {reading} }} "
-               + entry(store, T + "sensed", "http://example.org/orexis#StateGraph", "http://example.org/orexis#Received")
+               + entry(store, T + "sensed", "http://example.org/orexis#BeliefGraph", "http://example.org/orexis#Received")
                + " }")
     sent = []
     part.executor.commanded.connect(lambda c: sent.append((c.actuator, c.payload)) or [])

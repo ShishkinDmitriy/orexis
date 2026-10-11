@@ -87,7 +87,7 @@ def _tank(tmp_path, butt: int, *predicted):
     (tmp_path / "beliefs").mkdir()
     (tmp_path / "world.ttl").write_text(_WORLD)
     (tmp_path / "actions.ttl").write_text(_ACTIONS)
-    (tmp_path / "state.ttl").write_text(_HEAD + "<> a orexis:StateGraph ; orexis:beliefsOf :keeper .\n"
+    (tmp_path / "state.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph ; orexis:beliefsOf :keeper .\n"
                                         f":tank1 :level 4 .\n:butt :holds {butt} .\n")
     (tmp_path / "beliefs" / "keeper.ttl").write_text(_DESIRES)
     (tmp_path / "beliefs" / "keeper.self.ttl").write_text(_HEAD + "<> a orexis:SelfGraph .\n"

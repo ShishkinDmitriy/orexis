@@ -111,7 +111,7 @@
  
  GRAPH :catalogue {
 @@ -115,4 +131,97 @@
-   :sensed a orexis:StateGraph .
+   :sensed a orexis:BeliefGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 -}

@@ -70,7 +70,7 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent.belief.transition import run, transitions
-from agent.ontology import ACTION, DRIFT_GRAPH, KNOWN, OREXIS, PREDICTION, PUBLIC, STATE
+from agent.ontology import ACTION, DRIFT_GRAPH, KNOWN, OREXIS, PREDICTION, PUBLIC
 from agent.hash_named_graph import digest_of, hash_named_graph
 from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, clear_graph, revisions_of, forget_graph,
                          graphs_of, quads, rows, update)
@@ -204,11 +204,14 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     return made
 
 
-#  THE STATE GRAPHS THE AGENT DERIVED — what the transitions wrote of each arrival of testimony, the
-#  subject beliefs among them — as against those it received, which are testimony.
+#  THE BELIEFS THE AGENT DERIVED — what the transitions wrote of each arrival of testimony, the subject
+#  beliefs among them — as against those it received, which are testimony: no revision, which goes with
+#  its source, and nothing everyone reads; as `trigger` reads the agent's own state.
 _DERIVED_Q = """
 SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                               ?g a orexis:StateGraph ; orexis:arrivedBy orexis:Derived } } ORDER BY ?g"""
+                               ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
+                               FILTER NOT EXISTS { ?g a belief:RevisionGraph }
+                               FILTER NOT EXISTS { ?g a orexis:PublicGraph } } } ORDER BY ?g"""
 
 #  WHERE THE AGENT'S OWN STATE IS KEPT WHILE THE GROUNDS ARE LAID: a working graph, not a belief,
 #  handed by name to the transitions and taken away when the last ground is laid. Its name is for eyes.
@@ -216,8 +219,8 @@ _OWN = "http://example.org/orexis/graph/ground/own-state"
 
 
 def _own_state(store: ox.Store) -> str:
-    """The agent's own state as the present ground holds it — every state graph the agent derived,
-    copied into a working graph of its own — and the working graph's name.
+    """The agent's own state as the present ground holds it — every belief the agent derived that is
+    no revision and nothing everyone reads, copied into a working graph of its own — and the working graph's name.
 
     APART FROM THE GROUND because a ground is one graph and holds testimony beside the state: the
     observations the present holds and the predicted ones each boundary brings. A transition is handed
@@ -300,7 +303,7 @@ def _split(store: ox.Store, actions=None, at: datetime | None = None) -> list[st
         patterns = sorted(set(patterns) | _predicted(store), key=lambda p: (p[0], p[1] or ""))
     defining = set(graphs_of(store, *_DEFINING))
     made = []
-    for graph in graphs_of(store, *KNOWN, STATE):
+    for graph in graphs_of(store, *KNOWN):
         if graph in defining:
             continue
         g = ox.NamedNode(graph)

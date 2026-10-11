@@ -39,7 +39,7 @@
 
 GRAPH :ontology {
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
-  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -84,7 +84,7 @@ GRAPH :catalogue {
   :ontology a orexis:OntologyGraph .
   :ontology a orexis:PublicGraph .
   :sensed a orexis:Graph .
-  :sensed a orexis:StateGraph .
+  :sensed a orexis:BeliefGraph .
   :sensed orexis:beliefsOf :keeper .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .

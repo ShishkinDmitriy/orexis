@@ -12,7 +12,7 @@
 @@ -87,6 +85,131 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
-   :sensed a orexis:StateGraph .
+   :sensed a orexis:BeliefGraph .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
 +  :sensed.changeable prov:wasDerivedFrom :sensed .

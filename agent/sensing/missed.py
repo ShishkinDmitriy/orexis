@@ -17,8 +17,8 @@ period's end already says it, and a mark would say it twice.
 `sensing:silentAfter` cadences and more — the agent's limit, a stance in its self graph, and
 `SILENT_AFTER` where it states none — gets `sensing:silentSince` the instant its last reading fell
 due — named for the state, not for the tick that noticed — in a graph of the agent's own
-classified `orexis:StateGraph`, the kernel's kind, since a silence is a fact a plan may
-change, holding from that instant and present while the silence lasts; the sensor's next
+classified `orexis:BeliefGraph`, the kernel's kind, arrived `orexis:Derived`, since a silence is
+the agent's own conclusion about its sensor, holding from that instant and present while the silence lasts; the sensor's next
 reading drops it at the writer (`received`). Said once: a sensor already said silent is not
 re-said on every tick. SOSA and SSN say how often a sensor reports and nothing about one that
 has stopped, so this is one of sensing's own words.
@@ -35,7 +35,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
-from agent.ontology import STATE, local_of
+from agent.ontology import BELIEF, local_of
 from agent.stance import stance
 from agent.store import Raw, catalogue_of, entry, remember, rows, update
 
@@ -48,9 +48,9 @@ log = logging.getLogger("missed")
 #  agent's self graph states no `sensing:silentAfter` of it.
 SILENT_AFTER = 3
 
-#  EVERY SENSOR SAID SILENT ALREADY: the row in a state graph of the agent's.
+#  EVERY SENSOR SAID SILENT ALREADY: the row in a belief graph of the agent's.
 _SILENT_Q = """
-SELECT DISTINCT ?sensor WHERE { GRAPH $cat { ?sg a orexis:StateGraph } GRAPH ?sg { ?sensor sensing:silentSince ?since } }"""
+SELECT DISTINCT ?sensor WHERE { GRAPH $cat { ?sg a orexis:BeliefGraph } GRAPH ?sg { ?sensor sensing:silentSince ?since } }"""
 
 
 def missed(store, me: str, now: datetime, *, memo=None) -> list[str]:
@@ -79,7 +79,7 @@ def missed(store, me: str, now: datetime, *, memo=None) -> list[str]:
         update(store, f"""
 INSERT DATA {{
   GRAPH <{graph}> {{ <{sensor}> sensing:silentSince "{fell_due.isoformat()}"^^xsd:dateTime . }}
-  {entry(store, graph, STATE, DERIVED, me, start=fell_due)} }}""")
+  {entry(store, graph, BELIEF, DERIVED, me, start=fell_due)} }}""")
         log.warning("%s: %s silent since %s, %d cadences past", local_of(me), local_of(sensor),
                     fell_due.isoformat(timespec="seconds"), limit)
     return out

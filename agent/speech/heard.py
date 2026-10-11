@@ -6,7 +6,7 @@ import logging
 
 import pyoxigraph as ox
 
-from agent.ontology import OREXIS, STATE, local_of
+from agent.ontology import BELIEF, OREXIS, PUBLIC, local_of
 from agent.store import DocumentRefused, closed, document_of, kinds_in, put_document, rows
 
 log = logging.getLogger("speech")
@@ -21,15 +21,18 @@ def heard(store: ox.Store, me: str, payload: bytes) -> list[str]:
     """Believe the document `payload` holds, as a peer said it: every graph it names put in, each
     replacing what a peer said under that name before, received and this agent's. The names
     written, sorted — and none, said in the log, where the document is no document, a graph is
-    no state or a graph of its name arrived another way, or it says whose a graph is or who the
+    no belief a peer may say or a graph of its name arrived another way, or it says whose a graph is or who the
     self is: the loader's refusal (`refuse_the_sovereigns`), since the hearer owns what it hears
     and no peer tells this agent who it is."""
     try:
         doc = document_of(payload)
         for graph, kinds in kinds_in(doc).items():
-            if not any(STATE in closed(store, kind) for kind in kinds):
-                raise DocumentRefused(f"{graph} is no state of the world — a peer says what is, "
-                                      f"never a desire, an action or a rule")
+            #  THE INTERIM GATE (#953, until #958 makes a peer's word testimony): a belief, and none
+            #  of the kinds everyone reads — a peer says what is, never the world's documents, a
+            #  desire, an action or a rule.
+            if not any(BELIEF in closed(store, kind) and PUBLIC not in closed(store, kind) for kind in kinds):
+                raise DocumentRefused(f"{graph} is no belief a peer may say — a peer says what is, "
+                                      f"never the world's documents, a desire, an action or a rule")
             arrived = [r["arrival"] for r in rows(store, _ARRIVED_Q, (), graph=graph)]
             if arrived and arrived != [RECEIVED]:
                 raise DocumentRefused(f"{graph} is not a peer's to say again — it arrived "

@@ -49,7 +49,7 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
    so it reads the stated one and fails if it is too low; a test handing its own proves a figure no
    container searches at. Neither reaches a volume already lived in: a role or a stance changed after
    birth needs a fresh volume.
-5. **`state.ttl`** — `<> a orexis:StateGraph`, where things stand, for a world nothing senses.
+5. **`state.ttl`** — `<> a orexis:BeliefGraph`, where things stand, for a world nothing senses.
 6. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or
    `<> a planning:WantGraph` for a want that is met once; in a world of several agents, one
    document per agent under `beliefs/<id>.ttl`, since every desire a store holds is derived for.

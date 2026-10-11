@@ -14,9 +14,18 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent import clock
-from agent.ontology import STATE
+from agent.belief.ontology import REVISION_GRAPH
+from agent.execution.ontology import COMMITTED_STEP_GRAPH
+from agent.ontology import BELIEF, PUBLIC, SELF_GRAPH
 from agent.runtime import MET, Runtime, boot
 from agent.store import forget_graph, graphs_of, revisions_of, rows, update
+
+
+def _own(beliefs) -> list[str]:
+    """The agent's own beliefs, as the state documents were: no world's document, no self graph, no
+    revision, which goes with its source, and no committed step, which is the executor's record."""
+    shared = set(graphs_of(beliefs, PUBLIC, SELF_GRAPH, REVISION_GRAPH, COMMITTED_STEP_GRAPH))
+    return [g for g in graphs_of(beliefs, BELIEF) if g not in shared]
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -40,7 +49,7 @@ def _two_disks(beliefs) -> None:
     """The world less its large disk, and the conclusions drawn of the three taken back, so the
     runtime revises the state again at its start."""
     update(beliefs, f"DELETE WHERE {{ GRAPH ?g {{ <{TOWER}disk_3> ?p ?o }} }}")
-    for graph in revisions_of(beliefs, *graphs_of(beliefs, STATE)):
+    for graph in revisions_of(beliefs, *_own(beliefs)):
         forget_graph(beliefs, graph)
 
 

@@ -137,7 +137,7 @@ _SHIPPED_STAND = (":driver courier:aboard :van_a .\n\n:van_a courier:at :c0_0 .\
 TWO_AGENTS = {"world.ttl": [(_PEER_WORLD, _PEERS)], "state.ttl": [(_SHIPPED_STAND, _STAND)]}
 _PEER_DOCUMENTS = {
     "peer.self.ttl": "<> a orexis:SelfGraph .\n:peer a orexis:Self , planning:Planner .\n",
-    "peer.state.ttl": "<> a orexis:StateGraph .\n<> orexis:beliefsOf :peer .\n" + _STAND,
+    "peer.state.ttl": "<> a orexis:BeliefGraph .\n<> orexis:beliefsOf :peer .\n" + _STAND,
     "peer.desires.ttl": "<> a planning:DesireGraph .\n<> orexis:beliefsOf :peer .\n"
                         ":peer planning:holds :every_parcel_delivered .\n"
                         ":every_parcel_delivered a planning:Desire ; planning:metWhen courier:delivered ;\n"

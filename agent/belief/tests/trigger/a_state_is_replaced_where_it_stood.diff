@@ -17,13 +17,13 @@
    :world a orexis:PublicGraph .
 -  tick1:believed a orexis:BeliefGraph .
 -  tick1:believed a orexis:Graph .
--  tick1:believed a orexis:StateGraph .
+-  tick1:believed a orexis:BeliefGraph .
 -  tick1:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:20:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 -  tick1:believed orexis:arrivedBy orexis:Derived .
 -  tick1:believed orexis:beliefsOf :keeper .
 +  tick2:believed a orexis:BeliefGraph .
 +  tick2:believed a orexis:Graph .
-+  tick2:believed a orexis:StateGraph .
++  tick2:believed a orexis:BeliefGraph .
 +  tick2:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
 +  tick2:believed orexis:arrivedBy orexis:Derived .
 +  tick2:believed orexis:beliefsOf :keeper .

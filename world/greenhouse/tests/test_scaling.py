@@ -18,7 +18,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent import clock
-from agent.ontology import PUBLIC, STATE, local_of
+from agent.belief.ontology import REVISION_GRAPH
+from agent.ontology import BELIEF, PUBLIC, SELF_GRAPH, local_of
 from agent.runtime import boot
 from agent.store import close_catalogue, graphs_of, quads, revisions_of, rows
 from agent.sensing.received import received
@@ -61,7 +62,8 @@ def _pass(world: Path, readings: dict) -> tuple[int, int, dict]:
     for sensor, value in readings.items():
         _deliver(store, sensor, value, NOW)
     present = sum(1 for _ in store)
-    readings = graphs_of(store, STATE)
+    shared = set(graphs_of(store, PUBLIC, SELF_GRAPH, REVISION_GRAPH))
+    readings = [g for g in graphs_of(store, BELIEF) if g not in shared]     # the agent's own state
     state = sum(len(list(quads(store, g))) for g in [*readings, *revisions_of(store, *readings)])
     planner = Planner(store, "grower")
     planner.plan(NOW)

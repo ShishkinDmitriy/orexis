@@ -34,7 +34,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from agent.ontology import PREDICTION, STATE
+from agent.ontology import BELIEF, PREDICTION
 
 from .ontology import FORESEEN
 from agent.store import Raw, catalogue_of, graphs_of, remember, revisions_of, rows
@@ -51,8 +51,8 @@ def world_at(store, world: str | None, *, holder: str | None = None, now: dateti
              memo=None) -> list[str]:
     """The graphs a rule reads in `world`: public knowledge, the records, the desires and the
     wants holding at the world's own instant, and the world itself in the state's place — or,
-    where `world` is None, the PRESENT the store holds at `now`: the state graphs and their revisions
-    in the place a ground would stand.
+    where `world` is None, the PRESENT the store holds at `now`: every belief and its revisions in the
+    place a ground would stand.
 
     `holder` narrows the agent's own graphs to one holder's where a store holds several
     agents' (a test world); `now` is the present, at which a record is read whatever instant
@@ -86,10 +86,10 @@ def world_at(store, world: str | None, *, holder: str | None = None, now: dateti
         g for g in graphs_of(store, *FORESEEN, at=at, until=until, holder=holder, now=now)
         if g not in spoken_for))
     if world is None:
-        #  THE PRESENT GROUND'S OWN FILLING, read where it lies: every state graph and what the rules
+        #  THE PRESENT GROUND'S OWN FILLING, read where it lies: every belief and what the rules
         #  concluded of it, and what the search can change of every graph, as `lay_ground` copies the
         #  changeable graphs into the ground it lays at the present.
-        states = graphs_of(store, STATE)
-        return list(dict.fromkeys([*known, *states, *revisions_of(store, *states),
+        beliefs = graphs_of(store, BELIEF)
+        return list(dict.fromkeys([*known, *beliefs, *revisions_of(store, *beliefs),
                                    *graphs_of(store, CHANGEABLE_GRAPH)]))
     return [*known, world]

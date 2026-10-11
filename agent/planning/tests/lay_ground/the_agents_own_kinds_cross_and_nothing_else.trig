@@ -4,7 +4,7 @@
 # graph crosses — asked of the catalogue, never listed — and so does the catalogue itself,
 # since every read inside asks it what the graphs are. Of the agent's OWN, the kinds a search
 # reads cross: its readings, its predictions, its picks, its desires and its wants. `:sensed`
-# is a `orexis:StateGraph` and crosses for that reason.
+# is a `orexis:BeliefGraph` and crosses for that reason.
 #
 # AND A KIND NOBODY ASKS FOR STAYS BEHIND. `:scratch` is the agent's and is classified nothing
 # a rule reads, so it does not cross — which is what makes "asked" mean something.
@@ -47,7 +47,7 @@ GRAPH :catalogue {
   :scratch orexis:beliefsOf :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed a orexis:StateGraph .
+  :sensed a orexis:BeliefGraph .
   :sensed orexis:beliefsOf :keeper .
   :world a orexis:Graph .
   :world a orexis:PublicGraph .
