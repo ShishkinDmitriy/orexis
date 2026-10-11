@@ -31,7 +31,7 @@ LAPSE = CADENCE * (1 + GRACE)            # when the reading goes missing: due, a
 
 _SILENCES_Q = """
 SELECT ?g ?sensor ?since ?start WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph ; orexis:arrivedBy orexis:Derived ;
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ;
                dcterms:temporal/orexis:start ?start }
   GRAPH ?g { ?sensor sensing:silentSince ?since } }"""
 

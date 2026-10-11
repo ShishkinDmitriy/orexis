@@ -86,13 +86,13 @@ concluded and not the raw count, and then the transitions it triggers are applie
 
 A rule never knows the kind of graph it writes; each runner prepares its own target. Inference writes
 into its source's revision graph, and an effect into the possible world it forked, in place. For a
-transition `trigger` prepares a state graph of the arrival's own — the kernel's `orexis:StateGraph`,
-the arrival's owner's and derived, holding over the arrival's period, named from the arrival for
+transition `trigger` prepares a state graph of the arrival's own — a belief, the kernel's
+`orexis:BeliefGraph`, the arrival's owner's and derived and no revision, holding over the arrival's period, named from the arrival for
 eyes — so a silence ends what it says as it ends the arrival. One a later arrival of the same name
 writes into again takes that arrival's period.
 
-Each order reads the arrival with its revisions, the public graphs, and every state graph the agent
-derived, whatever its period. What it deletes is taken out of whichever of those holds it, and a
+Each order reads the arrival with its revisions, the public graphs, and every belief the agent derived
+that is no revision, whatever its period: the agent's own state, which no kind marks (#953). What it deletes is taken out of whichever of those holds it, and a
 graph emptied so is forgotten with its row. **Testimony is never a target**: a graph received or
 heard — a percept, which is no state and is read as the arrival alone — a public graph, an ontology and a
 revision are read and never written to. The target says no `prov:wasDerivedFrom`: a revision goes

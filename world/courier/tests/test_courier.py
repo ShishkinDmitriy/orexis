@@ -7,12 +7,21 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent import clock
-from agent.ontology import STATE
+from agent.belief.ontology import REVISION_GRAPH
+from agent.execution.ontology import COMMITTED_STEP_GRAPH
+from agent.ontology import BELIEF, PUBLIC, SELF_GRAPH
 
 WANT = "http://example.org/orexis/planning#WantGraph"   # planning's word; the Planner is all planning exports
 from agent.planning.planner import Planner
 from agent.runtime import MET, Runtime, boot
 from agent.store import graphs_of, rows
+
+
+def _own(beliefs) -> list[str]:
+    """The agent's own beliefs, as the state documents were: no world's document, no self graph, no
+    revision, which goes with its source, and no committed step, which is the executor's record."""
+    shared = set(graphs_of(beliefs, PUBLIC, SELF_GRAPH, REVISION_GRAPH, COMMITTED_STEP_GRAPH))
+    return [g for g in graphs_of(beliefs, BELIEF) if g not in shared]
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -29,7 +38,7 @@ SELECT ?want ?left ?spent WHERE {
 
 
 def _parcel_at(store) -> list[str]:
-    return [r["cell"].rsplit("#", 1)[-1] for r in rows(store, _WHERE_Q, graphs_of(store, STATE, "http://example.org/orexis#WorldGraph"))]
+    return [r["cell"].rsplit("#", 1)[-1] for r in rows(store, _WHERE_Q, [*_own(store), *graphs_of(store, "http://example.org/orexis#WorldGraph")])]
 
 
 def _acts(runtime) -> int:
@@ -38,7 +47,7 @@ def _acts(runtime) -> int:
 
 def test_the_boot_says_what_each_graph_is():
     beliefs = boot(WORLD, "courier")
-    assert len(graphs_of(beliefs, WANT)) == 1 and len(graphs_of(beliefs, STATE)) == 1
+    assert len(graphs_of(beliefs, WANT)) == 1 and len(_own(beliefs)) == 1
     assert _parcel_at(beliefs) == ["c1_2"], "the parcel stands where the delivery was posed"
 
 
@@ -100,7 +109,7 @@ def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeyp
     Runtime(beliefs, "courier").run(poll_s=0)
     boot(WORLD, "courier", beliefs)                   # a restart on the same volume
     assert _parcel_at(beliefs) == ["c3_3"], "the delivered parcel is the agent's belief, not the file's"
-    assert len(graphs_of(beliefs, STATE)) == 1
+    assert len(_own(beliefs)) == 1
     assert graphs_of(beliefs, WANT) == [], "the want was reached and withdrawn, and a restart does not bring it back"
 
 

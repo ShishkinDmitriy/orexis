@@ -54,6 +54,13 @@ def intentions_graph(agent_id: str) -> str:
     return _GRAPH + "intentions/" + agent_id
 
 
+def fictive_graph(agent_id: str) -> str:
+    """Where a fictive step puts what it adds and replaces nothing — the agent's own belief, the
+    executor having been the world; an addition that replaces something goes where what it replaces
+    stood. Named for eyes; a reader asks the catalogue for a belief."""
+    return _GRAPH + "fictive/" + agent_id
+
+
 def committed_graph(agent_id: str, step: str) -> str:
     """The graph holding one committed step over its landing window — the agent's own, named for
     the step for eyes; a reader asks the catalogue for `execution:CommittedStepGraph` and the

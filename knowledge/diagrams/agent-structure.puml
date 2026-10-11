@@ -48,7 +48,7 @@ frame "kernel" {
   folder "orexis:CatalogueGraph\nwhat every graph IS, itself included" as cat
   folder "orexis:OntologyGraph · orexis:WorldGraph\norexis:SocietyGraph · orexis:ActionGraph\norexis:DriftGraph · the world's documents" as pub
   folder "orexis:SelfGraph\nwho I am · my roles · my stances" as self
-  folder "orexis:StateGraph\nthe agent's own state · the subject beliefs\na silence · a peer's word" as st
+  folder "orexis:BeliefGraph\nthe agent's own state · the subject beliefs\na silence · a peer's word" as st
   folder "orexis:PredictionGraph\na diff over a period" as pr
   folder "orexis:PlanGraph\na plan published, adopted by reference" as plan
   folder "orexis:RecordGraph\nworth believing over its period" as rec
@@ -127,6 +127,6 @@ note as N1
   ----
   **Not drawn:** every reader of the public graphs, the metrics
   and history each package emits as events, and the market's
-  state kinds (`domains/market/`), beneath `orexis:StateGraph`.
+  kinds (`domains/market/`), beneath `orexis:BeliefGraph`.
 end note
 @enduml

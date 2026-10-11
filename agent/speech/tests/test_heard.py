@@ -20,8 +20,8 @@ def store():
     st = ox.Store()
     update(st, f"""INSERT DATA {{
   GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . <{T}vocabulary> a orexis:OntologyGraph .
-                               <{T}mine> a orexis:StateGraph ; orexis:arrivedBy orexis:Recorded . }}
-  GRAPH <{T}vocabulary> {{ <{T}RoundGraph> rdfs:subClassOf orexis:StateGraph , orexis:BeliefGraph , orexis:Graph . }} }}""")
+                               <{T}mine> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded . }}
+  GRAPH <{T}vocabulary> {{ <{T}RoundGraph> rdfs:subClassOf orexis:BeliefGraph , orexis:BeliefGraph , orexis:Graph . }} }}""")
     return st
 
 
@@ -31,7 +31,7 @@ def _doc(graph, kind, fact):
 
 def test_a_round_heard_is_believed_the_agent_s_own_and_received(store):
     assert heard(store, ME, _doc(T + "round", T + "RoundGraph", "open")) == [T + "round"]
-    assert T + "round" in graphs_of(store, OREXIS + "StateGraph"), "its kinds are closed on its row"
+    assert T + "round" in graphs_of(store, OREXIS + "BeliefGraph"), "its kinds are closed on its row"
     assert rows(store, _ARRIVAL_Q, (), g=T + "round") == [{"a": OREXIS + "Received", "o": ME}]
 
 

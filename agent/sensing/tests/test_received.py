@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from agent import clock
-from agent.ontology import STATE
+from agent.ontology import BELIEF
 from agent.sensing.ontology import OBSERVATION_GRAPH, STUCK_AFTER_TERM
 from agent.sensing.received import STUCK_AFTER, received
 from agent.store import graphs_of, rows
@@ -174,7 +174,7 @@ def test_the_latest_is_the_one_holding_now_and_every_older_one_has_ended(monkeyp
     assert graphs_of(store, OBSERVATION_GRAPH, at=last - timedelta(seconds=1), now=last) == [OBSERVED + "probe_" + (last - CADENCE).strftime("%Y%m%dT%H%M%SZ")]
     assert _period(store, holding[0]) == (last, last + 2 * CADENCE), "until the next is due and a grace past it"
     assert not graphs_of(store, OBSERVATION_GRAPH, at=last + 2 * CADENCE, now=last), "and none past that"
-    assert not graphs_of(store, STATE), "a percept is no state"
+    assert not set(graphs_of(store, OBSERVATION_GRAPH)) & set(graphs_of(store, BELIEF)), "a percept is no belief"
 
 
 def test_a_message_carrying_several_readings_chains_them_in_order(monkeypatch, snapshots):

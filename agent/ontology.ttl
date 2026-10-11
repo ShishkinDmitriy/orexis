@@ -45,7 +45,7 @@ orexis:BeliefGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Belief graph" ;
-    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, and what instruments and peers report." .
+    rdfs:comment "What IS: the world as ratified, what the rules and the closure make of it, what the agent's transitions conclude of what arrives, and what peers report. There is no kind beneath it for the part that can change: what a plan forks and an effect rewrites is extracted per scope from the writers, the effects, transitions and predictions, as a search's grounds are laid (knowledge/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md); and what the kind `orexis:BeliefGraph` said besides is said by provenance, how a graph arrived and whose it is. A graph of this kind the agent DERIVED, and that is no revision, is the agent's own state: what a transition reads beside the arrival that triggers it, and the one place a transition deletes from. An instrument's reading is none: it is sensing's observation, a kind beneath `orexis:Graph` alone, and what the mind reads of it is the subject belief a transition makes (#944)." .
 
 orexis:CatalogueGraph
     a owl:Class ;
@@ -104,12 +104,6 @@ orexis:SelfGraph
     rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Self graph" ;
     rdfs:comment "Which agent is the self, and the one private graph whose owner is read off what it holds rather than stated beside it: `<agent> a orexis:Self`, exactly once, in a document of this kind and no other, authored in the world under `beliefs/` and owned by the self it states. A belief, so a text answered over what is known reads it and it crosses into an imaginarium; NOT public, since it is true of one agent's store and of no other's, so a reader that reads the public graphs and asks the self states this kind beside them. And where the agent's STANCES are: a figure a package reads of the agent — its patience, a budget, a limit — stated as a triple about the self here and read off this kind alone, the package's constant where none is stated (knowledge/domain/kernel/stance.md). And its ROLES, the other kinds the self is stated beside `orexis:Self` here, read by the boot before any package is loaded (`orexis:Role`)." .
-
-orexis:StateGraph
-    a owl:Class ;
-    rdfs:subClassOf orexis:BeliefGraph , orexis:Graph ;
-    rdfs:label "State graph" ;
-    rdfs:comment "The world's CURRENT STATE as this agent holds it — the graph an effect rule rewrites and a plan forks per step, and the one a met-test reads. The kernel knows only that: what is in it is the packages' word (sensing says a sensor silent, DERIVED; a peer's document heard is one, RECEIVED; the belief package prepares one per arrival for what the transitions it triggers insert, the subject beliefs, DERIVED, a transition naming no graph of its own). An instrument's reading is no state: it is sensing's observation, a kind beneath `orexis:Graph` alone which no reader of the mind is handed, and what the mind reads of it is the subject belief a transition makes (#944). It was `orexis:SensedGraph`, named for the one writer it had; the instance keeps its IRI so a deployed volume keeps its readings. A graph of this kind the agent DERIVED is the agent's own state: what a transition reads beside the arrival that triggers it, and the one place a transition deletes from. NOT public: an agent's readings are its own." .
 
 orexis:WorkingGraph
     a owl:Class ;

@@ -21,7 +21,7 @@ RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 TOWER = Path(__file__).resolve().parents[3] / "world" / "tower"
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
-STATE = "http://example.org/orexis#StateGraph"
+STATE = "http://example.org/orexis#BeliefGraph"
 
 
 def _revised_again(monkeypatch, before=None) -> list:

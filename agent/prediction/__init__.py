@@ -1,7 +1,7 @@
 """The prediction package of Agent 0.2.0: when a reading changes range, and nothing else.
 
 **A PREDICTION IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** `predict` takes the
-observation a sensor last made — found by the kernel's kind, `orexis:StateGraph`, and SOSA's
+observation a sensor last made — found by sensing's kind, `sensing:ObservationGraph`, and SOSA's
 `sosa:madeBySensor`, so nothing of the sensing layer is imported or spoken — sums the rates of
 every drift moving what it observes, accumulates the sum between the happenings at which what a
 drift reads may change, places every crossing of a bound of the ranges that apply to what the

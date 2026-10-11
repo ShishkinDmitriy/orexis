@@ -22,7 +22,7 @@ arrivals are transitioned on in the order they came whoever handed them.
 from __future__ import annotations
 
 from agent import clock
-from agent.ontology import BELIEF, PREDICTION, PUBLIC, STATE
+from agent.ontology import BELIEF, PREDICTION, PUBLIC
 from agent.store import graphs_of, revisions_of
 
 from .deliberator import Deliberator
@@ -46,9 +46,11 @@ class _Belief:
         return []
 
     def start(self, runtime) -> None:
-        revisions = set(graphs_of(runtime.beliefs, REVISION_GRAPH))
-        self.revise([g for g in graphs_of(runtime.beliefs, STATE)
-                     if g not in revisions and not revisions_of(runtime.beliefs, g)])
+        #  EVERY BELIEF NOT YET REVISED, but what everyone reads: the world's documents were concluded on
+        #  at genesis, into graphs of their own, and a revision of one beside the rest would say it twice.
+        skip = set(graphs_of(runtime.beliefs, REVISION_GRAPH, PUBLIC))
+        self.revise([g for g in graphs_of(runtime.beliefs, BELIEF)
+                     if g not in skip and not revisions_of(runtime.beliefs, g)])
         runtime.on(BELIEF, lambda graph: self.revise([graph]))
         runtime.on(PREDICTION, lambda graph: self.revise([graph]))
 

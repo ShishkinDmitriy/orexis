@@ -22,7 +22,7 @@ def store(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: NOW)
     st = ox.Store()
     update(st, f"""INSERT DATA {{
-  GRAPH <{T}vocabulary> {{ <{T}NoteGraph> rdfs:subClassOf orexis:StateGraph , orexis:Graph . }}
+  GRAPH <{T}vocabulary> {{ <{T}NoteGraph> rdfs:subClassOf orexis:BeliefGraph , orexis:Graph . }}
   GRAPH <{T}actions> {{
     <{T}Noting> a orexis:Action ; orexis:takes <{T}topic> ;
       execution:implementation [ execution:operation [ a execution:Saying ; sh:construct \"\"\"CONSTRUCT {{ ?note a <{T}Note> , <{T}NoteGraph> ; <{T}about> $topic ; <{T}at> $now ;

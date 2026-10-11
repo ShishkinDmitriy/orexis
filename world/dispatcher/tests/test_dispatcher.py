@@ -55,11 +55,20 @@ from pathlib import Path
 import pytest
 
 from agent import clock
-from agent.ontology import OREXIS, PREDICTION, STATE
+from agent.belief.ontology import REVISION_GRAPH
+from agent.execution.ontology import COMMITTED_STEP_GRAPH
+from agent.ontology import BELIEF, OREXIS, PREDICTION, PUBLIC, SELF_GRAPH
 from agent.planning.planner import Planner
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import catalogue_of, entry, graphs_of, rows, update
 from onboarding import reading
+
+
+def _own(beliefs) -> list[str]:
+    """The agent's own beliefs, as the state documents were: no world's document, no self graph, no
+    revision, which goes with its source, and no committed step, which is the executor's record."""
+    shared = set(graphs_of(beliefs, PUBLIC, SELF_GRAPH, REVISION_GRAPH, COMMITTED_STEP_GRAPH))
+    return [g for g in graphs_of(beliefs, BELIEF) if g not in shared]
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -350,7 +359,7 @@ def _run(world: Path, passes: int = 40):
 
     def traced(event):
         at = _at(beliefs)
-        trace.append((_local(event.step), at.get("van_a"), at.get("van_b"), _shared(beliefs, graphs_of(beliefs, STATE))))
+        trace.append((_local(event.step), at.get("van_a"), at.get("van_b"), _shared(beliefs, _own(beliefs))))
         return []
     executor.step_taken.connect(traced)
     outcome = runtime.run(passes=1, poll_s=0)
@@ -371,7 +380,7 @@ def test_the_boot_says_what_each_graph_is_and_two_vans_are_one_scope(ticking):
     """One scope, and both vans in it with both parcels: nothing van A does reads a fact of van B, but a
     parcel is a filling value of either van's Pick, so the parcels join the vans — by key as by predicate."""
     beliefs = boot(WORLD, "dispatcher")
-    assert len(graphs_of(beliefs, DESIRE)) == 1 and len(graphs_of(beliefs, STATE)) == 1
+    assert len(graphs_of(beliefs, DESIRE)) == 1 and len(_own(beliefs)) == 1
     assert _at(beliefs) == {"van_a": "c0_0", "parcel_a": "c0_1", "van_b": "c3_0", "parcel_b": "c3_1"}
     members: dict[str, set] = {}
     for r in rows(beliefs, _MEMBERS_Q, ()):
@@ -602,7 +611,7 @@ def _parcel_b(cell: str, owed: str):
     """Parcel B ARRIVING at `cell`, owed at `owed`, written into the state as a consignment arriving at the
     depot would be: what `_arrival` writes for soft commitment's first trigger."""
     def arrive(beliefs, walking, at):
-        (state,) = graphs_of(beliefs, STATE)
+        (state,) = _own(beliefs)
         update(beliefs, f"""PREFIX courier: <http://example.org/orexis/courier#>
 INSERT DATA {{ GRAPH <{state}> {{ <{D}parcel_b> courier:at <{D}{cell}> ; courier:destination <{D}{owed}> }} }}""")
         return [state]
@@ -629,7 +638,7 @@ def _arrival(world: Path, arrive, *, after: int = 2, passes: int = 40) -> dict:
             seen["events"].append((kind, event))
             if kind == "taken":
                 at = _at(beliefs)
-                seen["trace"].append((_local(event.step), at.get("van_a"), at.get("van_b"), _shared(beliefs, graphs_of(beliefs, STATE))))
+                seen["trace"].append((_local(event.step), at.get("van_a"), at.get("van_b"), _shared(beliefs, _own(beliefs))))
             return []
         return handler
     executor.step_taken.connect(heard("taken"))
@@ -804,7 +813,7 @@ def _van_c(cell=None, *, observed: bool = False):
         where = cell or _next_cell(beliefs, walking)
         said = f"<{D}van_c> courier:at <{D}{where}>"
         if observed:
-            (state,) = graphs_of(beliefs, STATE)
+            (state,) = _own(beliefs)
             update(beliefs, f"PREFIX courier: <http://example.org/orexis/courier#>\nINSERT DATA {{ GRAPH <{state}> {{ {said} }} }}")
             written = [state]
         else:

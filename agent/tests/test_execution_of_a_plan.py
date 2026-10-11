@@ -34,7 +34,7 @@ def _move(beliefs, disk: str, onto: str) -> None:
     was moved onto, or on the peg itself — the domain's own effect, not the parameter. Read off
     the state graph by kind: a published plan's steps state the same rows in the graphs they
     predict in, and those are what the world is held to, not the world."""
-    state = 'GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph }'
+    state = 'GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }'
     (row,) = rows(beliefs, f'SELECT ?d ?p ?o ?g WHERE {{ {state} GRAPH ?g {{ ?d ?p ?o }} FILTER(?d = <{disk}> && STRENDS(STR(?p), "#on")) }}')
     top = rows(beliefs, f'SELECT ?t WHERE {{ {state} GRAPH ?g {{ ?t <{row["p"]}>+ <{onto}> . FILTER NOT EXISTS {{ ?z <{row["p"]}> ?t }} FILTER(?t != <{disk}>) }} }}')
     dest = top[0]["t"] if top else onto

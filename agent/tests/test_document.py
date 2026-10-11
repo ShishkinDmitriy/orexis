@@ -34,11 +34,11 @@ def _said(store, graph):
 
 
 def test_a_turtle_file_is_one_graph_named_by_the_file_and_its_rows_go_to_the_catalogue(store, tmp_path):
-    path = _write(tmp_path, "anything.ttl", "<> a orexis:StateGraph .\n<urn:disk> <urn:on> <urn:peg> .\n")
+    path = _write(tmp_path, "anything.ttl", "<> a orexis:BeliefGraph .\n<urn:disk> <urn:on> <urn:peg> .\n")
     name = path.resolve().as_uri()
     assert put_document(store, document(path)) == [name]
-    assert graphs_of(store, OREXIS + "StateGraph") == [name]
-    assert _said(store, name) == {("type", "StateGraph"), ("arrivedBy", "Asserted")}
+    assert graphs_of(store, OREXIS + "BeliefGraph") == [name]
+    assert _said(store, name) == {("type", "BeliefGraph"), ("arrivedBy", "Asserted")}
     held = rows(store, "SELECT ?s ?p ?o WHERE { GRAPH $g { ?s ?p ?o } }", (), g=name)
     assert held == [{"s": "urn:disk", "p": "urn:on", "o": "urn:peg"}], "the graph holds its facts and not its kind"
 
@@ -57,19 +57,19 @@ def test_a_period_stated_of_the_document_goes_with_its_row(store, tmp_path):
 
 def test_a_trig_file_names_its_graphs_and_states_their_kinds_in_its_default_graph(store, tmp_path):
     path = _write(tmp_path, "two.trig", """<#desires> a planning:DesireGraph .
-<#state> a orexis:StateGraph .
+<#state> a orexis:BeliefGraph .
 <#desires> { <urn:me> planning:holds <urn:home> . }
 <#state> { <urn:disk> <urn:on> <urn:peg> . }
 """)
     doc = document(path)
     base = path.resolve().as_uri()
-    assert kinds_in(doc) == {base + "#desires": {"http://example.org/orexis/planning#DesireGraph"}, base + "#state": {OREXIS + "StateGraph"}}
+    assert kinds_in(doc) == {base + "#desires": {"http://example.org/orexis/planning#DesireGraph"}, base + "#state": {OREXIS + "BeliefGraph"}}
     assert put_document(store, doc, owner="urn:me") == sorted([base + "#desires", base + "#state"])
     assert ("beliefsOf", "urn:me") in _said(store, base + "#state")
 
 
 def test_put_again_replaces_the_graph_and_its_row(store, tmp_path):
-    path = _write(tmp_path, "state.ttl", "<> a orexis:StateGraph .\n<urn:disk> <urn:on> <urn:peg_a> .\n")
+    path = _write(tmp_path, "state.ttl", "<> a orexis:BeliefGraph .\n<urn:disk> <urn:on> <urn:peg_a> .\n")
     put_document(store, document(path))
     path.write_text(PREFIXES + "<> a orexis:WorldGraph .\n<urn:disk> <urn:on> <urn:peg_c> .\n")
     (name,) = put_document(store, document(path))
@@ -80,9 +80,9 @@ def test_put_again_replaces_the_graph_and_its_row(store, tmp_path):
 @pytest.mark.parametrize("text, refusal", [
     ("<urn:a> <urn:b> <urn:c> .\n", "no kind"),
     ("<> a orexis:CatalogueGraph .\n", "catalogue"),
-    ("<> a orexis:StateGraph ; orexis:arrivedBy orexis:Derived .\n", "only the loader"),
-    ("<> a orexis:StateGraph ; orexis:beliefsOf <urn:ann> , <urn:bob> .\n", "a graph has one owner"),
-    ("<> a orexis:StateGraph ; orexis:beliefsOf [] .\n", "an owner is an agent, named"),
+    ("<> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .\n", "only the loader"),
+    ("<> a orexis:BeliefGraph ; orexis:beliefsOf <urn:ann> , <urn:bob> .\n", "a graph has one owner"),
+    ("<> a orexis:BeliefGraph ; orexis:beliefsOf [] .\n", "an owner is an agent, named"),
     ("<> a orexis:WorldGraph .\n<urn:someone> a orexis:Self .\n", "no self graph"),
     ("<> a orexis:SelfGraph , orexis:WorldGraph .\n<urn:ann> a orexis:Self .\n", "a self graph is nothing else"),
     ("<> a orexis:SelfGraph .\n", "states 0 selves"),
@@ -107,13 +107,13 @@ def test_a_file_says_whose_its_graph_is_and_a_self_graph_is_its_selfs(tmp_path):
     assert whose(selfish, (tmp_path / "who.ttl").resolve().as_uri()) == "urn:fern"
     agreed = document(_write(tmp_path, "both.ttl", "<> a orexis:SelfGraph ; orexis:beliefsOf <urn:fern> .\n<urn:fern> a orexis:Self .\n"))
     assert whose(agreed, (tmp_path / "both.ttl").resolve().as_uri()) == "urn:fern", "one fact, said twice and agreeing"
-    nobody = document(_write(tmp_path, "state.ttl", "<> a orexis:StateGraph .\n"))
+    nobody = document(_write(tmp_path, "state.ttl", "<> a orexis:BeliefGraph .\n"))
     assert whose(nobody, (tmp_path / "state.ttl").resolve().as_uri()) is None
 
 
 @pytest.mark.parametrize("text", [
-    "<urn:g> a orexis:StateGraph ; orexis:beliefsOf <urn:someone> .\n<urn:g> { <urn:a> <urn:b> <urn:c> }\n",
-    "<urn:g> a orexis:StateGraph .\n<urn:g> { <urn:someone> a orexis:Self }\n",
+    "<urn:g> a orexis:BeliefGraph ; orexis:beliefsOf <urn:someone> .\n<urn:g> { <urn:a> <urn:b> <urn:c> }\n",
+    "<urn:g> a orexis:BeliefGraph .\n<urn:g> { <urn:someone> a orexis:Self }\n",
     "<urn:g> a orexis:SelfGraph .\n<urn:g> { <urn:someone> a orexis:Self }\n",
 ], ids=["an owner", "who the self is", "the self's graph"])
 def test_a_document_from_no_file_says_neither_whose_a_graph_is_nor_who_the_self_is(text):
@@ -124,7 +124,7 @@ def test_a_document_from_no_file_says_neither_whose_a_graph_is_nor_who_the_self_
 
 
 def test_a_trig_row_about_no_graph_the_document_holds_is_refused(tmp_path):
-    path = _write(tmp_path, "stray.trig", "<#g> a orexis:StateGraph .\n<urn:x> <urn:y> <urn:z> .\n<#g> { <urn:a> <urn:b> <urn:c> . }\n")
+    path = _write(tmp_path, "stray.trig", "<#g> a orexis:BeliefGraph .\n<urn:x> <urn:y> <urn:z> .\n<#g> { <urn:a> <urn:b> <urn:c> . }\n")
     with pytest.raises(DocumentRefused, match="no graph it holds"):
         document(path)
 

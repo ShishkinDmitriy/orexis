@@ -107,7 +107,7 @@ _KEY_Q = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; so
 
 #  THE SILENCE SAID OF THIS SENSOR, if any — the graph holding the row, found by its content.
 _SILENCE_Q = """
-SELECT ?g WHERE { GRAPH $cat { ?g a orexis:StateGraph } GRAPH ?g { $sensor sensing:silentSince ?since } }"""
+SELECT ?g WHERE { GRAPH $cat { ?g a orexis:BeliefGraph } GRAPH ?g { $sensor sensing:silentSince ?since } }"""
 
 #  EVERY PERCEPT OF THIS SENSOR KEPT, newest first: its graph, its node, and whether a percept names
 #  it as its previous — the latest is the one none does.

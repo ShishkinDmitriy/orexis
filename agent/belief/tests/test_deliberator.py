@@ -93,10 +93,11 @@ T = "http://example.org/test#"
 #  WHAT THE COUNTER IS HELD TO, in the keeper's own state whatever its period, by local name.
 _COUNTER_Q = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }"
 
-#  THE KEEPER'S OWN STATE: every state graph it derived, which is where a transition writes — never a
-#  tick, which is a state graph it received.
+#  THE KEEPER'S OWN STATE: every belief it derived that is no revision, which is where a transition
+#  writes — never a tick, which is a belief it received.
 _OWN_STATE_Q = """SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
-    ?g a orexis:StateGraph ; orexis:arrivedBy orexis:Derived } } ORDER BY ?g"""
+    ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
+    FILTER NOT EXISTS { ?g a belief:RevisionGraph } FILTER NOT EXISTS { ?g a orexis:PublicGraph } } } ORDER BY ?g"""
 
 
 def _own_state(store) -> list[str]:

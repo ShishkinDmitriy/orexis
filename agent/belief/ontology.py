@@ -7,8 +7,8 @@ text, and named here only for the two readers in Python. What is ours is the inf
 one source, which the draft names as a role and not a class, and what a rule that CHANGES a state
 needs and the draft lacks: the class of a rule that is a transition, and its one update text (`ontology.ttl`
 beside this file). What triggers a transition and where it writes are no words of ours: an arrival of
-testimony triggers every one, and the runner prepares a state graph for it, the kernel's
-`orexis:StateGraph`.
+testimony triggers every one, and the runner prepares a state graph for it, a belief graph the agent
+derived, the kernel's `orexis:BeliefGraph`.
 
 THE NAME IS FOR EYES. A source's revision graph and an arrival's state graph are spelled from the
 source's own name; every reader asks the catalogue by class and by provenance, and

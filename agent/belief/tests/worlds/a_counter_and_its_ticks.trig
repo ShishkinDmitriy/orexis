@@ -18,12 +18,12 @@
 GRAPH :ontology {
   :TickGraph rdfs:subClassOf orexis:BeliefGraph .
   :TickGraph rdfs:subClassOf orexis:Graph .
-  :TickGraph rdfs:subClassOf orexis:StateGraph .
+  :TickGraph rdfs:subClassOf orexis:BeliefGraph .
   belief:RevisionGraph rdfs:subClassOf orexis:BeliefGraph .
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:StateGraph rdfs:subClassOf orexis:BeliefGraph .
-  orexis:StateGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {

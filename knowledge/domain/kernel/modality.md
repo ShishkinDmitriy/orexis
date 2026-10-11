@@ -16,7 +16,7 @@ asserts is its kind:
 
 | kind | force | owner |
 |---|---|---|
-| `orexis:StateGraph` | what IS, as this agent holds it | the kernel; belief's transitions write one per arrival, sensing a silence |
+| `orexis:BeliefGraph` | what IS: the world as ratified and as this agent holds it | the world's documents; belief's transitions write one per arrival, sensing a silence; what a scope can change of it is no kind but the writers' ([changeable](/domain/planning/changeable.md)) |
 | `sensing:ObservationGraph` | what a sensor SAID, once — and no belief | sensing, beneath `orexis:Graph` alone; read at the boundary ([observation](/domain/sensing/observation.md)) |
 | `orexis:PredictionGraph` | what WILL be, during a window | prediction writes, planning reads |
 | `planning:PossibleGraph` | what WOULD be, if a plan were taken | the planner, in its [imaginarium](/domain/planning/imaginarium.md) |
@@ -26,7 +26,7 @@ asserts is its kind:
 | `execution:IntentionGraph` | what is being DONE | the executor |
 
 The catalogue carries every kind a graph's class is beneath, so a reader asks `?g a
-planning:WantGraph` or hands `store.graphs_of(STATE, PREDICTION)` its kinds and walks no path —
+planning:WantGraph` or hands `store.graphs_of(BELIEF, PREDICTION)` its kinds and walks no path —
 and never names a graph instance.
 
 # The logics these belong to

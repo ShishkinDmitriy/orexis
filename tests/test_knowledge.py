@@ -1028,7 +1028,7 @@ def test_the_agent_structure_draws_every_graph_kind_and_no_other():
     short = lambda c: next(f"{n}:{str(c)[len(i):]}" for n, i in NAMESPACES.items() if str(c).startswith(i))
     root = rdflib.URIRef("http://example.org/orexis#Graph")
     declared = {short(c) for c in g.transitive_subjects(rdflib.RDFS.subClassOf, root)}
-    assert "orexis:StateGraph" in declared, "the closure stopped reaching the kernel's kinds"
+    assert "orexis:BeliefGraph" in declared, "the closure stopped reaching the kernel's kinds"
     picture = (REPO_ROOT / "knowledge" / "diagrams" / "agent-structure.puml").read_text().replace("\\n", " ")
     drawn = set(re.findall(r"\b[a-z]+:[A-Z]\w*Graph\b", picture))
     assert not (declared - _MODALITIES) - drawn, f"declared and not drawn: {sorted((declared - _MODALITIES) - drawn)}"

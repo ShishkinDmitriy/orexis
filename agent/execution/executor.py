@@ -88,7 +88,7 @@ import pyoxigraph as ox
 
 from agent import clock
 from agent.lifecycle import Signal
-from agent.ontology import ACTION, OREXIS, STATE, local_of
+from agent.ontology import ACTION, BELIEF, OREXIS, local_of
 from agent.stance import stance
 from agent.store import (NAMESPACES, Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant,
                          quads, quads_for_pattern, revisions_of, rows, update)
@@ -96,7 +96,7 @@ from agent.store import (NAMESPACES, Raw, add_quads, bind, catalogue_of, entry, 
 from .events import Commanded, IntentionResolved, Said, StepAnswered, StepTaken, Taking, Walked  # noqa: F401 — the events it says
 from .implementation import FICTIVE, operations
 from .ontology import (ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, LANDS_WITHIN_S, PATIENCE_S,
-                       RETRACTS_GRAPH, committed_graph, intentions_graph)
+                       RETRACTS_GRAPH, committed_graph, fictive_graph, intentions_graph)
 
 log = logging.getLogger("executor")
 
@@ -194,8 +194,20 @@ _RETRACTS_STANDING = """{ GRAPH $retracts { ?s ?p ?o } ?s ?p ?x . FILTER(?x = ?o
 
 #  A FICTIVE STEP'S WRITE: what it retracts leaves the state and what it adds enters it, the two
 #  graphs read where they stand and the terms carried over as they are.
-_RETRACT_U = """DELETE { GRAPH $state { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o } }"""
-_ADD_U = """INSERT { GRAPH $state { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o } }"""
+_RETRACT_U = """DELETE { GRAPH ?g { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o } GRAPH ?g { ?s ?p ?o } VALUES ?g { $held } }"""
+_ADD_U = """INSERT { GRAPH $into { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o } }"""
+
+#  WHERE A FICTIVE STEP'S RETRACTIONS STAND: every belief of the agent's holding one of them — none of
+#  the world's documents, no revision, which goes with its source, and no committed step, which is the
+#  executor's record and no fact of the world.
+_HELD_Q = """
+SELECT DISTINCT ?g WHERE {
+  GRAPH $retracts { ?s ?p ?o }
+  GRAPH $cat { ?g a orexis:BeliefGraph .
+               FILTER NOT EXISTS { ?g a orexis:PublicGraph }
+               FILTER NOT EXISTS { ?g a belief:RevisionGraph }
+               FILTER NOT EXISTS { ?g a execution:CommittedStepGraph } }
+  GRAPH ?g { ?s ?p ?o } } ORDER BY ?g"""
 
 #  WHETHER THE INTENTIONS GRAPH IS CLASSIFIED YET, and every plan published and adopted by none, with its want.
 _CLASSIFIED_Q = """SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph a ?k } } LIMIT 1"""
@@ -733,8 +745,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         #  THE READINGS AND THEIR REVISIONS: a step predicts in the concepts the rules conclude —
         #  a dose, that the soil comes to be inside its range — so it is answered when the next
         #  reading is revised to that, and the side lives in the graph derived from the reading's.
-        states = graphs_of(self.beliefs, STATE)
-        present = [ox.NamedNode(g) for g in (*states, *revisions_of(self.beliefs, *states))]
+        beliefs = graphs_of(self.beliefs, BELIEF)
+        present = [ox.NamedNode(g) for g in (*beliefs, *revisions_of(self.beliefs, *beliefs))]
         failing = ([bind(_ADDS_MISSING, adds=adds)] if adds else []) \
             + ([bind(_RETRACTS_STANDING, retracts=retracts)] if retracts else [])
         return not bool(self.beliefs.query("ASK { " + " UNION ".join(failing) + " }",
@@ -912,7 +924,8 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
     def fictive(self, said: dict, intention: str) -> None:
         """The taking of a step whose action is FICTIVE: say the step's name, then write what
-        it predicted into the agent's readings, so the present answers because the executor
+        it predicted into the agent's beliefs — each retraction taken out wherever the agent holds
+        it and each addition put where it stood — so the present answers because the executor
         was the world.
 
         AN ACTION IS FICTIVE where its implementation says so (`execution:Fictive`), read off
@@ -929,14 +942,21 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         predicted = next(iter(rows(self.intentions, bind(_PREDICTED_Q, step=said["step"]))), {})
         if not any(predicted.values()):
             return
-        (state, *_) = graphs_of(self.beliefs, STATE) or [None]
-        if state is None:
-            raise RuntimeError(f"{self.id}: a fictive step has no state graph to write into")
-        writes = ([bind(_RETRACT_U, state=state, retracts=predicted["retracts"])] if predicted.get("retracts") else []) \
-            + ([bind(_ADD_U, state=state, adds=predicted["adds"])] if predicted.get("adds") else [])
-        update(self.beliefs, " ;\n".join(writes))
+        #  WHAT IT RETRACTS IS TAKEN OUT WHEREVER THE AGENT HOLDS IT, AND WHAT IT ADDS GOES WHERE THAT
+        #  STOOD: replaced in place, so a drive's new cell lands beside the disks its rules read it with.
+        #  An addition replacing nothing is the executor's own belief, a graph of its own (#953).
+        held = [r["g"] for r in rows(self.beliefs, _HELD_Q, (), cat=Raw(f"<{catalogue_of(self.beliefs)}>"),
+                                     retracts=predicted["retracts"])] if predicted.get("retracts") else []
+        into = held[0] if held else fictive_graph(self.id)
+        writes = ([bind(_RETRACT_U, retracts=predicted["retracts"], held=Raw(" ".join(f"<{g}>" for g in held)))]
+                  if held else []) + ([bind(_ADD_U, into=into, adds=predicted["adds"])] if predicted.get("adds") else [])
+        if predicted.get("adds") and not held and into not in graphs_of(self.beliefs, BELIEF):
+            writes.append(f"INSERT DATA {{ {entry(self.beliefs, into, BELIEF, OREXIS + 'Derived', self.holder)} }}")
+        if writes:
+            update(self.beliefs, " ;\n".join(writes))
         if self.on_write is not None:
-            self.on_write(state)                # the rules conclude of the world the step moved
+            for graph in dict.fromkeys([*held, into] if predicted.get("adds") else held):
+                self.on_write(graph)            # the rules conclude of the world the step moved
 
     # --- the threads -------------------------------------------------------------------------------
 

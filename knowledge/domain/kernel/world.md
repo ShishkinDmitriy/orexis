@@ -21,7 +21,7 @@ what it is with `<> a <a graph kind>` on its own IRI, or, in TriG, of each graph
 | `world.ttl` | `orexis:WorldGraph` | the subjects and their ranges, the sensors, devices and systems, the venues — and `owl:imports` of the domains it speaks; in a world with no bus, its agent too | every agent, the simulator, and onboarding |
 | `society.ttl` | `orexis:SocietyGraph` | the agents and what each acts for, the client each is, the broker as what clients connect to, the topics, their filters, and which device speaks on which | every agent, the simulator, and onboarding |
 | `deployment.ttl` | `onboarding:DeploymentGraph` | where the broker listens, its `schema:url`s — only where the world pins them | onboarding alone |
-| `state.ttl` | `orexis:StateGraph` | where things stand at the start, for a world nothing senses | the agent it names |
+| `state.ttl` | `orexis:BeliefGraph` | where things stand at the start, for a world nothing senses | the agent it names |
 | `wants.ttl`, `desires.ttl` | `planning:WantGraph`, `planning:DesireGraph` | what an agent is to bring about, once or for good | the agent it names |
 | `beliefs/<id>.self.ttl` | `orexis:SelfGraph` | who one agent is and the roles it runs, `:fern_grower a orexis:Self , market:Bidder , sensing:Observer , prediction:Predictor`, and its stances | that agent alone, and onboarding |
 | `beliefs/<id>.ttl` | any agent-owned kind | one agent's own documents, in a world of several | the agent it names |

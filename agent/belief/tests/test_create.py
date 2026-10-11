@@ -35,11 +35,11 @@ def test_a_graph_written_is_revised_beside_the_world_alone(stand_in_runtime):
     store = ox.Store()
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} }}")
     rows_ = {"urn:test:world": "orexis:PublicGraph ; orexis:arrivedBy orexis:Asserted",
-             "urn:test:concluded": "orexis:StateGraph ; orexis:arrivedBy orexis:Derived ; "
+             "urn:test:concluded": "orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; "
                                    "dcterms:temporal [ orexis:start \"2025-01-01T00:00:00Z\"^^xsd:dateTime ; "
                                    "orexis:end \"2025-01-02T00:00:00Z\"^^xsd:dateTime ]",
-             "urn:test:other_reading": "orexis:StateGraph ; orexis:arrivedBy orexis:Received",
-             "urn:test:said": "orexis:StateGraph ; orexis:arrivedBy orexis:Recorded"}
+             "urn:test:other_reading": "orexis:BeliefGraph ; orexis:arrivedBy orexis:Received",
+             "urn:test:said": "orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded"}
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ "
                   + " ".join(f"<{g}> a {said} ." for g, said in rows_.items()) + " } }")
     runtime = stand_in_runtime(store, "urn:test:me", None)

@@ -30,7 +30,7 @@
    :ontology a orexis:OntologyGraph .
    :ontology a orexis:PublicGraph .
    :sensed a orexis:Graph .
-   :sensed a orexis:StateGraph .
+   :sensed a orexis:BeliefGraph .
    :sensed orexis:beliefsOf :keeper .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .

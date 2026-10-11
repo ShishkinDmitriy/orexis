@@ -82,7 +82,7 @@ class Observed:
 
 @dataclass(frozen=True)
 class Silence:
-    """How many sensors are said silent now: `sensing:silentSince` in a state graph of the agent's,
+    """How many sensors are said silent now: `sensing:silentSince` in a belief graph of the agent's,
     which `missed` writes once a sensor is past its limit of cadences and `received` takes back when a
     reading ends it."""
     metric = "silence"

@@ -44,7 +44,7 @@ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{on}> }}
 GRAPH <{T}actions> {{ <{MOVE}> a orexis:Action ; orexis:takes <{T}disk> , <{T}to> }}
 GRAPH <{T}catalogue> {{
   <{T}catalogue> a orexis:CatalogueGraph .
-  <{STATE}> a orexis:StateGraph . <{T}actions> a orexis:ActionGraph }}""", dataset=True)
+  <{STATE}> a orexis:BeliefGraph . <{T}actions> a orexis:ActionGraph }}""", dataset=True)
     return st
 
 

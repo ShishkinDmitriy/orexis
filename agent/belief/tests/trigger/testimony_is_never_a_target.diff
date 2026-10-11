@@ -17,7 +17,7 @@
    :world a orexis:PublicGraph .
 -  tick1:believed a orexis:BeliefGraph .
 -  tick1:believed a orexis:Graph .
--  tick1:believed a orexis:StateGraph .
+-  tick1:believed a orexis:BeliefGraph .
 -  tick1:believed orexis:arrivedBy orexis:Derived .
 -  tick1:believed orexis:beliefsOf :keeper .
    tick2:revisions a belief:RevisionGraph .

@@ -150,6 +150,23 @@ them were answering the second and third questions with a class.
 > allotment, alternated in one session: 9.6 s against 8.9 s for one test, the difference each template's
 > one parse, remembered after.
 
+> **`orexis:StateGraph` folded, built 2026-10-11 (#953).** The kernel declares no state kind, and the
+> worlds' `state.ttl` documents and the market's five kinds are beneath `orexis:BeliefGraph`. What the
+> kind did is said as follows. **The agent's own state** — what a transition reads beside its arrival
+> and deletes from, and what a ground's transitions carry — is every belief the agent derived that is
+> no revision and nothing everyone reads; it stays one graph per arrival, so a silence still ends a
+> state by its graph's period, and the belief base keeps the two CONSTRUCTs while planning takes the
+> engine's update. **The present** a landing is checked against, refine's frame and the present ground
+> read where it lies are every belief, and the walk is woken by a belief revised that is no committed
+> step. **A fictive step** takes its retractions out of every belief of the agent's holding them and
+> puts its additions where they stood, so a drive's new cell lands beside the disks the tower's rules
+> read it with; one replacing nothing goes into the executor's own. **The speech gate stays at the
+> writer** as an interim, a kind beneath belief and not beneath public, until a peer's word is
+> testimony ([a-peers-word-is-testimony-and-a-rule-makes-it-a-belief](/decisions/a-peers-word-is-testimony-and-a-rule-makes-it-a-belief.md),
+> #958); a peer may then say a committed step or a forecast, kinds the state kind kept out, as it could
+> always say a subject belief. A revision of a belief is a belief, so the readers that walk the agent's
+> own leave revisions to go with their sources. Every case reads as it did.
+
 After #951, since the writers' templates are what define the state and #951 makes each writer one
 update text parsed by rdflib. Then three slices, each keeping every world's figures:
 
@@ -166,4 +183,5 @@ Once built, this supersedes in part
 [who-put-the-fact-there](/decisions/who-put-the-fact-there.md) (the public class),
 [a-reader-states-the-kinds-it-reads](/decisions/a-reader-states-the-kinds-it-reads.md) (the public
 default), [a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md)
-(the target and the delete scope), and the modality page's `orexis:StateGraph` row.
+(the target and the delete scope), and the modality page's state row — both reconciled when the kind
+folded.

@@ -212,7 +212,7 @@ def test_an_actuator_that_listens_nowhere_is_sent_nothing_and_said_once(bus, cap
 
 #  THE KEEPER AND A PEER, each listening on a topic of its own for what the other says.
 _PEERS = """
-GRAPH :ontology { :NoteGraph rdfs:subClassOf orexis:StateGraph , orexis:BeliefGraph , orexis:Graph . }
+GRAPH :ontology { :NoteGraph rdfs:subClassOf orexis:BeliefGraph , orexis:BeliefGraph , orexis:Graph . }
 GRAPH :world {
   :keeper mqtt4ssn:listensToTopic :keeper_inbox .
   :keeper_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:hasFilterPattern "agents/keeper/inbox" ; mqtt4ssn:matchesTopic :keeper_inbox .

@@ -3,8 +3,8 @@ happened by its own signals, each carrying an event of `events.py`: `intention_r
 `commanded`, `said`, and — made only where heard — `step_taken`, `step_answered`, `walked`.
 
 LINKED, it connects `commanded` to every transport — a part that takes a `command` — and `said` to speech — what lies beneath it — and
-hears the deliberator's `revised`: where a source revised is a state graph, or the transitions an
-arrival triggered changed one, the present changed, so the world may have answered a step, and a walk
+hears the deliberator's `revised`: where a source revised is a belief of the agent's, or the transitions
+an arrival triggered changed one, the present changed, so the world may have answered a step, and a walk
 is queued; a prediction or a committed step revised is not the present, and answers no step. What
 a sensor said is no word of this package's (#944): its arrival changes the present by the
 transitions it triggers, which the deliberator says. STARTED, it walks what is due every pass, after planning.
@@ -15,7 +15,7 @@ present the earlier ones left.
 
 from __future__ import annotations
 
-from agent.ontology import STATE, local_of
+from agent.ontology import local_of
 from agent.store import Raw, catalogue_of, rows
 
 from .command import command
@@ -25,8 +25,11 @@ from .implementation import COMMAND, SAYING, operations
 from .says import says
 
 
-#  WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a state graph, by the catalogue.
-_PRESENT_Q = "SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a $state } } LIMIT 1"
+#  WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a belief of the agent's, by the catalogue.
+_PRESENT_Q = """
+SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
+                               FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
+                               FILTER NOT EXISTS { ?g a orexis:PublicGraph } } } LIMIT 1"""
 
 
 class _Execution:
@@ -49,14 +52,15 @@ class _Execution:
                 lambda revised: self._walk_soon() if revised.changed or self._present(revised.graphs) else None)
 
     def _present(self, graphs) -> bool:
-        """Whether any of `graphs` is a state graph — the present, which alone answers a step. A
-        prediction revised, or a committed step the executor itself wrote, is not: a walk on those would
+        """Whether any of `graphs` is the present, which alone answers a step: a belief of the agent's,
+        and none of the world's documents. A prediction revised is no belief, and a committed step the
+        executor itself wrote is no answer to one: a walk on those would
         read the clock for nothing, and a read of the clock is a tick in a test. An arrival whose
         transitions changed the state — what a sensor said, among them (#944) — the deliberator says
         by the state graphs it changed, heard beside this."""
         cat = catalogue_of(self.runtime.beliefs)
         return bool(graphs) and cat is not None and bool(rows(
-            self.runtime.beliefs, _PRESENT_Q, (), cat=Raw(f"<{cat}>"), state=STATE,
+            self.runtime.beliefs, _PRESENT_Q, (), cat=Raw(f"<{cat}>"),
             revised=Raw(" ".join(f"<{g}>" for g in graphs))))
 
     def _walk_soon(self) -> None:

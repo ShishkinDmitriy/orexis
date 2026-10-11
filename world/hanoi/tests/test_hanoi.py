@@ -9,11 +9,20 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent import clock
-from agent.ontology import STATE
+from agent.belief.ontology import REVISION_GRAPH
+from agent.execution.ontology import COMMITTED_STEP_GRAPH
+from agent.ontology import BELIEF, PUBLIC, SELF_GRAPH
 
 WANT = "http://example.org/orexis/planning#WantGraph"   # planning's word; the Planner is all planning exports
 from agent.runtime import PLANNED, Runtime, boot
 from agent.store import graphs_of, rows
+
+
+def _own(beliefs) -> list[str]:
+    """The agent's own beliefs, as the state documents were: no world's document, no self graph, no
+    revision, which goes with its source, and no committed step, which is the executor's record."""
+    shared = set(graphs_of(beliefs, PUBLIC, SELF_GRAPH, REVISION_GRAPH, COMMITTED_STEP_GRAPH))
+    return [g for g in graphs_of(beliefs, BELIEF) if g not in shared]
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -23,7 +32,7 @@ PLAN = "http://example.org/orexis#PlanGraph"
 #  THE DISKS HOME, read off the state by kind: a published plan's steps state the same rows in the
 #  graphs they predict in, and a prediction of a disk on C is not a disk on C.
 _HOME_Q = """PREFIX hanoi: <http://example.org/orexis/hanoi#>
-SELECT (COUNT(DISTINCT ?d) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:StateGraph }
+SELECT (COUNT(DISTINCT ?d) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
   GRAPH ?g { ?d (hanoi:on)+ hanoi:PegC } }"""
 #  THE PUBLISHED PLAN'S STEPS, each with the step after it and what it moves where, and what the plan
 #  spent — read off the belief base, where a plan published is, by its kind.
@@ -70,7 +79,7 @@ def _ticking(monkeypatch) -> None:
 
 def test_the_boot_says_what_each_graph_is():
     beliefs = boot(WORLD, "hanoi")
-    assert len(graphs_of(beliefs, WANT)) == 1 and len(graphs_of(beliefs, STATE)) == 1
+    assert len(graphs_of(beliefs, WANT)) == 1 and len(_own(beliefs)) == 1
     assert _home(beliefs) == 0, "three disks on peg A"
     (scopes,) = rows(beliefs, "SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a planning:Scope } }", ())
     assert int(scopes["n"]) >= 1, "scope_actions ran at boot"
