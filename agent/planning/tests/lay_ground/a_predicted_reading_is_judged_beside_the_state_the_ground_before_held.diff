@@ -14,25 +14,28 @@
  }
  
  GRAPH :held_ahead {
-@@ -71,6 +67,9 @@
+@@ -71,6 +67,10 @@
    :believed a orexis:Graph .
    :believed orexis:arrivedBy orexis:Derived .
    :believed orexis:beliefsOf :keeper .
++  :believed planning:cutBy "sha256:ce2dcc57c335da6d07e207828e3968d0a4ac95e6c78e68d6733720e7aa81a60f" .
 +  :believed.changeable a planning:ChangeableGraph .
 +  :believed.changeable orexis:arrivedBy orexis:Derived .
 +  :believed.changeable prov:wasDerivedFrom :believed .
    :catalogue a orexis:CatalogueGraph .
    :catalogue a orexis:Graph .
    :held_ahead a orexis:Graph .
-@@ -106,6 +105,55 @@
+@@ -106,6 +106,57 @@
    :sensed a orexis:Graph .
    :sensed orexis:arrivedBy orexis:Received .
    :sensed orexis:beliefsOf :keeper .
++  :sensed planning:cutBy "sha256:ce2dcc57c335da6d07e207828e3968d0a4ac95e6c78e68d6733720e7aa81a60f" .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
 +  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
++  :world planning:cutBy "sha256:ce2dcc57c335da6d07e207828e3968d0a4ac95e6c78e68d6733720e7aa81a60f" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:20:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .

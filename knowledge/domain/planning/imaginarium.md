@@ -21,7 +21,11 @@ are never touched. The word is the sovereign's, and says the thing that matters.
 The [planner](/domain/planning/planner.md) keeps one per [scope](/domain/planning/scope.md), and each pass
 refreshes it:
 
-- `prepare_ground` takes back every graph the last filling brought across, and what was cut out of it, and copies again every
+- `prepare_ground` keeps every copy whose source's row states the hash the copy's row was made with
+  ([a-graph-changes-in-place-and-its-row-says-what-it-holds](/decisions/a-graph-changes-in-place-and-its-row-says-what-it-holds.md)),
+  cut as it was, and reads its row again; it takes back, with what was cut out of it, every other graph
+  the last filling brought across — one that went, holds what it did not, or whose row states no hash —
+  and copies again every
   belief nobody owns — all of them, since a pattern reaching a graph nobody copied returns an empty result
   rather than an error — the catalogue, what the search reads to act by its own kinds (the actions,
   drifts, derivations, shapes, constraints and rules graphs), the agent's desires, wants and records, and

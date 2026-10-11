@@ -78,9 +78,9 @@ import pyoxigraph as ox
 
 from agent.belief.ontology import REVISION_GRAPH, RULES_GRAPH
 from agent.ontology import ACTION, BELIEF, DRIFT_GRAPH, PREDICTION, RECORD
-from agent.store import catalogue_of, forget_graph, graphs_of, revisions_of, rows
+from agent.store import Raw, bind, catalogue_of, forget_graph, graphs_of, revisions_of, rows, update
 
-from .ontology import CHANGEABLE_GRAPH, CONSTRAINT_GRAPH, DERIVATION_GRAPH, DESIRE, SCOPE_GRAPH, SHAPES, WANT
+from .ontology import CONSTRAINT_GRAPH, DERIVATION_GRAPH, DESIRE, SCOPE_GRAPH, SHAPES, WANT
 
 log = logging.getLogger("prepare_ground")
 
@@ -150,20 +150,40 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
     #  catalogue for a set that is unioned anyway. Measured at 107 µs a call on the plans case,
     #  which is why the list is spelled out here rather than built in pieces.
     made = {r["g"] for r in rows(into, _MADE_Q, ())}
-    #  AND WHAT THE LAST PASS CUT OUT OF IT: a changeable graph holds what its graph held then, and put
-    #  back beside a fresh copy it would stand a state that has since moved beside the one now (#953).
-    for iri in graphs_of(into, *CROSSING, CHANGEABLE_GRAPH):
-        if iri not in made:
-            forget_graph(into, iri)           # what the last filling brought across
     #  A STATE'S REVISIONS CROSS BY KIND: what the rules concluded of it is a belief, in a graph
     #  derived from the state's. A PERCEPT'S DO NOT: what the rules conclude of what a sensor said is a
     #  percept too, and neither is a kind that crosses (#944).
     behind = _of_another_scope(beliefs, scope, scopes)
-    for iri in dict.fromkeys([*graphs_of(beliefs, *CROSSING), catalogue_of(beliefs)]):
-        if iri is None or iri in behind:
+    wanted = [g for g in graphs_of(beliefs, *CROSSING) if g not in behind]
+    #  WHAT CHANGED SINCE THE LAST FILLING IS THE CATALOGUE'S TO SAY (a-graph-changes-in-place-and-its-row-
+    #  says-what-it-holds): a copy whose source's row states the hash the copy's row was made with holds
+    #  what its source holds and is kept, cut as it was; a graph that went, or holds what it did not, or
+    #  whose row states no hash, is taken back with what was cut out of it and copied again. A changeable
+    #  graph holds what its source held when it was cut, and put back beside a fresh copy it would stand a
+    #  state that has since moved beside the one now (#953).
+    said, held = _hashes(beliefs), _hashes(into)
+    kept = {g for g in wanted if said.get(g) is not None and said.get(g) == held.get(g)}
+    cut_from = {r["piece"]: r.get("source") for r in rows(into, _PIECES_Q, ())}
+    for iri in graphs_of(into, *CROSSING):
+        if iri not in made and iri not in kept:
+            forget_graph(into, iri, revisions=None)     # each copy is judged by itself, a revision too
+    for piece, source in cut_from.items():
+        if source not in kept:
+            forget_graph(into, piece, revisions=None)
+    #  A KEPT GRAPH'S ROW IS READ AGAIN, all but the cut it carries: a period ended or a flag flipped is
+    #  metadata, written in place in the belief base, and the row crossing again says it.
+    for iri in kept:
+        update(into, bind(_UNDESCRIBE_U, cat=Raw(f"<{catalogue_of(into)}>"), g=iri))
+    for iri in dict.fromkeys([*(g for g in wanted if g not in kept), catalogue_of(beliefs)]):
+        if iri is None:
             continue                          # a store nobody has told anything to has no catalogue
         into.extend(beliefs.quads_for_pattern(None, None, None, ox.NamedNode(iri)))
     return into
+
+
+def _hashes(store: ox.Store) -> dict[str, str]:
+    """Every graph `store`'s catalogue says the hash of, and the hash."""
+    return {r["g"]: r["h"] for r in rows(store, _HASHES_Q, ())}
 
 
 def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset[str]:
@@ -205,6 +225,15 @@ def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset
 #  laid here runs the transitions a predicted observation triggers (`lay_ground`, #944).
 CROSSING = (PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH, RULES_GRAPH,
             ACTION, DRIFT_GRAPH, DERIVATION_GRAPH, SHAPES, CONSTRAINT_GRAPH)
+
+#  EVERY ROW'S HASH, and every changeable graph with the graph it was cut from.
+_HASHES_Q = """SELECT ?g ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?h } }"""
+_PIECES_Q = """SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+  ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }"""
+#  A ROW TAKEN BACK, its period with it, and the cut it says it carries left: the graph is the one cut.
+_UNDESCRIBE_U = """DELETE { GRAPH $cat { $g ?p ?o . ?o ?pp ?po } }
+WHERE { GRAPH $cat { $g ?p ?o . FILTER(?p != planning:cutBy)
+                     OPTIONAL { ?o ?pp ?po . FILTER(?p = dcterms:temporal) } } }"""
 
 #  WHAT THE STORE MADE FOR ITSELF, which a refresh keeps: the grounds, the possible worlds and
 #  the plans, which are planning's kinds, and the wants the derivation minted, which are a

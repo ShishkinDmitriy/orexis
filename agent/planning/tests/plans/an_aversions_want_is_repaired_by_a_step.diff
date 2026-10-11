@@ -9,16 +9,18 @@
  }
  
  GRAPH :scopes {
-@@ -85,6 +83,131 @@
+@@ -85,6 +83,133 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:beliefsOf :keeper .
++  :sensed planning:cutBy "sha256:2deb87bf68488e0e88a46d10eea04e3ee15d48c39781b51b555d87b8499254df" .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
 +  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
 -}
++  :world planning:cutBy "sha256:2deb87bf68488e0e88a46d10eea04e3ee15d48c39781b51b555d87b8499254df" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .

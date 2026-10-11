@@ -1,9 +1,13 @@
 --- case
 +++ expected
-@@ -85,4 +85,33 @@
+@@ -83,6 +83,37 @@
+   :sensed a orexis:BeliefGraph .
+   :sensed a orexis:Graph .
    :sensed orexis:beliefsOf :keeper .
++  :sensed planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
++  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
