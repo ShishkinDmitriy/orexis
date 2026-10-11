@@ -329,7 +329,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   binds is read as absent** — kept, the self's anchor led rdflib's order, reordered the OPTIONAL
   chain a filling is asked as, and filled the greenhouse's dose with the heater (`footprint.parseable`).
 - **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —
-  narrowing was measured and not taken, since a real pass forks for 0.1% of itself (#662).
+  narrowing was measured and not taken, since a real pass forks for 0.1% of itself (#662); since #953
+  a fork copies what a writer can change and every rule still reads the rest, beside it.
+- **A ground holds what its scope's writers can change, cut out of every graph a search reads, and a
+  world reads what is left beside it** — effects, transitions and predictions say what changes, never a
+  document's kind; a pattern may over-match and never under-match, the two parts share no triple, and a
+  refresh takes the cut back with the graph it was cut from (#953, changeable).
 - **A rule does not say which world it reads; the list the runner builds says it instead** —
   `GRAPH $state` was one package claiming what every other package's actions can change (#666).
 - **A/B on this bench is alternated within one session or it is not a measurement** — the Pi drifts
@@ -419,8 +424,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A prediction is a diff, and only a ground has applied it** — one reader answers the derivation
   and the search (`world_at`), and refuses a world that says no period; the present, where no
   prediction has applied, it reads off a store with no ground as the readings themselves (#916).
-- **A world speaks for its state's revisions**, and **the search runs no rules, so a state's
-  revisions travel with it and an effect speaks the state a transition concludes** — a revision is of
+- **A world speaks for what can change of its state's revisions**, and **the search runs no rules, so a
+  state's revisions travel with it and an effect speaks the state a transition concludes** — a revision is of
   its source's kind and a drift's prediction is neither, which keeps the foreseen reading out of the
   present; the foreseen state is made where a ground is laid, before any search stands in it; and no
   reading crosses at all, a percept and what was concluded of it being no kind a world is made of (#944).

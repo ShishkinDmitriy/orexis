@@ -1,8 +1,9 @@
 """What a rule reads in one world — tested where the function lives.
 
 The claim that the grounds were laid for: a reader handed a world sees the world in the
-state's place and nothing the ground already speaks for — not the agent's readings, not a
-prediction, not another ground — beside everything public and the desires and wants.
+state's place and nothing the ground already speaks for — not what the search can change of the
+agent's readings, not a prediction, not another ground — beside everything public, what no step
+changes of every graph, and the desires and wants (#953).
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from agent import clock
 from agent.ontology import PUBLIC
 from agent.store import Memo, bindings, graphs_of, query
 from agent.planning.lay_ground import lay_ground
-from agent.planning.ontology import GROUND_GRAPH
+from agent.planning.ontology import CHANGEABLE_GRAPH, GROUND_GRAPH
 from agent.planning.prepare_ground import prepare_ground
 from agent.planning.world_at import world_at
 
@@ -38,8 +39,10 @@ def test_the_world_stands_in_the_states_place_and_nothing_the_ground_speaks_for_
     graphs = world_at(imagined, present)
     assert graphs[-1] == present, "the world named is the last graph, in the state's place"
     assert later not in graphs, "another ground is not"
-    assert STATE not in graphs and PREDICTION not in graphs, \
-        "the readings the ground was laid from, and the prediction it applied, are not"
+    changeable = set(graphs_of(imagined, CHANGEABLE_GRAPH))
+    assert changeable and not changeable & set(graphs) and PREDICTION not in graphs, \
+        "what the ground was laid from of the readings, and the prediction it applied, are not"
+    assert STATE in graphs, "what is left of the readings, that no step changes, is read beside the world"
     assert set(graphs_of(imagined, PUBLIC)) <= set(graphs), "everything public is"
 
 

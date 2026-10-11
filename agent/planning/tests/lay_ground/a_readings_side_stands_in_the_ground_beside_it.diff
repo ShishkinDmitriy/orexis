@@ -1,24 +1,61 @@
 --- case
 +++ expected
-@@ -70,4 +70,30 @@
+@@ -22,10 +22,6 @@
+ }
+ 
+ GRAPH :sensed {
+-  :soil a sosa:Observation .
+-  :soil sosa:hasFeatureOfInterest :bed .
+-  :soil sosa:hasSimpleResult 0.2 .
+-  :soil sosa:observedProperty :SoilMoisture .
+ }
+ 
+ GRAPH :sensed_revisions {
+@@ -40,7 +36,6 @@
+ }
+ 
+ GRAPH :drying_stops_revisions {
+-  :soil sensing:inside :bed_operating .
+ }
+ 
+ GRAPH :catalogue {
+@@ -58,16 +53,58 @@
+   :drying_stops_revisions a orexis:Graph .
+   :drying_stops_revisions orexis:arrivedBy orexis:Derived .
+   :drying_stops_revisions prov:wasDerivedFrom :drying_stops .
++  :drying_stops_revisions.changeable a planning:ChangeableGraph .
++  :drying_stops_revisions.changeable orexis:arrivedBy orexis:Derived .
++  :drying_stops_revisions.changeable prov:wasDerivedFrom :drying_stops_revisions .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+   :ontology a orexis:PublicGraph .
+   :sensed a orexis:Graph .
+   :sensed a orexis:StateGraph .
+   :sensed orexis:beliefsOf :keeper .
++  :sensed.changeable a planning:ChangeableGraph .
++  :sensed.changeable orexis:arrivedBy orexis:Derived .
++  :sensed.changeable prov:wasDerivedFrom :sensed .
+   :sensed_revisions a orexis:BeliefGraph .
+   :sensed_revisions a orexis:Graph .
+   :sensed_revisions orexis:arrivedBy orexis:Derived .
    :sensed_revisions prov:wasDerivedFrom :sensed .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T120000p0000 orexis:hash "sha256:632b57ea09c0a4f93d5aa14832f64082e5cea0a48956634965896ea1c484e4b5" .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:75d00bc1c7739d95dcce65e85e218e1dcf985ad52c2a5e807ab0fce80750c12d" .
 +  ground:2026-01-01T130000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T130000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T130000p0000 orexis:hash "sha256:b86c75a1199ef332c362c3b25f59bcf0919c3d7ee77e6f9e778ed02d9cf992d2" .
++  ground:2026-01-01T130000p0000 orexis:hash "sha256:4d783b4c0210ed4ebbe914da929af5826774e65c560d2d0823bfdf904d018871" .
 +  ground:2026-01-01T130000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
  }
 +
 +
 +GRAPH ground:2026-01-01T120000p0000 {
 +  :soil a sosa:Observation .
-+  :soil sensing:below :bed_operating .
++  :soil sensing:inside :bed_operating .
 +  :soil sosa:hasFeatureOfInterest :bed .
 +  :soil sosa:hasSimpleResult 0.2 .
 +  :soil sosa:observedProperty :SoilMoisture .
@@ -26,8 +63,18 @@
 +
 +GRAPH ground:2026-01-01T130000p0000 {
 +  :soil a sosa:Observation .
-+  :soil sensing:inside :bed_operating .
 +  :soil sosa:hasFeatureOfInterest :bed .
 +  :soil sosa:hasSimpleResult 0.35 .
++  :soil sosa:observedProperty :SoilMoisture .
++}
++
++GRAPH :drying_stops_revisions.changeable {
++  :soil sensing:inside :bed_operating .
++}
++
++GRAPH :sensed.changeable {
++  :soil a sosa:Observation .
++  :soil sosa:hasFeatureOfInterest :bed .
++  :soil sosa:hasSimpleResult 0.2 .
 +  :soil sosa:observedProperty :SoilMoisture .
 +}

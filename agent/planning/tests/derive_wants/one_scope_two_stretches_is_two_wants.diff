@@ -1,7 +1,21 @@
 --- case
 +++ expected
-@@ -80,4 +80,85 @@
+@@ -33,8 +33,6 @@
+ }
+ 
+ GRAPH :sensed {
+-  :tank1 :level 20 .
+-  :tank1 :temperature 20 .
+ }
+ 
+ GRAPH :dip {
+@@ -78,6 +76,95 @@
+   :sensed a orexis:BeliefGraph .
+   :sensed a orexis:Graph .
    :sensed a orexis:StateGraph .
++  :sensed.changeable a planning:ChangeableGraph .
++  :sensed.changeable orexis:arrivedBy orexis:Derived .
++  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
@@ -85,4 +99,9 @@
 +  :keeper.in_range.pursued.tank1.temperature.met a sh:NodeShape .
 +  :keeper.in_range.pursued.tank1.temperature.met sh:property [ planning:about :temperature ; sh:maxInclusive 30 ; sh:path :temperature ] .
 +  :keeper.in_range.pursued.tank1.temperature.met sh:targetNode :tank1 .
++}
++
++GRAPH :sensed.changeable {
++  :tank1 :level 20 .
++  :tank1 :temperature 20 .
 +}

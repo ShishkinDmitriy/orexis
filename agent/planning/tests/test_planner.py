@@ -26,8 +26,11 @@ import pyoxigraph as ox
 from agent import clock
 from agent.execution.executor import Executor
 from agent.planning.ontology import BUDGET_TERM, GROUND_GRAPH, PLAN_GRAPH, POSSIBLE_GRAPH
+from agent.ontology import PREDICTION
+from agent.planning import footprint
 from agent.planning.planner import BUDGET, Planner
-from agent.store import forget_graph, graphs_of, rows
+from agent.planning.world_at import world_at
+from agent.store import forget_graph, graphs_of, revisions_of, rows
 
 CASES_DIR = Path(__file__).parent / "plans"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -43,6 +46,69 @@ def test_the_pass_leaves_the_imaginarium_the_patch_says(case, monkeypatch, reque
     #  none here declares two.
     (imagined,) = planner.imaginaria.values()
     snapshots.held_to_diff(case, request, "planner", snapshots.snapshot_of(imagined))
+
+
+#  EVERY PASS CASE AND THE TWO DISKS, for what a world is made of (#953).
+_WORLD_CASES = [*CASES, Path(__file__).parent / "bench" / "two_disk_hanoi.trig"]
+
+
+def _passed(case, monkeypatch, snapshots):
+    """The imaginaria a pass over `case` leaves."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    planner = Planner(snapshots.stand_in(case), snapshots.AGENT)
+    planner.plan(snapshots.NOW)
+    assert planner.imaginaria, case.name
+    return planner.imaginaria.values()
+
+
+def _triples(store, graph):
+    return {(q.subject, q.predicate, q.object) for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph))}
+
+
+def _writes(store) -> tuple[set, set]:
+    """What the writers of a one-scope imaginarium can write: the predicates any object of which may be
+    written, and the `(predicate, object)` pairs written with a fixed object — an effect, a transition or
+    a prediction."""
+    patterns = footprint.changeable(store)
+    assert patterns is not footprint.ANYTHING
+    predictions = graphs_of(store, PREDICTION)
+    patterns += [(q.predicate.value, None) for graph in (*predictions, *revisions_of(store, *predictions))
+                 for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph))]
+    return {p for p, o in patterns if o is None}, {(p, o) for p, o in patterns if o is not None}
+
+
+def _written(triple, anything, fixed) -> bool:
+    _, p, o = triple
+    return p.value in anything or (p.value, f"<{o.value}>" if isinstance(o, ox.NamedNode) else str(o)) in fixed
+
+
+@pytest.mark.parametrize("case", _WORLD_CASES, ids=[c.stem for c in _WORLD_CASES])
+def test_nothing_read_beside_a_world_is_what_a_step_can_write(case, monkeypatch, snapshots):
+    """A world is its own graph read beside what is left of every graph the search reads, and what is
+    left holds nothing a writer can write: that was cut into the ground, so no value an effect replaces
+    in the world stands beside it in another graph (#953). Every case here is one scope, so the store's
+    writers are the scope's."""
+    for store in _passed(case, monkeypatch, snapshots):
+        anything, fixed = _writes(store)
+        worlds = [*graphs_of(store, GROUND_GRAPH), *graphs_of(store, POSSIBLE_GRAPH)]
+        assert worlds, case.name
+        for world in worlds:
+            for graph in world_at(store, world):
+                if graph != world:
+                    stale = [t for t in _triples(store, graph) if _written(t, anything, fixed)]
+                    assert not stale, (case.name, world, graph, stale)
+
+
+@pytest.mark.parametrize("case", _WORLD_CASES, ids=[c.stem for c in _WORLD_CASES])
+def test_every_triple_a_world_holds_is_one_a_writer_can_write(case, monkeypatch, snapshots):
+    """A world is forked from a ground of what can change, and a step writes into it: so every triple a
+    world holds is one some writer's pattern matches — an effect, a transition or a prediction. A triple
+    a step wrote that no pattern caught is the one that would stand beside its old value (#953)."""
+    for store in _passed(case, monkeypatch, snapshots):
+        anything, fixed = _writes(store)
+        for world in [*graphs_of(store, GROUND_GRAPH), *graphs_of(store, POSSIBLE_GRAPH)]:
+            for triple in _triples(store, world):
+                assert _written(triple, anything, fixed), (case.name, world, triple)
 
 
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):

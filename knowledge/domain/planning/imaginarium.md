@@ -21,7 +21,7 @@ are never touched. The word is the sovereign's, and says the thing that matters.
 The [planner](/domain/planning/planner.md) keeps one per [scope](/domain/planning/scope.md), and each pass
 refreshes it:
 
-- `prepare_ground` takes back every graph the last filling brought across and copies again every
+- `prepare_ground` takes back every graph the last filling brought across, and what was cut out of it, and copies again every
   public graph — every one, since a pattern reaching a graph nobody copied returns an empty result
   rather than an error — the catalogue, the rules graphs, the agent's desires, wants and records, and
   of its readings, predictions and subject beliefs those that are the scope's: one whose named members'
@@ -29,7 +29,9 @@ refreshes it:
   readings and a world their size
   ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)). What the
   store made for itself stays.
-- `lay_ground` lays a `planning:GroundGraph` per period: the present, and the present with each
+- `lay_ground` first cuts out of every graph crossed what the scope's writers can change, each into a
+  [changeable](/domain/planning/changeable.md) graph the present is laid from, the rest left to be read
+  beside every world; then it lays a `planning:GroundGraph` per period: the present, and the present with each
   [prediction](/domain/prediction/prediction.md) applied at its instant and the
   [transitions](/domain/belief/transition.md) its predicted observation triggers run there — which is
   what the rules graphs cross for.

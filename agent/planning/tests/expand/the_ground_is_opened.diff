@@ -1,6 +1,16 @@
 --- case
 +++ expected
-@@ -95,11 +95,29 @@
+@@ -54,8 +54,7 @@
+   :keeper.in_range rdfs:label "every tank in range" .
+ }
+ 
+-GRAPH :sensed {
+-}
++
+ 
+ GRAPH :scopes {
+   :fill planning:inScope :keeper.scope.1 .
+@@ -97,11 +96,29 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 a planning:Weighing .
@@ -31,9 +41,9 @@
    pursued:2026-01-01T120000p0000--open a orexis:Graph .
    pursued:2026-01-01T120000p0000--open a planning:WantGraph .
    pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-@@ -123,3 +141,8 @@
-   :keeper.in_range.pursued.tank1.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
-   :keeper.in_range.pursued.tank1.met sh:targetNode :tank1 .
+@@ -129,3 +146,8 @@
+ GRAPH :sensed.changeable {
+   :tank1 :level 0 .
  }
 +
 +

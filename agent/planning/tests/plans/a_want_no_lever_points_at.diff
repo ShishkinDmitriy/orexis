@@ -1,13 +1,13 @@
 --- case
 +++ expected
-@@ -60,4 +60,50 @@
+@@ -60,4 +60,46 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T120000p0000 orexis:hash "sha256:6049dbc777f47880d902c748f455b6e2f0c0df6ee3e7cd098544d26edb928bc8" .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
@@ -28,10 +28,6 @@
 +  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
  }
 +
-+
-+GRAPH ground:2026-01-01T120000p0000 {
-+  :tank1 :level 0 .
-+}
 +
 +GRAPH plan:keeper.in_range.pursued.tank1 {
 +  plan:keeper.in_range.pursued.tank1 a planning:Plan .

@@ -7,11 +7,12 @@ beside the prediction holding then — so a tank low now with a prediction refil
 unmet for ever, the exact failure the grounds were laid to close. Measured before it was
 believed: the grounds were right and the want was open-ended.
 
-WHAT IS LEFT OUT IS EVERYTHING THE GROUND SPEAKS FOR: the agent's own state, every
-prediction, and every ground and possible world but the one meant. A ground IS the state
-as it stands over a period with each prediction applied, so handing the raw state graph
-beside it puts the present's value in the world next to the one that superseded it, and a
-shape holding over every value sees both. A PERCEPT IS NEVER IN IT, nor anything concluded of one:
+WHAT IS LEFT OUT IS EVERYTHING THE GROUND SPEAKS FOR: what the search can change, cut out of
+every graph into a changeable graph (`lay_ground`, #953), every prediction, and every ground and
+possible world but the one meant. A ground IS what can change as it stands over a period with each
+prediction applied, so handing the changeable graph beside it puts the present's value in the world
+next to the one that superseded it, and a shape holding over every value sees both. What is left
+of every graph after the cut is read beside the world, being what no step changes. A PERCEPT IS NEVER IN IT, nor anything concluded of one:
 what a sensor said is of no kind read here (#944), and the state a transition made of it is.
 
 THE PERIOD IS THE WORLD'S OWN, read off its row. A ground is read at its start, the instant the
@@ -38,7 +39,7 @@ from agent.ontology import PREDICTION, STATE
 from .ontology import FORESEEN
 from agent.store import Raw, catalogue_of, graphs_of, remember, revisions_of, rows
 
-from .ontology import GROUND_GRAPH, POSSIBLE_GRAPH
+from .ontology import CHANGEABLE_GRAPH, GROUND_GRAPH, POSSIBLE_GRAPH
 
 _WHEN_Q = """
 SELECT ?at ?until WHERE {
@@ -71,21 +72,24 @@ def world_at(store, world: str | None, *, holder: str | None = None, now: dateti
             raise LookupError(f"{world} says no period — is it a ground or a possible world?")
         at = datetime.fromisoformat(when[0])
         until = datetime.fromisoformat(when[1]) if when[1] else at
-    #  WHAT A WORLD SPEAKS FOR: the readings, the predictions, the grounds and the possible
-    #  worlds — and what the rules concluded of a reading or a prediction, since a ground is laid
-    #  with those revisions and a step's effect rewrites them there. Read beside the world, a
-    #  reading's old side would outlive the dose that answered it.
+    #  WHAT A WORLD SPEAKS FOR: what the search can change, cut out of every graph it reads beside
+    #  (`lay_ground`, #953), the predictions and what was concluded of them, the grounds and the
+    #  possible worlds. A ground is laid from the changeable graphs and the predictions applied over
+    #  them, so read beside the world, a value an effect replaced would outlive the effect; what is
+    #  left of every graph the cut was made in is read beside it, being what no step changes.
     def spoken():
-        readings = graphs_of(store, STATE, PREDICTION)
-        return frozenset([*graphs_of(store, STATE, PREDICTION, GROUND_GRAPH, POSSIBLE_GRAPH),
-                          *revisions_of(store, *readings)])
+        predictions = graphs_of(store, PREDICTION)
+        return frozenset([*graphs_of(store, CHANGEABLE_GRAPH, PREDICTION, GROUND_GRAPH, POSSIBLE_GRAPH),
+                          *revisions_of(store, *predictions)])
     spoken_for = remember(memo, ("spoken_for",), spoken)
     known = remember(memo, ("knowable", at, until, holder, now), lambda: tuple(
         g for g in graphs_of(store, *FORESEEN, at=at, until=until, holder=holder, now=now)
         if g not in spoken_for))
     if world is None:
         #  THE PRESENT GROUND'S OWN FILLING, read where it lies: every state graph and what the rules
-        #  concluded of it, as `lay_ground` copies them into the ground it lays at the present.
+        #  concluded of it, and what the search can change of every graph, as `lay_ground` copies the
+        #  changeable graphs into the ground it lays at the present.
         states = graphs_of(store, STATE)
-        return [*known, *states, *revisions_of(store, *states)]
+        return list(dict.fromkeys([*known, *states, *revisions_of(store, *states),
+                                   *graphs_of(store, CHANGEABLE_GRAPH)]))
     return [*known, world]

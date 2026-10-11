@@ -1,13 +1,13 @@
 --- case
 +++ expected
-@@ -85,4 +85,46 @@
+@@ -85,4 +85,33 @@
    :sensed a orexis:StateGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T120000p0000 orexis:hash "sha256:18e27f3261ea397629f6f46a1095250f10a75875fa02ae4acef95673f8cc46c6" .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:for :keeper.warm_enough .
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:met false .
@@ -20,19 +20,6 @@
 +  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
  }
 +
-+
-+GRAPH ground:2026-01-01T120000p0000 {
-+  :cold_reading a sensing:BelowRegion .
-+  :cold_reading a sosa:Observation .
-+  :cold_reading sosa:hasFeatureOfInterest :air_of_cold_room .
-+  :cold_reading sosa:hasSimpleResult 11 .
-+  :cold_reading sosa:observedProperty water:AirTemperature .
-+  :warm_reading a sensing:InRegion .
-+  :warm_reading a sosa:Observation .
-+  :warm_reading sosa:hasFeatureOfInterest :air_of_warm_room .
-+  :warm_reading sosa:hasSimpleResult 21 .
-+  :warm_reading sosa:observedProperty water:AirTemperature .
-+}
 +
 +GRAPH pursued:2026-01-01T120000p0000--open {
 +  :keeper planning:holds :keeper.warm_enough.pursued.fern .

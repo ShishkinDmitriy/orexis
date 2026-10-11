@@ -137,6 +137,16 @@ them were answering the second and third questions with a class.
 
 # How it is built
 
+> **The first slice, built 2026-10-11 (#953).** The cut is made in `lay_ground`, not where the
+> imaginarium is filled, because a case lays its grounds in its own store; a refresh takes it back with
+> the graph it was cut from ([changeable](/domain/planning/changeable.md)). The drifts' share is the
+> predictions': a prediction writes what it adds, and its retraction takes out of a ground what stands
+> there. What another scope alone can change is still dropped whole, by graph, as `_of_another_scope`
+> did: a pattern of a predicate cannot tell one bed's soil from another's, so the three classes a scope
+> sees — changeable by it, by others alone, by none — wait on a key for the second. Measured on the
+> allotment, alternated in one session: 9.6 s against 8.9 s for one test, the difference each template's
+> one parse, remembered after.
+
 After #951, since the writers' templates are what define the state and #951 makes each writer one
 update text parsed by rdflib. Then three slices, each keeping every world's figures:
 

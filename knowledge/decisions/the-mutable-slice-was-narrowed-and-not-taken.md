@@ -13,6 +13,17 @@ status: accepted
 timestamp: 2026-09-16T10:00:00Z
 ---
 
+> **Amended 2026-10-11 (#953): the slice is cut now, for another reason.** A ground holds what its
+> scope's writers can change, cut out of every graph a search reads into a changeable graph, and a
+> world reads what is left beside it ([changeable](/domain/planning/changeable.md)). It is taken because
+> the state stopped being a kind a document declares
+> ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)),
+> not for the fork's cost, which this record measured at 0.1% and which stands. Neither refusal below is
+> crossed: the cut is by property, a predicate and a fixed object, as the second refusal concluded it
+> had to be; and nothing a rule reads is skipped, since what is not in the fork is read beside it. Its
+> risk is the one this record named in another place: a pattern that under-reports what is WRITTEN, held
+> by a test over every pass case (`test_planner.py`).
+
 # The mutable slice was narrowed, measured and not taken
 
 [a-node-holds-one-world](/decisions/a-node-holds-one-world.md) refused an overlay and named the
