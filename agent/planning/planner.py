@@ -189,7 +189,10 @@ SELECT ?w WHERE { GRAPH ?g { ?w planning:reopens ?w }
 #  an imaginarium holds does — its grounds and its possible worlds — asked before the grounds are laid,
 #  when what it holds is what the last pass left.
 _GROUND_HASHES_Q = """SELECT ?h WHERE { GRAPH $cat { ?g a planning:GroundGraph ; orexis:hash ?h } }"""
-_HASHES_Q = """SELECT DISTINCT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w orexis:hash ?h } }"""
+#  A WORLD'S, NEVER A BELIEF'S: a belief's row carries the hash of what it holds too (a-graph-changes-in-place-
+#  and-its-row-says-what-it-holds), and a ground holding the cut of one belief whole hashes as that belief does.
+_HASHES_Q = """SELECT DISTINCT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w orexis:hash ?h .
+  { ?w a planning:GroundGraph } UNION { ?w a planning:PossibleGraph } } }"""
 
 #  THE WANTS THE DERIVATION MINTED in an imaginarium — the only ones it can mint again.
 _DERIVED_Q = """

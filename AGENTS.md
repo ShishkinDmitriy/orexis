@@ -613,6 +613,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   agent's own names its owner, since one naming none is read as the world's; read over every belief
   instead, a footprint lost the heater's scope again (#913) and revision would read one peer's
   extracted word beside another's (#953).
+- **A belief changes in place, and its row says what it holds by hash** — every writer of a belief
+  or a prediction stamps `orexis:hash` as it finishes, `world/conftest.py` holds every world's tests to
+  it, and a renaming per change and a counter were refused, the test being the guarantee either way
+  (a-graph-changes-in-place-and-its-row-says-what-it-holds).
 - **An update takes no dataset** — what chooses which graphs are the world at an instant is Python
   or a materialised view.
 - **What ends by the clock is a graph with a period, and one sweep drops it** — what the ending

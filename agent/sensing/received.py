@@ -72,6 +72,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
+from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, local_of
 from agent.stance import stance
 from agent.store import Raw, catalogue_of, end_graph, entry, forget_graph, graphs_of, rows, update
@@ -243,6 +244,7 @@ def _forecast(store, me: str, sensor: str, feature: str, observed_property: str,
 INSERT DATA {{
   GRAPH <{graph}> {{ {' . '.join(said)} . }}
   {entry(store, graph, FORECAST_GRAPH, RECEIVED, me, start=start, end=end)} }}""")
+        hash_named_graph(store, graph)
         written.append(graph)
     log.info("%s: %s of %s forecast for %d stretch(es)%s", local_of(me), local_of(observed_property),
              local_of(feature), len(written), f" to {stretches[-1][1].isoformat(timespec='minutes')}" if written else "")

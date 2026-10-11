@@ -35,6 +35,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
+from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, local_of
 from agent.stance import stance
 from agent.store import Raw, catalogue_of, entry, remember, rows, update
@@ -80,6 +81,7 @@ def missed(store, me: str, now: datetime, *, memo=None) -> list[str]:
 INSERT DATA {{
   GRAPH <{graph}> {{ <{sensor}> sensing:silentSince "{fell_due.isoformat()}"^^xsd:dateTime . }}
   {entry(store, graph, BELIEF, DERIVED, me, start=fell_due)} }}""")
+        hash_named_graph(store, graph)
         log.warning("%s: %s silent since %s, %d cadences past", local_of(me), local_of(sensor),
                     fell_due.isoformat(timespec="seconds"), limit)
     return out

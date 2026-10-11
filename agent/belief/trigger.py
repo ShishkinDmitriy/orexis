@@ -43,6 +43,7 @@ from dataclasses import dataclass
 
 import pyoxigraph as ox
 
+from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, OREXIS
 from agent.store import Raw, bind, catalogue_of, entry, forget_graph, graphs_of, revisions_of, rows, update
 
@@ -69,6 +70,9 @@ _DERIVED_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
                                FILTER NOT EXISTS { ?g a belief:RevisionGraph }
                                ?g orexis:beliefsOf ?owner . } } ORDER BY ?g"""
+
+#  WHETHER A GRAPH STILL HAS A ROW: one an order emptied was forgotten, row and all.
+_ROW_Q = """SELECT ?k WHERE { GRAPH $cat { $graph a ?k } } LIMIT 1"""
 
 #  A ROW, AND ITS PERIOD, TAKEN BACK — for an arrival's state graph said again of a later arrival.
 _UNDESCRIBE_U = """
@@ -106,7 +110,7 @@ def trigger(store, arrival: str, *, budget: int = BUDGET, done: int = 0) -> Trig
     for n in range(done, len(orders)):
         if spent >= budget:
             log.debug("the transitions %s triggers are cut short after %d of %d order(s)", arrival, n, len(orders))
-            return Triggered(spent, n, False, tuple(changed))
+            return Triggered(spent, n, False, _stamped(store, cat, changed))
         state = _derived(store, cat)
         #  WHAT WAS CONCLUDED OF THE ARRIVAL, whatever kind its runner revised it into: every revision is
         #  this package's `belief:RevisionGraph`, so this asks that and learns no other package's word.
@@ -125,7 +129,16 @@ def trigger(store, arrival: str, *, budget: int = BUDGET, done: int = 0) -> Trig
                 changed.append(into)
         if change.added or change.deleted:
             log.debug("%s triggered order %d: %d deleted, %d added", arrival, n, len(change.deleted), len(change.added))
-    return Triggered(spent, len(orders), True, tuple(changed))
+    return Triggered(spent, len(orders), True, _stamped(store, cat, changed))
+
+
+def _stamped(store, cat: str, changed: list[str]) -> tuple:
+    """`changed`, each graph still standing stamped with the hash of what it now holds: a belief
+    changes in place and its row says what it holds (a-graph-changes-in-place-and-its-row-says-what-it-holds)."""
+    for graph in changed:
+        if rows(store, _ROW_Q, (), cat=Raw(f"<{cat}>"), graph=graph):
+            hash_named_graph(store, graph)
+    return tuple(changed)
 
 
 def _deleted_from(store, change, targets) -> list[str]:

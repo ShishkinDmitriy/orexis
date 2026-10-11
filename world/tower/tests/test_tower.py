@@ -16,6 +16,7 @@ from pathlib import Path
 from agent import clock
 from agent.belief.ontology import REVISION_GRAPH
 from agent.execution.ontology import COMMITTED_STEP_GRAPH
+from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, SELF_GRAPH
 from agent.runtime import MET, Runtime, boot
 from agent.store import forget_graph, graphs_of, revisions_of, rows, update
@@ -49,6 +50,8 @@ def _two_disks(beliefs) -> None:
     """The world less its large disk, and the conclusions drawn of the three taken back, so the
     runtime revises the state again at its start."""
     update(beliefs, f"DELETE WHERE {{ GRAPH ?g {{ <{TOWER}disk_3> ?p ?o }} }}")
+    for graph in graphs_of(beliefs, BELIEF):
+        hash_named_graph(beliefs, graph)       # a hand that edits a belief stamps it, as every writer does
     for graph in revisions_of(beliefs, *_own(beliefs)):
         forget_graph(beliefs, graph)
 

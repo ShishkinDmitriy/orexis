@@ -88,6 +88,7 @@ import pyoxigraph as ox
 
 from agent import clock
 from agent.lifecycle import Signal
+from agent.hash_named_graph import hash_named_graph
 from agent.ontology import ACTION, BELIEF, OREXIS, local_of
 from agent.stance import stance
 from agent.store import (NAMESPACES, Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant,
@@ -564,6 +565,7 @@ class Executor:
                      for q in quads_for_pattern(self.intentions, subject, graph=plan)
                      if not q.predicate.value.startswith(EXECUTION) and q.predicate != _RDF_TYPE]
             add_quads(self.beliefs, held)
+            hash_named_graph(self.beliefs, graph)
             log.debug("%s: %s is committed from %s, landing within %.0fs and answered within %.0fs",
                       self.id, local_of(step), opens.isoformat(timespec="seconds"), within, by)
             if self.on_write is not None:
@@ -954,6 +956,9 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             writes.append(f"INSERT DATA {{ {entry(self.beliefs, into, BELIEF, OREXIS + 'Derived', self.holder)} }}")
         if writes:
             update(self.beliefs, " ;\n".join(writes))
+            for graph in dict.fromkeys([*held, into] if predicted.get("adds") else held):
+                if graph in graphs_of(self.beliefs, BELIEF):      # one its retractions emptied stands, empty
+                    hash_named_graph(self.beliefs, graph)
         if self.on_write is not None:
             for graph in dict.fromkeys([*held, into] if predicted.get("adds") else held):
                 self.on_write(graph)            # the rules conclude of the world the step moved

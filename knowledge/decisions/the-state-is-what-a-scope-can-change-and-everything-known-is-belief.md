@@ -206,10 +206,11 @@ them were answering the second and third questions with a class.
 > owner — a constraint, a desire, a belief — is shared by every agent of the world, and the refusal of a
 > desire saying nobody's goes, a desire's holder being in its rows. Every case reads as it did.
 
-> **Amended 2026-10-11: what changed is a diff of names.** A graph a copy is made of is never changed
-> under its name ([a-graph-is-never-changed-under-its-name](/decisions/a-graph-is-never-changed-under-its-name.md)),
-> so the imaginarium refreshes the names that came and went and keeps every copy of a name that stands,
-> hearing no signal from any writer.
+> **Amended 2026-10-11: what changed is the catalogue's to say.** A belief or a prediction changes in
+> place and its row states the hash of what it holds
+> ([a-graph-changes-in-place-and-its-row-says-what-it-holds](/decisions/a-graph-changes-in-place-and-its-row-says-what-it-holds.md)),
+> so the imaginarium copies again the names that came and the names whose hash moved, forgets the names
+> that went, and keeps every other copy, hearing no signal from any writer.
 
 After #951, since the writers' templates are what define the state and #951 makes each writer one
 update text parsed by rdflib. Then three slices, each keeping every world's figures:

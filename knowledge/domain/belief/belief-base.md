@@ -42,6 +42,13 @@ Each reading, and each step taken and how it ended, also goes to the agent's his
 series point, for the panels to draw, and where the world is monitored a minute's metrics go to
 its metrics bucket. The series is watched, never believed: nothing reads it back into the store.
 
+# What a graph says of itself
+
+A belief or a prediction changes in place, under its name, and its catalogue row says what it holds:
+every writer stamps the hash of the content it leaves, `orexis:hash`, as the boot does of every
+document it put, so a copy made of a graph knows by the row whether it is still right, and a row that
+lies fails the world's tests ([a-graph-changes-in-place-and-its-row-says-what-it-holds](/decisions/a-graph-changes-in-place-and-its-row-says-what-it-holds.md)).
+
 # What a restart keeps
 
 Everything the agent owns. A volume it has lived in re-reads only the documents nobody owns — the

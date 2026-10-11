@@ -177,7 +177,8 @@ From bytes on a topic to a quantity an agent believes — and who holds the cloc
 * [the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md) - Belief is the one kind; a scope extracts its state from what its writers can write, and provenance replaces the public and state kinds.
 * [a-role-is-an-instance-an-agent-plays](/decisions/a-role-is-an-instance-an-agent-plays.md) - A role is an instance the agent plays, carrying its context and period; where it is stated decides who sees it.
 * [a-peers-word-is-testimony-and-a-rule-makes-it-a-belief](/decisions/a-peers-word-is-testimony-and-a-rule-makes-it-a-belief.md) - A peer's document is testimony in speech's own kind; only the agent's rules make it a belief or a prediction, so no kind gate remains.
-* [a-graph-is-never-changed-under-its-name](/decisions/a-graph-is-never-changed-under-its-name.md) - A change makes a new version and forgets the one before, so a copy never goes stale and what changed is the catalogue's diff.
+* [a-graph-is-never-changed-under-its-name](/decisions/a-graph-is-never-changed-under-its-name.md) - SUPERSEDED — a change was to make a new version and forget the one before; superseded before it was built.
+* [a-graph-changes-in-place-and-its-row-says-what-it-holds](/decisions/a-graph-changes-in-place-and-its-row-says-what-it-holds.md) - A belief changes in place and every writer stamps its content's hash on the row; a test catches a forgotten stamp.
 
 # Firmware, alarms and stand-ins
 

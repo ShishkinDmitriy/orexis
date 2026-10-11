@@ -13,9 +13,16 @@ description: >-
   catalogue, and a copy made of a name can never go stale. Refused - changing a graph in place, keeping
   every version in the belief base, a link from each version back to the one it replaced, a log of
   changes beside mutable graphs, and a stamp each writer updates on the graph's row.
-status: accepted
+status: superseded
+superseded-by: a-graph-changes-in-place-and-its-row-says-what-it-holds
 timestamp: 2026-10-11T18:00:00Z
 ---
+
+> **Superseded 2026-10-11, before it was built.** A graph changes in place, and every writer stamps
+> the hash of what it holds on its row
+> ([a-graph-changes-in-place-and-its-row-says-what-it-holds](/decisions/a-graph-changes-in-place-and-its-row-says-what-it-holds.md)).
+> The test below is kept; the renaming it guarded is not, since the test alone was what caught a writer
+> that changed a graph under its name.
 
 # Context
 
