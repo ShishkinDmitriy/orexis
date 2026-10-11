@@ -16,7 +16,7 @@ from pathlib import Path
 import pyoxigraph as ox
 import pytest
 
-from agent.ontology import BELIEF, OREXIS, PUBLIC, SELF, SELF_GRAPH
+from agent.ontology import BELIEF, OREXIS, SELF, SELF_GRAPH
 from agent.runtime import boot, packages_of, selves, world_of
 from agent.store import DocumentRefused, forget_graph, graphs_of, rows, update
 
@@ -74,7 +74,7 @@ def test_the_boot_puts_in_the_self_graph_the_world_authored_for_the_agent_it_was
     assert rows(store, _ROW_Q, (), g=_uri(world, "two.ttl")) == [{"arrival": OREXIS + "Asserted", "owner": ANN}], \
         "authored by the world and the agent's own"
     graph = _uri(world, "two.ttl")
-    assert graph in graphs_of(store, BELIEF) and graph not in graphs_of(store, PUBLIC), \
+    assert graph in graphs_of(store, BELIEF) and graph not in graphs_of(store, BELIEF, nobodys=True), \
         "a belief, read by every text answered over what is known — and nobody else's to read"
 
 
@@ -121,11 +121,18 @@ def test_a_graph_of_an_agents_own_that_names_no_agent_of_the_world_is_refused(wo
         boot(world, "ann")
 
 
-def test_a_public_graph_that_says_whose_it_is_is_refused(world):
-    """A public graph is everyone's: owned, it would not be read again at a volume's next boot."""
-    (world / "world.ttl").write_text(_WORLD.replace("<> a orexis:WorldGraph .", "<> a orexis:WorldGraph ; orexis:beliefsOf :ann ."))
-    with pytest.raises(DocumentRefused, match="is public"):
-        boot(world, "ann")
+def test_a_belief_of_the_world_is_whose_it_says_and_nobodys_where_it_says_none(world):
+    """Whose a belief is, is what it says, never its kind (#953): a belief of the world naming ann is
+    ann's own, kept as an agent's own graph is, and one naming nobody is everyone's, read again at
+    every boot as the world graph is. Ann's is not bob's: bob's boot passes it over."""
+    (world / "beliefs" / "notes.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph ; orexis:beliefsOf :ann .\n:pot :says \"ann's\" .\n")
+    (world / "shared.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph .\n:pot :says \"everyone's\" .\n")
+    ann, bob = boot(world, "ann"), boot(world, "bob")
+    notes, shared = _uri(world, "notes.ttl"), (world / "shared.ttl").resolve().as_uri()
+    assert notes in graphs_of(ann, BELIEF) and notes not in graphs_of(ann, BELIEF, nobodys=True), "ann's own"
+    assert rows(ann, _ROW_Q, (), g=notes) == [{"arrival": OREXIS + "Asserted", "owner": ANN}]
+    assert notes not in graphs_of(bob, BELIEF), "and no graph of bob's"
+    assert all(shared in graphs_of(store, BELIEF, nobodys=True) for store in (ann, bob)), "everyone's"
 
 
 def test_a_volume_lived_in_keeps_the_one_self_it_has(world):

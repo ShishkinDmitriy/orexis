@@ -20,7 +20,7 @@ GRAPH :state            { :parcel courier:destination :c1_1 . }
 GRAPH :state.changeable { :van courier:at :c0_0 . }
 ```
 
-A belief, public or record graph a search reads is cut in two in the
+A belief or record graph a search reads is cut in two in the
 [imaginarium](/domain/planning/imaginarium.md), as `lay_ground` lays the grounds: the triples some
 writer of the search's [scope](/domain/planning/scope.md) can write go into a `planning:ChangeableGraph`
 derived from the graph (`prov:wasDerivedFrom`), and the graph keeps the rest. The present ground is laid

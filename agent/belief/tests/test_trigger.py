@@ -2,7 +2,7 @@
 (knowledge/domain/belief/transition.md, a-transition-changes-the-state-and-an-inference-only-concludes).
 
 A case in `trigger/` is a store with a tick that has arrived — testimony, a graph received — the
-agent's own state before it, public knowledge, and the transitions in a rules graph, each typed
+agent's own state before it, what the world states, and the transitions in a rules graph, each typed
 `belief:Transition`, as a domain would ship them. The test triggers the tick's transitions and `<case>.diff` is
 what that changed: the state taken out where it stood, a graph left empty forgotten, and what was
 inserted in the state graph the runner prepares for the tick, over the tick's period. The words are
@@ -33,7 +33,7 @@ _HELD_Q = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?
 #  writes — never a tick or a graph heard, which are beliefs it received.
 _OWN_STATE_Q = """SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
     ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-    FILTER NOT EXISTS { ?g a belief:RevisionGraph } FILTER NOT EXISTS { ?g a orexis:PublicGraph } } } ORDER BY ?g"""
+    FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:beliefsOf ?owner . } } ORDER BY ?g"""
 
 
 def _held(store) -> dict[str, str]:

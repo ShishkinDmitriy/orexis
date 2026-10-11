@@ -4,7 +4,7 @@ title: Imaginarium
 term: http://example.org/orexis/planning#PossibleGraph
 description: >-
   The store a search thinks in - a second pyoxigraph store, in memory, one per scope, filled from
-  the beliefs with every public graph, the agent's desires and wants, and the readings and
+  the beliefs, every one nobody owns among them, the agent's desires and wants, and the readings and
   predictions that are the scope's, and holding one graph per possible world. What is in it never happened, and nothing in it reaches
   the beliefs; it outlives the pass so the next can continue.
 ---
@@ -13,7 +13,7 @@ description: >-
 
 A step's effect is SPARQL, and a query reads one store: "what would be true here" is answerable
 only in a store where *here* is what is true. So the search forks worlds into a store of its own,
-where a rule asked about a world reads that world's graphs beside the public ones, and the beliefs
+where a rule asked about a world reads that world's graphs beside those nobody owns, and the beliefs
 are never touched. The word is the sovereign's, and says the thing that matters.
 
 # How it is filled
@@ -22,7 +22,7 @@ The [planner](/domain/planning/planner.md) keeps one per [scope](/domain/plannin
 refreshes it:
 
 - `prepare_ground` takes back every graph the last filling brought across, and what was cut out of it, and copies again every
-  public graph — every one, since a pattern reaching a graph nobody copied returns an empty result
+  belief nobody owns — all of them, since a pattern reaching a graph nobody copied returns an empty result
   rather than an error — the catalogue, the rules graphs, the agent's desires, wants and records, and
   of its readings, predictions and subject beliefs those that are the scope's: one whose named members'
   scopes meet elsewhere, with its revisions, stays behind, so the grounds laid here are the scope's

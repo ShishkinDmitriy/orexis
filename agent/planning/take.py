@@ -9,7 +9,7 @@ its parts, and a reader who wants to know what taking a candidate does opens one
 
 **EVERYTHING IT NEEDS IS ON THE CANDIDATE'S ROW OR THE PARENT'S**, read in ONE query: which
 world it is taken in, what it fills, what that world spent and when it is; the action's texts
-off public knowledge; the next mint number off the pass's memo, read from the store once. Who
+off what the world states; the next mint number off the pass's memo, read from the store once. Who
 is taking it is nobody's argument: a text about the agent asks `?me a orexis:Self`, and the self
 crossed into the imaginarium with the beliefs. False where the action's rules say nothing about this world
 — no effect stated, or rules that add nothing and state no delete template — which is not
@@ -76,7 +76,7 @@ import pyoxigraph as ox
 from agent.belief.transition import Rule, run
 from agent.execution.ontology import ADDS_GRAPH, RETRACTS_GRAPH
 from agent.hash_named_graph import digest_of
-from agent.ontology import ACTION, PUBLIC, SELF_GRAPH, local_of
+from agent.ontology import ACTION, BELIEF, SELF_GRAPH, local_of
 
 from agent.store import (Raw, bind, bindings, catalogue_of, clear_graph, closed, construct, copy_graph,
                                 graphs_of, instant, query, remember, render, rows, update)
@@ -95,7 +95,7 @@ from .world_at import world_at
 
 log = logging.getLogger("take")
 
-#  THE ACTION'S TEXTS, read off public knowledge like everything else. `?rule` is bound by
+#  THE ACTION'S TEXTS, read off what the world states like everything else. `?rule` is bound by
 #  SUBSTITUTION (#500), the engine's own parameter, projected. `STR(?takes)` because
 #  GROUP_CONCAT over an IRI binds nothing in this engine.
 _RULE_Q = """
@@ -224,7 +224,7 @@ def take(store, cand: str, *, memo=None, within: frozenset | None = None) -> boo
         return False
     #  EVERY KIND A POSSIBLE GRAPH IS BENEATH, once per pass: the closure is materialised at
     #  genesis, so one `rdfs:subClassOf` step is every step, and a row written with them all
-    #  is what lets a reader ask `?g a orexis:WorkingGraph` and walk no path.
+    #  is what lets a reader ask `?g a orexis:Graph` and walk no path.
     kinds = remember(memo, ("closed", POSSIBLE_GRAPH), lambda: closed(store, POSSIBLE_GRAPH))
     #  THE MINT NUMBER IS THE CANDIDATE'S: `admit` drew it from the store's counter when it wrote
     #  the row, and the world carries it on, so nothing here counts.
@@ -352,7 +352,7 @@ def _binding(store, cand: str, memo) -> dict:
         if not found:
             raise LookupError(f"no candidate {cand} — was it admitted?")
         subject = remember(memo, ("acts_for",), lambda: next(
-            (r["for"] for r in rows(store, _ACTS_FOR_Q, graphs_of(store, PUBLIC, SELF_GRAPH))), None))
+            (r["for"] for r in rows(store, _ACTS_FOR_Q, [*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH)])), None))
         out = {"state": Raw(f"<{found[0]['from']}>"), "subject": subject or "urn:nobody",
                "now": instant(datetime.fromisoformat(found[0]["start"])),
                "action": found[0]["action"], "from": found[0]["from"], "minted": int(found[0]["minted"]),
@@ -369,7 +369,7 @@ def _rule(store, action: str, memo) -> dict | None:
     an action that states no effect, which no world is made by but the wait's — or None for no
     action at all.
 
-    REMEMBERED FOR THE PASS (#552): the text is public knowledge and only a write can
+    REMEMBERED FOR THE PASS (#552): the text is what the world states and only a write can
     change it, yet it was fetched on every fork by three callers each.
     """
     def fetch():

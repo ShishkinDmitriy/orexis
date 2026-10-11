@@ -53,7 +53,7 @@ world graph saying `:rose_grower sensing:stuckAfter 3` states something about th
 which a peer may read and the agent may believe — and is not the agent's word about itself, so no
 package reads it as one; nor is a figure in a graph of the agent's desires, or in a document a peer
 sent. Nothing refuses such a triple: the loader holds no vocabulary to tell a stance from any other
-fact about an agent, and a figure of an agent in a public graph may mean something to whoever reads
+fact about an agent, and a figure of an agent in a belief nobody owns may mean something to whoever reads
 it.
 
 One figure, stated once and as a number, is the stance. Two of one term, or one that is no number,
@@ -71,6 +71,6 @@ often the metrics window is written is the admins' instrumentation, environment 
 long a rate is held, how far a key no drift moves is carried: how the package does its work, not
 how much the agent allows it.
 
-Why a stance is a belief stated in the self graph rather than a flag, a file, a public graph or a
+Why a stance is a belief stated in the self graph rather than a flag, a file, a belief nobody owns or a
 kind of its own:
 [a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md).

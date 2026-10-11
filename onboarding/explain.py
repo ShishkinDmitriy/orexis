@@ -63,7 +63,7 @@ from .worlds import world_dir, worlds
 log = logging.getLogger("explain")
 
 OREXIS = "http://example.org/orexis#"
-PUBLIC = OREXIS + "PublicGraph"
+BELIEF = OREXIS + "BeliefGraph"
 DESIRE_GRAPH = "http://example.org/orexis/planning#DesireGraph"
 #  THE ONE UNIT THAT MAKES A READING A FRACTION OF ONE, as the dashboards read it: QUDT's UNITLESS,
 #  stated of the sensor or of the range its host states for the property it observes.
@@ -104,11 +104,11 @@ def _local(iri: str) -> str:
 
 def stated(world: str, agent: str) -> Stated:
     """`Stated` for `agent` of `world`, read off the world's documents as onboarding reads them: the
-    agent booted from them in memory for the desires it holds, the public graphs for the fractions."""
+    agent booted from them in memory for the desires it holds, the beliefs nobody owns for the fractions."""
     store = boot(world_dir(world), agent, others=reading.ours())
-    public = graphs_of(store, PUBLIC)
-    desires = {_local(r["d"]) for r in rows(store, _DESIRES_Q, public + graphs_of(store, DESIRE_GRAPH), id=ox.Literal(agent))}
-    fractions = {_local(r["sensor"]) for r in rows(store, _FRACTIONS_Q, public)}
+    stated = graphs_of(store, BELIEF, nobodys=True)
+    desires = {_local(r["d"]) for r in rows(store, _DESIRES_Q, stated + graphs_of(store, DESIRE_GRAPH), id=ox.Literal(agent))}
+    fractions = {_local(r["sensor"]) for r in rows(store, _FRACTIONS_Q, stated)}
     return Stated(frozenset(desires), frozenset(fractions))
 
 

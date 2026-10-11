@@ -65,8 +65,8 @@ def store(monkeypatch):
   GRAPH <{T}self> {{ <{T}me> a orexis:Self }}
   GRAPH <{T}catalogue> {{
     <{T}catalogue> a orexis:CatalogueGraph .
-    <{T}actions> a orexis:ActionGraph , orexis:PublicGraph .
-    <{T}world> a orexis:PublicGraph .
+    <{T}actions> a orexis:ActionGraph , orexis:BeliefGraph .
+    <{T}world> a orexis:BeliefGraph .
     <{T}read_before> a sensing:ObservationGraph ; {_period(earlier, latest)} .
     <{T}read_last> a sensing:ObservationGraph ; {_period(latest, NOW + timedelta(minutes=19))} .
     <{T}self> a orexis:SelfGraph , orexis:BeliefGraph . }} }}""")

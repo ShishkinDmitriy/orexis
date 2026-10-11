@@ -24,11 +24,8 @@ GRAPH :ontology {
   :Counter rdfs:label "counter" .
   :TickGraph rdfs:subClassOf orexis:BeliefGraph .
   :TickGraph rdfs:subClassOf orexis:Graph .
-  :TickGraph rdfs:subClassOf orexis:BeliefGraph .
   belief:RevisionGraph rdfs:subClassOf orexis:BeliefGraph .
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
@@ -66,26 +63,23 @@ GRAPH :catalogue {
   :catalogue a orexis:Graph .
   :heard a orexis:BeliefGraph .
   :heard a orexis:Graph .
-  :heard a orexis:BeliefGraph .
   :heard orexis:arrivedBy orexis:Received .
   :heard orexis:beliefsOf :keeper .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :rules a orexis:Graph .
   :rules a sh:RulesGraph .
   :tick2 a :TickGraph .
   :tick2 a orexis:BeliefGraph .
   :tick2 a orexis:Graph .
-  :tick2 a orexis:BeliefGraph .
   :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
   :tick2 orexis:arrivedBy orexis:Received .
   :tick2 orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
   tick1:believed a orexis:BeliefGraph .
   tick1:believed a orexis:Graph .
-  tick1:believed a orexis:BeliefGraph .
   tick1:believed orexis:arrivedBy orexis:Derived .
   tick1:believed orexis:beliefsOf :keeper .
   tick2:revisions a belief:RevisionGraph .
@@ -93,5 +87,6 @@ GRAPH :catalogue {
   tick2:revisions a orexis:Graph .
   tick2:revisions belief:settled true .
   tick2:revisions orexis:arrivedBy orexis:Derived .
+  tick2:revisions orexis:beliefsOf :keeper .
   tick2:revisions prov:wasDerivedFrom :tick2 .
 }

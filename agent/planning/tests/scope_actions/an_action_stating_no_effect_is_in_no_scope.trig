@@ -15,9 +15,7 @@
 
 
 GRAPH :ontology {
-  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
   planning:ScopeGraph rdfs:subClassOf orexis:Graph .
-  planning:ScopeGraph rdfs:subClassOf orexis:WorkingGraph .
 }
 
 GRAPH :actions {
@@ -29,11 +27,11 @@ GRAPH :actions {
 
 GRAPH :catalogue {
   :actions a orexis:ActionGraph .
+  :actions a orexis:BeliefGraph .
   :actions a orexis:Graph .
-  :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
 }

@@ -194,26 +194,25 @@ GRAPH :scopes {
 # What each graph IS, and when it holds — said once each, beside the data.
 GRAPH :catalogue {
   :actions a orexis:ActionGraph .
+  :actions a orexis:BeliefGraph .
   :actions a orexis:Graph .
-  :actions a orexis:PublicGraph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :constraints a orexis:BeliefGraph .
   :constraints a orexis:Graph .
-  :constraints a orexis:PublicGraph .
   :constraints a planning:ConstraintGraph .
   :desires a orexis:Graph .
   :desires a planning:DesireGraph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :scopes a orexis:Graph .
-  :scopes a orexis:WorkingGraph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:beliefsOf :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed a orexis:BeliefGraph .
+  :sensed orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

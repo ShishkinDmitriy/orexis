@@ -21,7 +21,7 @@ knowledge/decisions/a-rule-is-asked-about-a-world-not-about-a-store.md.
 **IT IS A STORE**, and was a class twice over — a subclass of the store's wrapper, then a
 holder forwarding twenty-two methods of which a search called five. The graphs a rule may read
 are copied in, so an ordinary query means the same thing here as it does in the belief base:
-`graphs_of(PUBLIC)` discovers the same names off the same ontology graph, and `effects.apply`
+`graphs_of(BELIEF, nobodys=True)` discovers the same names off the same ontology graph, and `effects.apply`
 cannot tell the two apart. What differs is that this one was constructed with no path, so it
 is memory and there is nothing to clean up — the whole store is dropped when the plan ends,
 and a crash mid-plan leaves nothing behind to find. That is most of why it is a store of its
@@ -77,7 +77,7 @@ import logging
 import pyoxigraph as ox
 
 from agent.belief.ontology import REVISION_GRAPH, RULES_GRAPH
-from agent.ontology import BELIEF, PREDICTION, PUBLIC, RECORD
+from agent.ontology import BELIEF, PREDICTION, RECORD
 from agent.store import catalogue_of, forget_graph, graphs_of, revisions_of, rows
 
 from .ontology import CHANGEABLE_GRAPH, DESIRE, SCOPE_GRAPH, WANT
@@ -97,15 +97,15 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
 
     FOUR THINGS CROSS, and then a fifth is BUILT:
 
-    1. **Every public graph, asked rather than listed.** The record budgeted for four — world,
+    1. **Every graph nobody owns, asked rather than listed.** The record budgeted for four — world,
        derived, entailed, beliefs, 486 quads — on the reasoning that those are what the shipped
        rules read. Measured, that set makes the actuation and market CONSTRUCTs bind nothing:
        both walk `?term market:ofGood ?good`, and a valuation term is stated in a package's
        `ontology.ttl`, so it lands in the ontology graph along with the T-Box. Copying every
-       public graph costs 10.4 ms and 2,646 quads on `world/loner` where the lean set is 0.6 ms
+       graph nobody owns costs 10.4 ms and 2,646 quads on `world/loner` where the lean set is 0.6 ms
        and 165 — and the lean set is wrong in the way this function exists to prevent, since a
        pattern reaching a graph nobody copied returns an EMPTY RESULT rather than an error.
-       **That measurement is also why no PUBLIC graph is narrowed per scope**: fewer graphs is
+       **That measurement is also why no graph nobody owns is narrowed per scope**: fewer graphs is
        the same move under another name, and it fails the same silent way. What IS narrowed is
        the readings, below, and by the one slice a rule can be refused against.
     2. **The catalogue**, since every read inside asks it what the graphs are.
@@ -117,7 +117,7 @@ def prepare_ground(beliefs: ox.Store, into: ox.Store, *, scope: str | None = Non
        `find_scopes.meet`: the scopes every named member is in, or every scope any is in where no
        scope holds them all — does not cross, so the ground laid here is the scope's readings and
        every world forked from it their size, whatever sensors the agent grows elsewhere. Safe
-       where narrowing the public graphs was not, because the same test already refuses every
+       where narrowing the graphs nobody owns was not, because the same test already refuses every
        filling that could reach such a reading: no candidate of this scope binds another scope's
        key, so no rule of this scope's search reaches the reading left out. Named is a subject, a
        predicate or an object — a subject belief, `:bed2 climate:soil climate:Dry`, names its bed
@@ -182,7 +182,7 @@ def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset
     behind: set[str] = set()
     #  THE AGENT'S OWN, EACH WITH ITS REVISIONS: what everyone reads is every scope's and is asked nothing,
     #  and a revision is asked with its source, not on its own.
-    skip = set(graphs_of(beliefs, PUBLIC, REVISION_GRAPH))
+    skip = {*graphs_of(beliefs, BELIEF, nobodys=True), *graphs_of(beliefs, REVISION_GRAPH)}
     for graph in (g for g in graphs_of(beliefs, BELIEF, PREDICTION) if g not in skip):
         group = [graph, *revisions_of(beliefs, graph)]
         named: set[str] = set()
@@ -201,7 +201,7 @@ def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset
 #  THE KINDS THAT CROSS, spelled once for the filling and the refresh — the rules graphs among them,
 #  since a ground laid here runs the transitions a predicted observation triggers (`lay_ground`, #944),
 #  and they are the rules the beliefs hold, read where they lie.
-CROSSING = (PUBLIC, PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH, RULES_GRAPH)
+CROSSING = (PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH, RULES_GRAPH)
 
 #  WHAT THE STORE MADE FOR ITSELF, which a refresh keeps: the grounds, the possible worlds and
 #  the plans, which are planning's kinds, and the wants the derivation minted, which are a

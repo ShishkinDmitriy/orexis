@@ -12,7 +12,9 @@ description: >-
   graphs, revision reads a source beside everything not received, and what defines what the agent
   can do and how it reasons is read only as asserted, so a peer's word is believed as what it said
   and can redefine nothing. Refused - a kind declared per document for what changes, a list of
-  exclusions per reader, and a peer gate that admits only triples some scope can write.
+  exclusions per reader, and a peer gate that admits only triples some scope can write. Amended as
+  built (#953) - what the world states is read as the beliefs nobody owns, never every belief, by
+  revision, the footprints and every reader of the world, and the agent's own is what names an owner.
 status: accepted
 timestamp: 2026-10-11T09:00:00Z
 ---
@@ -167,6 +169,24 @@ them were answering the second and third questions with a class.
 > always say a subject belief. A revision of a belief is a belief, so the readers that walk the agent's
 > own leave revisions to go with their sources. Every case reads as it did.
 > *#958 built it: a peer's word is a statement, the interim gate is gone, and slice 4 moves no gate.*
+
+> **`orexis:PublicGraph` and `orexis:WorkingGraph` folded, built 2026-10-11 (#953).** The kernel declares
+> no public kind: the ontology, the world, the society, the actions, the drifts, the shapes, the
+> constraints and the derivations are beliefs, and what every agent of a world reads is **the beliefs
+> nobody owns**, asked by provenance (`graphs_of(store, BELIEF, nobodys=True)`) as the boot already found
+> the world's shared documents. The boot keeps a world's belief by what it says: naming an owner, it is
+> that agent's own; naming none, everyone's. **Two clauses above were amended as built.** A reader of the
+> world, revision's neighbours and the footprints read the beliefs nobody owns, not every belief: read
+> over every belief, a footprint lost the heater's scope in `a_heater_that_dries_the_soil` again, the
+> self's anchor leading rdflib's order as #913 found; and since #958 what is extracted of a statement
+> arrives `orexis:Derived`, so "everything not received" would revise one peer's word beside another's,
+> which revising "beside what the world states alone" refuses. **The agent's own** is what names an
+> owner: the state a transition reads and deletes from, the present the walk wakes on and where a fictive
+> step's retractions stand are the agent's beliefs that name one, where they were those not public, so a
+> case's own state says `orexis:beliefsOf` as a running store's does. Planning's ground, possible, plan,
+> changeable and scope graphs sit beneath `orexis:Graph` alone, `orexis:WorkingGraph` having been read by
+> nothing. Every case reads as it did but for its rows, and one desire's constraint indices, renumbered
+> as its case was put in canonical order.
 
 > **Amended 2026-10-11: what changed is a diff of names.** A graph a copy is made of is never changed
 > under its name ([a-graph-is-never-changed-under-its-name](/decisions/a-graph-is-never-changed-under-its-name.md)),

@@ -16,9 +16,9 @@
  GRAPH :catalogue {
    :catalogue a orexis:CatalogueGraph .
 @@ -52,10 +46,39 @@
-   :ontology a orexis:PublicGraph .
+   :ontology a orexis:OntologyGraph .
+   :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-   :world a orexis:PublicGraph .
 -  forecast:weather_20260101T090000Z a orexis:BeliefGraph .
 -  forecast:weather_20260101T090000Z a orexis:Graph .
 -  forecast:weather_20260101T090000Z a sensing:ForecastGraph .

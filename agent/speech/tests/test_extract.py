@@ -28,11 +28,11 @@ def store():
     st = ox.Store()
     update(st, f"""INSERT DATA {{
   GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
-      <{T}rules> a sh:RulesGraph . <{T}world> a orexis:PublicGraph .
+      <{T}rules> a sh:RulesGraph . <{T}world> a orexis:BeliefGraph .
       <{ROUND}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> ;
                 dcterms:temporal [ orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
       <{CLAIM}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> .
-      <{T}held> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived . }}
+      <{T}held> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:beliefsOf <{ME}> . }}
   GRAPH <{T}rules> {{ <{T}believed> a speech:Extraction ; sh:construct "{_BELIEVED}" . }}
   GRAPH <{T}world> {{ <{T}water> a <{T}Venue> . }}
   GRAPH <{ROUND}> {{ <{ROUND}> a <{T}Round> ; <{T}lot> 40 ; <{T}onVenue> <{T}water> . }}

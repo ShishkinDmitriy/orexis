@@ -18,11 +18,8 @@
 GRAPH :ontology {
   :TickGraph rdfs:subClassOf orexis:BeliefGraph .
   :TickGraph rdfs:subClassOf orexis:Graph .
-  :TickGraph rdfs:subClassOf orexis:BeliefGraph .
   belief:RevisionGraph rdfs:subClassOf orexis:BeliefGraph .
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
@@ -57,11 +54,11 @@ GRAPH :rules {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :rules a orexis:Graph .
   :rules a sh:RulesGraph .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

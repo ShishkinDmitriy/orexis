@@ -29,8 +29,6 @@ GRAPH :ontology {
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:SelfGraph rdfs:subClassOf orexis:Graph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:BeliefGraph .
-  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
 }
 
@@ -62,14 +60,14 @@ GRAPH :self {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :self a orexis:BeliefGraph .
   :self a orexis:Graph .
   :self a orexis:SelfGraph .
   :self orexis:arrivedBy orexis:Asserted .
   :self orexis:beliefsOf :keeper .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

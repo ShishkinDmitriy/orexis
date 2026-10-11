@@ -19,18 +19,18 @@
  }
  
  GRAPH :catalogue {
-@@ -58,16 +53,58 @@
-   :drying_stops_revisions a orexis:Graph .
+@@ -59,12 +54,18 @@
    :drying_stops_revisions orexis:arrivedBy orexis:Derived .
+   :drying_stops_revisions orexis:beliefsOf :keeper .
    :drying_stops_revisions prov:wasDerivedFrom :drying_stops .
 +  :drying_stops_revisions.changeable a planning:ChangeableGraph .
 +  :drying_stops_revisions.changeable orexis:arrivedBy orexis:Derived .
 +  :drying_stops_revisions.changeable prov:wasDerivedFrom :drying_stops_revisions .
+   :ontology a orexis:BeliefGraph .
    :ontology a orexis:Graph .
    :ontology a orexis:OntologyGraph .
-   :ontology a orexis:PublicGraph .
-   :sensed a orexis:Graph .
    :sensed a orexis:BeliefGraph .
+   :sensed a orexis:Graph .
    :sensed orexis:beliefsOf :keeper .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
@@ -38,9 +38,10 @@
    :sensed_revisions a orexis:BeliefGraph .
    :sensed_revisions a orexis:Graph .
    :sensed_revisions orexis:arrivedBy orexis:Derived .
+@@ -72,4 +73,40 @@
    :sensed_revisions prov:wasDerivedFrom :sensed .
+   :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-   :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .

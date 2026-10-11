@@ -57,11 +57,11 @@ GRAPH forecast:weather_20260101T090000Z {
 GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
   forecast:weather_20260101T090000Z a orexis:BeliefGraph .
   forecast:weather_20260101T090000Z a orexis:Graph .
   forecast:weather_20260101T090000Z a sensing:ForecastGraph .

@@ -20,7 +20,7 @@ wrong with the prediction; there was no place in the pass where it REPLACED anyt
 bed's soil, dry — and never the reading, so a ground that only swapped the observation would keep the
 present's state for ever, and a foreseen crossing would read met. A predicted observation arriving in
 a ground triggers the transitions there, as a received one does in the present: belief's machine and
-the rules the beliefs hold, reading the arrival with its revisions, the public graphs and the agent's
+the rules the beliefs hold, reading the arrival with its revisions, the beliefs nobody owns and the agent's
 own state as the ground before left it, and changing the ground alone. So the hold reaches the
 forecast — a bed believed dry and resting at 0.3001 is foreseen dry, as the present holds it — and a
 prediction still triggers nothing in the belief base: the runner prepares the target, and here the
@@ -70,7 +70,7 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent.belief.transition import run, transitions
-from agent.ontology import ACTION, DRIFT_GRAPH, KNOWN, OREXIS, PREDICTION, PUBLIC
+from agent.ontology import ACTION, BELIEF, DRIFT_GRAPH, KNOWN, OREXIS, PREDICTION
 from agent.hash_named_graph import digest_of, hash_named_graph
 from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, clear_graph, revisions_of, forget_graph,
                          graphs_of, quads, rows, update)
@@ -157,7 +157,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     #  as the grounds are laid, from the present's: asked only where something is foreseen.
     rules = transitions(store) if ahead else []
     own = _own_state(store) if rules else None
-    public = _whole(store, graphs_of(store, PUBLIC)) if rules else []
+    stated = _whole(store, graphs_of(store, BELIEF, nobodys=True)) if rules else []
     made, marks = [here], _marked(store, here, within)
     opened = [now]
     landing = {at for at in landings if at > now}
@@ -183,7 +183,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
             continue
         there = _fork(store, here, _name(at), added, retracts)
         if rules:
-            _transitioned(store, there, [prediction for prediction, _ in group], rules, own, public)
+            _transitioned(store, there, [prediction for prediction, _ in group], rules, own, stated)
         mark = _marked(store, there, within)
         if mark == marks and at not in landing:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
@@ -211,7 +211,7 @@ _DERIVED_Q = """
 SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                                ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
                                FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-                               FILTER NOT EXISTS { ?g a orexis:PublicGraph } } } ORDER BY ?g"""
+                               ?g orexis:beliefsOf ?owner . } } ORDER BY ?g"""
 
 #  WHERE THE AGENT'S OWN STATE IS KEPT WHILE THE GROUNDS ARE LAID: a working graph, not a belief,
 #  handed by name to the transitions and taken away when the last ground is laid. Its name is for eyes.
@@ -234,12 +234,12 @@ def _own_state(store: ox.Store) -> str:
     return _OWN
 
 
-def _transitioned(store: ox.Store, ground: str, arrivals: list[str], rules, own: str, public: list[str]) -> None:
+def _transitioned(store: ox.Store, ground: str, arrivals: list[str], rules, own: str, stated: list[str]) -> None:
     """Every transition each of `arrivals` triggers, applied in `ground` as it is laid (#944).
 
     A PREDICTED OBSERVATION IS AN ARRIVAL THERE, as a received one is in the present: each triggers
     every transition once, in the order the predictions came, rule by rule through belief's machine,
-    reading itself with its revisions, the public graphs and the agent's own state as the ground before
+    reading itself with its revisions, the beliefs nobody owns and the agent's own state as the ground before
     left it — and nothing else — so a bed believed dry and resting at 0.3001 is foreseen dry, held by the
     margin as the present holds it. Each rule is the engine's own update, run twice over the same reads:
     `WITH` the ground, which no rule reads, and then `WITH` the working state, so what it deletes is
@@ -248,7 +248,7 @@ def _transitioned(store: ox.Store, ground: str, arrivals: list[str], rules, own:
     laid, and the present is never written to. No budget is spent: a ground holds what its predictions
     make of it, whole, or it is no ground."""
     for arrival in arrivals:
-        reads = [arrival, *revisions_of(store, arrival), *public, own]
+        reads = [arrival, *revisions_of(store, arrival), *stated, own]
         for rule in (rule for order in rules for rule in order):
             run(store, [rule], ground, reads)
             run(store, [rule], own, reads)

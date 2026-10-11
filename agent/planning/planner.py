@@ -92,7 +92,7 @@ import rdflib
 from agent import clock
 from agent.lifecycle import Signal
 from agent.metrics import Laps
-from agent.ontology import ACTION, PUBLIC, RECORD, local_of
+from agent.ontology import ACTION, BELIEF, RECORD, local_of
 from agent.stance import stance
 from agent.store import (Memo, Raw, add_quads, copy_graph, forget_graph, bind, bindings, catalogue_of, graphs_of, instant,
                          query, rdflib_view, remember, rows, update)
@@ -447,7 +447,7 @@ class Planner:
         """
         found = bindings(query(self.beliefs, f"""
 SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1""",
-                               graphs_of(self.beliefs, PUBLIC)))
+                               graphs_of(self.beliefs, BELIEF, nobodys=True)))
         if not found:
             raise LookupError(
                 f"no agent with localId '{agent_id}' in this store — was the world loaded "

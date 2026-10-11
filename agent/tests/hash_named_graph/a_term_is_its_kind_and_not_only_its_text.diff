@@ -13,10 +13,10 @@
 +  :number orexis:hash "sha256:23acf0186ea44c1b7de80353cc16d66a98484edd1deaf9d610fa92db660c4e86" .
    :one a orexis:Graph .
 +  :one orexis:hash "sha256:20fce1d445b751095bcdab463c301c2647602e5ddfc1fc0967e734d76e9bd526" .
+   :ontology a orexis:BeliefGraph .
    :ontology a orexis:Graph .
    :ontology a orexis:OntologyGraph .
-   :ontology a orexis:PublicGraph .
-+  :ontology orexis:hash "sha256:da6a67b23d29f938392d8a6a3169f3fc88dc84e3ae323d95311b61e03b48ed19" .
++  :ontology orexis:hash "sha256:cf6f9aa06c1311a83e21602e2c323feb46ae3b7e6e7549a62fd90b970624edc5" .
    :text a orexis:Graph .
 +  :text orexis:hash "sha256:cab4f6b86a4c2b3faf3b0809a4391ca502f841f992724730d620b186b8f6231d" .
  }

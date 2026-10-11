@@ -47,7 +47,7 @@ from agent.store import graphs_of, rows
 
 log = logging.getLogger("simulation")
 
-PUBLIC = "http://example.org/orexis#PublicGraph"
+BELIEF = "http://example.org/orexis#BeliefGraph"
 SIM = "http://example.org/orexis/sim#"
 CLIMATE = "http://example.org/orexis/climate#"
 ACTUATION = "http://example.org/orexis/actuation#"
@@ -113,7 +113,7 @@ class Simulator:
         self.heating: dict[str, datetime] = {}
 
     def _rows(self, text: str, **values) -> list[dict]:
-        return rows(self.store, text, graphs_of(self.store, PUBLIC), **values)
+        return rows(self.store, text, graphs_of(self.store, BELIEF, nobodys=True), **values)
 
     def open(self) -> list[str]:
         """Listen for the commands every simulated actuator takes; the topics."""

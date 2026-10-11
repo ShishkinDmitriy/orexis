@@ -42,7 +42,7 @@ def world(monkeypatch, snapshots):
 
 def _read(store, sensor, value, at, me) -> list[str]:
     """`value` read by `sensor` at `at`, and each percept written revised as sensing has the deliberator
-    revise it: beside the public graphs holding then, into this layer's kind."""
+    revise it: beside the beliefs nobody owns holding then, into this layer's kind."""
     written = received(store, me, sensor, f'{{"value": {value}}}'.encode(), at)
     for graph in written:
         revise(store, graph, read=graphs_of(store, *KNOWN, at=at), kind=OBSERVATION_GRAPH)

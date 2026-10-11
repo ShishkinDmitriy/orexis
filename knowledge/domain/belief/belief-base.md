@@ -10,8 +10,8 @@ description: >-
 
 # What it is
 
-A quad store, and in it named graphs: the vocabulary and the closure, the world's public
-documents, the state the agent observes and what the rules conclude of it, the predictions, the
+A quad store, and in it named graphs: the vocabulary and the closure, the world's
+documents nobody owns, the state the agent observes and what the rules conclude of it, the predictions, the
 desires and wants, the records. **There is no shared store.** Each agent's is a
 file in its own volume, built from the ratified documents of `world/<world>/`, so isolation is
 structural: nothing needs enforcing because nothing else can open it.
@@ -35,7 +35,7 @@ a caller, and a graph's NAME is for eyes: code relies on its row alone.
 
 One more kind of store, the runtime's to hold: the [imaginaria](/domain/planning/imaginarium.md), one
 per scope. Every [intention](/domain/execution/intention.md) and its acts are a graph of the belief base
-itself, the agent's own and not public, so the volume keeps them. A [level](/domain/kernel/level.md)
+itself, the agent's own and nobody else's, so the volume keeps them. A [level](/domain/kernel/level.md)
 is read by the one object that holds its store.
 
 Each reading, and each step taken and how it ended, also goes to the agent's history bucket as a
@@ -45,5 +45,5 @@ its metrics bucket. The series is watched, never believed: nothing reads it back
 # What a restart keeps
 
 Everything the agent owns. A volume it has lived in re-reads only the documents nobody owns — the
-ontologies, the domains, the world's public graphs — so an updated vocabulary reaches it and its
+ontologies, the domains, the world's beliefs nobody owns — so an updated vocabulary reaches it and its
 own beliefs are never reset by a restart.

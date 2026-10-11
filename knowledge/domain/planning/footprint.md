@@ -48,8 +48,8 @@ not read, because it would be a promise about the text that nothing holds the te
 
 The footprint of one TEXT names predicates. The [scopes](/domain/planning/scope.md) need more, since
 two levers writing one predicate on two readings are two scopes only if the readings are told apart,
-so `atoms_of` reads an action's footprint per FILLING: its precondition is asked over the public
-graphs with every pattern optional and no filter, which binds what the world states and leaves
+so `atoms_of` reads an action's footprint per FILLING: its precondition is asked over the beliefs
+nobody owns with every pattern optional and no filter, which binds what the world states and leaves
 what the state would have bound unbound; each row is one filling as far as the world alone decides
 it, and each pattern the filling reads of what some action writes, or writes, is an atom - the
 predicate on the subject's key. The key is the subject's own value where the row binds it, and
@@ -59,7 +59,7 @@ predicate. The terms a key holds are what a scope later holds as members, so a w
 placed by it.
 
 A pattern asking for the [self](/domain/kernel/self.md) is read as absent, in every half and every
-reading: no public graph holds the self and no action writes it, so it can say nothing of what a
+reading: no graph nobody owns holds the self and no action writes it, so it can say nothing of what a
 step reads or writes. Kept, it bound nothing, stood first in the order rdflib asks optional patterns
 in, being the pattern with fewest variables, and changed what the chain after it bound — the
 greenhouse's dose came to be filled with the heater, measured.
@@ -67,7 +67,7 @@ greenhouse's dose came to be filled with the heater, measured.
 A row is no filling where it leaves unbound a parameter the WORLD alone decides — one the action
 `orexis:takes` that is no subject its effect writes and stands in no pattern reading a predicate
 any effect writes or deletes: the valve, the heater, the cell a van drives to. Asked over the
-public graphs, such a parameter binds wherever the world holds one, so unbound it is the world
+beliefs nobody owns, such a parameter binds wherever the world holds one, so unbound it is the world
 saying there is none, and an action left with no filling is in no scope. The allotment imports
 the climate domain and holds no heater, and its heating's rows made two scopes that admitted
 nothing ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md), #913).
@@ -76,5 +76,5 @@ nothing ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-
 
 Not a scope: a scope is atoms joined across many fillings of many actions, and one footprint is
 one text's, or one filling's. Not a filling's range: which values a parameter may take in the
-WORLD is enumerated by the precondition against the state as well; the public half a footprint
-reads is the part the world alone decides, and it over-approximates the rest.
+WORLD is enumerated by the precondition against the state as well; the half a footprint reads
+over what the world states is the part the world alone decides, and it over-approximates the rest.

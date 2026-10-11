@@ -11,7 +11,7 @@ thing that made the wrapper forget.
 
 So there is no class here. A reader is handed the engine and says what it is reading:
 
-    rows(store, text, graphs_of(store, PUBLIC))
+    rows(store, text, graphs_of(store, BELIEF, nobodys=True))
 
 and every question the class answered as a method is answered here as a function of the same
 name, taking the engine first. Nothing is kept between calls, so nothing can go stale.
@@ -61,15 +61,11 @@ import pyoxigraph as ox
 
 from .ontology import BELIEF, OREXIS
 
-# Which graphs are public — ASKED, not listed. A graph IRI is an instance, and code that named
-# five of them was doing what rule 1 forbids everywhere else; `orexis:PublicGraph` is the term, the
-# instances are declared in the kernel's `agent/ontology.ttl`, and adding one is a vocabulary edit
-# that touches no Python.
+# What the world states — ASKED, not listed. A graph IRI is an instance, and code that named
+# five of them was doing what rule 1 forbids everywhere else; the kind is a term and whose a graph
+# is a row on the catalogue, so `graphs_of(store, BELIEF, nobodys=True)` answers with what every
+# agent of a world reads alike, and adding one is a document that touches no Python.
 #
-# `rdfs:subClassOf*` rather than a bare type, because this runs BEFORE the closure — it is what
-# tells the loader where to put the closure. The one graph named here is the bootstrap root: the
-# T-Box has to be loaded somewhere before it can be asked anything, exactly as an agent is handed
-# its own id before it can discover anything else.
 #  THE CATALOGUE — the one graph that says what every graph IS: its class, whose it is, how
 #  it arrived, when it holds, and the PROV account of the load that made it (one-catalogue-
 #  describes-every-graph-and-itself). It DESCRIBES ITSELF, which is what lets a store find it
@@ -79,7 +75,7 @@ from .ontology import BELIEF, OREXIS
 #  third and the provenance in a fourth; a writer names the catalogue when it creates it, and
 #  a migration names what it migrates from.
 #
-#  NOT PUBLIC, deliberately: a rule reads triples and never learns what a graph is, whose it
+#  NO BELIEF, deliberately: a rule reads triples and never learns what a graph is, whose it
 #  is, or when it holds — the door decides all three, structurally, by handing the rule a
 #  dataset (a-graph-holds-during-a-stretch). Every door here reads the catalogue by the IRI
 #  it discovered, and nothing else does.
@@ -345,6 +341,10 @@ ORDER BY ?g"""
 
 _OWNED = """OPTIONAL { ?g orexis:beliefsOf ?owner } FILTER(!BOUND(?owner) || ?owner = $holder)"""
 
+#  NOBODY'S: what the world states, the documents nobody owns and what the boot derived of them —
+#  what `orexis:PublicGraph` said by a kind until #953 folded it, said by provenance.
+_NOBODYS = """FILTER NOT EXISTS { ?g orexis:beliefsOf ?anyone }"""
+
 #  HOLDING AT `$at` AND STILL AT `$until`: begun by the first and not ended by the second, so a
 #  reader standing over a period is handed what holds throughout it; a reader standing at an
 #  instant says the same instant twice. A record is read at the present whatever is asked about.
@@ -606,7 +606,7 @@ def _one_home(doc: ox.Store, name: str) -> ox.Store:
     stated only in a graph that says it is a self graph and nothing else, every self graph states
     exactly one self, and an owner stated of a self graph is that self; refused otherwise.
 
-    THE SELF HAS ONE HOME. A self stated in a public graph would make every agent of the world
+    THE SELF HAS ONE HOME. A self stated in a belief nobody owns would make every agent of the world
     that agent, and one in a desire graph would be a second place to look for it; asked here, by
     the kinds the document states, it needs no vocabulary, which the loader does not have."""
     stated = kinds_in(doc)
@@ -768,7 +768,7 @@ def close_catalogue(store) -> None:
 
 
 def graphs_of(store, *kinds: str, at: datetime | None = None, until: datetime | None = None,
-              holder: str | None = None, now: datetime | None = None) -> list[str]:
+              holder: str | None = None, now: datetime | None = None, nobodys: bool = False) -> list[str]:
     """Every graph the catalogue types under any of `kinds` — subclasses included, the rows
     having been closed when they were written — holding at `at` where an instant is given, and
     still holding at `until` where a reader stands over a period rather than at an instant (#596):
@@ -786,9 +786,15 @@ def graphs_of(store, *kinds: str, at: datetime | None = None, until: datetime | 
     agent's store this is. Passed, the answer is that holder's graphs and those nobody owns;
     omitted, every graph of the kinds — which is right for a store holding one agent's world,
     and is what makes rule 4 (one agent, one volume) structural rather than remembered.
+
+    `nobodys` keeps the answer to the graphs no agent owns: what the world states, read alike by
+    every agent of it — the vocabulary, the world, the society, the actions, the drifts, the shapes
+    and the constraints, and what the boot derived of them. It is provenance and not a kind: whose
+    a graph is is how it arrived, which a graph class may not say (#953).
     """
+    owned = (bind(_OWNED, holder=holder) if holder is not None else "") + (_NOBODYS if nobodys else "")
     text = bind(_GRAPHS_Q, kinds=Raw(" ".join(f"<{k}>" for k in kinds)),
-                owned=Raw(bind(_OWNED, holder=holder) if holder is not None else ""),
+                owned=Raw(owned),
                 holding=Raw(bind(_HOLDING, at=instant(at), until=instant(until or at), now=instant(now or at))
                             if at is not None else ""))
     return [str(row["g"].value) for row in store.query(text, prefixes=NAMESPACES)]
@@ -1072,7 +1078,7 @@ def end_graph(store, graph_iri: str, at: datetime, *, revisions: str = BELIEF) -
 
 
 def put_graph(store, graph_iri: str, ttl: str, dataset: bool = False) -> None:
-    """Replace a graph with the given Turtle. Public knowledge only.
+    """Replace a graph with the given Turtle. What the world states only.
 
     `dataset=True` parses **TriG** — Turtle plus `GRAPH <iri> { … }` blocks — and EVERY graph
     the document names is replaced, not only the named one: loading is additive and a quad
@@ -1131,7 +1137,7 @@ class Memo:
 
     Every one of them is a fact the SEARCH cannot change: the graphs at an instant, a rule
     text, the action templates, the shapes a want was minted with. What could change them is a
-    write to public knowledge, and a pass makes none — which is why the lifetime is the pass's
+    write to what the world states, and a pass makes none — which is why the lifetime is the pass's
     and `forget` exists for the one owner that does write.
     """
 

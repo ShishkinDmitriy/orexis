@@ -31,7 +31,7 @@ the window could not take it from the instants on the step.
 # Why it is a belief
 
 An [intention](/domain/execution/intention.md) is the agent's own and crosses into no possible world;
-what a [drift](/domain/prediction/prediction.md) may read at an instant is a public or belief graph
+what a [drift](/domain/prediction/prediction.md) may read at an instant is a belief graph
 holding then. A committed step is the one row of an intention written as a belief, so the dose the
 grower is about to give is a flow its bed's prediction accumulates — rising to the aim over the
 window, on the low trajectory by the latest landing — and a want searched after the adoption sees a

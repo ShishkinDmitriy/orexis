@@ -1,42 +1,10 @@
 --- case
 +++ expected
-@@ -18,11 +18,11 @@
- }
- 
- GRAPH :world {
-+  :keeper :hasActuator :pump1 .
-+  :keeper :hasActuator :pump2 .
-   :keeper a orexis:Agent .
-   :keeper orexis:actsFor :bed1 .
-   :keeper orexis:actsFor :bed2 .
--  :keeper :hasActuator :pump1 .
--  :keeper :hasActuator :pump2 .
-   :pump1 :actuates :bed1 .
-   :pump1 :actuatesProperty :Moisture .
-   :pump2 :actuates :bed2 .
-@@ -31,14 +31,14 @@
- 
- GRAPH :actions {
-   :dose a orexis:Action .
-+  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
-+        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
-   :dose planning:precondition """PREFIX : <http://example.org/test#>
-         PREFIX sensing: <http://example.org/orexis/sensing#>
-         SELECT DISTINCT ?valve ?reading WHERE {
-             ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
-             ?valve :actuates ?subject ; :actuatesProperty ?property .
-             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
--  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
--        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
- }
- 
- GRAPH :catalogue {
-@@ -52,4 +52,28 @@
-   :ontology a orexis:PublicGraph .
+@@ -50,4 +50,27 @@
+   :ontology a orexis:OntologyGraph .
+   :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-   :world a orexis:PublicGraph .
 +  graph:scopes a orexis:Graph .
-+  graph:scopes a orexis:WorkingGraph .
 +  graph:scopes a planning:ScopeGraph .
 +  graph:scopes orexis:arrivedBy orexis:Derived .
  }

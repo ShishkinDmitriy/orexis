@@ -25,7 +25,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from agent.ontology import PUBLIC, local_of
+from agent.ontology import BELIEF, local_of
 from agent.store import Raw, catalogue_of, graphs_of, instant, remember, rows
 
 log = logging.getLogger("cadence")
@@ -55,7 +55,7 @@ def cadence_of(store, sensor: str, memo=None) -> float | None:
     them, or None where it states no frequency, several, or a unit nothing here converts.
     Remembered per pass where a memo is given."""
     def read():
-        found = rows(store, _CADENCE_Q, graphs_of(store, PUBLIC), sensor=sensor)
+        found = rows(store, _CADENCE_Q, graphs_of(store, BELIEF, nobodys=True), sensor=sensor)
         if len(found) != 1:
             if found:
                 log.warning("%s states %d frequencies: none is its cadence", local_of(sensor), len(found))

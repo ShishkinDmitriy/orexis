@@ -15,7 +15,7 @@
 
 
 GRAPH :ontology {
-  orexis:WorkingGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :number {
@@ -29,9 +29,9 @@ GRAPH :catalogue {
   :iri a orexis:Graph .
   :number a orexis:Graph .
   :one a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
   :text a orexis:Graph .
 }
 

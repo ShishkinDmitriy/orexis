@@ -5,7 +5,7 @@ every belief and every prediction written, as it is written, beside what the wor
 else, and applies the transitions each triggers. Belief links to nothing: nothing it needs lies beneath
 it.
 
-WHAT STANDS BESIDE A GRAPH REVISED is the public graphs alone. Never another testimony: handed
+WHAT STANDS BESIDE A GRAPH REVISED is the beliefs nobody owns alone. Never another testimony: handed
 everything believed, the first of two readings arriving together took the second's side into its own
 revision, where the second's next reading never reached it. And not the agent's own state: an
 inference concludes of its source and the world, and what the state was before an arrival is a
@@ -22,7 +22,7 @@ arrivals are transitioned on in the order they came whoever handed them.
 from __future__ import annotations
 
 from agent import clock
-from agent.ontology import BELIEF, PREDICTION, PUBLIC
+from agent.ontology import BELIEF, PREDICTION
 from agent.store import graphs_of, revisions_of
 
 from .deliberator import Deliberator
@@ -35,20 +35,20 @@ class _Belief:
         self.deliberator = Deliberator(runtime.beliefs, runtime.id)
 
     def revise(self, graphs, *, kind: str = BELIEF) -> list[str]:
-        """Revise `graphs` beside the public graphs and apply the transitions each triggers, now — their
+        """Revise `graphs` beside what the world states, the beliefs nobody owns, and apply the transitions each triggers, now — their
         revisions classified `kind`: a belief's are beliefs, and a package above hands the kind its
         own graphs' revisions are. Writes nothing a reader hears of, so it answers nothing."""
         runtime = self.runtime
-        public = graphs_of(runtime.beliefs, PUBLIC)
+        stated = graphs_of(runtime.beliefs, BELIEF, nobodys=True)
         for graph in graphs:
-            self.deliberator.changed(graph, read=public, kind=kind)
+            self.deliberator.changed(graph, read=stated, kind=kind)
         self.deliberator.deliberate(runtime.now or clock.now())
         return []
 
     def start(self, runtime) -> None:
-        #  EVERY BELIEF NOT YET REVISED, but what everyone reads: the world's documents were concluded on
+        #  EVERY BELIEF NOT YET REVISED, but what nobody owns: the world's documents were concluded on
         #  at genesis, into graphs of their own, and a revision of one beside the rest would say it twice.
-        skip = set(graphs_of(runtime.beliefs, REVISION_GRAPH, PUBLIC))
+        skip = {*graphs_of(runtime.beliefs, REVISION_GRAPH), *graphs_of(runtime.beliefs, BELIEF, nobodys=True)}
         self.revise([g for g in graphs_of(runtime.beliefs, BELIEF)
                      if g not in skip and not revisions_of(runtime.beliefs, g)])
         runtime.on(BELIEF, lambda graph: self.revise([graph]))

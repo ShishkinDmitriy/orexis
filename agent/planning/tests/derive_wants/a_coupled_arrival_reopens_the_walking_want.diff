@@ -11,15 +11,15 @@
  }
  
  GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a {
-@@ -216,14 +212,71 @@
+@@ -215,14 +211,71 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
-   :sensed a orexis:BeliefGraph .
+   :sensed orexis:beliefsOf :keeper .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
 +  :sensed.changeable prov:wasDerivedFrom :sensed .
+   :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-   :world a orexis:PublicGraph .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .

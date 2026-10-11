@@ -1,6 +1,6 @@
 """`revise`, one case per file, held to a PATCH of the store it leaves.
 
-A case in `revise/` is a store with a graph of readings, public knowledge beside it, and a graph
+A case in `revise/` is a store with a graph of readings, what the world states beside it, and a graph
 of rules as a package would ship them, a sh:RuleSet in a sh:RulesGraph. The test revises the readings and `<case>.diff` is what
 that concluded: the readings' revision graph, its row, and nothing in the readings.
 """

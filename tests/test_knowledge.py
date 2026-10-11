@@ -1008,7 +1008,7 @@ def test_a_committed_diagram_is_not_stale():
 
 #  THE KINDS THE PICTURE GROUPS BY rather than draws: what a graph is beneath, never what a writer
 #  classifies one as.
-_MODALITIES = {"orexis:Graph", "orexis:BeliefGraph", "orexis:PublicGraph", "orexis:WorkingGraph"}
+_MODALITIES = {"orexis:Graph", "orexis:BeliefGraph"}
 
 
 def test_the_agent_structure_draws_every_graph_kind_and_no_other():

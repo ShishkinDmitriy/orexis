@@ -317,7 +317,7 @@ def _needs() -> list[tuple[str, str]]:
 
     with tempfile.TemporaryDirectory() as here:
         store = reading.world(_declared(Path(here), []))
-        return sorted({(r["role"], r["message"]) for r in rows(store, reading._NEEDS_Q, graphs_of(store, reading.PUBLIC))})
+        return sorted({(r["role"], r["message"]) for r in rows(store, reading._NEEDS_Q, graphs_of(store, reading.BELIEF, nobodys=True))})
 
 
 NEEDS = _needs()
@@ -1401,8 +1401,8 @@ def test_agents_md_names_code_that_exists():
 
 def test_a_document_holding_drifts_is_a_drift_graph():
     """`predict` reads drifts from `orexis:DriftGraph` graphs alone, as the planner reads actions from
-    `orexis:ActionGraph` alone — so a drifts file left typed the bare `orexis:PublicGraph` is a file the
-    predictor passes over in silence, every public graph having been where it looked before. Every
+    `orexis:ActionGraph` alone — so a drifts file left typed a bare belief is a file the
+    predictor passes over in silence, every graph nobody owns having been where it looked before. Every
     document under `domains/` and `world/` carrying a `prediction:Drift` row says the kind."""
     import rdflib
 

@@ -1,11 +1,10 @@
 --- case
 +++ expected
-@@ -33,4 +33,18 @@
+@@ -31,4 +31,17 @@
+   :ontology a orexis:BeliefGraph .
    :ontology a orexis:Graph .
    :ontology a orexis:OntologyGraph .
-   :ontology a orexis:PublicGraph .
 +  graph:scopes a orexis:Graph .
-+  graph:scopes a orexis:WorkingGraph .
 +  graph:scopes a planning:ScopeGraph .
 +  graph:scopes orexis:arrivedBy orexis:Derived .
  }

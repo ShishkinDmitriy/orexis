@@ -50,7 +50,7 @@ BUDGET_TERM = PLANNING + "budget"
 
 
 #  A DERIVATION (scope-actions): one INSERT of one loaded rule, as the edge it makes. Written
-#  at every refresh of public knowledge, so the partition is a function of the store and not of
+#  at every refresh of what the world states, so the partition is a function of the store and not of
 #  the files — the actions are in the store already and the rules were not.
 DERIVATION = PLANNING + "Derivation"
 READS = PLANNING + "reads"

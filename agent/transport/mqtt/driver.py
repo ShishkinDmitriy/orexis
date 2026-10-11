@@ -49,7 +49,7 @@ import os
 from datetime import datetime
 
 from agent import clock
-from agent.ontology import PUBLIC, SELF_GRAPH, local_of
+from agent.ontology import BELIEF, SELF_GRAPH, local_of
 from agent.store import answer, graphs_of, rows
 from agent.transport.transport import Transport
 
@@ -176,14 +176,14 @@ class Mqtt(Transport):
         asks, as it hands `received` the bytes (#944) — imported here, as `received` is, so a member
         that only listens never loads sensing."""
         from agent.sensing.cadence import lapsed
-        mine = {r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC, SELF_GRAPH))}
+        mine = {r["sensor"] for r in rows(store, _MINE_Q, [*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH)])}
         asked = list(dict.fromkeys(sensor for sensor, _ in lapsed(store, now) if sensor in mine))
         for sensor in asked:
             self.sense_now(store, sensor)
         return []
 
     def reaches(self, store, device: str) -> bool:
-        return bool(answer(store, _REACHES_Q, graphs_of(store, PUBLIC), device=device)["boolean"])
+        return bool(answer(store, _REACHES_Q, graphs_of(store, BELIEF, nobodys=True), device=device)["boolean"])
 
     def set_cadence(self, store, sensor: str, sleep_s: int) -> bool:
         topic = self._command_topic(store, sensor)
@@ -196,7 +196,7 @@ class Mqtt(Transport):
         """Publish a step's command on the topic the actuator listens to, or its board's; not
         retained, since a command is an act and a retained one would be taken again by a device
         that reconnects."""
-        names = [p for p in (r["pattern"] for r in rows(store, _ACTUATES_Q, graphs_of(store, PUBLIC), actuator=actuator))
+        names = [p for p in (r["pattern"] for r in rows(store, _ACTUATES_Q, graphs_of(store, BELIEF, nobodys=True), actuator=actuator))
                  if "+" not in p and "#" not in p]
         if not names:
             return self._unreached(actuator, "the command is not sent")
@@ -213,7 +213,7 @@ class Mqtt(Transport):
     def tell(self, store, to: str, document: bytes) -> bool:
         """Publish a document on the topic the agent `to` listens to, by a pattern with no
         wildcard; not retained, since what was said is said once."""
-        names = [p for p in (r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=to))
+        names = [p for p in (r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, BELIEF, nobodys=True), agent=to))
                  if "+" not in p and "#" not in p]
         if not names:
             return self._unreached(to, "nothing said to it is sent")
@@ -225,8 +225,8 @@ class Mqtt(Transport):
     def open(self, store) -> list[str]:
         """Subscribe to every pattern the world implies for the agent's sensors, and to the topic
         it listens to itself; the patterns."""
-        patterns = sorted({r["pattern"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC, SELF_GRAPH))}
-                          | {r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=self.me)})
+        patterns = sorted({r["pattern"] for r in rows(store, _MINE_Q, [*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH)])}
+                          | {r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, BELIEF, nobodys=True), agent=self.me)})
         for pattern in patterns:
             self.client.subscribe(pattern)
         log.info("%s listening on %s", local_of(self.me), patterns or "nothing")
@@ -243,10 +243,10 @@ class Mqtt(Transport):
         comes only to a speaker, and one for a sensor of its only to an observer — `orexis-onboard`
         refuses a topic listened to by no speaker and a sensor reporting to no observer — so an agent
         that only listens never loads sensing and one that only senses never loads speech (#824, #927)."""
-        if any(matches(r["pattern"], topic) for r in rows(store, _LISTENS_Q, graphs_of(store, PUBLIC), agent=self.me)):
+        if any(matches(r["pattern"], topic) for r in rows(store, _LISTENS_Q, graphs_of(store, BELIEF, nobodys=True), agent=self.me)):
             from agent.speech.heard import heard
             return [(None, graph) for graph in heard(store, self.me, payload)]
-        mine = list(dict.fromkeys(r["sensor"] for r in rows(store, _MINE_Q, graphs_of(store, PUBLIC, SELF_GRAPH))
+        mine = list(dict.fromkeys(r["sensor"] for r in rows(store, _MINE_Q, [*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH)])
                                   if matches(r["pattern"], topic)))
         if not mine:
             log.debug("%s: a message on %s is nobody's of mine", local_of(self.me), topic)
@@ -265,7 +265,7 @@ class Mqtt(Transport):
         """The topic name the sensor's board takes commands on: a pattern of a filter matching
         it with no wildcard, since a publish takes a name. None, said in the log, where the
         board listens nowhere or every pattern is a wildcard."""
-        patterns = [r["pattern"] for r in rows(store, _COMMANDS_Q, graphs_of(store, PUBLIC), sensor=sensor)]
+        patterns = [r["pattern"] for r in rows(store, _COMMANDS_Q, graphs_of(store, BELIEF, nobodys=True), sensor=sensor)]
         names = [p for p in patterns if "+" not in p and "#" not in p]
         if not names:
             log.warning("%s: its board listens on %s, and none is a topic name to publish to",

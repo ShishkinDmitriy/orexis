@@ -4,7 +4,7 @@ the read lives, on the courier's own words: two vans and two parcels on one grid
 The derivation's cases (`derive_wants/two_parcels_a_constraint_joins_are_one_want.trig` and
 `two_parcels_on_disjoint_grids_are_two_wants.trig`) hold what the derivation MINTS from the answer;
 what is held here is the answer itself, and the one finding the design stands on: that a constraint
-read over the public graphs alone, as a scope's atoms are, cannot tell a shared grid from two.
+read over the beliefs nobody owns alone, as a scope's atoms are, cannot tell a shared grid from two.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import pyoxigraph as ox
 import pytest
 
 from agent import clock
-from agent.ontology import PUBLIC
+from agent.ontology import BELIEF
 from agent.planning import footprint
 from agent.planning.couplings import REACH_GRAPH, couplings
 from agent.planning.lay_ground import lay_ground
@@ -78,7 +78,7 @@ def test_a_holder_with_no_constraint_couples_nothing_and_pays_no_reach(laid):
 
 def test_over_the_public_graphs_alone_the_aversion_is_grid_blind(laid):
     """THE FINDING THE DESIGN STANDS ON. Asked the way a scope's atoms are — every pattern optional
-    over the public graphs — the aversion joins van A to van B with the cell unbound, on one grid
+    over the beliefs nobody owns — the aversion joins van A to van B with the cell unbound, on one grid
     and on two alike, since which cells a van can stand on is the drive's FILTER over coordinates
     and the public half of a text is its patterns. So the constraint is read over the reach."""
     select = """PREFIX courier: <http://example.org/orexis/courier#>
@@ -89,6 +89,6 @@ def test_over_the_public_graphs_alone_the_aversion_is_grid_blind(laid):
     seen = []
     for name in ("two_parcels_a_constraint_joins_are_one_want", "two_parcels_on_disjoint_grids_are_two_wants"):
         store = laid(name)
-        found = store.query(text, prefixes=NAMESPACES, default_graph=[ox.NamedNode(g) for g in graphs_of(store, PUBLIC)])
+        found = store.query(text, prefixes=NAMESPACES, default_graph=[ox.NamedNode(g) for g in graphs_of(store, BELIEF, nobodys=True)])
         seen.append(sorted((str(s["this"].value), str(s["other"].value), s["value"]) for s in found if s["this"] and s["other"]))
     assert seen[0] == seen[1] and len(seen[0]) == 4 and all(value is None for *_, value in seen[0]), seen

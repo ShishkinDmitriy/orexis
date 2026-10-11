@@ -204,7 +204,7 @@ _HELD_Q = """
 SELECT DISTINCT ?g WHERE {
   GRAPH $retracts { ?s ?p ?o }
   GRAPH $cat { ?g a orexis:BeliefGraph .
-               FILTER NOT EXISTS { ?g a orexis:PublicGraph }
+               ?g orexis:beliefsOf ?owner .
                FILTER NOT EXISTS { ?g a belief:RevisionGraph }
                FILTER NOT EXISTS { ?g a execution:CommittedStepGraph } }
   GRAPH ?g { ?s ?p ?o } } ORDER BY ?g"""
@@ -1020,6 +1020,6 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
 
 def _me_of(beliefs: ox.Store, agent_id: str) -> str | None:
-    """The agent a belief base holds with the id it was told, off public knowledge, or None."""
-    found = rows(beliefs, _ME_Q, graphs_of(beliefs, OREXIS + "PublicGraph"), id=ox.Literal(agent_id))
+    """The agent a belief base holds with the id it was told, off what the world states, or None."""
+    found = rows(beliefs, _ME_Q, graphs_of(beliefs, OREXIS + "BeliefGraph", nobodys=True), id=ox.Literal(agent_id))
     return found[0]["me"] if found else None

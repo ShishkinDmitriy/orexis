@@ -12,8 +12,8 @@ identifier a process is given: its own agent id.
 
 **Graph IRIs are not terms.** `orexis:WorldGraph` is the term; `…/graph/world` is a particular
 graph, no more a term than `orexis:fern_agent` is. The instances are declared in the kernel's
-own `ontology.ttl`, typed by class, and `graphs_of(store, PUBLIC)` asks which ones they
-are — so a query means "public knowledge" without any Python knowing what that consists of.
+own `ontology.ttl`, typed by class, and `graphs_of(store, BELIEF, nobodys=True)` asks which ones
+they are — so a query means "what the world states" without any Python knowing what that consists of.
 What survives here is the **bootstrap root** (the T-Box has to be loaded somewhere before it
 can be asked anything) and the **write targets** (a writer must say where it writes, built
 from the one id a process is handed). Neither is a reader enumerating what to read.
@@ -53,7 +53,7 @@ def local_of(iri: str) -> str:
 
 # --- named graphs ---------------------------------------------------------------------------
 #
-# Public knowledge is several graphs, not one, and the axis is **who put the fact there**:
+# What the world states is several graphs, not one, and the axis is **who put the fact there**:
 #
 #   asserted   somebody wrote it in a file — a package's vocabulary, or the sovereign's world
 #   derived    a rule computed it: the fact has no latitude once the rule exists, but the rule
@@ -99,14 +99,13 @@ CATALOGUE_GRAPH = _GRAPH + "catalogue"
 #  it stands at, `store.graphs_of` answers with the graphs, and nothing decides on anyone's
 #  behalf. Each kind is a kernel term a package may put its own graph under, which is how a
 #  package's record reaches every rule without the kernel learning the package's name.
-PUBLIC = OREXIS + "PublicGraph"          # everyone's: the vocabulary, the world, the actions
-BELIEF = OREXIS + "BeliefGraph"          # what IS: the world, the agent's own state, a claim held
+BELIEF = OREXIS + "BeliefGraph"          # what IS: the world, its vocabulary and actions, the agent's own state
 PREDICTION = OREXIS + "PredictionGraph"  # what is expected, holding during its window
 PLAN = OREXIS + "PlanGraph"              # a plan published, adopted by reference
 RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period
 ACTION = OREXIS + "ActionGraph"          # actions
 DRIFT_GRAPH = OREXIS + "DriftGraph"      # drifts — a domain's, read by the predictor
-SELF_GRAPH = OREXIS + "SelfGraph"        # who the self is — a belief, so read beside PUBLIC by whoever asks it
+SELF_GRAPH = OREXIS + "SelfGraph"        # who the self is — a belief the agent owns, read beside the world's by whoever asks it
 #  THE SELF: the one agent a store is this agent's, authored by its world in a self graph and
 #  checked by the boot. A text asks `?me a orexis:Self` and is bound nothing
 #  (knowledge/domain/kernel/self.md).
@@ -114,10 +113,10 @@ SELF = OREXIS + "Self"
 #  THE KIND EVERY ROLE IS BENEATH: what the agent runs, declared beside the self in its self graph,
 #  and the one question the boot asks before any package is loaded (knowledge/domain/kernel/role.md).
 ROLE = OREXIS + "Role"
-#  What a text is answered over: everyone's knowledge, what is, and the records. Stated once
+#  What a text is answered over: what is believed, and the records. Stated once
 #  here and named at every runner, so a runner says what it hands a text; a package that owns
 #  more kinds a text of its reads — planning's desires and wants — adds them to its own list.
-KNOWN = (PUBLIC, BELIEF, RECORD)
+KNOWN = (BELIEF, RECORD)
 
 #  A GRAPH'S NAME IS FOR EYES. The builders below spell a readable convention for the graphs
 #  the kernel writes — `intentions/<agent>` — and nothing in code depends on

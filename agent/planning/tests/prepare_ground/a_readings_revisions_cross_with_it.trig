@@ -20,8 +20,8 @@
 @prefix prediction: <http://example.org/orexis/prediction#> .
 
 GRAPH :ontology {
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -65,17 +65,19 @@ GRAPH :catalogue {
   :drying_stops_revisions a orexis:BeliefGraph .
   :drying_stops_revisions a orexis:Graph .
   :drying_stops_revisions orexis:arrivedBy orexis:Derived .
+  :drying_stops_revisions orexis:beliefsOf :keeper .
   :drying_stops_revisions prov:wasDerivedFrom :drying_stops .
+  :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :ontology a orexis:PublicGraph .
-  :sensed a orexis:Graph .
   :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
   :sensed orexis:beliefsOf :keeper .
   :sensed_revisions a orexis:BeliefGraph .
   :sensed_revisions a orexis:Graph .
   :sensed_revisions orexis:arrivedBy orexis:Derived .
+  :sensed_revisions orexis:beliefsOf :keeper .
   :sensed_revisions prov:wasDerivedFrom :sensed .
+  :world a orexis:BeliefGraph .
   :world a orexis:Graph .
-  :world a orexis:PublicGraph .
 }

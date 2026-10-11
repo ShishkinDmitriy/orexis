@@ -51,7 +51,7 @@ orexis:CatalogueGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Catalogue graph" ;
-    rdfs:comment "THE ONE GRAPH THAT SAYS WHAT EVERY GRAPH IS, ITSELF INCLUDED (one-catalogue-describes-every-graph-and-itself): its class, whose it is (`orexis:beliefsOf`), how it arrived (`orexis:arrivedBy`), when it holds (`dcterms:temporal`, a `dcterms:PeriodOfTime` either end open) and, for a public graph, the PROV-O account of the load that made it. Written by whoever creates a graph, in the same update as the graph; the vocabulary's own instances below are transcribed into it on every start. It describes ITSELF, which is what lets a store find it without knowing its name — `Store.catalogue` asks every graph for the one that says of itself it is this — so no reader names it, and the three graphs it replaced (the classification, the periods, the provenance) were the bootstrap root's names. NOT public, and the reason is use versus mention: these are statements ABOUT graphs, so merged into the default graph they would answer open patterns that mean something else — `?device a ?class` would return graphs — and a period is a fact that moves, which in every possible world would move the invariant signature and kill a kept cone. The door reads it and hands a rule a dataset; the rule learns nothing of it." .
+    rdfs:comment "THE ONE GRAPH THAT SAYS WHAT EVERY GRAPH IS, ITSELF INCLUDED (one-catalogue-describes-every-graph-and-itself): its class, whose it is (`orexis:beliefsOf`), how it arrived (`orexis:arrivedBy`), when it holds (`dcterms:temporal`, a `dcterms:PeriodOfTime` either end open) and, for a world's document, the PROV-O account of the load that made it. Written by whoever creates a graph, in the same update as the graph; the vocabulary's own instances below are transcribed into it on every start. It describes ITSELF, which is what lets a store find it without knowing its name — `Store.catalogue` asks every graph for the one that says of itself it is this — so no reader names it, and the three graphs it replaced (the classification, the periods, the provenance) were the bootstrap root's names. NO BELIEF, and the reason is use versus mention: these are statements ABOUT graphs, so merged into the default graph they would answer open patterns that mean something else — `?device a ?class` would return graphs — and a period is a fact that moves, which in every possible world would move the invariant signature and kill a kept cone. The door reads it and hands a rule a dataset; the rule learns nothing of it." .
 
 orexis:Graph
     a owl:Class ;
@@ -59,21 +59,15 @@ orexis:Graph
 
 orexis:OntologyGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:BeliefGraph , orexis:PublicGraph ;
+    rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Ontology graph" ;
     rdfs:comment "The T-Box: this module and every other, plus what RDFS entails of it." .
 
 orexis:ActionGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:PublicGraph ;
+    rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Action graph" ;
-    rdfs:comment "A graph of `orexis:Action` rows — what an agent can do, each with what it takes, when it is available, what it costs and what it adds and retracts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/actions.ttl`), and the planner reads its actions from these graphs alone rather than from every public graph, the vocabularies and the world included. Public, since what can be done is everyone's to read. The 0.1.0 kind of this spelling was also a menu graph; 0.2.0 has no menu." .
-
-orexis:PublicGraph
-    a owl:Class ;
-    rdfs:subClassOf orexis:Graph ;
-    rdfs:label "Public graph" ;
-    rdfs:comment "Knowledge every agent in a world may read: the vocabulary, the topology, and what the rules and the RDFS closure made of them. This is the class `store.query` looks for — the default graph of every query is whatever is an instance of THIS, discovered rather than listed, so adding one is a vocabulary edit and touches no code. Membership is deliberately by declaration and not by exclusion: a graph nobody typed is invisible, which is the safe direction to fail — the other way round, a new private graph nobody remembered to exclude would leak into every query." .
+    rdfs:comment "A graph of `orexis:Action` rows — what an agent can do, each with what it takes, when it is available, what it costs and what it adds and retracts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/actions.ttl`), and the planner reads its actions from these graphs alone rather than from every belief, the vocabularies and the world included. A belief nobody owns, since what can be done is everyone's to read. The 0.1.0 kind of this spelling was also a menu graph; 0.2.0 has no menu." .
 
 orexis:RecordGraph
     a owl:Class ;
@@ -89,9 +83,9 @@ orexis:Role
 
 orexis:SocietyGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:BeliefGraph , orexis:PublicGraph ;
+    rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Society graph" ;
-    rdfs:comment "Who a world's principals are and how they reach one another: the agents and the client each is, the brokers as what clients are connected to, the topics and the filters that name them, and which device speaks on which. Public and sovereign-authored, beside the world graph and apart from it, and read by the agents, the simulator and `orexis-mqtt`, which derives the ACL from it. The KERNEL'S kind, since the boot finds who the agent is on it before any package is loaded. Where a broker listens is not here: that is a deployment graph, onboarding's kind, which no agent loads (knowledge/decisions/a-documents-kind-says-who-reads-it.md)." .
+    rdfs:comment "Who a world's principals are and how they reach one another: the agents and the client each is, the brokers as what clients are connected to, the topics and the filters that name them, and which device speaks on which. Sovereign-authored and nobody's, beside the world graph and apart from it, and read by the agents, the simulator and `orexis-mqtt`, which derives the ACL from it. The KERNEL'S kind, since the boot finds who the agent is on it before any package is loaded. Where a broker listens is not here: that is a deployment graph, onboarding's kind, which no agent loads (knowledge/decisions/a-documents-kind-says-who-reads-it.md)." .
 
 orexis:Self
     a owl:Class ;
@@ -103,19 +97,13 @@ orexis:SelfGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Self graph" ;
-    rdfs:comment "Which agent is the self, and the one private graph whose owner is read off what it holds rather than stated beside it: `<agent> a orexis:Self`, exactly once, in a document of this kind and no other, authored in the world under `beliefs/` and owned by the self it states. A belief, so a text answered over what is known reads it and it crosses into an imaginarium; NOT public, since it is true of one agent's store and of no other's, so a reader that reads the public graphs and asks the self states this kind beside them. And where the agent's STANCES are: a figure a package reads of the agent — its patience, a budget, a limit — stated as a triple about the self here and read off this kind alone, the package's constant where none is stated (knowledge/domain/kernel/stance.md). And its ROLES, the other kinds the self is stated beside `orexis:Self` here, read by the boot before any package is loaded (`orexis:Role`)." .
-
-orexis:WorkingGraph
-    a owl:Class ;
-    rdfs:subClassOf orexis:Graph ;
-    rdfs:label "Working graph" ;
-    rdfs:comment "ONE agent's own graph that nothing outside its package reads — the scopes, a package's scratch. Classified like any per-agent graph, so a volume knows it from litter, and never carried into a possible world, since none of it is a fact about the world a met-test reads." .
+    rdfs:comment "Which agent is the self, and the one private graph whose owner is read off what it holds rather than stated beside it: `<agent> a orexis:Self`, exactly once, in a document of this kind and no other, authored in the world under `beliefs/` and owned by the self it states. A belief, so a text answered over what is known reads it and it crosses into an imaginarium; OWNED, since it is true of one agent's store and of no other's, so a reader that reads what the world states, the beliefs nobody owns, and asks the self states this kind beside them. And where the agent's STANCES are: a figure a package reads of the agent — its patience, a budget, a limit — stated as a triple about the self here and read off this kind alone, the package's constant where none is stated (knowledge/domain/kernel/stance.md). And its ROLES, the other kinds the self is stated beside `orexis:Self` here, read by the boot before any package is loaded (`orexis:Role`)." .
 
 orexis:WorldGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:BeliefGraph , orexis:PublicGraph ;
+    rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "World graph" ;
-    rdfs:comment "The world agents act in: the subjects and their ranges, the sensors, devices and systems, the venues — and, in a world with no society graph beside it, the agents and what each acts for. Public and sovereign-authored, importing the domains the world speaks (knowledge/domain/kernel/world.md)." .
+    rdfs:comment "The world agents act in: the subjects and their ranges, the sensors, devices and systems, the venues — and, in a world with no society graph beside it, the agents and what each acts for. Sovereign-authored and nobody's, importing the domains the world speaks (knowledge/domain/kernel/world.md)." .
 
 #################  Properties  #################
 
@@ -195,13 +183,13 @@ orexis:PlanGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Plan graph" ;
-    rdfs:comment "A PLAN PUBLISHED: the steps a search found for one want, in execution's words, written once by planning into the belief base under a name of its own, its root saying which want it `execution:pursues`. Planning owns it and it stays; an intention adopts it by reference (`execution:adopts`). The kernel's because planning writes it and execution reads it, and neither may name the other's word (knowledge/decisions/planning-and-execution-meet-at-the-store.md). Not public: it never crosses into an imaginarium." .
+    rdfs:comment "A PLAN PUBLISHED: the steps a search found for one want, in execution's words, written once by planning into the belief base under a name of its own, its root saying which want it `execution:pursues`. Planning owns it and it stays; an intention adopts it by reference (`execution:adopts`). The kernel's because planning writes it and execution reads it, and neither may name the other's word (knowledge/decisions/planning-and-execution-meet-at-the-store.md). No belief: it never crosses into an imaginarium." .
 
 orexis:DriftGraph
     a owl:Class ;
-    rdfs:subClassOf orexis:PublicGraph ;
+    rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Drift graph" ;
-    rdfs:comment "A graph of `prediction:Drift` rows — what moves a value while nobody acts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/drifts.ttl`, `<> a orexis:DriftGraph`), and the prediction package reads its drifts from these graphs alone rather than from every public graph. The KERNEL'S and not prediction's, though the rows are prediction's words: a domain ships its drifts whether or not an agent of the world is a predictor, and every agent reads them as a public graph — of a kind only prediction declared, every agent that is no predictor would pass them over and `orexis-onboard` would refuse it, which is refusing a drift with no predictor, foresight being the author's to decline (a-documents-kind-says-who-reads-it, #824, #927). Where a domain's document and the predictor meet is the kernel's to name, as the actions' graph is." .
+    rdfs:comment "A graph of `prediction:Drift` rows — what moves a value while nobody acts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/drifts.ttl`, `<> a orexis:DriftGraph`), and the prediction package reads its drifts from these graphs alone rather than from every belief. The KERNEL'S and not prediction's, though the rows are prediction's words: a domain ships its drifts whether or not an agent of the world is a predictor, and every agent reads them as a belief nobody owns — of a kind only prediction declared, every agent that is no predictor would pass them over and `orexis-onboard` would refuse it, which is refusing a drift with no predictor, foresight being the author's to decline (a-documents-kind-says-who-reads-it, #824, #927). Where a domain's document and the predictor meet is the kernel's to name, as the actions' graph is." .
 
 orexis:PredictionGraph
     a owl:Class ;

@@ -53,7 +53,7 @@ OREXIS = "http://example.org/orexis#"
 SENSING = "http://example.org/orexis/sensing#"
 SOSA = "http://www.w3.org/ns/sosa/"
 MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
-PUBLIC = OREXIS + "PublicGraph"
+BELIEF = OREXIS + "BeliefGraph"
 
 #  THE SOCIETY'S FIGURES for a sentinel, which the 0.1.0 sensing capability stated and Agent 0.2.0
 #  has no capability to state them on: a move of a quarter of the band since the last report wakes
@@ -69,9 +69,9 @@ def _world(world: str):
 
 
 def _rows(store, text: str) -> list[dict]:
-    """Over the world's public graphs and its hardware at once — a board's pins join the topics
+    """Over the world's beliefs nobody owns and its hardware at once — a board's pins join the topics
     its sensors publish on, and the hardware is the one kind here no agent reads."""
-    return _rows_of(store, text, graphs_of(store, PUBLIC, HARDWARE))
+    return _rows_of(store, text, graphs_of(store, BELIEF, HARDWARE, nobodys=True))
 
 
 

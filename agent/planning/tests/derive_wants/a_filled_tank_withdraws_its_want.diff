@@ -19,10 +19,10 @@
  
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
-@@ -79,8 +69,12 @@
-   :sensed a orexis:BeliefGraph .
+@@ -78,8 +68,12 @@
+   :sensed orexis:beliefsOf :keeper .
+   :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-   :world a orexis:PublicGraph .
 -  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
 -  pursued:keeper.in_range.pursued.tank1.level a planning:WantGraph .
 -  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .

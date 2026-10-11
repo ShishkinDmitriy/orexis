@@ -34,7 +34,7 @@ agent holds, and answers reflection's fixed questions over a season
 
 **A step runs where the world has what it serves.** History is every agent's, so every world is
 granted it, and metrics are where the world says it is monitored. The **bus** is a broker the
-world's society names — a premise read off the world, an ASK over its public graphs in `PREMISES`
+world's society names — a premise read off the world, an ASK over its beliefs nobody owns in `PREMISES`
 of `onboarding/reading.py`, onboarding's own and the one kind of premise left, since what an agent
 runs is declared and not derived. A world naming none — hanoi,
 the courier, the tower, the dispatcher — is onboarded without the MQTT step, which says in one line that it was

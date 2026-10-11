@@ -81,7 +81,7 @@ def stand_in(case: Path, text: str | None = None) -> ox.Store:
     #
     #  THE CASE SAYS WHAT ITS GRAPHS ARE, in a catalogue it names, found by what it says of
     #  itself and never by its spelling. A case with no catalogue is refused, since a store
-    #  that says nothing of its graphs has no public knowledge to read; one typing no
+    #  that says nothing of its graphs has nothing the world states to read; one typing no
     #  vocabulary graph the same, since the axioms would have nowhere to go. No name in a case
     #  is the kernel's: every graph is called what the case likes and found by what the
     #  catalogue says of it, the readings included.

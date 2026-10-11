@@ -1,92 +1,15 @@
 --- case
 +++ expected
-@@ -21,12 +21,12 @@
- 
- GRAPH :ontology {
-   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
-+  execution:CommittedStepGraph rdfs:subClassOf orexis:BeliefGraph .
-+  execution:CommittedStepGraph rdfs:subClassOf orexis:Graph .
-   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
-   orexis:BeliefGraph rdfs:subClassOf orexis:BeliefGraph .
-   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
--  execution:CommittedStepGraph rdfs:subClassOf orexis:BeliefGraph .
--  execution:CommittedStepGraph rdfs:subClassOf orexis:Graph .
-   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
- }
- 
-@@ -37,9 +37,9 @@
-   :probe a sosa:Sensor .
-   :probe sosa:isHostedBy :zamioculcas .
-   :probe sosa:observes :moisture .
-+  :tap :aimsAt 0.27 .
-+  :tap :risesBy 0.15 .
-   :tap :waters :zamioculcas .
--  :tap :risesBy 0.15 .
--  :tap :aimsAt 0.27 .
-   :zamioculcas :driesPerDay 4.0 .
-   :zamioculcas a :Pot .
-   :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
-@@ -51,14 +51,6 @@
- }
- 
- GRAPH :actions {
--  :Drying a prediction:Drift .
--  :Drying prediction:moves :moisture .
--  :Drying prediction:rate """PREFIX : <http://example.org/test#>
--      SELECT ?rate ?until WHERE {
--          $feature :driesPerDay ?perDay .
--          BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
--          BIND(0.0 AS ?until)
--      }""" .
-   :Dosed a prediction:Drift .
-   :Dosed prediction:moves :moisture .
-   :Dosed prediction:rate """PREFIX : <http://example.org/test#>
-@@ -68,6 +60,14 @@
-           ?tap :waters $feature ; :risesBy ?rise ; :aimsAt ?until .
-           BIND(xsd:double(?rise) / xsd:double(?soon) AS ?high)
-           BIND(xsd:double(?rise) / xsd:double(?late) AS ?low)
-+      }""" .
-+  :Drying a prediction:Drift .
-+  :Drying prediction:moves :moisture .
-+  :Drying prediction:rate """PREFIX : <http://example.org/test#>
-+      SELECT ?rate ?until WHERE {
-+          $feature :driesPerDay ?perDay .
-+          BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
-+          BIND(0.0 AS ?until)
-       }""" .
- }
- 
-@@ -82,16 +82,16 @@
- }
- 
- GRAPH committed:plan_dose {
-+  :plan_dose :tap :tap .
-   :plan_dose a execution:Step .
--  :plan_dose :tap :tap .
-+  :plan_dose execution:answeredWithinS 1200 .
-   :plan_dose execution:landsWithinS 600 .
--  :plan_dose execution:answeredWithinS 1200 .
- }
- 
- GRAPH :catalogue {
-+  :actions a orexis:DriftGraph .
-   :actions a orexis:Graph .
-   :actions a orexis:PublicGraph .
--  :actions a orexis:DriftGraph .
-   :catalogue a orexis:CatalogueGraph .
-   :catalogue a orexis:Graph .
-   :ontology a orexis:Graph .
-@@ -100,6 +100,8 @@
+@@ -98,6 +98,8 @@
+   :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-   :world a orexis:PublicGraph .
    committed:plan_dose a execution:CommittedStepGraph .
 +  committed:plan_dose a orexis:BeliefGraph .
 +  committed:plan_dose a orexis:Graph .
    committed:plan_dose dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:25:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:05:00+00:00"^^xsd:dateTime ] .
    committed:plan_dose orexis:arrivedBy orexis:Recorded .
    committed:plan_dose orexis:beliefsOf :keeper .
-@@ -108,4 +110,53 @@
+@@ -106,4 +108,53 @@
    observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
    observed:zamioculcas_moisture orexis:beliefsOf :keeper .

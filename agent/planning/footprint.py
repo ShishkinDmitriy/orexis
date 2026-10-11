@@ -46,7 +46,7 @@ never two instances of one: two pumps on two beds both write `climate:soil` of a
 predicates they are one scope though nothing either does reaches the other's bed. What tells
 their writes apart is WHOM they are of — the subject the precondition binds, a public fact, or where
 it binds none the values it binds it by. So an action's footprint is read per FILLING: its precondition is asked
-over the public graphs with every pattern optional, which binds what the world states and leaves
+over the beliefs nobody owns with every pattern optional, which binds what the world states and leaves
 what the state would have bound unbound; each row is one filling as far as the world alone decides
 it; and each pattern a filling reads or writes is an atom `(predicate, key)`, the key being the
 subject's own value where the row binds it and otherwise the values of the variables that share a
@@ -77,7 +77,7 @@ from agent import clock
 #  AN EFFECT'S TEMPLATES AS BELIEF'S MACHINE ASKS THEM: one reading of an update text, the
 #  runner's own, so what a scope says an effect writes is what the effect is applied as.
 from agent.belief.transition import Refused, templates, transitions
-from agent.ontology import ACTION, PUBLIC, SELF, local_of
+from agent.ontology import ACTION, BELIEF, SELF, local_of
 from agent.store import _TOKEN, NAMESPACES, PREFIXES, graphs_of, rows
 
 log = logging.getLogger("footprint")
@@ -99,7 +99,7 @@ _INTO = re.compile(r"\$into\([^)]*\)")
 #  of the self graph its world authors for it (knowledge/domain/kernel/self.md): no public graph
 #  holds it and no action writes it, so a footprint — a text read as the world alone would answer
 #  it — reads the text without it, `?me` the free variable the agent always was here. Read with it,
-#  the anchor binds nothing over the public graphs, stands first in rdflib's order since it is the
+#  the anchor binds nothing over the beliefs nobody owns, stands first in rdflib's order since it is the
 #  pattern with the fewest variables, and reorders the OPTIONAL chain a filling is asked as: measured
 #  on the greenhouse, the dose came to be filled with the heater as its valve and the scopes moved.
 _SELF_ANCHOR = re.compile(r"(\?\w+)\s+(?:a|rdf:type)\s+(?:orexis:Self|<" + re.escape(SELF) + r">)\s*(;|\.|(?=\}))")
@@ -454,7 +454,7 @@ def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
 
     A FUNCTION OVER THE STORE, handed the engine and nothing else. It took a QUERY — a lambda
     closing over the store and the graphs to read — which is the caller deciding what this
-    reads and this deciding nothing; the graphs an action is declared in are public knowledge,
+    reads and this deciding nothing; the graphs an action is declared in are what the world states,
     which is this module's to ask for, as `stored_edges` beside it already asks.
     """
     out = {}
@@ -523,7 +523,7 @@ def stored_edges(store, graphs) -> tuple:
 # --- the footprint per filling: predicates on keys ----------------------------------------------
 
 #  A FILLING AS THE WORLD ALONE DECIDES IT: the precondition's patterns, each OPTIONAL, asked over
-#  the public graphs — what the world states binds, what the state would have bound stays unbound.
+#  the beliefs nobody owns — what the world states binds, what the state would have bound stays unbound.
 _PUBLIC_P_Q = "SELECT DISTINCT ?p WHERE { ?s ?p ?o }"
 
 
@@ -546,7 +546,7 @@ def atoms_of(store, at: datetime | None = None) -> dict[str, list | None]:
     effects = _effects(store, at)
     if not effects:
         return out
-    public = graphs_of(store, PUBLIC, at=at or clock.now())
+    stated = graphs_of(store, BELIEF, at=at or clock.now(), nobodys=True)
     changeable = {str(p) for _, writes in actions_of(store, at).values() if writes is not ANYTHING for p in writes}
     takes: dict = {}
     for row in rows(store, _TAKES_Q, graphs_of(store, ACTION, at=at or clock.now())):
@@ -566,7 +566,7 @@ def atoms_of(store, at: datetime | None = None) -> dict[str, list | None]:
             out[action] = ANYTHING
             continue
         decided = _decided_by_the_world(parsed, written[action], touched, takes.get(action, ()))
-        out[action] = _fillings(store, public, parsed, written[action], changeable, decided)
+        out[action] = _fillings(store, stated, parsed, written[action], changeable, decided)
         if decided and not out[action]:
             log.info("%s takes %s, of which this world states none: it has no filling here, and is in no scope",
                      action, ", ".join(sorted(decided)))
@@ -581,7 +581,7 @@ def _decided_by_the_world(patterns: list, written: dict, touched: set, takes) ->
     """The parameters an action takes that the WORLD ALONE decides: each stands in some pattern of
     the precondition, is no subject the effect writes, and stands in no pattern reading a predicate
     any effect writes or deletes — the valve, the heater, the cell a van drives to, as against the
-    reading a dose moves or the van that drives. Asked over the public graphs, such a parameter is
+    reading a dose moves or the van that drives. Asked over the beliefs nobody owns, such a parameter is
     bound wherever the world holds one; left unbound, the world has said it holds none."""
     out = set()
     for param in takes:
@@ -662,8 +662,8 @@ def _collect(triples, out: dict):
     return out
 
 
-def _fillings(store, public, patterns: list, written: dict, changeable: set, decided=frozenset()) -> list:
-    """Each filling the world alone decides, as `(atoms, terms)`: the public graphs asked the
+def _fillings(store, stated, patterns: list, written: dict, changeable: set, decided=frozenset()) -> list:
+    """Each filling the world alone decides, as `(atoms, terms)`: the beliefs nobody owns asked the
     precondition's patterns, every one OPTIONAL and no filter, so a row binds what the world states
     and nothing else; then the atoms each filling reads of what some action writes, and writes.
 
@@ -678,14 +678,14 @@ def _fillings(store, public, patterns: list, written: dict, changeable: set, dec
     if patterns:
         text = "SELECT DISTINCT * WHERE { " + " ".join(f"OPTIONAL {{ {_n3(s)} {_n3(p)} {_n3(o)} . }}" for s, p, o in patterns) + " }"
         try:
-            found = store.query(text, prefixes=NAMESPACES, default_graph=[ox.NamedNode(g) for g in public])
+            found = store.query(text, prefixes=NAMESPACES, default_graph=[ox.NamedNode(g) for g in stated])
             names = [v.value for v in found.variables]
             rows_ = [{n: solution[n] for n in names if solution[n] is not None} for solution in found] or [{}]
             rows_ = [bound for bound in rows_ if decided.issubset(bound)]
             if not rows_:
                 return []
         except Exception as exc:                            # noqa: BLE001
-            log.debug("a precondition's patterns would not run over the public graphs: %s", exc)
+            log.debug("a precondition's patterns would not run over the beliefs nobody owns: %s", exc)
             rows_ = [{}]
     #  WHAT A SUBJECT IS KEYED BY where the world binds it nothing: the other end of every pattern
     #  it stands in — a variable the filling binds, or a constant the text states, which keys a

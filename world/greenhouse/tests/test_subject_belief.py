@@ -36,7 +36,7 @@ SOIL, AIR = "sensors/moisture_probe/reading", "sensors/thermometer/reading"
 #  writes and where sensing says a sensor silent — never a percept, which is no belief at all (#944).
 _DERIVED_Q = """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-    FILTER NOT EXISTS { ?g a belief:RevisionGraph } FILTER NOT EXISTS { ?g a orexis:PublicGraph } } }"""
+    FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:beliefsOf ?owner . } }"""
 
 #  WHAT THE BED IS BELIEVED, in climate's words, for one property: its state.
 _BELIEVED_Q = """SELECT ?state WHERE { $bed $state_as ?state }"""

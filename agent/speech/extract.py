@@ -25,7 +25,7 @@ import logging
 
 import pyoxigraph as ox
 
-from agent.ontology import BELIEF, OREXIS, PUBLIC, local_of
+from agent.ontology import BELIEF, OREXIS, local_of
 from agent.store import Raw, add_quads, catalogue_of, construct, entry, forget_graph, graphs_of, rows, update
 
 from .ontology import believed_graph
@@ -54,7 +54,7 @@ def extract(store: ox.Store, statement: str) -> list[str]:
     cat = catalogue_of(store)
     if cat is None:
         return []
-    reads = [statement, *graphs_of(store, PUBLIC)]
+    reads = [statement, *graphs_of(store, BELIEF, nobodys=True)]
     found: list = []
     for r in rows(store, _EXTRACTIONS_Q, graphs_of(store, _RULES_GRAPH)):
         try:

@@ -76,7 +76,7 @@ import re
 import pyoxigraph as ox
 
 from agent.hash_named_graph import forms
-from agent.ontology import BELIEF, OREXIS, PUBLIC
+from agent.ontology import BELIEF, OREXIS
 from agent.store import (Raw, catalogue_of, construct, entry, forget_graph, graphs_of, quads,
                          remember, rows, update)
 
@@ -243,7 +243,7 @@ def _layers(store) -> list[tuple[float, list[tuple[float, list[dict]]]]]:
         entry_["types"].add(r["type"])
         entry_["shape"] = entry_["shape"] or r.get("shape")
     declared: dict = {}
-    for r in rows(store, _DECLARED_Q, list(dict.fromkeys([*rules_graphs, *graphs_of(store, PUBLIC)]))):
+    for r in rows(store, _DECLARED_Q, list(dict.fromkeys([*rules_graphs, *graphs_of(store, BELIEF, nobodys=True)]))):
         declared.setdefault(r["rule"], {})[r["prefix"]] = r["namespace"]
     for rule, about in sorted(seen.items()):
         r = about["row"]

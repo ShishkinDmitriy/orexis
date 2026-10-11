@@ -12,7 +12,7 @@ whoever asks, and the rules bind the range themselves.
 
 from __future__ import annotations
 
-from agent.ontology import PUBLIC
+from agent.ontology import BELIEF
 from agent.store import graphs_of, remember, rows
 
 _BOUNDS_Q = """
@@ -27,10 +27,10 @@ ORDER BY ?low ?high"""
 def ranges_of(store, sensor: str, observed_property: str, memo=None) -> list[tuple[float, float]]:
     """The floor and the ceiling of every range that applies to what `sensor` observes of
     `observed_property`: its host's, its host's subject's where the host is a sample, and its
-    own, off public knowledge. Remembered per pass where a memo is given."""
+    own, off what the world states. Remembered per pass where a memo is given."""
     return remember(memo, ("ranges", sensor, observed_property), lambda: [
         (float(r["low"]), float(r["high"]))
-        for r in rows(store, _BOUNDS_Q, graphs_of(store, PUBLIC), sensor=sensor, property=observed_property)])
+        for r in rows(store, _BOUNDS_Q, graphs_of(store, BELIEF, nobodys=True), sensor=sensor, property=observed_property)])
 
 
 def side(low: float, high: float, value: float) -> int:

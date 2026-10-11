@@ -181,7 +181,7 @@ def test_a_world_graph_of_a_kind_a_loaded_package_declares_is_read_after_it(tmp_
 
 
 def test_a_role_is_read_off_the_self_graph_alone(tmp_path):
-    """What an agent runs is its own word about itself: a role a public graph states of it is no role
+    """What an agent runs is its own word about itself: a role a belief nobody owns states of it is no role
     of its, as a stance stated there is no stance."""
     store = boot(_world(tmp_path, [], f":me a <{SPEAKER}> .\n"), "me")
     assert roles_of(store) == frozenset() and packages_of(store) == ()
