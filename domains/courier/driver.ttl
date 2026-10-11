@@ -46,8 +46,7 @@ courier:Board a orexis:Action ;
     #  world that knows its roads better is where a truer one would come from.
     planning:landsAfter """SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(120 AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX courier: <http://example.org/orexis/courier#>
-        DELETE { $driver courier:aboard ?old  }
-        WHERE  { $driver courier:aboard ?old  }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
-        CONSTRUCT { $driver courier:aboard $van } WHERE { }""" ] ] .
+        sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { $driver courier:aboard ?old }
+        INSERT { $driver courier:aboard $van }
+        WHERE  { $driver courier:aboard ?old }""" ] ] .

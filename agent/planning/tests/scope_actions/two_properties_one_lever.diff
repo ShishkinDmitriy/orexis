@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -29,4 +29,16 @@
+@@ -30,4 +30,16 @@
    :ontology a orexis:Graph .
    :ontology a orexis:OntologyGraph .
    :ontology a orexis:PublicGraph .

@@ -43,10 +43,8 @@ GRAPH :actions {
             ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
             ?valve :actuates ?subject ; :actuatesProperty ?property .
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
-  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
-      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
-        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
   :heat a orexis:Action .
   :heat planning:precondition """PREFIX : <http://example.org/test#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
@@ -55,10 +53,8 @@ GRAPH :actions {
             ?heater :warms ?subject ; :warmsProperty ?property .
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range .
             ?soil sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty :Moisture . }""" .
-  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { $reading sensing:below ?range . $soil sensing:inside ?dry } WHERE { $reading sensing:below ?range . OPTIONAL { $soil sensing:inside ?dry } }""" ] ,
-      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
-        CONSTRUCT { $reading sensing:inside ?range . $soil sensing:below ?dry } WHERE { $reading sensing:below ?range . $soil sensing:inside ?dry }""" ] ] .
+  :heat planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+        DELETE { $reading sensing:below ?range . $soil sensing:inside ?dry } INSERT { $reading sensing:inside ?range . $soil sensing:below ?dry } WHERE { $reading sensing:below ?range . OPTIONAL { $soil sensing:inside ?dry } }""" ] ] .
 }
 
 GRAPH :catalogue {

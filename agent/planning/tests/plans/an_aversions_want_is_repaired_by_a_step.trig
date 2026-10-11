@@ -50,10 +50,10 @@ GRAPH :actions {
   :move orexis:takes :to .
   :move planning:costs """PREFIX : <http://example.org/test#>
       SELECT (1 AS ?cost) WHERE { }""" .
-  :move planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX : <http://example.org/test#>
+  :move planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
       DELETE { $tank :on ?s }
-      WHERE  { $tank :on ?s }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT { $tank :on $to } WHERE { }""" ] ] .
+      INSERT { $tank :on $to }
+      WHERE  { $tank :on ?s }""" ] ] .
   :move planning:precondition """PREFIX : <http://example.org/test#>
       SELECT ?tank ?to WHERE {
       ?tank a :Tank ; :on ?from .

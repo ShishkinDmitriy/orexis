@@ -61,11 +61,10 @@ actuation:Dosing a orexis:Action ;
             BIND(xsd:double(?every) * ?per AS ?most)
         }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX climate: <http://example.org/orexis/climate#>
+        sh:rule [ a belief:Transition ; belief:update """PREFIX climate: <http://example.org/orexis/climate#>
         DELETE { $subject climate:soil climate:Dry }
-        WHERE  { $subject climate:soil climate:Dry }""" ] ,
-                [ a sh:SPARQLRule ; sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
-        CONSTRUCT { $subject climate:soil climate:Moist } WHERE { $subject climate:soil climate:Dry }""" ] ] ;
+        INSERT { $subject climate:soil climate:Moist }
+        WHERE  { $subject climate:soil climate:Dry }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Command ; sh:select """PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX climate: <http://example.org/orexis/climate#>

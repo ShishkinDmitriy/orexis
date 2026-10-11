@@ -113,6 +113,25 @@ def test_the_market_s_calling_and_tendering_are_read_and_answer_what_they_read()
         {market.bidsIn, market.open, market.bidder, market.inRound, market.onVenue, market.clearedAt})
 
 
+def test_every_shipped_effect_is_transitions_whose_updates_the_machine_runs():
+    """Every rule of a shipped effect is a `belief:Transition`, and every `belief:update` a domain or a
+    world ships is one the machine runs and the footprint reads (#951): a text it refused would change
+    nothing in any world and write nothing in any scope, said only in the log. Read off the documents."""
+    from agent.belief.transition import templates
+    root = Path(__file__).resolve().parents[3]
+    belief, planning = (rdflib.Namespace(f"http://example.org/orexis/{p}#") for p in ("belief", "planning"))
+    updates, rules = [], []
+    for path in sorted([*root.glob("domains/*/*.ttl"), *root.glob("world/*/*.ttl"), *root.glob("world/*/*/*.ttl")]):
+        g = rdflib.Graph().parse(path)
+        updates += [(path.name, str(text)) for text in g.objects(None, belief.update)]
+        rules += [(path.name, rule, g) for effect in g.objects(None, planning.effect) for rule in g.objects(effect, SH.rule)]
+    assert len(updates) >= 14 and len(rules) >= 12, "the documents have moved, and this reads nothing"
+    for name, text in updates:
+        assert templates(text).insert or templates(text).delete, f"{name}: an update stating neither template"
+    for name, rule, g in rules:
+        assert (rule, RDF.type, belief.Transition) in g, f"{name}: an effect's rule that is no transition"
+
+
 def test_a_shape_whose_select_has_the_two_shapes_reads_their_predicates():
     """The door the constraints and the placing of a want go through (`_constraints`, `_of_scope`):
     a constraint stated as the issue's select was weighed in every world of every scope, since a
@@ -196,6 +215,27 @@ def test_actions_of_reads_every_action_the_store_holds(monkeypatch, snapshots):
     iri, (reads, writes) = action
     assert iri.endswith("#fill")
     assert URIRef("http://example.org/test#level") in reads and URIRef("http://example.org/test#level") in writes
+
+
+def test_an_effect_writes_what_its_update_takes_out_as_well_as_what_it_puts_in(monkeypatch, snapshots):
+    """An effect's rule is one update text (#951), and both its templates are what it writes, each
+    asked as the CONSTRUCT belief's machine asks it — a drain that takes out a spill and puts in a
+    level writes both. While a delete was a text of its own it was asked here as a query, which no
+    update parses as, and it wrote nothing. A rule of an effect that is no `belief:Transition` is no
+    rule the machine runs, and is read as no effect at all."""
+    from agent.ontology import ACTION
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(Path(__file__).parent / "plans" / "a_low_tank_is_filled.trig")
+    actions = graphs_of(store, ACTION, at=snapshots.NOW)[0]
+    update(store, f'''PREFIX : <http://example.org/test#> INSERT DATA {{ GRAPH <{actions}> {{
+        :drain a orexis:Action ; planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ;
+            belief:update "PREFIX : <http://example.org/test#> DELETE {{ ?t :spilt ?x }} INSERT {{ ?t :level 0 }} WHERE {{ ?t :spilt ?x }}" ] ] .
+        :spill a orexis:Action ; planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ;
+            sh:construct "PREFIX : <http://example.org/test#> CONSTRUCT {{ ?t :spilt 1 }} WHERE {{ ?t :level ?l }}" ] ] }} }}''')
+    found = footprint.actions_of(store)
+    T = "http://example.org/test#"
+    assert found[T + "drain"][1] == frozenset({URIRef(T + "level"), URIRef(T + "spilt")})
+    assert T + "spill" not in found, "an effect whose rule is no transition says nothing it writes"
 
 
 def test_stored_edges_read_the_derivations_genesis_wrote(wants):

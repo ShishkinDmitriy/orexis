@@ -15,9 +15,11 @@ description: >-
   per property, and sensing's mapping words, `sensing:judged` and `believe` go. Amended the same
   day - a transition declares no trigger and no target; and (#944) a predicted observation is an
   arrival in the ground the planner lays it into, where its transitions run, changing the ground
-  alone and never the present. Refused - change done by a Python writer
+  alone and never the present. Amended 2026-10-11 (#951) - a transition is one update text,
+  belief:update, its delete and insert templates over one WHERE; every effect rule is typed a
+  transition, and the class sits beneath sh:Rule. Refused - change done by a Python writer
   per need, a functional property replaced by the deliberator, rules that delete run to a fixpoint,
-  and one rule judging every range.
+  one rule judging every range, and an update text inside sh:construct.
 status: accepted
 timestamp: 2026-10-10T12:00:00Z
 ---
@@ -40,6 +42,29 @@ timestamp: 2026-10-10T12:00:00Z
 > transitions declared the observation's kind — and its predictions and committed steps spend none.
 > The body below is amended to all of it.
 
+> **Amended 2026-10-11 (#951): a transition is one update text.** As built it was two texts, a
+> `sh:construct` for what it inserts and a `DELETE … WHERE` beside it for what it takes out, each with
+> a WHERE of its own: #947 took the shape over from the effect's runner, and nothing had weighed one
+> text. Twelve rules in `domains/` spelled one pattern twice, climate's soil and air transitions the
+> clearest, and the two copies could drift apart with no test to notice. **A transition is now a
+> `belief:Transition` whose `belief:update` is one SPARQL update** — `DELETE { … } INSERT { … } WHERE
+> { … }`, either template alone over its WHERE, or `DELETE WHERE { … }` — naming no graph and chaining
+> no second operation. **The runner reads it with rdflib's update grammar**, never a pattern over its
+> characters, and asks each template as the `CONSTRUCT` it and the one WHERE spell, the text's own
+> prologue at its head; every rule of one order is still asked before any of it is applied, and
+> deletions still go before additions. A text that names its graphs (`WITH`, `USING`, `GRAPH`),
+> chains with `;`, or is no `DELETE`/`INSERT … WHERE` changes nothing, the whole of it, and is said
+> in the log by name. **Every rule of an action's effect is typed `belief:Transition`**, since an
+> effect is a transition the agent causes, and the effect's runner, planning's footprint and the
+> reach a constraint is read over all read `belief:update` off a rule so typed. **The class is beneath
+> `sh:Rule` and no longer `sh:SPARQLRule`**: it keeps `sh:order` and `sh:deactivated`, which SHACL
+> declares on `sh:Rule`, and carries no `sh:construct`; no SHACL engine executes a bare `sh:Rule`, so
+> nothing takes a transition for an inference whose text it should run, and revision's filter on the
+> type — a kind it reads, now — is what keeps one out of the default rule set. `belief:update` is
+> declared beneath `sh:construct`, as the sovereign asked; nothing entails a subproperty at boot, so
+> the axiom changes no reader. Measured: every case's diff and every world's test reads as it did,
+> the rule texts carried in a case's store aside. The body below is amended to all of it.
+
 # The question
 
 Slice 1 of #944 (#947) needed a subject's state to be replaced by the next reading's, with the state
@@ -59,8 +84,8 @@ change triples, and each has found its own way around rules that cannot.
   source being rewritten. [Revision](/domain/belief/revision.md) says it: "a rule states what it adds
   and nothing about what it removes".
 - **An action's effect already deletes.** `agent/planning/take.py` runs an effect's rules: a
-  `sh:SPARQLRule` whose `sh:construct` is what it adds or whose `planning:update` is a `DELETE …
-  WHERE`, grouped by `sh:order`, every rule of one order reading the same world, its deletions
+  `sh:SPARQLRule` whose `sh:construct` is what it adds or whose second text, then planning's word, is a
+  `DELETE … WHERE`, grouped by `sh:order`, every rule of one order reading the same world, its deletions
   applied before its additions and a later order reading what the earlier made, each run once,
   scoped to the world it changes and naming no graph. pySHACL would run the same rules to a
   fixpoint, "the opposite shape" ([a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)).
@@ -79,8 +104,9 @@ replaces.**
 - **An inference concludes.** A `sh:construct`, run by revision over a source to a fixpoint, adding
   only, into the source's revision graph; a function of its premises, re-derivable, gone with its
   source. A side, a quantity from a raw count, a calibration, the closure. Unchanged.
-- **A transition changes the state.** A rule that deletes and inserts — the shape an effect's rules
-  already have, a delete's `DELETE … WHERE` beside a construct's additions, grouped by `sh:order` —
+- **A transition changes the state.** A rule that deletes and inserts — one update, `belief:update`,
+  its delete template and its insert template over one WHERE, grouped by `sh:order`, every rule of
+  an effect being one —
   typed `belief:Transition` and triggered **once** by each arrival of testimony, reading the arrival
   and the state before it, and changing the agent's own state. Not to a fixpoint. Its result is not re-derivable
   from anything still held, since one of its premises is the state it replaced: it IS the state.
@@ -92,8 +118,8 @@ and it is belief's — this is belief revision proper, the row of the stack wher
 becomes what is believed ([the-agent-stack-is-a-second-axis](/decisions/the-agent-stack-is-a-second-axis.md)).
 Planning, above belief, applies an effect through it in the world it forks — and, since #944's
 second slice, a percept's transition in each ground it lays, where a predicted observation arrives
-(the seam below). The delete's word moves
-with the machine.
+(the seam below). The update's word is
+the machine's, belief's.
 
 **A transition declares no trigger, and the runner prepares where it writes.** Every arrival of
 testimony triggers every transition once, and the agent's own graphs trigger none; the WHERE says
@@ -164,6 +190,12 @@ frost below nought whatever the range, waterlogged after rain, or a state read o
   every state forced to be a side of the operating range. Its argument — the hold written once
   cannot drift between properties — is real and is what this costs: climate writes the hold twice,
   for the soil and the air.
+- **An update text inside `sh:construct`** (#951) — the one text kept under SHACL's own word, so a
+  transition would need no word of ours. One IRI would then carry two grammars: SHACL defines
+  `sh:construct` as a CONSTRUCT query, every reader of it — revision, the bridges, a SHACL engine —
+  would have to tell the two apart, and the rule's kind would be read off its text's first keyword
+  rather than off its type. `belief:update` is a word of its own, beneath `sh:construct` only as an
+  axiom nothing entails.
 
 # Consistent with, and named so it is not mistaken for a reversal
 

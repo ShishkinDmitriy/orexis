@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -20,37 +20,37 @@
+@@ -20,33 +20,35 @@
  GRAPH :world {
    :keeper a orexis:Agent .
    :keeper orexis:actsFor :bed .
@@ -17,24 +17,20 @@
 -  :dose orexis:takes :valve , :reading .
 +  :dose orexis:takes :reading .
 +  :dose orexis:takes :valve .
-+  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
-+        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
-+        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
++  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
++        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
    :dose planning:precondition """PREFIX : <http://example.org/test#>
          PREFIX sensing: <http://example.org/orexis/sensing#>
          SELECT DISTINCT ?valve ?reading WHERE {
              ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
              ?valve :actuates ?subject ; :actuatesProperty ?property .
              ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
--  :dose planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
--        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
--      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+-  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
 +  :heat a orexis:Action .
 +  :heat orexis:takes :heater .
 +  :heat orexis:takes :reading .
-+  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
-+        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
-         CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
++  :heat planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+         DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
 -  :heat a orexis:Action .
 -  :heat orexis:takes :heater , :reading .
    :heat planning:precondition """PREFIX : <http://example.org/test#>
@@ -43,14 +39,12 @@
              ?me a orexis:Self ; :hasActuator ?heater ; orexis:actsFor ?subject .
              ?heater :warms ?subject ; :warmsProperty ?property .
              ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
--  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; belief:delete """PREFIX sensing: <http://example.org/orexis/sensing#>
--        DELETE { $reading sensing:below ?range } WHERE { $reading sensing:below ?range }""" ] ,
--      [ a sh:SPARQLRule ; sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
--        CONSTRUCT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+-  :heat planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
+-        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
  }
  
  GRAPH :catalogue {
-@@ -64,4 +64,20 @@
+@@ -60,4 +62,20 @@
    :ontology a orexis:PublicGraph .
    :world a orexis:Graph .
    :world a orexis:PublicGraph .

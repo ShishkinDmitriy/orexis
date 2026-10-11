@@ -8,6 +8,7 @@
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix graph: <http://example.org/orexis/graph/> .
@@ -23,12 +24,12 @@ GRAPH :ontology {
 
 GRAPH :actions {
   :heat a orexis:Action .
-  :heat planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX sosa: <http://www.w3.org/ns/sosa/>
-        CONSTRUCT { ?o sosa:hasSimpleResult ?x . } WHERE { ?o a sosa:Observation }""" ] ] .
+  :heat planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        INSERT { ?o sosa:hasSimpleResult ?x . } WHERE { ?o a sosa:Observation }""" ] ] .
   :move a orexis:Action .
-  :move planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+  :move planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
         PREFIX water: <http://example.org/orexis/water#>
-        CONSTRUCT { ?p :standsIn ?room . } WHERE { ?p a water:Plant }""" ] ] .
+        INSERT { ?p :standsIn ?room . } WHERE { ?p a water:Plant }""" ] ] .
 }
 
 GRAPH :catalogue {

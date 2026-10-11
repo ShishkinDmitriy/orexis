@@ -17,7 +17,8 @@
 #  property's reading among them, it matches nothing and changes nothing. Each reads the reading, the
 #  subject's operating range for the property — the subject being the observation's feature of
 #  interest or what that is a sample of, whichever states one — the margin the range's condition states (`sensing:margin`, nought where none is), and
-#  the state the agent held of the subject before; it deletes that state and inserts the new one.
+#  the state the agent held of the subject before; it deletes that state and inserts the new one,
+#  one update over one WHERE (#951), so what it takes out and what it puts in are read of one match.
 #
 #  THE HOLD. A subject held under the floor stays there until its reading reaches the floor and the
 #  margin; one held over the ceiling stays there until its reading falls to the ceiling less the
@@ -36,17 +37,9 @@
 
 :soilRule a belief:Transition ;
     rdfs:label "the soil's state, held past its range's margin by the state before" ;
-    belief:delete """PREFIX climate: <http://example.org/orexis/climate#>
+    belief:update """PREFIX climate: <http://example.org/orexis/climate#>
         DELETE { ?subject climate:soil ?before }
-        WHERE  {
-            ?obs a sosa:Observation ; sosa:observedProperty climate:SoilMoisture ; sosa:hasSimpleResult ?value ;
-                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
-            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
-            ?condition ssn:forProperty climate:SoilMoisture ; schema:minValue ?low ; schema:maxValue ?high .
-            ?subject climate:soil ?before
-        }""" ;
-    sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
-        CONSTRUCT { ?subject climate:soil ?state }
+        INSERT { ?subject climate:soil ?state }
         WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty climate:SoilMoisture ; sosa:hasSimpleResult ?value ;
                  sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
@@ -62,17 +55,9 @@
 
 :airRule a belief:Transition ;
     rdfs:label "the air's state, held past its range's margin by the state before" ;
-    belief:delete """PREFIX climate: <http://example.org/orexis/climate#>
+    belief:update """PREFIX climate: <http://example.org/orexis/climate#>
         DELETE { ?subject climate:air ?before }
-        WHERE  {
-            ?obs a sosa:Observation ; sosa:observedProperty climate:AirTemperature ; sosa:hasSimpleResult ?value ;
-                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
-            ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
-            ?condition ssn:forProperty climate:AirTemperature ; schema:minValue ?low ; schema:maxValue ?high .
-            ?subject climate:air ?before
-        }""" ;
-    sh:construct """PREFIX climate: <http://example.org/orexis/climate#>
-        CONSTRUCT { ?subject climate:air ?state }
+        INSERT { ?subject climate:air ?state }
         WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty climate:AirTemperature ; sosa:hasSimpleResult ?value ;
                  sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .

@@ -85,10 +85,13 @@ def test_an_order_is_applied_whole_and_a_cut_is_continued_to_the_same_state(snap
 
 def test_a_transition_is_no_inference(snapshots):
     """Revision runs the default rule set to a fixpoint and never deletes; a rule typed
-    `belief:Transition` is no part of it, even stating `sh:SPARQLRule` beside, so revising the tick
-    concludes nothing and leaves the count as it was."""
+    `belief:Transition` is no part of it, even stating `sh:SPARQLRule` and a construct revision would
+    run beside — which is the guard's whole case now that the class is beneath `sh:Rule`, a kind
+    `revise` reads too — so revising the tick concludes nothing and leaves the count as it was."""
     store = snapshots.stand_in(CASES_DIR / "a_state_is_replaced_where_it_stood.trig")
-    update(store, "INSERT DATA { GRAPH <http://example.org/test#rules> { <http://example.org/test#countRule> a sh:SPARQLRule } }")
+    update(store, """INSERT DATA { GRAPH <http://example.org/test#rules> { <http://example.org/test#countRule>
+        a sh:SPARQLRule , sh:Rule ;
+        sh:construct "CONSTRUCT { ?c <http://example.org/test#count> 9 } WHERE { ?c a <http://example.org/test#Counter> }" } }""")
     assert revise(store, TICK, read=graphs_of(store, *KNOWN)) == 0
     assert _held(store) == {"count": "1"}
     assert not rows(store, "SELECT ?g WHERE { GRAPH ?c { ?g a belief:RevisionGraph } }")

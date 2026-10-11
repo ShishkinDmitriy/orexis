@@ -2,7 +2,8 @@
 
 Two sets per action, both derived and neither declared (#488):
 
-- what it WRITES — the predicates of its effect's rules, the construct templates and the deletes;
+- what it WRITES — the predicates of its effect's rules, each update's insert template and its
+  delete template, read as belief's machine reads them (`templates`);
 - what it READS — the predicates of its `planning:precondition`.
 
 A derivation rule is the same pair read off one INSERT: its template writes, its WHERE reads.
@@ -67,12 +68,15 @@ import rdflib
 from rdflib import RDF, URIRef
 from rdflib.collection import Collection
 from rdflib.paths import AlternativePath, InvPath, MulPath, NegatedPath, SequencePath
-from rdflib.plugins.sparql.algebra import translateQuery, translateUpdate, traverse
-from rdflib.plugins.sparql.parser import parseQuery, parseUpdate
+from rdflib.plugins.sparql.algebra import translateQuery, traverse
+from rdflib.plugins.sparql.parser import parseQuery
 
 #  WHAT A `$token` IS, from the module that BINDS one. It was spelled here too, a
 #  character apart, which is two definitions of one thing waiting to disagree.
 from agent import clock
+#  AN EFFECT'S TEMPLATES AS BELIEF'S MACHINE ASKS THEM: one reading of an update text, the
+#  runner's own, so what a scope says an effect writes is what the effect is applied as.
+from agent.belief.transition import Refused, templates
 from agent.ontology import ACTION, PUBLIC, SELF, local_of
 from agent.store import _TOKEN, NAMESPACES, PREFIXES, graphs_of, rows
 
@@ -365,12 +369,13 @@ def _values_in(node) -> dict:
 
 # --- the footprint of each action and each derivation -----------------------------------------------
 
-#  ONE ROW PER RULE OF AN ACTION'S EFFECT, with the action's precondition on each.
+#  ONE ROW PER RULE OF AN ACTION'S EFFECT, with the action's precondition on each — a rule being a
+#  transition, as the effect's runner finds it (`take`).
 _ACTIONS_Q = """
-SELECT ?action ?precondition ?construct ?delete WHERE {
+SELECT ?action ?precondition ?update WHERE {
   ?action a orexis:Action .
   OPTIONAL { ?action planning:precondition ?precondition }
-  OPTIONAL { ?action planning:effect/sh:rule ?r . OPTIONAL { ?r sh:construct ?construct } OPTIONAL { ?r belief:delete ?delete } }
+  OPTIONAL { ?action planning:effect/sh:rule ?r . ?r a belief:Transition ; belief:update ?update }
 }"""
 
 def written(store, at: datetime | None = None) -> frozenset[str]:
@@ -393,14 +398,7 @@ def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
     which is this module's to ask for, as `stored_edges` beside it already asks.
     """
     out = {}
-    effects: dict[str, dict] = {}
-    for row in rows(store, _ACTIONS_Q, graphs_of(store, ACTION, at=at or clock.now())):
-        held = effects.setdefault(row["action"], {"precondition": row.get("precondition"), "constructs": [], "deletes": []})
-        if row.get("construct"):
-            held["constructs"].append(row["construct"])
-        if row.get("delete"):
-            held["deletes"].append(row["delete"])
-    for action, effect in effects.items():
+    for action, effect in _effects(store, at).items():
         if not effect["constructs"]:
             #  AN ACTION STATING NO EFFECT is an action an event adopts (#506) — never on a
             #  admitted by any world, never simulated — and has no place in a closure that
@@ -418,11 +416,15 @@ def actions_of(store, at: datetime | None = None) -> dict[str, tuple]:
             part = writes_of_construct(text)
             if part is not ANYTHING:
                 writes = frozenset(writes | part)
-            #  else: A DELETE WITH A VARIABLE PREDICATE beside a construct — `?standing ?p
-            #  ?o`, every shipped reading-replacing lever — removes the node the construct
-            #  replaces, the readings graph's upsert, and so writes what the construct
-            #  writes. Read as ANYTHING it made every such lever relevant to every want, and
-            #  every want's view the whole world (#554, #565).
+            #  else: A DELETE WITH A VARIABLE PREDICATE beside an insert — `?standing ?p ?o` —
+            #  removes the node the insert replaces, and so writes what the insert writes. Read as
+            #  ANYTHING it made every such lever relevant to every want, and every want's view the
+            #  whole world (#554, #565).
+        #  A DELETE TEMPLATE IS READ HERE AS ITS CONSTRUCT, and was read by nobody while it was a
+        #  `DELETE` text of its own: this loop asked it as a query, which no update parses as, so
+        #  every delete read as ANYTHING and was passed over in silence. Asked as the CONSTRUCT the
+        #  machine asks (#951), each says what it takes out; measured, no case and no world moves,
+        #  since every predicate a shipped effect deletes some shipped effect also inserts.
         row = {"action": action}
         out[row["action"]] = (reads, writes)
     return out
@@ -536,13 +538,25 @@ def _decided_by_the_world(patterns: list, written: dict, touched: set, takes) ->
 
 
 def _effects(store, at: datetime | None) -> dict[str, dict]:
+    """Every action as its precondition and its effect's templates, each asked as the `CONSTRUCT`
+    belief's machine asks it (`templates`): the insert templates as `constructs`, what it adds, and
+    the delete templates as `deletes`, what it takes out. An update the machine refuses is kept as
+    a construct, which no query parse reads, so the action writes ANYTHING: what will not run cannot
+    be proven to write nothing, and the safe side is to say so."""
     effects: dict[str, dict] = {}
     for row in rows(store, _ACTIONS_Q, graphs_of(store, ACTION, at=at or clock.now())):
         held = effects.setdefault(row["action"], {"precondition": row.get("precondition"), "constructs": [], "deletes": []})
-        if row.get("construct"):
-            held["constructs"].append(row["construct"])
-        if row.get("delete"):
-            held["deletes"].append(row["delete"])
+        if not row.get("update"):
+            continue
+        try:
+            parts = templates(row["update"])
+        except Refused:
+            held["constructs"].append(row["update"])
+            continue
+        if parts.insert:
+            held["constructs"].append(parts.insert)
+        if parts.delete:
+            held["deletes"].append(parts.delete)
     return effects
 
 
@@ -561,28 +575,17 @@ def _patterns(text: str) -> list | None:
 
 
 def _written_subjects(constructs: list[str], deletes: list[str]) -> dict | None:
-    """What an effect writes, as `subject variable -> predicates` off its CONSTRUCT templates and
-    its DELETE templates — a type written is its class — or ANYTHING where a template's predicate
-    is a variable or its subject is not one."""
+    """What an effect writes, as `subject variable -> predicates` off its insert templates and its
+    delete templates, each asked as a CONSTRUCT — a type written is its class — or ANYTHING where a
+    template's predicate is a variable or its subject is not one."""
     out: dict = {}
-    for text in constructs:
+    for text in [*constructs, *deletes]:
         try:
             alg = translateQuery(parseQuery(PREFIXES + parseable(text))).algebra
         except Exception:                                   # noqa: BLE001
             return ANYTHING
         if _collect(alg.get("template") or (), out) is ANYTHING:
             return ANYTHING
-    for text in deletes:
-        try:
-            ops = translateUpdate(parseUpdate(PREFIXES + parseable(text))).algebra
-        except Exception:                                   # noqa: BLE001
-            return ANYTHING
-        for op in ops:
-            delete = getattr(op, "delete", None)
-            if delete is None:
-                continue
-            if _collect(getattr(delete, "triples", ()) or (), out) is ANYTHING:
-                return ANYTHING
     return out
 
 

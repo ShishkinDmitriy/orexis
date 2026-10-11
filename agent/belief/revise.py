@@ -91,7 +91,8 @@ BUDGET = 64
 #  or another type beneath `sh:Rule` — with where the draft places it, its construct where it
 #  has one, and whether a shape links it, so that what cannot be run is reported rather than
 #  passed over. Read by kind, as every reader here states the kinds it reads. A transition is no
-#  inference, and is not of it.
+#  inference, and is not of it, though its class is beneath `sh:Rule`, a kind this reads: the
+#  last filter is what keeps it out, whatever else a rule typed so states.
 _RULES_Q = """
 SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHERE {
   ?rule a ?type . FILTER(?type IN (sh:SPARQLRule, sh:TripleRule, sh:Rule))

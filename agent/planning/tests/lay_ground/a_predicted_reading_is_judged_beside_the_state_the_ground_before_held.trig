@@ -49,11 +49,9 @@ GRAPH :world {
 
 GRAPH :rules {
   :soilRule a belief:Transition .
-  :soilRule belief:delete """PREFIX : <http://example.org/test#>
+  :soilRule belief:update """PREFIX : <http://example.org/test#>
       DELETE { ?subject :soil ?before }
-      WHERE  { ?obs sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value . ?subject :soil ?before }""" .
-  :soilRule sh:construct """PREFIX : <http://example.org/test#>
-      CONSTRUCT { ?subject :soil ?state }
+      INSERT { ?subject :soil ?state }
       WHERE {
         ?obs sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value .
         ?subject :floor ?floor ; :margin ?margin .
