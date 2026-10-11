@@ -175,6 +175,7 @@ From bytes on a topic to a quantity an agent believes — and who holds the cloc
 * [an-observation-is-a-percept-and-the-mind-reads-only-beliefs](/decisions/an-observation-is-a-percept-and-the-mind-reads-only-beliefs.md) - SUPERSEDED IN PART — an observation is a percept and the mind reads only beliefs in the domain's words; the domain's transition makes them.
 * [a-transition-changes-the-state-and-an-inference-only-concludes](/decisions/a-transition-changes-the-state-and-an-inference-only-concludes.md) - A rule that changes the state is a transition, triggered once by an arrival; an inference only adds. Effects and belief revision share one machine.
 * [the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md) - Belief is the one kind; a scope extracts its state from what its writers can write, and provenance replaces the public and state kinds.
+* [a-role-is-an-instance-an-agent-plays](/decisions/a-role-is-an-instance-an-agent-plays.md) - A role is an instance the agent plays, carrying its context and period; where it is stated decides who sees it.
 
 # Firmware, alarms and stand-ins
 
