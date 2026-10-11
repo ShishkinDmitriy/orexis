@@ -24,7 +24,7 @@
  }
  
  GRAPH :scopes {
-@@ -83,6 +82,147 @@
+@@ -82,6 +81,147 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:beliefsOf :keeper .

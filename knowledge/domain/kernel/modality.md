@@ -16,7 +16,7 @@ asserts is its kind:
 
 | kind | force | owner |
 |---|---|---|
-| `orexis:BeliefGraph` | what IS: the world as ratified and as this agent holds it | the world's documents; belief's transitions write one per arrival, sensing a silence; what a scope can change of it is no kind but the writers' ([changeable](/domain/planning/changeable.md)) |
+| `orexis:BeliefGraph` | what IS, and what a possible world is made of: the world as ratified and as this agent holds it, the vocabulary, the self | the world's documents; belief's transitions write one per arrival, sensing a silence; what a scope can change of it is no kind but the writers' ([changeable](/domain/planning/changeable.md)) |
 | `sensing:ObservationGraph` | what a sensor SAID, once — and no belief | sensing, beneath `orexis:Graph` alone; read at the boundary ([observation](/domain/sensing/observation.md)) |
 | `orexis:PredictionGraph` | what WILL be, during a window | prediction writes, planning reads |
 | `planning:PossibleGraph` | what WOULD be, if a plan were taken | the planner, in its [imaginarium](/domain/planning/imaginarium.md) |
@@ -24,6 +24,12 @@ asserts is its kind:
 | `planning:DesireGraph`, `planning:WantGraph` | what is WANTED, standing or once | the world, and the derivation |
 | `orexis:RecordGraph` | what is OWED or was done, worth believing for a period | a package's record |
 | `execution:IntentionGraph` | what is being DONE | the executor |
+
+What the agent reads to ACT asserts nothing of a subject and is no modality: its actions, drifts,
+shapes, constraints, derivations and rules are its program, no possible world is made of any of them,
+and each is read by its own kind — `orexis:ActionGraph`, `orexis:DriftGraph`, `planning:ShapesGraph`,
+`planning:ConstraintGraph`, `planning:DerivationGraph`, `sh:RulesGraph` — beneath `orexis:Graph` alone
+([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)).
 
 The catalogue carries every kind a graph's class is beneath, so a reader asks `?g a
 planning:WantGraph` or hands `store.graphs_of(BELIEF, PREDICTION)` its kinds and walks no path —

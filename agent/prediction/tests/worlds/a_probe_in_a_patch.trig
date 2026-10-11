@@ -64,7 +64,6 @@ GRAPH :actions {
 }
 
 GRAPH :catalogue {
-  :actions a orexis:BeliefGraph .
   :actions a orexis:DriftGraph .
   :actions a orexis:Graph .
   :catalogue a orexis:CatalogueGraph .

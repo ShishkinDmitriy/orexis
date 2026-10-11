@@ -33,7 +33,7 @@ def store(monkeypatch):
   GRAPH <{T}catalogue> {{
     <{T}catalogue> a orexis:CatalogueGraph .
     <{T}vocabulary> a orexis:OntologyGraph , orexis:BeliefGraph .
-    <{T}actions> a orexis:ActionGraph , orexis:BeliefGraph .
+    <{T}actions> a orexis:ActionGraph .
     <{T}world> a orexis:BeliefGraph . }} }}""")
     return st
 

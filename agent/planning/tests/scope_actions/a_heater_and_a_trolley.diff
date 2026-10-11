@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -33,4 +33,17 @@
+@@ -32,4 +32,17 @@
    :ontology a orexis:BeliefGraph .
    :ontology a orexis:Graph .
    :ontology a orexis:OntologyGraph .

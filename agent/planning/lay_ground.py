@@ -70,13 +70,13 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent.belief.transition import run, transitions
-from agent.ontology import ACTION, BELIEF, DRIFT_GRAPH, KNOWN, OREXIS, PREDICTION
+from agent.ontology import BELIEF, KNOWN, OREXIS, PREDICTION
 from agent.hash_named_graph import digest_of, hash_named_graph
 from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, clear_graph, revisions_of, forget_graph,
                          graphs_of, quads, rows, update)
 
 from . import footprint
-from .ontology import CHANGEABLE_GRAPH, CONSTRAINT_GRAPH, DERIVATION_GRAPH, GROUND_GRAPH, SHAPES
+from .ontology import CHANGEABLE_GRAPH, GROUND_GRAPH
 
 _PROV = "http://www.w3.org/ns/prov#"
 _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
@@ -273,8 +273,10 @@ def _present(store: ox.Store, now: datetime) -> str:
     return name
 
 
-#  WHAT DEFINES WHAT THE AGENT CAN DO AND HOW IT REASONS, which no step changes and no split cuts.
-_DEFINING = (ACTION, DRIFT_GRAPH, OREXIS + "OntologyGraph", SHAPES, CONSTRAINT_GRAPH, DERIVATION_GRAPH)
+#  THE VOCABULARY, which no step changes and no split cuts: the one belief read beside every world
+#  whole. What the agent reads to act — its actions, drifts, shapes and constraints — is no belief,
+#  and no split reaches it (#953).
+_DEFINING = (OREXIS + "OntologyGraph",)
 
 #  EVERY CHANGEABLE GRAPH AND THE GRAPH IT WAS CUT FROM.
 _CUT_Q = """

@@ -605,10 +605,14 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A reader states the kinds it reads, and the store decides nothing** — a query is handed its
   graphs, `graphs_of` answers by kind and instant, and the union of everything was refused as the
   default.
-- **Whose a graph is, is provenance, and what the world states is the beliefs nobody owns** —
-  the public kind folded into belief, and a belief of the agent's own names its owner, since one
-  naming none is read as the world's; read over every belief instead, a footprint lost the heater's
-  scope again (#913) and revision would read one peer's extracted word beside another's (#953).
+- **A belief is what a possible world is made of, and what the agent reads to act is none** — the
+  actions, drifts, shapes, constraints and derivations are its program, each read by its own kind
+  beside the desires, wants and rules (#953).
+- **Whose a graph is, is provenance and never its kind, and what the world states is the beliefs
+  nobody owns** — a world's graph naming no owner is shared by every agent of it, and a belief of the
+  agent's own names its owner, since one naming none is read as the world's; read over every belief
+  instead, a footprint lost the heater's scope again (#913) and revision would read one peer's
+  extracted word beside another's (#953).
 - **An update takes no dataset** — what chooses which graphs are the world at an instant is Python
   or a materialised view.
 - **What ends by the clock is a graph with a period, and one sweep drops it** — what the ending

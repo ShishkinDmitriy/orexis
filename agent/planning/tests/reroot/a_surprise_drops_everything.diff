@@ -115,7 +115,7 @@
  
  GRAPH pursued:2026-01-01T120000p0000--open {
    :keeper planning:holds :keeper.every_disk_home.pursued .
-@@ -187,293 +142,12 @@
+@@ -186,293 +141,12 @@
    :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
@@ -409,7 +409,7 @@
    pursued:2026-01-01T120000p0000--open a orexis:Graph .
    pursued:2026-01-01T120000p0000--open a planning:WantGraph .
    pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-@@ -509,8 +183,7 @@
+@@ -508,8 +182,7 @@
    hanoi:on planning:inScope :keeper.scope.1 .
  }
  

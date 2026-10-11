@@ -11,7 +11,7 @@
  }
  
  GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b {
-@@ -209,11 +205,47 @@
+@@ -207,11 +203,47 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:beliefsOf :keeper .

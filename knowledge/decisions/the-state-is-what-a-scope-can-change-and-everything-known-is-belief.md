@@ -15,6 +15,9 @@ description: >-
   exclusions per reader, and a peer gate that admits only triples some scope can write. Amended as
   built (#953) - what the world states is read as the beliefs nobody owns, never every belief, by
   revision, the footprints and every reader of the world, and the agent's own is what names an owner.
+  Amended again - a belief is what a possible world is made of, so the actions, drifts, shapes,
+  constraints and derivations the agent reads to act are no beliefs, and a world's graph naming no
+  owner is shared whatever its kind.
 status: accepted
 timestamp: 2026-10-11T09:00:00Z
 ---
@@ -187,6 +190,21 @@ them were answering the second and third questions with a class.
 > changeable and scope graphs sit beneath `orexis:Graph` alone, `orexis:WorkingGraph` having been read by
 > nothing. Every case reads as it did but for its rows, and one desire's constraint indices, renumbered
 > as its case was put in canonical order.
+
+> **Amended 2026-10-11, the sovereign: a belief is what a possible world is made of.** Planning cuts
+> every belief into what a scope's writers can change and the rest, and reads every world against both;
+> that is the line. The world, the society, the vocabulary and its closure, the self, a forecast, a
+> committed step, the agent's state and what is extracted of a statement are beliefs. **What the agent
+> reads to act is not**: `orexis:ActionGraph` and `orexis:DriftGraph`, read by planning, execution and
+> prediction, and `planning:ShapesGraph`, `planning:ConstraintGraph` and `planning:DerivationGraph`, read
+> where a world is judged or a scope written, sit beneath `orexis:Graph` alone beside the desires, the
+> wants and the rules, which never were beliefs; each is read by its own kind, as every reader of it
+> already asked, and crosses into an imaginarium by its own kind. Where "The decision" lists actions,
+> drifts, shapes and constraints among the kinds beneath belief, read this; and where it says what defines
+> what the agent can do is read only as asserted, read that it is read by its own kinds, none a belief.
+> **Whose a world's graph is stays what it says, whatever its kind**: a graph the world authors naming no
+> owner — a constraint, a desire, a belief — is shared by every agent of the world, and the refusal of a
+> desire saying nobody's goes, a desire's holder being in its rows. Every case reads as it did.
 
 > **Amended 2026-10-11: what changed is a diff of names.** A graph a copy is made of is never changed
 > under its name ([a-graph-is-never-changed-under-its-name](/decisions/a-graph-is-never-changed-under-its-name.md)),

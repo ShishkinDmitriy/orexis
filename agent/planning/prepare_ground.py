@@ -77,10 +77,10 @@ import logging
 import pyoxigraph as ox
 
 from agent.belief.ontology import REVISION_GRAPH, RULES_GRAPH
-from agent.ontology import BELIEF, PREDICTION, RECORD
+from agent.ontology import ACTION, BELIEF, DRIFT_GRAPH, PREDICTION, RECORD
 from agent.store import catalogue_of, forget_graph, graphs_of, revisions_of, rows
 
-from .ontology import CHANGEABLE_GRAPH, DESIRE, SCOPE_GRAPH, WANT
+from .ontology import CHANGEABLE_GRAPH, CONSTRAINT_GRAPH, DERIVATION_GRAPH, DESIRE, SCOPE_GRAPH, SHAPES, WANT
 
 log = logging.getLogger("prepare_ground")
 
@@ -198,10 +198,13 @@ def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset
     return frozenset(behind)
 
 
-#  THE KINDS THAT CROSS, spelled once for the filling and the refresh — the rules graphs among them,
-#  since a ground laid here runs the transitions a predicted observation triggers (`lay_ground`, #944),
-#  and they are the rules the beliefs hold, read where they lie.
-CROSSING = (PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH, RULES_GRAPH)
+#  THE KINDS THAT CROSS, spelled once for the filling and the refresh: the beliefs a world is made of,
+#  and what the search reads to act, each by its own kind, since none of it is a belief (#953) — the
+#  actions it admits and takes, the drifts and the derivations a ground and a scope are read by, the
+#  desires, wants, shapes and constraints a world is judged by, and the rules graphs, since a ground
+#  laid here runs the transitions a predicted observation triggers (`lay_ground`, #944).
+CROSSING = (PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH, RULES_GRAPH,
+            ACTION, DRIFT_GRAPH, DERIVATION_GRAPH, SHAPES, CONSTRAINT_GRAPH)
 
 #  WHAT THE STORE MADE FOR ITSELF, which a refresh keeps: the grounds, the possible worlds and
 #  the plans, which are planning's kinds, and the wants the derivation minted, which are a

@@ -10,7 +10,7 @@
  
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
-@@ -96,11 +95,29 @@
+@@ -95,11 +94,29 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 a planning:Weighing .
@@ -41,7 +41,7 @@
    pursued:2026-01-01T120000p0000--open a orexis:Graph .
    pursued:2026-01-01T120000p0000--open a planning:WantGraph .
    pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-@@ -128,3 +145,8 @@
+@@ -127,3 +144,8 @@
  GRAPH :sensed.changeable {
    :tank1 :level 0 .
  }

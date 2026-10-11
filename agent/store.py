@@ -787,10 +787,11 @@ def graphs_of(store, *kinds: str, at: datetime | None = None, until: datetime | 
     omitted, every graph of the kinds — which is right for a store holding one agent's world,
     and is what makes rule 4 (one agent, one volume) structural rather than remembered.
 
-    `nobodys` keeps the answer to the graphs no agent owns: what the world states, read alike by
-    every agent of it — the vocabulary, the world, the society, the actions, the drifts, the shapes
-    and the constraints, and what the boot derived of them. It is provenance and not a kind: whose
-    a graph is is how it arrived, which a graph class may not say (#953).
+    `nobodys` keeps the answer to the graphs no agent owns, shared alike by every agent of a world:
+    asked of the beliefs, what the world states — the vocabulary, the world, the society, and what
+    the boot derived of them; asked of a kind the agent reads to act, a domain's actions or a world's
+    constraints, the ones every agent holds. It is provenance and not a kind: whose a graph is is how
+    it arrived, which a graph class may not say (#953).
     """
     owned = (bind(_OWNED, holder=holder) if holder is not None else "") + (_NOBODYS if nobodys else "")
     text = bind(_GRAPHS_Q, kinds=Raw(" ".join(f"<{k}>" for k in kinds)),
