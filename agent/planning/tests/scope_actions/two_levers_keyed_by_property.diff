@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -57,4 +57,27 @@
+@@ -54,4 +54,27 @@
    :ontology a orexis:OntologyGraph .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
@@ -15,16 +15,16 @@
 +  :Temperature planning:inScope scopes:2 .
 +  :bed planning:inScope scopes:1 .
 +  :bed planning:inScope scopes:2 .
++  :below planning:inScope scopes:1 .
++  :below planning:inScope scopes:2 .
 +  :dose planning:inScope scopes:1 .
 +  :heat planning:inScope scopes:2 .
 +  :heater planning:inScope scopes:2 .
++  :inside planning:inScope scopes:1 .
++  :inside planning:inScope scopes:2 .
 +  :keeper planning:inScope scopes:1 .
 +  :keeper planning:inScope scopes:2 .
 +  :pump planning:inScope scopes:1 .
 +  scopes:1 a planning:Scope .
 +  scopes:2 a planning:Scope .
-+  sensing:below planning:inScope scopes:1 .
-+  sensing:below planning:inScope scopes:2 .
-+  sensing:inside planning:inScope scopes:1 .
-+  sensing:inside planning:inScope scopes:2 .
 +}

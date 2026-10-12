@@ -18,7 +18,6 @@
 @prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
-@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
@@ -45,7 +44,7 @@ GRAPH :sensed {
 }
 
 GRAPH :sensed_revisions {
-  :soil sensing:below :bed_operating .
+  :soil :below :bed_operating .
 }
 
 GRAPH :drying_stops {
@@ -56,7 +55,7 @@ GRAPH :drying_stops {
 }
 
 GRAPH :drying_stops_revisions {
-  :soil sensing:inside :bed_operating .
+  :soil :inside :bed_operating .
 }
 
 GRAPH :catalogue {

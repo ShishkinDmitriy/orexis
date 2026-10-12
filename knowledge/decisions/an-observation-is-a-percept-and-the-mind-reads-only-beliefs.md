@@ -262,8 +262,7 @@ measured on #946's build. Judged one way, there is nothing to contradict.
   sensor a subject hosts and its cadence in SOSA's words, since no belief says when it is next
   revised. A belief stating that would remove the last SOSA word from the domains' actions.
 - **Stuck counts readings, not time.** A sensor that misses readings is said stuck later than one
-  that never misses; `sensing:stuckAfter` keeps its unit of cadences, and the percepts kept are that
-  many.
+  that never misses; `sensing:stuckAfter` is a count of readings, and the percepts kept are that many.
 - **How deep sensing keeps percepts** is what its deepest rule reads, stuck today; a rule reading
   further back widens it, and a percept is never a series — a series is watched, never believed.
 - **Stuck is a percept's, and no plan branches on it** (#944's fourth slice). It is concluded of what

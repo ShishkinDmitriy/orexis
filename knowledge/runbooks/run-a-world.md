@@ -215,6 +215,14 @@ podman build -t orexis:local .
 podman compose up -d --force-recreate
 ```
 
+Neither reaches what a lived-in volume already holds. A volume keeps its own graphs and their
+catalogue rows, and the closure only adds kinds, so a change to what KIND an agent's own graph is
+leaves the old row standing beside the new. A volume born before #944's fourth slice (#950) keeps its
+one observation graph per sensor classified as a belief, which the mind would still read, and one born
+before #953 keeps rows of `orexis:StateGraph`. Replace such a volume, as
+[move-a-world-to-agent-0-2-0](/runbooks/move-a-world-to-agent-0-2-0.md) does: export it, remove it,
+and `up` again.
+
 # Changing what an agent may reach
 
 Three things you will actually want to do, on each of the two shared services. They behave

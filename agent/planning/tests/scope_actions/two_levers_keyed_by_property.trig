@@ -2,7 +2,7 @@
 #
 # TWO LEVERS THAT WRITE THE SAME PREDICATES ON DIFFERENT KEYS ARE TWO SCOPES (#593). A pump and a
 # heater each turn a reading of the bed from below its range to inside it — the same two predicates,
-# `sensing:below` and `sensing:inside` — and over predicates alone they were one scope. What tells
+# `:below` and `:inside` — and over predicates alone they were one scope. What tells
 # their writes apart is the world's: the pump moves the bed's moisture, the heater its temperature, and
 # each precondition keys the reading it writes by that property. So the atoms are
 # `(below, {bed, Moisture})` and `(below, {bed, Temperature})`, two scopes; the properties are each
@@ -16,7 +16,6 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix graph: <http://example.org/orexis/graph/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
 
@@ -38,23 +37,21 @@ GRAPH :world {
 
 GRAPH :actions {
   :dose a orexis:Action .
-  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+        DELETE { $reading :below ?range } INSERT { $reading :inside ?range } WHERE { $reading :below ?range }""" ] ] .
   :dose planning:precondition """PREFIX : <http://example.org/test#>
-        PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT DISTINCT ?valve ?reading WHERE {
             ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
             ?valve :actuates ?subject ; :actuatesProperty ?property .
-            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; :below ?range . }""" .
   :heat a orexis:Action .
-  :heat planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+  :heat planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+        DELETE { $reading :below ?range } INSERT { $reading :inside ?range } WHERE { $reading :below ?range }""" ] ] .
   :heat planning:precondition """PREFIX : <http://example.org/test#>
-        PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT DISTINCT ?heater ?reading WHERE {
             ?me a orexis:Self ; :hasActuator ?heater ; orexis:actsFor ?subject .
             ?heater :warms ?subject ; :warmsProperty ?property .
-            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; :below ?range . }""" .
 }
 
 GRAPH :catalogue {
