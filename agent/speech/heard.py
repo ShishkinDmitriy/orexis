@@ -6,14 +6,12 @@ import logging
 
 import pyoxigraph as ox
 
-from agent.ontology import OREXIS, local_of
+from agent.ontology import RECEIVED, local_of
 from agent.store import DocumentRefused, document_of, kinds_in, put_document, rows
 
 from .statements import statements
 
 log = logging.getLogger("speech")
-
-RECEIVED = OREXIS + "Received"
 
 _ARRIVED_Q = """
 SELECT ?arrival WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival } }"""

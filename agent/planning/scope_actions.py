@@ -20,7 +20,7 @@ import logging
 import pyoxigraph as ox
 
 from agent import clock
-from agent.ontology import ACTION, OREXIS
+from agent.ontology import ACTION, DERIVED
 from agent.store import NAMESPACES, graphs_of, rows
 
 from . import footprint
@@ -141,7 +141,7 @@ INSERT {{
   GRAPH <{graph}> {{
 {chr(10).join(blocks)}
   }}
-  GRAPH ?cat {{ <{graph}> a planning:ScopeGraph ; orexis:arrivedBy <{OREXIS + "Derived"}> . }} }}
+  GRAPH ?cat {{ <{graph}> a planning:ScopeGraph ; orexis:arrivedBy <{DERIVED}> . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}

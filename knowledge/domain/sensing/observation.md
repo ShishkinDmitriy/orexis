@@ -16,16 +16,17 @@ description: >-
 
 ```turtle
 # the reading's graph, as `received` writes it: what the sensor gave, and the one before it
-:obs_probe_20260920T120000Z a sosa:Observation ; sosa:madeBySensor :probe ; sensing:rawResult 2412 ;
+:probe.20260920T120000Z a sosa:Observation ; sosa:madeBySensor :probe ; sensing:rawResult 2412 ;
     sosa:resultTime "2026-09-20T12:00:00Z"^^xsd:dateTime ;
-    sensing:previous :obs_probe_20260920T115000Z .
+    sensing:previous :probe.20260920T115000Z .
 # its revision, as sensing's rules conclude it from the topology and the probe's scaling
-:obs_probe_20260920T120000Z sosa:observedProperty climate:SoilMoisture ; sosa:hasFeatureOfInterest :fern ;
+:probe.20260920T120000Z sosa:observedProperty climate:SoilMoisture ; sosa:hasFeatureOfInterest :fern ;
     sensing:scaledResult 0.414737 ; sosa:hasSimpleResult 0.414737 .
 ```
 
 Written by [sensing](/domain/sensing/sensing.md)'s `received` into a `sensing:ObservationGraph` of its
-own, one per reading: a **percept**, and no state. A new reading does not
+own, one per reading, its node named off its sensor and its instant and never in a vocabulary's
+namespace: a **percept**, and no state. A new reading does not
 replace the one before; it names it, by **`sensing:previous`**, and ends its period at its own
 instant, so a sensor's observations are a chain whose latest is the one nothing names. The latest
 holds until the next is due and a **grace** past it, or until the next arrives, whichever is first.

@@ -17,10 +17,10 @@
 +
 +
 +GRAPH observed:probe_20260101T120000Z {
-+  orexis:obs_probe_20260101T120000Z a sosa:Observation .
-+  orexis:obs_probe_20260101T120000Z prov:wasGeneratedBy :keeper .
-+  orexis:obs_probe_20260101T120000Z sensing:previous orexis:obs_probe_20260101T114500Z .
-+  orexis:obs_probe_20260101T120000Z sensing:rawResult 0.08 .
-+  orexis:obs_probe_20260101T120000Z sosa:madeBySensor :probe .
-+  orexis:obs_probe_20260101T120000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :probe.20260101T120000Z a sosa:Observation .
++  :probe.20260101T120000Z prov:wasGeneratedBy :keeper .
++  :probe.20260101T120000Z sensing:previous :probe.20260101T114500Z .
++  :probe.20260101T120000Z sensing:rawResult 0.08 .
++  :probe.20260101T120000Z sosa:madeBySensor :probe .
++  :probe.20260101T120000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +}

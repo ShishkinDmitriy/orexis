@@ -59,7 +59,7 @@ from datetime import datetime
 from pathlib import Path
 import pyoxigraph as ox
 
-from .ontology import BELIEF, OREXIS
+from .ontology import ASSERTED, BELIEF, OREXIS
 
 # What the world states — ASKED, not listed. A graph IRI is an instance, and code that named
 # five of them was doing what rule 1 forbids everywhere else; the kind is a term and whose a graph
@@ -677,7 +677,7 @@ def imports_of(doc: ox.Store) -> list[str]:
 
 
 def put_document(store, doc: ox.Store, owner: str | None = None, graphs=None, *,
-                 arrival: str = OREXIS + "Asserted", close: bool = False) -> list[str]:
+                 arrival: str = ASSERTED, close: bool = False) -> list[str]:
     """Put a document's graphs in the store, each replacing any graph of its name, and its rows
     in the catalogue with the arrival — asserted, for a file — and, where `owner` is given, whose
     it is. `graphs`, where given, puts only those. The names put, sorted. The kinds each row says

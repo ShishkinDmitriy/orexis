@@ -47,11 +47,11 @@ GRAPH :world {
 }
 
 GRAPH forecast:weather_20260101T090000Z {
-  orexis:obs_balcony_precipitation_20260101T090000Z a sosa:Observation .
-  orexis:obs_balcony_precipitation_20260101T090000Z sosa:hasFeatureOfInterest :balcony .
-  orexis:obs_balcony_precipitation_20260101T090000Z sosa:hasSimpleResult 2.0 .
-  orexis:obs_balcony_precipitation_20260101T090000Z sosa:madeBySensor :weather .
-  orexis:obs_balcony_precipitation_20260101T090000Z sosa:observedProperty :precipitation .
+  :weather.20260101T090000Z a sosa:Observation .
+  :weather.20260101T090000Z sosa:hasFeatureOfInterest :balcony .
+  :weather.20260101T090000Z sosa:hasSimpleResult 2.0 .
+  :weather.20260101T090000Z sosa:madeBySensor :weather .
+  :weather.20260101T090000Z sosa:observedProperty :precipitation .
 }
 
 GRAPH :catalogue {
