@@ -48,8 +48,8 @@ not read, because it would be a promise about the text that nothing holds the te
 
 The footprint of one TEXT names predicates. The [scopes](/domain/planning/scope.md) need more, since
 two levers writing one predicate on two readings are two scopes only if the readings are told apart,
-so `atoms_of` reads an action's footprint per FILLING: its precondition is asked over the beliefs
-nobody owns with every pattern optional and no filter, which binds what the world states and leaves
+so `atoms_of` reads an action's footprint per FILLING: its precondition is asked over the common
+beliefs with every pattern optional and no filter, which binds what the world states and leaves
 what the state would have bound unbound; each row is one filling as far as the world alone decides
 it, and each pattern the filling reads of what some action writes, or writes, is an atom - the
 predicate on the subject's key. The key is the subject's own value where the row binds it, and
@@ -59,7 +59,7 @@ predicate. The terms a key holds are what a scope later holds as members, so a w
 placed by it.
 
 A pattern asking for the [self](/domain/kernel/self.md) is read as absent, in every half and every
-reading: no graph nobody owns holds the self and no action writes it, so it can say nothing of what a
+reading: no common graph holds the self and no action writes it, so it can say nothing of what a
 step reads or writes. Kept, it bound nothing, stood first in the order rdflib asks optional patterns
 in, being the pattern with fewest variables, and changed what the chain after it bound — the
 greenhouse's dose came to be filled with the heater, measured.
@@ -67,7 +67,7 @@ greenhouse's dose came to be filled with the heater, measured.
 A row is no filling where it leaves unbound a parameter the WORLD alone decides — one the action
 `orexis:takes` that is no subject its effect writes and stands in no pattern reading a predicate
 any effect writes or deletes: the valve, the heater, the cell a van drives to. Asked over the
-beliefs nobody owns, such a parameter binds wherever the world holds one, so unbound it is the world
+common beliefs, such a parameter binds wherever the world holds one, so unbound it is the world
 saying there is none, and an action left with no filling is in no scope. The allotment imports
 the climate domain and holds no heater, and its heating's rows made two scopes that admitted
 nothing ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md), #913).

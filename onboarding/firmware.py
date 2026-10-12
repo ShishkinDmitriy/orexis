@@ -69,9 +69,9 @@ def _world(world: str):
 
 
 def _rows(store, text: str) -> list[dict]:
-    """Over the world's beliefs nobody owns and its hardware at once — a board's pins join the topics
+    """Over the world's common beliefs and its hardware at once — a board's pins join the topics
     its sensors publish on, and the hardware is the one kind here no agent reads."""
-    return _rows_of(store, text, graphs_of(store, BELIEF, HARDWARE, nobodys=True))
+    return _rows_of(store, text, graphs_of(store, BELIEF, HARDWARE, common=True))
 
 
 

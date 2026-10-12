@@ -55,7 +55,7 @@ def extract(store: ox.Store, statement: str) -> list[str]:
     cat = catalogue_of(store)
     if cat is None:
         return []
-    reads = [statement, *graphs_of(store, BELIEF, nobodys=True)]
+    reads = [statement, *graphs_of(store, BELIEF, common=True)]
     found: list = []
     for r in rows(store, _EXTRACTIONS_Q, graphs_of(store, _RULES_GRAPH)):
         try:

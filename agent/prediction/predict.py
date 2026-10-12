@@ -9,7 +9,7 @@ ADD: drying and rain are two drifts and the value moves by their sum, which is P
 trajectory semantics, a drift being a process (a-prediction-accumulates-rates-between-happenings).
 The sum is accumulated from the observation for the agent's horizon — `prediction:horizonS`, a
 stance in its self graph, and `HORIZON_S`, a day, where it states none — split at every HAPPENING — the
-start or end of a public or belief graph holding in that stretch, since only there can what a
+start or end of a belief graph holding in that stretch, since only there can what a
 drift reads change, which is how a forecast hour and a step the executor committed to become
 one without this package learning either word — and held for at most `SEGMENT_S` between, so a
 rate that depends on the value is asked again. Within a segment the value is a straight line, and a crossing of a bound of every range
@@ -109,7 +109,7 @@ SELECT ?feature ?property ?value WHERE {
 #  Read from the graphs of drifts alone (`orexis:DriftGraph`), as the planner reads actions from
 #  `orexis:ActionGraph` alone: named for what it holds, and asked for, it is a term somebody reads. The
 #  kind is the kernel's and not this package's: a domain ships drifts whether or not any of its agents
-#  is a predictor, and every agent of the world reads the drift graph as a public one.
+#  is a predictor, and every agent of the world reads the drift graph, which names no owner.
 _DRIFTS_Q = "SELECT ?drift ?rate WHERE { ?drift a $drift ; $moves $property ; $rate_of ?rate } ORDER BY ?drift"
 
 #  THE PREDICTIONS WRITTEN FOR THIS SENSOR BEFORE: every one derived from a percept of it — the one in
@@ -119,7 +119,7 @@ _WRITTEN_Q = """
 SELECT DISTINCT ?g WHERE { GRAPH $cat { ?g a orexis:PredictionGraph ; prov:wasDerivedFrom ?percept }
                            GRAPH ?g { ?o sosa:madeBySensor $sensor } }"""
 
-#  THE HAPPENINGS: every instant inside the horizon at which a public or belief graph begins or
+#  THE HAPPENINGS: every instant inside the horizon at which a belief graph begins or
 #  stops holding — the only instants at which what a drift reads can change.
 _HAPPENINGS_Q = """
 SELECT DISTINCT ?t WHERE {

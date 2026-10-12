@@ -8,12 +8,12 @@ timestamp: 2026-08-09T00:00:00Z
 ---
 
 > **Superseded in part, 2026-10-11 (#953): there is no public class.** `orexis:PublicGraph` folded into
-> `orexis:BeliefGraph`, and what every agent of a world reads is said by provenance, a belief nobody owns,
-> asked as `graphs_of(store, BELIEF, nobodys=True)`
+> `orexis:BeliefGraph`, and what every agent of a world reads is said by provenance, a common belief,
+> asked as `graphs_of(store, BELIEF, common=True)`
 > ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)).
 > Asserted, derived and entailed in graphs of their own, a rule writing `$given` and `$derived`, and an
-> ordinary query reading their union, all stand; where the body says `orexis:PublicGraph`, read the beliefs
-> nobody owns.
+> ordinary query reading their union, all stand; where the body says `orexis:PublicGraph`, read the common
+> beliefs.
 
 # Context
 

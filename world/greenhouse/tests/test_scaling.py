@@ -49,7 +49,7 @@ SELECT DISTINCT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a plan
 def _deliver(store, sensor: str, value: float, at: datetime) -> None:
     """A reading as the deliberator takes it: written, revised, and the transitions it triggers applied."""
     for graph in received(store, GH + "grower", GH + sensor, f'{{"value": {value}}}'.encode(), at):
-        revise(store, graph, read=graphs_of(store, BELIEF, nobodys=True))
+        revise(store, graph, read=graphs_of(store, BELIEF, common=True))
         close_catalogue(store)
         trigger(store, graph)
 
@@ -62,7 +62,7 @@ def _pass(world: Path, readings: dict) -> tuple[int, int, dict]:
     for sensor, value in readings.items():
         _deliver(store, sensor, value, NOW)
     present = sum(1 for _ in store)
-    shared = {*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH, REVISION_GRAPH)}
+    shared = {*graphs_of(store, BELIEF, common=True), *graphs_of(store, SELF_GRAPH, REVISION_GRAPH)}
     readings = [g for g in graphs_of(store, BELIEF) if g not in shared]     # the agent's own state
     state = sum(len(list(quads(store, g))) for g in [*readings, *revisions_of(store, *readings)])
     planner = Planner(store, "grower")

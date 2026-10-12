@@ -55,7 +55,7 @@ def cadence_of(store, sensor: str, memo=None) -> float | None:
     them, or None where it states no frequency, several, or a unit nothing here converts.
     Remembered per pass where a memo is given."""
     def read():
-        found = rows(store, _CADENCE_Q, graphs_of(store, BELIEF, nobodys=True), sensor=sensor)
+        found = rows(store, _CADENCE_Q, graphs_of(store, BELIEF, common=True), sensor=sensor)
         if len(found) != 1:
             if found:
                 log.warning("%s states %d frequencies: none is its cadence", local_of(sensor), len(found))

@@ -25,7 +25,7 @@ from agent.store import forget_graph, graphs_of, revisions_of, rows, update
 def _own(beliefs) -> list[str]:
     """The agent's own beliefs, as the state documents were: no world's document, no self graph, no
     revision, which goes with its source, and no committed step, which is the executor's record."""
-    shared = {*graphs_of(beliefs, BELIEF, nobodys=True), *graphs_of(beliefs, SELF_GRAPH, REVISION_GRAPH, COMMITTED_STEP_GRAPH)}
+    shared = {*graphs_of(beliefs, BELIEF, common=True), *graphs_of(beliefs, SELF_GRAPH, REVISION_GRAPH, COMMITTED_STEP_GRAPH)}
     return [g for g in graphs_of(beliefs, BELIEF) if g not in shared]
 
 WORLD = Path(__file__).resolve().parents[1]

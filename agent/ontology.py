@@ -12,7 +12,7 @@ identifier a process is given: its own agent id.
 
 **Graph IRIs are not terms.** `orexis:WorldGraph` is the term; `…/graph/world` is a particular
 graph, no more a term than `orexis:fern_agent` is. The instances are declared in the kernel's
-own `ontology.ttl`, typed by class, and `graphs_of(store, BELIEF, nobodys=True)` asks which ones
+own `ontology.ttl`, typed by class, and `graphs_of(store, BELIEF, common=True)` asks which ones
 they are — so a query means "what the world states" without any Python knowing what that consists of.
 What survives here is the **bootstrap root** (the T-Box has to be loaded somewhere before it
 can be asked anything) and the **write targets** (a writer must say where it writes, built
@@ -84,7 +84,7 @@ GRAPH_PREFIX = _GRAPH
 
 #  WHAT THE VOCABULARY ENTAILS: every `rdfs:subClassOf` step the ontology graphs reach, written
 #  by the runtime at boot into one graph of its own, classified `orexis:OntologyGraph` and
-#  derived. Every other public graph is a document's, named by the document and found by its
+#  derived. Every other ontology graph is a document's, named by the document and found by its
 #  kind; this is the one no file holds.
 CLOSURE_GRAPH = _GRAPH + "ontology/closure"
 

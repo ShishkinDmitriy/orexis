@@ -21,7 +21,7 @@ GRAPH :ontology {
   planning:ScopeGraph rdfs:subClassOf orexis:Graph .
 }
 
-# THE WORLD, public: one keeper with a pump and a heater on one bed, each moving one property.
+# THE WORLD, common: one keeper with a pump and a heater on one bed, each moving one property.
 GRAPH :world {
   :heater :warms :bed .
   :heater :warmsProperty :Temperature .

@@ -11,7 +11,7 @@ description: >-
 # What it is
 
 A quad store, and in it named graphs: the vocabulary and the closure, the world's
-documents nobody owns, the state the agent observes and what the rules conclude of it, the predictions, the
+common documents, the state the agent observes and what the rules conclude of it, the predictions, the
 desires and wants, the records. **There is no shared store.** Each agent's is a
 file in its own volume, built from the ratified documents of `world/<world>/`, so isolation is
 structural: nothing needs enforcing because nothing else can open it.
@@ -23,7 +23,8 @@ orexis:CatalogueGraph`. Per graph it says:
 
 - **what it is** — its kind, and every kind that kind is beneath ([modality](/domain/kernel/modality.md));
 - **whose it is** — `orexis:beliefsOf`, the owner that created it, or that the world's document
-  of it names ([world](/domain/kernel/world.md)); a graph saying none is nobody's;
+  of it names ([world](/domain/kernel/world.md)); a graph saying none is a
+  [common belief](/domain/kernel/common-belief.md);
 - **how it arrived** — `orexis:arrivedBy`, one of Asserted, Derived, Received, Recorded;
 - **when it holds** — `orexis:start` and `orexis:end`, a period; absent is always.
 
@@ -51,6 +52,6 @@ lies fails the world's tests ([a-graph-changes-in-place-and-its-row-says-what-it
 
 # What a restart keeps
 
-Everything the agent owns. A volume it has lived in re-reads only the documents nobody owns — the
-ontologies, the domains, the world's beliefs nobody owns — so an updated vocabulary reaches it and its
+Everything the agent owns. A volume it has lived in re-reads only the common documents — the
+ontologies, the domains, the world's common beliefs — so an updated vocabulary reaches it and its
 own beliefs are never reset by a restart.

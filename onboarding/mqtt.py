@@ -174,8 +174,8 @@ def _world(world: str):
 
 
 def _rows(store, text: str) -> list[dict]:
-    """Over the world's beliefs nobody owns — the world and its society, where every grant is read."""
-    return rows(store, text, graphs_of(store, BELIEF, nobodys=True))
+    """Over the world's common beliefs — the world and its society, where every grant is read."""
+    return rows(store, text, graphs_of(store, BELIEF, common=True))
 
 
 def broker(world: str) -> tuple[str, int, int | None]:

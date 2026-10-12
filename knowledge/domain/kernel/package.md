@@ -57,7 +57,7 @@ loaded or not.
 **A transport is no role.** It is loaded where a loaded role needs bytes and the society wires a bus
 — the MQTT member for an observer one of whose sensors publishes on a topic, or a speaker that
 listens to one; the HTTP member for an observer one of whose sensors is a thing with a form —
-asked over the world's beliefs nobody owns and the self (`TRANSPORTS` in `agent/runtime.py`). That is the
+asked over the world's common beliefs and the self (`TRANSPORTS` in `agent/runtime.py`). That is the
 one derivation left, since which bus reaches a device is wiring and not a choice. History and metrics
 are loaded from the environment.
 

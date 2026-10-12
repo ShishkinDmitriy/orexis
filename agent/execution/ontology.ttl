@@ -25,7 +25,7 @@ execution:Executor a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Execu
     rdfs:comment "An agent that walks intentions and takes their steps: the role whose part is the executor, one concept with it. Declared, never derived; a role beneath this one — a market host's, a bidder's — loads this package with its own." .
 
 execution:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
-    rdfs:comment "What the agent is DOING: commitments adopted, standing and resolved, kept in the belief base's volume as a graph of the agent's own, not public, so a restart finds them and planning reads what is walked by this kind." .
+    rdfs:comment "What the agent is DOING: commitments adopted, standing and resolved, kept in the belief base's volume as a graph of the agent's own, so a restart finds them and planning reads what is walked by this kind." .
 
 execution:CommittedStepGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ; rdfs:label "Committed step graph" ;
     rdfs:comment "ONE STEP AN INTENTION HAS COMMITTED TO, as a belief holding over its landing window: from the step's `execution:notBefore` to its `execution:notAfter` plus the patience (knowledge/domain/execution/committed-step.md). Written by the executor at adoption, one graph per step, carrying the step's filling as the plan states it and the window's two lengths in seconds; closed at the instant the world answers the step or the intention ends, and forgotten once it has ended. A belief and not a reading: no plan forks it, nothing holds the world to it, and a drift reads it at an instant — the dose a bed is committed to is a flow its soil's prediction accumulates, so a later want is searched against a future that contains the earlier plan, and the start and end of the window are happenings of every prediction (a-prediction-accumulates-rates-between-happenings)." .
@@ -144,7 +144,7 @@ execution:partOf a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range 
 
 #  WHAT A STEP PREDICTS, as two graphs it names — stated, and never asserted: a world where the
 #  dose has landed is not this world (a-steps-prediction-is-two-graphs-it-names). The kinds are
-#  beneath orexis:Graph alone, so no reader of the present, the public knowledge or a package's
+#  beneath orexis:Graph alone, so no reader of the present, the common beliefs or a package's
 #  scratch is handed one; a reader reaches them through the step, by `execution:adds` and
 #  `execution:retracts`. The engine computes the effect's diff when a world is forked or the plan is extracted, compares the
 #  present to it when the step is held to the world, and writes a fictive step from it. They
@@ -152,7 +152,7 @@ execution:partOf a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range 
 #  in a pattern (#759).
 
 execution:AddsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Adds graph" ;
-    rdfs:comment "The facts a step predicts its world GAINS: every triple its action's effect added to the world it was applied to, as the terms they are — and nothing a prediction moved between the world the step is taken in and the one it lands in, which is no act of the agent's (#919). One graph per step, named by the step's `execution:adds`, written by the plan's extraction beside the step and copied with the plan; the executor holds the world to it — the step is answered once the present holds every one of them — and a fictive step writes them into the state. In an imaginarium, also one per possible world forked in a later ground than its parent's, derived from that world (`prov:wasDerivedFrom`), which the extraction copies. Not a belief and not public: what it says is what WOULD hold, and no reader asking for the present is handed it." .
+    rdfs:comment "The facts a step predicts its world GAINS: every triple its action's effect added to the world it was applied to, as the terms they are — and nothing a prediction moved between the world the step is taken in and the one it lands in, which is no act of the agent's (#919). One graph per step, named by the step's `execution:adds`, written by the plan's extraction beside the step and copied with the plan; the executor holds the world to it — the step is answered once the present holds every one of them — and a fictive step writes them into the state. In an imaginarium, also one per possible world forked in a later ground than its parent's, derived from that world (`prov:wasDerivedFrom`), which the extraction copies. Not a belief: what it says is what WOULD hold, and no reader asking for the present is handed it." .
 
 execution:RetractsGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Retracts graph" ;
     rdfs:comment "The facts a step predicts its world LOSES: every triple its action's effect took away from the world it was applied to. The other half of the prediction, a graph of its own because a graph is classified per kind it holds and a retraction is a different claim from an addition; named by the step's `execution:retracts`, and the step is answered only while the present holds none of them." .

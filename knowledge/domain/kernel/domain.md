@@ -26,7 +26,7 @@ graph it is:
 | `actions.ttl` | `orexis:ActionGraph` | its actions, each with what it takes, when it is available, what it costs and what it adds and retracts |
 | `shapes.ttl` | `planning:ShapesGraph` | what its words mean when wanted — a met-test shape a desire's `planning:metWhen` points at, and the select its `planning:estimates` points at |
 
-The planner reads actions from action graphs alone, not from every belief nobody owns. The measures sit with the actions because *never overstates* is a promise about the domain's own
+The planner reads actions from action graphs alone, not from every common belief. The measures sit with the actions because *never overstates* is a promise about the domain's own
 costs, which no world can keep. A shapes graph is its own kind, crossed by the
 [planner](/domain/planning/planner.md) beside the graphs of desires, wants and records, so that a pass
 reads a met-test without reading every vocabulary.

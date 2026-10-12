@@ -11,7 +11,7 @@ thing that made the wrapper forget.
 
 So there is no class here. A reader is handed the engine and says what it is reading:
 
-    rows(store, text, graphs_of(store, BELIEF, nobodys=True))
+    rows(store, text, graphs_of(store, BELIEF, common=True))
 
 and every question the class answered as a method is answered here as a function of the same
 name, taking the engine first. Nothing is kept between calls, so nothing can go stale.
@@ -63,7 +63,7 @@ from .ontology import BELIEF, OREXIS
 
 # What the world states — ASKED, not listed. A graph IRI is an instance, and code that named
 # five of them was doing what rule 1 forbids everywhere else; the kind is a term and whose a graph
-# is a row on the catalogue, so `graphs_of(store, BELIEF, nobodys=True)` answers with what every
+# is a row on the catalogue, so `graphs_of(store, BELIEF, common=True)` answers with what every
 # agent of a world reads alike, and adding one is a document that touches no Python.
 #
 #  THE CATALOGUE — the one graph that says what every graph IS: its class, whose it is, how
@@ -327,7 +327,7 @@ _XSD_DATETIME = ox.NamedNode(_XSD + "dateTime")
 
 #  WHICH GRAPHS, asked of the catalogue in one text: those of any of the kinds named — every
 #  row carries every kind its class is beneath, so no path is walked — the holder's or
-#  nobody's where a holder is named, and holding at the instant where one is given. A record
+#  the common ones where a holder is named, and holding at the instant where one is given. A record
 #  is handed as it stands at the present whatever instant is asked about (#645), which is the
 #  one thing the kind means.
 _GRAPHS_Q = """
@@ -341,9 +341,9 @@ ORDER BY ?g"""
 
 _OWNED = """OPTIONAL { ?g orexis:beliefsOf ?owner } FILTER(!BOUND(?owner) || ?owner = $holder)"""
 
-#  NOBODY'S: what the world states, the documents nobody owns and what the boot derived of them —
+#  COMMON: what the world states, the common documents and what the boot derived of them —
 #  what `orexis:PublicGraph` said by a kind until #953 folded it, said by provenance.
-_NOBODYS = """FILTER NOT EXISTS { ?g orexis:beliefsOf ?anyone }"""
+_COMMON = """FILTER NOT EXISTS { ?g orexis:beliefsOf ?anyone }"""
 
 #  HOLDING AT `$at` AND STILL AT `$until`: begun by the first and not ended by the second, so a
 #  reader standing over a period is handed what holds throughout it; a reader standing at an
@@ -606,7 +606,7 @@ def _one_home(doc: ox.Store, name: str) -> ox.Store:
     stated only in a graph that says it is a self graph and nothing else, every self graph states
     exactly one self, and an owner stated of a self graph is that self; refused otherwise.
 
-    THE SELF HAS ONE HOME. A self stated in a belief nobody owns would make every agent of the world
+    THE SELF HAS ONE HOME. A self stated in a common belief would make every agent of the world
     that agent, and one in a desire graph would be a second place to look for it; asked here, by
     the kinds the document states, it needs no vocabulary, which the loader does not have."""
     stated = kinds_in(doc)
@@ -768,7 +768,7 @@ def close_catalogue(store) -> None:
 
 
 def graphs_of(store, *kinds: str, at: datetime | None = None, until: datetime | None = None,
-              holder: str | None = None, now: datetime | None = None, nobodys: bool = False) -> list[str]:
+              holder: str | None = None, now: datetime | None = None, common: bool = False) -> list[str]:
     """Every graph the catalogue types under any of `kinds` — subclasses included, the rows
     having been closed when they were written — holding at `at` where an instant is given, and
     still holding at `until` where a reader stands over a period rather than at an instant (#596):
@@ -783,17 +783,17 @@ def graphs_of(store, *kinds: str, at: datetime | None = None, until: datetime | 
     for a second public name: half the readers took one and half the other, for one question.
 
     `holder` is the one thing the predecessor's wrapper knew and a function cannot: which
-    agent's store this is. Passed, the answer is that holder's graphs and those nobody owns;
+    agent's store this is. Passed, the answer is that holder's graphs and the common ones;
     omitted, every graph of the kinds — which is right for a store holding one agent's world,
     and is what makes rule 4 (one agent, one volume) structural rather than remembered.
 
-    `nobodys` keeps the answer to the graphs no agent owns, shared alike by every agent of a world:
+    `common` keeps the answer to the graphs no agent owns, shared alike by every agent of a world:
     asked of the beliefs, what the world states — the vocabulary, the world, the society, and what
     the boot derived of them; asked of a kind the agent reads to act, a domain's actions or a world's
     constraints, the ones every agent holds. It is provenance and not a kind: whose a graph is is how
     it arrived, which a graph class may not say (#953).
     """
-    owned = (bind(_OWNED, holder=holder) if holder is not None else "") + (_NOBODYS if nobodys else "")
+    owned = (bind(_OWNED, holder=holder) if holder is not None else "") + (_COMMON if common else "")
     text = bind(_GRAPHS_Q, kinds=Raw(" ".join(f"<{k}>" for k in kinds)),
                 owned=Raw(owned),
                 holding=Raw(bind(_HOLDING, at=instant(at), until=instant(until or at), now=instant(now or at))

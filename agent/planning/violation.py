@@ -370,7 +370,7 @@ class _Compiler:
         """
         if (shape, SH.path, None) in self.g:
             #  A PROPERTY shape where a node shape was expected — a member of `sh:or`, which
-            #  SHACL allows and the public-graph shape uses. Its constraints are its own.
+            #  SHACL allows. Its constraints are its own.
             return self._about_each(shape, self.property_violations(shape, focus))
         for p in self.g.predicates(shape):
             if _is_shacl(p) and p not in _NODE_ANNOTATIONS:

@@ -450,7 +450,7 @@ class Planner:
         """
         found = bindings(query(self.beliefs, f"""
 SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1""",
-                               graphs_of(self.beliefs, BELIEF, nobodys=True)))
+                               graphs_of(self.beliefs, BELIEF, common=True)))
         if not found:
             raise LookupError(
                 f"no agent with localId '{agent_id}' in this store — was the world loaded "

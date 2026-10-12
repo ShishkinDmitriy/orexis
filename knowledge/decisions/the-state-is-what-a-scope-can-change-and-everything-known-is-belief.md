@@ -13,7 +13,7 @@ description: >-
   can do and how it reasons is read only as asserted, so a peer's word is believed as what it said
   and can redefine nothing. Refused - a kind declared per document for what changes, a list of
   exclusions per reader, and a peer gate that admits only triples some scope can write. Amended as
-  built (#953) - what the world states is read as the beliefs nobody owns, never every belief, by
+  built (#953) - what the world states is read as the common beliefs, never every belief, by
   revision, the footprints and every reader of the world, and the agent's own is what names an owner.
   Amended again - a belief is what a possible world is made of, so the actions, drifts, shapes,
   constraints and derivations the agent reads to act are no beliefs, and a world's graph naming no
@@ -175,11 +175,11 @@ them were answering the second and third questions with a class.
 
 > **`orexis:PublicGraph` and `orexis:WorkingGraph` folded, built 2026-10-11 (#953).** The kernel declares
 > no public kind: the ontology, the world, the society, the actions, the drifts, the shapes, the
-> constraints and the derivations are beliefs, and what every agent of a world reads is **the beliefs
-> nobody owns**, asked by provenance (`graphs_of(store, BELIEF, nobodys=True)`) as the boot already found
+> constraints and the derivations are beliefs, and what every agent of a world reads is **the common
+> beliefs**, asked by provenance (`graphs_of(store, BELIEF, common=True)`) as the boot already found
 > the world's shared documents. The boot keeps a world's belief by what it says: naming an owner, it is
 > that agent's own; naming none, everyone's. **Two clauses above were amended as built.** A reader of the
-> world, revision's neighbours and the footprints read the beliefs nobody owns, not every belief: read
+> world, revision's neighbours and the footprints read the common beliefs, not every belief: read
 > over every belief, a footprint lost the heater's scope in `a_heater_that_dries_the_soil` again, the
 > self's anchor leading rdflib's order as #913 found; and since #958 what is extracted of a statement
 > arrives `orexis:Derived`, so "everything not received" would revise one peer's word beside another's,

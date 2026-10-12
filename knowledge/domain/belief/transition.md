@@ -91,10 +91,10 @@ transition `trigger` prepares a state graph of the arrival's own — a belief, t
 eyes — so a silence ends what it says as it ends the arrival. One a later arrival of the same name
 writes into again takes that arrival's period.
 
-Each order reads the arrival with its revisions, the beliefs nobody owns, and every belief the agent derived
+Each order reads the arrival with its revisions, the common beliefs, and every belief the agent derived
 that is no revision, whatever its period: the agent's own state, which no kind marks (#953). What it deletes is taken out of whichever of those holds it, and a
 graph emptied so is forgotten with its row. **Testimony is never a target**: a graph received or
-heard — a percept, which is no state and is read as the arrival alone — a belief nobody owns, an ontology and a
+heard — a percept, which is no state and is read as the arrival alone — a common belief, an ontology and a
 revision are read and never written to. The target says no `prov:wasDerivedFrom`: a revision goes
 when its source is forgotten, and this outlives the arrival it was made of, since the next arrival
 must read it, until a later transition takes its rows out.
@@ -135,7 +135,7 @@ A prediction is the agent's own and no testimony, so in the belief base it trigg
 [ground](/domain/prediction/prediction.md) the planner lays ahead is the period before it with the
 prediction applied, and the prediction's predicted observation ARRIVES there as a received one
 arrives in the present: `lay_ground` runs every transition it triggers, once, rule by rule, through
-this machine. Each rule reads the predicted observation with its revisions, the beliefs nobody owns, and
+this machine. Each rule reads the predicted observation with its revisions, the common beliefs, and
 the agent's own state as the ground before it left it — kept apart from the ground while the grounds
 are laid, since a ground is one graph and holds testimony beside the state, and a transition is
 handed no testimony but its arrival. Each rule is run twice over those reads, `WITH` the ground and

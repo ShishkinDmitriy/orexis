@@ -228,8 +228,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   dispatcher's two parcels are one want on a shared grid, 228 candidates where two apart cost 50, and
   two wants on disjoint grids (a-parcel-astray-is-a-want-of-its-own, constraint).
 - **One mind couples the wants a constraint can make collide, and searches them as one** — a
-  constraint's footprint, read over what the actions can REACH from the present (off the beliefs
-  nobody owns alone, as a scope's is, it is grid-blind, measured), says which wants' plans may interfere; those are one
+  constraint's footprint, read over what the actions can REACH from the present (off the common
+  beliefs alone, as a scope's is, it is grid-blind, measured), says which wants' plans may interfere; those are one
   cluster, one want, one search, optimal for both by construction, and the constraint is weighed in
   every possible world, one that violates it being impossible; a walking want is reconsidered when a want
   the footprint couples to it arrives; two minds optimize alone and meet by what they sense and say;
@@ -325,7 +325,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (a-scope-is-a-predicate-on-a-key, `world/greenhouse/tests/test_two_beds.py`).
 - **A variable in predicate position writes what a `VALUES` block in its own text binds it to, and
   anything only where nothing bounds it** — the one range the scopes honour is SPARQL's own.
-- **A footprint reads a text as the beliefs nobody owns answer it, so a pattern only the agent's own store
+- **A footprint reads a text as the common beliefs answer it, so a pattern only the agent's own store
   binds is read as absent** — kept, the self's anchor led rdflib's order, reordered the OPTIONAL
   chain a filling is asked as, and filled the greenhouse's dose with the heater (`footprint.parseable`).
 - **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —
@@ -550,7 +550,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
   read there alone, and the package's constant holds where none is stated** — the patience, both
   budgets, the silent and stuck limits and the horizon, each declared by its reader's package and
-  read through `agent/stance.py`; never a flag or a belief nobody owns, and a grace or a metrics window
+  read through `agent/stance.py`; never a flag or a common belief, and a grace or a metrics window
   is none (a-stance-is-the-agents-word-about-itself).
 - **A world's test hands its agent no budget, so the figure it passes at is the one the self graph
   states** — handed by the tests, 128 and 256 were proved while every container searched at 32, at
@@ -608,8 +608,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A belief is what a possible world is made of, and what the agent reads to act is none** — the
   actions, drifts, shapes, constraints and derivations are its program, each read by its own kind
   beside the desires, wants and rules (#953).
-- **Whose a graph is, is provenance and never its kind, and what the world states is the beliefs
-  nobody owns** — a world's graph naming no owner is shared by every agent of it, and a belief of the
+- **Whose a graph is, is provenance and never its kind, and what the world states is the common
+  beliefs** — a world's graph naming no owner is shared by every agent of it, and a belief of the
   agent's own names its owner, since one naming none is read as the world's; read over every belief
   instead, a footprint lost the heater's scope again (#913) and revision would read one peer's
   extracted word beside another's (#953).
@@ -910,8 +910,8 @@ restart — connected agents keep their sessions), so adding an agent or a world
 nothing.
 
 Beliefs are the agent's: **authored** once at birth from the world's documents, never touched by
-start or stop. A volume lived in keeps the agent's own graphs and reads again only what a
-document put in and nobody owns — the ontologies, the domains, the world's beliefs nobody owns — which
+start or stop. A volume lived in keeps the agent's own graphs and reads again only the common
+graphs a document put in — the ontologies, the domains, the world's common beliefs — which
 is how an updated ontology reaches a running agent. Anything that would reset an agent's own beliefs on a
 restart is a bug, not a convenience.
 
@@ -934,7 +934,7 @@ hand-rolled walk was once refused for exactly that reason. See
   See [a-desire-is-a-shape](knowledge/decisions/a-desire-is-a-shape.md).
 - **Never wrap `GRAPH <…>` around a SELECT.** What the world states is SEVERAL graphs — asserted,
   derived and entailed, for the vocabulary and for the world, plus whichever a package owns —
-  and a reader hands `store.query` the list `store.graphs_of(BELIEF, nobodys=True)` answers, merged as the default graph, so an ordinary pattern reads all of them.
+  and a reader hands `store.query` the list `store.graphs_of(BELIEF, common=True)` answers, merged as the default graph, so an ordinary pattern reads all of them.
   Never count them: the kind is a class, whose a graph is a row, and `graphs_of` asks. A basic graph
   pattern inside one `GRAPH` clause must match entirely *within* that graph, so narrowing it
   returns **nothing** the moment a fact you wanted lives elsewhere, silently, because an empty
@@ -951,7 +951,7 @@ hand-rolled walk was once refused for exactly that reason. See
   (a-reader-states-the-kinds-it-reads); a text that reads one graph names its kinds in its
   own `GRAPH` clauses by joining the catalogue, and is handed no default at all.
 - **A graph IRI is an instance, so rule 1 applies to it.** `orexis:WorldGraph` is the term code may
-  name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.graphs_of(BELIEF, nobodys=True)`.
+  name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.graphs_of(BELIEF, common=True)`.
   Two things are still named and both are writes or the bootstrap root, never a reader
   enumerating what to read — adding a graph everyone reads is a document that touches no Python.
   **A PER-AGENT graph is asked for the same way**: `store.graphs_of(<kind>)` answers with every

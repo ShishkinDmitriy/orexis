@@ -30,7 +30,7 @@ def ranges_of(store, sensor: str, observed_property: str, memo=None) -> list[tup
     own, off what the world states. Remembered per pass where a memo is given."""
     return remember(memo, ("ranges", sensor, observed_property), lambda: [
         (float(r["low"]), float(r["high"]))
-        for r in rows(store, _BOUNDS_Q, graphs_of(store, BELIEF, nobodys=True), sensor=sensor, property=observed_property)])
+        for r in rows(store, _BOUNDS_Q, graphs_of(store, BELIEF, common=True), sensor=sensor, property=observed_property)])
 
 
 def side(low: float, high: float, value: float) -> int:

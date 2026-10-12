@@ -44,9 +44,9 @@ predicates move together, and a want belongs to the scope of what it reads. It r
 never two instances of one: two pumps on two beds both write `climate:soil` of a subject (and, until
 #944 made the actions take the subject, a pump and a heater both wrote a reading's side), and over
 predicates they are one scope though nothing either does reaches the other's bed. What tells
-their writes apart is WHOM they are of — the subject the precondition binds, a public fact, or where
+their writes apart is WHOM they are of — the subject the precondition binds, a fact of the world, or where
 it binds none the values it binds it by. So an action's footprint is read per FILLING: its precondition is asked
-over the beliefs nobody owns with every pattern optional, which binds what the world states and leaves
+over the common beliefs with every pattern optional, which binds what the world states and leaves
 what the state would have bound unbound; each row is one filling as far as the world alone decides
 it; and each pattern a filling reads or writes is an atom `(predicate, key)`, the key being the
 subject's own value where the row binds it and otherwise the values of the variables that share a
@@ -96,10 +96,10 @@ _PARSE_TOKENS = {
 _INTO = re.compile(r"\$into\([^)]*\)")
 
 #  THE SELF IS NO FACT OF THE WORLD. A text asks for the agent as `?me a orexis:Self`, the one row
-#  of the self graph its world authors for it (knowledge/domain/kernel/self.md): no public graph
-#  holds it and no action writes it, so a footprint — a text read as the world alone would answer
+#  of the self graph its world authors for it (knowledge/domain/kernel/self.md): no belief nobody
+#  owns holds it and no action writes it, so a footprint — a text read as the world alone would answer
 #  it — reads the text without it, `?me` the free variable the agent always was here. Read with it,
-#  the anchor binds nothing over the beliefs nobody owns, stands first in rdflib's order since it is the
+#  the anchor binds nothing over the common beliefs, stands first in rdflib's order since it is the
 #  pattern with the fewest variables, and reorders the OPTIONAL chain a filling is asked as: measured
 #  on the greenhouse, the dose came to be filled with the heater as its valve and the scopes moved.
 _SELF_ANCHOR = re.compile(r"(\?\w+)\s+(?:a|rdf:type)\s+(?:orexis:Self|<" + re.escape(SELF) + r">)\s*(;|\.|(?=\}))")
@@ -523,14 +523,14 @@ def stored_edges(store, graphs) -> tuple:
 # --- the footprint per filling: predicates on keys ----------------------------------------------
 
 #  A FILLING AS THE WORLD ALONE DECIDES IT: the precondition's patterns, each OPTIONAL, asked over
-#  the beliefs nobody owns — what the world states binds, what the state would have bound stays unbound.
+#  the common beliefs — what the world states binds, what the state would have bound stays unbound.
 _PUBLIC_P_Q = "SELECT DISTINCT ?p WHERE { ?s ?p ?o }"
 
 
 def atoms_of(store, at: datetime | None = None) -> dict[str, list | None]:
     """Every action the store holds as `iri -> fillings`, each filling `(atoms, terms)`: the atoms
     `(predicate, key)` the filling reads of what some action writes and the atoms it writes, and
-    the public terms its key values are. ANYTHING where the action's texts cannot be read so.
+    the world's terms its key values are. ANYTHING where the action's texts cannot be read so.
 
     The KEY of a pattern's subject is its own value where the filling binds it — a disk, a venue,
     the agent — and otherwise the values of the variables sharing a pattern with it that the filling
@@ -546,7 +546,7 @@ def atoms_of(store, at: datetime | None = None) -> dict[str, list | None]:
     effects = _effects(store, at)
     if not effects:
         return out
-    stated = graphs_of(store, BELIEF, at=at or clock.now(), nobodys=True)
+    stated = graphs_of(store, BELIEF, at=at or clock.now(), common=True)
     changeable = {str(p) for _, writes in actions_of(store, at).values() if writes is not ANYTHING for p in writes}
     takes: dict = {}
     for row in rows(store, _TAKES_Q, graphs_of(store, ACTION, at=at or clock.now())):
@@ -581,7 +581,7 @@ def _decided_by_the_world(patterns: list, written: dict, touched: set, takes) ->
     """The parameters an action takes that the WORLD ALONE decides: each stands in some pattern of
     the precondition, is no subject the effect writes, and stands in no pattern reading a predicate
     any effect writes or deletes — the valve, the heater, the cell a van drives to, as against the
-    reading a dose moves or the van that drives. Asked over the beliefs nobody owns, such a parameter is
+    reading a dose moves or the van that drives. Asked over the common beliefs, such a parameter is
     bound wherever the world holds one; left unbound, the world has said it holds none."""
     out = set()
     for param in takes:
@@ -663,7 +663,7 @@ def _collect(triples, out: dict):
 
 
 def _fillings(store, stated, patterns: list, written: dict, changeable: set, decided=frozenset()) -> list:
-    """Each filling the world alone decides, as `(atoms, terms)`: the beliefs nobody owns asked the
+    """Each filling the world alone decides, as `(atoms, terms)`: the common beliefs asked the
     precondition's patterns, every one OPTIONAL and no filter, so a row binds what the world states
     and nothing else; then the atoms each filling reads of what some action writes, and writes.
 
@@ -685,7 +685,7 @@ def _fillings(store, stated, patterns: list, written: dict, changeable: set, dec
             if not rows_:
                 return []
         except Exception as exc:                            # noqa: BLE001
-            log.debug("a precondition's patterns would not run over the beliefs nobody owns: %s", exc)
+            log.debug("a precondition's patterns would not run over the common beliefs: %s", exc)
             rows_ = [{}]
     #  WHAT A SUBJECT IS KEYED BY where the world binds it nothing: the other end of every pattern
     #  it stands in — a variable the filling binds, or a constant the text states, which keys a

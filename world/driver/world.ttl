@@ -21,7 +21,7 @@
 #  the driver is what makes them one plan: drive one van, board the other, drive it
 #  (`constraints.ttl` says how the derivation is told so).
 
-#  WHOSE THE DRIVER IS, `courier:hasDriver` (#929): public, as a grower's actuator is, since it is
+#  WHOSE THE DRIVER IS, `courier:hasDriver` (#929): the world's, as a grower's actuator is, since it is
 #  what admits a drive or a boarding in the dispatcher's search and what a peer would find it by.
 #  Without it the driver is nobody's, and nothing here moves.
 

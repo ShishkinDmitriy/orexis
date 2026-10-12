@@ -1,7 +1,7 @@
 # the_agents_own_kinds_cross_and_nothing_else
 #
-# WHAT CROSSES IS WHAT A RULE MAY READ, and the fill ASKS which graphs those are. Every PUBLIC
-# graph crosses — asked of the catalogue, never listed — and so does the catalogue itself,
+# WHAT CROSSES IS WHAT A RULE MAY READ, and the fill ASKS which graphs those are. Every COMMON
+# belief crosses — asked of the catalogue, never listed — and so does the catalogue itself,
 # since every read inside asks it what the graphs are. Of the agent's OWN, the kinds a search
 # reads cross: its readings, its predictions, its picks, its desires and its wants. `:sensed`
 # is a `orexis:BeliefGraph` and crosses for that reason.
