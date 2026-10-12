@@ -145,7 +145,7 @@ SELECT ?w ?impossible ?open ?expanded ?met WHERE {
 #  EVERY POSSIBLE WORLD MARKED IMPOSSIBLE, and by which constraint.
 _IMPOSSIBLE_Q = """
 SELECT ?w ?by WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph ; planning:impossible ?by } }"""
-#  TWO VANS ON ONE CELL, in one graph's facts: the vans' kinds are public and the world's facts its own.
+#  TWO VANS ON ONE CELL, in one graph's facts: the vans' kinds are nobody's and the world's facts its own.
 _SHARED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
 SELECT DISTINCT ?cell WHERE { GRAPH $w { ?a courier:at ?cell . ?b courier:at ?cell }
                               GRAPH ?h { ?a a courier:Van . ?b a courier:Van } FILTER(?a != ?b) }"""

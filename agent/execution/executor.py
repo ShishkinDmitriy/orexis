@@ -2,7 +2,7 @@
 a commitment out.
 
 **IT OWNS THE INTENTIONS, AND NOTHING ELSE WRITES THEM.** They are a graph of the belief base, of
-its own kind (`execution:IntentionGraph`), the agent's and not public, so a restart on a lived-in
+its own kind (`execution:IntentionGraph`), the agent's and nobody else's, so a restart on a lived-in
 volume finds them (#842) and planning reads what is walked there, by pattern. A plan found above
 is PUBLISHED into the store — planning writes it into the beliefs once, as an `orexis:PlanGraph`
 it owns — and the executor adopts it BY REFERENCE, an intention that `execution:adopts` it and

@@ -76,11 +76,11 @@ def test_a_holder_with_no_constraint_couples_nothing_and_pays_no_reach(laid):
     assert couplings(store, T + "keeper", _present(store), NOW) is None
 
 
-def test_over_the_public_graphs_alone_the_aversion_is_grid_blind(laid):
+def test_over_the_beliefs_nobody_owns_alone_the_aversion_is_grid_blind(laid):
     """THE FINDING THE DESIGN STANDS ON. Asked the way a scope's atoms are — every pattern optional
     over the beliefs nobody owns — the aversion joins van A to van B with the cell unbound, on one grid
     and on two alike, since which cells a van can stand on is the drive's FILTER over coordinates
-    and the public half of a text is its patterns. So the constraint is read over the reach."""
+    and the half of a text the world answers is its patterns. So the constraint is read over the reach."""
     select = """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT $this ?value WHERE { $this a courier:Van ; courier:at ?value . ?other a courier:Van ; courier:at ?value . FILTER(?other != $this) }"""
     patterns = footprint._patterns(select)

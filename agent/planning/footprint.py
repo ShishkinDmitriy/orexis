@@ -44,7 +44,7 @@ predicates move together, and a want belongs to the scope of what it reads. It r
 never two instances of one: two pumps on two beds both write `climate:soil` of a subject (and, until
 #944 made the actions take the subject, a pump and a heater both wrote a reading's side), and over
 predicates they are one scope though nothing either does reaches the other's bed. What tells
-their writes apart is WHOM they are of — the subject the precondition binds, a public fact, or where
+their writes apart is WHOM they are of — the subject the precondition binds, a fact of the world, or where
 it binds none the values it binds it by. So an action's footprint is read per FILLING: its precondition is asked
 over the beliefs nobody owns with every pattern optional, which binds what the world states and leaves
 what the state would have bound unbound; each row is one filling as far as the world alone decides
@@ -96,8 +96,8 @@ _PARSE_TOKENS = {
 _INTO = re.compile(r"\$into\([^)]*\)")
 
 #  THE SELF IS NO FACT OF THE WORLD. A text asks for the agent as `?me a orexis:Self`, the one row
-#  of the self graph its world authors for it (knowledge/domain/kernel/self.md): no public graph
-#  holds it and no action writes it, so a footprint — a text read as the world alone would answer
+#  of the self graph its world authors for it (knowledge/domain/kernel/self.md): no belief nobody
+#  owns holds it and no action writes it, so a footprint — a text read as the world alone would answer
 #  it — reads the text without it, `?me` the free variable the agent always was here. Read with it,
 #  the anchor binds nothing over the beliefs nobody owns, stands first in rdflib's order since it is the
 #  pattern with the fewest variables, and reorders the OPTIONAL chain a filling is asked as: measured
@@ -530,7 +530,7 @@ _PUBLIC_P_Q = "SELECT DISTINCT ?p WHERE { ?s ?p ?o }"
 def atoms_of(store, at: datetime | None = None) -> dict[str, list | None]:
     """Every action the store holds as `iri -> fillings`, each filling `(atoms, terms)`: the atoms
     `(predicate, key)` the filling reads of what some action writes and the atoms it writes, and
-    the public terms its key values are. ANYTHING where the action's texts cannot be read so.
+    the world's terms its key values are. ANYTHING where the action's texts cannot be read so.
 
     The KEY of a pattern's subject is its own value where the filling binds it — a disk, a venue,
     the agent — and otherwise the values of the variables sharing a pattern with it that the filling

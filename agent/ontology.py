@@ -84,7 +84,7 @@ GRAPH_PREFIX = _GRAPH
 
 #  WHAT THE VOCABULARY ENTAILS: every `rdfs:subClassOf` step the ontology graphs reach, written
 #  by the runtime at boot into one graph of its own, classified `orexis:OntologyGraph` and
-#  derived. Every other public graph is a document's, named by the document and found by its
+#  derived. Every other ontology graph is a document's, named by the document and found by its
 #  kind; this is the one no file holds.
 CLOSURE_GRAPH = _GRAPH + "ontology/closure"
 

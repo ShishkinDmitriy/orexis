@@ -45,7 +45,7 @@ _GRAPH = "http://example.org/orexis/graph/"
 def intentions_graph(agent_id: str) -> str:
     """What this agent is committed to, standing and resolved. Its own, and only its own.
 
-    NOT public, and the absence is the design: an intention disclosed is strategy leaked. Apart
+    NOT the world's, and the absence is the design: an intention disclosed is strategy leaked. Apart
     from the picks graph on purpose — a pick has one value, held to `sh:maxCount 1`, while
     intentions accumulate a history: every resolved one stays, with its outcome and its reason,
     because intentions that forgot their resolutions could not answer the only question an operator

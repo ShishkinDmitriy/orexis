@@ -117,7 +117,7 @@ def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
 
 
 def test_the_silence_limit_is_the_agents_where_its_self_graph_states_one(pot, snapshots):
-    """The keeper's world says `sensing:silentAfter 1` of it in the public world graph, which is the
+    """The keeper's world says `sensing:silentAfter 1` of it in a belief nobody owns, which is the
     world's word and not the keeper's: three cadences hold. Its self graph says the same, a stance:
     one cadence past the reading's grace, the probe is silent, where the figure in code would have
     waited three."""

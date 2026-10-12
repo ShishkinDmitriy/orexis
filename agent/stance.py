@@ -10,8 +10,8 @@ ontology and asks for them here by the term; the kernel names none of them, and 
 another's.
 
 READ OF THE SELF GRAPH ALONE. The text asks `?me a orexis:Self ; $stance ?n` over the graphs of kind
-`orexis:SelfGraph` and nothing else, so a figure stated of the agent anywhere else — a public world
-graph, a graph of its desires, a peer's document — is not the agent's word about itself and is not
+`orexis:SelfGraph` and nothing else, so a figure stated of the agent anywhere else — a belief nobody
+owns, a graph of its desires, a peer's document — is not the agent's word about itself and is not
 read. Not refused, either: the loader holds no vocabulary, so it cannot tell a stance from any other
 fact a world states about an agent, and a world stating a figure of an agent may mean something by it.
 

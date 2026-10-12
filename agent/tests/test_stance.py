@@ -3,7 +3,7 @@ read there and nowhere else, and the package's constant where it states none.
 
 Held over a world BOOTED as an agent boots it, so the self graph is the one the world authored and
 the boot put in: what the self graph states is read; what the world states of the same agent in a
-public graph, or a graph of the agent's own desires states, is not the agent's word about itself and
+belief nobody owns, or a graph of the agent's own desires states, is not the agent's word about itself and
 is not read. The kernel names no package's figure, so neither does this: the terms are the test's."""
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ def test_a_figure_the_self_graph_does_not_state_is_the_default(ann):
 
 
 def test_a_figure_stated_of_the_agent_anywhere_but_its_self_graph_is_not_its_stance(ann):
-    """The world says `:ann :limit 9` in its public graph and ann's desires say `:ann :wish 4`: both
+    """The world says `:ann :limit 9` in a belief nobody owns and ann's desires say `:ann :wish 4`: both
     are in ann's store and about ann, and neither is ann's word about itself."""
     assert stance(ann, LIMIT, 3) == 3, "a figure a belief nobody owns states is the world's, not the self's"
     assert stance(ann, WISH, 1) == 1, "a desire graph is the agent's own, and not where it states itself"

@@ -3,7 +3,7 @@
 # A ROW LEAVING UNBOUND A PARAMETER THE WORLD ALONE DECIDES IS NO FILLING (#913). The allotment's
 # shape: the keeper acts for the bed and holds nothing, the tender holds the pump over it, and no
 # heater exists — both actions come with the domain. The heating takes a heater, and every pattern
-# the heater stands in reads what no effect writes or deletes, so the public graphs are where a
+# the heater stands in reads what no effect writes or deletes, so the beliefs nobody owns are where a
 # heater is found or not at all. Asked with every pattern optional, the heating's precondition still
 # binds the keeper and the bed, and that row made a scope of its own, `(below, {bed})`, which
 # admitted nothing and minted nothing at an imaginarium a pass. The reading is no such parameter: it
@@ -28,7 +28,7 @@ GRAPH :ontology {
   planning:ScopeGraph rdfs:subClassOf orexis:Graph .
 }
 
-# THE WORLD, public: a keeper acting for one bed, a tender holding the pump over it, no heater.
+# THE WORLD, nobody's: a keeper acting for one bed, a tender holding the pump over it, no heater.
 GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:actsFor :bed .

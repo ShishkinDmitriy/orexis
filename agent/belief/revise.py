@@ -106,8 +106,8 @@ SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHE
   FILTER NOT EXISTS { ?rule a belief:Transition } }"""
 
 #  WHAT A RULE'S `sh:prefixes` DECLARE, as SHACL-SPARQL spells it — the ontology node's
-#  `sh:declare` blocks, each a prefix and a namespace — read over the rules graphs and public
-#  knowledge, since an ontology node sits in either.
+#  `sh:declare` blocks, each a prefix and a namespace — read over the rules graphs and the beliefs
+#  nobody owns, since an ontology node sits in either.
 _DECLARED_Q = """
 SELECT ?rule ?prefix ?namespace WHERE {
   ?rule sh:prefixes ?ontology . ?ontology sh:declare ?d . ?d sh:prefix ?prefix ; sh:namespace ?namespace }"""

@@ -169,7 +169,7 @@ def test_a_volume_lived_in_before_the_self_was_authored_is_given_the_world_s(wor
     assert selves(store) == [ANN] and graphs_of(store, SELF_GRAPH) == [_uri(world, "two.ttl")]
 
 
-def test_a_world_document_of_a_public_kind_saying_who_the_self_is_is_refused_at_the_loader(world):
+def test_a_world_document_nobody_owns_saying_who_the_self_is_is_refused_at_the_loader(world):
     (world / "imposter.ttl").write_text(_HEAD + "<> a orexis:WorldGraph .\n:bob a orexis:Self .\n")
     with pytest.raises(DocumentRefused, match="no self graph"):
         boot(world, "ann")

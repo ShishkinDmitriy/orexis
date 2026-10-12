@@ -316,7 +316,7 @@ def roles_of(store: ox.Store) -> frozenset[str]:
     """Every role the self of `store` is in: each kind its self graph states it beside
     `orexis:Self`, and every class those are beneath, that is beneath `orexis:Role` — read off the
     self graph alone, as a stance is, since a role is the agent's word about itself and nothing a
-    peer or the public world may say of it. Empty where it declares none."""
+    peer or the world may say of it. Empty where it declares none."""
     _, steps = _vocabularies()
     stated = {r["kind"] for r in rows(store, _DECLARED_Q, graphs_of(store, SELF_GRAPH))}
     reached = set().union(*(_beneath(kind, steps, store) for kind in stated)) if stated else set()
