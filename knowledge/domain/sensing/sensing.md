@@ -41,9 +41,10 @@ does not decode writes nothing and says so in the log. A sensor reading a SERIES
 
 **`missed`** is what sensing's own `start` asks every minute of the timeline, whether or not anything
 arrived ([a-package-starts-itself](/decisions/a-package-starts-itself.md)): which sensors' readings have gone missing,
-their latest observation past its grace with nothing arrived, for the container to ask again, and which have been silent past the agent's limit of
-their cadences (`sensing:silentAfter`) — said by `sensing:silentSince` until a reading ends it. Both limits are
-[stances](/domain/kernel/stance.md), and a figure in code holds where the agent's self graph states none.
+their latest observation past its grace with nothing arrived, for the container to ask again, and which have been silent past their
+limit of cadences (`sensing:silentAfter`) — said by `sensing:silentSince`, in a `sensing:SilenceGraph` of the
+agent's own and no belief, until a reading ends it. Both limits are the [observer](/domain/sensing/observer.md)
+role's that reads the sensor, and the observer shape's default holds where it states none.
 
 # What it leaves to others
 

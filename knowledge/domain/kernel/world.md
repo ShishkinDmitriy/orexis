@@ -23,7 +23,7 @@ what it is with `<> a <a graph kind>` on its own IRI, or, in TriG, of each graph
 | `deployment.ttl` | `onboarding:DeploymentGraph` | where the broker listens, its `schema:url`s — only where the world pins them | onboarding alone |
 | `state.ttl` | `orexis:BeliefGraph` | where things stand at the start, for a world nothing senses | the agent it names |
 | `wants.ttl`, `desires.ttl` | `planning:WantGraph`, `planning:DesireGraph` | what an agent is to bring about, once or for good | the agent it names |
-| `beliefs/<id>.self.ttl` | `orexis:SelfGraph` | who one agent is and the roles it runs, `:fern_grower a orexis:Self , market:Bidder , sensing:Observer , prediction:Predictor`, and its stances | that agent alone, and onboarding |
+| `beliefs/<id>.self.ttl` | `orexis:SelfGraph` | who one agent is and the roles it plays, `:fern_grower orexis:plays [ a market:Bidder ] , [ a sensing:Observer ; sensing:sensor :fern_probe ]`, and its stances | that agent alone, and onboarding |
 | `beliefs/<id>.ttl` | any agent-owned kind | one agent's own documents, in a world of several | the agent it names |
 | `hardware.ttl` | `onboarding:HardwareGraph` | pins, parts and boards | `orexis-firmware` alone |
 

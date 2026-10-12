@@ -9,9 +9,9 @@ shape, since a topic name is a valid filter — so the agent subscribes by the p
 command to a pattern with no wildcard in it. The agent is a `mqtt4ssn:Client` too. This package
 declares no word of its own; its ontology names MQTT4SSN's namespace and says which of its terms the code reads.
 
-**WHAT IS DERIVED, NOT AUTHORED.** Which topics the agent listens to follows from what it acts for:
-its sensors are those `sosa:isHostedBy` the subject it `orexis:actsFor`, a sample of it or a place containing it, and their
-topics' filters are its subscriptions. The world never says "the agent polls this sensor".
+**WHAT IS DERIVED, NOT AUTHORED.** Which topics the agent listens to follows from what its observer
+role reads: its sensors are the ones a role it `orexis:plays` reads (`sensing.cadence.sensors`), and their
+topics' filters are its subscriptions. The world never says "the agent subscribes to this topic".
 
 **ONE CLASS, AND THE THREAD IS THE CONTAINER'S.** `Mqtt` is the agent's side of the bus, answering
 the family's `Transport` contract, kept at `agent/transport/` so that sensing knows no transport:

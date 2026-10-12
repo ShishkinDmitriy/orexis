@@ -14,11 +14,13 @@ through the driver (`sense_now`); it writes nothing for a reading merely missed,
 period's end already says it, and a mark would say it twice.
 
 **A SENSOR SILENT PAST THE LIMIT IS SAID SO.** One whose reading has been missing for
-`sensing:silentAfter` cadences and more — the agent's limit, a stance in its self graph, and
-`SILENT_AFTER` where it states none — gets `sensing:silentSince` the instant its last reading fell
-due — named for the state, not for the tick that noticed — in a graph of the agent's own
-classified `orexis:BeliefGraph`, the kernel's kind, arrived `orexis:Derived`, since a silence is
-the agent's own conclusion about its sensor, holding from that instant and present while the silence lasts; the sensor's next
+`sensing:silentAfter` cadences and more — the limit the observer role reading it states, the observer
+shape's default where it states none (`cadence.limit_of`) — gets `sensing:silentSince` the instant its
+last reading fell due — named for the state, not for the tick that noticed — in a graph of the
+agent's own classified `sensing:SilenceGraph`, arrived `orexis:Derived`, since a silence is the
+agent's own conclusion about its sensor: sensing's kind and no belief, as a stuck sensor is said in a
+percept's revision, since nothing in the mind reads it and a belief the agent derived is the state a
+transition may delete from. It holds from that instant and is present while the silence lasts; the sensor's next
 reading drops it at the writer (`received`). Said once: a sensor already said silent is not
 re-said on every tick. SOSA and SSN say how often a sensor reports and nothing about one that
 has stopped, so this is one of sensing's own words.
@@ -36,36 +38,30 @@ import logging
 from datetime import datetime, timedelta
 
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, DERIVED, local_of
-from agent.stance import stance
+from agent.ontology import DERIVED, local_of
 from agent.store import Raw, catalogue_of, entry, remember, rows, update
 
-from .cadence import cadence_of, lapsed
-from .ontology import SILENT_AFTER_TERM, silent_graph
+from .cadence import cadence_of, lapsed, limit_of
+from .ontology import SILENCE_GRAPH, SILENT_AFTER_TERM, silent_graph
 
 log = logging.getLogger("missed")
 
-#  HOW LONG A READING MAY BE MISSING before its sensor is said silent, in its own cadences, where the
-#  agent's self graph states no `sensing:silentAfter` of it.
-SILENT_AFTER = 3
-
-#  EVERY SENSOR SAID SILENT ALREADY: the row in a belief graph of the agent's.
+#  EVERY SENSOR SAID SILENT ALREADY: the row in a silence graph of the agent's.
 _SILENT_Q = """
-SELECT DISTINCT ?sensor WHERE { GRAPH $cat { ?sg a orexis:BeliefGraph } GRAPH ?sg { ?sensor sensing:silentSince ?since } }"""
+SELECT DISTINCT ?sensor WHERE { GRAPH $cat { ?sg a sensing:SilenceGraph } GRAPH ?sg { ?sensor sensing:silentSince ?since } }"""
 
 
 def missed(store, me: str, now: datetime, *, memo=None) -> list[str]:
     """The sensors whose reading is missing at `now` — observed once, and the observation
     fallen due before now with nothing arrived since (`cadence.lapsed`) — earliest lapse first; and
-    any of them silent for the agent's limit of cadences is said so, once, by `sensing:silentSince`
-    in a graph of `me`'s own.
+    any of them silent for the limit of cadences its observer role allows is said so, once, by
+    `sensing:silentSince` in a silence graph of `me`'s own.
     """
     found = lapsed(store, now, memo)
     if not found:
         return []
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
     silent = {r["sensor"] for r in rows(store, _SILENT_Q, (), cat=cat)}
-    limit = stance(store, SILENT_AFTER_TERM, SILENT_AFTER, memo)
     out: list[str] = []
     for sensor, fell_due in found:
         if sensor in out:
@@ -74,13 +70,14 @@ def missed(store, me: str, now: datetime, *, memo=None) -> list[str]:
         if sensor in silent:
             continue                                    # said already, and once is enough
         cadence = cadence_of(store, sensor, memo)
+        limit = limit_of(store, sensor, SILENT_AFTER_TERM, memo)
         if cadence is None or now < fell_due + timedelta(seconds=limit * cadence):
             continue
         graph = silent_graph(local_of(me), sensor)
         update(store, f"""
 INSERT DATA {{
   GRAPH <{graph}> {{ <{sensor}> sensing:silentSince "{fell_due.isoformat()}"^^xsd:dateTime . }}
-  {entry(store, graph, BELIEF, DERIVED, me, start=fell_due)} }}""")
+  {entry(store, graph, SILENCE_GRAPH, DERIVED, me, start=fell_due)} }}""")
         hash_named_graph(store, graph)
         log.warning("%s: %s silent since %s, %d cadences past", local_of(me), local_of(sensor),
                     fell_due.isoformat(timespec="seconds"), limit)

@@ -36,20 +36,23 @@ and a store's selves, counted in every graph, are that agent alone — a volume 
 another agent is the right id handed the wrong volume, and two selves would answer every text for
 both without a word. The loader keeps the self to its one home, and refuses it from a peer.
 
-**A PACKAGE IS LOADED ONLY FOR A ROLE THE AGENT IS DECLARED IN
-(a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).** The self graph states the
-agent's roles beside its self — `:supplier a orexis:Self , market:Host` — and each package declares
-the roles it serves in its own `ontology.ttl`, beneath `orexis:Role`; a domain declares roles in its
-own words beneath the packages'. So the boot reads the kernel and the world first, finds who the
-agent is and puts its self graph in, closes its roles over `rdfs:subClassOf` — the steps the
+**A PACKAGE IS LOADED ONLY FOR A ROLE THE AGENT PLAYS
+(a-package-is-loaded-only-for-a-role-the-agent-is-declared-in, a-role-is-an-instance-an-agent-plays).**
+The self graph states each role the agent plays beside its self — `:supplier orexis:plays [ a
+market:Host ]`, an instance carrying its own context — and each package declares the role classes it
+serves in its own `ontology.ttl`, beneath `orexis:Role`; a domain declares role classes in its own
+words beneath the packages'. So the boot reads the kernel and the world first, finds who the agent
+is and puts its self graph in, closes the classes of its roles over `rdfs:subClassOf` — the steps the
 world's domains state, and the steps each package's ontology states, READ APART so that no
 unloaded package's documents enter the store — and only then reads the documents of each package
 whose ontology declares a role in that closure: the directory it was read from, found by looking
 and never listed. It closes the vocabulary again and takes a second look at any graph of the
 world passed over for a kind only such a package declares. There is no default set and no fixed
-mind: an agent declaring no role loads nothing, said in the log, and `orexis-onboard` refuses it.
+mind: an agent playing no role loads nothing, said in the log, and `orexis-onboard` refuses it.
 A TRANSPORT IS NO ROLE: it is loaded where a loaded role needs bytes and the society wires a bus
-(`TRANSPORTS`) — the one derivation left, since which bus reaches a device is wiring. History and
+(`TRANSPORTS`): an observer's sensor on a topic or with a form, a speaker's topic. Which sensors an
+observer reads is its role's, declared (`sensing:sensor`), so the runtime asks the declaration and
+derives nothing from where a sensor is mounted; which bus reaches a device is wiring. History and
 metrics are deployment's, read from the environment. Hanoi's mover is a planner alone, and loads
 planning and nothing else — no execution, since its plan is its output, and no belief, since its
 world ships no rules (#928).
@@ -177,12 +180,11 @@ PLANNING = "planning"
 #  after these, by its name.
 PASS = ("belief", "planning", "execution", "sensing", "prediction", "speech", MQTT, HTTP)
 
-#  A SENSOR OF THE AGENT'S: hosted by what it acts for, by a sample of it, or by a place that
-#  contains it — the one relation sensing's callers read a sensor as the agent's by (the MQTT
-#  driver's `open` and `handle`, the HTTP driver's, sensing's `missed` of a series), and the one
-#  the observer's shape asks for.
-MINE = ("?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host . "
-        "?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host .")
+#  A SENSOR OF THE AGENT'S: one an observer role it plays reads (`sensing:sensor`), DECLARED, so
+#  nothing here walks where a sensor is mounted; onboarding holds the declaration to the world
+#  (`agent/sensing/ontology.ttl`'s observer shape). The one relation the transports read a sensor as
+#  the agent's by, the MQTT driver's and the HTTP driver's, and named here for the patterns below.
+MINE = "?me orexis:plays/sensing:sensor ?sensor ."
 
 #  THE ROLES THAT NEED BYTES, which the transports are loaded for: a transport is no role and no
 #  author declares one, so it is the one derivation left — where a loaded role needs bytes and the
@@ -210,8 +212,8 @@ WATCHERS = ("history", "metrics")
 #  of the society graph, where a world with a bus states its principals, and of the world graph,
 #  where a world with none states its one agent beside what it acts on.
 _ME_Q = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }"
-#  EVERY KIND THE SELF IS STATED, in its self graph: `orexis:Self` and the roles beside it.
-_DECLARED_Q = "SELECT DISTINCT ?kind WHERE { ?me a orexis:Self , ?kind }"
+#  THE CLASS OF EVERY ROLE THE SELF PLAYS, in its self graph: each instance it `orexis:plays`.
+_DECLARED_Q = "SELECT DISTINCT ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }"
 _SUBCLASS = "http://www.w3.org/2000/01/rdf-schema#subClassOf"
 _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 _CLASS = "http://www.w3.org/2002/07/owl#Class"
@@ -311,10 +313,10 @@ def _beneath(cls: str, steps, store: ox.Store | None = None) -> set[str]:
 
 
 def roles_of(store: ox.Store) -> frozenset[str]:
-    """Every role the self of `store` is in: each kind its self graph states it beside
-    `orexis:Self`, and every class those are beneath, that is beneath `orexis:Role` — read off the
+    """Every role class the self of `store` plays: the class of each role its self graph says it
+    `orexis:plays`, and every class those are beneath, that is beneath `orexis:Role` — read off the
     self graph alone, as a stance is, since a role is the agent's word about itself and nothing a
-    peer or the world may say of it. Empty where it declares none."""
+    peer or the world may say of it. Empty where it plays none."""
     _, steps = _vocabularies()
     stated = {r["kind"] for r in rows(store, _DECLARED_Q, graphs_of(store, SELF_GRAPH))}
     reached = set().union(*(_beneath(kind, steps, store) for kind in stated)) if stated else set()
@@ -323,9 +325,9 @@ def roles_of(store: ox.Store) -> frozenset[str]:
 
 def packages_of(store: ox.Store) -> tuple[str, ...]:
     """Every package the self of `store` loads, in the order a pass runs their parts: each package
-    whose ontology declares a role the self is in (`roles_of`), and each transport a loaded role
-    needs bytes from (`TRANSPORTS`), asked over the world's common graphs and the self. Nothing
-    where the self declares no role — no default and no fixed mind
+    whose ontology declares the class of a role the self plays (`roles_of`), and each transport a
+    loaded role needs bytes from (`TRANSPORTS`), asked over the world's common graphs and the self.
+    Nothing where the self plays no role — no default and no fixed mind
     (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in)."""
     roles = roles_of(store)
     serving, _ = _vocabularies()
@@ -423,8 +425,8 @@ def _put_documents(store: ox.Store, world: Path, agent_id: str | None = None,
         if loaded:
             log.info("%s loads %s", agent_id, ", ".join(loaded))
         else:
-            log.warning("%s is declared in no role, so it loads no package and runs nothing: its self graph "
-                        "says what it runs, `<agent> a orexis:Self , <role>`", agent_id)
+            log.warning("%s plays no role, so it loads no package and runs nothing: its self graph "
+                        "says what it runs, `<agent> orexis:plays [ a <role> ]`", agent_id)
     for _path, _doc, graph, kinds in passed:
         log.log(logging.DEBUG if others & set(kinds) else logging.INFO,
                 "passed over %s: %s is no kind this agent reads", graph, ", ".join(sorted(kinds)))

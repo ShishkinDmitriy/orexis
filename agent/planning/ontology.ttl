@@ -228,7 +228,8 @@ planning:Planner a owl:Class ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "an executor is no planner: nothing would publish a plan for it to walk" ;
         sh:select """SELECT ?me WHERE { ?me a orexis:Self
-            FILTER NOT EXISTS { { ?me a planning:Planner } UNION { ?me a ?role . ?role rdfs:subClassOf planning:Planner } } }""" ] .
+            FILTER NOT EXISTS { ?me orexis:plays ?role .
+                                { ?role a planning:Planner } UNION { ?role a ?kind . ?kind rdfs:subClassOf planning:Planner } } }""" ] .
 
 #################  Desires, wants and the searched half of an action — planning's  #################
 

@@ -16,10 +16,12 @@ from pathlib import Path
 import pytest
 
 from agent import clock
-from agent.sensing.missed import SILENT_AFTER, missed
+from agent.sensing.missed import missed
 from agent.sensing.received import GRACE, received
-from agent.sensing.ontology import OBSERVATION_GRAPH, SILENT_AFTER_TERM
+from agent.sensing.ontology import OBSERVATION_GRAPH, SILENT_AFTER_TERM, default_of
 from agent.store import graphs_of, rows, update
+
+SILENT_AFTER = default_of(SILENT_AFTER_TERM)          # where the observer role states none, the observer shape's default
 
 CASES_DIR = Path(__file__).parent / "missed"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
@@ -31,7 +33,7 @@ LAPSE = CADENCE * (1 + GRACE)            # when the reading goes missing: due, a
 
 _SILENCES_Q = """
 SELECT ?g ?sensor ?since ?start WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ;
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a sensing:SilenceGraph ; orexis:arrivedBy orexis:Derived ;
                dcterms:temporal/orexis:start ?start }
   GRAPH ?g { ?sensor sensing:silentSince ?since } }"""
 
@@ -116,16 +118,17 @@ def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     assert not snapshots.orphans_in(CASES_DIR)
 
 
-def test_the_silence_limit_is_the_agents_where_its_self_graph_states_one(pot, snapshots):
-    """The keeper's world says `sensing:silentAfter 1` of it in a common belief, which is the
-    world's word and not the keeper's: three cadences hold. Its self graph says the same, a stance:
-    one cadence past the reading's grace, the probe is silent, where the figure in code would have
-    waited three."""
-    update(pot, f"INSERT DATA {{ GRAPH <http://example.org/test#world> {{ <{snapshots.ME}> <{SILENT_AFTER_TERM}> 1 }} }}")
+def test_the_silence_limit_is_the_observer_roles_where_it_states_one(pot, snapshots):
+    """The keeper's world says it plays an observer role reading the probe with `sensing:silentAfter 1`,
+    in a common belief, which is the world's word and not the keeper's: three cadences hold. Its self
+    graph says the same: one cadence past the reading's grace, the probe is silent, where the observer
+    shape's default would have waited three."""
+    update(pot, f"""INSERT DATA {{ GRAPH <http://example.org/test#world> {{
+  <{snapshots.ME}> orexis:plays [ a sensing:Observer ; sensing:sensor <{PROBE}> ; <{SILENT_AFTER_TERM}> 1 ] }} }}""")
     fell_due = snapshots.NOW + LAPSE
     assert missed(pot, snapshots.ME, fell_due + CADENCE) == [PROBE] and _silences(pot) == [], \
-        "stated in a common belief, the limit is not the keeper's stance"
-    snapshots.stating(pot, {SILENT_AFTER_TERM: 1})
+        "stated in a common belief, the role is not the keeper's"
+    snapshots.observing(pot, PROBE, {SILENT_AFTER_TERM: 1})
     assert missed(pot, snapshots.ME, fell_due + CADENCE - timedelta(seconds=1)) == [PROBE] and _silences(pot) == []
     assert missed(pot, snapshots.ME, fell_due + CADENCE) == [PROBE]
     assert _silences(pot) == [(PROBE, fell_due, fell_due)]

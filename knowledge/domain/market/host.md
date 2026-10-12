@@ -11,7 +11,7 @@ description: >-
 
 # What it is
 
-`:supplier a orexis:Self , market:Host` in the supplier's self graph, and `:supplier market:hosts
+`:supplier orexis:plays [ a market:Host ]` in the supplier's self graph, and `:supplier market:hosts
 :water` in the society. The role says what the supplier RUNS, and nothing but the supplier reads it;
 the relation says which venue it holds, and it is public because a bidder must find the host of a
 venue to call it. The relation is what the role is founded on: the shape the market ships beside the

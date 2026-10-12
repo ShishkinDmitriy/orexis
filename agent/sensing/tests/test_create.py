@@ -12,13 +12,16 @@ from agent.belief.revise import revise
 from agent.ontology import BELIEF
 from agent.sensing.create import EVERY_S, create
 from agent.sensing.events import Doubted, Observed, Silence
-from agent.sensing.missed import SILENT_AFTER
+from agent.sensing.ontology import SILENT_AFTER_TERM, default_of
 from agent.sensing.ontology import OBSERVATION_GRAPH
 from agent.sensing.received import GRACE, received
 from agent.store import close_catalogue, document, graphs_of, put_document, rows
 
+SILENT_AFTER = default_of(SILENT_AFTER_TERM)          # where the observer role states none, the observer shape's default
+
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 RULES = Path(__file__).parents[1] / "rules.ttl"
+ONTOLOGY = Path(__file__).parents[1] / "ontology.ttl"     # the observer shape, whose default the stuck rule reads
 BELIEF_VOCABULARY = Path(__file__).parents[2] / "belief" / "ontology.ttl"
 PROBE = "http://example.org/test#probe"
 CADENCE = timedelta(seconds=900)
@@ -46,6 +49,7 @@ def test_where_heard_it_says_each_observation_with_its_interval_and_the_silence(
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
     put_document(store, document(RULES))
+    put_document(store, document(ONTOLOGY))
     put_document(store, document(BELIEF_VOCABULARY))          # what a revision is, so its row closes as a boot's does
     runtime = stand_in_runtime(store, snapshots.ME, snapshots.NOW)
     part = create(runtime)
@@ -95,6 +99,7 @@ def test_linked_to_belief_it_hands_in_each_observation_with_this_layers_kind(mon
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
     put_document(store, document(RULES))
+    put_document(store, document(ONTOLOGY))
     (before,) = received(store, snapshots.ME, PROBE, b'{"value": 0.2}', snapshots.NOW)
     (concluded,) = received(store, snapshots.ME, PROBE, b'{"value": 0.21}', snapshots.NOW + CADENCE)
     revise(store, concluded, read=graphs_of(store, BELIEF, common=True), kind=OBSERVATION_GRAPH)

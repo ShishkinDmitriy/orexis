@@ -17,6 +17,7 @@ from agent.belief.ontology import REVISION_GRAPH
 from agent.execution.ontology import COMMITTED_STEP_GRAPH
 from agent.ontology import BELIEF, SELF_GRAPH
 from agent.runtime import UNFINISHED, Runtime, boot
+from agent.sensing.ontology import SILENCE_GRAPH
 from agent.store import graphs_of, rows
 from agent.series import HISTORY, Sink, install
 from agent.transport.mqtt.driver import Mqtt
@@ -110,7 +111,7 @@ def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monke
     later = NOW + timedelta(minutes=100)
     monkeypatch.setattr(clock, "now", lambda: later)
     runtime.run(passes=1, poll_s=0)
-    silent = rows(runtime.beliefs, "SELECT ?s WHERE { ?s sensing:silentSince ?t } ORDER BY ?s", _own(runtime.beliefs))
+    silent = rows(runtime.beliefs, "SELECT ?s WHERE { ?s sensing:silentSince ?t } ORDER BY ?s", graphs_of(runtime.beliefs, SILENCE_GRAPH))
     assert [r["s"].rsplit("#", 1)[-1] for r in silent] == [
         "air_humidity_terrace", "air_pressure_terrace", "air_temp_terrace", "battery_sensor_terrace",
         "moisture_sensor_terrace"]

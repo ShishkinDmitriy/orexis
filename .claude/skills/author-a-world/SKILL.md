@@ -25,9 +25,10 @@ agents' to find (control-the-derivative-not-the-value).
 Write what `knowledge/runbooks/author-a-world.md` lists, each document saying which graph it is on
 its first line, importing its domains with `owl:imports` and speaking no word a domain does not
 declare: `world.ttl`; `society.ttl` only where there is a bus; a self graph for every agent,
-`beliefs/<id>.self.ttl`, saying who it is, the ROLES it runs beside its self — in a domain's words
-where the domain has them (`market:Host`), otherwise the packages' (`planning:Planner`,
-`sensing:Observer`, …), since an agent declaring none loads nothing and is refused — and any
+`beliefs/<id>.self.ttl`, saying who it is and each ROLE it plays beside its self, an instance
+(`orexis:plays [ a market:Host ]`) — of a domain's class where the domain has one, otherwise a
+package's (`planning:Planner`, `sensing:Observer` naming each `sensing:sensor` it reads, …), since an
+agent playing none loads nothing and is refused — and any
 stance it holds of itself, stating none anywhere else, where nothing reads it. Above all a planner
 whose pass needs more than planning's 32 candidates states the search's `planning:budget` it needs,
 at the figure the world's own test measured; `state.ttl` for a world nothing senses; the desires or

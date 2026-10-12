@@ -67,6 +67,12 @@ def two_bed_world(tmp_path: Path) -> Path:
                        .replace("mqtt4ssn:hosts :moisture_probe , :thermometer , :pump , :heater ;",
                                 "mqtt4ssn:hosts :moisture_probe , :thermometer , :pump , :heater , :moisture_probe2 , :pump2 ;"))
     society.write_text(society.read_text() + WIRED)
+    #  AND THE GROWER READS THE SECOND BED'S PROBE: a sensor is the agent's because a role it plays says so,
+    #  mounted in a bed it acts for or not (a-role-is-an-instance-an-agent-plays).
+    grower = world / "beliefs" / "grower.self.ttl"
+    read = "sensing:sensor :moisture_probe , :thermometer"
+    assert read in grower.read_text(), "the grower's observer role reads the first bed's two sensors"
+    grower.write_text(grower.read_text().replace(read, read + " , :moisture_probe2"))
     return world
 
 

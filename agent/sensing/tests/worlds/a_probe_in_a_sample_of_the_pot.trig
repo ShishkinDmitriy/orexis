@@ -27,6 +27,7 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
+  sensing:SilenceGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {

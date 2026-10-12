@@ -23,19 +23,42 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
+from functools import cache
+from pathlib import Path
 
 from agent.ontology import GRAPH_PREFIX
+from agent.store import document, rows
 
 SENSING = "http://example.org/orexis/sensing#"
 
-#  THE TERMS CODE READS: the graph a percept is kept in and a forecast's, the two limits the agent
-#  states, and the codec that ships. Every other word of this layer is spoken by a query text, under
-#  its prefix, and needs no constant here.
+#  THE TERMS CODE READS: the graph a percept is kept in, a forecast's and a silence's, the two limits
+#  an observer role states, and the codec that ships. Every other word of this layer is spoken by a
+#  query text, under its prefix, and needs no constant here.
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
 FORECAST_GRAPH = SENSING + "ForecastGraph"
-SILENT_AFTER_TERM = SENSING + "silentAfter"      # the agent's limits, as stances: cadences, and readings
+SILENCE_GRAPH = SENSING + "SilenceGraph"
+SILENT_AFTER_TERM = SENSING + "silentAfter"      # an observer role's limits: cadences, and readings
 STUCK_AFTER_TERM = SENSING + "stuckAfter"
 JSON_CODEC = SENSING + "Json"
+
+#  THIS LAYER'S ONTOLOGY, where the observer shape states what holds of a limit no role states.
+_ONTOLOGY = Path(__file__).resolve().parent / "ontology.ttl"
+
+_DEFAULT_Q = """
+SELECT ?default WHERE { ?shape sh:targetClass sensing:Observer ; sh:property ?p . ?p sh:path $limit ; sh:defaultValue ?default }"""
+
+
+@cache
+def default_of(limit: str) -> int:
+    """What holds of `limit` — `sensing:silentAfter`, `sensing:stuckAfter` — where no observer role states
+    it: the observer shape's `sh:defaultValue`, read off this layer's ontology, which is the one place
+    the figure lives and the one the stuck rule reads too. Refused where the ontology states none or
+    several, since a limit with no figure is a package shipped broken."""
+    doc = document(_ONTOLOGY)
+    found = {r["default"] for r in rows(doc, _DEFAULT_Q, [_ONTOLOGY.resolve().as_uri()], limit=limit)}
+    if len(found) != 1:
+        raise RuntimeError(f"sensing's ontology states {len(found)} defaults for {limit}, and one is the limit")
+    return int(float(found.pop()))
 
 
 def slug(iri: str) -> str:

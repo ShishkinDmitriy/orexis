@@ -91,7 +91,7 @@ def _tank(tmp_path, butt: int, *predicted):
                                         f":tank1 :level 4 .\n:butt :holds {butt} .\n")
     (tmp_path / "beliefs" / "keeper.ttl").write_text(_DESIRES)
     (tmp_path / "beliefs" / "keeper.self.ttl").write_text(_HEAD + "<> a orexis:SelfGraph .\n"
-                                                              ":keeper a orexis:Self , planning:Planner , execution:Executor .\n")
+                                                              ":keeper a orexis:Self ; orexis:plays [ a planning:Planner ] , [ a execution:Executor ] .\n")
     beliefs = boot(tmp_path, "keeper")
     for name, adds, retracts in predicted:
         graph = f"{T}{name}"

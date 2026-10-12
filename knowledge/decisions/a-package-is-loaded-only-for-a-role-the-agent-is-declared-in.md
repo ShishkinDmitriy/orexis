@@ -16,9 +16,19 @@ description: >-
   fixed mind, default roles, roles in the public world, asking a peer for its roles, and package roles
   with no domain roles. Supersedes in part a-documents-kind-says-who-reads-it,
   a-layer-is-a-package-and-need-loads-it and capability-packages.
-status: accepted
+status: superseded-in-part
+superseded-by: a-role-is-an-instance-an-agent-plays
 timestamp: 2026-10-08T12:00:00Z
 ---
+
+> **Superseded in part, 2026-10-12: a role is an instance the agent plays.** A role is no longer a type
+> of the agent stated beside `orexis:Self`, and `orexis:Role` is no longer beneath `orexis:Agent`: the
+> self graph says `<agent> orexis:plays [ a <role class> ]`, and the boot closes the classes of the roles
+> played ([a-role-is-an-instance-an-agent-plays](/decisions/a-role-is-an-instance-an-agent-plays.md)).
+> And which sensors report to an observer is declared by its role (`sensing:sensor`), not derived from
+> where they are mounted. A package loaded only for a role, no default, a domain's roles beneath the
+> packages', a transport loaded where a role needs bytes, and onboarding holding a declaration to its
+> world both ways, all stand.
 
 > **Recorded before the code; §1 to §6 are built since (#927).** Where this record says how the tree
 > IS, it was read on `e99731d0` (2026-10-08) and the measurements were run in memory there. The

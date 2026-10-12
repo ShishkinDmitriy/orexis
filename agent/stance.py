@@ -2,9 +2,9 @@
 constant where it states none (knowledge/domain/kernel/stance.md).
 
 A STANCE IS A BELIEF ABOUT ONESELF, NOT CONFIGURATION. How long the agent waits for a step to be
-answered, how much a search or a revision may spend in a pass, how many of a sensor's cadences it
-lets pass before it doubts the sensor, how far ahead it looks: each is a triple about the self in
-the agent's self graph — `:rose_grower sensing:stuckAfter 3` — authored by its world beside
+answered, how much a search or a revision may spend in a pass, how far ahead it looks: each is a
+triple about the self in the agent's self graph — `:rose_grower execution:patienceS 120` — authored
+by its world beside
 `:rose_grower a orexis:Self`, as a desire is. Each package declares the figures it reads in its own
 ontology and asks for them here by the term; the kernel names none of them, and no package names
 another's.

@@ -48,9 +48,11 @@ GRAPH :world {
   :weather_form hctl:hasTarget "https://forecast.example/v1?latitude={latitude}&longitude={longitude}&hourly=precipitation" .
 }
 
-# THE SELF, its world's self graph as the boot puts it in: this is the keeper's store.
+# THE SELF, its world's self graph as the boot puts it in: this is the keeper's store, and its observer
+# role reads the pot's probe and the balcony's forecast.
 GRAPH :self {
   :keeper a orexis:Self .
+  :keeper orexis:plays [ a sensing:Observer ; sensing:sensor :probe , :weather ] .
 }
 
 GRAPH :catalogue {

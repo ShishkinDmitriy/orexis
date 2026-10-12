@@ -9,9 +9,9 @@ sensor's when a pattern of its topic matches the channel by MQTT's own rules —
 to the topic the sensor's board `mqtt4ssn:listensToTopic`, by a pattern with no wildcard in it,
 since a publish takes a topic name; the payloads are the ones the firmware has always read,
 `{"sleep_s": n}` retained so a board deep asleep finds it on waking, and `{"sense": true}` not
-retained. Which sensors are the agent's is never authored: they are the ones `sosa:isHostedBy`
-what it `orexis:actsFor`, a sample of it, or a place that contains it (`schema:containedInPlace`),
-and `open` subscribes to their topics' patterns.
+retained. Which sensors are the agent's is its observer role's to say: the ones a role it
+`orexis:plays` reads (`sensing.cadence.sensors`), held by onboarding to where they are mounted, and `open`
+subscribes to their topics' patterns.
 
 **A MESSAGE BECOMES OBSERVATIONS THROUGH SENSING, AND THE TRANSPORT KNOWS NO CODEC.** `handle`
 takes a message's topic, bytes and instant and calls sensing's `received` once per sensor of the
@@ -49,8 +49,8 @@ import os
 from datetime import datetime
 
 from agent import clock
-from agent.ontology import BELIEF, SELF_GRAPH, local_of
-from agent.store import answer, graphs_of, rows
+from agent.ontology import BELIEF, local_of
+from agent.store import Raw, answer, graphs_of, rows
 from agent.transport.transport import Transport
 
 log = logging.getLogger("mqtt")
@@ -73,11 +73,11 @@ SELECT ?pattern WHERE {
   ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
 ORDER BY ?pattern"""
 
-#  EVERY SENSOR OF THE SELF'S THAT PUBLISHES ON A TOPIC, with each pattern that names it.
-_MINE_Q = """
+#  EVERY PATTERN NAMING A TOPIC A SENSOR PUBLISHES ON, for the sensors the agent reads — which sensing
+#  says (`cadence.sensors`), since a sensor is the agent's by a role it plays, and no word of a transport's.
+_TOPICS_Q = """
 SELECT ?sensor ?pattern WHERE {
-  ?me a orexis:Self ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host ; mqtt4ssn:observesTopic ?topic .
+  VALUES ?sensor { $sensors } ?sensor mqtt4ssn:observesTopic ?topic .
   ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
 ORDER BY ?sensor ?pattern"""
 
@@ -169,6 +169,16 @@ class Mqtt(Transport):
             loop_stop()
             disconnect()
 
+    def _topics(self, store) -> list[dict]:
+        """Every sensor the agent reads that publishes on a topic, with each pattern naming it. Which
+        sensors are the agent's is sensing's to say (`cadence.sensors`), imported here as `lapsed` is
+        where a message is handed on: sensing is loaded where the agent reads a sensor at all."""
+        from agent.sensing.cadence import sensors
+        mine = sensors(store)
+        if not mine:
+            return []
+        return rows(store, _TOPICS_Q, graphs_of(store, BELIEF, common=True), sensors=Raw(" ".join(f"<{s}>" for s in mine)))
+
     def nudge(self, store, now: datetime) -> list[str]:
         """Tell the board of every sensor of this member's whose reading has fallen due to sense now;
         the sensors asked. Writes nothing. Which readings have fallen due is SENSING'S to say
@@ -176,7 +186,7 @@ class Mqtt(Transport):
         asks, as it hands `received` the bytes (#944) — imported here, as `received` is, so a member
         that only listens never loads sensing."""
         from agent.sensing.cadence import lapsed
-        mine = {r["sensor"] for r in rows(store, _MINE_Q, [*graphs_of(store, BELIEF, common=True), *graphs_of(store, SELF_GRAPH)])}
+        mine = {r["sensor"] for r in self._topics(store)}
         asked = list(dict.fromkeys(sensor for sensor, _ in lapsed(store, now) if sensor in mine))
         for sensor in asked:
             self.sense_now(store, sensor)
@@ -225,7 +235,7 @@ class Mqtt(Transport):
     def open(self, store) -> list[str]:
         """Subscribe to every pattern the world implies for the agent's sensors, and to the topic
         it listens to itself; the patterns."""
-        patterns = sorted({r["pattern"] for r in rows(store, _MINE_Q, [*graphs_of(store, BELIEF, common=True), *graphs_of(store, SELF_GRAPH)])}
+        patterns = sorted({r["pattern"] for r in self._topics(store)}
                           | {r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, BELIEF, common=True), agent=self.me)})
         for pattern in patterns:
             self.client.subscribe(pattern)
@@ -241,13 +251,13 @@ class Mqtt(Transport):
 
         EACH CALLBACK IS IMPORTED WHERE A MESSAGE IS FOR IT. A message on the agent's own topic
         comes only to a speaker, and one for a sensor of its only to an observer — `orexis-onboard`
-        refuses a topic listened to by no speaker and a sensor reporting to no observer — so an agent
-        that only listens never loads sensing and one that only senses never loads speech (#824, #927)."""
+        refuses a topic listened to by no speaker and a sensor reporting to no observer role — so an
+        agent that only senses never loads speech (#824, #927). Sensing it does load, to ask which
+        sensors are its (`cadence.sensors`), since which are is a role's word and no transport's."""
         if any(matches(r["pattern"], topic) for r in rows(store, _LISTENS_Q, graphs_of(store, BELIEF, common=True), agent=self.me)):
             from agent.speech.heard import heard
             return [(None, graph) for graph in heard(store, self.me, payload)]
-        mine = list(dict.fromkeys(r["sensor"] for r in rows(store, _MINE_Q, [*graphs_of(store, BELIEF, common=True), *graphs_of(store, SELF_GRAPH)])
-                                  if matches(r["pattern"], topic)))
+        mine = list(dict.fromkeys(r["sensor"] for r in self._topics(store) if matches(r["pattern"], topic)))
         if not mine:
             log.debug("%s: a message on %s is nobody's of mine", local_of(self.me), topic)
             return []

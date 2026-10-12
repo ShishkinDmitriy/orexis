@@ -37,9 +37,9 @@ _WORLD = (_HEAD + "<> a orexis:WorldGraph .\n"
 #  EACH AGENT'S SELF GRAPH AND DESIRES, under names that say nothing of whose they are: the content
 #  says, and a boot reading the names would take the wrong one. Each is a planner, which is what reads
 #  a graph of desires; bob is an observer too.
-_ROLES = {"ann": "planning:Planner", "bob": "planning:Planner , sensing:Observer"}
+_ROLES = {"ann": "[ a planning:Planner ]", "bob": "[ a planning:Planner ] , [ a sensing:Observer ]"}
 _SELF = (_HEAD + "@prefix sensing: <http://example.org/orexis/sensing#> .\n"
-         "<> a orexis:SelfGraph .\n:{who} a orexis:Self , {roles} .\n")
+         "<> a orexis:SelfGraph .\n:{who} a orexis:Self ; orexis:plays {roles} .\n")
 _DESIRES = _HEAD + "<> a planning:DesireGraph ; orexis:beliefsOf :{who} .\n:{who} planning:holds :{who}_wish .\n"
 
 _ROW_Q = """SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .

@@ -24,14 +24,14 @@ identical - not the [reading](/domain/sensing/reading.md) concluded from it, whi
 rescale could make identical out of two different counts, and not close, since a live instrument
 jitters by at least a count and that jitter is what a stuck one lacks.
 
-Sensing keeps a sensor's last `sensing:stuckAfter` [percepts](/domain/sensing/observation.md) — a
-[stance](/domain/kernel/stance.md), six where the agent's self graph states none — and **a rule says
+Sensing keeps a sensor's last `sensing:stuckAfter` [percepts](/domain/sensing/observation.md) — the
+figure the [observer](/domain/sensing/observer.md) role reading it states, six where it states none — and **a rule says
 the sensor stuck when every one of them gave one number**: `:probe sensing:stuckOn 2412`, the number
 it is stuck on, concluded in the revision of the percept arriving (`agent/sensing/rules.ttl`). It
 holds while that percept does, so the first reading whose number differs ends it — the kept percepts
 no longer agree — and so does a silence, since a silent sensor has no percept holding. Nothing counts
 a run and nothing carries one onto the present: the premise is the percepts themselves, and the rule
-reads them where sensing keeps them, with the limit off the self graph, the one rule of sensing's
+reads them where sensing keeps them, with the limit off the role or the observer shape, the one rule of sensing's
 that reaches past the arrival it is revised for. A sensor stating no `ssn-system:Frequency` is never
 said stuck, as it is never said silent: its readings are no samples on a cadence the world promised.
 
@@ -64,6 +64,6 @@ The premise is the instrument's to keep, and a simulated one keeps it too. The s
 (`simulation/simulator.py`) publishes each number with the instrument's noise — a seeded draw
 within the model's `sim:jitter` either way, never the number that sensor published last — because
 the model's reading moves only where the physics moves it, and a thermometer in a greenhouse
-nobody heats was said stuck an hour into its world (#879). The limit is the agent's word about
-itself; a simulated world that read as stuck was a quiet instrument, not a low limit, and
+nobody heats was said stuck an hour into its world (#879). The limit is the observer role's word
+about its sensor; a simulated world that read as stuck was a quiet instrument, not a low limit, and
 `sensing:stuckAfter` is not where that is fixed.

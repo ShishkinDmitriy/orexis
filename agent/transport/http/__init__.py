@@ -8,9 +8,9 @@ hosted by, variable by local name, so `{latitude}` is the place's `schema:latitu
 declares no word of its own; its ontology names the two namespaces and says which terms the code
 reads.
 
-**WHAT IS DERIVED, NOT AUTHORED.** Which services the agent reads follows from what it acts for:
-its sensors are those `sosa:isHostedBy` the subject it `orexis:actsFor`, a sample of it or a place
-containing it, and a sensor with a form is this member's.
+**WHAT IS DERIVED, NOT AUTHORED.** Which services the agent reads follows from what its observer
+role reads: its sensors are the ones a role it `orexis:plays` reads (`sensing.cadence.sensors`), and a
+sensor with a form is this member's.
 
 **ONE CLASS, AND IT POLLS.** `Http` answers the family's `Transport` contract. `start` asks the
 runtime to fetch each of its sensors at once and every frequency the sensor states after — the

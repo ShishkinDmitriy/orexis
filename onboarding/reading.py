@@ -26,11 +26,11 @@ compose file are granted to a world whose society names a broker, and a world na
 onboarded without them.
 
 **What an agent runs is declared, and held to its world both ways here** (knowledge/decisions/
-a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md). `refused` boots every agent as
-its container boots it and says each way its roles and its world disagree: an agent declaring no
-role, which would run nothing; a declared role whose needs the world lacks, each need a shape the
+a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md, a-role-is-an-instance-an-agent-plays.md).
+`refused` boots every agent as its container boots it and says each way its roles and its world
+disagree: an agent playing no role, which would run nothing; a declared role whose needs the world lacks, each need a shape the
 package or domain owning its words ships, `sh:targetClass` the role and a `sh:sparql` select whose
-every row is a violation; a sensor reporting to an agent that is no observer; a topic an agent
+every row is a violation; a sensor reporting to an agent that no observer role of its reads; a topic an agent
 listens to with no speaker to hear it; and a graph the agent would read of a kind none of the
 packages it loads declares — the refusal `unread` makes of the world, narrowed to the agent. It does
 NOT refuse a drift with no predictor, foresight being the author's to decline, nor an action whose
@@ -52,8 +52,9 @@ from pathlib import Path
 import pyoxigraph as ox
 
 from agent.planning.planner import Planner
-from agent.runtime import (MINE, MQTT, OBSERVER, PLANNING, SPEAKER, boot, documents, known, packages_of,
-                           read_with_imports, roles_of, selves, world_of)
+from agent.ontology import local_of
+from agent.runtime import (MQTT, PLANNING, SPEAKER, boot, documents, known, packages_of, read_with_imports,
+                           roles_of, selves, world_of)
 from agent.store import (answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
                          rows, whose)
 
@@ -210,8 +211,17 @@ SELECT ?role ?select ?message WHERE {
   ?shape a sh:NodeShape ; sh:targetClass ?role ; sh:sparql ?constraint .
   ?constraint sh:select ?select OPTIONAL { ?constraint sh:message ?message } }"""
 
+#  EVERY SENSOR THAT REPORTS TO THE SELF AND NO OBSERVER ROLE OF ITS READS, off the common beliefs and
+#  the self: mounted on what it acts for, a sample of it, or a place containing it. The converse of the
+#  observer shape (agent/sensing/ontology.ttl), which refuses a sensor a role reads that does not report
+#  to it; between them a declaration and the world it is made in say one thing.
+_UNREAD_Q = """
+SELECT DISTINCT ?sensor WHERE {
+  ?me a orexis:Self ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
+  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host
+  FILTER NOT EXISTS { ?me orexis:plays/sensing:sensor ?sensor } }
+ORDER BY ?sensor"""
 #  WHETHER THE SELF IS READ BY A PACKAGE IT DOES NOT LOAD, off the common beliefs and the self.
-_SENSOR_Q = f"ASK {{ ?me a orexis:Self . {MINE} }}"
 _LISTENS_Q = "ASK { ?me a orexis:Self ; mqtt4ssn:listensToTopic ?topic }"
 
 
@@ -243,15 +253,16 @@ def refused(here: Path) -> list[str]:
 def _refusals(here: Path, beliefs: ox.Store, needs: list[dict]) -> list[str]:
     roles = roles_of(beliefs)
     if not roles:
-        return ["declares no role in its self graph, so it would load no package and run nothing — "
-                "`<agent> a orexis:Self , <role>` says what it runs"]
+        return ["plays no role in its self graph, so it would load no package and run nothing — "
+                "`<agent> orexis:plays [ a <role> ]` says what it runs"]
     cat = catalogue_of(beliefs)
     held = [g for g in graphs_of(beliefs, GRAPH) if g != cat]
     out = [need.get("message") or f"its world lacks what {need['role']} needs" for need in needs
            if need["role"] in roles and rows(beliefs, need["select"], held)]
     stated = [*graphs_of(beliefs, BELIEF, common=True), *graphs_of(beliefs, SELF_GRAPH)]
-    if OBSERVER not in roles and answer(beliefs, _SENSOR_Q, stated)["boolean"]:
-        out.append("a sensor reports to it, and it is no observer: no package it loads would read the sensor")
+    out += [f"{local_of(r['sensor'])} reports to it, and no observer role it plays reads it: no package it "
+            f"loads would read the sensor — `orexis:plays [ a sensing:Observer ; sensing:sensor <sensor> ]` says one does"
+            for r in rows(beliefs, _UNREAD_Q, stated)]
     if SPEAKER not in roles and answer(beliefs, _LISTENS_Q, stated)["boolean"]:
         out.append("it listens to a topic, and it is no speaker: no package it loads would hear what arrives there")
     (me,) = selves(beliefs)

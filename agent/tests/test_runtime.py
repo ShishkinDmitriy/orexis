@@ -36,10 +36,10 @@ def _hanoi(tmp_path: Path, *, desired: bool = False, walks: bool = False) -> Pat
     else:
         (world / "wants.ttl").write_text(wants)
     self_graph = (HANOI / "beliefs" / "hanoi.self.ttl").read_text()
-    assert ":hanoi a orexis:Self , planning:Planner ." in self_graph, "the shipped mover is a planner alone"
+    assert "orexis:plays [ a planning:Planner ] ." in self_graph, "the shipped mover is a planner alone"
     (world / "beliefs").mkdir()
     (world / "beliefs" / "hanoi.self.ttl").write_text(
-        self_graph.replace(":hanoi a orexis:Self , planning:Planner .", f":hanoi a orexis:Self , planning:Planner , <{EXECUTOR}> .")
+        self_graph.replace("orexis:plays [ a planning:Planner ] .", f"orexis:plays [ a planning:Planner ] , [ a <{EXECUTOR}> ] .")
         if walks else self_graph)
     return world
 

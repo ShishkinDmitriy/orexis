@@ -12,4 +12,5 @@
 #  in the world's: a peer finds the host by `market:hosts`, which the society states, and learns
 #  nothing of what the host runs.
 
-:supplier a orexis:Self , market:Host .
+:supplier a orexis:Self ;
+    orexis:plays [ a market:Host ] .

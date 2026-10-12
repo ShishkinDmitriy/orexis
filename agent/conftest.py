@@ -57,6 +57,19 @@ def stating(store: ox.Store, stances: dict) -> ox.Store:
     return store
 
 
+def observing(store: ox.Store, sensor: str, limits: dict | None = None) -> ox.Store:
+    """`store` with the keeper's self graph saying it plays an observer role reading `sensor`, the role
+    stating each of `limits` — a term and its figure — as a world's self graph states one: `<keeper>
+    orexis:plays [ a sensing:Observer ; sensing:sensor <sensor> ; <term> figure ]`
+    (a-role-is-an-instance-an-agent-plays). Added to the self graph a case already holds, typed as
+    `stating` types it."""
+    stating(store, {})
+    figures = "".join(f" ; <{term}> {figure}" for term, figure in (limits or {}).items())
+    update(store, f"""INSERT DATA {{ GRAPH <{SELF}> {{
+  <{ME}> orexis:plays [ a sensing:Observer ; sensing:sensor <{sensor}>{figures} ] }} }}""")
+    return store
+
+
 def cases_in(directory: Path) -> list[Path]:
     """The cases of one directory — a snapshot is `<case>.snapshot.trig`, an actual `<case>.actual.trig`."""
     return sorted(p for p in directory.glob("*.trig") if "." not in p.stem)

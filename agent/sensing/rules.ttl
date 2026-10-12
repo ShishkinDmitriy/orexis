@@ -107,9 +107,11 @@
 #  many of a sensor's and forgets the rest — concluded in the revision of the percept arriving, so it
 #  holds while that percept does and the next reading, differing, finds the kept ones no longer
 #  agree. The percepts before the one arriving are no testimony a revision is handed, so this rule
-#  reads them where they lie, by the kind sensing keeps them in, as it reads the limit off the agent's
-#  self graph — the one rule here that reaches past its arrival, and only into what this layer keeps;
-#  `received` reads the same stance with the same figure, six, where none is stated. Identical is the
+#  reads them where they lie, by the kind sensing keeps them in, as it reads the limit off the observer
+#  role reading the sensor, in the self graph where the role is played, and the observer shape's
+#  default off this layer's ontology where the role states none — the one rule here that reaches past
+#  its arrival, and only into what this layer keeps and states; `received` reads the same two, so the
+#  figure lives in one place (`cadence.limit_of`). Identical is the
 #  RAW number, since a clamp or a rescale can make two counts one reading, and a sensor stating no
 #  frequency is never said stuck, as it is never said silent. Run once: it reads no conclusion.
 
@@ -128,19 +130,24 @@
             ?sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?frequency .
             ?frequency a ssn-system:Frequency .
             {
-                SELECT ?sensor (COUNT(DISTINCT ?kept) AS ?readings) (COUNT(DISTINCT ?number) AS ?numbers) WHERE {
+                SELECT ?sensor (COUNT(DISTINCT ?kept) AS ?readings) (COUNT(DISTINCT ?number) AS ?numbers)
+                       (COUNT(DISTINCT ?stated) AS ?statements) (SAMPLE(?stated) AS ?figure) WHERE {
                     GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?percept a sensing:ObservationGraph }
                     GRAPH ?percept { ?kept sosa:madeBySensor ?sensor ; sensing:rawResult ?number }
+                    OPTIONAL {
+                        GRAPH ?cat { ?self a orexis:SelfGraph }
+                        GRAPH ?self { ?me a orexis:Self ; orexis:plays ?role .
+                                      ?role sensing:sensor ?sensor ; sensing:stuckAfter ?stated }
+                    }
                 } GROUP BY ?sensor
             }
             {
-                SELECT (COUNT(?stated) AS ?statements) (SAMPLE(?stated) AS ?figure) WHERE {
-                    OPTIONAL {
-                        GRAPH ?catalogue { ?catalogue a orexis:CatalogueGraph . ?self a orexis:SelfGraph }
-                        GRAPH ?self { ?me a orexis:Self ; sensing:stuckAfter ?stated }
-                    }
+                SELECT (SAMPLE(?given) AS ?default) WHERE {
+                    GRAPH ?catalogue { ?catalogue a orexis:CatalogueGraph . ?ontology a orexis:OntologyGraph }
+                    GRAPH ?ontology { ?shape sh:targetClass sensing:Observer ; sh:property ?property .
+                                      ?property sh:path sensing:stuckAfter ; sh:defaultValue ?given }
                 }
             }
-            BIND(IF(?statements = 1 && isNumeric(?figure), ?figure, 6) AS ?limit)
+            BIND(IF(?statements = 1 && isNumeric(?figure), ?figure, ?default) AS ?limit)
             FILTER(?numbers = 1 && ?readings >= ?limit)
         }""" .
