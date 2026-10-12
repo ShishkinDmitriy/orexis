@@ -114,15 +114,13 @@ from agent import series
 from agent.lifecycle import MET, PLANNED, UNFINISHED, UNREACHABLE, Signal  # noqa: F401 — the outcomes, re-exported
 from agent.metrics import Laps, Level, Value, window
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, OREXIS, PREDICTION, ROLE, SELF_GRAPH
+from agent.ontology import BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, DERIVED, OREXIS, PREDICTION, ROLE, SELF_GRAPH
 from agent.store import (NAMESPACES, answer, catalogue_of, close_catalogue, closed, classify, document, forget_graph,
                          graphs_of, imports_of, kinds_in, put_document, rows, update, whose, DocumentRefused, Raw)
 
 log = logging.getLogger("runtime")
 
 KERNEL = Path(__file__).resolve().parent
-ASSERTED = OREXIS + "Asserted"
-DERIVED = OREXIS + "Derived"
 ONTOLOGY = OREXIS + "OntologyGraph"
 WORLD = OREXIS + "WorldGraph"
 SOCIETY = OREXIS + "SocietyGraph"

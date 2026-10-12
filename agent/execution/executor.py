@@ -89,7 +89,7 @@ import pyoxigraph as ox
 from agent import clock
 from agent.lifecycle import Signal
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import ACTION, BELIEF, OREXIS, local_of
+from agent.ontology import ACTION, BELIEF, OREXIS, RECORDED, local_of
 from agent.stance import stance
 from agent.store import (NAMESPACES, Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant,
                          quads, quads_for_pattern, revisions_of, rows, update)
@@ -107,7 +107,6 @@ DEFAULT_PATIENCE_S = 60.0
 INTENTION = EXECUTION + "Intention"
 ADOPTS = EXECUTION + "adopts"
 INTENTION_GRAPH = EXECUTION + "IntentionGraph"
-RECORDED = OREXIS + "Recorded"
 #  The head a standing intention is AT — not the whole plan, which `execution:step` names, and
 #  not the first step for ever: what `by` points at moves as the world answers each step.
 BY = EXECUTION + "by"

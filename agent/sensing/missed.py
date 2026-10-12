@@ -36,12 +36,12 @@ import logging
 from datetime import datetime, timedelta
 
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, local_of
+from agent.ontology import BELIEF, DERIVED, local_of
 from agent.stance import stance
 from agent.store import Raw, catalogue_of, entry, remember, rows, update
 
 from .cadence import cadence_of, lapsed
-from .ontology import DERIVED, SILENT_AFTER_TERM, silent_graph
+from .ontology import SILENT_AFTER_TERM, silent_graph
 
 log = logging.getLogger("missed")
 

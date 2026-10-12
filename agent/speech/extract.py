@@ -26,7 +26,7 @@ import logging
 import pyoxigraph as ox
 
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, OREXIS, local_of
+from agent.ontology import BELIEF, DERIVED, local_of
 from agent.store import Raw, add_quads, catalogue_of, construct, entry, forget_graph, graphs_of, rows, update
 
 from .ontology import believed_graph
@@ -66,7 +66,7 @@ def extract(store: ox.Store, statement: str) -> list[str]:
         return []
     row = next(iter(rows(store, _ROW_Q, (), cat=Raw(f"<{cat}>"), g=Raw(f"<{statement}>"))), {})
     add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(target)) for t in found))
-    update(store, f"""INSERT DATA {{ {entry(store, target, BELIEF, OREXIS + "Derived", row.get("owner"), row.get("start"), row.get("end"))}
+    update(store, f"""INSERT DATA {{ {entry(store, target, BELIEF, DERIVED, row.get("owner"), row.get("start"), row.get("end"))}
   GRAPH <{cat}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}""")
     hash_named_graph(store, target)
     return [target]

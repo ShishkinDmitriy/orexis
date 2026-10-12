@@ -29,7 +29,7 @@ from datetime import datetime
 
 import pyoxigraph as ox
 
-from agent.ontology import BELIEF, GRAPH_PREFIX, OREXIS, local_of
+from agent.ontology import BELIEF, GRAPH_PREFIX, RECORDED, local_of
 from agent.store import classify, graphs_of, instant, quads_for_pattern, revisions_of, rows, update
 
 from .bridge import binding, expand, literal, heads, predicted
@@ -93,7 +93,7 @@ def refine(store: ox.Store, me: str, step: str, now: datetime) -> str | None:
   <{shape}> a sh:NodeShape ; sh:targetNode <{me}> ;
       sh:sparql [ a sh:SPARQLConstraint ; sh:message "{local_of(step)} is not kept below yet" ;
                   sh:select {literal(select)} ] . }} }}""")
-    classify(store, graph, WANT, OREXIS + "Recorded", me)   # the agent's own act, not a desire's derivation
+    classify(store, graph, WANT, RECORDED, me)   # the agent's own act, not a desire's derivation
     log.info("refining %s into %s — %d fact(s) of the world it lands in, held below",
              local_of(step), local_of(want), len(conjuncts))
     return want

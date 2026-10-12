@@ -42,7 +42,7 @@ import pyoxigraph as ox
 import uuid
 
 from agent.execution.ontology import ADDS_GRAPH, RETRACTS_GRAPH
-from agent.ontology import GRAPH_PREFIX, OREXIS, PLAN, local_of
+from agent.ontology import GRAPH_PREFIX, PLAN, RECORDED, local_of
 from agent.store import Raw, add_quads, bind, entry, forget_graph, graphs_of, quads, rows, update
 
 from .ontology import PLAN_GRAPH, WANT
@@ -113,10 +113,10 @@ def publish_plan(imaginarium: ox.Store, beliefs: ox.Store, me: str, walking: set
             into = moved(ox.NamedNode(g["g"]))
             add_quads(beliefs, (ox.Quad(q.subject, q.predicate, q.object, into) for q in quads(imaginarium, g["g"])))
             entries.append(entry(beliefs, into.value, ADDS_GRAPH if g["side"].endswith("adds") else RETRACTS_GRAPH,
-                                 OREXIS + "Recorded", me))
+                                 RECORDED, me))
         derived = [f"<{want}> prov:wasDerivedFrom <{r['d']}> ." for r in rows(imaginarium, _DERIVED_Q, (), want=want)]
         update(beliefs, f"""INSERT DATA {{
   GRAPH <{published}> {{ <{published}> execution:pursues <{want}> . {' '.join(derived)} }}
-  {entry(beliefs, published, PLAN, OREXIS + "Recorded", me)} {' '.join(entries)} }}""")
+  {entry(beliefs, published, PLAN, RECORDED, me)} {' '.join(entries)} }}""")
         handed.append(published)
     return handed

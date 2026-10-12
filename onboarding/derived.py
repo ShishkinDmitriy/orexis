@@ -27,12 +27,9 @@ from pathlib import Path
 
 import pyoxigraph as ox
 
-from agent.ontology import CATALOGUE_GRAPH
+from agent.ontology import ASSERTED, CATALOGUE_GRAPH, DERIVED
 from agent.store import document, put_document, rows, update
 
-OREXIS = "http://example.org/orexis#"
-ASSERTED = OREXIS + "Asserted"
-DERIVED = OREXIS + "Derived"
 
 _GRAPHS_Q = """
 SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a <$kind> ; orexis:arrivedBy <$arrival> } }

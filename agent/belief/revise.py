@@ -77,7 +77,7 @@ import pyoxigraph as ox
 
 from agent.hash_named_graph import forms
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, OREXIS
+from agent.ontology import BELIEF, DERIVED
 from agent.store import (Raw, catalogue_of, construct, entry, forget_graph, graphs_of, quads,
                          remember, rows, update)
 
@@ -310,7 +310,7 @@ WHERE  {{ GRAPH {cat} {{ <{into}> <{SETTLED}> ?was }} }}""")
     row = next(iter(rows(store, _SOURCE_Q, (), cat=cat, source=source)), {})
     update(store, f"""
 INSERT DATA {{
-  {entry(store, into, (REVISION_GRAPH, kind), OREXIS + "Derived", row.get("owner"), row.get("start"), row.get("end"))}
+  {entry(store, into, (REVISION_GRAPH, kind), DERIVED, row.get("owner"), row.get("start"), row.get("end"))}
   GRAPH {cat} {{ <{into}> <{DERIVED_FROM}> <{source}> ; <{SETTLED}> {flag} . }} }}""")
 
 

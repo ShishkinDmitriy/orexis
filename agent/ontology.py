@@ -62,6 +62,14 @@ def local_of(iri: str) -> str:
 #
 # Which is why they are different graphs rather than one "computed" one: amending the two has
 # utterly different blast radius. See knowledge/decisions/who-put-the-fact-there.md.
+
+#  HOW A GRAPH ARRIVED: the `orexis:Arrival` its catalogue row says by `orexis:arrivedBy`. Every
+#  package that writes a graph says one, and each spelled its own until they were stated here.
+ASSERTED = OREXIS + "Asserted"           # the sovereign said so
+DERIVED = OREXIS + "Derived"             # a rule concluded it
+RECEIVED = OREXIS + "Received"           # another party's word: an instrument's reading, a peer's claim
+RECORDED = OREXIS + "Recorded"           # this agent's own act
+
 _GRAPH = "http://example.org/orexis/graph/"
 #  Where every graph lives in the IRI space. Exported because a package that owns graphs of its
 #  own builds their names from here — where a graph SITS is the kernel's, what it HOLDS is not.

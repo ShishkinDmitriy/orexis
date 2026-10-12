@@ -71,7 +71,7 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent.belief.transition import run, transitions
-from agent.ontology import BELIEF, KNOWN, OREXIS, PREDICTION
+from agent.ontology import BELIEF, DERIVED, KNOWN, OREXIS, PREDICTION
 from agent.hash_named_graph import digest_of, hash_named_graph
 from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, clear_graph, revisions_of, forget_graph,
                          graphs_of, quads, rows, update)
@@ -194,11 +194,11 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         #  THE ONE BEFORE IT ENDS HERE. A ground holds until the next one begins, which is not
         #  known until it does — so each is classified when its successor arrives, and the last
         #  is left open because nothing the agent can see ends it.
-        classify(store, here, GROUND_GRAPH, OREXIS + "Derived", start=opened[-1], end=at)
+        classify(store, here, GROUND_GRAPH, DERIVED, start=opened[-1], end=at)
         made.append(there)
         opened.append(at)
         here, marks = there, mark
-    classify(store, here, GROUND_GRAPH, OREXIS + "Derived", start=opened[-1])
+    classify(store, here, GROUND_GRAPH, DERIVED, start=opened[-1])
     if own is not None:
         clear_graph(store, own)
     log.debug("%d ground world(s) over %d prediction(s)", len(made), len(ahead))
@@ -336,7 +336,7 @@ def _split(store: ox.Store, actions=None, at: datetime | None = None) -> list[st
         for q in cut:
             store.remove(q)
         add_quads(store, [ox.Quad(q.subject, q.predicate, q.object, ox.NamedNode(piece)) for q in cut])
-        classify(store, piece, CHANGEABLE_GRAPH, OREXIS + "Derived")
+        classify(store, piece, CHANGEABLE_GRAPH, DERIVED)
         add_quads(store, [ox.Quad(ox.NamedNode(piece), ox.NamedNode(_PROV + "wasDerivedFrom"),
                                   ox.NamedNode(graph), ox.NamedNode(cat))])
         made.append(piece)

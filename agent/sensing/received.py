@@ -73,13 +73,13 @@ import logging
 from datetime import datetime, timedelta
 
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, local_of
+from agent.ontology import BELIEF, RECEIVED, local_of
 from agent.stance import stance
 from agent.store import Raw, catalogue_of, end_graph, entry, forget_graph, graphs_of, rows, update
 
 from .cadence import cadence_of
-from .ontology import (FORECAST_GRAPH, OBSERVATION_GRAPH, RECEIVED, STUCK_AFTER_TERM, forecast_graph,
-                       observation_of, percept_graph, percept_of)
+from .ontology import (FORECAST_GRAPH, OBSERVATION_GRAPH, STUCK_AFTER_TERM, forecast_graph, forecast_of,
+                       percept_graph, percept_of)
 from .pipeline import decode, decode_series, reads_series
 
 log = logging.getLogger("received")
@@ -230,7 +230,7 @@ def _forecast(store, me: str, sensor: str, feature: str, observed_property: str,
         if end <= at:
             continue
         graph = forecast_graph(local_of(me), sensor, start)
-        node = f"{observation_of(feature, observed_property)}_{start.strftime('%Y%m%dT%H%M%SZ')}"
+        node = forecast_of(sensor, start)
         number = f"{round(value, 6) + 0.0:.6f}".rstrip("0")
         said = [f'<{node}> a sosa:Observation',
                 f'<{node}> sosa:hasFeatureOfInterest <{feature}>',

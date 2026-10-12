@@ -24,36 +24,18 @@ from __future__ import annotations
 import re
 from datetime import datetime
 
-from agent.ontology import GRAPH_PREFIX, OREXIS
+from agent.ontology import GRAPH_PREFIX
 
 SENSING = "http://example.org/orexis/sensing#"
 
-#  THIS LAYER'S OWN: the graph a percept is kept in and a forecast's, the link to the percept before,
-#  the silence and the number a stuck sensor keeps giving, and the two limits the agent states.
+#  THE TERMS CODE READS: the graph a percept is kept in and a forecast's, the two limits the agent
+#  states, and the codec that ships. Every other word of this layer is spoken by a query text, under
+#  its prefix, and needs no constant here.
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
 FORECAST_GRAPH = SENSING + "ForecastGraph"
-PREVIOUS = SENSING + "previous"
-SILENT_SINCE = SENSING + "silentSince"
-STUCK_ON = SENSING + "stuckOn"
 SILENT_AFTER_TERM = SENSING + "silentAfter"      # the agent's limits, as stances: cadences, and readings
 STUCK_AFTER_TERM = SENSING + "stuckAfter"
-
-#  THE PIPELINE'S: the codec family, a sensor's binding to a member, the member that ships, the
-#  pointers, the number a sensor gave, and the scaling and calibration the rules make a quantity of it by.
-CODEC = SENSING + "Codec"
-DECODED_BY = SENSING + "decodedBy"
 JSON_CODEC = SENSING + "Json"
-TWO_POINT_SCALING = SENSING + "TwoPointScaling"
-TWO_POINT_CALIBRATION = SENSING + "TwoPointCalibration"
-RAW_RESULT = SENSING + "rawResult"
-SCALED_RESULT = SENSING + "scaledResult"
-READING_POINTER = SENSING + "readingPointer"
-STARTS_POINTER = SENSING + "startsPointer"
-ENDS_POINTER = SENSING + "endsPointer"
-
-RECEIVED = OREXIS + "Received"
-DERIVED = OREXIS + "Derived"
-ASSERTED = OREXIS + "Asserted"
 
 
 def slug(iri: str) -> str:
@@ -66,18 +48,19 @@ def _stamp(at: datetime) -> str:
     return at.strftime("%Y%m%dT%H%M%S") + (f"{at.microsecond:06d}" if at.microsecond else "") + "Z"
 
 
-def observation_of(feature: str, observed_property: str) -> str:
-    """The node one (feature, property) pair owns — what a forecast's stretches are named from, a
-    series being read whole. Stable and distinct is all a reader relies on — it matches on
-    `sosa:hasFeatureOfInterest` and `sosa:observedProperty`, never the name."""
-    return f"{OREXIS}obs_{slug(feature)}_{slug(observed_property)}"
-
-
 def percept_of(sensor: str, at: datetime, n: int = 1) -> str:
     """The node of the reading `sensor` made at `at` — the `n`th of that instant, where a sensor read
-    twice in one. Distinct is all a reader relies on; it matches on SOSA's pattern and on the link a
-    percept states to the one before it, never the name."""
-    return f"{OREXIS}obs_{slug(sensor)}_{_stamp(at)}" + (f"_{n}" if n > 1 else "")
+    twice in one. Named off the sensor, as a want is named off its desire, so what is minted at
+    runtime sits beside what it is of and never in a vocabulary's namespace. Distinct is all a
+    reader relies on; it matches on SOSA's pattern and on the link a percept states to the one
+    before it, never the name."""
+    return f"{sensor}.{_stamp(at)}" + (f"_{n}" if n > 1 else "")
+
+
+def forecast_of(sensor: str, starts: datetime) -> str:
+    """The node of the stretch of `sensor`'s forecast that starts at `starts`, named off the sensor
+    as a percept is. A sensor reading a series writes no percept, so the two never meet."""
+    return f"{sensor}.{_stamp(starts)}"
 
 
 def percept_graph(agent_id: str, sensor: str, at: datetime, n: int = 1) -> str:

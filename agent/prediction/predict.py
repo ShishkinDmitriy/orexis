@@ -53,12 +53,12 @@ from datetime import datetime, timedelta
 import pyoxigraph as ox
 
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, RECORD, local_of
+from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, RECORD, RECORDED, local_of
 from agent.stance import stance
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
                          remember, revisions_of, rows, update)
 
-from .ontology import (DRIFT, FEATURE, HORIZON_TERM, MOVES, OBSERVATION_GRAPH, PROPERTY, RATE, RECORDED, RESULT,
+from .ontology import (DRIFT, FEATURE, HORIZON_TERM, MOVES, OBSERVATION_GRAPH, PROPERTY, RATE, RESULT,
                        predicted_of, prediction_graph)
 from .ranges import ranges_of, side
 
