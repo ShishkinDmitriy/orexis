@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -80,6 +80,49 @@
+@@ -79,6 +79,49 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:beliefsOf :keeper .
@@ -37,7 +37,7 @@
 +  :keeper.comfortable.pursued.bed1.Moisture prov:wasDerivedFrom :keeper.comfortable .
 +  :keeper.comfortable.pursued.bed1.Moisture rdfs:label "pursued: every bed's soil inside its range" .
 +  :keeper.comfortable.pursued.bed1.Moisture.met a sh:NodeShape .
-+  :keeper.comfortable.pursued.bed1.Moisture.met sh:property [ planning:about :Moisture ; sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:property [ sh:hasValue :Moisture ; sh:path sosa:observedProperty ] ; sh:property [ sh:minCount 1 ; sh:path sensing:below ] ] ] .
++  :keeper.comfortable.pursued.bed1.Moisture.met sh:property [ planning:about :Moisture ; sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:property [ sh:hasValue :Moisture ; sh:path sosa:observedProperty ] ; sh:property [ sh:minCount 1 ; sh:path :below ] ] ] .
 +  :keeper.comfortable.pursued.bed1.Moisture.met sh:targetNode :keeper .
 +  :keeper.comfortable.pursued.bed2.Moisture a planning:Want .
 +  :keeper.comfortable.pursued.bed2.Moisture planning:keyedBy :bed2 .
@@ -47,6 +47,6 @@
 +  :keeper.comfortable.pursued.bed2.Moisture prov:wasDerivedFrom :keeper.comfortable .
 +  :keeper.comfortable.pursued.bed2.Moisture rdfs:label "pursued: every bed's soil inside its range" .
 +  :keeper.comfortable.pursued.bed2.Moisture.met a sh:NodeShape .
-+  :keeper.comfortable.pursued.bed2.Moisture.met sh:property [ planning:about :Moisture ; sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:property [ sh:hasValue :Moisture ; sh:path sosa:observedProperty ] ; sh:property [ sh:minCount 1 ; sh:path sensing:below ] ] ] .
++  :keeper.comfortable.pursued.bed2.Moisture.met sh:property [ planning:about :Moisture ; sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:property [ sh:hasValue :Moisture ; sh:path sosa:observedProperty ] ; sh:property [ sh:minCount 1 ; sh:path :below ] ] ] .
 +  :keeper.comfortable.pursued.bed2.Moisture.met sh:targetNode :keeper .
 +}
