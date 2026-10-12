@@ -20,8 +20,8 @@ on points a real runtime wrote in-process, with no InfluxDB in the room (`world/
 test_explain.py`). Each question is a function over the history, the metrics and what the world STATES
 that the series cannot (`Stated`): the desires the agent holds, since a desire never read unmet leaves
 no trace on the series at all, and which sensors read a fraction, since "past 1.0" is a calibration
-point for a probe and nothing for a thermometer. Both are read off the world's documents — public,
-ratified, nobody's belief — which the record's last seam calls the honest default.
+point for a probe and nothing for a thermometer. Both are read off the world's documents — common,
+ratified belief — which the record's last seam calls the honest default.
 
 THE FIVE, in the record's order, each answering what it found or that nothing stood out:
 
@@ -104,9 +104,9 @@ def _local(iri: str) -> str:
 
 def stated(world: str, agent: str) -> Stated:
     """`Stated` for `agent` of `world`, read off the world's documents as onboarding reads them: the
-    agent booted from them in memory for the desires it holds, the beliefs nobody owns for the fractions."""
+    agent booted from them in memory for the desires it holds, the common beliefs for the fractions."""
     store = boot(world_dir(world), agent, others=reading.ours())
-    stated = graphs_of(store, BELIEF, nobodys=True)
+    stated = graphs_of(store, BELIEF, common=True)
     desires = {_local(r["d"]) for r in rows(store, _DESIRES_Q, stated + graphs_of(store, DESIRE_GRAPH), id=ox.Literal(agent))}
     fractions = {_local(r["sensor"]) for r in rows(store, _FRACTIONS_Q, stated)}
     return Stated(frozenset(desires), frozenset(fractions))

@@ -13,7 +13,7 @@ document that says it is an `orexis:OntologyGraph`, then the closure over `rdfs:
 written into a graph of its own and derived, so that a kind is every kind it is beneath. **A
 GRAPH OF A KIND THE VOCABULARY DOES NOT DECLARE IS PASSED OVER**: the kind says who reads a
 document, and a world's hardware and where its broker listens are onboarding's to read and not
-the agent's (#820, #823). Then the world's graphs nobody owns, then who the agent is — off the
+the agent's (#820, #823). Then the world's common graphs, then who the agent is — off the
 society graph, or the world graph of a world with no society, by the one identifier the
 process is told — and THE SELF, the agent's self graph put in; then the world's other private
 graphs that say they are this agent's, owned by it. The catalogue is closed and the Planner's
@@ -21,7 +21,7 @@ graphs that say they are this agent's, owned by it. The catalogue is closed and 
 
 **WHOSE A GRAPH IS, IS READ OFF WHAT IT SAYS, AND NEVER OFF ITS KIND.** A graph of the world that
 says whose it is is that agent's own — `<> orexis:beliefsOf :rose_grower` beside its kind, or, for a
-self graph, the self it states (`store.whose`) — and one that says nobody's is shared by every agent
+self graph, the self it states (`store.whose`) — and one that names nobody is common to every agent
 of the world, a belief, a desire or a constraint alike (#953). The boot reads every document of the
 world — beside it, under `secrets/` and under `beliefs/` — and keeps as its own exactly those
 graphs whose content names the agent it was told to be; another agent's are passed over, never
@@ -54,9 +54,9 @@ metrics are deployment's, read from the environment. Hanoi's mover is a planner 
 planning and nothing else — no execution, since its plan is its output, and no belief, since its
 world ships no rules (#928).
 
-**A VOLUME LIVED IN** — a store that already holds a catalogue — forgets every graph a document
-put in and nobody owns, and the closure, and reads the documents again: the kernel's, the
-packages' and the world's ones nobody owns are asserted and replaced at every boot, which is how an
+**A VOLUME LIVED IN** — a store that already holds a catalogue — forgets every common graph a
+document put in, and the closure, and reads the documents again: the kernel's, the
+packages' and the world's common ones are asserted and replaced at every boot, which is how an
 updated ontology reaches a running agent, and the roles are read again, so a package a role
 stops calling for stops loading. The agent's own are left as they are, because they are its
 beliefs from the first boot on (an-amendment-endows-what-it-grants) — the self graph among them, so
@@ -189,7 +189,7 @@ MINE = ("?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
 #  THE ROLES THAT NEED BYTES, which the transports are loaded for: a transport is no role and no
 #  author declares one, so it is the one derivation left — where a loaded role needs bytes and the
 #  society wires a bus, which device a bus reaches being wiring and not a choice. For each
-#  transport, the role and a pattern about `?me` asked over the world's graphs nobody owns and the self:
+#  transport, the role and a pattern about `?me` asked over the world's common graphs and the self:
 #  - THE MQTT TRANSPORT, for an observer one of whose sensors publishes on a topic, and for a speaker
 #    listening to one — what the member subscribes to. Where the agent commands an actuator and
 #    neither holds, no member is loaded: which actuators are the agent's is a domain's word;
@@ -227,7 +227,7 @@ _SELVES_Q = "SELECT DISTINCT ?self WHERE { GRAPH ?g { ?self a orexis:Self } } OR
 _ASSERTED_Q = """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:arrivedBy orexis:Asserted } }"""
 
 #  WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner — the kernel's,
-#  the packages' and the world's graphs nobody owns — and the closure derived from them.
+#  the packages' and the world's common graphs — and the closure derived from them.
 _FILES_Q = """
 SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
   { ?g orexis:arrivedBy orexis:Asserted FILTER NOT EXISTS { ?g orexis:beliefsOf ?who } }
@@ -326,13 +326,13 @@ def roles_of(store: ox.Store) -> frozenset[str]:
 def packages_of(store: ox.Store) -> tuple[str, ...]:
     """Every package the self of `store` loads, in the order a pass runs their parts: each package
     whose ontology declares a role the self is in (`roles_of`), and each transport a loaded role
-    needs bytes from (`TRANSPORTS`), asked over the world's graphs nobody owns and the self. Nothing
+    needs bytes from (`TRANSPORTS`), asked over the world's common graphs and the self. Nothing
     where the self declares no role — no default and no fixed mind
     (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in)."""
     roles = roles_of(store)
     serving, _ = _vocabularies()
     loaded = {package for role, package in serving.items() if role in roles}
-    known = [*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH)]
+    known = [*graphs_of(store, BELIEF, common=True), *graphs_of(store, SELF_GRAPH)]
     for transport, needs in TRANSPORTS.items():
         if any(role in roles and answer(store, f"ASK {{ ?me a orexis:Self . {pattern} }}", known)["boolean"]
                for role, pattern in needs.items()):
@@ -385,7 +385,7 @@ def _close_vocabulary(store: ox.Store) -> None:
 
 def _put_documents(store: ox.Store, world: Path, agent_id: str | None = None,
                 others: frozenset[str] = frozenset()) -> list[tuple[ox.Store, str]]:
-    """Read the documents and put in the vocabulary, closed, and every graph nobody owns; for an agent,
+    """Read the documents and put in the vocabulary, closed, and every common graph; for an agent,
     put in its self graph and answer the world's other graphs that say they are this agent's as
     (document, graph), for the caller to put or not. With no agent, nothing private is answered,
     and no self is put: every graph of an agent's own is still held to naming an agent of the
@@ -413,7 +413,7 @@ def _put_documents(store: ox.Store, world: Path, agent_id: str | None = None,
     own, passed = _put(store, world, read, [])
     own = _owned(store, own)
     if agent_id:
-        close_catalogue(store)          # the rows say every kind they are beneath, so a transport's need reads the graphs nobody owns
+        close_catalogue(store)          # the rows say every kind they are beneath, so a transport's need reads the common graphs
         me = _identity(store, agent_id)
         self_graph = _hold_the_self(store, agent_id, me, [(doc, graph) for doc, graph, owner in own if owner == me])
         loaded = packages_of(store)     # off the self graph, which states the roles
@@ -454,7 +454,7 @@ def _owned(store: ox.Store, own) -> list[tuple[ox.Store, str, str]]:
 
 def _put(store: ox.Store, world: Path, read, passed) -> tuple[list, list]:
     """Put the vocabulary `read` holds and close it, then every graph of `read`, and of what was
-    `passed` over before, whose kind the vocabulary now declares and that is nobody's: every graph
+    `passed` over before, whose kind the vocabulary now declares and that is common: every graph
     of a document outside the world's directory — a package's, a domain's — and every graph of the
     world's that says no owner, shared by every agent of the world, whatever its kind. What it says,
     never a kind: a world's graph saying whose it is is that agent's own (#953). The world's graphs of an agent's
@@ -466,16 +466,16 @@ def _put(store: ox.Store, world: Path, read, passed) -> tuple[list, list]:
     _close_vocabulary(store)
     candidates = [(path, doc, graph, kinds) for path, doc in read if path not in vocabulary
                   for graph, kinds in kinds_in(doc).items()]
-    nobodys, own, still = [], [], []
+    common, own, still = [], [], []
     for path, doc, graph, kinds in [*passed, *candidates]:
         if not known(store, kinds):
             still.append((path, doc, graph, kinds))
             continue
         if world not in path.parents or whose(doc, graph) is None:
-            nobodys.append((doc, graph))
+            common.append((doc, graph))
         else:
             own.append((doc, graph))
-    for doc, graph in nobodys:
+    for doc, graph in common:
         put_document(store, doc, graphs={graph})
     return own, still
 
@@ -509,7 +509,7 @@ def _stamp(store: ox.Store) -> None:
 def boot(world: Path, agent_id: str, store: ox.Store | None = None, others=frozenset()) -> ox.Store:
     """The agent's store from the documents: every graph classified by the document that holds
     it, the vocabulary closed, the catalogue closed, the scopes written. Handed a store that
-    already holds a catalogue, read again every graph nobody owns and leave the agent's own.
+    already holds a catalogue, read again every common graph and leave the agent's own.
     A graph of a kind in `others` is passed over at DEBUG, as `world_of` does: a caller booting
     an agent to ask what it holds, onboarding, reads those kinds itself."""
     world = Path(world).resolve()

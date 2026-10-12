@@ -128,7 +128,7 @@ SELECT ?codec ?pointer ?starts ?ends WHERE {
 
 
 def _binding(store, sensor: str) -> dict:
-    return next(iter(rows(store, _BINDING_Q, graphs_of(store, BELIEF, nobodys=True), sensor=sensor)), {})
+    return next(iter(rows(store, _BINDING_Q, graphs_of(store, BELIEF, common=True), sensor=sensor)), {})
 
 
 def _codec(sensor: str, binding: dict) -> Codec | None:

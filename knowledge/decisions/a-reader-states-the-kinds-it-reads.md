@@ -18,7 +18,7 @@ description: >-
 
 > **Superseded in part, 2026-10-11 (#953): the public kind is gone, and with it `orexis:WorkingGraph`.**
 > A reader still states the kinds it reads and the store still decides nothing. What it states for what
-> every agent of a world reads is the belief kind and a criterion of provenance, `nobodys=True`, never
+> every agent of a world reads is the belief kind and a criterion of provenance, `common=True`, never
 > `orexis:PublicGraph`, which folded into `orexis:BeliefGraph`
 > ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md));
 > and planning's ground, possible, plan, changeable and scope graphs sit beneath `orexis:Graph` alone.
@@ -122,7 +122,7 @@ tree's shape, and a package told the store how to behave by choosing a superclas
   second, and the store does nothing with either; they are content classes nobody asks for.
   Retiring them is a vocabulary change with its own cases to regenerate. *Closed 2026-10-11 (#953):
   `orexis:WorkingGraph` is retired, and what sat beneath it sits beneath `orexis:Graph`.*
-- **A plain `graphs_of(BELIEF, nobodys=True)` reads a belief nobody owns whatever its period.** No shipped world
+- **A plain `graphs_of(BELIEF, common=True)` reads a common belief whatever its period.** No shipped world
   states a period on a public graph; a reader that would care says `at`.
 - **`effects` and the affordances collection state a default of their own** — `KNOWN` as it
   holds now — for the actuator standing in the present, so that a caller with no world to hand

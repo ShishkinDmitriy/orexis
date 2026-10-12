@@ -1026,5 +1026,5 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
 def _me_of(beliefs: ox.Store, agent_id: str) -> str | None:
     """The agent a belief base holds with the id it was told, off what the world states, or None."""
-    found = rows(beliefs, _ME_Q, graphs_of(beliefs, OREXIS + "BeliefGraph", nobodys=True), id=ox.Literal(agent_id))
+    found = rows(beliefs, _ME_Q, graphs_of(beliefs, OREXIS + "BeliefGraph", common=True), id=ox.Literal(agent_id))
     return found[0]["me"] if found else None

@@ -23,7 +23,7 @@ a preference: two vans cannot share a cell, and a world where they do is not a b
 should mend but a world that cannot be.
 
 A constraint is **stated by the world**, in a `planning:ConstraintGraph` (`world/dispatcher/constraints.ttl`),
-no belief, as a desire is none, and shared by every agent of the world where the world names no owner for it, since what is possible is nobody's in particular; the agent
+no belief, as a desire is none, and common to every agent of the world where the world names no owner for it ([common belief](/domain/kernel/common-belief.md)), since what is possible is no one agent's; the agent
 `planning:holds` it exactly as it holds a desire, and carries its test in the same two words — a
 [shape](/domain/planning/shape.md) under `planning:metWhen`, or the avoided state under
 `planning:unmetWhen`, one select whose rows are the instances in it. Either polarity, because the
@@ -78,7 +78,7 @@ predicates it reads; and, as a [scope](/domain/planning/scope.md)'s atoms do, it
 variable its patterns share, the cell both `courier:at` patterns end in. What it joins there is
 what it can make collide: two plans whose steps write `at` on two vans that can stand on one cell.
 
-It is not read where a scope's atoms are. A scope asks each precondition over the beliefs nobody owns
+It is not read where a scope's atoms are. A scope asks each precondition over the common beliefs
 with every pattern optional, which is right for a partition fixed at boot, and asked that way the
 constraint is grid-blind: it joins `van_a` to `van_b` with the cell unbound on the shipped
 dispatcher and on a variant whose vans stand on two grids a continent apart alike, four identical

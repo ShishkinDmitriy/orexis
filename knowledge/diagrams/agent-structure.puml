@@ -47,7 +47,7 @@ frame "belief" {
 frame "kernel" {
   component "runtime\nboot · genesis · a pass" as RT
   folder "orexis:CatalogueGraph\nwhat every graph IS, itself included" as cat
-  folder "orexis:OntologyGraph · orexis:WorldGraph\norexis:SocietyGraph · beliefs nobody owns,\nthe world's documents" as pub
+  folder "orexis:OntologyGraph · orexis:WorldGraph\norexis:SocietyGraph · common beliefs,\nthe world's documents" as pub
   folder "orexis:ActionGraph · orexis:DriftGraph\nwhat the agent reads to act, no belief" as acts
   folder "orexis:SelfGraph\nwho I am · my roles · my stances" as self
   folder "orexis:BeliefGraph\nthe agent's own state · the subject beliefs\na silence · what is extracted of a statement" as st
@@ -131,7 +131,7 @@ note as N1
   observation never crosses into it; a pass's plan crosses
   back out once, published for the executor to adopt.
   ----
-  **Not drawn:** every reader of the beliefs nobody owns, the metrics
+  **Not drawn:** every reader of the common beliefs, the metrics
   and history each package emits as events, and the market's
   kinds (`domains/market/`), beneath `orexis:BeliefGraph`.
 end note

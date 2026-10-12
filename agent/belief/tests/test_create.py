@@ -28,7 +28,7 @@ def test_its_part_revises_beliefs_and_predictions_as_they_are_written_and_says_s
 
 
 def test_a_graph_written_is_revised_beside_the_world_alone(stand_in_runtime):
-    """Beside a graph written stand the beliefs nobody owns and nothing else: never another testimony — a
+    """Beside a graph written stand the common beliefs and nothing else: never another testimony — a
     reading received, a peer's word, is not read beside a graph it is not — and not a state the agent
     derived, which is a premise of a transition and not of an inference, and which `trigger` hands the
     transitions itself (a-transition-changes-the-state-and-an-inference-only-concludes)."""

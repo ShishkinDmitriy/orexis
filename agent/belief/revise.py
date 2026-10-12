@@ -106,8 +106,8 @@ SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHE
   FILTER NOT EXISTS { ?rule a belief:Transition } }"""
 
 #  WHAT A RULE'S `sh:prefixes` DECLARE, as SHACL-SPARQL spells it — the ontology node's
-#  `sh:declare` blocks, each a prefix and a namespace — read over the rules graphs and the beliefs
-#  nobody owns, since an ontology node sits in either.
+#  `sh:declare` blocks, each a prefix and a namespace — read over the rules graphs and the common
+#  beliefs, since an ontology node sits in either.
 _DECLARED_Q = """
 SELECT ?rule ?prefix ?namespace WHERE {
   ?rule sh:prefixes ?ontology . ?ontology sh:declare ?d . ?d sh:prefix ?prefix ; sh:namespace ?namespace }"""
@@ -245,7 +245,7 @@ def _layers(store) -> list[tuple[float, list[tuple[float, list[dict]]]]]:
         entry_["types"].add(r["type"])
         entry_["shape"] = entry_["shape"] or r.get("shape")
     declared: dict = {}
-    for r in rows(store, _DECLARED_Q, list(dict.fromkeys([*rules_graphs, *graphs_of(store, BELIEF, nobodys=True)]))):
+    for r in rows(store, _DECLARED_Q, list(dict.fromkeys([*rules_graphs, *graphs_of(store, BELIEF, common=True)]))):
         declared.setdefault(r["rule"], {})[r["prefix"]] = r["namespace"]
     for rule, about in sorted(seen.items()):
         r = about["row"]

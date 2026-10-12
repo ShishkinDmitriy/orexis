@@ -109,7 +109,7 @@ sh:RulesGraph rdfs:subClassOf orexis:Graph .
     arrival of testimony — a graph received or heard — as a database trigger runs once on each row
     inserted, after the arrival's revisions settle; the agent's own graphs, derived or recorded, and
     what the sovereign asserted trigger none, so its own output never triggers it again. It declares no trigger: it
-    reads the arrival with its revisions, the beliefs nobody owns and the agent's own derived state, so its
+    reads the arrival with its revisions, the common beliefs and the agent's own derived state, so its
     WHERE says what it is about, and on an arrival it is not about it matches nothing and changes
     nothing. What it inserts goes into the state graph the runner prepares for the arrival, an
     orexis:BeliefGraph the arrival's owner's and derived, holding over its period. This type is how

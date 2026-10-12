@@ -144,7 +144,7 @@ execution:partOf a owl:ObjectProperty ; rdfs:domain execution:Step ; rdfs:range 
 
 #  WHAT A STEP PREDICTS, as two graphs it names — stated, and never asserted: a world where the
 #  dose has landed is not this world (a-steps-prediction-is-two-graphs-it-names). The kinds are
-#  beneath orexis:Graph alone, so no reader of the present, the beliefs nobody owns or a package's
+#  beneath orexis:Graph alone, so no reader of the present, the common beliefs or a package's
 #  scratch is handed one; a reader reaches them through the step, by `execution:adds` and
 #  `execution:retracts`. The engine computes the effect's diff when a world is forked or the plan is extracted, compares the
 #  present to it when the step is held to the world, and writes a fictive step from it. They

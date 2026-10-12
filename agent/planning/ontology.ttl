@@ -359,7 +359,7 @@ planning:ShapesGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Shapes graph" ;
-    rdfs:comment "What a desire's met-test and estimate point at: the SHACL shapes a domain declares for what its words mean when wanted — delivered, solved — and the selects that say how far a world still is, in the unit its actions cost. SHACL's own notion of a shapes graph, typed so that the planner crosses these beside the graphs of desires, wants and records, which is where it reads a met-test, without crossing every vocabulary: all nine ontology graphs cost thirty times the crossing, measured. No belief, as a desire is none, and nobody's, since what a word means is everyone's; a domain ships one, and a world that authors a shape of its own may put it here or beside its desire." .
+    rdfs:comment "What a desire's met-test and estimate point at: the SHACL shapes a domain declares for what its words mean when wanted — delivered, solved — and the selects that say how far a world still is, in the unit its actions cost. SHACL's own notion of a shapes graph, typed so that the planner crosses these beside the graphs of desires, wants and records, which is where it reads a met-test, without crossing every vocabulary: all nine ontology graphs cost thirty times the crossing, measured. No belief, as a desire is none, and common, since what a word means is everyone's; a domain ships one, and a world that authors a shape of its own may put it here or beside its desire." .
 
 
 planning:precondition

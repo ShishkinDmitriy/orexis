@@ -13,7 +13,7 @@ one cluster, and two whose vans never can are two. A desire couples nothing, how
 authored: an aversion is a state the agent may enter and must leave, not one no plan may make.
 
 **READ OVER THE REACH, NOT OVER WHAT THE WORLD STATES.** `footprint.atoms_of` reads a scope's atoms
-off the graphs nobody owns alone, every pattern optional, which is right for a partition that must stand
+off the common graphs alone, every pattern optional, which is right for a partition that must stand
 while the agent runs. It is grid-blind: asked that way the aversion joins `van_a` to `van_b` with the
 cell unbound, on a shared grid and on two grids a continent apart alike, because which cells a van
 can stand on is the drive's precondition's FILTER over coordinates, and the half of a text those graphs

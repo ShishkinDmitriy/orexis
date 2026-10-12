@@ -72,7 +72,7 @@ _CLASS = ox.NamedNode("http://www.w3.org/2002/07/owl#Class")
 _TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 #  WHAT A STEP OF ONBOARDING SERVES, AS A PREMISE READ OFF THE WORLD (#824): an ASK per premise over
-#  the world's beliefs nobody owns, in T-Box terms alone. Onboarding's own, and the one kind of premise
+#  the world's common beliefs, in T-Box terms alone. Onboarding's own, and the one kind of premise
 #  left: what an AGENT runs is declared in its roles, never derived (#927). A
 #  step runs where its premise holds and says it was skipped where it does not, so a world is
 #  granted what it has and nothing it lacks. The BUS is a broker the world's society names: the
@@ -95,7 +95,7 @@ def _files(world: Path) -> list[Path]:
 
 
 def world(here: Path) -> ox.Store:
-    """The world in `here` as onboarding reads it: its beliefs nobody owns as an agent reads them, and
+    """The world in `here` as onboarding reads it: its common beliefs as an agent reads them, and
     every graph in its directory whose kind onboarding's vocabulary declares, closed. The first
     half passes over onboarding's kinds, and says so only at DEBUG, since the second half reads
     them."""
@@ -114,7 +114,7 @@ def world(here: Path) -> ox.Store:
 def premises(here: Path) -> frozenset[str]:
     """Every premise in `PREMISES` that holds of the world in `here`, read as onboarding reads it."""
     store = world(here)
-    stated = graphs_of(store, BELIEF, nobodys=True)
+    stated = graphs_of(store, BELIEF, common=True)
     return frozenset(premise for premise, ask in PREMISES.items() if answer(store, ask, stated)["boolean"])
 
 
@@ -184,7 +184,7 @@ def unholdable(here: Path) -> list[str]:
     world stating none among them."""
     store = world(here)
     out = []
-    for r in rows(store, _MARGINS_Q, graphs_of(store, BELIEF, nobodys=True)):
+    for r in rows(store, _MARGINS_Q, graphs_of(store, BELIEF, common=True)):
         said = f"a margin of {r['margin']}"
         named = r["named"] or "a range with no name"
         try:
@@ -210,7 +210,7 @@ SELECT ?role ?select ?message WHERE {
   ?shape a sh:NodeShape ; sh:targetClass ?role ; sh:sparql ?constraint .
   ?constraint sh:select ?select OPTIONAL { ?constraint sh:message ?message } }"""
 
-#  WHETHER THE SELF IS READ BY A PACKAGE IT DOES NOT LOAD, off the beliefs nobody owns and the self.
+#  WHETHER THE SELF IS READ BY A PACKAGE IT DOES NOT LOAD, off the common beliefs and the self.
 _SENSOR_Q = f"ASK {{ ?me a orexis:Self . {MINE} }}"
 _LISTENS_Q = "ASK { ?me a orexis:Self ; mqtt4ssn:listensToTopic ?topic }"
 
@@ -218,7 +218,7 @@ _LISTENS_Q = "ASK { ?me a orexis:Self ; mqtt4ssn:listensToTopic ?topic }"
 def agents(here: Path) -> list[str]:
     """Every agent the world in `here` states, by id, sorted."""
     store = world(here)
-    return [r["id"] for r in rows(store, _AGENTS_Q, graphs_of(store, BELIEF, nobodys=True))]
+    return [r["id"] for r in rows(store, _AGENTS_Q, graphs_of(store, BELIEF, common=True))]
 
 
 def loaded(here: Path) -> frozenset[str]:
@@ -235,7 +235,7 @@ def refused(here: Path) -> list[str]:
     whose every agent runs what it is declared to and is read by what it runs."""
     here = Path(here).resolve()
     store = world(here)
-    needs = rows(store, _NEEDS_Q, graphs_of(store, BELIEF, nobodys=True))
+    needs = rows(store, _NEEDS_Q, graphs_of(store, BELIEF, common=True))
     return [f"{agent_id}: {why}" for agent_id in agents(here)
             for why in _refusals(here, boot(here, agent_id, others=ours()), needs)]
 
@@ -249,7 +249,7 @@ def _refusals(here: Path, beliefs: ox.Store, needs: list[dict]) -> list[str]:
     held = [g for g in graphs_of(beliefs, GRAPH) if g != cat]
     out = [need.get("message") or f"its world lacks what {need['role']} needs" for need in needs
            if need["role"] in roles and rows(beliefs, need["select"], held)]
-    stated = [*graphs_of(beliefs, BELIEF, nobodys=True), *graphs_of(beliefs, SELF_GRAPH)]
+    stated = [*graphs_of(beliefs, BELIEF, common=True), *graphs_of(beliefs, SELF_GRAPH)]
     if OBSERVER not in roles and answer(beliefs, _SENSOR_Q, stated)["boolean"]:
         out.append("a sensor reports to it, and it is no observer: no package it loads would read the sensor")
     if SPEAKER not in roles and answer(beliefs, _LISTENS_Q, stated)["boolean"]:

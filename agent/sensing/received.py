@@ -142,7 +142,7 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     (#101), where `at` is the arrival.
     """
     if reads_series(store, sensor):
-        keys = rows(store, _KEY_Q, graphs_of(store, BELIEF, nobodys=True), sensor=sensor)
+        keys = rows(store, _KEY_Q, graphs_of(store, BELIEF, common=True), sensor=sensor)
         if len(keys) != 1:
             log.warning("%s has no key: one property observed of one host makes one, and the world states %d", local_of(sensor), len(keys))
             return []

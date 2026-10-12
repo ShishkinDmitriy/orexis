@@ -97,12 +97,12 @@ def read_by_an_agent(world: str) -> dict[Path, frozenset[str] | None]:
     """Every document the boot reads in the world's directory, under `beliefs/` and under
     `secrets/` (`runtime.documents`), holding a graph of a kind an agent reads — asked of the
     agent's own vocabulary as its boot has it, and not of onboarding's, whose kinds are exactly the
-    ones an agent is not to be handed — with whom it is FOR: None where it holds a graph nobody owns,
+    ones an agent is not to be handed — with whom it is FOR: None where it holds a common graph,
     which every agent and the simulator read, and otherwise the ids of the agents whose own
     graphs it holds, by what it says (`store.whose`) and never by its name."""
     here = world_dir(world).resolve()
     store = world_of(here, others=reading.ours())
-    ids = {r["a"]: r["id"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, nobodys=True))}
+    ids = {r["a"]: r["id"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, common=True))}
     out: dict[Path, frozenset[str] | None] = {}
     for path in documents(here):
         if here not in path.parents:
@@ -111,8 +111,8 @@ def read_by_an_agent(world: str) -> dict[Path, frozenset[str] | None]:
         held = {graph: kinds for graph, kinds in kinds_in(doc).items() if known(store, kinds)}
         if not held:
             continue
-        nobodys = any(whose(doc, graph) is None for graph in held)
-        out[path] = None if nobodys else frozenset(ids[whose(doc, graph)] for graph in held)
+        common = any(whose(doc, graph) is None for graph in held)
+        out[path] = None if common else frozenset(ids[whose(doc, graph)] for graph in held)
     return out
 
 
@@ -130,7 +130,7 @@ def simulated_client(world: str) -> str | None:
     """The client the world's simulator connects as, or None where nothing is simulated. One
     simulator plays every simulated system, so they must share one client."""
     store = reading.world(world_dir(world))
-    found = [r["id"] for r in rows(store, _SIMULATED_Q, graphs_of(store, BELIEF, nobodys=True))]
+    found = [r["id"] for r in rows(store, _SIMULATED_Q, graphs_of(store, BELIEF, common=True))]
     if len(found) > 1:
         raise SystemExit(f"orexis-compose: {world!r} hosts simulated systems on {found}; one simulator plays "
                          "them all, so one client must host them")

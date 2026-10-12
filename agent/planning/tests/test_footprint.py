@@ -177,7 +177,7 @@ def test_a_rule_text_is_made_parseable_and_nothing_more():
     "SELECT ?x WHERE { ?me <urn:test:p> ?x . ?x <urn:test:q> ?y . ?me a <http://example.org/orexis#Self> }",
 ], ids=["in a predicate list", "a statement of its own", "last, by full IRI"])
 def test_the_self_s_anchor_is_no_fact_of_the_world_and_a_footprint_reads_the_text_without_it(anchored):
-    """A text asks for the agent as `?me a orexis:Self`, a row no belief nobody owns holds and no
+    """A text asks for the agent as `?me a orexis:Self`, a row no common belief holds and no
     action writes. Read with it, the anchor stood first in rdflib's order and reordered the OPTIONAL chain a
     filling is asked as — the greenhouse's dose was filled with the heater (measured). A footprint
     reads such a text as it read the text with `?me` free: the same patterns, in the same order."""

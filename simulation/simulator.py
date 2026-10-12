@@ -113,7 +113,7 @@ class Simulator:
         self.heating: dict[str, datetime] = {}
 
     def _rows(self, text: str, **values) -> list[dict]:
-        return rows(self.store, text, graphs_of(self.store, BELIEF, nobodys=True), **values)
+        return rows(self.store, text, graphs_of(self.store, BELIEF, common=True), **values)
 
     def open(self) -> list[str]:
         """Listen for the commands every simulated actuator takes; the topics."""

@@ -12,7 +12,7 @@ identifier a process is given: its own agent id.
 
 **Graph IRIs are not terms.** `orexis:WorldGraph` is the term; `…/graph/world` is a particular
 graph, no more a term than `orexis:fern_agent` is. The instances are declared in the kernel's
-own `ontology.ttl`, typed by class, and `graphs_of(store, BELIEF, nobodys=True)` asks which ones
+own `ontology.ttl`, typed by class, and `graphs_of(store, BELIEF, common=True)` asks which ones
 they are — so a query means "what the world states" without any Python knowing what that consists of.
 What survives here is the **bootstrap root** (the T-Box has to be loaded somewhere before it
 can be asked anything) and the **write targets** (a writer must say where it writes, built

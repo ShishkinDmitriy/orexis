@@ -58,7 +58,7 @@ def test_where_heard_it_says_each_observation_with_its_interval_and_the_silence(
     assert kind == OBSERVATION_GRAPH
     for at, value in ((snapshots.NOW, 0.2), (snapshots.NOW + CADENCE * 1.5, 0.3)):
         (graph,) = received(store, snapshots.ME, PROBE, f'{{"value": {value}}}'.encode(), at)
-        revise(store, graph, read=graphs_of(store, BELIEF, nobodys=True), kind=OBSERVATION_GRAPH)
+        revise(store, graph, read=graphs_of(store, BELIEF, common=True), kind=OBSERVATION_GRAPH)
         close_catalogue(store)
         observation(graph)
     first, second = heard
@@ -97,7 +97,7 @@ def test_linked_to_belief_it_hands_in_each_observation_with_this_layers_kind(mon
     put_document(store, document(RULES))
     (before,) = received(store, snapshots.ME, PROBE, b'{"value": 0.2}', snapshots.NOW)
     (concluded,) = received(store, snapshots.ME, PROBE, b'{"value": 0.21}', snapshots.NOW + CADENCE)
-    revise(store, concluded, read=graphs_of(store, BELIEF, nobodys=True), kind=OBSERVATION_GRAPH)
+    revise(store, concluded, read=graphs_of(store, BELIEF, common=True), kind=OBSERVATION_GRAPH)
     runtime = stand_in_runtime(store, snapshots.ME, snapshots.NOW + CADENCE)
     part, belief = create(runtime), _Belief()
     part.observed.connect(lambda event: None)

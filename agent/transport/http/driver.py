@@ -104,19 +104,19 @@ class Http(Transport):
 
     def open(self, store) -> list[str]:
         """The sensors of the agent's this member reads."""
-        sensors = [r["sensor"] for r in rows(store, _MINE_Q, [*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH)])]
+        sensors = [r["sensor"] for r in rows(store, _MINE_Q, [*graphs_of(store, BELIEF, common=True), *graphs_of(store, SELF_GRAPH)])]
         log.info("%s reads %s over HTTP", local_of(self.me), [local_of(s) for s in sensors] or "nothing")
         return sensors
 
     def reaches(self, store, device: str) -> bool:
-        return bool(answer(store, _REACHES_Q, graphs_of(store, BELIEF, nobodys=True), device=device)["boolean"])
+        return bool(answer(store, _REACHES_Q, graphs_of(store, BELIEF, common=True), device=device)["boolean"])
 
     def sense_now(self, store, sensor: str) -> None:
         """Fetch what `sensor` reads, on a thread of its own, unless it is being fetched already."""
         with self._lock:
             if sensor in self._fetching:
                 return
-        stated = graphs_of(store, BELIEF, nobodys=True)
+        stated = graphs_of(store, BELIEF, common=True)
         targets = [r["target"] for r in rows(store, _TARGET_Q, stated, sensor=sensor)]
         values = {local_of(r["property"]): r["value"] for r in rows(store, _WHERE_Q, stated, sensor=sensor)}
         url = fill(targets[0], values) if targets else None

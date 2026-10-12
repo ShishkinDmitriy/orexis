@@ -58,7 +58,7 @@ def _reading(store, snapshots, probe, value, minutes=0):
     quantity — then the stretches are rewritten from it: the order a container keeps, belief's part
     hearing a graph before prediction's."""
     at = snapshots.NOW + timedelta(minutes=minutes)
-    read = graphs_of(store, BELIEF, at=at, nobodys=True)          # beside what the world states, as belief's part revises
+    read = graphs_of(store, BELIEF, at=at, common=True)          # beside what the world states, as belief's part revises
     [graph] = received(store, snapshots.ME, probe, f'{{"value": {value}}}'.encode(), at)
     revise(store, graph, read=read, kind=OBSERVATION_GRAPH)      # as sensing has belief's part revise it
     close_catalogue(store)

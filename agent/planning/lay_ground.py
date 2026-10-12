@@ -20,7 +20,7 @@ wrong with the prediction; there was no place in the pass where it REPLACED anyt
 bed's soil, dry — and never the reading, so a ground that only swapped the observation would keep the
 present's state for ever, and a foreseen crossing would read met. A predicted observation arriving in
 a ground triggers the transitions there, as a received one does in the present: belief's machine and
-the rules the beliefs hold, reading the arrival with its revisions, the beliefs nobody owns and the agent's
+the rules the beliefs hold, reading the arrival with its revisions, the common beliefs and the agent's
 own state as the ground before left it, and changing the ground alone. So the hold reaches the
 forecast — a bed believed dry and resting at 0.3001 is foreseen dry, as the present holds it — and a
 prediction still triggers nothing in the belief base: the runner prepares the target, and here the
@@ -158,7 +158,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     #  as the grounds are laid, from the present's: asked only where something is foreseen.
     rules = transitions(store) if ahead else []
     own = _own_state(store) if rules else None
-    stated = _whole(store, graphs_of(store, BELIEF, nobodys=True)) if rules else []
+    stated = _whole(store, graphs_of(store, BELIEF, common=True)) if rules else []
     made, marks = [here], _marked(store, here, within)
     opened = [now]
     landing = {at for at in landings if at > now}
@@ -240,7 +240,7 @@ def _transitioned(store: ox.Store, ground: str, arrivals: list[str], rules, own:
 
     A PREDICTED OBSERVATION IS AN ARRIVAL THERE, as a received one is in the present: each triggers
     every transition once, in the order the predictions came, rule by rule through belief's machine,
-    reading itself with its revisions, the beliefs nobody owns and the agent's own state as the ground before
+    reading itself with its revisions, the common beliefs and the agent's own state as the ground before
     left it — and nothing else — so a bed believed dry and resting at 0.3001 is foreseen dry, held by the
     margin as the present holds it. Each rule is the engine's own update, run twice over the same reads:
     `WITH` the ground, which no rule reads, and then `WITH` the working state, so what it deletes is
