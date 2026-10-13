@@ -19,8 +19,10 @@ kind makes a misspelled one silent in every reader; onboarding knows every reade
 or domain owning a word ships the shape a document using it is held to, in a requirement graph
 beside its ontology, of onboarding's kind, which no agent loads: a
 sensor observes a property and is mounted on something, a range's floor is below its ceiling and
-its margin a number it can hold, a desire is judged by one test. `invalid` runs every one over the
-world's common beliefs with pyshacl, and `refused` over each agent's own boot. What the world states
+its margin a number it can hold, a desire is judged by one test. pyshacl judges each agent's boot, which is what it
+will believe, so an agent's own documents may complete what the world's leave out; `invalid` says
+once what the common beliefs break and every agent's boot breaks too, and `refused` the rest, per
+agent. What the world states
 is accepted and revised once it runs; a document the sovereign authored may be garbage, and this is
 the last reader before it is believed.
 
@@ -173,11 +175,35 @@ def unread(here: Path) -> list[str]:
 
 
 def invalid(here: Path) -> list[str]:
-    """Every way the world in `here` breaks a shape its vocabularies ship, as `focus: why`, or `why`
-    alone where the focus has no name — held to the world's common beliefs as onboarding reads them.
-    Empty for a world that conforms. What an agent's own documents break is `refused`'s, per agent."""
+    """Every way the world in `here` breaks a requirement its vocabularies ship that no agent's own
+    documents complete, as `focus: why`, or `why` alone where the focus has no name: what the common
+    beliefs break and every agent's boot breaks too, said once as the world's. Empty for a world whose
+    common beliefs conform, or are completed in every agent. What an agent's boot breaks and the
+    others' do not is `refused`'s, per agent."""
+    of_world, _ = _judged(Path(here).resolve())
+    return sorted(of_world.values())
+
+
+def _judged(here: Path) -> tuple[dict[tuple, str], dict[str, list[str]]]:
+    """What the requirements report of the world in `here`: what is the world's, and what is each
+    agent's alone, by its id.
+
+    WHAT IS JUDGED IS WHAT AN AGENT WILL BELIEVE — its boot, the common beliefs with its own documents
+    beside them — so a world's document may leave a fact about a shared thing to the agents' own, and
+    an agent whose own documents complete it is not refused. The common beliefs are judged alone only
+    to say a fault once: one they break that every agent's boot breaks too is the world's, and the rest
+    each agent's that reports it."""
     store = world(here)
-    return sorted(_held_to(_shapes(store), store, graphs_of(store, BELIEF, common=True)).values())
+    shapes = _shapes(store)
+    common = _held_to(shapes, store, graphs_of(store, BELIEF, common=True))
+    each = {}
+    for agent_id in agents(here):
+        beliefs = boot(here, agent_id, others=ours())
+        cat = catalogue_of(beliefs)
+        each[agent_id] = _held_to(shapes, beliefs, [g for g in graphs_of(beliefs, GRAPH) if g != cat])
+    of_world = {key: why for key, why in common.items() if all(key in found for found in each.values())}
+    return of_world, {agent_id: sorted(why for key, why in found.items() if key not in of_world)
+                      for agent_id, found in each.items()}
 
 
 def _shapes(store: ox.Store) -> tuple[rdflib.Graph, rdflib.Graph]:
@@ -246,22 +272,17 @@ def refused(here: Path) -> list[str]:
     `agent: why` — each agent booted from the documents as its container boots it. Empty for a world
     whose every agent runs what it is declared to and is read by what it runs."""
     here = Path(here).resolve()
-    store = world(here)
-    shapes = _shapes(store)
-    of_world = set(_held_to(shapes, store, graphs_of(store, BELIEF, common=True)))
+    _, broken = _judged(here)
     return [f"{agent_id}: {why}" for agent_id in agents(here)
-            for why in _refusals(here, boot(here, agent_id, others=ours()), shapes, of_world)]
+            for why in _refusals(here, boot(here, agent_id, others=ours()), broken[agent_id])]
 
 
-def _refusals(here: Path, beliefs: ox.Store, shapes: tuple[rdflib.Graph, rdflib.Graph], of_world: set[tuple]) -> list[str]:
+def _refusals(here: Path, beliefs: ox.Store, broken: list[str]) -> list[str]:
     roles = roles_of(beliefs)
     if not roles:
         return ["plays no role in its self graph, so it would load no package and run nothing — "
                 "`<agent> orexis:plays [ a <role> ]` says what it runs"]
-    cat = catalogue_of(beliefs)
-    held = [g for g in graphs_of(beliefs, GRAPH) if g != cat]
-    out = [why for key, why in sorted(_held_to(shapes, beliefs, held).items(), key=lambda kv: kv[1])
-           if key not in of_world]
+    out = list(broken)
     stated = [*graphs_of(beliefs, BELIEF, common=True), *graphs_of(beliefs, SELF_GRAPH)]
     out += [f"{local_of(r['sensor'])} reports to it, and no observer role it plays reads it: no package it "
             f"loads would read the sensor — `orexis:plays [ a sensing:Observer ; sensing:sensor <sensor> ]` says one does"

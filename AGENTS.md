@@ -658,7 +658,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A world is held to its requirements at onboarding alone, read off the world and never an agent's
   boot** — the package owning a word ships its shapes in a `requirements.ttl` of onboarding's kind,
   which no agent loads, since none reads it; pyshacl is the `onboarding` extra's; and an agent playing
-  an executor alone loads no planning, whose requirement refuses it (#838, requirement).
+  an executor alone loads no planning, whose requirement refuses it; what is judged is each agent's
+  boot, so its own documents may complete what the world's leave out (#838, requirement).
 - **A role's need is a shape shipped by whoever owns the words it is stated in, and onboarding holds a
   declaration to its world both ways** — the executor's need to be a planner is planning's shape, the
   speaker's topic the MQTT transport's, since a package beneath may not speak them (#927).

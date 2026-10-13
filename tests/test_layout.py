@@ -322,6 +322,24 @@ def test_what_the_world_breaks_is_said_once_and_not_again_for_each_agent(tmp_pat
     assert reading.refused(world) == []
 
 
+def test_what_the_world_leaves_out_an_agents_own_documents_may_complete(tmp_path):
+    """What is judged is what each agent will believe: a sensor the world says nothing it observes,
+    completed by the agent's own state, refuses neither the world nor the agent; with a second agent
+    whose own documents do not complete it, that agent is refused by name and the world is not."""
+    from onboarding import reading
+
+    state = "<> a orexis:BeliefGraph ; orexis:ownedBy :me .\n:probe sosa:observes :moisture .\n"
+    world = _declared(tmp_path, [OBSERVER], ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n", reads=["probe"], state=state)
+    assert reading.invalid(world) == [] and reading.refused(world) == []
+
+    with (world / "world.ttl").open("a") as text:
+        text.write(':you a orexis:Agent ; orexis:localId "you" ; orexis:actsFor :pot .\n')
+    (world / "beliefs" / "you.self.ttl").write_text(
+        _ROLE_HEAD + "<> a orexis:SelfGraph .\n:you a orexis:Self" + _plays([OBSERVER], ["probe"]) + " .\n")
+    assert reading.invalid(world) == []
+    assert reading.refused(world) == ["you: probe: a sensor that observes no property: its readings would be of nothing"]
+
+
 @pytest.mark.parametrize("tests, refused", [
     ("planning:metWhen :ok", False),
     ("planning:unmetWhen :bad", False),

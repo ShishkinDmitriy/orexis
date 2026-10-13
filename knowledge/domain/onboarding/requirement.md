@@ -30,8 +30,13 @@ graph's. An agent's boot passes over a kind its vocabulary does not declare, so 
 requirement: what an agent holds is accepted and revised once it runs, and only a sovereign's
 document, before it is believed, may be refused.
 
-Onboarding reads the requirements off the world, which knows every package's vocabulary, and holds
-the world's common beliefs to them once and each agent's boot to them per agent. It never reads them
+What is judged is what each agent will believe: its boot, the world's common beliefs with its own
+documents beside them. So a world's document may leave a fact about a shared thing to the agents'
+own, and an agent whose own documents complete it is not refused. The common beliefs are judged
+alone only to say a fault once: one they break and every agent's boot breaks too is the world's,
+and the rest is each agent's that reports it.
+
+Onboarding reads the requirements off the world, which knows every package's vocabulary, and never
 off an agent's boot, which loads only what the agent's roles do: an agent playing an executor alone
 loads no planning, and the requirement refusing it is planning's.
 
