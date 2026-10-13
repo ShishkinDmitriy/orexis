@@ -83,7 +83,7 @@ def _derived(store, uri="urn:test:want", desire=_W_DESIRE, *, at=_W_NOW, until=N
         rdfs:label "a want under test" . }}
   GRAPH <{catalogue_of(store)}> {{
     <{graph}> a planning:WantGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
-        orexis:beliefsOf <{_W_HOLDER}> . }} }}""")
+        orexis:ownedBy <{_W_HOLDER}> . }} }}""")
     #  THE PERIOD ONCE PER GRAPH, and this guard is the writer's own. A period is a BLANK NODE
     #  and a blank node in an `INSERT` is a new node every time it runs; several wants share a
     #  stretch's graph now, so asserting it per want gave the graph a period per want and every

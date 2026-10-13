@@ -3,12 +3,12 @@
 @@ -86,4 +86,56 @@
    observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
-   observed:zamioculcas_moisture orexis:beliefsOf :keeper .
+   observed:zamioculcas_moisture orexis:ownedBy :keeper .
 +  predicted:zamioculcas_moisture_0 a orexis:Graph .
 +  predicted:zamioculcas_moisture_0 a orexis:PredictionGraph .
 +  predicted:zamioculcas_moisture_0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:36:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
 +  predicted:zamioculcas_moisture_0 orexis:arrivedBy orexis:Recorded .
-+  predicted:zamioculcas_moisture_0 orexis:beliefsOf :keeper .
++  predicted:zamioculcas_moisture_0 orexis:ownedBy :keeper .
 +  predicted:zamioculcas_moisture_0 orexis:hash "sha256:e61fc2d1d3400639bdfa554eb7849cc594757efded026a9cdb06170bca96d953" .
 +  predicted:zamioculcas_moisture_0 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
 +  predicted:zamioculcas_moisture_0 prov:wasDerivedFrom observed:zamioculcas_moisture .
@@ -16,7 +16,7 @@
 +  predicted:zamioculcas_moisture_1 a orexis:PredictionGraph .
 +  predicted:zamioculcas_moisture_1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:55:12+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:36:00+00:00"^^xsd:dateTime ] .
 +  predicted:zamioculcas_moisture_1 orexis:arrivedBy orexis:Recorded .
-+  predicted:zamioculcas_moisture_1 orexis:beliefsOf :keeper .
++  predicted:zamioculcas_moisture_1 orexis:ownedBy :keeper .
 +  predicted:zamioculcas_moisture_1 orexis:hash "sha256:e0a11091c0bfdb6c6799c6cfbe22686473c92fc26da374f644f7fe2437c60e60" .
 +  predicted:zamioculcas_moisture_1 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
 +  predicted:zamioculcas_moisture_1 prov:wasDerivedFrom observed:zamioculcas_moisture .
@@ -24,7 +24,7 @@
 +  predicted:zamioculcas_moisture_2 a orexis:PredictionGraph .
 +  predicted:zamioculcas_moisture_2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:55:12+00:00"^^xsd:dateTime ] .
 +  predicted:zamioculcas_moisture_2 orexis:arrivedBy orexis:Recorded .
-+  predicted:zamioculcas_moisture_2 orexis:beliefsOf :keeper .
++  predicted:zamioculcas_moisture_2 orexis:ownedBy :keeper .
 +  predicted:zamioculcas_moisture_2 orexis:hash "sha256:7c1cbfb9535d7711e3908e99e269889d46d59ad184bf747db75bb0c2d00dd485" .
 +  predicted:zamioculcas_moisture_2 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
 +  predicted:zamioculcas_moisture_2 prov:wasDerivedFrom observed:zamioculcas_moisture .

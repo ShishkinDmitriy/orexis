@@ -212,7 +212,7 @@ _DERIVED_Q = """
 SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                                ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
                                FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-                               ?g orexis:beliefsOf ?owner . } } ORDER BY ?g"""
+                               ?g orexis:ownedBy ?owner . } } ORDER BY ?g"""
 
 #  WHERE THE AGENT'S OWN STATE IS KEPT WHILE THE GROUNDS ARE LAID: a working graph, not a belief,
 #  handed by name to the transitions and taken away when the last ground is laid. Its name is for eyes.

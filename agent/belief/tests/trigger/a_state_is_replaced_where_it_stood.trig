@@ -57,12 +57,12 @@ GRAPH :catalogue {
   :tick2 a orexis:Graph .
   :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
   :tick2 orexis:arrivedBy orexis:Received .
-  :tick2 orexis:beliefsOf :keeper .
+  :tick2 orexis:ownedBy :keeper .
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .
   tick1:believed a orexis:BeliefGraph .
   tick1:believed a orexis:Graph .
   tick1:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:20:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   tick1:believed orexis:arrivedBy orexis:Derived .
-  tick1:believed orexis:beliefsOf :keeper .
+  tick1:believed orexis:ownedBy :keeper .
 }

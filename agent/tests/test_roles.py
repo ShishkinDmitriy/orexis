@@ -175,13 +175,13 @@ def test_a_world_graph_of_a_kind_a_loaded_package_declares_is_read_after_it(tmp_
     passed over."""
     world = _world(tmp_path, roles, _PROBE)
     (world / "reading.ttl").write_text(_HEAD + "@prefix sensing: <http://example.org/orexis/sensing#> .\n"
-                                       "<> a sensing:ObservationGraph ; orexis:beliefsOf :me .\n"
+                                       "<> a sensing:ObservationGraph ; orexis:ownedBy :me .\n"
                                        ":reading a sosa:Observation ; sosa:hasFeatureOfInterest :pot .\n")
     store = boot(world, "me")
     name = ox.NamedNode((world / "reading.ttl").resolve().as_uri())
     assert bool(list(store.quads_for_pattern(None, None, None, name))) is read
     if read:
-        owner = ox.NamedNode("http://example.org/orexis#beliefsOf")
+        owner = ox.NamedNode("http://example.org/orexis#ownedBy")
         assert [q.object.value for q in store.quads_for_pattern(name, owner, None)] == [ME], "the agent's own"
 
 

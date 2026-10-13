@@ -105,7 +105,7 @@ GRAPH :catalogue {
   :forecast_14 a orexis:Graph .
   :forecast_14 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
   :forecast_14 orexis:arrivedBy orexis:Received .
-  :forecast_14 orexis:beliefsOf :keeper .
+  :forecast_14 orexis:ownedBy :keeper .
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
@@ -115,5 +115,5 @@ GRAPH :catalogue {
   observed:zamioculcas_moisture a sensing:ObservationGraph .
   observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
-  observed:zamioculcas_moisture orexis:beliefsOf :keeper .
+  observed:zamioculcas_moisture orexis:ownedBy :keeper .
 }

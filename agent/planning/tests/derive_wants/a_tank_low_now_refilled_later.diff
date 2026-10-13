@@ -11,7 +11,7 @@
 @@ -64,6 +63,60 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
-   :sensed orexis:beliefsOf :keeper .
+   :sensed orexis:ownedBy :keeper .
 +  :sensed planning:cutBy "sha256:79a8c5917d7f90336d9f1fb7bd315a20df72059cf7cf98de56f00fff05dac6e0" .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
@@ -41,7 +41,7 @@
 +  pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 a planning:WantGraph .
 +  pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 orexis:arrivedBy orexis:Derived .
-+  pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 orexis:beliefsOf :keeper .
++  pursued:2026-01-01T120000p0000--2026-01-01T130000p0000 orexis:ownedBy :keeper .
  }
 +
 +

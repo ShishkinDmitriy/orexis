@@ -28,7 +28,7 @@ _HEAD = """@prefix : <http://example.org/test#> .
 _WORLD = _HEAD + '<> a orexis:WorldGraph .\n:ann a orexis:Agent ; orexis:localId "ann" ; :limit 9 .\n'
 #  THE SELF GRAPH STATES ONE, and the agent's desires another.
 _SELF = _HEAD + "<> a orexis:SelfGraph .\n:ann a orexis:Self ; :patience 5 .\n"
-_DESIRES = _HEAD + "<> a planning:DesireGraph ; orexis:beliefsOf :ann .\n:ann :wish 4 .\n"
+_DESIRES = _HEAD + "<> a planning:DesireGraph ; orexis:ownedBy :ann .\n:ann :wish 4 .\n"
 
 
 @pytest.fixture

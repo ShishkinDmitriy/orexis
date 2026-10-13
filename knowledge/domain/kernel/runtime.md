@@ -25,7 +25,7 @@ about the world. A document says what its graphs are and nothing about how they 
 they are: the loader writes `orexis:Asserted`, and the owner where a graph is the agent's. A
 graph stating no kind, one claiming to be the catalogue and one stating an arrival are refused
 (`store.document`), and so is one stating the [self](/domain/kernel/self.md) anywhere but once in a
-self graph. Whose a graph of an agent's own is, its document says — `<> orexis:beliefsOf` beside its
+self graph. Whose a graph of an agent's own is, its document says — `<> orexis:ownedBy` beside its
 kind, or the self a self graph states — and never its file's name.
 
 A document may import others, `owl:imports` with a relative IRI that resolves to the imported

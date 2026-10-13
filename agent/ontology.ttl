@@ -51,7 +51,7 @@ orexis:CatalogueGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Catalogue graph" ;
-    rdfs:comment "THE ONE GRAPH THAT SAYS WHAT EVERY GRAPH IS, ITSELF INCLUDED (one-catalogue-describes-every-graph-and-itself): its class, whose it is (`orexis:beliefsOf`), how it arrived (`orexis:arrivedBy`), when it holds (`dcterms:temporal`, a `dcterms:PeriodOfTime` either end open) and, for a world's document, the PROV-O account of the load that made it. Written by whoever creates a graph, in the same update as the graph; the vocabulary's own instances below are transcribed into it on every start. It describes ITSELF, which is what lets a store find it without knowing its name — `Store.catalogue` asks every graph for the one that says of itself it is this — so no reader names it, and the three graphs it replaced (the classification, the periods, the provenance) were the bootstrap root's names. NO BELIEF, and the reason is use versus mention: these are statements ABOUT graphs, so merged into the default graph they would answer open patterns that mean something else — `?device a ?class` would return graphs — and a period is a fact that moves, which in every possible world would move the invariant signature and kill a kept cone. The door reads it and hands a rule a dataset; the rule learns nothing of it." .
+    rdfs:comment "THE ONE GRAPH THAT SAYS WHAT EVERY GRAPH IS, ITSELF INCLUDED (one-catalogue-describes-every-graph-and-itself): its class, whose it is (`orexis:ownedBy`), how it arrived (`orexis:arrivedBy`), when it holds (`dcterms:temporal`, a `dcterms:PeriodOfTime` either end open) and, for a world's document, the PROV-O account of the load that made it. Written by whoever creates a graph, in the same update as the graph; the vocabulary's own instances below are transcribed into it on every start. It describes ITSELF, which is what lets a store find it without knowing its name — `Store.catalogue` asks every graph for the one that says of itself it is this — so no reader names it, and the three graphs it replaced (the classification, the periods, the provenance) were the bootstrap root's names. NO BELIEF, and the reason is use versus mention: these are statements ABOUT graphs, so merged into the default graph they would answer open patterns that mean something else — `?device a ?class` would return graphs — and a period is a fact that moves, which in every possible world would move the invariant signature and kill a kept cone. The door reads it and hands a rule a dataset; the rule learns nothing of it." .
 
 orexis:Graph
     a owl:Class ;
@@ -118,12 +118,12 @@ orexis:arrivedBy
     rdfs:range orexis:Arrival ;
     rdfs:label "arrived by" .
 
-orexis:beliefsOf
+orexis:ownedBy
     a owl:ObjectProperty ;
     rdfs:domain orexis:Graph ;
     rdfs:range orexis:Agent ;
-    rdfs:label "beliefs of" ;
-    rdfs:comment "Which agent owns this graph — said by the owner in the classification it writes when it creates the graph, beside what the graph is and how it arrived, so a reader that means its OWN graphs of a kind asks by owner as well as by class; and stated by a document the WORLD authors of a graph of an agent's own (`<> orexis:beliefsOf :rose_grower`), which is how a boot tells its own documents from another agent's by what they say and never by a file's name. A peer's document and the agent's own saying never state it: the hearer and the sayer are the owner. In a deployed volume every graph is the one agent's; a test standing several agents in one store is kept apart by this, never by a graph's name." .
+    rdfs:label "owned by" ;
+    rdfs:comment "Which agent owns this graph — said by the owner in the classification it writes when it creates the graph, beside what the graph is and how it arrived, so a reader that means its OWN graphs of a kind asks by owner as well as by class; and stated by a document the WORLD authors of a graph of an agent's own (`<> orexis:ownedBy :rose_grower`), which is how a boot tells its own documents from another agent's by what they say and never by a file's name. A peer's document and the agent's own saying never state it: the hearer and the sayer are the owner. In a deployed volume every graph is the one agent's; a test standing several agents in one store is kept apart by this, never by a graph's name." .
 
 orexis:end
     a owl:DatatypeProperty ;

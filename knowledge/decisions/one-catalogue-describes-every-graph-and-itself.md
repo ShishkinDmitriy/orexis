@@ -34,7 +34,7 @@ itself?"
 
 **One graph, the catalogue, describes every graph and itself.** A row of it says of a graph its
 class or classes, how it arrived (`orexis:arrivedBy`), whose beliefs it holds
-(`orexis:beliefsOf`, for a per-agent graph), and when it holds (`dcterms:temporal`, one
+(`orexis:ownedBy`, for a per-agent graph), and when it holds (`dcterms:temporal`, one
 `dcterms:PeriodOfTime` with an `orexis:start` and an `orexis:end`); the PROV account of a load
 sits beside those rows, in the same graph, in PROV-O and nothing else.
 

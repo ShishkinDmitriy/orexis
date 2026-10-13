@@ -58,7 +58,7 @@ log = logging.getLogger("trigger")
 _ARRIVAL_Q = """
 SELECT ?owner ?start ?end WHERE {
   GRAPH $cat { $arrival orexis:arrivedBy orexis:Received .
-               OPTIONAL { $arrival orexis:beliefsOf ?owner }
+               OPTIONAL { $arrival orexis:ownedBy ?owner }
                OPTIONAL { $arrival dcterms:temporal ?p .
                           OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1"""
@@ -69,7 +69,7 @@ LIMIT 1"""
 _DERIVED_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
                                FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-                               ?g orexis:beliefsOf ?owner . } } ORDER BY ?g"""
+                               ?g orexis:ownedBy ?owner . } } ORDER BY ?g"""
 
 #  WHETHER A GRAPH STILL HAS A ROW: one an order emptied was forgotten, row and all.
 _ROW_Q = """SELECT ?k WHERE { GRAPH $cat { $graph a ?k } } LIMIT 1"""

@@ -3,7 +3,7 @@
 @@ -83,8 +83,22 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
-   :sensed orexis:beliefsOf :keeper .
+   :sensed orexis:ownedBy :keeper .
 +  :sensed planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
@@ -22,4 +22,4 @@
 +  ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1.level planning:weighs ground:2026-01-01T120000p0000 .
    intentions:keeper a execution:IntentionGraph .
    intentions:keeper a orexis:Graph .
-   intentions:keeper orexis:beliefsOf :keeper .
+   intentions:keeper orexis:ownedBy :keeper .

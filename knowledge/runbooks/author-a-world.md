@@ -77,7 +77,7 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
    `<> a planning:WantGraph` for a want that is met once; in a world of several agents, one
    document per agent under `beliefs/<id>.ttl`, since every desire a store holds is derived for.
    Every document of a kind that is an agent's own — the state, the desires, the wants — says whose
-   beside its kind, `<> orexis:beliefsOf :fern_grower`; the file's name says nothing to any reader.
+   beside its kind, `<> orexis:ownedBy :fern_grower`; the file's name says nothing to any reader.
 7. **`hardware.ttl`** — `<> a onboarding:HardwareGraph`, pins and boards, if there are any: read
    by `orexis-firmware`, and a kind no agent declares, so a boot passes over it and no container
    mounts it. A document of a kind no reader declares is refused by `orexis-onboard`.

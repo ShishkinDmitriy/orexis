@@ -12,13 +12,13 @@
  GRAPH :catalogue {
    :catalogue a orexis:CatalogueGraph .
 @@ -69,10 +67,6 @@
-   :tick2 orexis:beliefsOf :keeper .
+   :tick2 orexis:ownedBy :keeper .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
 -  tick1:believed a orexis:BeliefGraph .
 -  tick1:believed a orexis:Graph .
 -  tick1:believed orexis:arrivedBy orexis:Derived .
--  tick1:believed orexis:beliefsOf :keeper .
+-  tick1:believed orexis:ownedBy :keeper .
    tick2:revisions a belief:RevisionGraph .
    tick2:revisions a orexis:BeliefGraph .
    tick2:revisions a orexis:Graph .

@@ -16,12 +16,12 @@ graph, and each can count on the others holding it too. The vocabulary, the worl
 society and what the boot derives of them are common beliefs; a reading an agent observed, a state
 it derived and a word a peer said to it are its own.
 
-The catalogue says which by `orexis:beliefsOf`. A graph of an agent's own names its owner there;
+The catalogue says which by `orexis:ownedBy`. A graph of an agent's own names its owner there;
 a common belief names none:
 
 ```turtle
 <graph/world>        a orexis:WorldGraph .                                     # common
-<graph/fern/desires> a planning:DesireGraph ; orexis:beliefsOf :fern_grower .  # the grower's own
+<graph/fern/desires> a planning:DesireGraph ; orexis:ownedBy :fern_grower .  # the grower's own
 ```
 
 That is provenance and not a kind: being common is how a graph arrived, which a graph class may

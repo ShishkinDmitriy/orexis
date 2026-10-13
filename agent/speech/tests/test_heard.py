@@ -13,7 +13,7 @@ from agent.store import graphs_of, rows, update
 
 T = "http://example.org/test#"
 ME = T + "me"
-_ARRIVAL_Q = "SELECT ?a ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g orexis:arrivedBy ?a ; orexis:beliefsOf ?o } }"
+_ARRIVAL_Q = "SELECT ?a ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g orexis:arrivedBy ?a ; orexis:ownedBy ?o } }"
 
 
 @pytest.fixture
@@ -79,6 +79,6 @@ def test_a_peer_cannot_say_whose_a_graph_is(store):
     """The hearer owns what it hears: a peer naming an owner would be a peer saying whose beliefs
     this agent holds. Refused whole, as the loader refuses it from anything but a world's file."""
     doc = (f"<{T}round> {{ <{T}round> <{T}says> \"open\" }}\n"
-           f"<{T}round> a <{T}RoundGraph> ; <{OREXIS}beliefsOf> <{T}someone> .").encode()
+           f"<{T}round> a <{T}RoundGraph> ; <{OREXIS}ownedBy> <{T}someone> .").encode()
     assert heard(store, ME, doc) == []
     assert not list(store.quads_for_pattern(ox.NamedNode(T + "round"), None, None)), "refused whole, and no row"

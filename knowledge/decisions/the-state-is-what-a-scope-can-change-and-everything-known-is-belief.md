@@ -113,7 +113,7 @@ to trust it is provenance. Three kinds answered three questions and looked alike
 them were answering the second and third questions with a class.
 
 **Provenance is already there.** Every catalogue row carries `orexis:arrivedBy` and
-`orexis:beliefsOf`. The boot already finds the world's shared documents by provenance, not by kind
+`orexis:ownedBy`. The boot already finds the world's shared documents by provenance, not by kind
 (what arrived asserted and nobody owns, `agent/runtime.py`).
 
 # What was refused
@@ -186,7 +186,7 @@ them were answering the second and third questions with a class.
 > which revising "beside what the world states alone" refuses. **The agent's own** is what names an
 > owner: the state a transition reads and deletes from, the present the walk wakes on and where a fictive
 > step's retractions stand are the agent's beliefs that name one, where they were those not public, so a
-> case's own state says `orexis:beliefsOf` as a running store's does. Planning's ground, possible, plan,
+> case's own state says `orexis:ownedBy` as a running store's does. Planning's ground, possible, plan,
 > changeable and scope graphs sit beneath `orexis:Graph` alone, `orexis:WorkingGraph` having been read by
 > nothing. Every case reads as it did but for its rows, and one desire's constraint indices, renumbered
 > as its case was put in canonical order.

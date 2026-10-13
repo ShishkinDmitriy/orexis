@@ -22,7 +22,7 @@ One graph describes every graph, itself included, and is found by its own row, `
 orexis:CatalogueGraph`. Per graph it says:
 
 - **what it is** — its kind, and every kind that kind is beneath ([modality](/domain/kernel/modality.md));
-- **whose it is** — `orexis:beliefsOf`, the owner that created it, or that the world's document
+- **whose it is** — `orexis:ownedBy`, the owner that created it, or that the world's document
   of it names ([world](/domain/kernel/world.md)); a graph saying none is a
   [common belief](/domain/kernel/common-belief.md);
 - **how it arrived** — `orexis:arrivedBy`, one of Asserted, Derived, Received, Recorded;

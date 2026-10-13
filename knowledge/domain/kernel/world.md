@@ -28,7 +28,7 @@ what it is with `<> a <a graph kind>` on its own IRI, or, in TriG, of each graph
 | `hardware.ttl` | `onboarding:HardwareGraph` | pins, parts and boards | `orexis-firmware` alone |
 
 The file's NAME is for eyes; the kind in the document is what the loader reads, and so is whose a
-graph of an agent's own is — `<> orexis:beliefsOf :fern_grower` beside its kind, or, in a self
+graph of an agent's own is — `<> orexis:ownedBy :fern_grower` beside its kind, or, in a self
 graph, the self it states — which is what the boot keeps its own by and `orexis-compose` mounts by
 ([self](/domain/kernel/self.md)). Eight ship:
 `hanoi` plans and exits, its plan published and walked by nobody; `courier` and `tower` plan, walk

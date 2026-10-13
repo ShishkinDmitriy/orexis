@@ -686,7 +686,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **What lasts says so in its compose file, and the host starts what says so** — the installation's
   services said nothing and podman's restart unit starts only `always`, so a power cut left every
   container down for two days ([run-a-world](knowledge/runbooks/run-a-world.md)).
-- **A graph of an agent's own says whose it is, and its file's name is for eyes** — `<> orexis:beliefsOf`
+- **A graph of an agent's own says whose it is by `orexis:ownedBy`, once `beliefsOf`, since a desire
+  graph and a want graph are no belief; and its file's name is for eyes** — `<> orexis:ownedBy`
   beside its kind, or the self a self graph states; the boot and `orexis-compose` keep a document by
   what it says, and a world keeps such documents under `beliefs/` (the-self-is-a-class-held-to-one-instance).
 - **A step of onboarding runs where the world has what it serves, and says so where it does not**

@@ -58,7 +58,7 @@ _ACTIONS = _HEAD + '''<> a orexis:ActionGraph .
         sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
         DELETE { $tank :level ?l } INSERT { $tank :level ?next } WHERE { $tank :level ?l . BIND(?l + 6 AS ?next) }""" ] ] .
 '''
-_DESIRES = _HEAD + """<> a planning:DesireGraph ; orexis:beliefsOf :keeper .
+_DESIRES = _HEAD + """<> a planning:DesireGraph ; orexis:ownedBy :keeper .
 :keeper planning:holds :full .
 :full a planning:Desire ; planning:about :level ; planning:metWhen :at_least_ten .
 :at_least_ten a sh:NodeShape ; sh:targetClass :Tank ;
@@ -87,7 +87,7 @@ def _tank(tmp_path, butt: int, *predicted):
     (tmp_path / "beliefs").mkdir()
     (tmp_path / "world.ttl").write_text(_WORLD)
     (tmp_path / "actions.ttl").write_text(_ACTIONS)
-    (tmp_path / "state.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph ; orexis:beliefsOf :keeper .\n"
+    (tmp_path / "state.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph ; orexis:ownedBy :keeper .\n"
                                         f":tank1 :level 4 .\n:butt :holds {butt} .\n")
     (tmp_path / "beliefs" / "keeper.ttl").write_text(_DESIRES)
     (tmp_path / "beliefs" / "keeper.self.ttl").write_text(_HEAD + "<> a orexis:SelfGraph .\n"
