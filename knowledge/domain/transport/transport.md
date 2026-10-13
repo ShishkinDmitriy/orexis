@@ -37,9 +37,9 @@ topic is its word.
 It adopts MQTT4SSN as it stands and declares no word of its own. A sensor
 `mqtt4ssn:observesTopic` a topic, a board `mqtt4ssn:listensToTopic` another, and a topic is named
 by the `mqtt4ssn:hasFilterPattern` of the filters that match it: the agent subscribes by the
-pattern and publishes a command to a pattern with no wildcard. Which sensors are the agent's is
-derived — those hosted by what it acts for, a sample of it, or a place that contains it — and
-never authored. The broker's address and the
+pattern and publishes a command to a pattern with no wildcard. Which sensors are the agent's is its
+[observer](/domain/sensing/observer.md) role's to declare, and the member asks sensing for them and
+names none of sensing's words. The broker's address and the
 agent's credential come from the environment (`MQTT_HOST`, `MQTT_USERNAME` and the rest), which
 [onboarding](/domain/onboarding/onboarding.md) writes; the member refuses to guess one. Started, it
 asks every minute of the timeline after its sensors' missing readings, telling each such board to

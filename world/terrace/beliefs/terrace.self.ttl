@@ -11,4 +11,12 @@
 #  WHAT IT RUNS: it observes the bed's probe and the forecast and foresees them, and wants nothing,
 #  so it is no planner and no executor; an observer is a deliberator too, so what its percepts are of is concluded.
 
-:terrace_agent a orexis:Self , sensing:Observer , prediction:Predictor .
+:terrace_agent a orexis:Self ;
+    orexis:plays [ a sensing:Observer ;
+                   sensing:sensor :air_humidity_terrace ,
+                                  :air_pressure_terrace ,
+                                  :air_temp_terrace ,
+                                  :battery_sensor_terrace ,
+                                  :forecast_terrace ,
+                                  :moisture_sensor_terrace ] ,
+                 [ a prediction:Predictor ] .

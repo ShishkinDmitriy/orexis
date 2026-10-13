@@ -36,9 +36,10 @@ agent SAID, as a document, never what it believes ([speech](/domain/speech/speec
 
 # What it runs
 
-Whatever its [roles](/domain/kernel/role.md) call for, and nothing else. Its self graph states them
-beside its self — `:grower a orexis:Self , planning:Planner , execution:Executor , sensing:Observer ,
-prediction:Predictor` — and the boot loads exactly the packages those roles are served by: the
+Whatever its [roles](/domain/kernel/role.md) call for, and nothing else. Its self graph says it plays
+them beside its self — `:grower orexis:plays [ a planning:Planner ] , [ a execution:Executor ] , [ a
+sensing:Observer ; sensing:sensor :moisture_probe ] , [ a prediction:Predictor ]` — and the boot loads
+exactly the packages those roles are served by: the
 greenhouse's grower runs belief, planning, execution, sensing and prediction, the terrace's agent
 belief, sensing and prediction, Hanoi's mover planning alone. Two agents of one world may
 therefore run different things though their world is the same, and an agent declaring no role runs

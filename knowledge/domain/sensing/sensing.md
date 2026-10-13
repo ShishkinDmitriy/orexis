@@ -40,10 +40,12 @@ does not decode writes nothing and says so in the log. A sensor reading a SERIES
 [forecast](/domain/sensing/forecast.md) per stretch still ahead instead, and replaces its last.
 
 **`missed`** is what sensing's own `start` asks every minute of the timeline, whether or not anything
-arrived ([a-package-starts-itself](/decisions/a-package-starts-itself.md)): which sensors' readings have gone missing,
-their latest observation past its grace with nothing arrived, for the container to ask again, and which have been silent past the agent's limit of
-their cadences (`sensing:silentAfter`) — said by `sensing:silentSince` until a reading ends it. Both limits are
-[stances](/domain/kernel/stance.md), and a figure in code holds where the agent's self graph states none.
+arrived ([a-package-starts-itself](/decisions/a-package-starts-itself.md)): which sensors have been silent past their
+limit of cadences (`sensing:silentAfter`) since their latest observation's period ended, until a reading ends
+it. A silence is computed at each ask and never written: its premises — that period, the sensor's frequency,
+the limit — are stored, the belief made of the observation ended with it, and nothing in the mind reads one.
+Sensing says it in the log and the series. Both limits are the [observer](/domain/sensing/observer.md)
+role's that reads the sensor, and the observer shape's default holds where it states none.
 
 # What it leaves to others
 
@@ -63,7 +65,7 @@ one, so the contract points one way.
 SOSA's and SSN's wherever they have one — a sensor `sosa:observes` a property and `sosa:isHostedBy`
 what it is mounted in, and that pair is what its readings are of — and its own for what neither
 standard says: the observation graph's kind and the forecast's, the link from an observation to the
-one before it, the silence and the number a stuck sensor keeps giving, the
+one before it, the limits a sensor is doubted past and the number a stuck sensor keeps giving, the
 [margin](/domain/sensing/margin.md) a domain's transition holds a state by, the pipeline's binding and
 the two pointers a series is read by, the number a sensor gave and the quantity scaled from it, and
 the two-point scaling and calibration with their points.

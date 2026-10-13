@@ -24,8 +24,9 @@ past the last one's end is handed none: the percept's standing as the present en
 `missed` says so when sensing's `start` asks every minute, and nothing here keeps a timer.
 
 **A SENSOR'S LAST FEW ARE KEPT, AS DEEP AS SENSING'S RULES READ.** Its deepest rule is stuck's, which
-reads a sensor's last `sensing:stuckAfter` readings — the agent's limit, a stance in its self graph,
-`STUCK_AFTER` where it states none — so that many of a sensor's percepts are kept and the oldest past
+reads a sensor's last `sensing:stuckAfter` readings — the limit the observer role reading it states,
+the observer shape's default where it states none (`cadence.limit_of`) — so that many of a sensor's
+percepts are kept and the oldest past
 them forgotten here, with what was concluded of each. Nothing else forgets a percept: no sweep drops
 a graph because its period has ended, and a percept's ending says only that it is not the present.
 
@@ -74,10 +75,9 @@ from datetime import datetime, timedelta
 
 from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, RECEIVED, local_of
-from agent.stance import stance
 from agent.store import Raw, catalogue_of, end_graph, entry, forget_graph, graphs_of, rows, update
 
-from .cadence import cadence_of
+from .cadence import cadence_of, limit_of
 from .ontology import (FORECAST_GRAPH, OBSERVATION_GRAPH, STUCK_AFTER_TERM, forecast_graph, forecast_of,
                        percept_graph, percept_of)
 from .pipeline import decode, decode_series, reads_series
@@ -92,23 +92,9 @@ log = logging.getLogger("received")
 #  (knowledge/domain/kernel/stance.md).
 GRACE = 1
 
-#  HOW MANY READINGS OF ONE NUMBER SAY A SENSOR STUCK, and so how many of a sensor's percepts are
-#  kept, where the agent's self graph states no `sensing:stuckAfter`: twice the silence limit. A live
-#  instrument's count moves by a bit within a few readings even in still soil, and soil itself
-#  drifts within an hour, so six readings of one number — an hour at the greenhouse's ten minutes,
-#  two at the terrace's twenty — are the signature of a frozen oscillator or a half-lost wire rather
-#  than of equilibrium; and the suspicion costs one row alone, since the first reading that differs
-#  ends it. Sensing's stuck rule (`rules.ttl`) reads the same stance with this figure where none is
-#  stated, and `tests/test_received.py` holds the two to one figure.
-STUCK_AFTER = 6
-
 #  THE KEY: what the sensor observes, of what it is mounted in — read for a series alone, which names
 #  its stretches by it.
 _KEY_Q = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; sosa:isHostedBy ?feature }"
-
-#  THE SILENCE SAID OF THIS SENSOR, if any — the graph holding the row, found by its content.
-_SILENCE_Q = """
-SELECT ?g WHERE { GRAPH $cat { ?g a orexis:BeliefGraph } GRAPH ?g { $sensor sensing:silentSince ?since } }"""
 
 #  EVERY PERCEPT OF THIS SENSOR KEPT, newest first: its graph, its node, and whether a percept names
 #  it as its previous — the latest is the one none does.
@@ -151,8 +137,6 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     if readings is None:
         return []
     cat = Raw(f"<{catalogue_of(store)}>")
-    for silence in rows(store, _SILENCE_Q, (), cat=cat, sensor=sensor):
-        forget_graph(store, silence["g"])
     kept = rows(store, _KEPT_Q, (), cat=cat, sensor=sensor)
     latest = next((r for r in kept if r.get("followed") != "true"), None)
     #  EVERY READING THE MESSAGE CARRIES, oldest first, each placed that long before it arrived: an
@@ -177,7 +161,7 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
              "".join(f", and read {n:g} {a:g}s before" for n, a in readings[:-1]))
     #  AS DEEP AS SENSING'S RULES READ: the sensor's last `stuckAfter` percepts, and never fewer than
     #  the latest — each one older forgotten, with what was concluded of it.
-    depth = max(1, stance(store, STUCK_AFTER_TERM, STUCK_AFTER, memo))
+    depth = max(1, limit_of(store, sensor, STUCK_AFTER_TERM, memo))
     newest_first = [*reversed(written), *(r["g"] for r in kept)]
     for old in newest_first[depth:]:
         forget_graph(store, old, revisions=OBSERVATION_GRAPH)

@@ -9,10 +9,12 @@ from pathlib import Path
 
 from agent import clock
 from agent.runtime import UNFINISHED, Runtime, boot
-from agent.sensing.received import STUCK_AFTER
+from agent.sensing.ontology import STUCK_AFTER_TERM, default_of
 from agent.store import rows
 from agent.transport.mqtt.driver import Mqtt
 from simulation.simulator import Simulator
+
+STUCK_AFTER = default_of(STUCK_AFTER_TERM)          # where the observer role states none, the observer shape's default
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)

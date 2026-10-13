@@ -13,7 +13,10 @@
 #  domain ships the rules that conclude Hanoi's facts from the grid's, which refine a move into the
 #  courier's steps beneath it.
 
-:mover a orexis:Self , planning:Planner , execution:Executor , belief:Deliberator .
+:mover a orexis:Self ;
+    orexis:plays [ a planning:Planner ] ,
+                 [ a execution:Executor ] ,
+                 [ a belief:Deliberator ] .
 
 #  WHAT ITS SEARCH MAY SPEND IN A PASS, a stance (knowledge/domain/kernel/stance.md).
 #  `tests/test_tower.py` walks two disks home with no budget of its own, reading this one; measured

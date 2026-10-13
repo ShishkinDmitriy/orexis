@@ -90,10 +90,11 @@ GRAPH :world {
   :zamioculcas a :Pot .
 }
 
-# THE SELF, its world's self graph as the boot puts it in: this is the keeper's store, and the
-# neighbour's lamp is not its.
+# THE SELF, its world's self graph as the boot puts it in: this is the keeper's store, its observer role
+# reads the pot's three sensors, and the neighbour's lamp is not its.
 GRAPH :self {
   :keeper a orexis:Self .
+  :keeper orexis:plays [ a sensing:Observer ; sensing:sensor :hygro , :probe , :thermo ] .
 }
 
 GRAPH :catalogue {

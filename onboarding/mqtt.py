@@ -9,10 +9,10 @@ the world already states every channel and who is wired to it.
 
 **The ACL is the wiring.** Nothing is listed by hand. The world's society graph says, in MQTT4SSN's
 words, which topic each sensor publishes on and which each device listens to, and who acts for
-what; the world graph beside it says which sensor is hosted by what:
+what; each agent's self graph says which sensors the observer roles it plays read:
 
-    an agent acts for S         read the topics of every sensor S hosts, and write the topic its
-                                board listens to (cadence and sense-now)
+    an agent reads sensor S     read the topics S publishes on, and write the topic its board
+                                listens to (cadence and sense-now)
     an agent holds actuator A   write the topic A listens to, or its board's (a step's command)
     a client hosts sensor X     write the topics X publishes on
     a client hosts actuator A   read the topics A listens to, and the client's own
@@ -110,6 +110,7 @@ class Principal:
 
 
 BELIEF = "http://example.org/orexis#BeliefGraph"
+SELF_GRAPH = "http://example.org/orexis#SelfGraph"
 ACTUATION = "http://example.org/orexis/actuation#"
 
 #  A TOPIC IS NAMED BY THE PATTERNS OF THE FILTERS THAT MATCH IT, in every query below.
@@ -118,16 +119,17 @@ ACTUATION = "http://example.org/orexis/actuation#"
 MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
 _AGENTS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
 
+#  WHAT AN AGENT READS AND NUDGES: the topics of every sensor an observer role it plays reads, and its
+#  board's — asked of the agent as its boot reads it, since which sensors are its is declared in its own
+#  self graph (`sensing:sensor`), which a store of the whole world does not hold.
 _HEARS_Q = f"""
-SELECT ?id ?pattern WHERE {{
-  ?a a orexis:Agent ; orexis:localId ?id ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host ; <{MQTT4SSN}observesTopic> ?topic .
+SELECT ?pattern WHERE {{
+  ?me a orexis:Self ; orexis:plays/sensing:sensor ?sensor . ?sensor <{MQTT4SSN}observesTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
 _NUDGES_Q = f"""
-SELECT ?id ?pattern WHERE {{
-  ?a a orexis:Agent ; orexis:localId ?id ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host .
+SELECT ?pattern WHERE {{
+  ?me a orexis:Self ; orexis:plays/sensing:sensor ?sensor .
   ?board ssn:hasSubSystem ?sensor ; <{MQTT4SSN}listensToTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
@@ -251,10 +253,13 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
 
     for row in _rows(store, _AGENTS_Q):
         agent(row["id"])
-    for row in _rows(store, _HEARS_Q):
-        agent(row["id"]).may(READ, row["pattern"])
-    for row in _rows(store, _NUDGES_Q):
-        agent(row["id"]).may(WRITE, row["pattern"])
+    for agent_id in list(agents):
+        beliefs = reading.boot(world_dir(world), agent_id, others=reading.ours())
+        stated = [*graphs_of(beliefs, BELIEF, common=True), *graphs_of(beliefs, SELF_GRAPH)]
+        for row in rows(beliefs, _HEARS_Q, stated):
+            agent(agent_id).may(READ, row["pattern"])
+        for row in rows(beliefs, _NUDGES_Q, stated):
+            agent(agent_id).may(WRITE, row["pattern"])
     for row in _rows(store, _COMMANDS_Q):
         agent(row["id"]).may(WRITE, row["pattern"])
     for row in _rows(store, _TOLD_Q):

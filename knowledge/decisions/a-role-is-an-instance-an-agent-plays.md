@@ -14,7 +14,8 @@ description: >-
   a peer sees a role is where it is stated, a document every agent of the world is given or the
   agent's own self graph. Refused - roles as types of the agent, package roles kept as types beside
   role instances, a link from the role to its player, and a role's period stated on the instance with
-  machinery of its own.
+  machinery of its own. Amended 2026-10-12 - an observer's silent and stuck limits are its role's,
+  the observer shape's default where none is stated, where they were stances with a constant in code.
 status: accepted
 timestamp: 2026-10-11T12:00:00Z
 ---
@@ -139,15 +140,37 @@ The role record's OntoClean grounding stands; it is applied one level up.
   of another. A peer's role is read only as asserted here, so nothing can be appointed at runtime.
   **The trigger: the first world where one agent's act gives another a role.**
 
+# An observer's limits are its role's (amended 2026-10-12)
+
+How long a sensor may be silent or stuck, `sensing:silentAfter` and `sensing:stuckAfter`, were
+[stances](/domain/kernel/stance.md), one figure for every sensor the agent heard, and where the self
+graph stated none a constant in `missed` and `received` held — and a literal six in the stuck rule,
+which reads the figure too and could not import a constant, so the one figure lived in two places held
+equal by a test. Decided: **a limit is a figure about what a role is over, so the observer role states
+it** beside the sensors it reads, and where a role states none **the observer shape's `sh:defaultValue`
+holds**, in sensing's ontology, which Python and the rule both read. A sensor judged by another figure
+is read by another observer role, as two venues are two host roles.
+
+Refused: the limits kept as stances, since a figure the agent holds about one of its sensors is not its
+word about itself, and one figure for all its sensors is the per-context value this record exists to
+give a home; and the default kept in code, since a rule cannot read it, and a default in two places is
+the drift a test was holding back. The other stances keep their constants in code: nothing but Python
+reads them.
+
 # How it is built
 
-An issue holds the build. The role classes and `orexis:plays` first, with the boot reading roles
-off the instances and every world's self graph and society rewritten; then the market's roles
-carrying their venue, their valve and their price, with `market:hosts` and `market:bidsIn` retired
-and Serving and Bidding reading the role. A world in which one agent hosts one venue and bids in
-another is the test that it holds.
+The first step is built: `orexis:plays` and the role classes no longer beneath `orexis:Agent`, the boot
+reading the classes of the roles played, every world's self graph rewritten, and the observer's role
+carrying its sensors (`sensing:sensor`) and its limits. Which sensors are an agent's is declared: the
+transports ask sensing for them (`cadence.sensors`), the broker's ACL is derived from them, and
+onboarding holds them to where they are mounted, both ways.
 
-Once built, this supersedes in part the role record (the role as a type of the agent, `orexis:Role`
-beneath `orexis:Agent`, and roles kept out of every document a peer is given) and the
-[role](/domain/kernel/role.md), [host](/domain/market/host.md) and
-[bidder](/domain/market/bidder.md) pages.
+Left: the market's roles carrying their venue, their valve and their price, with `market:hosts` and
+`market:bidsIn` retired and Serving and Bidding reading the role. A world in which one agent hosts one
+venue and bids in another is the test that it holds.
+
+Once that is built, this supersedes in part the [role](/domain/kernel/role.md),
+[host](/domain/market/host.md) and [bidder](/domain/market/bidder.md) pages' remaining account of the
+relations a role was founded on; the role record (the role as a type of the agent, `orexis:Role`
+beneath `orexis:Agent`) and the stance record (a sensor's limits as stances) are superseded in part
+already.

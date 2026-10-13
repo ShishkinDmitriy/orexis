@@ -88,7 +88,6 @@ TR  --> SEN : bytes
 TR  --> SP : a document
 SEN --> obs
 SEN --> fc
-SEN --> st : silentSince
 SEN --> DEL : revise · trigger
 DEL --> rev
 DEL --> st : a transition

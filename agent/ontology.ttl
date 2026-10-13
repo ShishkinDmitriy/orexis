@@ -34,7 +34,7 @@ orexis:Action
 orexis:Agent
     a owl:Class ;
     rdfs:label "Agent" ;
-    rdfs:comment "A self-interested principal: one process, told its own `orexis:localId`, holding one store and acting for a subject (`orexis:actsFor`). What it RUNS is the packages its declared roles call for (`orexis:Role`); what it can DO is the actions its world's domains ship and those packages take (knowledge/domain/kernel/agent.md)." .
+    rdfs:comment "A self-interested principal: one process, told its own `orexis:localId`, holding one store and acting for a subject (`orexis:actsFor`). What it RUNS is the packages the roles it plays call for (`orexis:plays`); what it can DO is the actions its world's domains ship and those packages take (knowledge/domain/kernel/agent.md)." .
 
 orexis:Arrival
     a owl:Class ;
@@ -77,9 +77,8 @@ orexis:RecordGraph
 
 orexis:Role
     a owl:Class ;
-    rdfs:subClassOf orexis:Agent ;
     rdfs:label "Role" ;
-    rdfs:comment "The kind every role is beneath (knowledge/domain/kernel/role.md): what an agent runs and may do, DECLARED of it in its own self graph — `:supplier a orexis:Self , market:Host` — and never derived from the world. A package declares the roles it serves in its own ontology, beneath this; a domain declares roles in its own words beneath package roles; and the boot loads a package only where the closure of the agent's declared roles reaches one its ontology declares. Anti-rigid, as a role is: its holder could cease to hold it, so no role is every agent's, and an agent declaring none loads nothing and is refused at onboarding (knowledge/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)." .
+    rdfs:comment "The class every role class is beneath (knowledge/domain/kernel/role.md). A role is an INSTANCE an agent plays, never its type: the agent declares it in its own self graph by `orexis:plays` — `:supplier orexis:plays [ a market:Host ]` — and it carries its own context and what belongs to it, as an observer's carries the sensors it reads. A package declares the role classes it serves in its own ontology, beneath this; a domain declares role classes in its own words beneath package ones; and the boot loads a package only where the closure of the classes of the roles the agent plays reaches one its ontology declares. Not beneath `orexis:Agent`: a role is played by an agent and is none. Anti-rigid, as a role is: its player could cease to play it, so no role is every agent's, and an agent playing none loads nothing and is refused at onboarding (knowledge/decisions/a-role-is-an-instance-an-agent-plays.md)." .
 
 orexis:SocietyGraph
     a owl:Class ;
@@ -97,7 +96,7 @@ orexis:SelfGraph
     a owl:Class ;
     rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Self graph" ;
-    rdfs:comment "Which agent is the self, and the one private graph whose owner is read off what it holds rather than stated beside it: `<agent> a orexis:Self`, exactly once, in a document of this kind and no other, authored in the world under `beliefs/` and owned by the self it states. A belief, so a text answered over what is known reads it and it crosses into an imaginarium; OWNED, since it is true of one agent's store and of no other's, so a reader that reads what the world states, the common beliefs, and asks the self states this kind beside them. And where the agent's STANCES are: a figure a package reads of the agent — its patience, a budget, a limit — stated as a triple about the self here and read off this kind alone, the package's constant where none is stated (knowledge/domain/kernel/stance.md). And its ROLES, the other kinds the self is stated beside `orexis:Self` here, read by the boot before any package is loaded (`orexis:Role`)." .
+    rdfs:comment "Which agent is the self, and the one private graph whose owner is read off what it holds rather than stated beside it: `<agent> a orexis:Self`, exactly once, in a document of this kind and no other, authored in the world under `beliefs/` and owned by the self it states. A belief, so a text answered over what is known reads it and it crosses into an imaginarium; OWNED, since it is true of one agent's store and of no other's, so a reader that reads what the world states, the common beliefs, and asks the self states this kind beside them. And where the agent's STANCES are: a figure a package reads of the agent — its patience, a budget, a limit — stated as a triple about the self here and read off this kind alone, the package's constant where none is stated (knowledge/domain/kernel/stance.md). And its ROLES, each an instance the self `orexis:plays` here, read by the boot before any package is loaded (`orexis:Role`)." .
 
 orexis:WorldGraph
     a owl:Class ;
@@ -145,6 +144,13 @@ orexis:localId
     rdfs:range xsd:string ;
     rdfs:label "local id" ;
     rdfs:comment "The short name a resource is known by outside RDF, stated so nothing has to infer it from the shape of a URI: an agent's, the ONE instance identifier a process is given and the string that is also its broker principal, its bucket, its container and its directory — everything else it discovers — and a board's, for the firmware generator. A sensor and a subject need none: the series tags them by the local name of their IRI (agent/sensing/events.py, tag_of), which every world gives them, where a stated id was missing in the one world that mattered (#885)." .
+
+orexis:plays
+    a owl:ObjectProperty ;
+    rdfs:domain orexis:Agent ;
+    rdfs:range orexis:Role ;
+    rdfs:label "plays" ;
+    rdfs:comment "A role this agent plays, stated in its own self graph beside `orexis:Self` and holding over that graph's period: an instance of a role class, anonymous unless something must refer to it, carrying its own context. The boot reads it before any package is loaded, so it is a word packages meet at (knowledge/decisions/a-role-is-an-instance-an-agent-plays.md)." .
 
 orexis:start
     a owl:DatatypeProperty ;

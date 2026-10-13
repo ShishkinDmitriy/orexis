@@ -530,9 +530,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   own** — `received` writes one `sosa:Observation` per reading, a percept linked to the one before by
   `sensing:previous`, the latest holding until the next is due and a grace past it and every older one
   ended where the next began; it keeps a sensor's last `sensing:stuckAfter` and nothing sweeps the rest
-  but it; `missed` says `sensing:silentSince` of a sensor whose latest has ended, asking
+  but it; `missed` answers which sensors are silent, their latest ended a limit of cadences ago, asking
   `cadence.lapsed` as the transport does; `agent/prediction/` accumulates the drifts' rates from the
   latest, speaking sensing's kind and importing none of its code (#944).
+- **A silence is computed and never written** — its premises are stored (the latest percept's end,
+  the cadence, the role's limit), the belief made of the percept ended with that period a limit of
+  cadences before, and nothing in the mind reads one; a silence graph of sensing's own was built and refused
+  as a second record of what the period's end says, which the next reading had to find and take back.
 - **A belief is a crisp triple, and probability lives only inside an estimator** — sensing and
   prediction may keep a mean and a spread while they work, and write a value, a side or a band as
   two numbers (a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
@@ -549,9 +553,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
   read there alone, and the package's constant holds where none is stated** — the patience, both
-  budgets, the silent and stuck limits and the horizon, each declared by its reader's package and
-  read through `agent/stance.py`; never a flag or a common belief, and a grace or a metrics window
-  is none (a-stance-is-the-agents-word-about-itself).
+  budgets and the horizon, each declared by its reader's package and read through `agent/stance.py`;
+  never a flag or a common belief, and a grace or a metrics window is none
+  (a-stance-is-the-agents-word-about-itself). A figure about what a role is OVER is the role's: an
+  observer's silent and stuck limits, the observer shape's `sh:defaultValue` where it states none.
 - **A world's test hands its agent no budget, so the figure it passes at is the one the self graph
   states** — handed by the tests, 128 and 256 were proved while every container searched at 32, at
   which the tower's two disks were not walked home in the test's passes (#932).
@@ -639,11 +644,17 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   was scanned for them; and the drifts' kind is the kernel's, not prediction's, because a domain
   ships drifts every agent reads, predictor or not, and a kind only prediction declared would be refused
   for every agent that is none.
-- **A package is loaded only for a role the agent is declared in, in its self graph, and there is no
-  default** — each package declares its roles in its own ontology, read apart from the store, a domain's
-  roles sit beneath them, and a transport is loaded where a loaded role needs bytes and the society
-  wires a bus; a premise read off the world was refused, since it cannot write an assignment no fact
-  implies (#927, a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+- **A package is loaded only for a role the agent plays, in its self graph, and there is no
+  default** — a role is an instance the agent `orexis:plays`, never its type; each package declares its
+  role classes in its own ontology, read apart from the store, a domain's role classes sit beneath
+  them, and a transport is loaded where a loaded role needs bytes and the society wires a bus; a
+  premise read off the world was refused, since it cannot write an assignment no fact implies (#927,
+  a-package-is-loaded-only-for-a-role-the-agent-is-declared-in, a-role-is-an-instance-an-agent-plays).
+- **An observer role declares the sensors it reads, and how long it lets them be silent or stuck** —
+  `sensing:sensor`, `sensing:silentAfter`, `sensing:stuckAfter`; a sensor moved into a pot is not the
+  agent's until a role says so, onboarding refuses a declared sensor mounted on nothing the agent acts
+  for and a mounted one no role reads, the transports ask sensing which are the agent's
+  (`cadence.sensors`), and the broker's ACL is derived from the declarations.
 - **A role's need is a shape shipped by whoever owns the words it is stated in, and onboarding holds a
   declaration to its world both ways** — the executor's need to be a planner is planning's shape, the
   speaker's topic the MQTT transport's, since a package beneath may not speak them (#927).
@@ -720,7 +731,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    beneath it and never above — belief, planning and execution import nothing of prediction, and
    outside planning the one name imported is `Planner` — and each package's layout test holds it to
    that. Which packages an agent runs is the [roles](knowledge/domain/kernel/role.md) its self graph
-   declares, each served by the package whose ontology declares it.
+   says it plays, each of a class the package whose ontology declares it serves.
    `agent/runtime.py` is the container that assembles them all. **A domain is documents and no
    code**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
    with `owl:imports`. Adding a way of acting is a node in a domain's `actions.ttl` — a

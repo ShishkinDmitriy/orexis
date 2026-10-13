@@ -294,17 +294,30 @@ _ROLE_HEAD = """@prefix : <http://example.org/test#> .
 """
 
 
-def _declared(tmp_path, roles, facts: str = "", **documents) -> Path:
-    """A world of one agent, `me`, importing the market, declared in `roles` in its self graph."""
+def _declared(tmp_path, roles, facts: str = "", reads=(), **documents) -> Path:
+    """A world of one agent, `me`, importing the market, playing a role of each class in `roles` in its
+    self graph — each given `reads`, the sensors an observer role reads — or each role there written out
+    whole where it is a `(class, what follows it)` pair."""
     market = (REPO_ROOT / "domains" / "market" / "ontology.ttl").as_uri()
     (tmp_path / "world.ttl").write_text(_ROLE_HEAD + f"<> a orexis:WorldGraph ; owl:imports <{market}> .\n"
                                         ':me a orexis:Agent ; orexis:localId "me" ; orexis:actsFor :pot .\n' + facts)
     (tmp_path / "beliefs").mkdir(exist_ok=True)
     (tmp_path / "beliefs" / "me.self.ttl").write_text(
-        _ROLE_HEAD + "<> a orexis:SelfGraph .\n:me a orexis:Self" + "".join(f" , <{r}>" for r in roles) + " .\n")
+        _ROLE_HEAD + "<> a orexis:SelfGraph .\n:me a orexis:Self" + _plays(roles, reads) + " .\n")
     for name, text in documents.items():
         (tmp_path / f"{name}.ttl").write_text(_ROLE_HEAD + text)
     return tmp_path
+
+
+_SENSOR = "http://example.org/orexis/sensing#sensor"
+OBSERVER = "http://example.org/orexis/sensing#Observer"
+
+
+def _plays(roles, reads=()) -> str:
+    """`; orexis:plays [ a <class> … ] , …` for each of `roles`, or nothing for none."""
+    played = [f"[ a <{r[0]}>{r[1]} ]" if isinstance(r, tuple) else
+              f"[ a <{r}>" + "".join(f" ; <{_SENSOR}> :{s}" for s in reads) + " ]" for r in roles]
+    return f" ; orexis:plays {' , '.join(played)}" if played else ""
 
 
 def _needs() -> list[tuple[str, str]]:
@@ -339,19 +352,22 @@ def test_onboarding_refuses_an_agent_declaring_no_role(tmp_path, monkeypatch):
 
     world = _declared(tmp_path, [])
     assert [line.split(":", 1)[0] for line in reading.refused(world)] == ["me"]
-    assert "declares no role" in reading.refused(world)[0]
+    assert "plays no role" in reading.refused(world)[0]
     monkeypatch.setattr(onboard, "world_dir", lambda name: world)
-    with pytest.raises(SystemExit, match="declares no role"):
+    with pytest.raises(SystemExit, match="plays no role"):
         onboard.onboard("me")
 
 
 @pytest.mark.parametrize("role, message", NEEDS, ids=[role.rsplit("#", 1)[-1] for role, _ in NEEDS])
 def test_onboarding_refuses_a_declared_role_whose_needs_its_world_lacks(tmp_path, role, message):
     """Declared in the role alone, in a world holding nothing the role needs: the shape its need is
-    stated by comes back with a row, and onboarding says what it says."""
+    stated by comes back with a row, and onboarding says what it says. An observer is held to two
+    needs, reading a sensor and reading only sensors that report to it, so it is played twice: once
+    reading nothing, and once reading `:stray`, which nothing the agent acts for mounts."""
     from onboarding import reading
 
-    refused = reading.refused(_declared(tmp_path, [role]))
+    played = [role, (role, f" ; <{_SENSOR}> :stray")] if role == OBSERVER else [role]
+    refused = reading.refused(_declared(tmp_path, played, ":stray a sosa:Sensor .\n"))
     assert f"me: {message}" in refused, refused
 
 
@@ -366,12 +382,18 @@ def test_every_role_but_the_deliberators_states_a_need():
     assert roles - targeted == {"http://example.org/orexis/belief#Deliberator"}, sorted(roles - targeted)
 
 
-def test_onboarding_refuses_a_sensor_reporting_to_an_agent_that_is_no_observer(tmp_path):
+def test_onboarding_refuses_a_sensor_reporting_to_an_agent_that_no_observer_role_of_its_reads(tmp_path):
+    """A sensor mounted on what the agent acts for is read by no role of its — no observer at all, or an
+    observer reading another: each such sensor said by name, and one a role reads said of nothing."""
     from onboarding import reading
 
     deliberator = "http://example.org/orexis/belief#Deliberator"
-    refused = reading.refused(_declared(tmp_path, [deliberator], ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n"))
-    assert refused == ["me: a sensor reports to it, and it is no observer: no package it loads would read the sensor"]
+    mounted = ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n:hygro a sosa:Sensor ; sosa:isHostedBy :pot .\n"
+    unread = ("reports to it, and no observer role it plays reads it: no package it loads would read the sensor — "
+              "`orexis:plays [ a sensing:Observer ; sensing:sensor <sensor> ]` says one does")
+    assert reading.refused(_declared(tmp_path, [deliberator], mounted)) == [f"me: hygro {unread}", f"me: probe {unread}"]
+    assert reading.refused(_declared(tmp_path, [OBSERVER], mounted, reads=["probe"])) == [f"me: hygro {unread}"]
+    assert reading.refused(_declared(tmp_path, [OBSERVER], mounted, reads=["probe", "hygro"])) == []
 
 
 def test_onboarding_refuses_a_topic_an_agent_listens_to_with_no_speaker(tmp_path):

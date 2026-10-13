@@ -108,13 +108,13 @@ thing here the sovereign chose rather than wired — so before anything is grant
 boots every agent as its container would and holds the declaration to the world both ways
 (`refused` in `onboarding/reading.py`). It refuses:
 
-- **an agent declaring no role**, which would boot, load nothing and run nothing;
+- **an agent playing no role**, which would boot, load nothing and run nothing;
 - **a declared role whose needs the world lacks** — each need a SHACL shape targeting the role, its
   `sh:sparql` select's every row a violation, shipped by the package or domain whose words the need
-  is stated in: a planner holding no desire or want, an executor that is no planner, an observer no
-  sensor reports to, a predictor with no sensor or no drift, a speaker listening to no topic, a host
+  is stated in: a planner holding no desire or want, an executor that is no planner, an observer that
+  reads no sensor or reads one mounted on nothing the agent acts for, a predictor with no sensor or no drift, a speaker listening to no topic, a host
   hosting no venue, a bidder bidding in none;
-- **a sensor reporting to an agent that is no observer**, and **a topic an agent listens to with no
+- **a sensor reporting to an agent that no observer role of its reads**, and **a topic an agent listens to with no
   speaker**, each something that would arrive and be read by none of its roles;
 - **a graph the agent would read of a kind none of the packages it loads declares** — the refusal of
   a kind no reader declares, below, narrowed to the agent, which is how rules held by an agent that

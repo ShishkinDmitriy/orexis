@@ -13,8 +13,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from agent.sensing.received import STUCK_AFTER
+from agent.sensing.ontology import STUCK_AFTER_TERM, default_of
 from simulation.simulator import JITTER, PLACES, Simulator
+
+STUCK_AFTER = default_of(STUCK_AFTER_TERM)          # where the observer role states none, the observer shape's default
 
 WORLD = Path(__file__).resolve().parents[2] / "world" / "greenhouse"
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)

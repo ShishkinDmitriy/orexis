@@ -11,7 +11,7 @@ description: >-
 
 # What it is
 
-`:rose_grower a orexis:Self , market:Bidder` in the grower's self graph, and
+`:rose_grower orexis:plays [ a market:Bidder ]` in the grower's self graph, and
 `:rose_grower market:bidsIn :water` in the society. The two are two facts with two readers: the role
 says what the grower runs, and only the grower reads it; the relation says where it bids, and the
 host's plans read it to know whom a round is told to.

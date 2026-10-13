@@ -65,4 +65,9 @@ def framed_greenhouse(tmp_path):
         assert old in text, old
         text = text.replace(old, new)
     society.write_text(text + WIRED)
+    #  AND THE GROWER READS THE FRAME'S THERMOMETER, its observer role saying so.
+    grower = world / "beliefs" / "grower.self.ttl"
+    read = "sensing:sensor :moisture_probe , :thermometer"
+    assert read in grower.read_text(), "the grower's observer role reads the bed's two sensors"
+    grower.write_text(grower.read_text().replace(read, read + " , :frame_thermometer"))
     return world
