@@ -118,6 +118,8 @@ stuck sensor ([stuck](/domain/sensing/stuck.md)).
 | an observer role naming no sensor | it would observe nothing |
 | a role naming a sensor mounted on nothing the agent acts for | the sensor does not report to it |
 | a sensor mounted on what the agent acts for that no role names | its bytes would reach no package |
+| a sensor observing no property, or mounted on nothing | it reports nothing of anything |
+| a range's condition with no one property, or a floor not below its ceiling | no reading can be judged by it |
 | a margin that is no number, negative, or half the range or more | the state could never be left |
 
 # Prove it

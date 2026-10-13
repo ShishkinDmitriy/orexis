@@ -525,6 +525,25 @@ and the broker's address in the deployment graph. [world-graph](/decisions/world
 the broker "to the world" as the one piece of infrastructure all members must agree on; the
 rendezvous stays public, its address does not.
 
+**Amended 2026-10-13 (#838): a requirement is a kind onboarding reads.** The sovereign extended
+this record on 2026-09-27: what a sovereign authored is validated at onboarding, by shapes the
+package owning each word ships. The question it left was how *a kind the agent knows* differs from
+*a kind it reads*, since the boot loads every kind its vocabulary declares. This record's own rule
+answers it: the agent reads no such shape, so the shapes go in a graph of a kind the agent's
+vocabulary does not declare — `onboarding:RequirementGraph`, declared beside the hardware and the
+deployment graphs — and the boot passes over it as it does over those. Each package still ships its
+own, in a `requirements.ttl` beside its ontology
+([requirement](/domain/onboarding/requirement.md)).
+
+Two alternatives were refused. **The shapes in the package's ontology graph** were built first, on
+the argument that nothing in the mind asks for a shape there; but every agent then loaded what none
+of them reads, which is the list of things kept out that this record replaced with a kind. **The
+shapes read off each agent's boot** fail the roles: an agent playing an executor alone loads no
+planning, and the requirement refusing it is planning's. So onboarding reads the requirements off
+the world. One shape stays in a vocabulary: the observer's `sh:defaultValue` for the limits a role
+leaves unstated, which the stuck rule reads off sensing's ontology as the agent runs. It refuses
+nothing.
+
 # Seams left open
 
 - **How several broker addresses, and a credential per broker, reach an agent.** Two constraints

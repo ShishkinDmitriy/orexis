@@ -209,28 +209,6 @@ planning:Planner a owl:Class ;
     Planner, one concept with it. Declared, never derived; it needs a desire or a want the agent
     holds, since a planner with nothing to pursue plans nothing.""" .
 
-[] a sh:NodeShape ;
-    sh:targetClass planning:Planner ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a planner holds no desire and no want: it would plan nothing" ;
-        sh:select """SELECT ?me WHERE { ?me a orexis:Self
-            FILTER NOT EXISTS { ?desire a planning:Desire }
-            FILTER NOT EXISTS { ?want a planning:Want } }""" ] .
-
-#  AN EXECUTOR IS A PLANNER TOO, while a plan crosses no agent: the executor walks what planning
-#  published in the same store, and a step is checked against the present by the Planner when it is
-#  taken (#916). Stated HERE and not in execution's ontology because being a planner is planning's
-#  word, and execution, beneath it, speaks none of planning's; the seam that would lift it is a plan
-#  crossing agents (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
-
-[] a sh:NodeShape ;
-    sh:targetClass execution:Executor ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "an executor is no planner: nothing would publish a plan for it to walk" ;
-        sh:select """SELECT ?me WHERE { ?me a orexis:Self
-            FILTER NOT EXISTS { ?me orexis:plays ?role .
-                                { ?role a planning:Planner } UNION { ?role a ?kind . ?kind rdfs:subClassOf planning:Planner } } }""" ] .
-
 #################  Desires, wants and the searched half of an action — planning's  #################
 
 planning:Desire

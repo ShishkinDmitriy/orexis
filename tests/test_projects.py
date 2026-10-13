@@ -87,11 +87,29 @@ def test_the_root_declares_exactly_what_its_own_trees_import():
     pyproject."""
     assert all((REPO_ROOT / tree).is_dir() for tree in OWN_TREES), "a shipped tree moved"
     want = set().union(*(needed(REPO_ROOT / tree) for tree in sorted(OWN_TREES)))
-    have = declared(REPO_ROOT / "pyproject.toml")
+    have = declared(REPO_ROOT / "pyproject.toml") | onboarding_extra(REPO_ROOT / "pyproject.toml")
     assert have == want, (
         "pyproject.toml is out of step with what agent/, onboarding/ and simulation/ import.\n"
         f"  missing: {sorted(want - have) or 'none'}\n"
         f"  unused:  {sorted(have - want) or 'none'}")
+
+
+def onboarding_extra(pyproject: Path) -> set[str]:
+    """The `onboarding` extra's distributions: what onboarding alone imports, which the agent image,
+    installing the distribution bare, never carries."""
+    config = tomllib.loads(pyproject.read_text())
+    return {normalise(re.split(r"[<>=!~\[;\s]", spec, maxsplit=1)[0])
+            for spec in config["project"]["optional-dependencies"]["onboarding"]}
+
+
+def test_what_the_onboarding_extra_carries_no_agent_or_simulator_imports():
+    """The image installs the distribution with no extra, so an import of the extra's under `agent/`
+    or `simulation/` is a ModuleNotFoundError in every container and in no test."""
+    extra = onboarding_extra(REPO_ROOT / "pyproject.toml")
+    assert extra, "the onboarding extra declares nothing — the guard would check nothing"
+    leaked = {tree: needed(REPO_ROOT / tree) & extra for tree in ("agent", "simulation")}
+    assert not any(leaked.values()), leaked
+    assert extra <= needed(REPO_ROOT / "onboarding"), "the onboarding extra declares what onboarding does not import"
 
 
 def test_the_distribution_ships_exactly_its_own_trees():

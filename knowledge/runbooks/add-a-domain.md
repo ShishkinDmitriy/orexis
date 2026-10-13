@@ -19,6 +19,7 @@ kind on `<>`; the file's name is for eyes.
 | `shapes.ttl` | `<> a planning:ShapesGraph` | met-tests a desire's `planning:metWhen` points at, and the selects `planning:estimates` points at |
 | `rules.ttl` | `<> a sh:RulesGraph` | rules the deliberator runs over the beliefs — the market's revisions of its documents, the tower's [bridges](/domain/planning/bridge.md) |
 | `drifts.ttl` | `<> a orexis:DriftGraph` | what a value does by itself, `prediction:Drift`s |
+| `requirements.ttl` | `<> a onboarding:RequirementGraph` | what a world using its words must state, held by `orexis-onboard` alone ([requirement](/domain/onboarding/requirement.md)) |
 
 A domain that combines others imports them: the tower's ontology imports `<../hanoi/ontology.ttl>`
 and `<../courier/ontology.ttl>` beside its own rules.
@@ -26,7 +27,7 @@ and `<../courier/ontology.ttl>` beside its own rules.
 A domain whose agents play a part only its words can name declares that as a
 [role](/domain/kernel/role.md) in its `ontology.ttl`, `rdfs:subClassOf` each package role it needs —
 the market's `market:Host` is beneath the planner, the executor, the speaker and, since it ships
-`rules.ttl`, the deliberator — and beside it a SHACL shape targeting the role whose `sh:sparql`
+`rules.ttl`, the deliberator — and in its `requirements.ttl` a SHACL shape targeting the role whose `sh:sparql`
 select returns a row where the world lacks what the role is founded on, `market:hosts` for the host.
 A world's agents are then declared in the domain's word, and nobody lists what it runs.
 

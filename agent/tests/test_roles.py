@@ -27,6 +27,7 @@ import pytest
 
 from agent.runtime import (HTTP, KERNEL, MQTT, OBSERVER, SPEAKER, VOCABULARY, WATCHERS, Runtime, _documents_of,
                            _vocabularies, boot, every_package, packages_of, roles_of)
+from agent.store import document, kinds_in
 
 ROOT = Path(__file__).resolve().parents[2]
 ME = "http://example.org/test#me"
@@ -61,9 +62,15 @@ def _world(tmp_path: Path, roles=(), facts: str = "", sensors=()) -> Path:
 
 
 def _held(store: ox.Store, package: str) -> list[bool]:
-    """For each document of `package`, whether its graph is in the store."""
+    """For each document of `package` of a kind an agent reads, whether its graph is in the store — a
+    package's requirements are onboarding's kind, which no agent loads (requirement.md)."""
     return [bool(list(store.quads_for_pattern(ox.NamedNode(path.as_uri()), None, None)))
-            for path in _documents_of([package])]
+            for path in _documents_of([package])
+            if not set().union(*kinds_in(document(path)).values()) & _ONBOARDINGS]
+
+
+#  THE KINDS ONLY ONBOARDING READS, by its vocabulary's own word: a test of the agent may name a term.
+_ONBOARDINGS = {"http://example.org/orexis/onboarding#RequirementGraph"}
 
 
 def _creates(package: str) -> bool:
