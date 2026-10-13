@@ -17,7 +17,6 @@ from agent.belief.ontology import REVISION_GRAPH
 from agent.execution.ontology import COMMITTED_STEP_GRAPH
 from agent.ontology import BELIEF, SELF_GRAPH
 from agent.runtime import UNFINISHED, Runtime, boot
-from agent.sensing.ontology import SILENCE_GRAPH
 from agent.store import graphs_of, rows
 from agent.series import HISTORY, Sink, install
 from agent.transport.mqtt.driver import Mqtt
@@ -98,7 +97,7 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
     assert broker.published == [], "nothing is wanted, so nothing is sent"
 
 
-def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monkeypatch):
+def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monkeypatch, caplog):
     """The terrace's one board reports once and then dies. Nothing arrives after, so no pass has
     a message to take; the passes still ask what has gone missing, and once three cadences are gone
     past a reading's grace — a hundred minutes at twenty a reading (#870) — every sensor of the board
@@ -111,8 +110,8 @@ def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monke
     later = NOW + timedelta(minutes=100)
     monkeypatch.setattr(clock, "now", lambda: later)
     runtime.run(passes=1, poll_s=0)
-    silent = rows(runtime.beliefs, "SELECT ?s WHERE { ?s sensing:silentSince ?t } ORDER BY ?s", graphs_of(runtime.beliefs, SILENCE_GRAPH))
-    assert [r["s"].rsplit("#", 1)[-1] for r in silent] == [
+    said = [r.getMessage() for r in caplog.records if r.name == "missed"]
+    assert sorted(m.split(": ", 1)[1].split(" ", 1)[0] for m in said) == [
         "air_humidity_terrace", "air_pressure_terrace", "air_temp_terrace", "battery_sensor_terrace",
         "moisture_sensor_terrace"]
     assert broker.published == []

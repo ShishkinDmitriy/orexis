@@ -31,7 +31,6 @@ frame "sensing" {
   component "received · missed\nruns revision over its observations" as SEN
   folder "sensing:ObservationGraph\none per reading · linked by sensing:previous" as obs #FFFCF2
   folder "sensing:ForecastGraph" as fc
-  folder "sensing:SilenceGraph\na sensor said silent, while it lasts" as sil
 }
 
 frame "speech" {
@@ -89,7 +88,6 @@ TR  --> SEN : bytes
 TR  --> SP : a document
 SEN --> obs
 SEN --> fc
-SEN --> sil : silentSince
 SEN --> DEL : revise · trigger
 DEL --> rev
 DEL --> st : a transition

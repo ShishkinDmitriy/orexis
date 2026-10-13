@@ -15,7 +15,7 @@ from agent.sensing.events import Doubted, Observed, Silence
 from agent.sensing.ontology import SILENT_AFTER_TERM, default_of
 from agent.sensing.ontology import OBSERVATION_GRAPH
 from agent.sensing.received import GRACE, received
-from agent.store import close_catalogue, document, graphs_of, put_document, rows
+from agent.store import close_catalogue, document, graphs_of, put_document
 
 SILENT_AFTER = default_of(SILENT_AFTER_TERM)          # where the observer role states none, the observer shape's default
 
@@ -27,7 +27,9 @@ PROBE = "http://example.org/test#probe"
 CADENCE = timedelta(seconds=900)
 
 
-def test_its_part_asks_after_silence_every_minute(monkeypatch, snapshots, stand_in_runtime):
+def test_its_part_asks_after_silence_every_minute(monkeypatch, snapshots, stand_in_runtime, caplog):
+    """Past its limit the probe is silent, said in the log once, at the ask it fell silent, and nothing
+    is written of it."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
     received(store, snapshots.ME, PROBE, b'{"value": 0.2}', snapshots.NOW)
@@ -35,9 +37,11 @@ def test_its_part_asks_after_silence_every_minute(monkeypatch, snapshots, stand_
     create(runtime).start(runtime)
     [(seconds, ask)] = runtime.timers
     assert seconds == EVERY_S and runtime.heard == [], "nobody hears an observation, so none is listened for"
-    assert ask() == []
-    said = rows(store, "SELECT ?s WHERE { GRAPH ?g { ?s sensing:silentSince ?t } }", ())
-    assert [r["s"] for r in said] == [PROBE], "the probe, silent past its limit, is said so"
+    before = set(store)
+    assert ask() == [] and ask() == []
+    assert [r.getMessage() for r in caplog.records if "silent since" in r.getMessage()] == [
+        f"keeper: probe silent since {(snapshots.NOW + CADENCE * (1 + GRACE)).isoformat(timespec='seconds')}"]
+    assert set(store) == before, "a silence is computed, never written"
 
 
 def test_where_heard_it_says_each_observation_with_its_interval_and_the_silence(monkeypatch, snapshots, stand_in_runtime):

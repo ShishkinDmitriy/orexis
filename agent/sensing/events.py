@@ -82,16 +82,16 @@ class Observed:
 
 @dataclass(frozen=True)
 class Silence:
-    """How many sensors are said silent now: `sensing:silentSince` in a belief graph of the agent's,
-    which `missed` writes once a sensor is past its limit of cadences and `received` takes back when a
-    reading ends it."""
+    """How many sensors are silent now: the latest reading missing for the limit of cadences the
+    observer role reading it allows (`sensing:silentAfter`), as `missed` answers it at each ask, until
+    a reading ends it."""
     metric = "silence"
     silent: Level = None
 
 
 @dataclass(frozen=True)
 class Doubted:
-    """A sensor the agent doubts, as it stands at the ask: said silent (`sensing:silentSince`), said
+    """A sensor the agent doubts, as it stands at the ask: silent (`missed`), said
     stuck (`sensing:stuckOn`, concluded of the percept holding now), each one or nought; and nought on both once, for a sensor doubted
     at the last ask and no longer. Named by the sensor, so the series says WHICH where `silence` says
     how many."""

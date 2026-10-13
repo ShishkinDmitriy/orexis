@@ -16,8 +16,8 @@
 #  interest, or a sosa:Sample that sosa:isSampleOf one — its board reaches it by ssn:hasSubSystem,
 #  and how often it reports is its ssn-system:Frequency; a range is SSN-System's, stated by the
 #  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph a
-#  percept is kept in and the link from one percept to the one before it, the silence of a sensor
-#  that has stopped reporting and the number one that is stuck keeps giving, the margin a range's
+#  percept is kept in and the link from one percept to the one before it, how long a sensor may be
+#  silent before it is doubted and the number one that is stuck keeps giving, the margin a range's
 #  condition states for a domain's transition to hold a state by, and the pipeline's own concepts,
 #  since neither standard says how
 #  bytes become a number: a codec, the binding of a sensor to one, the member that ships, and the
@@ -26,8 +26,8 @@
 #  nothing above it: a transport hands it bytes, it makes a number of them and writes one
 #  sosa:Observation per reading — a PERCEPT, in a graph of its own, linked to the one before it,
 #  holding until the next arrives or is due and a grace past it — keeps a sensor's last few, as deep
-#  as its rules read, and on the container's tick it says which readings are missing and which
-#  sensors have gone silent. It predicts nothing — that is the prediction package's — and concludes
+#  as its rules read, and on the container's tick it asks which sensors have gone silent,
+#  a silence computed from the latest percept's end and never written. It predicts nothing — that is the prediction package's — and concludes
 #  nothing itself: what a percept is of, its quantity and whether its sensor is stuck are revisions,
 #  concluded by the rules this layer ships (rules.ttl beside this file) and run by the deliberator.
 #  What the agent holds true of a subject is a domain's transition, triggered by the percept
@@ -84,16 +84,6 @@
         sh:select """SELECT ?me WHERE { ?me a orexis:Self ; orexis:plays/sensing:sensor ?sensor
             FILTER NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
                                 ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host } }""" ] .
-
-:SilenceGraph a owl:Class ;
-    rdfs:subClassOf orexis:Graph ;
-    rdfs:label "Silence graph" ;
-    rdfs:comment """Where `missed` says a sensor silent (`silentSince`), the agent's own and derived, holding
-    from the instant its last reading fell due while the silence lasts, and forgotten by the sensor's
-    next reading. SENSING'S, and no belief, as a stuck sensor is said in a percept's revision: nothing
-    in the mind reads a silence — it has no percept holding, and a transition judges what arrives —
-    and a belief graph the agent derived is the state a transition reads beside an arrival and may
-    delete from, which a sensor's silence is not. Read by sensing itself and by what it says happened.""" .
 
 :ObservationGraph a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
@@ -245,16 +235,6 @@
     rdfs:comment """As startsPointer, the instants each the END of the stretch its value holds over,
     the one before its start: what a service summing the hour up to a time says of rain.""" .
 
-:silentSince a owl:DatatypeProperty ;
-    rdfs:domain sosa:Sensor ;
-    rdfs:range xsd:dateTime ;
-    rdfs:label "silent since" ;
-    rdfs:comment """The sensor has stopped reporting: its last reading fell due at this instant and
-    nothing has arrived for a limit of its cadences since. A row present while the silence lasts,
-    named for the state and not for the tick that noticed it, written by `missed` into a `SilenceGraph`
-    of the agent's own and dropped by the sensor's next reading. SOSA and SSN say how often a sensor
-    reports and nothing about one that has stopped, which is why this is sensing's word.""" .
-
 # TWO LIMITS AN OBSERVER ROLE STATES of the sensors it reads, each a count of the doubted sensor's
 # cadences or readings: stated on the role where it is played, and the observer shape's
 # `sh:defaultValue` where the role states none — the one place the figure lives, read by `received`,
@@ -263,8 +243,10 @@
     rdfs:domain :Observer ;
     rdfs:range xsd:integer ;
     rdfs:label "silent after" ;
-    rdfs:comment """How many of a sensor's cadences its reading may be missing before `missed` says the
-    sensor silent (`silentSince`). Stated on the observer role that reads the sensor; where it states
+    rdfs:comment """How many of a sensor's cadences its reading may be missing before `missed` answers
+    the sensor silent, since the instant its latest percept ended: computed from that period, the
+    sensor's frequency and this, and never written, since its premises are stored and nothing in the
+    mind reads it. Stated on the observer role that reads the sensor; where it states
     none, the observer shape's default, three.""" .
 
 :stuckAfter a owl:DatatypeProperty ;

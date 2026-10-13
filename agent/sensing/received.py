@@ -96,10 +96,6 @@ GRACE = 1
 #  its stretches by it.
 _KEY_Q = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; sosa:isHostedBy ?feature }"
 
-#  THE SILENCE SAID OF THIS SENSOR, if any — the graph holding the row, found by its content.
-_SILENCE_Q = """
-SELECT ?g WHERE { GRAPH $cat { ?g a sensing:SilenceGraph } GRAPH ?g { $sensor sensing:silentSince ?since } }"""
-
 #  EVERY PERCEPT OF THIS SENSOR KEPT, newest first: its graph, its node, and whether a percept names
 #  it as its previous — the latest is the one none does.
 _KEPT_Q = """
@@ -141,8 +137,6 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     if readings is None:
         return []
     cat = Raw(f"<{catalogue_of(store)}>")
-    for silence in rows(store, _SILENCE_Q, (), cat=cat, sensor=sensor):
-        forget_graph(store, silence["g"])
     kept = rows(store, _KEPT_Q, (), cat=cat, sensor=sensor)
     latest = next((r for r in kept if r.get("followed") != "true"), None)
     #  EVERY READING THE MESSAGE CARRIES, oldest first, each placed that long before it arrived: an

@@ -530,13 +530,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   own** — `received` writes one `sosa:Observation` per reading, a percept linked to the one before by
   `sensing:previous`, the latest holding until the next is due and a grace past it and every older one
   ended where the next began; it keeps a sensor's last `sensing:stuckAfter` and nothing sweeps the rest
-  but it; `missed` says `sensing:silentSince` of a sensor whose latest has ended, asking
+  but it; `missed` answers which sensors are silent, their latest ended a limit of cadences ago, asking
   `cadence.lapsed` as the transport does; `agent/prediction/` accumulates the drifts' rates from the
   latest, speaking sensing's kind and importing none of its code (#944).
-- **A silence is sensing's kind, `sensing:SilenceGraph`, as stuck is said in a percept's revision** —
-  nothing in the mind reads one; it holds rows about a sensor and not an observation, begins where the
-  latest percept's period ends so no percept or revision could hold it, and `missed` alone writes it,
-  while a belief the agent derives is the state a transition may delete from.
+- **A silence is computed and never written** — its premises are stored (the latest percept's end,
+  the cadence, the role's limit), the belief made of the percept ended with that period a limit of
+  cadences before, and nothing in the mind reads one; a silence graph of sensing's own was built and refused
+  as a second record of what the period's end says, which the next reading had to find and take back.
 - **A belief is a crisp triple, and probability lives only inside an estimator** — sensing and
   prediction may keep a mean and a spread while they work, and write a value, a side or a band as
   two numbers (a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
