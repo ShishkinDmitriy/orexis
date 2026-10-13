@@ -22,7 +22,22 @@ agents' to find (control-the-derivative-not-the-value).
 
 ## 2. Draft
 
-Write what `knowledge/runbooks/author-a-world.md` lists, each document saying which graph it is on
+**Pick each agent's roles first**, from the narration: what it observes, foresees, pursues, trades.
+Each role has a runbook saying exactly what to write for it, with a diagram and the snippets of a
+shipped world — follow the one for every role an agent plays:
+
+| the agent… | role | runbook |
+|---|---|---|
+| reads sensors | `sensing:Observer` | `knowledge/runbooks/add-an-observer.md` |
+| foresees its readings | `prediction:Predictor` | `knowledge/runbooks/add-a-predictor.md` |
+| pursues a desire or a want, commanding devices | `planning:Planner`, `execution:Executor` | `knowledge/runbooks/add-a-planner.md` |
+| hosts or bids in a venue | `market:Host`, `market:Bidder` | `knowledge/runbooks/add-a-market.md` |
+
+The role table in `knowledge/runbooks/author-a-world.md` covers the rest (a speaker or a
+deliberator alone). A property, an action or a drift no domain has is
+`knowledge/runbooks/add-a-domain.md`, written before the world that needs it.
+
+Then write what `knowledge/runbooks/author-a-world.md` lists, each document saying which graph it is on
 its first line, importing its domains with `owl:imports` and speaking no word a domain does not
 declare: `world.ttl`; `society.ttl` only where there is a bus; a self graph for every agent,
 `beliefs/<id>.self.ttl`, saying who it is and each ROLE it plays beside its self, an instance
