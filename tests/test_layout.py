@@ -412,7 +412,7 @@ def test_onboarding_refuses_a_graph_of_a_kind_no_package_this_agent_loads_declar
 
     planner = "http://example.org/orexis/planning#Planner"
     world = _declared(tmp_path, [planner], wants="@prefix planning: <http://example.org/orexis/planning#> .\n"
-                      "<> a planning:WantGraph ; orexis:beliefsOf :me .\n:wanted a planning:Want .\n")
+                      "<> a planning:WantGraph ; orexis:ownedBy :me .\n:wanted a planning:Want .\n")
     assert reading.unread(world) == [], "every reader together declares the kind: only this agent does not"
     refused = reading.refused(world)
     assert len(refused) == 1 and refused[0].startswith("me: rules.ttl: ") and "shacl#RulesGraph" in refused[0], refused
@@ -1334,7 +1334,7 @@ def test_an_agent_holding_a_desire_is_restarted_with_no_transport(tmp_path, monk
               "@prefix hanoi: <http://example.org/orexis/hanoi#> .\n"
               "@prefix planning: <http://example.org/orexis/planning#> .\n"
               "@prefix orexis: <http://example.org/orexis#> .\n"
-              "<> a planning:DesireGraph ; orexis:beliefsOf :hanoi .\n"
+              "<> a planning:DesireGraph ; orexis:ownedBy :hanoi .\n"
               ":hanoi planning:holds :the_tower_stands .\n"
               ":the_tower_stands a planning:Desire ; planning:metWhen hanoi:solved .\n")
     root = _installed(tmp_path, monkeypatch, {("hanoi", "desires.ttl"): lambda _text: desire})

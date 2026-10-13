@@ -20,7 +20,7 @@ ROUND, CLAIM = T + "round", T + "claim"
 #  WHAT A DOCUMENT SAYS OF WHAT IT IS ABOUT, believed: the shape of the market's extraction.
 _BELIEVED = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ ?s a ?c ; ?p ?o . VALUES ?c {{ <{T}Round> <{T}Claim> }} }}"
 _ROW_Q = """SELECT ?a ?o ?from ?start WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-  $g orexis:arrivedBy ?a ; orexis:beliefsOf ?o ; prov:wasDerivedFrom ?from ; dcterms:temporal ?p . ?p orexis:start ?start } }"""
+  $g orexis:arrivedBy ?a ; orexis:ownedBy ?o ; prov:wasDerivedFrom ?from ; dcterms:temporal ?p . ?p orexis:start ?start } }"""
 
 
 @pytest.fixture
@@ -29,10 +29,10 @@ def store():
     update(st, f"""INSERT DATA {{
   GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
       <{T}rules> a sh:RulesGraph . <{T}world> a orexis:BeliefGraph .
-      <{ROUND}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> ;
+      <{ROUND}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{ME}> ;
                 dcterms:temporal [ orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-      <{CLAIM}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> .
-      <{T}held> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:beliefsOf <{ME}> . }}
+      <{CLAIM}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{ME}> .
+      <{T}held> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy <{ME}> . }}
   GRAPH <{T}rules> {{ <{T}believed> a speech:Extraction ; sh:construct "{_BELIEVED}" . }}
   GRAPH <{T}world> {{ <{T}water> a <{T}Venue> . }}
   GRAPH <{ROUND}> {{ <{ROUND}> a <{T}Round> ; <{T}lot> 40 ; <{T}onVenue> <{T}water> . }}
@@ -84,7 +84,7 @@ def test_a_peer_saying_a_subject_belief_makes_no_belief_where_no_extraction_conc
     no met-test reads it, where before #958 it was read as the agent's own state of its bed."""
     said = T + "rumour"
     update(store, f"""INSERT DATA {{
-  GRAPH <{CATALOGUE_GRAPH}> {{ <{said}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> . }}
+  GRAPH <{CATALOGUE_GRAPH}> {{ <{said}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{ME}> . }}
   GRAPH <{said}> {{ <{T}bed> <http://example.org/orexis/climate#soil> <http://example.org/orexis/climate#Dry> . }} }}""")
     assert extract(store, said) == []
     assert not list(store.quads_for_pattern(None, None, None, ox.NamedNode(believed_graph(said))))

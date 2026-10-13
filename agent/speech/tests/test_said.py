@@ -12,14 +12,14 @@ from agent.store import DocumentRefused, rows, update
 
 T = "http://example.org/test#"
 ME = T + "me"
-_ARRIVAL_Q = "SELECT ?a ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g orexis:arrivedBy ?a ; orexis:beliefsOf ?o } }"
+_ARRIVAL_Q = "SELECT ?a ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g orexis:arrivedBy ?a ; orexis:ownedBy ?o } }"
 
 
 @pytest.fixture
 def store():
     st = ox.Store()
     update(st, f"""INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
-        <{T}heard> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Received ; orexis:beliefsOf <{ME}> . }} }}""")
+        <{T}heard> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{ME}> . }} }}""")
     return st
 
 
@@ -59,7 +59,7 @@ def test_the_agent_s_own_word_cannot_say_whose_a_graph_is(store):
     """The sayer owns what it says: a saying that named another owner would put a second owner on the
     graph's row, beside the one `said` writes. Refused whole."""
     doc = _doc(T + "round", "open")
-    doc.add(ox.Quad(ox.NamedNode(T + "round"), ox.NamedNode(OREXIS + "beliefsOf"), ox.NamedNode(T + "someone"),
+    doc.add(ox.Quad(ox.NamedNode(T + "round"), ox.NamedNode(OREXIS + "ownedBy"), ox.NamedNode(T + "someone"),
                     ox.DefaultGraph()))
     with pytest.raises(DocumentRefused, match="only the world's own documents say"):
         said(store, ME, doc)

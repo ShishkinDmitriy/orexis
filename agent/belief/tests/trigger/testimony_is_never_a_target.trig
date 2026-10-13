@@ -64,7 +64,7 @@ GRAPH :catalogue {
   :heard a orexis:BeliefGraph .
   :heard a orexis:Graph .
   :heard orexis:arrivedBy orexis:Received .
-  :heard orexis:beliefsOf :keeper .
+  :heard orexis:ownedBy :keeper .
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
@@ -75,18 +75,18 @@ GRAPH :catalogue {
   :tick2 a orexis:Graph .
   :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
   :tick2 orexis:arrivedBy orexis:Received .
-  :tick2 orexis:beliefsOf :keeper .
+  :tick2 orexis:ownedBy :keeper .
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .
   tick1:believed a orexis:BeliefGraph .
   tick1:believed a orexis:Graph .
   tick1:believed orexis:arrivedBy orexis:Derived .
-  tick1:believed orexis:beliefsOf :keeper .
+  tick1:believed orexis:ownedBy :keeper .
   tick2:revisions a belief:RevisionGraph .
   tick2:revisions a orexis:BeliefGraph .
   tick2:revisions a orexis:Graph .
   tick2:revisions belief:settled true .
   tick2:revisions orexis:arrivedBy orexis:Derived .
-  tick2:revisions orexis:beliefsOf :keeper .
+  tick2:revisions orexis:ownedBy :keeper .
   tick2:revisions prov:wasDerivedFrom :tick2 .
 }

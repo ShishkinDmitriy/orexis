@@ -67,5 +67,5 @@ GRAPH :catalogue {
   forecast:weather_20260101T090000Z a sensing:ForecastGraph .
   forecast:weather_20260101T090000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   forecast:weather_20260101T090000Z orexis:arrivedBy orexis:Received .
-  forecast:weather_20260101T090000Z orexis:beliefsOf :keeper .
+  forecast:weather_20260101T090000Z orexis:ownedBy :keeper .
 }

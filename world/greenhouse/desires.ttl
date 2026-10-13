@@ -6,7 +6,7 @@
 @prefix planning: <http://example.org/orexis/planning#> .
 
 <> a planning:DesireGraph .    # this document is one graph, and this is what it is
-<> orexis:beliefsOf :grower .    # and whose it is — said here, never by the file's name
+<> orexis:ownedBy :grower .    # and whose it is — said here, never by the file's name
 
 #  THE DESIRE THIS WORLD EXISTS FOR, about TWO properties: the bed is comfortable when its soil is not
 #  believed dry and its air not believed cold. A desire and not a want, since it asks at every instant

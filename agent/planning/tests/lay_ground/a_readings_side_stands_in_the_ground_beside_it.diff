@@ -22,7 +22,7 @@
 @@ -57,18 +52,64 @@
    :drying_stops_revisions a orexis:Graph .
    :drying_stops_revisions orexis:arrivedBy orexis:Derived .
-   :drying_stops_revisions orexis:beliefsOf :keeper .
+   :drying_stops_revisions orexis:ownedBy :keeper .
 +  :drying_stops_revisions planning:cutBy "sha256:a4f514966104de7db295870f7f5c6b599661c9b05235d51404106a845d425f1c" .
    :drying_stops_revisions prov:wasDerivedFrom :drying_stops .
 +  :drying_stops_revisions.changeable a planning:ChangeableGraph .
@@ -33,7 +33,7 @@
    :ontology a orexis:OntologyGraph .
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
-   :sensed orexis:beliefsOf :keeper .
+   :sensed orexis:ownedBy :keeper .
 +  :sensed planning:cutBy "sha256:a4f514966104de7db295870f7f5c6b599661c9b05235d51404106a845d425f1c" .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
@@ -41,7 +41,7 @@
    :sensed_revisions a orexis:BeliefGraph .
    :sensed_revisions a orexis:Graph .
    :sensed_revisions orexis:arrivedBy orexis:Derived .
-   :sensed_revisions orexis:beliefsOf :keeper .
+   :sensed_revisions orexis:ownedBy :keeper .
 +  :sensed_revisions planning:cutBy "sha256:a4f514966104de7db295870f7f5c6b599661c9b05235d51404106a845d425f1c" .
    :sensed_revisions prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .

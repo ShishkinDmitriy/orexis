@@ -42,7 +42,7 @@ SELECT ?rule ?text WHERE { ?rule a speech:Extraction ; sh:construct ?text .
 
 #  THE STATEMENT'S ROW: whose it is and when it holds.
 _ROW_Q = """
-SELECT ?owner ?start ?end WHERE { GRAPH $cat { OPTIONAL { $g orexis:beliefsOf ?owner }
+SELECT ?owner ?start ?end WHERE { GRAPH $cat { OPTIONAL { $g orexis:ownedBy ?owner }
   OPTIONAL { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1"""
 

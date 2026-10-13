@@ -122,7 +122,7 @@ _PREFIX_LINE = re.compile(r"^\s*PREFIX\s+([A-Za-z][\w.\-]*)?\s*:\s*<([^>]*)>", r
 #  WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its row: the revisions are the same.
 _SOURCE_Q = """
 SELECT ?owner ?start ?end WHERE {
-  GRAPH $cat { OPTIONAL { $source orexis:beliefsOf ?owner }
+  GRAPH $cat { OPTIONAL { $source orexis:ownedBy ?owner }
                OPTIONAL { $source dcterms:temporal ?p .
                           OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1"""

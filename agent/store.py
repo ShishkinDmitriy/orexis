@@ -339,11 +339,11 @@ SELECT DISTINCT ?g WHERE {
     $holding } }
 ORDER BY ?g"""
 
-_OWNED = """OPTIONAL { ?g orexis:beliefsOf ?owner } FILTER(!BOUND(?owner) || ?owner = $holder)"""
+_OWNED = """OPTIONAL { ?g orexis:ownedBy ?owner } FILTER(!BOUND(?owner) || ?owner = $holder)"""
 
 #  COMMON: what the world states, the common documents and what the boot derived of them —
 #  what `orexis:PublicGraph` said by a kind until #953 folded it, said by provenance.
-_COMMON = """FILTER NOT EXISTS { ?g orexis:beliefsOf ?anyone }"""
+_COMMON = """FILTER NOT EXISTS { ?g orexis:ownedBy ?anyone }"""
 
 #  HOLDING AT `$at` AND STILL AT `$until`: begun by the first and not ended by the second, so a
 #  reader standing over a period is handed what holds throughout it; a reader standing at an
@@ -437,7 +437,7 @@ def entry(store, graph: str, graph_class: str | tuple, arrival: str, owner: str 
     catalogue = catalogue_of(store)
     if catalogue is None:
         raise RuntimeError("no graph describes itself as the catalogue — nothing has said what the graphs are")
-    whose = f" ; orexis:beliefsOf <{owner}>" if owner else ""
+    whose = f" ; orexis:ownedBy <{owner}>" if owner else ""
     stamp = lambda t: t if isinstance(t, str) else t.isoformat()
     when = ""
     if start is not None or end is not None:
@@ -498,7 +498,7 @@ WHERE  {{ GRAPH <{catalogue}> {{ }}
 #
 #  WHOSE A GRAPH IS, AND WHO THE SELF IS, ONLY THE WORLD SAYS (knowledge/domain/kernel/self.md).
 #  A document the world authors — a FILE — says of a graph of an agent's own whose it is,
-#  `<> orexis:beliefsOf :rose_grower`, the way it says what the graph is, and a self graph says
+#  `<> orexis:ownedBy :rose_grower`, the way it says what the graph is, and a self graph says
 #  who the self is, `:rose_grower a orexis:Self`, and is the self's by that: the boot keeps as its
 #  own exactly the graphs whose content says they are its, and never asks a file's name. A file is
 #  held to one home for the self: a self is stated in a graph that says it is a self graph and
@@ -509,7 +509,7 @@ WHERE  {{ GRAPH <{catalogue}> {{ }}
 
 _RDF_TYPE_IRI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 _ARRIVED_BY = OREXIS + "arrivedBy"
-_BELIEFS_OF = OREXIS + "beliefsOf"
+_OWNED_BY = OREXIS + "ownedBy"
 _SELF, _SELF_GRAPH = OREXIS + "Self", OREXIS + "SelfGraph"
 _TRIG = (".trig",)
 
@@ -592,7 +592,7 @@ def refuse_the_sovereigns(doc: ox.Store, name: str) -> ox.Store:
     peer's message, heard, and the agent's own saying (`said`): the world's author, the sovereign,
     says whose a graph is and who the self is, and the hearer and the sayer are the owner of
     what they put in."""
-    for q in doc.quads_for_pattern(None, ox.NamedNode(_BELIEFS_OF), None, ox.DefaultGraph()):
+    for q in doc.quads_for_pattern(None, ox.NamedNode(_OWNED_BY), None, ox.DefaultGraph()):
         raise DocumentRefused(f"{name} says whose {q.subject} is, which only the world's own documents say")
     for kind in (_SELF, _SELF_GRAPH):
         for q in doc.quads_for_pattern(None, ox.NamedNode(_RDF_TYPE_IRI), ox.NamedNode(kind), None):
@@ -611,7 +611,7 @@ def _one_home(doc: ox.Store, name: str) -> ox.Store:
     the kinds the document states, it needs no vocabulary, which the loader does not have."""
     stated = kinds_in(doc)
     owners: dict[str, set[str]] = {}
-    for q in doc.quads_for_pattern(None, ox.NamedNode(_BELIEFS_OF), None, ox.DefaultGraph()):
+    for q in doc.quads_for_pattern(None, ox.NamedNode(_OWNED_BY), None, ox.DefaultGraph()):
         if not isinstance(q.object, ox.NamedNode):
             raise DocumentRefused(f"{name} says {q.subject} is {q.object}'s, and an owner is an agent, named")
         owners.setdefault(q.subject.value, set()).add(q.object.value)
@@ -646,9 +646,9 @@ def _one_home(doc: ox.Store, name: str) -> ox.Store:
 
 def whose(doc: ox.Store, graph: str) -> str | None:
     """Whose the graph `graph` of the document `doc` is, by what the document says: the owner it
-    states, `<> orexis:beliefsOf <agent>`, or, for a self graph, the self it states — which the
+    states, `<> orexis:ownedBy <agent>`, or, for a self graph, the self it states — which the
     loader has held to agree (`_one_home`). None where it says neither. Never the file's name."""
-    for q in doc.quads_for_pattern(ox.NamedNode(graph), ox.NamedNode(_BELIEFS_OF), None, ox.DefaultGraph()):
+    for q in doc.quads_for_pattern(ox.NamedNode(graph), ox.NamedNode(_OWNED_BY), None, ox.DefaultGraph()):
         return q.object.value
     if _SELF_GRAPH in kinds_in(doc).get(graph, ()):
         for q in doc.quads_for_pattern(None, ox.NamedNode(_RDF_TYPE_IRI), ox.NamedNode(_SELF), ox.NamedNode(graph)):
@@ -704,7 +704,7 @@ def put_document(store, doc: ox.Store, owner: str | None = None, graphs=None, *,
             frontier = {q.object for q in mine if isinstance(q.object, ox.BlankNode)} - reached
         store.add(ox.Quad(node, ox.NamedNode(OREXIS + "arrivedBy"), ox.NamedNode(arrival), cat))
         if owner is not None:
-            store.add(ox.Quad(node, ox.NamedNode(OREXIS + "beliefsOf"), ox.NamedNode(owner), cat))
+            store.add(ox.Quad(node, ox.NamedNode(OREXIS + "ownedBy"), ox.NamedNode(owner), cat))
         if close:
             for kind in [q.object.value for q in rows_ if q.subject == node and q.predicate.value == _RDF_TYPE_IRI]:
                 for beneath in closed(store, kind):

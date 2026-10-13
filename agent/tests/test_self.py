@@ -40,10 +40,10 @@ _WORLD = (_HEAD + "<> a orexis:WorldGraph .\n"
 _ROLES = {"ann": "[ a planning:Planner ]", "bob": "[ a planning:Planner ] , [ a sensing:Observer ]"}
 _SELF = (_HEAD + "@prefix sensing: <http://example.org/orexis/sensing#> .\n"
          "<> a orexis:SelfGraph .\n:{who} a orexis:Self ; orexis:plays {roles} .\n")
-_DESIRES = _HEAD + "<> a planning:DesireGraph ; orexis:beliefsOf :{who} .\n:{who} planning:holds :{who}_wish .\n"
+_DESIRES = _HEAD + "<> a planning:DesireGraph ; orexis:ownedBy :{who} .\n:{who} planning:holds :{who}_wish .\n"
 
 _ROW_Q = """SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-  $g orexis:arrivedBy ?arrival ; orexis:beliefsOf ?owner } }"""
+  $g orexis:arrivedBy ?arrival ; orexis:ownedBy ?owner } }"""
 _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 
@@ -126,7 +126,7 @@ def test_a_belief_of_the_world_is_whose_it_says_and_common_where_it_says_none(wo
     """Whose a belief is, is what it says, never its kind (#953): a belief of the world naming ann is
     ann's own, kept as an agent's own graph is, and one naming nobody is everyone's, read again at
     every boot as the world graph is. Ann's is not bob's: bob's boot passes it over."""
-    (world / "beliefs" / "notes.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph ; orexis:beliefsOf :ann .\n:pot :says \"ann's\" .\n")
+    (world / "beliefs" / "notes.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph ; orexis:ownedBy :ann .\n:pot :says \"ann's\" .\n")
     (world / "shared.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph .\n:pot :says \"everyone's\" .\n")
     ann, bob = boot(world, "ann"), boot(world, "bob")
     notes, shared = _uri(world, "notes.ttl"), (world / "shared.ttl").resolve().as_uri()

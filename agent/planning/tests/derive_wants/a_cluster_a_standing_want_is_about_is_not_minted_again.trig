@@ -223,15 +223,15 @@ GRAPH :catalogue {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
-  :scopes orexis:beliefsOf :keeper .
+  :scopes orexis:ownedBy :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed orexis:beliefsOf :keeper .
+  :sensed orexis:ownedBy :keeper .
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .
   pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a orexis:Graph .
   pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a planning:WantGraph .
   pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
   pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b orexis:arrivedBy orexis:Derived .
-  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b orexis:beliefsOf :keeper .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b orexis:ownedBy :keeper .
 }

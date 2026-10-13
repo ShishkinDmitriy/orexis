@@ -11,7 +11,7 @@ from .statements import statements
 
 _ARRIVED_Q = """
 SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival .
-                                            OPTIONAL { $graph orexis:beliefsOf ?owner } } }"""
+                                            OPTIONAL { $graph orexis:ownedBy ?owner } } }"""
 
 
 def said(store: ox.Store, me: str, doc: ox.Store) -> list[str]:

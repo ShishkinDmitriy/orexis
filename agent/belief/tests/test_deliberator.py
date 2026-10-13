@@ -97,7 +97,7 @@ _COUNTER_Q = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTE
 #  writes — never a tick, which is a belief it received.
 _OWN_STATE_Q = """SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
     ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-    FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:beliefsOf ?owner . } } ORDER BY ?g"""
+    FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g"""
 
 
 def _own_state(store) -> list[str]:

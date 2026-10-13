@@ -64,7 +64,7 @@ GRAPH :catalogue {
   :drying_stops a orexis:Graph .
   :drying_stops a orexis:PredictionGraph .
   :drying_stops dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
-  :drying_stops orexis:beliefsOf :keeper .
+  :drying_stops orexis:ownedBy :keeper .
   :drying_stops orexis:retracts """PREFIX : <http://example.org/test#>
       DELETE { GRAPH $state { :soil ?p ?o } }
       WHERE  { GRAPH $state { :soil ?p ?o } }""" .
@@ -72,18 +72,18 @@ GRAPH :catalogue {
   :drying_stops_revisions a orexis:BeliefGraph .
   :drying_stops_revisions a orexis:Graph .
   :drying_stops_revisions orexis:arrivedBy orexis:Derived .
-  :drying_stops_revisions orexis:beliefsOf :keeper .
+  :drying_stops_revisions orexis:ownedBy :keeper .
   :drying_stops_revisions prov:wasDerivedFrom :drying_stops .
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed orexis:beliefsOf :keeper .
+  :sensed orexis:ownedBy :keeper .
   :sensed_revisions a orexis:BeliefGraph .
   :sensed_revisions a orexis:Graph .
   :sensed_revisions orexis:arrivedBy orexis:Derived .
-  :sensed_revisions orexis:beliefsOf :keeper .
+  :sensed_revisions orexis:ownedBy :keeper .
   :sensed_revisions prov:wasDerivedFrom :sensed .
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .

@@ -14,7 +14,7 @@
 @@ -213,14 +209,73 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
-   :sensed orexis:beliefsOf :keeper .
+   :sensed orexis:ownedBy :keeper .
 +  :sensed planning:cutBy "sha256:0d04982c80a681cc887f227f1dfec6d2d487ec8c9a093fd01c98713034526f06" .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
@@ -42,17 +42,17 @@
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a planning:weighs ground:2026-01-01T120000p0000 .
    intentions:keeper a execution:IntentionGraph .
    intentions:keeper a orexis:Graph .
-   intentions:keeper orexis:beliefsOf :keeper .
+   intentions:keeper orexis:ownedBy :keeper .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
 +  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
-+  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
++  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a a orexis:Graph .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a a planning:WantGraph .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:arrivedBy orexis:Derived .
-   pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:beliefsOf :keeper .
+   pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:ownedBy :keeper .
  }
 +
 +

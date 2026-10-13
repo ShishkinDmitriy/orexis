@@ -127,7 +127,7 @@ def _select(store, where: str, at: datetime | None, limit: int, offset: int,
     #  wants it wrote, and a world's ratified want is a graph of wants the sovereign wrote.
     #  One axis each, asked separately, because they ARE separate.
     came = f"    ?g orexis:arrivedBy <{arrival}> .\n" if arrival else ""
-    mine = (f'    OPTIONAL {{ ?g orexis:beliefsOf ?owner }}\n'
+    mine = (f'    OPTIONAL {{ ?g orexis:ownedBy ?owner }}\n'
             f'    FILTER(!BOUND(?owner) || ?owner = <{holder}>)'
             if holder else "")
     #  `?g a ?kind` IS THE JOIN, not only the filter, and removing it loses a want SILENTLY.

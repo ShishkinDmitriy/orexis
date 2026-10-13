@@ -67,7 +67,7 @@ GRAPH :catalogue {
   :self a orexis:Graph .
   :self a orexis:SelfGraph .
   :self orexis:arrivedBy orexis:Asserted .
-  :self orexis:beliefsOf :keeper .
+  :self orexis:ownedBy :keeper .
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .
 }

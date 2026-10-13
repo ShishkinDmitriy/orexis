@@ -19,7 +19,7 @@ graph**, written in the [world](/domain/kernel/world.md) under `beliefs/`:
 ```turtle
 <> a orexis:SelfGraph .
 :fern_grower a orexis:Self .
-# put in by the boot: an orexis:SelfGraph, orexis:beliefsOf :fern_grower, orexis:arrivedBy orexis:Asserted
+# put in by the boot: an orexis:SelfGraph, orexis:ownedBy :fern_grower, orexis:arrivedBy orexis:Asserted
 ```
 
 The agent keeps the name its world gave it. Being the self is something that agent IS in its own

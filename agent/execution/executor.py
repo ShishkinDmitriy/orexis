@@ -204,7 +204,7 @@ _HELD_Q = """
 SELECT DISTINCT ?g WHERE {
   GRAPH $retracts { ?s ?p ?o }
   GRAPH $cat { ?g a orexis:BeliefGraph .
-               ?g orexis:beliefsOf ?owner .
+               ?g orexis:ownedBy ?owner .
                FILTER NOT EXISTS { ?g a belief:RevisionGraph }
                FILTER NOT EXISTS { ?g a execution:CommittedStepGraph } }
   GRAPH ?g { ?s ?p ?o } } ORDER BY ?g"""
@@ -594,7 +594,7 @@ class Executor:
         owner = self.holder or _me_of(self.beliefs, self.id)
         ended = rows(self.beliefs, _ENDED_Q, (), cat=Raw(f"<{catalogue_of(self.beliefs)}>"),
                      kind=Raw(f"<{COMMITTED_STEP_GRAPH}>"), now=instant(now),
-                     owned=Raw(f"; orexis:beliefsOf <{owner}>" if owner else ""))
+                     owned=Raw(f"; orexis:ownedBy <{owner}>" if owner else ""))
         for r in ended:
             forget_graph(self.beliefs, r["g"])
 

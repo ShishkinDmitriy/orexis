@@ -53,7 +53,7 @@ def stating(store: ox.Store, stances: dict) -> ox.Store:
     figures = "".join(f" ; <{term}> {figure}" for term, figure in stances.items())
     update(store, f"""INSERT DATA {{
   GRAPH <{SELF}> {{ <{ME}> a orexis:Self{figures} }}
-  GRAPH <{cat}> {{ <{SELF}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:beliefsOf <{ME}> }} }}""")
+  GRAPH <{cat}> {{ <{SELF}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{ME}> }} }}""")
     return store
 
 

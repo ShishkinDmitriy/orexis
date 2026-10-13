@@ -65,7 +65,7 @@ def test_a_trig_file_names_its_graphs_and_states_their_kinds_in_its_default_grap
     base = path.resolve().as_uri()
     assert kinds_in(doc) == {base + "#desires": {"http://example.org/orexis/planning#DesireGraph"}, base + "#state": {OREXIS + "BeliefGraph"}}
     assert put_document(store, doc, owner="urn:me") == sorted([base + "#desires", base + "#state"])
-    assert ("beliefsOf", "urn:me") in _said(store, base + "#state")
+    assert ("ownedBy", "urn:me") in _said(store, base + "#state")
 
 
 def test_put_again_replaces_the_graph_and_its_row(store, tmp_path):
@@ -81,13 +81,13 @@ def test_put_again_replaces_the_graph_and_its_row(store, tmp_path):
     ("<urn:a> <urn:b> <urn:c> .\n", "no kind"),
     ("<> a orexis:CatalogueGraph .\n", "catalogue"),
     ("<> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .\n", "only the loader"),
-    ("<> a orexis:BeliefGraph ; orexis:beliefsOf <urn:ann> , <urn:bob> .\n", "a graph has one owner"),
-    ("<> a orexis:BeliefGraph ; orexis:beliefsOf [] .\n", "an owner is an agent, named"),
+    ("<> a orexis:BeliefGraph ; orexis:ownedBy <urn:ann> , <urn:bob> .\n", "a graph has one owner"),
+    ("<> a orexis:BeliefGraph ; orexis:ownedBy [] .\n", "an owner is an agent, named"),
     ("<> a orexis:WorldGraph .\n<urn:someone> a orexis:Self .\n", "no self graph"),
     ("<> a orexis:SelfGraph , orexis:WorldGraph .\n<urn:ann> a orexis:Self .\n", "a self graph is nothing else"),
     ("<> a orexis:SelfGraph .\n", "states 0 selves"),
     ("<> a orexis:SelfGraph .\n<urn:ann> a orexis:Self .\n<urn:bob> a orexis:Self .\n", "states 2 selves"),
-    ("<> a orexis:SelfGraph ; orexis:beliefsOf <urn:bob> .\n<urn:ann> a orexis:Self .\n", "a self graph is its self's"),
+    ("<> a orexis:SelfGraph ; orexis:ownedBy <urn:bob> .\n<urn:ann> a orexis:Self .\n", "a self graph is its self's"),
     ("<> a orexis:SelfGraph , orexis:Self .\n<urn:ann> a orexis:Self .\n", "of a graph"),
     ("<> a orexis:WorldGraph .\n<urn:g> a orexis:SelfGraph .\n", "in its rows"),
 ], ids=["no kind", "the catalogue", "an arrival", "two owners", "an owner unnamed", "a self in a world graph",
@@ -101,18 +101,18 @@ def test_a_file_is_refused_where_it_says_too_little_or_what_only_the_loader_says
 def test_a_file_says_whose_its_graph_is_and_a_self_graph_is_its_selfs(tmp_path):
     """What the world authors may say whose a graph is, and its self graph who the self is — the
     owner the boot keeps a graph by, read off the content (`whose`), never the file's name."""
-    owned = document(_write(tmp_path, "rose.ttl", "<> a planning:DesireGraph ; orexis:beliefsOf <urn:fern> .\n"))
+    owned = document(_write(tmp_path, "rose.ttl", "<> a planning:DesireGraph ; orexis:ownedBy <urn:fern> .\n"))
     assert whose(owned, (tmp_path / "rose.ttl").resolve().as_uri()) == "urn:fern"
     selfish = document(_write(tmp_path, "who.ttl", "<> a orexis:SelfGraph .\n<urn:fern> a orexis:Self .\n"))
     assert whose(selfish, (tmp_path / "who.ttl").resolve().as_uri()) == "urn:fern"
-    agreed = document(_write(tmp_path, "both.ttl", "<> a orexis:SelfGraph ; orexis:beliefsOf <urn:fern> .\n<urn:fern> a orexis:Self .\n"))
+    agreed = document(_write(tmp_path, "both.ttl", "<> a orexis:SelfGraph ; orexis:ownedBy <urn:fern> .\n<urn:fern> a orexis:Self .\n"))
     assert whose(agreed, (tmp_path / "both.ttl").resolve().as_uri()) == "urn:fern", "one fact, said twice and agreeing"
     nobody = document(_write(tmp_path, "state.ttl", "<> a orexis:BeliefGraph .\n"))
     assert whose(nobody, (tmp_path / "state.ttl").resolve().as_uri()) is None
 
 
 @pytest.mark.parametrize("text", [
-    "<urn:g> a orexis:BeliefGraph ; orexis:beliefsOf <urn:someone> .\n<urn:g> { <urn:a> <urn:b> <urn:c> }\n",
+    "<urn:g> a orexis:BeliefGraph ; orexis:ownedBy <urn:someone> .\n<urn:g> { <urn:a> <urn:b> <urn:c> }\n",
     "<urn:g> a orexis:BeliefGraph .\n<urn:g> { <urn:someone> a orexis:Self }\n",
     "<urn:g> a orexis:SelfGraph .\n<urn:g> { <urn:someone> a orexis:Self }\n",
 ], ids=["an owner", "who the self is", "the self's graph"])

@@ -17,7 +17,7 @@
 @@ -71,6 +67,10 @@
    :believed a orexis:Graph .
    :believed orexis:arrivedBy orexis:Derived .
-   :believed orexis:beliefsOf :keeper .
+   :believed orexis:ownedBy :keeper .
 +  :believed planning:cutBy "sha256:ce2dcc57c335da6d07e207828e3968d0a4ac95e6c78e68d6733720e7aa81a60f" .
 +  :believed.changeable a planning:ChangeableGraph .
 +  :believed.changeable orexis:arrivedBy orexis:Derived .
@@ -28,7 +28,7 @@
 @@ -106,6 +106,57 @@
    :sensed a orexis:Graph .
    :sensed orexis:arrivedBy orexis:Received .
-   :sensed orexis:beliefsOf :keeper .
+   :sensed orexis:ownedBy :keeper .
 +  :sensed planning:cutBy "sha256:ce2dcc57c335da6d07e207828e3968d0a4ac95e6c78e68d6733720e7aa81a60f" .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .

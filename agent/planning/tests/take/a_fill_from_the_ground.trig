@@ -86,10 +86,10 @@ GRAPH :catalogue {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
-  :scopes orexis:beliefsOf :keeper .
+  :scopes orexis:ownedBy :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed orexis:beliefsOf :keeper .
+  :sensed orexis:ownedBy :keeper .
   :sensed.changeable a planning:ChangeableGraph .
   :sensed.changeable orexis:arrivedBy orexis:Derived .
   :sensed.changeable prov:wasDerivedFrom :sensed .
@@ -113,7 +113,7 @@ GRAPH :catalogue {
   pursued:2026-01-01T120000p0000--open a planning:WantGraph .
   pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
-  pursued:2026-01-01T120000p0000--open orexis:beliefsOf :keeper .
+  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
 }
 
 GRAPH ground:2026-01-01T120000p0000 {

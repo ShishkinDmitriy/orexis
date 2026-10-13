@@ -20,7 +20,7 @@ graphs that say they are this agent's, owned by it. The catalogue is closed and 
 `scope` writes the scopes.
 
 **WHOSE A GRAPH IS, IS READ OFF WHAT IT SAYS, AND NEVER OFF ITS KIND.** A graph of the world that
-says whose it is is that agent's own — `<> orexis:beliefsOf :rose_grower` beside its kind, or, for a
+says whose it is is that agent's own — `<> orexis:ownedBy :rose_grower` beside its kind, or, for a
 self graph, the self it states (`store.whose`) — and one that names nobody is common to every agent
 of the world, a belief, a desire or a constraint alike (#953). The boot reads every document of the
 world — beside it, under `secrets/` and under `beliefs/` — and keeps as its own exactly those
@@ -230,7 +230,7 @@ _ASSERTED_Q = """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?
 #  the packages' and the world's common graphs — and the closure derived from them.
 _FILES_Q = """
 SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-  { ?g orexis:arrivedBy orexis:Asserted FILTER NOT EXISTS { ?g orexis:beliefsOf ?who } }
+  { ?g orexis:arrivedBy orexis:Asserted FILTER NOT EXISTS { ?g orexis:ownedBy ?who } }
   UNION { VALUES ?g { $closure } ?g orexis:arrivedBy ?any } FILTER(?g != ?cat) } }"""
 _CLOSE_U = """
 INSERT {{ GRAPH <{closure}> {{ ?a rdfs:subClassOf ?c }} }}

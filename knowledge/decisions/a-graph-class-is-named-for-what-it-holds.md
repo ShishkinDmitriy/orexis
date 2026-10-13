@@ -95,6 +95,8 @@ old name in place would have re-authored every pick on the next start.
 - **The world's files still say `beliefs/<agent>.ttl`.** They are the sovereign's authoring
   surface and the runbooks teach them by that name; the file holds the first picks, and its
   name is the world's to change.
-- **`orexis:beliefsOf` and `Beliefs.graph` keep their names.** The property says whose a
-  graph is, of every kind; the attribute is the belief base's own record graph, whatever it
-  holds.
+- **`Beliefs.graph` keeps its name**: the attribute is the belief base's own record graph,
+  whatever it holds. The property beside it kept its name here too, as `orexis:beliefsOf`, on
+  the ground that it says whose a graph is of every kind — and that ground is what renamed it
+  `orexis:ownedBy` once a desire graph and a want graph were no belief: a name saying belief
+  over a graph of a kind that is none is a class's name over the wrong rows.

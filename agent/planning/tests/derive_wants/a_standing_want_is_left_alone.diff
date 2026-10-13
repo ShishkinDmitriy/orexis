@@ -3,7 +3,7 @@
 @@ -76,8 +76,25 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
-   :sensed orexis:beliefsOf :keeper .
+   :sensed orexis:ownedBy :keeper .
 +  :sensed planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .

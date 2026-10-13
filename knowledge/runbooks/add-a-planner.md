@@ -38,7 +38,7 @@ unmet ([desire](/domain/planning/desire.md)). Its met-test is a
 [shape](/domain/planning/shape.md) the agent's beliefs are held to:
 
 ```turtle
-<> a planning:DesireGraph ; orexis:beliefsOf :grower .
+<> a planning:DesireGraph ; orexis:ownedBy :grower .
 :grower planning:holds :the_bed_is_comfortable .
 :the_bed_is_comfortable a planning:Desire ;
     planning:metWhen :comfortable .
@@ -59,7 +59,7 @@ A **want** is met once, and an agent holding only wants, reached by no transport
 one is reached:
 
 ```turtle
-<> a planning:WantGraph ; orexis:beliefsOf :courier .
+<> a planning:WantGraph ; orexis:ownedBy :courier .
 :courier planning:holds :every_parcel_delivered .
 :every_parcel_delivered a planning:Want ;
     planning:metWhen courier:delivered ;

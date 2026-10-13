@@ -33,7 +33,7 @@ _HELD_Q = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?
 #  writes — never a tick or a graph heard, which are beliefs it received.
 _OWN_STATE_Q = """SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
     ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-    FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:beliefsOf ?owner . } } ORDER BY ?g"""
+    FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g"""
 
 
 def _held(store) -> dict[str, str]:
