@@ -26,7 +26,7 @@ flowchart LR
     BRD["board<br/>hosts the sensor"]
     TOP["topic + filter<br/>observesTopic"]
   end
-  subgraph SELF["beliefs/&lt;id&gt;.self.ttl"]
+  subgraph SELF["beliefs/#lt;id#gt;.self.ttl"]
     ROLE["plays sensing:Observer<br/>sensing:sensor"]
   end
   DOM["a domain's rules<br/>one transition per property"]

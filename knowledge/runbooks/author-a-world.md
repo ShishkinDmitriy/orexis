@@ -18,14 +18,14 @@ flowchart TB
     S["society.ttl<br/>agents · boards · broker · topics<br/>only with a bus"]
   end
   subgraph OWN["each agent's own, read once at birth"]
-    SELF["beliefs/&lt;id&gt;.self.ttl<br/>the self, the roles it plays, its stances"]
+    SELF["beliefs/#lt;id#gt;.self.ttl<br/>the self, the roles it plays, its stances"]
     DES["desires or wants<br/>state, for a world nothing senses"]
   end
   subgraph ONB["read by onboarding alone"]
     DEP["deployment.ttl<br/>a pinned broker port"]
     HW["hardware.ttl<br/>pins and boards"]
   end
-  DOM["domains/&lt;name&gt;/<br/>words · actions · rules · drifts"]
+  DOM["domains/#lt;name#gt;/<br/>words · actions · rules · drifts"]
   W --> DOM
   SELF -->|"roles load the packages"| PK["sensing · prediction · planning<br/>execution · speech · belief · transport"]
 ```
