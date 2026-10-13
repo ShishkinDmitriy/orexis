@@ -98,6 +98,10 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
 7. **`hardware.ttl`** — `<> a onboarding:HardwareGraph`, pins and boards, if there are any: read
    by `orexis-firmware`, and a kind no agent declares, so a boot passes over it and no container
    mounts it. A document of a kind no reader declares is refused by `orexis-onboard`.
+8. **`requirements.ttl`**, where the world's own words need one — `<> a onboarding:RequirementGraph`,
+   then SHACL shapes over the words the world coins, held by `orexis-onboard` beside every package's
+   and domain's ([requirement](/domain/onboarding/requirement.md)); like the hardware, no agent loads
+   it and no container mounts it.
 
 State ranges, values and lots — picks. Never state a step, a dose or a price paid: those are
 the agents' to find.

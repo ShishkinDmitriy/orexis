@@ -340,6 +340,26 @@ def test_what_the_world_leaves_out_an_agents_own_documents_may_complete(tmp_path
     assert reading.refused(world) == ["you: probe: a sensor that observes no property: its readings would be of nothing"]
 
 
+@pytest.mark.parametrize("named", [False, True], ids=["unnamed", "named"])
+def test_a_world_holds_itself_to_requirements_of_its_own(tmp_path, named):
+    """A world's words are its own as a domain's are, so a requirement it ships beside its documents is
+    held as a package's is — and its agents' boots pass over it, as they pass over a package's."""
+    from agent.runtime import boot
+    from agent.store import graphs_of
+    from onboarding import reading
+
+    world = _declared(tmp_path, ["http://example.org/orexis/belief#Deliberator"],
+                      ':pot a :Pot' + (' ; :name "the fern\'s pot"' if named else "") + " .\n",
+                      requirements="@prefix onboarding: <http://example.org/orexis/onboarding#> .\n"
+                                   "<> a onboarding:RequirementGraph .\n"
+                                   "[] a sh:NodeShape ; sh:targetClass :Pot ;\n"
+                                   "   sh:property [ sh:path :name ; sh:minCount 1 ;\n"
+                                   '                 sh:message "a pot nobody can name on a dashboard" ] .\n')
+    assert reading.invalid(world) == ([] if named else ["pot: a pot nobody can name on a dashboard"])
+    assert reading.unread(world) == [] and reading.refused(world) == []
+    assert graphs_of(boot(world, "me", others=reading.ours()), reading.REQUIREMENT) == []
+
+
 @pytest.mark.parametrize("tests, refused", [
     ("planning:metWhen :ok", False),
     ("planning:unmetWhen :bad", False),

@@ -15,7 +15,9 @@ observes a property and is mounted on something, an observer role reads a sensor
 one of its two tests. It is a SHACL shape, and the package or domain owning the words ships it in a
 `requirements.ttl` beside its `ontology.ttl`, as `agent/sensing/requirements.ttl` and
 `domains/market/requirements.ttl` do. A domain imports it from its ontology, as it imports its
-actions and rules.
+actions and rules. A world whose words are its own ships its requirements the same way, a
+`requirements.ttl` beside its `world.ttl`, and they are held exactly as a package's are: a word is
+held to what its owner says of it, and a world owns its own.
 
 A requirement is not a [shape](/domain/planning/shape.md) in planning's sense. A met-test says what
 an agent wants of the world it believes, and the agent judges it every pass. A requirement says
