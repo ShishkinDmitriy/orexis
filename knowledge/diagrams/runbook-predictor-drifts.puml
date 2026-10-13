@@ -1,0 +1,33 @@
+@startuml runbook-predictor-drifts
+title A predictor — drifts summed into bands ahead
+
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 10
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #8FB4D0
+}
+skinparam frame {
+  BackgroundColor #F4F8FB
+  BorderColor #5B8DB8
+}
+
+rectangle "latest observation\nsoil 0.36" as OBS
+rectangle "climate:Drying\nreads climate:driesPerDay" as D1
+rectangle "climate:Raining\nreads climate:wetsPerMm\nand the rain forecast" as D2
+rectangle "actuation:Dosed\nreads a committed dose" as D3
+rectangle "sum of the drifts' rates\nper property" as SUM
+rectangle "bands ahead\nuntil the horizon" as BANDS
+rectangle "foreseen grounds\n0.04 a day: Dry in a day and a half" as G
+rectangle "planning\na want for that instant" as P #EAF5EA
+
+OBS --> SUM
+D1 --> SUM
+D2 --> SUM
+D3 --> SUM
+SUM --> BANDS
+BANDS --> G
+G --> P
+@enduml

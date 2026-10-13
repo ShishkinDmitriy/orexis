@@ -1,0 +1,31 @@
+@startuml runbook-observer-reading
+title What happens to one reading
+
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 10
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #8FB4D0
+}
+skinparam frame {
+  BackgroundColor #F4F8FB
+  BorderColor #5B8DB8
+}
+
+rectangle "board or simulator" as B
+rectangle "transport" as T
+rectangle "received\ncodec → pointer → number" as R
+rectangle "percept\nholds until due + grace" as P
+rectangle "sensing's rules\nquantity · scaling · stuck" as RV
+rectangle "domain transition\nclimate:soil climate:Dry" as TR
+rectangle "belief\nwhat planning reads" as BEL #EAF5EA
+
+B --> T : bytes on the topic
+T --> R
+R --> P
+P --> RV
+RV --> TR
+TR --> BEL
+@enduml

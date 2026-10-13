@@ -13,16 +13,7 @@ heading, as bands ([prediction](/domain/prediction/prediction.md),
 [corridor](/domain/prediction/corridor.md)). Planning then sees the bed go dry tomorrow, not only
 that it is dry now, so a want can be minted before the crossing.
 
-```mermaid
-flowchart LR
-  OBS["latest observation<br/>soil 0.36"] --> SUM["sum of the drifts' rates<br/>per property"]
-  D1["climate:Drying<br/>reads climate:driesPerDay"] --> SUM
-  D2["climate:Raining<br/>reads climate:wetsPerMm<br/>and the rain forecast"] --> SUM
-  D3["actuation:Dosed<br/>reads a committed dose"] --> SUM
-  SUM --> BANDS["bands ahead<br/>until the horizon"]
-  BANDS --> G["foreseen grounds<br/>0.04 a day: Dry in a day and a half"]
-  G --> P["planning<br/>a want for that instant"]
-```
+![the latest observation and each drift summed into bands ahead, foreseen grounds, and a want for that instant](../diagrams/runbook-predictor-drifts.svg)
 
 # What to write
 
