@@ -26,8 +26,3 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix speech: <http://example.org/orexis/speech#> .
 
-[] a sh:NodeShape ;
-    sh:targetClass speech:Speaker ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a speaker listens to no topic: no peer's document would reach it" ;
-        sh:select """SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me mqtt4ssn:listensToTopic ?topic } }""" ] .

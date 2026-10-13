@@ -105,14 +105,13 @@ will not load.
 
 A document the sovereign authored may be garbage, and onboarding is the last reader before it is
 believed: once an agent runs, what it holds is accepted and revised, never refused. So every
-package and domain ships, in its own ontology, a SHACL shape for each thing a document must say of
-its words, and `orexis-onboard` holds the world to them with pyshacl before anything is granted
-(`invalid` in `onboarding/reading.py`, #838). Sensing's say a sensor observes a property and is
+package and domain ships a [requirement](/domain/onboarding/requirement.md) for each thing a
+document must say of its words, and `orexis-onboard` holds the world to them with pyshacl before
+anything is granted (`invalid` in `onboarding/reading.py`, #838). Sensing's say a sensor observes a property and is
 mounted on something, a range's condition bounds one property with a floor below its ceiling, and
 its [margin](/domain/sensing/margin.md) is one the range can hold; planning's, that a desire or a
-want carries one test of its two. The shapes are read off the world, which knows every package's
-vocabulary, never off an agent's boot, which loads only what its roles do. pyshacl is the
-`onboarding` extra's, and the agent image never installs it.
+want carries one test of its two. pyshacl is the `onboarding` extra's, and the agent image never
+installs it.
 
 # What an agent is declared to run, held to its world
 

@@ -19,6 +19,9 @@ onboarding:HardwareGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label
 onboarding:DeploymentGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Deployment graph" ;
     rdfs:comment "What must be running for a world to be a society and where each thing answers - a broker's address, a series store, a container's image - read by onboarding alone and handed to an agent as environment. Never a credential (knowledge/domain/onboarding/deployment.md)." .
 
+onboarding:RequirementGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Requirement graph" ;
+    rdfs:comment "What a world must state of a package's or a domain's words: SHACL shapes the package or domain owning the words ships in a document of this kind beside its ontology, and `orexis-onboard` holds a world to before anything is granted. Read by onboarding alone, since what an agent holds is accepted and revised once it runs and a sovereign's document may be garbage only before it is believed; no agent loads one (knowledge/domain/onboarding/requirement.md, #838)." .
+
 onboarding:monitored a owl:DatatypeProperty ; rdfs:label "monitored" ;
     rdfs:domain onboarding:DeploymentGraph ;
     rdfs:comment "Said by a world's own deployment graph of itself, `<> onboarding:monitored true`: the world's agents write their metrics, so each is minted a metrics bucket and told of it, and the world gets a health dashboard. Absent is no - metrics are the admins' instrumentation and a world opts in - and a world saying it where the installation serves metrics from no store is refused at onboarding (knowledge/domain/onboarding/deployment.md)." .

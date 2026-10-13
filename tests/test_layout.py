@@ -289,6 +289,29 @@ def test_onboarding_refuses_a_sensor_that_reports_nothing_of_anything(tmp_path, 
     assert len(said) == 1 and said[0].startswith(why), said
 
 
+def test_an_agents_boot_holds_no_requirement_and_its_vocabulary_refuses_nothing():
+    """A requirement is onboarding's to read, so no agent loads one: a booted agent of every package
+    and the market holds no requirement graph, and no ontology it loads states a constraint — a met-test is
+    a shape of its desire's, not of a vocabulary — and the one shape left in a vocabulary, the observer's, states what holds of a limit no role states, which the
+    stuck rule reads off the ontology as the agent runs."""
+    import pyoxigraph as ox
+
+    from agent.runtime import boot
+    from agent.store import graphs_of
+    from onboarding import reading
+
+    here = REPO_ROOT / "world" / "allotment"
+    beliefs = boot(here, "fern_grower", others=reading.ours())
+    assert graphs_of(beliefs, reading.REQUIREMENT) == []
+    vocabulary = graphs_of(beliefs, reading.ONTOLOGY)
+    constraints = [p for p in ("sparql", "minCount", "maxCount", "datatype", "xone", "message")
+                   for g in vocabulary
+                   if any(beliefs.quads_for_pattern(None, ox.NamedNode("http://www.w3.org/ns/shacl#" + p), None, ox.NamedNode(g)))]
+    assert constraints == [], constraints
+    world = reading.world(here)
+    assert len(graphs_of(world, reading.REQUIREMENT)) >= 5, "onboarding reads every package's and the market's"
+
+
 def test_what_the_world_breaks_is_said_once_and_not_again_for_each_agent(tmp_path):
     """A shape the common beliefs break is the world's, said by `invalid`; `refused` says what an agent's
     own documents and roles break, so a sensor observing nothing is not said again as the agent's."""
@@ -370,7 +393,8 @@ def _needs() -> list[tuple[str, str]]:
 
     with tempfile.TemporaryDirectory() as here:
         store = reading.world(_declared(Path(here), []))
-        return sorted({(r["role"], r["message"]) for r in rows(store, _NEEDS_Q, graphs_of(store, reading.BELIEF, common=True))})
+        return sorted({(r["role"], r["message"]) for r in rows(store, _NEEDS_Q, [*graphs_of(store, reading.BELIEF, common=True),
+                                                                      *graphs_of(store, reading.REQUIREMENT)])})
 
 
 #  WHAT A ROLE NEEDS OF THE WORLD: every shape the vocabularies ship targeting a role class with a

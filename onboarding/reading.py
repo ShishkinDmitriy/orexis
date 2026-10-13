@@ -16,7 +16,8 @@ kind makes a misspelled one silent in every reader; onboarding knows every reade
 `unread` names the graphs none of them reads, and `orexis-onboard` refuses a world that has any.
 
 **A world is held to the shapes its vocabularies ship, here and nowhere else** (#838). The package
-or domain owning a word ships the shape a document using it is held to, in its own ontology: a
+or domain owning a word ships the shape a document using it is held to, in a requirement graph
+beside its ontology, of onboarding's kind, which no agent loads: a
 sensor observes a property and is mounted on something, a range's floor is below its ceiling and
 its margin a number it can hold, a desire is judged by one test. `invalid` runs every one over the
 world's common beliefs with pyshacl, and `refused` over each agent's own boot. What the world states
@@ -66,6 +67,7 @@ from agent.store import (NAMESPACES, answer, catalogue_of, close_catalogue, clos
 
 from .worlds import DOCUMENTS
 
+REQUIREMENT = "http://example.org/orexis/onboarding#RequirementGraph"
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 
 VOCABULARY = Path(__file__).resolve().parent / "ontology.ttl"
@@ -105,14 +107,14 @@ def _files(world: Path) -> list[Path]:
 
 def world(here: Path) -> ox.Store:
     """The world in `here` as onboarding reads it: its common beliefs as an agent reads them, and
-    every graph in its directory whose kind onboarding's vocabulary declares, closed. The first
-    half passes over onboarding's kinds, and says so only at DEBUG, since the second half reads
-    them."""
+    every graph whose kind onboarding's vocabulary declares, closed — in its directory, its hardware
+    and its deployment, and beside every package's and imported domain's ontology, their requirement
+    graphs. The first half passes over onboarding's kinds, and says so only at DEBUG, since the
+    second half reads them."""
     here = Path(here).resolve()
     store = world_of(here, others=ours())
     put_document(store, document(VOCABULARY))
-    for path in _files(here):
-        doc = document(path)
+    for _, doc in read_with_imports(documents(here)):
         graphs = {g for g, kinds in kinds_in(doc).items() if any(ours() & set(closed(store, k)) for k in kinds)}
         if graphs:
             put_document(store, doc, graphs=graphs)
@@ -178,27 +180,28 @@ def invalid(here: Path) -> list[str]:
     return sorted(_held_to(_shapes(store), store, graphs_of(store, BELIEF, common=True)).values())
 
 
-def _shapes(store: ox.Store) -> rdflib.Graph:
-    """Every shape the ontology graphs of `store` ship, with the vocabulary they are stated in.
+def _shapes(store: ox.Store) -> tuple[rdflib.Graph, rdflib.Graph]:
+    """Every requirement the world in `store` holds, and the vocabulary its shapes target through.
 
-    A shape is the T-Box's, so the package or domain owning the words it holds a document to ships
-    it in its own ontology, and nothing but onboarding runs one (#838). They are read off the WORLD,
-    which knows every package's vocabulary, and never off an agent's boot, which loads only what its
-    roles do: an agent playing an executor alone loads no planning, and the shape refusing it is
-    planning's."""
-    return rdflib_view(store, *graphs_of(store, ONTOLOGY))
+    A requirement is a package's or a domain's word about its own terms, shipped beside its ontology
+    in a graph of onboarding's kind, which no agent loads (requirement.md, #838). Both are read off
+    the WORLD, which knows every package's vocabulary, and never off an agent's boot, which loads
+    only what its roles do: an agent playing an executor alone loads no planning, and the shape
+    refusing it is planning's."""
+    return rdflib_view(store, *graphs_of(store, REQUIREMENT)), rdflib_view(store, *graphs_of(store, ONTOLOGY))
 
 
-def _held_to(shapes: rdflib.Graph, store: ox.Store, held: list[str]) -> dict[tuple, str]:
-    """What `shapes` report of the graphs `held` in `store`, keyed by the message and the focus where
+def _held_to(shapes: tuple[rdflib.Graph, rdflib.Graph], store: ox.Store, held: list[str]) -> dict[tuple, str]:
+    """What the requirements in `shapes` report of the graphs `held` in `store`, keyed by the message and the focus where
     that has a name — which is what tells a report about the world from one about an agent's own
     documents in an agent's boot. The graphs cross into rdflib for pyshacl with the store's namespaces
     bound on what is held, since pyshacl reads a constraint's select against the graph it asks, and
-    the shapes' vocabulary mixed in, so a role is targeted through the class it is beneath."""
+    the world's vocabulary mixed in, so a role is targeted through the class it is beneath."""
     data = rdflib_view(store, *held)
     for label, iri in NAMESPACES.items():
         data.bind(label, iri, override=True, replace=True)
-    _, report, _ = pyshacl.validate(data, shacl_graph=shapes, ont_graph=shapes)
+    requirements, vocabulary = shapes
+    _, report, _ = pyshacl.validate(data, shacl_graph=requirements, ont_graph=vocabulary)
     out = {}
     for result in report.subjects(_SH.resultMessage, None):
         focus, message = report.value(result, _SH.focusNode), str(report.value(result, _SH.resultMessage))
@@ -250,7 +253,7 @@ def refused(here: Path) -> list[str]:
             for why in _refusals(here, boot(here, agent_id, others=ours()), shapes, of_world)]
 
 
-def _refusals(here: Path, beliefs: ox.Store, shapes: rdflib.Graph, of_world: set[tuple]) -> list[str]:
+def _refusals(here: Path, beliefs: ox.Store, shapes: tuple[rdflib.Graph, rdflib.Graph], of_world: set[tuple]) -> list[str]:
     roles = roles_of(beliefs)
     if not roles:
         return ["plays no role in its self graph, so it would load no package and run nothing — "

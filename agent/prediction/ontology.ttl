@@ -33,15 +33,6 @@
     prediction's, which answers every observation written with the stretches ahead. Declared, never
     derived; it needs a sensor of the agent's and a drift.""" .
 
-[] a sh:NodeShape ;
-    sh:targetClass :Predictor ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a predictor with no sensor of its own or no drift: it would foresee nothing" ;
-        sh:select """SELECT $this WHERE { ?me orexis:plays $this
-            FILTER (NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-                                 ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host }
-                    || NOT EXISTS { ?drift a prediction:Drift }) }""" ] .
-
 :Drift a owl:Class ;
     rdfs:label "Drift" ;
     rdfs:comment """One thing that moves a value while nobody acts — a bed drying, rain wetting it. SOSA

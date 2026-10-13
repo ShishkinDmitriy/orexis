@@ -12,7 +12,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
-    owl:imports <actions.ttl> , <rules.ttl> .
+    owl:imports <actions.ttl> , <rules.ttl> , <requirements.ttl> .
 
 #  THE MARKET, A DOMAIN.
 #  How agents that want a scarce good get it from an agent that holds it: a bidder CALLS for a
@@ -75,20 +75,6 @@
     rdfs:subClassOf planning:Planner , execution:Executor , speech:Speaker , belief:Deliberator ;
     rdfs:label "Bidder" ;
     rdfs:comment "An agent that bids in a venue: calls for a round, tenders into it and presents the claim it wins. Founded on `market:bidsIn`, which says which venue; this says what the agent runs." .
-
-[] a sh:NodeShape ;
-    sh:targetClass :Host ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a host that hosts no venue: there is nothing for it to hold" ;
-        sh:select """PREFIX market: <http://example.org/orexis/market#>
-SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me market:hosts ?venue } }""" ] .
-
-[] a sh:NodeShape ;
-    sh:targetClass :Bidder ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a bidder that bids in no venue: there is nowhere for it to bid" ;
-        sh:select """PREFIX market: <http://example.org/orexis/market#>
-SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me market:bidsIn ?venue } }""" ] .
 
 #################  What the documents are  #################
 

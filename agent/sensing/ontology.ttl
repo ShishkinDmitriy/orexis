@@ -72,18 +72,12 @@
     grants the agent on the bus. It must report to the agent — be mounted on what the agent acts for,
     a sample of it, or a place containing it — and onboarding refuses one that does not.""" .
 
+#  WHAT HOLDS OF A LIMIT NO OBSERVER ROLE STATES, read by `default_of` and by the stuck rule off this
+#  ontology. The refusals of an observer are onboarding's (`requirements.ttl`).
 [] a sh:NodeShape ;
     sh:targetClass :Observer ;
-    sh:property [ sh:path :silentAfter ; sh:defaultValue 3 ; sh:datatype xsd:integer ; sh:maxCount 1 ] ,
-                [ sh:path :stuckAfter ; sh:defaultValue 6 ; sh:datatype xsd:integer ; sh:maxCount 1 ] ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "an observer that reads no sensor: it would observe nothing" ;
-        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this sensing:sensor ?sensor } }""" ] ,
-      [ a sh:SPARQLConstraint ;
-        sh:message "an observer reads a sensor that does not report to it: none mounted on what it acts for, a sample of it, or a place containing it" ;
-        sh:select """SELECT $this WHERE { ?me orexis:plays $this . $this sensing:sensor ?sensor
-            FILTER NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-                                ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host } }""" ] .
+    sh:property [ sh:path :silentAfter ; sh:defaultValue 3 ] ,
+                [ sh:path :stuckAfter ; sh:defaultValue 6 ] .
 
 :ObservationGraph a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
@@ -298,42 +292,3 @@
 # observes nothing or is mounted on nothing reports to no agent, and a range whose bounds cannot be
 # compared judges no state. Each says what it is, and onboarding refuses a world any of them reports.
 
-[] a sh:NodeShape ;
-    sh:targetClass sosa:Sensor ;
-    sh:property [ sh:path sosa:observes ; sh:minCount 1 ;
-                  sh:message "a sensor that observes no property: its readings would be of nothing" ] ,
-                [ sh:path sosa:isHostedBy ; sh:minCount 1 ;
-                  sh:message "a sensor mounted on nothing: it reports to no agent" ] .
-
-[] a sh:NodeShape ;
-    sh:targetObjectsOf ssn-system:inCondition ;
-    sh:property [ sh:path ssn:forProperty ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:message "a range's condition bounds no one property: a reading is held to it by its property" ] ,
-                [ sh:path schema:minValue ; sh:maxCount 1 ;
-                  sh:message "a range's condition states two floors" ] ,
-                [ sh:path schema:maxValue ; sh:maxCount 1 ;
-                  sh:message "a range's condition states two ceilings" ] ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "{?named}: a floor of {?low} not below its ceiling of {?high}, so no reading is inside it" ;
-        sh:select """SELECT $this ?named ?low ?high WHERE { ?range ssn-system:inCondition $this .
-            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
-            $this schema:minValue ?low ; schema:maxValue ?high FILTER (!(?low < ?high)) }""" ] .
-
-[] a sh:NodeShape ;
-    sh:targetSubjectsOf :margin ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "{?named}: a margin of {?margin}, which is no number" ;
-        sh:select """SELECT $this ?named ?margin WHERE { ?range ssn-system:inCondition $this .
-            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
-            $this sensing:margin ?margin FILTER (!isNumeric(?margin)) }""" ] ,
-      [ a sh:SPARQLConstraint ;
-        sh:message "{?named}: a margin of {?margin}, which is negative and widens nothing" ;
-        sh:select """SELECT $this ?named ?margin WHERE { ?range ssn-system:inCondition $this .
-            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
-            $this sensing:margin ?margin FILTER (isNumeric(?margin) && ?margin < 0) }""" ] ,
-      [ a sh:SPARQLConstraint ;
-        sh:message "{?named}: a margin of {?margin}, half the width of [{?low}, {?high}] or more — a subject a step brought to its middle would still be believed in the state it came from" ;
-        sh:select """SELECT $this ?named ?margin ?low ?high WHERE { ?range ssn-system:inCondition $this .
-            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
-            $this sensing:margin ?margin ; schema:minValue ?low ; schema:maxValue ?high
-            FILTER (isNumeric(?margin) && ?low < ?high && ?margin >= (?high - ?low) / 2) }""" ] .
