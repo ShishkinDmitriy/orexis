@@ -213,7 +213,7 @@ planning:Planner a owl:Class ;
     sh:targetClass planning:Planner ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a planner holds no desire and no want: it would plan nothing" ;
-        sh:select """SELECT ?me WHERE { ?me a orexis:Self
+        sh:select """SELECT $this WHERE {
             FILTER NOT EXISTS { ?desire a planning:Desire }
             FILTER NOT EXISTS { ?want a planning:Want } }""" ] .
 
@@ -227,9 +227,16 @@ planning:Planner a owl:Class ;
     sh:targetClass execution:Executor ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "an executor is no planner: nothing would publish a plan for it to walk" ;
-        sh:select """SELECT ?me WHERE { ?me a orexis:Self
+        sh:select """SELECT $this WHERE { ?me orexis:plays $this
             FILTER NOT EXISTS { ?me orexis:plays ?role .
                                 { ?role a planning:Planner } UNION { ?role a ?kind . ?kind rdfs:subClassOf planning:Planner } } }""" ] .
+
+#  A desire and a want are judged by one of their two tests, and one carrying both, or neither, is
+#  judged by nothing (`planning:metWhen`), so onboarding refuses it.
+[] a sh:NodeShape ;
+    sh:targetClass planning:Desire , planning:Want ;
+    sh:xone ( [ sh:path planning:metWhen ; sh:minCount 1 ] [ sh:path planning:unmetWhen ; sh:minCount 1 ] ) ;
+    sh:message "is judged by neither test or by both: a desire or a want carries planning:metWhen or planning:unmetWhen, one of the two" .
 
 #################  Desires, wants and the searched half of an action — planning's  #################
 

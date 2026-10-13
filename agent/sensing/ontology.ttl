@@ -1,6 +1,8 @@
 @prefix : <http://example.org/orexis/sensing#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix belief: <http://example.org/orexis/belief#> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix schema: <https://schema.org/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -76,12 +78,10 @@
                 [ sh:path :stuckAfter ; sh:defaultValue 6 ; sh:datatype xsd:integer ; sh:maxCount 1 ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "an observer that reads no sensor: it would observe nothing" ;
-        sh:select """SELECT ?me WHERE { ?me a orexis:Self ; orexis:plays ?role .
-            { ?role a sensing:Observer } UNION { ?role a ?kind . ?kind rdfs:subClassOf sensing:Observer }
-            FILTER NOT EXISTS { ?role sensing:sensor ?sensor } }""" ] ,
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this sensing:sensor ?sensor } }""" ] ,
       [ a sh:SPARQLConstraint ;
         sh:message "an observer reads a sensor that does not report to it: none mounted on what it acts for, a sample of it, or a place containing it" ;
-        sh:select """SELECT ?me WHERE { ?me a orexis:Self ; orexis:plays/sensing:sensor ?sensor
+        sh:select """SELECT $this WHERE { ?me orexis:plays $this . $this sensing:sensor ?sensor
             FILTER NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
                                 ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host } }""" ] .
 
@@ -291,3 +291,49 @@
     noise. Absent, nought, and the state is the bare comparison with the bounds. Read by a domain's
     transition and by nothing else. `orexis-onboard` refuses one that is no
     number, a negative one, and one of half the range's width or more.""" .
+
+#################  What a world must state of what sensing reads  #################################
+#
+# Held at onboarding to every world, over the documents as an agent's boot reads them: a sensor that
+# observes nothing or is mounted on nothing reports to no agent, and a range whose bounds cannot be
+# compared judges no state. Each says what it is, and onboarding refuses a world any of them reports.
+
+[] a sh:NodeShape ;
+    sh:targetClass sosa:Sensor ;
+    sh:property [ sh:path sosa:observes ; sh:minCount 1 ;
+                  sh:message "a sensor that observes no property: its readings would be of nothing" ] ,
+                [ sh:path sosa:isHostedBy ; sh:minCount 1 ;
+                  sh:message "a sensor mounted on nothing: it reports to no agent" ] .
+
+[] a sh:NodeShape ;
+    sh:targetObjectsOf ssn-system:inCondition ;
+    sh:property [ sh:path ssn:forProperty ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a range's condition bounds no one property: a reading is held to it by its property" ] ,
+                [ sh:path schema:minValue ; sh:maxCount 1 ;
+                  sh:message "a range's condition states two floors" ] ,
+                [ sh:path schema:maxValue ; sh:maxCount 1 ;
+                  sh:message "a range's condition states two ceilings" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "{?named}: a floor of {?low} not below its ceiling of {?high}, so no reading is inside it" ;
+        sh:select """SELECT $this ?named ?low ?high WHERE { ?range ssn-system:inCondition $this .
+            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
+            $this schema:minValue ?low ; schema:maxValue ?high FILTER (!(?low < ?high)) }""" ] .
+
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf :margin ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "{?named}: a margin of {?margin}, which is no number" ;
+        sh:select """SELECT $this ?named ?margin WHERE { ?range ssn-system:inCondition $this .
+            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
+            $this sensing:margin ?margin FILTER (!isNumeric(?margin)) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "{?named}: a margin of {?margin}, which is negative and widens nothing" ;
+        sh:select """SELECT $this ?named ?margin WHERE { ?range ssn-system:inCondition $this .
+            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
+            $this sensing:margin ?margin FILTER (isNumeric(?margin) && ?margin < 0) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "{?named}: a margin of {?margin}, half the width of [{?low}, {?high}] or more — a subject a step brought to its middle would still be believed in the state it came from" ;
+        sh:select """SELECT $this ?named ?margin ?low ?high WHERE { ?range ssn-system:inCondition $this .
+            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
+            $this sensing:margin ?margin ; schema:minValue ?low ; schema:maxValue ?high
+            FILTER (isNumeric(?margin) && ?low < ?high && ?margin >= (?high - ?low) / 2) }""" ] .

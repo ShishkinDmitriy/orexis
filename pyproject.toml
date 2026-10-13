@@ -24,6 +24,9 @@ dependencies = [
 
 [project.optional-dependencies]
 # pyyaml: the bundle's gate parses every document's frontmatter with it.
+# pyshacl: onboarding holds a world to its vocabularies' shapes (#838), and nothing in an agent does,
+# so it is an extra the image never installs.
+onboarding = ["pyshacl>=0.30"]
 dev = ["pytest>=8", "import-linter>=2", "pytest-xdist>=3", "pyshacl>=0.30", "pyyaml>=6"]
 
 [project.scripts]

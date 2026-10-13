@@ -87,14 +87,13 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
         if unread:
             raise SystemExit(f"orexis-onboard: world {world!r} holds graphs of a kind no reader declares — "
                              f"{'; '.join(unread)}; nothing granted")
-        # A margin its range cannot hold is refused before anyone reads it: the rule judging an
-        # observation into a subject belief takes it as stated, so one that is no number, a negative
-        # one, and one of half the range or more would each be believed
-        # as the world said it (knowledge/domain/sensing/margin.md).
-        unholdable = reading.unholdable(world_dir(world))
-        if unholdable:
-            raise SystemExit(f"orexis-onboard: world {world!r} states a margin its range cannot hold — "
-                             f"{'; '.join(unholdable)}; nothing granted")
+        # A world is held to the shapes its vocabularies ship before anyone reads it: a sensor observing
+        # nothing, a range whose floor is not below its ceiling, a margin it cannot hold — each the
+        # package's own word about its own terms, and every reader takes a document as stated (#838).
+        invalid = reading.invalid(world_dir(world))
+        if invalid:
+            raise SystemExit(f"orexis-onboard: world {world!r} states what its vocabularies' shapes refuse — "
+                             f"{'; '.join(invalid)}; nothing granted")
         # What an agent runs is declared — its roles, in its own self graph — and held to its world
         # both ways before anything is granted: a role whose needs the world lacks, and what would
         # arrive for an agent and be read by none of its roles. An agent declaring no role would boot,

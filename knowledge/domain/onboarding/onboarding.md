@@ -101,6 +101,19 @@ re-running changes nothing, and a sovereign who cares asserts the port instead. 
 read as the [runtime](/domain/kernel/runtime.md) boots it, so onboarding refuses a world whose documents
 will not load.
 
+# What a world states, held to its vocabularies' shapes
+
+A document the sovereign authored may be garbage, and onboarding is the last reader before it is
+believed: once an agent runs, what it holds is accepted and revised, never refused. So every
+package and domain ships, in its own ontology, a SHACL shape for each thing a document must say of
+its words, and `orexis-onboard` holds the world to them with pyshacl before anything is granted
+(`invalid` in `onboarding/reading.py`, #838). Sensing's say a sensor observes a property and is
+mounted on something, a range's condition bounds one property with a floor below its ceiling, and
+its [margin](/domain/sensing/margin.md) is one the range can hold; planning's, that a desire or a
+want carries one test of its two. The shapes are read off the world, which knows every package's
+vocabulary, never off an agent's boot, which loads only what its roles do. pyshacl is the
+`onboarding` extra's, and the agent image never installs it.
+
 # What an agent is declared to run, held to its world
 
 What an agent runs is its [roles](/domain/kernel/role.md), declared in its own self graph — the one
@@ -110,10 +123,12 @@ boots every agent as its container would and holds the declaration to the world 
 
 - **an agent playing no role**, which would boot, load nothing and run nothing;
 - **a declared role whose needs the world lacks** — each need a SHACL shape targeting the role, its
-  `sh:sparql` select's every row a violation, shipped by the package or domain whose words the need
+  `sh:sparql` select returning the role, `$this`, for each way it is unmet, shipped by the package or domain whose words the need
   is stated in: a planner holding no desire or want, an executor that is no planner, an observer that
   reads no sensor or reads one mounted on nothing the agent acts for, a predictor with no sensor or no drift, a speaker listening to no topic, a host
   hosting no venue, a bidder bidding in none;
+- **a shape the agent's own documents break**, as a want carrying both tests — what the world's
+  common beliefs break is said once, by `invalid`, and not again for each agent;
 - **a sensor reporting to an agent that no observer role of its reads**, and **a topic an agent listens to with no
   speaker**, each something that would arrive and be read by none of its roles;
 - **a graph the agent would read of a kind none of the packages it loads declares** — the refusal of

@@ -81,14 +81,14 @@
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a host that hosts no venue: there is nothing for it to hold" ;
         sh:select """PREFIX market: <http://example.org/orexis/market#>
-SELECT ?me WHERE { ?me a orexis:Self FILTER NOT EXISTS { ?me market:hosts ?venue } }""" ] .
+SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me market:hosts ?venue } }""" ] .
 
 [] a sh:NodeShape ;
     sh:targetClass :Bidder ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a bidder that bids in no venue: there is nowhere for it to bid" ;
         sh:select """PREFIX market: <http://example.org/orexis/market#>
-SELECT ?me WHERE { ?me a orexis:Self FILTER NOT EXISTS { ?me market:bidsIn ?venue } }""" ] .
+SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me market:bidsIn ?venue } }""" ] .
 
 #################  What the documents are  #################
 

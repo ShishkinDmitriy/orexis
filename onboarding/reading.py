@@ -15,10 +15,13 @@ vocabulary, then every graph in the world's directory of a kind that vocabulary 
 kind makes a misspelled one silent in every reader; onboarding knows every reader's vocabulary, so
 `unread` names the graphs none of them reads, and `orexis-onboard` refuses a world that has any.
 
-**A margin its range cannot hold is refused here, for the same reason** (`unholdable`,
-knowledge/domain/sensing/margin.md): a domain's transition judging an observation into a subject
-belief takes `sensing:margin` as stated, so one that is no number, negative, or of half its range's
-width or more is caught here or nowhere.
+**A world is held to the shapes its vocabularies ship, here and nowhere else** (#838). The package
+or domain owning a word ships the shape a document using it is held to, in its own ontology: a
+sensor observes a property and is mounted on something, a range's floor is below its ceiling and
+its margin a number it can hold, a desire is judged by one test. `invalid` runs every one over the
+world's common beliefs with pyshacl, and `refused` over each agent's own boot. What the world states
+is accepted and revised once it runs; a document the sovereign authored may be garbage, and this is
+the last reader before it is believed.
 
 **A step runs where the world has what it serves.** `premises` answers which of `PREMISES` hold of
 a world (#824): the broker's credentials and its ACL, the agents' certificates and the broker in a
@@ -29,8 +32,9 @@ onboarded without them.
 a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md, a-role-is-an-instance-an-agent-plays.md).
 `refused` boots every agent as its container boots it and says each way its roles and its world
 disagree: an agent playing no role, which would run nothing; a declared role whose needs the world lacks, each need a shape the
-package or domain owning its words ships, `sh:targetClass` the role and a `sh:sparql` select whose
-every row is a violation; a sensor reporting to an agent that no observer role of its reads; a topic an agent
+package or domain owning its words ships, `sh:targetClass` the role and a `sh:sparql` select of
+`$this`, the role, for every way it is unmet; a shape its own documents break, as a desire
+judged by both tests; a sensor reporting to an agent that no observer role of its reads; a topic an agent
 listens to with no speaker to hear it; and a graph the agent would read of a kind none of the
 packages it loads declares — the refusal `unread` makes of the world, narrowed to the agent. It does
 NOT refuse a drift with no predictor, foresight being the author's to decline, nor an action whose
@@ -50,15 +54,19 @@ from functools import cache
 from pathlib import Path
 
 import pyoxigraph as ox
+import pyshacl
+import rdflib
 
 from agent.planning.planner import Planner
 from agent.ontology import local_of
-from agent.runtime import (MQTT, PLANNING, SPEAKER, boot, documents, known, packages_of, read_with_imports,
+from agent.runtime import (MQTT, ONTOLOGY, PLANNING, SPEAKER, boot, documents, known, packages_of, read_with_imports,
                            roles_of, selves, world_of)
-from agent.store import (answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
-                         rows, whose)
+from agent.store import (NAMESPACES, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
+                         rdflib_view, rows, whose)
 
 from .worlds import DOCUMENTS
+
+_SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 
 VOCABULARY = Path(__file__).resolve().parent / "ontology.ttl"
 ONBOARDING = "http://example.org/orexis/onboarding#"
@@ -162,54 +170,45 @@ def unread(here: Path) -> list[str]:
     return out
 
 
-#  EVERY MARGIN A RANGE CANNOT HOLD (knowledge/domain/sensing/margin.md), with its range's name where it
-#  has one — a blank range is said as one with no name, and judged like any other — and the bounds it
-#  widens: one that is no number, which a transition's sum binds nothing with, so a subject held below
-#  or above would be judged in no state at all; a negative one, which widens nothing, so a transition
-#  would read as nought a figure the world stated; and one of half its range's width or more, since every act
-#  here aims at a range's middle and a subject a step brought there would still be believed in the
-#  state it came from.
-_MARGINS_Q = """
-SELECT ?named ?margin ?low ?high WHERE {
-  ?range ssn-system:inCondition ?condition . ?condition sensing:margin ?margin .
-  OPTIONAL { ?condition schema:minValue ?low } OPTIONAL { ?condition schema:maxValue ?high }
-  BIND(IF(isIRI(?range), STR(?range), "") AS ?named)
-  FILTER(!isNumeric(?margin) || ?margin < 0
-         || (BOUND(?low) && BOUND(?high) && 2 * ?margin >= ?high - ?low)) }
-ORDER BY ?named ?margin"""
-
-
-def unholdable(here: Path) -> list[str]:
-    """Every margin the world in `here` states that its range cannot hold, as `range: why`. Empty for a
-    world each of whose margins is a number from nought to less than half its range's width — every
-    world stating none among them."""
+def invalid(here: Path) -> list[str]:
+    """Every way the world in `here` breaks a shape its vocabularies ship, as `focus: why`, or `why`
+    alone where the focus has no name — held to the world's common beliefs as onboarding reads them.
+    Empty for a world that conforms. What an agent's own documents break is `refused`'s, per agent."""
     store = world(here)
-    out = []
-    for r in rows(store, _MARGINS_Q, graphs_of(store, BELIEF, common=True)):
-        said = f"a margin of {r['margin']}"
-        named = r["named"] or "a range with no name"
-        try:
-            margin = float(r["margin"])
-        except ValueError:
-            out.append(f"{named}: {said}, which is no number")
-            continue
-        out.append(f"{named}: {said}, which is negative and widens nothing" if margin < 0 else
-                   f"{named}: {said}, half the width of [{r['low']}, {r['high']}] or more — a subject a step "
-                   f"brought to its middle would still be believed in the state it came from")
+    return sorted(_held_to(_shapes(store), store, graphs_of(store, BELIEF, common=True)).values())
+
+
+def _shapes(store: ox.Store) -> rdflib.Graph:
+    """Every shape the ontology graphs of `store` ship, with the vocabulary they are stated in.
+
+    A shape is the T-Box's, so the package or domain owning the words it holds a document to ships
+    it in its own ontology, and nothing but onboarding runs one (#838). They are read off the WORLD,
+    which knows every package's vocabulary, and never off an agent's boot, which loads only what its
+    roles do: an agent playing an executor alone loads no planning, and the shape refusing it is
+    planning's."""
+    return rdflib_view(store, *graphs_of(store, ONTOLOGY))
+
+
+def _held_to(shapes: rdflib.Graph, store: ox.Store, held: list[str]) -> dict[tuple, str]:
+    """What `shapes` report of the graphs `held` in `store`, keyed by the message and the focus where
+    that has a name — which is what tells a report about the world from one about an agent's own
+    documents in an agent's boot. The graphs cross into rdflib for pyshacl with the store's namespaces
+    bound on what is held, since pyshacl reads a constraint's select against the graph it asks, and
+    the shapes' vocabulary mixed in, so a role is targeted through the class it is beneath."""
+    data = rdflib_view(store, *held)
+    for label, iri in NAMESPACES.items():
+        data.bind(label, iri, override=True, replace=True)
+    _, report, _ = pyshacl.validate(data, shacl_graph=shapes, ont_graph=shapes)
+    out = {}
+    for result in report.subjects(_SH.resultMessage, None):
+        focus, message = report.value(result, _SH.focusNode), str(report.value(result, _SH.resultMessage))
+        named = isinstance(focus, rdflib.URIRef)
+        out[(message, str(focus) if named else None)] = f"{local_of(str(focus))}: {message}" if named else message
     return out
 
 
 #  EVERY AGENT THE WORLD STATES, by the id its process is told.
 _AGENTS_Q = "SELECT ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id } ORDER BY ?id"
-
-#  WHAT A ROLE NEEDS OF THE WORLD: every shape the vocabularies ship targeting a class, with the
-#  select its `sh:sparql` constraint carries and what it says when a row comes back — read off every
-#  package's ontology and every domain's, the world's store holding them all, since a need is the
-#  shape of the package or domain owning its words and not always of the role's declarer.
-_NEEDS_Q = """
-SELECT ?role ?select ?message WHERE {
-  ?shape a sh:NodeShape ; sh:targetClass ?role ; sh:sparql ?constraint .
-  ?constraint sh:select ?select OPTIONAL { ?constraint sh:message ?message } }"""
 
 #  EVERY SENSOR THAT REPORTS TO THE SELF AND NO OBSERVER ROLE OF ITS READS, off the common beliefs and
 #  the self: mounted on what it acts for, a sample of it, or a place containing it. The converse of the
@@ -245,20 +244,21 @@ def refused(here: Path) -> list[str]:
     whose every agent runs what it is declared to and is read by what it runs."""
     here = Path(here).resolve()
     store = world(here)
-    needs = rows(store, _NEEDS_Q, graphs_of(store, BELIEF, common=True))
+    shapes = _shapes(store)
+    of_world = set(_held_to(shapes, store, graphs_of(store, BELIEF, common=True)))
     return [f"{agent_id}: {why}" for agent_id in agents(here)
-            for why in _refusals(here, boot(here, agent_id, others=ours()), needs)]
+            for why in _refusals(here, boot(here, agent_id, others=ours()), shapes, of_world)]
 
 
-def _refusals(here: Path, beliefs: ox.Store, needs: list[dict]) -> list[str]:
+def _refusals(here: Path, beliefs: ox.Store, shapes: rdflib.Graph, of_world: set[tuple]) -> list[str]:
     roles = roles_of(beliefs)
     if not roles:
         return ["plays no role in its self graph, so it would load no package and run nothing — "
                 "`<agent> orexis:plays [ a <role> ]` says what it runs"]
     cat = catalogue_of(beliefs)
     held = [g for g in graphs_of(beliefs, GRAPH) if g != cat]
-    out = [need.get("message") or f"its world lacks what {need['role']} needs" for need in needs
-           if need["role"] in roles and rows(beliefs, need["select"], held)]
+    out = [why for key, why in sorted(_held_to(shapes, beliefs, held).items(), key=lambda kv: kv[1])
+           if key not in of_world]
     stated = [*graphs_of(beliefs, BELIEF, common=True), *graphs_of(beliefs, SELF_GRAPH)]
     out += [f"{local_of(r['sensor'])} reports to it, and no observer role it plays reads it: no package it "
             f"loads would read the sensor — `orexis:plays [ a sensing:Observer ; sensing:sensor <sensor> ]` says one does"

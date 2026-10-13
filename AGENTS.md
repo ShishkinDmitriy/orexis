@@ -655,6 +655,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   agent's until a role says so, onboarding refuses a declared sensor mounted on nothing the agent acts
   for and a mounted one no role reads, the transports ask sensing which are the agent's
   (`cadence.sensors`), and the broker's ACL is derived from the declarations.
+- **A world is held to the shapes its vocabularies ship, at onboarding alone, read off the world and
+  never an agent's boot** — the package owning a word ships its shape in its ontology, pyshacl is the
+  `onboarding` extra's, and an agent playing an executor alone loads no planning, whose shape refuses
+  it (#838).
 - **A role's need is a shape shipped by whoever owns the words it is stated in, and onboarding holds a
   declaration to its world both ways** — the executor's need to be a planner is planning's shape, the
   speaker's topic the MQTT transport's, since a package beneath may not speak them (#927).
