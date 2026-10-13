@@ -15,40 +15,11 @@ the subject: the bed is dry. Playing the role loads [sensing](/domain/sensing/se
 (an observer is a [deliberator](/domain/belief/deliberator.md)), and the
 [transport](/domain/transport/transport.md) its sensors are reached by.
 
-```mermaid
-flowchart LR
-  subgraph W["world.ttl"]
-    SUB["subject<br/>operating range per property<br/>margin"]
-    SEN["sensor<br/>isHostedBy · observes<br/>Frequency · pointer"]
-  end
-  subgraph S["society.ttl"]
-    AG["agent<br/>actsFor the subject"]
-    BRD["board<br/>hosts the sensor"]
-    TOP["topic + filter<br/>observesTopic"]
-  end
-  subgraph SELF["beliefs/#lt;id#gt;.self.ttl"]
-    ROLE["plays sensing:Observer<br/>sensing:sensor"]
-  end
-  DOM["a domain's rules<br/>one transition per property"]
-  SEN --> SUB
-  AG --> SUB
-  BRD --> SEN
-  TOP --> SEN
-  ROLE --> SEN
-  DOM -. "reading → state" .-> SUB
-```
+![which document states the subject, the sensor, the agent, the board, the topic and the observer role](../diagrams/runbook-observer-documents.svg)
 
 What happens to one reading once the agent runs:
 
-```mermaid
-flowchart LR
-  B["board or simulator"] -->|bytes on the topic| T["transport"]
-  T --> R["received<br/>codec → pointer → number"]
-  R --> P["percept<br/>holds until due + grace"]
-  P --> RV["sensing's rules<br/>quantity · scaling · stuck"]
-  RV --> TR["domain transition<br/>climate:soil climate:Dry"]
-  TR --> BEL["belief<br/>what planning reads"]
-```
+![one reading from the board through the transport, received, the percept and the rules to a belief](../diagrams/runbook-observer-reading.svg)
 
 # What to write
 

@@ -1,0 +1,38 @@
+@startuml runbook-observer-documents
+title An observer — which document states what
+left to right direction
+
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 10
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #8FB4D0
+}
+skinparam frame {
+  BackgroundColor #F4F8FB
+  BorderColor #5B8DB8
+}
+
+frame "world.ttl" {
+  rectangle "subject\noperating range per property\nmargin" as SUB
+  rectangle "sensor\nisHostedBy · observes\nFrequency · pointer" as SEN
+}
+frame "society.ttl" {
+  rectangle "agent\nactsFor the subject" as AG
+  rectangle "board\nhosts the sensor" as BRD
+  rectangle "topic + filter\nobservesTopic" as TOP
+}
+frame "beliefs/<id>.self.ttl" {
+  rectangle "plays sensing:Observer\nsensing:sensor" as ROLE
+}
+rectangle "a domain's rules\none transition per property" as DOM
+
+SEN --> SUB
+AG --> SUB
+BRD --> SEN
+TOP --> SEN
+ROLE --> SEN
+DOM ..> SUB : reading → state
+@enduml

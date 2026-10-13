@@ -201,15 +201,7 @@ alike — see [belief-base](/domain/belief/belief-base.md).
 
 # What a change costs
 
-```mermaid
-flowchart LR
-  C{"what changed?"}
-  C -->|"agent/ or domains/ code"| R["podman compose restart"]
-  C -->|"world.ttl · society.ttl<br/>a range, a rate, a scaling, a venue"| R
-  C -->|"pyproject.toml"| B["podman build, then up --force-recreate"]
-  C -->|"the agent's own documents<br/>a role, a sensor it reads, a stance,<br/>a desire, a want, its state"| V["a fresh belief volume<br/>what it believed is lost"]
-  C -->|"society wiring<br/>an agent, a topic, a broker"| O["orexis-onboard, then up -d"]
-```
+![what each kind of change costs: a restart, a build, a fresh belief volume, or onboarding again](../diagrams/runbook-change-costs.svg)
 
 A restart reads the common documents again. An agent's own documents are read once, at birth, and
 a lived-in volume keeps them as they were: the tear-down's §Remove a belief base, then `up`.

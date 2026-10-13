@@ -17,6 +17,22 @@ PlantUML source with a rendered SVG beside it.
 * [service-reviser](./service-reviser.puml) - The seam: a service with no repository at all, because a mark is not a belief.
 * [time-two-cones](./time-two-cones.svg) - One tree of possible worlds on a time axis, the two kinds of edge, and the ground a node stands on.
 
+The runbooks' pictures, one per runbook that embeds it:
+
+* [runbook-world-documents](./runbook-world-documents.puml) - A world's documents: read by every agent on each restart, each agent's own at birth, onboarding's alone.
+* [runbook-change-costs](./runbook-change-costs.puml) - What a change to a running world costs: a restart, a build, a fresh belief volume, or onboarding.
+* [runbook-observer-documents](./runbook-observer-documents.puml) - Which document states the subject, the sensor, the agent, the board, the topic and the observer role.
+* [runbook-observer-reading](./runbook-observer-reading.puml) - One reading, from the board to a belief planning reads.
+* [runbook-predictor-drifts](./runbook-predictor-drifts.puml) - The drifts' rates summed into bands ahead, and a want for a foreseen instant.
+* [runbook-planner-loop](./runbook-planner-loop.puml) - From a desire read unmet to a command on a device, and the reading that shows it landed.
+* [runbook-market-round](./runbook-market-round.puml) - A bidder calls, tenders, wins a claim and presents it; the host doses its plot.
+
+# A picture is an image, never a Mermaid block
+
+GitHub's web view draws a Mermaid block and its mobile app shows the source as text, so the
+runbooks' diagrams, written in Mermaid first, read as code on a phone. An SVG shows everywhere a
+page does, and the stamp below holds it to its source.
+
 # One picture is drawn rather than rendered
 
 `time-two-cones.svg` has no `.puml` beside it and is not generated. Its geometry IS the idea —

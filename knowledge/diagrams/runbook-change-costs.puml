@@ -1,0 +1,29 @@
+@startuml runbook-change-costs
+title What a change costs a running world
+left to right direction
+
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 10
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #8FB4D0
+}
+skinparam frame {
+  BackgroundColor #F4F8FB
+  BorderColor #5B8DB8
+}
+
+rectangle "what changed?" as C #FFF6E0
+rectangle "podman compose restart" as R #EAF5EA
+rectangle "podman build,\nthen up --force-recreate" as B #EAF5EA
+rectangle "a fresh belief volume\nwhat it believed is lost" as V #FBE9E7
+rectangle "orexis-onboard, then up -d" as O #EAF5EA
+
+C --> R : agent/ or domains/ code
+C --> R : world.ttl · society.ttl\na range, a rate, a scaling, a venue
+C --> B : pyproject.toml
+C --> V : the agent's own documents\na role, a sensor it reads, a stance,\na desire, a want, its state
+C --> O : society wiring\nan agent, a topic, a broker
+@enduml

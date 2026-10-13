@@ -1,0 +1,33 @@
+@startuml runbook-planner-loop
+title A planner and its executor — from a desire to a device
+
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 10
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #8FB4D0
+}
+skinparam frame {
+  BackgroundColor #F4F8FB
+  BorderColor #5B8DB8
+}
+
+rectangle "desire\nthe bed is not Dry" as D
+rectangle "want" as W
+rectangle "actions.ttl\nprecondition · effect\nimplementation" as A
+rectangle "search\nthe imported actions" as S
+rectangle "plan\n[ Dosing pump bed ]" as P
+rectangle "executor\ntakes the step" as E
+rectangle "pump" as DEV
+rectangle "the bed Moist\nstep landed, want met" as L #EAF5EA
+
+D --> W : reads unmet
+W --> S
+A --> S
+S --> P
+P --> E
+E --> DEV : command on the device's topic
+DEV ..> L : next reading
+@enduml

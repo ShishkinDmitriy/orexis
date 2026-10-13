@@ -15,16 +15,7 @@ searches the domain's actions for a [plan](/domain/planning/plan.md), and publis
 reading that should show its effect. The two are declared together: an executor is refused unless
 the agent also plays a planner.
 
-```mermaid
-flowchart LR
-  D["desire<br/>the bed is not Dry"] -->|"reads unmet"| W["want"]
-  W --> S["search<br/>the imported actions"]
-  A["actions.ttl<br/>precondition · effect<br/>implementation"] --> S
-  S --> P["plan<br/>[ Dosing pump bed ]"]
-  P --> E["executor<br/>takes the step"]
-  E -->|"command on the device's topic"| DEV["pump"]
-  DEV -.->|"next reading"| L["the bed Moist<br/>step landed, want met"]
-```
+![a desire read unmet becomes a want, searched over the actions into a plan the executor takes on a device](../diagrams/runbook-planner-loop.svg)
 
 # What to write
 

@@ -14,20 +14,7 @@ a [round](/domain/market/round.md). Every message is a document one agent says t
 [speech](/domain/speech/speech.md). Each market role is beneath the planner, the executor, the
 speaker and the deliberator, so playing one loads all four.
 
-```mermaid
-sequenceDiagram
-  participant G as Bidder (grower)
-  participant H as Host (supplier)
-  participant V as Valve
-  Note over G: its plot is believed Dry,<br/>it holds no valve
-  G->>H: call, on the host's inbox
-  H->>G: round offered, lot and reserve
-  G->>H: tender, at its value per litre
-  H->>G: round cleared, a claim won
-  G->>H: claim presented
-  H->>V: dose command
-  V-->>G: next reading: plot Moist
-```
+![a bidder calls the host, tenders in the round, presents the claim it won, and the host doses its plot](../diagrams/runbook-market-round.svg)
 
 # What to write
 
