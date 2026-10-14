@@ -61,7 +61,7 @@ from influxdb_client import Authorization, BucketRetentionRules, InfluxDBClient,
 
 from agent.series import HISTORY, METRICS, PURPOSES
 
-from . import compose, installation
+from . import compose, installation, reading
 from .worlds import REPO_ROOT
 from .worlds import shown, world_dir, worlds
 
@@ -429,6 +429,7 @@ def main() -> None:
         if args.revoke:
             revoke(args.world, args.revoke)
         else:
+            reading.check(world_dir(args.world))
             provision(args.world, rotate=args.rotate)
     except AdminError as exc:
         raise SystemExit(f"orexis-influx: {exc}")

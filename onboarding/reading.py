@@ -64,7 +64,7 @@ from agent.planning.planner import Planner
 from agent.ontology import local_of
 from agent.runtime import (MQTT, ONTOLOGY, PLANNING, SPEAKER, boot, documents, known, packages_of, read_with_imports,
                            roles_of, selves, world_of)
-from agent.store import (NAMESPACES, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
+from agent.store import (NAMESPACES, DocumentRefused, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
                          rdflib_view, rows, whose)
 
 from .worlds import DOCUMENTS
@@ -73,6 +73,7 @@ REQUIREMENT = "http://example.org/orexis/onboarding#RequirementGraph"
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 
 VOCABULARY = Path(__file__).resolve().parent / "ontology.ttl"
+REQUIREMENTS = Path(__file__).resolve().parent / "requirements.ttl"
 ONBOARDING = "http://example.org/orexis/onboarding#"
 HARDWARE = ONBOARDING + "HardwareGraph"
 DEPLOYMENT = ONBOARDING + "DeploymentGraph"
@@ -116,6 +117,7 @@ def world(here: Path) -> ox.Store:
     here = Path(here).resolve()
     store = world_of(here, others=ours())
     put_document(store, document(VOCABULARY))
+    put_document(store, document(REQUIREMENTS))
     for _, doc in read_with_imports(documents(here)):
         graphs = {g for g, kinds in kinds_in(doc).items() if any(ours() & set(closed(store, k)) for k in kinds)}
         if graphs:
@@ -140,6 +142,39 @@ def lasts(here: Path, agent_id: str) -> bool:
     beliefs = boot(Path(here).resolve(), agent_id, others=ours())
     loaded = packages_of(beliefs)
     return (PLANNING in loaded and Planner(beliefs, agent_id).holds_a_desire()) or MQTT in loaded
+
+
+def check(here: Path) -> None:
+    """Refuse the world in `here`, naming every way, where its documents fail what onboarding holds
+    them to; nothing where they hold. `orexis-onboard` asks it first, and so does every tool it
+    runs that is called alone, so a renderer only ever reads a world that holds (#838) and formats
+    what it reads, judging nothing. Refused in that order, each said whole before the next is asked:
+
+    a world that will not load, or a graph of a kind no reader declares — every reader passes over
+    such a graph in silence, so a misspelled kind is caught here or nowhere; a requirement the
+    world breaks; an agent whose roles its world does not bear out, an agent declaring no role among
+    them, which would boot and run nothing (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in);
+    and a world posed in a state its own constraints say is impossible, which no agent repairs — it
+    would say so in every pass and mend nothing (constraint.md)."""
+    here = Path(here).resolve()
+    name = here.name
+    try:
+        found = unread(here)
+    except DocumentRefused as why:
+        raise SystemExit(f"world {name!r} does not load — {why}; nothing granted")
+    if found:
+        raise SystemExit(f"world {name!r} holds graphs of a kind no reader declares — {'; '.join(found)}; nothing granted")
+    found = invalid(here)
+    if found:
+        raise SystemExit(f"world {name!r} states what its requirements refuse — {'; '.join(found)}; nothing granted")
+    found = refused(here)
+    if found:
+        raise SystemExit(f"world {name!r} declares its agents' roles in a way it does not bear out — "
+                         f"{'; '.join(found)}; nothing granted")
+    found = [f"{a} holds {c}" for a in agents(here) for c in contradicted(here, a)]
+    if found:
+        raise SystemExit(f"world {name!r} is posed in a state its own constraints say is impossible — "
+                         f"{'; '.join(found)}; nothing granted")
 
 
 def contradicted(here: Path, agent_id: str) -> list[str]:
@@ -192,15 +227,17 @@ def _judged(here: Path) -> tuple[dict[tuple, str], dict[str, list[str]]]:
     beside them — so a world's document may leave a fact about a shared thing to the agents' own, and
     an agent whose own documents complete it is not refused. The common beliefs are judged alone only
     to say a fault once: one they break that every agent's boot breaks too is the world's, and the rest
-    each agent's that reports it."""
+    each agent's that reports it. The world's deployment is judged beside either, being no belief and
+    the world's alone: what it says of the broker the society names is what the broker is told."""
     store = world(here)
     shapes = _shapes(store)
-    common = _held_to(shapes, store, graphs_of(store, BELIEF, common=True))
+    deployed = rdflib_view(store, *graphs_of(store, DEPLOYMENT))
+    common = _held_to(shapes, store, graphs_of(store, BELIEF, common=True), deployed)
     each = {}
     for agent_id in agents(here):
         beliefs = boot(here, agent_id, others=ours())
         cat = catalogue_of(beliefs)
-        each[agent_id] = _held_to(shapes, beliefs, [g for g in graphs_of(beliefs, GRAPH) if g != cat])
+        each[agent_id] = _held_to(shapes, beliefs, [g for g in graphs_of(beliefs, GRAPH) if g != cat], deployed)
     of_world = {key: why for key, why in common.items() if all(key in found for found in each.values())}
     return of_world, {agent_id: sorted(why for key, why in found.items() if key not in of_world)
                       for agent_id, found in each.items()}
@@ -217,13 +254,16 @@ def _shapes(store: ox.Store) -> tuple[rdflib.Graph, rdflib.Graph]:
     return rdflib_view(store, *graphs_of(store, REQUIREMENT)), rdflib_view(store, *graphs_of(store, ONTOLOGY))
 
 
-def _held_to(shapes: tuple[rdflib.Graph, rdflib.Graph], store: ox.Store, held: list[str]) -> dict[tuple, str]:
+def _held_to(shapes: tuple[rdflib.Graph, rdflib.Graph], store: ox.Store, held: list[str],
+             beside: rdflib.Graph) -> dict[tuple, str]:
     """What the requirements in `shapes` report of the graphs `held` in `store`, keyed by the message and the focus where
     that has a name — which is what tells a report about the world from one about an agent's own
     documents in an agent's boot. The graphs cross into rdflib for pyshacl with the store's namespaces
     bound on what is held, since pyshacl reads a constraint's select against the graph it asks, and
-    the world's vocabulary mixed in, so a role is targeted through the class it is beneath."""
+    the world's vocabulary mixed in, so a role is targeted through the class it is beneath. What is
+    judged `beside` them is in no agent's store, and crosses as it is."""
     data = rdflib_view(store, *held)
+    data += beside
     for label, iri in NAMESPACES.items():
         data.bind(label, iri, override=True, replace=True)
     requirements, vocabulary = shapes

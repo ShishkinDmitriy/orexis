@@ -432,7 +432,9 @@ def main() -> None:
         description="Generate this world's Grafana dashboard from its own wiring.",
     )
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
-    generate(p.parse_args().world)
+    world = p.parse_args().world
+    reading.check(world_dir(world))
+    generate(world)
 
 
 if __name__ == "__main__":
