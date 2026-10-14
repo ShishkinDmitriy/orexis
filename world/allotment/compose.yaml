@@ -62,10 +62,9 @@ services:
     image: orexis:local
     command: ["orexis-agent", "/app/world/allotment", "fern_grower", "--volume", "/app/state"]
     environment:
-      # where this world's broker listens — asserted or allocated, generated here, never read off the world by the agent
-      MQTT_HOST: "localhost"
-      MQTT_PORT: "1890"
-      MQTT_TLS_PORT: "8890"
+      # each broker it is connected to and where that listens — asserted or allocated, generated here,
+      # never read off the world by the agent
+      MQTT_BROKERS: "http://example.org/orexis/world/allotment#broker mqtts://localhost:8890"
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
@@ -104,10 +103,9 @@ services:
     image: orexis:local
     command: ["orexis-agent", "/app/world/allotment", "rose_grower", "--volume", "/app/state"]
     environment:
-      # where this world's broker listens — asserted or allocated, generated here, never read off the world by the agent
-      MQTT_HOST: "localhost"
-      MQTT_PORT: "1890"
-      MQTT_TLS_PORT: "8890"
+      # each broker it is connected to and where that listens — asserted or allocated, generated here,
+      # never read off the world by the agent
+      MQTT_BROKERS: "http://example.org/orexis/world/allotment#broker mqtts://localhost:8890"
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
@@ -146,10 +144,9 @@ services:
     image: orexis:local
     command: ["orexis-agent", "/app/world/allotment", "supplier", "--volume", "/app/state"]
     environment:
-      # where this world's broker listens — asserted or allocated, generated here, never read off the world by the agent
-      MQTT_HOST: "localhost"
-      MQTT_PORT: "1890"
-      MQTT_TLS_PORT: "8890"
+      # each broker it is connected to and where that listens — asserted or allocated, generated here,
+      # never read off the world by the agent
+      MQTT_BROKERS: "http://example.org/orexis/world/allotment#broker mqtts://localhost:8890"
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"

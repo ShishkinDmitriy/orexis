@@ -556,9 +556,13 @@ reads a world that holds.
 
 - **How several broker addresses, and a credential per broker, reach an agent.** Two constraints
   are fixed: the agent never constructs a name from an instance (a bucket's name was refused on
-  that ground in series-and-bus-isolation), and it never reads a deployment graph. Within them,
-  environment keyed by the broker's IRI and a mounted file per broker are both open. The trigger
-  is the first world stating two brokers; until then onboarding refuses such a world (#821).
+  that ground in series-and-bus-isolation), and it never reads a deployment graph. **Settled for
+  the agent 2026-10-14, at the sovereign's word that nothing requires one broker:** one variable,
+  `MQTT_BROKERS`, holds each broker the agent is connected to by its IRI beside the url it reaches
+  it at, so the agent matches IRIs it reads in the society and constructs no name; the credential
+  stays one per agent, which each of the world's brokers holds. A mounted file per broker was not
+  needed. What still serves one broker — its service, config and ACL, a board's config.h, the
+  simulator — is onboarding's next step, and until it lands a world stating two is refused (#821).
 - **A sovereign-owned graph of tuning figures**, for what was hard-coded: settled by #876, 2026-10-08.
   An agent's figures about itself — the planner's and the deliberator's budgets, the executor's
   patience, sensing's two limits, prediction's horizon — are stances, stated of the self in its self

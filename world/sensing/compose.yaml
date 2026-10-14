@@ -43,10 +43,9 @@ services:
     image: orexis:local
     command: ["orexis-agent", "/app/world/sensing", "fern", "--volume", "/app/state"]
     environment:
-      # where this world's broker listens — asserted or allocated, generated here, never read off the world by the agent
-      MQTT_HOST: "localhost"
-      MQTT_PORT: "1884"
-      MQTT_TLS_PORT: "8884"
+      # each broker it is connected to and where that listens — asserted or allocated, generated here,
+      # never read off the world by the agent
+      MQTT_BROKERS: "http://example.org/orexis/world/sensing#broker mqtts://localhost:8884"
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"

@@ -62,7 +62,8 @@ from . import installation, reading
 from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
 
-from .mqtt import broker
+from .mqtt import addresses, broker
+from .reading import MQTT4SSN
 
 log = logging.getLogger("compose")
 
@@ -70,6 +71,11 @@ IMAGE = "orexis:local"
 BELIEF = "http://example.org/orexis#BeliefGraph"
 
 _IDS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
+
+#  THE BROKERS EACH AGENT IS CONNECTED TO, which its environment names with the url it reaches each at.
+_CONNECTED_Q = f"""
+SELECT ?id ?broker WHERE {{ ?a a orexis:Agent ; orexis:localId ?id ; <{MQTT4SSN}isConnectedToBroker> ?broker }}
+ORDER BY ?id ?broker"""
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.
 _SIMULATED_Q = """
@@ -181,24 +187,24 @@ def _restart(lasting: bool) -> str:
             '    restart: "no"')
 
 
-def _service(agent_id: str, world: str, read: set[Path], bus: tuple[str, int, int | None] | None,
+def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, str]] | None,
              series: dict[str, tuple[str, str]], window: float | None, lasting: bool) -> str:
-    """An agent's service. `bus` is the broker's (host, plain port, TLS port), or None where the
-    world has none — and then nothing of a bus is written: no `MQTT_*`, no broker credential, no
-    certificate. `lasting` says whether the agent runs for good (`reading.lasts`), and so whether
+    """An agent's service. `bus` is each broker the agent is connected to, by its IRI, with the url
+    it reaches it at — TLS where the broker listens so, since an agent of a world with a bus holds a
+    certificate — or None where the world has none, and then nothing of a bus is written: no
+    `MQTT_*`, no broker credential, no certificate. `lasting` says whether the agent runs for good (`reading.lasts`), and so whether
     its container is restarted."""
     stores = "".join(f'\n      INFLUX_{purpose}_URL: "{url}"\n      INFLUX_{purpose}_ORG: "{organisation}"'
                      for purpose, (url, organisation) in series.items())
     if METRICS in series and window is not None:
         stores += f'\n      {INTERVAL_KEY}: "{window:g}"'
     credentials = "".join(f"\n      - ./secrets/{series_credential(agent_id, purpose)}" for purpose in series)
-    if bus:
-        host, plain, tls = bus
-        tls_env = f'\n      MQTT_TLS_PORT: "{tls}"' if tls else ""
+    if bus is not None:
+        told = " ".join(f"{iri} {url}" for iri, url in bus)
         where = f"""
-      # where this world's broker listens — asserted or allocated, generated here, never read off the world by the agent
-      MQTT_HOST: "{host}"
-      MQTT_PORT: "{plain}"{tls_env}
+      # each broker it is connected to and where that listens — asserted or allocated, generated here,
+      # never read off the world by the agent
+      MQTT_BROKERS: "{told}"
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt\""""
@@ -276,6 +282,18 @@ def _broker(world: str, plain: int, tls: int | None) -> str:
 
 
 
+def _reached(world: str) -> dict[str, list[tuple[str, str]]]:
+    """Each agent's brokers, by its id: the IRI and the url it reaches it at, TLS where the broker
+    listens so and plain where it does not."""
+    store = reading.world(world_dir(world))
+    where = addresses(world)
+    out: dict[str, list[tuple[str, str]]] = {}
+    for r in rows(store, _CONNECTED_Q, graphs_of(store, BELIEF, common=True)):
+        host, plain, tls = where[r["broker"]]
+        out.setdefault(r["id"], []).append((r["broker"], f"mqtts://{host}:{tls}" if tls else f"mqtt://{host}:{plain}"))
+    return out
+
+
 def render(world: str) -> str:
     who = roster(world)
     if not who:
@@ -283,6 +301,7 @@ def render(world: str) -> str:
     #  THE BUS, where the world's society names a broker — and only then is `broker` asked for an
     #  address, which it refuses for a world with none.
     bus = broker(world) if reading.BUS in reading.premises(world_dir(world)) else None
+    reached = _reached(world) if bus else {}
     series = {purpose: installation.series(purpose) for purpose in installation.purposes(world)}
     window = installation.interval(METRICS) if METRICS in series else None
     client = simulated_client(world)
@@ -292,7 +311,8 @@ def render(world: str) -> str:
     read = read_by_an_agent(world)
     services = ((_broker(world, *bus[1:]) if bus else "")
                 + (_simulator(world, read, client, *bus[:2]) if client else "")
-                + "".join(_service(a, world, read, bus, series, window, reading.lasts(world_dir(world), a))
+                + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series, window,
+                                   reading.lasts(world_dir(world), a))
                           for a in who))
     volumes = (f"  orexis-{world}-mosquitto:\n" if bus else "") + "".join(f"  orexis-{world}-{a}:\n" for a in who)
     first = f"orexis-mqtt {world}" if bus else f"orexis-influx {world}"

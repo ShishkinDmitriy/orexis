@@ -2,6 +2,7 @@
 @prefix onboarding: <http://example.org/orexis/onboarding#> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 
 <> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
 
@@ -43,3 +44,17 @@
               BIND (IF(REGEX(STR(?b), "^[a-z]+://[^/:]*:[0-9]+"), REPLACE(STR(?b), "^[a-z]+://[^/:]*:([0-9]+).*$", "$1"),
                        IF(?scheme = "mqtt", "1883", "8883")) AS ?two)
               FILTER (xsd:integer(?one) < xsd:integer(?two)) }""" ] .
+
+#  A SENSOR'S READINGS COME OVER THE BROKERS ITS CLIENT IS CONNECTED TO, so an observer reading one over
+#  MQTT is played by an agent connected to one of them: a world may have any number of brokers, and the
+#  agent subscribes to a sensor's topic on each it shares with the sensor's client. Onboarding's, since
+#  it is stated in sensing's words and the transport's, and neither package may speak the other's.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf mqtt4ssn:observesTopic ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "read by {?me}, which is connected to none of the brokers its readings come over" ;
+        sh:select """
+            SELECT $this ?me WHERE {
+              ?me orexis:plays ?role . ?role sensing:sensor $this .
+              ?client mqtt4ssn:hosts ?system . ?system ssn:hasSubSystem* $this .
+              FILTER NOT EXISTS { ?client mqtt4ssn:isConnectedToBroker ?broker . ?me mqtt4ssn:isConnectedToBroker ?broker } }""" ] .

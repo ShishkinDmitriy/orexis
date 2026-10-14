@@ -39,9 +39,13 @@ It adopts MQTT4SSN as it stands and declares no word of its own. A sensor
 by the `mqtt4ssn:hasFilterPattern` of the filters that match it: the agent subscribes by the
 pattern and publishes a command to a pattern with no wildcard. Which sensors are the agent's is its
 [observer](/domain/sensing/observer.md) role's to declare, and the member asks sensing for them and
-names none of sensing's words. The broker's address and the
-agent's credential come from the environment (`MQTT_HOST`, `MQTT_USERNAME` and the rest), which
-[onboarding](/domain/onboarding/onboarding.md) writes; the member refuses to guess one. Started, it
+names none of sensing's words. Where each broker the agent is connected to listens, and the
+agent's credential, come from the environment (`MQTT_BROKERS`, each broker's IRI and its url, then
+`MQTT_USERNAME` and the rest), which [onboarding](/domain/onboarding/onboarding.md) writes; the member
+refuses to guess one, and holds a client per broker. A world may have any number of brokers, and
+MQTT4SSN says which each client `isConnectedToBroker`: a sensor's topic is subscribed to on every
+broker the agent shares with the sensor's client, its own on every broker it is connected to, and a
+command or a document goes out on the first broker it shares with whoever it is for. Started, it
 asks every minute of the timeline after its sensors' missing readings, telling each such board to
 sense now.
 

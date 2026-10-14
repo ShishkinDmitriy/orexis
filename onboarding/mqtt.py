@@ -180,27 +180,23 @@ def _rows(store, text: str) -> list[dict]:
     return rows(store, text, graphs_of(store, BELIEF, common=True))
 
 
-def broker(world: str) -> tuple[str, int, int | None]:
-    """(host, plain port, TLS port or None), off the `schema:url`s of the world's ONE broker.
-
-    One broker, with one host and one port per scheme, because this answer is one address:
-    `orexis-compose` writes it into every agent's environment and `orexis-firmware` into every
-    board's config.h. That a world states no more is onboarding's requirement (`requirements.ttl`),
-    held by `reading.check` before any tool asking here runs, so this formats and judges nothing.
-    It refused all three by hand once, and before that kept the first host it met and a port per
-    scheme from whichever url came last, so two brokers became one address belonging to neither.
+def addresses(world: str) -> dict[str, tuple[str, int, int | None]]:
+    """(host, plain port, TLS port or None) of each broker the world's society names, by its IRI, off
+    its `schema:url`s. One host and one port per scheme each, which is onboarding's requirement (`requirements.ttl`), held by `reading.check` before any tool asking
+    here runs, so this formats and judges nothing. It refused those by hand once, and before that
+    kept the first host it met and a port per scheme from whichever url came last.
 
     The urls are the world's own where it asserts them, and otherwise the ones the installation
     allocated, asked for by the IRI the world's society names its broker by and nothing else — so a
-    world is told its own broker's address and never another's. Nothing here computes a port.
+    world is told its own brokers' addresses and never another's. Nothing here computes a port.
     """
-    from urllib.parse import urlparse
     store = _world(world)
-    brokers = installation.brokers_of(store)
-    if not brokers:
-        raise SystemExit(f"orexis-mqtt: world {world!r} states no mqtt4ssn:Broker — it has no bus")
-    where = f"its mqtt4ssn:Broker {brokers[0]}"
-    urls = installation.asserted_on(store, brokers[0]) or installation.allocated(brokers[0])
+    return {b: _address(world, store, b) for b in installation.brokers_of(store)}
+
+
+def _address(world: str, store, broker_iri: str) -> tuple[str, int, int | None]:
+    from urllib.parse import urlparse
+    urls = installation.asserted_on(store, broker_iri) or installation.allocated(broker_iri)
     hosts: set[str] = set()
     ports: dict[str, set[int]] = {scheme: set() for scheme in _DEFAULT_PORTS}
     for text in urls:
@@ -211,10 +207,19 @@ def broker(world: str) -> tuple[str, int, int | None]:
             hosts.add(url.hostname)
         ports[url.scheme].add(url.port or _DEFAULT_PORTS[url.scheme])
     if not ports["mqtt"]:
-        raise SystemExit(f"orexis-mqtt: world {world!r} asserts no mqtt:// url on {where}, and the installation "
-                         "has allocated it none — `orexis-onboard` allocates one")
-    plain, tls = next(iter(ports["mqtt"])), next(iter(ports["mqtts"]), None)
-    return next(iter(hosts), "localhost"), plain, tls
+        raise SystemExit(f"orexis-mqtt: world {world!r} asserts no mqtt:// url on its mqtt4ssn:Broker {broker_iri}, "
+                         "and the installation has allocated it none — `orexis-onboard` allocates one")
+    return next(iter(hosts), "localhost"), next(iter(ports["mqtt"])), next(iter(ports["mqtts"]), None)
+
+
+def broker(world: str) -> tuple[str, int, int | None]:
+    """The address of the world's ONE broker (`addresses`), for what is still served one: the broker's
+    own service, its config and ACL, a board's config.h and the simulator. A world with no broker has
+    no bus, and is answered so."""
+    found = addresses(world)
+    if not found:
+        raise SystemExit(f"orexis-mqtt: world {world!r} states no mqtt4ssn:Broker — it has no bus")
+    return next(iter(found.values()))
 
 
 def broker_host(world: str) -> str:
