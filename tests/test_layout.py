@@ -506,6 +506,21 @@ def test_onboarding_refuses_a_sensor_reporting_to_an_agent_that_no_observer_role
     assert reading.refused(_declared(tmp_path, [OBSERVER], mounted, reads=["probe", "hygro"])) == []
 
 
+@pytest.mark.parametrize("connected", [False, True], ids=["on-none-of-its", "on-its"])
+def test_onboarding_refuses_an_observer_on_no_broker_its_sensor_reports_over(tmp_path, connected):
+    """A world may have any number of brokers, and a sensor's readings come over the ones its client is
+    connected to: an agent reading it over MQTT shares one of them, or nothing it subscribes to carries
+    the readings. The MQTT transport's requirement, since the words are its."""
+    from onboarding import reading
+
+    world = _declared(tmp_path, [OBSERVER], ":probe a sosa:Sensor ; sosa:isHostedBy :pot ; sosa:observes :moisture ;\n"
+                      "    mqtt4ssn:observesTopic :readings .\n:board mqtt4ssn:hosts :probe ; mqtt4ssn:isConnectedToBroker :hub .\n"
+                      + (":me mqtt4ssn:isConnectedToBroker :hub .\n" if connected else ""), reads=["probe"])
+    said = [line for line in reading.refused(world) if "broker" in line]
+    assert said == ([] if connected else
+                    ["me: probe: read by http://example.org/test#me, which is connected to none of the brokers its readings come over"]), said
+
+
 def test_onboarding_refuses_a_topic_an_agent_listens_to_with_no_speaker(tmp_path):
     from onboarding import reading
 
@@ -1149,7 +1164,7 @@ def test_a_world_with_a_bus_is_onboarded_with_everything(tmp_path, monkeypatch, 
     written = (here / "compose.yaml").read_text()
     assert written == (REPO_ROOT / "world" / "sensing" / "compose.yaml").read_text(), "not the committed compose file"
     services = yaml.safe_load(written)["services"]
-    assert "mosquitto" in services and "MQTT_HOST" in services["agent-fern"]["environment"]
+    assert "mosquitto" in services and "MQTT_BROKERS" in services["agent-fern"]["environment"]
 
 
 def test_a_simulator_with_no_broker_to_connect_to_is_refused(tmp_path, monkeypatch):

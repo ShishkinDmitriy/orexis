@@ -589,8 +589,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **Several transport members are one to the container** — a message goes back to the member that
   queued it, a command to the member that `reaches` the device.
 - **The transport speaks MQTT4SSN, and a topic is named by the filters that match it** — the agent
-  subscribes by the pattern and publishes to one with no wildcard; the broker's address stays in the
-  environment.
+  subscribes by the pattern and publishes to one with no wildcard; each broker's address stays in the
+  environment, `MQTT_BROKERS` by IRI, and a world may have any number, a topic going over a broker the
+  agent shares with the client it is about.
 - **What is said is a statement, and what is believed of it is extracted, heard or said alike** — a
   document is kept as `speech:StatementGraph`, which no reader of the mind is handed, whatever kind it
   says, and a domain's `speech:Extraction`, run by speech over the one statement alone, makes the belief;
