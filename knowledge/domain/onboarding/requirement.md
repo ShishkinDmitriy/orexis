@@ -17,10 +17,10 @@ one of its two tests. It is a SHACL shape, and the package or domain owning the 
 `domains/market/requirements.ttl` do. A domain imports it from its ontology, as it imports its
 actions and rules. A world whose words are its own ships its requirements the same way, a
 `requirements.ttl` beside its `world.ttl`, and they are held exactly as a package's are: a word is
-held to what its owner says of it, and a world owns its own. Onboarding ships its own too: a limit that
-is its own, one broker with one address while that is all it knows how to tell, and what is stated in
-two packages' words neither may speak of the other — an observer reading a sensor over MQTT is
-connected to a broker the sensor's client is.
+held to what its owner says of it, and a world owns its own. Onboarding ships its own too: limits that
+are its own, what tells a world's brokers apart and gives each client the address it is told, and
+what is stated in two packages' words neither may speak of the other — an observer reading a sensor
+over MQTT is connected to a broker the sensor's client is.
 
 A requirement is not a [shape](/domain/planning/shape.md) in planning's sense. A met-test says what
 an agent wants of the world it believes, and the agent judges it every pass. A requirement says

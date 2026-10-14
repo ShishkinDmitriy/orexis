@@ -620,25 +620,70 @@ def _asserting(*urls: str, world: str = "sensing") -> str:
 
 _SENSING_BROKER = "http://example.org/orexis/world/sensing#broker"
 
-#  A SECOND BROKER, stated as a first one is: named in the society as what a client could connect
-#  to, and its address asserted in a deployment graph of the world's own.
-_TWO_BROKERS = {("sensing", "society.ttl"): lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n",
+
+def _address(mqtt, world: str) -> tuple[str, int, int | None]:
+    """The address of a world's one broker, as every shipped world with a bus has."""
+    (found,) = mqtt.addresses(world).values()
+    return found
+
+#  A SECOND BROKER, stated as a first one is: named in the society as what a client connects to — the
+#  fern's agent, beside the one it is connected to already — and its address asserted in a deployment
+#  graph of the world's own.
+_TWO_BROKERS = {("sensing", "society.ttl"): lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n"
+                ":fern_agent mqtt4ssn:isConnectedToBroker :elsewhere .\n",
                 ("sensing", "deployment.ttl"): lambda _: _asserting("mqtt://elsewhere:1999", "mqtts://elsewhere:8999")
                 .replace(":broker schema:url", ":elsewhere schema:url")}
 
 
-def test_a_world_stating_two_brokers_is_refused_naming_both(tmp_path, monkeypatch):
-    """Broken on purpose: the sensing world with a second broker. `broker` kept the first host it
-    met and a port per scheme from whichever url sorted last, so this world was handed
-    `elsewhere` with the sensing broker's ports and nothing said so. How several brokers reach an
-    agent is an open seam (a-documents-kind-says-who-reads-it), so onboarding's requirement refuses
-    each, naming the other."""
-    from onboarding import reading
+def test_a_world_may_have_several_brokers_each_served_apart(tmp_path, monkeypatch):
+    """Nothing in the model asks a world for one broker: MQTT4SSN says which each client is connected
+    to. The sensing world with a second, which its agent is connected to as well and its board is not:
+    it holds, each broker is a service with its own files and volume, the agent is told both, and the
+    second broker's passwd holds the agent and not the board, which is connected to the first alone."""
+    import yaml
+
+    from onboarding import compose, mqtt, reading
 
     root = _installed(tmp_path, monkeypatch, _TWO_BROKERS)
-    said = reading.invalid(root / "sensing")
-    assert [line.split(":", 1)[0] for line in said] == ["broker", "elsewhere"], said
-    assert "one of several brokers, beside http://example.org/orexis/world/sensing#elsewhere" in said[0], said
+    assert reading.invalid(root / "sensing") == []
+    services = yaml.safe_load(compose.render("sensing"))["services"]
+    assert {"mosquitto-broker", "mosquitto-elsewhere"} <= set(services), sorted(services)
+    assert "orexis-sensing-mosquitto-elsewhere:/var/lib/mosquitto" in services["mosquitto-elsewhere"]["volumes"]
+    told = services["agent-fern"]["environment"]["MQTT_BROKERS"].split()
+    assert told[0::2] == [_SENSING_BROKER, "http://example.org/orexis/world/sensing#elsewhere"], told
+    assert told[3] == "mqtts://elsewhere:8999", told
+    mqtt.provision("sensing")
+    assert "listener 1999 0.0.0.0" in (root / "sensing" / "mosquitto" / "elsewhere" / "orexis.conf").read_text()
+    users = [line.split(":", 1)[0] for line in (root / "sensing" / "mosquitto" / "elsewhere" / "passwd").read_text().splitlines()]
+    assert users == ["sensing-fern"], users
+    users = [line.split(":", 1)[0] for line in (root / "sensing" / "mosquitto" / "broker" / "passwd").read_text().splitlines()]
+    assert users == ["moisture_sensor_fern", "sensing-fern"], users
+
+
+#  WHAT A WORLD OF SEVERAL BROKERS MAY NOT STATE, each on the sensing world.
+_ONE_PORT = {("sensing", "society.ttl"): lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n",
+             ("sensing", "deployment.ttl"): lambda _: _asserting("mqtt://localhost:1999")
+             + ':elsewhere schema:url "mqtt://localhost:1999" .\n'}
+
+
+@pytest.mark.parametrize("edit, said", [
+    (_ONE_PORT, "broker: listens at localhost:1999, as http://example.org/orexis/world/sensing#elsewhere does"),
+    ({("sensing", "society.ttl"): lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n"
+      ":esp32_fern mqtt4ssn:isConnectedToBroker :elsewhere .\n"},
+     "esp32_fern: connected to two brokers, http://example.org/orexis/world/sensing#broker and "
+     "http://example.org/orexis/world/sensing#elsewhere: it is flashed with one address"),
+    ({("sensing", "society.ttl"): lambda text: text + "\n<http://example.org/elsewhere#broker> a mqtt4ssn:Broker .\n"},
+     "broker: is named broker, as http://example.org/elsewhere#broker is"),
+], ids=["one-port", "a-board-on-two", "one-name"])
+def test_a_world_of_several_brokers_is_held_to_what_tells_them_apart(tmp_path, monkeypatch, edit, said):
+    """Two brokers on one host and port are one listener and cannot both start; a board is flashed with
+    one address, so it is connected to one broker; and a broker's service, volume and files are named
+    for its local name, so two brokers do not share one."""
+    from onboarding import reading
+
+    root = _installed(tmp_path, monkeypatch, edit)
+    found = reading.invalid(root / "sensing")
+    assert any(line.startswith(said) for line in found), found
 
 
 @pytest.mark.parametrize("edit, contradiction", [
@@ -665,16 +710,16 @@ def test_every_tool_called_alone_refuses_what_onboarding_does(tmp_path, monkeypa
     """`orexis-onboard` runs each tool after `reading.check`, and each is callable alone too — to
     rotate one service's credentials, or flash one board — so each asks the same check first and
     refuses before it writes anything, and a renderer only ever formats a world that holds. The
-    sensing world with a second broker, which compose would write into every agent's environment
-    and firmware into every board's config.h."""
+    sensing world with two brokers on one port, which compose would start as two services of which
+    one cannot listen."""
     import importlib
     import sys
 
     module = importlib.import_module(f"onboarding.{tool}")
-    root = _installed(tmp_path, monkeypatch, _TWO_BROKERS)
+    root = _installed(tmp_path, monkeypatch, _ONE_PORT)
     monkeypatch.setattr(module, "world_dir", lambda name: root / name)
     monkeypatch.setattr(sys, "argv", [f"orexis-{tool}", "sensing"])
-    with pytest.raises(SystemExit, match="one of several brokers"):
+    with pytest.raises(SystemExit, match="two brokers cannot hold one port on one host"):
         module.main()
 
 
@@ -765,8 +810,8 @@ def test_an_asserted_url_wins_and_a_broker_asserting_none_is_allocated_one():
     broker that asserts."""
     from onboarding import installation, mqtt
 
-    assert mqtt.broker("terrace") == ("localhost", 1888, 8888)
-    assert mqtt.broker("sensing") == ("localhost", 1884, 8884)
+    assert _address(mqtt, "terrace") == ("localhost", 1888, 8888)
+    assert _address(mqtt, "sensing") == ("localhost", 1884, 8884)
     assert installation.allocated(_SENSING_BROKER) == ["mqtt://localhost:1884", "mqtts://localhost:8884"]
     assert installation.allocated("http://example.org/orexis/world/terrace#broker") == []
 
@@ -777,7 +822,7 @@ def test_an_assertion_wins_over_an_allocation_already_made(tmp_path, monkeypatch
     from onboarding import installation, mqtt
 
     _installed(tmp_path, monkeypatch, {("sensing", "deployment.ttl"): lambda _: _asserting("mqtt://localhost:1885", "mqtts://localhost:8885")})
-    assert mqtt.broker("sensing") == ("localhost", 1885, 8885)
+    assert _address(mqtt, "sensing") == ("localhost", 1885, 8885)
     assert _SENSING_BROKER not in installation.derive()
 
 
@@ -829,10 +874,10 @@ def test_no_renderer_computes_a_port(tmp_path, monkeypatch):
     from onboarding import compose, mqtt
 
     _installed(tmp_path, monkeypatch, derivation=False)
-    for render in (lambda: mqtt.broker("sensing"), lambda: compose.render("sensing")):
+    for render in (lambda: _address(mqtt, "sensing"), lambda: compose.render("sensing")):
         with pytest.raises(SystemExit, match="has allocated it none"):
             render()
-    assert mqtt.broker("terrace") == ("localhost", 1888, 8888)
+    assert _address(mqtt, "terrace") == ("localhost", 1888, 8888)
 
 
 def _a_world_before_sensing(text: str) -> str:
@@ -898,7 +943,7 @@ def test_one_port_on_two_hosts_is_no_clash(tmp_path, monkeypatch):
     _installed(tmp_path, monkeypatch, {("greenhouse", "deployment.ttl"): lambda text: text.replace("localhost:1889", "elsewhere:1888")
                                        .replace("localhost:8889", "elsewhere:8889")})
     installation.derive()
-    assert mqtt.broker("greenhouse") == ("elsewhere", 1888, 8889)
+    assert _address(mqtt, "greenhouse") == ("elsewhere", 1888, 8889)
 
 
 @pytest.mark.parametrize("where", ["installation", "world"])
@@ -1041,21 +1086,17 @@ def test_a_committed_compose_file_is_what_onboarding_renders():
             f"world/{world}/compose.yaml is not what `orexis-compose {world}` renders — regenerate it"
 
 
-def test_every_shipped_world_with_a_bus_states_one_broker_address():
-    """The other direction: the refusal must not fire on a world that is right. A world with no bus
-    — hanoi — states no broker and is refused for that, as before: `broker` is asked for an address
-    that does not exist, and the tools stop asking it for such a world (below)."""
+def test_every_shipped_broker_has_an_address():
+    """The other direction: the requirements must not fire on a world that is right. Every broker a
+    shipped world names is answered a host and a plain port, and a world with no bus — hanoi — names
+    none and is answered none, which the tools never ask of it (below)."""
     from onboarding import mqtt
 
     answered = []
     for world in _worlds():
-        try:
-            host, plain, _tls = mqtt.broker(world)
-        except SystemExit as refused:
-            assert "states no mqtt4ssn:Broker" in str(refused), f"{world}: {refused}"
-            continue
-        assert host and plain, f"{world}: no address"
-        answered.append(world)
+        for broker_iri, (host, plain, _tls) in mqtt.addresses(world).items():
+            assert host and plain, f"{world}: {broker_iri} has no address"
+            answered.append(world)
     assert len(answered) >= 4, f"only {answered} state a broker — the guard would check nothing"
 
 
@@ -1157,14 +1198,14 @@ def test_a_world_with_a_bus_is_onboarded_with_everything(tmp_path, monkeypatch, 
     for agent in agents:
         for minted in (f"mqtt-{agent}.env", f"{agent}.crt", f"{agent}.key"):
             assert (here / "secrets" / minted).exists(), minted
-    for minted in ("secrets/ca.crt", "secrets/broker.crt", "mosquitto/acl.conf", "mosquitto/orexis.conf", "mosquitto/crl.pem"):
+    for minted in ("secrets/ca.crt", "secrets/broker.crt", "mosquitto/broker/acl.conf", "mosquitto/broker/orexis.conf", "mosquitto/crl.pem"):
         assert (here / minted).exists(), minted
     assert [r for r in caplog.records if "nothing stale" in r.getMessage()], "a fresh onboarding reports nothing stale"
     assert not [r for r in caplog.records if "no bus" in r.getMessage()]
     written = (here / "compose.yaml").read_text()
     assert written == (REPO_ROOT / "world" / "sensing" / "compose.yaml").read_text(), "not the committed compose file"
     services = yaml.safe_load(written)["services"]
-    assert "mosquitto" in services and "MQTT_BROKERS" in services["agent-fern"]["environment"]
+    assert "mosquitto-broker" in services and "MQTT_BROKERS" in services["agent-fern"]["environment"]
 
 
 def test_a_simulator_with_no_broker_to_connect_to_is_refused(tmp_path, monkeypatch):
@@ -1215,7 +1256,7 @@ def test_a_crl_is_written_empty_where_nobody_is_revoked_and_the_config_always_na
     here, _asked, _reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
     #  WHOLE LINES, not substrings: the first cut of this asked `in config`, and the config's own
     #  comment names the option, so the guard stayed green with the line struck out.
-    directives = [line for line in (here / "mosquitto" / "orexis.conf").read_text().splitlines() if not line.startswith("#")]
+    directives = [line for line in (here / "mosquitto" / "broker" / "orexis.conf").read_text().splitlines() if not line.startswith("#")]
     assert "crlfile /etc/mosquitto/crl.pem" in directives, directives
     assert directives.index("cafile /etc/mosquitto/clients-ca.crt") < directives.index("crlfile /etc/mosquitto/crl.pem") \
         < directives.index("acl_file /etc/mosquitto/acl.conf"), "the CRL is the TLS listener's"
@@ -1244,7 +1285,7 @@ def test_revoking_an_agent_puts_its_serial_on_the_crl_and_takes_its_credential(t
     here, _asked, _reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
     secrets = here / "secrets"
     old = x509.load_pem_x509_certificate((secrets / "fern.crt").read_bytes())
-    assert "sensing-fern" in (here / "mosquitto" / "passwd").read_text()
+    assert "sensing-fern" in (here / "mosquitto" / "broker" / "passwd").read_text()
     caplog.clear()
     with caplog.at_level(logging.INFO):
         mqtt.main(["sensing", "--revoke", "fern", "--no-reload"])
@@ -1253,8 +1294,8 @@ def test_revoking_an_agent_puts_its_serial_on_the_crl_and_takes_its_credential(t
     assert _crl_of(here).extensions.get_extension_for_class(x509.CRLNumber).value.crl_number == 2
     for gone in ("fern.crt", "fern.key", "mqtt-fern.env"):
         assert not (secrets / gone).exists(), gone
-    assert "sensing-fern" not in (here / "mosquitto" / "passwd").read_text()
-    assert "user sensing-fern" not in (here / "mosquitto" / "acl.conf").read_text()
+    assert "sensing-fern" not in (here / "mosquitto" / "broker" / "passwd").read_text()
+    assert "user sensing-fern" not in (here / "mosquitto" / "broker" / "acl.conf").read_text()
     assert [s for s in said if "restart" in s and "SIGHUP" in s], said
     assert [s for s in said if "still implies fern" in s], said
 

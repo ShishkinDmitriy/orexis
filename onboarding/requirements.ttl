@@ -6,14 +6,15 @@
 
 <> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
 
-#  WHAT A WORLD MUST STATE OF ITS BROKER FOR ONBOARDING TO TELL IT ONE ADDRESS. `orexis-compose`
-#  writes the broker's host and ports into every agent's environment and `orexis-firmware` into
-#  every board's config.h, so a world has one broker, and that broker one host and one port per
-#  scheme: of two, a board is flashed with one, and nothing here can say which is right. The words
-#  are MQTT4SSN's and schema.org's, and the limit is onboarding's, since how several addresses would
-#  reach an agent is not decided (knowledge/decisions/a-documents-kind-says-who-reads-it.md, its
-#  first seam). A url is read where it is the world's to assert, in a deployment graph beside its
-#  society; one the installation allocated is one url per scheme by construction.
+#  WHAT A WORLD MUST STATE OF ITS BROKERS FOR ONBOARDING TO TELL EACH CLIENT AN ADDRESS. A world may
+#  have any number of brokers, and `orexis-compose` writes each agent the ones it is connected to,
+#  `orexis-firmware` a board the one it is, and `orexis-mqtt` serves each apart. So a broker has one
+#  host and one port per scheme — of two, a board is flashed with one, and nothing here can say which
+#  is right — and no other broker of the world listens where it does. The words are MQTT4SSN's and
+#  schema.org's, and the limits are onboarding's. A url is read where it is the world's to assert, in
+#  a deployment graph beside its society; one the installation allocated is one url per scheme on a
+#  port no other broker holds, by construction, and two worlds on one port are the installation's to
+#  refuse (#837).
 #
 #  A url's host is what lies between `//` and the port or the path, and its port the number after
 #  the host's colon, or its scheme's where it states none — 1883 for `mqtt`, 8883 for `mqtts` — so a
@@ -21,10 +22,6 @@
 [] a sh:NodeShape ;
     sh:targetClass mqtt4ssn:Broker ;
     sh:sparql [
-        sh:message "one of several brokers, beside {?other}: onboarding tells an agent one broker's address, and how several would reach it is not decided" ;
-        sh:select """
-            SELECT $this ?other WHERE { ?other a mqtt4ssn:Broker FILTER (?other != $this) }""" ] ,
-    [
         sh:message "given two hosts, {?one} and {?two}: a board is flashed with one, and nothing says which is right" ;
         sh:select """
             SELECT $this ?one ?two WHERE {
@@ -43,7 +40,45 @@
                        IF(?scheme = "mqtt", "1883", "8883")) AS ?one)
               BIND (IF(REGEX(STR(?b), "^[a-z]+://[^/:]*:[0-9]+"), REPLACE(STR(?b), "^[a-z]+://[^/:]*:([0-9]+).*$", "$1"),
                        IF(?scheme = "mqtt", "1883", "8883")) AS ?two)
-              FILTER (xsd:integer(?one) < xsd:integer(?two)) }""" ] .
+              FILTER (xsd:integer(?one) < xsd:integer(?two)) }""" ] ,
+    [
+        sh:message "listens at {?at}, as {?other} does: two brokers cannot hold one port on one host" ;
+        sh:select """
+            SELECT $this ?other ?at WHERE {
+              $this schema:url ?a . ?other a mqtt4ssn:Broker ; schema:url ?b . FILTER (?other != $this)
+              BIND (REPLACE(STR(?a), "^([a-z]+)://.*$", "$1") AS ?mine)
+              BIND (REPLACE(STR(?b), "^([a-z]+)://.*$", "$1") AS ?theirs)
+              BIND (CONCAT(REPLACE(STR(?a), "^[a-z]+://([^/:]*).*$", "$1"), ":",
+                           IF(REGEX(STR(?a), "^[a-z]+://[^/:]*:[0-9]+"), REPLACE(STR(?a), "^[a-z]+://[^/:]*:([0-9]+).*$", "$1"),
+                              IF(?mine = "mqtt", "1883", "8883"))) AS ?at)
+              BIND (CONCAT(REPLACE(STR(?b), "^[a-z]+://([^/:]*).*$", "$1"), ":",
+                           IF(REGEX(STR(?b), "^[a-z]+://[^/:]*:[0-9]+"), REPLACE(STR(?b), "^[a-z]+://[^/:]*:([0-9]+).*$", "$1"),
+                              IF(?theirs = "mqtt", "1883", "8883"))) AS ?there)
+              FILTER (?at = ?there) }""" ] ,
+    [
+        sh:message "is named {?name}, as {?other} is: a broker's service, volume and files are named for it" ;
+        sh:select """
+            SELECT $this ?other ?name WHERE {
+              ?other a mqtt4ssn:Broker . FILTER (?other != $this)
+              BIND (REPLACE(STR($this), "^.*[#/]", "") AS ?name)
+              FILTER (REPLACE(STR(?other), "^.*[#/]", "") = ?name) }""" ] .
+
+#  A CLIENT THAT IS NO AGENT — A BOARD, OR WHAT THE SIMULATOR PLAYS — IS CONNECTED TO ONE BROKER: it is
+#  flashed or started with one address. An agent may be connected to any number, each in its environment.
+[] a sh:NodeShape ;
+    sh:targetClass mqtt4ssn:Client ;
+    sh:sparql [
+        sh:message "connected to no broker: it would be flashed with no address" ;
+        sh:select """
+            SELECT $this WHERE {
+              FILTER NOT EXISTS { $this a orexis:Agent }
+              FILTER NOT EXISTS { $this mqtt4ssn:isConnectedToBroker ?broker } }""" ] ,
+    [
+        sh:message "connected to two brokers, {?one} and {?two}: it is flashed with one address, and only an agent is told several" ;
+        sh:select """
+            SELECT $this ?one ?two WHERE {
+              FILTER NOT EXISTS { $this a orexis:Agent }
+              $this mqtt4ssn:isConnectedToBroker ?one , ?two . FILTER (STR(?one) < STR(?two)) }""" ] .
 
 #  A SENSOR'S READINGS COME OVER THE BROKERS ITS CLIENT IS CONNECTED TO, so an observer reading one over
 #  MQTT is played by an agent connected to one of them: a world may have any number of brokers, and the
