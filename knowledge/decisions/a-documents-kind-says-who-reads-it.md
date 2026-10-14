@@ -155,7 +155,8 @@ reading its own broker's address off the world is no longer a discipline to keep
 cannot do. What is left open is only how several addresses are TOLD — the first seam below.
 
 **Nothing is filed to build this yet.** All four worlds with a bus state one broker; the latent
-defect was `broker()` merging several without a word, and it refuses them now (#821).
+defect was `broker()` merging several without a word, and a requirement of onboarding's own refuses
+them now (#821, #838).
 
 ## 4. A series store per purpose: history and metrics
 
@@ -543,6 +544,13 @@ planning, and the requirement refusing it is planning's. So onboarding reads the
 the world. One shape stays in a vocabulary: the observer's `sh:defaultValue` for the limits a role
 leaves unstated, which the stuck rule reads off sensing's ontology as the agent runs. It refuses
 nothing.
+
+Onboarding ships one of its own, `onboarding/requirements.ttl`: a world has one broker, with one host
+and one port per scheme, judged with the world's deployment graph beside its beliefs. The words are
+MQTT4SSN's and schema.org's and the limit is onboarding's, since one address is what it knows how to
+tell (the first seam below). `broker()` refused the three by hand and now judges nothing: every tool
+asks `reading.check` before it renders, called alone or by `orexis-onboard`, so a renderer only ever
+reads a world that holds.
 
 # Seams left open
 

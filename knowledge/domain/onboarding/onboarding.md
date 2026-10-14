@@ -60,7 +60,8 @@ own compose file from it, alongside `orexis-infra-certs` and apart from onboardi
 
 **One broker, one address.** The compose file and the config are each handed a single address, so
 a world stating a second `mqtt4ssn:Broker`, or one broker whose urls disagree on a host or on a
-scheme's port, is refused and named rather than merged (`broker` in `onboarding/mqtt.py`).
+scheme's port, is refused and named rather than merged, by onboarding's own
+[requirement](/domain/onboarding/requirement.md) (`onboarding/requirements.ttl`).
 How several would reach an agent is the first seam of
 [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md).
 

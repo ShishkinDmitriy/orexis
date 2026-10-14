@@ -333,7 +333,9 @@ def main() -> None:
         description="Generate the compose file for a world, from that world's roster.",
     )
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
-    generate(p.parse_args().world)
+    world = p.parse_args().world
+    reading.check(world_dir(world))
+    generate(world)
 
 
 if __name__ == "__main__":

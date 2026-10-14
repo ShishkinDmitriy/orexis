@@ -491,6 +491,7 @@ def main() -> None:
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("--board", help="only this board, by its orexis:localId")
     args = p.parse_args()
+    reading.check(world_dir(args.world))
     generate(args.world, args.board)
 
 

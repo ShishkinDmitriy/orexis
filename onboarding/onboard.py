@@ -59,8 +59,6 @@ from __future__ import annotations
 import argparse
 import logging
 
-from agent.store import DocumentRefused
-
 from . import certs, compose, dashboards, influx, installation, mqtt, reading
 from .worlds import world_dir, worlds
 
@@ -75,41 +73,10 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     holding an old one is locked out until it is restarted with the new.
     """
     if check:
-        # Onboarding a world whose documents will not load is worse than refusing: it mints real
-        # credentials for agents that will refuse to boot, and leaves them lying around. So the
-        # world is read as onboarding reads it first — as an agent boots it, and then onboarding's
-        # own kinds — and a graph of a kind no reader declares is refused with it: every reader
-        # passes over such a graph in silence, so a misspelled kind is caught here or nowhere.
-        try:
-            unread = reading.unread(world_dir(world))
-        except DocumentRefused as refused:
-            raise SystemExit(f"orexis-onboard: world {world!r} does not load — {refused}; nothing granted")
-        if unread:
-            raise SystemExit(f"orexis-onboard: world {world!r} holds graphs of a kind no reader declares — "
-                             f"{'; '.join(unread)}; nothing granted")
-        # A world is held to the shapes its vocabularies ship before anyone reads it: a sensor observing
-        # nothing, a range whose floor is not below its ceiling, a margin it cannot hold — each the
-        # package's own word about its own terms, and every reader takes a document as stated (#838).
-        invalid = reading.invalid(world_dir(world))
-        if invalid:
-            raise SystemExit(f"orexis-onboard: world {world!r} states what its vocabularies' shapes refuse — "
-                             f"{'; '.join(invalid)}; nothing granted")
-        # What an agent runs is declared — its roles, in its own self graph — and held to its world
-        # both ways before anything is granted: a role whose needs the world lacks, and what would
-        # arrive for an agent and be read by none of its roles. An agent declaring no role would boot,
-        # load nothing and run nothing, which no credential should be minted for
-        # (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
-        refused = reading.refused(world_dir(world))
-        if refused:
-            raise SystemExit(f"orexis-onboard: world {world!r} declares its agents' roles in a way it does not "
-                             f"bear out — {'; '.join(refused)}; nothing granted")
-        # And a world posed in a state its own constraints say cannot be is refused the same way: a
-        # constraint is what the world says is possible, so this is the world contradicting itself,
-        # which no agent repairs — it would say so in every pass and mend nothing (constraint.md).
-        contradicted = [f"{a} holds {c}" for a in compose.roster(world) for c in reading.contradicted(world_dir(world), a)]
-        if contradicted:
-            raise SystemExit(f"orexis-onboard: world {world!r} is posed in a state its own constraints say is "
-                             f"impossible — {'; '.join(contradicted)}; nothing granted")
+        # Onboarding a world whose documents will not load, or do not hold, is worse than refusing: it
+        # mints real credentials for agents that will refuse to boot, or for a society reading what its
+        # words refuse, and leaves them lying around (`reading.check`).
+        reading.check(world_dir(world))
 
     log.info("onboarding %s", world)
     # A world asking to be monitored where the installation serves metrics nowhere is refused before

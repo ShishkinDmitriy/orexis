@@ -17,7 +17,8 @@ one of its two tests. It is a SHACL shape, and the package or domain owning the 
 `domains/market/requirements.ttl` do. A domain imports it from its ontology, as it imports its
 actions and rules. A world whose words are its own ships its requirements the same way, a
 `requirements.ttl` beside its `world.ttl`, and they are held exactly as a package's are: a word is
-held to what its owner says of it, and a world owns its own.
+held to what its owner says of it, and a world owns its own. Onboarding ships one too, for a limit
+that is its own: a world has one broker with one address, which is all it knows how to tell.
 
 A requirement is not a [shape](/domain/planning/shape.md) in planning's sense. A met-test says what
 an agent wants of the world it believes, and the agent judges it every pass. A requirement says
@@ -30,13 +31,15 @@ the world is believed.
 declared in `onboarding/ontology.ttl` beside the [deployment](/domain/onboarding/deployment.md)
 graph's. An agent's boot passes over a kind its vocabulary does not declare, so its store holds no
 requirement: what an agent holds is accepted and revised once it runs, and only a sovereign's
-document, before it is believed, may be refused.
+document, before it is believed, may be refused. Every one of onboarding's tools asks for the
+judgment before it renders anything, called alone or in turn, so none of them judges a world itself.
 
 What is judged is what each agent will believe: its boot, the world's common beliefs with its own
 documents beside them. So a world's document may leave a fact about a shared thing to the agents'
 own, and an agent whose own documents complete it is not refused. The common beliefs are judged
 alone only to say a fault once: one they break and every agent's boot breaks too is the world's,
-and the rest is each agent's that reports it.
+and the rest is each agent's that reports it. The world's deployment graph is judged beside either,
+being no belief and the world's alone.
 
 Onboarding reads the requirements off the world, which knows every package's vocabulary, and never
 off an agent's boot, which loads only what the agent's roles do: an agent playing an executor alone

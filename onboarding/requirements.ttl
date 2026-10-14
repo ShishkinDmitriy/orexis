@@ -1,0 +1,45 @@
+@prefix : <http://example.org/orexis/onboarding#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF ITS BROKER FOR ONBOARDING TO TELL IT ONE ADDRESS. `orexis-compose`
+#  writes the broker's host and ports into every agent's environment and `orexis-firmware` into
+#  every board's config.h, so a world has one broker, and that broker one host and one port per
+#  scheme: of two, a board is flashed with one, and nothing here can say which is right. The words
+#  are MQTT4SSN's and schema.org's, and the limit is onboarding's, since how several addresses would
+#  reach an agent is not decided (knowledge/decisions/a-documents-kind-says-who-reads-it.md, its
+#  first seam). A url is read where it is the world's to assert, in a deployment graph beside its
+#  society; one the installation allocated is one url per scheme by construction.
+#
+#  A url's host is what lies between `//` and the port or the path, and its port the number after
+#  the host's colon, or its scheme's where it states none — 1883 for `mqtt`, 8883 for `mqtts` — so a
+#  clash cannot hide behind an omission.
+[] a sh:NodeShape ;
+    sh:targetClass mqtt4ssn:Broker ;
+    sh:sparql [
+        sh:message "one of several brokers, beside {?other}: onboarding tells an agent one broker's address, and how several would reach it is not decided" ;
+        sh:select """
+            SELECT $this ?other WHERE { ?other a mqtt4ssn:Broker FILTER (?other != $this) }""" ] ,
+    [
+        sh:message "given two hosts, {?one} and {?two}: a board is flashed with one, and nothing says which is right" ;
+        sh:select """
+            SELECT $this ?one ?two WHERE {
+              $this schema:url ?a , ?b .
+              BIND (REPLACE(STR(?a), "^[a-z]+://([^/:]*).*$", "$1") AS ?one)
+              BIND (REPLACE(STR(?b), "^[a-z]+://([^/:]*).*$", "$1") AS ?two)
+              FILTER (?one < ?two) }""" ] ,
+    [
+        sh:message "given two {?scheme}:// ports, {?one} and {?two}: a board is flashed with one, and nothing says which is right" ;
+        sh:select """
+            SELECT $this ?scheme ?one ?two WHERE {
+              $this schema:url ?a , ?b .
+              BIND (REPLACE(STR(?a), "^([a-z]+)://.*$", "$1") AS ?scheme)
+              FILTER (?scheme IN ("mqtt", "mqtts") && STRSTARTS(STR(?b), CONCAT(?scheme, "://")))
+              BIND (IF(REGEX(STR(?a), "^[a-z]+://[^/:]*:[0-9]+"), REPLACE(STR(?a), "^[a-z]+://[^/:]*:([0-9]+).*$", "$1"),
+                       IF(?scheme = "mqtt", "1883", "8883")) AS ?one)
+              BIND (IF(REGEX(STR(?b), "^[a-z]+://[^/:]*:[0-9]+"), REPLACE(STR(?b), "^[a-z]+://[^/:]*:([0-9]+).*$", "$1"),
+                       IF(?scheme = "mqtt", "1883", "8883")) AS ?two)
+              FILTER (xsd:integer(?one) < xsd:integer(?two)) }""" ] .

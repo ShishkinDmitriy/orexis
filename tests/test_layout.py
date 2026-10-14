@@ -274,7 +274,7 @@ def test_onboarding_refuses_a_range_it_cannot_judge_by(tmp_path, monkeypatch, na
     assert len(said) == 1 and why in said[0], said
     assert said[0].startswith("http://example.org/test#pot_operating: " if named else "a range with no name"), said
     monkeypatch.setattr(onboard, "world_dir", lambda name: world)
-    with pytest.raises(SystemExit, match="shapes refuse"):
+    with pytest.raises(SystemExit, match="requirements refuse"):
         onboard.onboard("me")
 
 
@@ -616,41 +616,51 @@ def test_a_world_stating_two_brokers_is_refused_naming_both(tmp_path, monkeypatc
     """Broken on purpose: the sensing world with a second broker. `broker` kept the first host it
     met and a port per scheme from whichever url sorted last, so this world was handed
     `elsewhere` with the sensing broker's ports and nothing said so. How several brokers reach an
-    agent is an open seam (a-documents-kind-says-who-reads-it), so onboarding refuses instead."""
-    from onboarding import mqtt
+    agent is an open seam (a-documents-kind-says-who-reads-it), so onboarding's requirement refuses
+    each, naming the other."""
+    from onboarding import reading
 
-    _installed(tmp_path, monkeypatch, _TWO_BROKERS)
-    with pytest.raises(SystemExit, match=r"2 mqtt4ssn:Brokers") as refused:
-        mqtt.broker("sensing")
-    assert "sensing#broker" in str(refused.value) and "sensing#elsewhere" in str(refused.value)
+    root = _installed(tmp_path, monkeypatch, _TWO_BROKERS)
+    said = reading.invalid(root / "sensing")
+    assert [line.split(":", 1)[0] for line in said] == ["broker", "elsewhere"], said
+    assert "one of several brokers, beside http://example.org/orexis/world/sensing#elsewhere" in said[0], said
 
 
 @pytest.mark.parametrize("edit, contradiction", [
-    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtts://elsewhere:8888"'), "two hosts"),
-    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtt://localhost:1999"'), "two mqtt:// ports"),
+    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtts://elsewhere:8888"'), "two hosts, elsewhere and localhost"),
+    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtt://localhost:1999"'), "two mqtt:// ports, 1888 and 1999"),
     (lambda text: text.replace('"mqtt://localhost:1888"', '"mqtt://localhost:1888" , "mqtts://localhost:8999"'),
-     "two mqtts:// ports"),
-], ids=["hosts", "plain", "tls"])
+     "two mqtts:// ports, 8888 and 8999"),
+    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtt://localhost"'), "two mqtt:// ports, 1883 and 1888"),
+], ids=["hosts", "plain", "tls", "a-default-port"])
 def test_one_broker_given_two_addresses_is_refused(tmp_path, monkeypatch, edit, contradiction):
     """One broker whose urls disagree — two hosts, or two ports for one scheme — was answered with
     whichever sorted first or last. A board is flashed with one host and one port, so one of them
-    is simply wrong, and onboarding cannot tell which. The terrace asserts its urls."""
-    from onboarding import mqtt
+    is simply wrong, and onboarding cannot tell which. A url stating no port states its scheme's, so a
+    second port cannot hide behind an omission. The terrace asserts its urls."""
+    from onboarding import reading
 
-    _installed(tmp_path, monkeypatch, {("terrace", "deployment.ttl"): edit})
-    with pytest.raises(SystemExit, match=contradiction):
-        mqtt.broker("terrace")
+    root = _installed(tmp_path, monkeypatch, {("terrace", "deployment.ttl"): edit})
+    said = reading.invalid(root / "terrace")
+    assert len(said) == 1 and said[0].startswith(f"broker: given {contradiction}"), said
 
 
-@pytest.mark.parametrize("tool", ["compose", "firmware"])
-def test_the_tools_told_the_address_inherit_the_refusal(tmp_path, monkeypatch, tool):
-    """`orexis-compose` writes the address into every agent's environment and `orexis-firmware`
-    into every board's config.h; both ask `broker`, so neither writes a merged address."""
-    from onboarding import compose, firmware
+@pytest.mark.parametrize("tool", ["compose", "dashboards", "firmware", "influx", "mqtt"])
+def test_every_tool_called_alone_refuses_what_onboarding_does(tmp_path, monkeypatch, tool):
+    """`orexis-onboard` runs each tool after `reading.check`, and each is callable alone too — to
+    rotate one service's credentials, or flash one board — so each asks the same check first and
+    refuses before it writes anything, and a renderer only ever formats a world that holds. The
+    sensing world with a second broker, which compose would write into every agent's environment
+    and firmware into every board's config.h."""
+    import importlib
+    import sys
 
-    _installed(tmp_path, monkeypatch, _TWO_BROKERS)
-    with pytest.raises(SystemExit, match=r"2 mqtt4ssn:Brokers"):
-        compose.render("sensing") if tool == "compose" else firmware.generate("sensing")
+    module = importlib.import_module(f"onboarding.{tool}")
+    root = _installed(tmp_path, monkeypatch, _TWO_BROKERS)
+    monkeypatch.setattr(module, "world_dir", lambda name: root / name)
+    monkeypatch.setattr(sys, "argv", [f"orexis-{tool}", "sensing"])
+    with pytest.raises(SystemExit, match="one of several brokers"):
+        module.main()
 
 
 def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_load(tmp_path):
