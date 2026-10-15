@@ -112,7 +112,7 @@ Run the world to the claim it was written for. The greenhouse's test delivers a 
 asserts the pump command; the courier's runs until the want is met and the agent stops:
 
 ```python
-runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
 runtime.run(passes=1, poll_s=0)
 assert broker.published == [("actuators/pump/command", {"dose_ml": 500}, False)]
 ```

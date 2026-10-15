@@ -41,12 +41,16 @@ class Client:
 
 def _readings(simulator: Simulator, cadences: int, start: datetime = NOW) -> dict[str, list[tuple[float, float]]]:
     """`cadences` readings of every sensor, one per cadence from `start`: per sensor, the number
-    published beside the model's reading at that instant."""
+    published — its member of its board's one document, at its pointer — beside the model's reading
+    at that instant."""
     out: dict[str, list[tuple[float, float]]] = {name: [] for name in simulator.sensors}
     for n in range(cadences):
         published = dict(simulator.step(start + n * CADENCE))
         for name, sensor in simulator.sensors.items():
-            out[name].append((published[sensor["topic"]], sensor["value"]))
+            number = published[sensor["topic"]]
+            for key in sensor["pointer"].lstrip("/").split("/"):
+                number = number[key]
+            out[name].append((number, sensor["value"]))
     return out
 
 

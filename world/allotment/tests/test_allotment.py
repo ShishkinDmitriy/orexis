@@ -97,8 +97,9 @@ def test_each_agent_listens_on_its_own_topic_and_the_growers_on_their_probes(mon
     agents, bus, _ = _allotment(monkeypatch)
     patterns = {name: sorted(c.patterns) for name, c in zip(agents, bus.clients)}
     assert patterns == {"supplier": ["agents/supplier/inbox"],
-                        "rose_grower": ["agents/rose_grower/inbox", "sensors/rose_probe/reading"],
-                        "fern_grower": ["agents/fern_grower/inbox", "sensors/fern_probe/reading"]}
+                        "rose_grower": ["agents/rose_grower/inbox", "sensors/plot_board/reading"],
+                        "fern_grower": ["agents/fern_grower/inbox", "sensors/plot_board/reading"]}, \
+        "the board's one topic, named for it, and each grower reads its own probe's value of the document"
 
 
 def test_a_grower_s_world_is_hashed_within_what_the_market_s_texts_read(monkeypatch):
@@ -111,14 +112,14 @@ def test_a_grower_s_world_is_hashed_within_what_the_market_s_texts_read(monkeypa
     planner = rose.parts["planning"].planner
     heard: list = []
     planner.rerooted.connect(lambda event: heard.append(event) or [])
-    rose.deliver("sensors/rose_probe/reading", b'{"value": 0.45}', time.at)
+    rose.deliver("sensors/plot_board/reading", b'{"rose_moisture": 0.45}', time.at)
     rose.run(passes=1, poll_s=0)
     assert planner._read[1] is not None, "the growers' read set is readable: no text of the allotment reads anything"
     assert {MARKET + p for p in ("bidsIn", "calledBy", "calledOn", "answered", "clearedAt")} <= planner._read[1]
     assert {e.present for e in heard} == {"first"}
     heard.clear()
     time.at += timedelta(minutes=10)
-    rose.deliver("sensors/rose_probe/reading", b'{"value": 0.45}', time.at)
+    rose.deliver("sensors/plot_board/reading", b'{"rose_moisture": 0.45}', time.at)
     rose.run(passes=1, poll_s=0)
     assert heard and {e.present for e in heard} == {"ground"}, \
         f"the same reading at a new instant is the present the last pass stood in, not a surprise: {heard}"
@@ -166,7 +167,7 @@ def test_the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing(
     scopes = _scopes(rose)
     assert len(scopes) > 1 and [s for s in scopes if "rose_grower" not in s], \
         f"the premise: a scope the grower is no member of, so the every-scope rule does not take it out of the key: {scopes}"
-    rose.deliver("sensors/rose_probe/reading", b'{"value": 0.2}', time.at)
+    rose.deliver("sensors/plot_board/reading", b'{"rose_moisture": 0.2}', time.at)
     rose.run(passes=1, poll_s=0)
     wants = [(r["g"], r["s"], r.get("e")) for store in rose.parts["planning"].planner.imaginaria.values()
              for r in rows(store, f"""SELECT ?g ?s ?e WHERE {{ GRAPH <{catalogue_of(store)}> {{
@@ -182,8 +183,8 @@ def test_the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing(
 def test_a_dry_plot_is_watered_by_a_claim_bought_on_the_supplier_s_venue(monkeypatch):
     agents, bus, time = _allotment(monkeypatch)
     rose, supplier = agents["rose_grower"], agents["supplier"]
-    rose.deliver("sensors/rose_probe/reading", b'{"value": 0.2}', time.at)
-    agents["fern_grower"].deliver("sensors/fern_probe/reading", b'{"value": 0.45}', time.at)
+    rose.deliver("sensors/plot_board/reading", b'{"rose_moisture": 0.2}', time.at)
+    agents["fern_grower"].deliver("sensors/plot_board/reading", b'{"fern_moisture": 0.45}', time.at)
     _run(agents)
     assert bus.told("supplier"), "the dry grower called for a round"
     assert ("water", "true") in _facts(rose, "open"), "the supplier offered a round, and the grower believes it"
@@ -204,7 +205,7 @@ def test_a_dry_plot_is_watered_by_a_claim_bought_on_the_supplier_s_venue(monkeyp
     assert not _facts(rose, "holdsClaimOn"), "so the rose holds it no longer"
 
     time.at += timedelta(minutes=5)
-    rose.deliver("sensors/rose_probe/reading", b'{"value": 0.45}', time.at)
+    rose.deliver("sensors/plot_board/reading", b'{"rose_moisture": 0.45}', time.at)
     _run(agents)
     assert rose.parts["execution"].executor.walking() == [], "the reading answered the presentation"
     assert len(bus.commands()) == 1, "one dose, and nothing more once the plot is watered"
@@ -216,15 +217,15 @@ def test_one_lot_goes_to_the_dearer_bid_and_the_other_grower_calls_again(monkeyp
     answered, so past its patience its intention fails, it calls again, and the next round is its
     alone."""
     agents, bus, time = _allotment(monkeypatch)
-    agents["rose_grower"].deliver("sensors/rose_probe/reading", b'{"value": 0.2}', time.at)
-    agents["fern_grower"].deliver("sensors/fern_probe/reading", b'{"value": 0.25}', time.at)
+    agents["rose_grower"].deliver("sensors/plot_board/reading", b'{"rose_moisture": 0.2}', time.at)
+    agents["fern_grower"].deliver("sensors/plot_board/reading", b'{"fern_moisture": 0.25}', time.at)
     _run(agents)
     time.at += timedelta(seconds=31)
     _run(agents)
     assert bus.commands() == [("actuators/rose_valve/command", {"dose_ml": 500})], "the rose won the first lot"
     assert not _facts(agents["fern_grower"], "heldBy") - _facts(agents["rose_grower"], "heldBy"), \
         "the fern won nothing, and knows only of the rose's claim"
-    agents["rose_grower"].deliver("sensors/rose_probe/reading", b'{"value": 0.45}', time.at)
+    agents["rose_grower"].deliver("sensors/plot_board/reading", b'{"rose_moisture": 0.45}', time.at)
 
     time.at += timedelta(seconds=120)
     _run(agents)

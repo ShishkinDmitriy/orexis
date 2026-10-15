@@ -41,8 +41,10 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
    each `actuation:hasActuator` and the venues each hosts or bids in, the boards as clients and
    what each `mqtt4ssn:hosts`, the `mqtt4ssn:Broker`s — any number, a board
    `mqtt4ssn:isConnectedToBroker` one and an agent any it reads or speaks over —
-   and the topics, their filters, and which sensor `mqtt4ssn:observesTopic` and which device
-   `mqtt4ssn:listensToTopic` each one.
+   and the topics: one a board publishes on, which every sensor it hosts `mqtt4ssn:observesTopic`,
+   one each device `mqtt4ssn:listensToTopic`, one each agent listens on — and no filter, since
+   `orexis-onboard` names each by one convention into `society.derived.ttl` beside this file, which
+   is committed ([requirement](/domain/onboarding/requirement.md)).
 3. **`deployment.ttl`, only to pin a broker's port** — `<> a onboarding:DeploymentGraph`, then
    each pinned broker's `schema:url`s, `mqtt://` and `mqtts://`, one host. Leave one out and `orexis-onboard`
    allocates that broker a port free of every other's, into `infra/installation.derived.ttl`;
@@ -100,5 +102,6 @@ and the reason.
 # Run it
 
 To run it in containers, [onboarding](/domain/onboarding/onboarding.md) grants the credentials and
-writes the compose file: `orexis-onboard <name>`, then [run-a-world](/runbooks/run-a-world.md). A
+writes the compose file: `orexis-onboard <name>`, then [run-a-world](/runbooks/run-a-world.md) —
+or `orexis-topics <name>` alone, to name the topics with nothing up. A
 world with no bus is onboarded too — its compose file is its agents and nothing of a broker.

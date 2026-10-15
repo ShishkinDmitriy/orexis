@@ -23,8 +23,8 @@ touch another's.
 | `orexis-dashboards` | a Grafana folder for the world: what its agents observe, and where the world is monitored a health dashboard per package that reports, a row per measurement and the agent a variable |
 
 `orexis-firmware <world>` writes a board's `config.h` from the same documents: the broker's port off
-the `schema:url` on the world's `mqtt4ssn:Broker`, asserted or allocated, the topics in the
-society graph's MQTT4SSN words, the pins from the world's hardware graph, the credential
+the `schema:url` on the world's `mqtt4ssn:Broker`, asserted or allocated, the topics' names from the
+society graph `orexis-onboard` derived beside the society, the pins from the world's hardware graph, the credential
 `orexis-mqtt` minted.
 
 `orexis-explain <world> <agent>` is not onboarding but lives beside it for the same reason

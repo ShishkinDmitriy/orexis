@@ -53,6 +53,25 @@ port; of the installation, before a port is allocated, a broker on another world
 service's, judged over every url the installation holds. The shape targets the listener and asks only
 a url of what it clashes with, so it is one requirement at both grains.
 
+# What a rule fills
+
+A requirement may carry a `sh:rule` beside its constraints, and the rule fills what the constraint
+would otherwise refuse: `orexis-onboard` runs the rules over a world's asserted documents, writes what
+they made as a derived document, and judges the world with it in — so what remains unmet is garbage,
+and what a rule could complete is completed, by the same shape. The first is a topic's name. A society
+states that a sensor publishes on a topic, a device takes commands on one, an agent listens on one —
+the MQTT4SSN topic node both ends name — and no filter, since which name a topic goes by matters to
+nobody and that both ends agree matters to everyone. Onboarding's rule names each by its principal and
+its purpose: `sensors/<client>/reading` for what a board publishes, one topic however many sensors it
+carries, each reading its own value of the one document by pointer; `sensors/<client>/command` for
+what the board listens to; `actuators/<device>/command` for a device a client hosts; and
+`agents/<id>/inbox`. It writes them to `society.derived.ttl` beside the society, a society graph every
+reader reads as the society — the [transport](/domain/transport/transport.md), the simulator, the
+ACL, a board's `config.h` — and nothing computes a name. A filter a world asserts is kept and the rule
+writes none for it; what the derived document leaves unnamed, a topic nothing publishes on or listens
+to, and what it names twice or names alike, is refused. The committed document is held to a fresh
+derivation, as the installation's allocation is.
+
 # What stays in the ontology
 
 What an agent reads as it runs stays in the vocabulary it loads. The observer's limits are the one

@@ -37,7 +37,10 @@ topic is its word.
 It adopts MQTT4SSN as it stands and declares no word of its own. A sensor
 `mqtt4ssn:observesTopic` a topic, a board `mqtt4ssn:listensToTopic` another, and a topic is named
 by the `mqtt4ssn:hasFilterPattern` of the filters that match it: the agent subscribes by the
-pattern and publishes a command to a pattern with no wildcard. Which sensors are the agent's is its
+pattern and publishes a command to a pattern with no wildcard. No society states a filter: onboarding
+names each topic by one convention, for its publisher or its listener, into a derived society document
+the member reads as any other ([requirement](/domain/onboarding/requirement.md)), so a board has one
+readings topic and its sensors each read their own value of the one message by pointer. Which sensors are the agent's is its
 [observer](/domain/sensing/observer.md) role's to declare, and the member asks sensing for them and
 names none of sensing's words. Where each broker the agent is connected to listens, and the
 agent's credential, come from the environment (`MQTT_BROKERS`, each broker's IRI and its url, then

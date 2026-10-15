@@ -230,7 +230,7 @@ def _judged(here: Path) -> tuple[dict[tuple, str], dict[str, list[str]]]:
     each agent's that reports it. The world's deployment is judged beside either, being no belief and
     the world's alone: what it says of the broker the society names is what the broker is told."""
     store = world(here)
-    shapes = _shapes(store)
+    shapes = shapes_of(store)
     deployed = rdflib_view(store, *graphs_of(store, DEPLOYMENT))
     common = _held_to(shapes, store, graphs_of(store, BELIEF, common=True), deployed)
     each = {}
@@ -243,7 +243,7 @@ def _judged(here: Path) -> tuple[dict[tuple, str], dict[str, list[str]]]:
                       for agent_id, found in each.items()}
 
 
-def _shapes(store: ox.Store) -> tuple[rdflib.Graph, rdflib.Graph]:
+def shapes_of(store: ox.Store) -> tuple[rdflib.Graph, rdflib.Graph]:
     """Every requirement the world in `store` holds, and the vocabulary its shapes target through.
 
     A requirement is a package's or a domain's word about its own terms, shipped beside its ontology

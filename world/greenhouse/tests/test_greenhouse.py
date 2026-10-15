@@ -71,14 +71,14 @@ def _held(beliefs) -> set[tuple[str, str]]:
 
 def test_the_grower_listens_to_the_instruments_of_the_bed_it_acts_for(monkeypatch):
     _, broker = _grower(monkeypatch)
-    assert sorted(broker.subscribed) == ["sensors/moisture_probe/reading", "sensors/thermometer/reading"]
+    assert broker.subscribed == ["sensors/bed_board/reading"], "the board's one topic, named for it"
 
 
 def test_a_reading_is_written_and_the_bed_believed_dry(monkeypatch):
     """A reading is a percept, kept and handed to no reader of the mind; what the grower holds of the bed
     is the soil its transition made of it (#944)."""
     runtime, _ = _grower(monkeypatch)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
     runtime.drain(NOW)
     assert _held(runtime.beliefs) == {("soil", "Dry")}, "under the bed's floor of 0.30"
     assert len(graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph")) == 2, \
@@ -93,13 +93,13 @@ def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
     clock here ticks per read, so the step stands a few seconds after NOW and the reading comes a
     minute past the cadence."""
     runtime, broker = _grower(monkeypatch)
-    runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"temperature": 21.0}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     assert broker.published == [("actuators/pump/command", {"dose_ml": 500}, False)]
     assert len(runtime.parts["execution"].executor.walking()) == 1, "the world has not answered yet"
     runtime.time.at = NOW + timedelta(minutes=11)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert runtime.parts["execution"].executor.walking() == [], "the reading made the bed moist and answered the dose"
     assert ("soil", "Moist") in _held(runtime.beliefs)
@@ -122,8 +122,8 @@ def test_a_committed_dose_is_a_flow_the_beds_prediction_accumulates(monkeypatch)
     where the drying alone read 0.2 and below. When the reading answers the dose the window closes and
     the next tick forgets it."""
     runtime, broker = _grower(monkeypatch)
-    runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"temperature": 21.0}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
     runtime.run(passes=1, poll_s=0)
     assert broker.published == [("actuators/pump/command", {"dose_ml": 500}, False)]
     committed = "http://example.org/orexis/execution#CommittedStepGraph"
@@ -136,7 +136,7 @@ def test_a_committed_dose_is_a_flow_the_beds_prediction_accumulates(monkeypatch)
         f"one stretch from where the reading is due, risen to the aim and dried a day, not dried from 0.2: {predicted}"
     assert all(0.30 <= v <= 0.60 for _, v in predicted), f"foreseen inside the bed's range, never below: {predicted}"
     runtime.time.at = NOW + timedelta(minutes=11)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert runtime.parts["execution"].executor.walking() == []
     assert graphs_of(runtime.beliefs, committed) == [], "answered: closed, then swept"
@@ -157,11 +157,11 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     and the values the action takes, the valve and the bed (#944: the reading, until the dose took the
     subject)."""
     runtime, broker = _grower(monkeypatch)
-    runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"temperature": 21.0}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
     runtime.run(passes=1, poll_s=0)
     runtime.time.at = NOW + timedelta(minutes=11)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', runtime.time.at)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert runtime.parts["execution"].executor.walking() == [], "the dose landed"
     observed = [(p["measurement"], p["fields"]["value"], p["time"]) for p in history if p["measurement"] != "Step"]
@@ -194,8 +194,8 @@ def test_every_reading_the_grower_writes_is_drawn_by_one_greenhouse_panel(monkey
     from onboarding.dashboards import render
 
     runtime, broker = _grower(monkeypatch)
-    runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"temperature": 21.0}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
     runtime.drain(NOW)
     panels = render("greenhouse")["panels"]
     assert [p["title"] for p in panels] == ["bed — SoilMoisture", "bed — AirTemperature"], "by subject, then by sensor"
@@ -261,11 +261,11 @@ def _unanswered(monkeypatch, *, interval_s: float):
     metrics.identify(world=world_name(WORLD), agent="grower")
     try:
         runtime, broker = _grower(monkeypatch)
-        runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
-        runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+        runtime.deliver("sensors/bed_board/reading", b'{"temperature": 21.0}', NOW)
+        runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
         runtime.run(passes=1, poll_s=0)
         runtime.time.at = NOW + timedelta(days=1)
-        runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', runtime.time.at)
+        runtime.deliver("sensors/bed_board/reading", b'{"temperature": 21.0}', runtime.time.at)
         runtime.run(passes=1, poll_s=0)
         runtime.stop()                                   # as a stop does: the last window written
     finally:
@@ -305,8 +305,8 @@ def test_a_cold_bed_is_heated_for_as_long_as_the_gap_takes(monkeypatch):
     """16 degrees against 18 to 24: the middle is 21, five degrees at two an hour is two and a half
     hours, and the heater runs at most an hour a command."""
     runtime, broker = _grower(monkeypatch)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.45}', NOW)
-    runtime.deliver("sensors/thermometer/reading", b'{"value": 16.0}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.45}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"temperature": 16.0}', NOW)
     runtime.run(passes=1, poll_s=0)
     assert broker.published == [("actuators/heater/command", {"heat_s": 3600}, False)]
 
@@ -318,8 +318,8 @@ def test_a_cold_dry_bed_is_two_wants_planned_apart(monkeypatch):
     the air's; since #944 the two write the bed's soil and its air, two predicates. The bed is two
     wants in two imaginaria of one world each, and both commands go out in the one pass."""
     runtime, broker = _grower(monkeypatch)
-    runtime.deliver("sensors/thermometer/reading", b'{"value": 12.0}', NOW)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"temperature": 12.0}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     assert sorted(t for t, _, _ in broker.published) == ["actuators/heater/command", "actuators/pump/command"]
     imaginaria = runtime.parts["planning"].planner.imaginaria
@@ -347,8 +347,8 @@ def test_a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives(monkeypa
     until it is due. Nothing is sent while the bed is comfortable, the plan survives the passes
     between, and the dose goes out once the crossing has come and the present admits it."""
     runtime, broker = _grower(monkeypatch)
-    runtime.deliver("sensors/thermometer/reading", b'{"value": 21.0}', NOW)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.31}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"temperature": 21.0}', NOW)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.31}', NOW)
     runtime.run(passes=2, poll_s=0)
     assert broker.published == [], "comfortable now, so nothing is sent"
     (want,) = runtime.parts["execution"].executor.walking()
@@ -356,6 +356,6 @@ def test_a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives(monkeypa
     assert runtime.parts["execution"].executor.walking() == [want], "the plan placed ahead survives the passes"
     assert broker.published == []
     runtime.time.at = NOW + timedelta(hours=7)
-    runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2995}', runtime.time.at)
+    runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2995}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert [t for t, _, _ in broker.published] == ["actuators/pump/command"], "the foreseen crossing came, and the dose with it"

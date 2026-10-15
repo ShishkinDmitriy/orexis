@@ -588,10 +588,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   stretch, the HTTP member polls, the location lives in `secrets/` (a-forecast-is-a-series-a-sensor-reads).
 - **Several transport members are one to the container** — a message goes back to the member that
   queued it, a command to the member that `reaches` the device.
-- **The transport speaks MQTT4SSN, and a topic is named by the filters that match it** — the agent
-  subscribes by the pattern and publishes to one with no wildcard; each broker's address stays in the
-  environment, `MQTT_BROKERS` by IRI, and a world may have any number, a topic going over a broker the
-  agent shares with the client it is about.
+- **The transport speaks MQTT4SSN, and a topic is named by the filters that match it, which no society
+  states** — onboarding's one `sh:rule` names each for its publisher or its listener, a board's one
+  readings topic `sensors/<client>/reading`, into `society.derived.ttl`, which every reader reads as the
+  society (#836); the agent subscribes by the pattern and publishes to one with no wildcard; each
+  broker's address stays in the environment, `MQTT_BROKERS` by IRI, and a world may have any number, a
+  topic going over a broker the agent shares with the client it is about.
 - **What is said is a statement, and what is believed of it is extracted, heard or said alike** — a
   document is kept as `speech:StatementGraph`, which no reader of the mind is handed, whatever kind it
   says, and a domain's `speech:Extraction`, run by speech over the one statement alone, makes the belief;
@@ -881,6 +883,7 @@ pip install -e ".[dev]"
 orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, derive what the documents
                              #   leave out (a broker's port, into infra/installation.derived.ttl),
                              #   then grant everything below the world has something for.
+  orexis-topics <world>      #   each topic's filter, by one convention, into world/<world>/society.derived.ttl — needs nothing up
   orexis-influx <world>      #   a history bucket per agent, a metrics one where the world is monitored, each with a token that opens only it
   orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived — where its society names a broker
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster, the broker only with a bus

@@ -7,7 +7,8 @@
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
 #  THE TERRACE'S SOCIETY: one agent and one board, each a client of the world's one broker, and
-#  the board's one topic, named by the filter that matches it. The broker is here as what the
+#  the board's one topic, named by a filter `orexis-onboard` derives into society.derived.ttl beside
+#  this file, by one convention (onboarding/requirements.ttl). The broker is here as what the
 #  clients are connected to; where it listens is deployment.ttl's, which onboarding reads and no
 #  agent does.
 
@@ -27,8 +28,6 @@
     mqtt4ssn:hosts :moisture_sensor_terrace , :air_sensor_terrace , :battery_sensor_terrace .
 
 :terrace_readings a mqtt4ssn:Topic .
-:terrace_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/moisture_sensor_terrace/reading" ; mqtt4ssn:matchesTopic :terrace_readings .
 
 #  ONE MESSAGE, FIVE SENSORS: each reads its own value of the board's one document by pointer.
 :moisture_sensor_terrace mqtt4ssn:observesTopic :terrace_readings .
