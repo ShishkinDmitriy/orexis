@@ -18,9 +18,21 @@ one of its two tests. It is a SHACL shape, and the package or domain owning the 
 actions and rules. A world whose words are its own ships its requirements the same way, a
 `requirements.ttl` beside its `world.ttl`, and they are held exactly as a package's are: a word is
 held to what its owner says of it, and a world owns its own. Onboarding ships its own too: limits that
-are its own, what tells a world's brokers apart and gives each client the address it is told, and
-what is stated in two packages' words neither may speak of the other — an observer reading a sensor
+are its own, what tells a world's brokers apart and gives each client the address it is told — a
+broker asserting a url asserts a plain one, since a board is flashed and the simulator started with
+the plain port, and a client that is no agent is connected to one broker the society names as one —
+and what is stated in two packages' words neither may speak of the other — an observer reading a sensor
 over MQTT is connected to a broker the sensor's client is.
+
+A refusal a renderer wrote by hand is a requirement's to make, and the renderer only formats. Each
+of `orexis-mqtt`, `orexis-compose` and `orexis-firmware` once refused what it read as it read it — a
+client connected to no broker, a world's simulated systems hosted by two clients, a sentinel's probe
+with no cadence — and each such refusal is a shape now, shipped by whoever owns the words: the
+simulation domain's, that every simulated system is hosted by one client, the simulator's own; sensing's,
+that a sensor states one `ssn-system:Frequency`. What a renderer passed over in silence became a
+requirement the same way — a simulated system hosted by no client, which a simulator was started for
+and never played. What stays in a renderer is what no document can answer: a credential not yet
+minted, a port the installation has not allocated.
 
 A requirement is not a [shape](/domain/planning/shape.md) in planning's sense. A met-test says what
 an agent wants of the world it believes, and the agent judges it every pass. A requirement says

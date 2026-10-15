@@ -562,7 +562,11 @@ installation over every world's urls and its own services, a world at a time, si
 its own `:broker` and a broker's local name is its world's to keep apart. `broker()` refused those by
 hand and now judges nothing: every tool
 asks `reading.check` before it renders, called alone or by `orexis-onboard`, so a renderer only ever
-reads a world that holds.
+reads a world that holds. The rest of what the bus's renderers refused by hand followed (2026-10-15): a
+client connected to no broker, a broker asserting TLS alone, the simulator's systems on two clients
+and a sentinel's probe with no cadence are each a shape now, shipped by whoever owns the words — the
+simulation domain's and sensing's beside onboarding's own — and a system the simulator was started for
+and never played, which `orexis-compose` passed over in silence, is refused the same way.
 
 # Seams left open
 

@@ -385,9 +385,8 @@ def render_sentinel(world: str, row: dict, store) -> str:
         raise SystemExit(f"{row['sensorId']}: a sentinel watches the world's operating range, "
                          f"and its subject states none for the observed property")
     lo, hi = float(found[0]["lo"]), float(found[0]["hi"])
-    if not found[0].get("every"):
-        raise SystemExit(f"{row['sensorId']}: a sentinel's heartbeat is the cadence the world states "
-                         f"for it, and it states no ssn-system:Frequency")
+    #  THE HEARTBEAT IS THE CADENCE THE WORLD STATES FOR THE SENSOR, one `ssn-system:Frequency` on every
+    #  sensor: sensing's requirement, held by `reading.check` before this renders; it refused none by hand.
     heartbeat = int(float(found[0]["every"]) * _SECONDS.get(found[0]["unit"].rsplit("/", 1)[-1], 1))
     delta = round(WAKE_DELTA_FRACTION * (hi - lo), 3)
     persist = PERSIST_LOOKS

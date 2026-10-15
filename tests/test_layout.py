@@ -236,6 +236,13 @@ def test_every_shipped_world_conforms_to_the_shapes_its_vocabularies_ship():
         assert invalid(REPO_ROOT / "world" / world) == [], world
 
 
+def _cadence(sensor: str = ":probe") -> str:
+    """The one `ssn-system:Frequency` every sensor states, sensing's requirement, for a test about another."""
+    return ("@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .\n@prefix schema: <https://schema.org/> .\n"
+            f"{sensor} ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; "
+            "schema:value 10 ; schema:unitCode <http://qudt.org/vocab/unit/SEC> ] ] .\n")
+
+
 _RANGES = """@prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix schema: <https://schema.org/> .
@@ -266,7 +273,7 @@ def test_onboarding_refuses_a_range_it_cannot_judge_by(tmp_path, monkeypatch, na
     observer = "http://example.org/orexis/sensing#Observer"
     range_ = ":pot_operating" if named else "_:operating"
     world = _declared(tmp_path, [observer], ":probe a sosa:Sensor ; sosa:isHostedBy :pot ; sosa:observes :moisture .\n"
-                      + _RANGES % (range_, range_, low, margin))
+                      + _cadence() + _RANGES % (range_, range_, low, margin))
     said = reading.invalid(world)
     if why is None:
         assert said == []
@@ -285,7 +292,7 @@ def test_onboarding_refuses_a_range_it_cannot_judge_by(tmp_path, monkeypatch, na
 def test_onboarding_refuses_a_sensor_that_reports_nothing_of_anything(tmp_path, sensor, why):
     from onboarding import reading
 
-    said = reading.invalid(_declared(tmp_path, ["http://example.org/orexis/belief#Deliberator"], sensor + "\n"))
+    said = reading.invalid(_declared(tmp_path, ["http://example.org/orexis/belief#Deliberator"], sensor + "\n" + _cadence()))
     assert len(said) == 1 and said[0].startswith(why), said
 
 
@@ -317,7 +324,7 @@ def test_what_the_world_breaks_is_said_once_and_not_again_for_each_agent(tmp_pat
     own documents and roles break, so a sensor observing nothing is not said again as the agent's."""
     from onboarding import reading
 
-    world = _declared(tmp_path, ["http://example.org/orexis/belief#Deliberator"], ":gauge a sosa:Sensor ; sosa:isHostedBy :shed .\n")
+    world = _declared(tmp_path, ["http://example.org/orexis/belief#Deliberator"], ":gauge a sosa:Sensor ; sosa:isHostedBy :shed .\n" + _cadence(":gauge"))
     assert [line.split(":", 1)[0] for line in reading.invalid(world)] == ["gauge"]
     assert reading.refused(world) == []
 
@@ -329,7 +336,7 @@ def test_what_the_world_leaves_out_an_agents_own_documents_may_complete(tmp_path
     from onboarding import reading
 
     state = "<> a orexis:BeliefGraph ; orexis:ownedBy :me .\n:probe sosa:observes :moisture .\n"
-    world = _declared(tmp_path, [OBSERVER], ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n", reads=["probe"], state=state)
+    world = _declared(tmp_path, [OBSERVER], ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n" + _cadence(), reads=["probe"], state=state)
     assert reading.invalid(world) == [] and reading.refused(world) == []
 
     with (world / "world.ttl").open("a") as text:
@@ -1271,15 +1278,40 @@ def test_a_world_with_a_bus_is_onboarded_with_everything(tmp_path, monkeypatch, 
     assert "mosquitto-broker" in services and "MQTT_BROKERS" in services["agent-fern"]["environment"]
 
 
-def test_a_simulator_with_no_broker_to_connect_to_is_refused(tmp_path, monkeypatch):
-    """Broken on purpose: the allotment with its broker's type struck from the society. Its systems
-    are still simulated, by a client that connects to a broker, so a compose file of agents alone
-    would drop the simulator in silence; it is refused, and the world named."""
-    from onboarding import compose
+@pytest.mark.parametrize("edit, said", [
+    ({("allotment", "society.ttl"): lambda text: text.replace(":broker a mqtt4ssn:Broker .", "")},
+     "plot_board: connected to no mqtt4ssn:Broker: it would be flashed or started with no address"),
+    ({("terrace", "deployment.ttl"): lambda text: text.replace('"mqtt://localhost:1888" , ', "")},
+     "broker: asserts mqtts://localhost:8888 and no mqtt:// url: a board and the simulator connect plain"),
+    ({("allotment", "society.ttl"): lambda text: text + '\n:other a mqtt4ssn:Client ; mqtt4ssn:hasClientID "other" ; '
+                                                        'mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :fern_valve .\n'},
+     "fern_valve: hosted by other, as fern_probe is by plot_board: one simulator plays every simulated system of a world, as one client"),
+    ({("allotment", "society.ttl"): lambda text: text.replace(":rose_valve , :fern_valve .", ":rose_valve .")},
+     "fern_valve: hosted by no client: the simulator connects as the client hosting what it plays"),
+    ({("sensing", "world.ttl"): lambda text: text.replace('sensing:readingPointer "/moisture" ;\n    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty\n'
+                                                           '        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .',
+                                                           'sensing:readingPointer "/moisture" .')},
+     "moisture_sensor_fern: a sensor that states no ssn-system:Frequency"),
+    ({("sensing", "world.ttl"): lambda text: text.replace('[ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .',
+                                                           '[ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] , '
+                                                           '[ a ssn-system:Frequency ; schema:value 20 ; schema:unitCode unit:SEC ] ] .', 1)},
+     "moisture_sensor_fern: a sensor that states two frequencies"),
+], ids=["a-client-on-no-broker", "a-broker-asserting-tls-alone", "simulated-systems-on-two-clients",
+        "a-simulated-system-hosted-by-none", "a-sensor-with-no-cadence", "a-sensor-with-two-cadences"])
+def test_what_a_renderer_of_the_bus_refused_by_hand_is_a_requirement(tmp_path, monkeypatch, edit, said):
+    """Each of these a renderer once refused by hand, or passed over in silence, and each is a
+    requirement now, judged before any renderer runs (#838): a board or the simulator's client
+    connected to nothing the society names a broker — the allotment with its broker's type struck, whose
+    compose file of agents alone would have dropped the simulator; a broker asserting TLS alone, with no
+    plain port to flash a board with; the simulator's systems spread over two clients, or one hosted by
+    none, which the simulator would never play; and a sensor with no cadence, or two, which could never
+    be silent and gave a sentinel no heartbeat."""
+    from onboarding import reading
 
-    _installed(tmp_path, monkeypatch, {("allotment", "society.ttl"): lambda text: text.replace(":broker a mqtt4ssn:Broker .", "")})
-    with pytest.raises(SystemExit, match="names no mqtt4ssn:Broker for its simulator"):
-        compose.render("allotment")
+    root = _installed(tmp_path, monkeypatch, edit)
+    (world,) = {w for w, _ in edit}
+    found = reading.invalid(root / world)
+    assert any(line.startswith(said) for line in found), found
 
 
 def test_orexis_mqtt_grants_a_world_with_no_bus_nothing_and_says_so(tmp_path, monkeypatch, caplog):
