@@ -29,13 +29,18 @@ of `orexis-mqtt`, `orexis-compose` and `orexis-firmware` once refused what it re
 client connected to no broker, a world's simulated systems hosted by two clients, a sentinel's probe
 with no cadence — and each such refusal is a shape now, shipped by whoever owns the words: the
 simulation domain's, that every simulated system is hosted by one client, the simulator's own; sensing's,
-that a sensor states one `ssn-system:Frequency`. What a renderer passed over in silence became a
+that a sensor states one `ssn-system:Frequency`, and that its [scaling](/domain/sensing/scaling.md) is
+two points apart, which the generator read to size a wake window and sensing's rule reads to conclude a
+quantity. What a renderer passed over in silence became a
 requirement the same way — a simulated system hosted by no client, which a simulator was started for
 and never played. The installation's reader refused its document by hand in the same way, a check per
 reading — two stores, a store with no organisation, a view over no TLS — and each is a shape now,
 judged once as the document is read. What stays in a renderer is what no document can answer: a
 credential not yet minted, a port the installation has not allocated, a monitored world where the
-installation serves metrics from no store, which is two documents' word.
+installation serves metrics from no store, which is two documents' word — and what is said in a word
+no vocabulary declares: which board is a sentinel is its hardware graph's `mc:firmware`, so that a
+sentinel's subject states a range is the firmware generator's to refuse, there being no owner to ship
+the shape.
 
 A requirement is not a [shape](/domain/planning/shape.md) in planning's sense. A met-test says what
 an agent wants of the world it believes, and the agent judges it every pass. A requirement says

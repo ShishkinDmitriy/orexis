@@ -27,6 +27,12 @@ one hiding a flooded or frozen probe. A thermometer already reports degrees and 
 What a scaling changes is the UNIT; what corrects an instrument's error within its own unit is a
 [calibration](/domain/sensing/calibration.md), applied after it.
 
+Through one point, or two the sensor reads one number at, no line runs, and the rule concludes
+nothing — the observation gets no quantity and nothing says why. So two points, each reading one
+number and standing for one, the two numbers apart, and one scaling per sensor, are sensing's
+[requirement](/domain/onboarding/requirement.md) of a world, refused before anything is granted;
+`orexis-firmware`, which sizes a sentinel's wake window through the same points, once refused it by hand.
+
 # Measuring it again
 
 The points are the world's, so a new measurement is two numbers edited and the agent restarted: a

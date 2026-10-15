@@ -22,7 +22,9 @@ at layer 1, over the [scaling](/domain/sensing/scaling.md)'s quantity — the nu
 scaling scales the sensor — and what comes out is the observation's
 [reading](/domain/sensing/reading.md), on the straight line through the points, unclamped. Where a
 scaling changes the unit, a calibration keeps it: the two are told apart so that one probe may be
-rescaled and its rescaled quantity corrected, each measured on its own. No world states one yet.
+rescaled and its rescaled quantity corrected, each measured on its own. No world states one yet. What
+a world must state of one is what it must of a [scaling](/domain/sensing/scaling.md), the same shape
+holding both.
 
 Finding the points is a person's work for now — the instrument at a reference, its reading taken, the
 number written into the world — and #862 would make it a plan the agent walks with that person.

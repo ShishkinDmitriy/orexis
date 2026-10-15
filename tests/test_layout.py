@@ -1341,6 +1341,37 @@ def test_what_a_renderer_of_the_bus_refused_by_hand_is_a_requirement(tmp_path, m
     assert any(line.startswith(said) for line in found), found
 
 
+_WET_POINT = '[ rdfs:label "wet" ; sensing:reads 410 ; sensing:standsFor 1.0 ]'
+
+
+@pytest.mark.parametrize("edit, said", [
+    ({("terrace", "world.ttl"): lambda text: text.replace(" ,\n                  " + _WET_POINT, "")},
+     "probe_scaling: a scaling or a calibration states two points"),
+    ({("terrace", "world.ttl"): lambda text: text.replace("sensing:reads 410", "sensing:reads 785")},
+     "probe_scaling: its two points read one number, 785"),
+    ({("terrace", "world.ttl"): lambda text: text.replace(" ; sensing:standsFor 1.0 ]", " ]")},
+     "probe_scaling: states a point that reads no number, or stands for none"),
+    ({("terrace", "world.ttl"): lambda text: text.replace("sensing:reads 410 ;", "sensing:reads 410 , 420 ;")},
+     "probe_scaling: states a point that reads two numbers, or stands for two"),
+    ({("terrace", "world.ttl"): lambda text: text + "\n:second_scaling a sensing:TwoPointScaling ; sensing:scales :moisture_sensor_terrace ;\n"
+                                                    "    sensing:point [ sensing:reads 1 ; sensing:standsFor 0.0 ] , [ sensing:reads 2 ; sensing:standsFor 1.0 ] .\n"},
+     "moisture_sensor_terrace: rescaled by probe_scaling and second_scaling: one scaling places a sensor's number on one line"),
+], ids=["a-scaling-of-one-point", "two-points-reading-one-number", "a-point-standing-for-nothing",
+        "a-point-reading-two-numbers", "a-sensor-rescaled-twice"])
+def test_what_the_firmware_generator_refused_by_hand_is_sensings_requirement(tmp_path, monkeypatch, edit, said):
+    """`orexis-firmware` sized a sentinel's wake window through the two points of the probe's scaling
+    and refused, by hand, a scaling with one point or two reading one number — on which sensing's own
+    rule binds nothing, so the agent would have read nothing of the probe, in silence. A scaling or a
+    calibration is a line through two points, each reading one number and standing for one, and a
+    sensor is rescaled by one: sensing's requirement, judged of the world before the generator runs,
+    and the generator refuses none of it (#838)."""
+    from onboarding import reading
+
+    root = _installed(tmp_path, monkeypatch, edit)
+    found = reading.invalid(root / "terrace")
+    assert any(line.startswith(said) for line in found), found
+
+
 def test_orexis_mqtt_grants_a_world_with_no_bus_nothing_and_says_so(tmp_path, monkeypatch, caplog):
     """Run alone on a world with no bus, `orexis-mqtt` answers rather than refuses — nothing to grant,
     as `orexis-onboard` says of the same world — and `provision`, asked directly, refuses before a

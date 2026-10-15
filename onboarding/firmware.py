@@ -357,12 +357,10 @@ def _raw_window(store, row: dict, lo: float, hi: float) -> int:
     """The ULP's window in counts: a quarter of the band's width, through the two points of the scaling
     the world states of the probe. A recalibration moves them; regenerate and reflash only where the
     window's sensitivity has moved further than matters."""
-    points = sorted({(float(r["raw"]), float(r["quantity"]))
-                     for r in _rows(store, _POINTS_Q.format(sensor=row["sensor"], SENSING=SENSING))})
-    if len(points) != 2 or points[0][0] == points[1][0]:
-        raise SystemExit(f"{row['sensorId']} publishes its raw count, and the world states "
-                         f"{len(points)} distinct points of a scaling of it, where the window needs two")
-    (r0, q0), (r1, q1) = points
+    #  TWO POINTS, THE SENSOR READING A DIFFERENT NUMBER AT EACH: sensing's requirement, held by
+    #  `reading.check` before this renders, since its rule runs the same line; it refused none by hand.
+    (r0, q0), (r1, q1) = sorted({(float(r["raw"]), float(r["quantity"]))
+                                 for r in _rows(store, _POINTS_Q.format(sensor=row["sensor"], SENSING=SENSING))})
     return max(1, round(WAKE_DELTA_FRACTION * (hi - lo) * abs((r1 - r0) / (q1 - q0))))
 
 
@@ -372,7 +370,13 @@ def render_sentinel(world: str, row: dict, store) -> str:
     for the subject it watches, and a heartbeat that is the cadence the world states for it.
 
     The rest of what the board carries — an LED, a DHT11, a BME280, a built-in WS2812 — is the
-    same wiring question for either temperament, so `_optional_pins` answers it for both."""
+    same wiring question for either temperament, so `_optional_pins` answers it for both.
+
+    What this still refuses by hand is what no requirement may speak of (#838): which board is a
+    sentinel is the hardware's word, `mc:firmware`, in a graph no vocabulary types (#820), so that a
+    sentinel's subject states a range and a self-scaling probe its calibration are the hardware's
+    claims about the world, held here and nowhere else; which GPIOs the ULP can watch is the ESP32's,
+    the table below; and whether a firmware is a directory is the tree's."""
     creds = world_dir(world) / "secrets" / f"mqtt-{row['sensorId']}.env"
     user, password = _env(creds, "MQTT_USERNAME"), _env(creds, "MQTT_PASSWORD")
     if not password:

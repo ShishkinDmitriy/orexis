@@ -668,9 +668,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (#838, requirement).
 - **A refusal a renderer wrote by hand is a requirement's, and what a renderer passed over in silence
   is one too** — a client on no broker, a broker asserting TLS alone, the simulator's systems on two
-  clients or one hosted by none, a sensor with no cadence, and what the installation must state, judged
-  once as its document is read; what stays in a renderer is what no document answers, a credential not
-  minted or a port not allocated, or two documents' word (#838, requirement).
+  clients or one hosted by none, a sensor with no cadence or a scaling of one point, and what the
+  installation must state, judged once as its document is read; what stays in a renderer is what no
+  document answers, a credential not minted or a port not allocated, two documents' word, or a word no
+  vocabulary declares, which board is a sentinel being the hardware's (#838, requirement).
 - **A role's need is a shape shipped by whoever owns the words it is stated in, and onboarding holds a
   declaration to its world both ways** — the executor's need to be a planner is planning's shape, the
   speaker's topic the MQTT transport's, since a package beneath may not speak them (#927).
