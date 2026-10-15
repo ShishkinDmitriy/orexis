@@ -58,12 +58,16 @@ asserted and derived — none computes a port. The series store's address comes 
 installation (`infra/installation.ttl`) too, and `orexis-infra-compose` writes the shared services'
 own compose file from it, alongside `orexis-infra-certs` and apart from onboarding.
 
-**One broker, one address.** The compose file and the config are each handed a single address, so
-a world stating a second `mqtt4ssn:Broker`, or one broker whose urls disagree on a host or on a
-scheme's port, is refused and named rather than merged, by onboarding's own
-[requirement](/domain/onboarding/requirement.md) (`onboarding/requirements.ttl`).
-How several would reach an agent is the first seam of
-[a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md).
+**Any number of brokers, each served apart.** A world may name several `mqtt4ssn:Broker`s, and
+MQTT4SSN says which each client `isConnectedToBroker`. Each broker is a compose service of its own,
+`mosquitto-<its local name>`, with its config, passwd and ACL under `mosquitto/<its local name>/`
+and a volume of its own; it holds the principals connected to it, and every broker of the world
+trusts the world's one authority, shares its CRL and serves one certificate naming every host. An
+agent is told each broker it is connected to (`MQTT_BROKERS`), a board is flashed with the one it is,
+and the simulator started with its client's. Onboarding's own
+[requirement](/domain/onboarding/requirement.md) (`onboarding/requirements.ttl`) refuses what would
+make an address ambiguous — a broker whose urls disagree on a host or on a scheme's port, two
+brokers on one host and port, two named alike, a board connected to none or to two.
 
 # What it takes back, and only when told
 

@@ -73,6 +73,9 @@ testpaths = ["agent", "simulation", "world"]
 # a path; it stops inserting directories into sys.path, which is why `pythonpath` is here.
 addopts = "-n auto --import-mode=importlib"
 pythonpath = ["tests"]
+# rdflib's own `re.sub` call, once per REPLACE a requirement's select evaluates — onboarding's url
+# shapes run thousands — and nothing of ours to change.
+filterwarnings = ["ignore:'count' is passed as positional argument:DeprecationWarning:rdflib.plugins.sparql.operators"]
 
 # Parallel by default, which is only defensible because #271 made the vacuity guard survive a
 # worker. Read that before removing the flag or trusting a green run.

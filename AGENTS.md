@@ -688,7 +688,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 ### Deployment, onboarding and operating
 
 - **A broker's address is the world's to assert or the installation's to allocate, and the agent's
-  to be told** — asserted wins, derived completes, a collision is refused (#827, #823).
+  to be told** — asserted wins, derived completes, a collision is refused (#827, #823); a world may
+  have any number, each served apart, and only what makes an address ambiguous is refused (#821,
+  #838).
 - **What the documents leave out is derived into a document, and a renderer only formats** —
   `infra/installation.derived.ttl` is committed and held to a fresh derivation (#827).
 - **A world's wiring is its society, and its world graph speaks no MQTT4SSN** (#823).

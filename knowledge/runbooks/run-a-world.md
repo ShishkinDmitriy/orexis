@@ -82,7 +82,7 @@ Both halves were necessary:
 path works whether or not the profile is loaded, which is why it was chosen. By hand it is:
 
 ```bash
-pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' orexis-<world>_mosquitto_1)
+pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' orexis-<world>_mosquitto-<broker>_1)
 ```
 
 Making PID 1 a root shell fixed something else that had been wasting time: `podman stop` could
@@ -129,14 +129,14 @@ Still no store to prepare, and **no agent and no world is disturbed** — existi
 running, keep their beliefs and keep their credentials, because every grant is per principal and
 nothing is re-issued that already exists. Adding a bucket restarts nothing.
 
-**The one running thing that must hear about it is the world's broker**, since `orexis-mqtt`
-rewrites its `passwd` and `acl.conf`. Mosquitto reads both only at startup — but `orexis-mqtt`
+**The running things that must hear about it are the world's brokers**, since `orexis-mqtt`
+rewrites each one's `passwd` and `acl.conf`, under `mosquitto/<broker>/`, the broker's local name. Mosquitto reads both only at startup — but `orexis-mqtt`
 **reloads it for you**, and a reload is not a restart: connected agents keep their sessions and
 nothing is interrupted. You will see it say so:
 
 ```
-wrote world/allotment/mosquitto/passwd and world/allotment/mosquitto/acl.conf (4 principals)
-reloaded orexis-allotment_mosquitto_1 — connected agents kept their sessions
+wrote world/allotment/mosquitto/broker/passwd and world/allotment/mosquitto/broker/acl.conf (4 principals)
+reloaded orexis-allotment_mosquitto-broker_1 — connected agents kept their sessions
 ```
 
 If no broker is running it says that instead, and the files are simply read when it next starts.
@@ -261,7 +261,7 @@ it. Then say so, per service:
 
 ```bash
 orexis-mqtt <w> --revoke <id>       # credential gone, ACL rebuilt and reloaded, certificate on the CRL
-cd world/<w> && podman compose restart mosquitto    # the CRL is TLS material: read at start, not on SIGHUP
+cd world/<w> && podman compose restart mosquitto-<broker>    # each broker; the CRL is TLS material, read at start
 orexis-influx <w> --revoke <id>     # its tokens deleted; its buckets KEPT
 ```
 

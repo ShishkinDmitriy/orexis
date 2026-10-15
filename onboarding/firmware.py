@@ -46,7 +46,7 @@ from . import reading
 from .reading import HARDWARE
 from .worlds import REPO_ROOT
 from .worlds import shown, world_dir, worlds
-from .mqtt import broker
+from .mqtt import broker_of
 from .namespaces import BME280, DHT11, ESP32, I2C, MC, ONEWIRE, PROBE, RGBLED
 
 OREXIS = "http://example.org/orexis#"
@@ -84,7 +84,7 @@ WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 # the OPTIONAL parts this generator has a template for — an LED, a DHT11, a BME280. A board
 # carrying something it has no template for is reported (_untemplated), not guessed at.
 _BOARDS_Q = f"""
-SELECT ?boardId ?firmware ?lan ?sensor ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
+SELECT ?board ?boardId ?firmware ?lan ?sensor ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
        ?alarm
        ?ledRed ?ledGreen ?ledBlue ?airPin ?bmeSda ?bmeScl ?bmeAddr ?ws2812 ?battPin ?battDiv
 WHERE {{
@@ -447,15 +447,15 @@ def render_sentinel(world: str, row: dict, store) -> str:
 
 def generate(world: str, board: str | None = None) -> None:
     store = _world(world)
-    #  THE BOARDS FIRST, and the broker's address only where there is one to flash: a world with no
-    #  board is told so, bus or none, and a board in a world naming no broker is refused by `broker`.
+    #  THE BOARDS FIRST, and a broker's address only where there is one to flash: a world with no
+    #  board is told so, bus or none, and a board connected to no broker is refused by `broker_of`. A
+    #  board is flashed with the one broker it is connected to, whichever of the world's that is.
     boards = [r for r in _rows(store, _BOARDS_Q) if board is None or r["boardId"] == board]
     if not boards:
         raise SystemExit(
             f"orexis-firmware: no board in world {world!r}"
             + (f" called {board!r}" if board else " states mc:firmware and carries a probe"))
-    host, port, _ = broker(world)
-    rows = [{**r, "host": host, "port": port} for r in boards]
+    rows = [{**r, "host": host, "port": port} for r in boards for host, port, _ in [broker_of(world, r["board"])]]
     bounds = SLEEP_BOUNDS_S
 
     for row in rows:

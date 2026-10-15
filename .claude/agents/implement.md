@@ -50,7 +50,7 @@ else is in the tree — another agent's worktree, someone's work in progress, a 
 carrying a password.
 
 **A worktree isolates the filesystem, not the machine.** There is one container runtime, one set of
-volumes and one broker per world on this host, shared with whoever dispatched you and with three
+volumes and a world's own brokers on this host, shared with whoever dispatched you and with three
 live worlds. `podman compose up` in "your" world does not start a second copy — it REPLACES the
 running one, and `down -v` destroys belief bases that are not yours. An agent did exactly this
 once: it took the parent's simulation down to bring its own up, and neither had any way to notice.

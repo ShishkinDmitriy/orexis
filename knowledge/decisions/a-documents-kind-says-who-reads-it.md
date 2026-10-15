@@ -155,8 +155,8 @@ reading its own broker's address off the world is no longer a discipline to keep
 cannot do. What is left open is only how several addresses are TOLD — the first seam below.
 
 **Nothing is filed to build this yet.** All four worlds with a bus state one broker; the latent
-defect was `broker()` merging several without a word, and a requirement of onboarding's own refuses
-them now (#821, #838).
+defect was `broker()` merging several without a word; a requirement of onboarding's own refused
+them (#821, #838), until the seam below was settled and a world may have any number.
 
 ## 4. A series store per purpose: history and metrics
 
@@ -545,10 +545,11 @@ the world. One shape stays in a vocabulary: the observer's `sh:defaultValue` for
 leaves unstated, which the stuck rule reads off sensing's ontology as the agent runs. It refuses
 nothing.
 
-Onboarding ships one of its own, `onboarding/requirements.ttl`: a world has one broker, with one host
-and one port per scheme, judged with the world's deployment graph beside its beliefs. The words are
-MQTT4SSN's and schema.org's and the limit is onboarding's, since one address is what it knows how to
-tell (the first seam below). `broker()` refused the three by hand and now judges nothing: every tool
+Onboarding ships one of its own, `onboarding/requirements.ttl`: a broker has one host and one port
+per scheme, judged with the world's deployment graph beside its beliefs. The words are MQTT4SSN's and
+schema.org's and the limits are onboarding's. It held a world to one broker too, while one address was
+all onboarding knew how to tell, until the first seam below was settled. `broker()` refused those by
+hand and now judges nothing: every tool
 asks `reading.check` before it renders, called alone or by `orexis-onboard`, so a renderer only ever
 reads a world that holds.
 
@@ -561,8 +562,11 @@ reads a world that holds.
   `MQTT_BROKERS`, holds each broker the agent is connected to by its IRI beside the url it reaches
   it at, so the agent matches IRIs it reads in the society and constructs no name; the credential
   stays one per agent, which each of the world's brokers holds. A mounted file per broker was not
-  needed. What still serves one broker — its service, config and ACL, a board's config.h, the
-  simulator — is onboarding's next step, and until it lands a world stating two is refused (#821).
+  needed. **And for onboarding the next day:** each broker is served apart — a service, a config, a
+  passwd and an ACL of its own, holding the principals connected to it — a board is flashed with the
+  one broker it is connected to, and the simulator started with its client's; #821's refusal of a
+  second broker is lifted, and what is refused instead is what makes an address ambiguous: two
+  brokers on one host and port, two named alike, a board on none or on two.
 - **A sovereign-owned graph of tuning figures**, for what was hard-coded: settled by #876, 2026-10-08.
   An agent's figures about itself — the planner's and the deliberator's budgets, the executor's
   patience, sensing's two limits, prediction's horizon — are stances, stated of the self in its self
