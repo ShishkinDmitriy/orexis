@@ -33,10 +33,12 @@ this engine does badly; it writes the same kind of graph a rule would.
 as its broker exists and asserts nothing, and a new one takes the lowest slot left, so a world added
 later — whatever its name sorts as — never moves another's port. A board is flashed with its port.
 
-**A collision is refused, never resolved.** Two brokers on one host and port, asserted or allocated,
-or a broker on a service's: `derive` names both and writes nothing. A world asserting a port the
-installation already allocated to another is refused too, rather than moving the other — the other
-may be a board in a pot.
+**A collision is refused, never resolved, and refused by a requirement** (#838). Two brokers on one
+host and port, asserted or allocated, or a broker on a service's: `derive` names both and writes
+nothing. A world asserting a port the installation already allocated to another is refused too,
+rather than moving the other — the other may be a board in a pot. The refusal is the shape in
+onboarding's `requirements.ttl` that refuses a world's two brokers on one port, judged over everything
+the installation holds; the search only keeps what it was handed clash-free.
 
 **The installation may name worlds; a world names nothing of the installation.** The derived
 document names every broker it allocates, because the installation is the one reader that sees
@@ -57,10 +59,11 @@ import logging
 from urllib.parse import urlparse
 
 import pyoxigraph as ox
+import rdflib
 
 from agent.ontology import local_of as local
 from agent.series import HISTORY, METRICS
-from agent.store import DocumentRefused, Raw, answer, catalogue_of, graphs_of, rows
+from agent.store import DocumentRefused, Raw, answer, catalogue_of, graphs_of, rdflib_view, rows
 
 from . import derived, reading
 from .reading import DEPLOYMENT, ONBOARDING
@@ -263,25 +266,24 @@ def allocated(broker: str) -> list[str]:
 # ---------------------------------------------------------------- the derivation
 
 
-class _Taken:
-    """Every host and port something holds, and what holds it; a second holder is refused."""
-
-    def __init__(self):
-        self.held: dict[tuple[str, int], tuple[str, str]] = {}
-
-    def free(self, url) -> bool:
-        return (url.hostname, _port(url)) not in self.held
-
-    def take(self, owner: str, how: str, text: str) -> None:
-        url = _parsed(owner, text)
-        if not url.hostname or not _port(url):
-            return
-        key = (url.hostname, _port(url))
-        if key in self.held and self.held[key][0] != owner:
-            other, was = self.held[key]
-            raise SystemExit(f"{key[0]}:{key[1]} is held by {other} ({was}) and by {owner} ({how}) — a "
-                             "port is unique on its host; nothing was allocated")
-        self.held[key] = (owner, how)
+def _clashes(s: ox.Store, brokers: dict[str, list[str]], urls: dict[str, list[str]]) -> list[str]:
+    """Every listener holding a port on a host that something else holds, as `iri: why` — judged by
+    onboarding's own requirement (`requirements.ttl`), as a world's two brokers are, over the
+    installation's services, every url in `urls` and, world by world, that world's `brokers` typed
+    as what they are. A world at a time, since a broker's local name is its world's to keep apart
+    and every world names its own `:broker`; what the others hold need not say what it is, since the
+    requirement targets the listener and asks only a url of what it clashes with."""
+    held = rdflib_view(s, *derived.graphs(s, DEPLOYMENT, derived.ASSERTED))
+    for owner, said in urls.items():
+        for url in said:
+            held.add((rdflib.URIRef(owner), rdflib.URIRef(_SCHEMA_URL), rdflib.Literal(url)))
+    found: set[str] = set()
+    for named in sorted(b for b in brokers.values() if b) or [[]]:
+        data = rdflib.Graph() + held
+        for broker in named:
+            data.add((rdflib.URIRef(broker), rdflib.RDF.type, rdflib.URIRef(MQTT4SSN + "Broker")))
+        found |= {f"{focus}: {why}" if focus else why for (why, focus) in reading.reported(data, reading.own())}
+    return sorted(found)
 
 
 def _shifted(url, by: int) -> str:
@@ -308,25 +310,21 @@ def derive(remember: bool = True) -> dict[str, list[str]]:
     Everything held first — the services, every asserted url, and, `remember`ing, every allocation
     the derived document already makes that still stands — and then each broker left, in the order
     its IRI sorts, at the lowest slot where every pool url raised by the slot is free. Refused where
-    two things hold one port, and where the pool is needed and not stated."""
+    two listeners hold one port (`_clashes`), and where the pool is needed and not stated."""
     s = _store(with_derivation=remember)
-    taken = _Taken()
-    for kind in (SERIES_STORE, SERIES_VIEW):
-        for r in _asserted(s, _SERVICE_Q.replace("$kind", kind)):
-            if r.get("url"):
-                taken.take(r["s"], "the installation's service", r["url"])
+    services = [(r["s"], r["url"]) for kind in (SERIES_STORE, SERIES_VIEW)
+                for r in _asserted(s, _SERVICE_Q.replace("$kind", kind)) if r.get("url")]
 
     asserted: dict[str, list[str]] = {}
+    brokers: dict[str, list[str]] = {}
     for w in worlds():
         try:
             world_store = reading.world(world_dir(w))
         except DocumentRefused as refused:
             raise SystemExit(f"world {w!r} does not load, so no port can be allocated safely beside it — {refused}")
-        for broker in brokers_of(world_store):
+        brokers[w] = brokers_of(world_store)
+        for broker in brokers[w]:
             asserted[broker] = asserted_on(world_store, broker)
-    for broker, urls in sorted(asserted.items()):
-        for url in urls:
-            taken.take(broker, "asserted", url)
 
     out: dict[str, list[str]] = {}
     if remember:
@@ -344,18 +342,26 @@ def derive(remember: bool = True) -> dict[str, list[str]]:
                     raise SystemExit(f"{_where(DERIVATION)} allocates {broker} {', '.join(sorted(urls))}, which is no "
                                      "slot of the installation's pool — it was edited, or the pool moved; "
                                      "assert the port in the world to pin it, or remove the allocation to re-derive it")
-                for url in urls:
-                    taken.take(broker, "allocated", url)
                 out[broker] = sorted(urls)
+
+    #  WHAT IS HELD ALREADY HOLDS TOGETHER, or nothing is allocated: a requirement, judged as a world's
+    #  is, and the search below then keeps it so by construction.
+    held = {**{owner: [url] for owner, url in services}, **asserted, **out}
+    for owner, urls in held.items():
+        for url in urls:
+            _parsed(owner, url)
+    found = _clashes(s, brokers, held)
+    if found:
+        raise SystemExit(f"the installation holds a port twice — {'; '.join(found)}; nothing was allocated")
+    taken = {(u.hostname, _port(u)) for urls in held.values() for u in map(urlparse, urls)}
 
     for broker in sorted(b for b, urls in asserted.items() if not urls and b not in out):
         firsts = _pool(s, broker)
         for n in range(_LAST_PORT - max(u.port for u in firsts) + 1):
             candidates = [urlparse(_shifted(u, n)) for u in firsts]
-            if all(taken.free(u) for u in candidates):
+            if not any((u.hostname, _port(u)) in taken for u in candidates):
                 out[broker] = sorted(u.geturl() for u in candidates)
-                for u in candidates:
-                    taken.take(broker, "allocated", u.geturl())
+                taken |= {(u.hostname, _port(u)) for u in candidates}
                 break
         else:
             raise SystemExit(f"no port is left to allocate {broker}")

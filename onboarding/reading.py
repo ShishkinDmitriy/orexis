@@ -264,9 +264,21 @@ def _held_to(shapes: tuple[rdflib.Graph, rdflib.Graph], store: ox.Store, held: l
     judged `beside` them is in no agent's store, and crosses as it is."""
     data = rdflib_view(store, *held)
     data += beside
+    return reported(data, *shapes)
+
+
+@cache
+def own() -> rdflib.Graph:
+    """Onboarding's own requirements — the ones the installation is held to as well as a world."""
+    return rdflib.Graph().parse(REQUIREMENTS)
+
+
+def reported(data: rdflib.Graph, requirements: rdflib.Graph, vocabulary: rdflib.Graph | None = None) -> dict[tuple, str]:
+    """What `requirements` report of `data`, keyed by the message and the focus where that has a
+    name, and said as `focus: why` with the focus's local name, or `why` alone. The store's
+    namespaces are bound on `data`, since pyshacl reads a constraint's select against the graph it asks."""
     for label, iri in NAMESPACES.items():
         data.bind(label, iri, override=True, replace=True)
-    requirements, vocabulary = shapes
     _, report, _ = pyshacl.validate(data, shacl_graph=requirements, ont_graph=vocabulary)
     out = {}
     for result in report.subjects(_SH.resultMessage, None):

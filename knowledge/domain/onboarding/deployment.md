@@ -41,7 +41,9 @@ with its port. A world that asserts nothing leaves the choice to the installatio
 one reader that can choose safely is the one that chooses. What it allocated is a **derived**
 deployment graph, `infra/installation.derived.ttl` — committed, read back as derived, and kept, so
 a world added later never moves another's port. What is refused is a **collision**: two brokers on
-one host and port, asserted or allocated, or a broker on a service's. Every address is a
+one host and port, asserted or allocated, or a broker on a service's — by onboarding's
+[requirement](/domain/onboarding/requirement.md) that one port on one host is held by one listener,
+judged over everything the installation holds. Every address is a
 `schema:url`, so the host is stated where the port is. The installation may name worlds; a world
 names nothing of the installation, and onboarding asks it about one world's broker at a time.
 

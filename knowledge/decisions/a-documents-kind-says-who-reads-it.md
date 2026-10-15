@@ -238,6 +238,9 @@ a derivation that is a join would be a rule, writing the same kind of graph.
 **What is refused is a collision**, never resolved: two brokers on one host and port, asserted or
 allocated, or a broker on a service's port — named, and nothing written. A world asserting the port
 already allocated to another is refused rather than moving the other, which may be a board in a pot.
+Since #838 the refusal is the requirement that refuses a world's two brokers on one port, in
+onboarding's `requirements.ttl`, judged over every url the installation holds; the search is handed
+what holds together and only keeps it so.
 
 **Refused: a world stating its own port, always** — this change's first cut, and the extended
 issue's wording. It would move the terrace's pinned port into the installation, and make the
@@ -548,7 +551,10 @@ nothing.
 Onboarding ships one of its own, `onboarding/requirements.ttl`: a broker has one host and one port
 per scheme, judged with the world's deployment graph beside its beliefs. The words are MQTT4SSN's and
 schema.org's and the limits are onboarding's. It held a world to one broker too, while one address was
-all onboarding knew how to tell, until the first seam below was settled. `broker()` refused those by
+all onboarding knew how to tell, until the first seam below was settled. That one port on one host
+is held by one listener is its shape too, judged of a world and of the installation alike — of the
+installation over every world's urls and its own services, a world at a time, since every world names
+its own `:broker` and a broker's local name is its world's to keep apart. `broker()` refused those by
 hand and now judges nothing: every tool
 asks `reading.check` before it renders, called alone or by `orexis-onboard`, so a renderer only ever
 reads a world that holds.
