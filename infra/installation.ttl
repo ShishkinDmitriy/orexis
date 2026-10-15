@@ -19,11 +19,12 @@
 #  InfluxDB 3 Core, whose tokens are admin-only, so an accidental upgrade would remove the mechanism
 #  per-agent isolation is built on (knowledge/decisions/series-and-bus-isolation.md).
 #
-#  One store serves both purposes here, by coincidence and not by design. An agent is told a store
-#  per purpose, under the purpose's keys; a second store for one of them is a second node saying
-#  `onboarding:serves` it, and a purpose served by two is refused. History served by none is refused
+#  One store serves both purposes, and `infra/compose.yaml` runs one, so a second store is refused.
+#  An agent is told a store per purpose, under the purpose's keys. History served by none is refused
 #  too. Metrics served by none is an installation that monitors no world: take `onboarding:Metrics`
-#  off this line and every world saying it is `onboarding:monitored` is refused at onboarding.
+#  off this line and every world saying it is `onboarding:monitored` is refused at onboarding. What
+#  this document must state is its own requirement, `requirements.ttl` beside it, judged as it is
+#  read, and every tool reads it through that judgment.
 :series a onboarding:SeriesStore ;
     schema:url "http://localhost:8086" ;
     onboarding:organisation "orexis" ;

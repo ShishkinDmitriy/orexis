@@ -31,8 +31,11 @@ with no cadence — and each such refusal is a shape now, shipped by whoever own
 simulation domain's, that every simulated system is hosted by one client, the simulator's own; sensing's,
 that a sensor states one `ssn-system:Frequency`. What a renderer passed over in silence became a
 requirement the same way — a simulated system hosted by no client, which a simulator was started for
-and never played. What stays in a renderer is what no document can answer: a credential not yet
-minted, a port the installation has not allocated.
+and never played. The installation's reader refused its document by hand in the same way, a check per
+reading — two stores, a store with no organisation, a view over no TLS — and each is a shape now,
+judged once as the document is read. What stays in a renderer is what no document can answer: a
+credential not yet minted, a port the installation has not allocated, a monitored world where the
+installation serves metrics from no store, which is two documents' word.
 
 A requirement is not a [shape](/domain/planning/shape.md) in planning's sense. A met-test says what
 an agent wants of the world it believes, and the agent judges it every pass. A requirement says
@@ -59,8 +62,14 @@ Onboarding reads the requirements off the world, which knows every package's voc
 off an agent's boot, which loads only what the agent's roles do: an agent playing an executor alone
 loads no planning, and the requirement refusing it is planning's.
 
-One of onboarding's own is judged of the [installation](/domain/onboarding/deployment.md) as well:
-that one port on one host is held by one listener. Of a world it refuses two of its brokers on one
+The [installation](/domain/onboarding/deployment.md) ships its own, `infra/requirements.ttl` beside
+its document, as a world ships its own beside `world.ttl`, and is held to them as the document is
+read, so every tool reading it refuses one that does not hold and none judges it: one series store
+and one view, each with one url of the scheme the template serves it over and one image, the store
+with one organisation; history served by a store; one retention and one window per purpose; and one
+pool, each url of it with a host and a port. Two of onboarding's own are judged of it beside them:
+that no url carries a credential — the deployment page says why — judged of a world's deployment
+too; and that one port on one host is held by one listener: of a world it refuses two of its brokers on one
 port; of the installation, before a port is allocated, a broker on another world's port or on a
 service's, judged over every url the installation holds. The shape targets the listener and asks only
 a url of what it clashes with, so it is one requirement at both grains.

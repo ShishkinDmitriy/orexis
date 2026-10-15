@@ -566,7 +566,12 @@ reads a world that holds. The rest of what the bus's renderers refused by hand f
 client connected to no broker, a broker asserting TLS alone, the simulator's systems on two clients
 and a sentinel's probe with no cadence are each a shape now, shipped by whoever owns the words — the
 simulation domain's and sensing's beside onboarding's own — and a system the simulator was started for
-and never played, which `orexis-compose` passed over in silence, is refused the same way.
+and never played, which `orexis-compose` passed over in silence, is refused the same way. The
+installation's own reader followed last: what `infra/installation.ttl` must state — one store, one
+view, their urls, images and organisation, history served, one retention, one window, one pool, no
+credential — is its own requirement, `infra/requirements.ttl` beside it as a world's is beside its
+`world.ttl`, judged once as the document is read, where `installation.py` had a check per reading and
+a message per check; and a world is never held to it, since a world states no store.
 
 # Seams left open
 
