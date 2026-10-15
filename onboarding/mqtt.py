@@ -221,8 +221,10 @@ def _address(world: str, store, broker_iri: str) -> tuple[str, int, int | None]:
         if url.hostname:
             hosts.add(url.hostname)
         ports[url.scheme].add(url.port or _DEFAULT_PORTS[url.scheme])
-    if not ports["mqtt"]:
-        raise SystemExit(f"orexis-mqtt: world {world!r} asserts no mqtt:// url on its mqtt4ssn:Broker {broker_iri}, "
+    #  A BROKER ASSERTING A URL ASSERTS A PLAIN ONE, which is onboarding's requirement; one asserting none
+    #  has an address only once the installation has allocated it, which is `orexis-onboard`'s to do.
+    if not urls:
+        raise SystemExit(f"orexis-mqtt: world {world!r} asserts no url on its mqtt4ssn:Broker {broker_iri}, "
                          "and the installation has allocated it none — `orexis-onboard` allocates one")
     return next(iter(hosts), "localhost"), next(iter(ports["mqtt"])), next(iter(ports["mqtts"]), None)
 
@@ -239,13 +241,11 @@ def connected(world: str) -> dict[str, set[str]]:
 def broker_of(world: str, client: str) -> tuple[str, int, int | None]:
     """The address of the one broker `client` — a board, the simulator, by its IRI or its client id —
     is connected to, which is the one it is flashed or started with. That it is connected to exactly
-    one is onboarding's requirement; one connected to none has no bus to be told of, and is refused
-    here."""
+    one the society names a broker is onboarding's requirement (`requirements.ttl`), held by
+    `reading.check` before any tool asking here runs; this formats and judges nothing."""
     store = _world(world)
-    found = sorted({r["broker"] for r in _rows(store, _CONNECTED_Q) if client in (r["c"], r["id"])})
-    if not found:
-        raise SystemExit(f"orexis-mqtt: {local_of(client)!r} of world {world!r} is connected to no mqtt4ssn:Broker")
-    return addresses(world)[found[0]]
+    (broker,) = {r["broker"] for r in _rows(store, _CONNECTED_Q) if client in (r["c"], r["id"])}
+    return addresses(world)[broker]
 
 
 def agent_username(world: str, agent_id: str) -> str:

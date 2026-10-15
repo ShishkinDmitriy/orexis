@@ -135,13 +135,13 @@ def series_credential(agent_id: str, purpose: str = HISTORY) -> str:
 
 def simulated_client(world: str) -> str | None:
     """The client the world's simulator connects as, or None where nothing is simulated. One
-    simulator plays every simulated system, so they must share one client."""
+    simulator plays every simulated system, so one client hosts them all, and that client is connected
+    to a broker: the simulation domain's requirement and onboarding's (`domains/sim/requirements.ttl`,
+    `onboarding/requirements.ttl`), held by `reading.check` before any tool asking here runs. This
+    formats and judges nothing; it refused two clients by hand once."""
     store = reading.world(world_dir(world))
-    found = [r["id"] for r in rows(store, _SIMULATED_Q, graphs_of(store, BELIEF, common=True))]
-    if len(found) > 1:
-        raise SystemExit(f"orexis-compose: {world!r} hosts simulated systems on {found}; one simulator plays "
-                         "them all, so one client must host them")
-    return found[0] if found else None
+    found = {r["id"] for r in rows(store, _SIMULATED_Q, graphs_of(store, BELIEF, common=True))}
+    return found.pop() if found else None
 
 
 def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) -> str:
@@ -309,9 +309,6 @@ def render(world: str) -> str:
     series = {purpose: installation.series(purpose) for purpose in installation.purposes(world)}
     window = installation.interval(METRICS) if METRICS in series else None
     client = simulated_client(world)
-    if client and not bus:
-        raise SystemExit(f"orexis-compose: {world!r} hosts simulated systems on {client!r} and names no "
-                         "mqtt4ssn:Broker for its simulator to connect to")
     read = read_by_an_agent(world)
     services = ("".join(_broker(world, b, *bus[b][1:]) for b in sorted(bus))
                 + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")

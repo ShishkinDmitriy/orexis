@@ -17,10 +17,19 @@
 #
 #  A url's host is what lies between `//` and the port or the path, and its port the number after
 #  the host's colon, or its scheme's where it states none — 1883 for `mqtt`, 8883 for `mqtts` — so a
-#  clash cannot hide behind an omission.
+#  clash cannot hide behind an omission. And a broker asserting any url asserts a plain one: a board
+#  is flashed with the plain port and the simulator started with it, and the broker's own config
+#  listens there, so a world asserting TLS alone has no address to tell either (`orexis-mqtt` refused
+#  it by hand). A broker asserting none is allocated both.
 [] a sh:NodeShape ;
     sh:targetClass mqtt4ssn:Broker ;
     sh:sparql [
+        sh:message "asserts {?url} and no mqtt:// url: a board and the simulator connect plain" ;
+        sh:select """
+            SELECT $this ?url WHERE {
+              $this schema:url ?url .
+              FILTER NOT EXISTS { $this schema:url ?plain . FILTER STRSTARTS(STR(?plain), "mqtt://") } }""" ] ,
+    [
         sh:message "given two hosts, {?one} and {?two}: a board is flashed with one, and nothing says which is right" ;
         sh:select """
             SELECT $this ?one ?two WHERE {
@@ -77,14 +86,16 @@
 
 #  A CLIENT THAT IS NO AGENT — A BOARD, OR WHAT THE SIMULATOR PLAYS — IS CONNECTED TO ONE BROKER: it is
 #  flashed or started with one address. An agent may be connected to any number, each in its environment.
+#  Connected to a broker the society names as one: connected to a node it never says is a broker, the
+#  world has no bus, and a compose file of its agents alone would drop the simulator in silence.
 [] a sh:NodeShape ;
     sh:targetClass mqtt4ssn:Client ;
     sh:sparql [
-        sh:message "connected to no broker: it would be flashed with no address" ;
+        sh:message "connected to no mqtt4ssn:Broker: it would be flashed or started with no address" ;
         sh:select """
             SELECT $this WHERE {
               FILTER NOT EXISTS { $this a orexis:Agent }
-              FILTER NOT EXISTS { $this mqtt4ssn:isConnectedToBroker ?broker } }""" ] ,
+              FILTER NOT EXISTS { $this mqtt4ssn:isConnectedToBroker ?broker . ?broker a mqtt4ssn:Broker } }""" ] ,
     [
         sh:message "connected to two brokers, {?one} and {?two}: it is flashed with one address, and only an agent is told several" ;
         sh:select """

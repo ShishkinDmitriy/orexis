@@ -32,12 +32,26 @@
             FILTER NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
                                 ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host } }""" ] .
 
+#  A SENSOR STATES ITS CADENCE, ONE `ssn-system:Frequency`: when its next reading is due is read off it
+#  (`cadence.cadence_of`), a silence is a limit of cadences, and a board's heartbeat is it. Stating none
+#  or two, it has no cadence, so it could never be silent and a sentinel flashed from it would have no
+#  heartbeat — which `orexis-firmware` refused by hand.
 [] a sh:NodeShape ;
     sh:targetClass sosa:Sensor ;
     sh:property [ sh:path sosa:observes ; sh:minCount 1 ;
                   sh:message "a sensor that observes no property: its readings would be of nothing" ] ,
                 [ sh:path sosa:isHostedBy ; sh:minCount 1 ;
-                  sh:message "a sensor mounted on nothing: it reports to no agent" ] .
+                  sh:message "a sensor mounted on nothing: it reports to no agent" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a sensor that states no ssn-system:Frequency: when its next reading is due is read off its cadence, and a silence is a limit of them" ;
+        sh:select """SELECT $this WHERE {
+            FILTER NOT EXISTS { $this ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f . ?f a ssn-system:Frequency } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "a sensor that states two frequencies: neither is its cadence" ;
+        sh:select """SELECT $this WHERE {
+            $this ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f . ?f a ssn-system:Frequency .
+            $this ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?g . ?g a ssn-system:Frequency
+            FILTER (?f != ?g) }""" ] .
 
 [] a sh:NodeShape ;
     sh:targetObjectsOf ssn-system:inCondition ;

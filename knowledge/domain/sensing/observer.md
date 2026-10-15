@@ -48,4 +48,6 @@ Onboarding holds the declaration to the world both ways. The shape sensing ships
 that reads no sensor, and one that reads a sensor reporting to the agent from nowhere — mounted on
 nothing it acts for, a sample of that, or a place containing it. `orexis-onboard` refuses the converse:
 a sensor mounted so that it reports to the agent, which no observer role of the agent's reads, would
-deliver bytes no package reads ([role](/domain/kernel/role.md)).
+deliver bytes no package reads ([role](/domain/kernel/role.md)). And a sensor itself states one
+`ssn-system:Frequency`, sensing's requirement too: its silent limit is in cadences, and a sensor
+stating no cadence, or two, could never be silent.
