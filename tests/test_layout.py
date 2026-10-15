@@ -719,7 +719,7 @@ def test_every_tool_called_alone_refuses_what_onboarding_does(tmp_path, monkeypa
     root = _installed(tmp_path, monkeypatch, _ONE_PORT)
     monkeypatch.setattr(module, "world_dir", lambda name: root / name)
     monkeypatch.setattr(sys, "argv", [f"orexis-{tool}", "sensing"])
-    with pytest.raises(SystemExit, match="two brokers cannot hold one port on one host"):
+    with pytest.raises(SystemExit, match="one port on one host is held by one listener"):
         module.main()
 
 
@@ -931,7 +931,17 @@ def test_a_collision_is_refused(tmp_path, monkeypatch, edit, clash):
     from onboarding import installation
 
     _installed(tmp_path, monkeypatch, edit)
-    with pytest.raises(SystemExit, match=rf"{clash} is held by .* and by "):
+    with pytest.raises(SystemExit, match=rf"listens at {clash}, as .* does: one port on one host is held by one listener"):
+        installation.derive()
+
+
+def test_two_services_on_one_port_are_refused_as_two_brokers_are(tmp_path, monkeypatch):
+    """The installation's own services are listeners too, held by the one requirement: a view on the
+    store's port is refused before any port is allocated."""
+    from onboarding import installation
+
+    _installed(tmp_path, monkeypatch, installation=lambda text: text.replace("https://localhost:3000", "https://localhost:8086"))
+    with pytest.raises(SystemExit, match=r"installation#view: listens at localhost:8086, as .*installation#series does"):
         installation.derive()
 
 

@@ -39,12 +39,13 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
 2. **`society.ttl`**, for a world with a bus — `<> a orexis:SocietyGraph`, then the agents
    (`a orexis:Agent , mqtt4ssn:Client ; orexis:localId "…" ; orexis:actsFor …`) with the devices
    each `actuation:hasActuator` and the venues each hosts or bids in, the boards as clients and
-   what each `mqtt4ssn:hosts`, the one `mqtt4ssn:Broker` every client `mqtt4ssn:isConnectedToBroker`,
+   what each `mqtt4ssn:hosts`, the `mqtt4ssn:Broker`s — any number, a board
+   `mqtt4ssn:isConnectedToBroker` one and an agent any it reads or speaks over —
    and the topics, their filters, and which sensor `mqtt4ssn:observesTopic` and which device
    `mqtt4ssn:listensToTopic` each one.
-3. **`deployment.ttl`, only to pin the broker's port** — `<> a onboarding:DeploymentGraph`, then
-   the broker's `schema:url`s, `mqtt://` and `mqtts://`, one host. Leave it out and `orexis-onboard`
-   allocates the broker a port free of every other world's, into `infra/installation.derived.ttl`;
+3. **`deployment.ttl`, only to pin a broker's port** — `<> a onboarding:DeploymentGraph`, then
+   each pinned broker's `schema:url`s, `mqtt://` and `mqtts://`, one host. Leave one out and `orexis-onboard`
+   allocates that broker a port free of every other's, into `infra/installation.derived.ttl`;
    write it when something is flashed with the port, as the terrace's board is. A port another
    world holds is refused. Onboarding reads either to run the broker and to write each agent's
    environment; no agent loads them and no container mounts them.

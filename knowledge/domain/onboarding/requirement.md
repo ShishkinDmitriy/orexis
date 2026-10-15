@@ -47,6 +47,12 @@ Onboarding reads the requirements off the world, which knows every package's voc
 off an agent's boot, which loads only what the agent's roles do: an agent playing an executor alone
 loads no planning, and the requirement refusing it is planning's.
 
+One of onboarding's own is judged of the [installation](/domain/onboarding/deployment.md) as well:
+that one port on one host is held by one listener. Of a world it refuses two of its brokers on one
+port; of the installation, before a port is allocated, a broker on another world's port or on a
+service's, judged over every url the installation holds. The shape targets the listener and asks only
+a url of what it clashes with, so it is one requirement at both grains.
+
 # What stays in the ontology
 
 What an agent reads as it runs stays in the vocabulary it loads. The observer's limits are the one
