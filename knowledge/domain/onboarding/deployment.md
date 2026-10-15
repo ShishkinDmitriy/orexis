@@ -85,9 +85,12 @@ serving it into every agent's environment under the purpose's keys, and for metr
 purpose's retention says, and revokes the metrics grants of a world that stopped being monitored;
 `orexis-dashboards` draws health for a monitored world alone; and `orexis-infra-compose` writes
 `infra/compose.yaml`, the images and ports the document's and the rest the template's.
-`tests/test_layout.py` holds both committed documents to a fresh rendering and refuses a
-collision, a hand-edited allocation, a url carrying a credential, history served by no store, a
-monitored world where metrics are served by none, and an installation saying anything but a type,
-a url, an organisation, an image, a purpose served, a retention, an interval or a pool. The kind is decided in
+What the installation must state is its own [requirement](/domain/onboarding/requirement.md),
+`infra/requirements.ttl` beside it, judged as the document is read: one store and one view, their urls, images and the store's
+organisation, history served, one retention and one window per purpose, one pool with a host and a
+port in every url, and no credential anywhere. `tests/test_layout.py` holds both committed documents
+to a fresh rendering and refuses a collision, a hand-edited allocation, each of those, a monitored
+world where metrics are served by none, and an installation saying anything but a type, a url, an
+organisation, an image, a purpose served, a retention, an interval or a pool. The kind is decided in
 [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md), the
 allocation in its amendment, and monitoring in its last.

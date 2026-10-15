@@ -3,6 +3,8 @@
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
 
@@ -173,3 +175,12 @@
               ?me orexis:plays ?role . ?role sensing:sensor $this .
               ?client mqtt4ssn:hosts ?system . ?system ssn:hasSubSystem* $this .
               FILTER NOT EXISTS { ?client mqtt4ssn:isConnectedToBroker ?broker . ?me mqtt4ssn:isConnectedToBroker ?broker } }""" ] .
+
+#  NEVER A CREDENTIAL: a deployment graph says where, never what may be done there. A password in a url
+#  would be in every compose file and config.h written from it. Judged of a world beside its deployment,
+#  of the installation, and of every url the installation holds before a port is allocated.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf schema:url ;
+    sh:sparql [
+        sh:message "states a credential in {?url}: a deployment graph says where, never what may be done there" ;
+        sh:select """SELECT $this ?url WHERE { $this schema:url ?url . FILTER REGEX(STR(?url), "^[a-z]+://[^/]*@") }""" ] .

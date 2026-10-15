@@ -794,8 +794,35 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
         with pytest.raises(SystemExit, match=r"monitored.*Metrics from no store"):
             ask()
     _installed(tmp_path / "again", monkeypatch, installation=lambda text: text.replace("onboarding:History , ", ""))
-    with pytest.raises(SystemExit, match=r"0 onboarding:SeriesStores serving History"):
+    with pytest.raises(SystemExit, match=r"History: served by no store: every agent writes its history"):
         installation.series(HISTORY)
+
+
+@pytest.mark.parametrize("edit, said", [
+    (lambda text: text + '\n:second a onboarding:SeriesStore ; schema:url "http://localhost:8087" ; onboarding:organisation "o" ; '
+                         'onboarding:image "i" .\n', "series: is a series store beside http://example.org/orexis/installation#second"),
+    (lambda text: text.replace('    onboarding:organisation "orexis" ;\n', ""), "series: a series store has one organisation"),
+    (lambda text: text.replace('"docker.io/grafana/grafana:11.2.0"', '"docker.io/grafana/grafana:11.2.0" , "grafana:12"'),
+     "view: a series view runs one image"),
+    (lambda text: text.replace("https://localhost:3000", "http://localhost:3000"), "view: a series view answers at one https:// url"),
+    (lambda text: text.replace("http://localhost:8086", "https://localhost:8086"), "series: a series store answers at one http:// url"),
+    (lambda text: text.replace("onboarding:retentionDays 30", "onboarding:retentionDays 30 , 60"), "Metrics: a purpose is kept one whole number of days"),
+    (lambda text: text.replace("onboarding:retentionDays 30", 'onboarding:retentionDays "a month"'), "Metrics: a purpose is kept one whole number of days"),
+    (lambda text: text.replace("onboarding:intervalSeconds 60", 'onboarding:intervalSeconds "a minute"'),
+     "Metrics: a window of a minute, which is no number of seconds"),
+    (lambda text: text + '\n:more onboarding:allocatesFrom "mqtt://localhost:2884" .\n', "more: is a pool beside http://example.org/orexis/installation#brokers"),
+    (lambda text: text.replace('"mqtt://localhost:1884"', '"mqtt://localhost"'), "brokers: allocates from mqtt://localhost, which states no host or no port"),
+], ids=["two-stores", "no-organisation", "two-images", "a-view-in-the-clear", "a-store-over-tls", "two-retentions",
+        "a-retention-in-words", "a-window-in-words", "two-pools", "a-pool-url-with-no-port"])
+def test_what_the_installation_states_is_held_to_its_requirements(tmp_path, monkeypatch, edit, said):
+    """`installation.py` refused each of these by hand, in a reader of its own for each; each is a
+    shape of onboarding's own now, judged once as the document is read, so every tool reading the
+    installation refuses it the same way and none judges it."""
+    from onboarding import installation
+
+    _installed(tmp_path, monkeypatch, installation=edit)
+    with pytest.raises(SystemExit, match="requirements refuse — .*" + re.escape(said)):
+        installation.view()
 
 
 def test_a_world_is_monitored_only_where_its_own_deployment_says_so(tmp_path, monkeypatch):
@@ -997,11 +1024,11 @@ def test_a_collision_is_refused(tmp_path, monkeypatch, edit, clash):
 
 def test_two_services_on_one_port_are_refused_as_two_brokers_are(tmp_path, monkeypatch):
     """The installation's own services are listeners too, held by the one requirement: a view on the
-    store's port is refused before any port is allocated."""
+    store's port is refused as the installation is read, before any port is allocated."""
     from onboarding import installation
 
     _installed(tmp_path, monkeypatch, installation=lambda text: text.replace("https://localhost:3000", "https://localhost:8086"))
-    with pytest.raises(SystemExit, match=r"installation#view: listens at localhost:8086, as .*installation#series does"):
+    with pytest.raises(SystemExit, match=r"view: listens at localhost:8086, as .*installation#series does"):
         installation.derive()
 
 

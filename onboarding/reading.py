@@ -74,6 +74,7 @@ _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 
 VOCABULARY = Path(__file__).resolve().parent / "ontology.ttl"
 REQUIREMENTS = Path(__file__).resolve().parent / "requirements.ttl"
+INSTALLATION_REQUIREMENTS = Path(__file__).resolve().parent.parent / "infra" / "requirements.ttl"
 ONBOARDING = "http://example.org/orexis/onboarding#"
 HARDWARE = ONBOARDING + "HardwareGraph"
 DEPLOYMENT = ONBOARDING + "DeploymentGraph"
@@ -269,8 +270,10 @@ def _held_to(shapes: tuple[rdflib.Graph, rdflib.Graph], store: ox.Store, held: l
 
 @cache
 def own() -> rdflib.Graph:
-    """Onboarding's own requirements — the ones the installation is held to as well as a world."""
-    return rdflib.Graph().parse(REQUIREMENTS)
+    """What the installation is held to: onboarding's own requirements, which a world is held to as
+    well — the port one listener holds, the credential no url carries — and the installation's own,
+    beside its document, which no world is, since a world states no store (`INSTALLATION_REQUIREMENTS`)."""
+    return rdflib.Graph().parse(REQUIREMENTS) + rdflib.Graph().parse(INSTALLATION_REQUIREMENTS)
 
 
 def reported(data: rdflib.Graph, requirements: rdflib.Graph, vocabulary: rdflib.Graph | None = None) -> dict[tuple, str]:
