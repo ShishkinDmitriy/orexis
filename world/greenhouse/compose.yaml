@@ -52,6 +52,7 @@ services:
     userns_mode: "keep-id:uid=10001,gid=10001"
     restart: unless-stopped
     volumes:
+      - ./society.derived.ttl:/app/world/greenhouse/society.derived.ttl:ro
       - ./society.ttl:/app/world/greenhouse/society.ttl:ro
       - ./world.ttl:/app/world/greenhouse/world.ttl:ro
       - ../../agent:/app/agent:ro
@@ -91,6 +92,7 @@ services:
       - orexis-greenhouse-grower:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./desires.ttl:/app/world/greenhouse/desires.ttl:ro
+      - ./society.derived.ttl:/app/world/greenhouse/society.derived.ttl:ro
       - ./society.ttl:/app/world/greenhouse/society.ttl:ro
       - ./world.ttl:/app/world/greenhouse/world.ttl:ro
       - ./beliefs/grower.self.ttl:/app/world/greenhouse/beliefs/grower.self.ttl:ro

@@ -60,17 +60,17 @@ a place containing it (`schema:containedInPlace`).
 | `sensing:endsPointer`, `sensing:startsPointer` | the sensor reads a series, as a weather service's forecast ([forecast](/domain/sensing/forecast.md)) |
 
 **3. Who acts for it, and how its bytes arrive**, in `society.ttl` (in `world.ttl` for a world
-with no bus). The agent `orexis:actsFor` the subject; a board hosts the sensor; the sensor observes a
-topic, named by the filter that matches it.
+with no bus). The agent `orexis:actsFor` the subject; a board hosts the sensor; the sensor observes the
+board's topic. Its name is nobody's to state: `orexis-onboard` derives `sensors/bed_board/reading`
+into `society.derived.ttl` ([requirement](/domain/onboarding/requirement.md)), and a second sensor on
+the board observes the same topic, reading its own value of the board's one message by
+`sensing:readingPointer`.
 
 ```turtle
 :grower a orexis:Agent , mqtt4ssn:Client ; orexis:actsFor :bed .
-:bed_board a mqtt4ssn:Client ; mqtt4ssn:hosts :moisture_probe .
-:moisture_probe mqtt4ssn:observesTopic :moisture_readings .
-:moisture_readings a mqtt4ssn:Topic .
-:moisture_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/moisture_probe/reading" ;
-    mqtt4ssn:matchesTopic :moisture_readings .
+:bed_board a mqtt4ssn:Client ; mqtt4ssn:hasClientID "bed_board" ; mqtt4ssn:hosts :moisture_probe .
+:bed_readings a mqtt4ssn:Topic .
+:moisture_probe mqtt4ssn:observesTopic :bed_readings .
 ```
 
 Several sensors may observe one topic and differ only by their pointer, as the terrace's five do.
@@ -128,7 +128,7 @@ A test beside the world delivers a message on the sensor's topic and asserts the
 `world/greenhouse/tests/test_greenhouse.py` does:
 
 ```python
-runtime.deliver("sensors/moisture_probe/reading", b'{"value": 0.2}', NOW)
+runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
 runtime.drain(NOW)
 assert _held(runtime.beliefs) == {("soil", "Dry")}
 ```

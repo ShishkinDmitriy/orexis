@@ -71,12 +71,14 @@
 
 :tap a climate:WaterSource ; rdfs:label "the supplier's tap" ; climate:capacityL 50.0 .
 
-#  THE PROBES, one in each plot, reporting every ten minutes. Neither exists: the simulator plays
-#  them, from where each reading starts.
+#  THE PROBES, one in each plot, reporting every ten minutes as the two values of the board's one
+#  message, each reading its own by pointer. Neither exists: the simulator plays them, from where
+#  each reading starts.
 :rose_probe a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:initialValue 0.40 ; sim:minValue 0.0 ; sim:maxValue 1.0 ] ;
     sosa:isHostedBy :rose_plot ;
     sosa:observes climate:SoilMoisture ;
+    sensing:readingPointer "/rose_moisture" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:MIN ] ] .
 
@@ -84,6 +86,7 @@
     sim:simulatedBy [ a sim:Model ; sim:initialValue 0.40 ; sim:minValue 0.0 ; sim:maxValue 1.0 ] ;
     sosa:isHostedBy :fern_plot ;
     sosa:observes climate:SoilMoisture ;
+    sensing:readingPointer "/fern_moisture" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:MIN ] ] .
 

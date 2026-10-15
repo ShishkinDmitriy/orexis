@@ -868,6 +868,59 @@ def test_the_derived_document_arrives_derived_and_the_installation_asserted():
     assert derived.graphs(s, DEPLOYMENT, derived.DERIVED) == [installation.DERIVATION.resolve().as_uri()]
 
 
+def test_every_committed_derived_society_is_a_fresh_derivation():
+    """`world/<w>/society.derived.ttl` says GENERATED — do not edit, and it is what every reader
+    names a topic by — the agent, the simulator, the ACL, a board's config.h — so one left behind by
+    a change to the society names a topic nobody publishes on. Held to what the rule writes now, for
+    every world with a bus; a world with none has none."""
+    from onboarding import reading, topics
+
+    for w in sorted(p.name for p in (REPO_ROOT / "world").iterdir() if (p / "world.ttl").exists()):
+        if reading.BUS in reading.premises(REPO_ROOT / "world" / w):
+            assert topics.derivation(w).read_text() == topics.derivation_text(w), \
+                f"world/{w}/society.derived.ttl is not what the rule writes now — run `orexis-onboard {w}`"
+        else:
+            assert not topics.derivation(w).exists(), f"world/{w} has no bus and no topic to name"
+
+
+def test_a_stated_filter_is_kept_and_the_rule_names_the_rest(tmp_path, monkeypatch):
+    """Asserted wins, derived completes: the sensing world naming its readings topic itself, by a
+    pattern of its own, is derived a filter for its command topic alone, and holds."""
+    from onboarding import reading, topics
+
+    root = _installed(tmp_path, monkeypatch, {("sensing", "society.ttl"): lambda text: text +
+                      '\n:mine a mqtt4ssn:TopicFilter ; mqtt4ssn:hasFilterPattern "fern/readings" ; mqtt4ssn:matchesTopic :fern_readings .\n'})
+    monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
+    topics.write("sensing")
+    derived = (root / "sensing" / "society.derived.ttl").read_text()
+    assert "sensors/moisture_sensor_fern/command" in derived and "fern_readings" not in derived, derived
+    assert reading.invalid(root / "sensing") == []
+
+
+@pytest.mark.parametrize("edit, said", [
+    ({("sensing", "society.ttl"): lambda text: text + "\n:spare a mqtt4ssn:Topic .\n"},
+     "spare: named by no filter: nothing publishes on it or listens to it"),
+    ({("sensing", "society.derived.ttl"): lambda _: None},
+     "fern_commands: named by no filter: nothing publishes on it or listens to it, or `orexis-onboard` has not derived its name"),
+    ({("sensing", "society.ttl"): lambda text: text + "\n:second a mqtt4ssn:Topic . :air_temp_fern mqtt4ssn:observesTopic :second .\n"},
+     "fern_readings: named sensors/moisture_sensor_fern/reading, as http://example.org/orexis/world/sensing#second is"),
+    ({("sensing", "society.ttl"): lambda text: text + '\n:other a mqtt4ssn:Client ; mqtt4ssn:hasClientID "other" ; mqtt4ssn:hosts :moisture_sensor_fern .\n'},
+     "fern_readings: named twice, sensors/moisture_sensor_fern/reading and sensors/other/reading"),
+], ids=["a-topic-of-nobody", "not-yet-derived", "two-topics-of-one-board", "a-sensor-on-two-boards"])
+def test_a_topic_the_rule_cannot_name_once_is_refused(tmp_path, monkeypatch, edit, said):
+    """What the convention cannot name is refused, with the derived document in: a topic nothing
+    publishes on or listens to, a world whose topics `orexis-onboard` has not yet named, a board whose
+    sensors are spread over two topics — which it publishes as one — and a sensor two boards host."""
+    from onboarding import reading, topics
+
+    root = _installed(tmp_path, monkeypatch, edit)
+    monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
+    if ("sensing", "society.derived.ttl") not in edit:
+        topics.write("sensing")
+    found = reading.invalid(root / "sensing")
+    assert any(line.startswith(said) for line in found), found
+
+
 def test_no_renderer_computes_a_port(tmp_path, monkeypatch):
     """With nothing derived, a world asserting no url has no address, and every renderer says so
     rather than working one out — the allocation is the derivation's alone."""

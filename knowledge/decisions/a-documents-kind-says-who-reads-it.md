@@ -231,7 +231,9 @@ now and is allocated the 1884 and 8884 it asserted before, so its board needs no
 environment and a board's `config.h` only format what the asserted and derived graphs say; none
 computes a port, and every allocation is a line a reviewer reads in a diff. A test holds the
 committed derivation to a fresh one. `onboarding/derived.py` writes and reads such graphs and knows
-nothing of ports, since #836 derives topic names into the same layer. The allocation is Python and
+nothing of ports, since #836 derived topic names into the same layer — `society.derived.ttl`, a
+society graph beside the society, by the first `sh:rule`
+([requirement](/domain/onboarding/requirement.md)). The allocation is Python and
 not a SPARQL rule, because it is a search that remembers, which a rule over this engine does badly;
 a derivation that is a join would be a rule, writing the same kind of graph.
 
@@ -549,7 +551,10 @@ leaves unstated, which the stuck rule reads off sensing's ontology as the agent 
 nothing.
 
 Onboarding ships one of its own, `onboarding/requirements.ttl`: a broker has one host and one port
-per scheme, judged with the world's deployment graph beside its beliefs. The words are MQTT4SSN's and
+per scheme, judged with the world's deployment graph beside its beliefs; and, since #836, the one
+`sh:rule`, which names every topic for its publisher or its listener and writes the names beside the
+society, so a renderer reads a name and computes none — the derived pattern reaches the agent as a
+document of a kind it reads, never by computing it, since the agent imports no onboarding. The words are MQTT4SSN's and
 schema.org's and the limits are onboarding's. It held a world to one broker too, while one address was
 all onboarding knew how to tell, until the first seam below was settled. That one port on one host
 is held by one listener is its shape too, judged of a world and of the installation alike — of the

@@ -89,7 +89,7 @@ def test_the_bed_is_dosed_within_a_cadence_of_crossing_its_floor(monkeypatch):
     crossed = None
     for _ in range(40):                                             # a day, half an hour at a time
         published = bus.simulator.step(time["at"])
-        reading = next((v for t, v in published if "moisture" in t), None)
+        reading = next((document["moisture"] for _, document in published if "moisture" in document), None)
         if crossed is None and reading is not None and reading < 0.30:
             crossed = time["at"]
         bus.runtime.run(passes=1, poll_s=0)
@@ -114,7 +114,7 @@ def test_no_sensor_of_a_quiet_bed_is_said_stuck(monkeypatch):
     bus.simulator.open()
     air = []
     for _ in range(STUCK_AFTER + 2):
-        air.extend(v for t, v in bus.simulator.step(time["at"]) if "thermometer" in t)
+        air.extend(document["temperature"] for _, document in bus.simulator.step(time["at"]) if "temperature" in document)
         bus.runtime.run(passes=1, poll_s=0)
         time["at"] += timedelta(minutes=10)
     stuck = [r["sensor"].rsplit("#", 1)[-1] for r in rows(bus.runtime.beliefs, _STUCK_Q, ())]

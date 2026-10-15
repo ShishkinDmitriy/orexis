@@ -7,9 +7,11 @@
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
 #  THE ALLOTMENT'S SOCIETY: who its principals are and how they reach one another. Three agents and
-#  one board, each a client of the world's one broker, and the topics each listens or publishes on,
-#  named by the filters that match them. The broker is here as what the clients are connected to;
-#  where it listens is deployment.ttl's, which onboarding reads and no agent does.
+#  one board, each a client of the world's one broker, and the topics each listens or publishes on.
+#  A topic is named by a filter no society states: `orexis-onboard` derives each by one convention
+#  into society.derived.ttl, beside this file (onboarding/requirements.ttl). The broker is here as
+#  what the clients are connected to; where it listens is deployment.ttl's, which onboarding reads
+#  and no agent does.
 
 :broker a mqtt4ssn:Broker .
 
@@ -22,8 +24,6 @@
     actuation:hasActuator :rose_valve , :fern_valve ;
     mqtt4ssn:listensToTopic :supplier_inbox .
 :supplier_inbox a mqtt4ssn:Topic .
-:supplier_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "agents/supplier/inbox" ; mqtt4ssn:matchesTopic :supplier_inbox .
 
 :rose_grower a orexis:Agent , mqtt4ssn:Client ;
     orexis:localId "rose_grower" ;
@@ -34,8 +34,6 @@
     market:valuePerL 3.0 ;
     mqtt4ssn:listensToTopic :rose_grower_inbox .
 :rose_grower_inbox a mqtt4ssn:Topic .
-:rose_grower_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "agents/rose_grower/inbox" ; mqtt4ssn:matchesTopic :rose_grower_inbox .
 
 :fern_grower a orexis:Agent , mqtt4ssn:Client ;
     orexis:localId "fern_grower" ;
@@ -46,8 +44,6 @@
     market:valuePerL 2.0 ;
     mqtt4ssn:listensToTopic :fern_grower_inbox .
 :fern_grower_inbox a mqtt4ssn:Topic .
-:fern_grower_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "agents/fern_grower/inbox" ; mqtt4ssn:matchesTopic :fern_grower_inbox .
 
 #  THE BOARD IN THE BEDS: one client hosting both probes and both valves, as a real board hosts its
 #  peripherals — and one connection for the simulator that plays them.
@@ -55,24 +51,16 @@
     mqtt4ssn:isConnectedToBroker :broker ;
     mqtt4ssn:hosts :rose_probe , :fern_probe , :rose_valve , :fern_valve .
 
-#  WHERE EACH DEVICE SPEAKS: a probe publishes its readings on a topic of its own, and a valve
-#  listens on one for the command a step is sized to when it is taken.
-:rose_probe mqtt4ssn:observesTopic :rose_readings .
-:rose_readings a mqtt4ssn:Topic .
-:rose_readings_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/rose_probe/reading" ; mqtt4ssn:matchesTopic :rose_readings .
-
-:fern_probe mqtt4ssn:observesTopic :fern_readings .
-:fern_readings a mqtt4ssn:Topic .
-:fern_readings_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/fern_probe/reading" ; mqtt4ssn:matchesTopic :fern_readings .
+#  WHERE EACH DEVICE SPEAKS: the board publishes both probes' readings as one document on one topic,
+#  each probe reading its own value by pointer (world.ttl), and each grower subscribes to it for the
+#  probe it reads; a valve listens on a topic of its own for the command a step is sized to when it is
+#  taken.
+:plot_readings a mqtt4ssn:Topic .
+:rose_probe mqtt4ssn:observesTopic :plot_readings .
+:fern_probe mqtt4ssn:observesTopic :plot_readings .
 
 :rose_valve mqtt4ssn:listensToTopic :rose_valve_commands .
 :rose_valve_commands a mqtt4ssn:Topic .
-:rose_valve_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "actuators/rose_valve/command" ; mqtt4ssn:matchesTopic :rose_valve_commands .
 
 :fern_valve mqtt4ssn:listensToTopic :fern_valve_commands .
 :fern_valve_commands a mqtt4ssn:Topic .
-:fern_valve_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "actuators/fern_valve/command" ; mqtt4ssn:matchesTopic :fern_valve_commands .

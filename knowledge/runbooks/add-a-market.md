@@ -42,7 +42,7 @@ open.
     mqtt4ssn:listensToTopic :fern_grower_inbox .
 ```
 
-Each inbox is a topic and filter as any other (`agents/supplier/inbox`). The host holds the valves;
+Each inbox is a topic as any other, named `agents/supplier/inbox` by onboarding's rule. The host holds the valves;
 a bidder holds none, which is why its plan buys water instead of dosing.
 
 **3. The roles**, in each self graph. A bidder that reads its plot is an

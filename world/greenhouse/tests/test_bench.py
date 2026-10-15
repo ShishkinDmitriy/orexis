@@ -46,6 +46,17 @@ from agent import clock
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.transport.mqtt.driver import Mqtt
 
+
+#  WHAT A SENSOR'S READING ARRIVES AS: the bed's board publishes its two sensors in one document on one
+#  topic, each at the pointer world.ttl binds it to; a sensor of a test's own goes by sensing's default.
+_ABOARD = {"moisture_probe": "moisture", "thermometer": "temperature"}
+
+
+def _reading(sensor: str, value: float) -> tuple[str, bytes]:
+    if sensor in _ABOARD:
+        return "sensors/bed_board/reading", json.dumps({_ABOARD[sensor]: value}).encode()
+    return f"sensors/{sensor}/reading", json.dumps({"value": value}).encode()
+
 WORLD = Path(__file__).resolve().parents[1]
 BENCH = Path(__file__).parent / "bench"
 LEDGER = BENCH / "results.tsv"
@@ -110,7 +121,7 @@ def _pass(world: Path, monkeypatch, readings: dict, *, before: dict | None = Non
     runtime.passed.connect(lambda event: heard.update(passed=event))
     runtime.parts["planning"].planner.planned.connect(lambda event: heard.update(planned=event))
     runtime.parts["execution"].executor.intention_resolved.connect(lambda event: heard.setdefault("ended", []).append(event.outcome))
-    deliver = lambda given: [runtime.deliver(f"sensors/{sensor}/reading", json.dumps({"value": value}).encode(), time.at)
+    deliver = lambda given: [runtime.deliver(*_reading(sensor, value), time.at)
                              for sensor, value in given.items()]
     if before is not None:
         deliver(before)

@@ -67,6 +67,7 @@ services:
       # its own belief base, and nobody else can name it
       - orexis-sensing-fern:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./society.derived.ttl:/app/world/sensing/society.derived.ttl:ro
       - ./society.ttl:/app/world/sensing/society.ttl:ro
       - ./world.ttl:/app/world/sensing/world.ttl:ro
       - ./beliefs/fern.self.ttl:/app/world/sensing/beliefs/fern.self.ttl:ro

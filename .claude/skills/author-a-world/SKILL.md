@@ -57,6 +57,7 @@ same change, first (AGENTS.md).
 
 ```bash
 pytest -q world/<name>          # the test beside it: boots the world, runs it, asserts what it was written for
+orexis-topics <name>            # names the topics into world/<name>/society.derived.ttl, where there is a bus; commit it
 orexis-compose <name>           # writes world/<name>/compose.yaml from the roster; commit it
 pytest -q tests                 # layout and knowledge read every world: a document of a kind no reader declares is refused,
                                 #   and every agent's roles are held to its world as `orexis-onboard` holds them

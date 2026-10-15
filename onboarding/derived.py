@@ -31,6 +31,8 @@ from agent.ontology import ASSERTED, CATALOGUE_GRAPH, DERIVED
 from agent.store import document, put_document, rows, update
 
 
+_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+
 _GRAPHS_Q = """
 SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a <$kind> ; orexis:arrivedBy <$arrival> } }
 ORDER BY ?g"""
@@ -66,11 +68,12 @@ def text(kind: str, statements, prefixes: dict[str, str], header: str) -> str:
 
     grouped: dict[str, dict[str, set[str]]] = {}
     for subject, predicate, obj in statements:
-        grouped.setdefault(subject, {}).setdefault(predicate, set()).add(str(obj))
+        said = name(obj.value) if isinstance(obj, ox.NamedNode) else str(obj)
+        grouped.setdefault(subject, {}).setdefault(predicate, set()).add(said)
     lines = [f"#  {line}".rstrip() for line in header.strip().splitlines()]
     lines += [""] + [f"@prefix {p}: <{ns}> ." for p, ns in sorted(prefixes.items())] + [""]
     lines += [f"<> a {name(kind)} .    # this document is one graph, and this is what it is", ""]
     for subject in sorted(grouped):
-        said = [f"{name(p)} {' , '.join(sorted(objs))}" for p, objs in sorted(grouped[subject].items())]
+        said = [f"{'a' if p == _TYPE else name(p)} {' , '.join(sorted(objs))}" for p, objs in sorted(grouped[subject].items())]
         lines.append(f"{name(subject)} " + " ;\n    ".join(said) + " .")
     return "\n".join(lines) + "\n"

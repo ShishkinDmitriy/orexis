@@ -92,6 +92,63 @@
               FILTER NOT EXISTS { $this a orexis:Agent }
               $this mqtt4ssn:isConnectedToBroker ?one , ?two . FILTER (STR(?one) < STR(?two)) }""" ] .
 
+#  A TOPIC IS NAMED BY ONE CONVENTION, AND THE RULE HERE NAMES IT (#836). A society states THAT a sensor
+#  publishes on a topic, an actuator takes commands on one, an agent listens on one — the MQTT4SSN
+#  topic node — and no filter: a topic's name matters only because both ends must agree on it, and
+#  which name is chosen matters to nobody. The rule writes the filter the topic is named by, kind by
+#  kind of principal and purpose, `<who>/<id>/<what>`:
+#
+#    sensors/<client id>/reading     what a client — a board — publishes: the readings of every
+#                                    sensor it hosts, one document, each sensor reading its own value
+#                                    by pointer. Named by the PUBLISHER, so a board has one readings
+#                                    topic however many sensors it carries.
+#    sensors/<client id>/command     what a client that is no agent listens to itself.
+#    actuators/<device>/command      what a device a client hosts listens to, by its local name.
+#    agents/<id>/inbox               what an agent listens to.
+#
+#  `orexis-onboard` runs the rule over the world's asserted documents and writes what it made beside
+#  the society, `society.derived.ttl`, a society graph the agents, the simulator and every tool read
+#  as any other; a filter the world asserts itself is kept and wins, since the rule fills a topic
+#  that has none. The constraints below are judged with the derived document in: a topic nothing
+#  names is a topic nothing publishes on or listens to, or one `orexis-onboard` has not yet derived;
+#  two names on one topic is a sensor on two boards; one name on two topics is a board whose sensors
+#  the world spread over two topics, which the board publishes as one.
+[] a sh:NodeShape ;
+    sh:targetClass mqtt4ssn:Topic ;
+    sh:rule [ a sh:SPARQLRule ;
+        sh:construct """
+            CONSTRUCT { ?filter a mqtt4ssn:TopicFilter ; mqtt4ssn:hasFilterPattern ?pattern ; mqtt4ssn:matchesTopic $this }
+            WHERE {
+              FILTER NOT EXISTS { ?stated mqtt4ssn:matchesTopic $this }
+              { ?client mqtt4ssn:hasClientID ?id ; mqtt4ssn:hosts/ssn:hasSubSystem* ?sensor . ?sensor mqtt4ssn:observesTopic $this .
+                BIND (CONCAT("sensors/", ?id, "/reading") AS ?pattern) }
+              UNION
+              { ?client mqtt4ssn:hasClientID ?id ; mqtt4ssn:listensToTopic $this . FILTER NOT EXISTS { ?client a orexis:Agent }
+                BIND (CONCAT("sensors/", ?id, "/command") AS ?pattern) }
+              UNION
+              { ?device mqtt4ssn:listensToTopic $this . FILTER NOT EXISTS { ?device a mqtt4ssn:Client }
+                BIND (CONCAT("actuators/", REPLACE(STR(?device), "^.*[#/]", ""), "/command") AS ?pattern) }
+              UNION
+              { ?agent a orexis:Agent ; orexis:localId ?id ; mqtt4ssn:listensToTopic $this .
+                BIND (CONCAT("agents/", ?id, "/inbox") AS ?pattern) }
+              BIND (IRI(CONCAT(STR($this), "_filter")) AS ?filter) }""" ] ;
+    sh:sparql [
+        sh:message "named by no filter: nothing publishes on it or listens to it, or `orexis-onboard` has not derived its name" ;
+        sh:select """
+            SELECT $this WHERE { FILTER NOT EXISTS { ?filter mqtt4ssn:matchesTopic $this } }""" ] ,
+    [
+        sh:message "named twice, {?one} and {?two}: a sensor on it is hosted by two clients, or a name was asserted beside the derived one" ;
+        sh:select """
+            SELECT $this ?one ?two WHERE {
+              ?f mqtt4ssn:matchesTopic $this ; mqtt4ssn:hasFilterPattern ?one . ?g mqtt4ssn:matchesTopic $this ; mqtt4ssn:hasFilterPattern ?two .
+              FILTER (?one < ?two && !REGEX(?one, "[+#]") && !REGEX(?two, "[+#]")) }""" ] ,
+    [
+        sh:message "named {?name}, as {?other} is: a client publishes on one topic, so what its sensors observe is one topic" ;
+        sh:select """
+            SELECT $this ?other ?name WHERE {
+              ?f mqtt4ssn:matchesTopic $this ; mqtt4ssn:hasFilterPattern ?name . ?g mqtt4ssn:matchesTopic ?other ; mqtt4ssn:hasFilterPattern ?name .
+              FILTER (?other != $this && !REGEX(?name, "[+#]")) }""" ] .
+
 #  A SENSOR'S READINGS COME OVER THE BROKERS ITS CLIENT IS CONNECTED TO, so an observer reading one over
 #  MQTT is played by an agent connected to one of them: a world may have any number of brokers, and the
 #  agent subscribes to a sensor's topic on each it shares with the sensor's client. Onboarding's, since

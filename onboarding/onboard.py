@@ -7,6 +7,7 @@ it is wired, and that is a complete description of nothing running. Between it a
 `podman compose up` there is a phase with no name until now, made of four tools that each read
 the same world's documents and grant exactly what its wiring implies:
 
+  (the society's derivation)  each topic's filter, by one convention, into society.derived.ttl — where it has a bus
   orexis-influx <world>    a bucket per agent, and a token that opens only it
   orexis-mqtt <world>      a credential per principal, and the broker ACL, derived — where it has a bus
   orexis-compose <world>   the roster, as services
@@ -59,7 +60,9 @@ from __future__ import annotations
 import argparse
 import logging
 
-from . import certs, compose, dashboards, influx, installation, mqtt, reading
+from agent.store import DocumentRefused
+
+from . import certs, compose, dashboards, influx, installation, mqtt, reading, topics
 from .worlds import world_dir, worlds
 
 log = logging.getLogger("onboard")
@@ -72,11 +75,23 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     destructive option here — it replaces credentials that are currently in use, so anything
     holding an old one is locked out until it is restarted with the new.
     """
+    here = world_dir(world)
+    # THE BUS, where the world's society names a broker: its topics' names, its credentials, its ACL,
+    # the agents' certificates and the reload all serve one, and a world naming none has nothing for
+    # them to serve. Asked first, since the society's derivation comes before the judgment.
+    try:
+        bus = reading.BUS in reading.premises(here)
+    except DocumentRefused as why:
+        raise SystemExit(f"world {world!r} does not load — {why}; nothing granted")
+    if bus:
+        # What the society leaves out is derived before the world is judged: each topic's filter, into
+        # `society.derived.ttl`, which the judgment and every tool below read as the society (#836).
+        topics.write(world)
     if check:
         # Onboarding a world whose documents will not load, or do not hold, is worse than refusing: it
         # mints real credentials for agents that will refuse to boot, or for a society reading what its
         # words refuse, and leaves them lying around (`reading.check`).
-        reading.check(world_dir(world))
+        reading.check(here)
 
     log.info("onboarding %s", world)
     # A world asking to be monitored where the installation serves metrics nowhere is refused before
@@ -89,10 +104,6 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     # only reads what was asserted or allocated (onboarding.derived).
     installation.write_derivation()
     influx.provision(world, rotate=rotate)
-    # THE BUS, where the world's society names a broker: its credentials, its ACL, the agents'
-    # certificates and the reload all serve one, and a world naming none has nothing for them to
-    # serve — `broker` refuses to answer an address for it, so nothing below asks.
-    bus = reading.BUS in reading.premises(world_dir(world))
     if bus:
         mqtt.provision(world, rotate=rotate)
         if not mqtt.reload_broker(world):
