@@ -24,6 +24,13 @@ world's candidates are handed to the ground, the cone's periods are re-stamped a
 is rebased, and everything else is dropped. Three disks re-planned after the first move in 34 ms
 against 132 fresh.
 
+More than one world can hold the present's hash: the old present and the ground a step in flight
+lands in, once the step has landed as predicted, or a child and the ground its step reached. Each is
+the present, so the name decides nothing; the one with the most worlds beneath it is the match, since
+that is the search kept — a reopened plan is found from the landing ground while the present it was
+reopened from holds none — and only cones as large are told by when they were minted, a ground of the
+last pass before a world (#925).
+
 A surprise — a reading no world predicted, another agent moving — matches nothing, and the cone
 goes whole. The present is identified among the imagined worlds, never asserted from one: a child
 is a prediction, and only the hash of what was observed says the world landed there.
