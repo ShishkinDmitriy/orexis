@@ -404,7 +404,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `agent/planning/` the one name imported is `Planner`.
 - **The imaginarium outlives the pass, and the present is identified in it by hash** — `reroot`
   keeps the cone under the match and drops the rest; a surprise matches nothing; a name is never
-  trusted (the-future-is-a-cone-and-the-present-is-identified-in-it).
+  trusted, so of two worlds holding the present's hash the one with the larger cone is the match
+  (the-future-is-a-cone-and-the-present-is-identified-in-it, #925).
 - **A world is hashed within what is read, and a fact nothing reads is not where a world stands** —
   a reading's instant made every reading a surprise to the re-root, and a number inside its band is
   no side; a period ahead is still told by the whole ground, since folded by what is read a
