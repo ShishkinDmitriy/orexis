@@ -22,12 +22,28 @@ agents' to find (control-the-derivative-not-the-value).
 
 ## 2. Draft
 
-Write what `knowledge/runbooks/author-a-world.md` lists, each document saying which graph it is on
+**Pick each agent's roles first**, from the narration: what it observes, foresees, pursues, trades.
+Each role has a runbook saying exactly what to write for it, with a diagram and the snippets of a
+shipped world — follow the one for every role an agent plays:
+
+| the agent… | role | runbook |
+|---|---|---|
+| reads sensors | `sensing:Observer` | `knowledge/runbooks/add-an-observer.md` |
+| foresees its readings | `prediction:Predictor` | `knowledge/runbooks/add-a-predictor.md` |
+| pursues a desire or a want, commanding devices | `planning:Planner`, `execution:Executor` | `knowledge/runbooks/add-a-planner.md` |
+| hosts or bids in a venue | `market:Host`, `market:Bidder` | `knowledge/runbooks/add-a-market.md` |
+
+The role table in `knowledge/runbooks/author-a-world.md` covers the rest (a speaker or a
+deliberator alone). A property, an action or a drift no domain has is
+`knowledge/runbooks/add-a-domain.md`, written before the world that needs it.
+
+Then write what `knowledge/runbooks/author-a-world.md` lists, each document saying which graph it is on
 its first line, importing its domains with `owl:imports` and speaking no word a domain does not
 declare: `world.ttl`; `society.ttl` only where there is a bus; a self graph for every agent,
-`beliefs/<id>.self.ttl`, saying who it is, the ROLES it runs beside its self — in a domain's words
-where the domain has them (`market:Host`), otherwise the packages' (`planning:Planner`,
-`sensing:Observer`, …), since an agent declaring none loads nothing and is refused — and any
+`beliefs/<id>.self.ttl`, saying who it is and each ROLE it plays beside its self, an instance
+(`orexis:plays [ a market:Host ]`) — of a domain's class where the domain has one, otherwise a
+package's (`planning:Planner`, `sensing:Observer` naming each `sensing:sensor` it reads, …), since an
+agent playing none loads nothing and is refused — and any
 stance it holds of itself, stating none anywhere else, where nothing reads it. Above all a planner
 whose pass needs more than planning's 32 candidates states the search's `planning:budget` it needs,
 at the figure the world's own test measured; `state.ttl` for a world nothing senses; the desires or
@@ -41,6 +57,7 @@ same change, first (AGENTS.md).
 
 ```bash
 pytest -q world/<name>          # the test beside it: boots the world, runs it, asserts what it was written for
+orexis-topics <name>            # names the topics into world/<name>/society.derived.ttl, where there is a bus; commit it
 orexis-compose <name>           # writes world/<name>/compose.yaml from the roster; commit it
 pytest -q tests                 # layout and knowledge read every world: a document of a kind no reader declares is refused,
                                 #   and every agent's roles are held to its world as `orexis-onboard` holds them

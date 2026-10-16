@@ -62,7 +62,8 @@ class Client:
         self.looping = True
 
 
-BY_PASSWORD = {"MQTT_HOST": "broker", "MQTT_PORT": "1888", "MQTT_USERNAME": "keeper", "MQTT_PASSWORD": "s3cret"}
+BROKER = TEST + "broker"
+BY_PASSWORD = {"MQTT_BROKERS": f"{BROKER} mqtt://broker:1888", "MQTT_USERNAME": "keeper", "MQTT_PASSWORD": "s3cret"}
 
 
 @pytest.fixture
@@ -159,26 +160,63 @@ def test_a_message_a_sensor_cannot_read_writes_nothing_for_it(bus, snapshots, ca
 def test_connect_brings_the_bus_up_from_the_environment_and_delivers_to_the_container(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     delivered, session = [], Client()
-    bus = Mqtt.connect(snapshots.ME, lambda topic, payload, at: delivered.append((topic, payload, at)), environ=BY_PASSWORD, client=session)
-    assert isinstance(bus, Mqtt) and bus.client is session
+    bus = Mqtt.connect(snapshots.ME, lambda topic, payload, at: delivered.append((topic, payload, at)), environ=BY_PASSWORD,
+                       client=lambda broker: session)
+    assert isinstance(bus, Mqtt) and bus.clients == {BROKER: session}
     assert session.credential == ("keeper", "s3cret") and session.connected == ("broker", 1888) and session.looping
-    assert session.tls is None, "no certificate in the environment, so by password"
+    assert session.tls is None, "an mqtt:// url, so by password"
     session.on_message(session, None, Message("sensors/board/reading", b"{}"))
     assert delivered == [("sensors/board/reading", b"{}", snapshots.NOW)], "to the container's queue, at the present"
 
 
-def test_connect_uses_a_certificate_and_the_tls_port_where_the_environment_holds_one(snapshots):
+def test_connect_uses_the_certificate_where_the_url_is_mqtts(snapshots):
     session = Client()
-    Mqtt.connect(snapshots.ME, lambda *a: None, client=session,
-                 environ={**BY_PASSWORD, "MQTT_CA": "ca.pem", "MQTT_CERT": "keeper.pem", "MQTT_KEY": "keeper.key", "MQTT_TLS_PORT": "8888"})
+    Mqtt.connect(snapshots.ME, lambda *a: None, client=lambda broker: session,
+                 environ={**BY_PASSWORD, "MQTT_BROKERS": f"{BROKER} mqtts://broker:8888",
+                          "MQTT_CA": "ca.pem", "MQTT_CERT": "keeper.pem", "MQTT_KEY": "keeper.key"})
     assert session.tls == ("ca.pem", "keeper.pem", "keeper.key") and session.connected == ("broker", 8888)
 
 
-def test_connect_refuses_to_guess_a_host_or_a_credential(snapshots):
-    with pytest.raises(RuntimeError, match="MQTT_HOST"):
-        Mqtt.connect(snapshots.ME, lambda *a: None, environ={"MQTT_USERNAME": "keeper"}, client=Client())
-    with pytest.raises(RuntimeError, match="MQTT_USERNAME"):
-        Mqtt.connect(snapshots.ME, lambda *a: None, environ={"MQTT_HOST": "broker"}, client=Client())
+def test_connect_refuses_to_guess_a_broker_or_a_credential(snapshots):
+    for environ, refusal in [({"MQTT_USERNAME": "keeper"}, "no MQTT_BROKERS"),
+                             ({**BY_PASSWORD, "MQTT_BROKERS": BROKER}, "no MQTT_BROKERS"),
+                             ({**BY_PASSWORD, "MQTT_BROKERS": f"{BROKER} broker:1888"}, "no mqtt:// or mqtts:// url"),
+                             ({**BY_PASSWORD, "MQTT_BROKERS": f"{BROKER} mqtts://broker:8888"}, "no MQTT_CA"),
+                             ({"MQTT_BROKERS": BY_PASSWORD["MQTT_BROKERS"]}, "MQTT_USERNAME")]:
+        with pytest.raises(RuntimeError, match=refusal):
+            Mqtt.connect(snapshots.ME, lambda *a: None, environ=environ, client=lambda broker: Client())
+
+
+#  A SECOND BROKER, which the keeper connects to as well, and a peer on it alone.
+_TWO_BROKERS = """
+GRAPH :world {
+  :elsewhere a mqtt4ssn:Broker .
+  :keeper mqtt4ssn:isConnectedToBroker :elsewhere .
+  :peer a orexis:Agent , mqtt4ssn:Client ; mqtt4ssn:isConnectedToBroker :elsewhere ; mqtt4ssn:listensToTopic :peer_inbox .
+  :peer_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:hasFilterPattern "agents/peer/inbox" ; mqtt4ssn:matchesTopic :peer_inbox .
+}
+"""
+
+
+def test_each_topic_goes_over_a_broker_the_agent_shares_with_its_client(monkeypatch, snapshots, caplog):
+    """A world may have any number of brokers. The keeper is connected to two: the board's readings
+    are subscribed to and its commands sent on the board's broker, and a document to the peer on the
+    peer's; and a member connected to the board's broker alone says once that the peer is on none of
+    its brokers, and sends it nothing."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(WORLD, WORLD.read_text() + _TWO_BROKERS)
+    here, there = Client(), Client()
+    mqtt = Mqtt(snapshots.ME, {BROKER: here, TEST + "elsewhere": there})
+    mqtt.open(store)
+    assert here.subscribed == ["sensors/board/reading"] and there.subscribed == []
+    assert mqtt.actuate(store, TEST + "board", {"dose_ml": 250}) and mqtt.tell(store, TEST + "peer", b"{}")
+    assert [t for t, _, _ in here.published] == ["sensors/board/command"]
+    assert [t for t, _, _ in there.published] == ["agents/peer/inbox"]
+
+    alone = Mqtt(snapshots.ME, {BROKER: Client()})
+    with caplog.at_level("WARNING", logger="mqtt"):
+        assert alone.tell(store, TEST + "peer", b"{}") is False and alone.tell(store, TEST + "peer", b"{}") is False
+    assert [r.getMessage() for r in caplog.records] == ["peer is on no broker this agent is connected to, so nothing said to it is sent"]
 
 
 def test_filter_matching_is_mqtts_own():

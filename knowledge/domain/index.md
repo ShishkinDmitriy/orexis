@@ -10,6 +10,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [agent](/domain/kernel/agent.md) - One process, one store, one world, told its local id; acts for a subject, holds its desires, and runs what its roles call for.
 * [role](/domain/kernel/role.md) - What an agent runs, declared in its self graph beside its self; a package is loaded only for one. No default.
 * [self](/domain/kernel/self.md) - The one agent a store is this agent's, authored in its self graph and checked at boot; a text asks `?me a orexis:Self`.
+* [common belief](/domain/kernel/common-belief.md) - A belief every agent of a world holds: a graph whose catalogue row names no owner, asked with `common=True`.
 * [stance](/domain/kernel/stance.md) - A figure the agent holds about itself, a triple about the self in its self graph; the package's constant where none is stated.
 * [world](/domain/kernel/world.md) - A directory of documents, each saying which graph it is; imports its domains, and its tests live beside it.
 * [domain](/domain/kernel/domain.md) - A vocabulary, its actions, shapes and rules as documents in `domains/<name>/`, imported by the worlds that speak it.
@@ -36,7 +37,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; a transition judges a subject against the operating one.
 * [margin](/domain/sensing/margin.md) - How far past a bound a value must go to leave the state held of a subject; stated on the range's condition, read by a transition.
 * [stuck](/domain/sensing/stuck.md) - A sensor whose last readings kept all gave one number is stuck on it, by a rule over its percepts; counts readings, not time.
-* [observer](/domain/sensing/observer.md) - The role sensing serves, beneath the deliberator since what a reading is of is a revision; needs a sensor reporting to it.
+* [observer](/domain/sensing/observer.md) - The role sensing serves, played as an instance declaring the sensors it reads and how long they may be silent or stuck.
 
 # Transport — reaching the society
 
@@ -118,3 +119,4 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 * [onboarding](/domain/onboarding/onboarding.md) - Buckets, credentials, the ACL, compose and dashboards, each read off the world; decides nothing, so re-running is safe.
 * [deployment](/domain/onboarding/deployment.md) - What must run and where it answers, a graph onboarding alone reads; an agent is told it as environment, and never a credential.
+* [requirement](/domain/onboarding/requirement.md) - What a world must state of a package's words, shapes the package ships and onboarding alone holds a world to.

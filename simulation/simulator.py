@@ -9,16 +9,17 @@ address reaches it as environment, as an agent's does:
 - which systems to play: every one marked `sim:simulatedBy`, and a sensor's starting reading and
   bounds from its `sim:Model` (the world graph);
 - where each speaks: the topic a sensor publishes on and the topic an actuator listens to, by the
-  patterns of the MQTT4SSN filters that match them (the society graph); how often a sensor
-  reports, from its `ssn-system:Frequency`;
+  patterns of the MQTT4SSN filters that match them (the society onboarding derived beside the
+  society); how often a sensor reports, from its `ssn-system:Frequency`;
 - the physics: a subject's soil dries `climate:driesPerDay`; a dose of `dose_ml` on a valve that
   `actuation:actuates` a subject raises the property it `actuation:actuatesProperty` by the litres
   over the subject's `climate:litresPerFraction`; a heating of `heat_s` on a heater that
   `climate:warms` a subject raises the property it `climate:warmsProperty` at `climate:degreesPerHour`
   for as long as it runs.
 
-A reading is published as `{"value": n}` on the sensor's topic, the document sensing's default
-pointer reads. Time is the one timeline, `clock.now()`; `step` is called with the present and
+A topic is a board's, and a board publishes ONE document on it at its heartbeat: every sensor it
+hosts, each number at the pointer the world binds the sensor to (`sensing:readingPointer`, `/value`
+where it binds none), which is what sensing reads it by. Time is the one timeline, `clock.now()`; `step` is called with the present and
 advances everything from the last step.
 
 THE NUMBER PUBLISHED IS THE INSTRUMENT'S, NOT THE MODEL'S (#879). The physics moves only what a
@@ -43,6 +44,7 @@ from datetime import datetime, timedelta
 
 from agent import clock
 from agent.runtime import world_of
+from agent.sensing.pipeline import DEFAULT_POINTER
 from agent.store import graphs_of, rows
 
 log = logging.getLogger("simulation")
@@ -51,6 +53,7 @@ BELIEF = "http://example.org/orexis#BeliefGraph"
 SIM = "http://example.org/orexis/sim#"
 CLIMATE = "http://example.org/orexis/climate#"
 ACTUATION = "http://example.org/orexis/actuation#"
+SENSING = "http://example.org/orexis/sensing#"
 MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
 _SECONDS = {"SEC": 1, "MIN": 60, "HR": 3600, "HUR": 3600, "DAY": 86400}
 
@@ -61,7 +64,7 @@ PLACES = 4
 JITTER = 10.0 ** -PLACES
 
 _SENSORS_Q = f"""
-SELECT ?sensor ?subject ?property ?start ?lo ?hi ?jitter ?pattern ?every ?unit WHERE {{
+SELECT ?sensor ?subject ?property ?start ?lo ?hi ?jitter ?pattern ?every ?unit ?pointer WHERE {{
   ?sensor a sosa:Sensor ; <{SIM}simulatedBy> ?model ; sosa:isHostedBy ?subject ; sosa:observes ?property ;
           <{MQTT4SSN}observesTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern .
@@ -69,6 +72,7 @@ SELECT ?sensor ?subject ?property ?start ?lo ?hi ?jitter ?pattern ?every ?unit W
   OPTIONAL {{ ?model <{SIM}initialValue> ?start }}
   OPTIONAL {{ ?model <{SIM}minValue> ?lo }} OPTIONAL {{ ?model <{SIM}maxValue> ?hi }}
   OPTIONAL {{ ?model <{SIM}jitter> ?jitter }}
+  OPTIONAL {{ ?sensor <{SENSING}readingPointer> ?pointer }}
   OPTIONAL {{ ?sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f .
              ?f a ssn-system:Frequency ; schema:value ?every ; schema:unitCode ?unit }} }}
 ORDER BY ?sensor"""
@@ -106,14 +110,15 @@ class Simulator:
                 "value": float(r.get("start") or 0.0), "every": every, "due": self.at,
                 "lo": float(r["lo"]) if r.get("lo") is not None else None,
                 "hi": float(r["hi"]) if r.get("hi") is not None else None,
-                "jitter": float(r["jitter"]) if r.get("jitter") is not None else JITTER, "last": None}
+                "jitter": float(r["jitter"]) if r.get("jitter") is not None else JITTER, "last": None,
+                "pointer": r.get("pointer") or DEFAULT_POINTER}
         self.listening = {r["pattern"]: r["actuator"] for r in self._rows(_ACTUATORS_Q)
                           if "+" not in r["pattern"] and "#" not in r["pattern"]}
         self.dries = {r["subject"]: float(r["rate"]) for r in self._rows(_DRIES_Q)}
         self.heating: dict[str, datetime] = {}
 
     def _rows(self, text: str, **values) -> list[dict]:
-        return rows(self.store, text, graphs_of(self.store, BELIEF, nobodys=True), **values)
+        return rows(self.store, text, graphs_of(self.store, BELIEF, common=True), **values)
 
     def open(self) -> list[str]:
         """Listen for the commands every simulated actuator takes; the topics."""
@@ -168,8 +173,15 @@ class Simulator:
             return 86400.0
         return max(0.0, (min(s["due"] for s in self.sensors.values()) - now).total_seconds())
 
-    def step(self, now: datetime) -> list[tuple[str, float]]:
-        """Advance the physics to `now` and publish every reading fallen due; what was published."""
+    def step(self, now: datetime) -> list[tuple[str, dict]]:
+        """Advance the physics to `now` and publish every topic a reading has fallen due on; what was
+        published, as (topic, document).
+
+        ONE DOCUMENT PER TOPIC, AS A BOARD PUBLISHES: a topic is a client's, named for it, and the client
+        publishes every sensor it hosts in one message at its heartbeat, each sensor's number at the
+        pointer the world binds it to (`sensing:readingPointer`) — the terrace board's five values are
+        one message, and the agent's sensors each read their own. So every sensor of a topic is read
+        when any of them is due, and sensors of one board report at the cadence of its fastest."""
         seconds = max(0.0, (now - self.at).total_seconds())
         for sensor in self.sensors.values():
             rate = self.dries.get(sensor["subject"])
@@ -184,10 +196,21 @@ class Simulator:
                 del self.heating[heater]
         self.at = now
         published = []
-        for sensor in self.sensors.values():
-            if sensor["due"] <= now:
-                value = self._read(sensor)
-                self.client.publish(sensor["topic"], json.dumps({"value": value}).encode())
-                sensor["due"] = now + timedelta(seconds=sensor["every"])
-                published.append((sensor["topic"], value))
+        for topic in sorted({s["topic"] for s in self.sensors.values() if s["due"] <= now}):
+            document: dict = {}
+            for sensor in self.sensors.values():
+                if sensor["topic"] == topic:
+                    _put(document, sensor["pointer"], self._read(sensor))
+                    sensor["due"] = now + timedelta(seconds=sensor["every"])
+            self.client.publish(topic, json.dumps(document).encode())
+            published.append((topic, document))
         return published
+
+
+def _put(document: dict, pointer: str, value: float) -> None:
+    """`value` at `pointer` in `document` — a JSON pointer of object members, `/a/b`, which is what a
+    board writes and the reverse of the one walk sensing reads by."""
+    keys = pointer.lstrip("/").split("/")
+    for key in keys[:-1]:
+        document = document.setdefault(key, {})
+    document[keys[-1]] = value

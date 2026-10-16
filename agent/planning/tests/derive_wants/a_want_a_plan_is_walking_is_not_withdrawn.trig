@@ -87,15 +87,15 @@ GRAPH :catalogue {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
-  :scopes orexis:beliefsOf :keeper .
+  :scopes orexis:ownedBy :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed orexis:beliefsOf :keeper .
+  :sensed orexis:ownedBy :keeper .
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .
   intentions:keeper a execution:IntentionGraph .
   intentions:keeper a orexis:Graph .
-  intentions:keeper orexis:beliefsOf :keeper .
+  intentions:keeper orexis:ownedBy :keeper .
   pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
   pursued:keeper.in_range.pursued.tank1.level a planning:WantGraph .
   pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .

@@ -41,7 +41,9 @@ with its port. A world that asserts nothing leaves the choice to the installatio
 one reader that can choose safely is the one that chooses. What it allocated is a **derived**
 deployment graph, `infra/installation.derived.ttl` — committed, read back as derived, and kept, so
 a world added later never moves another's port. What is refused is a **collision**: two brokers on
-one host and port, asserted or allocated, or a broker on a service's. Every address is a
+one host and port, asserted or allocated, or a broker on a service's — by onboarding's
+[requirement](/domain/onboarding/requirement.md) that one port on one host is held by one listener,
+judged over everything the installation holds. Every address is a
 `schema:url`, so the host is stated where the port is. The installation may name worlds; a world
 names nothing of the installation, and onboarding asks it about one world's broker at a time.
 
@@ -83,9 +85,12 @@ serving it into every agent's environment under the purpose's keys, and for metr
 purpose's retention says, and revokes the metrics grants of a world that stopped being monitored;
 `orexis-dashboards` draws health for a monitored world alone; and `orexis-infra-compose` writes
 `infra/compose.yaml`, the images and ports the document's and the rest the template's.
-`tests/test_layout.py` holds both committed documents to a fresh rendering and refuses a
-collision, a hand-edited allocation, a url carrying a credential, history served by no store, a
-monitored world where metrics are served by none, and an installation saying anything but a type,
-a url, an organisation, an image, a purpose served, a retention, an interval or a pool. The kind is decided in
+What the installation must state is its own [requirement](/domain/onboarding/requirement.md),
+`infra/requirements.ttl` beside it, judged as the document is read: one store and one view, their urls, images and the store's
+organisation, history served, one retention and one window per purpose, one pool with a host and a
+port in every url, and no credential anywhere. `tests/test_layout.py` holds both committed documents
+to a fresh rendering and refuses a collision, a hand-edited allocation, each of those, a monitored
+world where metrics are served by none, and an installation saying anything but a type, a url, an
+organisation, an image, a purpose served, a retention, an interval or a pool. The kind is decided in
 [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md), the
 allocation in its amendment, and monitoring in its last.

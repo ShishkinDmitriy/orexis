@@ -39,7 +39,7 @@ def pot(monkeypatch, snapshots):
 
 
 def _stated(store, *said: str) -> None:
-    """What the world states beside the sensor, in a graph of its own that nobody owns."""
+    """What the world states beside the sensor, in a common graph of its own."""
     update(store, f"""PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 INSERT DATA {{ GRAPH <{T}instruments> {{ {" ".join(said)} }}
   {entry(store, T + "instruments", "http://example.org/orexis#BeliefGraph", "http://example.org/orexis#Asserted")} }}""")
@@ -49,7 +49,7 @@ def _read(store, snapshots, number) -> dict:
     """A reading of `number`, revised beside what the world states as belief's part revises it: what the
     rules concluded of it."""
     (graph,) = received(store, snapshots.ME, PROBE, f'{{"value": {number}}}'.encode(), snapshots.NOW)
-    revise(store, graph, read=graphs_of(store, BELIEF, nobodys=True))
+    revise(store, graph, read=graphs_of(store, BELIEF, common=True))
     found = rows(store, "SELECT ?scaled ?reading WHERE { ?o sensing:scaledResult ?scaled ; sosa:hasSimpleResult ?reading }",
                  [graph, graph + "/revisions"])
     return {k: float(v) for k, v in found[0].items()} if found else {}

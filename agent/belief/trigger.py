@@ -11,7 +11,7 @@ asserted trigger none, so a transition's output can never trigger it again.
 
 **WHAT IT READS, AND SO WHAT IT IS ABOUT**: the arrival with its revisions — which have settled by the
 time this is called, so a transition reads the quantity the pipeline concluded and not the raw count —
-the beliefs nobody owns, and the agent's own DERIVED state graphs, whatever their period: the state a
+the common beliefs, and the agent's own DERIVED state graphs, whatever their period: the state a
 transition replaces is a premise of the one it writes, and a state ended by a silence is still the
 state the next arrival is judged beside. Never another testimony: an observation received, a forecast,
 a peer's word is not read beside an arrival it is not. So a WHERE asking for an observation of a
@@ -23,7 +23,7 @@ graph, the kernel's `orexis:BeliefGraph`, the arrival's owner's and derived, hol
 period, and no revision — so a state
 lasts as long as what it was made of, and a silence ends it as it ends the arrival. What an order
 deletes is taken out of whichever of the agent's own derived state graphs holds it, and one left empty
-is forgotten, row and all. Testimony is never a target: a graph received or heard, a belief nobody owns, an
+is forgotten, row and all. Testimony is never a target: a graph received or heard, a common belief, an
 ontology, a revision — nothing that is not a state the agent derived — is never deleted from. The
 target says no `prov:wasDerivedFrom`: a revision is derived from its source and goes with it, and this
 outlives the arrival it was made of until a later transition takes its rows out.
@@ -58,7 +58,7 @@ log = logging.getLogger("trigger")
 _ARRIVAL_Q = """
 SELECT ?owner ?start ?end WHERE {
   GRAPH $cat { $arrival orexis:arrivedBy orexis:Received .
-               OPTIONAL { $arrival orexis:beliefsOf ?owner }
+               OPTIONAL { $arrival orexis:ownedBy ?owner }
                OPTIONAL { $arrival dcterms:temporal ?p .
                           OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1"""
@@ -69,7 +69,7 @@ LIMIT 1"""
 _DERIVED_Q = """
 SELECT ?g WHERE { GRAPH $cat { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
                                FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-                               ?g orexis:beliefsOf ?owner . } } ORDER BY ?g"""
+                               ?g orexis:ownedBy ?owner . } } ORDER BY ?g"""
 
 #  WHETHER A GRAPH STILL HAS A ROW: one an order emptied was forgotten, row and all.
 _ROW_Q = """SELECT ?k WHERE { GRAPH $cat { $graph a ?k } } LIMIT 1"""
@@ -115,7 +115,7 @@ def trigger(store, arrival: str, *, budget: int = BUDGET, done: int = 0) -> Trig
         #  WHAT WAS CONCLUDED OF THE ARRIVAL, whatever kind its runner revised it into: every revision is
         #  this package's `belief:RevisionGraph`, so this asks that and learns no other package's word.
         reads = list(dict.fromkeys([arrival, *revisions_of(store, arrival, kind=REVISION_GRAPH),
-                                    *graphs_of(store, BELIEF, nobodys=True), *state]))
+                                    *graphs_of(store, BELIEF, common=True), *state]))
         change = asked(store, orders[n], reads)
         spent += change.executions
         changed += [g for g in _deleted_from(store, change, state) if g not in changed]

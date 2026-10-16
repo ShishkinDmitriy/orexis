@@ -8,6 +8,8 @@ imaginarium, placed it in the first scope, found it unreachable there and comman
 
 from __future__ import annotations
 
+import json
+
 import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -18,6 +20,17 @@ from agent import clock
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import rows
 from agent.transport.mqtt.driver import Mqtt
+
+
+#  WHAT A SENSOR'S READING ARRIVES AS: the bed's board publishes its two sensors in one document on one
+#  topic, each at the pointer world.ttl binds it to; a sensor of a test's own goes by sensing's default.
+_ABOARD = {"moisture_probe": "moisture", "thermometer": "temperature"}
+
+
+def _reading(sensor: str, value: float) -> tuple[str, bytes]:
+    if sensor in _ABOARD:
+        return "sensors/bed_board/reading", json.dumps({_ABOARD[sensor]: value}).encode()
+    return f"sensors/{sensor}/reading", json.dumps({"value": value}).encode()
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -67,6 +80,12 @@ def two_bed_world(tmp_path: Path) -> Path:
                        .replace("mqtt4ssn:hosts :moisture_probe , :thermometer , :pump , :heater ;",
                                 "mqtt4ssn:hosts :moisture_probe , :thermometer , :pump , :heater , :moisture_probe2 , :pump2 ;"))
     society.write_text(society.read_text() + WIRED)
+    #  AND THE GROWER READS THE SECOND BED'S PROBE: a sensor is the agent's because a role it plays says so,
+    #  mounted in a bed it acts for or not (a-role-is-an-instance-an-agent-plays).
+    grower = world / "beliefs" / "grower.self.ttl"
+    read = "sensing:sensor :moisture_probe , :thermometer"
+    assert read in grower.read_text(), "the grower's observer role reads the first bed's two sensors"
+    grower.write_text(grower.read_text().replace(read, read + " , :moisture_probe2"))
     return world
 
 
@@ -129,7 +148,7 @@ def test_two_dry_beds_are_two_wants_in_two_scopes_and_both_pumps_are_commanded_i
     runtime = Runtime(beliefs, "grower", transport=Mqtt(GH + "grower", broker))
     runtime.time = time
     for sensor, value in {"thermometer": 21.0, "moisture_probe": 0.2, "moisture_probe2": 0.2}.items():
-        runtime.deliver(f"sensors/{sensor}/reading", f'{{"value": {value}}}'.encode(), NOW)
+        runtime.deliver(*_reading(sensor, value), NOW)
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     planner = runtime.parts["planning"].planner
     found = [sorted((_local(r["w"]), _local(r.get("key"))) for r in rows(im, _WANTS_Q, ()))

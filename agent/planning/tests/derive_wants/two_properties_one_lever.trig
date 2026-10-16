@@ -66,10 +66,10 @@ GRAPH :catalogue {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
-  :scopes orexis:beliefsOf :keeper .
+  :scopes orexis:ownedBy :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed orexis:beliefsOf :keeper .
+  :sensed orexis:ownedBy :keeper .
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .
 }

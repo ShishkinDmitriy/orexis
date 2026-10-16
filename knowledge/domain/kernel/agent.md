@@ -25,7 +25,7 @@ the agent acting for it may share a local id, and only one of them is an agent.
 # What is its own
 
 Its store, held in a volume nothing else mounts, and in it the graphs the catalogue says are its
-(`orexis:beliefsOf`): the one saying it is the [self](/domain/kernel/self.md), the documents of its
+(`orexis:ownedBy`): the one saying it is the [self](/domain/kernel/self.md), the documents of its
 world that say they are its, the state it senses and revises, the wants derived for it, the
 intentions it walks. A world of several agents states each
 one's desires apart for that reason — the derivation mints a want under every desire a store holds.
@@ -36,9 +36,10 @@ agent SAID, as a document, never what it believes ([speech](/domain/speech/speec
 
 # What it runs
 
-Whatever its [roles](/domain/kernel/role.md) call for, and nothing else. Its self graph states them
-beside its self — `:grower a orexis:Self , planning:Planner , execution:Executor , sensing:Observer ,
-prediction:Predictor` — and the boot loads exactly the packages those roles are served by: the
+Whatever its [roles](/domain/kernel/role.md) call for, and nothing else. Its self graph says it plays
+them beside its self — `:grower orexis:plays [ a planning:Planner ] , [ a execution:Executor ] , [ a
+sensing:Observer ; sensing:sensor :moisture_probe ] , [ a prediction:Predictor ]` — and the boot loads
+exactly the packages those roles are served by: the
 greenhouse's grower runs belief, planning, execution, sensing and prediction, the terrace's agent
 belief, sensing and prediction, Hanoi's mover planning alone. Two agents of one world may
 therefore run different things though their world is the same, and an agent declaring no role runs

@@ -639,7 +639,7 @@ INSERT {{
   {said_points}
   {shape_lines} }}
   GRAPH ?cat {{ <{graph}> a planning:WantGraph ; orexis:arrivedBy orexis:Derived ;
-      orexis:beliefsOf <{holder}> . }} }}
+      orexis:ownedBy <{holder}> . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> dcterms:temporal
       [ a dcterms:PeriodOfTime{period} ] . }} }}

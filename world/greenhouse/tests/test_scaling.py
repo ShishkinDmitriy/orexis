@@ -14,6 +14,8 @@ what the light was for.
 
 from __future__ import annotations
 
+import json
+
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -26,6 +28,17 @@ from agent.sensing.received import received
 from agent.belief.revise import revise
 from agent.belief.trigger import trigger
 from agent.planning.planner import Planner
+
+
+#  WHAT A SENSOR'S READING ARRIVES AS: the bed's board publishes its two sensors in one document on one
+#  topic, each at the pointer world.ttl binds it to; a sensor of a test's own goes by sensing's default.
+_ABOARD = {"moisture_probe": "moisture", "thermometer": "temperature"}
+
+
+def _reading(sensor: str, value: float) -> tuple[str, bytes]:
+    if sensor in _ABOARD:
+        return "sensors/bed_board/reading", json.dumps({_ABOARD[sensor]: value}).encode()
+    return f"sensors/{sensor}/reading", json.dumps({"value": value}).encode()
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -48,8 +61,8 @@ SELECT DISTINCT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a plan
 
 def _deliver(store, sensor: str, value: float, at: datetime) -> None:
     """A reading as the deliberator takes it: written, revised, and the transitions it triggers applied."""
-    for graph in received(store, GH + "grower", GH + sensor, f'{{"value": {value}}}'.encode(), at):
-        revise(store, graph, read=graphs_of(store, BELIEF, nobodys=True))
+    for graph in received(store, GH + "grower", GH + sensor, _reading(sensor, value)[1], at):
+        revise(store, graph, read=graphs_of(store, BELIEF, common=True))
         close_catalogue(store)
         trigger(store, graph)
 
@@ -62,7 +75,7 @@ def _pass(world: Path, readings: dict) -> tuple[int, int, dict]:
     for sensor, value in readings.items():
         _deliver(store, sensor, value, NOW)
     present = sum(1 for _ in store)
-    shared = {*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH, REVISION_GRAPH)}
+    shared = {*graphs_of(store, BELIEF, common=True), *graphs_of(store, SELF_GRAPH, REVISION_GRAPH)}
     readings = [g for g in graphs_of(store, BELIEF) if g not in shared]     # the agent's own state
     state = sum(len(list(quads(store, g))) for g in [*readings, *revisions_of(store, *readings)])
     planner = Planner(store, "grower")
@@ -142,7 +155,7 @@ def test_a_step_is_judged_by_its_own_filling_whichever_scope_admitted_it(monkeyp
     runtime = Runtime(beliefs, "grower", transport=Mqtt(GH + "grower", broker))
     runtime.time = time
     for sensor, value in {"thermometer": 12.0, "moisture_probe": 0.2, "frame_thermometer": 5.0}.items():
-        runtime.deliver(f"sensors/{sensor}/reading", f'{{"value": {value}}}'.encode(), NOW)
+        runtime.deliver(*_reading(sensor, value), NOW)
     assert runtime.run(passes=1, poll_s=0) == UNFINISHED
     assert sorted(broker.published) == ["actuators/heater/command", "actuators/lamp/command", "actuators/pump/command"]
     assert len(runtime.parts["execution"].executor.walking()) == 3

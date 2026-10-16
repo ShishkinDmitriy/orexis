@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -59,4 +59,19 @@
+@@ -56,4 +56,19 @@
    :ontology a orexis:OntologyGraph .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
@@ -13,10 +13,10 @@
 +GRAPH graph:scopes {
 +  :Moisture planning:inScope scopes:1 .
 +  :bed planning:inScope scopes:1 .
++  :below planning:inScope scopes:1 .
 +  :dose planning:inScope scopes:1 .
++  :inside planning:inScope scopes:1 .
 +  :keeper planning:inScope scopes:1 .
 +  :pump planning:inScope scopes:1 .
 +  scopes:1 a planning:Scope .
-+  sensing:below planning:inScope scopes:1 .
-+  sensing:inside planning:inScope scopes:1 .
 +}

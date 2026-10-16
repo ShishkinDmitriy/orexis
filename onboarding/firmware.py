@@ -46,7 +46,7 @@ from . import reading
 from .reading import HARDWARE
 from .worlds import REPO_ROOT
 from .worlds import shown, world_dir, worlds
-from .mqtt import broker
+from .mqtt import broker_of
 from .namespaces import BME280, DHT11, ESP32, I2C, MC, ONEWIRE, PROBE, RGBLED
 
 OREXIS = "http://example.org/orexis#"
@@ -69,9 +69,9 @@ def _world(world: str):
 
 
 def _rows(store, text: str) -> list[dict]:
-    """Over the world's beliefs nobody owns and its hardware at once — a board's pins join the topics
+    """Over the world's common beliefs and its hardware at once — a board's pins join the topics
     its sensors publish on, and the hardware is the one kind here no agent reads."""
-    return _rows_of(store, text, graphs_of(store, BELIEF, HARDWARE, nobodys=True))
+    return _rows_of(store, text, graphs_of(store, BELIEF, HARDWARE, common=True))
 
 
 
@@ -84,7 +84,7 @@ WIFI_ENV = REPO_ROOT / "infra" / "secrets" / "wifi.env"
 # the OPTIONAL parts this generator has a template for — an LED, a DHT11, a BME280. A board
 # carrying something it has no template for is reported (_untemplated), not guessed at.
 _BOARDS_Q = f"""
-SELECT ?boardId ?firmware ?lan ?sensor ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
+SELECT ?board ?boardId ?firmware ?lan ?sensor ?sensorId ?readTopic ?cmdTopic ?gpio ?rawDry ?rawWet
        ?alarm
        ?ledRed ?ledGreen ?ledBlue ?airPin ?bmeSda ?bmeScl ?bmeAddr ?ws2812 ?battPin ?battDiv
 WHERE {{
@@ -357,12 +357,10 @@ def _raw_window(store, row: dict, lo: float, hi: float) -> int:
     """The ULP's window in counts: a quarter of the band's width, through the two points of the scaling
     the world states of the probe. A recalibration moves them; regenerate and reflash only where the
     window's sensitivity has moved further than matters."""
-    points = sorted({(float(r["raw"]), float(r["quantity"]))
-                     for r in _rows(store, _POINTS_Q.format(sensor=row["sensor"], SENSING=SENSING))})
-    if len(points) != 2 or points[0][0] == points[1][0]:
-        raise SystemExit(f"{row['sensorId']} publishes its raw count, and the world states "
-                         f"{len(points)} distinct points of a scaling of it, where the window needs two")
-    (r0, q0), (r1, q1) = points
+    #  TWO POINTS, THE SENSOR READING A DIFFERENT NUMBER AT EACH: sensing's requirement, held by
+    #  `reading.check` before this renders, since its rule runs the same line; it refused none by hand.
+    (r0, q0), (r1, q1) = sorted({(float(r["raw"]), float(r["quantity"]))
+                                 for r in _rows(store, _POINTS_Q.format(sensor=row["sensor"], SENSING=SENSING))})
     return max(1, round(WAKE_DELTA_FRACTION * (hi - lo) * abs((r1 - r0) / (q1 - q0))))
 
 
@@ -372,7 +370,13 @@ def render_sentinel(world: str, row: dict, store) -> str:
     for the subject it watches, and a heartbeat that is the cadence the world states for it.
 
     The rest of what the board carries — an LED, a DHT11, a BME280, a built-in WS2812 — is the
-    same wiring question for either temperament, so `_optional_pins` answers it for both."""
+    same wiring question for either temperament, so `_optional_pins` answers it for both.
+
+    What this still refuses by hand is what no requirement may speak of (#838): which board is a
+    sentinel is the hardware's word, `mc:firmware`, in a graph no vocabulary types (#820), so that a
+    sentinel's subject states a range and a self-scaling probe its calibration are the hardware's
+    claims about the world, held here and nowhere else; which GPIOs the ULP can watch is the ESP32's,
+    the table below; and whether a firmware is a directory is the tree's."""
     creds = world_dir(world) / "secrets" / f"mqtt-{row['sensorId']}.env"
     user, password = _env(creds, "MQTT_USERNAME"), _env(creds, "MQTT_PASSWORD")
     if not password:
@@ -385,9 +389,8 @@ def render_sentinel(world: str, row: dict, store) -> str:
         raise SystemExit(f"{row['sensorId']}: a sentinel watches the world's operating range, "
                          f"and its subject states none for the observed property")
     lo, hi = float(found[0]["lo"]), float(found[0]["hi"])
-    if not found[0].get("every"):
-        raise SystemExit(f"{row['sensorId']}: a sentinel's heartbeat is the cadence the world states "
-                         f"for it, and it states no ssn-system:Frequency")
+    #  THE HEARTBEAT IS THE CADENCE THE WORLD STATES FOR THE SENSOR, one `ssn-system:Frequency` on every
+    #  sensor: sensing's requirement, held by `reading.check` before this renders; it refused none by hand.
     heartbeat = int(float(found[0]["every"]) * _SECONDS.get(found[0]["unit"].rsplit("/", 1)[-1], 1))
     delta = round(WAKE_DELTA_FRACTION * (hi - lo), 3)
     persist = PERSIST_LOOKS
@@ -447,15 +450,15 @@ def render_sentinel(world: str, row: dict, store) -> str:
 
 def generate(world: str, board: str | None = None) -> None:
     store = _world(world)
-    #  THE BOARDS FIRST, and the broker's address only where there is one to flash: a world with no
-    #  board is told so, bus or none, and a board in a world naming no broker is refused by `broker`.
+    #  THE BOARDS FIRST, and a broker's address only where there is one to flash: a world with no
+    #  board is told so, bus or none, and a board connected to no broker is refused by `broker_of`. A
+    #  board is flashed with the one broker it is connected to, whichever of the world's that is.
     boards = [r for r in _rows(store, _BOARDS_Q) if board is None or r["boardId"] == board]
     if not boards:
         raise SystemExit(
             f"orexis-firmware: no board in world {world!r}"
             + (f" called {board!r}" if board else " states mc:firmware and carries a probe"))
-    host, port, _ = broker(world)
-    rows = [{**r, "host": host, "port": port} for r in boards]
+    rows = [{**r, "host": host, "port": port} for r in boards for host, port, _ in [broker_of(world, r["board"])]]
     bounds = SLEEP_BOUNDS_S
 
     for row in rows:
@@ -491,6 +494,7 @@ def main() -> None:
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("--board", help="only this board, by its orexis:localId")
     args = p.parse_args()
+    reading.check(world_dir(args.world))
     generate(args.world, args.board)
 
 

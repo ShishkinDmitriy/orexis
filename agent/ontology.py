@@ -12,7 +12,7 @@ identifier a process is given: its own agent id.
 
 **Graph IRIs are not terms.** `orexis:WorldGraph` is the term; `…/graph/world` is a particular
 graph, no more a term than `orexis:fern_agent` is. The instances are declared in the kernel's
-own `ontology.ttl`, typed by class, and `graphs_of(store, BELIEF, nobodys=True)` asks which ones
+own `ontology.ttl`, typed by class, and `graphs_of(store, BELIEF, common=True)` asks which ones
 they are — so a query means "what the world states" without any Python knowing what that consists of.
 What survives here is the **bootstrap root** (the T-Box has to be loaded somewhere before it
 can be asked anything) and the **write targets** (a writer must say where it writes, built
@@ -62,6 +62,14 @@ def local_of(iri: str) -> str:
 #
 # Which is why they are different graphs rather than one "computed" one: amending the two has
 # utterly different blast radius. See knowledge/decisions/who-put-the-fact-there.md.
+
+#  HOW A GRAPH ARRIVED: the `orexis:Arrival` its catalogue row says by `orexis:arrivedBy`. Every
+#  package that writes a graph says one, and each spelled its own until they were stated here.
+ASSERTED = OREXIS + "Asserted"           # the sovereign said so
+DERIVED = OREXIS + "Derived"             # a rule concluded it
+RECEIVED = OREXIS + "Received"           # another party's word: an instrument's reading, a peer's claim
+RECORDED = OREXIS + "Recorded"           # this agent's own act
+
 _GRAPH = "http://example.org/orexis/graph/"
 #  Where every graph lives in the IRI space. Exported because a package that owns graphs of its
 #  own builds their names from here — where a graph SITS is the kernel's, what it HOLDS is not.
@@ -84,7 +92,7 @@ GRAPH_PREFIX = _GRAPH
 
 #  WHAT THE VOCABULARY ENTAILS: every `rdfs:subClassOf` step the ontology graphs reach, written
 #  by the runtime at boot into one graph of its own, classified `orexis:OntologyGraph` and
-#  derived. Every other public graph is a document's, named by the document and found by its
+#  derived. Every other ontology graph is a document's, named by the document and found by its
 #  kind; this is the one no file holds.
 CLOSURE_GRAPH = _GRAPH + "ontology/closure"
 

@@ -1,0 +1,22 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF the MQTT transport's WORDS, held by onboarding alone before anything is granted
+#  (knowledge/domain/onboarding/requirement.md, #838). No agent loads this graph: its kind is
+#  onboarding's, and the boot passes over it as it passes over a world's hardware.
+
+[] a sh:NodeShape ;
+    sh:targetClass speech:Speaker ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a speaker listens to no topic: no peer's document would reach it" ;
+        sh:select """SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me mqtt4ssn:listensToTopic ?topic } }""" ] ,
+    [ a sh:SPARQLConstraint ;
+        sh:message "a speaker connected to no broker: what is said to it is carried by none" ;
+        sh:select """SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me mqtt4ssn:isConnectedToBroker ?broker } }""" ] .

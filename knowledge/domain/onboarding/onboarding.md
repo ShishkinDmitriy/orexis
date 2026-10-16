@@ -23,8 +23,8 @@ touch another's.
 | `orexis-dashboards` | a Grafana folder for the world: what its agents observe, and where the world is monitored a health dashboard per package that reports, a row per measurement and the agent a variable |
 
 `orexis-firmware <world>` writes a board's `config.h` from the same documents: the broker's port off
-the `schema:url` on the world's `mqtt4ssn:Broker`, asserted or allocated, the topics in the
-society graph's MQTT4SSN words, the pins from the world's hardware graph, the credential
+the `schema:url` on the world's `mqtt4ssn:Broker`, asserted or allocated, the topics' names from the
+society graph `orexis-onboard` derived beside the society, the pins from the world's hardware graph, the credential
 `orexis-mqtt` minted.
 
 `orexis-explain <world> <agent>` is not onboarding but lives beside it for the same reason
@@ -34,7 +34,7 @@ agent holds, and answers reflection's fixed questions over a season
 
 **A step runs where the world has what it serves.** History is every agent's, so every world is
 granted it, and metrics are where the world says it is monitored. The **bus** is a broker the
-world's society names — a premise read off the world, an ASK over its beliefs nobody owns in `PREMISES`
+world's society names — a premise read off the world, an ASK over its common beliefs in `PREMISES`
 of `onboarding/reading.py`, onboarding's own and the one kind of premise left, since what an agent
 runs is declared and not derived. A world naming none — hanoi,
 the courier, the tower, the dispatcher — is onboarded without the MQTT step, which says in one line that it was
@@ -58,11 +58,16 @@ asserted and derived — none computes a port. The series store's address comes 
 installation (`infra/installation.ttl`) too, and `orexis-infra-compose` writes the shared services'
 own compose file from it, alongside `orexis-infra-certs` and apart from onboarding.
 
-**One broker, one address.** The compose file and the config are each handed a single address, so
-a world stating a second `mqtt4ssn:Broker`, or one broker whose urls disagree on a host or on a
-scheme's port, is refused and named rather than merged (`broker` in `onboarding/mqtt.py`).
-How several would reach an agent is the first seam of
-[a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md).
+**Any number of brokers, each served apart.** A world may name several `mqtt4ssn:Broker`s, and
+MQTT4SSN says which each client `isConnectedToBroker`. Each broker is a compose service of its own,
+`mosquitto-<its local name>`, with its config, passwd and ACL under `mosquitto/<its local name>/`
+and a volume of its own; it holds the principals connected to it, and every broker of the world
+trusts the world's one authority, shares its CRL and serves one certificate naming every host. An
+agent is told each broker it is connected to (`MQTT_BROKERS`), a board is flashed with the one it is,
+and the simulator started with its client's. Onboarding's own
+[requirement](/domain/onboarding/requirement.md) (`onboarding/requirements.ttl`) refuses what would
+make an address ambiguous — a broker whose urls disagree on a host or on a scheme's port, two
+brokers on one host and port, two named alike, a board connected to none or to two.
 
 # What it takes back, and only when told
 
@@ -101,6 +106,15 @@ re-running changes nothing, and a sovereign who cares asserts the port instead. 
 read as the [runtime](/domain/kernel/runtime.md) boots it, so onboarding refuses a world whose documents
 will not load.
 
+# What a world states, held to its requirements
+
+A document the sovereign authored may be garbage, and onboarding is the last reader before it is
+believed: once an agent runs, what it holds is accepted and revised, never refused. So every
+package and domain ships a [requirement](/domain/onboarding/requirement.md) for each thing a
+document must say of its words, and `orexis-onboard` holds the world to them with pyshacl before
+anything is granted (`invalid` in `onboarding/reading.py`, #838). pyshacl is the `onboarding`
+extra's, and the agent image never installs it.
+
 # What an agent is declared to run, held to its world
 
 What an agent runs is its [roles](/domain/kernel/role.md), declared in its own self graph — the one
@@ -108,13 +122,15 @@ thing here the sovereign chose rather than wired — so before anything is grant
 boots every agent as its container would and holds the declaration to the world both ways
 (`refused` in `onboarding/reading.py`). It refuses:
 
-- **an agent declaring no role**, which would boot, load nothing and run nothing;
+- **an agent playing no role**, which would boot, load nothing and run nothing;
 - **a declared role whose needs the world lacks** — each need a SHACL shape targeting the role, its
-  `sh:sparql` select's every row a violation, shipped by the package or domain whose words the need
-  is stated in: a planner holding no desire or want, an executor that is no planner, an observer no
-  sensor reports to, a predictor with no sensor or no drift, a speaker listening to no topic, a host
+  `sh:sparql` select returning the role, `$this`, for each way it is unmet, shipped by the package or domain whose words the need
+  is stated in: a planner holding no desire or want, an executor that is no planner, an observer that
+  reads no sensor or reads one mounted on nothing the agent acts for, a predictor with no sensor or no drift, a speaker listening to no topic, a host
   hosting no venue, a bidder bidding in none;
-- **a sensor reporting to an agent that is no observer**, and **a topic an agent listens to with no
+- **a requirement its boot breaks that is not the world's**, as a want carrying both tests (the
+  [requirement](/domain/onboarding/requirement.md) page says which faults are the world's);
+- **a sensor reporting to an agent that no observer role of its reads**, and **a topic an agent listens to with no
   speaker**, each something that would arrive and be read by none of its roles;
 - **a graph the agent would read of a kind none of the packages it loads declares** — the refusal of
   a kind no reader declares, below, narrowed to the agent, which is how rules held by an agent that

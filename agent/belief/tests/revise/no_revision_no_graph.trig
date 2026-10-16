@@ -42,7 +42,7 @@ GRAPH :catalogue {
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
   :sensed orexis:arrivedBy orexis:Received .
-  :sensed orexis:beliefsOf :keeper .
+  :sensed orexis:ownedBy :keeper .
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .
 }

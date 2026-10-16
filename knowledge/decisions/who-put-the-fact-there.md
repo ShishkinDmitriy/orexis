@@ -8,12 +8,12 @@ timestamp: 2026-08-09T00:00:00Z
 ---
 
 > **Superseded in part, 2026-10-11 (#953): there is no public class.** `orexis:PublicGraph` folded into
-> `orexis:BeliefGraph`, and what every agent of a world reads is said by provenance, a belief nobody owns,
-> asked as `graphs_of(store, BELIEF, nobodys=True)`
+> `orexis:BeliefGraph`, and what every agent of a world reads is said by provenance, a common belief,
+> asked as `graphs_of(store, BELIEF, common=True)`
 > ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)).
 > Asserted, derived and entailed in graphs of their own, a rule writing `$given` and `$derived`, and an
-> ordinary query reading their union, all stand; where the body says `orexis:PublicGraph`, read the beliefs
-> nobody owns.
+> ordinary query reading their union, all stand; where the body says `orexis:PublicGraph`, read the common
+> beliefs.
 
 # Context
 
@@ -119,7 +119,7 @@ would otherwise read.
 
 ## The per-agent catalog is derived, not written
 
-Every world used to carry `<…/graph/picks/fern> a orexis:BeliefsGraph ; orexis:beliefsOf :fern_agent`,
+Every world used to carry `<…/graph/picks/fern> a orexis:BeliefsGraph ; orexis:ownedBy :fern_agent`,
 once per agent, beside the roster it restated. A second list is a second thing to drift, and this
 one drifted silently — nothing failed if an agent was added and its line was not.
 
@@ -357,7 +357,7 @@ which had to settle the same question for an interval.
   the part that makes it worth doing.
 - **A hand-written graph catalog still sits in every `world.ttl`.** `<…/graph/world> a
   orexis:WorldGraph` and two siblings, restated per world, covering three of the five and read by
-  nothing except the owned-graph shape (`orexis:OwnedGraphShape`, once `ag:BeliefsGraphShape`) — which needs the beliefs entries, since `orexis:beliefsOf`
+  nothing except the owned-graph shape (`orexis:OwnedGraphShape`, once `ag:BeliefsGraphShape`) — which needs the beliefs entries, since `orexis:ownedBy`
   carries information nothing else has. It is the partial answer that existed before this record
   and it was missed on the first pass. Left alone deliberately: it is ratified content, removing
   it is a world-file change with its own review, and a computed description now stands beside it.

@@ -2,7 +2,7 @@
 
 The claim that the grounds were laid for: a reader handed a world sees the world in the
 state's place and nothing the ground already speaks for — not what the search can change of the
-agent's readings, not a prediction, not another ground — beside everything public, what no step
+agent's readings, not a prediction, not another ground — beside every common belief, what no step
 changes of every graph, and the desires and wants (#953).
 """
 
@@ -43,7 +43,7 @@ def test_the_world_stands_in_the_states_place_and_nothing_the_ground_speaks_for_
     assert changeable and not changeable & set(graphs) and PREDICTION not in graphs, \
         "what the ground was laid from of the readings, and the prediction it applied, are not"
     assert STATE in graphs, "what is left of the readings, that no step changes, is read beside the world"
-    assert set(graphs_of(imagined, BELIEF, nobodys=True)) <= set(graphs), "everything public is"
+    assert set(graphs_of(imagined, BELIEF, common=True)) <= set(graphs), "every common belief is"
 
 
 def test_a_world_is_read_at_its_own_instant(imagined):

@@ -7,6 +7,7 @@ it is wired, and that is a complete description of nothing running. Between it a
 `podman compose up` there is a phase with no name until now, made of four tools that each read
 the same world's documents and grant exactly what its wiring implies:
 
+  (the society's derivation)  each topic's filter, by one convention, into society.derived.ttl — where it has a bus
   orexis-influx <world>    a bucket per agent, and a token that opens only it
   orexis-mqtt <world>      a credential per principal, and the broker ACL, derived — where it has a bus
   orexis-compose <world>   the roster, as services
@@ -61,7 +62,7 @@ import logging
 
 from agent.store import DocumentRefused
 
-from . import certs, compose, dashboards, influx, installation, mqtt, reading
+from . import certs, compose, dashboards, influx, installation, mqtt, reading, topics
 from .worlds import world_dir, worlds
 
 log = logging.getLogger("onboard")
@@ -74,43 +75,23 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     destructive option here — it replaces credentials that are currently in use, so anything
     holding an old one is locked out until it is restarted with the new.
     """
+    here = world_dir(world)
+    # THE BUS, where the world's society names a broker: its topics' names, its credentials, its ACL,
+    # the agents' certificates and the reload all serve one, and a world naming none has nothing for
+    # them to serve. Asked first, since the society's derivation comes before the judgment.
+    try:
+        bus = reading.BUS in reading.premises(here)
+    except DocumentRefused as why:
+        raise SystemExit(f"world {world!r} does not load — {why}; nothing granted")
+    if bus:
+        # What the society leaves out is derived before the world is judged: each topic's filter, into
+        # `society.derived.ttl`, which the judgment and every tool below read as the society (#836).
+        topics.write(world)
     if check:
-        # Onboarding a world whose documents will not load is worse than refusing: it mints real
-        # credentials for agents that will refuse to boot, and leaves them lying around. So the
-        # world is read as onboarding reads it first — as an agent boots it, and then onboarding's
-        # own kinds — and a graph of a kind no reader declares is refused with it: every reader
-        # passes over such a graph in silence, so a misspelled kind is caught here or nowhere.
-        try:
-            unread = reading.unread(world_dir(world))
-        except DocumentRefused as refused:
-            raise SystemExit(f"orexis-onboard: world {world!r} does not load — {refused}; nothing granted")
-        if unread:
-            raise SystemExit(f"orexis-onboard: world {world!r} holds graphs of a kind no reader declares — "
-                             f"{'; '.join(unread)}; nothing granted")
-        # A margin its range cannot hold is refused before anyone reads it: the rule judging an
-        # observation into a subject belief takes it as stated, so one that is no number, a negative
-        # one, and one of half the range or more would each be believed
-        # as the world said it (knowledge/domain/sensing/margin.md).
-        unholdable = reading.unholdable(world_dir(world))
-        if unholdable:
-            raise SystemExit(f"orexis-onboard: world {world!r} states a margin its range cannot hold — "
-                             f"{'; '.join(unholdable)}; nothing granted")
-        # What an agent runs is declared — its roles, in its own self graph — and held to its world
-        # both ways before anything is granted: a role whose needs the world lacks, and what would
-        # arrive for an agent and be read by none of its roles. An agent declaring no role would boot,
-        # load nothing and run nothing, which no credential should be minted for
-        # (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
-        refused = reading.refused(world_dir(world))
-        if refused:
-            raise SystemExit(f"orexis-onboard: world {world!r} declares its agents' roles in a way it does not "
-                             f"bear out — {'; '.join(refused)}; nothing granted")
-        # And a world posed in a state its own constraints say cannot be is refused the same way: a
-        # constraint is what the world says is possible, so this is the world contradicting itself,
-        # which no agent repairs — it would say so in every pass and mend nothing (constraint.md).
-        contradicted = [f"{a} holds {c}" for a in compose.roster(world) for c in reading.contradicted(world_dir(world), a)]
-        if contradicted:
-            raise SystemExit(f"orexis-onboard: world {world!r} is posed in a state its own constraints say is "
-                             f"impossible — {'; '.join(contradicted)}; nothing granted")
+        # Onboarding a world whose documents will not load, or do not hold, is worse than refusing: it
+        # mints real credentials for agents that will refuse to boot, or for a society reading what its
+        # words refuse, and leaves them lying around (`reading.check`).
+        reading.check(here)
 
     log.info("onboarding %s", world)
     # A world asking to be monitored where the installation serves metrics nowhere is refused before
@@ -123,10 +104,6 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     # only reads what was asserted or allocated (onboarding.derived).
     installation.write_derivation()
     influx.provision(world, rotate=rotate)
-    # THE BUS, where the world's society names a broker: its credentials, its ACL, the agents'
-    # certificates and the reload all serve one, and a world naming none has nothing for them to
-    # serve — `broker` refuses to answer an address for it, so nothing below asks.
-    bus = reading.BUS in reading.premises(world_dir(world))
     if bus:
         mqtt.provision(world, rotate=rotate)
         if not mqtt.reload_broker(world):

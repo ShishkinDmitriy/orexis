@@ -11,4 +11,5 @@
 #  nothing else. The plan is its output: it is no executor, so nothing walks the plan and the agent
 #  ends `planned` once it is published (#928); and its world ships no rules, so it is no deliberator.
 
-:hanoi a orexis:Self , planning:Planner .
+:hanoi a orexis:Self ;
+    orexis:plays [ a planning:Planner ] .

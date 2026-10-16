@@ -1,0 +1,36 @@
+@startuml runbook-world-documents
+title A world's documents — who reads each, and when
+
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 10
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #8FB4D0
+}
+skinparam frame {
+  BackgroundColor #F4F8FB
+  BorderColor #5B8DB8
+}
+
+frame "read by every agent, again on each restart" {
+  rectangle "world.ttl\nsubjects · ranges · sensors · devices · venues\nowl:imports the domains" as W
+  rectangle "society.ttl\nagents · boards · broker · topics\nonly with a bus" as S
+}
+frame "each agent's own, read once at birth" {
+  rectangle "beliefs/<id>.self.ttl\nthe self, the roles it plays, its stances" as SELF
+  rectangle "desires or wants\nstate, for a world nothing senses" as DES
+}
+frame "read by onboarding alone" {
+  rectangle "deployment.ttl\na pinned broker port" as DEP
+  rectangle "hardware.ttl\npins and boards" as HW
+}
+rectangle "domains/<name>/\nwords · actions · rules · drifts" as DOM
+rectangle "sensing · prediction · planning\nexecution · speech · belief · transport" as PK
+
+W -right-> DOM : imports
+SELF -right-> PK : roles load the packages
+S -[hidden]down-> SELF
+DES -[hidden]down-> DEP
+@enduml

@@ -24,6 +24,9 @@ dependencies = [
 
 [project.optional-dependencies]
 # pyyaml: the bundle's gate parses every document's frontmatter with it.
+# pyshacl: onboarding holds a world to its vocabularies' shapes (#838), and nothing in an agent does,
+# so it is an extra the image never installs.
+onboarding = ["pyshacl>=0.30"]
 dev = ["pytest>=8", "import-linter>=2", "pytest-xdist>=3", "pyshacl>=0.30", "pyyaml>=6"]
 
 [project.scripts]
@@ -37,6 +40,7 @@ orexis-onboard = "onboarding.onboard:main"
 orexis-influx = "onboarding.influx:main"
 orexis-mqtt = "onboarding.mqtt:main"
 orexis-compose = "onboarding.compose:main"
+orexis-topics = "onboarding.topics:main"
 orexis-dashboards = "onboarding.dashboards:main"
 # REFLECTION'S FIRST TOOL, beside onboarding and outside the agent as it is: one agent's season from
 # its history and metrics buckets, read with the admin-side token, never from its beliefs (#894).
@@ -70,6 +74,9 @@ testpaths = ["agent", "simulation", "world"]
 # a path; it stops inserting directories into sys.path, which is why `pythonpath` is here.
 addopts = "-n auto --import-mode=importlib"
 pythonpath = ["tests"]
+# rdflib's own `re.sub` call, once per REPLACE a requirement's select evaluates — onboarding's url
+# shapes run thousands — and nothing of ours to change.
+filterwarnings = ["ignore:'count' is passed as positional argument:DeprecationWarning:rdflib.plugins.sparql.operators"]
 
 # Parallel by default, which is only defensible because #271 made the vacuity guard survive a
 # worker. Read that before removing the flag or trusting a green run.

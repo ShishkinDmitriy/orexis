@@ -20,13 +20,16 @@ from agent import clock
 from agent.belief.revise import revise
 from agent.ontology import BELIEF, KNOWN
 from agent.belief.ontology import RULES_GRAPH
-from agent.sensing.ontology import OBSERVATION_GRAPH, STUCK_AFTER_TERM
-from agent.sensing.received import STUCK_AFTER, received
+from agent.sensing.received import received
+from agent.sensing.ontology import OBSERVATION_GRAPH, STUCK_AFTER_TERM, default_of
 from agent.store import closed, document, graphs_of, put_document, revisions_of, rows
+
+STUCK_AFTER = default_of(STUCK_AFTER_TERM)          # where the observer role states none, the observer shape's default
 
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
 BOARD = Path(__file__).parent / "worlds" / "a_board_and_its_peripherals.trig"
 RULES = Path(__file__).parents[1] / "rules.ttl"
+ONTOLOGY = Path(__file__).parents[1] / "ontology.ttl"     # the observer shape, whose default the stuck rule reads
 TEST = "http://example.org/test#"
 PROBE = TEST + "probe"
 CADENCE = timedelta(seconds=900)
@@ -37,12 +40,13 @@ def world(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
     put_document(store, document(RULES))
+    put_document(store, document(ONTOLOGY))
     return store
 
 
 def _read(store, sensor, value, at, me) -> list[str]:
     """`value` read by `sensor` at `at`, and each percept written revised as sensing has the deliberator
-    revise it: beside the beliefs nobody owns holding then, into this layer's kind."""
+    revise it: beside the common beliefs holding then, into this layer's kind."""
     written = received(store, me, sensor, f'{{"value": {value}}}'.encode(), at)
     for graph in written:
         revise(store, graph, read=graphs_of(store, *KNOWN, at=at), kind=OBSERVATION_GRAPH)
@@ -89,6 +93,7 @@ def test_a_samples_observation_is_of_the_sample(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     world = snapshots.stand_in(Path(__file__).parent / "worlds" / "a_probe_in_a_sample_of_the_pot.trig")
     put_document(world, document(RULES))
+    put_document(world, document(ONTOLOGY))
     [graph] = _read(world, PROBE, 0.05, snapshots.NOW, snapshots.ME)
     (of,) = rows(world, "SELECT ?f WHERE { ?o sosa:hasFeatureOfInterest ?f }", revisions_of(world, graph, kind=OBSERVATION_GRAPH))
     assert of["f"].endswith("#patch")
@@ -151,6 +156,7 @@ def test_a_sensor_stating_no_frequency_is_never_said_stuck(monkeypatch, snapshot
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(BOARD)
     put_document(store, document(RULES))
+    put_document(store, document(ONTOLOGY))
     at = snapshots.NOW
     for _ in range(STUCK_AFTER + 2):
         for graph in received(store, snapshots.ME, PROBE, b'{"soil": {"moisture": 0.2}}', at):
@@ -159,13 +165,14 @@ def test_a_sensor_stating_no_frequency_is_never_said_stuck(monkeypatch, snapshot
     assert _stuck(store, at - timedelta(days=1)) == []
 
 
-def test_the_stuck_limit_is_the_agents_where_its_self_graph_states_one(monkeypatch, snapshots):
-    """The keeper's self graph says `sensing:stuckAfter 2`, a stance: the probe's number, given twice, is
-    stuck where the figure in code would have waited six — read by the rule off the self graph, and by
-    `received` for how many to keep, alike."""
+def test_the_stuck_limit_is_the_observer_roles_where_it_states_one(monkeypatch, snapshots):
+    """The observer role reading the probe says `sensing:stuckAfter 2`: the probe's number, given twice,
+    is stuck where the observer shape's default would have waited six — read by the rule off the role
+    in the self graph, and by `received` for how many to keep, alike."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    store = snapshots.stating(snapshots.stand_in(WORLD), {STUCK_AFTER_TERM: 2})
+    store = snapshots.observing(snapshots.stand_in(WORLD), PROBE, {STUCK_AFTER_TERM: 2})
     put_document(store, document(RULES))
+    put_document(store, document(ONTOLOGY))
     first = _every_cadence(store, snapshots, [0.25])
     assert _stuck(store, first) == [], "one reading is short of two"
     second = _every_cadence(store, snapshots, [0.25], first + CADENCE)

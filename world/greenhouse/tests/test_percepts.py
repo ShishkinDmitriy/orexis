@@ -16,15 +16,18 @@ import pyoxigraph as ox
 from agent import clock
 from agent.planning.world_at import world_at
 from agent.runtime import Runtime, boot
-from agent.sensing.received import STUCK_AFTER
+from agent.sensing.ontology import STUCK_AFTER_TERM, default_of
 from agent.store import graphs_of, revisions_of, rows
 from agent.transport.mqtt.driver import Mqtt
+
+STUCK_AFTER = default_of(STUCK_AFTER_TERM)          # where the observer role states none, the observer shape's default
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 CADENCE = timedelta(minutes=10)
 GH = "http://example.org/orexis/world/greenhouse#"
-SOIL, AIR = "sensors/moisture_probe/reading", "sensors/thermometer/reading"
+#  THE BOARD'S ONE TOPIC, and each sensor's value in its one document, by the pointer world.ttl binds it to.
+BED, SOIL, AIR = "sensors/bed_board/reading", "moisture", "temperature"
 SENSING = "http://example.org/orexis/sensing#"
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
 
@@ -65,8 +68,8 @@ def _grower(monkeypatch):
 def _passes(runtime, time, readings):
     """Each reading delivered a cadence apart — the soil and the air together — a pass after each."""
     for soil, air in readings:
-        runtime.deliver(AIR, json.dumps({"value": air}).encode(), time["at"])
-        runtime.deliver(SOIL, json.dumps({"value": soil}).encode(), time["at"])
+        runtime.deliver(BED, json.dumps({AIR: air}).encode(), time["at"])
+        runtime.deliver(BED, json.dumps({SOIL: soil}).encode(), time["at"])
         runtime.run(passes=1, poll_s=0)
         time["at"] += CADENCE
 

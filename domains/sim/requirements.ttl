@@ -1,0 +1,30 @@
+@prefix : <http://example.org/orexis/sim#> .
+@prefix sim: <http://example.org/orexis/sim#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF the simulation domain's WORDS, held by onboarding alone before anything is
+#  granted (knowledge/domain/onboarding/requirement.md, #838). No agent loads this graph: its kind is
+#  onboarding's, and the boot passes over it as it passes over a world's hardware.
+#
+#  ONE SIMULATOR PLAYS EVERY SIMULATED SYSTEM OF A WORLD, AS ONE CLIENT. The simulator is a process of
+#  the world and connects as the client that hosts what it plays, the way a board connects as itself:
+#  one connection, one credential, one service in the world's compose file. So every simulated system
+#  is hosted by a client, and by the same one — `orexis-compose` refused two by hand, and a system
+#  hosted by none it passed over in silence, starting a simulator that never played it.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf :simulatedBy ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "hosted by no client: the simulator connects as the client hosting what it plays" ;
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { ?client mqtt4ssn:hosts $this ; mqtt4ssn:hasClientID ?id } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "hosted by {?one}, as {?other} is by {?two}: one simulator plays every simulated system of a world, as one client" ;
+        sh:select """PREFIX sim: <http://example.org/orexis/sim#>
+SELECT $this ?one ?other ?two WHERE {
+  ?a mqtt4ssn:hosts $this ; mqtt4ssn:hasClientID ?one .
+  ?system sim:simulatedBy ?model . ?b mqtt4ssn:hosts ?system ; mqtt4ssn:hasClientID ?two .
+  FILTER (?one < ?two)
+  BIND (REPLACE(STR(?system), "^.*[#/]", "") AS ?other) }""" ] .

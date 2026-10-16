@@ -1,7 +1,7 @@
 --- case
 +++ expected
 @@ -54,4 +54,17 @@
-   :sensed orexis:beliefsOf :keeper .
+   :sensed orexis:ownedBy :keeper .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
 +  sensed:revisions a belief:RevisionGraph .
@@ -9,7 +9,7 @@
 +  sensed:revisions a orexis:Graph .
 +  sensed:revisions belief:settled true .
 +  sensed:revisions orexis:arrivedBy orexis:Derived .
-+  sensed:revisions orexis:beliefsOf :keeper .
++  sensed:revisions orexis:ownedBy :keeper .
 +  sensed:revisions orexis:hash "sha256:fb51c0c2bb5e2ccff519413eec3c8f234d987ff4bb13f30dcf228350769eee13" .
 +  sensed:revisions prov:wasDerivedFrom :sensed .
  }

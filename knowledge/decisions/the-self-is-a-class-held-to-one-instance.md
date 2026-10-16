@@ -30,7 +30,7 @@ agent by its `orexis:localId` and kept the IRI in Python.
 **And an agent's own documents were found by their file's name** — the one place the boot relied
 on a name. `documents()` globbed `beliefs/<id>.*`, `orexis-compose` mounted `beliefs/<id>.*` into
 the agent's container, and every other document of a kind that is not public was the booting
-agent's because it sat beside the world. The loader refused a document stating `orexis:beliefsOf`
+agent's because it sat beside the world. The loader refused a document stating `orexis:ownedBy`
 as "what only the loader says", so no document could say whose it was, and the boot owned what it
 read by where it found it: 14 private documents across 9 worlds, 3 of them under `beliefs/`.
 
@@ -46,7 +46,7 @@ text asks `?me a orexis:Self` and is bound nothing; `store.bind` still refuses a
 binds when a text runs, and `tests/test_store.py` refuses a `$me` written anywhere in the trees a
 text lives in ([self](/domain/kernel/self.md)). All ten shipped agents, across nine worlds, have one.
 
-**Whose a graph of an agent's own is, its document says: `<> orexis:beliefsOf :rose_grower`,**
+**Whose a graph of an agent's own is, its document says: `<> orexis:ownedBy :rose_grower`,**
 beside `<> a planning:DesireGraph`, the way it says what the graph is (`store.whose`). A self graph
 needs no such row: it is its self's by the self it states, and a row stated beside it must name
 the same agent or the file is refused — one fact, one source, and two that disagree are not
@@ -58,7 +58,7 @@ its content names, and the simulator, which is no agent, the public documents al
 
 **The loader's refusal is relaxed for what the WORLD authors, and only there.** It refused a stated
 owner because the catalogue's provenance rows are the loader's to write — `orexis:arrivedBy` still
-is, from every document. But the boot was already writing `orexis:beliefsOf` on every private file
+is, from every document. But the boot was already writing `orexis:ownedBy` on every private file
 it read, and choosing the owner by the file's location: the owner was a guess, and the document is
 where the sovereign can say it. A FILE (`store.document`) may now state an owner, one per graph,
 naming an agent the world states; a graph naming nobody, or nobody the world states, is refused,
@@ -101,7 +101,7 @@ its agents' documents and nothing more.
 **Reading ownership off a desire's `planning:holds`.** The desires already say `:rose_grower
 planning:holds …`. It does not generalise: the courier's and Hanoi's state graphs name no agent at
 all, a self graph names its agent by another word, and a graph of stances would by a third; and it
-is planning's word read by the kernel's boot. `orexis:beliefsOf` is already the word for whose a
+is planning's word read by the kernel's boot. `orexis:ownedBy` is already the word for whose a
 graph is, on every row the catalogue holds; a second word would be the synonym the dictionary
 refuses.
 

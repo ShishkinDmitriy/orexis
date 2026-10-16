@@ -31,13 +31,14 @@ CADENCE = timedelta(minutes=10)
 GH = "http://example.org/orexis/world/greenhouse#"
 CLIMATE = "http://example.org/orexis/climate#"
 BELIEF = "http://example.org/orexis#BeliefGraph"
-SOIL, AIR = "sensors/moisture_probe/reading", "sensors/thermometer/reading"
+#  THE BOARD'S ONE TOPIC, and each sensor's value in its one document, by the pointer world.ttl binds it to.
+BED, SOIL, AIR = "sensors/bed_board/reading", "moisture", "temperature"
 
 #  THE GROWER'S OWN STATE: every belief it derived that is no revision, which is where a transition
 #  writes and where sensing says a sensor silent — never a percept, which is no belief at all (#944).
 _DERIVED_Q = """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-    FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:beliefsOf ?owner . } }"""
+    FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } }"""
 
 #  WHAT THE BED IS BELIEVED, in climate's words, for one property: its state.
 _BELIEVED_Q = """SELECT ?state WHERE { $bed $state_as ?state }"""
@@ -50,7 +51,7 @@ OBSERVATION_GRAPH = "http://example.org/orexis/sensing#ObservationGraph"
 
 #  A GRAPH'S PERIOD, owner and arrival, off its row.
 _ROW_Q = """SELECT ?start ?end ?owner ?arrival WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-    $g dcterms:temporal ?p ; orexis:beliefsOf ?owner ; orexis:arrivedBy ?arrival . ?p orexis:start ?start ; orexis:end ?end } }"""
+    $g dcterms:temporal ?p ; orexis:ownedBy ?owner ; orexis:arrivedBy ?arrival . ?p orexis:start ?start ; orexis:end ?end } }"""
 
 
 class _Broker:
@@ -82,10 +83,10 @@ def _believed(beliefs, words: str, at: datetime | None = None) -> str | None:
 
 
 def _read(runtime, time, topic: str, values) -> list:
-    """Each of `values` read on `topic` a cadence apart, a pass after each: what the bed was believed."""
+    """Each of `values` read as `topic` — the soil's or the air's member of the board's document — a cadence apart, a pass after each: what the bed was believed."""
     out = []
     for value in values:
-        runtime.deliver(topic, json.dumps({"value": value}).encode(), time["at"])
+        runtime.deliver(BED, json.dumps({topic: value}).encode(), time["at"])
         runtime.run(passes=1, poll_s=0)
         out.append(_believed(runtime.beliefs, "soil" if topic == SOIL else "air"))
         time["at"] += CADENCE
@@ -194,7 +195,7 @@ def test_the_readings_one_message_carries_are_taken_in_turn(monkeypatch):
     0.3001 would have been moist. The earlier's state is taken out where it stood, and the latest's
     stands in the latest's own graph."""
     runtime, time = _grower(monkeypatch)
-    runtime.deliver(SOIL, json.dumps({"value": [{"value": 0.2990, "age_s": 25}, {"value": 0.3001, "age_s": 0}]}).encode(), NOW)
+    runtime.deliver(BED, json.dumps({SOIL: [{"value": 0.2990, "age_s": 25}, {"value": 0.3001, "age_s": 0}]}).encode(), NOW)
     runtime.run(passes=1, poll_s=0)
     (believed,) = _own_state(runtime.beliefs)
     assert _believed(runtime.beliefs, "soil") == "Dry"
@@ -222,7 +223,7 @@ def test_a_revision_a_budget_cut_short_is_believed_as_it_would_have_been(monkeyp
         the deliberator's pass where a graph is written, so a reading cut short with nothing written
         after it waits for the next; this calls the pass as that next write would."""
         left.clear()
-        runtime.deliver(SOIL, json.dumps({"value": value}).encode(), time["at"])
+        runtime.deliver(BED, json.dumps({SOIL: value}).encode(), time["at"])
         runtime.run(passes=1, poll_s=0)
         for _ in range(50):
             if not observed() & set(deliberator.pending):
@@ -304,8 +305,8 @@ def _held(tmp_path, monkeypatch, *, pump: bool):
     present, ahead = [], []
     for n, value in enumerate(HELD):
         time["at"] = NOW + n * CADENCE
-        runtime.deliver(SOIL, json.dumps({"value": value}).encode(), time["at"])
-        runtime.deliver(AIR, json.dumps({"value": 21.0 + n / 100}).encode(), time["at"])
+        runtime.deliver(BED, json.dumps({SOIL: value}).encode(), time["at"])
+        runtime.deliver(BED, json.dumps({AIR: 21.0 + n / 100}).encode(), time["at"])
         runtime.run(passes=1, poll_s=0)
         present.append(_believed(runtime.beliefs, "soil"))
         laid = [(r["start"], r["state"].rsplit("#", 1)[-1])

@@ -1,0 +1,119 @@
+@prefix : <http://example.org/orexis/sensing#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix schema: <https://schema.org/> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF sensing's WORDS, held by onboarding alone before anything is granted
+#  (knowledge/domain/onboarding/requirement.md, #838). No agent loads this graph: its kind is
+#  onboarding's, and the boot passes over it as it passes over a world's hardware.
+
+[] a sh:NodeShape ;
+    sh:targetClass :Observer ;
+    sh:property [ sh:path :silentAfter ; sh:datatype xsd:integer ; sh:maxCount 1 ;
+                  sh:message "an observer limit is one whole number of cadences or readings" ] ,
+                [ sh:path :stuckAfter ; sh:datatype xsd:integer ; sh:maxCount 1 ;
+                  sh:message "an observer limit is one whole number of cadences or readings" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "an observer that reads no sensor: it would observe nothing" ;
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this sensing:sensor ?sensor } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "an observer reads a sensor that does not report to it: none mounted on what it acts for, a sample of it, or a place containing it" ;
+        sh:select """SELECT $this WHERE { ?me orexis:plays $this . $this sensing:sensor ?sensor
+            FILTER NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
+                                ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host } }""" ] .
+
+#  A SENSOR STATES ITS CADENCE, ONE `ssn-system:Frequency`: when its next reading is due is read off it
+#  (`cadence.cadence_of`), a silence is a limit of cadences, and a board's heartbeat is it. Stating none
+#  or two, it has no cadence, so it could never be silent and a sentinel flashed from it would have no
+#  heartbeat — which `orexis-firmware` refused by hand.
+[] a sh:NodeShape ;
+    sh:targetClass sosa:Sensor ;
+    sh:property [ sh:path sosa:observes ; sh:minCount 1 ;
+                  sh:message "a sensor that observes no property: its readings would be of nothing" ] ,
+                [ sh:path sosa:isHostedBy ; sh:minCount 1 ;
+                  sh:message "a sensor mounted on nothing: it reports to no agent" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a sensor that states no ssn-system:Frequency: when its next reading is due is read off its cadence, and a silence is a limit of them" ;
+        sh:select """SELECT $this WHERE {
+            FILTER NOT EXISTS { $this ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f . ?f a ssn-system:Frequency } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "a sensor that states two frequencies: neither is its cadence" ;
+        sh:select """SELECT $this WHERE {
+            $this ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f . ?f a ssn-system:Frequency .
+            $this ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?g . ?g a ssn-system:Frequency
+            FILTER (?f != ?g) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "rescaled by {?one} and {?two}: one scaling places a sensor's number on one line" ;
+        sh:select """SELECT $this ?one ?two WHERE {
+            ?a sensing:scales $this . ?b sensing:scales $this FILTER (STR(?a) < STR(?b))
+            BIND (REPLACE(STR(?a), "^.*[#/]", "") AS ?one) BIND (REPLACE(STR(?b), "^.*[#/]", "") AS ?two) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "corrected by {?one} and {?two}: one calibration places a sensor's quantity on one line" ;
+        sh:select """SELECT $this ?one ?two WHERE {
+            ?a sensing:corrects $this . ?b sensing:corrects $this FILTER (STR(?a) < STR(?b))
+            BIND (REPLACE(STR(?a), "^.*[#/]", "") AS ?one) BIND (REPLACE(STR(?b), "^.*[#/]", "") AS ?two) }""" ] .
+
+#  A SCALING OR A CALIBRATION IS THE LINE THROUGH TWO POINTS, each what the sensor reads there and what
+#  that stands for. Sensing's rule places a number on the line through the two the world states, and
+#  through one point, or two the sensor reads one number at, no line runs: the rule binds nothing, the
+#  observation gets no quantity, and the agent reads nothing of the sensor, in silence — which
+#  `orexis-firmware`, sizing a sentinel's wake window from the same two points, refused by hand.
+[] a sh:NodeShape ;
+    sh:targetClass :TwoPointScaling , :TwoPointCalibration ;
+    sh:property [ sh:path :point ; sh:minCount 2 ; sh:maxCount 2 ;
+                  sh:message "a scaling or a calibration states two points: a line is through two" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "its two points read one number, {?raw}: no line is through them" ;
+        sh:select """SELECT $this ?raw WHERE {
+            $this sensing:point ?a , ?b . ?a sensing:reads ?raw . ?b sensing:reads ?raw FILTER (?a != ?b) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "states a point that reads no number, or stands for none" ;
+        sh:select """SELECT $this WHERE {
+            $this sensing:point ?p FILTER NOT EXISTS { ?p sensing:reads ?raw ; sensing:standsFor ?quantity } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "states a point that reads two numbers, or stands for two" ;
+        sh:select """SELECT $this WHERE {
+            $this sensing:point ?p . { ?p sensing:reads ?x , ?y FILTER (?x != ?y) } UNION { ?p sensing:standsFor ?x , ?y FILTER (?x != ?y) } }""" ] .
+
+[] a sh:NodeShape ;
+    sh:targetObjectsOf ssn-system:inCondition ;
+    sh:property [ sh:path ssn:forProperty ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a range's condition bounds no one property: a reading is held to it by its property" ] ,
+                [ sh:path schema:minValue ; sh:maxCount 1 ;
+                  sh:message "a range's condition states two floors" ] ,
+                [ sh:path schema:maxValue ; sh:maxCount 1 ;
+                  sh:message "a range's condition states two ceilings" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "{?named}: a floor of {?low} not below its ceiling of {?high}, so no reading is inside it" ;
+        sh:select """SELECT $this ?named ?low ?high WHERE { ?range ssn-system:inCondition $this .
+            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
+            $this schema:minValue ?low ; schema:maxValue ?high FILTER (!(?low < ?high)) }""" ] .
+
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf :margin ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "{?named}: a margin of {?margin}, which is no number" ;
+        sh:select """SELECT $this ?named ?margin WHERE { ?range ssn-system:inCondition $this .
+            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
+            $this sensing:margin ?margin FILTER (!isNumeric(?margin)) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "{?named}: a margin of {?margin}, which is negative and widens nothing" ;
+        sh:select """SELECT $this ?named ?margin WHERE { ?range ssn-system:inCondition $this .
+            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
+            $this sensing:margin ?margin FILTER (isNumeric(?margin) && ?margin < 0) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "{?named}: a margin of {?margin}, half the width of [{?low}, {?high}] or more — a subject a step brought to its middle would still be believed in the state it came from" ;
+        sh:select """SELECT $this ?named ?margin ?low ?high WHERE { ?range ssn-system:inCondition $this .
+            BIND (IF(isIRI(?range), STR(?range), "a range with no name") AS ?named)
+            $this sensing:margin ?margin ; schema:minValue ?low ; schema:maxValue ?high
+            FILTER (isNumeric(?margin) && ?low < ?high && ?margin >= (?high - ?low) / 2) }""" ] .

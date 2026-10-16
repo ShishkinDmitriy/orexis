@@ -37,13 +37,13 @@ _WORLD = (_HEAD + "<> a orexis:WorldGraph .\n"
 #  EACH AGENT'S SELF GRAPH AND DESIRES, under names that say nothing of whose they are: the content
 #  says, and a boot reading the names would take the wrong one. Each is a planner, which is what reads
 #  a graph of desires; bob is an observer too.
-_ROLES = {"ann": "planning:Planner", "bob": "planning:Planner , sensing:Observer"}
+_ROLES = {"ann": "[ a planning:Planner ]", "bob": "[ a planning:Planner ] , [ a sensing:Observer ]"}
 _SELF = (_HEAD + "@prefix sensing: <http://example.org/orexis/sensing#> .\n"
-         "<> a orexis:SelfGraph .\n:{who} a orexis:Self , {roles} .\n")
-_DESIRES = _HEAD + "<> a planning:DesireGraph ; orexis:beliefsOf :{who} .\n:{who} planning:holds :{who}_wish .\n"
+         "<> a orexis:SelfGraph .\n:{who} a orexis:Self ; orexis:plays {roles} .\n")
+_DESIRES = _HEAD + "<> a planning:DesireGraph ; orexis:ownedBy :{who} .\n:{who} planning:holds :{who}_wish .\n"
 
 _ROW_Q = """SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-  $g orexis:arrivedBy ?arrival ; orexis:beliefsOf ?owner } }"""
+  $g orexis:arrivedBy ?arrival ; orexis:ownedBy ?owner } }"""
 _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 
@@ -74,7 +74,7 @@ def test_the_boot_puts_in_the_self_graph_the_world_authored_for_the_agent_it_was
     assert rows(store, _ROW_Q, (), g=_uri(world, "two.ttl")) == [{"arrival": OREXIS + "Asserted", "owner": ANN}], \
         "authored by the world and the agent's own"
     graph = _uri(world, "two.ttl")
-    assert graph in graphs_of(store, BELIEF) and graph not in graphs_of(store, BELIEF, nobodys=True), \
+    assert graph in graphs_of(store, BELIEF) and graph not in graphs_of(store, BELIEF, common=True), \
         "a belief, read by every text answered over what is known — and nobody else's to read"
 
 
@@ -113,7 +113,7 @@ def test_a_graph_the_world_authors_naming_nobody_is_shared_whatever_its_kind(wor
     (world / "beliefs" / "shared.ttl").write_text(_HEAD + "<> a planning:DesireGraph .\n:ann planning:holds :ann_wish .\n")
     shared = _uri(world, "shared.ttl")
     for store in (boot(world, "ann"), boot(world, "bob"), world_of(world)):
-        assert shared in graphs_of(store, DESIRE_GRAPH, nobodys=True), "everyone's"
+        assert shared in graphs_of(store, DESIRE_GRAPH, common=True), "everyone's"
 
 
 def test_a_graph_of_an_agents_own_that_names_no_agent_of_the_world_is_refused(world):
@@ -122,18 +122,18 @@ def test_a_graph_of_an_agents_own_that_names_no_agent_of_the_world_is_refused(wo
         boot(world, "ann")
 
 
-def test_a_belief_of_the_world_is_whose_it_says_and_nobodys_where_it_says_none(world):
+def test_a_belief_of_the_world_is_whose_it_says_and_common_where_it_says_none(world):
     """Whose a belief is, is what it says, never its kind (#953): a belief of the world naming ann is
     ann's own, kept as an agent's own graph is, and one naming nobody is everyone's, read again at
     every boot as the world graph is. Ann's is not bob's: bob's boot passes it over."""
-    (world / "beliefs" / "notes.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph ; orexis:beliefsOf :ann .\n:pot :says \"ann's\" .\n")
+    (world / "beliefs" / "notes.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph ; orexis:ownedBy :ann .\n:pot :says \"ann's\" .\n")
     (world / "shared.ttl").write_text(_HEAD + "<> a orexis:BeliefGraph .\n:pot :says \"everyone's\" .\n")
     ann, bob = boot(world, "ann"), boot(world, "bob")
     notes, shared = _uri(world, "notes.ttl"), (world / "shared.ttl").resolve().as_uri()
-    assert notes in graphs_of(ann, BELIEF) and notes not in graphs_of(ann, BELIEF, nobodys=True), "ann's own"
+    assert notes in graphs_of(ann, BELIEF) and notes not in graphs_of(ann, BELIEF, common=True), "ann's own"
     assert rows(ann, _ROW_Q, (), g=notes) == [{"arrival": OREXIS + "Asserted", "owner": ANN}]
     assert notes not in graphs_of(bob, BELIEF), "and no graph of bob's"
-    assert all(shared in graphs_of(store, BELIEF, nobodys=True) for store in (ann, bob)), "everyone's"
+    assert all(shared in graphs_of(store, BELIEF, common=True) for store in (ann, bob)), "everyone's"
 
 
 def test_a_volume_lived_in_keeps_the_one_self_it_has(world):
@@ -169,7 +169,7 @@ def test_a_volume_lived_in_before_the_self_was_authored_is_given_the_world_s(wor
     assert selves(store) == [ANN] and graphs_of(store, SELF_GRAPH) == [_uri(world, "two.ttl")]
 
 
-def test_a_world_document_of_a_public_kind_saying_who_the_self_is_is_refused_at_the_loader(world):
+def test_a_world_document_nobody_owns_saying_who_the_self_is_is_refused_at_the_loader(world):
     (world / "imposter.ttl").write_text(_HEAD + "<> a orexis:WorldGraph .\n:bob a orexis:Self .\n")
     with pytest.raises(DocumentRefused, match="no self graph"):
         boot(world, "ann")

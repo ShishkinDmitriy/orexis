@@ -1,0 +1,65 @@
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT THE INSTALLATION MUST STATE, `installation.ttl` beside this file — its own requirements, as a
+#  world ships its own beside its world.ttl, and held to by `installation._store` before any tool
+#  reads it, since every tool reads it through there; a world is never held to these, the installation
+#  alone states a store. Judged beside onboarding's `requirements.ttl` — the credential a url may not
+#  carry, the port one listener holds — which is judged of a world too. The words are onboarding's
+#  (onboarding/ontology.ttl) and the limits are the installation's template's: `infra/compose.yaml` runs one
+#  series store and one series view, so there is one of each, with one url, one image and, for the
+#  store, one organisation; the store answers over http and the view over https, which is how the
+#  template serves them; history is served by a store, since every agent writes it, where metrics may
+#  be served by none; a purpose is kept one number of days and a window of it is one number of
+#  seconds; and there is one pool to allocate from, each url of it stating the host and the port a slot
+#  is counted from. `installation.py` refused each of these by hand once, and formats what it reads.
+[] a sh:NodeShape ;
+    sh:targetClass onboarding:SeriesStore ;
+    sh:property [ sh:path schema:url ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^http://" ;
+                  sh:message "a series store answers at one http:// url: an agent is told one, and the template serves it plain" ] ,
+                [ sh:path onboarding:organisation ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a series store has one organisation: every bucket is minted in it, and every agent told of it" ] ,
+                [ sh:path onboarding:image ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a series store runs one image, pinned" ] ;
+    sh:sparql [
+        sh:message "is a series store beside {?other}: `infra/compose.yaml` runs one" ;
+        sh:select """SELECT $this ?other WHERE { ?other a onboarding:SeriesStore . FILTER (STR(?other) < STR($this)) }""" ] .
+
+[] a sh:NodeShape ;
+    sh:targetClass onboarding:SeriesView ;
+    sh:property [ sh:path schema:url ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^https://" ;
+                  sh:message "a series view answers at one https:// url: the template serves it over TLS" ] ,
+                [ sh:path onboarding:image ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a series view runs one image, pinned" ] ;
+    sh:sparql [
+        sh:message "is a series view beside {?other}: `infra/compose.yaml` runs one" ;
+        sh:select """SELECT $this ?other WHERE { ?other a onboarding:SeriesView . FILTER (STR(?other) < STR($this)) }""" ] .
+
+[] a sh:NodeShape ;
+    sh:targetNode onboarding:History ;
+    sh:sparql [
+        sh:message "served by no store: every agent writes its history" ;
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { ?store a onboarding:SeriesStore ; onboarding:serves $this } }""" ] .
+
+[] a sh:NodeShape ;
+    sh:targetNode onboarding:History , onboarding:Metrics ;
+    sh:property [ sh:path onboarding:retentionDays ; sh:maxCount 1 ; sh:datatype xsd:integer ;
+                  sh:message "a purpose is kept one whole number of days, or for ever" ] ,
+                [ sh:path onboarding:intervalSeconds ; sh:maxCount 1 ;
+                  sh:message "a window of a purpose's points is one length" ] ;
+    sh:sparql [
+        sh:message "a window of {?seconds}, which is no number of seconds" ;
+        sh:select """SELECT $this ?seconds WHERE { $this onboarding:intervalSeconds ?seconds . FILTER (!isNumeric(?seconds)) }""" ] .
+
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf onboarding:allocatesFrom ;
+    sh:sparql [
+        sh:message "is a pool beside {?other}: a broker is allocated a slot of one pool" ;
+        sh:select """SELECT $this ?other WHERE { ?other onboarding:allocatesFrom ?url . FILTER (STR(?other) < STR($this)) }""" ] ,
+    [
+        sh:message "allocates from {?url}, which states no host or no port: a slot is the port raised, on the host" ;
+        sh:select """SELECT $this ?url WHERE { $this onboarding:allocatesFrom ?url . FILTER (!REGEX(STR(?url), "^[a-z]+://[^/:@]+:[0-9]+")) }""" ] .

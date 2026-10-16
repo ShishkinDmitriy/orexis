@@ -5,7 +5,7 @@
 @prefix planning: <http://example.org/orexis/planning#> .
 
 <> a planning:WantGraph .    # this document is one graph, and this is what it is
-<> orexis:beliefsOf :mover .    # and whose it is — said here, never by the file's name
+<> orexis:ownedBy :mover .    # and whose it is — said here, never by the file's name
 
 #  HANOI'S SENTENCE, on the grid: every disk home on peg C. The mover holds this want and no
 #  desire, so it stops when the tower stands.

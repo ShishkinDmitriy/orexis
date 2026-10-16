@@ -1,0 +1,186 @@
+@prefix : <http://example.org/orexis/onboarding#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF ITS BROKERS FOR ONBOARDING TO TELL EACH CLIENT AN ADDRESS. A world may
+#  have any number of brokers, and `orexis-compose` writes each agent the ones it is connected to,
+#  `orexis-firmware` a board the one it is, and `orexis-mqtt` serves each apart. So a broker has one
+#  host and one port per scheme — of two, a board is flashed with one, and nothing here can say which
+#  is right — and its local name is no other's of the world. The words are MQTT4SSN's and
+#  schema.org's, and the limits are onboarding's. A url is read where it is the world's to assert, in
+#  a deployment graph beside its society; one the installation allocated is one url per scheme, by
+#  construction. Where it listens is the next shape's.
+#
+#  A url's host is what lies between `//` and the port or the path, and its port the number after
+#  the host's colon, or its scheme's where it states none — 1883 for `mqtt`, 8883 for `mqtts` — so a
+#  clash cannot hide behind an omission. And a broker asserting any url asserts a plain one: a board
+#  is flashed with the plain port and the simulator started with it, and the broker's own config
+#  listens there, so a world asserting TLS alone has no address to tell either (`orexis-mqtt` refused
+#  it by hand). A broker asserting none is allocated both.
+[] a sh:NodeShape ;
+    sh:targetClass mqtt4ssn:Broker ;
+    sh:sparql [
+        sh:message "asserts {?url} and no mqtt:// url: a board and the simulator connect plain" ;
+        sh:select """
+            SELECT $this ?url WHERE {
+              $this schema:url ?url .
+              FILTER NOT EXISTS { $this schema:url ?plain . FILTER STRSTARTS(STR(?plain), "mqtt://") } }""" ] ,
+    [
+        sh:message "given two hosts, {?one} and {?two}: a board is flashed with one, and nothing says which is right" ;
+        sh:select """
+            SELECT $this ?one ?two WHERE {
+              $this schema:url ?a , ?b .
+              BIND (REPLACE(STR(?a), "^[a-z]+://([^/:]*).*$", "$1") AS ?one)
+              BIND (REPLACE(STR(?b), "^[a-z]+://([^/:]*).*$", "$1") AS ?two)
+              FILTER (?one < ?two) }""" ] ,
+    [
+        sh:message "given two {?scheme}:// ports, {?one} and {?two}: a board is flashed with one, and nothing says which is right" ;
+        sh:select """
+            SELECT $this ?scheme ?one ?two WHERE {
+              $this schema:url ?a , ?b .
+              BIND (REPLACE(STR(?a), "^([a-z]+)://.*$", "$1") AS ?scheme)
+              FILTER (?scheme IN ("mqtt", "mqtts") && STRSTARTS(STR(?b), CONCAT(?scheme, "://")))
+              BIND (IF(REGEX(STR(?a), "^[a-z]+://[^/:]*:[0-9]+"), REPLACE(STR(?a), "^[a-z]+://[^/:]*:([0-9]+).*$", "$1"),
+                       IF(?scheme = "mqtt", "1883", "8883")) AS ?one)
+              BIND (IF(REGEX(STR(?b), "^[a-z]+://[^/:]*:[0-9]+"), REPLACE(STR(?b), "^[a-z]+://[^/:]*:([0-9]+).*$", "$1"),
+                       IF(?scheme = "mqtt", "1883", "8883")) AS ?two)
+              FILTER (xsd:integer(?one) < xsd:integer(?two)) }""" ] ,
+    [
+        sh:message "is named {?name}, as {?other} is: a broker's service, volume and files are named for it" ;
+        sh:select """
+            SELECT $this ?other ?name WHERE {
+              ?other a mqtt4ssn:Broker . FILTER (?other != $this)
+              BIND (REPLACE(STR($this), "^.*[#/]", "") AS ?name)
+              FILTER (REPLACE(STR(?other), "^.*[#/]", "") = ?name) }""" ] .
+
+#  ONE PORT ON ONE HOST IS HELD BY ONE LISTENER — a broker, or a service of the installation — whatever
+#  else states a url there. Judged of a world, beside its deployment, it refuses two of the world's
+#  brokers on one port; judged of the installation (`installation.derive`), beside every url any world
+#  asserts and every allocation kept, it refuses a broker on another world's port or on a service's,
+#  and a world asserting a port already allocated to another, rather than moving the other, which may
+#  be a board in a pot. Only the listener is targeted, so a forecast's url beside another's is no
+#  clash, and what the installation holds of other worlds need not say what it is. A url's port is its
+#  scheme's where it states none, so a clash cannot hide behind an omission (#837).
+[] a sh:NodeShape ;
+    sh:targetClass mqtt4ssn:Broker , onboarding:SeriesStore , onboarding:SeriesView ;
+    sh:sparql [
+        sh:message "listens at {?at}, as {?other} does: one port on one host is held by one listener" ;
+        sh:select """
+            SELECT $this ?other ?at WHERE {
+              $this schema:url ?a . ?other schema:url ?b . FILTER (?other != $this)
+              BIND (REPLACE(STR(?a), "^([a-z]+)://.*$", "$1") AS ?mine)
+              BIND (REPLACE(STR(?b), "^([a-z]+)://.*$", "$1") AS ?theirs)
+              BIND (CONCAT(REPLACE(STR(?a), "^[a-z]+://([^/:]*).*$", "$1"), ":",
+                           IF(REGEX(STR(?a), "^[a-z]+://[^/:]*:[0-9]+"), REPLACE(STR(?a), "^[a-z]+://[^/:]*:([0-9]+).*$", "$1"),
+                              IF(?mine = "mqtt", "1883", IF(?mine = "mqtts", "8883",
+                              IF(?mine = "http", "80", IF(?mine = "https", "443", "")))))) AS ?at)
+              BIND (CONCAT(REPLACE(STR(?b), "^[a-z]+://([^/:]*).*$", "$1"), ":",
+                           IF(REGEX(STR(?b), "^[a-z]+://[^/:]*:[0-9]+"), REPLACE(STR(?b), "^[a-z]+://[^/:]*:([0-9]+).*$", "$1"),
+                              IF(?theirs = "mqtt", "1883", IF(?theirs = "mqtts", "8883",
+                              IF(?theirs = "http", "80", IF(?theirs = "https", "443", "")))))) AS ?there)
+              FILTER (?at = ?there && !STRENDS(?at, ":")) }""" ] .
+
+#  A CLIENT THAT IS NO AGENT — A BOARD, OR WHAT THE SIMULATOR PLAYS — IS CONNECTED TO ONE BROKER: it is
+#  flashed or started with one address. An agent may be connected to any number, each in its environment.
+#  Connected to a broker the society names as one: connected to a node it never says is a broker, the
+#  world has no bus, and a compose file of its agents alone would drop the simulator in silence.
+[] a sh:NodeShape ;
+    sh:targetClass mqtt4ssn:Client ;
+    sh:sparql [
+        sh:message "connected to no mqtt4ssn:Broker: it would be flashed or started with no address" ;
+        sh:select """
+            SELECT $this WHERE {
+              FILTER NOT EXISTS { $this a orexis:Agent }
+              FILTER NOT EXISTS { $this mqtt4ssn:isConnectedToBroker ?broker . ?broker a mqtt4ssn:Broker } }""" ] ,
+    [
+        sh:message "connected to two brokers, {?one} and {?two}: it is flashed with one address, and only an agent is told several" ;
+        sh:select """
+            SELECT $this ?one ?two WHERE {
+              FILTER NOT EXISTS { $this a orexis:Agent }
+              $this mqtt4ssn:isConnectedToBroker ?one , ?two . FILTER (STR(?one) < STR(?two)) }""" ] .
+
+#  A TOPIC IS NAMED BY ONE CONVENTION, AND THE RULE HERE NAMES IT (#836). A society states THAT a sensor
+#  publishes on a topic, an actuator takes commands on one, an agent listens on one — the MQTT4SSN
+#  topic node — and no filter: a topic's name matters only because both ends must agree on it, and
+#  which name is chosen matters to nobody. The rule writes the filter the topic is named by, kind by
+#  kind of principal and purpose, `<who>/<id>/<what>`:
+#
+#    sensors/<client id>/reading     what a client — a board — publishes: the readings of every
+#                                    sensor it hosts, one document, each sensor reading its own value
+#                                    by pointer. Named by the PUBLISHER, so a board has one readings
+#                                    topic however many sensors it carries.
+#    sensors/<client id>/command     what a client that is no agent listens to itself.
+#    actuators/<device>/command      what a device a client hosts listens to, by its local name.
+#    agents/<id>/inbox               what an agent listens to.
+#
+#  `orexis-onboard` runs the rule over the world's asserted documents and writes what it made beside
+#  the society, `society.derived.ttl`, a society graph the agents, the simulator and every tool read
+#  as any other; a filter the world asserts itself is kept and wins, since the rule fills a topic
+#  that has none. The constraints below are judged with the derived document in: a topic nothing
+#  names is a topic nothing publishes on or listens to, or one `orexis-onboard` has not yet derived;
+#  two names on one topic is a sensor on two boards; one name on two topics is a board whose sensors
+#  the world spread over two topics, which the board publishes as one.
+[] a sh:NodeShape ;
+    sh:targetClass mqtt4ssn:Topic ;
+    sh:rule [ a sh:SPARQLRule ;
+        sh:construct """
+            CONSTRUCT { ?filter a mqtt4ssn:TopicFilter ; mqtt4ssn:hasFilterPattern ?pattern ; mqtt4ssn:matchesTopic $this }
+            WHERE {
+              FILTER NOT EXISTS { ?stated mqtt4ssn:matchesTopic $this }
+              { ?client mqtt4ssn:hasClientID ?id ; mqtt4ssn:hosts/ssn:hasSubSystem* ?sensor . ?sensor mqtt4ssn:observesTopic $this .
+                BIND (CONCAT("sensors/", ?id, "/reading") AS ?pattern) }
+              UNION
+              { ?client mqtt4ssn:hasClientID ?id ; mqtt4ssn:listensToTopic $this . FILTER NOT EXISTS { ?client a orexis:Agent }
+                BIND (CONCAT("sensors/", ?id, "/command") AS ?pattern) }
+              UNION
+              { ?device mqtt4ssn:listensToTopic $this . FILTER NOT EXISTS { ?device a mqtt4ssn:Client }
+                BIND (CONCAT("actuators/", REPLACE(STR(?device), "^.*[#/]", ""), "/command") AS ?pattern) }
+              UNION
+              { ?agent a orexis:Agent ; orexis:localId ?id ; mqtt4ssn:listensToTopic $this .
+                BIND (CONCAT("agents/", ?id, "/inbox") AS ?pattern) }
+              BIND (IRI(CONCAT(STR($this), "_filter")) AS ?filter) }""" ] ;
+    sh:sparql [
+        sh:message "named by no filter: nothing publishes on it or listens to it, or `orexis-onboard` has not derived its name" ;
+        sh:select """
+            SELECT $this WHERE { FILTER NOT EXISTS { ?filter mqtt4ssn:matchesTopic $this } }""" ] ,
+    [
+        sh:message "named twice, {?one} and {?two}: a sensor on it is hosted by two clients, or a name was asserted beside the derived one" ;
+        sh:select """
+            SELECT $this ?one ?two WHERE {
+              ?f mqtt4ssn:matchesTopic $this ; mqtt4ssn:hasFilterPattern ?one . ?g mqtt4ssn:matchesTopic $this ; mqtt4ssn:hasFilterPattern ?two .
+              FILTER (?one < ?two && !REGEX(?one, "[+#]") && !REGEX(?two, "[+#]")) }""" ] ,
+    [
+        sh:message "named {?name}, as {?other} is: a client publishes on one topic, so what its sensors observe is one topic" ;
+        sh:select """
+            SELECT $this ?other ?name WHERE {
+              ?f mqtt4ssn:matchesTopic $this ; mqtt4ssn:hasFilterPattern ?name . ?g mqtt4ssn:matchesTopic ?other ; mqtt4ssn:hasFilterPattern ?name .
+              FILTER (?other != $this && !REGEX(?name, "[+#]")) }""" ] .
+
+#  A SENSOR'S READINGS COME OVER THE BROKERS ITS CLIENT IS CONNECTED TO, so an observer reading one over
+#  MQTT is played by an agent connected to one of them: a world may have any number of brokers, and the
+#  agent subscribes to a sensor's topic on each it shares with the sensor's client. Onboarding's, since
+#  it is stated in sensing's words and the transport's, and neither package may speak the other's.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf mqtt4ssn:observesTopic ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "read by {?me}, which is connected to none of the brokers its readings come over" ;
+        sh:select """
+            SELECT $this ?me WHERE {
+              ?me orexis:plays ?role . ?role sensing:sensor $this .
+              ?client mqtt4ssn:hosts ?system . ?system ssn:hasSubSystem* $this .
+              FILTER NOT EXISTS { ?client mqtt4ssn:isConnectedToBroker ?broker . ?me mqtt4ssn:isConnectedToBroker ?broker } }""" ] .
+
+#  NEVER A CREDENTIAL: a deployment graph says where, never what may be done there. A password in a url
+#  would be in every compose file and config.h written from it. Judged of a world beside its deployment,
+#  of the installation, and of every url the installation holds before a port is allocated.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf schema:url ;
+    sh:sparql [
+        sh:message "states a credential in {?url}: a deployment graph says where, never what may be done there" ;
+        sh:select """SELECT $this ?url WHERE { $this schema:url ?url . FILTER REGEX(STR(?url), "^[a-z]+://[^/]*@") }""" ] .

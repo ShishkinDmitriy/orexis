@@ -222,7 +222,7 @@ def _sensor_panel(title: str, bucket: str, sensor_id: str, measurement: str, uni
 def _ranges_by_subject(store) -> dict:
     """{(subjectIri, propertyIri): {"OperatingRange": (lo, hi), ...}} — empty when none stated."""
     out: dict = {}
-    for r in rows(store, _RANGES_Q, graphs_of(store, BELIEF, nobodys=True)):
+    for r in rows(store, _RANGES_Q, graphs_of(store, BELIEF, common=True)):
         kind = r["kind"].rsplit("/", 1)[-1].rsplit("#", 1)[-1]
         if kind not in ("OperatingRange", "SurvivalRange"):
             continue
@@ -241,7 +241,7 @@ def render(world: str) -> dict:
     a panel keyed on the sensor can be right about all three.
     """
     store = reading.world(world_dir(world))
-    sensors = rows(store, _SENSORS_Q, graphs_of(store, BELIEF, nobodys=True))
+    sensors = rows(store, _SENSORS_Q, graphs_of(store, BELIEF, common=True))
     if not sensors:
         raise SystemExit(f"orexis-dashboards: nothing in world {world!r} observes anything")
     ranges = _ranges_by_subject(store)
@@ -401,7 +401,7 @@ def generate(world: str) -> None:
     # that is not monitored has no health dashboard, and a stale one from before is taken away.
     docs = []
     store = reading.world(world_dir(world))
-    if rows(store, _SENSORS_Q, graphs_of(store, BELIEF, nobodys=True)):
+    if rows(store, _SENSORS_Q, graphs_of(store, BELIEF, common=True)):
         docs.append(("orexis.json", render(world)))
     else:
         log.info("  nothing in %s observes anything — no readings dashboard", world)
@@ -432,7 +432,9 @@ def main() -> None:
         description="Generate this world's Grafana dashboard from its own wiring.",
     )
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
-    generate(p.parse_args().world)
+    world = p.parse_args().world
+    reading.check(world_dir(world))
+    generate(world)
 
 
 if __name__ == "__main__":

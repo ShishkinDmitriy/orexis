@@ -56,7 +56,7 @@ GRAPH :catalogue {
   :dip a orexis:Graph .
   :dip a orexis:PredictionGraph .
   :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
-  :dip orexis:beliefsOf :keeper .
+  :dip orexis:ownedBy :keeper .
   :dip orexis:retracts """PREFIX : <http://example.org/test#>
       DELETE { GRAPH $state { :tank1 :level ?l } }
       WHERE  { GRAPH $state { :tank1 :level ?l } }""" .
@@ -66,13 +66,13 @@ GRAPH :catalogue {
   :refill a orexis:Graph .
   :refill a orexis:PredictionGraph .
   :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
-  :refill orexis:beliefsOf :keeper .
+  :refill orexis:ownedBy :keeper .
   :refill orexis:retracts """PREFIX : <http://example.org/test#>
       DELETE { GRAPH $state { :tank1 :level ?l } }
       WHERE  { GRAPH $state { :tank1 :level ?l } }""" .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed orexis:beliefsOf :keeper .
+  :sensed orexis:ownedBy :keeper .
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .
 }

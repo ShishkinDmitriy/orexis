@@ -22,9 +22,11 @@ import pytest
 
 from agent import clock
 from agent.ontology import BELIEF
-from agent.sensing.ontology import OBSERVATION_GRAPH, STUCK_AFTER_TERM
-from agent.sensing.received import STUCK_AFTER, received
+from agent.sensing.received import received
+from agent.sensing.ontology import OBSERVATION_GRAPH, STUCK_AFTER_TERM, default_of
 from agent.store import graphs_of, rows
+
+STUCK_AFTER = default_of(STUCK_AFTER_TERM)          # where the observer role states none, the observer shape's default
 
 CASES_DIR = Path(__file__).parent / "received"
 WORLD = Path(__file__).parent / "worlds" / "a_pot_and_its_probe.trig"
@@ -155,9 +157,9 @@ def test_each_reading_names_the_one_before_it_and_only_the_last_stuck_after_are_
     assert len(graphs_of(store, OBSERVATION_GRAPH)) == STUCK_AFTER
 
 
-def test_the_depth_kept_is_the_agents_where_its_self_graph_states_one(monkeypatch, snapshots):
+def test_the_depth_kept_is_the_observer_roles_where_it_states_one(monkeypatch, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
-    store = snapshots.stating(snapshots.stand_in(WORLD), {STUCK_AFTER_TERM: 2})
+    store = snapshots.observing(snapshots.stand_in(WORLD), PROBE, {STUCK_AFTER_TERM: 2})
     _every_cadence(store, snapshots, [0.2, 0.21, 0.22, 0.23])
     assert [n for _, n, _ in _chain(store)] == [0.22, 0.23]
 
@@ -189,15 +191,15 @@ def test_a_message_carrying_several_readings_chains_them_in_order(monkeypatch, s
     alarm = b'{"value": [{"value": 656, "age_s": 25}, {"value": 361, "age_s": 0}]}'
     earlier, reading = received(store, snapshots.ME, PROBE, alarm, snapshots.NOW)
     assert (earlier, reading) == (OBSERVED + "probe_20260101T115935Z", OBSERVED + "probe_20260101T120000Z")
-    assert [(o.rsplit("#", 1)[-1], n, p and p.rsplit("#", 1)[-1]) for o, n, p in _chain(store)] == [
-        ("obs_probe_20260101T114500Z", 640.0, None),
-        ("obs_probe_20260101T115935Z", 656.0, "obs_probe_20260101T114500Z"),
-        ("obs_probe_20260101T120000Z", 361.0, "obs_probe_20260101T115935Z")]
+    assert _chain(store) == [
+        (PROBE + ".20260101T114500Z", 640.0, None),
+        (PROBE + ".20260101T115935Z", 656.0, PROBE + ".20260101T114500Z"),
+        (PROBE + ".20260101T120000Z", 361.0, PROBE + ".20260101T115935Z")], "named off the sensor, never in a vocabulary's namespace"
     assert _period(store, quiet)[1] == snapshots.NOW - timedelta(seconds=25), "ended where the earlier began"
     assert _period(store, earlier) == (snapshots.NOW - timedelta(seconds=25), snapshots.NOW)
     assert graphs_of(store, OBSERVATION_GRAPH, at=snapshots.NOW, now=snapshots.NOW) == [reading]
     heartbeat = b'{"value": [{"value": 370, "age_s": 0}]}'
     [beat] = received(store, snapshots.ME, PROBE, heartbeat, snapshots.NOW)
     assert beat == OBSERVED + "probe_20260101T120000Z_2", "a second reading at one instant is named apart"
-    assert [p for o, _, p in _chain(store) if o.endswith("_2")] == [TEST.replace("test#", "orexis#") + "obs_probe_20260101T120000Z"]
+    assert [p for o, _, p in _chain(store) if o.endswith("_2")] == [PROBE + ".20260101T120000Z"]
     assert graphs_of(store, OBSERVATION_GRAPH, at=snapshots.NOW, now=snapshots.NOW) == [beat]

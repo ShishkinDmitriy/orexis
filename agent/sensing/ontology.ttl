@@ -1,6 +1,8 @@
 @prefix : <http://example.org/orexis/sensing#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix belief: <http://example.org/orexis/belief#> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix schema: <https://schema.org/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -16,8 +18,8 @@
 #  interest, or a sosa:Sample that sosa:isSampleOf one — its board reaches it by ssn:hasSubSystem,
 #  and how often it reports is its ssn-system:Frequency; a range is SSN-System's, stated by the
 #  host, by what the host is a sample of, or by the sensor itself. Declared here is the graph a
-#  percept is kept in and the link from one percept to the one before it, the silence of a sensor
-#  that has stopped reporting and the number one that is stuck keeps giving, the margin a range's
+#  percept is kept in and the link from one percept to the one before it, how long a sensor may be
+#  silent before it is doubted and the number one that is stuck keeps giving, the margin a range's
 #  condition states for a domain's transition to hold a state by, and the pipeline's own concepts,
 #  since neither standard says how
 #  bytes become a number: a codec, the binding of a sensor to one, the member that ships, and the
@@ -26,38 +28,56 @@
 #  nothing above it: a transport hands it bytes, it makes a number of them and writes one
 #  sosa:Observation per reading — a PERCEPT, in a graph of its own, linked to the one before it,
 #  holding until the next arrives or is due and a grace past it — keeps a sensor's last few, as deep
-#  as its rules read, and on the container's tick it says which readings are missing and which
-#  sensors have gone silent. It predicts nothing — that is the prediction package's — and concludes
+#  as its rules read, and on the container's tick it asks which sensors have gone silent,
+#  a silence computed from the latest percept's end and never written. It predicts nothing — that is the prediction package's — and concludes
 #  nothing itself: what a percept is of, its quantity and whether its sensor is stuck are revisions,
 #  concluded by the rules this layer ships (rules.ttl beside this file) and run by the deliberator.
 #  What the agent holds true of a subject is a domain's transition, triggered by the percept
 #  arriving, and none of this layer's words (an-observation-is-a-percept-and-the-mind-reads-only-beliefs).
 #  No word of any transport is spoken here.
 
-#  THE ROLE THIS LAYER SERVES (knowledge/domain/sensing/observer.md): an agent declared an observer
-#  runs sensing's part, and the boot loads this layer for it and for nothing else. BENEATH THE
-#  DELIBERATOR, because what a percept is of and its quantity are revisions: the rules this layer
+#  THE ROLE THIS LAYER SERVES (knowledge/domain/sensing/observer.md): an agent that plays an
+#  observer runs sensing's part, and the boot loads this layer for it and for nothing else. BENEATH
+#  THE DELIBERATOR, because what a percept is of and its quantity are revisions: the rules this layer
 #  ships conclude them and the deliberator runs those rules, so an observer that were no deliberator
-#  would hold numbers that are of nothing. That is how this layer says what it needs of the belief package
-#  without the runtime knowing it (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
-#  What the role needs of the world is a sensor reporting to the agent — hosted by what it acts for,
-#  by a sample of it, or by a place that contains it — and `orexis-onboard` refuses an observer
-#  whose world states none, as it refuses a sensor reporting to an agent that is no observer.
+#  would hold numbers that are of nothing. That is how this layer says what it needs of the belief
+#  package without the runtime knowing it (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+#
+#  AN OBSERVER IS A ROLE THE AGENT PLAYS, AND IT CARRIES THE SENSORS IT READS
+#  (a-role-is-an-instance-an-agent-plays): `:fern_agent orexis:plays [ a sensing:Observer ;
+#  sensing:sensor :probe ]`. Which sensors report to an agent is DECLARED, where it was derived from
+#  where they are mounted, so a probe moved into a pot the agent acts for is not its sensor until
+#  someone says so. Onboarding holds the declaration to the world both ways: this shape refuses an
+#  observer reading no sensor, and one reading a sensor mounted on nothing the agent acts for — not
+#  on it, a sample of it, or a place containing it; `orexis-onboard` refuses a sensor mounted so that
+#  no observer role of the agent reads it. And the role carries how far its sensors are trusted:
+#  `silentAfter` and `stuckAfter`, the shape's `sh:defaultValue` where a role states none — the one
+#  place the figure lives, read by `received`, `missed` and the stuck rule alike. A sensor judged by
+#  another figure is read by another observer role.
 
 :Observer a owl:Class ;
     rdfs:subClassOf orexis:Role , belief:Deliberator ;
     rdfs:label "Observer" ;
-    rdfs:comment """An agent that turns its sensors' numbers into observations: the role whose part is
-    sensing's, which writes an observation per reading and says a sensor silent or stuck. Declared,
-    never derived; it needs a sensor reporting to it.""" .
+    rdfs:comment """A role an agent plays that turns its sensors' numbers into observations: the role
+    whose part is sensing's, which writes an observation per reading and says a sensor silent or
+    stuck. Played, never derived, and carrying the sensors it reads (`sensor`) and how long it lets
+    them be silent or stuck (`silentAfter`, `stuckAfter`).""" .
 
+:sensor a owl:ObjectProperty ;
+    rdfs:domain :Observer ;
+    rdfs:range sosa:Sensor ;
+    rdfs:label "sensor" ;
+    rdfs:comment """A sensor this observer role reads: what makes it the agent's, declared in the self
+    graph where the role is played. What the transports subscribe to and fetch, and what onboarding
+    grants the agent on the bus. It must report to the agent — be mounted on what the agent acts for,
+    a sample of it, or a place containing it — and onboarding refuses one that does not.""" .
+
+#  WHAT HOLDS OF A LIMIT NO OBSERVER ROLE STATES, read by `default_of` and by the stuck rule off this
+#  ontology. The refusals of an observer are onboarding's (`requirements.ttl`).
 [] a sh:NodeShape ;
     sh:targetClass :Observer ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "an observer no sensor reports to: it would observe nothing" ;
-        sh:select """SELECT ?me WHERE { ?me a orexis:Self
-            FILTER NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-                                ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host } }""" ] .
+    sh:property [ sh:path :silentAfter ; sh:defaultValue 3 ] ,
+                [ sh:path :stuckAfter ; sh:defaultValue 6 ] .
 
 :ObservationGraph a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
@@ -209,41 +229,32 @@
     rdfs:comment """As startsPointer, the instants each the END of the stretch its value holds over,
     the one before its start: what a service summing the hour up to a time says of rain.""" .
 
-:silentSince a owl:DatatypeProperty ;
-    rdfs:domain sosa:Sensor ;
-    rdfs:range xsd:dateTime ;
-    rdfs:label "silent since" ;
-    rdfs:comment """The sensor has stopped reporting: its last reading fell due at this instant and
-    nothing has arrived for a limit of its cadences since. A row present while the silence lasts,
-    named for the state and not for the tick that noticed it, written by `missed` into a graph of
-    the agent's own and dropped by the sensor's next reading. SOSA and SSN say how often a sensor
-    reports and nothing about one that has stopped, which is why this is sensing's word.""" .
-
-# TWO LIMITS THE AGENT STATES OF ITSELF: stances, in its self graph, read through the kernel's
-# `stance` with the figure in code where none is stated — and the stuck limit by sensing's rule too,
-# off the same graph and with the same figure; one row each, since an agent judges every sensor it
-# hears by one standard. Stated anywhere but the self graph, a limit is not read
-# (knowledge/domain/kernel/stance.md).
+# TWO LIMITS AN OBSERVER ROLE STATES of the sensors it reads, each a count of the doubted sensor's
+# cadences or readings: stated on the role where it is played, and the observer shape's
+# `sh:defaultValue` where the role states none — the one place the figure lives, read by `received`,
+# `missed` and the stuck rule alike. A sensor judged by another figure is read by another role.
 :silentAfter a owl:DatatypeProperty ;
-    rdfs:domain orexis:Self ;
+    rdfs:domain :Observer ;
     rdfs:range xsd:integer ;
     rdfs:label "silent after" ;
-    rdfs:comment """How many of a sensor's cadences its reading may be missing before `missed` says the
-    sensor silent (`silentSince`). The agent states it of itself in its self graph; where it states
-    none, three.""" .
+    rdfs:comment """How many of a sensor's cadences its reading may be missing before `missed` answers
+    the sensor silent, since the instant its latest percept ended: computed from that period, the
+    sensor's frequency and this, and never written, since its premises are stored and nothing in the
+    mind reads it. Stated on the observer role that reads the sensor; where it states
+    none, the observer shape's default, three.""" .
 
 :stuckAfter a owl:DatatypeProperty ;
-    rdfs:domain orexis:Self ;
+    rdfs:domain :Observer ;
     rdfs:range xsd:integer ;
     rdfs:label "stuck after" ;
     rdfs:comment """How many of a sensor's readings may give the same number before its sensor is said
     stuck (`stuckOn`) — a count of READINGS, not of time (#944): `received` keeps that many of a
     sensor's percepts and sensing's rule says the sensor stuck when every one kept gave one number, so
-    a sensor that misses readings is said stuck later than one that never does. The agent states it
-    of itself in its self graph; where it states none, six — twice the silence: a live instrument's
-    count moves by a bit within a few readings even in still soil, and soil itself drifts within an
-    hour, so six readings of one number are the signature of a frozen oscillator or a half-lost wire
-    rather than of equilibrium.""" .
+    a sensor that misses readings is said stuck later than one that never does. Stated on the observer
+    role that reads the sensor; where it states none, the observer shape's default, six — twice the
+    silence: a live instrument's count moves by a bit within a few readings even in still soil, and
+    soil itself drifts within an hour, so six readings of one number are the signature of a frozen
+    oscillator or a half-lost wire rather than of equilibrium.""" .
 
 :stuckOn a owl:DatatypeProperty ;
     rdfs:domain sosa:Sensor ;
@@ -274,3 +285,10 @@
     noise. Absent, nought, and the state is the bare comparison with the bounds. Read by a domain's
     transition and by nothing else. `orexis-onboard` refuses one that is no
     number, a negative one, and one of half the range's width or more.""" .
+
+#################  What a world must state of what sensing reads  #################################
+#
+# Held at onboarding to every world, over the documents as an agent's boot reads them: a sensor that
+# observes nothing or is mounted on nothing reports to no agent, and a range whose bounds cannot be
+# compared judges no state. Each says what it is, and onboarding refuses a world any of them reports.
+

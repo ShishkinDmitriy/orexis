@@ -20,7 +20,7 @@ wrong with the prediction; there was no place in the pass where it REPLACED anyt
 bed's soil, dry — and never the reading, so a ground that only swapped the observation would keep the
 present's state for ever, and a foreseen crossing would read met. A predicted observation arriving in
 a ground triggers the transitions there, as a received one does in the present: belief's machine and
-the rules the beliefs hold, reading the arrival with its revisions, the beliefs nobody owns and the agent's
+the rules the beliefs hold, reading the arrival with its revisions, the common beliefs and the agent's
 own state as the ground before left it, and changing the ground alone. So the hold reaches the
 forecast — a bed believed dry and resting at 0.3001 is foreseen dry, as the present holds it — and a
 prediction still triggers nothing in the belief base: the runner prepares the target, and here the
@@ -71,7 +71,7 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent.belief.transition import run, transitions
-from agent.ontology import BELIEF, KNOWN, OREXIS, PREDICTION
+from agent.ontology import BELIEF, DERIVED, KNOWN, OREXIS, PREDICTION
 from agent.hash_named_graph import digest_of, hash_named_graph
 from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, clear_graph, revisions_of, forget_graph,
                          graphs_of, quads, rows, update)
@@ -158,7 +158,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     #  as the grounds are laid, from the present's: asked only where something is foreseen.
     rules = transitions(store) if ahead else []
     own = _own_state(store) if rules else None
-    stated = _whole(store, graphs_of(store, BELIEF, nobodys=True)) if rules else []
+    stated = _whole(store, graphs_of(store, BELIEF, common=True)) if rules else []
     made, marks = [here], _marked(store, here, within)
     opened = [now]
     landing = {at for at in landings if at > now}
@@ -194,11 +194,11 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         #  THE ONE BEFORE IT ENDS HERE. A ground holds until the next one begins, which is not
         #  known until it does — so each is classified when its successor arrives, and the last
         #  is left open because nothing the agent can see ends it.
-        classify(store, here, GROUND_GRAPH, OREXIS + "Derived", start=opened[-1], end=at)
+        classify(store, here, GROUND_GRAPH, DERIVED, start=opened[-1], end=at)
         made.append(there)
         opened.append(at)
         here, marks = there, mark
-    classify(store, here, GROUND_GRAPH, OREXIS + "Derived", start=opened[-1])
+    classify(store, here, GROUND_GRAPH, DERIVED, start=opened[-1])
     if own is not None:
         clear_graph(store, own)
     log.debug("%d ground world(s) over %d prediction(s)", len(made), len(ahead))
@@ -212,7 +212,7 @@ _DERIVED_Q = """
 SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                                ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
                                FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-                               ?g orexis:beliefsOf ?owner . } } ORDER BY ?g"""
+                               ?g orexis:ownedBy ?owner . } } ORDER BY ?g"""
 
 #  WHERE THE AGENT'S OWN STATE IS KEPT WHILE THE GROUNDS ARE LAID: a working graph, not a belief,
 #  handed by name to the transitions and taken away when the last ground is laid. Its name is for eyes.
@@ -240,7 +240,7 @@ def _transitioned(store: ox.Store, ground: str, arrivals: list[str], rules, own:
 
     A PREDICTED OBSERVATION IS AN ARRIVAL THERE, as a received one is in the present: each triggers
     every transition once, in the order the predictions came, rule by rule through belief's machine,
-    reading itself with its revisions, the beliefs nobody owns and the agent's own state as the ground before
+    reading itself with its revisions, the common beliefs and the agent's own state as the ground before
     left it — and nothing else — so a bed believed dry and resting at 0.3001 is foreseen dry, held by the
     margin as the present holds it. Each rule is the engine's own update, run twice over the same reads:
     `WITH` the ground, which no rule reads, and then `WITH` the working state, so what it deletes is
@@ -336,7 +336,7 @@ def _split(store: ox.Store, actions=None, at: datetime | None = None) -> list[st
         for q in cut:
             store.remove(q)
         add_quads(store, [ox.Quad(q.subject, q.predicate, q.object, ox.NamedNode(piece)) for q in cut])
-        classify(store, piece, CHANGEABLE_GRAPH, OREXIS + "Derived")
+        classify(store, piece, CHANGEABLE_GRAPH, DERIVED)
         add_quads(store, [ox.Quad(ox.NamedNode(piece), ox.NamedNode(_PROV + "wasDerivedFrom"),
                                   ox.NamedNode(graph), ox.NamedNode(cat))])
         made.append(piece)

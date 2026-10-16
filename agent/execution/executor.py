@@ -2,7 +2,7 @@
 a commitment out.
 
 **IT OWNS THE INTENTIONS, AND NOTHING ELSE WRITES THEM.** They are a graph of the belief base, of
-its own kind (`execution:IntentionGraph`), the agent's and not public, so a restart on a lived-in
+its own kind (`execution:IntentionGraph`), the agent's and nobody else's, so a restart on a lived-in
 volume finds them (#842) and planning reads what is walked there, by pattern. A plan found above
 is PUBLISHED into the store — planning writes it into the beliefs once, as an `orexis:PlanGraph`
 it owns — and the executor adopts it BY REFERENCE, an intention that `execution:adopts` it and
@@ -89,7 +89,7 @@ import pyoxigraph as ox
 from agent import clock
 from agent.lifecycle import Signal
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import ACTION, BELIEF, OREXIS, local_of
+from agent.ontology import ACTION, BELIEF, OREXIS, RECORDED, local_of
 from agent.stance import stance
 from agent.store import (NAMESPACES, Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant,
                          quads, quads_for_pattern, revisions_of, rows, update)
@@ -107,7 +107,6 @@ DEFAULT_PATIENCE_S = 60.0
 INTENTION = EXECUTION + "Intention"
 ADOPTS = EXECUTION + "adopts"
 INTENTION_GRAPH = EXECUTION + "IntentionGraph"
-RECORDED = OREXIS + "Recorded"
 #  The head a standing intention is AT — not the whole plan, which `execution:step` names, and
 #  not the first step for ever: what `by` points at moves as the world answers each step.
 BY = EXECUTION + "by"
@@ -205,7 +204,7 @@ _HELD_Q = """
 SELECT DISTINCT ?g WHERE {
   GRAPH $retracts { ?s ?p ?o }
   GRAPH $cat { ?g a orexis:BeliefGraph .
-               ?g orexis:beliefsOf ?owner .
+               ?g orexis:ownedBy ?owner .
                FILTER NOT EXISTS { ?g a belief:RevisionGraph }
                FILTER NOT EXISTS { ?g a execution:CommittedStepGraph } }
   GRAPH ?g { ?s ?p ?o } } ORDER BY ?g"""
@@ -595,7 +594,7 @@ class Executor:
         owner = self.holder or _me_of(self.beliefs, self.id)
         ended = rows(self.beliefs, _ENDED_Q, (), cat=Raw(f"<{catalogue_of(self.beliefs)}>"),
                      kind=Raw(f"<{COMMITTED_STEP_GRAPH}>"), now=instant(now),
-                     owned=Raw(f"; orexis:beliefsOf <{owner}>" if owner else ""))
+                     owned=Raw(f"; orexis:ownedBy <{owner}>" if owner else ""))
         for r in ended:
             forget_graph(self.beliefs, r["g"])
 
@@ -1026,5 +1025,5 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
 
 def _me_of(beliefs: ox.Store, agent_id: str) -> str | None:
     """The agent a belief base holds with the id it was told, off what the world states, or None."""
-    found = rows(beliefs, _ME_Q, graphs_of(beliefs, OREXIS + "BeliefGraph", nobodys=True), id=ox.Literal(agent_id))
+    found = rows(beliefs, _ME_Q, graphs_of(beliefs, OREXIS + "BeliefGraph", common=True), id=ox.Literal(agent_id))
     return found[0]["me"] if found else None

@@ -9,10 +9,10 @@ the world already states every channel and who is wired to it.
 
 **The ACL is the wiring.** Nothing is listed by hand. The world's society graph says, in MQTT4SSN's
 words, which topic each sensor publishes on and which each device listens to, and who acts for
-what; the world graph beside it says which sensor is hosted by what:
+what; each agent's self graph says which sensors the observer roles it plays read:
 
-    an agent acts for S         read the topics of every sensor S hosts, and write the topic its
-                                board listens to (cadence and sense-now)
+    an agent reads sensor S     read the topics S publishes on, and write the topic its board
+                                listens to (cadence and sense-now)
     an agent holds actuator A   write the topic A listens to, or its board's (a step's command)
     a client hosts sensor X     write the topics X publishes on
     a client hosts actuator A   read the topics A listens to, and the client's own
@@ -59,22 +59,30 @@ from pathlib import Path
 from cryptography import x509
 
 from . import certs, installation, reading
+from agent.ontology import local_of
 from agent.store import graphs_of, rows
 from .worlds import REPO_ROOT
 from .worlds import shown, world_dir, worlds
 
 log = logging.getLogger("mqtt")
 
-def mosquitto_dir(world: str):
-    """A broker per world, so its files live WITH the world rather than in shared infra.
+def mosquitto_dir(world: str, broker_iri: str | None = None):
+    """A world's brokers are its own, so their files live WITH the world rather than in shared infra:
+    each broker's config, passwd and ACL under `mosquitto/<its local name>/`, and what every broker
+    of the world shares — the authority's CRL — in `mosquitto/` itself, asked with no broker.
 
-    This is what makes the ACL below derivable from one world's wiring instead of from every
-    provisioned world at once. The old shared broker forced the generator to span all of them —
-    "the operator's view by necessity" — and forced a restart whenever a new world appeared,
-    because its authority had to be added to a trust bundle the broker only reads at startup.
-    Neither is true of a broker that belongs to one world.
+    This is what makes an ACL derivable from one world's wiring instead of from every provisioned
+    world at once. The old shared broker forced the generator to span all of them — "the operator's
+    view by necessity" — and forced a restart whenever a new world appeared, because its authority
+    had to be added to a trust bundle the broker only reads at startup. Neither is true of a broker
+    that belongs to one world, and a world may have any number.
     """
-    return world_dir(world) / "mosquitto"
+    return world_dir(world) / "mosquitto" / (local_of(broker_iri) if broker_iri else "")
+
+
+def service_of(broker_iri: str) -> str:
+    """The compose service, and the stem of the volume, a broker runs as: by its local name."""
+    return f"mosquitto-{local_of(broker_iri)}"
 
 READ, WRITE = "read", "write"
 
@@ -110,6 +118,7 @@ class Principal:
 
 
 BELIEF = "http://example.org/orexis#BeliefGraph"
+SELF_GRAPH = "http://example.org/orexis#SelfGraph"
 ACTUATION = "http://example.org/orexis/actuation#"
 
 #  A TOPIC IS NAMED BY THE PATTERNS OF THE FILTERS THAT MATCH IT, in every query below.
@@ -118,16 +127,17 @@ ACTUATION = "http://example.org/orexis/actuation#"
 MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
 _AGENTS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
 
+#  WHAT AN AGENT READS AND NUDGES: the topics of every sensor an observer role it plays reads, and its
+#  board's — asked of the agent as its boot reads it, since which sensors are its is declared in its own
+#  self graph (`sensing:sensor`), which a store of the whole world does not hold.
 _HEARS_Q = f"""
-SELECT ?id ?pattern WHERE {{
-  ?a a orexis:Agent ; orexis:localId ?id ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host ; <{MQTT4SSN}observesTopic> ?topic .
+SELECT ?pattern WHERE {{
+  ?me a orexis:Self ; orexis:plays/sensing:sensor ?sensor . ?sensor <{MQTT4SSN}observesTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
 _NUDGES_Q = f"""
-SELECT ?id ?pattern WHERE {{
-  ?a a orexis:Agent ; orexis:localId ?id ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host .
+SELECT ?pattern WHERE {{
+  ?me a orexis:Self ; orexis:plays/sensing:sensor ?sensor .
   ?board ssn:hasSubSystem ?sensor ; <{MQTT4SSN}listensToTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
@@ -148,6 +158,13 @@ SELECT ?id ?pattern WHERE {{
 _CLIENTS_Q = f"""
 SELECT ?client ?id WHERE {{ ?client a <{MQTT4SSN}Client> ; <{MQTT4SSN}hasClientID> ?id .
   FILTER NOT EXISTS {{ ?client a orexis:Agent }} }}"""
+
+#  WHO IS CONNECTED TO WHICH BROKER, by the name each principal goes by: an agent by its id, any other
+#  client by its client id. A broker's passwd and ACL hold the principals connected to it alone.
+_CONNECTED_Q = f"""
+SELECT ?c ?id ?broker WHERE {{
+  {{ ?c a orexis:Agent ; orexis:localId ?id }} UNION {{ ?c <{MQTT4SSN}hasClientID> ?id FILTER NOT EXISTS {{ ?c a orexis:Agent }} }}
+  ?c <{MQTT4SSN}isConnectedToBroker> ?broker }}"""
 
 _PUBLISHES_Q = f"""
 SELECT ?id ?pattern WHERE {{
@@ -174,38 +191,27 @@ def _world(world: str):
 
 
 def _rows(store, text: str) -> list[dict]:
-    """Over the world's beliefs nobody owns — the world and its society, where every grant is read."""
-    return rows(store, text, graphs_of(store, BELIEF, nobodys=True))
+    """Over the world's common beliefs — the world and its society, where every grant is read."""
+    return rows(store, text, graphs_of(store, BELIEF, common=True))
 
 
-def broker(world: str) -> tuple[str, int, int | None]:
-    """(host, plain port, TLS port or None), off the `schema:url`s of the world's ONE broker.
-
-    One broker, because this answer is one address: `orexis-compose` writes it into every agent's
-    environment and `orexis-firmware` into every board's config.h, and both ask here. A world
-    stating two is refused rather than merged — this kept the first host it met and a port per
-    scheme from whichever url came last, so two brokers became one address belonging to neither.
-    How several addresses reach an agent is left open until a world needs it
-    (knowledge/decisions/a-documents-kind-says-who-reads-it.md, its first seam). One broker whose
-    urls disagree — two hosts, or two ports for one scheme — is refused for the same reason: a
-    board is flashed with one of them, and nothing here can say which is right.
+def addresses(world: str) -> dict[str, tuple[str, int, int | None]]:
+    """(host, plain port, TLS port or None) of each broker the world's society names, by its IRI, off
+    its `schema:url`s. One host and one port per scheme each, which is onboarding's requirement (`requirements.ttl`), held by `reading.check` before any tool asking
+    here runs, so this formats and judges nothing. It refused those by hand once, and before that
+    kept the first host it met and a port per scheme from whichever url came last.
 
     The urls are the world's own where it asserts them, and otherwise the ones the installation
     allocated, asked for by the IRI the world's society names its broker by and nothing else — so a
-    world is told its own broker's address and never another's. Nothing here computes a port.
+    world is told its own brokers' addresses and never another's. Nothing here computes a port.
     """
-    from urllib.parse import urlparse
     store = _world(world)
-    brokers = installation.brokers_of(store)
-    if not brokers:
-        raise SystemExit(f"orexis-mqtt: world {world!r} states no mqtt4ssn:Broker — it has no bus")
-    if len(brokers) > 1:
-        raise SystemExit(
-            f"orexis-mqtt: world {world!r} states {len(brokers)} mqtt4ssn:Brokers ({', '.join(brokers)}); "
-            "onboarding tells an agent one broker's address, and how several would reach it is not "
-            "decided — see knowledge/decisions/a-documents-kind-says-who-reads-it.md")
-    where = f"its mqtt4ssn:Broker {brokers[0]}"
-    urls = installation.asserted_on(store, brokers[0]) or installation.allocated(brokers[0])
+    return {b: _address(world, store, b) for b in installation.brokers_of(store)}
+
+
+def _address(world: str, store, broker_iri: str) -> tuple[str, int, int | None]:
+    from urllib.parse import urlparse
+    urls = installation.asserted_on(store, broker_iri) or installation.allocated(broker_iri)
     hosts: set[str] = set()
     ports: dict[str, set[int]] = {scheme: set() for scheme in _DEFAULT_PORTS}
     for text in urls:
@@ -215,22 +221,31 @@ def broker(world: str) -> tuple[str, int, int | None]:
         if url.hostname:
             hosts.add(url.hostname)
         ports[url.scheme].add(url.port or _DEFAULT_PORTS[url.scheme])
-    if len(hosts) > 1:
-        raise SystemExit(f"orexis-mqtt: world {world!r} has two hosts for {where}: "
-                         f"{', '.join(sorted(hosts))}")
-    for scheme, stated in ports.items():
-        if len(stated) > 1:
-            raise SystemExit(f"orexis-mqtt: world {world!r} has two {scheme}:// ports for {where}: "
-                             f"{', '.join(map(str, sorted(stated)))}")
-    if not ports["mqtt"]:
-        raise SystemExit(f"orexis-mqtt: world {world!r} asserts no mqtt:// url on {where}, and the installation "
-                         "has allocated it none — `orexis-onboard` allocates one")
-    (plain,), tls = ports["mqtt"], next(iter(ports["mqtts"]), None)
-    return next(iter(hosts), "localhost"), plain, tls
+    #  A BROKER ASSERTING A URL ASSERTS A PLAIN ONE, which is onboarding's requirement; one asserting none
+    #  has an address only once the installation has allocated it, which is `orexis-onboard`'s to do.
+    if not urls:
+        raise SystemExit(f"orexis-mqtt: world {world!r} asserts no url on its mqtt4ssn:Broker {broker_iri}, "
+                         "and the installation has allocated it none — `orexis-onboard` allocates one")
+    return next(iter(hosts), "localhost"), next(iter(ports["mqtt"])), next(iter(ports["mqtts"]), None)
 
 
-def broker_host(world: str) -> str:
-    return broker(world)[0]
+def connected(world: str) -> dict[str, set[str]]:
+    """Every broker the world's society names, by its IRI, with the principals connected to it."""
+    store = _world(world)
+    out: dict[str, set[str]] = {b: set() for b in installation.brokers_of(store)}
+    for row in _rows(store, _CONNECTED_Q):
+        out.setdefault(row["broker"], set()).add(row["id"])
+    return out
+
+
+def broker_of(world: str, client: str) -> tuple[str, int, int | None]:
+    """The address of the one broker `client` — a board, the simulator, by its IRI or its client id —
+    is connected to, which is the one it is flashed or started with. That it is connected to exactly
+    one the society names a broker is onboarding's requirement (`requirements.ttl`), held by
+    `reading.check` before any tool asking here runs; this formats and judges nothing."""
+    store = _world(world)
+    (broker,) = {r["broker"] for r in _rows(store, _CONNECTED_Q) if client in (r["c"], r["id"])}
+    return addresses(world)[broker]
 
 
 def agent_username(world: str, agent_id: str) -> str:
@@ -251,10 +266,13 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
 
     for row in _rows(store, _AGENTS_Q):
         agent(row["id"])
-    for row in _rows(store, _HEARS_Q):
-        agent(row["id"]).may(READ, row["pattern"])
-    for row in _rows(store, _NUDGES_Q):
-        agent(row["id"]).may(WRITE, row["pattern"])
+    for agent_id in list(agents):
+        beliefs = reading.boot(world_dir(world), agent_id, others=reading.ours())
+        stated = [*graphs_of(beliefs, BELIEF, common=True), *graphs_of(beliefs, SELF_GRAPH)]
+        for row in rows(beliefs, _HEARS_Q, stated):
+            agent(agent_id).may(READ, row["pattern"])
+        for row in rows(beliefs, _NUDGES_Q, stated):
+            agent(agent_id).may(WRITE, row["pattern"])
     for row in _rows(store, _COMMANDS_Q):
         agent(row["id"]).may(WRITE, row["pattern"])
     for row in _rows(store, _TOLD_Q):
@@ -334,11 +352,12 @@ def device_credential_file(world: str, device_id: str) -> Path:
 def provision(world: str, rotate: bool = False) -> None:
     """Every principal's credential, the agents' certificates, and this world's broker files.
 
-    The broker's address is asked FIRST, so a world it refuses — one naming no broker, or two, or
-    one with no address asserted or allocated — is refused before a credential is minted for a bus
-    that is not there. The callers ask the premise (`reading.BUS`) and do not call this for a world
-    with no bus."""
-    host = broker_host(world)
+    The brokers' addresses are asked FIRST, so a broker with no address asserted or allocated is
+    refused before a credential is minted for a bus that is not there. The callers ask the premise
+    (`reading.BUS`) and do not call this for a world with no bus."""
+    hosts = sorted({host for host, _, _ in addresses(world).values()})
+    if not hosts:
+        raise SystemExit(f"orexis-mqtt: world {world!r} states no mqtt4ssn:Broker — it has no bus")
     agents, devices = grants(world)
     if not agents:
         raise SystemExit(f"orexis-mqtt: world {world!r} declares no agents")
@@ -362,28 +381,31 @@ def provision(world: str, rotate: bool = False) -> None:
 
     # Agents also get a client certificate. Boards deliberately do not: a deep-sleeping board
     # would pay a TLS handshake on every wake, and the ACL below authorises both the same way.
-    certs.issue_for_world(world, agents.keys(), rotate=rotate, broker_host=host)
+    certs.issue_for_world(world, agents.keys(), rotate=rotate, broker_hosts=hosts)
 
     rebuild(world)
     write_config(world)
 
 
 def write_config(world: str) -> None:
-    """This world's broker configuration, on the ports its world asserts or the installation
-    allocated it.
+    """Each of this world's brokers' configuration, on the ports its world asserts or the
+    installation allocated it.
 
     Generated rather than baked, because the ports differ per world and two brokers on one host
     must not collide — which the installation, seeing the host, answers for. Everything else is
     the same in every world, and is here rather than in the image so that changing it is
     regenerating rather than rebuilding.
     """
-    _, plain, tls = broker(world)
+    for broker_iri, (_, plain, tls) in sorted(addresses(world).items()):
+        _write_config(world, broker_iri, plain, tls)
 
+
+def _write_config(world: str, broker_iri: str, plain: int, tls: int | None) -> None:
     lines = [
-        f"# GENERATED by `orexis-mqtt {world}` — do not edit. One broker per world.",
+        f"# GENERATED by `orexis-mqtt {world}` — do not edit. The broker {local_of(broker_iri)} of this world.",
         "#",
-        "# The ports come from the `schema:url`s on this world's mqtt4ssn:Broker, which is also where",
-        "# its agents' environment is generated from. Two worlds are two brokers on two ports.",
+        "# The ports come from the `schema:url`s on this mqtt4ssn:Broker, which is also where its",
+        "# agents' environment is generated from. Two brokers are two ports, whatever their worlds.",
         "",
         "log_dest stdout",
         "connection_messages true",
@@ -419,19 +441,25 @@ def write_config(world: str) -> None:
     lines += ["# Shared by both listeners, derived from this world's wiring alone.",
               "acl_file /etc/mosquitto/acl.conf", ""]
 
-    d = mosquitto_dir(world)
+    d = mosquitto_dir(world, broker_iri)
     d.mkdir(parents=True, exist_ok=True)
     (d / "orexis.conf").write_text("\n".join(lines))
     (d / "orexis.conf").chmod(0o644)
-    log.info("  broker %-24s :%s%s", world, plain, f" +mTLS :{int(tls)}" if tls else "")
+    log.info("  broker %-24s :%s%s", local_of(broker_iri), plain, f" +mTLS :{int(tls)}" if tls else "")
 
 
 def rebuild(world: str) -> None:
-    """Write THIS world's broker files, from this world's wiring and nothing else."""
+    """Write each of THIS world's brokers' passwd and ACL, from this world's wiring and nothing
+    else: a broker holds the principals connected to it, each with every grant the wiring gives it."""
+    agents, devices = grants(world)
+    for broker_iri, ids in sorted(connected(world).items()):
+        _rebuild(world, broker_iri, {a: p for a, p in agents.items() if a in ids},
+                 {d: p for d, p in devices.items() if d in ids})
+
+
+def _rebuild(world: str, broker_iri: str, agents: dict[str, Principal], devices: dict[str, Principal]) -> None:
     passwd: dict[str, str] = {}
     blocks: list[str] = []
-
-    agents, devices = grants(world)
     for agent_id, principal in sorted(agents.items()):
         password = _read_password(agent_credential_file(world, agent_id))
         if password is None:
@@ -452,7 +480,7 @@ def rebuild(world: str) -> None:
             passwd[principal.username] = password
             blocks.append("\n".join(principal.lines()))
 
-    d = mosquitto_dir(world)
+    d = mosquitto_dir(world, broker_iri)
     d.mkdir(parents=True, exist_ok=True)
     passwd_file, acl_file = d / "passwd", d / "acl.conf"
     passwd_file.write_text(
@@ -463,21 +491,21 @@ def rebuild(world: str) -> None:
     # and are mounted only into the one container entitled to them.
     passwd_file.chmod(0o644)
     acl_file.write_text(
-        f"# GENERATED by `orexis-mqtt {world}` from that world's wiring — do not edit.\n"
+        f"# GENERATED by `orexis-mqtt {world}` from that world's wiring — do not edit. The broker\n"
+        f"# {local_of(broker_iri)}, and the principals connected to it.\n"
         "#\n"
         "# Each principal may say and hear exactly what the world connects it to. There is no\n"
         "# list behind this: add an agent to the world, re-run, and it is admitted. Nothing is\n"
         "# granted by default, and an unlisted user may do nothing at all.\n"
         + "\n".join(blocks) + "\n")
     acl_file.chmod(0o644)
-    log.info("  wrote %s and %s (%d principals)", passwd_file.relative_to(REPO_ROOT),
-             acl_file.relative_to(REPO_ROOT), len(passwd))
+    log.info("  wrote %s and %s (%d principals)", shown(passwd_file), shown(acl_file), len(passwd))
 
 
 # ---------------------------------------------------------------- revocation
 
 
-RESTART_HINT = "cd world/{world} && podman compose restart mosquitto"
+RESTART_HINT = "cd world/{world} && podman compose restart {services}"
 
 
 def revoke(world: str, principal: str) -> None:
@@ -518,7 +546,8 @@ def revoke(world: str, principal: str) -> None:
                     " with a new certificate" if restart else "")
     if restart:
         log.warning("  ! the broker reads its CRL at start and SIGHUP does not reload TLS material — restart it "
-                    "for the revocation to take: %s", RESTART_HINT.format(world=world))
+                    "for the revocation to take: %s", RESTART_HINT.format(
+                        world=world, services=" ".join(service_of(b) for b in sorted(connected(world)))))
 
 
 def stale(world: str) -> list[str]:
@@ -570,14 +599,20 @@ def stale(world: str) -> list[str]:
 # So: signal the broker child of that container's PID 1, from here. `-P` keeps it exact — any
 # other broker on this machine, including one from an unrelated project, is untouched.
 BROKER_CONTAINER = "OREXIS_BROKER_CONTAINER"
-# One broker per world, so the name is the world's compose project.
-def _broker_names(world: str):
-    return (f"orexis-{world}_mosquitto_1", f"orexis-{world}-mosquitto-1")
+# The world's compose project, and the broker's service in it.
+def _broker_names(world: str, broker_iri: str):
+    return (f"orexis-{world}_{service_of(broker_iri)}_1", f"orexis-{world}-{service_of(broker_iri)}-1")
 
 RELOAD_HINT = ("pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' <broker-container>)")
 
 
 def reload_broker(world: str) -> bool:
+    """Tell each of the world's running brokers to reread what we just wrote; whether every one was.
+    Best effort, and never fatal."""
+    return all([_reload(world, b) for b in sorted(connected(world))])
+
+
+def _reload(world: str, broker_iri: str) -> bool:
     """Tell a running broker to reread what we just wrote. Best effort, and never fatal.
 
     Not running is the ordinary case during first-time setup — the ACL has to exist before the
@@ -589,7 +624,7 @@ def reload_broker(world: str) -> bool:
     import signal
     import subprocess
 
-    names = [n for n in (os.environ.get(BROKER_CONTAINER),) if n] or list(_broker_names(world))
+    names = [n for n in (os.environ.get(BROKER_CONTAINER),) if n] or list(_broker_names(world, broker_iri))
     for name in names:
         try:
             out = subprocess.run(["podman", "inspect", "-f", "{{.State.Pid}}", name],
@@ -652,6 +687,7 @@ def main(argv: list[str] | None = None) -> None:
         log.info("  no bus — its society names no mqtt4ssn:Broker, so there is nothing to grant")
         return
     else:
+        reading.check(world_dir(args.world))
         provision(args.world, rotate=args.rotate)
     if not args.no_reload:
         reload_broker(args.world)

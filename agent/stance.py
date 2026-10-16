@@ -2,16 +2,16 @@
 constant where it states none (knowledge/domain/kernel/stance.md).
 
 A STANCE IS A BELIEF ABOUT ONESELF, NOT CONFIGURATION. How long the agent waits for a step to be
-answered, how much a search or a revision may spend in a pass, how many of a sensor's cadences it
-lets pass before it doubts the sensor, how far ahead it looks: each is a triple about the self in
-the agent's self graph — `:rose_grower sensing:stuckAfter 3` — authored by its world beside
+answered, how much a search or a revision may spend in a pass, how far ahead it looks: each is a
+triple about the self in the agent's self graph — `:rose_grower execution:patienceS 120` — authored
+by its world beside
 `:rose_grower a orexis:Self`, as a desire is. Each package declares the figures it reads in its own
 ontology and asks for them here by the term; the kernel names none of them, and no package names
 another's.
 
 READ OF THE SELF GRAPH ALONE. The text asks `?me a orexis:Self ; $stance ?n` over the graphs of kind
-`orexis:SelfGraph` and nothing else, so a figure stated of the agent anywhere else — a public world
-graph, a graph of its desires, a peer's document — is not the agent's word about itself and is not
+`orexis:SelfGraph` and nothing else, so a figure stated of the agent anywhere else — a belief nobody
+owns, a graph of its desires, a peer's document — is not the agent's word about itself and is not
 read. Not refused, either: the loader holds no vocabulary, so it cannot tell a stance from any other
 fact a world states about an agent, and a world stating a figure of an agent may mean something by it.
 

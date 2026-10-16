@@ -26,7 +26,7 @@ import logging
 import pyoxigraph as ox
 
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, OREXIS, local_of
+from agent.ontology import BELIEF, DERIVED, local_of
 from agent.store import Raw, add_quads, catalogue_of, construct, entry, forget_graph, graphs_of, rows, update
 
 from .ontology import believed_graph
@@ -42,7 +42,7 @@ SELECT ?rule ?text WHERE { ?rule a speech:Extraction ; sh:construct ?text .
 
 #  THE STATEMENT'S ROW: whose it is and when it holds.
 _ROW_Q = """
-SELECT ?owner ?start ?end WHERE { GRAPH $cat { OPTIONAL { $g orexis:beliefsOf ?owner }
+SELECT ?owner ?start ?end WHERE { GRAPH $cat { OPTIONAL { $g orexis:ownedBy ?owner }
   OPTIONAL { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1"""
 
@@ -55,7 +55,7 @@ def extract(store: ox.Store, statement: str) -> list[str]:
     cat = catalogue_of(store)
     if cat is None:
         return []
-    reads = [statement, *graphs_of(store, BELIEF, nobodys=True)]
+    reads = [statement, *graphs_of(store, BELIEF, common=True)]
     found: list = []
     for r in rows(store, _EXTRACTIONS_Q, graphs_of(store, _RULES_GRAPH)):
         try:
@@ -66,7 +66,7 @@ def extract(store: ox.Store, statement: str) -> list[str]:
         return []
     row = next(iter(rows(store, _ROW_Q, (), cat=Raw(f"<{cat}>"), g=Raw(f"<{statement}>"))), {})
     add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(target)) for t in found))
-    update(store, f"""INSERT DATA {{ {entry(store, target, BELIEF, OREXIS + "Derived", row.get("owner"), row.get("start"), row.get("end"))}
+    update(store, f"""INSERT DATA {{ {entry(store, target, BELIEF, DERIVED, row.get("owner"), row.get("start"), row.get("end"))}
   GRAPH <{cat}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}""")
     hash_named_graph(store, target)
     return [target]

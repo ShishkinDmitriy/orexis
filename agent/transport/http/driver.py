@@ -27,8 +27,8 @@ import urllib.parse
 import urllib.request
 
 from agent import clock
-from agent.ontology import BELIEF, SELF_GRAPH, local_of
-from agent.sensing.cadence import cadence_of
+from agent.ontology import BELIEF, local_of
+from agent.sensing.cadence import cadence_of, sensors as observed
 from agent.store import answer, graphs_of, rows
 from agent.transport.transport import Transport
 
@@ -37,12 +37,9 @@ log = logging.getLogger("http")
 #  HOW LONG ONE FETCH MAY TAKE, in real seconds.
 TIMEOUT_S = 30.0
 
-#  EVERY SENSOR OF THE SELF'S THAT IS A THING WITH A FORM.
-_MINE_Q = """
-SELECT DISTINCT ?sensor WHERE {
-  ?me a orexis:Self ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host ; td:hasForm ?form }
-ORDER BY ?sensor"""
+#  WHETHER A SENSOR IS A THING WITH A FORM: which of the sensors the agent reads — sensing's to say
+#  (`cadence.sensors`) — this member reads.
+_FORM_Q = "ASK { $sensor td:hasForm ?form }"
 
 #  WHERE A SENSOR IS READ: its form's target.
 _TARGET_Q = "SELECT ?target WHERE { $sensor td:hasForm ?form . ?form hctl:hasTarget ?target } ORDER BY ?target"
@@ -104,19 +101,19 @@ class Http(Transport):
 
     def open(self, store) -> list[str]:
         """The sensors of the agent's this member reads."""
-        sensors = [r["sensor"] for r in rows(store, _MINE_Q, [*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH)])]
+        sensors = [s for s in observed(store) if answer(store, _FORM_Q, graphs_of(store, BELIEF, common=True), sensor=s)["boolean"]]
         log.info("%s reads %s over HTTP", local_of(self.me), [local_of(s) for s in sensors] or "nothing")
         return sensors
 
     def reaches(self, store, device: str) -> bool:
-        return bool(answer(store, _REACHES_Q, graphs_of(store, BELIEF, nobodys=True), device=device)["boolean"])
+        return bool(answer(store, _REACHES_Q, graphs_of(store, BELIEF, common=True), device=device)["boolean"])
 
     def sense_now(self, store, sensor: str) -> None:
         """Fetch what `sensor` reads, on a thread of its own, unless it is being fetched already."""
         with self._lock:
             if sensor in self._fetching:
                 return
-        stated = graphs_of(store, BELIEF, nobodys=True)
+        stated = graphs_of(store, BELIEF, common=True)
         targets = [r["target"] for r in rows(store, _TARGET_Q, stated, sensor=sensor)]
         values = {local_of(r["property"]): r["value"] for r in rows(store, _WHERE_Q, stated, sensor=sensor)}
         url = fill(targets[0], values) if targets else None

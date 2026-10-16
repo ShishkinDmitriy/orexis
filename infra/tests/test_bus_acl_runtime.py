@@ -50,7 +50,7 @@ def _bus() -> tuple[str, int]:
     """Discovered, not hardcoded — where the world's broker listens, `schema:url` on its
     `mqtt4ssn:Broker`, asserted by the world or allocated by the installation, as the operator's
     tools read it."""
-    host, plain, _tls = mqtt_admin.broker(WORLD)
+    (host, plain, _tls), = mqtt_admin.addresses(WORLD).values()
     return host, plain
 
 
@@ -62,10 +62,16 @@ def _reachable(host: str, port: int) -> bool:
         return False
 
 
+def _broker_dir():
+    """The files of the world's one broker, which these tests rewrite and restore."""
+    (broker,) = mqtt_admin.connected(WORLD)
+    return mqtt_admin.mosquitto_dir(WORLD, broker)
+
+
 @pytest.fixture(scope="module")
 def bus():
     host, port = _bus()
-    d = mqtt_admin.mosquitto_dir(WORLD)
+    d = _broker_dir()
     if not (d / "passwd").exists() or not (d / "acl.conf").exists():
         pytest.skip(f"no broker files for {WORLD} — run `orexis-mqtt {WORLD}` first")
     if not _reachable(host, port):
@@ -100,15 +106,15 @@ def _grants_block(probe: Probe, read: bool) -> str:
 def probe(bus):
     """Add a principal to the live broker, and guarantee it is gone again."""
     p = Probe()
-    passwd_before = (mqtt_admin.mosquitto_dir(WORLD) / 'passwd').read_text()
-    acl_before = (mqtt_admin.mosquitto_dir(WORLD) / 'acl.conf').read_text()
+    passwd_before = (_broker_dir() / 'passwd').read_text()
+    acl_before = (_broker_dir() / 'acl.conf').read_text()
 
     def apply(read: bool, password: str | None = None):
         """Rewrite the broker's two files, reload, and WAIT until the change is really live."""
         p.password = password or p.password
-        (mqtt_admin.mosquitto_dir(WORLD) / 'passwd').write_text(
+        (_broker_dir() / 'passwd').write_text(
             passwd_before + f"{p.username}:{mqtt_admin._hash(p.password)}\n")
-        (mqtt_admin.mosquitto_dir(WORLD) / 'acl.conf').write_text(acl_before + _grants_block(p, read=read))
+        (_broker_dir() / 'acl.conf').write_text(acl_before + _grants_block(p, read=read))
         assert mqtt_admin.reload_broker(WORLD), "the broker did not accept a reload"
         _await_credential(bus, p.username, p.password)
 
@@ -117,8 +123,8 @@ def probe(bus):
         apply(read=True)
         yield p
     finally:
-        (mqtt_admin.mosquitto_dir(WORLD) / 'passwd').write_text(passwd_before)
-        (mqtt_admin.mosquitto_dir(WORLD) / 'acl.conf').write_text(acl_before)
+        (_broker_dir() / 'passwd').write_text(passwd_before)
+        (_broker_dir() / 'acl.conf').write_text(acl_before)
         mqtt_admin.reload_broker(WORLD)
 
 

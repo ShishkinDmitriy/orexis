@@ -19,7 +19,7 @@ PLANNING = "http://example.org/orexis/planning#"
 
 #  PLANNING'S GRAPH KINDS: desires, the wants derived from them, the shapes a met-test and an
 #  estimate point at, and the constraints a world states — what is possible, in a desire's words
-#  and of another modality, public since physics is everyone's.
+#  and of another modality, common since physics is everyone's.
 DESIRE = PLANNING + "DesireGraph"
 WANT = PLANNING + "WantGraph"
 SHAPES = PLANNING + "ShapesGraph"

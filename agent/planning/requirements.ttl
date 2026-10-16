@@ -1,0 +1,47 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix : <http://example.org/orexis/planning#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF planning's WORDS, held by onboarding alone before anything is granted
+#  (knowledge/domain/onboarding/requirement.md, #838). No agent loads this graph: its kind is
+#  onboarding's, and the boot passes over it as it passes over a world's hardware.
+
+[] a sh:NodeShape ;
+    sh:targetClass planning:Planner ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a planner holds no desire and no want: it would plan nothing" ;
+        sh:select """SELECT $this WHERE {
+            FILTER NOT EXISTS { ?desire a planning:Desire }
+            FILTER NOT EXISTS { ?want a planning:Want } }""" ] .
+
+#  AN EXECUTOR IS A PLANNER TOO, while a plan crosses no agent: the executor walks what planning
+#  published in the same store, and a step is checked against the present by the Planner when it is
+#  taken (#916). Stated HERE and not in execution's ontology because being a planner is planning's
+#  word, and execution, beneath it, speaks none of planning's; the seam that would lift it is a plan
+#  crossing agents (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+
+[] a sh:NodeShape ;
+    sh:targetClass execution:Executor ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "an executor is no planner: nothing would publish a plan for it to walk" ;
+        sh:select """SELECT $this WHERE { ?me orexis:plays $this
+            FILTER NOT EXISTS { ?me orexis:plays ?role .
+                                { ?role a planning:Planner } UNION { ?role a ?kind . ?kind rdfs:subClassOf planning:Planner } } }""" ] .
+
+#  A desire and a want are judged by one of their two tests, and one carrying both, or neither, is
+#  judged by nothing (`planning:metWhen`), so onboarding refuses it.
+[] a sh:NodeShape ;
+    sh:targetClass planning:Desire , planning:Want ;
+    sh:xone ( [ sh:path planning:metWhen ; sh:minCount 1 ] [ sh:path planning:unmetWhen ; sh:minCount 1 ] ) ;
+    sh:message "is judged by neither test or by both: a desire or a want carries planning:metWhen or planning:unmetWhen, one of the two" .

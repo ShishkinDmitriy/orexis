@@ -12,7 +12,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
-    owl:imports <actions.ttl> , <rules.ttl> .
+    owl:imports <actions.ttl> , <rules.ttl> , <requirements.ttl> .
 
 #  THE MARKET, A DOMAIN.
 #  How agents that want a scarce good get it from an agent that holds it: a bidder CALLS for a
@@ -55,9 +55,11 @@
 
 #################  The roles, as an agent's self graph declares them  #################
 #
-#  What an agent RUNS on the market, declared in its own self graph — `:supplier a orexis:Self ,
-#  market:Host` — and never in the public world: a peer needs the relation, `market:hosts`, to find
-#  whom to call, and nothing of what the callee runs. Each role is beneath the package roles it
+#  What an agent RUNS on the market, a role it plays, declared in its own self graph — `:supplier
+#  orexis:plays [ a market:Host ]` — and never in the world's: a peer needs the relation,
+#  `market:hosts`, to find whom to call, and nothing of what the callee runs. That relation folds
+#  into the role, as its venue, when the market's roles carry their context
+#  (a-role-is-an-instance-an-agent-plays); until then it stays beside it. Each role is beneath the package roles it
 #  needs, so an author declares the host and the boot's closure loads the planner, the executor,
 #  speech, and belief for the rules this domain ships; nobody lists a host's packages by hand. A
 #  role over a venue keeps the relation it is founded on, and its shape asks for it: a host that
@@ -73,20 +75,6 @@
     rdfs:subClassOf planning:Planner , execution:Executor , speech:Speaker , belief:Deliberator ;
     rdfs:label "Bidder" ;
     rdfs:comment "An agent that bids in a venue: calls for a round, tenders into it and presents the claim it wins. Founded on `market:bidsIn`, which says which venue; this says what the agent runs." .
-
-[] a sh:NodeShape ;
-    sh:targetClass :Host ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a host that hosts no venue: there is nothing for it to hold" ;
-        sh:select """PREFIX market: <http://example.org/orexis/market#>
-SELECT ?me WHERE { ?me a orexis:Self FILTER NOT EXISTS { ?me market:hosts ?venue } }""" ] .
-
-[] a sh:NodeShape ;
-    sh:targetClass :Bidder ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a bidder that bids in no venue: there is nowhere for it to bid" ;
-        sh:select """PREFIX market: <http://example.org/orexis/market#>
-SELECT ?me WHERE { ?me a orexis:Self FILTER NOT EXISTS { ?me market:bidsIn ?venue } }""" ] .
 
 #################  What the documents are  #################
 

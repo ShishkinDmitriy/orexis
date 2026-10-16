@@ -155,7 +155,8 @@ reading its own broker's address off the world is no longer a discipline to keep
 cannot do. What is left open is only how several addresses are TOLD — the first seam below.
 
 **Nothing is filed to build this yet.** All four worlds with a bus state one broker; the latent
-defect was `broker()` merging several without a word, and it refuses them now (#821).
+defect was `broker()` merging several without a word; a requirement of onboarding's own refused
+them (#821, #838), until the seam below was settled and a world may have any number.
 
 ## 4. A series store per purpose: history and metrics
 
@@ -230,13 +231,18 @@ now and is allocated the 1884 and 8884 it asserted before, so its board needs no
 environment and a board's `config.h` only format what the asserted and derived graphs say; none
 computes a port, and every allocation is a line a reviewer reads in a diff. A test holds the
 committed derivation to a fresh one. `onboarding/derived.py` writes and reads such graphs and knows
-nothing of ports, since #836 derives topic names into the same layer. The allocation is Python and
+nothing of ports, since #836 derived topic names into the same layer — `society.derived.ttl`, a
+society graph beside the society, by the first `sh:rule`
+([requirement](/domain/onboarding/requirement.md)). The allocation is Python and
 not a SPARQL rule, because it is a search that remembers, which a rule over this engine does badly;
 a derivation that is a join would be a rule, writing the same kind of graph.
 
 **What is refused is a collision**, never resolved: two brokers on one host and port, asserted or
 allocated, or a broker on a service's port — named, and nothing written. A world asserting the port
 already allocated to another is refused rather than moving the other, which may be a board in a pot.
+Since #838 the refusal is the requirement that refuses a world's two brokers on one port, in
+onboarding's `requirements.ttl`, judged over every url the installation holds; the search is handed
+what holds together and only keeps it so.
 
 **Refused: a world stating its own port, always** — this change's first cut, and the extended
 issue's wording. It would move the terrace's pinned port into the installation, and make the
@@ -525,13 +531,62 @@ and the broker's address in the deployment graph. [world-graph](/decisions/world
 the broker "to the world" as the one piece of infrastructure all members must agree on; the
 rendezvous stays public, its address does not.
 
+**Amended 2026-10-13 (#838): a requirement is a kind onboarding reads.** The sovereign extended
+this record on 2026-09-27: what a sovereign authored is validated at onboarding, by shapes the
+package owning each word ships. The question it left was how *a kind the agent knows* differs from
+*a kind it reads*, since the boot loads every kind its vocabulary declares. This record's own rule
+answers it: the agent reads no such shape, so the shapes go in a graph of a kind the agent's
+vocabulary does not declare — `onboarding:RequirementGraph`, declared beside the hardware and the
+deployment graphs — and the boot passes over it as it does over those. Each package still ships its
+own, in a `requirements.ttl` beside its ontology
+([requirement](/domain/onboarding/requirement.md)).
+
+Two alternatives were refused. **The shapes in the package's ontology graph** were built first, on
+the argument that nothing in the mind asks for a shape there; but every agent then loaded what none
+of them reads, which is the list of things kept out that this record replaced with a kind. **The
+shapes read off each agent's boot** fail the roles: an agent playing an executor alone loads no
+planning, and the requirement refusing it is planning's. So onboarding reads the requirements off
+the world. One shape stays in a vocabulary: the observer's `sh:defaultValue` for the limits a role
+leaves unstated, which the stuck rule reads off sensing's ontology as the agent runs. It refuses
+nothing.
+
+Onboarding ships one of its own, `onboarding/requirements.ttl`: a broker has one host and one port
+per scheme, judged with the world's deployment graph beside its beliefs; and, since #836, the one
+`sh:rule`, which names every topic for its publisher or its listener and writes the names beside the
+society, so a renderer reads a name and computes none — the derived pattern reaches the agent as a
+document of a kind it reads, never by computing it, since the agent imports no onboarding. The words are MQTT4SSN's and
+schema.org's and the limits are onboarding's. It held a world to one broker too, while one address was
+all onboarding knew how to tell, until the first seam below was settled. That one port on one host
+is held by one listener is its shape too, judged of a world and of the installation alike — of the
+installation over every world's urls and its own services, a world at a time, since every world names
+its own `:broker` and a broker's local name is its world's to keep apart. `broker()` refused those by
+hand and now judges nothing: every tool
+asks `reading.check` before it renders, called alone or by `orexis-onboard`, so a renderer only ever
+reads a world that holds. The rest of what the bus's renderers refused by hand followed (2026-10-15): a
+client connected to no broker, a broker asserting TLS alone, the simulator's systems on two clients
+and a sentinel's probe with no cadence are each a shape now, shipped by whoever owns the words — the
+simulation domain's and sensing's beside onboarding's own — and a system the simulator was started for
+and never played, which `orexis-compose` passed over in silence, is refused the same way. The
+installation's own reader followed last: what `infra/installation.ttl` must state — one store, one
+view, their urls, images and organisation, history served, one retention, one window, one pool, no
+credential — is its own requirement, `infra/requirements.ttl` beside it as a world's is beside its
+`world.ttl`, judged once as the document is read, where `installation.py` had a check per reading and
+a message per check; and a world is never held to it, since a world states no store.
+
 # Seams left open
 
 - **How several broker addresses, and a credential per broker, reach an agent.** Two constraints
   are fixed: the agent never constructs a name from an instance (a bucket's name was refused on
-  that ground in series-and-bus-isolation), and it never reads a deployment graph. Within them,
-  environment keyed by the broker's IRI and a mounted file per broker are both open. The trigger
-  is the first world stating two brokers; until then onboarding refuses such a world (#821).
+  that ground in series-and-bus-isolation), and it never reads a deployment graph. **Settled for
+  the agent 2026-10-14, at the sovereign's word that nothing requires one broker:** one variable,
+  `MQTT_BROKERS`, holds each broker the agent is connected to by its IRI beside the url it reaches
+  it at, so the agent matches IRIs it reads in the society and constructs no name; the credential
+  stays one per agent, which each of the world's brokers holds. A mounted file per broker was not
+  needed. **And for onboarding the next day:** each broker is served apart — a service, a config, a
+  passwd and an ACL of its own, holding the principals connected to it — a board is flashed with the
+  one broker it is connected to, and the simulator started with its client's; #821's refusal of a
+  second broker is lifted, and what is refused instead is what makes an address ambiguous: two
+  brokers on one host and port, two named alike, a board on none or on two.
 - **A sovereign-owned graph of tuning figures**, for what was hard-coded: settled by #876, 2026-10-08.
   An agent's figures about itself — the planner's and the deliberator's budgets, the executor's
   patience, sensing's two limits, prediction's horizon — are stances, stated of the self in its self

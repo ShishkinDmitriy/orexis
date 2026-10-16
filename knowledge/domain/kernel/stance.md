@@ -3,7 +3,7 @@ type: Domain Concept
 title: Stance
 description: >-
   A figure the agent holds about itself - how long it waits, how much a search or a revision may
-  spend, how many cadences before it doubts a sensor, how far ahead it looks. A triple about the
+  spend, how far ahead it looks. A triple about the
   self in its self graph, declared by the package that reads it, read there alone, and the
   package's constant where nothing is stated. A belief, never configuration.
 ---
@@ -17,7 +17,7 @@ agent's self graph beside the row saying who it is:
 <> a orexis:SelfGraph .
 :rose_grower a orexis:Self ;
     execution:patienceS 120 ;     # a step may go two minutes unanswered past its landing
-    sensing:stuckAfter 3 .        # three readings of one number and a sensor is doubted
+    prediction:horizonS 43200 .   # the drifts are accumulated half a day past an observation
 ```
 
 The word is the figure's, not the triple's: `execution:patienceS` is a stance whether or not a
@@ -35,25 +35,22 @@ Each is declared by the package that reads it, in its own `ontology.ttl`, with d
 | `execution:patienceS` | how long a commitment absorbs a second plan for its want, and how long past its latest landing a step may go unanswered | the [executor](/domain/execution/executor.md), when it is made | `DEFAULT_PATIENCE_S`, sixty seconds |
 | `planning:budget` | candidates one want's search may weigh in a pass | the [planner](/domain/planning/planner.md), when it is made | `BUDGET` in `agent/planning/planner.py`, 32 |
 | `belief:budget` | rule executions one pass of revision may spend | the [deliberator](/domain/belief/deliberator.md), when it is made | `BUDGET` in `agent/belief/deliberator.py`, 256 |
-| `sensing:silentAfter` | cadences a reading may be missing before its sensor is said silent | `missed`, each pass | `SILENT_AFTER`, 3 |
-| `sensing:stuckAfter` | readings that may give one number before their sensor is said [stuck](/domain/sensing/stuck.md), and so how many of a sensor's percepts are kept | `received`, each reading, and sensing's stuck rule off the self graph itself | `STUCK_AFTER`, 6 |
 | `prediction:horizonS` | seconds past an observation the drifts are accumulated | `predict`, each observation | `HORIZON_S`, a day |
 
 What the two budgets are, in their units, is the [budget](/domain/planning/budget.md) page's.
 
-One figure has a second reader that is no Python: sensing's stuck rule, a SPARQL text, reads
-`sensing:stuckAfter` off the self graph itself, with the same figure where none is stated and the same
-refusal of several or of one that is no number, since `received` keeps that many percepts and the rule
-says stuck when that many agree (#944). `agent/sensing/tests/test_rules.py` holds the two to one figure.
+How long a sensor may be silent or stuck is no stance: it is a figure about what a role is OVER,
+so the [observer](/domain/sensing/observer.md) role reading the sensor states it, and its default lives
+in the observer shape rather than in code, since a rule reads it as well as Python.
 
 # Read in the self graph, and nowhere else
 
 The reader asks `?me a orexis:Self ; <term> ?n` over the graphs of kind `orexis:SelfGraph` alone. A
-world graph saying `:rose_grower sensing:stuckAfter 3` states something about the agent in public —
+world graph saying `:rose_grower execution:patienceS 120` states something about the agent in public —
 which a peer may read and the agent may believe — and is not the agent's word about itself, so no
 package reads it as one; nor is a figure in a graph of the agent's desires, or in a document a peer
 sent. Nothing refuses such a triple: the loader holds no vocabulary to tell a stance from any other
-fact about an agent, and a figure of an agent in a belief nobody owns may mean something to whoever reads
+fact about an agent, and a figure of an agent in a common belief may mean something to whoever reads
 it.
 
 One figure, stated once and as a number, is the stance. Two of one term, or one that is no number,
@@ -71,6 +68,6 @@ often the metrics window is written is the admins' instrumentation, environment 
 long a rate is held, how far a key no drift moves is carried: how the package does its work, not
 how much the agent allows it.
 
-Why a stance is a belief stated in the self graph rather than a flag, a file, a belief nobody owns or a
+Why a stance is a belief stated in the self graph rather than a flag, a file, a common belief or a
 kind of its own:
 [a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md).

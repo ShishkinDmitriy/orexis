@@ -27,10 +27,12 @@ import pytest
 
 from agent.runtime import (HTTP, KERNEL, MQTT, OBSERVER, SPEAKER, VOCABULARY, WATCHERS, Runtime, _documents_of,
                            _vocabularies, boot, every_package, packages_of, roles_of)
+from agent.store import document, kinds_in
 
 ROOT = Path(__file__).resolve().parents[2]
 ME = "http://example.org/test#me"
 ROLE = "http://example.org/orexis#Role"
+SENSOR = "http://example.org/orexis/sensing#sensor"
 
 _HEAD = """@prefix : <http://example.org/test#> .
 @prefix orexis: <http://example.org/orexis#> .
@@ -47,19 +49,28 @@ _PROBE = ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n"
 ROLES, _ = _vocabularies()
 
 
-def _world(tmp_path: Path, roles=(), facts: str = "") -> Path:
-    """A world of one agent, `me`, declared in `roles` in its self graph, beside `facts`."""
+def _world(tmp_path: Path, roles=(), facts: str = "", sensors=()) -> Path:
+    """A world of one agent, `me`, playing a role of each class in `roles` in its self graph, the
+    observer's reading `sensors`, beside `facts`."""
     (tmp_path / "world.ttl").write_text(_HEAD + "<> a orexis:WorldGraph .\n" + _AGENT + facts)
     (tmp_path / "beliefs").mkdir(exist_ok=True)
-    declared = "".join(f" , <{role}>" for role in roles)
+    reads = "".join(f" ; <{SENSOR}> :{sensor}" for sensor in sensors)
+    played = " , ".join(f"[ a <{role}>{reads if role == OBSERVER else ''} ]" for role in roles)
+    declared = f" ; orexis:plays {played}" if roles else ""
     (tmp_path / "beliefs" / "me.self.ttl").write_text(_HEAD + "<> a orexis:SelfGraph .\n" f":me a orexis:Self{declared} .\n")
     return tmp_path
 
 
 def _held(store: ox.Store, package: str) -> list[bool]:
-    """For each document of `package`, whether its graph is in the store."""
+    """For each document of `package` of a kind an agent reads, whether its graph is in the store — a
+    package's requirements are onboarding's kind, which no agent loads (requirement.md)."""
     return [bool(list(store.quads_for_pattern(ox.NamedNode(path.as_uri()), None, None)))
-            for path in _documents_of([package])]
+            for path in _documents_of([package])
+            if not set().union(*kinds_in(document(path)).values()) & _ONBOARDINGS]
+
+
+#  THE KINDS ONLY ONBOARDING READS, by its vocabulary's own word: a test of the agent may name a term.
+_ONBOARDINGS = {"http://example.org/orexis/onboarding#RequirementGraph"}
 
 
 def _creates(package: str) -> bool:
@@ -130,7 +141,7 @@ def test_an_agent_declaring_no_role_loads_nothing_and_runs_nothing(tmp_path, cap
     assert roles_of(store) == frozenset() and packages_of(store) == ()
     assert not any(_held(store, package)[0] for package in every_package())
     assert Runtime(store, "me").parts == {}
-    assert "declared in no role" in caplog.text
+    assert "plays no role" in caplog.text
 
 
 #  WHAT BRINGS A TRANSPORT: a role that needs bytes and the wiring of a bus — and either alone, none.
@@ -138,20 +149,21 @@ _ON_A_TOPIC = _PROBE + ":probe mqtt4ssn:observesTopic :readings .\n"
 _LISTENS = ":me mqtt4ssn:listensToTopic :inbox .\n"
 _A_FORM = ":pot schema:containedInPlace :balcony . :weather a sosa:Sensor ; sosa:isHostedBy :balcony ; td:hasForm [] .\n"
 TRANSPORTS = {
-    "an observer's sensor on a topic": ([OBSERVER], _ON_A_TOPIC, {MQTT}),
-    "a speaker listening to a topic": ([SPEAKER], _LISTENS, {MQTT}),
-    "an observer's sensor with a form": ([OBSERVER], _A_FORM, {HTTP}),
-    "an observer's sensor on no bus": ([OBSERVER], _PROBE, set()),
-    "a sensor on a topic, and no observer": ([SPEAKER], _ON_A_TOPIC, set()),
-    "a topic listened to, and no speaker": ([OBSERVER], _PROBE + _LISTENS, set()),
-    "a sensor with a form, and no observer": ([SPEAKER], _A_FORM, set()),
+    "an observer's sensor on a topic": ([OBSERVER], _ON_A_TOPIC, ["probe"], {MQTT}),
+    "a speaker listening to a topic": ([SPEAKER], _LISTENS, [], {MQTT}),
+    "an observer's sensor with a form": ([OBSERVER], _A_FORM, ["weather"], {HTTP}),
+    "an observer's sensor on no bus": ([OBSERVER], _PROBE, ["probe"], set()),
+    "a sensor on a topic, and no observer": ([SPEAKER], _ON_A_TOPIC, [], set()),
+    "a sensor on a topic no observer reads": ([OBSERVER], _ON_A_TOPIC, [], set()),
+    "a topic listened to, and no speaker": ([OBSERVER], _PROBE + _LISTENS, ["probe"], set()),
+    "a sensor with a form, and no observer": ([SPEAKER], _A_FORM, [], set()),
 }
 
 
 @pytest.mark.parametrize("case", TRANSPORTS, ids=str)
 def test_a_transport_is_loaded_where_a_loaded_role_needs_bytes_and_the_society_wires_a_bus(tmp_path, case):
-    roles, facts, expected = TRANSPORTS[case]
-    store = boot(_world(tmp_path, roles, facts), "me")
+    roles, facts, sensors, expected = TRANSPORTS[case]
+    store = boot(_world(tmp_path, roles, facts, sensors), "me")
     assert set(packages_of(store)) & {MQTT, HTTP} == expected
     for transport in (MQTT, HTTP):
         assert all(_held(store, transport)) if transport in expected else not any(_held(store, transport))
@@ -170,20 +182,20 @@ def test_a_world_graph_of_a_kind_a_loaded_package_declares_is_read_after_it(tmp_
     passed over."""
     world = _world(tmp_path, roles, _PROBE)
     (world / "reading.ttl").write_text(_HEAD + "@prefix sensing: <http://example.org/orexis/sensing#> .\n"
-                                       "<> a sensing:ObservationGraph ; orexis:beliefsOf :me .\n"
+                                       "<> a sensing:ObservationGraph ; orexis:ownedBy :me .\n"
                                        ":reading a sosa:Observation ; sosa:hasFeatureOfInterest :pot .\n")
     store = boot(world, "me")
     name = ox.NamedNode((world / "reading.ttl").resolve().as_uri())
     assert bool(list(store.quads_for_pattern(None, None, None, name))) is read
     if read:
-        owner = ox.NamedNode("http://example.org/orexis#beliefsOf")
+        owner = ox.NamedNode("http://example.org/orexis#ownedBy")
         assert [q.object.value for q in store.quads_for_pattern(name, owner, None)] == [ME], "the agent's own"
 
 
 def test_a_role_is_read_off_the_self_graph_alone(tmp_path):
-    """What an agent runs is its own word about itself: a role a belief nobody owns states of it is no role
+    """What an agent runs is its own word about itself: a role a common belief states of it is no role
     of its, as a stance stated there is no stance."""
-    store = boot(_world(tmp_path, [], f":me a <{SPEAKER}> .\n"), "me")
+    store = boot(_world(tmp_path, [], f":me orexis:plays [ a <{SPEAKER}> ] .\n"), "me")
     assert roles_of(store) == frozenset() and packages_of(store) == ()
 
 
@@ -232,10 +244,10 @@ def _walked(tmp_path: Path) -> Path:
         (world / name).write_text((hanoi / name).read_text())
     (world / "beliefs").mkdir()
     shipped = (hanoi / "beliefs" / "hanoi.self.ttl").read_text()
-    assert ":hanoi a orexis:Self , planning:Planner ." in shipped, "the shipped mover is a planner alone"
+    assert "orexis:plays [ a planning:Planner ] ." in shipped, "the shipped mover is a planner alone"
     (world / "beliefs" / "hanoi.self.ttl").write_text(shipped.replace(
-        ":hanoi a orexis:Self , planning:Planner .",
-        ":hanoi a orexis:Self , planning:Planner , <http://example.org/orexis/execution#Executor> ."))
+        "orexis:plays [ a planning:Planner ] .",
+        "orexis:plays [ a planning:Planner ] , [ a <http://example.org/orexis/execution#Executor> ] ."))
     return world
 
 

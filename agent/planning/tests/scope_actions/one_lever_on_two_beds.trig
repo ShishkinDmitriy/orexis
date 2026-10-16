@@ -14,7 +14,6 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix graph: <http://example.org/orexis/graph/> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
-@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix scopes: <http://example.org/orexis/graph/scopes/> .
 
 
@@ -22,7 +21,7 @@ GRAPH :ontology {
   planning:ScopeGraph rdfs:subClassOf orexis:Graph .
 }
 
-# THE WORLD, public: one keeper with a pump and a heater on one bed, each moving one property.
+# THE WORLD, common: one keeper with a pump and a heater on one bed, each moving one property.
 GRAPH :world {
   :keeper :hasActuator :pump1 .
   :keeper :hasActuator :pump2 .
@@ -37,14 +36,13 @@ GRAPH :world {
 
 GRAPH :actions {
   :dose a orexis:Action .
-  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX sensing: <http://example.org/orexis/sensing#>
-        DELETE { $reading sensing:below ?range } INSERT { $reading sensing:inside ?range } WHERE { $reading sensing:below ?range }""" ] ] .
+  :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+        DELETE { $reading :below ?range } INSERT { $reading :inside ?range } WHERE { $reading :below ?range }""" ] ] .
   :dose planning:precondition """PREFIX : <http://example.org/test#>
-        PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT DISTINCT ?valve ?reading WHERE {
             ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
             ?valve :actuates ?subject ; :actuatesProperty ?property .
-            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sensing:below ?range . }""" .
+            ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; :below ?range . }""" .
 }
 
 GRAPH :catalogue {

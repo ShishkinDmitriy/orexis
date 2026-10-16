@@ -77,13 +77,13 @@ GRAPH :actions {
 }
 
 GRAPH observed:zamioculcas_moisture {
-  orexis:obs_zamioculcas_moisture a sosa:Observation .
-  orexis:obs_zamioculcas_moisture prov:wasGeneratedBy :keeper .
-  orexis:obs_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
-  orexis:obs_zamioculcas_moisture sosa:hasSimpleResult 0.12 .
-  orexis:obs_zamioculcas_moisture sosa:madeBySensor :probe .
-  orexis:obs_zamioculcas_moisture sosa:observedProperty :moisture .
-  orexis:obs_zamioculcas_moisture sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  :probe.20260101T120000Z a sosa:Observation .
+  :probe.20260101T120000Z prov:wasGeneratedBy :keeper .
+  :probe.20260101T120000Z sosa:hasFeatureOfInterest :zamioculcas .
+  :probe.20260101T120000Z sosa:hasSimpleResult 0.12 .
+  :probe.20260101T120000Z sosa:madeBySensor :probe .
+  :probe.20260101T120000Z sosa:observedProperty :moisture .
+  :probe.20260101T120000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 }
 
 GRAPH :forecast_14 {
@@ -106,7 +106,7 @@ GRAPH :catalogue {
   :forecast_14 a orexis:Graph .
   :forecast_14 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
   :forecast_14 orexis:arrivedBy orexis:Received .
-  :forecast_14 orexis:beliefsOf :keeper .
+  :forecast_14 orexis:ownedBy :keeper .
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
@@ -116,5 +116,5 @@ GRAPH :catalogue {
   observed:zamioculcas_moisture a sensing:ObservationGraph .
   observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
-  observed:zamioculcas_moisture orexis:beliefsOf :keeper .
+  observed:zamioculcas_moisture orexis:ownedBy :keeper .
 }

@@ -225,15 +225,22 @@ def test_onboarding_refuses_a_world_holding_a_kind_no_reader_declares(tmp_path, 
         onboard.onboard("hanoi")
 
 
-# --- a margin its range cannot hold is refused (knowledge/domain/sensing/margin.md, #944) --------
+# --- a world is held to the shapes its vocabularies ship (#838; margin.md, #944) -------------------
 
-def test_every_shipped_world_states_margins_its_ranges_hold():
-    from onboarding.reading import unholdable
+def test_every_shipped_world_conforms_to_the_shapes_its_vocabularies_ship():
+    from onboarding.reading import invalid
 
     worlds = _worlds()
     assert worlds, "no world found — the guard would check nothing"
     for world in worlds:
-        assert unholdable(REPO_ROOT / "world" / world) == [], world
+        assert invalid(REPO_ROOT / "world" / world) == [], world
+
+
+def _cadence(sensor: str = ":probe") -> str:
+    """The one `ssn-system:Frequency` every sensor states, sensing's requirement, for a test about another."""
+    return ("@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .\n@prefix schema: <https://schema.org/> .\n"
+            f"{sensor} ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty [ a ssn-system:Frequency ; "
+            "schema:value 10 ; schema:unitCode <http://qudt.org/vocab/unit/SEC> ] ] .\n")
 
 
 _RANGES = """@prefix ssn: <http://www.w3.org/ns/ssn/> .
@@ -241,40 +248,141 @@ _RANGES = """@prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix schema: <https://schema.org/> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 :pot ssn-system:hasOperatingRange %s .
-%s ssn-system:inCondition [ ssn:forProperty :moisture ; schema:minValue 0.30 ; schema:maxValue 0.60 ; sensing:margin %s ] .
+%s ssn-system:inCondition [ ssn:forProperty :moisture ; schema:minValue %s ; schema:maxValue 0.60 ; sensing:margin %s ] .
 """
 
 
-@pytest.mark.parametrize("named, margin, why", [
-    (True, "0.0002", None),
-    (True, "0.1499", None),
-    (True, "-0.0002", "negative and widens nothing"),
-    (True, "0.15", "half the width of [0.3, 0.6] or more"),
-    (True, '"wide"', "no number"),
-    (False, "0.0002", None),
-    (False, "0.15", "half the width of [0.3, 0.6] or more"),
-], ids=["twice-a-count", "just-under-half", "negative", "half", "no-number", "unnamed", "unnamed-half"])
-def test_onboarding_refuses_a_margin_its_range_cannot_hold(tmp_path, monkeypatch, named, margin, why):
+@pytest.mark.parametrize("named, low, margin, why", [
+    (True, "0.30", "0.0002", None),
+    (True, "0.30", "0.1499", None),
+    (True, "0.30", "-0.0002", "negative and widens nothing"),
+    (True, "0.30", "0.15", "half the width of [0.3, 0.6] or more"),
+    (True, "0.30", '"wide"', "no number"),
+    (False, "0.30", "0.0002", None),
+    (False, "0.30", "0.15", "half the width of [0.3, 0.6] or more"),
+    (True, "0.60", "0.0", "a floor of 0.6 not below its ceiling of 0.6"),
+], ids=["twice-a-count", "just-under-half", "negative", "half", "no-number", "unnamed", "unnamed-half", "no-width"])
+def test_onboarding_refuses_a_range_it_cannot_judge_by(tmp_path, monkeypatch, named, low, margin, why):
     """A margin that is no number leaves a subject believed below or above judged in no state; a negative
     one widens nothing, so the rule would read as nought a figure the world stated; one of half the range
-    or more would leave a subject a step brought to the middle believed in the state it came from. Each is
-    refused, and nothing is granted; a range with no name is judged like any other, and said as one with
-    no name."""
+    or more would leave a subject a step brought to the middle believed in the state it came from; and a
+    floor not below its ceiling holds no reading. Each is refused by sensing's shapes, and nothing is
+    granted; a range with no name is judged like any other, and said as one with no name."""
     from onboarding import onboard, reading
 
     observer = "http://example.org/orexis/sensing#Observer"
     range_ = ":pot_operating" if named else "_:operating"
     world = _declared(tmp_path, [observer], ":probe a sosa:Sensor ; sosa:isHostedBy :pot ; sosa:observes :moisture .\n"
-                      + _RANGES % (range_, range_, margin))
-    said = reading.unholdable(world)
+                      + _cadence() + _RANGES % (range_, range_, low, margin))
+    said = reading.invalid(world)
     if why is None:
         assert said == []
         return
     assert len(said) == 1 and why in said[0], said
     assert said[0].startswith("http://example.org/test#pot_operating: " if named else "a range with no name"), said
     monkeypatch.setattr(onboard, "world_dir", lambda name: world)
-    with pytest.raises(SystemExit, match="a margin its range cannot hold"):
+    with pytest.raises(SystemExit, match="requirements refuse"):
         onboard.onboard("me")
+
+
+@pytest.mark.parametrize("sensor, why", [
+    (":probe a sosa:Sensor ; sosa:isHostedBy :pot .", "probe: a sensor that observes no property"),
+    (":probe a sosa:Sensor ; sosa:observes :moisture .", "probe: a sensor mounted on nothing"),
+], ids=["observes-nothing", "mounted-on-nothing"])
+def test_onboarding_refuses_a_sensor_that_reports_nothing_of_anything(tmp_path, sensor, why):
+    from onboarding import reading
+
+    said = reading.invalid(_declared(tmp_path, ["http://example.org/orexis/belief#Deliberator"], sensor + "\n" + _cadence()))
+    assert len(said) == 1 and said[0].startswith(why), said
+
+
+def test_an_agents_boot_holds_no_requirement_and_its_vocabulary_refuses_nothing():
+    """A requirement is onboarding's to read, so no agent loads one: a booted agent of every package
+    and the market holds no requirement graph, and no ontology it loads states a constraint — a met-test is
+    a shape of its desire's, not of a vocabulary — and the one shape left in a vocabulary, the observer's, states what holds of a limit no role states, which the
+    stuck rule reads off the ontology as the agent runs."""
+    import pyoxigraph as ox
+
+    from agent.runtime import boot
+    from agent.store import graphs_of
+    from onboarding import reading
+
+    here = REPO_ROOT / "world" / "allotment"
+    beliefs = boot(here, "fern_grower", others=reading.ours())
+    assert graphs_of(beliefs, reading.REQUIREMENT) == []
+    vocabulary = graphs_of(beliefs, reading.ONTOLOGY)
+    constraints = [p for p in ("sparql", "minCount", "maxCount", "datatype", "xone", "message")
+                   for g in vocabulary
+                   if any(beliefs.quads_for_pattern(None, ox.NamedNode("http://www.w3.org/ns/shacl#" + p), None, ox.NamedNode(g)))]
+    assert constraints == [], constraints
+    world = reading.world(here)
+    assert len(graphs_of(world, reading.REQUIREMENT)) >= 5, "onboarding reads every package's and the market's"
+
+
+def test_what_the_world_breaks_is_said_once_and_not_again_for_each_agent(tmp_path):
+    """A shape the common beliefs break is the world's, said by `invalid`; `refused` says what an agent's
+    own documents and roles break, so a sensor observing nothing is not said again as the agent's."""
+    from onboarding import reading
+
+    world = _declared(tmp_path, ["http://example.org/orexis/belief#Deliberator"], ":gauge a sosa:Sensor ; sosa:isHostedBy :shed .\n" + _cadence(":gauge"))
+    assert [line.split(":", 1)[0] for line in reading.invalid(world)] == ["gauge"]
+    assert reading.refused(world) == []
+
+
+def test_what_the_world_leaves_out_an_agents_own_documents_may_complete(tmp_path):
+    """What is judged is what each agent will believe: a sensor the world says nothing it observes,
+    completed by the agent's own state, refuses neither the world nor the agent; with a second agent
+    whose own documents do not complete it, that agent is refused by name and the world is not."""
+    from onboarding import reading
+
+    state = "<> a orexis:BeliefGraph ; orexis:ownedBy :me .\n:probe sosa:observes :moisture .\n"
+    world = _declared(tmp_path, [OBSERVER], ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n" + _cadence(), reads=["probe"], state=state)
+    assert reading.invalid(world) == [] and reading.refused(world) == []
+
+    with (world / "world.ttl").open("a") as text:
+        text.write(':you a orexis:Agent ; orexis:localId "you" ; orexis:actsFor :pot .\n')
+    (world / "beliefs" / "you.self.ttl").write_text(
+        _ROLE_HEAD + "<> a orexis:SelfGraph .\n:you a orexis:Self" + _plays([OBSERVER], ["probe"]) + " .\n")
+    assert reading.invalid(world) == []
+    assert reading.refused(world) == ["you: probe: a sensor that observes no property: its readings would be of nothing"]
+
+
+@pytest.mark.parametrize("named", [False, True], ids=["unnamed", "named"])
+def test_a_world_holds_itself_to_requirements_of_its_own(tmp_path, named):
+    """A world's words are its own as a domain's are, so a requirement it ships beside its documents is
+    held as a package's is — and its agents' boots pass over it, as they pass over a package's."""
+    from agent.runtime import boot
+    from agent.store import graphs_of
+    from onboarding import reading
+
+    world = _declared(tmp_path, ["http://example.org/orexis/belief#Deliberator"],
+                      ':pot a :Pot' + (' ; :name "the fern\'s pot"' if named else "") + " .\n",
+                      requirements="@prefix onboarding: <http://example.org/orexis/onboarding#> .\n"
+                                   "<> a onboarding:RequirementGraph .\n"
+                                   "[] a sh:NodeShape ; sh:targetClass :Pot ;\n"
+                                   "   sh:property [ sh:path :name ; sh:minCount 1 ;\n"
+                                   '                 sh:message "a pot nobody can name on a dashboard" ] .\n')
+    assert reading.invalid(world) == ([] if named else ["pot: a pot nobody can name on a dashboard"])
+    assert reading.unread(world) == [] and reading.refused(world) == []
+    assert graphs_of(boot(world, "me", others=reading.ours()), reading.REQUIREMENT) == []
+
+
+@pytest.mark.parametrize("tests, refused", [
+    ("planning:metWhen :ok", False),
+    ("planning:unmetWhen :bad", False),
+    ("planning:metWhen :ok ; planning:unmetWhen :bad", True),
+], ids=["met-when", "unmet-when", "both"])
+def test_onboarding_refuses_a_want_judged_by_both_tests(tmp_path, tests, refused):
+    """Planning's shape, held to an agent's own documents in its boot: a want carries one of the two
+    tests, and one carrying both is judged by nothing."""
+    from onboarding import reading
+
+    planner = "http://example.org/orexis/planning#Planner"
+    world = _declared(tmp_path, [planner], wants="@prefix planning: <http://example.org/orexis/planning#> .\n"
+                      f"<> a planning:WantGraph ; orexis:ownedBy :me .\n:wanted a planning:Want ; {tests} .\n")
+    said = [line for line in reading.refused(world) if "rules.ttl" not in line]
+    assert said == (["me: wanted: is judged by neither test or by both: a desire or a want carries planning:metWhen "
+                     "or planning:unmetWhen, one of the two"] if refused else []), said
 
 
 # --- what an agent runs is declared, and onboarding holds the declaration to the world both ways ---
@@ -294,17 +402,30 @@ _ROLE_HEAD = """@prefix : <http://example.org/test#> .
 """
 
 
-def _declared(tmp_path, roles, facts: str = "", **documents) -> Path:
-    """A world of one agent, `me`, importing the market, declared in `roles` in its self graph."""
+def _declared(tmp_path, roles, facts: str = "", reads=(), **documents) -> Path:
+    """A world of one agent, `me`, importing the market, playing a role of each class in `roles` in its
+    self graph — each given `reads`, the sensors an observer role reads — or each role there written out
+    whole where it is a `(class, what follows it)` pair."""
     market = (REPO_ROOT / "domains" / "market" / "ontology.ttl").as_uri()
     (tmp_path / "world.ttl").write_text(_ROLE_HEAD + f"<> a orexis:WorldGraph ; owl:imports <{market}> .\n"
                                         ':me a orexis:Agent ; orexis:localId "me" ; orexis:actsFor :pot .\n' + facts)
     (tmp_path / "beliefs").mkdir(exist_ok=True)
     (tmp_path / "beliefs" / "me.self.ttl").write_text(
-        _ROLE_HEAD + "<> a orexis:SelfGraph .\n:me a orexis:Self" + "".join(f" , <{r}>" for r in roles) + " .\n")
+        _ROLE_HEAD + "<> a orexis:SelfGraph .\n:me a orexis:Self" + _plays(roles, reads) + " .\n")
     for name, text in documents.items():
         (tmp_path / f"{name}.ttl").write_text(_ROLE_HEAD + text)
     return tmp_path
+
+
+_SENSOR = "http://example.org/orexis/sensing#sensor"
+OBSERVER = "http://example.org/orexis/sensing#Observer"
+
+
+def _plays(roles, reads=()) -> str:
+    """`; orexis:plays [ a <class> … ] , …` for each of `roles`, or nothing for none."""
+    played = [f"[ a <{r[0]}>{r[1]} ]" if isinstance(r, tuple) else
+              f"[ a <{r}>" + "".join(f" ; <{_SENSOR}> :{s}" for s in reads) + " ]" for r in roles]
+    return f" ; orexis:plays {' , '.join(played)}" if played else ""
 
 
 def _needs() -> list[tuple[str, str]]:
@@ -317,7 +438,16 @@ def _needs() -> list[tuple[str, str]]:
 
     with tempfile.TemporaryDirectory() as here:
         store = reading.world(_declared(Path(here), []))
-        return sorted({(r["role"], r["message"]) for r in rows(store, reading._NEEDS_Q, graphs_of(store, reading.BELIEF, nobodys=True))})
+        return sorted({(r["role"], r["message"]) for r in rows(store, _NEEDS_Q, [*graphs_of(store, reading.BELIEF, common=True),
+                                                                      *graphs_of(store, reading.REQUIREMENT)])})
+
+
+#  WHAT A ROLE NEEDS OF THE WORLD: every shape the vocabularies ship targeting a role class with a
+#  `sh:sparql` constraint, and what it says — a shape targeting what is no role is found by none.
+_NEEDS_Q = """
+SELECT ?role ?message WHERE {
+  ?shape a sh:NodeShape ; sh:targetClass ?role ; sh:sparql/sh:message ?message .
+  ?role rdfs:subClassOf* orexis:Role }"""
 
 
 NEEDS = _needs()
@@ -339,19 +469,22 @@ def test_onboarding_refuses_an_agent_declaring_no_role(tmp_path, monkeypatch):
 
     world = _declared(tmp_path, [])
     assert [line.split(":", 1)[0] for line in reading.refused(world)] == ["me"]
-    assert "declares no role" in reading.refused(world)[0]
+    assert "plays no role" in reading.refused(world)[0]
     monkeypatch.setattr(onboard, "world_dir", lambda name: world)
-    with pytest.raises(SystemExit, match="declares no role"):
+    with pytest.raises(SystemExit, match="plays no role"):
         onboard.onboard("me")
 
 
 @pytest.mark.parametrize("role, message", NEEDS, ids=[role.rsplit("#", 1)[-1] for role, _ in NEEDS])
 def test_onboarding_refuses_a_declared_role_whose_needs_its_world_lacks(tmp_path, role, message):
     """Declared in the role alone, in a world holding nothing the role needs: the shape its need is
-    stated by comes back with a row, and onboarding says what it says."""
+    stated by comes back with a row, and onboarding says what it says. An observer is held to two
+    needs, reading a sensor and reading only sensors that report to it, so it is played twice: once
+    reading nothing, and once reading `:stray`, which nothing the agent acts for mounts."""
     from onboarding import reading
 
-    refused = reading.refused(_declared(tmp_path, [role]))
+    played = [role, (role, f" ; <{_SENSOR}> :stray")] if role == OBSERVER else [role]
+    refused = reading.refused(_declared(tmp_path, played, ":stray a sosa:Sensor .\n"))
     assert f"me: {message}" in refused, refused
 
 
@@ -366,12 +499,33 @@ def test_every_role_but_the_deliberators_states_a_need():
     assert roles - targeted == {"http://example.org/orexis/belief#Deliberator"}, sorted(roles - targeted)
 
 
-def test_onboarding_refuses_a_sensor_reporting_to_an_agent_that_is_no_observer(tmp_path):
+def test_onboarding_refuses_a_sensor_reporting_to_an_agent_that_no_observer_role_of_its_reads(tmp_path):
+    """A sensor mounted on what the agent acts for is read by no role of its — no observer at all, or an
+    observer reading another: each such sensor said by name, and one a role reads said of nothing."""
     from onboarding import reading
 
     deliberator = "http://example.org/orexis/belief#Deliberator"
-    refused = reading.refused(_declared(tmp_path, [deliberator], ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n"))
-    assert refused == ["me: a sensor reports to it, and it is no observer: no package it loads would read the sensor"]
+    mounted = ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n:hygro a sosa:Sensor ; sosa:isHostedBy :pot .\n"
+    unread = ("reports to it, and no observer role it plays reads it: no package it loads would read the sensor — "
+              "`orexis:plays [ a sensing:Observer ; sensing:sensor <sensor> ]` says one does")
+    assert reading.refused(_declared(tmp_path, [deliberator], mounted)) == [f"me: hygro {unread}", f"me: probe {unread}"]
+    assert reading.refused(_declared(tmp_path, [OBSERVER], mounted, reads=["probe"])) == [f"me: hygro {unread}"]
+    assert reading.refused(_declared(tmp_path, [OBSERVER], mounted, reads=["probe", "hygro"])) == []
+
+
+@pytest.mark.parametrize("connected", [False, True], ids=["on-none-of-its", "on-its"])
+def test_onboarding_refuses_an_observer_on_no_broker_its_sensor_reports_over(tmp_path, connected):
+    """A world may have any number of brokers, and a sensor's readings come over the ones its client is
+    connected to: an agent reading it over MQTT shares one of them, or nothing it subscribes to carries
+    the readings. The MQTT transport's requirement, since the words are its."""
+    from onboarding import reading
+
+    world = _declared(tmp_path, [OBSERVER], ":probe a sosa:Sensor ; sosa:isHostedBy :pot ; sosa:observes :moisture ;\n"
+                      "    mqtt4ssn:observesTopic :readings .\n:board mqtt4ssn:hosts :probe ; mqtt4ssn:isConnectedToBroker :hub .\n"
+                      + (":me mqtt4ssn:isConnectedToBroker :hub .\n" if connected else ""), reads=["probe"])
+    said = [line for line in reading.refused(world) if "broker" in line]
+    assert said == ([] if connected else
+                    ["me: probe: read by http://example.org/test#me, which is connected to none of the brokers its readings come over"]), said
 
 
 def test_onboarding_refuses_a_topic_an_agent_listens_to_with_no_speaker(tmp_path):
@@ -390,7 +544,7 @@ def test_onboarding_refuses_a_graph_of_a_kind_no_package_this_agent_loads_declar
 
     planner = "http://example.org/orexis/planning#Planner"
     world = _declared(tmp_path, [planner], wants="@prefix planning: <http://example.org/orexis/planning#> .\n"
-                      "<> a planning:WantGraph ; orexis:beliefsOf :me .\n:wanted a planning:Want .\n")
+                      "<> a planning:WantGraph ; orexis:ownedBy :me .\n:wanted a planning:Want ; planning:metWhen :ok .\n")
     assert reading.unread(world) == [], "every reader together declares the kind: only this agent does not"
     refused = reading.refused(world)
     assert len(refused) == 1 and refused[0].startswith("me: rules.ttl: ") and "shacl#RulesGraph" in refused[0], refused
@@ -473,52 +627,107 @@ def _asserting(*urls: str, world: str = "sensing") -> str:
 
 _SENSING_BROKER = "http://example.org/orexis/world/sensing#broker"
 
-#  A SECOND BROKER, stated as a first one is: named in the society as what a client could connect
-#  to, and its address asserted in a deployment graph of the world's own.
-_TWO_BROKERS = {("sensing", "society.ttl"): lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n",
+
+def _address(mqtt, world: str) -> tuple[str, int, int | None]:
+    """The address of a world's one broker, as every shipped world with a bus has."""
+    (found,) = mqtt.addresses(world).values()
+    return found
+
+#  A SECOND BROKER, stated as a first one is: named in the society as what a client connects to — the
+#  fern's agent, beside the one it is connected to already — and its address asserted in a deployment
+#  graph of the world's own.
+_TWO_BROKERS = {("sensing", "society.ttl"): lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n"
+                ":fern_agent mqtt4ssn:isConnectedToBroker :elsewhere .\n",
                 ("sensing", "deployment.ttl"): lambda _: _asserting("mqtt://elsewhere:1999", "mqtts://elsewhere:8999")
                 .replace(":broker schema:url", ":elsewhere schema:url")}
 
 
-def test_a_world_stating_two_brokers_is_refused_naming_both(tmp_path, monkeypatch):
-    """Broken on purpose: the sensing world with a second broker. `broker` kept the first host it
-    met and a port per scheme from whichever url sorted last, so this world was handed
-    `elsewhere` with the sensing broker's ports and nothing said so. How several brokers reach an
-    agent is an open seam (a-documents-kind-says-who-reads-it), so onboarding refuses instead."""
-    from onboarding import mqtt
+def test_a_world_may_have_several_brokers_each_served_apart(tmp_path, monkeypatch):
+    """Nothing in the model asks a world for one broker: MQTT4SSN says which each client is connected
+    to. The sensing world with a second, which its agent is connected to as well and its board is not:
+    it holds, each broker is a service with its own files and volume, the agent is told both, and the
+    second broker's passwd holds the agent and not the board, which is connected to the first alone."""
+    import yaml
 
-    _installed(tmp_path, monkeypatch, _TWO_BROKERS)
-    with pytest.raises(SystemExit, match=r"2 mqtt4ssn:Brokers") as refused:
-        mqtt.broker("sensing")
-    assert "sensing#broker" in str(refused.value) and "sensing#elsewhere" in str(refused.value)
+    from onboarding import compose, mqtt, reading
+
+    root = _installed(tmp_path, monkeypatch, _TWO_BROKERS)
+    assert reading.invalid(root / "sensing") == []
+    services = yaml.safe_load(compose.render("sensing"))["services"]
+    assert {"mosquitto-broker", "mosquitto-elsewhere"} <= set(services), sorted(services)
+    assert "orexis-sensing-mosquitto-elsewhere:/var/lib/mosquitto" in services["mosquitto-elsewhere"]["volumes"]
+    told = services["agent-fern"]["environment"]["MQTT_BROKERS"].split()
+    assert told[0::2] == [_SENSING_BROKER, "http://example.org/orexis/world/sensing#elsewhere"], told
+    assert told[3] == "mqtts://elsewhere:8999", told
+    mqtt.provision("sensing")
+    assert "listener 1999 0.0.0.0" in (root / "sensing" / "mosquitto" / "elsewhere" / "orexis.conf").read_text()
+    users = [line.split(":", 1)[0] for line in (root / "sensing" / "mosquitto" / "elsewhere" / "passwd").read_text().splitlines()]
+    assert users == ["sensing-fern"], users
+    users = [line.split(":", 1)[0] for line in (root / "sensing" / "mosquitto" / "broker" / "passwd").read_text().splitlines()]
+    assert users == ["moisture_sensor_fern", "sensing-fern"], users
+
+
+#  WHAT A WORLD OF SEVERAL BROKERS MAY NOT STATE, each on the sensing world.
+_ONE_PORT = {("sensing", "society.ttl"): lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n",
+             ("sensing", "deployment.ttl"): lambda _: _asserting("mqtt://localhost:1999")
+             + ':elsewhere schema:url "mqtt://localhost:1999" .\n'}
+
+
+@pytest.mark.parametrize("edit, said", [
+    (_ONE_PORT, "broker: listens at localhost:1999, as http://example.org/orexis/world/sensing#elsewhere does"),
+    ({("sensing", "society.ttl"): lambda text: text + "\n:elsewhere a mqtt4ssn:Broker .\n"
+      ":esp32_fern mqtt4ssn:isConnectedToBroker :elsewhere .\n"},
+     "esp32_fern: connected to two brokers, http://example.org/orexis/world/sensing#broker and "
+     "http://example.org/orexis/world/sensing#elsewhere: it is flashed with one address"),
+    ({("sensing", "society.ttl"): lambda text: text + "\n<http://example.org/elsewhere#broker> a mqtt4ssn:Broker .\n"},
+     "broker: is named broker, as http://example.org/elsewhere#broker is"),
+], ids=["one-port", "a-board-on-two", "one-name"])
+def test_a_world_of_several_brokers_is_held_to_what_tells_them_apart(tmp_path, monkeypatch, edit, said):
+    """Two brokers on one host and port are one listener and cannot both start; a board is flashed with
+    one address, so it is connected to one broker; and a broker's service, volume and files are named
+    for its local name, so two brokers do not share one."""
+    from onboarding import reading
+
+    root = _installed(tmp_path, monkeypatch, edit)
+    found = reading.invalid(root / "sensing")
+    assert any(line.startswith(said) for line in found), found
 
 
 @pytest.mark.parametrize("edit, contradiction", [
-    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtts://elsewhere:8888"'), "two hosts"),
-    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtt://localhost:1999"'), "two mqtt:// ports"),
+    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtts://elsewhere:8888"'), "two hosts, elsewhere and localhost"),
+    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtt://localhost:1999"'), "two mqtt:// ports, 1888 and 1999"),
     (lambda text: text.replace('"mqtt://localhost:1888"', '"mqtt://localhost:1888" , "mqtts://localhost:8999"'),
-     "two mqtts:// ports"),
-], ids=["hosts", "plain", "tls"])
+     "two mqtts:// ports, 8888 and 8999"),
+    (lambda text: text.replace('"mqtts://localhost:8888"', '"mqtt://localhost"'), "two mqtt:// ports, 1883 and 1888"),
+], ids=["hosts", "plain", "tls", "a-default-port"])
 def test_one_broker_given_two_addresses_is_refused(tmp_path, monkeypatch, edit, contradiction):
     """One broker whose urls disagree — two hosts, or two ports for one scheme — was answered with
     whichever sorted first or last. A board is flashed with one host and one port, so one of them
-    is simply wrong, and onboarding cannot tell which. The terrace asserts its urls."""
-    from onboarding import mqtt
+    is simply wrong, and onboarding cannot tell which. A url stating no port states its scheme's, so a
+    second port cannot hide behind an omission. The terrace asserts its urls."""
+    from onboarding import reading
 
-    _installed(tmp_path, monkeypatch, {("terrace", "deployment.ttl"): edit})
-    with pytest.raises(SystemExit, match=contradiction):
-        mqtt.broker("terrace")
+    root = _installed(tmp_path, monkeypatch, {("terrace", "deployment.ttl"): edit})
+    said = reading.invalid(root / "terrace")
+    assert len(said) == 1 and said[0].startswith(f"broker: given {contradiction}"), said
 
 
-@pytest.mark.parametrize("tool", ["compose", "firmware"])
-def test_the_tools_told_the_address_inherit_the_refusal(tmp_path, monkeypatch, tool):
-    """`orexis-compose` writes the address into every agent's environment and `orexis-firmware`
-    into every board's config.h; both ask `broker`, so neither writes a merged address."""
-    from onboarding import compose, firmware
+@pytest.mark.parametrize("tool", ["compose", "dashboards", "firmware", "influx", "mqtt"])
+def test_every_tool_called_alone_refuses_what_onboarding_does(tmp_path, monkeypatch, tool):
+    """`orexis-onboard` runs each tool after `reading.check`, and each is callable alone too — to
+    rotate one service's credentials, or flash one board — so each asks the same check first and
+    refuses before it writes anything, and a renderer only ever formats a world that holds. The
+    sensing world with two brokers on one port, which compose would start as two services of which
+    one cannot listen."""
+    import importlib
+    import sys
 
-    _installed(tmp_path, monkeypatch, _TWO_BROKERS)
-    with pytest.raises(SystemExit, match=r"2 mqtt4ssn:Brokers"):
-        compose.render("sensing") if tool == "compose" else firmware.generate("sensing")
+    module = importlib.import_module(f"onboarding.{tool}")
+    root = _installed(tmp_path, monkeypatch, _ONE_PORT)
+    monkeypatch.setattr(module, "world_dir", lambda name: root / name)
+    monkeypatch.setattr(sys, "argv", [f"orexis-{tool}", "sensing"])
+    with pytest.raises(SystemExit, match="one port on one host is held by one listener"):
+        module.main()
 
 
 def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_load(tmp_path):
@@ -585,8 +794,35 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
         with pytest.raises(SystemExit, match=r"monitored.*Metrics from no store"):
             ask()
     _installed(tmp_path / "again", monkeypatch, installation=lambda text: text.replace("onboarding:History , ", ""))
-    with pytest.raises(SystemExit, match=r"0 onboarding:SeriesStores serving History"):
+    with pytest.raises(SystemExit, match=r"History: served by no store: every agent writes its history"):
         installation.series(HISTORY)
+
+
+@pytest.mark.parametrize("edit, said", [
+    (lambda text: text + '\n:second a onboarding:SeriesStore ; schema:url "http://localhost:8087" ; onboarding:organisation "o" ; '
+                         'onboarding:image "i" .\n', "series: is a series store beside http://example.org/orexis/installation#second"),
+    (lambda text: text.replace('    onboarding:organisation "orexis" ;\n', ""), "series: a series store has one organisation"),
+    (lambda text: text.replace('"docker.io/grafana/grafana:11.2.0"', '"docker.io/grafana/grafana:11.2.0" , "grafana:12"'),
+     "view: a series view runs one image"),
+    (lambda text: text.replace("https://localhost:3000", "http://localhost:3000"), "view: a series view answers at one https:// url"),
+    (lambda text: text.replace("http://localhost:8086", "https://localhost:8086"), "series: a series store answers at one http:// url"),
+    (lambda text: text.replace("onboarding:retentionDays 30", "onboarding:retentionDays 30 , 60"), "Metrics: a purpose is kept one whole number of days"),
+    (lambda text: text.replace("onboarding:retentionDays 30", 'onboarding:retentionDays "a month"'), "Metrics: a purpose is kept one whole number of days"),
+    (lambda text: text.replace("onboarding:intervalSeconds 60", 'onboarding:intervalSeconds "a minute"'),
+     "Metrics: a window of a minute, which is no number of seconds"),
+    (lambda text: text + '\n:more onboarding:allocatesFrom "mqtt://localhost:2884" .\n', "more: is a pool beside http://example.org/orexis/installation#brokers"),
+    (lambda text: text.replace('"mqtt://localhost:1884"', '"mqtt://localhost"'), "brokers: allocates from mqtt://localhost, which states no host or no port"),
+], ids=["two-stores", "no-organisation", "two-images", "a-view-in-the-clear", "a-store-over-tls", "two-retentions",
+        "a-retention-in-words", "a-window-in-words", "two-pools", "a-pool-url-with-no-port"])
+def test_what_the_installation_states_is_held_to_its_requirements(tmp_path, monkeypatch, edit, said):
+    """`installation.py` refused each of these by hand, in a reader of its own for each; each is a
+    shape of onboarding's own now, judged once as the document is read, so every tool reading the
+    installation refuses it the same way and none judges it."""
+    from onboarding import installation
+
+    _installed(tmp_path, monkeypatch, installation=edit)
+    with pytest.raises(SystemExit, match="requirements refuse — .*" + re.escape(said)):
+        installation.view()
 
 
 def test_a_world_is_monitored_only_where_its_own_deployment_says_so(tmp_path, monkeypatch):
@@ -608,8 +844,8 @@ def test_an_asserted_url_wins_and_a_broker_asserting_none_is_allocated_one():
     broker that asserts."""
     from onboarding import installation, mqtt
 
-    assert mqtt.broker("terrace") == ("localhost", 1888, 8888)
-    assert mqtt.broker("sensing") == ("localhost", 1884, 8884)
+    assert _address(mqtt, "terrace") == ("localhost", 1888, 8888)
+    assert _address(mqtt, "sensing") == ("localhost", 1884, 8884)
     assert installation.allocated(_SENSING_BROKER) == ["mqtt://localhost:1884", "mqtts://localhost:8884"]
     assert installation.allocated("http://example.org/orexis/world/terrace#broker") == []
 
@@ -620,7 +856,7 @@ def test_an_assertion_wins_over_an_allocation_already_made(tmp_path, monkeypatch
     from onboarding import installation, mqtt
 
     _installed(tmp_path, monkeypatch, {("sensing", "deployment.ttl"): lambda _: _asserting("mqtt://localhost:1885", "mqtts://localhost:8885")})
-    assert mqtt.broker("sensing") == ("localhost", 1885, 8885)
+    assert _address(mqtt, "sensing") == ("localhost", 1885, 8885)
     assert _SENSING_BROKER not in installation.derive()
 
 
@@ -666,16 +902,69 @@ def test_the_derived_document_arrives_derived_and_the_installation_asserted():
     assert derived.graphs(s, DEPLOYMENT, derived.DERIVED) == [installation.DERIVATION.resolve().as_uri()]
 
 
+def test_every_committed_derived_society_is_a_fresh_derivation():
+    """`world/<w>/society.derived.ttl` says GENERATED — do not edit, and it is what every reader
+    names a topic by — the agent, the simulator, the ACL, a board's config.h — so one left behind by
+    a change to the society names a topic nobody publishes on. Held to what the rule writes now, for
+    every world with a bus; a world with none has none."""
+    from onboarding import reading, topics
+
+    for w in sorted(p.name for p in (REPO_ROOT / "world").iterdir() if (p / "world.ttl").exists()):
+        if reading.BUS in reading.premises(REPO_ROOT / "world" / w):
+            assert topics.derivation(w).read_text() == topics.derivation_text(w), \
+                f"world/{w}/society.derived.ttl is not what the rule writes now — run `orexis-onboard {w}`"
+        else:
+            assert not topics.derivation(w).exists(), f"world/{w} has no bus and no topic to name"
+
+
+def test_a_stated_filter_is_kept_and_the_rule_names_the_rest(tmp_path, monkeypatch):
+    """Asserted wins, derived completes: the sensing world naming its readings topic itself, by a
+    pattern of its own, is derived a filter for its command topic alone, and holds."""
+    from onboarding import reading, topics
+
+    root = _installed(tmp_path, monkeypatch, {("sensing", "society.ttl"): lambda text: text +
+                      '\n:mine a mqtt4ssn:TopicFilter ; mqtt4ssn:hasFilterPattern "fern/readings" ; mqtt4ssn:matchesTopic :fern_readings .\n'})
+    monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
+    topics.write("sensing")
+    derived = (root / "sensing" / "society.derived.ttl").read_text()
+    assert "sensors/moisture_sensor_fern/command" in derived and "fern_readings" not in derived, derived
+    assert reading.invalid(root / "sensing") == []
+
+
+@pytest.mark.parametrize("edit, said", [
+    ({("sensing", "society.ttl"): lambda text: text + "\n:spare a mqtt4ssn:Topic .\n"},
+     "spare: named by no filter: nothing publishes on it or listens to it"),
+    ({("sensing", "society.derived.ttl"): lambda _: None},
+     "fern_commands: named by no filter: nothing publishes on it or listens to it, or `orexis-onboard` has not derived its name"),
+    ({("sensing", "society.ttl"): lambda text: text + "\n:second a mqtt4ssn:Topic . :air_temp_fern mqtt4ssn:observesTopic :second .\n"},
+     "fern_readings: named sensors/moisture_sensor_fern/reading, as http://example.org/orexis/world/sensing#second is"),
+    ({("sensing", "society.ttl"): lambda text: text + '\n:other a mqtt4ssn:Client ; mqtt4ssn:hasClientID "other" ; mqtt4ssn:hosts :moisture_sensor_fern .\n'},
+     "fern_readings: named twice, sensors/moisture_sensor_fern/reading and sensors/other/reading"),
+], ids=["a-topic-of-nobody", "not-yet-derived", "two-topics-of-one-board", "a-sensor-on-two-boards"])
+def test_a_topic_the_rule_cannot_name_once_is_refused(tmp_path, monkeypatch, edit, said):
+    """What the convention cannot name is refused, with the derived document in: a topic nothing
+    publishes on or listens to, a world whose topics `orexis-onboard` has not yet named, a board whose
+    sensors are spread over two topics — which it publishes as one — and a sensor two boards host."""
+    from onboarding import reading, topics
+
+    root = _installed(tmp_path, monkeypatch, edit)
+    monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
+    if ("sensing", "society.derived.ttl") not in edit:
+        topics.write("sensing")
+    found = reading.invalid(root / "sensing")
+    assert any(line.startswith(said) for line in found), found
+
+
 def test_no_renderer_computes_a_port(tmp_path, monkeypatch):
     """With nothing derived, a world asserting no url has no address, and every renderer says so
     rather than working one out — the allocation is the derivation's alone."""
     from onboarding import compose, mqtt
 
     _installed(tmp_path, monkeypatch, derivation=False)
-    for render in (lambda: mqtt.broker("sensing"), lambda: compose.render("sensing")):
+    for render in (lambda: _address(mqtt, "sensing"), lambda: compose.render("sensing")):
         with pytest.raises(SystemExit, match="has allocated it none"):
             render()
-    assert mqtt.broker("terrace") == ("localhost", 1888, 8888)
+    assert _address(mqtt, "terrace") == ("localhost", 1888, 8888)
 
 
 def _a_world_before_sensing(text: str) -> str:
@@ -729,7 +1018,17 @@ def test_a_collision_is_refused(tmp_path, monkeypatch, edit, clash):
     from onboarding import installation
 
     _installed(tmp_path, monkeypatch, edit)
-    with pytest.raises(SystemExit, match=rf"{clash} is held by .* and by "):
+    with pytest.raises(SystemExit, match=rf"listens at {clash}, as .* does: one port on one host is held by one listener"):
+        installation.derive()
+
+
+def test_two_services_on_one_port_are_refused_as_two_brokers_are(tmp_path, monkeypatch):
+    """The installation's own services are listeners too, held by the one requirement: a view on the
+    store's port is refused as the installation is read, before any port is allocated."""
+    from onboarding import installation
+
+    _installed(tmp_path, monkeypatch, installation=lambda text: text.replace("https://localhost:3000", "https://localhost:8086"))
+    with pytest.raises(SystemExit, match=r"view: listens at localhost:8086, as .*installation#series does"):
         installation.derive()
 
 
@@ -741,7 +1040,7 @@ def test_one_port_on_two_hosts_is_no_clash(tmp_path, monkeypatch):
     _installed(tmp_path, monkeypatch, {("greenhouse", "deployment.ttl"): lambda text: text.replace("localhost:1889", "elsewhere:1888")
                                        .replace("localhost:8889", "elsewhere:8889")})
     installation.derive()
-    assert mqtt.broker("greenhouse") == ("elsewhere", 1888, 8889)
+    assert _address(mqtt, "greenhouse") == ("elsewhere", 1888, 8889)
 
 
 @pytest.mark.parametrize("where", ["installation", "world"])
@@ -884,21 +1183,17 @@ def test_a_committed_compose_file_is_what_onboarding_renders():
             f"world/{world}/compose.yaml is not what `orexis-compose {world}` renders — regenerate it"
 
 
-def test_every_shipped_world_with_a_bus_states_one_broker_address():
-    """The other direction: the refusal must not fire on a world that is right. A world with no bus
-    — hanoi — states no broker and is refused for that, as before: `broker` is asked for an address
-    that does not exist, and the tools stop asking it for such a world (below)."""
+def test_every_shipped_broker_has_an_address():
+    """The other direction: the requirements must not fire on a world that is right. Every broker a
+    shipped world names is answered a host and a plain port, and a world with no bus — hanoi — names
+    none and is answered none, which the tools never ask of it (below)."""
     from onboarding import mqtt
 
     answered = []
     for world in _worlds():
-        try:
-            host, plain, _tls = mqtt.broker(world)
-        except SystemExit as refused:
-            assert "states no mqtt4ssn:Broker" in str(refused), f"{world}: {refused}"
-            continue
-        assert host and plain, f"{world}: no address"
-        answered.append(world)
+        for broker_iri, (host, plain, _tls) in mqtt.addresses(world).items():
+            assert host and plain, f"{world}: {broker_iri} has no address"
+            answered.append(world)
     assert len(answered) >= 4, f"only {answered} state a broker — the guard would check nothing"
 
 
@@ -1000,25 +1295,81 @@ def test_a_world_with_a_bus_is_onboarded_with_everything(tmp_path, monkeypatch, 
     for agent in agents:
         for minted in (f"mqtt-{agent}.env", f"{agent}.crt", f"{agent}.key"):
             assert (here / "secrets" / minted).exists(), minted
-    for minted in ("secrets/ca.crt", "secrets/broker.crt", "mosquitto/acl.conf", "mosquitto/orexis.conf", "mosquitto/crl.pem"):
+    for minted in ("secrets/ca.crt", "secrets/broker.crt", "mosquitto/broker/acl.conf", "mosquitto/broker/orexis.conf", "mosquitto/crl.pem"):
         assert (here / minted).exists(), minted
     assert [r for r in caplog.records if "nothing stale" in r.getMessage()], "a fresh onboarding reports nothing stale"
     assert not [r for r in caplog.records if "no bus" in r.getMessage()]
     written = (here / "compose.yaml").read_text()
     assert written == (REPO_ROOT / "world" / "sensing" / "compose.yaml").read_text(), "not the committed compose file"
     services = yaml.safe_load(written)["services"]
-    assert "mosquitto" in services and "MQTT_HOST" in services["agent-fern"]["environment"]
+    assert "mosquitto-broker" in services and "MQTT_BROKERS" in services["agent-fern"]["environment"]
 
 
-def test_a_simulator_with_no_broker_to_connect_to_is_refused(tmp_path, monkeypatch):
-    """Broken on purpose: the allotment with its broker's type struck from the society. Its systems
-    are still simulated, by a client that connects to a broker, so a compose file of agents alone
-    would drop the simulator in silence; it is refused, and the world named."""
-    from onboarding import compose
+@pytest.mark.parametrize("edit, said", [
+    ({("allotment", "society.ttl"): lambda text: text.replace(":broker a mqtt4ssn:Broker .", "")},
+     "plot_board: connected to no mqtt4ssn:Broker: it would be flashed or started with no address"),
+    ({("terrace", "deployment.ttl"): lambda text: text.replace('"mqtt://localhost:1888" , ', "")},
+     "broker: asserts mqtts://localhost:8888 and no mqtt:// url: a board and the simulator connect plain"),
+    ({("allotment", "society.ttl"): lambda text: text + '\n:other a mqtt4ssn:Client ; mqtt4ssn:hasClientID "other" ; '
+                                                        'mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :fern_valve .\n'},
+     "fern_valve: hosted by other, as fern_probe is by plot_board: one simulator plays every simulated system of a world, as one client"),
+    ({("allotment", "society.ttl"): lambda text: text.replace(":rose_valve , :fern_valve .", ":rose_valve .")},
+     "fern_valve: hosted by no client: the simulator connects as the client hosting what it plays"),
+    ({("sensing", "world.ttl"): lambda text: text.replace('sensing:readingPointer "/moisture" ;\n    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty\n'
+                                                           '        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .',
+                                                           'sensing:readingPointer "/moisture" .')},
+     "moisture_sensor_fern: a sensor that states no ssn-system:Frequency"),
+    ({("sensing", "world.ttl"): lambda text: text.replace('[ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .',
+                                                           '[ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] , '
+                                                           '[ a ssn-system:Frequency ; schema:value 20 ; schema:unitCode unit:SEC ] ] .', 1)},
+     "moisture_sensor_fern: a sensor that states two frequencies"),
+], ids=["a-client-on-no-broker", "a-broker-asserting-tls-alone", "simulated-systems-on-two-clients",
+        "a-simulated-system-hosted-by-none", "a-sensor-with-no-cadence", "a-sensor-with-two-cadences"])
+def test_what_a_renderer_of_the_bus_refused_by_hand_is_a_requirement(tmp_path, monkeypatch, edit, said):
+    """Each of these a renderer once refused by hand, or passed over in silence, and each is a
+    requirement now, judged before any renderer runs (#838): a board or the simulator's client
+    connected to nothing the society names a broker — the allotment with its broker's type struck, whose
+    compose file of agents alone would have dropped the simulator; a broker asserting TLS alone, with no
+    plain port to flash a board with; the simulator's systems spread over two clients, or one hosted by
+    none, which the simulator would never play; and a sensor with no cadence, or two, which could never
+    be silent and gave a sentinel no heartbeat."""
+    from onboarding import reading
 
-    _installed(tmp_path, monkeypatch, {("allotment", "society.ttl"): lambda text: text.replace(":broker a mqtt4ssn:Broker .", "")})
-    with pytest.raises(SystemExit, match="names no mqtt4ssn:Broker for its simulator"):
-        compose.render("allotment")
+    root = _installed(tmp_path, monkeypatch, edit)
+    (world,) = {w for w, _ in edit}
+    found = reading.invalid(root / world)
+    assert any(line.startswith(said) for line in found), found
+
+
+_WET_POINT = '[ rdfs:label "wet" ; sensing:reads 410 ; sensing:standsFor 1.0 ]'
+
+
+@pytest.mark.parametrize("edit, said", [
+    ({("terrace", "world.ttl"): lambda text: text.replace(" ,\n                  " + _WET_POINT, "")},
+     "probe_scaling: a scaling or a calibration states two points"),
+    ({("terrace", "world.ttl"): lambda text: text.replace("sensing:reads 410", "sensing:reads 785")},
+     "probe_scaling: its two points read one number, 785"),
+    ({("terrace", "world.ttl"): lambda text: text.replace(" ; sensing:standsFor 1.0 ]", " ]")},
+     "probe_scaling: states a point that reads no number, or stands for none"),
+    ({("terrace", "world.ttl"): lambda text: text.replace("sensing:reads 410 ;", "sensing:reads 410 , 420 ;")},
+     "probe_scaling: states a point that reads two numbers, or stands for two"),
+    ({("terrace", "world.ttl"): lambda text: text + "\n:second_scaling a sensing:TwoPointScaling ; sensing:scales :moisture_sensor_terrace ;\n"
+                                                    "    sensing:point [ sensing:reads 1 ; sensing:standsFor 0.0 ] , [ sensing:reads 2 ; sensing:standsFor 1.0 ] .\n"},
+     "moisture_sensor_terrace: rescaled by probe_scaling and second_scaling: one scaling places a sensor's number on one line"),
+], ids=["a-scaling-of-one-point", "two-points-reading-one-number", "a-point-standing-for-nothing",
+        "a-point-reading-two-numbers", "a-sensor-rescaled-twice"])
+def test_what_the_firmware_generator_refused_by_hand_is_sensings_requirement(tmp_path, monkeypatch, edit, said):
+    """`orexis-firmware` sized a sentinel's wake window through the two points of the probe's scaling
+    and refused, by hand, a scaling with one point or two reading one number — on which sensing's own
+    rule binds nothing, so the agent would have read nothing of the probe, in silence. A scaling or a
+    calibration is a line through two points, each reading one number and standing for one, and a
+    sensor is rescaled by one: sensing's requirement, judged of the world before the generator runs,
+    and the generator refuses none of it (#838)."""
+    from onboarding import reading
+
+    root = _installed(tmp_path, monkeypatch, edit)
+    found = reading.invalid(root / "terrace")
+    assert any(line.startswith(said) for line in found), found
 
 
 def test_orexis_mqtt_grants_a_world_with_no_bus_nothing_and_says_so(tmp_path, monkeypatch, caplog):
@@ -1058,7 +1409,7 @@ def test_a_crl_is_written_empty_where_nobody_is_revoked_and_the_config_always_na
     here, _asked, _reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
     #  WHOLE LINES, not substrings: the first cut of this asked `in config`, and the config's own
     #  comment names the option, so the guard stayed green with the line struck out.
-    directives = [line for line in (here / "mosquitto" / "orexis.conf").read_text().splitlines() if not line.startswith("#")]
+    directives = [line for line in (here / "mosquitto" / "broker" / "orexis.conf").read_text().splitlines() if not line.startswith("#")]
     assert "crlfile /etc/mosquitto/crl.pem" in directives, directives
     assert directives.index("cafile /etc/mosquitto/clients-ca.crt") < directives.index("crlfile /etc/mosquitto/crl.pem") \
         < directives.index("acl_file /etc/mosquitto/acl.conf"), "the CRL is the TLS listener's"
@@ -1087,7 +1438,7 @@ def test_revoking_an_agent_puts_its_serial_on_the_crl_and_takes_its_credential(t
     here, _asked, _reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
     secrets = here / "secrets"
     old = x509.load_pem_x509_certificate((secrets / "fern.crt").read_bytes())
-    assert "sensing-fern" in (here / "mosquitto" / "passwd").read_text()
+    assert "sensing-fern" in (here / "mosquitto" / "broker" / "passwd").read_text()
     caplog.clear()
     with caplog.at_level(logging.INFO):
         mqtt.main(["sensing", "--revoke", "fern", "--no-reload"])
@@ -1096,8 +1447,8 @@ def test_revoking_an_agent_puts_its_serial_on_the_crl_and_takes_its_credential(t
     assert _crl_of(here).extensions.get_extension_for_class(x509.CRLNumber).value.crl_number == 2
     for gone in ("fern.crt", "fern.key", "mqtt-fern.env"):
         assert not (secrets / gone).exists(), gone
-    assert "sensing-fern" not in (here / "mosquitto" / "passwd").read_text()
-    assert "user sensing-fern" not in (here / "mosquitto" / "acl.conf").read_text()
+    assert "sensing-fern" not in (here / "mosquitto" / "broker" / "passwd").read_text()
+    assert "user sensing-fern" not in (here / "mosquitto" / "broker" / "acl.conf").read_text()
     assert [s for s in said if "restart" in s and "SIGHUP" in s], said
     assert [s for s in said if "still implies fern" in s], said
 
@@ -1312,7 +1663,7 @@ def test_an_agent_holding_a_desire_is_restarted_with_no_transport(tmp_path, monk
               "@prefix hanoi: <http://example.org/orexis/hanoi#> .\n"
               "@prefix planning: <http://example.org/orexis/planning#> .\n"
               "@prefix orexis: <http://example.org/orexis#> .\n"
-              "<> a planning:DesireGraph ; orexis:beliefsOf :hanoi .\n"
+              "<> a planning:DesireGraph ; orexis:ownedBy :hanoi .\n"
               ":hanoi planning:holds :the_tower_stands .\n"
               ":the_tower_stands a planning:Desire ; planning:metWhen hanoi:solved .\n")
     root = _installed(tmp_path, monkeypatch, {("hanoi", "desires.ttl"): lambda _text: desire})
@@ -1402,7 +1753,7 @@ def test_agents_md_names_code_that_exists():
 def test_a_document_holding_drifts_is_a_drift_graph():
     """`predict` reads drifts from `orexis:DriftGraph` graphs alone, as the planner reads actions from
     `orexis:ActionGraph` alone — so a drifts file left typed a bare belief is a file the
-    predictor passes over in silence, every graph nobody owns having been where it looked before. Every
+    predictor passes over in silence, every common graph having been where it looked before. Every
     document under `domains/` and `world/` carrying a `prediction:Drift` row says the kind."""
     import rdflib
 

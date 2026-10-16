@@ -352,7 +352,7 @@ def _binding(store, cand: str, memo) -> dict:
         if not found:
             raise LookupError(f"no candidate {cand} — was it admitted?")
         subject = remember(memo, ("acts_for",), lambda: next(
-            (r["for"] for r in rows(store, _ACTS_FOR_Q, [*graphs_of(store, BELIEF, nobodys=True), *graphs_of(store, SELF_GRAPH)])), None))
+            (r["for"] for r in rows(store, _ACTS_FOR_Q, [*graphs_of(store, BELIEF, common=True), *graphs_of(store, SELF_GRAPH)])), None))
         out = {"state": Raw(f"<{found[0]['from']}>"), "subject": subject or "urn:nobody",
                "now": instant(datetime.fromisoformat(found[0]["start"])),
                "action": found[0]["action"], "from": found[0]["from"], "minted": int(found[0]["minted"]),

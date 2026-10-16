@@ -23,12 +23,12 @@ what it is with `<> a <a graph kind>` on its own IRI, or, in TriG, of each graph
 | `deployment.ttl` | `onboarding:DeploymentGraph` | where the broker listens, its `schema:url`s — only where the world pins them | onboarding alone |
 | `state.ttl` | `orexis:BeliefGraph` | where things stand at the start, for a world nothing senses | the agent it names |
 | `wants.ttl`, `desires.ttl` | `planning:WantGraph`, `planning:DesireGraph` | what an agent is to bring about, once or for good | the agent it names |
-| `beliefs/<id>.self.ttl` | `orexis:SelfGraph` | who one agent is and the roles it runs, `:fern_grower a orexis:Self , market:Bidder , sensing:Observer , prediction:Predictor`, and its stances | that agent alone, and onboarding |
+| `beliefs/<id>.self.ttl` | `orexis:SelfGraph` | who one agent is and the roles it plays, `:fern_grower orexis:plays [ a market:Bidder ] , [ a sensing:Observer ; sensing:sensor :fern_probe ]`, and its stances | that agent alone, and onboarding |
 | `beliefs/<id>.ttl` | any agent-owned kind | one agent's own documents, in a world of several | the agent it names |
 | `hardware.ttl` | `onboarding:HardwareGraph` | pins, parts and boards | `orexis-firmware` alone |
 
 The file's NAME is for eyes; the kind in the document is what the loader reads, and so is whose a
-graph of an agent's own is — `<> orexis:beliefsOf :fern_grower` beside its kind, or, in a self
+graph of an agent's own is — `<> orexis:ownedBy :fern_grower` beside its kind, or, in a self
 graph, the self it states — which is what the boot keeps its own by and `orexis-compose` mounts by
 ([self](/domain/kernel/self.md)). Eight ship:
 `hanoi` plans and exits, its plan published and walked by nobody; `courier` and `tower` plan, walk
@@ -64,7 +64,7 @@ world graph beside what it acts on.
 
 An agent is told its id and given one world, mounted at `/app/world/<name>`; it never learns other
 worlds exist. The [runtime](/domain/kernel/runtime.md) boots from the directory, following
-`owl:imports` into `domains/`, and a volume it has lived in reads the documents nobody owns again at
+`owl:imports` into `domains/`, and a volume it has lived in reads the common documents again at
 every boot while keeping the agent's own. [Onboarding](/domain/onboarding/onboarding.md) reads the same
 documents to grant each agent its bucket, its broker credential where there is a bus, and its container, and writes
 `compose.yaml` and `secrets/` beside them.

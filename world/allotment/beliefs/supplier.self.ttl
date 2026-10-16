@@ -9,7 +9,8 @@
 #
 #  WHAT IT RUNS: the market's host, in the market's word — beneath the planner, the executor, the
 #  speaker and the deliberator, which the boot loads for it. Its own word about itself, here and never
-#  in the public world: a peer finds the host by `market:hosts`, which the society states, and learns
+#  in the world's: a peer finds the host by `market:hosts`, which the society states, and learns
 #  nothing of what the host runs.
 
-:supplier a orexis:Self , market:Host .
+:supplier a orexis:Self ;
+    orexis:plays [ a market:Host ] .

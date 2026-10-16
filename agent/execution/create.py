@@ -29,7 +29,7 @@ from .says import says
 _PRESENT_Q = """
 SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
                                FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
-                               ?g orexis:beliefsOf ?owner . } } LIMIT 1"""
+                               ?g orexis:ownedBy ?owner . } } LIMIT 1"""
 
 
 class _Execution:

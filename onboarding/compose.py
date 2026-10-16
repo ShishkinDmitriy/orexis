@@ -62,7 +62,9 @@ from . import installation, reading
 from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
 
-from .mqtt import broker
+from .mqtt import addresses, broker_of, service_of
+from agent.ontology import local_of
+from .reading import MQTT4SSN
 
 log = logging.getLogger("compose")
 
@@ -70,6 +72,11 @@ IMAGE = "orexis:local"
 BELIEF = "http://example.org/orexis#BeliefGraph"
 
 _IDS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
+
+#  THE BROKERS EACH AGENT IS CONNECTED TO, which its environment names with the url it reaches each at.
+_CONNECTED_Q = f"""
+SELECT ?id ?broker WHERE {{ ?a a orexis:Agent ; orexis:localId ?id ; <{MQTT4SSN}isConnectedToBroker> ?broker }}
+ORDER BY ?id ?broker"""
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.
 _SIMULATED_Q = """
@@ -97,12 +104,12 @@ def read_by_an_agent(world: str) -> dict[Path, frozenset[str] | None]:
     """Every document the boot reads in the world's directory, under `beliefs/` and under
     `secrets/` (`runtime.documents`), holding a graph of a kind an agent reads — asked of the
     agent's own vocabulary as its boot has it, and not of onboarding's, whose kinds are exactly the
-    ones an agent is not to be handed — with whom it is FOR: None where it holds a graph nobody owns,
+    ones an agent is not to be handed — with whom it is FOR: None where it holds a common graph,
     which every agent and the simulator read, and otherwise the ids of the agents whose own
     graphs it holds, by what it says (`store.whose`) and never by its name."""
     here = world_dir(world).resolve()
     store = world_of(here, others=reading.ours())
-    ids = {r["a"]: r["id"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, nobodys=True))}
+    ids = {r["a"]: r["id"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, common=True))}
     out: dict[Path, frozenset[str] | None] = {}
     for path in documents(here):
         if here not in path.parents:
@@ -111,8 +118,8 @@ def read_by_an_agent(world: str) -> dict[Path, frozenset[str] | None]:
         held = {graph: kinds for graph, kinds in kinds_in(doc).items() if known(store, kinds)}
         if not held:
             continue
-        nobodys = any(whose(doc, graph) is None for graph in held)
-        out[path] = None if nobodys else frozenset(ids[whose(doc, graph)] for graph in held)
+        common = any(whose(doc, graph) is None for graph in held)
+        out[path] = None if common else frozenset(ids[whose(doc, graph)] for graph in held)
     return out
 
 
@@ -128,13 +135,13 @@ def series_credential(agent_id: str, purpose: str = HISTORY) -> str:
 
 def simulated_client(world: str) -> str | None:
     """The client the world's simulator connects as, or None where nothing is simulated. One
-    simulator plays every simulated system, so they must share one client."""
+    simulator plays every simulated system, so one client hosts them all, and that client is connected
+    to a broker: the simulation domain's requirement and onboarding's (`domains/sim/requirements.ttl`,
+    `onboarding/requirements.ttl`), held by `reading.check` before any tool asking here runs. This
+    formats and judges nothing; it refused two clients by hand once."""
     store = reading.world(world_dir(world))
-    found = [r["id"] for r in rows(store, _SIMULATED_Q, graphs_of(store, BELIEF, nobodys=True))]
-    if len(found) > 1:
-        raise SystemExit(f"orexis-compose: {world!r} hosts simulated systems on {found}; one simulator plays "
-                         "them all, so one client must host them")
-    return found[0] if found else None
+    found = {r["id"] for r in rows(store, _SIMULATED_Q, graphs_of(store, BELIEF, common=True))}
+    return found.pop() if found else None
 
 
 def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) -> str:
@@ -181,24 +188,24 @@ def _restart(lasting: bool) -> str:
             '    restart: "no"')
 
 
-def _service(agent_id: str, world: str, read: set[Path], bus: tuple[str, int, int | None] | None,
+def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, str]] | None,
              series: dict[str, tuple[str, str]], window: float | None, lasting: bool) -> str:
-    """An agent's service. `bus` is the broker's (host, plain port, TLS port), or None where the
-    world has none — and then nothing of a bus is written: no `MQTT_*`, no broker credential, no
-    certificate. `lasting` says whether the agent runs for good (`reading.lasts`), and so whether
+    """An agent's service. `bus` is each broker the agent is connected to, by its IRI, with the url
+    it reaches it at — TLS where the broker listens so, since an agent of a world with a bus holds a
+    certificate — or None where the world has none, and then nothing of a bus is written: no
+    `MQTT_*`, no broker credential, no certificate. `lasting` says whether the agent runs for good (`reading.lasts`), and so whether
     its container is restarted."""
     stores = "".join(f'\n      INFLUX_{purpose}_URL: "{url}"\n      INFLUX_{purpose}_ORG: "{organisation}"'
                      for purpose, (url, organisation) in series.items())
     if METRICS in series and window is not None:
         stores += f'\n      {INTERVAL_KEY}: "{window:g}"'
     credentials = "".join(f"\n      - ./secrets/{series_credential(agent_id, purpose)}" for purpose in series)
-    if bus:
-        host, plain, tls = bus
-        tls_env = f'\n      MQTT_TLS_PORT: "{tls}"' if tls else ""
+    if bus is not None:
+        told = " ".join(f"{iri} {url}" for iri, url in bus)
         where = f"""
-      # where this world's broker listens — asserted or allocated, generated here, never read off the world by the agent
-      MQTT_HOST: "{host}"
-      MQTT_PORT: "{plain}"{tls_env}
+      # each broker it is connected to and where that listens — asserted or allocated, generated here,
+      # never read off the world by the agent
+      MQTT_BROKERS: "{told}"
       MQTT_CERT: "/app/secrets/agent.crt"
       MQTT_KEY: "/app/secrets/agent.key"
       MQTT_CA: "/app/secrets/ca.crt\""""
@@ -238,10 +245,12 @@ def _service(agent_id: str, world: str, read: set[Path], bus: tuple[str, int, in
 """
 
 
-def _broker(world: str, plain: int, tls: int | None) -> str:
-    """This world's own broker. Not shared infra, and that is the point.
+def _broker(world: str, broker_iri: str, plain: int, tls: int | None) -> str:
+    """One of this world's own brokers, as a service of its own. Not shared infra, and that is the point.
 
-    A broker per world costs about 2 MB and removes more than it adds: its ACL derives from ONE
+    A world may have any number of brokers, each served apart, on its own ports with its own passwd,
+    ACL and volume, and every one of them trusting the world's authority alone. A broker of a world's
+    own costs about 2 MB and removes more than it adds: its ACL derives from ONE
     world's wiring instead of every provisioned world at once, it trusts exactly one certificate
     authority instead of a bundle rebuilt whenever a world appears, and a new world no longer
     forces a restart of something other societies are talking to. See knowledge/domain/onboarding/onboarding.md.
@@ -256,8 +265,9 @@ def _broker(world: str, plain: int, tls: int | None) -> str:
         "      - ./mosquitto/crl.pem:/etc/mosquitto/crl.pem:ro\n"
         "      - ./secrets/broker.crt:/etc/mosquitto/broker.crt:ro\n"
         "      - ./secrets/broker.key:/etc/mosquitto/broker.key:ro")
+    service, files = service_of(broker_iri), f"./mosquitto/{local_of(broker_iri)}"
     return f"""
-  mosquitto:
+  {service}:
     build:
       context: ../../infra/mosquitto
       dockerfile: Containerfile
@@ -266,35 +276,46 @@ def _broker(world: str, plain: int, tls: int | None) -> str:
     restart: unless-stopped
     volumes:
       # generated by `orexis-mqtt {world}` from this world's wiring and the ports it asserts or is allocated
-      - ./mosquitto/orexis.conf:/etc/mosquitto/conf.d/orexis.conf:ro
-      - ./mosquitto/passwd:/etc/mosquitto/passwd:ro
-      - ./mosquitto/acl.conf:/etc/mosquitto/acl.conf:ro{tls_mounts}
+      - {files}/orexis.conf:/etc/mosquitto/conf.d/orexis.conf:ro
+      - {files}/passwd:/etc/mosquitto/passwd:ro
+      - {files}/acl.conf:/etc/mosquitto/acl.conf:ro{tls_mounts}
       # retained cadences outlive a restart: a sleeping board must still receive the interval
       # its agent set before the broker bounced
-      - orexis-{world}-mosquitto:/var/lib/mosquitto
+      - orexis-{world}-{service}:/var/lib/mosquitto
 """
 
+
+
+def _reached(world: str) -> dict[str, list[tuple[str, str]]]:
+    """Each agent's brokers, by its id: the IRI and the url it reaches it at, TLS where the broker
+    listens so and plain where it does not."""
+    store = reading.world(world_dir(world))
+    where = addresses(world)
+    out: dict[str, list[tuple[str, str]]] = {}
+    for r in rows(store, _CONNECTED_Q, graphs_of(store, BELIEF, common=True)):
+        host, plain, tls = where[r["broker"]]
+        out.setdefault(r["id"], []).append((r["broker"], f"mqtts://{host}:{tls}" if tls else f"mqtt://{host}:{plain}"))
+    return out
 
 
 def render(world: str) -> str:
     who = roster(world)
     if not who:
         raise SystemExit(f"orexis-compose: world {world!r} declares no agents")
-    #  THE BUS, where the world's society names a broker — and only then is `broker` asked for an
-    #  address, which it refuses for a world with none.
-    bus = broker(world) if reading.BUS in reading.premises(world_dir(world)) else None
+    #  THE BUS, where the world's society names a broker — a service per broker, each agent told the
+    #  ones it is connected to — and only then are the brokers' addresses asked for.
+    bus = addresses(world) if reading.BUS in reading.premises(world_dir(world)) else {}
+    reached = _reached(world) if bus else {}
     series = {purpose: installation.series(purpose) for purpose in installation.purposes(world)}
     window = installation.interval(METRICS) if METRICS in series else None
     client = simulated_client(world)
-    if client and not bus:
-        raise SystemExit(f"orexis-compose: {world!r} hosts simulated systems on {client!r} and names no "
-                         "mqtt4ssn:Broker for its simulator to connect to")
     read = read_by_an_agent(world)
-    services = ((_broker(world, *bus[1:]) if bus else "")
-                + (_simulator(world, read, client, *bus[:2]) if client else "")
-                + "".join(_service(a, world, read, bus, series, window, reading.lasts(world_dir(world), a))
+    services = ("".join(_broker(world, b, *bus[b][1:]) for b in sorted(bus))
+                + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")
+                + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series, window,
+                                   reading.lasts(world_dir(world), a))
                           for a in who))
-    volumes = (f"  orexis-{world}-mosquitto:\n" if bus else "") + "".join(f"  orexis-{world}-{a}:\n" for a in who)
+    volumes = "".join(f"  orexis-{world}-{service_of(b)}:\n" for b in sorted(bus)) + "".join(f"  orexis-{world}-{a}:\n" for a in who)
     first = f"orexis-mqtt {world}" if bus else f"orexis-influx {world}"
     return f"""# GENERATED by `orexis-compose {world}` from the world beside it — do not edit.
 #
@@ -333,7 +354,9 @@ def main() -> None:
         description="Generate the compose file for a world, from that world's roster.",
     )
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
-    generate(p.parse_args().world)
+    world = p.parse_args().world
+    reading.check(world_dir(world))
+    generate(world)
 
 
 if __name__ == "__main__":

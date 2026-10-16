@@ -25,7 +25,7 @@ want, the search finds a plan of steps, and each step is taken by commanding a d
 a peer:
 
 ```
-  board publishes            -> sensors/<probe>/reading     {"value": 0.18}
+  board publishes            -> sensors/<board>/reading     {"moisture": 0.18}
   agent believes, concludes  -> the reading, and that it is below its plot's range
   agent calls for water      -> agents/<host>/inbox         a call, as a document
   host offers a round        -> agents/<bidder>/inbox       a round, as a document

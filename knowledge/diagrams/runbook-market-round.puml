@@ -1,0 +1,20 @@
+@startuml runbook-market-round
+title A market — one dry plot watered through a round
+skinparam shadowing false
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam ArrowFontSize 11
+
+participant "Bidder (grower)" as G
+participant "Host (supplier)" as H
+participant "Valve" as V
+
+note over G : its plot is believed Dry,\nit holds no valve
+G -> H : call, on the host's inbox
+H -> G : round offered, lot and reserve
+G -> H : tender, at its value per litre
+H -> G : round cleared, a claim won
+G -> H : claim presented
+H -> V : dose command
+V --> G : next reading: plot Moist
+@enduml

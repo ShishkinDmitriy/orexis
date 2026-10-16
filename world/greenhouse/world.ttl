@@ -61,7 +61,8 @@
 
 :water_butt a climate:WaterSource ; rdfs:label "the water butt" ; climate:capacityL 20.0 .
 
-#  THE INSTRUMENTS, each reporting every ten minutes.
+#  THE INSTRUMENTS, each reporting every ten minutes, as the two values of the board's one message —
+#  each sensor reads its own by pointer.
 #  None of the four exists: the simulator plays them, from where each reading starts. The bed starts
 #  comfortable and a quarter of a day from its floor, so a world brought up shows its loop — the
 #  drying, the dose, the reading that answers it — in the first hours of its time and not its third day.
@@ -73,6 +74,7 @@
     sim:simulatedBy [ a sim:Model ; sim:initialValue 0.31 ; sim:minValue 0.0 ; sim:maxValue 1.0 ] ;
     sosa:isHostedBy :bed ;
     sosa:observes climate:SoilMoisture ;
+    sensing:readingPointer "/moisture" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:MIN ] ] .
 
@@ -80,6 +82,7 @@
     sim:simulatedBy [ a sim:Model ; sim:initialValue 21.0 ; sim:minValue -10.0 ; sim:maxValue 45.0 ; sim:jitter 0.01 ] ;
     sosa:isHostedBy :bed ;
     sosa:observes climate:AirTemperature ;
+    sensing:readingPointer "/temperature" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:MIN ] ] .
 

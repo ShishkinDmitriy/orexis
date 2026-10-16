@@ -7,7 +7,7 @@ import logging
 from datetime import datetime
 
 from agent import clock
-from agent.ontology import OREXIS, RECORD
+from agent.ontology import DERIVED, RECORD
 
 from .ontology import WANT
 from agent.store import bindings, query
@@ -51,13 +51,6 @@ log = logging.getLogger("find_wants")
 #  Generous enough that no correct caller meets it, small enough that meeting it is survivable.
 PAGE = 100
 
-#  HOW THE DERIVATION'S WANTS ARRIVED, which `derived=True` narrows to. This was a graph CLASS
-#  of its own once, under `planning:WantGraph`, whose whole content was that the derivation
-#  rather than a world put the rows there — the ARRIVAL axis wearing a content class, which the
-#  kernel vocabulary forbids in its own words. A want is in a graph of wants whoever wrote it,
-#  and which writer is `orexis:arrivedBy`.
-DERIVED = OREXIS + "Derived"
-
 
 def find_wants(store, at: datetime | None = None, *, uri: str = "", desire: str = "",
                derived: bool = False, holder: str = "", limit: int = PAGE,
@@ -84,6 +77,11 @@ def find_wants(store, at: datetime | None = None, *, uri: str = "", desire: str 
     if desire:
         patterns += f" ; prov:wasDerivedFrom <{desire}>"
     where = f"BIND(<{uri}> AS ?w) {patterns} ." if uri else f"{patterns} ."
+    #  HOW THE DERIVATION'S WANTS ARRIVED, which `derived=True` narrows to. This was a graph CLASS
+    #  of its own once, under `planning:WantGraph`, whose whole content was that the derivation
+    #  rather than a world put the rows there — the ARRIVAL axis wearing a content class, which the
+    #  kernel vocabulary forbids in its own words. A want is in a graph of wants whoever wrote it,
+    #  and which writer is `orexis:arrivedBy`.
     found = _select(store, where, at, limit, offset, DERIVED if derived else "", holder)
     #  A PAGE OF ONE IS ALWAYS FULL: `find_want` asks for one, and one standing is the
     #  ordinary answer, not a leak.
@@ -129,7 +127,7 @@ def _select(store, where: str, at: datetime | None, limit: int, offset: int,
     #  wants it wrote, and a world's ratified want is a graph of wants the sovereign wrote.
     #  One axis each, asked separately, because they ARE separate.
     came = f"    ?g orexis:arrivedBy <{arrival}> .\n" if arrival else ""
-    mine = (f'    OPTIONAL {{ ?g orexis:beliefsOf ?owner }}\n'
+    mine = (f'    OPTIONAL {{ ?g orexis:ownedBy ?owner }}\n'
             f'    FILTER(!BOUND(?owner) || ?owner = <{holder}>)'
             if holder else "")
     #  `?g a ?kind` IS THE JOIN, not only the filter, and removing it loses a want SILENTLY.

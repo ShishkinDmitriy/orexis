@@ -5,7 +5,8 @@
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+<> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
+    owl:imports <requirements.ttl> .
 
 #  SIMULATION, A DOMAIN.
 #  What a world lacks to be played without its hardware, and nothing more. The simulator
@@ -16,7 +17,9 @@
 #  simulation needs is here: that no such thing exists and a process plays it, where its reading
 #  starts and between which bounds it can move, and how far the number it publishes strays from
 #  that reading. The 0.1.0 package's own physics rates, its tick, its time scale and its meddler
-#  went with the physics to the domains that own it.
+#  went with the physics to the domains that own it. What a world must state of these words — that
+#  every simulated system is hosted by one client, the simulator's — is `requirements.ttl`'s, which
+#  onboarding holds a world to and no agent loads.
 
 :simulatedBy a owl:ObjectProperty ; rdfs:domain ssn:System ; rdfs:range :Model ;
     rdfs:label "simulated by" ;

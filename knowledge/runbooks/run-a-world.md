@@ -82,7 +82,7 @@ Both halves were necessary:
 path works whether or not the profile is loaded, which is why it was chosen. By hand it is:
 
 ```bash
-pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' orexis-<world>_mosquitto_1)
+pkill -HUP -P $(podman inspect -f '{{.State.Pid}}' orexis-<world>_mosquitto-<broker>_1)
 ```
 
 Making PID 1 a root shell fixed something else that had been wasting time: `podman stop` could
@@ -129,14 +129,14 @@ Still no store to prepare, and **no agent and no world is disturbed** — existi
 running, keep their beliefs and keep their credentials, because every grant is per principal and
 nothing is re-issued that already exists. Adding a bucket restarts nothing.
 
-**The one running thing that must hear about it is the world's broker**, since `orexis-mqtt`
-rewrites its `passwd` and `acl.conf`. Mosquitto reads both only at startup — but `orexis-mqtt`
+**The running things that must hear about it are the world's brokers**, since `orexis-mqtt`
+rewrites each one's `passwd` and `acl.conf`, under `mosquitto/<broker>/`, the broker's local name. Mosquitto reads both only at startup — but `orexis-mqtt`
 **reloads it for you**, and a reload is not a restart: connected agents keep their sessions and
 nothing is interrupted. You will see it say so:
 
 ```
-wrote world/allotment/mosquitto/passwd and world/allotment/mosquitto/acl.conf (4 principals)
-reloaded orexis-allotment_mosquitto_1 — connected agents kept their sessions
+wrote world/allotment/mosquitto/broker/passwd and world/allotment/mosquitto/broker/acl.conf (4 principals)
+reloaded orexis-allotment_mosquitto-broker_1 — connected agents kept their sessions
 ```
 
 If no broker is running it says that instead, and the files are simply read when it next starts.
@@ -149,8 +149,8 @@ The compose file is **generated, never hand-edited**: one service per agent, nam
 plus a `simulation` service where the world marks systems `sim:simulatedBy`. Adding an agent is
 adding it to the world and regenerating; a hand-edit is a second roster waiting to drift from the
 documents. Each container mounts exactly one store credential per purpose — its own — and of the
-world's documents those nobody owns and those that say they are its agent's; the simulator's, the
-ones nobody owns alone.
+world's documents the common ones and those that say they are its agent's; the simulator's, the
+common ones alone.
 
 # Monitor a world, or stop
 
@@ -191,13 +191,20 @@ A world is self-contained: its topology, its agents' opening beliefs and the com
 runs it are one directory. There is no separate deploy tree to keep in step.
 
 `up` is **start**, not birth. The first boot builds the agent's store from the documents; every
-boot after that logs `booted from … (a volume lived in: its own graphs kept)`, reads the documents nobody owns
+boot after that logs `booted from … (a volume lived in: its own graphs kept)`, reads the common documents
 again and leaves the agent's own graphs alone, so a restart cannot reset what it
 believes. The store lives in a named volume per agent and survives `up`, `down` and `restart`
 alike — see [belief-base](/domain/belief/belief-base.md).
 
 `down` removes only what *this* file declares. It is not a way to stop everything; for that see
 [tear-down](/runbooks/tear-down.md).
+
+# What a change costs
+
+![what each kind of change costs: a restart, a build, a fresh belief volume, or onboarding again](../diagrams/runbook-change-costs.svg)
+
+A restart reads the common documents again. An agent's own documents are read once, at birth, and
+a lived-in volume keeps them as they were: the tear-down's §Remove a belief base, then `up`.
 
 # After a code change
 
@@ -214,6 +221,17 @@ image copies rather than mounts:
 podman build -t orexis:local .
 podman compose up -d --force-recreate
 ```
+
+Neither reaches what a lived-in volume already holds. A volume keeps its own graphs and their
+catalogue rows, and the closure only adds kinds, so a change to what KIND an agent's own graph is
+leaves the old row standing beside the new. A volume born before #944's fourth slice (#950) keeps its
+one observation graph per sensor classified as a belief, which the mind would still read, and one born
+before #953 keeps rows of `orexis:StateGraph`. And a volume born before roles were instances keeps
+the self graph it was born with, its roles stated as types of the agent (`a orexis:Self ,
+sensing:Observer`), which the boot no longer reads as roles: the agent plays none, loads nothing and
+exits. Replace such a volume, as
+[move-a-world-to-agent-0-2-0](/runbooks/move-a-world-to-agent-0-2-0.md) does: export it, remove it,
+and `up` again.
 
 # Changing what an agent may reach
 
@@ -243,7 +261,7 @@ it. Then say so, per service:
 
 ```bash
 orexis-mqtt <w> --revoke <id>       # credential gone, ACL rebuilt and reloaded, certificate on the CRL
-cd world/<w> && podman compose restart mosquitto    # the CRL is TLS material: read at start, not on SIGHUP
+cd world/<w> && podman compose restart mosquitto-<broker>    # each broker; the CRL is TLS material, read at start
 orexis-influx <w> --revoke <id>     # its tokens deleted; its buckets KEPT
 ```
 
@@ -355,8 +373,8 @@ real one.
 |---|---|
 | agent refuses to start, `DocumentRefused` | a document states no kind, claims to be the catalogue or states an arrival; states a self anywhere but once in a self graph; or a graph of an agent's own names nobody, or no agent of the world. The message names the file |
 | agent refuses to start, `self graph` | its own documents hold no self graph, or two — the world authors exactly one per agent, under `beliefs/` — or its volume's self is another agent |
-| agent starts, logs `declared in no role`, and exits at once | its self graph states no role beside its self, so it loads no package — or its volume was born before the world declared one, and keeps the self graph it had: a role reaches only a fresh volume. `orexis-onboard` refuses the first; the second needs the volume removed (`tear-down`) |
-| `orexis-onboard` refuses, `declares its agents' roles in a way it does not bear out` | a role whose need the world lacks, a sensor reporting to an agent that is no observer, a topic listened to by no speaker, or a graph of a kind none of the agent's packages declares — each line names the agent and the reason |
+| agent starts, logs `plays no role`, and exits at once | its self graph says it plays no role, so it loads no package — or its volume was born before the world declared one, or before roles were instances (`orexis:plays`), and keeps the self graph it had: a role reaches only a fresh volume. `orexis-onboard` refuses the first; the second needs the volume removed (`tear-down`) |
+| `orexis-onboard` refuses, `declares its agents' roles in a way it does not bear out` | a role whose need the world lacks, a sensor an observer role reads that is mounted on nothing the agent acts for, a sensor reporting to an agent that no observer role of its reads, a topic listened to by no speaker, or a graph of a kind none of the agent's packages declares — each line names the agent and the reason |
 | agent never logs `a volume lived in` | it is not keeping its volume — check the `orexis-<world>-<agent>` volume is mounted at `/app/state` |
 | `--userns and --pod cannot be set together` | the generated `x-podman: in_pod: false` was removed or the file is stale — regenerate |
 | cannot read an agent's belief base from outside | by design: the store is exclusively locked by its owner, and nothing else can open it |

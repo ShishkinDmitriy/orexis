@@ -161,7 +161,7 @@ planning:ScopeGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Sco
     orexis:arrivedBy orexis:Derived .
 
 planning:Scope a owl:Class ; rdfs:label "Scope" ;
-    rdfs:comment "A set of atoms — a predicate on a key, the public terms a filling binds the subject by — joined wherever one filling of one action reads or writes both, and separate where nothing does — a bulkhead in the vocabulary (knowledge/domain/planning/scope.md). Two wants in different scopes cannot contradict, because no action of one writes a fact the other reads. Named for the graph it is written in and its place in the partition, largest first." .
+    rdfs:comment "A set of atoms — a predicate on a key, the world's terms a filling binds the subject by — joined wherever one filling of one action reads or writes both, and separate where nothing does — a bulkhead in the vocabulary (knowledge/domain/planning/scope.md). Two wants in different scopes cannot contradict, because no action of one writes a fact the other reads. Named for the graph it is written in and its place in the partition, largest first." .
 planning:inScope a owl:ObjectProperty ; rdfs:range planning:Scope ; rdfs:label "in scope" ;
     rdfs:comment "Every scope a predicate, a term or an action is in: a predicate in every scope some filling writes it in, a term in every scope a filling binding it falls in, an action in every scope some filling of it lies in. Said in full, never only where it is one: a reading, a witness and a want are placed by the MEET of their terms' scopes, and a bed keyed by a pump's filling and a heater's is in both scopes, which is what tells its soil's reading from another bed's — said only where one, it was in neither and told nothing (a-scope-is-a-predicate-on-a-key). A reader wanting the term unique to a scope asks for one scope. No domain: said of a property, of a term a key holds and of an action alike. An action stating no effect is in no scope, as no world admits it; one whose effect cannot be read is in the one scope that joins everything." .
 
@@ -208,27 +208,6 @@ planning:Planner a owl:Class ;
     rdfs:comment """An agent that derives wants and searches for plans: the role whose part is the
     Planner, one concept with it. Declared, never derived; it needs a desire or a want the agent
     holds, since a planner with nothing to pursue plans nothing.""" .
-
-[] a sh:NodeShape ;
-    sh:targetClass planning:Planner ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a planner holds no desire and no want: it would plan nothing" ;
-        sh:select """SELECT ?me WHERE { ?me a orexis:Self
-            FILTER NOT EXISTS { ?desire a planning:Desire }
-            FILTER NOT EXISTS { ?want a planning:Want } }""" ] .
-
-#  AN EXECUTOR IS A PLANNER TOO, while a plan crosses no agent: the executor walks what planning
-#  published in the same store, and a step is checked against the present by the Planner when it is
-#  taken (#916). Stated HERE and not in execution's ontology because being a planner is planning's
-#  word, and execution, beneath it, speaks none of planning's; the seam that would lift it is a plan
-#  crossing agents (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
-
-[] a sh:NodeShape ;
-    sh:targetClass execution:Executor ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "an executor is no planner: nothing would publish a plan for it to walk" ;
-        sh:select """SELECT ?me WHERE { ?me a orexis:Self
-            FILTER NOT EXISTS { { ?me a planning:Planner } UNION { ?me a ?role . ?role rdfs:subClassOf planning:Planner } } }""" ] .
 
 #################  Desires, wants and the searched half of an action — planning's  #################
 
@@ -359,7 +338,7 @@ planning:ShapesGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Shapes graph" ;
-    rdfs:comment "What a desire's met-test and estimate point at: the SHACL shapes a domain declares for what its words mean when wanted — delivered, solved — and the selects that say how far a world still is, in the unit its actions cost. SHACL's own notion of a shapes graph, typed so that the planner crosses these beside the graphs of desires, wants and records, which is where it reads a met-test, without crossing every vocabulary: all nine ontology graphs cost thirty times the crossing, measured. No belief, as a desire is none, and nobody's, since what a word means is everyone's; a domain ships one, and a world that authors a shape of its own may put it here or beside its desire." .
+    rdfs:comment "What a desire's met-test and estimate point at: the SHACL shapes a domain declares for what its words mean when wanted — delivered, solved — and the selects that say how far a world still is, in the unit its actions cost. SHACL's own notion of a shapes graph, typed so that the planner crosses these beside the graphs of desires, wants and records, which is where it reads a met-test, without crossing every vocabulary: all nine ontology graphs cost thirty times the crossing, measured. No belief, as a desire is none, and common, since what a word means is everyone's; a domain ships one, and a world that authors a shape of its own may put it here or beside its desire." .
 
 
 planning:precondition

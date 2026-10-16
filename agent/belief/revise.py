@@ -77,7 +77,7 @@ import pyoxigraph as ox
 
 from agent.hash_named_graph import forms
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, OREXIS
+from agent.ontology import BELIEF, DERIVED
 from agent.store import (Raw, catalogue_of, construct, entry, forget_graph, graphs_of, quads,
                          remember, rows, update)
 
@@ -106,8 +106,8 @@ SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHE
   FILTER NOT EXISTS { ?rule a belief:Transition } }"""
 
 #  WHAT A RULE'S `sh:prefixes` DECLARE, as SHACL-SPARQL spells it — the ontology node's
-#  `sh:declare` blocks, each a prefix and a namespace — read over the rules graphs and public
-#  knowledge, since an ontology node sits in either.
+#  `sh:declare` blocks, each a prefix and a namespace — read over the rules graphs and the common
+#  beliefs, since an ontology node sits in either.
 _DECLARED_Q = """
 SELECT ?rule ?prefix ?namespace WHERE {
   ?rule sh:prefixes ?ontology . ?ontology sh:declare ?d . ?d sh:prefix ?prefix ; sh:namespace ?namespace }"""
@@ -122,7 +122,7 @@ _PREFIX_LINE = re.compile(r"^\s*PREFIX\s+([A-Za-z][\w.\-]*)?\s*:\s*<([^>]*)>", r
 #  WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its row: the revisions are the same.
 _SOURCE_Q = """
 SELECT ?owner ?start ?end WHERE {
-  GRAPH $cat { OPTIONAL { $source orexis:beliefsOf ?owner }
+  GRAPH $cat { OPTIONAL { $source orexis:ownedBy ?owner }
                OPTIONAL { $source dcterms:temporal ?p .
                           OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1"""
@@ -245,7 +245,7 @@ def _layers(store) -> list[tuple[float, list[tuple[float, list[dict]]]]]:
         entry_["types"].add(r["type"])
         entry_["shape"] = entry_["shape"] or r.get("shape")
     declared: dict = {}
-    for r in rows(store, _DECLARED_Q, list(dict.fromkeys([*rules_graphs, *graphs_of(store, BELIEF, nobodys=True)]))):
+    for r in rows(store, _DECLARED_Q, list(dict.fromkeys([*rules_graphs, *graphs_of(store, BELIEF, common=True)]))):
         declared.setdefault(r["rule"], {})[r["prefix"]] = r["namespace"]
     for rule, about in sorted(seen.items()):
         r = about["row"]
@@ -310,7 +310,7 @@ WHERE  {{ GRAPH {cat} {{ <{into}> <{SETTLED}> ?was }} }}""")
     row = next(iter(rows(store, _SOURCE_Q, (), cat=cat, source=source)), {})
     update(store, f"""
 INSERT DATA {{
-  {entry(store, into, (REVISION_GRAPH, kind), OREXIS + "Derived", row.get("owner"), row.get("start"), row.get("end"))}
+  {entry(store, into, (REVISION_GRAPH, kind), DERIVED, row.get("owner"), row.get("start"), row.get("end"))}
   GRAPH {cat} {{ <{into}> <{DERIVED_FROM}> <{source}> ; <{SETTLED}> {flag} . }} }}""")
 
 

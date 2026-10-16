@@ -8,7 +8,7 @@
 # over the reach from where the vans stand it yields no row, since no cell can hold both; so the
 # constraint joins nothing, and the two parcels are two clusters as a-parcel-astray-is-a-want-of-
 # its-own left them: two wants, each named for its parcel, narrowed to it, its estimate bound to it.
-# The scopes are still one — the partition is read off the public graphs, which bind either van to
+# The scopes are still one — the partition is read off the common beliefs, which bind either van to
 # either parcel — which is why the coupling is read over the reach and not off the scopes.
 #
 # The clock stands at 2026-01-01T12:00:00Z when the derivation runs.
@@ -239,10 +239,10 @@ GRAPH :catalogue {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
-  :scopes orexis:beliefsOf :keeper .
+  :scopes orexis:ownedBy :keeper .
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
-  :sensed orexis:beliefsOf :keeper .
+  :sensed orexis:ownedBy :keeper .
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .
 }

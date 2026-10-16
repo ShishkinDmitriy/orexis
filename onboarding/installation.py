@@ -33,10 +33,12 @@ this engine does badly; it writes the same kind of graph a rule would.
 as its broker exists and asserts nothing, and a new one takes the lowest slot left, so a world added
 later — whatever its name sorts as — never moves another's port. A board is flashed with its port.
 
-**A collision is refused, never resolved.** Two brokers on one host and port, asserted or allocated,
-or a broker on a service's: `derive` names both and writes nothing. A world asserting a port the
-installation already allocated to another is refused too, rather than moving the other — the other
-may be a board in a pot.
+**A collision is refused, never resolved, and refused by a requirement** (#838). Two brokers on one
+host and port, asserted or allocated, or a broker on a service's: `derive` names both and writes
+nothing. A world asserting a port the installation already allocated to another is refused too,
+rather than moving the other — the other may be a board in a pot. The refusal is the shape in
+onboarding's `requirements.ttl` that refuses a world's two brokers on one port, judged over everything
+the installation holds; the search only keeps what it was handed clash-free.
 
 **The installation may name worlds; a world names nothing of the installation.** The derived
 document names every broker it allocates, because the installation is the one reader that sees
@@ -57,10 +59,11 @@ import logging
 from urllib.parse import urlparse
 
 import pyoxigraph as ox
+import rdflib
 
 from agent.ontology import local_of as local
 from agent.series import HISTORY, METRICS
-from agent.store import DocumentRefused, Raw, answer, catalogue_of, graphs_of, rows
+from agent.store import DocumentRefused, Raw, answer, catalogue_of, graphs_of, rdflib_view, rows
 
 from . import derived, reading
 from .reading import DEPLOYMENT, ONBOARDING
@@ -98,7 +101,7 @@ _INTERVAL_Q = f"SELECT ?s WHERE {{ <$purpose> <{ONBOARDING}intervalSeconds> ?s }
 _URLS_Q = f"SELECT ?s ?url WHERE {{ ?s <{_SCHEMA_URL}> ?url }}"
 
 #  A WORLD'S BROKER, as its society names it, and the urls its own documents assert on it — over
-#  its beliefs nobody owns and its deployment graphs, since an assertion anywhere is an assertion.
+#  its common beliefs and its deployment graphs, since an assertion anywhere is an assertion.
 _BROKERS_Q = f"SELECT ?b WHERE {{ ?b a <{MQTT4SSN}Broker> }}"
 _ASSERTED_Q = f"SELECT ?b ?url WHERE {{ ?b a <{MQTT4SSN}Broker> ; <{_SCHEMA_URL}> ?url }}"
 
@@ -109,7 +112,9 @@ def _where(path) -> str:
 
 def _store(with_derivation: bool = True) -> ox.Store:
     """The installation as onboarding reads it: the asserted document, and the derived one where it
-    is on disk and asked for, each classified by how it arrived."""
+    is on disk and asked for, each classified by how it arrived. Refused, naming every way, where
+    the asserted document fails what onboarding's requirements hold it to — every tool reads the
+    installation through here, so none reads one that does not hold, and none judges it."""
     if not INSTALLATION.exists():
         raise SystemExit(f"no installation at {_where(INSTALLATION)} — the shared services are stated there")
     s = derived.store()
@@ -121,7 +126,29 @@ def _store(with_derivation: bool = True) -> ox.Store:
         raise SystemExit(f"the installation does not load — {refused}")
     if not derived.graphs(s, DEPLOYMENT, derived.ASSERTED):
         raise SystemExit(f"the installation at {_where(INSTALLATION)} holds no onboarding:DeploymentGraph")
+    found = invalid(s)
+    if found:
+        raise SystemExit(f"the installation at {_where(INSTALLATION)} states what its requirements refuse — "
+                         f"{'; '.join(found)}")
     return s
+
+
+_judged: dict[tuple, list[str]] = {}
+
+
+def invalid(s: ox.Store) -> list[str]:
+    """Every way the installation's asserted document in `s` breaks onboarding's own requirements
+    (`requirements.ttl`): one series store and one view, each with one url of the scheme the template
+    serves it over and one image, the store with one organisation; history served by a store; one
+    retention and one window per purpose; one pool, each url of it with a host and a port; and no
+    credential in any url. As `focus: why`, sorted; empty for an installation that holds. Remembered
+    per document on disk, since every tool asks several times in a run."""
+    key = (INSTALLATION, INSTALLATION.stat().st_mtime_ns)
+    if key not in _judged:
+        data = rdflib_view(s, *derived.graphs(s, DEPLOYMENT, derived.ASSERTED))
+        _judged[key] = sorted(f"{local(focus)}: {why}" if focus else why
+                              for (why, focus) in reading.reported(data, reading.own()))
+    return _judged[key]
 
 
 def _asserted(s: ox.Store, text: str) -> list[dict]:
@@ -132,61 +159,36 @@ def _port(url) -> int | None:
     return url.port or DEFAULT_PORTS.get(url.scheme)
 
 
-def _parsed(owner: str, text: str):
-    url = urlparse(text)
-    if url.username or url.password:
-        raise SystemExit(f"a credential is stated in the url of {owner} — a deployment graph says where, "
-                         "never what may be done there")
-    return url
-
-
 # ---------------------------------------------------------------- the services
 
 
-def _service(kind: str, label: str, iri: str | None = None) -> dict:
-    """The installation's one service of `kind` — or the one named `iri` — its url, and its image
-    and organisation where stated. One, because each is handed to its readers as one address."""
+def _service(kind: str) -> dict:
+    """The installation's one service of `kind`: its url, and its image and organisation where
+    stated. That there is one, with one url and one image, is onboarding's requirement, judged as the
+    document is read (`_store`); this formats and judges nothing, and refused each by hand once."""
     s = _store(with_derivation=False)
-    found = [r for r in _asserted(s, _SERVICE_Q.replace("$kind", kind)) if iri is None or r["s"] == iri]
-    named = sorted({r["s"] for r in found})
-    if len(named) != 1:
-        raise SystemExit(f"the installation states {len(named)} {label}s"
-                         + (f" ({', '.join(named)})" if named else "") + " — it is told as one")
-    values = {key: sorted({r[key] for r in found if r.get(key)}) for key in ("url", "image", "organisation")}
-    for key, stated in values.items():
-        if len(stated) > 1:
-            raise SystemExit(f"the installation states two {key}s for its {label} {named[0]}: {', '.join(stated)}")
-    if not values["url"]:
-        raise SystemExit(f"the installation states no url for its {label} {named[0]}")
-    _parsed(named[0], values["url"][0])
-    return {"iri": named[0], **{key: (stated[0] if stated else None) for key, stated in values.items()}}
+    (found,) = _asserted(s, _SERVICE_Q.replace("$kind", kind))
+    return {"iri": found["s"], **{key: found.get(key) for key in ("url", "image", "organisation")}}
 
 
 def served(purpose: str) -> tuple[str, str] | None:
     """(url, organisation) of the series store that `onboarding:serves` `purpose`, or None where no
-    store serves it. Two are refused, since an agent is told one store per purpose."""
+    store serves it — metrics may be served by none; history served by none is refused as the
+    document is read."""
     s = _store(with_derivation=False)
-    found = _asserted(s, _SERVES_Q.replace("$purpose", PURPOSE_OF[purpose]))
-    named = sorted({r["s"] for r in found})
-    if not named:
+    if not _asserted(s, _SERVES_Q.replace("$purpose", PURPOSE_OF[purpose])):
         return None
-    if len(named) > 1:
-        raise SystemExit(f"the installation states {len(named)} onboarding:SeriesStores serving "
-                         f"{local(PURPOSE_OF[purpose])} ({', '.join(named)}) — an agent is told one store per purpose")
-    store = _service(SERIES_STORE, "onboarding:SeriesStore", named[0])
-    if not store["organisation"]:
-        raise SystemExit(f"the installation states no onboarding:organisation for {store['iri']}")
+    store = _service(SERIES_STORE)
     return store["url"], store["organisation"]
 
 
 def series(purpose: str) -> tuple[str, str]:
     """(url, organisation) of the series store that serves `purpose` — what `orexis-influx` mints the
-    purpose's buckets in and what `orexis-compose` tells an agent under the purpose's keys — refused
-    where none does: asked only for a purpose some agent is to be told of (`purposes`)."""
+    purpose's buckets in and what `orexis-compose` tells an agent under the purpose's keys. Asked only
+    for a purpose some agent is to be told of (`purposes`), which is served: history always, by the
+    requirement, and metrics where `purposes` found it served."""
     found = served(purpose)
-    if found is None:
-        raise SystemExit(f"the installation states 0 onboarding:SeriesStores serving {local(PURPOSE_OF[purpose])}"
-                         " — an agent told of the purpose would be told of a store nobody has")
+    assert found is not None, f"{purpose} is told and served by no store — `purposes` answers which are told"
     return found
 
 
@@ -219,8 +221,6 @@ def interval(purpose: str) -> float | None:
     """How many seconds a window of `purpose`'s points is, `onboarding:intervalSeconds` on the
     purpose — or None where the installation states none, and the agent keeps its own sixty."""
     said = {float(r["s"]) for r in _asserted(_store(with_derivation=False), _INTERVAL_Q.replace("$purpose", PURPOSE_OF[purpose]))}
-    if len(said) > 1:
-        raise SystemExit(f"the installation states {len(said)} intervals for {local(PURPOSE_OF[purpose])}")
     return next(iter(said), None)
 
 
@@ -228,14 +228,12 @@ def retention(purpose: str) -> int | None:
     """How many days the installation keeps `purpose`'s points, `onboarding:retentionDays` on the
     purpose — or None where it states none, and the purpose's buckets keep everything."""
     days = {int(r["days"]) for r in _asserted(_store(with_derivation=False), _RETENTION_Q.replace("$purpose", PURPOSE_OF[purpose]))}
-    if len(days) > 1:
-        raise SystemExit(f"the installation states {len(days)} retentions for {local(PURPOSE_OF[purpose])}")
     return next(iter(days), None)
 
 
 def view() -> dict:
     """The series view: its url and its image."""
-    return _service(SERIES_VIEW, "onboarding:SeriesView")
+    return _service(SERIES_VIEW)
 
 
 # ---------------------------------------------------------------- a world's broker
@@ -243,13 +241,13 @@ def view() -> dict:
 
 def brokers_of(world_store: ox.Store) -> list[str]:
     """Every broker a world's society names, sorted."""
-    return sorted({r["b"] for r in rows(world_store, _BROKERS_Q, graphs_of(world_store, BELIEF, nobodys=True))})
+    return sorted({r["b"] for r in rows(world_store, _BROKERS_Q, graphs_of(world_store, BELIEF, common=True))})
 
 
 def asserted_on(world_store: ox.Store, broker: str) -> list[str]:
     """The urls a world's own documents assert on `broker`, sorted — none where it leaves them to
     the installation."""
-    graphs = graphs_of(world_store, BELIEF, DEPLOYMENT, nobodys=True)
+    graphs = graphs_of(world_store, BELIEF, DEPLOYMENT, common=True)
     return sorted(r["url"] for r in rows(world_store, _ASSERTED_Q, graphs) if r["b"] == broker)
 
 
@@ -263,25 +261,24 @@ def allocated(broker: str) -> list[str]:
 # ---------------------------------------------------------------- the derivation
 
 
-class _Taken:
-    """Every host and port something holds, and what holds it; a second holder is refused."""
-
-    def __init__(self):
-        self.held: dict[tuple[str, int], tuple[str, str]] = {}
-
-    def free(self, url) -> bool:
-        return (url.hostname, _port(url)) not in self.held
-
-    def take(self, owner: str, how: str, text: str) -> None:
-        url = _parsed(owner, text)
-        if not url.hostname or not _port(url):
-            return
-        key = (url.hostname, _port(url))
-        if key in self.held and self.held[key][0] != owner:
-            other, was = self.held[key]
-            raise SystemExit(f"{key[0]}:{key[1]} is held by {other} ({was}) and by {owner} ({how}) — a "
-                             "port is unique on its host; nothing was allocated")
-        self.held[key] = (owner, how)
+def _clashes(s: ox.Store, brokers: dict[str, list[str]], urls: dict[str, list[str]]) -> list[str]:
+    """Every listener holding a port on a host that something else holds, as `iri: why` — judged by
+    onboarding's own requirement (`requirements.ttl`), as a world's two brokers are, over the
+    installation's services, every url in `urls` and, world by world, that world's `brokers` typed
+    as what they are. A world at a time, since a broker's local name is its world's to keep apart
+    and every world names its own `:broker`; what the others hold need not say what it is, since the
+    requirement targets the listener and asks only a url of what it clashes with."""
+    held = rdflib_view(s, *derived.graphs(s, DEPLOYMENT, derived.ASSERTED))
+    for owner, said in urls.items():
+        for url in said:
+            held.add((rdflib.URIRef(owner), rdflib.URIRef(_SCHEMA_URL), rdflib.Literal(url)))
+    found: set[str] = set()
+    for named in sorted(b for b in brokers.values() if b) or [[]]:
+        data = rdflib.Graph() + held
+        for broker in named:
+            data.add((rdflib.URIRef(broker), rdflib.RDF.type, rdflib.URIRef(MQTT4SSN + "Broker")))
+        found |= {f"{focus}: {why}" if focus else why for (why, focus) in reading.reported(data, reading.own())}
+    return sorted(found)
 
 
 def _shifted(url, by: int) -> str:
@@ -289,17 +286,14 @@ def _shifted(url, by: int) -> str:
 
 
 def _pool(s: ox.Store, wanting: str | None = None) -> list:
-    """The urls the installation allocates from, parsed — one pool, each url with a host and a port."""
+    """The urls the installation allocates from, parsed. That there is one pool, each url of it
+    stating a host and a port, is onboarding's requirement, judged as the document is read; that
+    there is a pool at all is asked here, since only a broker asserting nothing needs one."""
     pool = [(r["s"], r["url"]) for r in _asserted(s, _POOL_Q)]
     if not pool:
         raise SystemExit(f"{wanting or 'a broker'} asserts no url and the installation states nothing to "
                          "allocate from (onboarding:allocatesFrom)")
-    if len({owner for owner, _ in pool}) > 1:
-        raise SystemExit(f"the installation states {len({o for o, _ in pool})} pools to allocate from")
-    firsts = [_parsed(owner, url) for owner, url in pool]
-    if not all(u.hostname and u.port for u in firsts):
-        raise SystemExit("every url the installation allocates from states a host and a port")
-    return firsts
+    return [urlparse(url) for _, url in pool]
 
 
 def derive(remember: bool = True) -> dict[str, list[str]]:
@@ -308,25 +302,21 @@ def derive(remember: bool = True) -> dict[str, list[str]]:
     Everything held first — the services, every asserted url, and, `remember`ing, every allocation
     the derived document already makes that still stands — and then each broker left, in the order
     its IRI sorts, at the lowest slot where every pool url raised by the slot is free. Refused where
-    two things hold one port, and where the pool is needed and not stated."""
+    two listeners hold one port (`_clashes`), and where the pool is needed and not stated."""
     s = _store(with_derivation=remember)
-    taken = _Taken()
-    for kind in (SERIES_STORE, SERIES_VIEW):
-        for r in _asserted(s, _SERVICE_Q.replace("$kind", kind)):
-            if r.get("url"):
-                taken.take(r["s"], "the installation's service", r["url"])
+    services = [(r["s"], r["url"]) for kind in (SERIES_STORE, SERIES_VIEW)
+                for r in _asserted(s, _SERVICE_Q.replace("$kind", kind)) if r.get("url")]
 
     asserted: dict[str, list[str]] = {}
+    brokers: dict[str, list[str]] = {}
     for w in worlds():
         try:
             world_store = reading.world(world_dir(w))
         except DocumentRefused as refused:
             raise SystemExit(f"world {w!r} does not load, so no port can be allocated safely beside it — {refused}")
-        for broker in brokers_of(world_store):
+        brokers[w] = brokers_of(world_store)
+        for broker in brokers[w]:
             asserted[broker] = asserted_on(world_store, broker)
-    for broker, urls in sorted(asserted.items()):
-        for url in urls:
-            taken.take(broker, "asserted", url)
 
     out: dict[str, list[str]] = {}
     if remember:
@@ -344,18 +334,24 @@ def derive(remember: bool = True) -> dict[str, list[str]]:
                     raise SystemExit(f"{_where(DERIVATION)} allocates {broker} {', '.join(sorted(urls))}, which is no "
                                      "slot of the installation's pool — it was edited, or the pool moved; "
                                      "assert the port in the world to pin it, or remove the allocation to re-derive it")
-                for url in urls:
-                    taken.take(broker, "allocated", url)
                 out[broker] = sorted(urls)
+
+    #  WHAT IS HELD ALREADY HOLDS TOGETHER, or nothing is allocated: a requirement, judged as a world's
+    #  is — no credential in any url, no port held twice — and the search below then keeps it so by
+    #  construction.
+    held = {**{owner: [url] for owner, url in services}, **asserted, **out}
+    found = _clashes(s, brokers, held)
+    if found:
+        raise SystemExit(f"the installation holds what its requirements refuse — {'; '.join(found)}; nothing was allocated")
+    taken = {(u.hostname, _port(u)) for urls in held.values() for u in map(urlparse, urls)}
 
     for broker in sorted(b for b, urls in asserted.items() if not urls and b not in out):
         firsts = _pool(s, broker)
         for n in range(_LAST_PORT - max(u.port for u in firsts) + 1):
             candidates = [urlparse(_shifted(u, n)) for u in firsts]
-            if all(taken.free(u) for u in candidates):
+            if not any((u.hostname, _port(u)) in taken for u in candidates):
                 out[broker] = sorted(u.geturl() for u in candidates)
-                for u in candidates:
-                    taken.take(broker, "allocated", u.geturl())
+                taken |= {(u.hostname, _port(u)) for u in candidates}
                 break
         else:
             raise SystemExit(f"no port is left to allocate {broker}")
@@ -388,23 +384,12 @@ def write_derivation() -> None:
 # ---------------------------------------------------------------- infra/compose.yaml
 
 
-def _published(url: str, label: str, schemes: tuple[str, ...]) -> int:
-    parsed = urlparse(url)
-    if parsed.scheme not in schemes:
-        raise SystemExit(f"the installation's {label} is at {url}, and this template serves it over "
-                         f"{' or '.join(schemes)}")
-    return _port(parsed)
-
-
 def render() -> str:
-    store, shown = _service(SERIES_STORE, "onboarding:SeriesStore"), view()
-    for service in (store, shown):
-        if not service["image"]:
-            raise SystemExit(f"the installation states no onboarding:image for {service['iri']}")
-    if not (organisation := store["organisation"]):
-        raise SystemExit(f"the installation states no onboarding:organisation for {store['iri']}")
-    store_port = _published(store["url"], "series store", ("http",))
-    view_port = _published(shown["url"], "series view", ("https",))
+    #  THE STORE OVER http AND THE VIEW OVER https, each with an image and the store with an organisation:
+    #  what this template serves, and onboarding's requirement of the document, judged as it is read.
+    store, shown = _service(SERIES_STORE), view()
+    organisation = store["organisation"]
+    store_port, view_port = _port(urlparse(store["url"])), _port(urlparse(shown["url"]))
     return f"""# GENERATED by `orexis-infra-compose` from infra/installation.ttl beside it — do not edit.
 #
 # The shared services: the series store, and Grafana for eyeballing it. What each runs and where

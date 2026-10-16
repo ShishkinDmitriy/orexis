@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import pyoxigraph as ox
 
-from agent.ontology import OREXIS, local_of
+from agent.ontology import RECORDED, local_of
 from agent.store import DocumentRefused, kinds_in, put_document, refuse_the_sovereigns, rows
 
 from .statements import statements
 
-RECORDED = OREXIS + "Recorded"
-
 _ARRIVED_Q = """
 SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival .
-                                            OPTIONAL { $graph orexis:beliefsOf ?owner } } }"""
+                                            OPTIONAL { $graph orexis:ownedBy ?owner } } }"""
 
 
 def said(store: ox.Store, me: str, doc: ox.Store) -> list[str]:

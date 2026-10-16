@@ -20,7 +20,7 @@ import logging
 import pyoxigraph as ox
 
 from agent import clock
-from agent.ontology import ACTION, OREXIS
+from agent.ontology import ACTION, DERIVED
 from agent.store import NAMESPACES, graphs_of, rows
 
 from . import footprint
@@ -44,7 +44,7 @@ def scope_actions(store: ox.Store) -> None:
     that holds everything. A scope is named for the graph it is written in and its place in the
     partition, largest first (`scopes.py` names both), so the same actions write the same text.
 
-    A FUNCTION OVER THE ENGINE, and it names no agent: the actions come from the beliefs nobody owns
+    A FUNCTION OVER THE ENGINE, and it names no agent: the actions come from the common beliefs
     the catalogue describes, the derivations' edges from the graph genesis wrote them into, and
     the partition that comes out is the STORE's — every agent reading one store would compute
     the same one from the same rows, so there is nobody to name it after (`scopes.py`).
@@ -141,7 +141,7 @@ INSERT {{
   GRAPH <{graph}> {{
 {chr(10).join(blocks)}
   }}
-  GRAPH ?cat {{ <{graph}> a planning:ScopeGraph ; orexis:arrivedBy <{OREXIS + "Derived"}> . }} }}
+  GRAPH ?cat {{ <{graph}> a planning:ScopeGraph ; orexis:arrivedBy <{DERIVED}> . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
@@ -170,8 +170,8 @@ def _partition(atoms: dict[str, list | None], rules: tuple = ()) -> tuple[frozen
     **A SCOPE IS OVER KEYS, NOT PREDICATES ALONE.** Over predicates it separated a vocabulary and
     never two instances of one: a pump and a heater both write a reading's side, and were one
     scope though the pump's reading is the soil's and the heater's the air's. An atom is a
-    predicate on a KEY — the subject's own value, or the public values the filling binds it by, a
-    reading's feature and property — read per filling off the beliefs nobody owns (`footprint.atoms_of`);
+    predicate on a KEY — the subject's own value, or the world's values the filling binds it by, a
+    reading's feature and property — read per filling off the common beliefs (`footprint.atoms_of`);
     two fillings join only where they share an atom, and an atom keyed by nothing is every atom of
     its predicate, which is the predicate partition again. An action whose texts cannot be read
     joins everything. A derivation's edges are predicates and join every key of theirs.

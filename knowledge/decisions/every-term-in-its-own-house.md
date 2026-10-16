@@ -86,7 +86,8 @@ Instances are exempt and that is why it is a *name* check rather than a ban —
 `orexis:moisture_sensor_fern` was a thing in a world, not a term in a vocabulary. Since the worlds
 took their individuals into namespaces of their own, no world FILE puts an instance in `orexis:`
 any more (a test refuses one that does) — but the exemption stays, because runtime-minted
-nodes (`ag:obs_…`) and synthetic test fixtures still do, legitimately. The heuristic is that a term is Capitalised or camelCase and an instance is a single
+nodes (a prediction's `orexis:predicted_…`, an intention's `orexis:intention_…`; sensing's percepts
+are named off their sensor since) and synthetic test fixtures still do, legitimately. The heuristic is that a term is Capitalised or camelCase and an instance is a single
 lowercase word or carries an underscore. Verified by reintroducing the real defect: it fails on
 `bidsIn`, naming the file.
 

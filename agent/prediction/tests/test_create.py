@@ -27,7 +27,7 @@ def test_its_part_predicts_from_every_observation_written(monkeypatch, snapshots
     for vocabulary in (AGENT / "sensing" / "rules.ttl", AGENT / "belief" / "ontology.ttl"):
         put_document(store, document(vocabulary))
     [graph] = received(store, snapshots.ME, PROBE, b'{"value": 0.25}', snapshots.NOW)
-    revise(store, graph, read=graphs_of(store, BELIEF, nobodys=True), kind=OBSERVATION_GRAPH)   # as sensing has, before this hears it
+    revise(store, graph, read=graphs_of(store, BELIEF, common=True), kind=OBSERVATION_GRAPH)   # as sensing has, before this hears it
     close_catalogue(store)
     runtime = stand_in_runtime(store, snapshots.ME, snapshots.NOW)
     create(runtime).start(runtime)

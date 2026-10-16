@@ -149,8 +149,9 @@ def _ca(dir_: Path, common_name: str, rotate: bool,
 
 
 def _leaf(dir_: Path, stem: str, common_name: str, ca: tuple[Path, Path],
-          server: bool, rotate: bool, browser_facing: bool = False) -> bool:
-    """Issue `<stem>.crt`/`.key` for this identity. Returns whether it wrote anything."""
+          server: bool, rotate: bool, browser_facing: bool = False, also: tuple[str, ...] = ()) -> bool:
+    """Issue `<stem>.crt`/`.key` for this identity — a server's also under the names in `also`.
+    Returns whether it wrote anything."""
     cert_path, key_path = dir_ / f"{stem}.crt", dir_ / f"{stem}.key"
     if not rotate and key_path.exists() and not _expiring(cert_path):
         return False
@@ -175,8 +176,9 @@ def _leaf(dir_: Path, stem: str, common_name: str, ca: tuple[Path, Path],
     if server:
         # Agents reach the broker by the name the WORLD states, so that name must be in the
         # certificate or every client rejects it. localhost covers the host-networked case.
+        names = dict.fromkeys([common_name, *also, "localhost"])
         builder = builder.add_extension(
-            x509.SubjectAlternativeName([x509.DNSName(common_name), x509.DNSName("localhost")]),
+            x509.SubjectAlternativeName([x509.DNSName(n) for n in names]),
             critical=False,
         )
     cert = builder.sign(ca_key, _sign_with(ca_key))
@@ -197,8 +199,8 @@ def world_ca(world: str) -> Path:
 
 
 def crl_file(world: str) -> Path:
-    """The authority's CRL, beside the broker's other generated files, since the broker is what
-    reads it: `orexis-compose` mounts it at the path the generated config names. Public material
+    """The authority's CRL, beside the brokers' other generated files and shared by them all, since
+    a broker is what reads it: `orexis-compose` mounts it at the path the generated config names. Public material
     — signed by the authority, carrying serials and dates — so 0644 like the ACL."""
     from .mqtt import mosquitto_dir
 
@@ -273,8 +275,10 @@ def revoked(world: str) -> list[int]:
 
 
 def issue_for_world(world: str, agent_ids, rotate: bool = False,
-                    broker_host: str | None = None) -> None:
-    """This world's authority, its broker's certificate, one per agent, and the authority's CRL.
+                    broker_hosts: list[str] = ()) -> None:
+    """This world's authority, its brokers' certificate, one per agent, and the authority's CRL. One
+    certificate serves every broker of the world, naming each host one listens on: they share the
+    world's authority, and a world's brokers are told apart by their ports.
 
     The CN is the agent's world-qualified username, so the broker maps it straight onto the ACL
     that is already derived from the wiring.
@@ -283,10 +287,11 @@ def issue_for_world(world: str, agent_ids, rotate: bool = False,
 
     secrets = world_dir(world) / "secrets"
     ca = _ca(secrets, f"orexis {world} CA", rotate)
-    if broker_host and _leaf(secrets, "broker", broker_host, ca, server=True, rotate=rotate):
+    if broker_hosts and _leaf(secrets, "broker", broker_hosts[0], ca, server=True, rotate=rotate,
+                              also=tuple(broker_hosts[1:])):
         # Signed by the world, for the world. An agent verifies its broker with the same
         # authority that vouches for the agent — one trust root per society, both directions.
-        log.info("  cert   broker         CN=%s", broker_host)
+        log.info("  cert   broker         CN=%s", ", ".join(broker_hosts))
     for agent_id in sorted(agent_ids):
         if _leaf(secrets, agent_id, agent_username(world, agent_id), ca,
                  server=False, rotate=rotate):

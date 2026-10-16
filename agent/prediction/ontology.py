@@ -42,8 +42,6 @@ RESULT = SOSA + "hasSimpleResult"
 #  in — a percept, which no reader of the mind is handed and this estimator reads at the boundary.
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
 
-RECORDED = OREXIS + "Recorded"
-
 
 def slug(iri: str) -> str:
     """The local name of a term, safe to paste into an IRI."""

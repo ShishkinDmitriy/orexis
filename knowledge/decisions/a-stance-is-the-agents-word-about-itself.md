@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: A stance is the agent's word about itself, stated in its self graph and read there alone
-status: accepted
+status: superseded-in-part
+superseded-by: a-role-is-an-instance-an-agent-plays
 timestamp: 2026-10-08
 description: >-
   What an agent holds about itself - its patience, the search's and revision's budgets, how long a
@@ -12,6 +13,14 @@ description: >-
   `orexis:actsFor`, a stances kind of its own, a flag or environment, refusal at the loader. The
   second half of #876.
 ---
+
+> **Superseded in part, 2026-10-12: a sensor's limits are its observer role's.** How long a sensor may
+> be silent or stuck is a figure about what a role is OVER, so `sensing:silentAfter` and
+> `sensing:stuckAfter` are stated on the observer role reading the sensor, and the observer shape's
+> `sh:defaultValue` holds where none is stated — the one place the figure lives, read by Python and by
+> the stuck rule alike, where it was a constant in code and a literal in the rule
+> ([a-role-is-an-instance-an-agent-plays](/decisions/a-role-is-an-instance-an-agent-plays.md)). Every
+> other stance stands as this record has it.
 
 # What was true (measured 2026-10-08, on main at 2c20aeec)
 

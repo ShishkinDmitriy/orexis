@@ -228,8 +228,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   dispatcher's two parcels are one want on a shared grid, 228 candidates where two apart cost 50, and
   two wants on disjoint grids (a-parcel-astray-is-a-want-of-its-own, constraint).
 - **One mind couples the wants a constraint can make collide, and searches them as one** — a
-  constraint's footprint, read over what the actions can REACH from the present (off the beliefs
-  nobody owns alone, as a scope's is, it is grid-blind, measured), says which wants' plans may interfere; those are one
+  constraint's footprint, read over what the actions can REACH from the present (off the common
+  beliefs alone, as a scope's is, it is grid-blind, measured), says which wants' plans may interfere; those are one
   cluster, one want, one search, optimal for both by construction, and the constraint is weighed in
   every possible world, one that violates it being impossible; a walking want is reconsidered when a want
   the footprint couples to it arrives; two minds optimize alone and meet by what they sense and say;
@@ -325,7 +325,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (a-scope-is-a-predicate-on-a-key, `world/greenhouse/tests/test_two_beds.py`).
 - **A variable in predicate position writes what a `VALUES` block in its own text binds it to, and
   anything only where nothing bounds it** — the one range the scopes honour is SPARQL's own.
-- **A footprint reads a text as the beliefs nobody owns answer it, so a pattern only the agent's own store
+- **A footprint reads a text as the common beliefs answer it, so a pattern only the agent's own store
   binds is read as absent** — kept, the self's anchor led rdflib's order, reordered the OPTIONAL
   chain a filling is asked as, and filled the greenhouse's dose with the heater (`footprint.parseable`).
 - **What a fork may skip is bounded by what a rule may READ, never by what a step changed** —
@@ -530,9 +530,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   own** — `received` writes one `sosa:Observation` per reading, a percept linked to the one before by
   `sensing:previous`, the latest holding until the next is due and a grace past it and every older one
   ended where the next began; it keeps a sensor's last `sensing:stuckAfter` and nothing sweeps the rest
-  but it; `missed` says `sensing:silentSince` of a sensor whose latest has ended, asking
+  but it; `missed` answers which sensors are silent, their latest ended a limit of cadences ago, asking
   `cadence.lapsed` as the transport does; `agent/prediction/` accumulates the drifts' rates from the
   latest, speaking sensing's kind and importing none of its code (#944).
+- **A silence is computed and never written** — its premises are stored (the latest percept's end,
+  the cadence, the role's limit), the belief made of the percept ended with that period a limit of
+  cadences before, and nothing in the mind reads one; a silence graph of sensing's own was built and refused
+  as a second record of what the period's end says, which the next reading had to find and take back.
 - **A belief is a crisp triple, and probability lives only inside an estimator** — sensing and
   prediction may keep a mean and a spread while they work, and write a value, a side or a band as
   two numbers (a-belief-is-crisp-and-an-estimator-may-reason-with-probability).
@@ -549,9 +553,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
   read there alone, and the package's constant holds where none is stated** — the patience, both
-  budgets, the silent and stuck limits and the horizon, each declared by its reader's package and
-  read through `agent/stance.py`; never a flag or a belief nobody owns, and a grace or a metrics window
-  is none (a-stance-is-the-agents-word-about-itself).
+  budgets and the horizon, each declared by its reader's package and read through `agent/stance.py`;
+  never a flag or a common belief, and a grace or a metrics window is none
+  (a-stance-is-the-agents-word-about-itself). A figure about what a role is OVER is the role's: an
+  observer's silent and stuck limits, the observer shape's `sh:defaultValue` where it states none.
 - **A world's test hands its agent no budget, so the figure it passes at is the one the self graph
   states** — handed by the tests, 128 and 256 were proved while every container searched at 32, at
   which the tower's two disks were not walked home in the test's passes (#932).
@@ -583,9 +588,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   stretch, the HTTP member polls, the location lives in `secrets/` (a-forecast-is-a-series-a-sensor-reads).
 - **Several transport members are one to the container** — a message goes back to the member that
   queued it, a command to the member that `reaches` the device.
-- **The transport speaks MQTT4SSN, and a topic is named by the filters that match it** — the agent
-  subscribes by the pattern and publishes to one with no wildcard; the broker's address stays in the
-  environment.
+- **The transport speaks MQTT4SSN, and a topic is named by the filters that match it, which no society
+  states** — onboarding's one `sh:rule` names each for its publisher or its listener, a board's one
+  readings topic `sensors/<client>/reading`, into `society.derived.ttl`, which every reader reads as the
+  society (#836); the agent subscribes by the pattern and publishes to one with no wildcard; each
+  broker's address stays in the environment, `MQTT_BROKERS` by IRI, and a world may have any number, a
+  topic going over a broker the agent shares with the client it is about.
 - **What is said is a statement, and what is believed of it is extracted, heard or said alike** — a
   document is kept as `speech:StatementGraph`, which no reader of the mind is handed, whatever kind it
   says, and a domain's `speech:Extraction`, run by speech over the one statement alone, makes the belief;
@@ -608,8 +616,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A belief is what a possible world is made of, and what the agent reads to act is none** — the
   actions, drifts, shapes, constraints and derivations are its program, each read by its own kind
   beside the desires, wants and rules (#953).
-- **Whose a graph is, is provenance and never its kind, and what the world states is the beliefs
-  nobody owns** — a world's graph naming no owner is shared by every agent of it, and a belief of the
+- **Whose a graph is, is provenance and never its kind, and what the world states is the common
+  beliefs** — a world's graph naming no owner is shared by every agent of it, and a belief of the
   agent's own names its owner, since one naming none is read as the world's; read over every belief
   instead, a footprint lost the heater's scope again (#913) and revision would read one peer's
   extracted word beside another's (#953).
@@ -639,11 +647,31 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   was scanned for them; and the drifts' kind is the kernel's, not prediction's, because a domain
   ships drifts every agent reads, predictor or not, and a kind only prediction declared would be refused
   for every agent that is none.
-- **A package is loaded only for a role the agent is declared in, in its self graph, and there is no
-  default** — each package declares its roles in its own ontology, read apart from the store, a domain's
-  roles sit beneath them, and a transport is loaded where a loaded role needs bytes and the society
-  wires a bus; a premise read off the world was refused, since it cannot write an assignment no fact
-  implies (#927, a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+- **A package is loaded only for a role the agent plays, in its self graph, and there is no
+  default** — a role is an instance the agent `orexis:plays`, never its type; each package declares its
+  role classes in its own ontology, read apart from the store, a domain's role classes sit beneath
+  them, and a transport is loaded where a loaded role needs bytes and the society wires a bus; a
+  premise read off the world was refused, since it cannot write an assignment no fact implies (#927,
+  a-package-is-loaded-only-for-a-role-the-agent-is-declared-in, a-role-is-an-instance-an-agent-plays).
+- **An observer role declares the sensors it reads, and how long it lets them be silent or stuck** —
+  `sensing:sensor`, `sensing:silentAfter`, `sensing:stuckAfter`; a sensor moved into a pot is not the
+  agent's until a role says so, onboarding refuses a declared sensor mounted on nothing the agent acts
+  for and a mounted one no role reads, the transports ask sensing which are the agent's
+  (`cadence.sensors`), and the broker's ACL is derived from the declarations.
+- **A world is held to its requirements at onboarding alone, read off the world and never an agent's
+  boot** — the package, domain or world owning a word ships its shapes in a `requirements.ttl` of
+  onboarding's kind, which no agent loads, since none reads it, and which is not `planning:ShapesGraph`,
+  whose shapes every planner reads; pyshacl is the `onboarding` extra's; and an agent playing
+  an executor alone loads no planning, whose requirement refuses it; what is judged is each agent's
+  boot, so its own documents may complete what the world's leave out; and every tool asks
+  `reading.check` before it renders, alone or under `orexis-onboard`, so a renderer judges nothing
+  (#838, requirement).
+- **A refusal a renderer wrote by hand is a requirement's, and what a renderer passed over in silence
+  is one too** — a client on no broker, a broker asserting TLS alone, the simulator's systems on two
+  clients or one hosted by none, a sensor with no cadence or a scaling of one point, and what the
+  installation must state, judged once as its document is read; what stays in a renderer is what no
+  document answers, a credential not minted or a port not allocated, two documents' word, or a word no
+  vocabulary declares, which board is a sentinel being the hardware's (#838, requirement).
 - **A role's need is a shape shipped by whoever owns the words it is stated in, and onboarding holds a
   declaration to its world both ways** — the executor's need to be a planner is planning's shape, the
   speaker's topic the MQTT transport's, since a package beneath may not speak them (#927).
@@ -668,14 +696,17 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 ### Deployment, onboarding and operating
 
 - **A broker's address is the world's to assert or the installation's to allocate, and the agent's
-  to be told** — asserted wins, derived completes, a collision is refused (#827, #823).
+  to be told** — asserted wins, derived completes, a collision is refused (#827, #823); a world may
+  have any number, each served apart, and only what makes an address ambiguous is refused (#821,
+  #838).
 - **What the documents leave out is derived into a document, and a renderer only formats** —
   `infra/installation.derived.ttl` is committed and held to a fresh derivation (#827).
 - **A world's wiring is its society, and its world graph speaks no MQTT4SSN** (#823).
 - **What lasts says so in its compose file, and the host starts what says so** — the installation's
   services said nothing and podman's restart unit starts only `always`, so a power cut left every
   container down for two days ([run-a-world](knowledge/runbooks/run-a-world.md)).
-- **A graph of an agent's own says whose it is, and its file's name is for eyes** — `<> orexis:beliefsOf`
+- **A graph of an agent's own says whose it is by `orexis:ownedBy`, once `beliefsOf`, since a desire
+  graph and a want graph are no belief; and its file's name is for eyes** — `<> orexis:ownedBy`
   beside its kind, or the self a self graph states; the boot and `orexis-compose` keep a document by
   what it says, and a world keeps such documents under `beliefs/` (the-self-is-a-class-held-to-one-instance).
 - **A step of onboarding runs where the world has what it serves, and says so where it does not**
@@ -720,7 +751,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    beneath it and never above — belief, planning and execution import nothing of prediction, and
    outside planning the one name imported is `Planner` — and each package's layout test holds it to
    that. Which packages an agent runs is the [roles](knowledge/domain/kernel/role.md) its self graph
-   declares, each served by the package whose ontology declares it.
+   says it plays, each of a class the package whose ontology declares it serves.
    `agent/runtime.py` is the container that assembles them all. **A domain is documents and no
    code**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
    with `owl:imports`. Adding a way of acting is a node in a domain's `actions.ttl` — a
@@ -858,6 +889,7 @@ pip install -e ".[dev]"
 orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, derive what the documents
                              #   leave out (a broker's port, into infra/installation.derived.ttl),
                              #   then grant everything below the world has something for.
+  orexis-topics <world>      #   each topic's filter, by one convention, into world/<world>/society.derived.ttl — needs nothing up
   orexis-influx <world>      #   a history bucket per agent, a metrics one where the world is monitored, each with a token that opens only it
   orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived — where its society names a broker
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster, the broker only with a bus
@@ -910,8 +942,8 @@ restart — connected agents keep their sessions), so adding an agent or a world
 nothing.
 
 Beliefs are the agent's: **authored** once at birth from the world's documents, never touched by
-start or stop. A volume lived in keeps the agent's own graphs and reads again only what a
-document put in and nobody owns — the ontologies, the domains, the world's beliefs nobody owns — which
+start or stop. A volume lived in keeps the agent's own graphs and reads again only the common
+graphs a document put in — the ontologies, the domains, the world's common beliefs — which
 is how an updated ontology reaches a running agent. Anything that would reset an agent's own beliefs on a
 restart is a bug, not a convenience.
 
@@ -934,7 +966,7 @@ hand-rolled walk was once refused for exactly that reason. See
   See [a-desire-is-a-shape](knowledge/decisions/a-desire-is-a-shape.md).
 - **Never wrap `GRAPH <…>` around a SELECT.** What the world states is SEVERAL graphs — asserted,
   derived and entailed, for the vocabulary and for the world, plus whichever a package owns —
-  and a reader hands `store.query` the list `store.graphs_of(BELIEF, nobodys=True)` answers, merged as the default graph, so an ordinary pattern reads all of them.
+  and a reader hands `store.query` the list `store.graphs_of(BELIEF, common=True)` answers, merged as the default graph, so an ordinary pattern reads all of them.
   Never count them: the kind is a class, whose a graph is a row, and `graphs_of` asks. A basic graph
   pattern inside one `GRAPH` clause must match entirely *within* that graph, so narrowing it
   returns **nothing** the moment a fact you wanted lives elsewhere, silently, because an empty
@@ -951,7 +983,7 @@ hand-rolled walk was once refused for exactly that reason. See
   (a-reader-states-the-kinds-it-reads); a text that reads one graph names its kinds in its
   own `GRAPH` clauses by joining the catalogue, and is handed no default at all.
 - **A graph IRI is an instance, so rule 1 applies to it.** `orexis:WorldGraph` is the term code may
-  name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.graphs_of(BELIEF, nobodys=True)`.
+  name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.graphs_of(BELIEF, common=True)`.
   Two things are still named and both are writes or the bootstrap root, never a reader
   enumerating what to read — adding a graph everyone reads is a document that touches no Python.
   **A PER-AGENT graph is asked for the same way**: `store.graphs_of(<kind>)` answers with every
