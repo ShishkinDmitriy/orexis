@@ -51,7 +51,39 @@
         sh:select """SELECT $this WHERE {
             $this ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f . ?f a ssn-system:Frequency .
             $this ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?g . ?g a ssn-system:Frequency
-            FILTER (?f != ?g) }""" ] .
+            FILTER (?f != ?g) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "rescaled by {?one} and {?two}: one scaling places a sensor's number on one line" ;
+        sh:select """SELECT $this ?one ?two WHERE {
+            ?a sensing:scales $this . ?b sensing:scales $this FILTER (STR(?a) < STR(?b))
+            BIND (REPLACE(STR(?a), "^.*[#/]", "") AS ?one) BIND (REPLACE(STR(?b), "^.*[#/]", "") AS ?two) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "corrected by {?one} and {?two}: one calibration places a sensor's quantity on one line" ;
+        sh:select """SELECT $this ?one ?two WHERE {
+            ?a sensing:corrects $this . ?b sensing:corrects $this FILTER (STR(?a) < STR(?b))
+            BIND (REPLACE(STR(?a), "^.*[#/]", "") AS ?one) BIND (REPLACE(STR(?b), "^.*[#/]", "") AS ?two) }""" ] .
+
+#  A SCALING OR A CALIBRATION IS THE LINE THROUGH TWO POINTS, each what the sensor reads there and what
+#  that stands for. Sensing's rule places a number on the line through the two the world states, and
+#  through one point, or two the sensor reads one number at, no line runs: the rule binds nothing, the
+#  observation gets no quantity, and the agent reads nothing of the sensor, in silence — which
+#  `orexis-firmware`, sizing a sentinel's wake window from the same two points, refused by hand.
+[] a sh:NodeShape ;
+    sh:targetClass :TwoPointScaling , :TwoPointCalibration ;
+    sh:property [ sh:path :point ; sh:minCount 2 ; sh:maxCount 2 ;
+                  sh:message "a scaling or a calibration states two points: a line is through two" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "its two points read one number, {?raw}: no line is through them" ;
+        sh:select """SELECT $this ?raw WHERE {
+            $this sensing:point ?a , ?b . ?a sensing:reads ?raw . ?b sensing:reads ?raw FILTER (?a != ?b) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "states a point that reads no number, or stands for none" ;
+        sh:select """SELECT $this WHERE {
+            $this sensing:point ?p FILTER NOT EXISTS { ?p sensing:reads ?raw ; sensing:standsFor ?quantity } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "states a point that reads two numbers, or stands for two" ;
+        sh:select """SELECT $this WHERE {
+            $this sensing:point ?p . { ?p sensing:reads ?x , ?y FILTER (?x != ?y) } UNION { ?p sensing:standsFor ?x , ?y FILTER (?x != ?y) } }""" ] .
 
 [] a sh:NodeShape ;
     sh:targetObjectsOf ssn-system:inCondition ;
