@@ -4,7 +4,7 @@ Prediction sits ABOVE sensing and beneath the mind: it predicts what a sensor wi
 no sensing there is nothing to predict, so it reads the observation a sensor last made by
 sensing's kind, `sensing:ObservationGraph` — the one word of sensing's it speaks (#944) — and SOSA's
 words, and imports nothing of sensing's code, of the mind, of the belief package or of any
-transport; the planner reads what it writes by kind and imports nothing of it. A module named for an act exports that act alone, a
+transport; the planner is handed its foresight at link, through the runtime, and imports nothing of it (#1000). A module named for an act exports that act alone, a
 module named for a thing may answer several questions about it, and every public function has a
 test named for it. A TEST here may import its neighbours, to tell the whole story of a pot; the
 code may not.
@@ -58,8 +58,8 @@ def test_the_one_word_of_sensing_this_package_speaks_is_the_kind_an_observation_
 
 
 def test_the_mind_imports_nothing_of_prediction():
-    """The planner reads forecasts by KIND: a graph classified `orexis:ForecastGraph` is
-    its to read whoever wrote it, the predictor among them (#992)."""
+    """The planner is handed the predictor's foresight at link, by the runtime, and names no module of this
+    package (#1000); a forecast it reads is a graph classified `orexis:ForecastGraph`, whoever wrote it."""
     for path in sorted((ROOT / "agent").rglob("*.py")):
         if PREDICTION in path.parents or "tests" in path.parts or path == ROOT / "agent" / "runtime.py":
             continue                  # the container assembles every layer and may import them all

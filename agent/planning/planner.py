@@ -279,11 +279,20 @@ ORDER BY ?step"""
 #  courier's corner delivery 198 to 78; this tree's figures are in the runbook.
 EXHAUSTED = PLANNING + "Exhausted"
 #  THE WANTS MET IN THE PRESENT GROUND: a weighing of a want in the ground just laid, saying met.
+#  A WANT MET IN THE PRESENT GROUND WHOSE INSTANT HAS COME. A want in trouble from a later instant is
+#  weighed in the latest ground begun by then (`unweighed`), which is the present's where no boundary stands
+#  between — and read met there it is not reached, since its instant has not come: with a dose committed at
+#  the very crossing the want was minted for, the flows lift the bed as it would have crossed, no ground
+#  is laid there, and the present's answer is the plan's foresight of itself. An intention is ended by the
+#  world reaching its want, never by its own commitment (#1000); the want is reached when the instant has
+#  come and the present reads met, or taken when it reads unmet.
 _MET_NOW_Q = """
 SELECT DISTINCT ?for WHERE {
   GRAPH ?cat { ?x planning:weighs $ground ; planning:for ?for ; planning:met true .
-               ?cat a orexis:CatalogueGraph }
-  GRAPH ?any { ?for a planning:Want } }"""
+               ?cat a orexis:CatalogueGraph .
+               ?d a planning:WantGraph . OPTIONAL { ?d dcterms:temporal/orexis:start ?ws } }
+  GRAPH ?d { ?for a planning:Want }
+  FILTER(!BOUND(?ws) || ?ws <= $now) }"""
 
 _OUTCOMES_Q = "SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"
 
@@ -415,6 +424,10 @@ class Planner:
         #  by-kind read as everywhere else. They are memory and die with the Planner; what
         #  outlives the Planner is the intentions, a graph of the beliefs.
         self.imaginaria: dict[str, ox.Store] = {}
+        #  THE PREDICTOR'S FORESIGHT, where the agent plays one: `foresee(beliefs, now, placed=…)`, set at
+        #  link by the planning part, answering the integration of the flows this advances as it lays the
+        #  grounds (#1000); None, and no flow is integrated.
+        self.foresee = None
         #  WHAT THE TEXTS A PASS EVALUATES READ, remembered while the graphs they live in stand.
         self._read: tuple[frozenset | None, frozenset | None] = (None, None)
         self.handed: list[tuple[str, str]] = []
@@ -561,7 +574,13 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  belief no text reads moves no hash at all. Asked only where something is walked by a
             #  holder of a constraint, which is the only agent the answer is for.
             foreseen = frozenset(r["h"] for r in rows(store, _HASHES_Q, ()) if r.get("h")) if flights else frozenset()
-            present, *_ = lay_ground(store, at, within, landings, actions=only)
+            #  AND WHAT MOVES FROM EACH GROUND: the flows, integrated by the predictor's foresight as the grounds
+            #  are laid (#1000) — every key advanced, and a crossing laid here where the key is this scope's,
+            #  as a reading is placed: the scopes its feature and property meet in, or every scope where none.
+            placed = None if _scope == UNSCOPED else (
+                lambda feature, prop: _scope in (scopes.meet({feature, prop}) or {_scope}))
+            foresight = self.foresee(self.beliefs, at, placed=placed) if self.foresee is not None else None
+            present, *_ = lay_ground(store, at, within, landings, actions=only, foresight=foresight)
             arrived = bool(flights) and bool(frozenset(
                 r["h"] for r in rows(store, _GROUND_HASHES_Q, (), cat=Raw(f"<{catalogue_of(store)}>"))) - foreseen)
             rerooting = reroot(store, present)
@@ -600,7 +619,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  A WANT MET IN THE PRESENT IS REACHED, and one-shot: it goes, from here and from the
             #  beliefs, where a want the world authored lives — unless a plan is still walking it,
             #  whose last step the executor has yet to see answered.
-            met_now = {r["for"] for r in rows(store, _MET_NOW_Q, (), ground=present)}
+            met_now = {r["for"] for r in rows(store, _MET_NOW_Q, (), ground=present, now=instant(at))}
             self.reached |= met_now & walking
             reached = met_now - walking
             #  THE DERIVATION IS TOLD WHAT IS WALKED, and from when — the instant each walking want's

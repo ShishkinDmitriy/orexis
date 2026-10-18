@@ -321,6 +321,8 @@ def test_a_bed_held_dry_is_foreseen_dry_and_a_grower_with_no_pump_commits_no_wai
     ground the grower lays ahead — the predicted 0.3001 is judged there by climate's soil transition,
     beside the state the ground before it held, as the reading is in the present. Nothing ahead reads
     the bed moist, so no `planning:Wait` reaches a world where the want is met, and none is committed.
+    Since #1000 the flows are integrated from each ground and a ground holding the same state as the one
+    before it collapses, so the present is the one ground and nothing ahead reads anything at all.
 
     Measured on #946's build, where a predicted number was judged bare, the stretch ahead read inside
     and the grower committed three waits in this hour, each sending nothing; and on this tree with the
@@ -328,7 +330,7 @@ def test_a_bed_held_dry_is_foreseen_dry_and_a_grower_with_no_pump_commits_no_wai
     same, which is what this case is red at."""
     published, taken, present, ahead = _held(tmp_path, monkeypatch, pump=False)
     assert present == ["Dry"] * len(HELD), present
-    assert all(seen == ["Dry"] for seen in ahead), f"every ground ahead holds the bed dry: {ahead}"
+    assert all(set(seen) <= {"Dry"} for seen in ahead), f"no ground ahead holds the bed anything but dry: {ahead}"
     assert ("Wait" not in taken, published) == (True, []), (taken, published)
 
 

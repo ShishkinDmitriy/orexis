@@ -19,7 +19,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [part](/domain/kernel/part.md) - What a package contributes to a running agent: created, linked to the others, started, stopped last-first.
 * [event](/domain/kernel/event.md) - What a signal carries: a class its package declares, said whole; it may mark what is reported and answer a history point.
 * [level](/domain/kernel/level.md) - A reported field that is the state now, read by its store's owner and written as it last stood in a window.
-* [forecast](/domain/kernel/forecast.md) - Anyone's word about a stretch ahead, one kind holding during it; the predictor's own and a committed step among them, told apart by provenance.
+* [forecast](/domain/kernel/forecast.md) - Anyone's word about a stretch ahead, one kind holding during it; a received hour and a committed step, told apart by provenance.
 * [signal](/domain/kernel/signal.md) - A package's own word for what just happened, on its object, carrying one event; connected when parts link, never stored.
 * [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind on the catalogue.
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
@@ -50,10 +50,10 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [deliberator](/domain/belief/deliberator.md) - The pass over what arrived — revised, then transitioned on, in turn — within one budget of rule executions; and the role running it.
 * [transition](/domain/belief/transition.md) - A typed rule that changes a state, triggered once by every arrival of testimony, into a state graph the runner prepares: a subject belief.
 
-# Prediction — the stretches ahead
+# Prediction — the flows, integrated from each ground
 
-* [prediction](/domain/prediction/prediction.md) - Flows answer rates that add, accumulated between happenings; one graph per stretch between range crossings; a ground per stretch.
-* [corridor](/domain/prediction/corridor.md) - A rate known as a range gives the lowest and highest trajectory; a stretch is the corridor's worst side.
+* [prediction](/domain/prediction/prediction.md) - Flows answer rates that add, integrated from each ground as the planner lays them; a crossing lays the next ground; nothing is written.
+* [corridor](/domain/prediction/corridor.md) - A rate known as a range gives the lowest and highest trajectory; a knot's number is the corridor's worst side.
 * [predictor](/domain/prediction/predictor.md) - The role prediction serves; needs a sensor of the agent's and a flow. A flow nobody foresees by is not refused.
 
 # Planning — what is wanted, and how to get there

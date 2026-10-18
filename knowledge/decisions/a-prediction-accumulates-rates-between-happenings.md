@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: A prediction accumulates rates between happenings, inside a corridor
-status: accepted
+status: superseded-in-part
+superseded-by: a-flow-is-integrated-where-the-ground-is-laid
 timestamp: 2026-09-28T12:00:00Z
 description: >-
   The sovereign's model of prediction, agreed 2026-09-28 while asking how a terrace would learn
@@ -14,6 +15,16 @@ description: >-
   it stays below the search, which is still qualitative. Refused - the fixed ladder and its
   bisection, a flow answering the value it reaches, a stored net rate and an expected value.
 ---
+
+> **Superseded in part, 2026-10-18: the sum is accumulated from each ground, not from the belief base,
+> and nothing is written.** That a flow answers a rate, that rates add, that a crossing is placed
+> exactly on a straight segment and that a range of rates is a corridor all stand. Where the
+> accumulation runs and what it leaves do not:
+> [a-flow-is-integrated-where-the-ground-is-laid](/decisions/a-flow-is-integrated-where-the-ground-is-laid.md)
+> has the planner ask the integrator ground by ground, every key advancing together, a crossing laying a
+> ground where the transitions judge the number, and no forecast of the predictor's own written into
+> the belief base. "Only the stretches are written" and the happenings read off the graphs' periods,
+> below, are the arrangement that record replaces (#1000).
 
 # The claim
 

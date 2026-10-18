@@ -74,7 +74,7 @@ def world_at(store, world: str | None, *, holder: str | None = None, now: dateti
         until = datetime.fromisoformat(when[1]) if when[1] else at
     #  WHAT A WORLD SPEAKS FOR: what the search can change, cut out of every graph it reads beside
     #  (`lay_ground`, #953), the grounds and the possible worlds. A ground is laid from the changeable
-    #  graphs — a forecast laid where it begins is cut whole into one (#987, #992) — so read beside the
+    #  graphs — a forecast laid where it begins is cut whole into one (#987) — so read beside the
     #  world, a value an effect replaced would outlive the effect; what is left of every graph the cut
     #  was made in is read beside it, being what no step changes, at the world's own period.
     def spoken():
@@ -95,17 +95,12 @@ def world_at(store, world: str | None, *, holder: str | None = None, now: dateti
     return [*known, world]
 
 
-#  EVERY BELIEF THAT IS NOT THE PRESENT'S, and the changeable part cut from one: one whose period begins
-#  after `$now`, and the agent's own forecast whatever its period — recorded: the predictor's stretch, a
-#  committed step — since what it foresees of now the percept states, and the present is where no
-#  prediction has applied (#916, #992).
+#  EVERY BELIEF THAT BEGINS AFTER `$now`, and the changeable part cut from one — a forecast of anyone's the
+#  present has not reached (#987). The predictor's own foresight is no graph of the belief base (#1000), so
+#  nothing is left out for who said it.
 _AHEAD_Q = """
 SELECT ?g WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               { { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start }
-                 UNION { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom/dcterms:temporal/orexis:start ?start }
-                 FILTER(?start > $now) }
-               UNION
-               { { ?g a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded }
-                 UNION { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom ?f .
-                         ?f a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded } } } }"""
+               { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start }
+               UNION { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom/dcterms:temporal/orexis:start ?start }
+               FILTER(?start > $now) } }"""

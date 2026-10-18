@@ -17,9 +17,10 @@
 #  SIZED TO THE AIM THE COMMAND SIZES TO (actions.ttl): the rise is the dose in millilitres the
 #  command will send — to the middle of the subject's operating range, at most the valve's cap —
 #  back in fractions, by the subject's litres per fraction. The step names the subject it acts on, and
-#  the number is read off the observation of that subject's soil moisture the prediction is made
-#  from: prediction is an estimator at the boundary and reads the number, where the mind reads only
-#  the subject's soil (#944). Spread over the window it is a rate: the
+#  the number is `$value`, the subject's soil moisture as the integration stands at the instant asked —
+#  the one number a flow is owed of its own key, handed by the predictor as it advances the grounds
+#  (#1000); it was read off the reading in hand, which the imaginarium holds no percept of (#944).
+#  Spread over the window it is a rate: the
 #  high trajectory has the whole rise in by the earliest landing (`execution:landsWithinS`), the low
 #  one by the latest (`execution:answeredWithinS`), which is how a late landing widens the corridor;
 #  a dose lands at the least at once (#596), and a rise over no time is no rate, so a second stands
@@ -39,16 +40,14 @@ actuation:Dosed a prediction:Flow ;
                   execution:landsWithinS ?soon ; execution:answeredWithinS ?late .
             ?valve actuation:actuates $feature ; actuation:actuatesProperty climate:SoilMoisture ;
                    actuation:maxDoseMl ?cap .
-            ?reading sosa:hasFeatureOfInterest $feature ; sosa:observedProperty climate:SoilMoisture ;
-                     sosa:hasSimpleResult ?read .
             $feature ssn-system:hasOperatingRange/ssn-system:inCondition ?condition ;
                      climate:litresPerFraction ?litres .
             ?condition ssn:forProperty climate:SoilMoisture ; schema:minValue ?lo ; schema:maxValue ?hi .
             BIND(((xsd:double(?lo) + xsd:double(?hi)) / 2.0) AS ?aim)
-            BIND((?aim - xsd:double(?read)) * xsd:double(?litres) * 1000.0 AS ?wanted)
+            BIND((?aim - $value) * xsd:double(?litres) * 1000.0 AS ?wanted)
             BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), IF(?wanted < 0.0, 0.0, ?wanted)) AS ?ml)
             BIND(?ml / (xsd:double(?litres) * 1000.0) AS ?rise)
             BIND(?rise / IF(xsd:double(?soon) > 0.0, xsd:double(?soon), 1.0) AS ?high)
             BIND(?rise / xsd:double(?late) AS ?low)
-            BIND(xsd:double(?read) + ?rise AS ?until)
+            BIND($value + ?rise AS ?until)
         }""" .

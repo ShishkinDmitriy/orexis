@@ -30,7 +30,8 @@
     rdfs:subClassOf orexis:Role ;
     rdfs:label "Predictor" ;
     rdfs:comment """An agent that foresees its readings by the flows: the role whose part is
-    prediction's, which answers every observation written with the stretches ahead. Declared, never
+    prediction's, which hands the planner the flows' integration to advance as it lays the grounds (#1000).
+    Declared, never
     derived; it needs a sensor of the agent's and a flow.""" .
 
 :Flow a owl:Class ;
@@ -60,6 +61,6 @@
     rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
     rdfs:label "horizon seconds" ;
     rdfs:comment """How far past an observation the agent looks, in the timeline's seconds: the flows'
-    sum is accumulated that far and no prediction is written past it, so a crossing beyond it is not
+    sum is integrated that far and no ground is laid past it, so a crossing beyond it is not
     foreseen and no want is minted for it yet. A stance: the agent states it of itself in its self
-    graph and `predict` reads it; where it states none, a day.""" .
+    graph and `foresee` reads it; where it states none, a day.""" .

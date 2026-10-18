@@ -440,9 +440,18 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   from ten seconds on stood under the van today, and a value stands until its key is assigned (#987).
 - **A forecast is one kernel kind, `orexis:ForecastGraph`, a belief, and who said it is provenance** —
   the predictor's stretch, sensing's hour and the executor's committed step held one shape under three
-  kinds, told apart by one reader; now each is laid where it begins if something reads it, a text of the
-  pass or a transition, the agent's own, recorded, runs the transitions in the ground it is laid into
-  and is never the present's, and each author replaces its own by its provenance (#992, forecast).
+  kinds, told apart by one reader; each is laid where it begins if a text of the pass or a transition
+  reads it, and each author replaces its own by its provenance (#992, forecast) — and since #1000 the
+  predictor is no author, its foresight being the grounds, so nothing is told from the received any more.
+- **A flow is integrated where the ground is laid, from each ground, and the predictor writes no
+  forecast** — a ground is the state ahead and the flows its derivative, so the planner is handed the
+  integration at link and advances it ground by ground, every key together, a crossing laying the ground
+  the predicted observation arrives in; read off the belief base, a flow saw no state ahead, the happenings
+  and the boundaries were one set computed twice, and #996's order and #992's recorded path stood in for a
+  sum (#1000, a-flow-is-integrated-where-the-ground-is-laid).
+- **A flow reads a belief ahead by its period, beside the ground, and it lays no ground for a flow** — a
+  forecast hour's node carries its start and not its end, so laid into a ground it would rain for ever;
+  a committed step and a rain hour are remainders the flows see exactly while they hold (#1000).
 - **A world speaks for what can change of its state's revisions**, and **the search runs no rules, so a
   state's revisions travel with it and an effect speaks the state a transition concludes** — a revision is of
   its source's kind and a flow's prediction is neither, which keeps the foreseen reading out of the
@@ -489,8 +498,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   in the plan were found safe in an order nothing would walk them in (#905).
 - **A committed step is a forecast over its landing window, and a flow reads it there** — the
   executor writes each adopted step as an `execution:CommittedStepGraph` holding from its
-  `notBefore` to its `landsAt` plus the patience, closes it when answered or ended, and prediction
-  hears every belief and rewrites every key for one that is no observation; a later want is then
+  `notBefore` to its `landsAt` plus the patience, closes it when answered or ended, and the flows
+  read it by its period as the grounds are laid (#1000); a later want is then
   searched against a future that contains the earlier plan (#849, committed-step).
 - **The executor walks when the present changed, not when anything was revised** — a prediction or
   a committed step revised answers no step, and a walk on it read the clock for nothing, which on a
@@ -596,17 +605,19 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (an-observation-is-concluded-from-the-number-a-sensor-gave).
 - **A flow answers a rate, and a prediction accumulates them** — rates add, a happening is where
   one may change, a crossing is on a straight line (a-prediction-accumulates-rates-between-happenings);
-  the observation in hand is read at every instant with its revisions, since a flow sized from a
-  reading reads it past the stretch the observation holds for.
+  a flow is owed `$value`, its own key's number as the integration stands, and reads no percept, since
+  the imaginarium holds none (#1000).
 - **A key no flow moves is predicted nothing** — the state concluded of the reading is what every
   ground ahead inherits by fork, so a prediction carrying the reading unmoved for an hour said nothing
   the grounds did not hold, made the greenhouse's air a ground of its own a pass, and said nothing at
   all past the hour (#989).
-- **A flow reads a forecast of any author at its instant, the agent's own predictions among them, so
-  the keys are predicted in the order the flow texts read each other, each once an arrival, and a cycle
-  is refused at onboarding rather than iterated** — the soil's drying reads the air as the agent foresees
-  it; `order` reads every `sosa:observedProperty` a rate names; and what the part wrote it answers
-  nothing of, since heard as a belief each prediction would rewrite every key without end (#996).
+- **Every key advances together between two grounds, and nothing orders them** — the soil's drying
+  reads the air's number as the integration stands at the instant asked, and soil reading air and air
+  reading soil are coupled flows, not a cycle; the keys were predicted in the order their texts read
+  each other and a cycle refused at onboarding (#996) only while each was integrated alone off a store
+  with no ground in it (#1000). **A state held past its bound by a margin prediction does not read is
+  judged again within the hour** — a knot an hour on for a key that moved, with the number it stands at,
+  and a crossing's number read no further than that hour.
 - **Foresight is derived where the model is the agent's and asked for where it is another's** —
   drying is nobody's to ask and rain nobody's to derive; an actor is whoever is asked what will hold,
   and nobody is asked for a plan; a FORECAST is anyone's word about what will hold later, the

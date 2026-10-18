@@ -15,7 +15,7 @@ import pytest
 from agent import clock
 from agent.belief.ontology import REVISION_GRAPH
 from agent.execution.ontology import COMMITTED_STEP_GRAPH
-from agent.ontology import BELIEF, FORECAST as FORECAST_KIND, SELF_GRAPH
+from agent.ontology import BELIEF, FORECAST as FORECAST_KIND, RECORD, SELF_GRAPH
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import graphs_of, rows
 from agent.series import HISTORY, Sink, install
@@ -261,8 +261,10 @@ def test_without_its_place_the_forecast_is_not_asked_for_and_the_terrace_still_b
 def test_a_forecast_is_fetched_when_due_and_the_soils_next_prediction_carries_its_rain(monkeypatch, tmp_path):
     """THE WHOLE PATH. Started, the HTTP member polls the forecast at once for the terrace's place,
     and the body is a job the runtime hands to sensing, which writes an hour of forecast per graph.
-    The soil reads 0.2, under the bed's floor, and its next reading is predicted with the rain:
-    below until the shower lifts it back inside the bed's range, which drying alone never would."""
+    The soil reads 0.2, under the bed's floor, and the foresight integrated from it reads the rain by
+    its period (#1000): below until the shower lifts it back inside the bed's range, which drying alone
+    never would. The terrace plays no planner, so nothing lays its grounds; the test advances the
+    predictor's foresight itself, as a planner would, and no forecast of the predictor's own is written."""
     from agent.transport.http.driver import Http
     from agent.transport.transport import Transports
 
@@ -281,11 +283,14 @@ def test_a_forecast_is_fetched_when_due_and_the_soils_next_prediction_carries_it
     assert sorted(float(r["v"]) for r in hours) == [0.0, 0.0, 10.0]
     runtime.deliver((0, "sensors/moisture_sensor_terrace/reading"), MESSAGE, NOW)
     runtime.run(passes=1, poll_s=0)
-    predicted = [float(r["v"]) for r in rows(
-        store, "SELECT ?v ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:ForecastGraph ; "
-               "dcterms:temporal/orexis:start ?s } GRAPH ?g { ?o sosa:observedProperty <http://example.org/orexis/climate#SoilMoisture> ; "
-               "sosa:hasSimpleResult ?v } } ORDER BY ?s", (),)]
-    assert predicted[0] < 0.25 and any(0.25 <= v <= 0.60 for v in predicted[1:]), predicted
+    foresight = runtime.parts["prediction"].foresee(store, NOW)
+    graphs_at = lambda t: graphs_of(store, BELIEF, RECORD, at=t, until=t)        # noqa: E731
+    numbers, t = [], NOW
+    while (knot := foresight.advance(store, t, foresight.horizon, graphs_at)) is not None:
+        numbers += [float(tr.object.value) for tr in knot[1] if tr.predicate.value.endswith("hasSimpleResult")]
+        t = knot[0]
+    assert numbers and numbers[0] < 0.25 and any(0.25 <= v <= 0.60 for v in numbers[1:]), numbers
+    assert not [g for g in graphs_of(store, FORECAST_KIND) if "terrace_bed" in g], "no forecast of the soil is written"
 
 
 def test_the_boards_config_is_rendered_from_the_world(monkeypatch, tmp_path):

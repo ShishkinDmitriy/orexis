@@ -21,6 +21,10 @@ from agent.store import add_quads, catalogue_of, rows
 
 CASES_DIR = Path(__file__).parent / "lay_ground"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
+#  THE CASES LAID WITH THE PREDICTOR'S FORESIGHT (#1000): the same function, handed the integration of the
+#  flows the prediction package makes from the case — which a TEST here may import and the code may not.
+FORESEEN_DIR = Path(__file__).parent / "foreseen"
+FORESEEN = sorted(p for p in FORESEEN_DIR.glob("*.trig") if "." not in p.stem)
 
 
 @pytest.mark.parametrize("case", CASES, ids=[c.stem for c in CASES])
@@ -28,6 +32,19 @@ def test_lay_ground_lays_the_grounds_the_patch_says(case, monkeypatch, request, 
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(case)
     lay_ground(store, snapshots.NOW)
+    snapshots.held_to_diff(case, request, "lay_ground", snapshots.snapshot_of(store))
+
+
+@pytest.mark.parametrize("case", FORESEEN, ids=[c.stem for c in FORESEEN])
+def test_lay_ground_lays_the_grounds_the_foresight_answers(case, monkeypatch, request, snapshots):
+    """The flows integrated from each ground as the grounds are laid (#1000): a ground at every crossing
+    the predictor answers, where the predicted observation arrives and the transitions judge it, and
+    at the hour's end where a key moved; one that changes no state collapses as any does."""
+    from agent.prediction.foresee import foresee
+
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(case)
+    lay_ground(store, snapshots.NOW, foresight=foresee(store, snapshots.NOW))
     snapshots.held_to_diff(case, request, "lay_ground", snapshots.snapshot_of(store))
 
 
@@ -106,6 +123,8 @@ def test_an_action_added_makes_what_it_writes_changeable_and_nothing_else(monkey
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     assert len(CASES) >= 3, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)
+    assert len(FORESEEN) >= 1, [c.name for c in FORESEEN]
+    assert not snapshots.orphans_in(FORESEEN_DIR)
 
 
 def test_a_belief_ahead_that_no_text_reads_lays_no_ground(monkeypatch, snapshots):

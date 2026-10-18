@@ -12,8 +12,8 @@ precondition saying whether it may. So the timeline is laid by exactly the machi
 fork the period before, take the keys out of the fork, add what the prediction holds.
 
 **AND SO IS A BELIEF THAT BEGINS LATER** (#987). A forecast is anyone's word about what will hold
-later, the predictor's own among them (foresight-is-derived-where-the-model-is-the-agents-and-asked-
-for-where-it-is-anothers), and a peer's cell from ten seconds on, a round said to open at one, is a
+later — a forecast received, a committed step (foresight-is-derived-where-the-model-is-the-agents-and-
+asked-for-where-it-is-anothers) — and a peer's cell from ten seconds on, a round said to open at one, is a
 graph with a period ahead. Where some text of the pass reads what it adds it is a writer of it, as a
 prediction is (`_predicted`), so it is cut whole into its changeable part and laid where its period
 begins — fork, keys out, forecast in — and in no ground before it: laid into the present with
@@ -30,15 +30,21 @@ the stale one still violated: measured, a tank low now and a prediction refillin
 from twelve, lifts NEVER*, because the present's 5 outlived the prediction's 20. Nothing was
 wrong with the prediction; there was no place in the pass where it REPLACED anything.
 
-**AND WHAT IT BRINGS IS AN ARRIVAL** (#944). The mind reads what the agent holds of a subject — the
-bed's soil, dry — and never the reading, so a ground that only swapped the observation would keep the
-present's state for ever, and a foreseen crossing would read met. A predicted observation arriving in
-a ground triggers the transitions there, as a received one does in the present: belief's machine and
-the rules the beliefs hold, reading the arrival with its revisions, the common beliefs and the agent's
-own state as the ground before left it, and changing the ground alone. So the hold reaches the
-forecast — a bed believed dry and resting at 0.3001 is foreseen dry, as the present holds it — and a
-prediction still triggers nothing in the belief base: the runner prepares the target, and here the
-target is the ground being laid.
+**AND THE FLOWS ARE INTEGRATED FROM EACH GROUND** (a-flow-is-integrated-where-the-ground-is-laid,
+#1000). The predictor's own foresight is no graph of the belief base: the planner is handed the
+integration of the flows at link (`foresight`, the prediction package's) and advances it from each ground
+to the next boundary it knows of — a belief ahead beginning, a step landing — reading the ground and
+every graph holding at the instant beside it, as `world_at` hands a reader; every key advances together,
+and nothing orders them. Where a key's trajectory crosses a bound of a range the subject is judged by,
+the predictor answers the instant and the predicted observation to lay there, and a ground is laid at
+the crossing: the observation ARRIVES in it (#944) and triggers the transitions there, as a received one
+does in the present — belief's machine and the rules the beliefs hold, reading the arrival, the common
+beliefs and the agent's own state as the ground before left it, and changing the ground alone. So the
+hold reaches the foresight — a bed believed dry and resting at 0.3001 is foreseen dry, as the present
+holds it — and nothing triggers in the belief base: the runner prepares the target, and here the target
+is the ground being laid, which keeps the state the transitions made and no number. The mind reads what
+the agent holds of a subject — the bed's soil, dry — and never the reading, so a ground that only moved a
+number would keep the present's state for ever, and a foreseen crossing would read met.
 
 **AND THE PERIODS COLLAPSE.** Each ground is hashed as a possible world is, and where two
 neighbouring periods reach the same facts the second is not a period at all: nothing a met-test
@@ -91,7 +97,7 @@ from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, cle
                          graphs_of, instant, quads, rows, update)
 
 from . import footprint
-from .ontology import CHANGEABLE_GRAPH, GROUND_GRAPH
+from .ontology import CHANGEABLE_GRAPH, GROUND_GRAPH, POSSIBLE_GRAPH
 
 _PROV = "http://www.w3.org/ns/prov#"
 _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
@@ -111,11 +117,11 @@ def _foreseen(store: ox.Store, now: datetime) -> list[tuple[datetime, str, str]]
     laid (`_fork`). Nothing is said about how.
 
     A BELIEF HOLDING LATER IS LAID WHERE IT BEGINS (#987): a peer's cell from ten seconds on, a round said
-    to open at one, the predictor's own stretch — each a graph the present has not reached, cut whole
+    to open at one, a forecast hour received — each a graph the present has not reached, cut whole
     into its changeable part where some text of the pass or some transition reads what it adds, since it
     then writes it (`_predicted`), and applied where its period begins, superseding by key. Its END is no
-    boundary: a value stands in a ground until something assigns its key, as a prediction's last stretch
-    stands past the horizon, and what an ending MEANS stays its owner's (#645). One saying nothing the
+    boundary: a value stands in a ground until something assigns its key, and what an ending MEANS stays
+    its owner's (#645); a flow reads such a graph by its period, beside the ground, and sees it end. One saying nothing the
     pass reads is cut only where another writer's pattern reaches it, and is otherwise read beside every
     world at the world's own period, as every remainder is.
 
@@ -138,18 +144,8 @@ SELECT ?piece ?source ?start WHERE {
                ?source dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
 ORDER BY ?start ?piece"""
 
-#  THE AGENT'S OWN FORECASTS: recorded — the predictor's stretches, derived from the percept each foresees
-#  from, and the executor's committed steps. Nothing transitioned on one when it was written — a recorded
-#  graph triggers none in the belief base (#947) — so the ground it is laid into runs them there (#944);
-#  and none is the present's, whatever its period, since what it foresees of now the percept states and a
-#  step committed to is no fact of the world.
-_FORESEEN_BY_ME_Q = """
-SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                               ?g a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded } }"""
-
-
 def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
-               landings=(), actions=None) -> list[str]:
+               landings=(), actions=None, foresight=None) -> list[str]:
     """Build one ground world per period the agent can see, classified with its stretch.
 
     `within` is what a world of this imaginarium is identified by — the Planner's to say, from
@@ -176,6 +172,11 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     `actions` are the scope's — the Planner's to say — whose effects, with every transition, say what
     is changeable and so what a ground holds; None means every action the store holds.
 
+    `foresight` is the predictor's integration of the flows, made for this pass — the Planner's to hand
+    on, from the prediction part at link (#1000) — advanced here from each ground to the next boundary,
+    and laying a ground at every crossing it answers, where the predicted observation arrives and the
+    transitions judge it; None, and no flow is integrated.
+
     Answers with the graphs it made, earliest first. What a READER takes is `world_at`.
 
     PUBLIC, AND IN PLACE: it lays the grounds into whichever store it is handed. `prepare_ground`
@@ -185,26 +186,40 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     """
 
     #  WHAT A BELIEF AHEAD IS LAID FOR: some text of the pass reads it, or some transition does, since a
-    #  ground runs the transitions a predicted observation triggers and they read the number (#992).
+    #  ground runs them on a predicted observation and they read its number. A belief only a flow reads — a
+    #  committed step, a forecast hour — is read by its period beside the ground (`graphs_at`) and lays none.
     gate = None if within is None else _gate(store, within)
     _split(store, actions, now, gate)
     ahead = _foreseen(store, now)
     here = _present(store, now)
-    pieces = {source: piece for _, piece, source in ahead}
-    foreseen = {r["g"] for r in rows(store, _FORESEEN_BY_ME_Q, ())} & set(pieces)
     #  THE TRANSITIONS A PREDICTED OBSERVATION TRIGGERS, and the agent's own state they read and change
-    #  as the grounds are laid, from the present's: asked only where the predictor's own forecast is laid.
+    #  as the grounds are laid, from the present's: asked only where the flows are integrated (#1000).
     #  A belief received and laid ahead triggers none: it triggered them when it arrived, and what they
     #  made of it holds over its period and is laid beside it.
-    rules = transitions(store) if foreseen else []
+    rules = transitions(store) if foresight is not None else []
     own = _own_state(store) if rules else None
     stated = _whole(store, graphs_of(store, BELIEF, common=True)) if rules else []
     made, marks = [here], _marked(store, here, within)
     opened = [now]
     landing = {at for at in landings if at > now}
-    for at, group in _by_instant(ahead, landing):
-        if at <= now:
-            continue                    # a boundary already reached is the present's, not ahead
+    #  THE BOUNDARIES THE STORE KNOWS OF, earliest first — a boundary already reached is the present's, not
+    #  ahead — and, where the flows are integrated, the end of what is foreseen, integrated to and laid at
+    #  nothing: a crossing is a boundary too, and the predictor says where as the grounds are laid.
+    boundaries = [(at, group) for at, group in _by_instant(ahead, landing) if at > now]
+    if foresight is not None:
+        boundaries = sorted([*boundaries, (foresight.horizon, [])], key=lambda b: b[0])
+    spoken = frozenset(graphs_of(store, CHANGEABLE_GRAPH, GROUND_GRAPH, POSSIBLE_GRAPH))
+
+    def graphs_at(at: datetime) -> list[str]:
+        """What a flow reads in the ground standing, at `at`: the ground, and every graph holding then
+        beside it, as `world_at` hands a reader — the remainders by their periods, and nothing a ground
+        speaks for."""
+        return [*(g for g in graphs_of(store, *KNOWN, at=at, until=at) if g not in spoken and g not in made), here]
+
+    def lay(at: datetime, added: list, arrival: list) -> None:
+        """One ground at `at`, forked from the one standing: `added` laid superseding by key, `arrival`
+        judged by the transitions — and kept only where it differs from the one before, or lands a step."""
+        nonlocal here, marks
         #  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE. A boundary is an instant,
         #  not a forecast: two flows that both start at one o'clock describe ONE world, and
         #  forking once per forecast made two grounds with the same name and a period from the
@@ -212,22 +227,15 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         #  was handed NO ground and the agent went blind past the boundary. Each retract is
         #  read against the ground standing BEFORE the instant, so they supersede in parallel
         #  rather than one seeing another's work.
-        added = [t for piece, _ in group for t in _triples(store, piece)]     # what can change of what begins here
-        arrivals = [[piece, *(pieces[r] for r in revisions_of(store, source) if r in pieces)]
-                    for piece, source in group if source in foreseen]        # the predicted reading, with what was concluded of it
-        if not added and at not in landing:
-            #  A forecast that changes nothing is not a period — an early-out, not a guard:
-            #  the hash below reaches the same answer, having laid the graph first.
-            continue
         there = _fork(store, here, _name(at), added)
-        if rules and arrivals:
-            _transitioned(store, there, arrivals, rules, own, stated)
+        if rules and arrival:
+            _arrived(store, there, arrival, rules, own, stated)
         mark = _marked(store, there, within)
         if mark == marks and at not in landing:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
             #  instant answers what the one before it answered and is not a period of its own.
             forget_graph(store, there)
-            continue
+            return
         #  THE ONE BEFORE IT ENDS HERE. A ground holds until the next one begins, which is not
         #  known until it does — so each is classified when its successor arrives, and the last
         #  is left open because nothing the agent can see ends it.
@@ -235,9 +243,36 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         made.append(there)
         opened.append(at)
         here, marks = there, mark
+
+    stands = now
+    for at, group in boundaries:
+        #  WHAT MOVES FROM HERE BEFORE THE BOUNDARY: the flows integrated from the ground standing, and a
+        #  ground laid at every crossing the predictor answers, each the ground the integration goes on
+        #  from; a crossing exactly at the boundary is one world change with what begins there.
+        crossing: list = []
+        while foresight is not None:
+            knot = foresight.advance(store, stands, at, graphs_at)
+            if knot is None:
+                break
+            when, arrival = knot
+            if when >= at:
+                crossing = arrival
+                break
+            lay(when, [], arrival)
+            stands = when
+        added = [tr for piece, _ in group for tr in _triples(store, piece)]     # what can change of what begins here
+        stands = at
+        if not added and not crossing and at not in landing:
+            #  A boundary that changes nothing is not a period — an early-out, not a guard:
+            #  the hash below reaches the same answer, having laid the graph first.
+            continue
+        lay(at, added, crossing)
     classify(store, here, GROUND_GRAPH, DERIVED, start=opened[-1])
     if own is not None:
         clear_graph(store, own)
+    if foresight is not None:
+        foresight.finish(store)
+        clear_graph(store, _ARRIVAL)
     log.debug("%d ground world(s) over %d boundar(ies) ahead", len(made), len(ahead))
     return made
 
@@ -254,6 +289,18 @@ SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
 #  WHERE THE AGENT'S OWN STATE IS KEPT WHILE THE GROUNDS ARE LAID: a working graph, not a belief,
 #  handed by name to the transitions and taken away when the last ground is laid. Its name is for eyes.
 _OWN = "http://example.org/orexis/graph/ground/own-state"
+
+#  WHERE A PREDICTED OBSERVATION STANDS AS IT ARRIVES IN A GROUND: a working graph the transitions are
+#  handed as the arrival, not a belief, rewritten per crossing and taken away when the last ground is laid.
+_ARRIVAL = "http://example.org/orexis/graph/ground/arrival"
+
+
+def _arrived(store: ox.Store, ground: str, arrival: list, rules, own: str, stated: list[str]) -> None:
+    """The predicted observations in `arrival` — triples the predictor answered for a crossing — arriving in
+    `ground`: written into the arrival's working graph and transitioned on there (`_transitioned`)."""
+    clear_graph(store, _ARRIVAL)
+    add_quads(store, [ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(_ARRIVAL)) for t in arrival])
+    _transitioned(store, ground, [[_ARRIVAL]], rules, own, stated)
 
 
 def _own_state(store: ox.Store) -> str:
@@ -274,10 +321,10 @@ def _own_state(store: ox.Store) -> str:
 
 def _transitioned(store: ox.Store, ground: str, arrivals: list[list[str]], rules, own: str, stated: list[str]) -> None:
     """Every transition each of `arrivals` triggers, applied in `ground` as it is laid (#944) — each
-    arrival the changeable parts of a predicted observation and of what the rules concluded of it.
+    arrival the graphs holding a predicted observation, the predictor's answer for a crossing (#1000).
 
     A PREDICTED OBSERVATION IS AN ARRIVAL THERE, as a received one is in the present: each triggers
-    every transition once, in the order the forecasts came, rule by rule through belief's machine,
+    every transition once, rule by rule through belief's machine,
     reading itself with its revisions, the common beliefs and the agent's own state as the ground before
     left it — and nothing else — so a bed believed dry and resting at 0.3001 is foreseen dry, held by the
     margin as the present holds it. Each rule is the engine's own update, run twice over the same reads:
@@ -308,12 +355,11 @@ def _present(store: ox.Store, now: datetime) -> str:
     #  kind cut here, and crosses into no ground (#944); what the ground holds of it is the subject belief.
     #  AND NOTHING THAT BEGINS LATER (#987): a belief holding from an instant ahead is laid where it begins,
     #  and the present held it as if it held now — a peer's cell from ten seconds on stood under the van today.
-    #  NOR THE PREDICTOR'S OWN FORECAST, whatever its period (#992): the stretch standing over now foresees
-    #  what the percept it was made from states, and the present is where no prediction has applied (#916).
+    #  The present is where no prediction has applied (#916), and the predictor's own foresight is no graph
+    #  of the belief base to leave out (#1000).
     ahead = {r["piece"] for r in rows(store, _PIECES_AHEAD_Q, (), now=instant(now))}
-    foreseen = {r["g"] for r in rows(store, _FORESEEN_BY_ME_Q, ())}
     for source in graphs_of(store, CHANGEABLE_GRAPH):
-        if source in ahead or _source_of(store, source) in foreseen:
+        if source in ahead:
             continue
         update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                        f"WHERE {{ GRAPH <{source}> {{ ?s ?p ?o }} }}")
@@ -405,7 +451,8 @@ def _predicted(store: ox.Store, now: datetime, gate: frozenset | None = None) ->
     present holds, and the two must meet in one ground to do so (#987, #992). ONE NOTHING READS IS NOT:
     `gate` is what the pass's texts and the transitions read, and a fact none reads is not a place the
     search can be in (cone), so a belief ahead saying nothing read — a committed step of the agent's own,
-    whose window and filling no met-test asks — writes nothing a ground holds and lays no ground; laid,
+    whose window and filling no met-test asks, and which the dose flow reads by its period beside the
+    ground — writes nothing a ground holds and lays no ground; laid,
     every later step of a plan was a boundary, and a dispatcher's pass laid five grounds for three
     (measured). None reads anything, and lays every belief ahead."""
     #  A GRAPH IS READ WITH ITS REVISIONS AND AS IT STOOD BEFORE THE CUT (`_whole`): a copy the refresh
@@ -429,15 +476,6 @@ def _gate(store: ox.Store, within: frozenset) -> frozenset | None:
     number where no met-test does — None, everything, where a transition cannot be read."""
     read = footprint.read_by_transitions(store)
     return None if read is footprint.ANYTHING else within | read
-
-
-_SOURCE_Q = "SELECT ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $piece prov:wasDerivedFrom ?source } }"
-
-
-def _source_of(store: ox.Store, piece: str) -> str | None:
-    """The graph a changeable part was cut from."""
-    found = rows(store, _SOURCE_Q, (), piece=piece)
-    return found[0]["source"] if found else None
 
 
 def _reads_any(store: ox.Store, graphs, within: frozenset) -> bool:

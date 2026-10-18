@@ -113,8 +113,8 @@ change triples, and each has found its own way around rules that cannot.
   applied before its additions and a later order reading what the earlier made, each run once,
   scoped to the world it changes and naming no graph. pySHACL would run the same rules to a
   fixpoint, "the opposite shape" ([a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)).
-- **Everything else that changes a triple is Python.** Prediction forgets a key's predictions and
-  writes new ones (`agent/prediction/predict.py`); the executor closes a committed step by
+- **Everything else that changes a triple is Python.** Prediction rewrote a key's forecasts until #1000
+  made its foresight the grounds' (`agent/prediction/foresee.py`); the executor closes a committed step by
   forgetting it (`agent/execution/executor.py`); and slice 1's `believe` replaced a subject belief.
 - **The two kinds were already told apart in AGENTS.md, by package rather than by what they do**:
   "the effect deletes because a possible world is where taking something away is the point; the

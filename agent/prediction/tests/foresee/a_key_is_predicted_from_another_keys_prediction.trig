@@ -1,21 +1,18 @@
 # a_key_is_predicted_from_another_keys_prediction
 #
-# THE SOIL DRIES BY THE AIR, AS THE AGENT ITSELF FORESEES THE AIR (#996). A pot in a room, read at
-# 0.25 and drying eight fractions a day in dry air, less as the air is humid: its flow reads the
-# room's humidity, `sosa:observedProperty :humidity`, at every instant it is asked at. The room has a
-# hygrometer, read at 0.5 at noon, and two predictions of it already written by this agent's walk —
-# the keys are predicted in the order the texts read each other, so the air's stand before the soil
-# is asked — saying 0.5 until one and 0.95 after.
+# THE SOIL DRIES BY THE AIR, AS THE AGENT ITSELF FORESEES THE AIR, AND THE TWO ADVANCE TOGETHER (#1000). A
+# pot in a room, read at 0.25 and drying eight fractions a day in dry air, less as the air is humid: its
+# flow reads the room's humidity, `sosa:observedProperty :humidity`, at every instant it is asked at.
+# The room has a hygrometer, read at 0.5 at noon, and its air gains 0.4 an hour while the window is shut,
+# until it is saturated.
 #
-# - UNTIL A QUARTER PAST the flow reads the hygrometer's PERCEPT, holding then, and the soil dries
-#   four fractions a day; from a quarter past to one it reads the first PREDICTION and dries the same;
-#   the operating floor at 0.1 is met at 12:54.
-# - AT ONE the second prediction begins — a happening, since it is a graph beginning — and the soil
-#   dries 0.4 a day in the humid air: from 0.0833 it meets the survival floor at 0.02 at 16:48.
-# - Three stretches. Read off the percept alone the soil would have frozen at a quarter past; read
-#   off nothing until then it would have met the floor a quarter of an hour late.
-#
-# The air's own predictions stand, derived from the hygrometer's percept and not the probe's.
+# Nothing of the air is written anywhere: the air's number the soil's flow reads is the one the
+# integration stands at, kept in the predictor's working graph beside the ground — 0.5 at noon, 0.9 at
+# one, saturated at a quarter past — so the soil dries four fractions a day at noon and ever less, and
+# stops drying once the air is saturated. The air crosses its operating ceiling at 0.9 at one o'clock,
+# a crossing of its own; the soil, slowing as the air fills, meets no floor before the air stops it.
+# Each key is advanced at the same instants over the same graphs, and nothing orders them (#996's order
+# and its cycle refusal are gone with the forecasts it ordered).
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -34,7 +31,6 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
 @prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
 
 GRAPH :ontology {
@@ -107,25 +103,6 @@ GRAPH observed:room_humidity {
   :hygrometer.20260101T120000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 }
 
-#  WHAT THIS AGENT FORESEES OF THE AIR, written before the soil is asked: one node per key, a stretch each.
-GRAPH predicted:room_humidity_0 {
-  orexis:predicted_room_humidity a sosa:Observation .
-  orexis:predicted_room_humidity sosa:hasFeatureOfInterest :room .
-  orexis:predicted_room_humidity sosa:hasSimpleResult 0.5 .
-  orexis:predicted_room_humidity sosa:madeBySensor :hygrometer .
-  orexis:predicted_room_humidity sosa:observedProperty :humidity .
-  orexis:predicted_room_humidity sosa:resultTime "2026-01-01T12:59:00+00:00"^^xsd:dateTime .
-}
-
-GRAPH predicted:room_humidity_1 {
-  orexis:predicted_room_humidity a sosa:Observation .
-  orexis:predicted_room_humidity sosa:hasFeatureOfInterest :room .
-  orexis:predicted_room_humidity sosa:hasSimpleResult 0.95 .
-  orexis:predicted_room_humidity sosa:madeBySensor :hygrometer .
-  orexis:predicted_room_humidity sosa:observedProperty :humidity .
-  orexis:predicted_room_humidity sosa:resultTime "2026-01-02T12:00:00+00:00"^^xsd:dateTime .
-}
-
 GRAPH :catalogue {
   :actions a orexis:FlowGraph .
   :actions a orexis:Graph .
@@ -146,18 +123,4 @@ GRAPH :catalogue {
   observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
   observed:zamioculcas_moisture orexis:ownedBy :keeper .
-  predicted:room_humidity_0 a orexis:Graph .
-  predicted:room_humidity_0 a orexis:BeliefGraph .
-  predicted:room_humidity_0 a orexis:ForecastGraph .
-  predicted:room_humidity_0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
-  predicted:room_humidity_0 orexis:arrivedBy orexis:Recorded .
-  predicted:room_humidity_0 orexis:ownedBy :keeper .
-  predicted:room_humidity_0 prov:hadPrimarySource observed:room_humidity .
-  predicted:room_humidity_1 a orexis:Graph .
-  predicted:room_humidity_1 a orexis:BeliefGraph .
-  predicted:room_humidity_1 a orexis:ForecastGraph .
-  predicted:room_humidity_1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
-  predicted:room_humidity_1 orexis:arrivedBy orexis:Recorded .
-  predicted:room_humidity_1 orexis:ownedBy :keeper .
-  predicted:room_humidity_1 prov:hadPrimarySource observed:room_humidity .
 }

@@ -1,5 +1,5 @@
 @startuml runbook-predictor-flows
-title A predictor — flows summed into bands ahead
+title A predictor — flows integrated from each ground
 
 skinparam shadowing false
 skinparam defaultFontSize 12
@@ -18,9 +18,9 @@ rectangle "latest observation\nsoil 0.36" as OBS
 rectangle "climate:Drying\nreads climate:driesPerDay" as D1
 rectangle "climate:Raining\nreads climate:wetsPerMm\nand the rain forecast" as D2
 rectangle "actuation:Dosed\nreads a committed dose" as D3
-rectangle "sum of the flows' rates\nper property" as SUM
-rectangle "bands ahead\nuntil the horizon" as BANDS
-rectangle "foreseen grounds\n0.04 a day: Dry in a day and a half" as G
+rectangle "sum of the flows' rates\nper key, from the ground standing" as SUM
+rectangle "the next knot\na crossing, or the hour's end" as BANDS
+rectangle "a ground laid there\n0.04 a day: Dry in a day and a half" as G
 rectangle "planning\na want for that instant" as P #EAF5EA
 
 OBS --> SUM
@@ -29,5 +29,6 @@ D2 --> SUM
 D3 --> SUM
 SUM --> BANDS
 BANDS --> G
+G --> SUM : integrated on from here
 G --> P
 @enduml

@@ -1,0 +1,138 @@
+# a_crossing_is_judged_in_the_ground_laid_there_and_a_recovery_within_the_hour
+#
+# THE FLOWS ARE INTEGRATED FROM EACH GROUND, AND A CROSSING LAYS ONE (#1000). The bed is believed dry —
+# `:believed`, the state the soil's transition wrote when the reading arrived, a state graph the agent
+# DERIVED — and the reading in hand is 0.2999, a ten-thousandth under the floor at 0.3. Two flows move
+# the soil, and a forecast hour of rain is a belief ahead:
+#
+# - `:Seeping` lifts the soil 0.0004 an hour until 0.3001. The soil crosses the floor at a quarter past,
+#   and the predictor answers the crossing with the number at the far end of the stretch it opens, 0.3001,
+#   where the seeping stops: a ten-thousandth over the floor and short of the floor and its margin. The
+#   transition judges it in the ground laid there, beside the state the present holds, dry, and the bed
+#   is foreseen dry — held by the margin as the present would hold it. Nothing a met-test reads moved, so
+#   that ground COLLAPSES into the present and a quarter past is no period. Judged bare, 0.3001 would
+#   have read moist.
+# - `:rain_hour`, a forecast received, says ten millimetres fall from two to three; `:Raining` reads it
+#   by its period, beside the ground, and wets the soil 0.05 an hour while it holds. The hour is a belief
+#   ahead that something reads, so it is laid where it begins: a ground at two, holding the rain and the
+#   bed still dry. The soil stands still until then, so no hour's end before two lays anything.
+# - At three the key has moved, so the hour's end is a knot: the soil stands at 0.3501, past the floor
+#   and its margin, the transition makes the bed moist, and a ground is laid at three — the recovery seen
+#   within the hour, which a crossing alone would never have shown, the soil having crossed its one bound
+#   at a quarter past.
+#
+# What a transition changes is the ground being laid, and the present is never written to: `:believed`
+# still says dry. The predictor's numbers and the arrivals live in working graphs while the grounds are
+# laid and are gone once they are; no forecast of the predictor's own is written. The clock stands at
+# 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+GRAPH :ontology {
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :bed :floor 0.3 .
+  :bed :margin 0.0002 .
+  :bed a sosa:FeatureOfInterest .
+  :bed ssn-system:hasOperatingRange :bed.operating .
+  :bed.operating a ssn-system:OperatingRange .
+  :bed.operating ssn-system:inCondition [ schema:maxValue 0.6 ; schema:minValue 0.3 ; ssn:forProperty :moisture ] .
+  :keeper a orexis:Agent .
+  :probe a sosa:Sensor .
+  :probe sosa:isHostedBy :bed .
+  :probe sosa:observes :moisture .
+}
+
+GRAPH :rules {
+  :soilRule a belief:Transition .
+  :soilRule belief:update """PREFIX : <http://example.org/test#>
+      DELETE { ?subject :soil ?before }
+      INSERT { ?subject :soil ?state }
+      WHERE {
+        ?obs sosa:hasFeatureOfInterest ?subject ; sosa:hasSimpleResult ?value .
+        ?subject :floor ?floor ; :margin ?margin .
+        OPTIONAL { ?subject :soil ?before }
+        BIND(IF(?value < ?floor || (BOUND(?before) && sameTerm(?before, :Dry) && ?value < (?floor + ?margin)), :Dry, :Moist) AS ?state)
+      }""" .
+}
+
+GRAPH :flows {
+  :Raining a prediction:Flow .
+  :Raining prediction:moves :moisture .
+  :Raining prediction:rate """PREFIX : <http://example.org/test#>
+      SELECT ?rate ?until WHERE {
+          ?rain sosa:observedProperty :precipitation ; sosa:hasSimpleResult ?mm .
+          BIND(xsd:double(?mm) * 0.005 / 3600.0 AS ?rate)
+          BIND(1.0 AS ?until)
+      }""" .
+  :Seeping a prediction:Flow .
+  :Seeping prediction:moves :moisture .
+  :Seeping prediction:rate "SELECT ?rate ?until WHERE { BIND(0.0004 / 3600.0 AS ?rate) BIND(0.3001 AS ?until) }" .
+}
+
+GRAPH :sensed {
+  :soil a sosa:Observation .
+  :soil sosa:hasFeatureOfInterest :bed .
+  :soil sosa:hasSimpleResult 0.2999 .
+  :soil sosa:madeBySensor :probe .
+  :soil sosa:observedProperty :moisture .
+  :soil sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+}
+
+GRAPH :believed {
+  :bed :soil :Dry .
+}
+
+GRAPH :rain_hour {
+  :rain a sosa:Observation .
+  :rain sosa:observedProperty :precipitation .
+  :rain sosa:hasSimpleResult 10.0 .
+}
+
+GRAPH :catalogue {
+  :believed a orexis:BeliefGraph .
+  :believed a orexis:Graph .
+  :believed orexis:arrivedBy orexis:Derived .
+  :believed orexis:ownedBy :keeper .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :flows a orexis:FlowGraph .
+  :flows a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :rain_hour a orexis:Graph .
+  :rain_hour a orexis:BeliefGraph .
+  :rain_hour a orexis:ForecastGraph .
+  :rain_hour orexis:arrivedBy orexis:Received .
+  :rain_hour dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
+  :rain_hour orexis:ownedBy :keeper .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :sensed a orexis:Graph .
+  :sensed a sensing:ObservationGraph .
+  :sensed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  :sensed orexis:arrivedBy orexis:Received .
+  :sensed orexis:ownedBy :keeper .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+}

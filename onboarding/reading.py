@@ -61,9 +61,8 @@ import pyshacl
 import rdflib
 
 from agent.planning.planner import Planner
-from agent.prediction.order import Cycle, order
 from agent.ontology import local_of
-from agent.runtime import (MQTT, ONTOLOGY, PLANNING, PREDICTION_PACKAGE, SPEAKER, boot, documents, known, packages_of, read_with_imports,
+from agent.runtime import (MQTT, ONTOLOGY, PLANNING, SPEAKER, boot, documents, known, packages_of, read_with_imports,
                            roles_of, selves, world_of)
 from agent.store import (NAMESPACES, DocumentRefused, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
                          rdflib_view, rows, whose)
@@ -177,30 +176,6 @@ def check(here: Path) -> None:
     if found:
         raise SystemExit(f"world {name!r} is posed in a state its own constraints say is impossible — "
                          f"{'; '.join(found)}; nothing granted")
-    found = cyclic(here)
-    if found:
-        raise SystemExit(f"world {name!r} states flows that read each other in a cycle, which no predictor "
-                         f"can accumulate — {'; '.join(found)}; nothing granted")
-
-
-def cyclic(here: Path) -> list[str]:
-    """Every predictor of the world in `here` whose flows read each other round, as `agent: why` — asked
-    of the agent as its boot reads it, by the prediction package's own `order`. A key's prediction may
-    read another key's, so the keys are predicted in the order the flow texts fix (#996); two
-    properties each moving by the other are a coupled system, which no predictor here accumulates, so
-    `orexis-onboard` refuses the world as it refuses one posed against its own constraints. Empty for a
-    world whose texts order, and for an agent that is no predictor, which reads no flow — a flow no
-    predictor reads is not refused (knowledge/domain/prediction/predictor.md)."""
-    out = []
-    for agent_id in agents(here):
-        beliefs = boot(Path(here).resolve(), agent_id, others=ours())
-        if PREDICTION_PACKAGE not in packages_of(beliefs):
-            continue
-        try:
-            order(beliefs)
-        except Cycle as why:
-            out.append(f"{agent_id}: {why}")
-    return out
 
 
 def contradicted(here: Path, agent_id: str) -> list[str]:

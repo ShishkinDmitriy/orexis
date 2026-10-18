@@ -1,0 +1,95 @@
+--- case
++++ expected
+@@ -72,13 +72,9 @@
+ }
+ 
+ GRAPH :believed {
+-  :bed :soil :Dry .
+ }
+ 
+ GRAPH :rain_hour {
+-  :rain a sosa:Observation .
+-  :rain sosa:observedProperty :precipitation .
+-  :rain sosa:hasSimpleResult 10.0 .
+ }
+ 
+ GRAPH :catalogue {
+@@ -86,6 +82,10 @@
+   :believed a orexis:Graph .
+   :believed orexis:arrivedBy orexis:Derived .
+   :believed orexis:ownedBy :keeper .
++  :believed planning:cutBy "sha256:621c8781c566e34c0b21b8067f9372339f6388a397e7991545c698be4dbbc44e" .
++  :believed.changeable <http://www.w3.org/ns/prov#wasDerivedFrom> :believed .
++  :believed.changeable a planning:ChangeableGraph .
++  :believed.changeable orexis:arrivedBy orexis:Derived .
+   :catalogue a orexis:CatalogueGraph .
+   :catalogue a orexis:Graph .
+   :flows a orexis:FlowGraph .
+@@ -93,12 +93,16 @@
+   :ontology a orexis:BeliefGraph .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+-  :rain_hour a orexis:Graph .
+   :rain_hour a orexis:BeliefGraph .
+   :rain_hour a orexis:ForecastGraph .
++  :rain_hour a orexis:Graph .
++  :rain_hour dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
+   :rain_hour orexis:arrivedBy orexis:Received .
+-  :rain_hour dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
+   :rain_hour orexis:ownedBy :keeper .
++  :rain_hour planning:cutBy "sha256:621c8781c566e34c0b21b8067f9372339f6388a397e7991545c698be4dbbc44e" .
++  :rain_hour.changeable <http://www.w3.org/ns/prov#wasDerivedFrom> :rain_hour .
++  :rain_hour.changeable a planning:ChangeableGraph .
++  :rain_hour.changeable orexis:arrivedBy orexis:Derived .
+   :rules a orexis:Graph .
+   :rules a sh:RulesGraph .
+   :sensed a orexis:Graph .
+@@ -108,4 +112,48 @@
+   :sensed orexis:ownedBy :keeper .
+   :world a orexis:BeliefGraph .
+   :world a orexis:Graph .
++  :world planning:cutBy "sha256:621c8781c566e34c0b21b8067f9372339f6388a397e7991545c698be4dbbc44e" .
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T14:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:e66c59c6d425d81ed52aac478dbae34a85ca8c1c51355b722cd37ed9ce668f9a" .
++  ground:2026-01-01T140000p0000 <http://www.w3.org/ns/prov#wasDerivedFrom> ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T140000p0000 a planning:GroundGraph .
++  ground:2026-01-01T140000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T140000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T140000p0000 orexis:hash "sha256:832bede9433f86025b446f7be34db7ae58771b6d2e98b247fa2cd0c919bdb54f" .
++  ground:2026-01-01T150000p0000 <http://www.w3.org/ns/prov#wasDerivedFrom> ground:2026-01-01T140000p0000 .
++  ground:2026-01-01T150000p0000 a planning:GroundGraph .
++  ground:2026-01-01T150000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T15:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T150000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T150000p0000 orexis:hash "sha256:9519906b164d0cdc8429982860c2bbdbfe8a5435eec819d8144c68e6d536a2f6" .
+ }
++
++
++GRAPH ground:2026-01-01T120000p0000 {
++  :bed :soil :Dry .
++}
++
++GRAPH ground:2026-01-01T140000p0000 {
++  :bed :soil :Dry .
++  :rain a sosa:Observation .
++  :rain sosa:hasSimpleResult 10.0 .
++  :rain sosa:observedProperty :precipitation .
++}
++
++GRAPH ground:2026-01-01T150000p0000 {
++  :bed :soil :Moist .
++  :rain a sosa:Observation .
++  :rain sosa:hasSimpleResult 10.0 .
++  :rain sosa:observedProperty :precipitation .
++}
++
++GRAPH :believed.changeable {
++  :bed :soil :Dry .
++}
++
++GRAPH :rain_hour.changeable {
++  :rain a sosa:Observation .
++  :rain sosa:hasSimpleResult 10.0 .
++  :rain sosa:observedProperty :precipitation .
++}

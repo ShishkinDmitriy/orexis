@@ -7,17 +7,16 @@ and the one it predicts, and ONE of sensing's: the kind an observation is kept i
 above sensing — it predicts what a sensor will read, and with no sensing there is nothing to predict
 — so it may speak sensing's word, and it imports none of sensing's code (#944).
 
-THE NAMES ARE FOR EYES. A prediction's graph is spelled here for the writer, from the one
-identifier a process is handed and the key of the observation it is derived from; every
-reader asks the catalogue by class and by pattern, and renaming one here would change nothing
-a reader sees.
+THE ONE NAME IS FOR EYES. The predicted observation of a key is a node of its own, spelled here from
+the key; a reader matches the key, never the name. No graph is named: a forecast of the predictor's own
+is no graph of the belief base since #1000, its foresight being the grounds the planner lays.
 """
 
 from __future__ import annotations
 
 import re
 
-from agent.ontology import GRAPH_PREFIX, OREXIS
+from agent.ontology import OREXIS
 
 PREDICTION = "http://example.org/orexis/prediction#"
 SOSA = "http://www.w3.org/ns/sosa/"
@@ -46,13 +45,6 @@ OBSERVATION_GRAPH = SENSING + "ObservationGraph"
 def slug(iri: str) -> str:
     """The local name of a term, safe to paste into an IRI."""
     return re.sub(r"[^A-Za-z0-9_]", "_", re.split(r"[#/]", iri.rstrip("#/"))[-1])
-
-
-def prediction_graph(agent_id: str, feature: str, observed_property: str, n: int) -> str:
-    """The n-th prediction of one key, first stretch first — the ordinal joined by an
-    underscore, since a slash cannot sit in a prefixed name's local part and a case would
-    have to spell the graph in full."""
-    return f"{GRAPH_PREFIX}predicted/{agent_id}/{slug(feature)}_{slug(observed_property)}_{n}"
 
 
 def predicted_of(feature: str, observed_property: str) -> str:

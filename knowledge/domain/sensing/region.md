@@ -28,8 +28,8 @@ the subject or on an instrument that watches it; nothing derives or picks one.
   [margin](/domain/sensing/margin.md) the range's condition states. None judges a survival range.
 - **A desire's met-test** reads the state that transition makes, never the range or a reading: a
   grower wants no bed it acts for believed dry, and a dose's effect predicts it will be moist (#944).
-- **The prediction package** places every crossing of a bound of either range where its accumulated
-  rates reach it, so a stretch begins where the predicted number changes range.
+- **The prediction package** places every crossing of a bound of either range where its integrated
+  rates reach it, so the planner lays a ground where the predicted number changes range.
 - **A command** sizes a step to the middle of the operating range when it is taken.
 
 No rule of sensing's reads a range any more: the sides it concluded of every reading — below, inside
