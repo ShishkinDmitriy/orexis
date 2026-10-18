@@ -10,6 +10,14 @@ description: >-
   observation's transitions make the subject's foreseen state.
 ---
 
+# What prediction is for
+
+Prediction is the agent's foresight for the models it holds, and nothing more: it integrates the
+drifts for what nobody can be asked about, the bed drying from its own latest reading. What another
+holds the model of — rain, a peer's route — is a [forecast](/domain/sensing/forecast.md), asked for
+and laid into the ground of its period as it stands
+([foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers](/decisions/foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers.md)).
+
 # What a drift is
 
 A **drift**, `prediction:Drift`, is one thing that moves a value while nobody acts: a bed drying,
