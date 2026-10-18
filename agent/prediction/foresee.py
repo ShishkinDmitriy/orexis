@@ -164,44 +164,71 @@ class Foresight:
         return self.origin + timedelta(seconds=max(k.horizon for k in self.keys))
 
     def advance(self, store, at: datetime, until: datetime, graphs_at) -> tuple[datetime, list[ox.Triple]] | None:
-        """Integrate every key from `at` to `until`, reading `graphs_at(instant)` — the ground the planner
+        """Integrate every key from `at` towards `until`, reading `graphs_at(instant)` — the ground the planner
         stands in and every graph holding at the instant beside it — and answer the earliest instant in
         `(at, until]` at which a key the caller lays crosses a range bound, with the predicted observation
-        of each key crossing there; None where none does, every key then standing at `until`. Asked first
-        at `at`, each key is carried from its reading's instant to `at` reading what holds at `at`."""
+        of each key crossing there; or the hour's end, where a key the caller lays has moved by then, with
+        the number each such key then stands at; or None where neither comes before `until`, every key then
+        standing at `until`. Asked first at `at`, each key is carried from its reading's instant to `at`
+        reading what holds at `at`.
+
+        THE INTEGRATION STOPS AT THE FIRST KNOT, and runs on only as far as the knot's number needs — the
+        next crossing of the same key, the hour after it or `until`, whichever is first — since the planner
+        lays a ground there and the integration goes on from that ground: integrated to `until` every time,
+        a pass asked the flows twenty times over for one day (measured, 670 asks a pass for 30)."""
         t0, t1 = self._s(at), self._s(min(until, self.horizon))
         if self.t is None:
             self._catch_up(store, t0, graphs_at)
-        if t1 <= self.t + 1e-9:
+        if t1 <= self.t + 1e-9 or not any(k.laid for k in self.keys):
             self.t = max(self.t, t1)
             return None
         t0 = self.t
-        self._integrate(store, t0, t1, graphs_at)
-        #  THE NEXT KNOT: the earliest crossing of any key the caller lays, or the hour's end where a key it
-        #  lays has moved by then — a state held past its bound by a margin this package does not read is
-        #  judged again within the hour, and a key standing still is judged nothing.
-        crossings = {key.sensor: _crossings(key.knots, key.ranges, t0, t1) for key in self.keys if key.laid}
-        first = min((c[0] for c in crossings.values() if c), default=math.inf)
         cap = t0 + SEGMENT_S
-        moved = {key.sensor for key in self.keys if key.laid and _at(key.knots, min(cap, t1)) != _at(key.knots, t0)}
-        if cap <= t1 + 1e-9 and cap < first and moved:
-            first = cap
-        if first == math.inf:
+        marks = self._marks(store, t0, t1, cap)
+        for key in self.keys:
+            key.knots = [(t0, key.lo, key.hi)]
+        t, first, far, crossing = t0, None, None, set()
+        for mark in marks:
+            while t < mark - 1e-9:
+                t = self._step(store, t, mark, graphs_at)
+                if first is None:
+                    found = {key.sensor: _crossings(key.knots[-2:], key.ranges, t0, t, opening=len(key.knots) == 2)
+                             for key in self.keys if key.laid}
+                    firsts = {sensor: cs[0] for sensor, cs in found.items() if cs}
+                    if firsts:
+                        first = min(firsts.values())
+                        crossing = {sensor for sensor, c in firsts.items() if abs(c - first) < 1e-9}
+                        far = min(first + SEGMENT_S, t1)
+                        for sensor, cs in found.items():
+                            if sensor in crossing:
+                                far = min([far, *(c for c in cs if c > first + 1e-9)])
+                    elif t >= cap - 1e-9:
+                        #  THE HOUR'S END: a state held past its bound by a margin this package does not read is
+                        #  judged again within the hour, for every key the caller lays that has moved.
+                        moved = [key for key in self.keys if key.laid and (key.lo, key.hi) != key.knots[0][1:]]
+                        if moved:
+                            self._stand_at(store, t)
+                            return self.origin + timedelta(seconds=t), [
+                                tr for key in moved for tr in _observation(key, _worst(key), self.origin + timedelta(seconds=t))]
+                else:
+                    for key in self.keys:
+                        if key.sensor in crossing:
+                            far = min([far, *(c for c in _crossings(key.knots[-2:], key.ranges, first, t) if c > first + 1e-9)])
+                if first is not None and t >= far - 1e-9:
+                    break
+            if first is not None and t >= far - 1e-9:
+                break
+        if first is None:
             self._stand_at(store, t1)
             return None
         arrival: list[ox.Triple] = []
         for key in self.keys:
-            found = crossings.get(key.sensor, [])
-            if found and abs(found[0] - first) < 1e-9:
+            if key.sensor in crossing:
                 #  THE NUMBER LAID AT A CROSSING IS READ AT THE FAR END OF THE STRETCH IT OPENS — the next
                 #  crossing, the hour's end or the boundary, whichever comes first — the last instant known to
                 #  lie on the new side, so the side as written is the stretch's and not the bound's edge.
-                far = min([*(c for c in found if c > first + 1e-9), first + SEGMENT_S, t1])
                 when, value = _number_on_its_side(key.knots, key.ranges, first, far)
                 arrival += _observation(key, value, self.origin + timedelta(seconds=when))
-            elif key.laid and key.sensor in moved and first == cap:
-                key.lo, key.hi = _at(key.knots, first)
-                arrival += _observation(key, _worst(key), self.origin + timedelta(seconds=first))
         self._stand_at(store, first)
         return self.origin + timedelta(seconds=first), arrival
 
@@ -229,39 +256,39 @@ class Foresight:
                 t += step
         self.t = t0
 
-    def _integrate(self, store, t0: float, t1: float, graphs_at) -> None:
-        """Every key from `t0` to `t1`, together: at each segment every key's flows are asked at the same
-        instant over the same graphs and the same numbers, and every key moves by its own sum. The
-        knots of each key are left on it, `t0` first."""
+    def _marks(self, store, t0: float, t1: float, cap: float) -> list[float]:
+        """The instants between `t0` and `t1` a segment must end at: every happening — a belief beginning or
+        stopping holding — each key's horizon, the hour's end and `t1`."""
         cat = Raw(f"<{catalogue_of(store)}>")
         happenings = {datetime.fromisoformat(r["t"]) for r in rows(
             store, _HAPPENINGS_Q, (), cat=cat, **{"from": self._at(t0), "to": self._at(t1)})}
-        marks = sorted({*(self._s(h) for h in happenings), *(k.horizon for k in self.keys if t0 < k.horizon < t1), t1})
+        return sorted({*(self._s(h) for h in happenings), *(k.horizon for k in self.keys if t0 < k.horizon < t1),
+                       *([cap] if t0 < cap < t1 else []), t1})
+
+    def _step(self, store, t: float, mark: float, graphs_at) -> float:
+        """One segment from `t`, every key together: every key's flows asked at `t` over the same graphs and
+        the same numbers, and every key moved by its own sum to `mark`, the hour's end or the nearest stop,
+        whichever is first; the instant reached, each key's knot appended."""
+        self._numbers(store, t)
+        graphs = [NUMBERS, *graphs_at(self.origin + timedelta(seconds=t))]
+        plans = {}
         for key in self.keys:
-            key.knots = [(t0, key.lo, key.hi)]
-        t = t0
-        for mark in marks:
-            while t < mark - 1e-9:
-                self._numbers(store, t)
-                graphs = [NUMBERS, *graphs_at(self.origin + timedelta(seconds=t))]
-                plans = {}
-                for key in self.keys:
-                    if t >= key.horizon - 1e-9:
-                        continue                        # looked at no further: it stands
-                    said_lo = self._rates(store, key, key.lo, t, graphs)
-                    said_hi = said_lo if key.hi == key.lo else self._rates(store, key, key.hi, t, graphs)
-                    plans[key.sensor] = (*_net(said_lo, key.lo, 0), *_net(said_hi, key.hi, 1))
-                step = min(mark - t, SEGMENT_S)
-                for key in self.keys:
-                    if key.sensor in plans:
-                        r_lo, stops_lo, r_hi, stops_hi = plans[key.sensor]
-                        step = min(step, _reach(key.lo, r_lo, stops_lo), _reach(key.hi, r_hi, stops_hi))
-                for key in self.keys:
-                    if key.sensor in plans:
-                        r_lo, stops_lo, r_hi, stops_hi = plans[key.sensor]
-                        key.lo, key.hi = sorted((_move(key.lo, r_lo, step, stops_lo), _move(key.hi, r_hi, step, stops_hi)))
-                    key.knots.append((t + step, key.lo, key.hi))
-                t += step
+            if t >= key.horizon - 1e-9:
+                continue                        # looked at no further: it stands
+            said_lo = self._rates(store, key, key.lo, t, graphs)
+            said_hi = said_lo if key.hi == key.lo else self._rates(store, key, key.hi, t, graphs)
+            plans[key.sensor] = (*_net(said_lo, key.lo, 0), *_net(said_hi, key.hi, 1))
+        step = min(mark - t, SEGMENT_S)
+        for key in self.keys:
+            if key.sensor in plans:
+                r_lo, stops_lo, r_hi, stops_hi = plans[key.sensor]
+                step = min(step, _reach(key.lo, r_lo, stops_lo), _reach(key.hi, r_hi, stops_hi))
+        for key in self.keys:
+            if key.sensor in plans:
+                r_lo, stops_lo, r_hi, stops_hi = plans[key.sensor]
+                key.lo, key.hi = sorted((_move(key.lo, r_lo, step, stops_lo), _move(key.hi, r_hi, step, stops_hi)))
+            key.knots.append((t + step, key.lo, key.hi))
+        return t + step
 
     def _rates(self, store, key: _Key, value: float, t: float, graphs) -> list[tuple[float, float, float | None]]:
         """Every contribution the key's flows answer at `t` for the subject holding `value`: (lowest
@@ -342,7 +369,11 @@ def foresee(beliefs, now: datetime, *, placed=None, memo=None) -> Foresight | No
                          (taken - now).total_seconds() + horizon,
                          ranges_of(beliefs, sensor, key["property"], memo), flows,
                          placed is None or bool(placed(key["feature"], key["property"])), reading, reading))
-    if not keys:
+    #  THE KEYS THE CALLER LAYS, AND THE KEYS THEIR FLOWS READ: a key laid elsewhere and read by no flow of
+    #  a laid one is integrated for nobody here, and it stands.
+    laid = [k for k in keys if k.laid]
+    keys = [k for k in keys if k.laid or any(k.property in f["rate"] for lk in laid for f in lk.flows)]
+    if not laid:
         return None
     log.debug("foreseeing %d key(s): %s", len(keys), ", ".join(local_of(k.sensor) for k in keys))
     return Foresight(now, keys)
@@ -380,12 +411,12 @@ def _move(value: float, rate: float, step: float, stops: list[float]) -> float:
     return moved
 
 
-def _crossings(knots, ranges, after: float, before: float) -> list[float]:
+def _crossings(knots, ranges, after: float, before: float, opening: bool = True) -> list[float]:
     """Every instant in `(after, before]` at which the corridor's low trajectory crosses a floor or its
-    high one a ceiling, earliest first, each to the whole second after it."""
-    found = sorted({c for n, ((t0, lo0, hi0), (t1, lo1, hi1)) in enumerate(zip(knots, knots[1:]))
-                    for c in _crossed(t0, lo0, hi0, t1, lo1, hi1, ranges, opening=n == 0) if after < c <= before})
-    return found
+    high one a ceiling, earliest first, each to the whole second after it; `opening` says the first pair of
+    knots opens a stretch, where a trajectory standing on a bound has crossed it (`_crossed`)."""
+    return sorted({c for n, ((t0, lo0, hi0), (t1, lo1, hi1)) in enumerate(zip(knots, knots[1:]))
+                   for c in _crossed(t0, lo0, hi0, t1, lo1, hi1, ranges, opening=opening and n == 0) if after < c <= before})
 
 
 def _crossed(t0, lo0, hi0, t1, lo1, hi1, ranges, opening: bool = False) -> list[float]:

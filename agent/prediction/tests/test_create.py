@@ -34,6 +34,6 @@ def test_its_part_offers_the_foresight_and_hears_nothing(monkeypatch, snapshots,
     foresight = part.foresee(store, snapshots.NOW)
     assert [k.sensor for k in foresight.keys] == [PROBE], "the probe's key, read off its latest percept"
     assert foresight.keys[0].lo == 0.25 and foresight.keys[0].laid
-    #  WHAT A SCOPE LAYS: the keys the caller places there; every key is advanced either way.
-    assert not part.foresee(store, snapshots.NOW, placed=lambda feature, prop: False).keys[0].laid
+    #  WHAT A SCOPE LAYS: the keys the caller places there; a scope laying none is handed nothing.
+    assert part.foresee(store, snapshots.NOW, placed=lambda feature, prop: False) is None
     assert runtime.written == [], "nothing is written into the belief base"
