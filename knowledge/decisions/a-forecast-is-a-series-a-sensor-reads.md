@@ -5,7 +5,7 @@ status: accepted
 timestamp: 2026-09-28T21:00:00Z
 description: >-
   The sovereign's choices for #851, made 2026-09-28. A weather service is a sosa:Sensor that
-  reads a SERIES; sensing writes one sensing:ForecastGraph per stretch, holding during it, and
+  reads a SERIES; sensing writes one orexis:ForecastGraph per stretch, holding during it, and
   the next forecast replaces the last. The service is reached over HTTP by a transport member
   that adopts the W3C WoT Thing Description as it stands, its target a URI template the
   place's schema:geo fills. The location is private and lives in a world's secrets/, which a
@@ -22,8 +22,9 @@ feature of interest, the place. What sets it apart is that one response carries 
 each about a stretch ahead. A sensor stating `sensing:endsPointer` (or `sensing:startsPointer`)
 beside its `sensing:readingPointer` reads a series: the one pointer finds the instants, the
 other the values, and each value holds over the stretch between one instant and the next.
-`received` writes one [forecast](/domain/sensing/forecast.md) graph per stretch still ahead,
-`sensing:ForecastGraph` beneath `orexis:BeliefGraph`, holding during the stretch, and forgets
+`received` writes one [forecast](/domain/kernel/forecast.md) graph per stretch still ahead,
+`orexis:ForecastGraph` beneath `orexis:BeliefGraph` - sensing's own kind until #992 made it the kernel's, one
+kind for anyone's word about a stretch ahead - holding during the stretch, and forgets
 every forecast graph the sensor wrote before, so the next forecast replaces the last.
 
 **The member polls it.** A pushed reading tells the agent it arrived; a series must be pulled.

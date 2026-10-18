@@ -178,7 +178,7 @@ def test_an_arrival_that_triggers_nothing_holds_no_turn(monkeypatch, snapshots):
     store = snapshots.stand_in(TICKS)
     note = T + "note"
     update(store, f"""INSERT DATA {{ GRAPH <{note}> {{ <{T}note_t> a <{T}Tick> ; <{T}loud> true }}
-  {entry(store, note, "http://example.org/orexis#PredictionGraph", "http://example.org/orexis#Derived", T + "keeper")} }}""")
+  {entry(store, note, "http://example.org/orexis#ForecastGraph", "http://example.org/orexis#Derived", T + "keeper")} }}""")
     deliberator = Deliberator(store, snapshots.AGENT, budget=50)
     deliberator.changed(note)
     deliberator.changed(_tick(store, "quiet", snapshots.NOW, loud=False))

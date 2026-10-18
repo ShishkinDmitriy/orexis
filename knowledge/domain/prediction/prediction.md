@@ -14,7 +14,7 @@ description: >-
 
 Prediction is the agent's foresight for the models it holds, and nothing more: it integrates the
 flows for what nobody can be asked about, the bed drying from its own latest reading, and what it
-writes is a [forecast](/domain/sensing/forecast.md) whose author is this agent. What another holds
+writes is a [forecast](/domain/kernel/forecast.md) whose author is this agent. What another holds
 the model of — rain, where a peer's van will be — is a forecast too, asked for; the two are one kind
 told apart by who said them, and each is laid into the ground of its period as it stands
 ([foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers](/decisions/foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers.md),
@@ -32,7 +32,7 @@ one concept under two words. It says which property it `prediction:moves` and ca
 subject `$feature` whose value is `$value` at the instant `$at`. It may answer `?low` and `?high`
 instead, a rate known only as a range, and `?until`, the value past which it contributes nothing.
 A flow reads whatever holds at `$at`: the world's facts, such as `climate:driesPerDay`, a
-[forecast](/domain/sensing/forecast.md) hour, a [committed step](/domain/execution/committed-step.md)
+[forecast](/domain/kernel/forecast.md) hour, a [committed step](/domain/execution/committed-step.md)
 inside its landing window - the dose the agent is about to give - another sensor's percept holding then,
 and the prediction this agent wrote for another key, the soil's drying reading the air's humidity as the
 agent itself foresees it (#996). Every flow moving one property ADDS: the value moves by
@@ -60,7 +60,7 @@ two, the rates are asked once and held, at most for an hour. Within a segment th
 straight line, so a crossing of a bound of every [region](/domain/sensing/region.md) that applies to
 what the sensor observes is placed exactly, by division.
 
-What is written is one `orexis:PredictionGraph` per stretch - from the observation's horizon to the
+What is written is one `orexis:ForecastGraph` per stretch - from the observation's horizon to the
 first crossing, crossing to crossing, the last to the horizon's end - holding a predicted
 `sosa:Observation` with the number at the last instant of the stretch known to lie on its side -
 its key, its sensor, the number and the instant, as ONE node per key and never the percept it was

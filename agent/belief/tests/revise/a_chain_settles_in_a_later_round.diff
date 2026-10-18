@@ -9,8 +9,8 @@
 +  sensed:revisions a orexis:Graph .
 +  sensed:revisions belief:settled true .
 +  sensed:revisions orexis:arrivedBy orexis:Derived .
-+  sensed:revisions orexis:ownedBy :keeper .
 +  sensed:revisions orexis:hash "sha256:88bcf5e657558390eb5dfed0e4c1ff2e37a4632ea1caa38b708e237dae84bcc1" .
++  sensed:revisions orexis:ownedBy :keeper .
 +  sensed:revisions prov:wasDerivedFrom :sensed .
  }
 +

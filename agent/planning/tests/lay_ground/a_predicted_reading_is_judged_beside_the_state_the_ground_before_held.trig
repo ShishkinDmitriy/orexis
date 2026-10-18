@@ -37,7 +37,8 @@
 
 GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -96,23 +97,29 @@ GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
   :held_ahead a orexis:Graph .
-  :held_ahead a orexis:PredictionGraph .
+  :held_ahead a orexis:BeliefGraph .
+  :held_ahead a orexis:ForecastGraph .
+  :held_ahead orexis:arrivedBy orexis:Recorded .
   :held_ahead dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:40:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:20:00+00:00"^^xsd:dateTime ] .
   :held_ahead orexis:ownedBy :keeper .
-  :held_ahead prov:wasDerivedFrom :sensed .
+  :held_ahead prov:hadPrimarySource :sensed .
   :held_later a orexis:Graph .
-  :held_later a orexis:PredictionGraph .
+  :held_later a orexis:BeliefGraph .
+  :held_later a orexis:ForecastGraph .
+  :held_later orexis:arrivedBy orexis:Recorded .
   :held_later dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:40:00+00:00"^^xsd:dateTime ] .
   :held_later orexis:ownedBy :keeper .
-  :held_later prov:wasDerivedFrom :sensed .
+  :held_later prov:hadPrimarySource :sensed .
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :rising a orexis:Graph .
-  :rising a orexis:PredictionGraph .
+  :rising a orexis:BeliefGraph .
+  :rising a orexis:ForecastGraph .
+  :rising orexis:arrivedBy orexis:Recorded .
   :rising dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
   :rising orexis:ownedBy :keeper .
-  :rising prov:wasDerivedFrom :sensed .
+  :rising prov:hadPrimarySource :sensed .
   :rules a orexis:Graph .
   :rules a sh:RulesGraph .
   :sensed a orexis:BeliefGraph .

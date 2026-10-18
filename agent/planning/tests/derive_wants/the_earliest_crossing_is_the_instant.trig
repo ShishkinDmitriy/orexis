@@ -72,10 +72,16 @@ GRAPH :catalogue {
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :predicted-0 a orexis:Graph .
-  :predicted-0 a orexis:PredictionGraph .
+  :predicted-0 a orexis:BeliefGraph .
+  :predicted-0 a orexis:ForecastGraph .
+  :predicted-0 orexis:arrivedBy orexis:Recorded .
+  :predicted-0 orexis:ownedBy :keeper .
   :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:45:00+00:00"^^xsd:dateTime ] .
   :predicted-1 a orexis:Graph .
-  :predicted-1 a orexis:PredictionGraph .
+  :predicted-1 a orexis:BeliefGraph .
+  :predicted-1 a orexis:ForecastGraph .
+  :predicted-1 orexis:arrivedBy orexis:Recorded .
+  :predicted-1 orexis:ownedBy :keeper .
   :predicted-1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:20:00+00:00"^^xsd:dateTime ] .
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .

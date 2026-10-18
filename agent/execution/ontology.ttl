@@ -27,7 +27,7 @@ execution:Executor a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Execu
 execution:IntentionGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Intention graph" ;
     rdfs:comment "What the agent is DOING: commitments adopted, standing and resolved, kept in the belief base's volume as a graph of the agent's own, so a restart finds them and planning reads what is walked by this kind." .
 
-execution:CommittedStepGraph a owl:Class ; rdfs:subClassOf orexis:BeliefGraph ; rdfs:label "Committed step graph" ;
+execution:CommittedStepGraph a owl:Class ; rdfs:subClassOf orexis:ForecastGraph ; rdfs:label "Committed step graph" ;
     rdfs:comment "ONE STEP AN INTENTION HAS COMMITTED TO, as a belief holding over its landing window: from the step's `execution:notBefore` to its `execution:notAfter` plus the patience (knowledge/domain/execution/committed-step.md). Written by the executor at adoption, one graph per step, carrying the step's filling as the plan states it and the window's two lengths in seconds; closed at the instant the world answers the step or the intention ends, and forgotten once it has ended. A belief and not a reading: no plan forks it, nothing holds the world to it, and a flow reads it at an instant — the dose a bed is committed to is a flow its soil's prediction accumulates, so a later want is searched against a future that contains the earlier plan, and the start and end of the window are happenings of every prediction (a-prediction-accumulates-rates-between-happenings)." .
 
 execution:landsWithinS a owl:DatatypeProperty ; rdfs:domain execution:Step ; rdfs:range xsd:decimal ;

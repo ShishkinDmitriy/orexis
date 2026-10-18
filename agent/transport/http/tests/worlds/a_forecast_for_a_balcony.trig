@@ -21,8 +21,10 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:SelfGraph rdfs:subClassOf orexis:Graph .
-  sensing:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
-  sensing:ForecastGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {

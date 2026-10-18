@@ -10,7 +10,22 @@
  
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
-@@ -66,11 +65,26 @@
+@@ -47,12 +46,12 @@
+   :ontology a orexis:BeliefGraph .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+-  :refill a orexis:Graph .
+   :refill a orexis:BeliefGraph .
+   :refill a orexis:ForecastGraph .
++  :refill a orexis:Graph .
++  :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :refill orexis:arrivedBy orexis:Recorded .
+   :refill orexis:ownedBy :keeper .
+-  :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :scopes a orexis:Graph .
+   :scopes a planning:ScopeGraph .
+   :scopes orexis:arrivedBy orexis:Derived .
+@@ -69,11 +68,26 @@
    ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
    ground:2026-01-01T120000p0000 orexis:hash "sha256:6049dbc777f47880d902c748f455b6e2f0c0df6ee3e7cd098544d26edb928bc8" .

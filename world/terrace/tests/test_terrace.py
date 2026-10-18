@@ -15,7 +15,7 @@ import pytest
 from agent import clock
 from agent.belief.ontology import REVISION_GRAPH
 from agent.execution.ontology import COMMITTED_STEP_GRAPH
-from agent.ontology import BELIEF, SELF_GRAPH
+from agent.ontology import BELIEF, FORECAST as FORECAST_KIND, SELF_GRAPH
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import graphs_of, rows
 from agent.series import HISTORY, Sink, install
@@ -91,7 +91,9 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
         graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph"))}
     assert read == {"SoilMoisture": 0.2, "AirTemperature": 14.5, "AirHumidity": 0.8, "AirPressure": 1012.0,
                     "BatteryVoltage": 3.91}
-    held = rows(runtime.beliefs, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", _own(runtime.beliefs))
+    #  A FORECAST IS A BELIEF TOO (#992), about a stretch ahead: what the agent holds of the PRESENT is the rest.
+    present = [g for g in _own(runtime.beliefs) if g not in graphs_of(runtime.beliefs, FORECAST_KIND)]
+    held = rows(runtime.beliefs, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", present)
     assert [(r["s"].rsplit("#", 1)[-1], r["p"].rsplit("#", 1)[-1], r["o"].rsplit("#", 1)[-1]) for r in held] == \
         [("terrace_bed", "soil", "Dry")], "under the bed's floor, and nothing of the readings themselves"
     assert broker.published == [], "nothing is wanted, so nothing is sent"
@@ -275,12 +277,12 @@ def test_a_forecast_is_fetched_when_due_and_the_soils_next_prediction_carries_it
     assert asked == ["https://api.open-meteo.com/v1/forecast?latitude=50.12&longitude=10.34&hourly=precipitation"
                      "&timezone=GMT&forecast_days=2"]
     hours = rows(store, "SELECT ?v WHERE { ?o sosa:madeBySensor $s ; sosa:hasSimpleResult ?v } ORDER BY ?v",
-                 graphs_of(store, "http://example.org/orexis/sensing#ForecastGraph"), s=FORECAST_SENSOR)
+                 graphs_of(store, "http://example.org/orexis#ForecastGraph"), s=FORECAST_SENSOR)
     assert sorted(float(r["v"]) for r in hours) == [0.0, 0.0, 10.0]
     runtime.deliver((0, "sensors/moisture_sensor_terrace/reading"), MESSAGE, NOW)
     runtime.run(passes=1, poll_s=0)
     predicted = [float(r["v"]) for r in rows(
-        store, "SELECT ?v ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PredictionGraph ; "
+        store, "SELECT ?v ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:ForecastGraph ; "
                "dcterms:temporal/orexis:start ?s } GRAPH ?g { ?o sosa:observedProperty <http://example.org/orexis/climate#SoilMoisture> ; "
                "sosa:hasSimpleResult ?v } } ORDER BY ?s", (),)]
     assert predicted[0] < 0.25 and any(0.25 <= v <= 0.60 for v in predicted[1:]), predicted

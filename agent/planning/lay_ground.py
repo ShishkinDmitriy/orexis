@@ -1,7 +1,7 @@
 """Laying the ground worlds: what the agent's own knowledge comes to over each period, one
 graph per period, in the store a pass stands in.
 
-**A PREDICTION IS AN ACTION NOBODY TAKES.** What it makes true is its graph's own contents —
+**A FORECAST IS AN ACTION NOBODY TAKES.** What it makes true is its graph's own contents —
 concrete, because a prediction is a value at an instant — and what it takes away is whatever stood
 under the same KEY: every triple of the ground whose subject and predicate some triple of the
 prediction has, as PDDL assigns a fluent (#988). A prediction carries no text saying what it
@@ -85,7 +85,7 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent.belief.transition import run, transitions
-from agent.ontology import BELIEF, DERIVED, KNOWN, OREXIS, PREDICTION
+from agent.ontology import BELIEF, DERIVED, KNOWN, OREXIS
 from agent.hash_named_graph import digest_of, hash_named_graph
 from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, clear_graph, revisions_of, forget_graph,
                          graphs_of, instant, quads, rows, update)
@@ -99,51 +99,53 @@ _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 log = logging.getLogger("lay_ground")
 
 
-def _foreseen(store: ox.Store, now: datetime) -> list[tuple[datetime, str, bool]]:
-    """Every boundary ahead of `now` this store holds — the instant, the graph laid there and whether
-    it is a prediction — earliest first: each prediction's start, and the start of every belief whose
-    changeable part was cut (`_split`), the part laid being the changeable graph.
+def _foreseen(store: ox.Store, now: datetime) -> list[tuple[datetime, str, str]]:
+    """Every boundary ahead of `now` this store holds — the instant, the changeable part laid there and
+    the graph it was cut from — earliest first: the start of every belief whose changeable part was cut
+    (`_split`), a forecast of anyone's among them, since a forecast is a belief holding later (#992).
 
-    BOTH ARE SAID OF THE GRAPH AND NEITHER INSIDE IT: a prediction's contents are what it ADDS,
-    which is what a prediction naturally is — `GRAPH :next_temp { :air :hasTemp 30 }` — and the
-    catalogue says what a graph is, whose it is and when it holds. What it supersedes is read off
-    what it adds: every triple standing under one of its keys, a key being a subject and a
-    predicate, goes when the boundary is laid (`_fork`). Nothing is said about how.
+    BOTH ARE SAID OF THE GRAPH AND NEITHER INSIDE IT: a forecast's contents are what it ADDS, which is
+    what a forecast naturally is — `GRAPH :next_temp { :air :hasTemp 30 }` — and the catalogue says what
+    a graph is, whose it is and when it holds. What it supersedes is read off what it adds: every triple
+    standing under one of its keys, a key being a subject and a predicate, goes when the boundary is
+    laid (`_fork`). Nothing is said about how.
 
-    A BELIEF HOLDING LATER IS LAID THE SAME WAY (#987): a forecast of anyone's — a peer's cell from
-    ten seconds on, a round said to open at one — is a graph the present has not reached, cut whole
-    into its changeable part where some text of the pass reads what it adds, since it then writes it
-    (`_predicted`), and applied where its period begins, superseding by key, as a prediction is. Its
-    END is no boundary: a value stands in a ground until something assigns its key, as a
-    prediction's last stretch stands past the horizon, and what an ending MEANS stays its owner's
-    (#645). One saying nothing the pass reads is cut only where another writer's pattern reaches it,
-    and is otherwise read beside every world at the world's own period, as every remainder is.
+    A BELIEF HOLDING LATER IS LAID WHERE IT BEGINS (#987): a peer's cell from ten seconds on, a round said
+    to open at one, the predictor's own stretch — each a graph the present has not reached, cut whole
+    into its changeable part where some text of the pass or some transition reads what it adds, since it
+    then writes it (`_predicted`), and applied where its period begins, superseding by key. Its END is no
+    boundary: a value stands in a ground until something assigns its key, as a prediction's last stretch
+    stands past the horizon, and what an ending MEANS stays its owner's (#645). One saying nothing the
+    pass reads is cut only where another writer's pattern reaches it, and is otherwise read beside every
+    world at the world's own period, as every remainder is.
 
-    NO HOLDER. One agent, one volume (rule 4), so the store IS the scope and a prediction in it
-    is this agent's by construction.
+    NO HOLDER. One agent, one volume (rule 4), so the store IS the scope and a forecast in it is this
+    agent's to lay by construction.
 
-    A PREDICTION WHOSE KEYS STAND NOWHERE is legal and means it: a prediction of something the
-    world does not yet say at all — a round opening, a claim arriving — adds without superseding.
+    A FORECAST WHOSE KEYS STAND NOWHERE is legal and means it: a prediction of something the world does
+    not yet say at all — a round opening, a claim arriving — adds without superseding.
     """
-    said = """
-SELECT ?prediction ?at WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?prediction a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?at } }
-ORDER BY ?at ?prediction"""
-    ahead = [(datetime.fromisoformat(r["at"]), r["prediction"], True) for r in rows(store, said, ())]
-    ahead += [(datetime.fromisoformat(r["start"]), r["piece"], False)
-              for r in rows(store, _PIECES_AHEAD_Q, (), now=instant(now))]
-    return sorted(ahead)
+    return sorted((datetime.fromisoformat(r["start"]), r["piece"], r["source"])
+                  for r in rows(store, _PIECES_AHEAD_Q, (), now=instant(now)))
 
 
-#  THE CHANGEABLE PART OF EVERY BELIEF THAT BEGINS AFTER `$now`, and when: laid where its period begins,
-#  and in no ground before it.
+#  THE CHANGEABLE PART OF EVERY BELIEF THAT BEGINS AFTER `$now`, the graph it was cut from and when: laid
+#  where its period begins, and in no ground before it.
 _PIECES_AHEAD_Q = """
-SELECT ?piece ?start WHERE {
+SELECT ?piece ?source ?start WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
                ?source dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
 ORDER BY ?start ?piece"""
+
+#  THE AGENT'S OWN FORECASTS: recorded — the predictor's stretches, derived from the percept each foresees
+#  from, and the executor's committed steps. Nothing transitioned on one when it was written — a recorded
+#  graph triggers none in the belief base (#947) — so the ground it is laid into runs them there (#944);
+#  and none is the present's, whatever its period, since what it foresees of now the percept states and a
+#  step committed to is no fact of the world.
+_FORESEEN_BY_ME_Q = """
+SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                               ?g a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded } }"""
 
 
 def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
@@ -182,14 +184,19 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     among them — stays where the derivation reads it.
     """
 
-    _split(store, actions, now, within)
+    #  WHAT A BELIEF AHEAD IS LAID FOR: some text of the pass reads it, or some transition does, since a
+    #  ground runs the transitions a predicted observation triggers and they read the number (#992).
+    gate = None if within is None else _gate(store, within)
+    _split(store, actions, now, gate)
     ahead = _foreseen(store, now)
     here = _present(store, now)
+    pieces = {source: piece for _, piece, source in ahead}
+    foreseen = {r["g"] for r in rows(store, _FORESEEN_BY_ME_Q, ())} & set(pieces)
     #  THE TRANSITIONS A PREDICTED OBSERVATION TRIGGERS, and the agent's own state they read and change
-    #  as the grounds are laid, from the present's: asked only where something is predicted. A belief
-    #  laid ahead triggers none: it triggered them when it arrived, and what they made of it holds over
-    #  its period and is laid beside it.
-    rules = transitions(store) if any(predicted for _, _, predicted in ahead) else []
+    #  as the grounds are laid, from the present's: asked only where the predictor's own forecast is laid.
+    #  A belief received and laid ahead triggers none: it triggered them when it arrived, and what they
+    #  made of it holds over its period and is laid beside it.
+    rules = transitions(store) if foreseen else []
     own = _own_state(store) if rules else None
     stated = _whole(store, graphs_of(store, BELIEF, common=True)) if rules else []
     made, marks = [here], _marked(store, here, within)
@@ -197,27 +204,24 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     landing = {at for at in landings if at > now}
     for at, group in _by_instant(ahead, landing):
         if at <= now:
-            continue                    # a prediction already reached is the present's, not ahead
+            continue                    # a boundary already reached is the present's, not ahead
         #  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE. A boundary is an instant,
-        #  not a prediction: two flows that both start at one o'clock describe ONE world, and
-        #  forking once per prediction made two grounds with the same name and a period from the
+        #  not a forecast: two flows that both start at one o'clock describe ONE world, and
+        #  forking once per forecast made two grounds with the same name and a period from the
         #  instant to itself — which holds at no instant at all, so a reader standing after it
         #  was handed NO ground and the agent went blind past the boundary. Each retract is
         #  read against the ground standing BEFORE the instant, so they supersede in parallel
         #  rather than one seeing another's work.
-        added, predictions = [], [graph for graph, predicted in group if predicted]
-        for prediction in predictions:
-            for graph in (prediction, *revisions_of(store, prediction)):
-                added += list(_triples(store, graph))       # the predicted reading, and what was concluded of it
-        for piece in (graph for graph, predicted in group if not predicted):
-            added += list(_triples(store, piece))           # what can change of a belief beginning here
+        added = [t for piece, _ in group for t in _triples(store, piece)]     # what can change of what begins here
+        arrivals = [[piece, *(pieces[r] for r in revisions_of(store, source) if r in pieces)]
+                    for piece, source in group if source in foreseen]        # the predicted reading, with what was concluded of it
         if not added and at not in landing:
-            #  A prediction that changes nothing is not a period — an early-out, not a guard:
+            #  A forecast that changes nothing is not a period — an early-out, not a guard:
             #  the hash below reaches the same answer, having laid the graph first.
             continue
         there = _fork(store, here, _name(at), added)
-        if rules and predictions:
-            _transitioned(store, there, predictions, rules, own, stated)
+        if rules and arrivals:
+            _transitioned(store, there, arrivals, rules, own, stated)
         mark = _marked(store, there, within)
         if mark == marks and at not in landing:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
@@ -268,21 +272,22 @@ def _own_state(store: ox.Store) -> str:
     return _OWN
 
 
-def _transitioned(store: ox.Store, ground: str, arrivals: list[str], rules, own: str, stated: list[str]) -> None:
-    """Every transition each of `arrivals` triggers, applied in `ground` as it is laid (#944).
+def _transitioned(store: ox.Store, ground: str, arrivals: list[list[str]], rules, own: str, stated: list[str]) -> None:
+    """Every transition each of `arrivals` triggers, applied in `ground` as it is laid (#944) — each
+    arrival the changeable parts of a predicted observation and of what the rules concluded of it.
 
     A PREDICTED OBSERVATION IS AN ARRIVAL THERE, as a received one is in the present: each triggers
-    every transition once, in the order the predictions came, rule by rule through belief's machine,
+    every transition once, in the order the forecasts came, rule by rule through belief's machine,
     reading itself with its revisions, the common beliefs and the agent's own state as the ground before
     left it — and nothing else — so a bed believed dry and resting at 0.3001 is foreseen dry, held by the
     margin as the present holds it. Each rule is the engine's own update, run twice over the same reads:
     `WITH` the ground, which no rule reads, and then `WITH` the working state, so what it deletes is
     taken out of both and what it inserts put into both, and the next rule reads the state this one
     left (#953). The runner prepares the target, as every runner does: here it is the ground being
-    laid, and the present is never written to. No budget is spent: a ground holds what its predictions
+    laid, and the present is never written to. No budget is spent: a ground holds what its forecasts
     make of it, whole, or it is no ground."""
     for arrival in arrivals:
-        reads = [arrival, *revisions_of(store, arrival), *stated, own]
+        reads = [*arrival, *stated, own]
         for rule in (rule for order in rules for rule in order):
             run(store, [rule], ground, reads)
             run(store, [rule], own, reads)
@@ -303,9 +308,12 @@ def _present(store: ox.Store, now: datetime) -> str:
     #  kind cut here, and crosses into no ground (#944); what the ground holds of it is the subject belief.
     #  AND NOTHING THAT BEGINS LATER (#987): a belief holding from an instant ahead is laid where it begins,
     #  and the present held it as if it held now — a peer's cell from ten seconds on stood under the van today.
+    #  NOR THE PREDICTOR'S OWN FORECAST, whatever its period (#992): the stretch standing over now foresees
+    #  what the percept it was made from states, and the present is where no prediction has applied (#916).
     ahead = {r["piece"] for r in rows(store, _PIECES_AHEAD_Q, (), now=instant(now))}
+    foreseen = {r["g"] for r in rows(store, _FORESEEN_BY_ME_Q, ())}
     for source in graphs_of(store, CHANGEABLE_GRAPH):
-        if source in ahead:
+        if source in ahead or _source_of(store, source) in foreseen:
             continue
         update(store, f"INSERT {{ GRAPH <{name}> {{ ?s ?p ?o }} }} "
                        f"WHERE {{ GRAPH <{source}> {{ ?s ?p ?o }} }}")
@@ -328,7 +336,7 @@ SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
   ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }"""
 
 
-def _split(store: ox.Store, actions, at: datetime, within: frozenset | None = None) -> list[str]:
+def _split(store: ox.Store, actions, at: datetime, gate: frozenset | None = None) -> list[str]:
     """Cut out of every graph a search reads beside its worlds what the search can change, each into a
     `planning:ChangeableGraph` derived from it — what `actions`' effects (every action's where None)
     and the transitions can write (`footprint.changeable`) — leaving the rest where it was. The
@@ -342,7 +350,7 @@ def _split(store: ox.Store, actions, at: datetime, within: frozenset | None = No
     cat = catalogue_of(store)
     patterns = footprint.changeable(store, actions, at)
     if patterns is not footprint.ANYTHING:
-        patterns = sorted(set(patterns) | _predicted(store, at, within), key=lambda p: (p[0], p[1] or ""))
+        patterns = sorted(set(patterns) | _predicted(store, at, gate), key=lambda p: (p[0], p[1] or ""))
     by = _signature(patterns)
     pieces: dict[str, list[str]] = {}
     for r in rows(store, _CUT_Q, ()):
@@ -378,8 +386,8 @@ def _split(store: ox.Store, actions, at: datetime, within: frozenset | None = No
         add_quads(store, [ox.Quad(ox.NamedNode(piece), ox.NamedNode(_PROV + "wasDerivedFrom"),
                                   ox.NamedNode(graph), ox.NamedNode(cat))])
         made.append(piece)
-    log.debug("%d changeable graph(s) cut over %s pattern(s)", len(made),
-              "every" if patterns is footprint.ANYTHING else len(patterns))
+    log.debug("%d changeable graph(s) cut over %s pattern(s), %d standing", len(made),
+              "every" if patterns is footprint.ANYTHING else len(patterns), len(standing))
     return made
 
 
@@ -389,28 +397,47 @@ def _signature(patterns) -> str:
     return "sha256:" + hashlib.sha256(text.encode()).hexdigest()
 
 
-def _predicted(store: ox.Store, now: datetime, within: frozenset | None = None) -> set:
-    """What the predictions write, as patterns, and what every belief beginning after `now` that some
-    text of the pass reads does: each predicate one adds, or what was concluded of it, a type with its
-    class. A prediction is a writer too: its retraction takes out of the ground what stands where it
-    adds, so a belief in that place has to be in the ground for it to go. A belief holding later is laid
-    as a prediction is (#987), so it is a writer the same way — the butt a forecast says will hold water
-    at half past supersedes the empty butt the present holds, and the two must meet in one ground to do
-    so. ONE NOTHING READS IS NOT: `within` is what the pass's texts read, and a fact no text reads is not
-    a place the search can be in (cone), so a belief ahead saying nothing read — a committed step of the
-    agent's own, whose window and filling no met-test asks — writes nothing a ground holds and lays no
-    ground; laid, every later step of a plan was a boundary, and a dispatcher's pass laid five grounds for
-    three (measured). None reads anything, and lays every belief ahead."""
+def _predicted(store: ox.Store, now: datetime, gate: frozenset | None = None) -> set:
+    """What every belief beginning after `now` that something reads writes, as patterns: each predicate
+    it adds, or what was concluded of it, a type with its class. A forecast is a writer: its retraction
+    takes out of the ground what stands where it adds, so a belief in that place has to be in the ground
+    for it to go — the butt a forecast says will hold water at half past supersedes the empty butt the
+    present holds, and the two must meet in one ground to do so (#987, #992). ONE NOTHING READS IS NOT:
+    `gate` is what the pass's texts and the transitions read, and a fact none reads is not a place the
+    search can be in (cone), so a belief ahead saying nothing read — a committed step of the agent's own,
+    whose window and filling no met-test asks — writes nothing a ground holds and lays no ground; laid,
+    every later step of a plan was a boundary, and a dispatcher's pass laid five grounds for three
+    (measured). None reads anything, and lays every belief ahead."""
+    #  A GRAPH IS READ WITH ITS REVISIONS AND AS IT STOOD BEFORE THE CUT (`_whole`): a copy the refresh
+    #  kept holds its content in the changeable part the last pass cut, and read bare it said nothing.
     ahead = [r["g"] for r in rows(store, _BELIEFS_AHEAD_Q, (), now=instant(now))]
-    if within is not None:
-        ahead = [g for g in ahead if _reads_any(store, [g, *revisions_of(store, g)], within)]
-    graphs = [*graphs_of(store, PREDICTION), *ahead]
+    whole = {g: _whole(store, [g, *revisions_of(store, g)]) for g in ahead}
+    read = ahead if gate is None else [g for g in ahead if _reads_any(store, whole[g], gate)]
+    log.debug("%d belief(s) ahead, %d read by something: %s", len(ahead), len(read),
+              ", ".join(g.rsplit("/", 1)[-1] for g in read))
     out = set()
-    for graph in (*graphs, *revisions_of(store, *graphs)):
+    for graph in dict.fromkeys(g for a in read for g in whole[a]):
         for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph)):
             typed = q.predicate.value == _RDF_TYPE and isinstance(q.object, ox.NamedNode)
             out.add((q.predicate.value, f"<{q.object.value}>" if typed else None))
     return out
+
+
+def _gate(store: ox.Store, within: frozenset) -> frozenset | None:
+    """What a belief ahead is laid for being read by: `within`, what the pass's texts read, and what every
+    transition's WHERE reads, since the ground runs them on a predicted observation and they read its
+    number where no met-test does — None, everything, where a transition cannot be read."""
+    read = footprint.read_by_transitions(store)
+    return None if read is footprint.ANYTHING else within | read
+
+
+_SOURCE_Q = "SELECT ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $piece prov:wasDerivedFrom ?source } }"
+
+
+def _source_of(store: ox.Store, piece: str) -> str | None:
+    """The graph a changeable part was cut from."""
+    found = rows(store, _SOURCE_Q, (), piece=piece)
+    return found[0]["source"] if found else None
 
 
 def _reads_any(store: ox.Store, graphs, within: frozenset) -> bool:
@@ -464,13 +491,13 @@ def _marked(store: ox.Store, ground: str, within: frozenset | None) -> str:
     return digest_of(store, ground)
 
 
-def _by_instant(ahead, landings=()) -> list[tuple[datetime, list[tuple[str, bool]]]]:
-    """What is laid, grouped by the instant it applies, earliest first — one entry per BOUNDARY
-    rather than one per graph, each graph with whether it is a prediction — and every landing a
+def _by_instant(ahead, landings=()) -> list[tuple[datetime, list[tuple[str, str]]]]:
+    """What is laid, grouped by the instant it applies, earliest first — one entry per BOUNDARY rather
+    than one per graph, each changeable part with the graph it was cut from — and every landing a
     boundary too, with what applies there or nothing."""
     out: dict = {at: [] for at in landings}
-    for at, graph, predicted in ahead:
-        out.setdefault(at, []).append((graph, predicted))
+    for at, piece, source in ahead:
+        out.setdefault(at, []).append((piece, source))
     return sorted(out.items())
 
 

@@ -31,11 +31,10 @@ from agent.store import document, rows
 
 SENSING = "http://example.org/orexis/sensing#"
 
-#  THE TERMS CODE READS: the graph a percept is kept in, and a forecast's, the two limits
+#  THE TERMS CODE READS: the graph a percept is kept in — a forecast's is the kernel's, `orexis:ForecastGraph` (#992) — the two limits
 #  an observer role states, and the codec that ships. Every other word of this layer is spoken by a
 #  query text, under its prefix, and needs no constant here.
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
-FORECAST_GRAPH = SENSING + "ForecastGraph"
 SILENT_AFTER_TERM = SENSING + "silentAfter"      # an observer role's limits: cadences, and readings
 STUCK_AFTER_TERM = SENSING + "stuckAfter"
 JSON_CODEC = SENSING + "Json"

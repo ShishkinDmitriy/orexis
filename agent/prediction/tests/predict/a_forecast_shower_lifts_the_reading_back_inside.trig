@@ -30,7 +30,8 @@
 GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
 }
 

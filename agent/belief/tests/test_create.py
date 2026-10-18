@@ -8,11 +8,11 @@ import pyoxigraph as ox
 
 from agent.belief.create import create
 from agent.belief.deliberator import Deliberator
-from agent.ontology import BELIEF, CATALOGUE_GRAPH, PREDICTION
+from agent.ontology import BELIEF, CATALOGUE_GRAPH
 from agent.store import update
 
 
-def test_its_part_revises_beliefs_and_predictions_as_they_are_written_and_says_so(stand_in_runtime):
+def test_its_part_revises_beliefs_as_they_are_written_and_says_so(stand_in_runtime):
     store = ox.Store()
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} }}")
     runtime = stand_in_runtime(store, "urn:test:me", None)
@@ -21,10 +21,10 @@ def test_its_part_revises_beliefs_and_predictions_as_they_are_written_and_says_s
     heard = []
     part.deliberator.revised.connect(lambda revised: heard.extend(revised.graphs))
     part.start(runtime)
-    assert [kind for kind, _ in runtime.heard] == [BELIEF, PREDICTION], \
-        "an observation is no kind of belief's: sensing hands its own in (#944)"
+    assert [kind for kind, _ in runtime.heard] == [BELIEF], \
+        "an observation is no kind of belief's: sensing hands its own in (#944); a forecast is a belief (#992)"
     assert all(handler("urn:test:nothing") == [] for _, handler in runtime.heard)
-    assert heard == ["urn:test:nothing"] * 2, "each pass says what it revised"
+    assert heard == ["urn:test:nothing"], "each pass says what it revised"
 
 
 def test_a_graph_written_is_revised_beside_the_world_alone(stand_in_runtime):

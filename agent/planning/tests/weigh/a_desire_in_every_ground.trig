@@ -57,7 +57,10 @@ GRAPH :catalogue {
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :refill a orexis:Graph .
-  :refill a orexis:PredictionGraph .
+  :refill a orexis:BeliefGraph .
+  :refill a orexis:ForecastGraph .
+  :refill orexis:arrivedBy orexis:Recorded .
+  :refill orexis:ownedBy :keeper .
   :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .

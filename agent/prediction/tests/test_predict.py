@@ -27,7 +27,7 @@ PROBE = "http://example.org/test#probe"
 #  key's, written by an earlier walk and read by the probe's flow (#996), is none of them.
 _WINDOWS_Q = """
 SELECT ?g ?start ?end WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PredictionGraph ; dcterms:temporal ?p .
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:ForecastGraph ; dcterms:temporal ?p .
                ?p orexis:start ?start . OPTIONAL { ?p orexis:end ?end } }
   GRAPH ?g { ?o sosa:madeBySensor $sensor } }
 ORDER BY ?start"""

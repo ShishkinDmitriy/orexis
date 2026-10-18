@@ -162,7 +162,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A package's words are the package's, however long the kernel spoke them** — `market:dischargedAt`
   is the market's, and the kernel names no word of it (#635).
 - **A term belongs to the package that owns the concept, and the kernel keeps what packages meet
-  at** — `orexis:Action`, `orexis:takes` and `orexis:PredictionGraph` are the kernel's; one word is
+  at** — `orexis:Action`, `orexis:takes` and `orexis:ForecastGraph` are the kernel's; one word is
   one concept, so `planning:spent` and `planning:costs` are two.
 - **The kernel speaks no SOSA or SSN, and a word two packages seem to meet at is lowered only once
   the second is shown to need it** — the margin went into the kernel so prediction could read it,
@@ -278,7 +278,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A long-lived object and situational data about it is one shape three times, and only
   testimony is kept** — the observation is stored because it IS the premise; a judgment and a step
   are conclusions whose premises are stored.
-- **A synchronous twin of a pass is a second pass, and it flows** — one pass the runtime and a
+- **A synchronous twin of a pass is a second pass, and it drifts** — one pass the runtime and a
   test both call (the executor's `tick` and `drain`) is what stops that.
 - **A pass begins in one place, and judging happens once in it** — `Planner.plan` derives every
   pass, so no row goes stale for want of a re-judging.
@@ -438,6 +438,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   ground before it; its end lays none** — a forecast of anyone's writes what it adds, so it is cut
   whole and supersedes by key in the ground of its instant, where laid into the present a peer's cell
   from ten seconds on stood under the van today, and a value stands until its key is assigned (#987).
+- **A forecast is one kernel kind, `orexis:ForecastGraph`, a belief, and who said it is provenance** —
+  the predictor's stretch, sensing's hour and the executor's committed step held one shape under three
+  kinds, told apart by one reader; now each is laid where it begins if something reads it, a text of the
+  pass or a transition, the agent's own, recorded, runs the transitions in the ground it is laid into
+  and is never the present's, and each author replaces its own by its provenance (#992, forecast).
 - **A world speaks for what can change of its state's revisions**, and **the search runs no rules, so a
   state's revisions travel with it and an effect speaks the state a transition concludes** — a revision is of
   its source's kind and a flow's prediction is neither, which keeps the foreseen reading out of the
@@ -482,7 +487,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **Two intentions walked side by side keep no order between them**, so a joint plan leaves a walking
   intention standing only where it BEGINS with that intention's untaken steps — the same steps later
   in the plan were found safe in an order nothing would walk them in (#905).
-- **A committed step is a belief over its landing window, and a flow reads it there** — the
+- **A committed step is a forecast over its landing window, and a flow reads it there** — the
   executor writes each adopted step as an `execution:CommittedStepGraph` holding from its
   `notBefore` to its `landsAt` plus the patience, closes it when answered or ended, and prediction
   hears every belief and rewrites every key for one that is no observation; a later want is then

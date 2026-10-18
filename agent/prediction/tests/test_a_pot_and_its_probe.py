@@ -33,7 +33,7 @@ OPERATING, SURVIVAL = (0.1, 0.3), (0.02, 0.45)
 
 _NUMBER_Q = "SELECT ?v WHERE { ?o sosa:hasSimpleResult ?v }"
 _PREDICTIONS_Q = """
-SELECT ?g ?start WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?start } }
+SELECT ?g ?start WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:ForecastGraph ; dcterms:temporal/orexis:start ?start } }
 ORDER BY ?start"""
 
 

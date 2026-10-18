@@ -77,7 +77,7 @@ import logging
 import pyoxigraph as ox
 
 from agent.belief.ontology import REVISION_GRAPH, RULES_GRAPH
-from agent.ontology import ACTION, BELIEF, FLOW_GRAPH, PREDICTION, RECORD
+from agent.ontology import ACTION, BELIEF, FLOW_GRAPH, RECORD
 from agent.store import Raw, bind, catalogue_of, forget_graph, graphs_of, revisions_of, rows, update
 
 from .ontology import CONSTRAINT_GRAPH, DERIVATION_GRAPH, DESIRE, SCOPE_GRAPH, SHAPES, WANT
@@ -203,7 +203,7 @@ def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset
     #  THE AGENT'S OWN, EACH WITH ITS REVISIONS: what everyone reads is every scope's and is asked nothing,
     #  and a revision is asked with its source, not on its own.
     skip = {*graphs_of(beliefs, BELIEF, common=True), *graphs_of(beliefs, REVISION_GRAPH)}
-    for graph in (g for g in graphs_of(beliefs, BELIEF, PREDICTION) if g not in skip):
+    for graph in (g for g in graphs_of(beliefs, BELIEF) if g not in skip):
         group = [graph, *revisions_of(beliefs, graph)]
         named: set[str] = set()
         for g in group:
@@ -223,7 +223,7 @@ def _of_another_scope(beliefs: ox.Store, scope: str | None, scopes) -> frozenset
 #  actions it admits and takes, the flows and the derivations a ground and a scope are read by, the
 #  desires, wants, shapes and constraints a world is judged by, and the rules graphs, since a ground
 #  laid here runs the transitions a predicted observation triggers (`lay_ground`, #944).
-CROSSING = (PREDICTION, DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH, RULES_GRAPH,
+CROSSING = (DESIRE, WANT, RECORD, BELIEF, SCOPE_GRAPH, RULES_GRAPH,
             ACTION, FLOW_GRAPH, DERIVATION_GRAPH, SHAPES, CONSTRAINT_GRAPH)
 
 #  EVERY ROW'S HASH, and every changeable graph with the graph it was cut from.

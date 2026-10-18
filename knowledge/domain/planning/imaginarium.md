@@ -38,7 +38,7 @@ refreshes it:
   [changeable](/domain/planning/changeable.md) graph the present is laid from, the rest left to be read
   beside every world; then it lays a `planning:GroundGraph` per period: the present, and a ground at
   every instant a [prediction](/domain/prediction/prediction.md) applies or a belief the present has not
-  reached begins — a [forecast](/domain/sensing/forecast.md) of anyone's, laid whole where its period
+  reached begins — a [forecast](/domain/kernel/forecast.md) of anyone's, laid whole where its period
   begins and in no ground before it (#987) — each forked from the ground before, superseding by key,
   with the [transitions](/domain/belief/transition.md) a predicted observation triggers run there, which
   is what the rules graphs cross for. A ground that hashes like the one before is no period and is

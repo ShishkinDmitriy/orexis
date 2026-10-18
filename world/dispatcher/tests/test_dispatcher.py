@@ -38,7 +38,7 @@ that no cell holds two vans (#567). What this world is held to is what was MEASU
   and the walking want minted again where its drive in flight lands, reopening itself; it turns van A
   back after that drive, never cancelled, and parcel A is delivered round the peer. A peer's van on a
   cell the plan never enters is asked about and reopens nothing.
-- A VAN WAITS FOR A PEER'S ROUTE LAID AS A PREDICTION (#920): the planning package's wait, which no
+- A VAN WAITS FOR A PEER'S ROUTE LAID AS A FORECAST (#920): the planning package's wait, which no
   document here names, lands where the next ground begins, so van A waits a cell short while van B
   crosses ahead rather than drive back and in again, and waits out van B standing in a corridor in
   one wait for the whole stretch, where the courier's own wait, a drive's band long, could not. With
@@ -58,7 +58,7 @@ from agent import clock
 from agent.belief.ontology import REVISION_GRAPH
 from agent.execution.ontology import COMMITTED_STEP_GRAPH
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, OREXIS, PREDICTION, SELF_GRAPH
+from agent.ontology import BELIEF, OREXIS, FORECAST, SELF_GRAPH
 from agent.planning.planner import Planner
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import catalogue_of, entry, graphs_of, rows, update
@@ -1016,7 +1016,7 @@ def _lay_route(beliefs, route) -> None:
         graph = f"http://example.org/orexis/graph/route/van_b/{n}"
         update(beliefs, f"""INSERT DATA {{
   GRAPH <{graph}> {{ <{D}van_b> <http://example.org/orexis/courier#at> <{D}{cell}> . }}
-  {entry(beliefs, graph, PREDICTION, OREXIS + "Received", D + "dispatcher", start=NOW + timedelta(seconds=offset))}
+  {entry(beliefs, graph, FORECAST, OREXIS + "Received", D + "dispatcher", start=NOW + timedelta(seconds=offset))}
   GRAPH <{catalogue_of(beliefs)}> {{ <{graph}> orexis:retracts "{_ROUTE_RETRACTS}" }} }}""")
         hash_named_graph(beliefs, graph)
 

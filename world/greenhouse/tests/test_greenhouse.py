@@ -108,7 +108,7 @@ def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
 
 _PREDICTED_Q = """
 SELECT ?start ?value WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?start }
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:ForecastGraph ; dcterms:temporal/orexis:start ?start }
   GRAPH ?g { ?o sosa:observedProperty <http://example.org/orexis/climate#SoilMoisture> ; sosa:hasSimpleResult ?value } }
 ORDER BY ?start"""
 

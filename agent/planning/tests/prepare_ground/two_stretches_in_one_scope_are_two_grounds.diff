@@ -1,0 +1,24 @@
+--- case
++++ expected
+@@ -36,17 +36,17 @@
+ GRAPH :catalogue {
+   :catalogue a orexis:CatalogueGraph .
+   :catalogue a orexis:Graph .
+-  :dip a orexis:Graph .
+   :dip a orexis:BeliefGraph .
+   :dip a orexis:ForecastGraph .
++  :dip a orexis:Graph .
++  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+   :dip orexis:arrivedBy orexis:Recorded .
+-  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+   :dip orexis:ownedBy :keeper .
+-  :heat a orexis:Graph .
+   :heat a orexis:BeliefGraph .
+   :heat a orexis:ForecastGraph .
++  :heat a orexis:Graph .
++  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :heat orexis:arrivedBy orexis:Recorded .
+-  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :heat orexis:ownedBy :keeper .
+   :ontology a orexis:BeliefGraph .
+   :ontology a orexis:Graph .

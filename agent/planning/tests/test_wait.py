@@ -24,7 +24,7 @@ import pytest
 
 from agent import clock
 from agent.execution.executor import Executor
-from agent.ontology import BELIEF, OREXIS, PREDICTION
+from agent.ontology import BELIEF, OREXIS, FORECAST
 from agent.planning.planner import Planner
 from agent.runtime import boot
 from agent.store import catalogue_of, entry, rows, update
@@ -65,12 +65,12 @@ _DESIRES = _HEAD + """<> a planning:DesireGraph ; orexis:ownedBy :keeper .
     sh:property [ planning:about :level ; sh:path :level ; sh:minInclusive 10 ] .
 """
 #  WHAT IS FORESEEN half a minute on, as (graph, what it adds) — what it supersedes is whatever
-#  stands under the same subject and predicate, read off the adds (#988). Laid as a prediction of the
-#  agent's own or as a belief it received holding from then, a forecast of anyone's (#987): the search
-#  waits for either the same way, since a ground is laid where each begins.
+#  stands under the same subject and predicate, read off the adds (#988). Laid as a forecast, the one
+#  kind anyone's word about a stretch ahead is kept in (#992), or as a plain belief holding from then
+#  (#987): the search waits for either the same way, since a ground is laid where each begins.
 RAIN = ("rain", f"<{T}butt> <{T}holds> 1 .")
 REFILL = ("refill", f"<{T}tank1> <{T}level> 12 .")
-FORESEEN = pytest.mark.parametrize("kind", [PREDICTION, BELIEF], ids=["predicted", "received"])
+FORESEEN = pytest.mark.parametrize("kind", [FORECAST, BELIEF], ids=["forecast", "belief"])
 
 _STEPS_Q = """
 SELECT ?a ?nb ?la ?spent WHERE { GRAPH ?p { ?p a planning:Plan ; planning:spent ?spent .
@@ -86,7 +86,7 @@ SELECT ?g WHERE { GRAPH ?p { ?step a execution:Step ; execution:adds|execution:r
 _OUTCOMES_Q = "SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }"
 
 
-def _tank(tmp_path, butt: int, *foreseen, kind: str = PREDICTION):
+def _tank(tmp_path, butt: int, *foreseen, kind: str = FORECAST):
     """The tank's world booted as the keeper, with what is `foreseen` laid half a minute on, as a
     graph of `kind` — a prediction, or a belief received."""
     (tmp_path / "beliefs").mkdir()

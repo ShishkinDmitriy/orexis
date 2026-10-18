@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -21,7 +21,6 @@
+@@ -22,38 +22,78 @@
  }
  
  GRAPH :sensed {
@@ -8,7 +8,43 @@
  }
  
  GRAPH :dip {
-@@ -49,6 +48,33 @@
+-  :tank1 :level 5 .
+ }
+ 
+ GRAPH :refill {
+-  :tank1 :level 20 .
+ }
+ 
+ GRAPH :catalogue {
+   :catalogue a orexis:CatalogueGraph .
+   :catalogue a orexis:Graph .
+-  :dip a orexis:Graph .
+   :dip a orexis:BeliefGraph .
+   :dip a orexis:ForecastGraph .
++  :dip a orexis:Graph .
++  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+   :dip orexis:arrivedBy orexis:Recorded .
+-  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+   :dip orexis:ownedBy :keeper .
++  :dip planning:cutBy "sha256:79a8c5917d7f90336d9f1fb7bd315a20df72059cf7cf98de56f00fff05dac6e0" .
++  :dip.changeable a planning:ChangeableGraph .
++  :dip.changeable orexis:arrivedBy orexis:Derived .
++  :dip.changeable prov:wasDerivedFrom :dip .
+   :ontology a orexis:BeliefGraph .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+-  :refill a orexis:Graph .
+   :refill a orexis:BeliefGraph .
+   :refill a orexis:ForecastGraph .
++  :refill a orexis:Graph .
++  :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :refill orexis:arrivedBy orexis:Recorded .
+-  :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :refill orexis:ownedBy :keeper .
++  :refill planning:cutBy "sha256:79a8c5917d7f90336d9f1fb7bd315a20df72059cf7cf98de56f00fff05dac6e0" .
++  :refill.changeable a planning:ChangeableGraph .
++  :refill.changeable orexis:arrivedBy orexis:Derived .
++  :refill.changeable prov:wasDerivedFrom :refill .
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .
@@ -36,6 +72,14 @@
 +}
 +
 +GRAPH ground:2026-01-01T130000p0000 {
++  :tank1 :level 20 .
++}
++
++GRAPH :dip.changeable {
++  :tank1 :level 5 .
++}
++
++GRAPH :refill.changeable {
 +  :tank1 :level 20 .
 +}
 +

@@ -43,7 +43,7 @@ graph it reads does not already hold, and a statement it reads holds what it say
 # What it concludes, and what it leaves
 
 A belief, today. Where a peer says its van will be over the periods it was asked about, the
-extraction concludes a [forecast](/domain/sensing/forecast.md): a belief holding over the stretch it is
+extraction concludes a [forecast](/domain/kernel/forecast.md): a belief holding over the stretch it is
 about, which the planner lays into the ground of that period, built with the first world that asks one
 (#568, #923).
 Nothing is believed of a statement no extraction concludes of: a peer saying the agent's bed is dry

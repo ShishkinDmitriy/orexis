@@ -28,7 +28,8 @@
 
 GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -54,14 +55,18 @@ GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
   :dip a orexis:Graph .
-  :dip a orexis:PredictionGraph .
+  :dip a orexis:BeliefGraph .
+  :dip a orexis:ForecastGraph .
+  :dip orexis:arrivedBy orexis:Recorded .
   :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
   :dip orexis:ownedBy :keeper .
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
   :refill a orexis:Graph .
-  :refill a orexis:PredictionGraph .
+  :refill a orexis:BeliefGraph .
+  :refill a orexis:ForecastGraph .
+  :refill orexis:arrivedBy orexis:Recorded .
   :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
   :refill orexis:ownedBy :keeper .
   :sensed a orexis:BeliefGraph .

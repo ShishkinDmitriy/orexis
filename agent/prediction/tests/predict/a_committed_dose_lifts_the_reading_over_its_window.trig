@@ -41,7 +41,8 @@ GRAPH :ontology {
   execution:CommittedStepGraph rdfs:subClassOf orexis:BeliefGraph .
   execution:CommittedStepGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
 }
 
@@ -114,6 +115,7 @@ GRAPH :catalogue {
   :world a orexis:BeliefGraph .
   :world a orexis:Graph .
   committed:plan_dose a execution:CommittedStepGraph .
+  committed:plan_dose a orexis:ForecastGraph .
   committed:plan_dose dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:25:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:05:00+00:00"^^xsd:dateTime ] .
   committed:plan_dose orexis:arrivedBy orexis:Recorded .
   committed:plan_dose orexis:ownedBy :keeper .

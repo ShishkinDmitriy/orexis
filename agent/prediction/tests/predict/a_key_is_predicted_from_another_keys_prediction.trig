@@ -40,7 +40,8 @@
 GRAPH :ontology {
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
 }
 
@@ -146,15 +147,17 @@ GRAPH :catalogue {
   observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
   observed:zamioculcas_moisture orexis:ownedBy :keeper .
   predicted:room_humidity_0 a orexis:Graph .
-  predicted:room_humidity_0 a orexis:PredictionGraph .
+  predicted:room_humidity_0 a orexis:BeliefGraph .
+  predicted:room_humidity_0 a orexis:ForecastGraph .
   predicted:room_humidity_0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
   predicted:room_humidity_0 orexis:arrivedBy orexis:Recorded .
   predicted:room_humidity_0 orexis:ownedBy :keeper .
-  predicted:room_humidity_0 prov:wasDerivedFrom observed:room_humidity .
+  predicted:room_humidity_0 prov:hadPrimarySource observed:room_humidity .
   predicted:room_humidity_1 a orexis:Graph .
-  predicted:room_humidity_1 a orexis:PredictionGraph .
+  predicted:room_humidity_1 a orexis:BeliefGraph .
+  predicted:room_humidity_1 a orexis:ForecastGraph .
   predicted:room_humidity_1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
   predicted:room_humidity_1 orexis:arrivedBy orexis:Recorded .
   predicted:room_humidity_1 orexis:ownedBy :keeper .
-  predicted:room_humidity_1 prov:wasDerivedFrom observed:room_humidity .
+  predicted:room_humidity_1 prov:hadPrimarySource observed:room_humidity .
 }

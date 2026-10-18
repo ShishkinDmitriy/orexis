@@ -43,7 +43,7 @@ one holding only until the next one's instant — a step in the history, not a s
 
 **A SERIES IS A FORECAST, ONE GRAPH PER STRETCH.** A sensor stating where the instants its values
 are for are kept (`reads_series`) is read as a series: each value still ahead is written as its own
-`sosa:Observation` into a graph of its own, `sensing:ForecastGraph`, holding during its stretch —
+`sosa:Observation` into a graph of its own, `orexis:ForecastGraph`, holding during its stretch —
 of what, which property, the number, the instant the forecast was issued, the start of its
 stretch, the sensor — and every forecast graph the sensor wrote before is forgotten first, so the
 next forecast replaces the last. A stretch already over when the forecast arrives is not written.
@@ -74,11 +74,11 @@ import logging
 from datetime import datetime, timedelta
 
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, RECEIVED, local_of
+from agent.ontology import FORECAST, BELIEF, RECEIVED, local_of
 from agent.store import Raw, catalogue_of, end_graph, entry, forget_graph, graphs_of, rows, update
 
 from .cadence import cadence_of, limit_of
-from .ontology import (FORECAST_GRAPH, OBSERVATION_GRAPH, STUCK_AFTER_TERM, forecast_graph, forecast_of,
+from .ontology import (OBSERVATION_GRAPH, STUCK_AFTER_TERM, forecast_graph, forecast_of,
                        percept_graph, percept_of)
 from .pipeline import decode, decode_series, reads_series
 
@@ -110,7 +110,7 @@ _SAID_Q = "SELECT ?p WHERE { GRAPH $cat { $g ?p ?o } } LIMIT 1"
 
 #  THE FORECAST THIS SENSOR GAVE BEFORE: every graph of it, found by its content.
 _FORECAST_Q = """
-SELECT ?g WHERE { GRAPH $cat { ?g a sensing:ForecastGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }"""
+SELECT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }"""
 
 
 def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
@@ -227,7 +227,7 @@ def _forecast(store, me: str, sensor: str, feature: str, observed_property: str,
         update(store, f"""
 INSERT DATA {{
   GRAPH <{graph}> {{ {' . '.join(said)} . }}
-  {entry(store, graph, FORECAST_GRAPH, RECEIVED, me, start=start, end=end)} }}""")
+  {entry(store, graph, FORECAST, RECEIVED, me, start=start, end=end)} }}""")
         hash_named_graph(store, graph)
         written.append(graph)
     log.info("%s: %s of %s forecast for %d stretch(es)%s", local_of(me), local_of(observed_property),
