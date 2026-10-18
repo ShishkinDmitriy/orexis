@@ -1,0 +1,160 @@
+# a_key_is_predicted_from_another_keys_prediction
+#
+# THE SOIL DRIES BY THE AIR, AS THE AGENT ITSELF FORESEES THE AIR (#996). A pot in a room, read at
+# 0.25 and drying eight fractions a day in dry air, less as the air is humid: its drift reads the
+# room's humidity, `sosa:observedProperty :humidity`, at every instant it is asked at. The room has a
+# hygrometer, read at 0.5 at noon, and two predictions of it already written by this agent's walk —
+# the keys are predicted in the order the texts read each other, so the air's stand before the soil
+# is asked — saying 0.5 until one and 0.95 after.
+#
+# - UNTIL A QUARTER PAST the drift reads the hygrometer's PERCEPT, holding then, and the soil dries
+#   four fractions a day; from a quarter past to one it reads the first PREDICTION and dries the same;
+#   the operating floor at 0.1 is met at 12:54.
+# - AT ONE the second prediction begins — a happening, since it is a graph beginning — and the soil
+#   dries 0.4 a day in the humid air: from 0.0833 it meets the survival floor at 0.02 at 16:48.
+# - Three stretches. Read off the percept alone the soil would have frozen at a quarter past; read
+#   off nothing until then it would have met the floor a quarter of an hour late.
+#
+# The air's own predictions stand, derived from the hygrometer's percept and not the probe's.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix predicted: <http://example.org/orexis/graph/predicted/keeper/> .
+@prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
+
+GRAPH :ontology {
+  belief:RevisionGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :hygrometer a sosa:Sensor .
+  :hygrometer sosa:isHostedBy :room .
+  :hygrometer sosa:observes :humidity .
+  :keeper a orexis:Agent .
+  :keeper orexis:actsFor :zamioculcas .
+  :keeper orexis:localId "keeper" .
+  :probe a sosa:Sensor .
+  :probe sosa:isHostedBy :zamioculcas .
+  :probe sosa:observes :moisture .
+  :room a sosa:FeatureOfInterest .
+  :room ssn-system:hasOperatingRange :room.operating .
+  :room.operating a ssn-system:OperatingRange .
+  :room.operating ssn-system:inCondition [ schema:maxValue 0.9 ; schema:minValue 0.0 ; ssn:forProperty :humidity ] .
+  :zamioculcas :driesPerDay 8.0 .
+  :zamioculcas a :Pot .
+  :zamioculcas schema:containedInPlace :room .
+  :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
+  :zamioculcas ssn-system:hasSurvivalRange :zamioculcas.survival .
+  :zamioculcas.operating a ssn-system:OperatingRange .
+  :zamioculcas.operating ssn-system:inCondition [ schema:maxValue 0.3 ; schema:minValue 0.1 ; ssn:forProperty :moisture ] .
+  :zamioculcas.survival a ssn-system:SurvivalRange .
+  :zamioculcas.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
+}
+
+GRAPH :actions {
+  :Drying a prediction:Drift .
+  :Drying prediction:moves :moisture .
+  :Drying prediction:rate """PREFIX : <http://example.org/test#>
+      SELECT ?rate ?until WHERE {
+          $feature :driesPerDay ?perDay ; schema:containedInPlace ?room .
+          ?air sosa:hasFeatureOfInterest ?room ; sosa:observedProperty :humidity ; sosa:hasSimpleResult ?h .
+          BIND(-xsd:double(?perDay) * (1.0 - xsd:double(?h)) / 86400.0 AS ?rate)
+          BIND(0.0 AS ?until)
+      }""" .
+  :Drying rdfs:label "what a pot loses while nobody waters it, less the more humid its room's air" .
+  :Humidifying a prediction:Drift .
+  :Humidifying prediction:moves :humidity .
+  :Humidifying prediction:rate "SELECT ?rate ?until WHERE { BIND(0.4 / 3600.0 AS ?rate) BIND(1.0 AS ?until) }" .
+  :Humidifying rdfs:label "what the room's air gains while the window is shut" .
+}
+
+GRAPH observed:zamioculcas_moisture {
+  :probe.20260101T120000Z a sosa:Observation .
+  :probe.20260101T120000Z prov:wasGeneratedBy :keeper .
+  :probe.20260101T120000Z sosa:hasFeatureOfInterest :zamioculcas .
+  :probe.20260101T120000Z sosa:hasSimpleResult 0.25 .
+  :probe.20260101T120000Z sosa:madeBySensor :probe .
+  :probe.20260101T120000Z sosa:observedProperty :moisture .
+  :probe.20260101T120000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+}
+
+GRAPH observed:room_humidity {
+  :hygrometer.20260101T120000Z a sosa:Observation .
+  :hygrometer.20260101T120000Z prov:wasGeneratedBy :keeper .
+  :hygrometer.20260101T120000Z sosa:hasFeatureOfInterest :room .
+  :hygrometer.20260101T120000Z sosa:hasSimpleResult 0.5 .
+  :hygrometer.20260101T120000Z sosa:madeBySensor :hygrometer .
+  :hygrometer.20260101T120000Z sosa:observedProperty :humidity .
+  :hygrometer.20260101T120000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+}
+
+#  WHAT THIS AGENT FORESEES OF THE AIR, written before the soil is asked: one node per key, a stretch each.
+GRAPH predicted:room_humidity_0 {
+  orexis:predicted_room_humidity a sosa:Observation .
+  orexis:predicted_room_humidity sosa:hasFeatureOfInterest :room .
+  orexis:predicted_room_humidity sosa:hasSimpleResult 0.5 .
+  orexis:predicted_room_humidity sosa:madeBySensor :hygrometer .
+  orexis:predicted_room_humidity sosa:observedProperty :humidity .
+  orexis:predicted_room_humidity sosa:resultTime "2026-01-01T12:59:00+00:00"^^xsd:dateTime .
+}
+
+GRAPH predicted:room_humidity_1 {
+  orexis:predicted_room_humidity a sosa:Observation .
+  orexis:predicted_room_humidity sosa:hasFeatureOfInterest :room .
+  orexis:predicted_room_humidity sosa:hasSimpleResult 0.95 .
+  orexis:predicted_room_humidity sosa:madeBySensor :hygrometer .
+  orexis:predicted_room_humidity sosa:observedProperty :humidity .
+  orexis:predicted_room_humidity sosa:resultTime "2026-01-02T12:00:00+00:00"^^xsd:dateTime .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:DriftGraph .
+  :actions a orexis:Graph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  observed:room_humidity a orexis:Graph .
+  observed:room_humidity a sensing:ObservationGraph .
+  observed:room_humidity dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  observed:room_humidity orexis:arrivedBy orexis:Received .
+  observed:room_humidity orexis:ownedBy :keeper .
+  observed:zamioculcas_moisture a orexis:Graph .
+  observed:zamioculcas_moisture a sensing:ObservationGraph .
+  observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
+  observed:zamioculcas_moisture orexis:ownedBy :keeper .
+  predicted:room_humidity_0 a orexis:Graph .
+  predicted:room_humidity_0 a orexis:PredictionGraph .
+  predicted:room_humidity_0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
+  predicted:room_humidity_0 orexis:arrivedBy orexis:Recorded .
+  predicted:room_humidity_0 orexis:ownedBy :keeper .
+  predicted:room_humidity_0 prov:wasDerivedFrom observed:room_humidity .
+  predicted:room_humidity_1 a orexis:Graph .
+  predicted:room_humidity_1 a orexis:PredictionGraph .
+  predicted:room_humidity_1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+  predicted:room_humidity_1 orexis:arrivedBy orexis:Recorded .
+  predicted:room_humidity_1 orexis:ownedBy :keeper .
+  predicted:room_humidity_1 prov:wasDerivedFrom observed:room_humidity .
+}

@@ -41,3 +41,39 @@ def test_its_part_predicts_from_every_observation_written(monkeypatch, snapshots
     update(store, f"INSERT DATA {{ GRAPH <{COMMITTED}> {{ <{COMMITTED}> <http://example.org/test#says> 1 }} "
                   f"{entry(store, COMMITTED, BELIEF, 'http://example.org/orexis#Recorded', snapshots.ME)} }}")
     assert len(predicted(COMMITTED)) == 3, "every key with an observation in hand, predicted again"
+
+
+CHAINED = Path(__file__).parent / "predict" / "a_key_is_predicted_from_another_keys_prediction.trig"
+HYGROMETER = "http://example.org/test#hygrometer"
+AIR = "http://example.org/orexis/graph/observed/keeper/room_humidity"
+SOIL = "http://example.org/orexis/graph/observed/keeper/zamioculcas_moisture"
+
+
+def _keys(written) -> list[str]:
+    """The key each written graph is of, in order, once per run of one key."""
+    out = []
+    for g in written:
+        key = g.rsplit("/", 1)[-1].rsplit("_", 1)[0]
+        if not out or out[-1] != key:
+            out.append(key)
+    return out
+
+
+def test_one_arrival_walks_the_keys_once_in_the_order_their_drifts_read_each_other(monkeypatch, snapshots, stand_in_runtime):
+    """THE WALK (#996). The soil's drift reads the room's humidity, so a belief arriving rewrites the air
+    first and the soil after it, each once; the hygrometer's percept arriving rewrites the air and the
+    soil, which depends on it; the probe's rewrites the soil alone, since nothing reads the soil; and a
+    graph this part wrote itself is answered with nothing, so a prediction heard as a belief (#992)
+    rewrites no key and the walk ends."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(CHAINED)
+    runtime = stand_in_runtime(store, snapshots.ME, snapshots.NOW)
+    create(runtime).start(runtime)
+    predicted = dict(runtime.heard)[BELIEF]
+    update(store, f"INSERT DATA {{ GRAPH <{COMMITTED}> {{ <{COMMITTED}> <http://example.org/test#says> 1 }} "
+                  f"{entry(store, COMMITTED, BELIEF, 'http://example.org/orexis#Recorded', snapshots.ME)} }}")
+    written = predicted(COMMITTED)
+    assert _keys(written) == ["room_humidity", "zamioculcas_moisture"], written
+    assert predicted(written[0]) == [] and predicted(written[-1]) == [], "what it wrote, it answers nothing of"
+    assert _keys(predicted(AIR)) == ["room_humidity", "zamioculcas_moisture"], "the air, and the soil that reads it"
+    assert _keys(predicted(SOIL)) == ["zamioculcas_moisture"], "the soil alone: nothing reads it"

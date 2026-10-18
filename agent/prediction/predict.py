@@ -9,10 +9,13 @@ ADD: drying and rain are two drifts and the value moves by their sum, which is P
 trajectory semantics, a drift being a process (a-prediction-accumulates-rates-between-happenings).
 The sum is accumulated from the observation for the agent's horizon — `prediction:horizonS`, a
 stance in its self graph, and `HORIZON_S`, a day, where it states none — split at every HAPPENING — the
-start or end of a belief graph holding in that stretch, since only there can what a
-drift reads change, which is how a forecast hour and a step the executor committed to become
+start or end of a belief graph, a prediction or a percept holding in that stretch, since only there
+can what a drift reads change, which is how a forecast hour and a step the executor committed to become
 one without this package learning either word — and held for at most `SEGMENT_S` between, so a
-rate that depends on the value is asked again. Within a segment the value is a straight line, and a crossing of a bound of every range
+rate that depends on the value is asked again. A DRIFT READS A FORECAST OF ANY AUTHOR at the instant
+it is asked at: a received hour, another sensor's percept holding then, and the prediction this agent
+wrote for another key — the keys are predicted in the order the texts read each other (`order`,
+#996), so the soil's drying reads the air's humidity as the agent itself foresees it. Within a segment the value is a straight line, and a crossing of a bound of every range
 that applies to what the sensor observes (SSN-System's, `ranges_of`) is placed exactly, by
 division: no scan looks for it, so a value that dips below a floor and comes back inside an hour
 later is seen. A drift answering `?until` contributes nothing past it, and a segment is split
@@ -119,8 +122,8 @@ _WRITTEN_Q = """
 SELECT DISTINCT ?g WHERE { GRAPH $cat { ?g a orexis:PredictionGraph ; prov:wasDerivedFrom ?percept }
                            GRAPH ?g { ?o sosa:madeBySensor $sensor } }"""
 
-#  THE HAPPENINGS: every instant inside the horizon at which a belief graph begins or
-#  stops holding — the only instants at which what a drift reads can change.
+#  THE HAPPENINGS: every instant inside the horizon at which a belief graph, a prediction or a percept
+#  begins or stops holding — the only instants at which what a drift reads can change (#996).
 _HAPPENINGS_Q = """
 SELECT DISTINCT ?t WHERE {
   GRAPH $cat { VALUES ?kind { $kinds } ?g a ?kind ; dcterms:temporal ?p .
@@ -165,7 +168,13 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
         """Every contribution the drifts answer at `elapsed` seconds past the observation, for
         the subject holding `value`: (lowest rate, highest rate, the value it stops at)."""
         at = taken + timedelta(seconds=elapsed)
-        known = remember(memo, ("known", at), lambda: graphs_of(store, BELIEF, RECORD, at=at, now=now or taken))
+        #  WHAT A DRIFT READS AT THE INSTANT: every belief and record holding then, and every FORECAST of
+        #  any author (#996) — a prediction this agent wrote for another key a moment ago, since the keys
+        #  are predicted in the order the texts read each other (`order`), and another sensor's percept
+        #  holding then, as this estimator reads its own at the boundary (#944); this key's own stretches
+        #  are gone by now, forgotten before the drifts are asked.
+        known = remember(memo, ("known", sensor, at), lambda: graphs_of(
+            store, BELIEF, RECORD, PREDICTION, OBSERVATION_GRAPH, at=at, now=now or taken))
         #  THE OBSERVATION IN HAND IS READ AT EVERY INSTANT, with what the rules concluded of it —
         #  its key and its number live in its revisions — since a drift sized from the reading a
         #  committed step answers reads it past the stretch the observation holds for.
@@ -215,9 +224,9 @@ INSERT DATA {{
 
 
 def _happenings(store, cat, taken: datetime, horizon: float) -> list[float]:
-    """The seconds past the observation at which a belief graph begins or stops
-    holding inside the `horizon`, earliest first, with the horizon's end."""
-    found = rows(store, _HAPPENINGS_Q, (), cat=cat, kinds=Raw(f"<{BELIEF}>"),
+    """The seconds past the observation at which a belief graph, a prediction or a percept begins or
+    stops holding inside the `horizon`, earliest first, with the horizon's end."""
+    found = rows(store, _HAPPENINGS_Q, (), cat=cat, kinds=Raw(f"<{BELIEF}> <{PREDICTION}> <{OBSERVATION_GRAPH}>"),
                  **{"from": instant(taken), "to": instant(taken + timedelta(seconds=horizon))})
     return sorted({*((datetime.fromisoformat(r["t"]) - taken).total_seconds() for r in found), horizon})
 

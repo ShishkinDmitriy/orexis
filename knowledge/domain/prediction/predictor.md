@@ -19,7 +19,11 @@ observer's, so nothing but the author's declaration says both.
 # What it needs, and what it does not
 
 A sensor of the agent's and a `prediction:Drift`, a shape prediction ships beside the role; an agent
-declared a predictor in a world stating neither is refused at onboarding.
+declared a predictor in a world stating neither is refused at onboarding. And drifts that ORDER: a
+predictor's keys are predicted each after the keys its drifts read, so a world whose drifts read each
+other round - the soil moving by the air and the air by the soil - is refused as it is read, by the
+package's own `order`, the way a world posed against its own constraints is (#996). Both are judged in
+Python and not by a shape, since neither is a word a document states but what the texts say together.
 
 The other way round is NOT refused. A world may ship drifts — a domain's `drifts.ttl` imported for
 its actions — whose agents foresee nothing; declining foresight is the author's choice, and refusing

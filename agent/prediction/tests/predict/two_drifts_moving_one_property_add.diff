@@ -13,14 +13,14 @@
 +  predicted:zamioculcas_moisture_0 prov:wasDerivedFrom observed:zamioculcas_moisture .
 +  predicted:zamioculcas_moisture_1 a orexis:Graph .
 +  predicted:zamioculcas_moisture_1 a orexis:PredictionGraph .
-+  predicted:zamioculcas_moisture_1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:55:12+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:36:00+00:00"^^xsd:dateTime ] .
++  predicted:zamioculcas_moisture_1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:55:13+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:36:00+00:00"^^xsd:dateTime ] .
 +  predicted:zamioculcas_moisture_1 orexis:arrivedBy orexis:Recorded .
-+  predicted:zamioculcas_moisture_1 orexis:hash "sha256:f60e4188aa7ae2692099c7060a717bc0611117144e013b527ee718951e500669" .
++  predicted:zamioculcas_moisture_1 orexis:hash "sha256:445323180bb39275557f23e4c2430c9bf260dddb56ca5c53c71bcf7069906b7c" .
 +  predicted:zamioculcas_moisture_1 orexis:ownedBy :keeper .
 +  predicted:zamioculcas_moisture_1 prov:wasDerivedFrom observed:zamioculcas_moisture .
 +  predicted:zamioculcas_moisture_2 a orexis:Graph .
 +  predicted:zamioculcas_moisture_2 a orexis:PredictionGraph .
-+  predicted:zamioculcas_moisture_2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:55:12+00:00"^^xsd:dateTime ] .
++  predicted:zamioculcas_moisture_2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-02T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:55:13+00:00"^^xsd:dateTime ] .
 +  predicted:zamioculcas_moisture_2 orexis:arrivedBy orexis:Recorded .
 +  predicted:zamioculcas_moisture_2 orexis:hash "sha256:581de966a45c407595b5b9d1d4d1a5b5d0c80b5a9d3d7d364ec19d9704d877a6" .
 +  predicted:zamioculcas_moisture_2 orexis:ownedBy :keeper .
@@ -40,10 +40,10 @@
 +GRAPH predicted:zamioculcas_moisture_1 {
 +  orexis:predicted_zamioculcas_moisture a sosa:Observation .
 +  orexis:predicted_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
-+  orexis:predicted_zamioculcas_moisture sosa:hasSimpleResult 0.02 .
++  orexis:predicted_zamioculcas_moisture sosa:hasSimpleResult 0.024097 .
 +  orexis:predicted_zamioculcas_moisture sosa:madeBySensor :probe .
 +  orexis:predicted_zamioculcas_moisture sosa:observedProperty :moisture .
-+  orexis:predicted_zamioculcas_moisture sosa:resultTime "2026-01-01T12:55:12+00:00"^^xsd:dateTime .
++  orexis:predicted_zamioculcas_moisture sosa:resultTime "2026-01-01T12:54:13+00:00"^^xsd:dateTime .
 +}
 +
 +GRAPH predicted:zamioculcas_moisture_2 {

@@ -23,10 +23,13 @@ CASES_DIR = Path(__file__).parent / "predict"
 CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 PROBE = "http://example.org/test#probe"
 
+#  THE PROBE'S STRETCHES: every prediction holding an observation the probe made, and when — another
+#  key's, written by an earlier walk and read by the probe's drift (#996), is none of them.
 _WINDOWS_Q = """
 SELECT ?g ?start ?end WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PredictionGraph ; dcterms:temporal ?p .
-               ?p orexis:start ?start . OPTIONAL { ?p orexis:end ?end } } }
+               ?p orexis:start ?start . OPTIONAL { ?p orexis:end ?end } }
+  GRAPH ?g { ?o sosa:madeBySensor $sensor } }
 ORDER BY ?start"""
 
 #  WHERE EACH STRETCH OPENS, in minutes past noon, with the minutes a crossing may be placed
@@ -43,6 +46,7 @@ OPENS = {
     "a_forecast_shower_lifts_the_reading_back_inside": [(15, 0), (28.8, 0.02), (144, 0.02), (316.8, 0.02), (432, 0.02)],
     "a_forecast_range_opens_a_corridor_on_its_dry_side": [(15, 0), (28.8, 0.02), (144, 0.02)],
     "a_committed_dose_lifts_the_reading_over_its_window": [(15, 0), (61.2, 0.02), (90, 0.02)],
+    "a_key_is_predicted_from_another_keys_prediction": [(15, 0), (54, 0.02), (288, 0.02)],
 }
 
 
@@ -52,7 +56,7 @@ def test_predict_writes_the_stretches_the_patch_says(case, monkeypatch, request,
     store = snapshots.stand_in(case)
     written = predict(store, snapshots.ME, PROBE)
     snapshots.held_to_diff(case, request, "predict", snapshots.snapshot_of(store))
-    opened = [(datetime.fromisoformat(r["start"]) - snapshots.NOW).total_seconds() / 60 for r in rows(store, _WINDOWS_Q, ())]
+    opened = [(datetime.fromisoformat(r["start"]) - snapshots.NOW).total_seconds() / 60 for r in rows(store, _WINDOWS_Q, (), sensor=PROBE)]
     assert len(opened) == len(OPENS[case.stem]), opened
     for got, (minute, within) in zip(opened, OPENS[case.stem]):
         assert abs(got - minute) <= within + 1e-9, (opened, OPENS[case.stem])
@@ -67,7 +71,7 @@ def test_the_stretches_are_rewritten_whole_by_the_next_prediction(monkeypatch, s
     first = predict(store, snapshots.ME, PROBE)
     again = predict(store, snapshots.ME, PROBE)
     assert first == again
-    assert [r["g"] for r in rows(store, _WINDOWS_Q, ())] == again
+    assert [r["g"] for r in rows(store, _WINDOWS_Q, (), sensor=PROBE)] == again
 
 
 def test_the_horizon_is_the_agents_stance_where_its_self_graph_states_one(monkeypatch, snapshots):
@@ -80,7 +84,7 @@ def test_the_horizon_is_the_agents_stance_where_its_self_graph_states_one(monkey
                               {HORIZON_TERM: 28800})
     predict(store, snapshots.ME, PROBE)
     windows = [((datetime.fromisoformat(r["start"]) - snapshots.NOW).total_seconds() / 60,
-                (datetime.fromisoformat(r["end"]) - snapshots.NOW).total_seconds() / 60) for r in rows(store, _WINDOWS_Q, ())]
+                (datetime.fromisoformat(r["end"]) - snapshots.NOW).total_seconds() / 60) for r in rows(store, _WINDOWS_Q, (), sensor=PROBE)]
     assert [(round(a, 1), round(b, 1)) for a, b in windows] == [(15.0, 432.0), (432.0, 480.0)], windows
 
 
