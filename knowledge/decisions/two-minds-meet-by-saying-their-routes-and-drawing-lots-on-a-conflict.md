@@ -25,6 +25,16 @@ status: accepted
 timestamp: 2026-10-07T20:00:00Z
 ---
 
+> **Amended 2026-10-18**
+> ([foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers](/decisions/foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers.md)):
+> a peer's answer is a forecast, as the weather's is — somebody else's word about a stretch ahead,
+> laid into the ground of its period as it stands — so it needs no carrying into a prediction. What
+> sets the peer apart from the weather is control, not the shape of its word: the peer controls its
+> van, so there is a draw; the weather service controls nothing, so its answer is final. The general
+> form of the rule above: ask the controller of every predicate your plan reads that you do not write.
+> And nobody is asked for a plan: a plan is private to the mind that found it, and what crosses is a
+> forecast, so where this record says "route", read the peer's forecast of where its van will be.
+
 > **Amended 2026-10-08** (#929): **whom to ask is the agent that has the driver of the van in range**,
 > `courier:hasDriver`, which the world states and the [driver](/domain/courier/driver.md) page owns. A
 > world posing #922 names a driver for each van and whose it is, or each agent's search drives both.

@@ -42,7 +42,9 @@ graph it reads does not already hold, and a statement it reads holds what it say
 
 # What it concludes, and what it leaves
 
-A belief, today. A prediction — a peer's announced route, where the peer expects to be — is what a
-drift would make of a belief extracted from it, built with the first world that says one (#568).
+A belief, today. Where a peer says its van will be over the periods it was asked about, the
+extraction concludes a [forecast](/domain/sensing/forecast.md): a belief holding over the stretch it is
+about, which the planner lays into the ground of that period, built with the first world that asks one
+(#568, #923).
 Nothing is believed of a statement no extraction concludes of: a peer saying the agent's bed is dry
 changes no met-test unless a rule the agent holds extracts it.
