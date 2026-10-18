@@ -48,7 +48,7 @@ GRAPH :world {
 }
 
 GRAPH :actions {
-  :Drying a prediction:Drift .
+  :Drying a prediction:Flow .
   :Drying prediction:moves :moisture .
   :Drying prediction:rate """PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
@@ -70,7 +70,7 @@ GRAPH observed:zamioculcas_moisture {
 }
 
 GRAPH :catalogue {
-  :actions a orexis:DriftGraph .
+  :actions a orexis:FlowGraph .
   :actions a orexis:Graph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .

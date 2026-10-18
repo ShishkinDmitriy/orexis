@@ -38,7 +38,7 @@ roles the package serves, beneath `orexis:Role`:
 |---|---|---|
 | belief | `belief:Deliberator` | revises what it believes by the rules it holds |
 | sensing | `sensing:Observer`, beneath the deliberator | turns its sensors' numbers into observations |
-| prediction | `prediction:Predictor` | foresees its readings by the drifts |
+| prediction | `prediction:Predictor` | foresees its readings by the flows |
 | planning | `planning:Planner` | derives wants and searches for plans |
 | execution | `execution:Executor` | walks intentions and takes their steps |
 | speech | `speech:Speaker` | hears its peers' documents and says its own |
@@ -51,7 +51,7 @@ role in that closure, its documents put in and its part created. A package's ont
 agent's store to answer whether the package is needed: Hanoi's mover, a planner alone, holds no
 execution, sensing, prediction, speech or belief document, as the #824 measurement found for all
 but execution, which #928 took away. A domain that
-speaks a package's words, as climate's drifts speak prediction's, is read whether the package is
+speaks a package's words, as climate's flows speak prediction's, is read whether the package is
 loaded or not.
 
 **A transport is no role.** It is loaded where a loaded role needs bytes and the society wires a bus

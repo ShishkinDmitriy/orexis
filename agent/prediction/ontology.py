@@ -1,6 +1,6 @@
 """The words the prediction package reads and writes, and the names it spells for eyes.
 
-ITS OWN WORDS, the drift and what it says, declared in `ontology.ttl` beside this file; everything else
+ITS OWN WORDS, the flow and what it says, declared in `ontology.ttl` beside this file; everything else
 it speaks is the kernel's — the graph kinds and the arrival — SOSA's, on the observation it reads
 and the one it predicts, and ONE of sensing's: the kind an observation is kept in,
 `sensing:ObservationGraph`, by which the observation a sensor last made is found. Prediction sits
@@ -25,7 +25,7 @@ SENSING = "http://example.org/orexis/sensing#"
 
 #  THIS PACKAGE'S OWN: one thing that moves a value while nobody acts, the property it moves,
 #  and the select answering how fast.
-DRIFT = PREDICTION + "Drift"
+FLOW = PREDICTION + "Flow"
 MOVES = PREDICTION + "moves"
 RATE = PREDICTION + "rate"
 
@@ -33,7 +33,7 @@ RATE = PREDICTION + "rate"
 #  graph, read by `predict` (knowledge/domain/kernel/stance.md).
 HORIZON_TERM = PREDICTION + "horizonS"
 
-#  SOSA'S, on an observation — the key a drift's answer is matched by, and the number.
+#  SOSA'S, on an observation — the key a flow's answer is matched by, and the number.
 FEATURE = SOSA + "hasFeatureOfInterest"
 PROPERTY = SOSA + "observedProperty"
 RESULT = SOSA + "hasSimpleResult"

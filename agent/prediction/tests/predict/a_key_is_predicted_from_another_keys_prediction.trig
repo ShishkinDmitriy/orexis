@@ -1,13 +1,13 @@
 # a_key_is_predicted_from_another_keys_prediction
 #
 # THE SOIL DRIES BY THE AIR, AS THE AGENT ITSELF FORESEES THE AIR (#996). A pot in a room, read at
-# 0.25 and drying eight fractions a day in dry air, less as the air is humid: its drift reads the
+# 0.25 and drying eight fractions a day in dry air, less as the air is humid: its flow reads the
 # room's humidity, `sosa:observedProperty :humidity`, at every instant it is asked at. The room has a
 # hygrometer, read at 0.5 at noon, and two predictions of it already written by this agent's walk —
 # the keys are predicted in the order the texts read each other, so the air's stand before the soil
 # is asked — saying 0.5 until one and 0.95 after.
 #
-# - UNTIL A QUARTER PAST the drift reads the hygrometer's PERCEPT, holding then, and the soil dries
+# - UNTIL A QUARTER PAST the flow reads the hygrometer's PERCEPT, holding then, and the soil dries
 #   four fractions a day; from a quarter past to one it reads the first PREDICTION and dries the same;
 #   the operating floor at 0.1 is met at 12:54.
 # - AT ONE the second prediction begins — a happening, since it is a graph beginning — and the soil
@@ -70,7 +70,7 @@ GRAPH :world {
 }
 
 GRAPH :actions {
-  :Drying a prediction:Drift .
+  :Drying a prediction:Flow .
   :Drying prediction:moves :moisture .
   :Drying prediction:rate """PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
@@ -80,7 +80,7 @@ GRAPH :actions {
           BIND(0.0 AS ?until)
       }""" .
   :Drying rdfs:label "what a pot loses while nobody waters it, less the more humid its room's air" .
-  :Humidifying a prediction:Drift .
+  :Humidifying a prediction:Flow .
   :Humidifying prediction:moves :humidity .
   :Humidifying prediction:rate "SELECT ?rate ?until WHERE { BIND(0.4 / 3600.0 AS ?rate) BIND(1.0 AS ?until) }" .
   :Humidifying rdfs:label "what the room's air gains while the window is shut" .
@@ -126,7 +126,7 @@ GRAPH predicted:room_humidity_1 {
 }
 
 GRAPH :catalogue {
-  :actions a orexis:DriftGraph .
+  :actions a orexis:FlowGraph .
   :actions a orexis:Graph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .

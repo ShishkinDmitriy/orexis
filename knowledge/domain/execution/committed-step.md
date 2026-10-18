@@ -5,7 +5,7 @@ term: http://example.org/orexis/execution#CommittedStepGraph
 description: >-
   A step an intention has adopted, believed over its landing window - from the instant it may be
   taken to a patience past the latest it may land. One graph per step, written by the executor at
-  adoption and closed when the step is answered or its intention ends, so that a drift reads what
+  adoption and closed when the step is answered or its intention ends, so that a flow reads what
   the agent is about to do and a prediction made afterwards contains the plan.
 ---
 
@@ -31,7 +31,7 @@ the window could not take it from the instants on the step.
 # Why it is a belief
 
 An [intention](/domain/execution/intention.md) is the agent's own and crosses into no possible world;
-what a [drift](/domain/prediction/prediction.md) may read at an instant is a belief graph
+what a [flow](/domain/prediction/prediction.md) may read at an instant is a belief graph
 holding then. A committed step is the one row of an intention written as a belief, so the dose the
 grower is about to give is a flow its bed's prediction accumulates — rising to the aim over the
 window, on the low trajectory by the latest landing — and a want searched after the adoption sees a

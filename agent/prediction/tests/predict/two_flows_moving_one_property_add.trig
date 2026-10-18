@@ -1,10 +1,8 @@
-# a_key_no_drift_moves_is_predicted_nothing
+# two_flows_moving_one_property_add
 #
-# A drift is declared and reaches nothing: the pot states no rate, so the select yields no row.
-# Nothing is predicted — a package that declares no drift for a key has made no claim about it,
-# and the state concluded of the reading is what every ground ahead inherits (#989). The reading
-# was carried forward an hour as it stood, once, which said nothing the grounds did not hold and
-# nothing at all past the hour.
+# Drying at four fractions a day and a leak at two, each a flow of its own moving the pot's moisture;
+# neither knows the other, and the value moves by their sum, six a day. Read at 0.25: the operating
+# floor at 0.10 is met 36 minutes out and the survival floor at 0.02 at 55.2.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -40,6 +38,8 @@ GRAPH :world {
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :zamioculcas .
   :probe sosa:observes :moisture .
+  :zamioculcas :driesPerDay 4.0 .
+  :zamioculcas :leaksPerDay 2.0 .
   :zamioculcas a :Pot .
   :zamioculcas ssn-system:hasOperatingRange :zamioculcas.operating .
   :zamioculcas ssn-system:hasSurvivalRange :zamioculcas.survival .
@@ -50,7 +50,7 @@ GRAPH :world {
 }
 
 GRAPH :actions {
-  :Drying a prediction:Drift .
+  :Drying a prediction:Flow .
   :Drying prediction:moves :moisture .
   :Drying prediction:rate """PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
@@ -58,7 +58,14 @@ GRAPH :actions {
           BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
           BIND(0.0 AS ?until)
       }""" .
-  :Drying rdfs:label "what a pot loses while nobody waters it" .
+  :Leaking a prediction:Flow .
+  :Leaking prediction:moves :moisture .
+  :Leaking prediction:rate """PREFIX : <http://example.org/test#>
+      SELECT ?rate ?until WHERE {
+          $feature :leaksPerDay ?perDay .
+          BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
+          BIND(0.0 AS ?until)
+      }""" .
 }
 
 GRAPH observed:zamioculcas_moisture {
@@ -72,7 +79,7 @@ GRAPH observed:zamioculcas_moisture {
 }
 
 GRAPH :catalogue {
-  :actions a orexis:DriftGraph .
+  :actions a orexis:FlowGraph .
   :actions a orexis:Graph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .

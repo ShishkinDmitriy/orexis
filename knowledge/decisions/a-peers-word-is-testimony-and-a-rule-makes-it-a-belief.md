@@ -6,7 +6,7 @@ description: >-
   sensor's reading is, made a belief or a prediction. Decided - `heard` puts a peer's document into
   a kind of speech's own that no reader of the mind is handed, as sensing keeps an observation; its
   arrival is testimony, revised and transitioned on like a reading; and what the mind reads of it is
-  only what a rule the agent holds concludes - a belief, or what a drift predicts from it. The agent's
+  only what a rule the agent holds concludes - a belief, or what a flow predicts from it. The agent's
   own saying takes the same path. So nothing a peer sends is read as an action, a rule, a world or a
   belief by its own declaration, and no gate on kinds is needed at the writer or the readers.
   Refused - the writer's gate on the kind a peer declares, the readers' gate on arrival, and the
@@ -72,9 +72,9 @@ it:
 - **a belief**, what an inference concludes of the one document, gone when it is said again, as the
   market's rules already conclude a venue open from a round, or what a transition makes of it in the
   agent's own state;
-- **a prediction**, what a drift accumulates from what was said, as a drift reads a
+- **a prediction**, what a flow accumulates from what was said, as a flow reads a
   [committed step](/domain/execution/committed-step.md) at an instant: a peer's announced route is the
-  peer's word about where it will be, and where the agent then expects it is the drift's.
+  peer's word about where it will be, and where the agent then expects it is the flow's.
 
 **The agent's own saying takes the same path.** `said` puts what the agent told a peer into the same
 kind, arrived `orexis:Recorded`, and the same rules conclude of it: the round a host opened is open to
@@ -115,7 +115,7 @@ hole of that shape.
 - **The writer's gate on the kind a peer declares**: today's `orexis:StateGraph`, and slice 3's
   interim, a belief and not public. It trusts the sender's typing of its own graph, and what passes
   it is read as the agent's own state, unjudged.
-- **The readers' gate on arrival**, #952's plan: every reader of the ontology, actions, drifts,
+- **The readers' gate on arrival**, #952's plan: every reader of the ontology, actions, flows,
   rules, shapes, constraints, desires and the self taking only what arrived asserted. It closes
   redefinition and leaves the rest: a peer's word in a kind no such reader names is still read as
   belief, unjudged. It also asks every such reader to keep the rule.
@@ -140,7 +140,7 @@ hole of that shape.
 [#958](https://github.com/ShishkinDmitriy/orexis/issues/958) holds the build, after slice 3 of #953. Speech's kind and its page first, with `heard` and
 `said` writing it and the interim gate gone; then the market's rules concluding what its actions'
 preconditions, effects and implementations read of a call, a round, a bid, a claim and a presentation,
-where today they read the documents themselves; then a peer's announced route read by a drift, which
+where today they read the documents themselves; then a peer's announced route read by a flow, which
 the dispatcher's tests lay by hand today. A world in which a peer's document declares an action graph,
 is believed as what was said, and is read by no planner is the test that it holds.
 

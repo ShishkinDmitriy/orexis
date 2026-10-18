@@ -7,7 +7,7 @@ How to actually operate a society: bring one into existence, run it, and take it
 
 * [author-a-world](/runbooks/author-a-world.md) - The documents a world is, each saying which graph it is, and the test beside it that proves it.
 * [add-an-observer](/runbooks/add-an-observer.md) - Sensors for an agent: the subject's ranges, each sensor and its topic, the observer role naming it, and a domain transition making the belief.
-* [add-a-predictor](/runbooks/add-a-predictor.md) - Foresight for an agent: the predictor role, a domain's drifts and the subject's facts they read, and the horizon.
+* [add-a-predictor](/runbooks/add-a-predictor.md) - Foresight for an agent: the predictor role, a domain's flows and the subject's facts they read, and the horizon.
 * [add-a-planner](/runbooks/add-a-planner.md) - Something to pursue: a desire or a want with its met-test, the domain's actions, the devices commanded, and the budget.
 * [add-a-market](/runbooks/add-a-market.md) - A venue, the host holding its good and the bidders buying it, their inbox topics, and the desires that make them trade.
 * [run-a-world](/runbooks/run-a-world.md) - Deploy, up, down, logs, and what to do after a code change. One container per agent, generated from the world.

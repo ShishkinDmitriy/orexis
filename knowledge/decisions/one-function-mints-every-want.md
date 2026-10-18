@@ -44,7 +44,7 @@ target is the class it quantifies over
 is the SELECT whose rows are `?this` — the focus node that failed — and `?_constraint`, which
 property or side of it. That select IS the decomposition: run against a world, its rows are the
 instances in trouble. Run it now, over the graphs holding now, and at the start of each prediction the
-agent holds — sensing's drift, the ledger's *undischarged at its deadline* — and each row's
+agent holds — sensing's flow, the ledger's *undischarged at its deadline* — and each row's
 first instant is its witness, the t₀ at which *always* would stop being true. Decomposition and
 witnessing are one query per desire, which is why neither needs a rule of its own.
 
@@ -63,7 +63,7 @@ reaches it has fixed what needed fixing by when it was needed.
 
 **A package writes instances and predictions.** The ledger, on a claim: the debt, and a
 prediction that it is undischarged at its deadline. Sensing, on a reading: the reading, and what
-the drift predicts of it. Neither writes a want. *No overdue debts* gets the met-test it never
+the flow predicts of it. Neither writes a want. *No overdue debts* gets the met-test it never
 had — overdue was unaskable because it wanted the clock, and a prediction at the deadline is an
 instant a reader can ask at. The derivation does the rest, for both, the same way.
 
@@ -144,7 +144,7 @@ choir asks**: the ledger is held by hosting and is not one, so its foresight is 
 **What was foreseen may arrive early, and the present outranks the instant.** A want minted
 at a foreseen instant says *hold at T*, and a plan for it is placed to land at T (#619). The
 holder presented an hour before the lapse; a reading showed the pot below its floor before
-the drift said it would. The cluster is unmet NOW and its want still said T, so a plan found
+the flow said it would. The cluster is unmet NOW and its want still said T, so a plan found
 from `pursuing()` was placed at the deadline less the pour while the buyer waited — hosting's
 own presentation path served now, and the two doors disagreed. The derivation re-mints such a want
 with no instant, under the same name, so the trace, a remembered plan and the keeper meet the

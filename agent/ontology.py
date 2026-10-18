@@ -112,7 +112,7 @@ PREDICTION = OREXIS + "PredictionGraph"  # what is expected, holding during its 
 PLAN = OREXIS + "PlanGraph"              # a plan published, adopted by reference
 RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period
 ACTION = OREXIS + "ActionGraph"          # actions
-DRIFT_GRAPH = OREXIS + "DriftGraph"      # drifts — a domain's, read by the predictor
+FLOW_GRAPH = OREXIS + "FlowGraph"      # flows — a domain's, read by the predictor
 SELF_GRAPH = OREXIS + "SelfGraph"        # who the self is — a belief the agent owns, read beside the world's by whoever asks it
 #  THE SELF: the one agent a store is this agent's, authored by its world in a self graph and
 #  checked by the boot. A text asks `?me a orexis:Self` and is bound nothing

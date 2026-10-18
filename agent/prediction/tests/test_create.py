@@ -1,7 +1,7 @@
 """Prediction's part: once started it answers every percept a job writes — a graph of sensing's
 kind holding a node a sensor made, revised by then, sensing's part handing it to belief's first —
 by rewriting that sensor's predictions; and every belief, holding no sensor's node, a step the
-executor committed to, by rewriting every key's, since what a drift reads may have changed."""
+executor committed to, by rewriting every key's, since what a flow reads may have changed."""
 
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ def _keys(written) -> list[str]:
 
 
 def test_one_arrival_walks_the_keys_once_in_the_order_their_drifts_read_each_other(monkeypatch, snapshots, stand_in_runtime):
-    """THE WALK (#996). The soil's drift reads the room's humidity, so a belief arriving rewrites the air
+    """THE WALK (#996). The soil's flow reads the room's humidity, so a belief arriving rewrites the air
     first and the soil after it, each once; the hygrometer's percept arriving rewrites the air and the
     soil, which depends on it; the probe's rewrites the soil alone, since nothing reads the soil; and a
     graph this part wrote itself is answered with nothing, so a prediction heard as a belief (#992)

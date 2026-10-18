@@ -1,29 +1,29 @@
-"""`predict`: when the reading will change range — the rates of the drifts moving what it
+"""`predict`: when the reading will change range — the rates of the flows moving what it
 observes, accumulated from the observation in hand, and a prediction written for each stretch
 between crossings.
 
-**A PREDICTION IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** Every `prediction:Drift`
+**A PREDICTION IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** Every `prediction:Flow`
 that `prediction:moves` the observed property answers a RATE for the subject at an instant —
-per second of the one timeline, a package's select over whatever holds then — and the drifts
-ADD: drying and rain are two drifts and the value moves by their sum, which is PDDL+'s
-trajectory semantics, a drift being a process (a-prediction-accumulates-rates-between-happenings).
+per second of the one timeline, a package's select over whatever holds then — and the flows
+ADD: drying and rain are two flows and the value moves by their sum, which is PDDL+'s
+trajectory semantics, a flow being a process (a-prediction-accumulates-rates-between-happenings).
 The sum is accumulated from the observation for the agent's horizon — `prediction:horizonS`, a
 stance in its self graph, and `HORIZON_S`, a day, where it states none — split at every HAPPENING — the
 start or end of a belief graph, a prediction or a percept holding in that stretch, since only there
-can what a drift reads change, which is how a forecast hour and a step the executor committed to become
+can what a flow reads change, which is how a forecast hour and a step the executor committed to become
 one without this package learning either word — and held for at most `SEGMENT_S` between, so a
-rate that depends on the value is asked again. A DRIFT READS A FORECAST OF ANY AUTHOR at the instant
+rate that depends on the value is asked again. A FLOW READS A FORECAST OF ANY AUTHOR at the instant
 it is asked at: a received hour, another sensor's percept holding then, and the prediction this agent
 wrote for another key — the keys are predicted in the order the texts read each other (`order`,
 #996), so the soil's drying reads the air's humidity as the agent itself foresees it. Within a segment the value is a straight line, and a crossing of a bound of every range
 that applies to what the sensor observes (SSN-System's, `ranges_of`) is placed exactly, by
 division: no scan looks for it, so a value that dips below a floor and comes back inside an hour
-later is seen. A drift answering `?until` contributes nothing past it, and a segment is split
+later is seen. A flow answering `?until` contributes nothing past it, and a segment is split
 where the value reaches it, so the soil dries to nothing and not below.
 
-**A RATE KNOWN AS A RANGE GIVES A CORRIDOR.** A drift may answer `?low` and `?high` instead of
+**A RATE KNOWN AS A RANGE GIVES A CORRIDOR.** A flow may answer `?low` and `?high` instead of
 `?rate`, and ranges add as rates do; two trajectories are accumulated, the low one by every
-drift's lowest rate and the high one by every drift's highest, each asking the drifts at its own
+flow's lowest rate and the high one by every flow's highest, each asking the flows at its own
 value. The side of an instant is the corridor's worst, range by range — below where the low
 trajectory is under the floor, above where the high one is over the ceiling — and the number
 written is the trajectory that side was read from, so the rules conclude of it the side the
@@ -43,7 +43,7 @@ kind, #944), which no reader of the mind is handed: this estimator is one of the
 ground holds of the key is the prediction alone, which a domain's transition judges as it arrives
 there.
 
-**A KEY NO DRIFT MOVES IS PREDICTED NOTHING.** A package that declares no drift has made no claim
+**A KEY NO FLOW MOVES IS PREDICTED NOTHING.** A package that declares no flow has made no claim
 about the world, and this package invents none: the subject's state, concluded of the reading in the
 present, is what every ground ahead inherits by fork until a prediction's key replaces it (#944,
 #988), so a prediction carrying the reading unmoved for an hour said nothing the grounds did not
@@ -59,12 +59,12 @@ from datetime import datetime, timedelta
 import pyoxigraph as ox
 
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, DRIFT_GRAPH, PREDICTION, RECORD, RECORDED, local_of
+from agent.ontology import BELIEF, FLOW_GRAPH, PREDICTION, RECORD, RECORDED, local_of
 from agent.stance import stance
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
                          remember, revisions_of, rows, update)
 
-from .ontology import (DRIFT, FEATURE, HORIZON_TERM, MOVES, OBSERVATION_GRAPH, PROPERTY, RATE, RESULT,
+from .ontology import (FLOW, FEATURE, HORIZON_TERM, MOVES, OBSERVATION_GRAPH, PROPERTY, RATE, RESULT,
                        predicted_of, prediction_graph)
 from .ranges import ranges_of, side
 
@@ -80,7 +80,7 @@ _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 #  (knowledge/domain/kernel/stance.md).
 HORIZON_S = 86400.0
 
-#  THE LONGEST A RATE IS HELD before the drifts are asked again: an hour, so a rate that
+#  THE LONGEST A RATE IS HELD before the flows are asked again: an hour, so a rate that
 #  depends on the value it moves is read off a value no more than an hour old.
 SEGMENT_S = 3600.0
 
@@ -107,13 +107,13 @@ _KEY_Q = """
 SELECT ?feature ?property ?value WHERE {
   $node sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value } LIMIT 1"""
 
-#  EVERY DRIFT MOVING THE PROPERTY — the terms spliced as the terms they are, since no file of
+#  EVERY FLOW MOVING THE PROPERTY — the terms spliced as the terms they are, since no file of
 #  this package binds a label for its namespace and a query needs none.
-#  Read from the graphs of drifts alone (`orexis:DriftGraph`), as the planner reads actions from
+#  Read from the graphs of flows alone (`orexis:FlowGraph`), as the planner reads actions from
 #  `orexis:ActionGraph` alone: named for what it holds, and asked for, it is a term somebody reads. The
-#  kind is the kernel's and not this package's: a domain ships drifts whether or not any of its agents
-#  is a predictor, and every agent of the world reads the drift graph, which names no owner.
-_DRIFTS_Q = "SELECT ?drift ?rate WHERE { ?drift a $drift ; $moves $property ; $rate_of ?rate } ORDER BY ?drift"
+#  kind is the kernel's and not this package's: a domain ships flows whether or not any of its agents
+#  is a predictor, and every agent of the world reads the flow graph, which names no owner.
+_FLOWS_Q = "SELECT ?flow ?rate WHERE { ?flow a $flow ; $moves $property ; $rate_of ?rate } ORDER BY ?flow"
 
 #  THE PREDICTIONS WRITTEN FOR THIS SENSOR BEFORE: every one derived from a percept of it — the one in
 #  hand, or one before it, since each reading is a percept of its own (#944) — found by the predicted
@@ -123,7 +123,7 @@ SELECT DISTINCT ?g WHERE { GRAPH $cat { ?g a orexis:PredictionGraph ; prov:wasDe
                            GRAPH ?g { ?o sosa:madeBySensor $sensor } }"""
 
 #  THE HAPPENINGS: every instant inside the horizon at which a belief graph, a prediction or a percept
-#  begins or stops holding — the only instants at which what a drift reads can change (#996).
+#  begins or stops holding — the only instants at which what a flow reads can change (#996).
 _HAPPENINGS_Q = """
 SELECT DISTINCT ?t WHERE {
   GRAPH $cat { VALUES ?kind { $kinds } ?g a ?kind ; dcterms:temporal ?p .
@@ -132,7 +132,7 @@ SELECT DISTINCT ?t WHERE {
 
 def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=None) -> list[str]:
     """Rewrite the predictions of the key `sensor` last observed, from the observation in hand:
-    one per stretch between the instants the drifts' summed rates carry the reading across a
+    one per stretch between the instants the flows' summed rates carry the reading across a
     bound. The graphs written, first stretch first; none where no observation by the sensor
     stands or the horizon does not reach past its own.
 
@@ -159,33 +159,33 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
     horizon = stance(store, HORIZON_TERM, HORIZON_S, memo)
     if base >= horizon:
         return []
-    drifts = remember(memo, ("drifts", observed_property), lambda: rows(
-        store, _DRIFTS_Q, graphs_of(store, DRIFT_GRAPH), drift=Raw(f"<{DRIFT}>"), moves=Raw(f"<{MOVES}>"),
+    flows = remember(memo, ("flows", observed_property), lambda: rows(
+        store, _FLOWS_Q, graphs_of(store, FLOW_GRAPH), flow=Raw(f"<{FLOW}>"), moves=Raw(f"<{MOVES}>"),
         rate_of=Raw(f"<{RATE}>"), property=observed_property))
     ranges = ranges_of(store, sensor, observed_property, memo)
 
     def rates(elapsed: float, value: float) -> list[tuple[float, float, float | None]]:
-        """Every contribution the drifts answer at `elapsed` seconds past the observation, for
+        """Every contribution the flows answer at `elapsed` seconds past the observation, for
         the subject holding `value`: (lowest rate, highest rate, the value it stops at)."""
         at = taken + timedelta(seconds=elapsed)
-        #  WHAT A DRIFT READS AT THE INSTANT: every belief and record holding then, and every FORECAST of
+        #  WHAT A FLOW READS AT THE INSTANT: every belief and record holding then, and every FORECAST of
         #  any author (#996) — a prediction this agent wrote for another key a moment ago, since the keys
         #  are predicted in the order the texts read each other (`order`), and another sensor's percept
         #  holding then, as this estimator reads its own at the boundary (#944); this key's own stretches
-        #  are gone by now, forgotten before the drifts are asked.
+        #  are gone by now, forgotten before the flows are asked.
         known = remember(memo, ("known", sensor, at), lambda: graphs_of(
             store, BELIEF, RECORD, PREDICTION, OBSERVATION_GRAPH, at=at, now=now or taken))
         #  THE OBSERVATION IN HAND IS READ AT EVERY INSTANT, with what the rules concluded of it —
-        #  its key and its number live in its revisions — since a drift sized from the reading a
+        #  its key and its number live in its revisions — since a flow sized from the reading a
         #  committed step answers reads it past the stretch the observation holds for.
         graphs = list(dict.fromkeys([*known, *believed]))
         said = []
-        for drift in drifts:
+        for flow in flows:
             try:
-                answered = rows(store, drift["rate"], graphs, feature=feature, at=instant(at),
+                answered = rows(store, flow["rate"], graphs, feature=feature, at=instant(at),
                                 value=ox.Literal(repr(float(value)), datatype=ox.NamedNode(_XSD + "double")))
             except Exception as exc:                                    # noqa: BLE001
-                log.error("drift %s would not run for a prediction: %s", local_of(drift["drift"]), exc)
+                log.error("flow %s would not run for a prediction: %s", local_of(flow["flow"]), exc)
                 continue
             for row in answered:
                 low, high = row.get("low", row.get("rate")), row.get("high", row.get("rate"))
@@ -197,7 +197,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
 
     knots, moved = _accumulate(rates, reading, _happenings(store, cat, taken, horizon), memo)
     if not moved:
-        log.debug("no drift moves %s of %s: nothing to predict", local_of(observed_property), local_of(feature))
+        log.debug("no flow moves %s of %s: nothing to predict", local_of(observed_property), local_of(feature))
         return []
     stretches = _stretches(knots, ranges, base, horizon)
     own = [ox.Triple(q.subject, q.predicate, q.object) for g in believed for q in quads(store, g)]
@@ -233,12 +233,12 @@ def _happenings(store, cat, taken: datetime, horizon: float) -> list[float]:
 
 def _accumulate(rates, reading: float, happenings: list[float], memo) -> tuple[list[tuple[float, float, float]], bool]:
     """The corridor from the observation to the horizon, as knots (elapsed, low, high) the two
-    trajectories are straight between, and whether any drift moved the value at all.
+    trajectories are straight between, and whether any flow moved the value at all.
 
-    Each trajectory asks the drifts at its own value and moves by the sum of their lowest rates
-    (the low one) or highest (the high one); a drift at or past its `until` in the direction it
+    Each trajectory asks the flows at its own value and moves by the sum of their lowest rates
+    (the low one) or highest (the high one); a flow at or past its `until` in the direction it
     pushes contributes nothing, and a segment ends where the value reaches one, so the next
-    asking sees the drift stopped."""
+    asking sees the flow stopped."""
     t, lo, hi = 0.0, reading, reading
     knots, moved = [(t, lo, hi)], False
     for happening in happenings:
@@ -259,7 +259,7 @@ def _accumulate(rates, reading: float, happenings: list[float], memo) -> tuple[l
 
 def _net(said, value: float, end: int) -> tuple[float, list[float]]:
     """The summed rate of one trajectory — every contribution's lowest (`end` 0) or highest
-    (`end` 1) — and the `until` values the contributing drifts push toward."""
+    (`end` 1) — and the `until` values the contributing flows push toward."""
     total, stops = 0.0, []
     for contribution in said:
         rate, until = contribution[end], contribution[2]

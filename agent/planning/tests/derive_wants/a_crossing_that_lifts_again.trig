@@ -55,12 +55,12 @@ GRAPH :sensed {
   :tank2 :temperature 20 .
 }
 
-#  LOW FROM HALF PAST — the drift's reading for that window.
+#  LOW FROM HALF PAST — the flow's reading for that window.
 GRAPH :predicted-0 {
   :tank1 :level 5 .
 }
 
-#  AND BACK IN RANGE FROM ONE: rain, a refill, whatever the drift read. The graph's START is
+#  AND BACK IN RANGE FROM ONE: rain, a refill, whatever the flow read. The graph's START is
 #  what ends the trouble, since the reading it carries is what the met-test sees from then.
 GRAPH :predicted-1 {
   :tank1 :level 20 .

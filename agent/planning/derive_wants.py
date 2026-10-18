@@ -188,7 +188,7 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
     #  UNLESS WHAT WAS FORESEEN HAS ARRIVED. A want minted at a foreseen instant says "hold
     #  at T", and a plan for it is placed to land at T (#619). A cluster unmet NOW whose want
     #  still says T — the holder asked before the claim lapsed, the pot crossed before the
-    #  drift said it would — is re-minted with no instant, under the same name, so the
+    #  flow said it would — is re-minted with no instant, under the same name, so the
     #  kept cone and a standing intention meet the want they kept and a plan is found
     #  from the present. The instant was the derivation's reading of the predictions; the present
     #  outranks it, as it does everywhere else here.

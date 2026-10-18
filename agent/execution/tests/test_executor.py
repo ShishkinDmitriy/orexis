@@ -445,7 +445,7 @@ def _placed(plan: ox.Store) -> ox.Store:
 def test_a_committed_steps_window_closes_a_patience_past_its_latest_landing():
     """Where the plan states a latest landing, the window a committed step is believed over runs to
     it and the patience past it, and `execution:answeredWithinS` says so, while `landsWithinS` stays
-    the earliest — the two numbers a drift's high and low trajectories are divided by (#596)."""
+    the earliest — the two numbers a flow's high and low trajectories are divided by (#596)."""
     beliefs = _beliefs(PEG_A)
     plan = _placed(_predicting(1))
     update(plan, f"""INSERT DATA {{ GRAPH <{PLAN}> {{

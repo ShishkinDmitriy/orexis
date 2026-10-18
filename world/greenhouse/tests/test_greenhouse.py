@@ -116,7 +116,7 @@ ORDER BY ?start"""
 def test_a_committed_dose_is_a_flow_the_beds_prediction_accumulates(monkeypatch):
     """#849. Adopted, the dose stands in the beliefs as a committed step holding over its landing
     window — from the step's instant to the probe's next reading plus the patience — and the actuation
-    domain's drift reads it there: the bed's prediction, rewritten as the window is written, rises to
+    domain's flow reads it there: the bed's prediction, rewritten as the window is written, rises to
     the aim the command sizes to, 0.45, by the time the next reading is due, and dries from there, so
     the one stretch of the day reads inside its range — 0.41 at its end, a day's drying under the aim —
     where the drying alone read 0.2 and below. When the reading answers the dose the window closes and
@@ -226,7 +226,7 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     assert sum(p["fields"]["satisfied"] for p in of(dosed, "imaginarium")) == 1
     #  TWO MET: the soil want in the world its dose made, and the desire in the air's one ground, which
     #  holds the air's state alone — the soil the desire is also about is not there to read dry. It read
-    #  three between #944 and #989: the air's key moves by no drift, and a prediction carried it unmoved
+    #  three between #944 and #989: the air's key moves by no flow, and a prediction carried it unmoved
     #  for an hour, whose predicted observation made the ground a quarter-hour on a period of its own
     #  though nothing a met-test reads differed there. Nothing is predicted for such a key now (#989).
     assert sum(p["fields"]["met"] for p in of(dosed, "imaginarium")) == 2

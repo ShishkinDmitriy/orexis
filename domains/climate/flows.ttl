@@ -3,16 +3,16 @@
 @prefix prediction: <http://example.org/orexis/prediction#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<> a orexis:DriftGraph .    # this document is one graph, and this is what it is
+<> a orexis:FlowGraph .    # this document is one graph, and this is what it is
 
-#  WHAT MOVES A SUBJECT'S SOIL WHILE NOBODY WATERS IT, one drift per flow, each answering a rate
-#  per second of the one timeline; the prediction package adds them and accumulates the sum. A drift
+#  WHAT MOVES A SUBJECT'S SOIL WHILE NOBODY WATERS IT, one flow per flow, each answering a rate
+#  per second of the one timeline; the prediction package adds them and accumulates the sum. A flow
 #  says nothing of a state: what the subject is foreseen to be — dry, moist —
 #  is what this domain's transitions make of the predicted number
 #  in the ground the planner lays it into (#944).
 
 #  THE DRYING: `climate:driesPerDay` a day, until nothing is left.
-climate:Drying a prediction:Drift ;
+climate:Drying a prediction:Flow ;
     rdfs:label "what a subject's soil loses while nobody waters it" ;
     prediction:moves climate:SoilMoisture ;
     prediction:rate """PREFIX climate: <http://example.org/orexis/climate#>
@@ -25,7 +25,7 @@ climate:Drying a prediction:Drift ;
 #  THE RAIN: what a forecast hour says falls on the subject's place, `climate:wetsPerMm` a
 #  millimetre, until the soil is saturated. A forecast giving a range of millimetres gives a range
 #  of rates, and the prediction a corridor; a subject stating no `wetsPerMm` is sheltered.
-climate:Raining a prediction:Drift ;
+climate:Raining a prediction:Flow ;
     rdfs:label "what rain on a subject's place gives its soil" ;
     prediction:moves climate:SoilMoisture ;
     prediction:rate """PREFIX climate: <http://example.org/orexis/climate#>

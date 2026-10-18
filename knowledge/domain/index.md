@@ -31,7 +31,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [scaling](/domain/sensing/scaling.md) - A rescale, a probe's count a moisture: two points the world states beside the sensor, applied by sensing's rule.
 * [sensing](/domain/sensing/sensing.md) - A transport's bytes become an observation per reading, a sensor's last few kept; says when a sensor falls silent.
 * [observation](/domain/sensing/observation.md) - One act of observing in SOSA's words, one per reading, linked to the one before; a percept, the premise everything else derives from.
-* [reading](/domain/sensing/reading.md) - The number an observation carries: what a transition judges, what a drift predicts, what a dose is sized from.
+* [reading](/domain/sensing/reading.md) - The number an observation carries: what a transition judges, what a flow predicts, what a dose is sized from.
 * [calibration](/domain/sensing/calibration.md) - A correction within one unit, two points the world states beside the sensor, applied by sensing's rule after any scaling.
 * [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; a transition judges a subject against the operating one.
@@ -52,9 +52,9 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Prediction — the stretches ahead
 
-* [prediction](/domain/prediction/prediction.md) - Drifts answer rates that add, accumulated between happenings; one graph per stretch between range crossings; a ground per stretch.
+* [prediction](/domain/prediction/prediction.md) - Flows answer rates that add, accumulated between happenings; one graph per stretch between range crossings; a ground per stretch.
 * [corridor](/domain/prediction/corridor.md) - A rate known as a range gives the lowest and highest trajectory; a stretch is the corridor's worst side.
-* [predictor](/domain/prediction/predictor.md) - The role prediction serves; needs a sensor of the agent's and a drift. A drift nobody foresees by is not refused.
+* [predictor](/domain/prediction/predictor.md) - The role prediction serves; needs a sensor of the agent's and a flow. A flow nobody foresees by is not refused.
 
 # Planning — what is wanted, and how to get there
 
@@ -81,7 +81,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [intention](/domain/execution/intention.md) - One plan committed to for one want, standing at a step until done, failed, superseded or abandoned.
 * [commitment](/domain/execution/commitment.md) - Hard on the step in flight, never cancelled; soft on the plan, kept until a want a constraint couples to it arrives.
 * [step](/domain/execution/step.md) - An action picked with its values: the two graphs it predicts in, when it may be taken and lands.
-* [committed-step](/domain/execution/committed-step.md) - A step an intention adopted, believed over its landing window, so a drift reads it and a later search sees the plan.
+* [committed-step](/domain/execution/committed-step.md) - A step an intention adopted, believed over its landing window, so a flow reads it and a later search sees the plan.
 * [act](/domain/execution/act.md) - The record that a step was taken, and when; the world, not the act, says whether it landed.
 * [implementation](/domain/execution/implementation.md) - How an action is carried out when a step is taken: operations grouped by order, sized from the present, never read by a search.
 * [operation](/domain/execution/operation.md) - One thing taking a step does — a command, a saying, or the fictive write. Not an act, which is the record.

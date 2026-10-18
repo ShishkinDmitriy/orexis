@@ -179,7 +179,7 @@ def test_a_drift_outside_a_wants_scope_keeps_its_cone(monkeypatch, framed_greenh
     """#565's second item, by construction since a scope's imaginarium holds the scope's readings alone
     (#884): a present that drifts in a fact a want never reads — the frame's air, under a soil plan —
     hashes to the same soil ground, so the soil's re-root finds the last pass's present and keeps its
-    cone, while the frame's own search finds the present among what it imagined. A drift in the soil
+    cone, while the frame's own search finds the present among what it imagined. A flow in the soil
     itself that nothing imagined drops the soil's cone.
     WHAT MOVES A PRESENT IS A STATE, NOT A NUMBER: a world is hashed within what is read, and no text
     reads the number a reading gave, so the frame going from 5 to 7 degrees under a floor of 10 would be

@@ -2,7 +2,7 @@
 #
 # THE WORLD PREDICTION IS HELD TO, with sensing and the rules beside it: one agent acting for one pot, the probe the pot hosts, the pot's own physics —
 # four fractions a day, a fast dryer, so a reading inside its operating range meets the floor within the
-# hour — the pot's operating and survival ranges in SSN-System's words, and the drift that predicts the
+# hour — the pot's operating and survival ranges in SSN-System's words, and the flow that predicts the
 # number. Nothing about sides: those are the rules this layer registers, concluded by the deliberator.
 # No reading: `received` writes those, and `predict` the stretches.
 #
@@ -52,7 +52,7 @@ GRAPH :world {
 }
 
 GRAPH :actions {
-  :Drying a prediction:Drift .
+  :Drying a prediction:Flow .
   :Drying prediction:moves :moisture .
   :Drying prediction:rate """PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
@@ -64,7 +64,7 @@ GRAPH :actions {
 }
 
 GRAPH :catalogue {
-  :actions a orexis:DriftGraph .
+  :actions a orexis:FlowGraph .
   :actions a orexis:Graph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .

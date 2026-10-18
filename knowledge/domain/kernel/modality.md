@@ -25,9 +25,9 @@ asserts is its kind:
 | `orexis:RecordGraph` | what is OWED or was done, worth believing for a period | a package's record |
 | `execution:IntentionGraph` | what is being DONE | the executor |
 
-What the agent reads to ACT asserts nothing of a subject and is no modality: its actions, drifts,
+What the agent reads to ACT asserts nothing of a subject and is no modality: its actions, flows,
 shapes, constraints, derivations and rules are its program, no possible world is made of any of them,
-and each is read by its own kind — `orexis:ActionGraph`, `orexis:DriftGraph`, `planning:ShapesGraph`,
+and each is read by its own kind — `orexis:ActionGraph`, `orexis:FlowGraph`, `planning:ShapesGraph`,
 `planning:ConstraintGraph`, `planning:DerivationGraph`, `sh:RulesGraph` — beneath `orexis:Graph` alone
 ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)).
 

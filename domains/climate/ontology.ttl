@@ -6,12 +6,12 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
-    owl:imports <actions.ttl> , <drifts.ttl> , <rules.ttl> .
+    owl:imports <actions.ttl> , <flows.ttl> , <rules.ttl> .
 
 #  CLIMATE, A DOMAIN.
 #  A planted thing's surroundings: the properties its instruments observe — the soil's moisture,
 #  the air's temperature, humidity and pressure — the rain a forecast says falls on its place, where
-#  its water comes from, how its soil dries and how rain wets it while nobody waters it (drifts.ttl),
+#  its water comes from, how its soil dries and how rain wets it while nobody waters it (flows.ttl),
 #  and a heater that warms its air, taken through the heating
 #  (actions.ttl). The ranges a subject should be in are SSN-System's, stated by a world, and what is
 #  believed of a subject's soil and air is said in this domain's words, below, by this domain's
@@ -68,10 +68,10 @@
     rdfs:label "capacity in litres" .
 
 :driesPerDay a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "dries per day" ;
-    rdfs:comment "How much soil moisture a subject loses a day while nobody waters it, as a fraction: the rate the drying drift answers." .
+    rdfs:comment "How much soil moisture a subject loses a day while nobody waters it, as a fraction: the rate the drying flow answers." .
 
 :wetsPerMm a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "wets per millimetre" ;
-    rdfs:comment "How much a millimetre of rain on its place raises a subject's soil moisture, as a fraction: what the rain drift runs on. A sheltered subject states none, and rain never reaches it." .
+    rdfs:comment "How much a millimetre of rain on its place raises a subject's soil moisture, as a fraction: what the rain flow runs on. A sheltered subject states none, and rain never reaches it." .
 
 :litresPerFraction a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "litres per fraction" ;
     rdfs:comment "How many litres raise a subject's soil moisture by a whole fraction: what a dose is sized by when it is taken." .

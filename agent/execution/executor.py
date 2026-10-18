@@ -47,7 +47,7 @@ decided here. A `take` that raises records the act as not taken and resolves the
 **A COMMITTED STEP IS A BELIEF OVER ITS LANDING WINDOW** (#849). At adoption every step of the plan
 is written into the beliefs as a graph of its own, `execution:CommittedStepGraph`, holding from the
 step's `notBefore` to its `landsAt` plus the patience and carrying the step's filling and the window's
-two lengths in seconds; a drift reads it at an instant inside the window, so a prediction made after
+two lengths in seconds; a flow reads it at an instant inside the window, so a prediction made after
 the adoption contains the plan and the window's ends are its happenings. The window closes when the
 world answers the step or the intention ends, which is a write whoever hears a belief written hears,
 and `tick` forgets what has ended (knowledge/domain/execution/committed-step.md).
@@ -531,7 +531,7 @@ class Executor:
         """Write every step of the adopted plan into the beliefs as a graph of its own, an
         `execution:CommittedStepGraph` holding over the step's LANDING WINDOW — from its
         `execution:notBefore` to its `execution:notAfter`, the latest landing, plus the patience — so that a prediction
-        made from now on sees the intention: the window's two ends are happenings, and a drift reads
+        made from now on sees the intention: the window's two ends are happenings, and a flow reads
         the step at any instant inside it (a-prediction-accumulates-rates-between-happenings, the seam
         "committed steps are not yet flows", closed by #849).
 
@@ -574,7 +574,7 @@ class Executor:
         """Close the committed step's window at `now`: the world answered the step, or the intention
         ended, so nothing of the step flows past this instant. A window already ended by the clock
         is left as it stands — the sweep takes it — and one closed is said to whoever hears a belief
-        written, since what a drift reads changed."""
+        written, since what a flow reads changed."""
         if catalogue_of(self.beliefs) is None:
             return
         cat, graph = Raw(f"<{catalogue_of(self.beliefs)}>"), committed_graph(self.id, step)

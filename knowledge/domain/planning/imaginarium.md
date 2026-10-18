@@ -28,7 +28,7 @@ refreshes it:
   and copies again every
   common belief — all of them, since a pattern reaching a graph nobody copied returns an empty result
   rather than an error — the catalogue, what the search reads to act by its own kinds (the actions,
-  drifts, derivations, shapes, constraints and rules graphs), the agent's desires, wants and records, and
+  flows, derivations, shapes, constraints and rules graphs), the agent's desires, wants and records, and
   of its readings, predictions and subject beliefs those that are the scope's: one whose named members'
   scopes meet elsewhere, with its revisions, stays behind, so the grounds laid here are the scope's
   readings and a world their size

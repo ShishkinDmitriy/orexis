@@ -53,5 +53,5 @@ Too much costs a fork a few quads: a triple no step ever changes is copied anywa
 world: a triple a step writes that no pattern caught is written into the fork while the old one stays
 in the remainder, read beside it, and a shape holding over every value sees both.
 
-What defines what the agent can do is never cut: the vocabulary, the actions, the drifts, the shapes,
+What defines what the agent can do is never cut: the vocabulary, the actions, the flows, the shapes,
 the constraints and the derivations are no fact a step changes.

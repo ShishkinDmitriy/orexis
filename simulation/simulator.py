@@ -23,7 +23,7 @@ where it binds none), which is what sensing reads it by. Time is the one timelin
 advances everything from the last step.
 
 THE NUMBER PUBLISHED IS THE INSTRUMENT'S, NOT THE MODEL'S (#879). The physics moves only what a
-drift or a running heater moves, so a model nothing touches — the air of a greenhouse nobody heats,
+flow or a running heater moves, so a model nothing touches — the air of a greenhouse nobody heats,
 a probe clamped at its bound — reads the same to the fourth place at every cadence, and sensing,
 whose stuck detector is premised on a live instrument's count moving by at least one within a few
 readings, said such a sensor stuck an hour into its world. So each published number is the model's

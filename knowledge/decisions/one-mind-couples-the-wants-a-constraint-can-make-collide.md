@@ -60,8 +60,8 @@ On the development container, one pass of the Planner at a budget of 128 over th
   collision is between the plans, not inside either. Every world and every step stands at the pass's
   instant: the courier's actions declare no `planning:landsAfter`, so the plans have no time axis to
   be compared on. Walked, both vans stand on `c2_1` for one act. Afterwards the beliefs hold two plan
-  graphs and no committed step, no prediction, no drift: the committed step reaches the future
-  through a drift alone ([committed-step](/domain/execution/committed-step.md)) and the courier has
+  graphs and no committed step, no prediction, no flow: the committed step reaches the future
+  through a flow alone ([committed-step](/domain/execution/committed-step.md)) and the courier has
   none. *Since #901 (2026-10-05) the courier declares its band — a drive half a minute to a minute,
   a pick and a drop at once — so the steps land at distinct instants, the worlds hold over periods
   and a committed drive's window is two minutes and more; the counts above did not move.*
@@ -362,7 +362,7 @@ plan down the same cells. A cluster a standing want is already about is that wan
 | van B parked on `c2_1`, bounded (#902) | 1 | 49 | 56 | 8, 7 refused and 1 passed over | a five-step delivery BY VAN B; van A never moves |
 | the parcel aboard van A, van B parked, bounded (#902) | 1 | 52 | 66 | 8, 5 refused | van B steps aside, van A drives through: four steps, the route round five; the estimate reads three |
 | both vans on one cell, bounded (#902) | 2 | 4 and 75 | 128 | 14, 7 refused | the aversion's own want refused nothing, its one-step drive found; the joint want `Exhausted` at 128 as before |
-| the corridor, coupled, the constraint a kind of its own (2026-10-06) | 1 | 210, and the constraint in 210 | 286 | 16, 13 impossible and 3 passed over by hash | the same ten-step plan, walked with two vans on no cell; 6.7 s against 6.2 s alternated, within the drift |
+| the corridor, coupled, the constraint a kind of its own (2026-10-06) | 1 | 210, and the constraint in 210 | 286 | 16, 13 impossible and 3 passed over by hash | the same ten-step plan, walked with two vans on no cell; 6.7 s against 6.2 s alternated, within the flow |
 | the shipped pose, the same | 1 | 148, and the constraint in 148 | 228 | 0 | unchanged; 3.3 s against 3.1 s |
 | van B parked on `c2_1`, the same | 1 | 49 | 56 | 8, 7 impossible | five steps BY VAN B; 434 ms against 373 |
 | the parcel aboard van A, van B parked, the same | 1 | 52 | 66 | 8, 5 impossible | van B aside, van A through, four steps; 435 ms against 402 |
@@ -478,9 +478,9 @@ plan down the same cells. A cluster a standing want is already about is that wan
   that does.
 - **The landing ground applies no prediction of the step in flight itself.** It holds what the agent
   already sees then, which is right for a fictive step, whose effect is in the present, and for one a
-  drift reads as a committed step, whose effect is in the predictions; a step that reaches the world
-  and that no drift reads lands in a ground that lacks its effect, and the joint search would plan as
-  if it had not landed. Applying the step's own `execution:adds` there was refused while a drift can
+  flow reads as a committed step, whose effect is in the predictions; a step that reaches the world
+  and that no flow reads lands in a ground that lacks its effect, and the joint search would plan as
+  if it had not landed. Applying the step's own `execution:adds` there was refused while a flow can
   already state it, since the two would count it twice; the trigger is the first such world that
   reconsiders.
 - **A joint plan with the walking steps later is reconsidered, not kept.** Agreement is read as the

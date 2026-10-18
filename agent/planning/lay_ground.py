@@ -67,7 +67,7 @@ changeable graphs, so a fork copies what a step can change, and a world reads ev
 it; the two are disjoint, so no value an effect replaced stands beside the one that replaced it. The
 cut is made here and not where the imaginarium is filled, because a case lays its grounds in its own
 store; it is taken back before it is made again, so laying twice cuts once. What defines what the agent
-can do — the vocabulary, the actions, the drifts, the shapes, the constraints, the derivations — is no
+can do — the vocabulary, the actions, the flows, the shapes, the constraints, the derivations — is no
 fact a step changes and is never cut.
 
 **WHAT IS BUILT IS CLASSIFIED, NOT RETURNED.** Each ground is a graph with the stretch it holds
@@ -162,7 +162,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     the plan it finds begins after it, and a plan is placed at its root's instant (#905,
     knowledge/domain/execution/commitment.md). What the ground holds is what the agent already
     sees holding then, and the step's own prediction is not applied again: a fictive step wrote
-    it into the present when it was taken, and a step a drift reads as a committed step is in the
+    it into the present when it was taken, and a step a flow reads as a committed step is in the
     predictions already. So it is not collapsed into the ground before it by hash, which is the
     one thing that makes it a boundary rather than a prediction.
 
@@ -199,7 +199,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         if at <= now:
             continue                    # a prediction already reached is the present's, not ahead
         #  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE. A boundary is an instant,
-        #  not a prediction: two drifts that both start at one o'clock describe ONE world, and
+        #  not a prediction: two flows that both start at one o'clock describe ONE world, and
         #  forking once per prediction made two grounds with the same name and a period from the
         #  instant to itself — which holds at no instant at all, so a reader standing after it
         #  was handed NO ground and the agent went blind past the boundary. Each retract is
@@ -313,7 +313,7 @@ def _present(store: ox.Store, now: datetime) -> str:
 
 
 #  THE VOCABULARY, which no step changes and no split cuts: the one belief read beside every world
-#  whole. What the agent reads to act — its actions, drifts, shapes and constraints — is no belief,
+#  whole. What the agent reads to act — its actions, flows, shapes and constraints — is no belief,
 #  and no split reaches it (#953).
 _DEFINING = (OREXIS + "OntologyGraph",)
 

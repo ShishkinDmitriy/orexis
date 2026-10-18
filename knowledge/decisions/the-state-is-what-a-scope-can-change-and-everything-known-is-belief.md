@@ -4,7 +4,7 @@ title: The state is what a scope can change, and everything an agent knows is be
 description: >-
   The sovereign, 2026-10-11 - public, state and belief graphs look alike, and only belief should be a
   kind. Decided - the state is not declared by a graph's kind but extracted, per scope, from
-  everything believed - every triple some effect, transition or drift of the scope can write - so
+  everything believed - every triple some effect, transition or flow of the scope can write - so
   adding an action makes more of what is known state, as it should; and the public axis goes, since
   who shares a document is how it arrived, which a graph class may not say. orexis:StateGraph and
   orexis:PublicGraph fold into orexis:BeliefGraph. What the two kinds did besides is said by
@@ -15,7 +15,7 @@ description: >-
   exclusions per reader, and a peer gate that admits only triples some scope can write. Amended as
   built (#953) - what the world states is read as the common beliefs, never every belief, by
   revision, the footprints and every reader of the world, and the agent's own is what names an owner.
-  Amended again - a belief is what a possible world is made of, so the actions, drifts, shapes,
+  Amended again - a belief is what a possible world is made of, so the actions, flows, shapes,
   constraints and derivations the agent reads to act are no beliefs, and a world's graph naming no
   owner is shared whatever its kind.
 status: accepted
@@ -35,7 +35,7 @@ Three kernel kinds sort what an agent knows, and to the sovereign they looked li
   landing against it. The world authors it per document (`<> a orexis:StateGraph` in every
   `state.ttl`), and a domain subclasses it (the market's calls, rounds, bids, claims, presentations).
 - **`orexis:PublicGraph`**, on another axis: what every agent of a world reads. The ontology, the
-  world, the society, the actions, the drifts, the shapes and the constraints; a query's default,
+  world, the society, the actions, the flows, the shapes and the constraints; a query's default,
   what revision reads a source beside, and what a footprint and a scope are read over
   ([who-put-the-fact-there](/decisions/who-put-the-fact-there.md),
   [a-reader-states-the-kinds-it-reads](/decisions/a-reader-states-the-kinds-it-reads.md)).
@@ -58,7 +58,7 @@ documents), `orexis:Derived`, `orexis:Received`, `orexis:Recorded`.
 
 **Everything an agent knows is belief, and `orexis:BeliefGraph` is the one kind of it.**
 `orexis:StateGraph` and `orexis:PublicGraph` fold into it. The kinds beneath it stay, each named for
-the rows it holds: ontology, world, society, actions, drifts, shapes, constraints, self, forecast,
+the rows it holds: ontology, world, society, actions, flows, shapes, constraints, self, forecast,
 committed step, the market's calls, rounds, bids, claims and presentations, and the graph a
 transition writes. The other modalities stay what they are: desire, want, prediction, possible
 world, plan, record, intention, observation.
@@ -68,7 +68,7 @@ triple that some writer in the scope can write:
 
 - each effect of the scope's actions;
 - each transition, since a ground runs the transitions a predicted observation triggers;
-- each drift, since a prediction writes a predicted observation.
+- each flow, since a prediction writes a predicted observation.
 
 The writers' templates are read once, at boot as the scopes are, with each template's variables
 standing for any term and a predicate variable bounded by its own `VALUES`, as a scope already reads
@@ -86,7 +86,7 @@ scopes were built for, kept.
   The hazard the public-only rule closed was one testimony taking another's side, and that is what
   this excludes; the world's documents, the agent's own state and what was derived stand beside it.
 - **What defines what the agent can do and how it reasons is read only as asserted.** The
-  ontology, the actions, the drifts, the rules, the shapes, the constraints, the desires and the self
+  ontology, the actions, the flows, the rules, the shapes, the constraints, the desires and the self
   are read from graphs that arrived `orexis:Asserted`, or were derived from one (the closure). **A
   peer's document is believed as what it said**, a first-order belief about what the peer said, and
   can redefine nothing, since no reader of actions or rules takes a graph that arrived
@@ -147,7 +147,7 @@ them were answering the second and third questions with a class.
 
 > **The first slice, built 2026-10-11 (#953).** The cut is made in `lay_ground`, not where the
 > imaginarium is filled, because a case lays its grounds in its own store; a refresh takes it back with
-> the graph it was cut from ([changeable](/domain/planning/changeable.md)). The drifts' share is the
+> the graph it was cut from ([changeable](/domain/planning/changeable.md)). The flows' share is the
 > predictions': a prediction writes what it adds, and its retraction takes out of a ground what stands
 > there. What another scope alone can change is still dropped whole, by graph, as `_of_another_scope`
 > did: a pattern of a predicate cannot tell one bed's soil from another's, so the three classes a scope
@@ -174,7 +174,7 @@ them were answering the second and third questions with a class.
 > *#958 built it: a peer's word is a statement, the interim gate is gone, and slice 4 moves no gate.*
 
 > **`orexis:PublicGraph` and `orexis:WorkingGraph` folded, built 2026-10-11 (#953).** The kernel declares
-> no public kind: the ontology, the world, the society, the actions, the drifts, the shapes, the
+> no public kind: the ontology, the world, the society, the actions, the flows, the shapes, the
 > constraints and the derivations are beliefs, and what every agent of a world reads is **the common
 > beliefs**, asked by provenance (`graphs_of(store, BELIEF, common=True)`) as the boot already found
 > the world's shared documents. The boot keeps a world's belief by what it says: naming an owner, it is
@@ -195,12 +195,12 @@ them were answering the second and third questions with a class.
 > every belief into what a scope's writers can change and the rest, and reads every world against both;
 > that is the line. The world, the society, the vocabulary and its closure, the self, a forecast, a
 > committed step, the agent's state and what is extracted of a statement are beliefs. **What the agent
-> reads to act is not**: `orexis:ActionGraph` and `orexis:DriftGraph`, read by planning, execution and
+> reads to act is not**: `orexis:ActionGraph` and `orexis:FlowGraph`, read by planning, execution and
 > prediction, and `planning:ShapesGraph`, `planning:ConstraintGraph` and `planning:DerivationGraph`, read
 > where a world is judged or a scope written, sit beneath `orexis:Graph` alone beside the desires, the
 > wants and the rules, which never were beliefs; each is read by its own kind, as every reader of it
 > already asked, and crosses into an imaginarium by its own kind. Where "The decision" lists actions,
-> drifts, shapes and constraints among the kinds beneath belief, read this; and where it says what defines
+> flows, shapes and constraints among the kinds beneath belief, read this; and where it says what defines
 > what the agent can do is read only as asserted, read that it is read by its own kinds, none a belief.
 > **Whose a world's graph is stays what it says, whatever its kind**: a graph the world authors naming no
 > owner — a constraint, a desire, a belief — is shared by every agent of the world, and the refusal of a

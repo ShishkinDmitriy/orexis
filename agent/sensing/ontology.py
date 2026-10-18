@@ -10,7 +10,7 @@ transition to hold a state by, and the pipeline's concepts: a codec, the binding
 one, the JSON member that ships, the pointer and the two a series is read by, the number a sensor
 gave, and the scaling and calibration the rules make a quantity of it by — and nothing of the 0.1.0
 packages' own: what an agent polled, what a sensor monitored or sampled, a device's sense mode and
-a drift's horizons were SSN restated or read by nothing, and 0.2.0 speaks none of them. The drift
+a flow's horizons were SSN restated or read by nothing, and 0.2.0 speaks none of them. The flow
 is the prediction package's. Not one word of any transport.
 
 THE NAMES ARE FOR EYES. A percept's node and graph and a forecast's are spelled here for the writer,

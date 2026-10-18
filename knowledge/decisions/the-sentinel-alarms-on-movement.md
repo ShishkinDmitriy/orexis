@@ -54,7 +54,7 @@ range is **slow** news, already carried by every heartbeat, and the agent — wh
 0..1 of a saturation fraction, and the operating range does not appear in the comparison at all.**
 
 The division of labour that replaces it is one line: **the heartbeat says where the value is; the
-ULP says that it moved.** Slow drift is never invisible — each scheduled report carries the
+ULP says that it moved.** Slow flow is never invisible — each scheduled report carries the
 drifted value — and a between-reports jolt still wakes the radio within a patrol and a confirm.
 
 **The band is not gone; it moved up a level.** `WAKE_DELTA` is `sensing:alarmDeltaFraction` of the
@@ -142,7 +142,7 @@ so this costs one instruction per path.
 
 The honest consequence: at a 60-second patrol the value can travel far more than a band width
 between looks, so the promise weakens from "we will see it within a second" to "we will see where
-it ENDED UP within a minute". Good for watching a pot drift, wrong for catching the act of
+it ENDED UP within a minute". Good for watching a pot flow, wrong for catching the act of
 watering.
 
 # Seams left open

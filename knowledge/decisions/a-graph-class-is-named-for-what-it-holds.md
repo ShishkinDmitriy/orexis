@@ -51,7 +51,7 @@ record, and nothing names a role. A want is not a desire (`orexis:Want` says so,
 **A class named for the role.** `RootsGraph` said what the rows are to the derivation — a root is
 what a want is derived under — and the rows were `orexis:Desire` all along. Two names for one
 kind of row in the T-Box is the synonym the dictionary refuses between pages: a reader meets
-both, looks for the difference, and the meanings drift. The derivation keeps the word *root* in its
+both, looks for the difference, and the meanings flow. The derivation keeps the word *root* in its
 prose, as the role a desire plays there, and the graph's name for eyes stays `roots/<agent>`.
 
 **A fresh spelling.** `orexis:DesireGraph` had existed and was retired by #312

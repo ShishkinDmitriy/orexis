@@ -31,7 +31,7 @@
 
 #  THE TERRACE ITSELF, the place a forecast's rain falls on, and the bed in it. How fast the bed
 #  dries and how much a millimetre of rain wets it are guesses until they are fitted from the
-#  history the agent already keeps; the rain drift reads a forecast hour for the terrace, and until
+#  history the agent already keeps; the rain flow reads a forecast hour for the terrace, and until
 #  one arrives the bed only dries.
 :terrace a schema:Place ;
     rdfs:comment "The terrace: outdoors, open to the rain. Where it is — its schema:geo — is in secrets/place.ttl, which is not committed." .

@@ -735,7 +735,7 @@ def revisions_of(store, *sources: str, kind: str = BELIEF) -> list[str]:
     their revisions in that kind (#944). The kernel names no package's word, so the kind is an
     argument and not a list of the kinds there are.
 
-    AND NOT ANY GRAPH DERIVED FROM IT. A drift's prediction says it was derived from the observation
+    AND NOT ANY GRAPH DERIVED FROM IT. A flow's prediction says it was derived from the observation
     it runs over too, and a prediction is what a reading WILL be: asked without the kind, this handed
     the present ground and the executor's answer the future as the present."""
     if not sources:

@@ -1,5 +1,5 @@
-"""`order`: the properties in the order their keys are predicted (#996) — read off the drift texts, a
-property after every property its drifts read, a cycle refused, a text that cannot be read reading
+"""`order`: the properties in the order their keys are predicted (#996) — read off the flow texts, a
+property after every property its flows read, a cycle refused, a text that cannot be read reading
 every property."""
 
 from __future__ import annotations
@@ -17,19 +17,19 @@ MOISTURE, HUMIDITY, WARMTH, LIGHT = T + "moisture", T + "humidity", T + "warmth"
 
 
 def _drift(store, name: str, moves: str, reads: str = "", text: str | None = None) -> None:
-    """A drift moving `moves` whose rate reads an observation of `reads`, or says `text`."""
+    """A flow moving `moves` whose rate reads an observation of `reads`, or says `text`."""
     rate = text if text is not None else f"""PREFIX : <{T}>
         SELECT ?rate WHERE {{ ?o sosa:hasFeatureOfInterest ?x ; sosa:observedProperty <{reads}> ; sosa:hasSimpleResult ?v .
                               BIND(xsd:double(?v) / 86400.0 AS ?rate) }}"""
     rate = rate.replace('"""', "'")
     update(store, f"""PREFIX prediction: <http://example.org/orexis/prediction#>
-INSERT DATA {{ GRAPH <{T}actions> {{ <{T}{name}> a prediction:Drift ; prediction:moves <{moves}> ; prediction:rate \"\"\"{rate}\"\"\" }} }}""")
+INSERT DATA {{ GRAPH <{T}actions> {{ <{T}{name}> a prediction:Flow ; prediction:moves <{moves}> ; prediction:rate \"\"\"{rate}\"\"\" }} }}""")
 
 
 def test_a_property_is_predicted_after_every_property_its_drifts_read(snapshots):
     """The pot's drying reads nothing: one property, itself. Add the air, whose humidity moves by
-    nothing another key says, and a soil drift reading the air: the air comes first, whatever the IRIs'
-    order; and a drift reading its own property — the dose reads the soil it lifts — is no dependency."""
+    nothing another key says, and a soil flow reading the air: the air comes first, whatever the IRIs'
+    order; and a flow reading its own property — the dose reads the soil it lifts — is no dependency."""
     store = snapshots.stand_in(WORLD)
     assert order(store) == [MOISTURE]
     _drift(store, "Evaporating", MOISTURE, HUMIDITY)

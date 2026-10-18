@@ -81,7 +81,7 @@ tree, the image built and answered `import onboarding` with `ModuleNotFoundError
 that was wrong; it enforced the arrows. What it could not do is derive the roster — root
 trees are installed for everyone or no one, so "every agent carries all four" was not a
 decision inside that placement but a consequence of it, and consequences that arrive
-unexamined are how architecture drifts.
+unexamined are how architecture flows.
 
 **Layers as granted capabilities, still.** The refusal in
 [the-mind-is-not-a-package](/decisions/0.1.0/the-mind-is-not-a-package.md) stands and this record

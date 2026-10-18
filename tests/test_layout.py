@@ -552,13 +552,13 @@ def test_onboarding_refuses_a_graph_of_a_kind_no_package_this_agent_loads_declar
 
 def test_onboarding_does_not_refuse_a_drift_no_predictor_reads_nor_a_saying_no_speaker_takes(tmp_path):
     """Foresight is the author's to decline, and whether an action admits this agent is the search's
-    to say: a world holding a drift and an action that says, whose one agent is a deliberator alone,
+    to say: a world holding a flow and an action that says, whose one agent is a deliberator alone,
     is onboarded."""
     from onboarding import reading
 
     deliberator = "http://example.org/orexis/belief#Deliberator"
     world = _declared(tmp_path, [deliberator],
-                      drifts="<> a orexis:DriftGraph .\n:Drying a prediction:Drift ; prediction:moves :moisture .\n",
+                      flows="<> a orexis:FlowGraph .\n:Drying a prediction:Flow ; prediction:moves :moisture .\n",
                       actions="<> a orexis:ActionGraph .\n:Telling a orexis:Action ; execution:implementation [ "
                               "a execution:Implementation ; execution:operation [ a execution:Saying ; "
                               "sh:construct \"CONSTRUCT {} WHERE {}\" ] ] .\n")
@@ -1748,28 +1748,28 @@ def test_agents_md_names_code_that_exists():
     assert not stale, f"_NAMED_AS_HISTORY lists {stale}, which AGENTS.md no longer names — drop them"
 
 
-# --- a graph of drifts says so -----------------------------------------------------------------------
+# --- a graph of flows says so -----------------------------------------------------------------------
 
 def test_a_document_holding_drifts_is_a_drift_graph():
-    """`predict` reads drifts from `orexis:DriftGraph` graphs alone, as the planner reads actions from
-    `orexis:ActionGraph` alone — so a drifts file left typed a bare belief is a file the
+    """`predict` reads flows from `orexis:FlowGraph` graphs alone, as the planner reads actions from
+    `orexis:ActionGraph` alone — so a flows file left typed a bare belief is a file the
     predictor passes over in silence, every common graph having been where it looked before. Every
-    document under `domains/` and `world/` carrying a `prediction:Drift` row says the kind."""
+    document under `domains/` and `world/` carrying a `prediction:Flow` row says the kind."""
     import rdflib
 
     PREDICTION, OREXIS = rdflib.Namespace("http://example.org/orexis/prediction#"), rdflib.Namespace("http://example.org/orexis#")
     holding = []
     for path in sorted([*REPO_ROOT.glob("domains/*/*.ttl"), *REPO_ROOT.glob("world/*/*.ttl")]):
-        if "prediction:Drift" not in path.read_text():
+        if "prediction:Flow" not in path.read_text():
             continue
         g = rdflib.Graph()
         g.parse(path, format="turtle", publicID=path.as_uri())
-        if (None, rdflib.RDF.type, PREDICTION.Drift) not in g:
+        if (None, rdflib.RDF.type, PREDICTION.Flow) not in g:
             continue
         holding.append(path)
         kinds = set(g.objects(rdflib.URIRef(path.as_uri()), rdflib.RDF.type))
-        assert OREXIS.DriftGraph in kinds, f"{path.relative_to(REPO_ROOT)} holds drifts and says {kinds} — the predictor reads orexis:DriftGraph alone"
-    assert holding, "no document holds a drift — this guard checks nothing"
+        assert OREXIS.FlowGraph in kinds, f"{path.relative_to(REPO_ROOT)} holds flows and says {kinds} — the predictor reads orexis:FlowGraph alone"
+    assert holding, "no document holds a flow — this guard checks nothing"
 
 
 # --- the domain is a plug-in -----------------------------------------------------------------------
@@ -1814,25 +1814,25 @@ def test_no_generated_credential_is_tracked():
 
 
 
-# --- drifts that read each other round are refused (#996) ---------------------------------------------
+# --- flows that read each other round are refused (#996) ---------------------------------------------
 
 _CYCLE = """@prefix orexis: <http://example.org/orexis#> .
 @prefix prediction: <http://example.org/orexis/prediction#> .
 @prefix climate: <http://example.org/orexis/climate#> .
 
-<> a orexis:DriftGraph .
+<> a orexis:FlowGraph .
 
-climate:Evaporating a prediction:Drift ; prediction:moves climate:SoilMoisture ;
+climate:Evaporating a prediction:Flow ; prediction:moves climate:SoilMoisture ;
     prediction:rate \"\"\"SELECT ?rate WHERE { ?air sosa:observedProperty climate:AirHumidity ; sosa:hasSimpleResult ?h .
                                              BIND(-xsd:double(?h) / 86400.0 AS ?rate) }\"\"\" .
-climate:Condensing a prediction:Drift ; prediction:moves climate:AirHumidity ;
+climate:Condensing a prediction:Flow ; prediction:moves climate:AirHumidity ;
     prediction:rate \"\"\"SELECT ?rate WHERE { ?soil sosa:observedProperty climate:SoilMoisture ; sosa:hasSimpleResult ?m .
                                              BIND(xsd:double(?m) / 86400.0 AS ?rate) }\"\"\" .
 """
 
 
 def test_onboarding_refuses_drifts_that_read_each_other_in_a_cycle(tmp_path):
-    """The sensing world's fern is a predictor. Its documents order — the shipped drifts read no other key —
+    """The sensing world's fern is a predictor. Its documents order — the shipped flows read no other key —
     and with a soil moving by the air and an air moving by the soil they do not: a coupled system no
     predictor here accumulates, named with both properties, and refused as the world is read (#996)."""
     import shutil
@@ -1843,7 +1843,7 @@ def test_onboarding_refuses_drifts_that_read_each_other_in_a_cycle(tmp_path):
     shutil.copytree(REPO_ROOT / "world" / "sensing", world, ignore=shutil.ignore_patterns("tests", "secrets", "__pycache__"))
     (tmp_path / "domains").symlink_to(REPO_ROOT / "domains")
     assert reading.cyclic(world) == []
-    (world / "drifts.ttl").write_text(_CYCLE)
-    assert reading.cyclic(world) == ["fern: drifts read each other in a cycle over AirHumidity, SoilMoisture"]
+    (world / "flows.ttl").write_text(_CYCLE)
+    assert reading.cyclic(world) == ["fern: flows read each other in a cycle over AirHumidity, SoilMoisture"]
     with pytest.raises(SystemExit, match="read each other in a cycle"):
         reading.check(world)

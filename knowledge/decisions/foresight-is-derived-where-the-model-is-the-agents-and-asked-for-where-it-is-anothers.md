@@ -5,7 +5,7 @@ description: >-
   The sovereign, 2026-10-18, asking whether the terrace's rain forecast and a peer van's route are
   one thing, and whether the agent should sense the future itself or ask an actor for its plan.
   Decided - what will hold later is derived by the agent where it holds the model (drying, from its
-  own reading and the domain's drift) and asked for where another holds it (rain, a peer's route,
+  own reading and the domain's flow) and asked for where another holds it (rain, a peer's route,
   a person's intention); an ACTOR is whoever the agent asks what will hold, and whether that actor
   controls the thing is a separate relation, stated per domain, that decides only whether there is
   anything to bargain about; a FORECAST is the one word for anyone's word about what will hold
@@ -40,14 +40,14 @@ the thing, cannot ask it to change, and can only ask what it will do.
 
 - A forecast is a `sensing:ForecastGraph` written by sensing from a software `sosa:Sensor` reading a
   series, one graph per hour ([a-forecast-is-a-series-a-sensor-reads](/decisions/a-forecast-is-a-series-a-sensor-reads.md)).
-  It reaches a ground only through the `climate:Raining` drift, which reads it as a rate for the bed's
+  It reaches a ground only through the `climate:Raining` flow, which reads it as a rate for the bed's
   soil. Its own start and end are happenings to the predictor and boundaries to nothing.
 - A prediction is an `orexis:PredictionGraph` the predictor derives from a sensor's latest percept and
-  the drifts moving its property ([a-prediction-accumulates-rates-between-happenings](/decisions/a-prediction-accumulates-rates-between-happenings.md)).
+  the flows moving its property ([a-prediction-accumulates-rates-between-happenings](/decisions/a-prediction-accumulates-rates-between-happenings.md)).
   It is the one kind `lay_ground` lays a ground ahead for. `predict` requires a numeric result and a
   `sosa:madeBySensor`; a cell is neither, so a peer's route has no path, and the dispatcher's tests
   write a `PredictionGraph` about the peer's van by hand.
-- The air humidity on the terrace is read by no drift, transition, desire or action, and reaches no
+- The air humidity on the terrace is read by no flow, transition, desire or action, and reaches no
   prediction and no ground. It is a belief and nothing more.
 - The terrace agent plays an observer and a predictor and wants nothing, so it lays no grounds at all.
 
@@ -56,7 +56,7 @@ the thing, cannot ask it to change, and can only ask what it will do.
 **Who holds the model decides.** For every predicate a plan reads, what will hold later comes from
 whoever has the model of it:
 
-- the bed's drying is the agent's own model, a drift over its own latest reading, and nobody can be
+- the bed's drying is the agent's own model, a flow over its own latest reading, and nobody can be
   asked for it: **derived**;
 - rain is the weather service's model, which the agent will never hold: **asked for**;
 - the other van's cells are the peer's plan, which only the peer knows: **asked for**;
@@ -83,7 +83,7 @@ sovereign asked for fewer concepts, and the shape admits it: a weather hour, a p
 van, the executor's committed step and the predictor's stretch are each a belief holding over a stretch
 ahead, saying what will hold there, replaced by its author when its author knows better. What PDDL
 calls a timed initial literal. They differ in who said it — the service through sensing, the peer
-through speech, the executor, the predictor from a percept and the drifts — and whose a graph is, is
+through speech, the executor, the predictor from a percept and the flows — and whose a graph is, is
 provenance and never its kind ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)
 folded the public kind by the same rule). So `orexis:PredictionGraph` and `sensing:ForecastGraph` are
 one kernel kind, with `execution:CommittedStepGraph` beneath it, once #987 has taken away the one reader
@@ -95,7 +95,7 @@ instant a forecast begins, and the forecast holds in the grounds from there — 
 a ground keeps a value until something assigns its key, as a prediction's last stretch stands past the
 horizon (#987 refined the "or stops holding" this first said). The planner needs one thing of it, that it holds later, and that is a fact about the
 timeline and not about a class of beings. Where the forecast is about the predicate the plan reads, as a
-peer's cells are, nothing is computed; where it is about something else, as rain is, the domain's drift
+peer's cells are, nothing is computed; where it is about something else, as rain is, the domain's flow
 says what it does to the planned quantity, and the predictor forecasts from it as it does now.
 
 **Nobody is asked for a plan.** A plan is private to the mind that found it, the asker's and the
@@ -105,7 +105,7 @@ committed to and what it intends, restricted to what was asked. #923's "route" i
 nothing more; the word goes.
 
 **The prediction package is the agent's foresight for the models it holds, and nothing more.** It
-integrates the drifts for what nobody can be asked about and writes the forecasts it alone can author.
+integrates the flows for what nobody can be asked about and writes the forecasts it alone can author.
 Everything else the agent foresees is asked for.
 
 **The weather stays on sensing's channel.** It is trusted like an instrument — it has no stake in the
@@ -138,7 +138,7 @@ grounds of its period by itself.
 
 **The general form of #923's rule falls out.** Ask the controller of every predicate your plan reads
 that you do not write. The courier's constraint reads `courier:at` and Drive writes only our van's, so
-the other van's controller is asked. The grower's drift reads precipitation, nothing of ours writes it,
+the other van's controller is asked. The grower's flow reads precipitation, nothing of ours writes it,
 so the forecast is polled. Same rule, two channels.
 
 # PDDL, term for term
@@ -146,7 +146,7 @@ so the forecast is polled. Same rule, two channels.
 | PDDL | here |
 |---|---|
 | a timed initial literal (2.2): a fact known to hold over a window, from anyone, never re-derived | a forecast: a belief holding over a stretch ahead, whoever's word, laid per period |
-| a process (PDDL+): continuous change while its condition holds, chosen by nobody | a drift, integrated by the predictor for the models the agent holds |
+| a process (PDDL+): continuous change while its condition holds, chosen by nobody | a flow, integrated by the predictor for the models the agent holds |
 | an event (PDDL+): discrete change when its condition becomes true | a transition, run where a predicted or forecast observation arrives in a ground |
 | the planner's happenings: TIL times and process start and stop points | a ground per instant a belief the present has not reached begins (#987) |
 
@@ -164,7 +164,7 @@ on the row, and the draw decides which answers count.
   domain states where a plan branches on it.
 - **A kernel `Actor` class.** Nothing a plan selects depends on it, and it would make a belief about
   another agent second-order: what it is, not what it said.
-- **Delegating what nobody can be asked.** Drying has no actor; the agent's own drift over its own
+- **Delegating what nobody can be asked.** Drying has no actor; the agent's own flow over its own
   reading is the only model there is. The prediction package stays for exactly this.
 - **Two kinds for one shape.** `orexis:PredictionGraph` and `sensing:ForecastGraph` hold the same thing,
   an observation of a stretch ahead, and were told apart only by `lay_ground`, which laid a ground for

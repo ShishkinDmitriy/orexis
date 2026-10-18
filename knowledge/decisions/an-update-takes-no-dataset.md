@@ -143,7 +143,7 @@ is the price of hearing an empty result.
   keep small today and nothing caps.
 - **The choir's foresight is Python**, a package answering a question at derivation time.
   Closed by deletion rather than by a rule: the foresight filtered judgments that already
-  carry their instants, and how far ahead the agent sees is the horizons each drift predicts
+  carry their instants, and how far ahead the agent sees is the horizons each flow predicts
   at ([judge-desires-then-derive-wants](/decisions/judge-desires-then-derive-wants.md)).
 - **A scope over variables** (#565, #663) changes the partition and not the mechanism: a
   finer partition is more groups in the same `GROUP BY`.

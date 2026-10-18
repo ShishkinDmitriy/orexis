@@ -18,7 +18,7 @@ kind on `<>`; the file's name is for eyes.
 | `actions.ttl` | `<> a orexis:ActionGraph` | the [actions](/domain/kernel/action.md): what each takes, its precondition, its effect, its implementation, its cost |
 | `shapes.ttl` | `<> a planning:ShapesGraph` | met-tests a desire's `planning:metWhen` points at, and the selects `planning:estimates` points at |
 | `rules.ttl` | `<> a sh:RulesGraph` | rules the deliberator runs over the beliefs — the market's revisions of its documents, the tower's [bridges](/domain/planning/bridge.md) |
-| `drifts.ttl` | `<> a orexis:DriftGraph` | what a value does by itself, `prediction:Drift`s |
+| `flows.ttl` | `<> a orexis:FlowGraph` | what a value does by itself, `prediction:Flow`s |
 | `requirements.ttl` | `<> a onboarding:RequirementGraph` | what a world using its words must state, held by `orexis-onboard` alone ([requirement](/domain/onboarding/requirement.md)) |
 
 A domain that combines others imports them: the tower's ontology imports `<../hanoi/ontology.ttl>`

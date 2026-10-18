@@ -61,7 +61,7 @@ search — against the whole pass here, a fresh store per run, medians of five:
 | 2 | 143 + 244 ms | 50 ms |
 
 The predecessor's row above says 0.31 s for three disks and its search took 0.42 s on the day
-this was taken, which is the drift the table warns about and why the two sides are timed
+this was taken, which is the flow the table warns about and why the two sides are timed
 together here. Inside the package the star cost something too: the tree before it,
 `463e27c5`, ran two disks in about 30 ms against 45 alternated the same day, and could not
 reach three disks within its fixed budget of 32.
@@ -339,7 +339,7 @@ figures are the next section's.
 each of the 68 worlds' periods and for the ten steps' `notBefore`, `landsAt` and `notAfter` alike —
 because the courier declares no `planning:landsAfter`; so the two plans have no instant to be
 composed at. **After the runtime's pass the beliefs hold two plan graphs and nothing else of the
-walk**: no committed step (every window closed and swept inside the pass), no prediction, no drift,
+walk**: no committed step (every window closed and swept inside the pass), no prediction, no flow,
 no sensor. The parked van is the case a bound on worlds refuses and the corridor the case it
 cannot: the plan through the parked van visits eleven worlds that hold two vans, where the two
 corridor plans, each moving its own van, visit none.
@@ -433,7 +433,7 @@ and 160 after, then 42, 159 and 150 against 46, 129 and 170 — two disks, three
 corner, 220 queries a pass where 218 were — and the pass bench (`world/greenhouse/tests/test_bench.py`)
 read its search lap 62, 29, 90 and 29 ms before against 62, 30, 94 and 23 after, then 51, 23, 79 and 29
 against 55, 29, 91 and 27, its four cases in order, five quads more for the term's declaration; both
-inside the drift the other laps show. **And one representation was refused on this bench:** the
+inside the flow the other laps show. **And one representation was refused on this bench:** the
 refusal first kept the want's verdict and filtered the frontier's achiever read and the plan's with
 `FILTER NOT EXISTS { ?y planning:refused ?by }`, and the search bench read 58, 150 and 176 against
 main's 44, 112 and 133, a quarter of every pass for holders with no invariant at all; with the filter
@@ -498,7 +498,7 @@ violates no_cell_holds_two_vans, a constraint of this world, and nothing repairs
 (van_b, 0, c0_0)`, `reading.contradicted` answers the same row to `orexis-onboard`, and the joint
 want's search still marks the seven worlds that part the vans and bring them together again — those
 are worlds the search made, and the present's own violation is not one. The timings lean a few
-percent slower on the searched poses and faster on two, all inside the drift this machine shows
+percent slower on the searched poses and faster on two, all inside the flow this machine shows
 between rounds of one tree (the shipped pose's five base passes ran 2955 to 3447 ms). What was added
 per candidate is one `OPTIONAL` in `weigh`'s `_ABOUT_Q`, reading the world's mark, and one in the
 planner's `_REACHED_Q`; what was removed is the parent's rows read once per pass per world. The
@@ -588,7 +588,7 @@ Scopes 2 and 3 are gone since #913, in the section below.
 **What that broke, and the rule it taught.** A trouble is keyed by the scope members its offending
 node names, less a member of every scope. With one scope every member was one and the key empty;
 with four the rose grower is a member of scopes 1 and 3 only, the observation names it as whose it
-is (`rose_grower, rose_plot`) and the drift's copy of it does not (`rose_plot`), so the present's
+is (`rose_grower, rose_plot`) and the flow's copy of it does not (`rose_plot`), so the present's
 ground and the foreseen one at the reading's instant plus twenty minutes were two ways of failing
 under one name: two want graphs (`…120007--…122006` and `…122006--open`), two roots, and the plan
 extracted under the foreseen one, placed at 12:20:06 where three rounds of the test never reached
@@ -693,7 +693,7 @@ intention stands.
 | the driver, its own constraint held | 256 | one | 191 | 133, each constraint in 133 | eleven steps | 2225 ms (2182) | 11 acts, 9 passes, one at a time |
 
 **The drive's new filter costs the dispatcher nothing it can see.** A van the world names no driver
-for is refused by nothing, so every count is the tree before's and the pass is inside the drift. The
+for is refused by nothing, so every count is the tree before's and the pass is inside the flow. The
 boarding is a document the courier's ontology does not import: imported, it split the dispatcher
 into three scopes and turned eighteen of the twenty-three tests of the dispatcher, the courier and
 the tower red (#913).
@@ -762,7 +762,7 @@ its plan was found in, so no pass asks; the passes are the tree before's to the 
 reading of *arrived* — a ground holding what no ground of the last pass held — asked at every pass of
 the same walk, since every step taken moves the present: 6 asks, 31 worlds replayed, 103 ms over the
 walk, measured on one walk and not kept. **A belief off the plan's path costs one ask**: three worlds replayed,
-8 ms, inside the drift of the pass. **A belief across it costs the re-search**: the arrival pass is
+8 ms, inside the flow of the pass. **A belief across it costs the re-search**: the arrival pass is
 326 ms against 97, of which the asking is a few milliseconds — the first world replayed is impossible —
 and the rest the walking want searched again from the ground where its drive in flight lands, 38
 candidates, 25 worlds, two of them impossible. The tree before walks van A onto `c1_2` with van C
@@ -815,7 +815,7 @@ more in an allotment grower's search, seven where it weighed four, the plan the 
 adds to a pass where no ground ahead can be told apart is one read of the grounds per imaginarium and
 one of whether the store holds the wait; the shipped cases read 1 to 6 per cent slower at the median
 over this session and an earlier one, and within 2 per cent at the minimum, which nothing here
-separates from the drift — said as possibly real rather than as nothing.
+separates from the flow — said as possibly real rather than as nothing.
 
 **Where something is predicted, the wait is the cheaper plan and often the cheaper search.** The
 crossing — van B a peer's, its route down the third column laid as predictions — is a drive, a wait,

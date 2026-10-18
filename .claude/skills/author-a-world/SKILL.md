@@ -34,7 +34,7 @@ shipped world — follow the one for every role an agent plays:
 | hosts or bids in a venue | `market:Host`, `market:Bidder` | `knowledge/runbooks/add-a-market.md` |
 
 The role table in `knowledge/runbooks/author-a-world.md` covers the rest (a speaker or a
-deliberator alone). A property, an action or a drift no domain has is
+deliberator alone). A property, an action or a flow no domain has is
 `knowledge/runbooks/add-a-domain.md`, written before the world that needs it.
 
 Then write what `knowledge/runbooks/author-a-world.md` lists, each document saying which graph it is on
