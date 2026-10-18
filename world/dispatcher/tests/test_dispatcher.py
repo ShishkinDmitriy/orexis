@@ -647,6 +647,7 @@ def _arrival(world: Path, arrive, *, after: int = 2, passes: int = 40) -> dict:
     executor.intention_resolved.connect(heard("resolved"))
     planner.plan_published.connect(heard("published"))
     planner.reconsidered.connect(heard("reconsidered"))
+    planner.rerooted.connect(heard("rerooted"))
     planner.searched.connect(lambda e: seen["searched"].append(e) or [])
     planner.planned.connect(lambda e: seen["planned"].append(e) or [])
     for n in range(passes):
@@ -684,6 +685,21 @@ def _published(seen) -> dict[str, list[tuple]]:
 
 def _of(seen, kind: str, since_arrival: bool = True) -> list:
     return [e for k, e in seen["events"][seen["arrived"]["events"] if since_arrival else 0:] if k == kind]
+
+
+def _the_replacement_keeps_its_cone(seen) -> None:
+    """THE RE-ROOT AFTER A REOPENING FINDS THE PRESENT UNDER THE LANDING GROUND (#925). The arrival is a
+    surprise, a belief or a parcel the last pass never imagined; the reopened want is searched from the ground
+    its step in flight lands in; and once that step has landed as predicted, the present holds the facts of
+    two grounds of that pass, the old present and the landing one. The cone is the replacement's, under the
+    landing ground, so the pass keeps it whole and every later step of the replacement lands in a world the
+    search imagined: picked by name, the old present dropped it, and the steps after it were a surprise each."""
+    presents = [(e.present, e.kept, e.dropped) for e in _of(seen, "rerooted")]
+    assert [p for p, _, _ in presents[:2]] == ["surprise", "ground"], f"the arrival, then the landing: {presents}"
+    _, kept, dropped = presents[1]
+    assert kept > 10 * dropped, f"the replacement's cone is kept under the landing ground: kept {kept}, dropped {dropped}"
+    assert "surprise" not in [p for p, _, _ in presents[2:]], \
+        f"every later step of the replacement lands in a world the search imagined: {presents}"
 
 
 @pytest.mark.parametrize("name, edits, cell, owed, candidates, worlds, impossible, at", [
@@ -740,6 +756,7 @@ def test_a_parcel_arriving_mid_walk_reopens_the_walking_want_and_the_joint_plan_
     searched = {_local(e.want): e.weighed for e in arrived["searched"]}
     assert (searched, arrived["weighed"].get(JOINT), arrived["impossible"]) == ({JOINT: candidates}, worlds, impossible), \
         f"the coupled re-search, measured: {searched} candidates, {arrived['weighed']} worlds, {arrived['impossible']} impossible"
+    _the_replacement_keeps_its_cone(seen)
 
 
 def test_a_joint_plan_that_begins_with_the_walking_intentions_untaken_steps_leaves_it_standing(ticking, tmp_path):
@@ -881,6 +898,11 @@ def test_a_belief_that_makes_the_walking_plans_next_world_impossible_reopens_it_
     searched = {_local(e.want): e.weighed for e in arrived["searched"]}
     assert (searched, arrived["weighed"].get(A), arrived["impossible"]) == ({A: 38}, 25, {CONSTRAINT: 2}), \
         f"the re-search from the landing ground, measured: {searched} candidates, {arrived['weighed']} worlds, {arrived['impossible']} impossible"
+    if observed:
+        #  A PREDICTED PEER IS NOT THE SAME CASE: its prediction starts ten seconds on, so by the pass that follows
+        #  the landing the present has stopped carrying it and holds the facts of the old present alone, a
+        #  different present from the landing ground's and no tie between two.
+        _the_replacement_keeps_its_cone(seen)
 
 
 def test_a_belief_that_touches_nothing_the_walking_plans_worlds_read_reopens_nothing(ticking, tmp_path, caplog):

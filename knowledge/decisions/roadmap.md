@@ -5,7 +5,7 @@ description: >-
   Direction, not a task list: the open chains of issues in the order each unlocks the next, and the
   parked extensions with the record whose seam opens each.
 status: accepted
-timestamp: 2026-10-08T12:00:00Z
+timestamp: 2026-10-16T12:00:00Z
 ---
 
 # Where it stands
@@ -32,9 +32,28 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
   ([committed-step](/domain/execution/committed-step.md), #849), and an imaginarium kept between passes
   with the present identified in it ([the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md)).
 
+# When 0.2.0 is finished
+
+**0.2.0 is finished when several agents contend: #568 closed, which is #922 and #923 closed on top of
+#919 to #921, and #925 closed beside them.** #925 gates because the re-root dropping the cone a
+reopened plan hangs under is the path the loser of a draw walks (#921), so the release would
+otherwise stand on a plan it forgets. A two-agent society then delivers both parcels at a crossing and in a corridor with
+one passing place, with no collision and no deadlock, and the shipped one-agent worlds are unchanged.
+That merge is tagged `v0.2.0` with release notes in the shape `v0.1.0` has (what the tree is, the
+commit it was cut at), and `pyproject.toml` moves to 0.3.0 in the next change. Everything not
+listed above is 0.3.0.
+
+Two cuts were weighed and refused. **Tagging now** would date 0.2.0 by the kernel's replacement,
+which finished on 2026-09-26, and leave the release to say nothing the tree did not say a month
+earlier. **Finishing when nothing known is wrong** would gate the release on defects (#937, #942,
+#949, the terrace probe's #939 to #941) that no world's behaviour waits on; they are fixed
+as they are reached and gate nothing. The thesis, self-interested agents sharing a scarce
+resource with no overseer, is what 0.2.0 was built toward, so it is what finishes it.
+
 # Next, in order
 
-1. **What is wrong before what is missing** — nothing known is wrong today: a frozen probe is said
+1. **What is wrong before what is missing** — what is known wrong is filed as bugs and gates no
+   release (see above): a frozen probe is said
    stuck (#462, done; the detectors it listed and did not build are seams in
    [stuck](/domain/sensing/stuck.md)), and a world runs end to end from nothing on demand (#47, done).
 2. **Planning in time, its second half** — #596, an action with a duration, down to its two unticked

@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from agent import clock
-from agent.store import rows
+from agent.store import catalogue_of, rows, update
 from agent.planning.reroot import reroot
 
 CASES_DIR = Path(__file__).parent / "reroot"
@@ -80,6 +80,36 @@ def test_a_surprise_keeps_nothing(snapshots):
     store = snapshots.stand_in(CASES_DIR / "a_surprise_drops_everything.trig")
     assert reroot(store, _present(store)).match is None
     assert rows(store, _WORLDS_Q, ()) == []
+
+
+_GROUND = "http://example.org/orexis/graph/ground/"
+
+
+@pytest.mark.parametrize("holder", ["old", "landing"])
+def test_two_grounds_holding_the_presents_facts_are_told_by_their_cones_and_never_by_name(holder, snapshots):
+    """A STEP IN FLIGHT HAS LANDED AS PREDICTED, so the ground it lands in holds what the present of the
+    last pass held, and both have the new present's hash (#925). A reopened plan is searched from the
+    landing ground, so its cone hangs there and the old present holds none: the present is the ground
+    with the search under it, whichever of the two a name would put first. Where it is the old present
+    that holds the cone, as in a pass nothing reopened, it is the old present."""
+    store = snapshots.stand_in(CASES_DIR / "nothing_happened_and_the_cone_is_kept_whole.trig")
+    cat = catalogue_of(store)
+    old, landing = _GROUND + "2026-01-01T120000p0000", _GROUND + "2026-01-01T120030p0000"
+    update(store, f"""
+INSERT {{ GRAPH <{cat}> {{ <{landing}> a planning:GroundGraph ; orexis:arrivedBy orexis:Derived ; orexis:hash ?h ;
+    prov:wasDerivedFrom <{old}> ;
+    dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:30+00:00"^^xsd:dateTime ] }} }}
+WHERE {{ GRAPH <{cat}> {{ <{old}> orexis:hash ?h }} }}""")
+    held, bare = (old, landing) if holder == "old" else (landing, old)
+    if holder == "landing":
+        update(store, f"""
+DELETE {{ GRAPH <{cat}> {{ ?c planning:from <{old}> }} }} INSERT {{ GRAPH <{cat}> {{ ?c planning:from <{landing}> }} }}
+WHERE {{ GRAPH <{cat}> {{ ?c planning:from <{old}> }} }}""")
+    whole = len(rows(store, _WORLDS_Q, ()))
+    found = reroot(store, _present(store))
+    assert found.match == held, f"{found.match} is the match, and {bare} holds no search"
+    assert len(found.kept) >= whole and len(rows(store, _WORLDS_Q, ())) == whole, "the cone under the match is kept whole"
+    assert bare in found.dropped, "the bare ground goes with the rest the pass made"
 
 
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):

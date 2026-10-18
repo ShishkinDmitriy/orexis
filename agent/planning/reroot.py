@@ -32,9 +32,13 @@ THE MATCH IS BY HASH AND NOTHING ELSE — never by the name a graph was laid und
 where in the tree it sits — and the hash is taken WITHIN WHAT IS READ, so a fact no text of an
 action or a desire reads, a reading's instant above all, is not what the present differs by
 (`hash_named_graph`). Two worlds may repeat one hash (a candidate whose fork repeated a
-world already seen makes a graph before it is known to repeat); the first minted is the one
-the search expanded, so it is the match, and a ground of the last pass ranks before any
-world. A world attached to the new ground BY NAME — a ground re-laid under the name of the
+world already seen makes a graph before it is known to repeat), and so may two grounds: the
+present the last pass stood in and the ground a step in flight lands in, once that step has
+landed as predicted. Each is the present, and the search done from each is a cone; the match
+is the one with the most worlds beneath it, since that is the search kept, and a reopened
+plan is found from the landing ground while the present it was reopened from holds none
+(#925). Where the cones are as large the first minted is the one the search expanded, and a
+ground of the last pass ranks before any world. A world attached to the new ground BY NAME — a ground re-laid under the name of the
 last one, a test clock that did not move — is not the match and not kept: what hangs there was
 forked from facts the ground may no longer hold, and `lay_ground` took the old graph's
 verdicts with the graph.
@@ -52,18 +56,21 @@ log = logging.getLogger("reroot")
 
 _HASH_Q = """SELECT ?h WHERE { GRAPH $cat { $ground orexis:hash ?h } }"""
 
-#  THE MATCH: a world of the last pass — possible, or a ground not laid from this one — holding
-#  the ground's facts, the earliest minted first and a ground before any world.
-_MATCH_Q = """
-SELECT ?w WHERE {
+#  THE WORLDS THAT MAY BE THE MATCH: each world of the last pass — possible, or a ground not laid
+#  from this one — holding the ground's facts, with when it was minted, a ground before any world.
+_MATCHES_Q = """
+SELECT ?w ?minted WHERE {
   GRAPH $cat {
     ?w orexis:hash $hash . FILTER(?w != $ground)
     { ?w a planning:PossibleGraph } UNION { ?w a planning:GroundGraph }
     FILTER NOT EXISTS { ?w prov:wasDerivedFrom+ $ground }
     FILTER NOT EXISTS { ?w (planning:by/planning:from)+ $ground }
     OPTIONAL { ?w planning:minted ?m } }
-  BIND(COALESCE(?m, 0) AS ?minted) }
-ORDER BY ?minted ?w LIMIT 1"""
+  BIND(COALESCE(?m, 0) AS ?minted) }"""
+
+#  HOW MUCH OF THE SEARCH HANGS UNDER A WORLD: the worlds reached from it by taking candidates.
+_CONE_SIZE_Q = """
+SELECT (COUNT(DISTINCT ?w) AS ?n) WHERE { GRAPH $cat { ?w (planning:by/planning:from)+ $match } }"""
 
 #  THE GROUNDS OF THIS PASS: the one laid and every boundary laid from it.
 _LAID_Q = """
@@ -144,6 +151,17 @@ class Rerooting(NamedTuple):
     dropped: tuple
 
 
+def _matched(store, ground: str, hash: str, cat: Raw) -> str | None:
+    """The world the present is: of the worlds holding the ground's facts, the one with the largest
+    cone, then the earliest minted, a ground before any world — the name only to order what all of
+    those leave equal (#925)."""
+    tied = rows(store, _MATCHES_Q, (), ground=ground, cat=cat, hash=Raw(f'"{hash}"'))
+    if len(tied) < 2:
+        return tied[0]["w"] if tied else None
+    cone = {r["w"]: int(rows(store, _CONE_SIZE_Q, (), match=r["w"], cat=cat)[0]["n"]) for r in tied}
+    return min(tied, key=lambda r: (-cone[r["w"]], int(r["minted"]), r["w"]))["w"]
+
+
 def reroot(store, ground: str) -> Rerooting:
     """Find the world the last pass imagined that `ground` — the present just laid — landed
     in, hand its cone to the ground, and drop everything else the last pass made. What was
@@ -156,8 +174,7 @@ def reroot(store, ground: str) -> Rerooting:
     found = next(iter(rows(store, _HASH_Q, (), ground=ground, cat=cat)), None)
     if found is None:
         raise LookupError(f"{ground} has no hash — is it a ground lay_ground laid?")
-    match = next((r["w"] for r in rows(store, _MATCH_Q, (), ground=ground, cat=cat,
-                                        hash=Raw(f'"{found["h"]}"'))), None)
+    match = _matched(store, ground, found["h"], cat)
     kept = {r["g"] for r in rows(store, _LAID_Q, (), ground=ground, cat=cat)}
     #  ASKED BEFORE THE MATCH'S ROW GOES: the match is among what is dropped, since the ground
     #  carries its facts now, so asked afterwards a step that landed as predicted read as the old
