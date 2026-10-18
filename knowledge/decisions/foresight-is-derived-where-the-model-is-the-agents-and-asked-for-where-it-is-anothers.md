@@ -8,10 +8,13 @@ description: >-
   own reading and the domain's drift) and asked for where another holds it (rain, a peer's route,
   a person's intention); an ACTOR is whoever the agent asks what will hold, and whether that actor
   controls the thing is a separate relation, stated per domain, that decides only whether there is
-  anything to bargain about; every forecast, whoever's word, is laid into the ground of its period
-  as it stands, and the prediction package is the agent's foresight for the models it holds and
-  nothing more. Refused - sensing every future fact, an actor that controls, a kernel Actor class,
-  delegating what nobody can be asked, and moving the weather to speech now.
+  anything to bargain about; a FORECAST is the one word for anyone's word about what will hold
+  later - the weather service's, a peer's, the executor's committed step, and the predictor's own,
+  which is a forecast whose author is this agent - one kind, the author provenance, each laid into
+  the ground of its period as it stands; nobody is ever asked for a plan, only for a forecast; and
+  the prediction package is the agent's foresight for the models it holds and nothing more.
+  Refused - sensing every future fact, an actor that controls, a kernel Actor class, delegating
+  what nobody can be asked, two kinds for one shape, and moving the weather to speech now.
 status: accepted
 timestamp: 2026-10-18T10:00:00Z
 ---
@@ -75,19 +78,34 @@ nothing, so its answer is final and there is nobody to bargain with. The agent t
 the weather would reach for the draw or the market and find no counterparty; "belief in God" is harmless
 exactly as long as the agent asks only for knowledge.
 
-**Every forecast is laid into the ground of its period as it stands, whoever's word it is.** A belief
-holding over a stretch ahead — a forecast hour, a peer's answer, a committed step — is what PDDL calls a
-timed initial literal: known in advance, from anyone, never re-derived. The planner needs one thing of
-it, that it holds later and the agent did not derive it, and that is a fact about the timeline and not
-about a class of beings. A ground is laid at every instant such a belief begins or stops holding within
-the horizon, and the belief holds in the grounds of its period; a prediction the agent derived is laid
-the same way. Where the forecast is about the predicate the plan reads, as a peer's cells are, nothing
-is computed; where it is about something else, as rain is, the domain's drift says what it does to the
-planned quantity, and the predictor derives from it as it does now.
+**A forecast is the one word, and a prediction is a forecast whose author is this agent.** The
+sovereign asked for fewer concepts, and the shape admits it: a weather hour, a peer's answer about its
+van, the executor's committed step and the predictor's stretch are each a belief holding over a stretch
+ahead, saying what will hold there, replaced by its author when its author knows better. What PDDL
+calls a timed initial literal. They differ in who said it — the service through sensing, the peer
+through speech, the executor, the predictor from a percept and the drifts — and whose a graph is, is
+provenance and never its kind ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)
+folded the public kind by the same rule). So `orexis:PredictionGraph` and `sensing:ForecastGraph` are
+one kernel kind, with `execution:CommittedStepGraph` beneath it, once #987 has taken away the one reader
+that told them apart. Nothing a plan selects depends on which author said a forecast; what depends on
+the author is who replaces it, and the author's own provenance finds it.
+
+**Every forecast is laid into the ground of its period as it stands.** A ground is laid at every
+instant a forecast begins or stops holding within the horizon, and the forecast holds in the grounds of
+its period. The planner needs one thing of it, that it holds later, and that is a fact about the
+timeline and not about a class of beings. Where the forecast is about the predicate the plan reads, as a
+peer's cells are, nothing is computed; where it is about something else, as rain is, the domain's drift
+says what it does to the planned quantity, and the predictor forecasts from it as it does now.
+
+**Nobody is asked for a plan.** A plan is private to the mind that found it, the asker's and the
+answerer's alike. What crosses between agents is a forecast: the peer is asked where its van will be
+over these periods, as the weather service is asked how much will fall, and answers from what it has
+committed to and what it intends, restricted to what was asked. #923's "route" is that answer and
+nothing more; the word goes.
 
 **The prediction package is the agent's foresight for the models it holds, and nothing more.** It
-integrates the drifts for what nobody can be asked about. Everything else the agent foresees is a
-forecast, asked for.
+integrates the drifts for what nobody can be asked about and writes the forecasts it alone can author.
+Everything else the agent foresees is asked for.
 
 **The weather stays on sensing's channel.** It is trusted like an instrument — it has no stake in the
 bed, it is wrong by noise, and sensing has the words for a stale or silent forecast — and it is polled
@@ -147,6 +165,11 @@ on the row, and the draw decides which answers count.
   another agent second-order: what it is, not what it said.
 - **Delegating what nobody can be asked.** Drying has no actor; the agent's own drift over its own
   reading is the only model there is. The prediction package stays for exactly this.
+- **Two kinds for one shape.** `orexis:PredictionGraph` and `sensing:ForecastGraph` hold the same thing,
+  an observation of a stretch ahead, and were told apart only by `lay_ground`, which laid a ground for
+  the one and not the other. With a ground at every forecast's boundary nothing reads the difference,
+  and a term nobody reads is annotation. The author stays on the row as provenance, which is where
+  the public fold put it too.
 - **Moving the weather to speech now.** It would cost an extraction rule and the cadence words and
   change no plan. The trigger for moving it: the first external source the agent must ask on demand
   rather than poll, or one that answers in a shape sensing's pointers cannot read.
@@ -165,7 +188,8 @@ on the row, and the draw decides which answers count.
 # How it is built
 
 The record emits the issues that make it true: a ground at every happening, with the check that a
-belief holding later is never laid into the present; `orexis:retracts` dropped from a prediction's row,
-the key saying what it supersedes; `CARRIED_S` removed, the state a ground inherits standing where the
-carried prediction stood; and #923's rule stated in its general form. The prediction page opens with
-what the package is for.
+belief holding later is never laid into the present (#987); `orexis:retracts` dropped from a
+prediction's row, the key saying what it supersedes (#988); `CARRIED_S` removed, the state a ground
+inherits standing where the carried prediction stood (#989); a person as an actor (#990); the two
+kinds folded into one kernel forecast kind with the committed step beneath it, after #987 (#992); and
+#923's rule stated in its general form. The prediction page opens with what the package is for.

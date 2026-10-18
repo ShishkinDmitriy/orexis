@@ -582,9 +582,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   reading reads it past the stretch the observation holds for.
 - **Foresight is derived where the model is the agent's and asked for where it is another's** —
   drying is nobody's to ask and rain nobody's to derive; an actor is whoever is asked what will hold,
-  a forecast is laid into the ground of its period whoever's word it is, and whether the actor
-  controls the thing is a separate relation that decides only whether there is anything to bargain
-  about (foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers).
+  and nobody is asked for a plan; a FORECAST is anyone's word about what will hold later, the
+  predictor's own among them, one kind whose author is provenance, laid into the ground of its period;
+  and whether an actor controls the thing is a separate relation that decides only whether there is
+  anything to bargain about (foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers).
 - **A prediction is bands, and the width never leaves the rule** (#642); **the mind wakes on
   contradiction, not on time** — a reading inside the bands leaves no mark (#632).
 - **A step's band is the prediction from its landing, and a reading is compared once** (#639).

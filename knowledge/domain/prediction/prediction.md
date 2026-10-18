@@ -13,10 +13,12 @@ description: >-
 # What prediction is for
 
 Prediction is the agent's foresight for the models it holds, and nothing more: it integrates the
-drifts for what nobody can be asked about, the bed drying from its own latest reading. What another
-holds the model of — rain, a peer's route — is a [forecast](/domain/sensing/forecast.md), asked for
-and laid into the ground of its period as it stands
-([foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers](/decisions/foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers.md)).
+drifts for what nobody can be asked about, the bed drying from its own latest reading, and what it
+writes is a [forecast](/domain/sensing/forecast.md) whose author is this agent. What another holds
+the model of — rain, where a peer's van will be — is a forecast too, asked for; the two are one kind
+told apart by who said them, and each is laid into the ground of its period as it stands
+([foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers](/decisions/foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers.md),
+#992).
 
 # What a drift is
 
