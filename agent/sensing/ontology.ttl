@@ -103,14 +103,9 @@
     latest is the one no percept names as its previous. Kept as deep as sensing's rules read — its
     last `stuckAfter` — so the oldest kept names one that is gone (knowledge/domain/sensing/observation.md).""" .
 
-:ForecastGraph a owl:Class ;
-    rdfs:subClassOf orexis:BeliefGraph ;
-    rdfs:label "Forecast graph" ;
-    rdfs:comment """One stretch of a forecast: the sosa:Observation a sensor reading a series made of
-    one stretch ahead - of what, which property, the number, the instant it was issued, the sensor -
-    holding during that stretch, and forgotten with the rest of that sensor's forecast when the
-    next arrives. Named for what it holds. A belief and not a reading: neither a percept nor a
-    state, so no prediction takes it for the observation in hand and no plan forks it.""" .
+#  A FORECAST'S GRAPH IS THE KERNEL'S KIND, `orexis:ForecastGraph`, where sensing, prediction and execution meet (#992):
+#  `received` writes one per stretch of a series, holding during it, forgotten with the rest of that sensor's forecast
+#  when the next arrives — a belief and not a reading, so no prediction takes it for the observation in hand.
 
 :Codec a owl:Class ;
     rdfs:label "Codec" ;

@@ -30,7 +30,7 @@ frame "transport" {
 frame "sensing" {
   component "received · missed\nruns revision over its observations" as SEN
   folder "sensing:ObservationGraph\none per reading · linked by sensing:previous" as obs #FFFCF2
-  folder "sensing:ForecastGraph" as fc
+  folder "orexis:ForecastGraph" as fc
 }
 
 frame "speech" {
@@ -51,7 +51,7 @@ frame "kernel" {
   folder "orexis:ActionGraph · orexis:FlowGraph\nwhat the agent reads to act, no belief" as acts
   folder "orexis:SelfGraph\nwho I am · my roles · my stances" as self
   folder "orexis:BeliefGraph\nthe agent's own state · the subject beliefs\na silence · what is extracted of a statement" as st
-  folder "orexis:PredictionGraph\na diff over a period" as pr
+  folder "orexis:ForecastGraph\na diff over a period" as pr
   folder "orexis:PlanGraph\na plan published, adopted by reference" as plan
   folder "orexis:RecordGraph\nworth believing over its period" as rec
 }

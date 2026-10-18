@@ -5,7 +5,7 @@ observation a sensor last made — found by sensing's kind, `sensing:Observation
 `sosa:madeBySensor`, so nothing of the sensing layer is imported or spoken — sums the rates of
 every flow moving what it observes, accumulates the sum between the happenings at which what a
 flow reads may change, places every crossing of a bound of the ranges that apply to what the
-sensor observes (SSN-System's, `ranges_of`) exactly, and writes one `orexis:PredictionGraph` per
+sensor observes (SSN-System's, `ranges_of`) exactly, and writes one `orexis:ForecastGraph` per
 stretch between crossings, holding a predicted `sosa:Observation` with its number. A rate known
 as a range gives a corridor, and a stretch is its worst side. Which side a stretch is on is not
 said here: it is a revision the sensing layer's rules conclude of the predicted observation as of

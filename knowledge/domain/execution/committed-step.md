@@ -19,7 +19,8 @@ GRAPH <…/committed/grower/plan_s1> {
 }
 ```
 
-The catalogue says the graph is an `execution:CommittedStepGraph`, a belief, holding from the step's
+The catalogue says the graph is an `execution:CommittedStepGraph`, a [forecast](/domain/kernel/forecast.md)
+of the agent's own act and so a belief (#992), holding from the step's
 `execution:notBefore` to its `execution:notAfter`, the latest landing, plus the patience. Inside is
 the step's filling, copied from the [plan](/domain/planning/plan.md) as terms the executor never
 reads, and two numbers of the executor's own: `execution:landsWithinS`, how many seconds after its
@@ -28,11 +29,13 @@ window closes. They are numbers
 because the engine binds nothing for the stretch between two instants, so a rule dividing a rise by
 the window could not take it from the instants on the step.
 
-# Why it is a belief
+# Why it is a forecast
 
 An [intention](/domain/execution/intention.md) is the agent's own and crosses into no possible world;
 what a [flow](/domain/prediction/prediction.md) may read at an instant is a belief graph
-holding then. A committed step is the one row of an intention written as a belief, so the dose the
+holding then. A committed step is the one row of an intention written as a belief - the executor's
+word about what will hold over the window, beneath `orexis:ForecastGraph` as the predictor's stretch
+and a received hour are, recorded and so never the present's - so the dose the
 grower is about to give is a flow its bed's prediction accumulates — rising to the aim over the
 window, on the low trajectory by the latest landing — and a want searched after the adoption sees a
 future that contains the plan, which is the IRMA order: a commitment is background a new option is

@@ -22,7 +22,7 @@ arrivals are transitioned on in the order they came whoever handed them.
 from __future__ import annotations
 
 from agent import clock
-from agent.ontology import BELIEF, PREDICTION
+from agent.ontology import BELIEF
 from agent.store import graphs_of, revisions_of
 
 from .deliberator import Deliberator
@@ -52,7 +52,6 @@ class _Belief:
         self.revise([g for g in graphs_of(runtime.beliefs, BELIEF)
                      if g not in skip and not revisions_of(runtime.beliefs, g)])
         runtime.on(BELIEF, lambda graph: self.revise([graph]))
-        runtime.on(PREDICTION, lambda graph: self.revise([graph]))
 
 
 def create(runtime) -> _Belief:

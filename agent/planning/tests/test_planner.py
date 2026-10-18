@@ -26,7 +26,7 @@ import pyoxigraph as ox
 from agent import clock
 from agent.execution.executor import Executor
 from agent.planning.ontology import BUDGET_TERM, GROUND_GRAPH, PLAN_GRAPH, POSSIBLE_GRAPH
-from agent.ontology import PREDICTION
+from agent.ontology import FORECAST
 from agent.planning import footprint
 from agent.planning.planner import BUDGET, Planner
 from agent.planning.world_at import world_at
@@ -71,7 +71,7 @@ def _writes(store) -> tuple[set, set]:
     a prediction."""
     patterns = footprint.changeable(store)
     assert patterns is not footprint.ANYTHING
-    predictions = graphs_of(store, PREDICTION)
+    predictions = graphs_of(store, FORECAST)
     patterns += [(q.predicate.value, None) for graph in (*predictions, *revisions_of(store, *predictions))
                  for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph))]
     return {p for p, o in patterns if o is None}, {(p, o) for p, o in patterns if o is not None}

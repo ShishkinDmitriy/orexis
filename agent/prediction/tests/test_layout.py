@@ -58,8 +58,8 @@ def test_the_one_word_of_sensing_this_package_speaks_is_the_kind_an_observation_
 
 
 def test_the_mind_imports_nothing_of_prediction():
-    """The planner reads predictions by KIND: a graph classified `orexis:PredictionGraph` is
-    its to read whoever wrote it."""
+    """The planner reads forecasts by KIND: a graph classified `orexis:ForecastGraph` is
+    its to read whoever wrote it, the predictor among them (#992)."""
     for path in sorted((ROOT / "agent").rglob("*.py")):
         if PREDICTION in path.parents or "tests" in path.parts or path == ROOT / "agent" / "runtime.py":
             continue                  # the container assembles every layer and may import them all

@@ -19,7 +19,7 @@ import weakref
 import pytest
 
 from agent.hash_named_graph import digest_of
-from agent.ontology import BELIEF, PREDICTION
+from agent.ontology import BELIEF
 from agent.runtime import Runtime
 from agent.store import catalogue_of, graphs_of, rows
 
@@ -48,7 +48,7 @@ def unstamped(store) -> list[str]:
     out = []
     stated = [r["g"] for r in rows(store, """SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         ?g orexis:hash ?h } }""", ())]
-    for graph in dict.fromkeys([*graphs_of(store, BELIEF, PREDICTION), *stated]):
+    for graph in dict.fromkeys([*graphs_of(store, BELIEF), *stated]):
         row = next(iter(rows(store, _STAMP_Q, (), cat=cat, g=graph)), {})
         said = row.get("h")
         if said != digest_of(store, graph):
@@ -121,6 +121,8 @@ def _apart(kept, whole) -> list[str]:
                 "its content" if a[g][0] != b[g][0] else "its row")
             if g in a and g in b and a[g][0] != b[g][0]:
                 which += f" — kept only {sorted(map(str, a[g][0] - b[g][0]))[:3]} — full only {sorted(map(str, b[g][0] - a[g][0]))[:3]}"
+            elif g in a and g in b:
+                which += f" — kept says {sorted(a[g][1] - b[g][1])} — full says {sorted(b[g][1] - a[g][1])}"
             out.append(f"{g}: {which}")
     return out
 

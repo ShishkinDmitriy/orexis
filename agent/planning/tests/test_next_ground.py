@@ -47,15 +47,14 @@ def test_a_ground_is_followed_by_the_next_and_the_last_by_nothing(imagined, snap
     assert next_ground(imagined, later) is None, "nothing is laid after the refill: nothing to wait for"
 
 
-def test_a_ground_the_search_cannot_tell_from_the_one_before_is_not_where_a_wait_lands(monkeypatch, snapshots):
-    """The same two grounds laid hashed within a reading nothing reads: the refill is a period of its
-    own, since a period is told by everything it holds, but to the search it holds what the present
-    holds, and a wait landing there would repeat the world it left — so none is offered."""
+def test_a_forecast_the_search_reads_nothing_of_lays_no_ground_a_wait_could_land_in(monkeypatch, snapshots):
+    """Laid where the texts read a predicate nothing states: the refill says nothing the search reads, so
+    it is not where the search can be, lays no ground (#987, #992), and a wait has nothing to land in —
+    the present is the one ground, followed by nothing."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = prepare_ground(snapshots.stand_in(CASE), ox.Store())
-    present, later = lay_ground(store, snapshots.NOW, within=frozenset({"http://example.org/test#unread"}))
+    (present,) = lay_ground(store, snapshots.NOW, within=frozenset({"http://example.org/test#unread"}))
     assert next_ground(store, present) is None, "the refill moves nothing the search reads"
-    assert next_ground(store, later) is None
 
 
 def test_a_world_inside_a_ground_is_followed_by_the_ground_after_it(imagined, snapshots):

@@ -31,22 +31,23 @@ def test_lay_ground_lays_the_grounds_the_patch_says(case, monkeypatch, request, 
     snapshots.held_to_diff(case, request, "lay_ground", snapshots.snapshot_of(store))
 
 
-def test_a_period_is_told_by_the_whole_ground_and_its_hash_is_taken_within_what_is_read(monkeypatch, snapshots):
-    """The level drops at half past and the temperature rises at one: three grounds. Laid where
-    the level alone is read they are three grounds still — a boundary is a period by everything
-    the ground holds — and the last two carry ONE hash, since the temperature is not where a
-    world stands there. Folding them by what is read was built and struck: a want
-    minted for a foreseen crossing came to be weighed in the present and its intention ended
-    before its step was due (#858, `lay_ground`)."""
+def test_a_forecast_read_by_nothing_lays_no_ground_and_one_read_is_a_period_by_everything_it_holds(monkeypatch, snapshots):
+    """The level drops at half past and the temperature rises at one. Laid where the level alone is read,
+    the temperature's forecast says nothing the search can be in and lays no ground: two grounds, told
+    apart by the level (#987, #992). Laid where both are read, three — and which boundary is a period is
+    still told by everything the ground holds, not by what is read: folding by what is read was built
+    and struck, since a want minted for a foreseen crossing came to be weighed in the present and its
+    intention ended before its step was due (#858, `lay_ground`)."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     case = CASES_DIR / "two_stretches_in_one_scope_are_two_grounds.trig"
     store = snapshots.stand_in(case)
-    grounds = lay_ground(store, snapshots.NOW, frozenset({"http://example.org/test#level"}))
-    assert len(grounds) == 3
+    grounds = lay_ground(store, snapshots.NOW, frozenset({_T + "level"}))
+    assert len(grounds) == 2, "the temperature is read by nothing"
     hashes = [rows(store, "SELECT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . "
                           f"<{g}> orexis:hash ?h }} }}")[0]["h"] for g in grounds]
     assert hashes[0] != hashes[1], "the level dropped, which is read"
-    assert hashes[1] == hashes[2], "the temperature rose, which is not"
+    store = snapshots.stand_in(case)
+    assert len(lay_ground(store, snapshots.NOW, frozenset({_T + "level", _T + "temperature"}))) == 3
 
 
 _T = "http://example.org/test#"

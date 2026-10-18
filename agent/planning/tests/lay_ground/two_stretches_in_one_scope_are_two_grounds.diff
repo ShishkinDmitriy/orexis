@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -20,8 +20,6 @@
+@@ -21,39 +21,91 @@
  }
  
  GRAPH :sensed {
@@ -9,7 +9,43 @@
  }
  
  GRAPH :dip {
-@@ -49,6 +47,46 @@
+-  :tank1 :level 5 .
+ }
+ 
+ GRAPH :heat {
+-  :tank1 :temperature 40 .
+ }
+ 
+ GRAPH :catalogue {
+   :catalogue a orexis:CatalogueGraph .
+   :catalogue a orexis:Graph .
+-  :dip a orexis:Graph .
+   :dip a orexis:BeliefGraph .
+   :dip a orexis:ForecastGraph .
++  :dip a orexis:Graph .
++  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+   :dip orexis:arrivedBy orexis:Recorded .
+-  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+   :dip orexis:ownedBy :keeper .
+-  :heat a orexis:Graph .
++  :dip planning:cutBy "sha256:2d2bc758c20d47733082d0b31615c2919929e8b533dc0b2ef7f7dcdf99c62cfa" .
++  :dip.changeable a planning:ChangeableGraph .
++  :dip.changeable orexis:arrivedBy orexis:Derived .
++  :dip.changeable prov:wasDerivedFrom :dip .
+   :heat a orexis:BeliefGraph .
+   :heat a orexis:ForecastGraph .
++  :heat a orexis:Graph .
++  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :heat orexis:arrivedBy orexis:Recorded .
+-  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :heat orexis:ownedBy :keeper .
++  :heat planning:cutBy "sha256:2d2bc758c20d47733082d0b31615c2919929e8b533dc0b2ef7f7dcdf99c62cfa" .
++  :heat.changeable a planning:ChangeableGraph .
++  :heat.changeable orexis:arrivedBy orexis:Derived .
++  :heat.changeable prov:wasDerivedFrom :heat .
+   :ontology a orexis:BeliefGraph .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .
@@ -49,6 +85,14 @@
 +
 +GRAPH ground:2026-01-01T130000p0000 {
 +  :tank1 :level 5 .
++  :tank1 :temperature 40 .
++}
++
++GRAPH :dip.changeable {
++  :tank1 :level 5 .
++}
++
++GRAPH :heat.changeable {
 +  :tank1 :temperature 40 .
 +}
 +

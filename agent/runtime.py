@@ -117,7 +117,7 @@ from agent import series
 from agent.lifecycle import MET, PLANNED, UNFINISHED, UNREACHABLE, Signal  # noqa: F401 — the outcomes, re-exported
 from agent.metrics import Laps, Level, Value, window
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, DERIVED, OREXIS, PREDICTION, ROLE, SELF_GRAPH
+from agent.ontology import BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, DERIVED, OREXIS, ROLE, SELF_GRAPH
 from agent.store import (NAMESPACES, answer, catalogue_of, close_catalogue, closed, classify, document, forget_graph,
                          graphs_of, imports_of, kinds_in, put_document, rows, update, whose, DocumentRefused, Raw)
 
@@ -503,7 +503,7 @@ def _stamp(store: ox.Store) -> None:
     flows, shapes, constraints, rules and desires among them, which nothing writes after — and a graph
     of a volume lived in is stamped again as it stands
     (a-graph-changes-in-place-and-its-row-says-what-it-holds)."""
-    for graph in dict.fromkeys([*graphs_of(store, BELIEF, PREDICTION),
+    for graph in dict.fromkeys([*graphs_of(store, BELIEF),
                                 *(r["g"] for r in rows(store, _ASSERTED_Q, ()))]):
         hash_named_graph(store, graph)
 

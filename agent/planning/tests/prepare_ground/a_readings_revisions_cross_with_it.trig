@@ -20,7 +20,8 @@
 
 GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  orexis:PredictionGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -54,10 +55,12 @@ GRAPH :catalogue {
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .
   :drying_stops a orexis:Graph .
-  :drying_stops a orexis:PredictionGraph .
+  :drying_stops a orexis:BeliefGraph .
+  :drying_stops a orexis:ForecastGraph .
+  :drying_stops orexis:arrivedBy orexis:Recorded .
   :drying_stops dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
   :drying_stops orexis:ownedBy :keeper .
-  :drying_stops prov:wasDerivedFrom :sensed .
+  :drying_stops prov:hadPrimarySource :sensed .
   :drying_stops_revisions a orexis:BeliefGraph .
   :drying_stops_revisions a orexis:Graph .
   :drying_stops_revisions orexis:arrivedBy orexis:Derived .

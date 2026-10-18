@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -35,9 +35,7 @@
+@@ -35,14 +35,11 @@
  }
  
  GRAPH :sensed {
@@ -10,7 +10,31 @@
    :tank2 :temperature 20 .
  }
  
-@@ -72,6 +70,63 @@
+ GRAPH :predicted-0 {
+-  :tank1 :level 5 .
+ }
+ 
+ GRAPH :scopes {
+@@ -62,12 +59,16 @@
+   :ontology a orexis:BeliefGraph .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+-  :predicted-0 a orexis:Graph .
+   :predicted-0 a orexis:BeliefGraph .
+   :predicted-0 a orexis:ForecastGraph .
++  :predicted-0 a orexis:Graph .
++  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+   :predicted-0 orexis:arrivedBy orexis:Recorded .
+   :predicted-0 orexis:ownedBy :keeper .
+-  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  :predicted-0 planning:cutBy "sha256:79a8c5917d7f90336d9f1fb7bd315a20df72059cf7cf98de56f00fff05dac6e0" .
++  :predicted-0.changeable a planning:ChangeableGraph .
++  :predicted-0.changeable orexis:arrivedBy orexis:Derived .
++  :predicted-0.changeable prov:wasDerivedFrom :predicted-0 .
+   :scopes a orexis:Graph .
+   :scopes a planning:ScopeGraph .
+   :scopes orexis:arrivedBy orexis:Derived .
+@@ -75,6 +76,67 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .
@@ -68,6 +92,10 @@
 +  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
 +  :keeper.in_range.pursued.tank1.level.met sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
 +  :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
++}
++
++GRAPH :predicted-0.changeable {
++  :tank1 :level 5 .
 +}
 +
 +GRAPH :sensed.changeable {

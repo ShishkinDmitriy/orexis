@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -39,13 +39,9 @@
+@@ -40,31 +40,18 @@
  }
  
  GRAPH :sensed {
@@ -14,7 +14,25 @@
  }
  
  GRAPH :held_ahead {
-@@ -71,6 +67,10 @@
+-  :soil a sosa:Observation .
+-  :soil sosa:hasFeatureOfInterest :bed .
+-  :soil sosa:hasSimpleResult 0.3001 .
+ }
+ 
+ GRAPH :held_later {
+-  :soil a sosa:Observation .
+-  :soil sosa:hasFeatureOfInterest :bed .
+-  :soil sosa:hasSimpleResult 0.3001 .
+ }
+ 
+ GRAPH :rising {
+-  :soil a sosa:Observation .
+-  :soil sosa:hasFeatureOfInterest :bed .
+-  :soil sosa:hasSimpleResult 0.35 .
+ }
+ 
+ GRAPH :catalogue {
+@@ -72,38 +59,123 @@
    :believed a orexis:Graph .
    :believed orexis:arrivedBy orexis:Derived .
    :believed orexis:ownedBy :keeper .
@@ -24,8 +42,51 @@
 +  :believed.changeable prov:wasDerivedFrom :believed .
    :catalogue a orexis:CatalogueGraph .
    :catalogue a orexis:Graph .
-   :held_ahead a orexis:Graph .
-@@ -97,6 +97,57 @@
+-  :held_ahead a orexis:Graph .
+   :held_ahead a orexis:BeliefGraph .
+   :held_ahead a orexis:ForecastGraph .
++  :held_ahead a orexis:Graph .
++  :held_ahead dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:40:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:20:00+00:00"^^xsd:dateTime ] .
+   :held_ahead orexis:arrivedBy orexis:Recorded .
+-  :held_ahead dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:40:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:20:00+00:00"^^xsd:dateTime ] .
+   :held_ahead orexis:ownedBy :keeper .
++  :held_ahead planning:cutBy "sha256:ce2dcc57c335da6d07e207828e3968d0a4ac95e6c78e68d6733720e7aa81a60f" .
+   :held_ahead prov:hadPrimarySource :sensed .
+-  :held_later a orexis:Graph .
++  :held_ahead.changeable a planning:ChangeableGraph .
++  :held_ahead.changeable orexis:arrivedBy orexis:Derived .
++  :held_ahead.changeable prov:wasDerivedFrom :held_ahead .
+   :held_later a orexis:BeliefGraph .
+   :held_later a orexis:ForecastGraph .
++  :held_later a orexis:Graph .
++  :held_later dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:40:00+00:00"^^xsd:dateTime ] .
+   :held_later orexis:arrivedBy orexis:Recorded .
+-  :held_later dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:40:00+00:00"^^xsd:dateTime ] .
+   :held_later orexis:ownedBy :keeper .
++  :held_later planning:cutBy "sha256:ce2dcc57c335da6d07e207828e3968d0a4ac95e6c78e68d6733720e7aa81a60f" .
+   :held_later prov:hadPrimarySource :sensed .
++  :held_later.changeable a planning:ChangeableGraph .
++  :held_later.changeable orexis:arrivedBy orexis:Derived .
++  :held_later.changeable prov:wasDerivedFrom :held_later .
+   :ontology a orexis:BeliefGraph .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+-  :rising a orexis:Graph .
+   :rising a orexis:BeliefGraph .
+   :rising a orexis:ForecastGraph .
++  :rising a orexis:Graph .
++  :rising dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :rising orexis:arrivedBy orexis:Recorded .
+-  :rising dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+   :rising orexis:ownedBy :keeper .
++  :rising planning:cutBy "sha256:ce2dcc57c335da6d07e207828e3968d0a4ac95e6c78e68d6733720e7aa81a60f" .
+   :rising prov:hadPrimarySource :sensed .
++  :rising.changeable a planning:ChangeableGraph .
++  :rising.changeable orexis:arrivedBy orexis:Derived .
++  :rising.changeable prov:wasDerivedFrom :rising .
+   :rules a orexis:Graph .
+   :rules a sh:RulesGraph .
+   :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:arrivedBy orexis:Received .
    :sensed orexis:ownedBy :keeper .
@@ -76,6 +137,24 @@
 +
 +GRAPH :believed.changeable {
 +  :bed :soil :Dry .
++}
++
++GRAPH :held_ahead.changeable {
++  :soil a sosa:Observation .
++  :soil sosa:hasFeatureOfInterest :bed .
++  :soil sosa:hasSimpleResult 0.3001 .
++}
++
++GRAPH :held_later.changeable {
++  :soil a sosa:Observation .
++  :soil sosa:hasFeatureOfInterest :bed .
++  :soil sosa:hasSimpleResult 0.3001 .
++}
++
++GRAPH :rising.changeable {
++  :soil a sosa:Observation .
++  :soil sosa:hasFeatureOfInterest :bed .
++  :soil sosa:hasSimpleResult 0.35 .
 +}
 +
 +GRAPH :sensed.changeable {

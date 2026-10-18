@@ -2,7 +2,7 @@
 observes, accumulated from the observation in hand, and a prediction written for each stretch
 between crossings.
 
-**A PREDICTION IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** Every `prediction:Flow`
+**A FORECAST IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** Every `prediction:Flow`
 that `prediction:moves` the observed property answers a RATE for the subject at an instant —
 per second of the one timeline, a package's select over whatever holds then — and the flows
 ADD: drying and rain are two flows and the value moves by their sum, which is PDDL+'s
@@ -29,13 +29,13 @@ trajectory is under the floor, above where the high one is over the ceiling — 
 written is the trajectory that side was read from, so the rules conclude of it the side the
 corridor has.
 
-**WHAT IS WRITTEN IS ONE PREDICTION PER STRETCH**: from the observation's horizon to the first
+**WHAT IS WRITTEN IS ONE FORECAST PER STRETCH**: from the observation's horizon to the first
 crossing, crossing to crossing, and from the last to the horizon's end — each an
-`orexis:PredictionGraph` holding during its stretch, carrying a predicted `sosa:Observation` in
+`orexis:ForecastGraph` holding during its stretch, carrying a predicted `sosa:Observation` in
 SOSA's words with the number at the last instant of the stretch known to lie on its side — its
 key, its sensor, the number and the instant, and nothing else of the percept it was made from. Each
-says which percept it was derived from, and the next percept of the sensor drops every one before
-its own are written. THE PREDICTED OBSERVATION IS ONE NODE PER KEY, not one per stretch: each stretch's
+says which percept is its primary source — `prov:hadPrimarySource`, no revision of it — and the next
+percept of the sensor drops every one before its own are written. THE PREDICTED OBSERVATION IS ONE NODE PER KEY, not one per stretch: each stretch's
 graph says that node's number and instant for its stretch, and the planner laying a ground replaces
 by key — every triple of the same subject and predicate — so a stretch supersedes the one before it
 with no text saying how (#988). THE OBSERVATION IN HAND IS A PERCEPT (`sensing:ObservationGraph`, sensing's
@@ -59,7 +59,7 @@ from datetime import datetime, timedelta
 import pyoxigraph as ox
 
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, FLOW_GRAPH, PREDICTION, RECORD, RECORDED, local_of
+from agent.ontology import BELIEF, FLOW_GRAPH, FORECAST, RECORD, RECORDED, local_of
 from agent.stance import stance
 from agent.store import (PLACES, Raw, catalogue_of, entry, forget_graph, graphs_of, instant, quads,
                          remember, revisions_of, rows, update)
@@ -115,11 +115,14 @@ SELECT ?feature ?property ?value WHERE {
 #  is a predictor, and every agent of the world reads the flow graph, which names no owner.
 _FLOWS_Q = "SELECT ?flow ?rate WHERE { ?flow a $flow ; $moves $property ; $rate_of ?rate } ORDER BY ?flow"
 
-#  THE PREDICTIONS WRITTEN FOR THIS SENSOR BEFORE: every one derived from a percept of it — the one in
-#  hand, or one before it, since each reading is a percept of its own (#944) — found by the predicted
-#  observation it holds.
+#  THE PREDICTIONS WRITTEN FOR THIS SENSOR BEFORE: every forecast whose primary source is a percept of it
+#  — the one in hand, or one before it, since each reading is a percept of its own (#944) — found by the
+#  predicted observation it holds. `prov:hadPrimarySource` and not `prov:wasDerivedFrom`: a prediction is
+#  no revision of the percept it foresees from, and a reader asking a percept's revisions — the
+#  transitions, which read an arrival with what the rules concluded of it — must never be handed the
+#  predicted number as if the sensor had said it (#992).
 _WRITTEN_Q = """
-SELECT DISTINCT ?g WHERE { GRAPH $cat { ?g a orexis:PredictionGraph ; prov:wasDerivedFrom ?percept }
+SELECT DISTINCT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph ; prov:hadPrimarySource ?percept }
                            GRAPH ?g { ?o sosa:madeBySensor $sensor } }"""
 
 #  THE HAPPENINGS: every instant inside the horizon at which a belief graph, a prediction or a percept
@@ -174,7 +177,7 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
         #  holding then, as this estimator reads its own at the boundary (#944); this key's own stretches
         #  are gone by now, forgotten before the flows are asked.
         known = remember(memo, ("known", sensor, at), lambda: graphs_of(
-            store, BELIEF, RECORD, PREDICTION, OBSERVATION_GRAPH, at=at, now=now or taken))
+            store, BELIEF, RECORD, OBSERVATION_GRAPH, at=at, now=now or taken))
         #  THE OBSERVATION IN HAND IS READ AT EVERY INSTANT, with what the rules concluded of it —
         #  its key and its number live in its revisions — since a flow sized from the reading a
         #  committed step answers reads it past the stretch the observation holds for.
@@ -206,8 +209,8 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
         graph_n = prediction_graph(local_of(me), feature, observed_property, n)
         update(store, f"""
 INSERT DATA {{
-  {entry(store, graph_n, PREDICTION, RECORDED, me, start=taken + timedelta(seconds=begins), end=taken + timedelta(seconds=closes))}
-  GRAPH <{catalogue_of(store)}> {{ <{graph_n}> prov:wasDerivedFrom <{graph}> . }} }}""")
+  {entry(store, graph_n, FORECAST, RECORDED, me, start=taken + timedelta(seconds=begins), end=taken + timedelta(seconds=closes))}
+  GRAPH <{catalogue_of(store)}> {{ <{graph_n}> prov:hadPrimarySource <{graph}> . }} }}""")
         #  THE PREDICTED OBSERVATION ALONE, a node of its own: its key, its sensor, a
         #  number and an instant — never the percept, whose name, link to the one before it and what the
         #  rules concluded of its sensor are what a sensor said, and cross into no ground (#944).
@@ -226,7 +229,7 @@ INSERT DATA {{
 def _happenings(store, cat, taken: datetime, horizon: float) -> list[float]:
     """The seconds past the observation at which a belief graph, a prediction or a percept begins or
     stops holding inside the `horizon`, earliest first, with the horizon's end."""
-    found = rows(store, _HAPPENINGS_Q, (), cat=cat, kinds=Raw(f"<{BELIEF}> <{PREDICTION}> <{OBSERVATION_GRAPH}>"),
+    found = rows(store, _HAPPENINGS_Q, (), cat=cat, kinds=Raw(f"<{BELIEF}> <{OBSERVATION_GRAPH}>"),
                  **{"from": instant(taken), "to": instant(taken + timedelta(seconds=horizon))})
     return sorted({*((datetime.fromisoformat(r["t"]) - taken).total_seconds() for r in found), horizon})
 

@@ -63,6 +63,6 @@ URI template; `{latitude}` and `{longitude}` are filled from the `schema:geo` of
 hosted by, variable by local name. Started, it polls each sensor at once and then every
 `ssn-system:Frequency` the sensor states; a fetch runs on a thread of its own, one at a time per
 sensor, and the response is submitted like a message.
-The one sensor it serves today is a [forecast](/domain/sensing/forecast.md) service, whose
+The one sensor it serves today is a [forecast](/domain/kernel/forecast.md) service, whose
 address is public and is read off the world, not told
 ([a-forecast-is-a-series-a-sensor-reads](/decisions/a-forecast-is-a-series-a-sensor-reads.md)).

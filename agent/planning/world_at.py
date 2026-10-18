@@ -34,9 +34,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from agent.ontology import BELIEF, PREDICTION
+from agent.ontology import BELIEF
 
-from .ontology import FORESEEN
+from .ontology import KNOWN
 from agent.store import Raw, catalogue_of, graphs_of, instant, remember, revisions_of, rows
 
 from .ontology import CHANGEABLE_GRAPH, GROUND_GRAPH, POSSIBLE_GRAPH
@@ -73,17 +73,15 @@ def world_at(store, world: str | None, *, holder: str | None = None, now: dateti
         at = datetime.fromisoformat(when[0])
         until = datetime.fromisoformat(when[1]) if when[1] else at
     #  WHAT A WORLD SPEAKS FOR: what the search can change, cut out of every graph it reads beside
-    #  (`lay_ground`, #953), the predictions and what was concluded of them, the grounds and the
-    #  possible worlds. A ground is laid from the changeable graphs and the predictions applied over
-    #  them, so read beside the world, a value an effect replaced would outlive the effect; what is
-    #  left of every graph the cut was made in is read beside it, being what no step changes.
+    #  (`lay_ground`, #953), the grounds and the possible worlds. A ground is laid from the changeable
+    #  graphs — a forecast laid where it begins is cut whole into one (#987, #992) — so read beside the
+    #  world, a value an effect replaced would outlive the effect; what is left of every graph the cut
+    #  was made in is read beside it, being what no step changes, at the world's own period.
     def spoken():
-        predictions = graphs_of(store, PREDICTION)
-        return frozenset([*graphs_of(store, CHANGEABLE_GRAPH, PREDICTION, GROUND_GRAPH, POSSIBLE_GRAPH),
-                          *revisions_of(store, *predictions)])
+        return frozenset(graphs_of(store, CHANGEABLE_GRAPH, GROUND_GRAPH, POSSIBLE_GRAPH))
     spoken_for = remember(memo, ("spoken_for",), spoken)
     known = remember(memo, ("knowable", at, until, holder, now), lambda: tuple(
-        g for g in graphs_of(store, *FORESEEN, at=at, until=until, holder=holder, now=now)
+        g for g in graphs_of(store, *KNOWN, at=at, until=until, holder=holder, now=now)
         if g not in spoken_for))
     if world is None:
         #  THE PRESENT GROUND'S OWN FILLING, read where it lies: every belief and what the rules
@@ -97,10 +95,17 @@ def world_at(store, world: str | None, *, holder: str | None = None, now: dateti
     return [*known, world]
 
 
-#  EVERY BELIEF WHOSE PERIOD BEGINS AFTER `$now`, and the changeable part cut from one.
+#  EVERY BELIEF THAT IS NOT THE PRESENT'S, and the changeable part cut from one: one whose period begins
+#  after `$now`, and the agent's own forecast whatever its period — recorded: the predictor's stretch, a
+#  committed step — since what it foresees of now the percept states, and the present is where no
+#  prediction has applied (#916, #992).
 _AHEAD_Q = """
 SELECT ?g WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start }
-               UNION { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom/dcterms:temporal/orexis:start ?start }
-               FILTER(?start > $now) } }"""
+               { { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start }
+                 UNION { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom/dcterms:temporal/orexis:start ?start }
+                 FILTER(?start > $now) }
+               UNION
+               { { ?g a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded }
+                 UNION { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom ?f .
+                         ?f a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded } } } }"""

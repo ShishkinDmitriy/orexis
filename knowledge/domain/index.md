@@ -19,6 +19,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [part](/domain/kernel/part.md) - What a package contributes to a running agent: created, linked to the others, started, stopped last-first.
 * [event](/domain/kernel/event.md) - What a signal carries: a class its package declares, said whole; it may mark what is reported and answer a history point.
 * [level](/domain/kernel/level.md) - A reported field that is the state now, read by its store's owner and written as it last stood in a window.
+* [forecast](/domain/kernel/forecast.md) - Anyone's word about a stretch ahead, one kind holding during it; the predictor's own and a committed step among them, told apart by provenance.
 * [signal](/domain/kernel/signal.md) - A package's own word for what just happened, on its object, carrying one event; connected when parts link, never stored.
 * [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind on the catalogue.
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
@@ -33,7 +34,6 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [observation](/domain/sensing/observation.md) - One act of observing in SOSA's words, one per reading, linked to the one before; a percept, the premise everything else derives from.
 * [reading](/domain/sensing/reading.md) - The number an observation carries: what a transition judges, what a flow predicts, what a dose is sized from.
 * [calibration](/domain/sensing/calibration.md) - A correction within one unit, two points the world states beside the sensor, applied by sensing's rule after any scaling.
-* [forecast](/domain/sensing/forecast.md) - Another party's word about a stretch ahead: what a sensor reading a series writes, one graph per stretch. Testimony, never a prediction.
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; a transition judges a subject against the operating one.
 * [margin](/domain/sensing/margin.md) - How far past a bound a value must go to leave the state held of a subject; stated on the range's condition, read by a transition.
 * [stuck](/domain/sensing/stuck.md) - A sensor whose last readings kept all gave one number is stuck on it, by a rule over its percepts; counts readings, not time.

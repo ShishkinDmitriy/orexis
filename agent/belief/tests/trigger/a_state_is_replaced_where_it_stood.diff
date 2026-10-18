@@ -24,8 +24,8 @@
 +  tick2:believed a orexis:Graph .
 +  tick2:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
 +  tick2:believed orexis:arrivedBy orexis:Derived .
-+  tick2:believed orexis:ownedBy :keeper .
 +  tick2:believed orexis:hash "sha256:aa46966d4ffb360392125962f625b67e7ceb301fdc2e0bf6d4564975f6cfe5a4" .
++  tick2:believed orexis:ownedBy :keeper .
  }
 +
 +

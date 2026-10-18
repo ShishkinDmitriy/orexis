@@ -53,7 +53,7 @@ def test_forgetting_a_graph_forgets_the_beliefs_derived_from_it():
     st = ox.Store()
     update(st, """INSERT DATA {
       GRAPH <urn:cat> { <urn:cat> a orexis:CatalogueGraph .
-        <urn:g> a orexis:Graph , orexis:PredictionGraph .
+        <urn:g> a orexis:Graph , orexis:ForecastGraph .
         <urn:g/rev> a orexis:Graph , orexis:BeliefGraph ; prov:wasDerivedFrom <urn:g> .
         <urn:other/rev> a orexis:Graph , orexis:BeliefGraph ; prov:wasDerivedFrom <urn:other> . }
       GRAPH <urn:g> { <urn:s> <urn:p> 1 }

@@ -389,6 +389,30 @@ def written(store, at: datetime | None = None) -> frozenset[str]:
     return frozenset(out)
 
 
+def read_by_transitions(store) -> frozenset | None:
+    """Every predicate — and every class a type pattern names — some transition's WHERE reads, as strings:
+    what a ground laid runs them over, so a forecast saying one of them is laid where it begins (#992).
+    ANYTHING where a transition cannot be read, or will not run."""
+    out: set[str] = set()
+    for order in transitions(store):
+        for rule in order:
+            if not rule.update:
+                continue
+            try:
+                parts = templates(rule.update)
+            except Refused:
+                return ANYTHING
+            for text in (parts.insert, parts.delete):
+                if not text:
+                    continue
+                reads = reads_of_select(text)
+                if reads is ANYTHING:
+                    return ANYTHING
+                out |= {str(p) for p in reads}
+                break                               # one WHERE, asked once
+    return frozenset(out)
+
+
 def changeable(store, actions=None, at: datetime | None = None) -> list[tuple] | None:
     """What a search can change, as patterns of triple: `(predicate, object)` IRIs, the object None
     where anything stands there — one per triple of every template of every writer, each effect of

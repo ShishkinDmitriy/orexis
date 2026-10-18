@@ -29,8 +29,10 @@
 
 GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
-  sensing:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
-  sensing:ForecastGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
 }
 
 GRAPH :world {
@@ -64,7 +66,7 @@ GRAPH :catalogue {
   :world a orexis:Graph .
   forecast:weather_20260101T090000Z a orexis:BeliefGraph .
   forecast:weather_20260101T090000Z a orexis:Graph .
-  forecast:weather_20260101T090000Z a sensing:ForecastGraph .
+  forecast:weather_20260101T090000Z a orexis:ForecastGraph .
   forecast:weather_20260101T090000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
   forecast:weather_20260101T090000Z orexis:arrivedBy orexis:Received .
   forecast:weather_20260101T090000Z orexis:ownedBy :keeper .

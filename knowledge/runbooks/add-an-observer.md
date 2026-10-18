@@ -57,7 +57,7 @@ a place containing it (`schema:containedInPlace`).
 | no frequency | the sensor has no cadence: its reading never goes missing, and it is never silent or stuck |
 | `sensing:readingPointer "/moisture_raw"` | the board publishes several values in one message; the default is `/value` |
 | `sensing:TwoPointScaling`, `sensing:TwoPointCalibration` | the board sends raw counts, or reads a little off ([scaling](/domain/sensing/scaling.md), [calibration](/domain/sensing/calibration.md), [calibrate-a-probe](/runbooks/calibrate-a-probe.md)) |
-| `sensing:endsPointer`, `sensing:startsPointer` | the sensor reads a series, as a weather service's forecast ([forecast](/domain/sensing/forecast.md)) |
+| `sensing:endsPointer`, `sensing:startsPointer` | the sensor reads a series, as a weather service's forecast ([forecast](/domain/kernel/forecast.md)) |
 
 **3. Who acts for it, and how its bytes arrive**, in `society.ttl` (in `world.ttl` for a world
 with no bus). The agent `orexis:actsFor` the subject; a board hosts the sensor; the sensor observes the

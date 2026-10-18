@@ -113,7 +113,7 @@ is built, and nothing here was run on a bench.
 - **A peer cannot say a prediction.** `heard` refuses a document any of whose graphs is not a kind
   beneath `orexis:StateGraph` (`agent/speech/heard.py`): a peer reports what IS. A route said as
   state would be copied into the present ground, which is false — the van is not yet where its route
-  goes — so a route the agent lost to becomes an `orexis:PredictionGraph` only by this decision, and
+  goes — so a route the agent lost to becomes an `orexis:ForecastGraph` only by this decision, and
   #923 argues the refusal it relaxes.
 - **There was no wait.** A courier-only `courier:Wait` was built and taken back out the same day,
   both within PR #924 (the revert is `bb4b4a12`), because waiting is every world's and is #920's,

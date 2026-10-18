@@ -13,7 +13,7 @@ writer, which is why `test_layout.py` refuses a reader that imports one.
 """
 from __future__ import annotations
 
-from agent.ontology import KNOWN as _KERNEL_KNOWN, PREDICTION
+from agent.ontology import KNOWN as _KERNEL_KNOWN
 
 PLANNING = "http://example.org/orexis/planning#"
 
@@ -25,9 +25,9 @@ WANT = PLANNING + "WantGraph"
 SHAPES = PLANNING + "ShapesGraph"
 CONSTRAINT_GRAPH = PLANNING + "ConstraintGraph"
 #  WHAT A PLANNING TEXT IS ANSWERED OVER — a met-test, a precondition, an effect: the kernel's
-#  kinds and the desires and wants — and, standing at an instant, what is expected then.
+#  kinds and the desires and wants; standing at an instant, a forecast holding then is a belief among
+#  them (#992).
 KNOWN = (*_KERNEL_KNOWN, DESIRE, WANT)
-FORESEEN = (*KNOWN, PREDICTION)
 
 #  WHAT A PASS FINDS, per want: a graph of its own in the imaginarium, holding the steps in
 #  execution's own words. Named by `imaginarium.plan_graph` and copied out by the execution

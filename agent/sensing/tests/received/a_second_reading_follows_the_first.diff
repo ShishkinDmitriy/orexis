@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -59,7 +59,22 @@
+@@ -60,7 +60,22 @@
    :world a orexis:Graph .
    observed:probe_20260101T114500Z a orexis:Graph .
    observed:probe_20260101T114500Z a sensing:ObservationGraph .

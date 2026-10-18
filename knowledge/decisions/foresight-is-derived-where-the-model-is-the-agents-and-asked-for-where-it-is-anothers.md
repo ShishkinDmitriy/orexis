@@ -38,18 +38,25 @@ the thing, cannot ask it to change, and can only ask what it will do.
 
 # What the tree holds today, verified
 
-- A forecast is a `sensing:ForecastGraph` written by sensing from a software `sosa:Sensor` reading a
+- A forecast is a `orexis:ForecastGraph` written by sensing from a software `sosa:Sensor` reading a
   series, one graph per hour ([a-forecast-is-a-series-a-sensor-reads](/decisions/a-forecast-is-a-series-a-sensor-reads.md)).
   It reaches a ground only through the `climate:Raining` flow, which reads it as a rate for the bed's
   soil. Its own start and end are happenings to the predictor and boundaries to nothing.
-- A prediction is an `orexis:PredictionGraph` the predictor derives from a sensor's latest percept and
+- A prediction is an `orexis:ForecastGraph` the predictor derives from a sensor's latest percept and
   the flows moving its property ([a-prediction-accumulates-rates-between-happenings](/decisions/a-prediction-accumulates-rates-between-happenings.md)).
   It is the one kind `lay_ground` lays a ground ahead for. `predict` requires a numeric result and a
   `sosa:madeBySensor`; a cell is neither, so a peer's route has no path, and the dispatcher's tests
-  write a `PredictionGraph` about the peer's van by hand.
+  write a `ForecastGraph` about the peer's van by hand.
 - The air humidity on the terrace is read by no flow, transition, desire or action, and reaches no
   prediction and no ground. It is a belief and nothing more.
 - The terrace agent plays an observer and a predictor and wants nothing, so it lays no grounds at all.
+
+> **Verified again after #987, #996 and #992.** Sensing's forecast, the predictor's prediction and the
+> executor's committed step are one kind, `orexis:ForecastGraph`, beneath `orexis:BeliefGraph`; a forecast
+> of any author is laid where its period begins if a text of the pass or a transition reads what it says,
+> so an hour is a boundary where something reads it; a flow reads a forecast of any author at its instant,
+> the agent's own predictions among them; and a recorded forecast is never the present's. The list above
+> stands as the tree was on the morning this record was written.
 
 # The decision
 
@@ -85,9 +92,9 @@ ahead, saying what will hold there, replaced by its author when its author knows
 calls a timed initial literal. They differ in who said it — the service through sensing, the peer
 through speech, the executor, the predictor from a percept and the flows — and whose a graph is, is
 provenance and never its kind ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)
-folded the public kind by the same rule). So `orexis:PredictionGraph` and `sensing:ForecastGraph` are
-one kernel kind, with `execution:CommittedStepGraph` beneath it, once #987 has taken away the one reader
-that told them apart. Nothing a plan selects depends on which author said a forecast; what depends on
+folded the public kind by the same rule). So the predictor's `orexis:PredictionGraph` and sensing's `sensing:ForecastGraph` became
+one kernel kind, `orexis:ForecastGraph`, with `execution:CommittedStepGraph` beneath it, once #987 had taken
+away the one reader that told them apart (#992). Nothing a plan selects depends on which author said a forecast; what depends on
 the author is who replaces it, and the author's own provenance finds it.
 
 **Every forecast is laid into the ground of its period as it stands.** A ground is laid at every
@@ -166,7 +173,7 @@ on the row, and the draw decides which answers count.
   another agent second-order: what it is, not what it said.
 - **Delegating what nobody can be asked.** Drying has no actor; the agent's own flow over its own
   reading is the only model there is. The prediction package stays for exactly this.
-- **Two kinds for one shape.** `orexis:PredictionGraph` and `sensing:ForecastGraph` hold the same thing,
+- **Two kinds for one shape.** The predictor's prediction graph and sensing's forecast graph held the same thing,
   an observation of a stretch ahead, and were told apart only by `lay_ground`, which laid a ground for
   the one and not the other. With a ground at every forecast's boundary nothing reads the difference,
   and a term nobody reads is annotation. The author stays on the row as provenance, which is where

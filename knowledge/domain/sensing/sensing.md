@@ -37,7 +37,7 @@ rescaled through the sensor's [scaling](/domain/sensing/scaling.md); at layer 1 
 sensor is [stuck](/domain/sensing/stuck.md) on one number. A payload that
 does not decode writes nothing and says so in the log. A sensor reading a SERIES - one stating
 `sensing:endsPointer` or `sensing:startsPointer` beside its reading pointer - writes one
-[forecast](/domain/sensing/forecast.md) per stretch still ahead instead, and replaces its last.
+[forecast](/domain/kernel/forecast.md) per stretch still ahead instead, and replaces its last.
 
 **`missed`** is what sensing's own `start` asks every minute of the timeline, whether or not anything
 arrived ([a-package-starts-itself](/decisions/a-package-starts-itself.md)): which sensors have been silent past their
@@ -64,7 +64,7 @@ one, so the contract points one way.
 
 SOSA's and SSN's wherever they have one — a sensor `sosa:observes` a property and `sosa:isHostedBy`
 what it is mounted in, and that pair is what its readings are of — and its own for what neither
-standard says: the observation graph's kind and the forecast's, the link from an observation to the
+standard says: the observation graph's kind, the link from an observation to the
 one before it, the limits a sensor is doubted past and the number a stuck sensor keeps giving, the
 [margin](/domain/sensing/margin.md) a domain's transition holds a state by, the pipeline's binding and
 the two pointers a series is read by, the number a sensor gave and the quantity scaled from it, and
