@@ -36,10 +36,13 @@ refreshes it:
   store made for itself stays.
 - `lay_ground` first cuts out of every graph crossed what the scope's writers can change, each into a
   [changeable](/domain/planning/changeable.md) graph the present is laid from, the rest left to be read
-  beside every world; then it lays a `planning:GroundGraph` per period: the present, and the present with each
-  [prediction](/domain/prediction/prediction.md) applied at its instant and the
-  [transitions](/domain/belief/transition.md) its predicted observation triggers run there — which is
-  what the rules graphs cross for.
+  beside every world; then it lays a `planning:GroundGraph` per period: the present, and a ground at
+  every instant a [prediction](/domain/prediction/prediction.md) applies or a belief the present has not
+  reached begins — a [forecast](/domain/sensing/forecast.md) of anyone's, laid whole where its period
+  begins and in no ground before it (#987) — each forked from the ground before, superseding by key,
+  with the [transitions](/domain/belief/transition.md) a predicted observation triggers run there, which
+  is what the rules graphs cross for. A ground that hashes like the one before is no period and is
+  dropped; a belief's end is no boundary, a value standing until its key is assigned.
 
 What it makes for itself: a `planning:PossibleGraph` per world a candidate reached, each forked from
 its parent — or from the ground its step lands in, the path replayed there — and never mutated,

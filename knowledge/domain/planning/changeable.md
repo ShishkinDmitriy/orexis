@@ -38,12 +38,14 @@ What can change is said by what writes, never by a document's kind
 
 - **an [effect](/domain/planning/effect.md)** of one of the scope's actions, applied in a fork;
 - **a [transition](/domain/belief/transition.md)**, which a predicted observation triggers in a ground;
-- **a prediction**, whose retraction takes out of a ground what stands where it adds.
+- **a prediction, and a belief whose period begins later** - a forecast of anyone's - each laid in the
+  ground where it begins and superseding there whatever stands under a key it adds to (#987).
 
 Each template of an effect or a transition is a pattern: an IRI or a literal it states is fixed, a
 token, a variable or a blank node is anything, and the subject always is. A predicate variable is the
 IRIs its own `VALUES` bounds it to. A prediction is a pattern per predicate it adds, a type with its
-class. A writer whose templates cannot be read makes every triple changeable.
+class, and so is a belief beginning later, which is cut whole. A writer whose templates cannot be read
+makes every triple changeable.
 
 # Why a pattern may match too much and never too little
 

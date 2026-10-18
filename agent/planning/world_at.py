@@ -37,7 +37,7 @@ from datetime import datetime
 from agent.ontology import BELIEF, PREDICTION
 
 from .ontology import FORESEEN
-from agent.store import Raw, catalogue_of, graphs_of, remember, revisions_of, rows
+from agent.store import Raw, catalogue_of, graphs_of, instant, remember, revisions_of, rows
 
 from .ontology import CHANGEABLE_GRAPH, GROUND_GRAPH, POSSIBLE_GRAPH
 
@@ -88,8 +88,19 @@ def world_at(store, world: str | None, *, holder: str | None = None, now: dateti
     if world is None:
         #  THE PRESENT GROUND'S OWN FILLING, read where it lies: every belief and what the rules
         #  concluded of it, and what the search can change of every graph, as `lay_ground` copies the
-        #  changeable graphs into the ground it lays at the present.
-        beliefs = graphs_of(store, BELIEF)
+        #  changeable graphs into the ground it lays at the present — all but what BEGINS LATER (#987),
+        #  a forecast's period being ahead of the present it is read in, as the ground leaves it out.
+        ahead = {r["g"] for r in rows(store, _AHEAD_Q, (), now=instant(now))}
+        beliefs = [g for g in graphs_of(store, BELIEF) if g not in ahead]
         return list(dict.fromkeys([*known, *beliefs, *revisions_of(store, *beliefs),
-                                   *graphs_of(store, CHANGEABLE_GRAPH)]))
+                                   *(g for g in graphs_of(store, CHANGEABLE_GRAPH) if g not in ahead)]))
     return [*known, world]
+
+
+#  EVERY BELIEF WHOSE PERIOD BEGINS AFTER `$now`, and the changeable part cut from one.
+_AHEAD_Q = """
+SELECT ?g WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+               { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start }
+               UNION { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom/dcterms:temporal/orexis:start ?start }
+               FILTER(?start > $now) } }"""

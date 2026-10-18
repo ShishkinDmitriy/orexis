@@ -430,6 +430,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A prediction is a diff, and only a ground has applied it** — one reader answers the derivation
   and the search (`world_at`), and refuses a world that says no period; the present, where no
   prediction has applied, it reads off a store with no ground as the readings themselves (#916).
+- **A belief the present has not reached is laid where it begins, whole, as a prediction is, and in no
+  ground before it; its end lays none** — a forecast of anyone's writes what it adds, so it is cut
+  whole and supersedes by key in the ground of its instant, where laid into the present a peer's cell
+  from ten seconds on stood under the van today, and a value stands until its key is assigned (#987).
 - **A world speaks for what can change of its state's revisions**, and **the search runs no rules, so a
   state's revisions travel with it and an effect speaks the state a transition concludes** — a revision is of
   its source's kind and a drift's prediction is neither, which keeps the foreseen reading out of the

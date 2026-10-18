@@ -1,18 +1,43 @@
 --- case
 +++ expected
-@@ -22,9 +22,15 @@
+@@ -13,7 +13,6 @@
+ }
+ 
+ GRAPH :forecast {
+-  :outside :warmth 28 .
+ }
+ 
+ GRAPH :catalogue {
+@@ -22,9 +21,32 @@
    :forecast a orexis:BeliefGraph .
    :forecast a orexis:Graph .
    :forecast dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T18:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T15:00:00+00:00"^^xsd:dateTime ] .
-+  :forecast planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
++  :forecast planning:cutBy "sha256:9ffbf0f1957b4d4ed3ad2786b222f8d35f71c950ff928ca71d2509cf13a7af88" .
++  :forecast.changeable a planning:ChangeableGraph .
++  :forecast.changeable orexis:arrivedBy orexis:Derived .
++  :forecast.changeable prov:wasDerivedFrom :forecast .
    :ontology a orexis:BeliefGraph .
    :ontology a orexis:Graph .
    :ontology a orexis:OntologyGraph .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-+  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
++  :world planning:cutBy "sha256:9ffbf0f1957b4d4ed3ad2786b222f8d35f71c950ff928ca71d2509cf13a7af88" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
++  ground:2026-01-01T150000p0000 a planning:GroundGraph .
++  ground:2026-01-01T150000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T15:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T150000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T150000p0000 orexis:hash "sha256:eddad6a55f0cacd05aa4e7c595637c1f88f63469a9246248f063efa1677597db" .
++  ground:2026-01-01T150000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
  }
++
++
++GRAPH ground:2026-01-01T150000p0000 {
++  :outside :warmth 28 .
++}
++
++GRAPH :forecast.changeable {
++  :outside :warmth 28 .
++}

@@ -105,3 +105,17 @@ def test_an_action_added_makes_what_it_writes_changeable_and_nothing_else(monkey
 def test_every_case_is_read_and_no_diff_is_orphaned(snapshots):
     assert len(CASES) >= 3, [c.name for c in CASES]
     assert not snapshots.orphans_in(CASES_DIR)
+
+
+def test_a_belief_ahead_that_no_text_reads_lays_no_ground(monkeypatch, snapshots):
+    """The forecast says the warmth outside from three. Laid where every text reads anything, it is a
+    boundary and a ground; laid where the texts read the level alone, it is not where the search can
+    be, so it is no writer, nothing of it is cut, and the present is the one ground (#987). A committed
+    step of the agent's own is such a belief, and laid as a boundary every later step of a plan was one."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    case = CASES_DIR / "a_forecast_holding_later_crosses_whole.trig"
+    assert len(lay_ground(snapshots.stand_in(case), snapshots.NOW, None)) == 2, "read anything: a ground at three"
+    store = snapshots.stand_in(case)
+    assert len(lay_ground(store, snapshots.NOW, frozenset({_T + "level"}))) == 1, "the warmth is read by nothing"
+    assert not rows(store, "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ChangeableGraph } }"), \
+        "and nothing of the forecast was cut"

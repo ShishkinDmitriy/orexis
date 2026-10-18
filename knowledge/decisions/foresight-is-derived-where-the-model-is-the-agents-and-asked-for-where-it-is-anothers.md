@@ -91,8 +91,9 @@ that told them apart. Nothing a plan selects depends on which author said a fore
 the author is who replaces it, and the author's own provenance finds it.
 
 **Every forecast is laid into the ground of its period as it stands.** A ground is laid at every
-instant a forecast begins or stops holding within the horizon, and the forecast holds in the grounds of
-its period. The planner needs one thing of it, that it holds later, and that is a fact about the
+instant a forecast begins, and the forecast holds in the grounds from there — its end lays none, since
+a ground keeps a value until something assigns its key, as a prediction's last stretch stands past the
+horizon (#987 refined the "or stops holding" this first said). The planner needs one thing of it, that it holds later, and that is a fact about the
 timeline and not about a class of beings. Where the forecast is about the predicate the plan reads, as a
 peer's cells are, nothing is computed; where it is about something else, as rain is, the domain's drift
 says what it does to the planned quantity, and the predictor forecasts from it as it does now.
@@ -147,7 +148,7 @@ so the forecast is polled. Same rule, two channels.
 | a timed initial literal (2.2): a fact known to hold over a window, from anyone, never re-derived | a forecast: a belief holding over a stretch ahead, whoever's word, laid per period |
 | a process (PDDL+): continuous change while its condition holds, chosen by nobody | a drift, integrated by the predictor for the models the agent holds |
 | an event (PDDL+): discrete change when its condition becomes true | a transition, run where a predicted or forecast observation arrives in a ground |
-| the planner's happenings: TIL times and process start and stop points | a ground per instant a belief begins or stops holding within the horizon |
+| the planner's happenings: TIL times and process start and stop points | a ground per instant a belief the present has not reached begins (#987) |
 
 PDDL has no word for who said a TIL, and that is where this record goes further: a TIL from the
 weather service and one from a self-interested peer are the same to it. Here whose word it is stays
