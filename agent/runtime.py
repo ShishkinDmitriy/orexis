@@ -170,6 +170,8 @@ VOCABULARY = "ontology.ttl"
 MQTT, HTTP = "transport/mqtt", "transport/http"
 #  THE ONE PACKAGE THE BOOT ITSELF CALLS INTO, where it is loaded: the planner writes the scopes.
 PLANNING = "planning"
+#  AND THE ONE ONBOARDING ASKS AFTER, for the agents that read drifts: a cycle among them is refused (#996).
+PREDICTION_PACKAGE = "prediction"
 
 #  WHERE EACH LOADED PART STANDS IN A PASS, and nothing else: WHICH packages load is the agent's
 #  roles' to say, and this only orders the ones that do, as their parts are created and started.

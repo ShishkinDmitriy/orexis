@@ -593,6 +593,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   ground ahead inherits by fork, so a prediction carrying the reading unmoved for an hour said nothing
   the grounds did not hold, made the greenhouse's air a ground of its own a pass, and said nothing at
   all past the hour (#989).
+- **A drift reads a forecast of any author at its instant, the agent's own predictions among them, so
+  the keys are predicted in the order the drift texts read each other, each once an arrival, and a cycle
+  is refused at onboarding rather than iterated** — the soil's drying reads the air as the agent foresees
+  it; `order` reads every `sosa:observedProperty` a rate names; and what the part wrote it answers
+  nothing of, since heard as a belief each prediction would rewrite every key without end (#996).
 - **Foresight is derived where the model is the agent's and asked for where it is another's** —
   drying is nobody's to ask and rain nobody's to derive; an actor is whoever is asked what will hold,
   and nobody is asked for a plan; a FORECAST is anyone's word about what will hold later, the

@@ -31,9 +31,10 @@ holds then: a forecast hour, and a committed step. The drift reads both and answ
 package sums and accumulates; only the stretches are written.
 
 **Time is split at the happenings.** A happening is an instant at which what a drift reads may
-change: the start or end of any public or belief graph holding inside the horizon, which is how a
-forecast hour and a committed step's landing window become one without prediction learning a word
-of either. Between two happenings the rates are asked once and held, at most for an hour, so a rate
+change: the start or end of any belief graph, prediction or percept holding inside the horizon, which is how a
+forecast hour, a committed step's landing window and another key's foreseen crossing become one without
+prediction learning a word of any (#996 added the agent's own predictions and the other sensors' percepts
+to what a drift reads, so the keys are predicted in the order their drifts read each other). Between two happenings the rates are asked once and held, at most for an hour, so a rate
 that depends on the value is asked again; within a segment the value is linear, and a crossing of
 a range bound is placed exactly, `(bound − value) / rate`. The horizon is a day past the
 observation.

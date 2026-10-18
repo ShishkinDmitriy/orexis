@@ -28,23 +28,30 @@ rain wetting it, a barrel leaking. It says which property it `prediction:moves` 
 subject `$feature` whose value is `$value` at the instant `$at`. It may answer `?low` and `?high`
 instead, a rate known only as a range, and `?until`, the value past which it contributes nothing.
 A drift reads whatever holds at `$at`: the world's facts, such as `climate:driesPerDay`, a
-[forecast](/domain/sensing/forecast.md) hour, and a [committed step](/domain/execution/committed-step.md)
-inside its landing window - the dose the agent is about to give. Every drift moving one property ADDS: the value moves by
+[forecast](/domain/sensing/forecast.md) hour, a [committed step](/domain/execution/committed-step.md)
+inside its landing window - the dose the agent is about to give - another sensor's percept holding then,
+and the prediction this agent wrote for another key, the soil's drying reading the air's humidity as the
+agent itself foresees it (#996). Every drift moving one property ADDS: the value moves by
 the sum, and no drift knows another exists.
 
 # What is written
 
-Started, the package answers every percept and every belief a job writes: a percept by rewriting
-that sensor's predictions, a belief - a committed step written or closed - by rewriting every key's,
-since what a drift reads has changed ([a-package-starts-itself](/decisions/a-package-starts-itself.md)). `predict`
+Started, the package answers every percept and every belief a job writes by one walk over the keys
+in the order their drifts read each other - `order` reads every `sosa:observedProperty` a rate text names,
+and a property is predicted after each it reads, so the prediction a drift reads is written when it is
+asked; two properties each moving by the other are a cycle, refused at onboarding and never iterated
+to a fixpoint (#996). A percept rewrites that sensor's key and every key whose drifts read it; a belief - a
+committed step written or closed - rewrites every key's, since what a drift reads has changed; each key
+once an arrival, and what the package wrote itself it answers nothing of
+([a-package-starts-itself](/decisions/a-package-starts-itself.md)). `predict`
 (`agent/prediction/predict.py`) takes the observation a sensor last made - the latest
 [percept](/domain/sensing/observation.md), the one begun last, found by sensing's kind, `sensing:ObservationGraph`,
 and `sosa:madeBySensor` - the one word of sensing's prediction speaks, from above it, importing none
 of its code; prediction is one of the readers at the boundary a percept is handed to - and accumulates the
 drifts' sum from it as far as the agent looks - `prediction:horizonS`, a
 [stance](/domain/kernel/stance.md), a day where it states none. Time is split at every **happening**,
-the start or end of a belief graph holding inside that horizon, since only there can what a
-drift reads change; between
+the start or end of a belief graph, a prediction or a percept holding inside that horizon, since only
+there can what a drift reads change; between
 two, the rates are asked once and held, at most for an hour. Within a segment the value is a
 straight line, so a crossing of a bound of every [region](/domain/sensing/region.md) that applies to
 what the sensor observes is placed exactly, by division.
