@@ -19,6 +19,13 @@ status: accepted
 timestamp: 2026-10-18T10:00:00Z
 ---
 
+> **Amended 2026-10-18: the predictor's own foresight is the grounds, and it writes no forecast.**
+> What this record decides stands - foresight derived where the model is the agent's, asked for where
+> it is another's, one forecast kind whose author is provenance. Who the authors are has narrowed:
+> [a-flow-is-integrated-where-the-ground-is-laid](/decisions/a-flow-is-integrated-where-the-ground-is-laid.md)
+> integrates the flows from each ground as the planner lays them, so the predictor's stretches are no
+> longer written, and the forecasts that remain are a forecast received and a committed step (#1000).
+
 # Context
 
 The terrace holds a rain forecast from a weather service; the dispatcher's two-minds world will hold
