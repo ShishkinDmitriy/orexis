@@ -84,12 +84,10 @@ GRAPH :catalogue {
   :dip a orexis:PredictionGraph .
   :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
   :dip orexis:ownedBy :keeper .
-  :dip orexis:retracts "PREFIX : <http://example.org/test#> DELETE { GRAPH $state { :tank1 :level ?was } } WHERE { GRAPH $state { :tank1 :level ?was } }" .
   :heat a orexis:Graph .
   :heat a orexis:PredictionGraph .
   :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
   :heat orexis:ownedBy :keeper .
-  :heat orexis:retracts "PREFIX : <http://example.org/test#> DELETE { GRAPH $state { :tank1 :temperature ?was } } WHERE { GRAPH $state { :tank1 :temperature ?was } }" .
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .

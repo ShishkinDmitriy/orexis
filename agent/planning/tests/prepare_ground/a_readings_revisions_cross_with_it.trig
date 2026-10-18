@@ -57,9 +57,6 @@ GRAPH :catalogue {
   :drying_stops a orexis:PredictionGraph .
   :drying_stops dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
   :drying_stops orexis:ownedBy :keeper .
-  :drying_stops orexis:retracts """PREFIX : <http://example.org/test#>
-      DELETE { GRAPH $state { :soil ?p ?o } }
-      WHERE  { GRAPH $state { :soil ?p ?o } }""" .
   :drying_stops prov:wasDerivedFrom :sensed .
   :drying_stops_revisions a orexis:BeliefGraph .
   :drying_stops_revisions a orexis:Graph .

@@ -202,9 +202,3 @@ orexis:PredictionGraph
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Prediction graph" ;
     rdfs:comment "A PREDICTION: a graph holding during the stretch it predicts for, carrying a predicted `sosa:Observation` with the number a drift gives there — one graph per stretch between the instants the reading changes range, written by the prediction package (knowledge/domain/prediction/prediction.md). What the subject is foreseen to be is what a domain's transitions make of it where it arrives, in the ground the planner lays per stretch, applying the prediction to the present (#944); its predicted observation is a node of its own and never the percept it was made from; the agent's own records never list it, and the executor answers a step over the readings, never over what was foreseen." .
-
-orexis:retracts
-    a owl:DatatypeProperty ;
-    rdfs:range xsd:string ;
-    rdfs:label "retracts" ;
-    rdfs:comment """On a PREDICTION's catalogue row: the `DELETE … WHERE` naming `GRAPH $state` that takes out of a ground what the prediction's graph replaces — the reading it predicts is no longer the reading that stood — when a boundary applies it. A prediction is an action nobody takes, and this is the half of its effect its graph cannot hold; an action states its own as the delete template of a `belief:update` in its `planning:effect`.""" .

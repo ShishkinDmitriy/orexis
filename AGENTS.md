@@ -422,6 +422,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   lands in by the one path; a belief has arrived where a ground holds what no world the last pass
   left did, so a plan landing as it said asks nothing (#905, #921, commitment); and **a plan whose
   want is gone is nobody's**.
+- **A prediction supersedes by key, and carries no text saying how** — a boundary takes out of its ground
+  every triple under a subject and predicate the prediction adds to, as PDDL assigns a fluent, and the
+  predicted observation is one node per key so a stretch replaces the one before; the retraction text a
+  prediction's row carried, a `DELETE` naming `GRAPH $state` that the prediction package wrote in
+  planning's form, was retired by #666's rule (#988).
 - **A prediction is a diff, and only a ground has applied it** — one reader answers the derivation
   and the search (`world_at`), and refuses a world that says no period; the present, where no
   prediction has applied, it reads off a store with no ground as the readings themselves (#916).

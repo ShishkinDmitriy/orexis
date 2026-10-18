@@ -32,9 +32,10 @@ crossing, crossing to crossing, and from the last to the horizon's end — each 
 SOSA's words with the number at the last instant of the stretch known to lie on its side — its
 key, its sensor, the number and the instant, and nothing else of the percept it was made from. Each
 says which percept it was derived from, and the next percept of the sensor drops every one before
-its own are written; its row carries `orexis:retracts`, the `DELETE … WHERE` naming `GRAPH $state`
-that takes the key's predicted node out of whatever ground the boundary is laid over — in the form
-`lay_ground` reads today. THE OBSERVATION IN HAND IS A PERCEPT (`sensing:ObservationGraph`, sensing's
+its own are written. THE PREDICTED OBSERVATION IS ONE NODE PER KEY, not one per stretch: each stretch's
+graph says that node's number and instant for its stretch, and the planner laying a ground replaces
+by key — every triple of the same subject and predicate — so a stretch supersedes the one before it
+with no text saying how (#988). THE OBSERVATION IN HAND IS A PERCEPT (`sensing:ObservationGraph`, sensing's
 kind, #944), which no reader of the mind is handed: this estimator is one of the readers at the boundary, and what a
 ground holds of the key is the prediction alone, which a domain's transition judges as it arrives
 there.
@@ -127,11 +128,6 @@ SELECT DISTINCT ?t WHERE {
                { ?p orexis:start ?t } UNION { ?p orexis:end ?t } }
   FILTER(?t > $from && ?t < $to) }"""
 
-#  THE DIFF A PREDICTION MAKES: the key's standing node goes, whole.
-_RETRACTS = ("DELETE { GRAPH $state { ?o ?p ?v } } "
-             "WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <%s> ; sosa:observedProperty <%s> ; ?p ?v } }")
-
-
 def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=None) -> list[str]:
     """Rewrite the predictions of the key `sensor` last observed, from the observation in hand:
     one per stretch between the instants the drifts' summed rates carry the reading across a
@@ -206,13 +202,11 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
         update(store, f"""
 INSERT DATA {{
   {entry(store, graph_n, PREDICTION, RECORDED, me, start=taken + timedelta(seconds=begins), end=taken + timedelta(seconds=closes))}
-  GRAPH <{catalogue_of(store)}> {{
-    <{graph_n}> prov:wasDerivedFrom <{graph}> ;
-                orexis:retracts {_literal(_RETRACTS % (feature, observed_property))} . }} }}""")
+  GRAPH <{catalogue_of(store)}> {{ <{graph_n}> prov:wasDerivedFrom <{graph}> . }} }}""")
         #  THE PREDICTED OBSERVATION ALONE, carried or moved, a node of its own: its key, its sensor, a
         #  number and an instant — never the percept, whose name, link to the one before it and what the
         #  rules concluded of its sensor are what a sensor said, and cross into no ground (#944).
-        triples = _observation(own, node, predicted_of(feature, observed_property, n),
+        triples = _observation(own, node, predicted_of(feature, observed_property),
                                reading if value is None else value[1],
                                taken if value is None else taken + timedelta(seconds=value[0]))
         store.extend(ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(graph_n)) for t in triples)
@@ -350,6 +344,3 @@ def _observation(own, node: str, named: str, value: float, at: datetime) -> list
                          ox.Literal(at.isoformat(), datatype=ox.NamedNode(_XSD + "dateTime"))))
     return out
 
-
-def _literal(text: str) -> str:
-    return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'

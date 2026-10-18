@@ -64,9 +64,10 @@ _DESIRES = _HEAD + """<> a planning:DesireGraph ; orexis:ownedBy :keeper .
 :at_least_ten a sh:NodeShape ; sh:targetClass :Tank ;
     sh:property [ planning:about :level ; sh:path :level ; sh:minInclusive 10 ] .
 """
-#  WHAT IS PREDICTED half a minute on, as (graph, what it adds, what it retracts).
-RAIN = ("rain", f"<{T}butt> <{T}holds> 1 .", f"<{T}butt> <{T}holds> ?w")
-REFILL = ("refill", f"<{T}tank1> <{T}level> 12 .", f"<{T}tank1> <{T}level> ?l")
+#  WHAT IS PREDICTED half a minute on, as (graph, what it adds) — what it supersedes is whatever
+#  stands under the same subject and predicate, read off the adds (#988).
+RAIN = ("rain", f"<{T}butt> <{T}holds> 1 .")
+REFILL = ("refill", f"<{T}tank1> <{T}level> 12 .")
 
 _STEPS_Q = """
 SELECT ?a ?nb ?la ?spent WHERE { GRAPH ?p { ?p a planning:Plan ; planning:spent ?spent .
@@ -93,11 +94,10 @@ def _tank(tmp_path, butt: int, *predicted):
     (tmp_path / "beliefs" / "keeper.self.ttl").write_text(_HEAD + "<> a orexis:SelfGraph .\n"
                                                               ":keeper a orexis:Self ; orexis:plays [ a planning:Planner ] , [ a execution:Executor ] .\n")
     beliefs = boot(tmp_path, "keeper")
-    for name, adds, retracts in predicted:
+    for name, adds in predicted:
         graph = f"{T}{name}"
         update(beliefs, f"""INSERT DATA {{ GRAPH <{graph}> {{ {adds} }}
-  {entry(beliefs, graph, PREDICTION, OREXIS + "Received", start=NOW + timedelta(seconds=30))}
-  GRAPH <{catalogue_of(beliefs)}> {{ <{graph}> orexis:retracts "DELETE {{ GRAPH $state {{ {retracts} }} }} WHERE {{ GRAPH $state {{ {retracts} }} }}" }} }}""")
+  {entry(beliefs, graph, PREDICTION, OREXIS + "Received", start=NOW + timedelta(seconds=30))} }}""")
     return beliefs
 
 
