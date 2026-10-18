@@ -64,8 +64,8 @@ claimed nothing, and the state concluded of the reading is what every ground ahe
 
 - **A ground per stretch**, by the [planner](/domain/planning/planner.md)'s `lay_ground`: the present,
   and the present with each prediction applied at its instant - a prediction is a diff, and only a
-  ground has applied it. The derivation judges every desire in every ground, so a crossing
-  foreseen at noon mints a want at noon.
+  ground has applied it - as a forecast received is applied where its period begins (#987). The
+  derivation judges every desire in every ground, so a crossing foreseen at noon mints a want at noon.
 - **The subject's state in that ground.** The predicted observation arrives in the ground it is laid
   into and triggers the [transitions](/domain/belief/transition.md) there, beside the state the ground
   before held, so the margin holds what is foreseen as it holds the present. The prediction itself

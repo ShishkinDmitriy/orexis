@@ -50,8 +50,9 @@ same way, since the texts read the state the agent believes its subject in and n
 (#944): a reading that leaves the state as it was is the old present, and one that changes it is a
 child where a plan predicted the change and a surprise where none did.
 
-Two things the projection does not reach. Which boundary ahead is a period is still told by
-everything a ground holds: folded by what is read, the grounds a plan's own prediction had
+Two things the projection does not reach. Which boundary ahead is a period — a ground is laid where
+a prediction applies or a belief the present has not reached begins (#987), each forked from the one
+before — is still told by everything a ground holds: folded by what is read, the grounds a plan's own prediction had
 answered collapsed into the present, and a want minted for a foreseen crossing was weighed there,
 read met and lost its intention before the step was due. And where a text cannot be read the
 world is hashed whole, as every world was — which no shipped world is any longer: the market's

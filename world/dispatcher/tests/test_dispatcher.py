@@ -808,8 +808,8 @@ PEER = {"world.ttl": [*HALF_A["world.ttl"], ("courier:destination :c0_3", "couri
                        ':van_a a courier:Van ; rdfs:label "van A" .\n'
                        ':van_c a courier:Van ; courier:drivenBy :peer ; rdfs:label "a peer\'s van" .')],
         "state.ttl": HALF_A["state.ttl"]}
-#  WHERE VAN C IS SAID TO STAND, as a prediction laid in the beliefs.
-PEER_GRAPH = "http://example.org/orexis/graph/prediction/dispatcher/van_c"
+#  WHERE VAN C IS SAID TO STAND, as a forecast laid in the beliefs: a belief holding from an instant ahead.
+PEER_GRAPH = "http://example.org/orexis/graph/forecast/dispatcher/van_c"
 _PLAN_OF_Q = "SELECT ?p WHERE { GRAPH ?g { $i execution:adopts ?p } }"
 
 
@@ -824,9 +824,10 @@ def _next_cell(beliefs, walking) -> str:
 def _van_c(cell=None, *, observed: bool = False):
     """VAN C, said to stand on `cell` — or, where none is named, on the cell van A's plan drives to first
     after its step in flight: OBSERVED, a fact written into the state as #922 would write a peer van seen
-    standing; or PREDICTED, an `orexis:PredictionGraph` holding from ten seconds on, as #923 would lay a
-    peer's route this agent lost a draw to. Neither is built here; what is held is what the agent does
-    with such a belief once it has it."""
+    standing; or FORESEEN, a belief holding from ten seconds on, as #923 would lay a peer's forecast of
+    its route this agent lost a draw to — a plain `orexis:BeliefGraph` with a period, of no kind of the
+    predictor's, laid where it begins (#987). Neither is built here; what is held is what the agent
+    does with such a belief once it has it."""
     def arrive(beliefs, walking, at):
         where = cell or _next_cell(beliefs, walking)
         said = f"<{D}van_c> courier:at <{D}{where}>"
@@ -836,7 +837,7 @@ def _van_c(cell=None, *, observed: bool = False):
             written = [state]
         else:
             update(beliefs, f"""PREFIX courier: <http://example.org/orexis/courier#>
-INSERT DATA {{ {entry(beliefs, PEER_GRAPH, PREDICTION, OREXIS + "Recorded", D + "dispatcher", start=at + timedelta(seconds=10))}
+INSERT DATA {{ {entry(beliefs, PEER_GRAPH, BELIEF, OREXIS + "Received", D + "dispatcher", start=at + timedelta(seconds=10))}
   GRAPH <{PEER_GRAPH}> {{ {said} }} }}""")
             written = [PEER_GRAPH]
         for graph in written:
@@ -846,7 +847,7 @@ INSERT DATA {{ {entry(beliefs, PEER_GRAPH, PREDICTION, OREXIS + "Recorded", D + 
     return arrive
 
 
-@pytest.mark.parametrize("observed", [False, True], ids=["predicted", "observed"])
+@pytest.mark.parametrize("observed", [False, True], ids=["foreseen", "observed"])
 def test_a_belief_that_makes_the_walking_plans_next_world_impossible_reopens_it_after_the_step_in_flight(
         ticking, tmp_path, observed):
     """SOFT COMMITMENT'S SECOND TRIGGER (#921). Van A has driven to parcel A and picked it, and its next
@@ -899,9 +900,9 @@ def test_a_belief_that_makes_the_walking_plans_next_world_impossible_reopens_it_
     assert (searched, arrived["weighed"].get(A), arrived["impossible"]) == ({A: 38}, 25, {CONSTRAINT: 2}), \
         f"the re-search from the landing ground, measured: {searched} candidates, {arrived['weighed']} worlds, {arrived['impossible']} impossible"
     if observed:
-        #  A PREDICTED PEER IS NOT THE SAME CASE: its prediction starts ten seconds on, so by the pass that follows
-        #  the landing the present has stopped carrying it and holds the facts of the old present alone, a
-        #  different present from the landing ground's and no tie between two.
+        #  A FORESEEN PEER IS NOT THE SAME CASE: its belief holds from ten seconds on, so it is laid in the
+        #  ground where it begins and into no present (#987) — the arrival is news to a ground ahead and no
+        #  surprise to the present, which still matches the cone, so the helper's premise does not hold.
         _the_replacement_keeps_its_cone(seen)
 
 

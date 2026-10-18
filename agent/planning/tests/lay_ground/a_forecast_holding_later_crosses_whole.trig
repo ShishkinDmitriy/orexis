@@ -4,12 +4,12 @@
 # a step's landing, a want's instant — so a forecast holding hours from now is a graph the
 # PRESENT has not reached and the search still must be able to see.
 #
-# Copied whole, the imagined world's own door filters by the instant it is asked at, exactly as
-# the belief base's does. Copied at now, a search could not see past the present's weather, and
-# would find nothing there rather than an error — which is this function's whole failure mode.
-#
-# So the forecast crosses even though its period starts in three hours, and the diff shows it
-# unchanged. A version of this that filtered by the clock would show it DROPPED.
+# Crossed whole, it is laid where its period begins (#987): the warmth is cut into the forecast's
+# changeable part, since a belief beginning later is a writer of what it adds, the present ground
+# holds nothing of it and ends where the forecast begins, and the ground at three holds the warmth.
+# Laid into the present it would have been read at noon; filtered by the clock it would have been
+# DROPPED, and the search could not see past the present's weather — finding nothing there rather
+# than an error, which is this function's whole failure mode.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 

@@ -89,3 +89,22 @@ def test_the_present_a_store_holds_is_read_as_the_present_ground_laid_from_it(mo
     assert facts and facts == {tuple(r.values()) for r in bindings(query(imagined, _FACTS_Q, world_at(imagined, present)))}
     with pytest.raises(ValueError):
         world_at(beliefs, None)
+
+
+_LATER = "http://example.org/test#refill_said"
+
+
+def test_the_present_filling_leaves_out_what_begins_later(monkeypatch, snapshots):
+    """A forecast holding from half past is a graph the present has not reached (#987): read at noon,
+    the present — the world a store holds without a ground — is handed neither it nor what was cut out
+    of it, as the present ground leaves both out; read at half past, it is handed both."""
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    case = Path(__file__).parent / "lay_ground" / "a_belief_beginning_later_is_in_no_ground_before_its_period.trig"
+    store = prepare_ground(snapshots.stand_in(case), ox.Store())
+    lay_ground(store, snapshots.NOW)
+    piece = _LATER + ".changeable"
+    assert piece in graphs_of(store, CHANGEABLE_GRAPH), "the level the fill writes was cut out of the forecast"
+    now = world_at(store, None, now=snapshots.NOW)
+    assert _LATER not in now and piece not in now, "at noon the forecast is ahead, whole"
+    later = world_at(store, None, now=snapshots.NOW.replace(minute=30))
+    assert _LATER in later and piece in later, "at half past it has begun"

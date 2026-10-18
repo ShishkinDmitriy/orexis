@@ -1,0 +1,83 @@
+# a_belief_beginning_later_is_in_no_ground_before_its_period
+#
+# A FORECAST IS LAID WHERE ITS PERIOD BEGINS, AND NOWHERE EARLIER (#987). The tank reads 4, in the
+# state the agent holds, and a fill is the one action, writing `:level` — so the level is what this
+# scope can change, cut out of every graph into its changeable part. A belief the agent did not
+# derive — a refill said to hold from half past twelve to one, a peer's or a supplier's word — says
+# the level will be 12 then: a graph with a period ahead, of no prediction's kind.
+#
+# - THE PRESENT GROUND HOLDS 4. Before this change every changeable part was copied into the present
+#   whatever its period, and the present read 12 at noon.
+# - THE GROUND AT HALF PAST HOLDS 12: forked from the present, the key `:tank1 :level` taken out and
+#   the forecast put in, as a prediction is applied.
+# - THE FORECAST IS LAID WHOLE. A belief beginning later is a writer of what it adds, as a prediction
+#   is, so `:said_by` is cut with the level though no effect writes it: the two must meet in one ground
+#   for the forecast's level to supersede the present's, and a remainder read beside every world of
+#   its period would stand the present's 4 beside the forecast's 12.
+# - ONE O'CLOCK IS NO BOUNDARY. The forecast ends there, and an end assigns no key: a value stands in a
+#   ground until something assigns it, as a prediction's last stretch stands past the horizon.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+GRAPH :ontology {
+  orexis:ActionGraph rdfs:subClassOf orexis:Graph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :tank1 a :Tank .
+}
+
+GRAPH :actions {
+  :fill a orexis:Action .
+  :fill orexis:takes :tank .
+  :fill planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+      DELETE { $tank :level ?l }
+      INSERT { ?tank :level ?next } WHERE {
+      $tank :level ?l .
+      BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
+}
+
+GRAPH :believed {
+  :tank1 :level 4 .
+}
+
+#  WHAT SOMEBODY SAID WILL HOLD from half past twelve to one — the level, which the fill writes, and who
+#  said it, which nothing writes.
+GRAPH :refill_said {
+  :tank1 :level 12 .
+  :tank1 :said_by :supplier .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :believed a orexis:BeliefGraph .
+  :believed a orexis:Graph .
+  :believed orexis:arrivedBy orexis:Derived .
+  :believed orexis:ownedBy :keeper .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :refill_said a orexis:BeliefGraph .
+  :refill_said a orexis:Graph .
+  :refill_said dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+  :refill_said orexis:arrivedBy orexis:Received .
+  :refill_said orexis:ownedBy :keeper .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+}

@@ -24,7 +24,7 @@ import pytest
 
 from agent import clock
 from agent.execution.executor import Executor
-from agent.ontology import OREXIS, PREDICTION
+from agent.ontology import BELIEF, OREXIS, PREDICTION
 from agent.planning.planner import Planner
 from agent.runtime import boot
 from agent.store import catalogue_of, entry, rows, update
@@ -64,10 +64,13 @@ _DESIRES = _HEAD + """<> a planning:DesireGraph ; orexis:ownedBy :keeper .
 :at_least_ten a sh:NodeShape ; sh:targetClass :Tank ;
     sh:property [ planning:about :level ; sh:path :level ; sh:minInclusive 10 ] .
 """
-#  WHAT IS PREDICTED half a minute on, as (graph, what it adds) — what it supersedes is whatever
-#  stands under the same subject and predicate, read off the adds (#988).
+#  WHAT IS FORESEEN half a minute on, as (graph, what it adds) — what it supersedes is whatever
+#  stands under the same subject and predicate, read off the adds (#988). Laid as a prediction of the
+#  agent's own or as a belief it received holding from then, a forecast of anyone's (#987): the search
+#  waits for either the same way, since a ground is laid where each begins.
 RAIN = ("rain", f"<{T}butt> <{T}holds> 1 .")
 REFILL = ("refill", f"<{T}tank1> <{T}level> 12 .")
+FORESEEN = pytest.mark.parametrize("kind", [PREDICTION, BELIEF], ids=["predicted", "received"])
 
 _STEPS_Q = """
 SELECT ?a ?nb ?la ?spent WHERE { GRAPH ?p { ?p a planning:Plan ; planning:spent ?spent .
@@ -83,8 +86,9 @@ SELECT ?g WHERE { GRAPH ?p { ?step a execution:Step ; execution:adds|execution:r
 _OUTCOMES_Q = "SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }"
 
 
-def _tank(tmp_path, butt: int, *predicted):
-    """The tank's world booted as the keeper, with what is `predicted` laid half a minute on."""
+def _tank(tmp_path, butt: int, *foreseen, kind: str = PREDICTION):
+    """The tank's world booted as the keeper, with what is `foreseen` laid half a minute on, as a
+    graph of `kind` — a prediction, or a belief received."""
     (tmp_path / "beliefs").mkdir()
     (tmp_path / "world.ttl").write_text(_WORLD)
     (tmp_path / "actions.ttl").write_text(_ACTIONS)
@@ -94,10 +98,10 @@ def _tank(tmp_path, butt: int, *predicted):
     (tmp_path / "beliefs" / "keeper.self.ttl").write_text(_HEAD + "<> a orexis:SelfGraph .\n"
                                                               ":keeper a orexis:Self ; orexis:plays [ a planning:Planner ] , [ a execution:Executor ] .\n")
     beliefs = boot(tmp_path, "keeper")
-    for name, adds in predicted:
+    for name, adds in foreseen:
         graph = f"{T}{name}"
         update(beliefs, f"""INSERT DATA {{ GRAPH <{graph}> {{ {adds} }}
-  {entry(beliefs, graph, PREDICTION, OREXIS + "Received", start=NOW + timedelta(seconds=30))} }}""")
+  {entry(beliefs, graph, kind, OREXIS + "Received", T + "keeper", start=NOW + timedelta(seconds=30))} }}""")
     return beliefs
 
 
@@ -126,21 +130,23 @@ def test_every_agent_holds_the_wait_in_every_scope(tmp_path):
     assert scopes and {r["s"] for r in rows(beliefs, _IN_SCOPE_Q, (), wait=WAIT)} == scopes
 
 
-def test_rain_filling_the_butt_is_waited_for_and_then_the_tank_is_filled(tmp_path):
+@FORESEEN
+def test_rain_filling_the_butt_is_waited_for_and_then_the_tank_is_filled(tmp_path, kind):
     """WAIT, THEN ACT. The butt is empty, so nothing is admitted now but the wait; it lands where the
     rain's ground begins, half a minute on, and there the fill is admitted and meets the want."""
-    _, _, outcome, steps, spent, admitted = _planned(_tank(tmp_path, 0, RAIN))
+    _, _, outcome, steps, spent, admitted = _planned(_tank(tmp_path, 0, RAIN, kind=kind))
     assert outcome == "Satisfied"
     assert steps == [("Wait", 0, 30), ("fill", 30, 30)], steps
     assert spent == {1.1}, "a tenth for the wait and one for the fill"
     assert admitted == 1, "one wait, from the present: the rain's is the last ground"
 
 
-def test_a_tank_a_prediction_refills_is_met_by_waiting_and_not_by_a_dearer_fill(tmp_path):
+@FORESEEN
+def test_a_tank_a_prediction_refills_is_met_by_waiting_and_not_by_a_dearer_fill(tmp_path, kind):
     """The fill is admitted now and would meet the want at one; the wait meets it at a tenth, in the
     ground where the refill has landed. Its step predicts nothing — the refill is not its to predict
     (#919) — and, taken with no implementation, sends nothing and is answered at its landing."""
-    beliefs = _tank(tmp_path, 1, REFILL)
+    beliefs = _tank(tmp_path, 1, REFILL, kind=kind)
     planner, im, outcome, steps, spent, admitted = _planned(beliefs)
     assert outcome == "Satisfied"
     assert steps == [("Wait", 0, 30)], steps
