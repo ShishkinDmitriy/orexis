@@ -66,11 +66,11 @@ timestamp: 2026-10-09T20:00:00Z
 > - **A command and a saying read the observation holding as the step is taken**, the reading in hand,
 >   by naming its kind in their own text.
 >
-> Measured: the present ground holds no reading now, so a key no drift moves — the greenhouse's air —
+> Measured: the present ground holds no reading now, so a key no flow moves — the greenhouse's air —
 > whose carried prediction brings a predicted observation into the ground a grace on is a period of its
 > own there, where it collapsed into the present before: one ground more for that scope a pass. And the
 > crossing instants of two prediction cases moved by a second each way, the observation's end no
-> longer being a happening. *That ground is gone again since #989: a key no drift moves is predicted
+> longer being a happening. *That ground is gone again since #989: a key no flow moves is predicted
 > nothing, since the state the present concluded is what every ground ahead inherits, and the carried
 > observation had made a period of nothing a met-test reads.*
 
@@ -89,9 +89,9 @@ timestamp: 2026-10-09T20:00:00Z
 
 > **Amended 2026-10-10 (#947): the belief is the state, and holds no number.** As first decided, the
 > belief carried the subject's value beside its state — "its moisture is 0.3001" — so that a command
-> could size a dose and a drift a rate from it. Nothing in planning reads a number: the met-tests,
+> could size a dose and a flow a rate from it. Nothing in planning reads a number: the met-tests,
 > the preconditions, the effects and the costs read the side. The number's readers are a command,
-> sizing a step when it is taken, and prediction's drifts, an estimator's rates — the effectoric and
+> sizing a step when it is taken, and prediction's flows, an estimator's rates — the effectoric and
 > the perceptual side of the boundary, neither of them the mind. So the number stays the percept's,
 > and they read it there. Copied into the belief it was the percept's testimony said twice, and it
 > moved the belief, and with it the mind's present, on every reading that wobbled inside its state.
@@ -122,8 +122,8 @@ domain the agent acts in, abstracted from how any sensor is wired.
   take it as their `$reading` parameter: the precondition asks its side, `landsAfter` reads its
   sensor's cadence through `sosa:madeBySensor`, the effect deletes `sensing:below` and constructs
   `sensing:inside` on it, and the command sizes the dose from its `sosa:hasSimpleResult`. The soil's
-  drying (`domains/actuation/drifts.ttl`) takes its rate from the reading's number, and rain
-  (`domains/climate/drifts.ttl`) from a forecast observation's band. Prediction
+  drying (`domains/actuation/flows.ttl`) takes its rate from the reading's number, and rain
+  (`domains/climate/flows.ttl`) from a forecast observation's band. Prediction
   (`agent/prediction/predict.py`) reads the observation in hand and writes a predicted
   `sosa:Observation` per stretch, which the rules judge and the planner reads.
 - **Planning's and execution's code name no SOSA word.** They are generic over triples; the reading
@@ -161,7 +161,7 @@ about the subject, whose IRI does not change, and it speaks no SOSA: the domain'
 desire asks "the bed is not dry"; the dose takes the bed, not a reading, and its effect turns dry into
 its state inside the range. The number stays the percept's [reading](/domain/sensing/reading.md),
 read there by the two readers at the boundary: the dose's command, sizing it when it is taken, and
-the drying drift, prediction's rate — the effectoric and the perceptual interface, neither of them
+the drying flow, prediction's rate — the effectoric and the perceptual interface, neither of them
 the mind, which compares triples and interprets no literal. The world's description of which sensor
 a subject hosts and the ranges it states stays in SOSA and SSN, since it is sensing's
 configuration and not an observation.
@@ -180,7 +180,7 @@ domain declares which of its words says each side of which property. The judgmen
 between properties, and a domain adds a property by naming three states.
 
 **A predicted number becomes a predicted belief the same way, beside the belief before it.**
-Prediction stays the estimator it is: it reads the percept in hand and the drifts, cuts the horizon
+Prediction stays the estimator it is: it reads the percept in hand and the flows, cuts the horizon
 where the number crosses a bound, and writes a number per stretch, reading no margin. Revision
 judges each stretch's number into a predicted belief beside the belief before it — the present
 belief for the first stretch, the stretch before for the rest — so a bed believed dry and resting at

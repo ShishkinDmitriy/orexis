@@ -1,10 +1,10 @@
 """`create`: the prediction package's part, and what it does once started (a-package-starts-itself) —
 it answers every percept and every belief a job writes by one walk over the keys, in the order their
-drifts read each other (`order`, #996). A percept holding a node some sensor made — a reading, of
+flows read each other (`order`, #996). A percept holding a node some sensor made — a reading, of
 sensing's `sensing:ObservationGraph` kind, a word this package may speak from above sensing (#944) —
-rewrites that sensor's key and every key whose drifts read it, transitively; a belief holding no
+rewrites that sensor's key and every key whose flows read it, transitively; a belief holding no
 sensor's node — a step the executor committed to, a document a peer said — rewrites every key's, since
-what a drift reads at an instant may have changed and the package cannot tell for which key. Each key
+what a flow reads at an instant may have changed and the package cannot tell for which key. Each key
 is rewritten ONCE an arrival, and a key read by another is written before the other is asked, so the
 soil's drying reads the air as this agent foresees it. It hears of the graph through the runtime, by
 kind, and knows no package that wrote it; a graph closed early is a belief written too, since its
@@ -58,7 +58,7 @@ class _Prediction:
 
 
 def create(runtime) -> _Prediction:
-    """The prediction package's part: once started, it walks the keys in the order their drifts read
+    """The prediction package's part: once started, it walks the keys in the order their flows read
     each other — a sensor's key and what depends on it whenever a percept it made is written, every
     key's whenever any belief is — and answers nothing of what it wrote itself."""
     return _Prediction()

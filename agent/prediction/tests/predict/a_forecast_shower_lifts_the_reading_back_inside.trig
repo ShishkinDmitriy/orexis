@@ -54,7 +54,7 @@ GRAPH :world {
 }
 
 GRAPH :actions {
-  :Drying a prediction:Drift .
+  :Drying a prediction:Flow .
   :Drying prediction:moves :moisture .
   :Drying prediction:rate """PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
@@ -62,7 +62,7 @@ GRAPH :actions {
           BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
           BIND(0.0 AS ?until)
       }""" .
-  :Raining a prediction:Drift .
+  :Raining a prediction:Flow .
   :Raining prediction:moves :moisture .
   :Raining prediction:rate """PREFIX : <http://example.org/test#>
       SELECT ?low ?high ?until WHERE {
@@ -97,7 +97,7 @@ GRAPH :forecast_14 {
 }
 
 GRAPH :catalogue {
-  :actions a orexis:DriftGraph .
+  :actions a orexis:FlowGraph .
   :actions a orexis:Graph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .

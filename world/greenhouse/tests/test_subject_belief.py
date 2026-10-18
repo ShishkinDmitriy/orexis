@@ -5,7 +5,7 @@ revising the observation and then applying the transitions it triggers, climate'
 the soil and 0.02 on the air (a-transition-changes-the-state-and-an-inference-only-concludes).
 
 The grower's mind reads nothing else (#944's second slice): its desire asks the bed's soil and air, the
-dose and the heating take the bed and speak its state, and only a command sizing a step and a drift
+dose and the heating take the bed and speak its state, and only a command sizing a step and a flow
 read a reading's number. And a ground the planner lays ahead holds the states a predicted observation's
 transitions make there, beside the state the ground before it held (#944's third slice, in part), so
 the hold reaches the forecast: the last cases here say what that does to a bed held dry at its floor.

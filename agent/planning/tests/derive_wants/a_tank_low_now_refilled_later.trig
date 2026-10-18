@@ -48,7 +48,7 @@ GRAPH :sensed {
   :tank1 :level 0 .
 }
 
-#  REFILLED FROM ONE — and the prediction retracts the reading it supersedes, as a drift's does.
+#  REFILLED FROM ONE — and the prediction retracts the reading it supersedes, as a flow's does.
 GRAPH :refill {
   :tank1 :level 20 .
 }

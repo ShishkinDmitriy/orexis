@@ -1,18 +1,18 @@
 """`order`: the properties the agent predicts, in the order their keys are predicted — a property whose
-drifts read another's observations after that other (#996).
+flows read another's observations after that other (#996).
 
 **A PREDICTION MAY DEPEND ON A FORECAST OF ANY AUTHOR**, the agent's own predictions among them: the
-soil's drying on the air's humidity, which the agent itself foresees. A drift's `prediction:rate` is a
+soil's drying on the air's humidity, which the agent itself foresees. A flow's `prediction:rate` is a
 select, and what it reads is in its text: every `sosa:observedProperty` it names is a key it reads at
 `$at` — a received forecast, another sensor's percept holding then, or the prediction this agent wrote
 for that key a moment ago. So the keys are predicted in an order the texts fix: a property is predicted
-after every property its drifts read, and the prediction it reads is already written when it is asked.
+after every property its flows read, and the prediction it reads is already written when it is asked.
 
 **A CYCLE IS REFUSED, NOT ITERATED.** Soil moving by the air and air moving by the soil is a coupled
 system, and a fixpoint over two piecewise-linear corridors is a solver this package is not; no shipped
 world states one, so one is a mistake in the documents and `orexis-onboard` says so before anything is
-granted. A drift reading its own property — the dose reads the soil's reading it lifts — is no cycle: the
-reading in hand is every drift's input.
+granted. A flow reading its own property — the dose reads the soil's reading it lifts — is no cycle: the
+reading in hand is every flow's input.
 
 **A TEXT THAT WILL NOT BE READ READS EVERY PROPERTY** — a variable where the property stands, a body the
 parser refuses — so it is predicted last, and two such texts are a cycle: the safe side, as a footprint
@@ -28,10 +28,10 @@ from rdflib import URIRef
 from rdflib.plugins.sparql.algebra import translateQuery, traverse
 from rdflib.plugins.sparql.parser import parseQuery
 
-from agent.ontology import DRIFT_GRAPH, local_of
+from agent.ontology import FLOW_GRAPH, local_of
 from agent.store import PREFIXES, graphs_of, rows
 
-from .ontology import DRIFT, MOVES, PROPERTY, RATE
+from .ontology import FLOW, MOVES, PROPERTY, RATE
 
 log = logging.getLogger("predict")
 
@@ -40,17 +40,17 @@ ANYTHING = None          # the set of every property: a text that cannot be read
 _TOKEN = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)\b")
 _OBSERVED = URIRef(PROPERTY)
 
-#  EVERY DRIFT AND THE PROPERTY IT MOVES, with its text, off the graphs of drifts alone.
-_DRIFTS_Q = "SELECT ?drift ?property ?rate WHERE { ?drift a $drift ; $moves ?property ; $rate_of ?rate } ORDER BY ?drift"
+#  EVERY FLOW AND THE PROPERTY IT MOVES, with its text, off the graphs of flows alone.
+_FLOWS_Q = "SELECT ?flow ?property ?rate WHERE { ?flow a $flow ; $moves ?property ; $rate_of ?rate } ORDER BY ?flow"
 
 
 class Cycle(Exception):
-    """Two or more properties whose drifts read each other: a system, not a chain."""
+    """Two or more properties whose flows read each other: a system, not a chain."""
 
 
 def order(store, properties=None, after=None) -> list[str]:
-    """`properties` — every property some drift moves, where None — in the order their keys are
-    predicted: each after every property a drift moving it reads, ties in the IRIs' order. Where
+    """`properties` — every property some flow moves, where None — in the order their keys are
+    predicted: each after every property a flow moving it reads, ties in the IRIs' order. Where
     `after` names properties, those alone and every property that depends on one, transitively: what
     an arrival of their percepts makes stale. Raises `Cycle` where the texts read each other round."""
     reads = _reads(store)
@@ -71,12 +71,12 @@ def order(store, properties=None, after=None) -> list[str]:
 
 
 def _reads(store) -> dict[str, frozenset | None]:
-    """Every property some drift moves, and the properties the drifts moving it read."""
+    """Every property some flow moves, and the properties the flows moving it read."""
     out: dict[str, set | None] = {}
-    for r in rows(store, _DRIFTS_Q, graphs_of(store, DRIFT_GRAPH), drift=f"<{DRIFT}>", moves=f"<{MOVES}>", rate_of=f"<{RATE}>"):
+    for r in rows(store, _FLOWS_Q, graphs_of(store, FLOW_GRAPH), flow=f"<{FLOW}>", moves=f"<{MOVES}>", rate_of=f"<{RATE}>"):
         read = _observed_in(r["rate"])
         if read is ANYTHING:
-            log.warning("drift %s reads a property that cannot be read off its text: predicted last", local_of(r["drift"]))
+            log.warning("flow %s reads a property that cannot be read off its text: predicted last", local_of(r["flow"]))
         have = out.get(r["property"], set())
         out[r["property"]] = ANYTHING if have is ANYTHING or read is ANYTHING else have | read
     return {p: (frozenset(v) if v is not None else ANYTHING) for p, v in out.items()}
@@ -96,7 +96,7 @@ def _sorted(depends: dict[str, set[str]]) -> list[str]:
     while left:
         ready = sorted(p for p, deps in left.items() if not deps)
         if not ready:
-            raise Cycle("drifts read each other in a cycle over " + ", ".join(sorted(local_of(p) for p in left)))
+            raise Cycle("flows read each other in a cycle over " + ", ".join(sorted(local_of(p) for p in left)))
         for p in ready:
             out.append(p)
             del left[p]
@@ -111,7 +111,7 @@ def _observed_in(text: str) -> frozenset | None:
     try:
         algebra = translateQuery(parseQuery(PREFIXES + _TOKEN.sub(lambda m: "?" + m.group(1), text))).algebra
     except Exception as exc:                            # noqa: BLE001 — unreadable is a finding, not an error
-        log.debug("could not parse a drift's rate for the properties it reads: %s", exc)
+        log.debug("could not parse a flow's rate for the properties it reads: %s", exc)
         return ANYTHING
     found: set = set()
     bad = [False]

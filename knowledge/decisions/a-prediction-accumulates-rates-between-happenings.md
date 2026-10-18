@@ -5,36 +5,36 @@ status: accepted
 timestamp: 2026-09-28T12:00:00Z
 description: >-
   The sovereign's model of prediction, agreed 2026-09-28 while asking how a terrace would learn
-  when rain waters it. A drift answers a RATE, the rate of its property at an instant, and every
-  drift moving one property adds to it; the prediction package accumulates the sum between
-  HAPPENINGS, the instants any graph a drift may read begins or ends, re-reading every hour,
+  when rain waters it. A flow answers a RATE, the rate of its property at an instant, and every
+  flow moving one property adds to it; the prediction package accumulates the sum between
+  HAPPENINGS, the instants any graph a flow may read begins or ends, re-reading every hour,
   and places each crossing of a range bound exactly. A rate known only as a range gives a
   CORRIDOR, the lowest and highest trajectory, and the stretch's side is the corridor's worst.
-  It is PDDL+'s trajectory semantics, a process per drift and a timed fluent per forecast, and
+  It is PDDL+'s trajectory semantics, a process per flow and a timed fluent per forecast, and
   it stays below the search, which is still qualitative. Refused - the fixed ladder and its
-  bisection, a drift answering the value it reaches, a stored net rate and an expected value.
+  bisection, a flow answering the value it reaches, a stored net rate and an expected value.
 ---
 
 # The claim
 
-**A drift answers a rate, and rates add.** `prediction:Drift` carries `prediction:rate`, a select
+**A flow answers a rate, and rates add.** `prediction:Flow` carries `prediction:rate`, a select
 answering how fast the property it `prediction:moves` is changing, per second of the one timeline,
-for `$feature` holding `$value` at `$at`. Drying is one drift and rain another; neither knows the
-other exists, and the rate the value moves by is their sum. A drift that stops somewhere says so,
+for `$feature` holding `$value` at `$at`. Drying is one flow and rain another; neither knows the
+other exists, and the rate the value moves by is their sum. A flow that stops somewhere says so,
 `?until`, and contributes nothing past it: the soil dries until nothing is left and wets until it
 is saturated.
 
 **What is stored is what the world states; the net rate is computed and never written.**
 `climate:driesPerDay` is a rate, and it is stored, because it is a constant of the bed. What is
 never stored is the rate the value actually moves by at an instant, because it depends on what
-holds then: a forecast hour, and a committed step. The drift reads both and answers; the
+holds then: a forecast hour, and a committed step. The flow reads both and answers; the
 package sums and accumulates; only the stretches are written.
 
-**Time is split at the happenings.** A happening is an instant at which what a drift reads may
+**Time is split at the happenings.** A happening is an instant at which what a flow reads may
 change: the start or end of any belief graph, prediction or percept holding inside the horizon, which is how a
 forecast hour, a committed step's landing window and another key's foreseen crossing become one without
 prediction learning a word of any (#996 added the agent's own predictions and the other sensors' percepts
-to what a drift reads, so the keys are predicted in the order their drifts read each other). Between two happenings the rates are asked once and held, at most for an hour, so a rate
+to what a flow reads, so the keys are predicted in the order their flows read each other). Between two happenings the rates are asked once and held, at most for an hour, so a rate
 that depends on the value is asked again; within a segment the value is linear, and a crossing of
 a range bound is placed exactly, `(bound − value) / rate`. The horizon is a day past the
 observation.
@@ -56,8 +56,8 @@ semantics are adopted for prediction as they stand.
 
 | PDDL+ | here |
 |---|---|
-| a process, `(increase (v) (* #t rate))` while its condition holds | a drift, its `prediction:rate` |
-| processes on one fluent sum | the drifts moving one property add |
+| a process, `(increase (v) (* #t rate))` while its condition holds | a flow, its `prediction:rate` |
+| processes on one fluent sum | the flows moving one property add |
 | an event, fired when its condition becomes true | a crossing, which `lay_ground` calls an action nobody takes |
 | a timed initial fluent (2.2's literals, numeric) | a forecast hour: a graph holding during its period |
 | a happening | a happening: a graph's period beginning or ending |
@@ -88,10 +88,10 @@ more of them is finer foresight bought with more worlds.
   one rung was never seen - which is exactly what rain does to a drying bed. Drying alone is
   monotone and hid it. A happening is where a rate may change, so a crossing between two is on a
   straight line and no scan is needed to find it.
-- **A drift answering the value it reaches.** A drift that answered the observation `$elapsed`
-  seconds on could not be combined: two drifts answered two numbers for one node and the first was
+- **A flow answering the value it reaches.** A flow that answered the observation `$elapsed`
+  seconds on could not be combined: two flows answered two numbers for one node and the first was
   taken. Rates add; values do not.
-- **One drift for the whole water balance.** It would compose by hand what the sum composes, and
+- **One flow for the whole water balance.** It would compose by hand what the sum composes, and
   every domain adding a flow - a leak, a committed dose - would edit it.
 - **A stored net rate.** It is a conclusion whose premises are stored and would outlive them
   (a-situated-instance-is-kept-only-when-it-is-testimony).
@@ -107,12 +107,12 @@ more of them is finer foresight bought with more worlds.
 - ~~Committed steps are not yet flows~~ - closed by #849, 2026-10-03, as this seam said it would be:
   the executor writes each step of an adopted plan into the beliefs as a
   [committed step](/domain/execution/committed-step.md), a graph holding over its landing window, so
-  the window's ends are happenings and a drift reads the step at an instant inside it; the actuation
+  the window's ends are happenings and a flow reads the step at an instant inside it; the actuation
   domain's `actuation:Dosed` answers the dose's rise over the window, the low trajectory by the latest
   landing, so a late landing widens the corridor. A later want is searched against a future that
   contains the earlier plan, which is the IRMA order (Bratman, Israel and Pollack, 1988): a
   commitment is background a new option is filtered against, earliest committed first. Two plans
-  drawing one barrel still interfere only where a drift of the barrel's level reads the committed
+  drawing one barrel still interfere only where a flow of the barrel's level reads the committed
   draws; no shipped world observes a source's level yet. A PEER's announced route is a prediction
   graph laid the same way, and that is the two-minds tool — laid by the agent that lost a draw to it,
   since 2026-10-07
@@ -129,7 +129,7 @@ more of them is finer foresight bought with more worlds.
   over an STNU (Morris, Muscettola and Vidal, 2001), and is the part of
   [#596](https://github.com/ShishkinDmitriy/orexis/issues/596) still open.
 - **A driver has no level form.** Outside temperature is not a stock; its forecast IS its future,
-  and a key the agent observes that follows a forecast would be a drift answering a level rather
+  and a key the agent observes that follows a forecast would be a flow answering a level rather
   than a rate. Nothing reads one yet.
 - **No forecast arrives.** A forecast graph is written by hand in a test; the fetcher is a
   transport member the runtime cannot yet hold beside MQTT.
@@ -137,6 +137,6 @@ more of them is finer foresight bought with more worlds.
 # What it amends
 
 [the-drift-is-sensings-and-its-result-is-predictions](/decisions/the-drift-is-sensings-and-its-result-is-predictions.md),
-in its 0.2.0 amendment: the drift is still prediction's and its result is still one prediction per
+in its 0.2.0 amendment: the flow is still prediction's and its result is still one prediction per
 stretch; what `predict` does between is accumulation over happenings rather than a ladder and a
-bisection, and a drift answers a rate.
+bisection, and a flow answers a rate.

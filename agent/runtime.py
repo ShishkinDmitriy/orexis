@@ -170,7 +170,7 @@ VOCABULARY = "ontology.ttl"
 MQTT, HTTP = "transport/mqtt", "transport/http"
 #  THE ONE PACKAGE THE BOOT ITSELF CALLS INTO, where it is loaded: the planner writes the scopes.
 PLANNING = "planning"
-#  AND THE ONE ONBOARDING ASKS AFTER, for the agents that read drifts: a cycle among them is refused (#996).
+#  AND THE ONE ONBOARDING ASKS AFTER, for the agents that read flows: a cycle among them is refused (#996).
 PREDICTION_PACKAGE = "prediction"
 
 #  WHERE EACH LOADED PART STANDS IN A PASS, and nothing else: WHICH packages load is the agent's
@@ -500,7 +500,7 @@ def world_of(world: Path, others=frozenset()) -> ox.Store:
 def _stamp(store: ox.Store) -> None:
     """Every belief and prediction the store holds, and every graph a document put, its row stamped
     with the hash of what it holds: the boot is the writer of every document it put — the actions,
-    drifts, shapes, constraints, rules and desires among them, which nothing writes after — and a graph
+    flows, shapes, constraints, rules and desires among them, which nothing writes after — and a graph
     of a volume lived in is stamped again as it stands
     (a-graph-changes-in-place-and-its-row-says-what-it-holds)."""
     for graph in dict.fromkeys([*graphs_of(store, BELIEF, PREDICTION),

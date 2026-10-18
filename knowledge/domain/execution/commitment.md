@@ -73,7 +73,7 @@ Either trigger is then followed by the one path below.
    such landing — its `execution:landsAt`, shifted by how late it was taken, as the executor reads it
    — and the reopening want is searched from that ground, so the plan it finds begins after the step.
    What that ground holds is what the agent already sees holding then: a fictive step wrote its
-   effect into the present when it was taken, and a step a drift reads is in the predictions.
+   effect into the present when it was taken, and a step a flow reads is in the predictions.
 2. **The joint plan agrees where it begins with the walking intention's untaken steps**, compared by
    the action each fills and the values it is filled with, never by node. Then the intention stands
    untouched — adopted when it was, ended by nothing — and only the new part of the joint plan is

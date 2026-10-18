@@ -47,7 +47,7 @@ timestamp: 2026-10-09T12:00:00Z
 
 # The question
 
-The mind says what it does not know as an interval. A drift that knows its rate only as a range
+The mind says what it does not know as an interval. A flow that knows its rate only as a range
 answers a low and a high rate, prediction carries the [corridor](/domain/prediction/corridor.md)
 between them, and a stretch is read at its worst side; membership in a range is crisp. The
 sovereign asked whether that was a good choice: whether a reading and a prediction should be
@@ -61,7 +61,7 @@ The question turned out to have two halves, and only one of them is about the mi
   was a strict comparison in `agent/sensing/rules.ttl` (`FILTER(?value < ?low)`). A probe reading
   0.249 against the terrace bed's floor of 0.25 was below exactly as a noiseless probe would be.
 - **A prediction carries worst-case bands**, the corridor, built by interval arithmetic over the
-  drifts' rate ranges; an expected value for an uncertain forecast was refused in
+  flows' rate ranges; an expected value for an uncertain forecast was refused in
   [a-prediction-accumulates-rates-between-happenings](/decisions/a-prediction-accumulates-rates-between-happenings.md).
 - **Nothing stopped a side flipping on noise.** 0.1.0 absorbed a flip by predicting a reading in both
   bands where the world stated an instrument's noise (`sensing:noise`), and #615 was closed on that

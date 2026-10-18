@@ -2,7 +2,7 @@
 type: Runbook
 title: Add a predictor
 description: >-
-  Let an agent foresee its readings - the predictor role, the drifts a domain ships and the facts
+  Let an agent foresee its readings - the predictor role, the flows a domain ships and the facts
   on the subject they read, and the horizon it looks across.
 ---
 
@@ -13,7 +13,7 @@ heading, as bands ([prediction](/domain/prediction/prediction.md),
 [corridor](/domain/prediction/corridor.md)). Planning then sees the bed go dry tomorrow, not only
 that it is dry now, so a want can be minted before the crossing.
 
-![the latest observation and each drift summed into bands ahead, foreseen grounds, and a want for that instant](../diagrams/runbook-predictor-drifts.svg)
+![the latest observation and each flow summed into bands ahead, foreseen grounds, and a want for that instant](../diagrams/runbook-predictor-flows.svg)
 
 # What to write
 
@@ -27,16 +27,16 @@ to the agent, and onboarding refuses a sensor no observer role reads, so in prac
                  [ a prediction:Predictor ] .
 ```
 
-**2. The drifts**, from a domain: a `prediction:Drift` says which property it moves and gives a
-rate, read off facts the world states. Importing the domain's ontology brings its `drifts.ttl`.
+**2. The flows**, from a domain: a `prediction:Flow` says which property it moves and gives a
+rate, read off facts the world states. Importing the domain's ontology brings its `flows.ttl`.
 
-| drift | moves | reads on the subject |
+| flow | moves | reads on the subject |
 |---|---|---|
 | `climate:Drying` | soil moisture | `climate:driesPerDay` |
 | `climate:Raining` | soil moisture | `climate:wetsPerMm`, and a precipitation forecast on its place |
 | `actuation:Dosed` | soil moisture | a dose the agent has committed to |
 
-**3. The facts the drifts read**, on the subject in `world.ttl`:
+**3. The facts the flows read**, on the subject in `world.ttl`:
 
 ```turtle
 :bed climate:driesPerDay 0.04 ; climate:wetsPerMm 0.01 ; schema:containedInPlace :terrace .
@@ -47,7 +47,7 @@ rate, read off facts the world states. Importing the domain's ontology brings it
 
 # What onboarding refuses
 
-A predictor with no sensor of its own, or a world stating no drift: it would foresee nothing.
+A predictor with no sensor of its own, or a world stating no flow: it would foresee nothing.
 
 # Prove it
 

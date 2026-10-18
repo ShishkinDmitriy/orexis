@@ -12,7 +12,7 @@ description: >-
   "check", where the dictionary says judge; a wrapper between either function and the engine;
   the choir's judgment for a met-test the compiler refuses; a holder argument; the present as
   an argument or a row; and, at the end, the intermediate itself. The FORESIGHT is deleted -
-  a met-test already says which instants fail, and the drifts' horizons say how far ahead the
+  a met-test already says which instants fail, and the flows' horizons say how far ahead the
   agent sees. It is held to a snapshot of the store it leaves.
 status: accepted
 timestamp: 2026-09-19T18:00:00Z
@@ -113,7 +113,7 @@ want only if that instant was nearer than `sensing:foresightS` — a per-agent p
 the choir at derivation time. The sovereign, on being shown what the function reached for:
 *derive_wants should accept only judgments; it is just decomposition of judgments into wants*.
 The judgments already say which instants fail and when, and how far ahead the agent sees is
-said by the drifts, each declaring the horizons it predicts at (1 hour, 5 hours, 24 hours in
+said by the flows, each declaring the horizons it predicts at (1 hour, 5 hours, 24 hours in
 every shipped package). The pick was measured to have exactly two states in practice —
 unbounded for the market's root and absent everywhere else, absent meaning *never derive a
 foreseen want* — so it was an on/off switch wearing a horizon's name, and no shipped world set

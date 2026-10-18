@@ -37,6 +37,6 @@ is taken and answers the device and the payload: for a dose, how far the subject
 below the middle of the range, by the subject's litres per fraction, at most the
 valve's cap. The runtime sends it through the [transport](/domain/transport/transport.md). The
 executor answers the step when the next reading's transition says the soil moist. A dose the agent
-is committed to is a flow its subject's prediction accumulates (`domains/actuation/drifts.ttl`), its
+is committed to is a flow its subject's prediction accumulates (`domains/actuation/flows.ttl`), its
 rate read off the committed step's subject and that subject's observation — prediction is the other
 reader of the number, an estimator at the boundary.

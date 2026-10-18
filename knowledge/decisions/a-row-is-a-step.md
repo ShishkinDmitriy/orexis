@@ -81,7 +81,7 @@ lever. One shape, one word, and the moment is said by what else the step carries
 
 The **metric key was renamed with it** — `affordances_suspect` became `steps_suspect` — on the
 sovereign's ruling, at the cost of the series history on the live terrace world. A key that
-outlived its word would be the same drift in telemetry.
+outlived its word would be the same flow in telemetry.
 
 # Seams left open
 

@@ -126,7 +126,7 @@ boots every agent as its container would and holds the declaration to the world 
 - **a declared role whose needs the world lacks** — each need a SHACL shape targeting the role, its
   `sh:sparql` select returning the role, `$this`, for each way it is unmet, shipped by the package or domain whose words the need
   is stated in: a planner holding no desire or want, an executor that is no planner, an observer that
-  reads no sensor or reads one mounted on nothing the agent acts for, a predictor with no sensor or no drift, a speaker listening to no topic, a host
+  reads no sensor or reads one mounted on nothing the agent acts for, a predictor with no sensor or no flow, a speaker listening to no topic, a host
   hosting no venue, a bidder bidding in none;
 - **a requirement its boot breaks that is not the world's**, as a want carrying both tests (the
   [requirement](/domain/onboarding/requirement.md) page says which faults are the world's);
@@ -136,7 +136,7 @@ boots every agent as its container would and holds the declaration to the world 
   a kind no reader declares, below, narrowed to the agent, which is how rules held by an agent that
   is no deliberator are caught.
 
-It does not refuse a drift no predictor reads, since foresight is the author's to decline, nor an
+It does not refuse a flow no predictor reads, since foresight is the author's to decline, nor an
 action that says a document an agent is in no role to take, since whether an action admits a step
 for this agent is the search's to say
 ([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).

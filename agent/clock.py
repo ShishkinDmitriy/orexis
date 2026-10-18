@@ -3,7 +3,7 @@
 
 An agent writes instants — a reading's `resultTime`, a period's start and end, a want's
 `holdsAt`, a step's `notBefore`, a debt's expiry — and keeps stretches — a cadence, a grace, a
-patience, a landing, the `$elapsed` a drift is handed — and every one of them is in ONE
+patience, a landing, the `$elapsed` a flow is handed — and every one of them is in ONE
 timeline. A day is eighty-six thousand four hundred of its seconds wherever the agent runs, and
 a rule may say so: the literal is the timeline's own arithmetic, never a unit the mind learned.
 

@@ -40,7 +40,7 @@ package or domain owning its words ships, `sh:targetClass` the role and a `sh:sp
 judged by both tests; a sensor reporting to an agent that no observer role of its reads; a topic an agent
 listens to with no speaker to hear it; and a graph the agent would read of a kind none of the
 packages it loads declares — the refusal `unread` makes of the world, narrowed to the agent. It does
-NOT refuse a drift with no predictor, foresight being the author's to decline, nor an action whose
+NOT refuse a flow with no predictor, foresight being the author's to decline, nor an action whose
 saying an agent is in no role to take, which is the search's to say and not onboarding's.
 
 **Whether an agent lasts is read off the agent, as its boot reads it.** `lasts` boots the agent
@@ -179,17 +179,17 @@ def check(here: Path) -> None:
                          f"{'; '.join(found)}; nothing granted")
     found = cyclic(here)
     if found:
-        raise SystemExit(f"world {name!r} states drifts that read each other in a cycle, which no predictor "
+        raise SystemExit(f"world {name!r} states flows that read each other in a cycle, which no predictor "
                          f"can accumulate — {'; '.join(found)}; nothing granted")
 
 
 def cyclic(here: Path) -> list[str]:
-    """Every predictor of the world in `here` whose drifts read each other round, as `agent: why` — asked
+    """Every predictor of the world in `here` whose flows read each other round, as `agent: why` — asked
     of the agent as its boot reads it, by the prediction package's own `order`. A key's prediction may
-    read another key's, so the keys are predicted in the order the drift texts fix (#996); two
+    read another key's, so the keys are predicted in the order the flow texts fix (#996); two
     properties each moving by the other are a coupled system, which no predictor here accumulates, so
     `orexis-onboard` refuses the world as it refuses one posed against its own constraints. Empty for a
-    world whose texts order, and for an agent that is no predictor, which reads no drift — a drift no
+    world whose texts order, and for an agent that is no predictor, which reads no flow — a flow no
     predictor reads is not refused (knowledge/domain/prediction/predictor.md)."""
     out = []
     for agent_id in agents(here):

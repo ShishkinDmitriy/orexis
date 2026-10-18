@@ -3,8 +3,8 @@ type: Role
 title: Predictor
 term: http://example.org/orexis/prediction#Predictor
 description: >-
-  An agent that foresees its readings by the drifts - the role whose part is prediction's. Declared
-  in the agent's self graph; it needs a sensor of the agent's and a drift. A drift no predictor reads
+  An agent that foresees its readings by the flows - the role whose part is prediction's. Declared
+  in the agent's self graph; it needs a sensor of the agent's and a flow. A flow no predictor reads
   is not refused, since foresight is the author's to decline.
 ---
 
@@ -18,14 +18,14 @@ observer's, so nothing but the author's declaration says both.
 
 # What it needs, and what it does not
 
-A sensor of the agent's and a `prediction:Drift`, a shape prediction ships beside the role; an agent
-declared a predictor in a world stating neither is refused at onboarding. And drifts that ORDER: a
-predictor's keys are predicted each after the keys its drifts read, so a world whose drifts read each
+A sensor of the agent's and a `prediction:Flow`, a shape prediction ships beside the role; an agent
+declared a predictor in a world stating neither is refused at onboarding. And flows that ORDER: a
+predictor's keys are predicted each after the keys its flows read, so a world whose flows read each
 other round - the soil moving by the air and the air by the soil - is refused as it is read, by the
 package's own `order`, the way a world posed against its own constraints is (#996). Both are judged in
 Python and not by a shape, since neither is a word a document states but what the texts say together.
 
-The other way round is NOT refused. A world may ship drifts — a domain's `drifts.ttl` imported for
+The other way round is NOT refused. A world may ship flows — a domain's `flows.ttl` imported for
 its actions — whose agents foresee nothing; declining foresight is the author's choice, and refusing
 it would make the declaration a premise restated
 ([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).

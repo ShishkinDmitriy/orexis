@@ -9,11 +9,11 @@
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
 #  OREXIS PREDICTION, AGENT 0.2.0.
-#  What the prediction package of Agent 0.2.0 declares: the drift and the two things it says, and
+#  What the prediction package of Agent 0.2.0 declares: the flow and the two things it says, and
 #  how far ahead the agent looks, a stance of its own. A
-#  prediction is the calculation of when a reading changes range — the rates of every drift moving
+#  prediction is the calculation of when a reading changes range — the rates of every flow moving
 #  the observed property, summed and accumulated from the observation a sensor last made, between
-#  the happenings at which what a drift reads may change, every crossing of a range bound placed
+#  the happenings at which what a flow reads may change, every crossing of a range bound placed
 #  exactly, and one orexis:PredictionGraph written per stretch between crossings, holding a
 #  predicted sosa:Observation with its number. The observation is found by the kernel's kind and
 #  SOSA's words, a range is SSN-System's, and which side a stretch is on is a revision the sensing
@@ -21,34 +21,37 @@
 
 #  THE ROLE THIS PACKAGE SERVES (knowledge/domain/prediction/predictor.md): an agent declared a
 #  predictor runs prediction's part, and the boot loads this package for it and for nothing else.
-#  What it needs of the world is a sensor of the agent's and a drift; `orexis-onboard` refuses a
-#  predictor whose world states neither, and does NOT refuse a drift with no predictor to read it —
+#  What it needs of the world is a sensor of the agent's and a flow; `orexis-onboard` refuses a
+#  predictor whose world states neither, and does NOT refuse a flow with no predictor to read it —
 #  foresight is the author's to decline, and refusing it would make the declaration the derivation
 #  restated (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
 
 :Predictor a owl:Class ;
     rdfs:subClassOf orexis:Role ;
     rdfs:label "Predictor" ;
-    rdfs:comment """An agent that foresees its readings by the drifts: the role whose part is
+    rdfs:comment """An agent that foresees its readings by the flows: the role whose part is
     prediction's, which answers every observation written with the stretches ahead. Declared, never
-    derived; it needs a sensor of the agent's and a drift.""" .
+    derived; it needs a sensor of the agent's and a flow.""" .
 
-:Drift a owl:Class ;
-    rdfs:label "Drift" ;
-    rdfs:comment """One thing that moves a value while nobody acts — a bed drying, rain wetting it. SOSA
-    has no word for it: a sosa:Procedure is how an observation is MADE, and a drift is how the world
-    moves what was observed. PDDL+ calls it a process. It says which property it moves and how fast;
-    every drift moving one property adds, and none knows another exists.""" .
+:Flow a owl:Class ;
+    rdfs:label "Flow" ;
+    rdfs:comment """One thing that moves a value while nobody acts — a bed drying, rain wetting it, the dose
+    the agent is committed to. SOSA has no word for it: a sosa:Procedure is how an observation is MADE,
+    and a flow is how the world moves what was observed. PDDL+ calls it a process. The word is system
+    dynamics': a value is a stock, each flow into or out of it has a rate and a direction, flows sum,
+    and `until` is the level a flow stops at; it was `Drift` until the dose, which is no drift, was
+    called a flow in every page that spoke of it (#998). It says which property it moves and how fast;
+    every flow moving one property adds, and none knows another exists.""" .
 
 :moves a owl:ObjectProperty ;
-    rdfs:domain :Drift ; rdfs:range sosa:ObservableProperty ;
+    rdfs:domain :Flow ; rdfs:range sosa:ObservableProperty ;
     rdfs:label "moves" ;
-    rdfs:comment "The property whose value the drift's rate changes: which drifts are asked for a key." .
+    rdfs:comment "The property whose value the flow's rate changes: which flows are asked for a key." .
 
 :rate a owl:DatatypeProperty ;
-    rdfs:domain :Drift ; rdfs:range xsd:string ;
+    rdfs:domain :Flow ; rdfs:range xsd:string ;
     rdfs:label "rate" ;
-    rdfs:comment """A select answering how fast the drift moves its property, per second of the one
+    rdfs:comment """A select answering how fast the flow moves its property, per second of the one
     timeline, for $feature holding $value at the instant $at: ?rate, or ?low and ?high where the rate
     is known only as a range — the two ends of a corridor — and ?until, the value past which it
     contributes nothing. Read over whatever holds at $at; one row per contribution, and rows add.""" .
@@ -56,7 +59,7 @@
 :horizonS a owl:DatatypeProperty ;
     rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
     rdfs:label "horizon seconds" ;
-    rdfs:comment """How far past an observation the agent looks, in the timeline's seconds: the drifts'
+    rdfs:comment """How far past an observation the agent looks, in the timeline's seconds: the flows'
     sum is accumulated that far and no prediction is written past it, so a crossing beyond it is not
     foreseen and no want is minted for it yet. A stance: the agent states it of itself in its self
     graph and `predict` reads it; where it states none, a day.""" .

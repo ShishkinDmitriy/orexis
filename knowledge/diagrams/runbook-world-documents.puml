@@ -26,7 +26,7 @@ frame "read by onboarding alone" {
   rectangle "deployment.ttl\na pinned broker port" as DEP
   rectangle "hardware.ttl\npins and boards" as HW
 }
-rectangle "domains/<name>/\nwords · actions · rules · drifts" as DOM
+rectangle "domains/<name>/\nwords · actions · rules · flows" as DOM
 rectangle "sensing · prediction · planning\nexecution · speech · belief · transport" as PK
 
 W -right-> DOM : imports

@@ -120,7 +120,7 @@ is the same move at one grain finer.
   except that a world holds it, and a graph is that saying.
 - **One graph, the committed step's.** The executor already writes each adopted step as an
   `execution:CommittedStepGraph`, a belief holding over the step's landing window, carrying the
-  step's filling for a drift to read as a flow ([committed-step](/domain/execution/committed-step.md)).
+  step's filling for a flow to read as a flow ([committed-step](/domain/execution/committed-step.md)).
   Putting the predicted facts in it would make them *beliefs*: `graphs_of(BELIEF)` would hand "the
   soil is inside its range" to every met-test from the moment of adoption, and the want would read
   met before the world answered. The two graphs differ in modality — believed against stated — and

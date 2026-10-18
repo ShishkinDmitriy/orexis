@@ -17,7 +17,7 @@ agent's self graph beside the row saying who it is:
 <> a orexis:SelfGraph .
 :rose_grower a orexis:Self ;
     execution:patienceS 120 ;     # a step may go two minutes unanswered past its landing
-    prediction:horizonS 43200 .   # the drifts are accumulated half a day past an observation
+    prediction:horizonS 43200 .   # the flows are accumulated half a day past an observation
 ```
 
 The word is the figure's, not the triple's: `execution:patienceS` is a stance whether or not a
@@ -35,7 +35,7 @@ Each is declared by the package that reads it, in its own `ontology.ttl`, with d
 | `execution:patienceS` | how long a commitment absorbs a second plan for its want, and how long past its latest landing a step may go unanswered | the [executor](/domain/execution/executor.md), when it is made | `DEFAULT_PATIENCE_S`, sixty seconds |
 | `planning:budget` | candidates one want's search may weigh in a pass | the [planner](/domain/planning/planner.md), when it is made | `BUDGET` in `agent/planning/planner.py`, 32 |
 | `belief:budget` | rule executions one pass of revision may spend | the [deliberator](/domain/belief/deliberator.md), when it is made | `BUDGET` in `agent/belief/deliberator.py`, 256 |
-| `prediction:horizonS` | seconds past an observation the drifts are accumulated | `predict`, each observation | `HORIZON_S`, a day |
+| `prediction:horizonS` | seconds past an observation the flows are accumulated | `predict`, each observation | `HORIZON_S`, a day |
 
 What the two budgets are, in their units, is the [budget](/domain/planning/budget.md) page's.
 

@@ -163,7 +163,7 @@ new and its page is written first:
 | kernel | `orexis:Role` | the kind every role is beneath; its page says what a role is | — |
 | belief | `belief:Deliberator` ([deliberator](/domain/belief/deliberator.md)) | revises what it believes by the rules it holds | nothing |
 | sensing | `sensing:Observer`, beneath the deliberator — new | turns its sensors' numbers into observations | a sensor reporting to it, as sensing's premise reads one |
-| prediction | `prediction:Predictor` — new | foresees its readings by the drifts | a sensor of its, and a drift |
+| prediction | `prediction:Predictor` — new | foresees its readings by the flows | a sensor of its, and a flow |
 | planning | `planning:Planner` ([planner](/domain/planning/planner.md)) | derives wants and searches for plans | a desire or a want it holds |
 | execution | `execution:Executor` ([executor](/domain/execution/executor.md)) | walks intentions and takes steps | being a planner too, while a plan crosses no agent (seam below) |
 | speech | `speech:Speaker`, in a vocabulary speech does not yet have — new | hears peers' documents and says its own | a topic it listens to |
@@ -217,7 +217,7 @@ already refuses a graph no reader declares. The converse, read here from the sov
   refusal, narrowed from "no reader at all" to "no reader this agent loads", which is how a rules
   graph held by an agent that is no deliberator is caught.
 
-**Not refused**, and why: a drift with no predictor — foresight an author may decline, so refusing
+**Not refused**, and why: a flow with no predictor — foresight an author may decline, so refusing
 it would make the declaration the derivation restated; and an action with an `execution:Saying`
 that an agent is in no role to take — whether an action admits this agent is the search's to say,
 and onboarding does not search.

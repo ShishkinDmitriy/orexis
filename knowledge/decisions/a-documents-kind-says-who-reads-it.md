@@ -113,7 +113,7 @@ premise read off the world holds:
 | package | premise |
 |---|---|
 | sensing | a sensor hosted by what the agent acts for |
-| prediction | a `prediction:Drift` declared by a domain the world imports |
+| prediction | a `prediction:Flow` declared by a domain the world imports |
 | speech | the agent `mqtt4ssn:listensToTopic` a topic, or an action it may take has an `execution:Saying` operation |
 | transport | as today: a sensor it claims, or a topic the agent listens to |
 
@@ -170,7 +170,7 @@ bucket). Its PURPOSES, history and metrics, are concepts the code may name
 and its premise is the one read off the environment rather than the world, because a store is
 deployment: the environment names a store for its purpose.
 
-**If the agent ever reads its history** — to learn a drift, say — that store is a source, it
+**If the agent ever reads its history** — to learn a flow, say — that store is a source, it
 arrives through sensing and a transport like any testimony, and it is no longer a sink.
 
 ## 5. History is contributed by the package that decides each thing
@@ -270,8 +270,8 @@ test holds the committed file to the rendering. The seam this record left for it
 Each premise was checked against what its package's callers read, and two rows of §2's table
 changed:
 
-- **Prediction needs a sensor of the agent's as well as a drift.** `predict` is asked of a sensor
-  that has just reported, and moves nothing without one; on a drift alone, the allotment's
+- **Prediction needs a sensor of the agent's as well as a flow.** `predict` is asked of a sensor
+  that has just reported, and moves nothing without one; on a flow alone, the allotment's
   supplier — which senses nothing, in a world importing climate — would have loaded it for nothing.
 - **The transport's sensor is the agent's own**, hosted by what it acts for, which is what the
   member subscribes to; "a sensor it claims" was any sensor in the world that published on a
@@ -297,8 +297,8 @@ package held, by an instance in a document or by a path, to decide what to impor
 The boot puts the kernel, the mind and the world in, closes the catalogue, finds the agent, asks
 the premises, and only then reads the documents of the packages that held, closing the vocabulary
 again and taking a second look at a world graph passed over for a kind only such a package
-declares. A premise naming a package's word — `prediction:Drift` — matches the IRI with no
-vocabulary behind it, so climate's drifts are read whether prediction is loaded or not. With no
+declares. A premise naming a package's word — `prediction:Flow` — matches the IRI with no
+vocabulary behind it, so climate's flows are read whether prediction is loaded or not. With no
 agent, `world_of` reads every package, since the operator's tools read every reader's vocabulary.
 
 Measured on Hanoi's mover, before and after: sensing's ontology and its three rules, prediction's

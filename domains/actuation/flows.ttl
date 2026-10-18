@@ -4,12 +4,12 @@
 @prefix prediction: <http://example.org/orexis/prediction#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-<> a orexis:DriftGraph .    # this document is one graph, and this is what it is
+<> a orexis:FlowGraph .    # this document is one graph, and this is what it is
 
 #  WHAT A DOSE THE AGENT IS COMMITTED TO GIVES ITS SUBJECT'S SOIL, over the step's landing window:
 #  the pump runs and the soil takes the water up. A step the executor has adopted stands in the
 #  beliefs as a graph holding from its opening to the latest the world may answer it
-#  (execution:CommittedStepGraph), and this drift reads it there at the instant it is asked at —
+#  (execution:CommittedStepGraph), and this flow reads it there at the instant it is asked at —
 #  so a prediction made after the adoption rises where the dose will land, a later want is searched
 #  against a future that contains the earlier plan, and two plans drawing one source see each
 #  other's draw (a-prediction-accumulates-rates-between-happenings).
@@ -24,11 +24,11 @@
 #  one by the latest (`execution:answeredWithinS`), which is how a late landing widens the corridor;
 #  a dose lands at the least at once (#596), and a rise over no time is no rate, so a second stands
 #  in for at once there — the engine would answer INF, measured, and INF times nought is not a number;
-#  neither rises past the aim (`?until`). The drift contributes nothing outside the window, since
+#  neither rises past the aim (`?until`). The flow contributes nothing outside the window, since
 #  the graph it reads holds for the window alone, and nothing once the step is answered or its
 #  intention ends, since the executor closes the window then.
 
-actuation:Dosed a prediction:Drift ;
+actuation:Dosed a prediction:Flow ;
     rdfs:label "what a dose the agent is committed to gives its subject's soil over the step's landing window" ;
     prediction:moves climate:SoilMoisture ;
     prediction:rate """PREFIX actuation: <http://example.org/orexis/actuation#>

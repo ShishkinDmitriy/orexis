@@ -43,7 +43,7 @@ code may name. So the environment is keyed by purpose, never by instance, and th
 each is minted per purpose into the agent's own secrets.
 
 **A series read back is no longer a series.** The day an agent reads its history — to learn a
-drift, say — that history is a source, and it arrives through sensing and a transport like any
+flow, say — that history is a source, and it arrives through sensing and a transport like any
 other testimony.
 
 # What is built

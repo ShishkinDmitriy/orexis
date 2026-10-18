@@ -16,8 +16,8 @@
 [] a sh:NodeShape ;
     sh:targetClass :Predictor ;
     sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "a predictor with no sensor of its own or no drift: it would foresee nothing" ;
+        sh:message "a predictor with no sensor of its own or no flow: it would foresee nothing" ;
         sh:select """SELECT $this WHERE { ?me orexis:plays $this
             FILTER (NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
                                  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host }
-                    || NOT EXISTS { ?drift a prediction:Drift }) }""" ] .
+                    || NOT EXISTS { ?flow a prediction:Flow }) }""" ] .

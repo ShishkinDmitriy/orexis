@@ -135,6 +135,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   or a subject goes by the local name of its IRI in the series, since a stated id equalled it in
   every world and was missing in the one that mattered, which got no readings dashboard (#885).
 - **A term nobody reads is annotation**, however many instances state it.
+- **A word is held to every instance of its concept, not the first** — `Drift` fit the drying and
+  neither the rain nor the dose, which three pages had taken to calling a flow, one concept under two
+  words; it is `prediction:Flow`, system dynamics' word, and a clock, a bench and a definition still
+  drift (#998).
 - **A word used before it is defined is a word everyone defines differently** — `duty` ran to 64
   code sites and 13 pages, meaning `obligation` all along.
 - **Desire is bouletic, obligation deontic, availability alethic, freshness epistemic** — different
@@ -255,7 +259,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   the dispatcher's desire was physics, and a desire's bound over worlds and an executor-held resource
   were both built and refused (#902, constraint, one-mind-couples-the-wants-a-constraint-can-make-collide).
 - **A derivation asks nothing the met-tests do not answer** — how far ahead the agent sees is the
-  horizons each drift predicts at.
+  horizons each flow predicts at.
 - **The holder's own IRI is never part of a trouble's key** — the one constant of an agent's world
   tells two of its troubles apart from nothing, and keyed by it an observation and the prediction's
   copy of it were two wants under one name, two roots, and a plan placed twenty minutes out; it fell
@@ -274,7 +278,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A long-lived object and situational data about it is one shape three times, and only
   testimony is kept** — the observation is stored because it IS the premise; a judgment and a step
   are conclusions whose premises are stored.
-- **A synchronous twin of a pass is a second pass, and it drifts** — one pass the runtime and a
+- **A synchronous twin of a pass is a second pass, and it flows** — one pass the runtime and a
   test both call (the executor's `tick` and `drain`) is what stops that.
 - **A pass begins in one place, and judging happens once in it** — `Planner.plan` derives every
   pass, so no row goes stale for want of a re-judging.
@@ -358,7 +362,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   in one is CRISP**.
 - **A step is sized when it is taken, from the present, and the search only says the state it
   reaches** — an action takes the subject, and the `execution:Command` reads its latest observation
-  over the beliefs and the percepts holding as the step is taken: with a drift, the one reader of a
+  over the beliefs and the percepts holding as the step is taken: with a flow, the one reader of a
   reading's number (#944).
 - **A step lands when the world can SHOW its effect, and a landing is a BAND** — the least and the
   most, so a dose lands within a cadence of the step, a market act when its round's window closes,
@@ -436,7 +440,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   from ten seconds on stood under the van today, and a value stands until its key is assigned (#987).
 - **A world speaks for what can change of its state's revisions**, and **the search runs no rules, so a
   state's revisions travel with it and an effect speaks the state a transition concludes** — a revision is of
-  its source's kind and a drift's prediction is neither, which keeps the foreseen reading out of the
+  its source's kind and a flow's prediction is neither, which keeps the foreseen reading out of the
   present; the foreseen state is made where a ground is laid, before any search stands in it; and no
   reading crosses at all, a percept and what was concluded of it being no kind a world is made of (#944).
 - **A graph forgotten takes its revisions with it, and an orphan revision is a side with no
@@ -478,7 +482,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **Two intentions walked side by side keep no order between them**, so a joint plan leaves a walking
   intention standing only where it BEGINS with that intention's untaken steps — the same steps later
   in the plan were found safe in an order nothing would walk them in (#905).
-- **A committed step is a belief over its landing window, and a drift reads it there** — the
+- **A committed step is a belief over its landing window, and a flow reads it there** — the
   executor writes each adopted step as an `execution:CommittedStepGraph` holding from its
   `notBefore` to its `landsAt` plus the patience, closes it when answered or ended, and prediction
   hears every belief and rewrites every key for one that is no observation; a later want is then
@@ -541,7 +545,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `sensing:previous`, the latest holding until the next is due and a grace past it and every older one
   ended where the next began; it keeps a sensor's last `sensing:stuckAfter` and nothing sweeps the rest
   but it; `missed` answers which sensors are silent, their latest ended a limit of cadences ago, asking
-  `cadence.lapsed` as the transport does; `agent/prediction/` accumulates the drifts' rates from the
+  `cadence.lapsed` as the transport does; `agent/prediction/` accumulates the flows' rates from the
   latest, speaking sensing's kind and importing none of its code (#944).
 - **A silence is computed and never written** — its premises are stored (the latest percept's end,
   the cadence, the role's limit), the belief made of the percept ended with that period a limit of
@@ -585,16 +589,16 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **An observation is concluded from the number a sensor gave** — its quantity through the scaling,
   its reading through the calibration; what the subject is then is a domain's transition's
   (an-observation-is-concluded-from-the-number-a-sensor-gave).
-- **A drift answers a rate, and a prediction accumulates them** — rates add, a happening is where
+- **A flow answers a rate, and a prediction accumulates them** — rates add, a happening is where
   one may change, a crossing is on a straight line (a-prediction-accumulates-rates-between-happenings);
-  the observation in hand is read at every instant with its revisions, since a drift sized from a
+  the observation in hand is read at every instant with its revisions, since a flow sized from a
   reading reads it past the stretch the observation holds for.
-- **A key no drift moves is predicted nothing** — the state concluded of the reading is what every
+- **A key no flow moves is predicted nothing** — the state concluded of the reading is what every
   ground ahead inherits by fork, so a prediction carrying the reading unmoved for an hour said nothing
   the grounds did not hold, made the greenhouse's air a ground of its own a pass, and said nothing at
   all past the hour (#989).
-- **A drift reads a forecast of any author at its instant, the agent's own predictions among them, so
-  the keys are predicted in the order the drift texts read each other, each once an arrival, and a cycle
+- **A flow reads a forecast of any author at its instant, the agent's own predictions among them, so
+  the keys are predicted in the order the flow texts read each other, each once an arrival, and a cycle
   is refused at onboarding rather than iterated** — the soil's drying reads the air as the agent foresees
   it; `order` reads every `sosa:observedProperty` a rate names; and what the part wrote it answers
   nothing of, since heard as a belief each prediction would rewrite every key without end (#996).
@@ -639,7 +643,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   graphs, `graphs_of` answers by kind and instant, and the union of everything was refused as the
   default.
 - **A belief is what a possible world is made of, and what the agent reads to act is none** — the
-  actions, drifts, shapes, constraints and derivations are its program, each read by its own kind
+  actions, flows, shapes, constraints and derivations are its program, each read by its own kind
   beside the desires, wants and rules (#953).
 - **Whose a graph is, is provenance and never its kind, and what the world states is the common
   beliefs** — a world's graph naming no owner is shared by every agent of it, and a belief of the
@@ -667,10 +671,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (a-documents-kind-says-who-reads-it).
 - **A world's words are its own or a domain's it imports** — `owl:imports` names the graph it
   brings; **a vocabulary two worlds speak is a domain**, and the shapes are `planning:ShapesGraph`.
-- **A graph of actions is an `orexis:ActionGraph` and a graph of drifts an `orexis:DriftGraph`, and the
+- **A graph of actions is an `orexis:ActionGraph` and a graph of flows an `orexis:FlowGraph`, and the
   planner and the predictor read each from those alone** — typed bare, every graph everyone reads
-  was scanned for them; and the drifts' kind is the kernel's, not prediction's, because a domain
-  ships drifts every agent reads, predictor or not, and a kind only prediction declared would be refused
+  was scanned for them; and the flows' kind is the kernel's, not prediction's, because a domain
+  ships flows every agent reads, predictor or not, and a kind only prediction declared would be refused
   for every agent that is none.
 - **A package is loaded only for a role the agent plays, in its self graph, and there is no
   default** — a role is an instance the agent `orexis:plays`, never its type; each package declares its

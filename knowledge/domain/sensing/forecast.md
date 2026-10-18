@@ -21,7 +21,7 @@ never takes it for the observation in hand.
 
 It is not a [prediction](/domain/prediction/prediction.md). A prediction is the agent's own
 calculation, derived from its last observation and replaced with it; a forecast is testimony,
-kept because it arrived and replaced when the next one does. A drift reads a forecast, and the
+kept because it arrived and replaced when the next one does. A flow reads a forecast, and the
 start and end of its stretch are happenings of the calculation.
 
 # Where it comes from

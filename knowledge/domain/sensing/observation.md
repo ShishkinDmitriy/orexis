@@ -45,7 +45,7 @@ begins.
 
 It is testimony, the one thing in the store that is somebody else's word (`orexis:Received`), and
 it is the premise: what a rule concludes of it is a [revision](/domain/belief/revision.md) in a
-graph derived from it, and what a drift makes of it is a
+graph derived from it, and what a flow makes of it is a
 [prediction](/domain/prediction/prediction.md). Its revisions go when it is forgotten, because they
 were about it; its predictions go when the next reading of its sensor is predicted from.
 

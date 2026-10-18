@@ -127,7 +127,7 @@ transition — humidity, pressure, rain, a battery's voltage — is believed of 
 reads nothing else** (#944): a [desire](/domain/planning/desire.md) asks the bed's soil and air, and
 the dose, the heating and the market's presenting take the [subject](/domain/actuation/subject.md)
 and speak its state in their preconditions and effects. A reading's number has two readers left,
-both at the boundary: a command sizing a step when it is taken, and a drift.
+both at the boundary: a command sizing a step when it is taken, and a flow.
 
 # In a ground: a predicted observation arriving
 

@@ -1,7 +1,7 @@
 # a_committed_dose_lifts_the_reading_over_its_window
 #
 # A step the executor has committed to stands in the beliefs as a graph holding over its landing
-# window (execution:CommittedStepGraph), and a drift reads it there: the tap the step opens lifts the
+# window (execution:CommittedStepGraph), and a flow reads it there: the tap the step opens lifts the
 # pot's moisture by 0.15 toward an aim of 0.27 — over 600 seconds on the high trajectory, the earliest
 # landing, and over 1200 on the low, the latest, which is how a late landing widens the corridor. The
 # window's start and end are happenings, and nothing of this package learned the word.
@@ -66,7 +66,7 @@ GRAPH :world {
 }
 
 GRAPH :actions {
-  :Dosed a prediction:Drift .
+  :Dosed a prediction:Flow .
   :Dosed prediction:moves :moisture .
   :Dosed prediction:rate """PREFIX : <http://example.org/test#>
       PREFIX execution: <http://example.org/orexis/execution#>
@@ -76,7 +76,7 @@ GRAPH :actions {
           BIND(xsd:double(?rise) / xsd:double(?soon) AS ?high)
           BIND(xsd:double(?rise) / xsd:double(?late) AS ?low)
       }""" .
-  :Drying a prediction:Drift .
+  :Drying a prediction:Flow .
   :Drying prediction:moves :moisture .
   :Drying prediction:rate """PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
@@ -104,7 +104,7 @@ GRAPH committed:plan_dose {
 }
 
 GRAPH :catalogue {
-  :actions a orexis:DriftGraph .
+  :actions a orexis:FlowGraph .
   :actions a orexis:Graph .
   :catalogue a orexis:CatalogueGraph .
   :catalogue a orexis:Graph .

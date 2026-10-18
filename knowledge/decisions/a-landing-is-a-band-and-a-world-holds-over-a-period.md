@@ -50,9 +50,9 @@ So, since 2026-10-03:
   retired. The re-root moves both ends by the stretch from the match's start to the new ground's.
 - **A step carries both ends**: `execution:landsAt`, the earliest, from which the executor asks the
   present whether what the step predicted holds, and `execution:notAfter`, the latest, a patience
-  past which it gives up. The committed step a drift reads is believed to `notAfter` plus the
+  past which it gives up. The committed step a flow reads is believed to `notAfter` plus the
   patience, so its `answeredWithinS` is the latest landing and `landsWithinS` the earliest, which is
-  what the drift's two trajectories were already dividing by.
+  what the flow's two trajectories were already dividing by.
 - **The dose and the heating declare the band they are**: the next reading is due within a cadence
   of the act, nothing at the least and the cadence at the most, read off the world in SSN-System's
   words. A market act lands when its round's window closes, exactly, both ends agreeing. **And the
@@ -95,8 +95,8 @@ So, since 2026-10-03:
 # Measured
 
 - `0.5 / xsd:double(0)` binds `INF` on pyoxigraph 0.5.11 — not nothing, as the other arithmetic
-  traps do. A dose landing at the least at once hands the drift `landsWithinS 0`, and a rise over no
-  time is `INF`, which multiplied by an elapsed nought is not a number; the actuation drift divides
+  traps do. A dose landing at the least at once hands the flow `landsWithinS 0`, and a rise over no
+  time is `INF`, which multiplied by an elapsed nought is not a number; the actuation flow divides
   by one second where the earliest landing is nought, standing for *at once*.
 - Every regenerated snapshot differs from its predecessor by the world's row alone — the instant
   become a period — and, in the cases whose fill declares a band of one to three minutes, by the

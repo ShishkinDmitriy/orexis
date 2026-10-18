@@ -6,7 +6,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
-    owl:imports <actions.ttl> , <drifts.ttl> .
+    owl:imports <actions.ttl> , <flows.ttl> .
 
 #  ACTUATION, A DOMAIN.
 #  How a device an agent holds changes the thing it acts for: a valve that doses a subject from a
@@ -14,7 +14,7 @@
 #  device is SOSA's `sosa:Actuator`; a world says which subject and property it acts on and how it
 #  is reached, in MQTT4SSN's words, and the dose (actions.ttl) says what taking it makes true and
 #  how big it is, sized from the present when the step is taken; a dose the agent is committed to
-#  is a flow its subject's prediction accumulates over the step's landing window (drifts.ttl). The
+#  is a flow its subject's prediction accumulates over the step's landing window (flows.ttl). The
 #  0.1.0 package's capability, its tolerance and its review are not here: 0.2.0 grants nothing and
 #  revises no setting.
 

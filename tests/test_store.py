@@ -93,7 +93,7 @@ def test_queries_use_only_declared_prefixes(path):
 #  precondition, its cost, when it lands and its effect — speaks what the agent holds of a subject, in a
 #  domain's words, and never what a sensor said: no side a rule concluded of a reading, and no number a
 #  reading carries. The number's two readers stand at the boundary, and neither is held here: a command,
-#  sizing a step when it is taken (an implementation), and a drift, prediction's rate.
+#  sizing a step when it is taken (an implementation), and a flow, prediction's rate.
 _READ_BY_THE_MIND = ("precondition", "costs", "landsAfter", "effect", "metWhen", "unmetWhen", "estimates")
 #  AND NO WORD OF A PERCEPT AT ALL (#944): what a sensor said is a graph no reader of the mind is handed,
 #  so a text the mind reads that names one of its words — the number it gave, the instant, the sensor,
@@ -149,4 +149,4 @@ def test_the_mind_reads_no_side_no_number_and_no_word_of_a_percept():
                         for path, what, text in said for m in _PERCEPT.finditer(text)})
     assert not offending, (
         "a text the mind reads speaks a reading's side, its number or a word of a percept; it reads what the agent holds of the "
-        "subject, in the domain's words, and only a command or a drift reads the number:\n" + "\n".join(offending))
+        "subject, in the domain's words, and only a command or a flow reads the number:\n" + "\n".join(offending))

@@ -5,7 +5,7 @@ term: http://www.w3.org/ns/sosa/hasSimpleResult
 description: >-
   The quantity an observation carries - the value of a property, concluded by sensing's rules from
   the number the sensor gave, through the scaling and calibration the world states. What a subject
-  belief is judged from, what a drift predicts forward and a command sizes a step from, and nothing
+  belief is judged from, what a flow predicts forward and a command sizes a step from, and nothing
   the mind reads, since it is a percept's; it ages by its period rather than by being overwritten, and
   it is the one belief a peer or a device can be wrong about.
 ---
@@ -26,9 +26,9 @@ where the world states one. It is concluded in the observation's revision, and s
   range's [margin](/domain/sensing/margin.md), in the domain's words and with no number: the
   reading stays here. A met-test, a precondition and an effect read this, never the reading.
 - **The stretches ahead** — the [prediction](/domain/prediction/prediction.md) package runs the
-  domain's drift over the latest and writes one predicted reading per stretch between range crossings.
+  domain's flow over the latest and writes one predicted reading per stretch between range crossings.
 - **A step's size** — the action's command reads it when the step is taken, the
-  [subject](/domain/actuation/subject.md)'s latest, the one percept holding then: with the drifts, the
+  [subject](/domain/actuation/subject.md)'s latest, the one percept holding then: with the flows, the
   only readers of the number, both at the boundary.
 
 # What it is not

@@ -1,9 +1,9 @@
 """`predict`, one case per file, held to a PATCH of the store it leaves.
 
 A case in `predict/` is a belief base with an observation in hand, the pot's ranges and the
-drift the domain declares; the diff is the predictions the observation comes to — one graph
+flow the domain declares; the diff is the predictions the observation comes to — one graph
 per stretch between the instants the reading changes range, each carrying a predicted
-observation with the number the drift gives on that side, holding during its stretch, its row
+observation with the number the flow gives on that side, holding during its stretch, its row
 saying which observation it was derived from and how it supersedes the standing node.
 """
 
@@ -24,7 +24,7 @@ CASES = sorted(p for p in CASES_DIR.glob("*.trig") if "." not in p.stem)
 PROBE = "http://example.org/test#probe"
 
 #  THE PROBE'S STRETCHES: every prediction holding an observation the probe made, and when — another
-#  key's, written by an earlier walk and read by the probe's drift (#996), is none of them.
+#  key's, written by an earlier walk and read by the probe's flow (#996), is none of them.
 _WINDOWS_Q = """
 SELECT ?g ?start ?end WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:PredictionGraph ; dcterms:temporal ?p .
@@ -34,15 +34,15 @@ ORDER BY ?start"""
 
 #  WHERE EACH STRETCH OPENS, in minutes past noon, with the minutes a crossing may be placed
 #  within: a crossing is placed by division and rounded up to the whole second. The arithmetic is
-#  the drift's: 0.25 less the rate per day, so the operating floor at 0.10 is met 0.15 / rate days
+#  the flow's: 0.25 less the rate per day, so the operating floor at 0.10 is met 0.15 / rate days
 #  out and the survival floor at 0.02 is met 0.23 / rate days out. The shower and the corridor are
 #  read in their own files.
 OPENS = {
     "a_slow_dryer_crosses_the_floor_after_seven_hours": [(15, 0), (432, 0.02), (662.4, 0.02)],
     "a_fast_dryer_crosses_both_floors_within_two_hours": [(15, 0), (54, 0.02), (82.8, 0.02)],
     "a_reading_already_below_crosses_only_the_survival_floor": [(15, 0), (86.4, 0.02)],
-    "a_key_no_drift_moves_is_predicted_nothing": [],
-    "two_drifts_moving_one_property_add": [(15, 0), (36, 0.02), (55.2, 0.02)],
+    "a_key_no_flow_moves_is_predicted_nothing": [],
+    "two_flows_moving_one_property_add": [(15, 0), (36, 0.02), (55.2, 0.02)],
     "a_forecast_shower_lifts_the_reading_back_inside": [(15, 0), (28.8, 0.02), (144, 0.02), (316.8, 0.02), (432, 0.02)],
     "a_forecast_range_opens_a_corridor_on_its_dry_side": [(15, 0), (28.8, 0.02), (144, 0.02)],
     "a_committed_dose_lifts_the_reading_over_its_window": [(15, 0), (61.2, 0.02), (90, 0.02)],

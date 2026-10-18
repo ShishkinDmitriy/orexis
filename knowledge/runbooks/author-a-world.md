@@ -22,7 +22,7 @@ what to write for one.
 | role | loads | the world must state | how |
 |---|---|---|---|
 | `sensing:Observer` | sensing, belief, the transport its sensors need | a sensor reporting to the agent, named by the role | [add-an-observer](/runbooks/add-an-observer.md) |
-| `prediction:Predictor` | prediction | a sensor of the agent's and a drift | [add-a-predictor](/runbooks/add-a-predictor.md) |
+| `prediction:Predictor` | prediction | a sensor of the agent's and a flow | [add-a-predictor](/runbooks/add-a-predictor.md) |
 | `planning:Planner` with `execution:Executor` | planning, execution | a desire or a want; the actions and devices it acts with | [add-a-planner](/runbooks/add-a-planner.md) |
 | `market:Host`, `market:Bidder` | planning, execution, speech, belief, the MQTT transport | a venue it hosts or bids in, and an inbox topic | [add-a-market](/runbooks/add-a-market.md) |
 | `speech:Speaker` | speech, the MQTT transport | a topic the agent listens to; a domain's extraction for what it hears | [speaker](/domain/speech/speaker.md) |
@@ -62,7 +62,7 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
    `execution:Executor` for an agent with a desire or a want to plan and walk, `sensing:Observer` for
    one a sensor reports to — naming each sensor it reads, `sensing:sensor`, and any `sensing:silentAfter`
    or `sensing:stuckAfter` it holds them to ([observer](/domain/sensing/observer.md)) —
-   `prediction:Predictor` for one that foresees by a drift,
+   `prediction:Predictor` for one that foresees by a flow,
    `speech:Speaker` for one that hears on a topic, `belief:Deliberator` for one holding rules (an
    observer and a market role are one already). `orexis-onboard` refuses an agent playing none, a
    role whose needs the world lacks, a sensor reporting to no observer role, a sensor a role reads that

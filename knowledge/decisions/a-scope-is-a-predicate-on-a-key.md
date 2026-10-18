@@ -54,7 +54,7 @@ the met-test names and the key the want carries, within what the predicates left
 # What was refused
 
 - **A declaration of what an action moves** — `orexis:moves climate:SoilMoisture` on the dose, as a
-  drift says `prediction:moves`. It would have split the greenhouse in an afternoon, and it is the
+  flow says `prediction:moves`. It would have split the greenhouse in an afternoon, and it is the
   thing [footprint](/domain/planning/footprint.md) refuses on its first page: a second statement of
   what the texts already settle, drifting from them with nothing to say so. The precondition says
   the pump's reading is of the property the pump actuates; a declaration would say it again.

@@ -117,7 +117,7 @@ pass, the agent's judgment, answered by a want and a plan walked with a person. 
 same question over months of history — slow, outside the pass, the sovereign's, answered by a
 document offered back. One is a judgment in the pass and the other a proposal outside it; they differ
 in the clock they run on, the data they read and who acts on the answer, and a desire that the agent
-could not author for itself — because it does not yet know what a drift over a season looks like — is
+could not author for itself — because it does not yet know what a flow over a season looks like — is
 exactly what a proposal would hand it.
 
 **What the calibration IS today, since the proposal has to be in the world's words.** The brief this

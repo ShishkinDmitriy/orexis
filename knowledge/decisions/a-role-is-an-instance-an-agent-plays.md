@@ -154,7 +154,7 @@ is read by another observer role, as two venues are two host roles.
 Refused: the limits kept as stances, since a figure the agent holds about one of its sensors is not its
 word about itself, and one figure for all its sensors is the per-context value this record exists to
 give a home; and the default kept in code, since a rule cannot read it, and a default in two places is
-the drift a test was holding back. The other stances keep their constants in code: nothing but Python
+the flow a test was holding back. The other stances keep their constants in code: nothing but Python
 reads them.
 
 # How it is built

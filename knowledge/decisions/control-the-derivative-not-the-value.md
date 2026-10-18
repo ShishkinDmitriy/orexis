@@ -31,7 +31,7 @@ Stated once, here, so the next design conversation can cite it instead of redisc
 | sensing | the reading | the **cadence** — itself only within bounds: firmware clamp, agent clamp, constitutional clamp |
 | desire | the moisture | the **aim** — a pick inside a region the agent does not control either |
 | the sovereign | the aim | the **region's sources** — plant ranges, ratified once; the pick is never theirs |
-| review | the belief | the **rule for re-picking** — and the mandate bounds how far, which is a bound on the *rate of drift* |
+| review | the belief | the **rule for re-picking** — and the mandate bounds how far, which is a bound on the *rate of flow* |
 | intention | the acts | the **patience** — not "act now" but how long a commitment absorbs impulses |
 | the model | the move | the **rules that produce moves** — it writes an affordance; the search exploits it forever |
 

@@ -68,7 +68,7 @@ timestamp: 2026-10-07T20:00:00Z
 > **Amended 2026-10-07** (#923 rewritten): **speech hears, prediction predicts.** Speech stores a
 > peer's route as testimony of a kind of its own, neither state nor prediction, and writes no
 > prediction; prediction derives from heard routes as it derives from a committed step (#849) and a
-> drift, one path for what will hold later. Every heard route is a source by default, so until a draw
+> flow, one path for what will hold later. Every heard route is a source by default, so until a draw
 > ends both agents plan as if yielding. The draw LAYS NOTHING: it decides which routes count, and a
 > route this agent won against is no source until its owner says a new one, or the winner's own
 > walking plan would read impossible and #921 would reopen it too. **Silence**: a peer seen in range
