@@ -224,13 +224,12 @@ def test_a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
     assert one(dosed, "intentions") == {"standing": 1} and one(dosed, "silence") == {"silent": 0}
     assert one(dosed, "act")["count"] == one(dosed, "act")["taken"] == 1
     assert sum(p["fields"]["satisfied"] for p in of(dosed, "imaginarium")) == 1
-    #  THREE MET: the soil want in the world its dose made, and the desire in each of the air's two
-    #  grounds, which hold the air's state alone — the soil the desire is also about is not there to read
-    #  dry. TWO GROUNDS where there was one (#944): the present ground holds no reading, a percept being
-    #  handed to no reader of the mind, and the air's carried prediction brings a predicted observation
-    #  into the ground a quarter-hour on, so that boundary no longer restates the present and is a period
-    #  of its own. Two met before.
-    assert sum(p["fields"]["met"] for p in of(dosed, "imaginarium")) == 3
+    #  TWO MET: the soil want in the world its dose made, and the desire in the air's one ground, which
+    #  holds the air's state alone — the soil the desire is also about is not there to read dry. It read
+    #  three between #944 and #989: the air's key moves by no drift, and a prediction carried it unmoved
+    #  for an hour, whose predicted observation made the ground a quarter-hour on a period of its own
+    #  though nothing a met-test reads differed there. Nothing is predicted for such a key now (#989).
+    assert sum(p["fields"]["met"] for p in of(dosed, "imaginarium")) == 2
     assert one(dosed, "revisions")["unsettled"] == 0 < one(dosed, "revisions")["revisions"]
     assert [(p["tags"]["outcome"], p["fields"]["count"]) for p in of(a_day_later, "intention")] == [("failed", 2)]
     assert one(a_day_later, "intentions") == {"standing": 0}

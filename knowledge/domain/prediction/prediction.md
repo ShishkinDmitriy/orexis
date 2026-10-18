@@ -57,8 +57,8 @@ made from, which crosses into no ground (#944). A stretch supersedes the one bef
 planner laying a ground takes out every triple under a subject and predicate the prediction adds to,
 and the prediction says nothing about how (#988). Where a
 rate is a range the value is a [corridor](/domain/prediction/corridor.md), and each stretch is its
-worst side. A key no drift moves is carried forward an hour past the observation, and no further: a
-package that declares no drift has claimed nothing past that.
+worst side. A key no drift moves is predicted nothing: a package that declares no drift has
+claimed nothing, and the state concluded of the reading is what every ground ahead inherits (#989).
 
 # What is made of it
 
