@@ -65,7 +65,7 @@ instrument's bytes may arrive — the sensor's and the path's, written into what
 [observation](/domain/sensing/observation.md) is, and stated of the sensor if it ever varies. How
 often the metrics window is written is the admins' instrumentation, environment like the rest of a
 [series](/domain/kernel/series.md). How a pass's revision budget is shared between sources, how
-long a rate is held, how far a key no drift moves is carried: how the package does its work, not
+long a rate is held: how the package does its work, not
 how much the agent allows it.
 
 Why a stance is a belief stated in the self graph rather than a flag, a file, a common belief or a

@@ -70,7 +70,9 @@ timestamp: 2026-10-09T20:00:00Z
 > whose carried prediction brings a predicted observation into the ground a grace on is a period of its
 > own there, where it collapsed into the present before: one ground more for that scope a pass. And the
 > crossing instants of two prediction cases moved by a second each way, the observation's end no
-> longer being a happening.
+> longer being a happening. *That ground is gone again since #989: a key no drift moves is predicted
+> nothing, since the state the present concluded is what every ground ahead inherits, and the carried
+> observation had made a period of nothing a met-test reads.*
 
 > **Amended 2026-10-10 (#944's second slice): the mind reads the subject belief, and planning's code
 > was not untouched.** The desires, preconditions and effects speak the subject's state and the

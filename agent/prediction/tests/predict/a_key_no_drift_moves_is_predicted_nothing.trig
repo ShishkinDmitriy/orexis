@@ -1,8 +1,10 @@
-# a_key_no_drift_moves_is_carried_an_hour_forward
+# a_key_no_drift_moves_is_predicted_nothing
 #
 # A drift is declared and reaches nothing: the pot states no rate, so the select yields no row.
-# The reading is carried forward as it stands, for an hour past it, and no further — a package
-# that declares no drift for a key has made no claim about it past that.
+# Nothing is predicted — a package that declares no drift for a key has made no claim about it,
+# and the state concluded of the reading is what every ground ahead inherits (#989). The reading
+# was carried forward an hour as it stood, once, which said nothing the grounds did not hold and
+# nothing at all past the hour.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 

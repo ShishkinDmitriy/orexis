@@ -585,6 +585,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   one may change, a crossing is on a straight line (a-prediction-accumulates-rates-between-happenings);
   the observation in hand is read at every instant with its revisions, since a drift sized from a
   reading reads it past the stretch the observation holds for.
+- **A key no drift moves is predicted nothing** — the state concluded of the reading is what every
+  ground ahead inherits by fork, so a prediction carrying the reading unmoved for an hour said nothing
+  the grounds did not hold, made the greenhouse's air a ground of its own a pass, and said nothing at
+  all past the hour (#989).
 - **Foresight is derived where the model is the agent's and asked for where it is another's** —
   drying is nobody's to ask and rain nobody's to derive; an actor is whoever is asked what will hold,
   and nobody is asked for a plan; a FORECAST is anyone's word about what will hold later, the

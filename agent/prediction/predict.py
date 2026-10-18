@@ -40,9 +40,11 @@ kind, #944), which no reader of the mind is handed: this estimator is one of the
 ground holds of the key is the prediction alone, which a domain's transition judges as it arrives
 there.
 
-**A KEY NO DRIFT MOVES** — a store declaring no drift at all is the same case — is predicted to
-stay as it reads for `CARRIED_S` past the observation alone: a package that declares no drift
-has made no claim about the world past that, and this package invents no persistence.
+**A KEY NO DRIFT MOVES IS PREDICTED NOTHING.** A package that declares no drift has made no claim
+about the world, and this package invents none: the subject's state, concluded of the reading in the
+present, is what every ground ahead inherits by fork until a prediction's key replaces it (#944,
+#988), so a prediction carrying the reading unmoved for an hour said nothing the grounds did not
+already hold, and said nothing at all past the hour (#989).
 """
 
 from __future__ import annotations
@@ -78,9 +80,6 @@ HORIZON_S = 86400.0
 #  THE LONGEST A RATE IS HELD before the drifts are asked again: an hour, so a rate that
 #  depends on the value it moves is read off a value no more than an hour old.
 SEGMENT_S = 3600.0
-
-#  HOW LONG A KEY NO DRIFT MOVES IS CARRIED FORWARD as it reads: an hour past the observation.
-CARRIED_S = 3600.0
 
 #  WHERE A STRETCH'S NUMBER IS READ when its end lies across a bound: this long before the end,
 #  or half the stretch where that is shorter.
@@ -189,12 +188,9 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
 
     knots, moved = _accumulate(rates, reading, _happenings(store, cat, taken, horizon), memo)
     if not moved:
-        #  NO DRIFT MOVES THIS KEY: it is predicted to stay as it reads, for an hour alone.
-        if CARRIED_S <= base:
-            return []
-        stretches = [(base, CARRIED_S, None)]
-    else:
-        stretches = _stretches(knots, ranges, base, horizon)
+        log.debug("no drift moves %s of %s: nothing to predict", local_of(observed_property), local_of(feature))
+        return []
+    stretches = _stretches(knots, ranges, base, horizon)
     own = [ox.Triple(q.subject, q.predicate, q.object) for g in believed for q in quads(store, g)]
     written = []
     for n, (begins, closes, value) in enumerate(stretches):
@@ -203,12 +199,11 @@ def predict(store, me: str, sensor: str, *, now: datetime | None = None, memo=No
 INSERT DATA {{
   {entry(store, graph_n, PREDICTION, RECORDED, me, start=taken + timedelta(seconds=begins), end=taken + timedelta(seconds=closes))}
   GRAPH <{catalogue_of(store)}> {{ <{graph_n}> prov:wasDerivedFrom <{graph}> . }} }}""")
-        #  THE PREDICTED OBSERVATION ALONE, carried or moved, a node of its own: its key, its sensor, a
+        #  THE PREDICTED OBSERVATION ALONE, a node of its own: its key, its sensor, a
         #  number and an instant — never the percept, whose name, link to the one before it and what the
         #  rules concluded of its sensor are what a sensor said, and cross into no ground (#944).
         triples = _observation(own, node, predicted_of(feature, observed_property),
-                               reading if value is None else value[1],
-                               taken if value is None else taken + timedelta(seconds=value[0]))
+                               value[1], taken + timedelta(seconds=value[0]))
         store.extend(ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(graph_n)) for t in triples)
         hash_named_graph(store, graph_n)
         written.append(graph_n)
