@@ -113,11 +113,17 @@ Both are beliefs ahead and are laid where they begin, as #987 decided; the integ
 there, so a future that contains the earlier plan is still what a later want is searched against
 (#849), and a peer's route laid as a forecast is still the two-minds tool (#568).
 
-**What gates a belief ahead gains the flows' reads, and the hash does not.** A belief ahead is laid
-where something reads it (#987): the pass's texts, the transitions and now the flows, since the
-committed step is read by the dose flow alone. A world is still hashed within what the pass's texts
-read, so a number moving between two grounds tells them apart by nothing, and the cone is not dropped
-for a reading inside its band (#632, [cone](/domain/planning/cone.md)).
+**A flow reads a belief ahead by its period, and lays no ground for it.** A belief ahead is laid into
+a ground where a text of the pass or a transition reads it (#987), and a ground keeps what is laid
+into it past the belief's end, since a value stands until its key is assigned. A flow cannot read a
+forecast hour that way: the hour's node carries its start and not its end, so laid into the ground it
+would rain for ever. So the flows read what they read as the planner's own readers do - the ground, and
+beside it every graph holding at the instant asked, by the period its row states - and a belief only a
+flow reads, a committed step or a forecast hour, is a remainder the flows see exactly while it holds and
+lays no ground, as it laid none before. What gates a belief ahead is unchanged, and so is the hash: a
+world is hashed within what the pass's texts read, so a number moving between two grounds tells them
+apart by nothing, and the cone is not dropped for a reading inside its band (#632,
+[cone](/domain/planning/cone.md)).
 
 **The ground holds the state and no number.** The predicted observation arrives in a ground and is
 judged there; what the ground keeps is what the transitions concluded of it. The numbers stay the
@@ -199,6 +205,7 @@ them in.
 
 #1000 carries the whole of it: the integrator handed to the planner at link and asked ground by
 ground in `lay_ground`; every key advanced together; `order` and the onboarding cycle check retired;
-the recorded-forecast path out of `lay_ground` and `world_at`; the dose flow reading `$value`; the
+the recorded-forecast path out of `lay_ground` and `world_at`; the dose flow reading `$value`; the flows
+reading a belief ahead by its period and never off the ground; the
 prediction cases restated over the knots and the grounds they lay; and the pages - prediction,
 predictor, forecast, committed step, changeable, imaginarium, cone - reconciled in the same change.
