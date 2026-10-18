@@ -42,8 +42,8 @@ than the question supposed.
 # What the tree held, verified 2026-10-18
 
 - **The predictor read no ground.** What a flow read at a future instant was the union of the graphs
-  holding then in the belief base - `graphs_of(BELIEF, RECORD, OBSERVATION_GRAPH, at=at)` in
-  `agent/prediction/predict.py` - never a ground. But a state ahead exists only in a ground: the
+  holding then in the belief base - `graphs_of(BELIEF, RECORD, OBSERVATION_GRAPH, at=at)` in the
+  `predict` module since retired - never a ground. But a state ahead exists only in a ground: the
   transitions run there, and a key is superseded there. So a flow conditioned on a FORESEEN state would
   have read the present's state instead. No shipped flow did: drying reads a constant of the bed, rain
   reads a forecast hour's number, the dose reads a committed step and the present reading. The gap was

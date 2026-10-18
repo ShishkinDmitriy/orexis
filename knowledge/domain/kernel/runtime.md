@@ -102,8 +102,9 @@ starts it: a message arrives on the member's thread and is submitted, and each p
 the one executing thread — [sensing](/domain/sensing/sensing.md) writes the observation, the
 [deliberator](/domain/belief/deliberator.md) runs the rules that conclude its side and the
 transitions that make its subject's state, the
-[prediction](/domain/prediction/prediction.md) package writes the stretches ahead and the rules conclude
-theirs — each hearing the graph written, where its package was loaded. A step whose action's
+[planner](/domain/planning/planner.md) lays the grounds, integrating the
+[prediction](/domain/prediction/prediction.md) package's flows from each and running the transitions on
+what crosses a bound — each hearing the graph written, where its package was loaded. A step whose action's
 implementation holds an `execution:Command` is taken by handing what the command answers, sized from
 the present, to the transport reaching the device; the [greenhouse](/domain/kernel/domain.md)'s pump
 and heater are taken so.

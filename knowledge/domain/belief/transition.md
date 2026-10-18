@@ -63,15 +63,15 @@ nothing, the whole of it, and is said in the log by the rule's name.
   once, when an arrival of testimony triggers it: what it deletes is taken out of whichever of the
   agent's state graphs holds it, which is several graphs, until the agent's own state is one (#953).
 - **Planning** applies the same transitions (`transitions`, the one read of them both use) through
-  `run` in each ground it lays ahead, once per predicted observation arriving there (`lay_ground`,
-  #944). Below.
+  `run` in each ground it lays at a crossing the flows foresee, once per predicted observation arriving
+  there (`lay_ground`, #944, #1000). Below.
 
 # What triggers it
 
 As a database trigger runs once on each row inserted into its table, and may delete and insert,
 **an arrival of testimony triggers every transition once.** Testimony is a graph whose catalogue row
 says it arrived `orexis:Received` — an instrument's observation, a forecast, a peer's document heard.
-Nothing else triggers one: the agent's own graphs, derived or recorded — a prediction, a committed
+Nothing else triggers one: the agent's own graphs, derived or recorded — a committed
 step, the very state a transition writes — and what the sovereign asserted trigger none, so a
 transition's output can never trigger it again. A transition declares no trigger at all.
 
@@ -131,19 +131,19 @@ both at the boundary: a command sizing a step when it is taken, and a flow.
 
 # In a ground: a predicted observation arriving
 
-A prediction is the agent's own and no testimony, so in the belief base it triggers nothing. But a
-[ground](/domain/prediction/prediction.md) the planner lays ahead is the period before it with the
-prediction applied, and the prediction's predicted observation ARRIVES there as a received one
-arrives in the present: `lay_ground` runs every transition it triggers, once, rule by rule, through
-this machine. Each rule reads the predicted observation with its revisions, the common beliefs, and
+The agent's foresight of a reading is its own and no testimony, and no graph of the belief base at all
+(#1000), so there it triggers nothing. But where the [flows](/domain/prediction/prediction.md) integrated
+from a ground cross a bound the planner lays the next ground, and the predicted observation the
+predictor answers for the crossing ARRIVES there as a received one arrives in the present: `lay_ground`
+runs every transition it triggers, once, rule by rule, through this machine. Each rule reads the predicted observation with its revisions, the common beliefs, and
 the agent's own state as the ground before it left it — kept apart from the ground while the grounds
 are laid, since a ground is one graph and holds testimony beside the state, and a transition is
 handed no testimony but its arrival. Each rule is run twice over those reads, `WITH` the ground and
 then `WITH` the working state, so what it deletes is taken out of both and what it inserts put into
 both: the runner's target is the ground being laid, and the present is never written
-to. So a bed believed dry and resting at 0.3001 is foreseen dry, the hold reaching the forecast, and
+to. So a bed believed dry and resting at 0.3001 is foreseen dry, the hold reaching the foresight, and
 a ground that comes to hold what the one before held is still no period
-(`agent/planning/tests/lay_ground/a_predicted_reading_is_judged_beside_the_state_the_ground_before_held.trig`).
+(`agent/planning/tests/foreseen/a_crossing_is_judged_in_the_ground_laid_there_and_a_recovery_within_the_hour.trig`).
 No budget is spent there: a ground holds what its predictions make of it, whole, or it is no ground.
 
 # Once, in turn, within a budget

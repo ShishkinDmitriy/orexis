@@ -13,7 +13,6 @@ from pathlib import Path
 import pytest
 
 from agent import clock
-from agent.execution.executor import DEFAULT_PATIENCE_S
 from agent.ontology import OREXIS
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.series import HISTORY, Sink, install
@@ -106,21 +105,29 @@ def test_a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
     assert len(broker.published) == 1, "one dose, and nothing more once the bed is comfortable"
 
 
-_PREDICTED_Q = """
-SELECT ?start ?value WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:ForecastGraph ; dcterms:temporal/orexis:start ?start }
-  GRAPH ?g { ?o sosa:observedProperty <http://example.org/orexis/climate#SoilMoisture> ; sosa:hasSimpleResult ?value } }
+#  THE BED'S SOIL IN EVERY GROUND THE GROWER LAYS, and when each begins — the foresight since #1000, read off
+#  the planner's imaginaria and never off the beliefs, where no forecast of the predictor's own is written.
+_FORESEEN_Q = """
+SELECT ?start ?state WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start }
+  GRAPH ?g { <http://example.org/orexis/world/greenhouse#bed> <http://example.org/orexis/climate#soil> ?state } }
 ORDER BY ?start"""
+
+
+def _foreseen(runtime) -> list[tuple[datetime, str]]:
+    """Every ground of every imaginarium of the grower's, as (when it begins, the bed's soil there)."""
+    return sorted((datetime.fromisoformat(r["start"]), r["state"].rsplit("#", 1)[-1])
+                  for im in runtime.parts["planning"].planner.imaginaria.values() for r in rows(im, _FORESEEN_Q, ()))
 
 
 def test_a_committed_dose_is_a_flow_the_beds_prediction_accumulates(monkeypatch):
     """#849. Adopted, the dose stands in the beliefs as a committed step holding over its landing
     window — from the step's instant to the probe's next reading plus the patience — and the actuation
-    domain's flow reads it there: the bed's prediction, rewritten as the window is written, rises to
-    the aim the command sizes to, 0.45, by the time the next reading is due, and dries from there, so
-    the one stretch of the day reads inside its range — 0.41 at its end, a day's drying under the aim —
-    where the drying alone read 0.2 and below. When the reading answers the dose the window closes and
-    the next tick forgets it."""
+    domain's flow reads it there, by its period, as the next pass lays the grounds (#1000): the bed's
+    soil rises to the aim the command sizes to, 0.45, within the window, so the ground laid where it
+    crosses its floor holds the bed moist and no ground of the day holds it dry again — a day's drying
+    under the aim — where the drying alone read 0.2 and below. When the reading answers the dose the
+    window closes and the next tick forgets it."""
     runtime, broker = _grower(monkeypatch)
     runtime.deliver("sensors/bed_board/reading", b'{"temperature": 21.0}', NOW)
     runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
@@ -131,10 +138,10 @@ def test_a_committed_dose_is_a_flow_the_beds_prediction_accumulates(monkeypatch)
     (period,) = rows(runtime.beliefs, "SELECT ?s ?e WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g dcterms:temporal ?p . ?p orexis:start ?s ; orexis:end ?e } }", (), g=window)
     opens, closes = datetime.fromisoformat(period["s"]), datetime.fromisoformat(period["e"])
     assert timedelta(minutes=11) <= closes - opens <= timedelta(minutes=11, seconds=5), "a cadence, and the patience"
-    predicted = [(datetime.fromisoformat(r["start"]), float(r["value"])) for r in rows(runtime.beliefs, _PREDICTED_Q, ())]
-    assert [(s >= closes - timedelta(seconds=DEFAULT_PATIENCE_S), round(v, 2)) for s, v in predicted] == [(True, 0.41)], \
-        f"one stretch from where the reading is due, risen to the aim and dried a day, not dried from 0.2: {predicted}"
-    assert all(0.30 <= v <= 0.60 for _, v in predicted), f"foreseen inside the bed's range, never below: {predicted}"
+    runtime.run(passes=1, poll_s=0)                             # the grounds laid with the dose committed
+    ahead = [(s, state) for s, state in _foreseen(runtime) if s > runtime.time.at]
+    assert ahead and ahead[0][0] <= closes and {state for _, state in ahead} == {"Moist"}, \
+        f"risen to the aim within the window and never dry again, not dried from 0.2: {ahead}"
     runtime.time.at = NOW + timedelta(minutes=11)
     runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)

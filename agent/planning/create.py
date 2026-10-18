@@ -3,7 +3,8 @@ happened by its own signals, each carrying an event of `events.py`: `plan_publis
 `want_reached`, `step_blocked`, `reconsidered`, `want_unreachable`, and — made only where heard —
 `searched`, `planned`, `rerooted`, `imagined`.
 
-LINKED, it connects those signals to what lies beneath it — the executor adopts a plan published,
+LINKED, it takes the predictor's foresight where the agent plays one, to advance as it lays the grounds
+(#1000), and connects those signals to what lies beneath it — the executor adopts a plan published,
 ends an unbegun intention whose want is reached, ends one whose next step is blocked, ends one a
 reconsideration replaced after its step in flight — and hears two of the executor's: `taking`, a
 head about to be handed to its taker, which the Planner checks against the present and says blocked
@@ -52,6 +53,12 @@ class _Planning:
         self.walked = False
 
     def link(self, parts) -> None:
+        #  THE PREDICTOR'S FORESIGHT, where the agent plays one: the integration of the flows the Planner
+        #  advances ground by ground as it lays them, handed here and imported nowhere
+        #  (a-flow-is-integrated-where-the-ground-is-laid, #1000). None, and the grounds are laid unforeseen.
+        prediction = parts.get("prediction")
+        if prediction is not None:
+            self.planner.foresee = prediction.foresee
         execution = parts.get("execution")
         if execution is None:
             return

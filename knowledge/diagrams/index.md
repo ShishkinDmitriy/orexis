@@ -23,7 +23,7 @@ The runbooks' pictures, one per runbook that embeds it:
 * [runbook-change-costs](./runbook-change-costs.puml) - What a change to a running world costs: a restart, a build, a fresh belief volume, or onboarding.
 * [runbook-observer-documents](./runbook-observer-documents.puml) - Which document states the subject, the sensor, the agent, the board, the topic and the observer role.
 * [runbook-observer-reading](./runbook-observer-reading.puml) - One reading, from the board to a belief planning reads.
-* [runbook-predictor-flows](./runbook-predictor-flows.puml) - The flows' rates summed into bands ahead, and a want for a foreseen instant.
+* [runbook-predictor-flows](./runbook-predictor-flows.puml) - The flows' rates summed from each ground, a ground at every crossing, and a want for a foreseen instant.
 * [runbook-planner-loop](./runbook-planner-loop.puml) - From a desire read unmet to a command on a device, and the reading that shows it landed.
 * [runbook-market-round](./runbook-market-round.puml) - A bidder calls, tenders, wins a claim and presents it; the host doses its plot.
 

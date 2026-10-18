@@ -71,8 +71,8 @@ makes a new version of it:
   keeps what is taken out, so a refresh that trusted the name would miss either. A graph written once
   and never again — a percept, a prediction, a committed step — makes no version, and those are most of
   what is written. A graph that would be left empty is not versioned; it is forgotten.
-- **A name forgotten is never written again.** Prediction forgets a key's stretches and writes the new
-  ones under the names it used before (`agent/prediction/predict.py`), so a name a copy holds would hold
+- **A name forgotten is never written again.** Prediction forgot a key's stretches and wrote the new
+  ones under the names it used before (until #1000, which writes none), so a name a copy holds would hold
   other content; each is minted afresh, as a possible world's is.
 - **A graph's lasting identity is the name its first version had**, an IRI that stands on every
   version's row though no graph of that name is held after the first change. A reader that asks for a particular graph

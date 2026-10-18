@@ -8,12 +8,13 @@ description: >-
 
 # What it gives the agent
 
-A [predictor](/domain/prediction/predictor.md) answers each observation with where the reading is
-heading, as bands ([prediction](/domain/prediction/prediction.md),
-[corridor](/domain/prediction/corridor.md)). Planning then sees the bed go dry tomorrow, not only
-that it is dry now, so a want can be minted before the crossing.
+A [predictor](/domain/prediction/predictor.md) hands the planner the integration of the flows, which
+the planner advances from each ground as it lays them ([prediction](/domain/prediction/prediction.md),
+[corridor](/domain/prediction/corridor.md)): where the reading is foreseen to cross a bound, a ground
+is laid and the subject's state judged there. Planning then sees the bed go dry tomorrow, not only that
+it is dry now, so a want can be minted before the crossing. Nothing is written into the beliefs.
 
-![the latest observation and each flow summed into bands ahead, foreseen grounds, and a want for that instant](../diagrams/runbook-predictor-flows.svg)
+![the latest observation and each flow summed from each ground, a ground at every crossing, and a want for that instant](../diagrams/runbook-predictor-flows.svg)
 
 # What to write
 
@@ -47,9 +48,11 @@ rate, read off facts the world states. Importing the domain's ontology brings it
 
 # What onboarding refuses
 
-A predictor with no sensor of its own, or a world stating no flow: it would foresee nothing.
+A predictor with no sensor of its own, or a world stating no flow: it would foresee nothing. Flows
+that read each other are not refused: every key advances together (#1000).
 
 # Prove it
 
-`world/greenhouse/tests/test_greenhouse.py` asserts that a committed dose shows in the bed's
-prediction; a world of your own asserts the instant its subject is foreseen to cross.
+`world/greenhouse/tests/test_greenhouse.py` asserts that a committed dose shows in the grounds the
+grower lays ahead; a world of your own asserts the instant its subject is foreseen to cross, read off
+the planner's imaginarium as `agent/planning/tests/test_lay_ground.py` reads a case's.

@@ -18,7 +18,7 @@ asserts is its kind:
 |---|---|---|
 | `orexis:BeliefGraph` | what IS, and what a possible world is made of: the world as ratified and as this agent holds it, the vocabulary, the self | the world's documents; belief's transitions write one per arrival, sensing a silence; what a scope can change of it is no kind but the writers' ([changeable](/domain/planning/changeable.md)) |
 | `sensing:ObservationGraph` | what a sensor SAID, once — and no belief | sensing, beneath `orexis:Graph` alone; read at the boundary ([observation](/domain/sensing/observation.md)) |
-| `orexis:ForecastGraph` | what WILL be, during a window, whoever says so - a belief beneath the first ([forecast](/domain/kernel/forecast.md)) | sensing from a series, the predictor from a percept, the executor for a committed step; planning lays each where it begins |
+| `orexis:ForecastGraph` | what WILL be, during a window, whoever says so - a belief beneath the first ([forecast](/domain/kernel/forecast.md)) | sensing from a series, the executor for a committed step, speech from a peer's statement; planning lays one where it begins where a text reads it, and the flows read one by its period; the predictor writes none, its foresight being the grounds (#1000) |
 | `planning:PossibleGraph` | what WOULD be, if a plan were taken | the planner, in its [imaginarium](/domain/planning/imaginarium.md) |
 | `execution:AddsGraph`, `execution:RetractsGraph` | what one [step](/domain/execution/step.md) WOULD make true and false | planning writes, the executor reads |
 | `planning:DesireGraph`, `planning:WantGraph` | what is WANTED, standing or once | the world, and the derivation |

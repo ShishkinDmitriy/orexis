@@ -124,8 +124,8 @@ domain the agent acts in, abstracted from how any sensor is wired.
   `sensing:inside` on it, and the command sizes the dose from its `sosa:hasSimpleResult`. The soil's
   drying (`domains/actuation/flows.ttl`) takes its rate from the reading's number, and rain
   (`domains/climate/flows.ttl`) from a forecast observation's band. Prediction
-  (`agent/prediction/predict.py`) reads the observation in hand and writes a predicted
-  `sosa:Observation` per stretch, which the rules judge and the planner reads.
+  (`agent/prediction/foresee.py`) reads the observation in hand and answers a predicted
+  `sosa:Observation` at each crossing, which the rules judge in the ground the planner lays there (#1000).
 - **Planning's and execution's code name no SOSA word.** They are generic over triples; the reading
   enters them through the domains' texts alone.
 - **History was carried as summaries, because only one observation was kept.** The run of an

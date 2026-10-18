@@ -79,5 +79,6 @@ asks sensing which readings have lapsed (`cadence.lapsed`).
 # What is not one
 
 A [forecast](/domain/kernel/forecast.md) is another party's word about a stretch ahead, and is a
-belief. A prediction's predicted observation is the agent's own, a node of its own, and crosses into
-the grounds the planner lays; the observation it was made from never does.
+belief. The predicted observation the predictor answers for a crossing is the agent's own, a node of
+its own, and arrives in the ground the planner lays there (#1000); the observation it was made from
+never does.

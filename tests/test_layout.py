@@ -1814,36 +1814,3 @@ def test_no_generated_credential_is_tracked():
 
 
 
-# --- flows that read each other round are refused (#996) ---------------------------------------------
-
-_CYCLE = """@prefix orexis: <http://example.org/orexis#> .
-@prefix prediction: <http://example.org/orexis/prediction#> .
-@prefix climate: <http://example.org/orexis/climate#> .
-
-<> a orexis:FlowGraph .
-
-climate:Evaporating a prediction:Flow ; prediction:moves climate:SoilMoisture ;
-    prediction:rate \"\"\"SELECT ?rate WHERE { ?air sosa:observedProperty climate:AirHumidity ; sosa:hasSimpleResult ?h .
-                                             BIND(-xsd:double(?h) / 86400.0 AS ?rate) }\"\"\" .
-climate:Condensing a prediction:Flow ; prediction:moves climate:AirHumidity ;
-    prediction:rate \"\"\"SELECT ?rate WHERE { ?soil sosa:observedProperty climate:SoilMoisture ; sosa:hasSimpleResult ?m .
-                                             BIND(xsd:double(?m) / 86400.0 AS ?rate) }\"\"\" .
-"""
-
-
-def test_onboarding_refuses_drifts_that_read_each_other_in_a_cycle(tmp_path):
-    """The sensing world's fern is a predictor. Its documents order — the shipped flows read no other key —
-    and with a soil moving by the air and an air moving by the soil they do not: a coupled system no
-    predictor here accumulates, named with both properties, and refused as the world is read (#996)."""
-    import shutil
-
-    from onboarding import reading
-
-    world = tmp_path / "world" / "sensing"
-    shutil.copytree(REPO_ROOT / "world" / "sensing", world, ignore=shutil.ignore_patterns("tests", "secrets", "__pycache__"))
-    (tmp_path / "domains").symlink_to(REPO_ROOT / "domains")
-    assert reading.cyclic(world) == []
-    (world / "flows.ttl").write_text(_CYCLE)
-    assert reading.cyclic(world) == ["fern: flows read each other in a cycle over AirHumidity, SoilMoisture"]
-    with pytest.raises(SystemExit, match="read each other in a cycle"):
-        reading.check(world)
