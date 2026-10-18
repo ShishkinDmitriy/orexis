@@ -72,7 +72,6 @@ GRAPH :catalogue {
   :predicted-0 a orexis:Graph .
   :predicted-0 a orexis:PredictionGraph .
   :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
-  :predicted-0 orexis:retracts "PREFIX : <http://example.org/test#> DELETE { GRAPH $state { :tank1 :level ?was } } WHERE { GRAPH $state { :tank1 :level ?was } }" .
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .

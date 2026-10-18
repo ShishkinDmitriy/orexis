@@ -55,8 +55,10 @@ def prediction_graph(agent_id: str, feature: str, observed_property: str, n: int
     return f"{GRAPH_PREFIX}predicted/{agent_id}/{slug(feature)}_{slug(observed_property)}_{n}"
 
 
-def predicted_of(feature: str, observed_property: str, n: int) -> str:
-    """The node the n-th prediction of one key says the reading of its stretch is — its own, and never
-    the percept's it was made from, which is what a sensor said at an instant and crosses into no
-    ground (#944). Distinct is all a reader relies on: it matches the key, never the name."""
-    return f"{OREXIS}predicted_{slug(feature)}_{slug(observed_property)}_{n}"
+def predicted_of(feature: str, observed_property: str) -> str:
+    """The node every prediction of one key says the reading of its stretch is — ONE per key, as a
+    fluent is, so a later stretch's graph states the same node's number and instant and the planner
+    laying its ground replaces the earlier stretch's by subject and predicate (#988); its own, and
+    never the percept's it was made from, which is what a sensor said at an instant and crosses into
+    no ground (#944). A reader matches the key, never the name."""
+    return f"{OREXIS}predicted_{slug(feature)}_{slug(observed_property)}"

@@ -2,12 +2,14 @@
 graph per period, in the store a pass stands in.
 
 **A PREDICTION IS AN ACTION NOBODY TAKES.** What it makes true is its graph's own contents —
-concrete, because a prediction is a value at an instant — and what it takes away is
-`orexis:retracts` on its catalogue row, a `DELETE … WHERE` naming `GRAPH $state`, because what
-is standing in that place is not something a prediction can name in advance. Its period says
-WHEN it applies rather than a precondition saying whether it may. So the timeline is laid by
-exactly the machinery the search walks: fork the period before, run the retraction against the
-fork, add what the prediction holds.
+concrete, because a prediction is a value at an instant — and what it takes away is whatever stood
+under the same KEY: every triple of the ground whose subject and predicate some triple of the
+prediction has, as PDDL assigns a fluent (#988). A prediction carries no text saying what it
+supersedes; its own triples say it, and `orexis:retracts` — a `DELETE … WHERE` naming `GRAPH $state`,
+written by the prediction package in this package's form — was retired for the reason #666 gave
+the effects: a rule does not say which world it reads. Its period says WHEN it applies rather than a
+precondition saying whether it may. So the timeline is laid by exactly the machinery the search walks:
+fork the period before, take the keys out of the fork, add what the prediction holds.
 
 WHY IT HAD TO BECOME A DIFF. A prediction used to be a STATE — a graph holding the reading it
 foretold — and a door handed a reader every graph holding at an instant, so a met-test asked at
@@ -85,36 +87,27 @@ _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 log = logging.getLogger("lay_ground")
 
 
-def _foreseen(store: ox.Store) -> list[tuple[datetime, str, str | None]]:
-    """Every prediction this store holds — its graph, the instant it applies, and the pattern
-    it supersedes — earliest first.
+def _foreseen(store: ox.Store) -> list[tuple[datetime, str]]:
+    """Every prediction this store holds — its graph and the instant it applies — earliest first.
 
-    ALL THREE ARE SAID OF THE GRAPH AND NONE INSIDE IT: a prediction's contents are what it
-    ADDS, which is what a prediction naturally is — `GRAPH :next_temp { :air :hasTemp 30 }` —
-    and a triple saying how to retract would be one of the facts it asserts. The catalogue
-    already says what a graph is, whose it is and when it holds; how it supersedes is the same
-    kind of statement about it.
-
-    THE RETRACT IS A PATTERN AND THE ADDS ARE NOT, which is the whole shape of this. What a
-    prediction says is concrete — a value at an instant; what it TAKES AWAY is whatever is
-    standing in that place, which nobody can name in advance. So one is data and the other is a
-    CONSTRUCT over `$state`, and a keyed reading falls out of it for free: the pattern matches
-    the old observation node by its key and takes it whole.
+    BOTH ARE SAID OF THE GRAPH AND NEITHER INSIDE IT: a prediction's contents are what it ADDS,
+    which is what a prediction naturally is — `GRAPH :next_temp { :air :hasTemp 30 }` — and the
+    catalogue says what a graph is, whose it is and when it holds. What it supersedes is read off
+    what it adds: every triple standing under one of its keys, a key being a subject and a
+    predicate, goes when the boundary is laid (`_fork`). Nothing is said about how.
 
     NO HOLDER. One agent, one volume (rule 4), so the store IS the scope and a prediction in it
     is this agent's by construction.
 
-    A PREDICTION THAT RETRACTS NOTHING is legal and means it: a prediction of something the world
-    does not yet say at all — a round opening, a claim arriving — adds without superseding.
+    A PREDICTION WHOSE KEYS STAND NOWHERE is legal and means it: a prediction of something the
+    world does not yet say at all — a round opening, a claim arriving — adds without superseding.
     """
     said = """
-SELECT ?prediction ?at ?retracts WHERE {
+SELECT ?prediction ?at WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?prediction a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?at .
-               OPTIONAL { ?prediction orexis:retracts ?retracts } } }
+               ?prediction a orexis:PredictionGraph ; dcterms:temporal/orexis:start ?at } }
 ORDER BY ?at ?prediction"""
-    return sorted((datetime.fromisoformat(r["at"]), r["prediction"], r.get("retracts"))
-                  for r in rows(store, said, ()))
+    return sorted((datetime.fromisoformat(r["at"]), r["prediction"]) for r in rows(store, said, ()))
 
 
 def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
@@ -172,19 +165,17 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         #  was handed NO ground and the agent went blind past the boundary. Each retract is
         #  read against the ground standing BEFORE the instant, so they supersede in parallel
         #  rather than one seeing another's work.
-        added, retracts = [], []
-        for prediction, supersedes in group:
+        added = []
+        for prediction in group:
             for graph in (prediction, *revisions_of(store, prediction)):
                 added += list(_triples(store, graph))       # the predicted reading, and what was concluded of it
-            if supersedes:
-                retracts.append(supersedes)
-        if not added and not retracts and at not in landing:
+        if not added and at not in landing:
             #  A prediction that changes nothing is not a period — an early-out, not a guard:
             #  the hash below reaches the same answer, having laid the graph first.
             continue
-        there = _fork(store, here, _name(at), added, retracts)
+        there = _fork(store, here, _name(at), added)
         if rules:
-            _transitioned(store, there, [prediction for prediction, _ in group], rules, own, stated)
+            _transitioned(store, there, group, rules, own, stated)
         mark = _marked(store, there, within)
         if mark == marks and at not in landing:
             #  THE SAME GROUND UNDER ANOTHER NAME. Nothing a met-test can read moved, so this
@@ -395,28 +386,36 @@ def _marked(store: ox.Store, ground: str, within: frozenset | None) -> str:
     return digest_of(store, ground)
 
 
-def _by_instant(predictions, landings=()) -> list[tuple[datetime, list[tuple[str, str | None]]]]:
+def _by_instant(predictions, landings=()) -> list[tuple[datetime, list[str]]]:
     """The predictions grouped by the instant they apply, earliest first — one entry per
     BOUNDARY rather than one per prediction — and every landing a boundary too, with what
     predictions apply there or none."""
     out: dict = {at: [] for at in landings}
-    for at, prediction, supersedes in predictions:
-        out.setdefault(at, []).append((prediction, supersedes))
+    for at, prediction in predictions:
+        out.setdefault(at, []).append(prediction)
     return sorted(out.items())
 
 
-def _fork(store: ox.Store, parent: str, name: str, added, retracts: list[str]) -> str:
-    """The ground one boundary past `parent`: its facts, less what each prediction there
-    retracts, plus what they all add.
+#  WHAT A BOUNDARY TAKES OUT OF THE GROUND IT MAKES: every triple under a key some prediction there adds
+#  to — the key being its subject and predicate, so a value is replaced as PDDL assigns a fluent (#988).
+_SUPERSEDE_U = """DELETE { GRAPH $state { ?s ?p ?o } } WHERE { GRAPH $state { ?s ?p ?o } VALUES (?s ?p) { $keys } }"""
 
-    THE SAME FORK A SEARCH MAKES (`fork`), and the order — copy, every delete,
-    then the adds — is said there: a boundary is ONE world change, and the predictions
-    beginning at an instant supersede in parallel. A prediction's retraction is bound HERE,
-    to the ground this boundary makes, because what `$state` means is the caller's — an
-    action's is bound to the world its step makes.
+
+def _fork(store: ox.Store, parent: str, name: str, added) -> str:
+    """The ground one boundary past `parent`: its facts, less whatever stood under a key the
+    predictions there add to, plus what they all add.
+
+    THE SAME FORK A SEARCH MAKES (`fork`), and the order — copy, the delete, then the adds — is
+    said there: a boundary is ONE world change, and the predictions beginning at an instant
+    supersede in parallel. The keys are read off what is added, and the delete is bound HERE, to
+    the ground this boundary makes; a blank-node subject names nothing across graphs and keys
+    nothing.
     """
     _relaid(store, name)
-    fork(store, parent, name, added, [bind(text, state=Raw(f"<{name}>")) for text in retracts])
+    keys = sorted({(t.subject, t.predicate) for t in added if isinstance(t.subject, ox.NamedNode)}, key=str)
+    supersede = [bind(_SUPERSEDE_U, state=Raw(f"<{name}>"),
+                      keys=Raw(" ".join(f"(<{s.value}> <{p.value}>)" for s, p in keys)))] if keys else []
+    fork(store, parent, name, added, supersede)
     #  AND WHICH GROUND IT CAME FROM, in the store rather than in its name. What MADE it is
     #  not said: a ground is made by predictions nobody takes, and its own period says when —
     #  which is the one thing a possible world has no answer for and a ground does.

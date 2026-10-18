@@ -10,7 +10,7 @@
    :tank2 :temperature 20 .
  }
  
-@@ -80,6 +78,78 @@
+@@ -78,6 +76,78 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .

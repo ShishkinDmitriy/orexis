@@ -99,17 +99,11 @@ GRAPH :catalogue {
   :held_ahead a orexis:PredictionGraph .
   :held_ahead dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:40:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:20:00+00:00"^^xsd:dateTime ] .
   :held_ahead orexis:ownedBy :keeper .
-  :held_ahead orexis:retracts """PREFIX : <http://example.org/test#>
-      DELETE { GRAPH $state { :soil ?p ?o } }
-      WHERE  { GRAPH $state { :soil ?p ?o } }""" .
   :held_ahead prov:wasDerivedFrom :sensed .
   :held_later a orexis:Graph .
   :held_later a orexis:PredictionGraph .
   :held_later dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:40:00+00:00"^^xsd:dateTime ] .
   :held_later orexis:ownedBy :keeper .
-  :held_later orexis:retracts """PREFIX : <http://example.org/test#>
-      DELETE { GRAPH $state { :soil ?p ?o } }
-      WHERE  { GRAPH $state { :soil ?p ?o } }""" .
   :held_later prov:wasDerivedFrom :sensed .
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
@@ -118,9 +112,6 @@ GRAPH :catalogue {
   :rising a orexis:PredictionGraph .
   :rising dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
   :rising orexis:ownedBy :keeper .
-  :rising orexis:retracts """PREFIX : <http://example.org/test#>
-      DELETE { GRAPH $state { :soil ?p ?o } }
-      WHERE  { GRAPH $state { :soil ?p ?o } }""" .
   :rising prov:wasDerivedFrom :sensed .
   :rules a orexis:Graph .
   :rules a sh:RulesGraph .

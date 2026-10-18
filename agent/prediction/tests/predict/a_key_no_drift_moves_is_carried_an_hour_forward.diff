@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -77,4 +77,22 @@
+@@ -77,4 +77,21 @@
    observed:zamioculcas_moisture dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
    observed:zamioculcas_moisture orexis:arrivedBy orexis:Received .
    observed:zamioculcas_moisture orexis:ownedBy :keeper .
@@ -8,18 +8,17 @@
 +  predicted:zamioculcas_moisture_0 a orexis:PredictionGraph .
 +  predicted:zamioculcas_moisture_0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:15:00+00:00"^^xsd:dateTime ] .
 +  predicted:zamioculcas_moisture_0 orexis:arrivedBy orexis:Recorded .
++  predicted:zamioculcas_moisture_0 orexis:hash "sha256:8b1fa4cd3ef42036f674483bfafe6b0649cdc4ba25c637f9b20acfda918a81cd" .
 +  predicted:zamioculcas_moisture_0 orexis:ownedBy :keeper .
-+  predicted:zamioculcas_moisture_0 orexis:hash "sha256:fd657465d7d52611542db4ae7dbc370826c3da070d5b8ec3a5bebb2e67baeed9" .
-+  predicted:zamioculcas_moisture_0 orexis:retracts "DELETE { GRAPH $state { ?o ?p ?v } } WHERE { GRAPH $state { ?o sosa:hasFeatureOfInterest <http://example.org/test#zamioculcas> ; sosa:observedProperty <http://example.org/test#moisture> ; ?p ?v } }" .
 +  predicted:zamioculcas_moisture_0 prov:wasDerivedFrom observed:zamioculcas_moisture .
  }
 +
 +
 +GRAPH predicted:zamioculcas_moisture_0 {
-+  orexis:predicted_zamioculcas_moisture_0 a sosa:Observation .
-+  orexis:predicted_zamioculcas_moisture_0 sosa:hasFeatureOfInterest :zamioculcas .
-+  orexis:predicted_zamioculcas_moisture_0 sosa:hasSimpleResult 0.25 .
-+  orexis:predicted_zamioculcas_moisture_0 sosa:madeBySensor :probe .
-+  orexis:predicted_zamioculcas_moisture_0 sosa:observedProperty :moisture .
-+  orexis:predicted_zamioculcas_moisture_0 sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  orexis:predicted_zamioculcas_moisture a sosa:Observation .
++  orexis:predicted_zamioculcas_moisture sosa:hasFeatureOfInterest :zamioculcas .
++  orexis:predicted_zamioculcas_moisture sosa:hasSimpleResult 0.25 .
++  orexis:predicted_zamioculcas_moisture sosa:madeBySensor :probe .
++  orexis:predicted_zamioculcas_moisture sosa:observedProperty :moisture .
++  orexis:predicted_zamioculcas_moisture sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
 +}

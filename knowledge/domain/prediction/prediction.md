@@ -52,9 +52,10 @@ what the sensor observes is placed exactly, by division.
 What is written is one `orexis:PredictionGraph` per stretch - from the observation's horizon to the
 first crossing, crossing to crossing, the last to the horizon's end - holding a predicted
 `sosa:Observation` with the number at the last instant of the stretch known to lie on its side -
-its key, its sensor, the number and the instant, as a node of its own and never the percept it was
-made from, which crosses into no ground (#944) - and carrying on its catalogue row
-`orexis:retracts`, the text that takes out of a ground the predicted reading it replaces. Where a
+its key, its sensor, the number and the instant, as ONE node per key and never the percept it was
+made from, which crosses into no ground (#944). A stretch supersedes the one before it by key: the
+planner laying a ground takes out every triple under a subject and predicate the prediction adds to,
+and the prediction says nothing about how (#988). Where a
 rate is a range the value is a [corridor](/domain/prediction/corridor.md), and each stretch is its
 worst side. A key no drift moves is carried forward an hour past the observation, and no further: a
 package that declares no drift has claimed nothing past that.

@@ -9,7 +9,7 @@
  }
  
  GRAPH :dip {
-@@ -55,6 +53,46 @@
+@@ -49,6 +47,46 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .
