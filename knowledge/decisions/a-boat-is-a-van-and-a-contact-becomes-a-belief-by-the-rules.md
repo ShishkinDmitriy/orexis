@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: A boat is a van, a drive is answered by the world, and a contact's numbers become a belief by the rules
-status: accepted
+status: superseded-in-part
+superseded-by: navigation-is-a-body-a-mover-and-a-move
 timestamp: 2026-10-19T09:00:00Z
 description: >-
   The sovereign recast the two-minds world on 2026-10-18 as boats in a canal - a radar shows
@@ -16,6 +17,15 @@ description: >-
   categorical readings in sensing, a contact list of variable length, and the dispatcher kept beside
   the canal.
 ---
+
+> **Superseded in part, 2026-10-19.** A boat is a BODY and not a van, and a drive is a command to the body
+> itself and not to a helm: [navigation-is-a-body-a-mover-and-a-move](/decisions/navigation-is-a-body-a-mover-and-a-move.md) took the space and the moving out of the
+> courier into navigation, made the mover a role, and left the helm and the engine to a driving layer
+> nothing a mover plans branches on. **And parked the same day, onto vans**: the sovereign set the
+> navigation layer and the nautical words aside until two minds meet, so the two-minds world is posed
+> with the courier's own words - vans on a single-track lane with a passing place, the canal's grid on
+> a road - and a drive the world answers is a command to the van itself. The contact, the sentinel,
+> the obstacle and the world replacing the dispatcher stand; #1003 and #1004 build them on that world.
 
 > **Decided 2026-10-19, and built by #1002, #1003 and #1004 in that order.** Until they close, the two-minds world is the
 > dispatcher, with the peer stood in by `_van_c` in its tests.

@@ -177,6 +177,13 @@ from the relation to the role, which is founded on it.
 
 ## 4. A role is internal; what a peer needs is a public relation
 
+> **Amended 2026-10-19.** The courier's public fact became `courier:hasDriver` by #929, as proposed
+> below, and is a ROLE since [navigation-is-a-body-a-mover-and-a-move](/decisions/navigation-is-a-body-a-mover-and-a-move.md): a mover the world states an agent plays,
+> aboard the body it moves, in the document every agent is given. The line this section draws holds in
+> substance - what is public is what a peer's plan branches on - and a role a peer must address is
+> stated publicly rather than a relation kept beside an internal role, as
+> [a-role-is-an-instance-an-agent-plays](/decisions/a-role-is-an-instance-an-agent-plays.md) foresaw.
+
 **Roles are the agent's own knowledge.** They are stated in the agent's own stances document — its
 self graph, the kernel kind holding its `orexis:Self`, where #876's stances go as well
 ([the-self-is-a-class-held-to-one-instance](/decisions/the-self-is-a-class-held-to-one-instance.md)) — authored by

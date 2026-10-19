@@ -38,6 +38,9 @@ timestamp: 2026-10-07T20:00:00Z
 > **Amended 2026-10-08** (#929): **whom to ask is the agent that has the driver of the van in range**,
 > `courier:hasDriver`, which the world states and the [driver](/domain/courier/driver.md) page owns. A
 > world posing #922 names a driver for each van and whose it is, or each agent's search drives both.
+> **Amended again 2026-10-19**: the driver is a MOVER, a role the world states an agent plays aboard
+> the body it moves, so whom to ask is the agent that plays the mover aboard the body in range, and
+> `courier:hasDriver` is retired ([navigation-is-a-body-a-mover-and-a-move](/decisions/navigation-is-a-body-a-mover-and-a-move.md), #1007).
 
 > **Amended 2026-10-07, again** (#923 rewritten a third time): **ask, never tell.** A van saying its
 > whole route tells a peer everything it will do, and a peer has no need of most of it — a van
