@@ -743,6 +743,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A belief an instrument reports is never posed** — a transition changes the agent's derived state
   alone, so a cell asserted in `state.ttl` stood beside the one the fix concluded and the drive was never
   answered; what comes from outside is stored when it arrives (#1002, position).
+- **A driver is a role the world states an agent plays, carrying the vans it drives** — `orexis:plays`
+  where `courier:hasDriver` was, so a peer finds the agent to ask by the role and a role loads nothing
+  from the world graph, the boot reading roles for loading off the self graph alone (#1002, driver,
+  navigation-is-a-body-a-mover-and-a-move §3).
 - **An agent commands what it acts for where that listens for commands** — the courier's van is told its
   drives on its own topic, and the ACL grants it as `actuation:hasActuator` is granted, a device the agent
   acts for being a device it takes a step through (#1002).

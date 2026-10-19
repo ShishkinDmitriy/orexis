@@ -801,12 +801,12 @@ def test_a_parcel_arriving_where_the_walking_van_can_never_meet_its_van_reopens_
 
 #  A PEER'S VAN (#921): van A and parcel A alone, the parcel owed at `c2_2` so three drives remain after the
 #  pick and more than one way runs there, and VAN C, a van of the world's that this agent does not drive —
-#  `courier:drivenBy` a peer who is not aboard it, so the drive's own filter refuses it (#903) — standing
+#  a peer `courier:drives` and is not aboard, so the drive's own filter refuses it (#903) — standing
 #  nowhere the agent knows of until a belief says where.
 PEER = {"world.ttl": [*HALF_A["world.ttl"], ("courier:destination :c0_3", "courier:destination :c2_2"),
                       (':van_a a courier:Van ; rdfs:label "van A" .',
                        ':van_a a courier:Van ; rdfs:label "van A" .\n'
-                       ':van_c a courier:Van ; courier:drivenBy :peer ; rdfs:label "a peer\'s van" .')],
+                       ':van_c a courier:Van ; rdfs:label "a peer\'s van" .\n:peer courier:drives :van_c .')],
         "state.ttl": HALF_A["state.ttl"]}
 #  WHERE VAN C IS SAID TO STAND, as a forecast laid in the beliefs: a belief holding from an instant ahead.
 PEER_GRAPH = "http://example.org/orexis/graph/forecast/dispatcher/van_c"
@@ -968,8 +968,8 @@ def test_two_vans_on_one_cell_as_posed_is_a_contradiction_said_and_refused_and_n
 #  column is laid as predictions, as speech will lay a peer's route ahead (#568). A drive lands half a
 #  minute to a minute after it is taken. The constraint stays the world's own: van B is a van.
 _PEERS_VAN = (':van_b a courier:Van ; rdfs:label "van B" .',
-              ':van_b a courier:Van ; courier:drivenBy :peer ; rdfs:label "van B" .\n'
-              ':peer a courier:Driver ; rdfs:label "the peer driving van B, aboard it in no belief of this agent" .')
+              ':van_b a courier:Van ; rdfs:label "van B" .\n'
+              ':peer a courier:Driver ; courier:drives :van_b ; rdfs:label "the peer driving van B, aboard it in no belief of this agent" .')
 _CROSSING_WORLD = [_PEERS_VAN,
                    (':parcel_b a courier:Parcel ; courier:destination :c3_3 ;\n    rdfs:label "the parcel owed at the top of the last column" .', ""),
                    ("courier:destination :c0_3", "courier:destination :c3_1")]

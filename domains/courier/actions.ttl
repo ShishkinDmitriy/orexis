@@ -19,8 +19,8 @@ courier:Drive a orexis:Action ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Fictive ] ] ;
     #  A VAN SOMEBODY DRIVES MOVES ONLY WITH THEM ABOARD (#903), AND ONLY BY THE AGENT THAT HAS THEM
-    #  (#929): the last filter refuses a van `drivenBy` a driver who is not `aboard` it or whom the
-    #  agent does not `courier:hasDriver`, and asks nothing of a van the world names no driver for,
+    #  (#929): the last filter refuses a van a driver `drives` who is not `aboard` it or whom the
+    #  agent does not `orexis:plays`, and asks nothing of a van the world names no driver for,
     #  which is every van of the dispatcher's, the courier's and the tower's — so their drives are
     #  the fillings they were. Where a world names one driver for two vans, one van at a time is
     #  where the driver is, and no plan can drive the other without a boarding first; where two
@@ -34,8 +34,8 @@ courier:Drive a orexis:Action ;
             ?here courier:x ?hx ; courier:y ?hy .
             ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
             FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
-            FILTER NOT EXISTS { ?van courier:drivenBy ?driver .
-                FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; courier:hasDriver ?driver } }
+            FILTER NOT EXISTS { ?driver courier:drives ?van .
+                FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; orexis:plays ?driver } }
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  HOW LONG A DRIVE TAKES TO SHOW, as a BAND (#901): a van is on the road to the next cell
@@ -69,8 +69,8 @@ courier:Pick a orexis:Action ;
             ?van courier:at ?cell . ?parcel courier:at ?cell .
             ?parcel a courier:Parcel .
             ?van a courier:Van .
-            FILTER NOT EXISTS { ?van courier:drivenBy ?driver .
-                FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; courier:hasDriver ?driver } }
+            FILTER NOT EXISTS { ?driver courier:drives ?van .
+                FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; orexis:plays ?driver } }
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  A PICK SHOWS AT ONCE: the parcel is aboard as the door shuts, nought twice — declared rather
@@ -93,8 +93,8 @@ courier:Drop a orexis:Action ;
         SELECT ?parcel ?to WHERE {
             ?parcel courier:carriedBy ?van . ?van courier:at ?to .
             ?parcel a courier:Parcel .
-            FILTER NOT EXISTS { ?van courier:drivenBy ?driver .
-                FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; courier:hasDriver ?driver } }
+            FILTER NOT EXISTS { ?driver courier:drives ?van .
+                FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; orexis:plays ?driver } }
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     #  A DROP SHOWS AT ONCE, as the pick does: nought twice, declared.

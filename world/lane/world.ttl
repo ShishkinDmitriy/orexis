@@ -29,7 +29,9 @@
 #  so the world says once which is which (knowledge/domain/courier/position.md).
 #
 #  THE VAN: `van_a` stands at the western end with its driver aboard; its parcel waits a cell east and is
-#  owed at the eastern end. The agent acts for the van, reads its position fix and commands it; the fix
+#  owed at the eastern end. The agent plays the driver, a role carrying the van it drives, stated in this
+#  document because a peer finds the agent to ask by it (#929, #1002); it acts for the van, reads its
+#  position fix and commands it; the fix
 #  reports every ten seconds and the van is on the cell it is told forty-five seconds on, inside the
 #  drive's band of thirty to sixty. Where the van stands is never posed: its first fix says
 #  (knowledge/domain/courier/position.md).
@@ -37,12 +39,11 @@
 :courier_a a orexis:Agent ;
     orexis:localId "courier_a" ;
     orexis:actsFor :van_a ;
-    courier:hasDriver :driver_a ;
-    rdfs:comment "The courier of van A: a mind with the courier's actions over one van, through the driver it has." .
+    orexis:plays :driver_a ;    # the role, stated here and not in its self graph, since a peer finds the agent by it
+    rdfs:comment "The courier of van A: a mind with the courier's actions over one van, through the driver it plays." .
 
-:driver_a a courier:Driver ; rdfs:label "the driver of van A" .
+:driver_a a courier:Driver ; courier:drives :van_a ; rdfs:label "the driver of van A" .
 :van_a a courier:Van ;
-    courier:drivenBy :driver_a ;
     sim:simulatedBy [ a sim:Model ; sim:delayS 45 ] ;    # told a cell, it is there forty-five seconds on
     rdfs:label "van A" .
 :parcel_a a courier:Parcel ; courier:destination :c6_1 ;
