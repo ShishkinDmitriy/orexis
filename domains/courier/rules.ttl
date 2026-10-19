@@ -11,13 +11,16 @@
 #  handed its one arrival and the agent's own derived state (#947), so the fix is read in two orders:
 #  order 0, the arriving coordinate replaces the one held of the van, `courier:x` or `courier:y`; order 1,
 #  the cell authored at the two coordinates now held replaces the cell the van was at. The first fix
-#  leaves the van nowhere until its second coordinate lands, a reading later, and coordinates no cell is
-#  authored at leave the cell before standing, as a state does, until a fix says where else. The feature of
+#  leaves the van nowhere until its second coordinate lands, a reading later, and at coordinates no cell is
+#  authored at the van is believed nowhere, since a cell is where something IS. The feature of
 #  interest is the van the sensor is hosted by, or, where the sensor observes a contact standing for a van
-#  in range (#1003), what the contact `isSampleOf` - a radar's relative vector is added to the agent's own
-#  van's coordinates in the same shape. Imported by `actions.answered.ttl`, the one document of the
-#  courier's whose drive a fix answers, so a world with the fictive drive and no belief package never loads
-#  a rules graph it has no reader for.
+#  in range (#1003), what the contact `isSampleOf`, and the contact's own vector is RELATIVE: `relativeColumnRule`
+#  and `relativeRowRule` add it to the coordinates held of the van carrying the contact and write the sum on
+#  the peer the contact stands for, or on the contact itself where it stands for nothing named, an obstacle;
+#  the cell rule then serves a van, a peer and an obstacle alike, and a vector landing on no cell - a contact
+#  beyond range, reported past the grid - is believed nowhere, which is the retraction. Imported by
+#  `actions.answered.ttl`, the one document of the courier's whose drive a fix answers, so a world with the
+#  fictive drive and no belief package never loads a rules graph it has no reader for.
 
 :columnRule a belief:Transition ; sh:order 0 ;
     rdfs:label "the column a van stands in, concluded of its fix" ;
@@ -45,17 +48,46 @@
             OPTIONAL { ?van courier:y ?was }
         }""" .
 
-:cellRule a belief:Transition ; sh:order 1 ;
-    rdfs:label "the cell a van stands on, the one authored at the coordinates held" ;
+:relativeColumnRule a belief:Transition ; sh:order 0 ;
+    rdfs:label "the column of what a contact stands for, its vector added to the carrying van's" ;
     belief:update """PREFIX courier: <http://example.org/orexis/courier#>
-        DELETE { ?van courier:at ?before }
-        INSERT { ?van courier:at ?cell }
+        DELETE { ?subject courier:x ?was }
+        INSERT { ?subject courier:x ?x }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty courier:RelativeColumn ; sosa:hasSimpleResult ?d ;
+                 sosa:hasFeatureOfInterest ?contact .
+            ?contact sosa:isHostedBy ?mine . ?mine courier:x ?mx .
+            OPTIONAL { ?contact sosa:isSampleOf ?peer }
+            BIND(COALESCE(?peer, ?contact) AS ?subject)
+            BIND(xsd:integer(?mx) + xsd:integer(?d) AS ?x)
+            OPTIONAL { ?subject courier:x ?was }
+        }""" .
+
+:relativeRowRule a belief:Transition ; sh:order 0 ;
+    rdfs:label "the row of what a contact stands for, its vector added to the carrying van's" ;
+    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { ?subject courier:y ?was }
+        INSERT { ?subject courier:y ?y }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty courier:RelativeRow ; sosa:hasSimpleResult ?d ;
+                 sosa:hasFeatureOfInterest ?contact .
+            ?contact sosa:isHostedBy ?mine . ?mine courier:y ?my .
+            OPTIONAL { ?contact sosa:isSampleOf ?peer }
+            BIND(COALESCE(?peer, ?contact) AS ?subject)
+            BIND(xsd:integer(?my) + xsd:integer(?d) AS ?y)
+            OPTIONAL { ?subject courier:y ?was }
+        }""" .
+
+:cellRule a belief:Transition ; sh:order 1 ;
+    rdfs:label "the cell a thing stands on, the one authored at the coordinates held, or nowhere" ;
+    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { ?subject courier:at ?before }
+        INSERT { ?subject courier:at ?cell }
         WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty ?coordinate ;
-                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?van .
-            VALUES ?coordinate { courier:Column courier:Row }
-            ?van a courier:Van ; courier:x ?x ; courier:y ?y .
-            ?cell a courier:Cell ; courier:x ?cx ; courier:y ?cy .
-            FILTER(?cx = ?x && ?cy = ?y)
-            OPTIONAL { ?van courier:at ?before }
+                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
+            VALUES ?coordinate { courier:Column courier:Row courier:RelativeColumn courier:RelativeRow }
+            ?subject courier:x ?x ; courier:y ?y .
+            OPTIONAL { ?cell a courier:Cell ; courier:x ?cx ; courier:y ?cy . FILTER(?cx = ?x && ?cy = ?y) }
+            OPTIONAL { ?subject courier:at ?before }
         }""" .

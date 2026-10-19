@@ -747,6 +747,15 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   where the courier's own relation from the agent was, so a peer finds the agent to ask by the role and a role loads nothing
   from the world graph, the boot reading roles for loading off the self graph alone (#1002, driver,
   navigation-is-a-body-a-mover-and-a-move §3).
+- **A contact is a sample a van carries, its sensors report an offset, and out of range is off the grid** —
+  the rules add the carrying van's held coordinates and find the cell, so a peer or an obstacle beyond
+  the radius lands on no cell and is believed nowhere by geometry, never by a sentinel or a silence; a
+  sensor on a sample the subject carries reports to the agent, the third way (#1003, contact, obstacle).
+- **A radar slot is the obstacle, typed by the world, and its cell is the one belief that changes** —
+  nothing types anything at runtime, and a world holds "no van where an obstacle is" as a constraint,
+  beside "no cell holds two vans" (#1003).
+- **One simulator client hosts everything it plays, a parked van and a tree included** — a thing with no
+  instrument stands where its model says, `sim:x` and `sim:y`, and is seen by a radar (#1003).
 - **An agent commands what it acts for where that listens for commands** — the courier's van is told its
   drives on its own topic, and the ACL grants it as `actuation:hasActuator` is granted, a device the agent
   acts for being a device it takes a step through (#1002).

@@ -40,6 +40,22 @@
 :Row a owl:Class ; rdfs:subClassOf sosa:ObservableProperty ; rdfs:label "Row" ;
     rdfs:comment "The row a van stands in, as an instrument observes it: the other half of a position fix, reporting the van's `courier:y`." .
 
+:RelativeColumn a owl:Class ; rdfs:subClassOf sosa:ObservableProperty ; rdfs:label "Relative column" ;
+    rdfs:comment """The column of a CONTACT as seen from the van that carries it: a `sosa:Sample` hosted by the van, standing
+    for a peer van it `isSampleOf` - a receiver, one per known van - or for nothing named - a radar's slot, an
+    obstacle. Two sensors hosted by the contact observe this and `RelativeRow`, each reporting the contact's
+    offset from the carrying van, and the courier's transitions add the van's own held coordinates to it and
+    find the cell; a vector landing on no cell is a contact beyond range, believed nowhere
+    (knowledge/domain/courier/contact.md, #1003).""" .
+
+:RelativeRow a owl:Class ; rdfs:subClassOf sosa:ObservableProperty ; rdfs:label "Relative row" ;
+    rdfs:comment "The row of a contact as seen from the van that carries it: the other half of a contact's vector." .
+
+:Obstacle a owl:Class ; rdfs:label "Obstacle" ;
+    rdfs:comment """A thing a radar sees and nothing identifies: a contact slot standing for nothing named, at the cell its
+    vector lands on while something is in range and nowhere otherwise. A van never stands where one is, which a
+    world states as a constraint; there is nothing to ask an obstacle (knowledge/domain/courier/obstacle.md).""" .
+
 :Van a owl:Class ; rdfs:label "Van" ;
     rdfs:comment "What moves and what carries. A pure subject of the search, with no capability and no grant." .
 

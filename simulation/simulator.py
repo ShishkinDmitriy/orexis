@@ -39,7 +39,14 @@ A VAN IS PLAYED AS A BODY THAT MOVES ON COMMAND (#1002): a `courier:Van` marked 
 the position fix it hosts — two sensors observing `courier:Column` and `courier:Row` — reports the
 coordinates from then on. The grid is read off the world, each cell's coordinates, and a van refuses a
 cell that is no neighbour of the one it stands on, as a road would; so the pilot never writes its own van's cell, and
-there is a true position for a contact to be played from (#1003).
+there is a true position for a contact to be played from.
+
+A CONTACT IS PLAYED FROM THE TRUE POSITIONS (#1003): a `sosa:Sample` a van carries, with two sensors
+observing `courier:RelativeColumn` and `courier:RelativeRow`, reports the vector from the carrying van
+to what it stands for - the peer it `isSampleOf`, or, standing for nothing named, the nearest thing no
+receiver of that van identifies - while that is within the sensors' model's `sim:radius`, |dx| + |dy|
+in cells; beyond it, a vector landing one cell past the grid's far corner, which no cell is authored at.
+A thing's true position is its fix's if it has one, else where its model says it stands (`sim:x`, `sim:y`).
 """
 
 from __future__ import annotations
@@ -114,6 +121,19 @@ SELECT ?van ?column ?row ?delay WHERE {{
 #  the one it stands on, as a road would.
 _CELLS_Q = f"""SELECT ?x ?y WHERE {{ ?cell a <{COURIER}Cell> ; <{COURIER}x> ?x ; <{COURIER}y> ?y }}"""
 
+#  EVERY CONTACT PLAYED (#1003): the van carrying it, the peer it stands for where it stands for one, its two
+#  sensors and how far they see.
+_CONTACTS_Q = f"""
+SELECT ?contact ?van ?peer ?column ?row ?radius WHERE {{
+  ?contact a sosa:Sample ; sosa:isHostedBy ?van .
+  ?column a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes <{COURIER}RelativeColumn> ; <{SIM}simulatedBy> ?model .
+  ?row a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes <{COURIER}RelativeRow> .
+  OPTIONAL {{ ?contact sosa:isSampleOf ?peer }}
+  OPTIONAL {{ ?model <{SIM}radius> ?radius }} }} ORDER BY ?contact"""
+
+#  WHERE A THING WITH NO INSTRUMENT STANDS, as its model says: a parked van, a fallen tree.
+_POSED_Q = f"""SELECT ?thing ?x ?y WHERE {{ ?thing <{SIM}simulatedBy> ?model . ?model <{SIM}x> ?x ; <{SIM}y> ?y }}"""
+
 
 class Simulator:
     """The world's simulated systems, their state, and one client on the world's broker."""
@@ -143,6 +163,11 @@ class Simulator:
                      for r in self._rows(_VANS_Q) if r["column"] in self.sensors and r["row"] in self.sensors}
         self.cells = {(int(r["x"]), int(r["y"])) for r in self._rows(_CELLS_Q)}
         self.moving: dict[str, tuple[datetime, tuple[int, int]]] = {}
+        #  THE CONTACTS each van carries, in the world's order, and where the things with no fix stand.
+        self.contacts = {r["contact"]: (r["van"], r.get("peer"), r["column"], r["row"],
+                                        int(r["radius"]) if r.get("radius") is not None else None)
+                         for r in self._rows(_CONTACTS_Q) if r["column"] in self.sensors and r["row"] in self.sensors}
+        self.posed = {r["thing"]: (int(r["x"]), int(r["y"])) for r in self._rows(_POSED_Q)}
 
     def _rows(self, text: str, **values) -> list[dict]:
         return rows(self.store, text, graphs_of(self.store, BELIEF, common=True), **values)
@@ -211,6 +236,43 @@ class Simulator:
         self.moving[van] = (self.at + timedelta(seconds=delay), to)
         log.info("%s drives to %s, there in %s s", van.rsplit("#", 1)[-1], to, delay)
 
+    def position(self, thing: str) -> tuple[int, int] | None:
+        """Where `thing` truly stands: its fix's coordinates if it has one, else its model's, else nowhere."""
+        if thing in self.vans:
+            column, row, _ = self.vans[thing]
+            return (int(round(self.sensors[column]["value"])), int(round(self.sensors[row]["value"])))
+        return self.posed.get(thing)
+
+    def _sight(self) -> None:
+        """Every contact's sensors set to the vector from the carrying van to what the contact stands for —
+        its peer, or the nearest thing no receiver of that van identifies, slots taking the nearest first —
+        where that is within the radius, and to a vector landing past the grid's far corner where it is not,
+        or where there is nothing to stand for."""
+        beyond = (max(x for x, _ in self.cells) + 1, max(y for _, y in self.cells) + 1) if self.cells else (1, 1)
+        identified = {(van, peer) for van, peer, *_ in self.contacts.values() if peer}
+        taken: dict[str, set[str]] = {}
+        for contact, (van, peer, column, row, radius) in self.contacts.items():
+            here = self.position(van)
+            if here is None:
+                continue
+            target = None
+            if peer:
+                target = self.position(peer)
+            else:
+                things = [(abs(p[0] - here[0]) + abs(p[1] - here[1]), name, p)
+                          for name in [*self.vans, *self.posed]
+                          if name != van and (van, name) not in identified and name not in taken.get(van, set())
+                          and (p := self.position(name)) is not None]
+                things.sort()
+                if things:
+                    _, name, target = things[0]
+                    taken.setdefault(van, set()).add(name)
+            if target is not None and (radius is None or abs(target[0] - here[0]) + abs(target[1] - here[1]) <= radius):
+                vector = (target[0] - here[0], target[1] - here[1])
+            else:
+                vector = (beyond[0] - here[0], beyond[1] - here[1])
+            self.sensors[column]["value"], self.sensors[row]["value"] = float(vector[0]), float(vector[1])
+
     def due_in(self, now: datetime) -> float:
         """World seconds until the earliest reading falls due — nought where one is due already, a day
         where nothing here reads — so the process sleeps until then and not for a real second."""
@@ -245,6 +307,7 @@ class Simulator:
                 self.sensors[self.vans[van][1]]["value"] = float(to[1])
                 del self.moving[van]
         self.at = now
+        self._sight()
         published = []
         for topic in sorted({s["topic"] for s in self.sensors.values() if s["due"] <= now}):
             document: dict = {}

@@ -51,3 +51,13 @@
     rdfs:comment """How long after a van is told a cell its position fix shows it there: the simulator's stand-in
     for the road, stated on the van's model inside the drive's landing band (#1002). Nought where the model
     states none, so the fix shows the cell at its next reading.""" .
+
+:radius a owl:DatatypeProperty ; rdfs:domain :Model ; rdfs:range xsd:integer ; rdfs:label "radius, cells" ;
+    rdfs:comment """How far a contact's sensor sees, in cells along the grid, |dx| + |dy|: the simulator reports a thing
+    within it as its vector from the carrying van and a thing beyond it as a vector landing one cell past the
+    grid's far corner, which no cell is authored at (#1003). Stated on the contact's sensors' model.""" .
+
+:x a owl:DatatypeProperty ; rdfs:domain :Model ; rdfs:range xsd:integer ; rdfs:label "column" ;
+    rdfs:comment "Where a thing with no instrument stands, as the simulator plays it - a parked van, a fallen tree: what a radar sees. A van with a position fix stands where its fix says, and states none." .
+
+:y a owl:DatatypeProperty ; rdfs:domain :Model ; rdfs:range xsd:integer ; rdfs:label "row" .
