@@ -66,17 +66,17 @@ def _lane(monkeypatch):
 
 def test_the_van_is_driven_by_command_and_lands_where_the_fix_shows_it(monkeypatch):
     """Six drives, a pick and a drop from the western road to the eastern end, each drive sent to the van
-    as the number of the cell to reach, and each landing shown by the fix within the drive's band before
-    the next is taken: the courier never writes its van's cell, the simulator moves it."""
+    as the coordinates of the cell to reach, and each landing shown by the fix within the drive's band
+    before the next is taken: the courier never writes its van's cell, the simulator moves it."""
     bus, time = _lane(monkeypatch)
     assert bus.simulator.open() == ["actuators/van_a/command"]
-    assert bus.simulator.vans and bus.simulator.cells[19] == (6, 1), "the van and the grid read off the world"
-    bus.simulator.step(NOW)                                             # the fix: the van on cell 1
+    assert bus.simulator.vans and (6, 1) in bus.simulator.cells, "the van and the grid read off the world"
+    bus.simulator.step(NOW)                                             # the fix: the van at (0, 1)
     bus.runtime.run(passes=1, poll_s=0)
     assert _at(bus.runtime.beliefs) == {"van_a": "c0_1", "parcel_a": "c1_1"}, _at(bus.runtime.beliefs)
     assert len(bus.runtime.parts["execution"].executor.walking()) == 1, "a plan for the parcel is walked"
     assert [t for t, _ in bus.commands] == ["actuators/van_a/command"], "the first drive is sent to the van"
-    assert bus.commands[0][1] == {"to": 4}, "to the parcel's cell, by its number"
+    assert bus.commands[0][1] == {"to": {"x": 1, "y": 1}}, "to the parcel's cell, by its coordinates"
     #  THE WORLD ANSWERS: ten seconds at a time, the fix reporting the van's cell, until the plan is walked.
     for _ in range(90):
         time["at"] += timedelta(seconds=CADENCE_S)
@@ -86,11 +86,11 @@ def test_the_van_is_driven_by_command_and_lands_where_the_fix_shows_it(monkeypat
             break
     assert bus.runtime.parts["execution"].executor.walking() == [], "the plan was walked to its end"
     assert _at(bus.runtime.beliefs) == {"van_a": "c6_1", "parcel_a": "c6_1"}, _at(bus.runtime.beliefs)
-    told = [payload["to"] for _, payload in bus.commands]
-    assert told[0] == 4 and told[-1] == 19 and len(told) == 6, f"six drives, east along the lane: {told}"
-    assert all(abs(bus.simulator.cells[a][0] - bus.simulator.cells[b][0]) + abs(bus.simulator.cells[a][1] - bus.simulator.cells[b][1]) == 1
-               for a, b in zip([1, *told], told)), "each a neighbour of the last"
-    assert bus.simulator.sensors[L + "fix_a"]["value"] == 19.0, "the simulator's van is at the eastern end: nobody wrote it there"
+    told = [(payload["to"]["x"], payload["to"]["y"]) for _, payload in bus.commands]
+    assert told[0] == (1, 1) and told[-1] == (6, 1) and len(told) == 6, f"six drives, east along the lane: {told}"
+    assert all(abs(a[0] - b[0]) + abs(a[1] - b[1]) == 1 for a, b in zip([(0, 1), *told], told)), "each a neighbour of the last"
+    assert (bus.simulator.sensors[L + "fix_a_column"]["value"], bus.simulator.sensors[L + "fix_a_row"]["value"]) == (6.0, 1.0), \
+        "the simulator's van is at the eastern end: nobody wrote it there"
     assert (time["at"] - NOW) <= timedelta(minutes=8), f"walked within eight minutes of the world's time: {time['at'] - NOW}"
 
 
@@ -98,8 +98,8 @@ def test_a_van_told_a_cell_that_is_no_neighbour_refuses_and_stays(monkeypatch, c
     bus, time = _lane(monkeypatch)
     bus.simulator.open()
     bus.simulator.step(NOW)
-    bus.simulator.command("actuators/van_a/command", b'{"to": 19}')
+    bus.simulator.command("actuators/van_a/command", b'{"to": {"x": 6, "y": 1}}')
     assert "no neighbour" in caplog.text
     time["at"] += timedelta(seconds=60)
     bus.simulator.step(time["at"])
-    assert bus.simulator.sensors[L + "fix_a"]["value"] == 1.0
+    assert bus.simulator.sensors[L + "fix_a_column"]["value"] == 0.0

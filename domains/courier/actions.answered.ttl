@@ -12,8 +12,8 @@
 
 #  THE COURIER'S ACTIONS WHERE THE WORLD ANSWERS A DRIVE (#1002). A world imports this document or
 #  `actions.ttl`, never both: the two declare the same three actions, and differ in one implementation.
-#  Here a drive is a COMMAND to the van itself — `{"to": <number>}`, the number of the cell to reach, on
-#  the topic the van listens to — and the world moves the van: the simulator over the drive's band, a real
+#  Here a drive is a COMMAND to the van itself — `{"to": {"x": <column>, "y": <row>}}`, the coordinates of
+#  the cell to reach, on the topic the van listens to — and the world moves the van: the simulator over the drive's band, a real
 #  van as its own driving will (navigation-is-a-body-a-mover-and-a-move, §5). The step lands when the van's
 #  position fix shows the cell, as a dose lands when the probe shows the soil moist, and fails a patience
 #  past its latest landing when it does not; the executor says only what happened, and writes no outcome of
@@ -29,9 +29,9 @@ courier:Drive a orexis:Action ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Command ; sh:select """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?actuator ?payload WHERE {
-            $to courier:number ?number .
+            $to courier:x ?x ; courier:y ?y .
             BIND($van AS ?actuator)
-            BIND(CONCAT('{"to": ', STR(?number), '}') AS ?payload)
+            BIND(CONCAT('{"to": {"x": ', STR(?x), ', "y": ', STR(?y), '}}') AS ?payload)
         }""" ] ] ;
     #  A VAN SOMEBODY DRIVES MOVES ONLY WITH THEM ABOARD (#903), AND ONLY BY THE AGENT THAT HAS THEM
     #  (#929): the last filter refuses a van a driver `drives` who is not `aboard` it or whom the

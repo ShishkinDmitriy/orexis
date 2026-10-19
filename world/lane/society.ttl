@@ -4,8 +4,8 @@
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
-#  THE WIRING: one broker, the courier a client of it, and the van's board — the client that hosts the fix
-#  and the van itself, played by the simulator — publishing the fix's readings and listening for the van's
+#  THE WIRING: one broker, the courier a client of it, and the van's board — the client that hosts the fix's
+#  two sensors and the van itself, played by the simulator — publishing the fix's readings and listening for the van's
 #  drives. The topics are named by one convention (`orexis-topics lane`, into society.derived.ttl).
 
 :broker a mqtt4ssn:Broker .
@@ -14,11 +14,12 @@
     mqtt4ssn:hasClientID "courier_a" ;
     mqtt4ssn:isConnectedToBroker :broker .
 
-:van_a_board a mqtt4ssn:Client ; mqtt4ssn:hosts :fix_a , :van_a ;
+:van_a_board a mqtt4ssn:Client ; mqtt4ssn:hosts :fix_a_column , :fix_a_row , :van_a ;
     mqtt4ssn:hasClientID "van_a_board" ;
     mqtt4ssn:isConnectedToBroker :broker .
 
 :van_a_readings a mqtt4ssn:Topic .
-:fix_a mqtt4ssn:observesTopic :van_a_readings .
+:fix_a_column mqtt4ssn:observesTopic :van_a_readings .
+:fix_a_row mqtt4ssn:observesTopic :van_a_readings .
 :van_a mqtt4ssn:listensToTopic :van_a_commands .
 :van_a_commands a mqtt4ssn:Topic .

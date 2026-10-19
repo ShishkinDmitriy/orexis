@@ -24,9 +24,9 @@
 #  second van, the contact that sees it and the two minds come with #1003 and #1004.
 #
 #  THE GRID: columns 0 and 1 and columns 5 and 6 are open road, three rows deep; columns 2 to 4 are the
-#  lane, row 1 alone, and (3, 2) is the passing place. Each cell states its NUMBER, 3 x + y, which is what
-#  every instrument here reports and the van is told: an instrument gives numbers and a cell is an IRI,
-#  so the world says once which is which (knowledge/domain/courier/position.md).
+#  lane, row 1 alone, and (3, 2) is the passing place. A cell is its two coordinates, which is what the
+#  van's fix reports and what the van is told: an instrument gives numbers, and the coordinates are the
+#  courier's own (knowledge/domain/courier/position.md).
 #
 #  THE VAN: `van_a` stands at the western end with its driver aboard; its parcel waits a cell east and is
 #  owed at the eastern end. The agent plays the driver, a role carrying the van it drives, stated in this
@@ -49,33 +49,41 @@
 :parcel_a a courier:Parcel ; courier:destination :c6_1 ;
     rdfs:label "the parcel owed at the eastern end" .
 
-#  The van's instrument, hosted by the van and played by the simulator: the fix at the van's cell, exactly —
-#  a fix that reports the same cell twice is a van that has not moved, not a stuck instrument, so its
-#  agent lets it repeat (beliefs/courier_a.self.ttl).
-:fix_a a sosa:Sensor ;
+#  The van's position fix, two sensors hosted by the van and played by the simulator, the column and the
+#  row of the van's cell, exactly — a fix that reports the same cell twice is a van that has not moved, not
+#  a stuck instrument, so its agent lets it repeat (beliefs/courier_a.self.ttl). Both in one message of the
+#  van's board, at `/x` and `/y`.
+:fix_a_column a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 0 ; sim:jitter 0 ] ;
+    sosa:isHostedBy :van_a ;
+    sosa:observes courier:Column ;
+    sensing:readingPointer "/x" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+:fix_a_row a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:initialValue 1 ; sim:jitter 0 ] ;
     sosa:isHostedBy :van_a ;
-    sosa:observes courier:Position ;
-    sensing:readingPointer "/cell" ;
+    sosa:observes courier:Row ;
+    sensing:readingPointer "/y" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
 
 #  Western road
-:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 ; courier:number 0 .
-:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 ; courier:number 1 .
-:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 ; courier:number 2 .
-:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 ; courier:number 3 .
-:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 ; courier:number 4 .
-:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 ; courier:number 5 .
+:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
+:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
+:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .
+:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 .
+:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 .
+:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 .
 #  The lane, and its passing place
-:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 ; courier:number 7 .
-:c3_1 a courier:Cell ; courier:x 3 ; courier:y 1 ; courier:number 10 .
-:c3_2 a courier:Cell ; courier:x 3 ; courier:y 2 ; courier:number 11 .
-:c4_1 a courier:Cell ; courier:x 4 ; courier:y 1 ; courier:number 13 .
+:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 .
+:c3_1 a courier:Cell ; courier:x 3 ; courier:y 1 .
+:c3_2 a courier:Cell ; courier:x 3 ; courier:y 2 .
+:c4_1 a courier:Cell ; courier:x 4 ; courier:y 1 .
 #  Eastern road
-:c5_0 a courier:Cell ; courier:x 5 ; courier:y 0 ; courier:number 15 .
-:c5_1 a courier:Cell ; courier:x 5 ; courier:y 1 ; courier:number 16 .
-:c5_2 a courier:Cell ; courier:x 5 ; courier:y 2 ; courier:number 17 .
-:c6_0 a courier:Cell ; courier:x 6 ; courier:y 0 ; courier:number 18 .
-:c6_1 a courier:Cell ; courier:x 6 ; courier:y 1 ; courier:number 19 .
-:c6_2 a courier:Cell ; courier:x 6 ; courier:y 2 ; courier:number 20 .
+:c5_0 a courier:Cell ; courier:x 5 ; courier:y 0 .
+:c5_1 a courier:Cell ; courier:x 5 ; courier:y 1 .
+:c5_2 a courier:Cell ; courier:x 5 ; courier:y 2 .
+:c6_0 a courier:Cell ; courier:x 6 ; courier:y 0 .
+:c6_1 a courier:Cell ; courier:x 6 ; courier:y 1 .
+:c6_2 a courier:Cell ; courier:x 6 ; courier:y 2 .

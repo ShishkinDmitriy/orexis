@@ -35,10 +35,10 @@ reproducible, and the noise is the instrument's alone: the model's reading is un
 the model's bounds bound the reading, not the number.
 
 A VAN IS PLAYED AS A BODY THAT MOVES ON COMMAND (#1002): a `courier:Van` marked `sim:simulatedBy`, told
-`{"to": <number>}` on the topic it listens to, is on the cell of that number `sim:delayS` later, and the
-position fix it hosts — a sensor observing `courier:Position` — reports the cell's number from then on.
-The grid is read off the world, each cell's number and coordinates, and a van refuses a cell that is no
-neighbour of the one it stands on, as a road would; so the pilot never writes its own van's cell, and
+`{"to": {"x": <column>, "y": <row>}}` on the topic it listens to, is on that cell `sim:delayS` later, and
+the position fix it hosts — two sensors observing `courier:Column` and `courier:Row` — reports the
+coordinates from then on. The grid is read off the world, each cell's coordinates, and a van refuses a
+cell that is no neighbour of the one it stands on, as a road would; so the pilot never writes its own van's cell, and
 there is a true position for a contact to be played from (#1003).
 """
 
@@ -101,17 +101,18 @@ SELECT ?subject ?property ?rate WHERE {{
 
 _DRIES_Q = f"""SELECT ?subject ?rate WHERE {{ ?subject <{CLIMATE}driesPerDay> ?rate }}"""
 
-#  EVERY VAN PLAYED, the position fix it hosts and how long a drive takes to show (#1002): a van told a cell
-#  is there `sim:delayS` later, and its fix reports the cell from then on.
+#  EVERY VAN PLAYED, the two sensors of its position fix and how long a drive takes to show (#1002): a van
+#  told a cell is there `sim:delayS` later, and its fix reports the cell's coordinates from then on.
 _VANS_Q = f"""
-SELECT ?van ?fix ?delay WHERE {{
+SELECT ?van ?column ?row ?delay WHERE {{
   ?van a <{COURIER}Van> ; <{SIM}simulatedBy> ?model .
-  ?fix a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes <{COURIER}Position> .
+  ?column a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes <{COURIER}Column> .
+  ?row a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes <{COURIER}Row> .
   OPTIONAL {{ ?model <{SIM}delayS> ?delay }} }}"""
 
-#  THE GRID AS THE WORLD STATES IT: each cell's number and coordinates, so a van refuses a cell that is no
-#  neighbour of the one it stands on, as a road would.
-_CELLS_Q = f"""SELECT ?n ?x ?y WHERE {{ ?cell a <{COURIER}Cell> ; <{COURIER}number> ?n ; <{COURIER}x> ?x ; <{COURIER}y> ?y }}"""
+#  THE GRID AS THE WORLD STATES IT: each cell's coordinates, so a van refuses a cell that is no neighbour of
+#  the one it stands on, as a road would.
+_CELLS_Q = f"""SELECT ?x ?y WHERE {{ ?cell a <{COURIER}Cell> ; <{COURIER}x> ?x ; <{COURIER}y> ?y }}"""
 
 
 class Simulator:
@@ -136,12 +137,12 @@ class Simulator:
                           if "+" not in r["pattern"] and "#" not in r["pattern"]}
         self.dries = {r["subject"]: float(r["rate"]) for r in self._rows(_DRIES_Q)}
         self.heating: dict[str, datetime] = {}
-        #  THE VANS, each with the fix that shows where it is and the delay a drive takes; and the drives
-        #  under way, each the instant it shows and the number of the cell it shows.
-        self.vans = {r["van"]: (r["fix"], float(r["delay"]) if r.get("delay") is not None else 0.0)
-                     for r in self._rows(_VANS_Q) if r["fix"] in self.sensors}
-        self.cells = {int(r["n"]): (int(r["x"]), int(r["y"])) for r in self._rows(_CELLS_Q)}
-        self.moving: dict[str, tuple[datetime, int]] = {}
+        #  THE VANS, each with the two sensors of its fix and the delay a drive takes; and the drives under
+        #  way, each the instant it shows and the cell it shows.
+        self.vans = {r["van"]: (r["column"], r["row"], float(r["delay"]) if r.get("delay") is not None else 0.0)
+                     for r in self._rows(_VANS_Q) if r["column"] in self.sensors and r["row"] in self.sensors}
+        self.cells = {(int(r["x"]), int(r["y"])) for r in self._rows(_CELLS_Q)}
+        self.moving: dict[str, tuple[datetime, tuple[int, int]]] = {}
 
     def _rows(self, text: str, **values) -> list[dict]:
         return rows(self.store, text, graphs_of(self.store, BELIEF, common=True), **values)
@@ -193,19 +194,18 @@ class Simulator:
             self.heating[actuator] = self.at + timedelta(seconds=float(said["heat_s"]))
             log.info("%s heats for %s s", actuator.rsplit("#", 1)[-1], said["heat_s"])
         if "to" in said and actuator in self.vans:
-            self._drive(actuator, int(said["to"]))
+            self._drive(actuator, (int(said["to"]["x"]), int(said["to"]["y"])))
 
-    def _drive(self, van: str, to: int) -> None:
-        """A van told a cell: it is there `sim:delayS` later, where the cell is a neighbour of the one it
-        stands on — |dx| + |dy| = 1, the drive's own rule — and it refuses anything else in the log, as a
-        road would a cell it cannot reach in one drive. A van already under way is told again."""
-        fix, delay = self.vans[van]
-        here = int(round(self.sensors[fix]["value"]))
+    def _drive(self, van: str, to: tuple[int, int]) -> None:
+        """A van told a cell's coordinates: it is there `sim:delayS` later, where the cell is a neighbour of
+        the one it stands on — |dx| + |dy| = 1, the drive's own rule — and it refuses anything else in the
+        log, as a road would a cell it cannot reach in one drive. A van already under way is told again."""
+        column, row, delay = self.vans[van]
+        here = (int(round(self.sensors[column]["value"])), int(round(self.sensors[row]["value"])))
         if to not in self.cells or here not in self.cells:
             log.error("%s: told %s, which is no cell of this world", van.rsplit("#", 1)[-1], to)
             return
-        (hx, hy), (tx, ty) = self.cells[here], self.cells[to]
-        if abs(tx - hx) + abs(ty - hy) != 1:
+        if abs(to[0] - here[0]) + abs(to[1] - here[1]) != 1:
             log.error("%s: told %s from %s, which is no neighbour", van.rsplit("#", 1)[-1], to, here)
             return
         self.moving[van] = (self.at + timedelta(seconds=delay), to)
@@ -241,7 +241,8 @@ class Simulator:
                 del self.heating[heater]
         for van, (shows, to) in list(self.moving.items()):
             if shows <= now:
-                self.sensors[self.vans[van][0]]["value"] = float(to)
+                self.sensors[self.vans[van][0]]["value"] = float(to[0])
+                self.sensors[self.vans[van][1]]["value"] = float(to[1])
                 del self.moving[van]
         self.at = now
         published = []

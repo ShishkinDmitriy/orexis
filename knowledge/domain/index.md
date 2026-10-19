@@ -114,7 +114,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Courier — a domain of documents
 
 * [driver](/domain/courier/driver.md) - A role an agent plays over the vans it drives, stated by the world: a search acts with a van only through it.
-* [position](/domain/courier/position.md) - A fix reports the number of the cell a van is on, and the courier's transition concludes `courier:at` of it.
+* [position](/domain/courier/position.md) - A fix reports a van's column and row; the courier's transitions hold the coordinates and conclude the cell authored at them.
 
 # Onboarding — from a world to a society
 

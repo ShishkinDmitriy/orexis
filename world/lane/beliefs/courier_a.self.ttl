@@ -12,5 +12,5 @@
 :courier_a a orexis:Self ;
     orexis:plays [ a planning:Planner ] ,
                  [ a execution:Executor ] ,
-                 [ a sensing:Observer ; sensing:sensor :fix_a ; sensing:stuckAfter 100000 ] .
+                 [ a sensing:Observer ; sensing:sensor :fix_a_column , :fix_a_row ; sensing:stuckAfter 100000 ] .
 :courier_a planning:budget 256 .
