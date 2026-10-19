@@ -78,6 +78,13 @@ timestamp: 2026-10-07T20:00:00Z
 > against a non-cooperator (Cleve), the withheld reveal a breach anyone can compute. Where the text
 > below says the loser lays the winner's route, or that speech writes it, read this.
 
+> **Amended 2026-10-19: the world is the canal, and attention is numbers the rules make a belief of.**
+> The protocol stands as decided. The world two minds meet in is the canal world, boats in a canal with
+> one passing bay, replacing the dispatcher; a boat is a van beneath the courier's words; attention
+> (#922) is an AIS receiver and a radar, ordinary numeric sensors reading a cell's number, and a courier
+> transition concludes "a boat at this cell" of them, an unidentified contact being an obstacle nothing
+> addresses ([a-boat-is-a-van-and-a-contact-becomes-a-belief-by-the-rules](/decisions/a-boat-is-a-van-and-a-contact-becomes-a-belief-by-the-rules.md)).
+
 # The question
 
 [#567](https://github.com/ShishkinDmitriy/orexis/issues/567) asked how ONE mind keeps two of its
