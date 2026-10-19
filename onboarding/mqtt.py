@@ -141,9 +141,12 @@ SELECT ?pattern WHERE {{
   ?board ssn:hasSubSystem ?sensor ; <{MQTT4SSN}listensToTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
+#  WHAT AN AGENT COMMANDS: a device it holds (`actuation:hasActuator`), or what it acts for where that
+#  listens for commands itself — the courier's van, told its drives where the world answers them (#1002).
 _COMMANDS_Q = f"""
 SELECT ?id ?pattern WHERE {{
-  ?a a orexis:Agent ; orexis:localId ?id ; <{ACTUATION}hasActuator> ?device .
+  ?a a orexis:Agent ; orexis:localId ?id .
+  {{ ?a <{ACTUATION}hasActuator> ?device }} UNION {{ ?a orexis:actsFor ?device }}
   {{ ?device <{MQTT4SSN}listensToTopic> ?topic }} UNION {{ ?board ssn:hasSubSystem ?device ; <{MQTT4SSN}listensToTopic> ?topic }}
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 

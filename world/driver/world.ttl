@@ -6,6 +6,7 @@
 
 <> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
     owl:imports <../../domains/courier/ontology.ttl> ,    # the domain this world poses
+                <../../domains/courier/actions.ttl> ,      # with its drives fictive: nothing here answers a van (#1002)
                 <../../domains/courier/driver.ttl> .      # and the boarding, since this world has a driver
 
 #  THE DRIVER (#903): the dispatcher's two vans and two parcels, and ONE DRIVER the agent has,

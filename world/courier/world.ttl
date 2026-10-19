@@ -5,7 +5,8 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 
 <> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
-    owl:imports <../../domains/courier/ontology.ttl> .    # the domain this world poses
+    owl:imports <../../domains/courier/ontology.ttl> ,    # the domain this world poses
+                <../../domains/courier/actions.ttl> .      # with its drives fictive: nothing here answers a van (#1002)
 
 #  A 4x4 grid, one van, one parcel owed at the far corner. The state is where the van is times
 #  where the parcel is or that it is aboard, 16 x 17 = 272 worlds, and a world can be nearer the

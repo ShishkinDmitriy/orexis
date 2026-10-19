@@ -33,6 +33,13 @@ would round, and never the number this sensor published last — the premise the
 held to rather than left to a draw that could repeat. The draw is seeded, so a test and a run are
 reproducible, and the noise is the instrument's alone: the model's reading is untouched by it, and
 the model's bounds bound the reading, not the number.
+
+A VAN IS PLAYED AS A BODY THAT MOVES ON COMMAND (#1002): a `courier:Van` marked `sim:simulatedBy`, told
+`{"to": <number>}` on the topic it listens to, is on the cell of that number `sim:delayS` later, and the
+position fix it hosts — a sensor observing `courier:Position` — reports the cell's number from then on.
+The grid is read off the world, each cell's number and coordinates, and a van refuses a cell that is no
+neighbour of the one it stands on, as a road would; so the pilot never writes its own van's cell, and
+there is a true position for a contact to be played from (#1003).
 """
 
 from __future__ import annotations
@@ -54,6 +61,7 @@ SIM = "http://example.org/orexis/sim#"
 CLIMATE = "http://example.org/orexis/climate#"
 ACTUATION = "http://example.org/orexis/actuation#"
 SENSING = "http://example.org/orexis/sensing#"
+COURIER = "http://example.org/orexis/courier#"
 MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
 _SECONDS = {"SEC": 1, "MIN": 60, "HR": 3600, "HUR": 3600, "DAY": 86400}
 
@@ -93,6 +101,18 @@ SELECT ?subject ?property ?rate WHERE {{
 
 _DRIES_Q = f"""SELECT ?subject ?rate WHERE {{ ?subject <{CLIMATE}driesPerDay> ?rate }}"""
 
+#  EVERY VAN PLAYED, the position fix it hosts and how long a drive takes to show (#1002): a van told a cell
+#  is there `sim:delayS` later, and its fix reports the cell from then on.
+_VANS_Q = f"""
+SELECT ?van ?fix ?delay WHERE {{
+  ?van a <{COURIER}Van> ; <{SIM}simulatedBy> ?model .
+  ?fix a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes <{COURIER}Position> .
+  OPTIONAL {{ ?model <{SIM}delayS> ?delay }} }}"""
+
+#  THE GRID AS THE WORLD STATES IT: each cell's number and coordinates, so a van refuses a cell that is no
+#  neighbour of the one it stands on, as a road would.
+_CELLS_Q = f"""SELECT ?n ?x ?y WHERE {{ ?cell a <{COURIER}Cell> ; <{COURIER}number> ?n ; <{COURIER}x> ?x ; <{COURIER}y> ?y }}"""
+
 
 class Simulator:
     """The world's simulated systems, their state, and one client on the world's broker."""
@@ -116,6 +136,12 @@ class Simulator:
                           if "+" not in r["pattern"] and "#" not in r["pattern"]}
         self.dries = {r["subject"]: float(r["rate"]) for r in self._rows(_DRIES_Q)}
         self.heating: dict[str, datetime] = {}
+        #  THE VANS, each with the fix that shows where it is and the delay a drive takes; and the drives
+        #  under way, each the instant it shows and the number of the cell it shows.
+        self.vans = {r["van"]: (r["fix"], float(r["delay"]) if r.get("delay") is not None else 0.0)
+                     for r in self._rows(_VANS_Q) if r["fix"] in self.sensors}
+        self.cells = {int(r["n"]): (int(r["x"]), int(r["y"])) for r in self._rows(_CELLS_Q)}
+        self.moving: dict[str, tuple[datetime, int]] = {}
 
     def _rows(self, text: str, **values) -> list[dict]:
         return rows(self.store, text, graphs_of(self.store, BELIEF, common=True), **values)
@@ -152,7 +178,8 @@ class Simulator:
         return value
 
     def command(self, topic: str, payload: bytes) -> None:
-        """A command on an actuator's topic: a dose pours at once, a heating runs for its seconds."""
+        """A command on an actuator's topic: a dose pours at once, a heating runs for its seconds, a van
+        is at the cell it is told after its delay."""
         actuator = self.listening.get(topic)
         if actuator is None:
             return
@@ -165,6 +192,24 @@ class Simulator:
         if "heat_s" in said:
             self.heating[actuator] = self.at + timedelta(seconds=float(said["heat_s"]))
             log.info("%s heats for %s s", actuator.rsplit("#", 1)[-1], said["heat_s"])
+        if "to" in said and actuator in self.vans:
+            self._drive(actuator, int(said["to"]))
+
+    def _drive(self, van: str, to: int) -> None:
+        """A van told a cell: it is there `sim:delayS` later, where the cell is a neighbour of the one it
+        stands on — |dx| + |dy| = 1, the drive's own rule — and it refuses anything else in the log, as a
+        road would a cell it cannot reach in one drive. A van already under way is told again."""
+        fix, delay = self.vans[van]
+        here = int(round(self.sensors[fix]["value"]))
+        if to not in self.cells or here not in self.cells:
+            log.error("%s: told %s, which is no cell of this world", van.rsplit("#", 1)[-1], to)
+            return
+        (hx, hy), (tx, ty) = self.cells[here], self.cells[to]
+        if abs(tx - hx) + abs(ty - hy) != 1:
+            log.error("%s: told %s from %s, which is no neighbour", van.rsplit("#", 1)[-1], to, here)
+            return
+        self.moving[van] = (self.at + timedelta(seconds=delay), to)
+        log.info("%s drives to %s, there in %s s", van.rsplit("#", 1)[-1], to, delay)
 
     def due_in(self, now: datetime) -> float:
         """World seconds until the earliest reading falls due — nought where one is due already, a day
@@ -194,6 +239,10 @@ class Simulator:
                     self._move(sensor, float(r["rate"]) * running / 3600.0)
             if until <= now:
                 del self.heating[heater]
+        for van, (shows, to) in list(self.moving.items()):
+            if shows <= now:
+                self.sensors[self.vans[van][0]]["value"] = float(to)
+                del self.moving[van]
         self.at = now
         published = []
         for topic in sorted({s["topic"] for s in self.sensors.values() if s["due"] <= now}):

@@ -1,0 +1,32 @@
+@prefix : <http://example.org/orexis/courier#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a sh:RulesGraph .    # this document is one graph, and this is what it is
+
+#  WHERE A VAN STANDS, CONCLUDED OF WHAT AN INSTRUMENT GAVE (#1002). A position fix hosted by a van observes
+#  `courier:Position` and reports a number; the world states each cell's `courier:number`; and this
+#  transition, triggered by the fix's percept arriving, deletes the cell the van was at and inserts the cell
+#  that states the number — a-transition-changes-the-state-and-an-inference-only-concludes, the courier's
+#  one transition. The feature of interest is the van the fix is hosted by, or, where the fix observes a
+#  contact standing for a van in range (#1003), what the contact `isSampleOf`. A number no cell states — an
+#  instrument's sentinel beneath nought, a cell off the grid — concludes nothing and takes nothing away:
+#  a van believed somewhere stays there until a fix says where else, as a state does. Imported by
+#  `actions.answered.ttl`, the one document of the courier's whose drive a fix answers, so a world with the
+#  fictive drive and no belief package never loads a rules graph it has no reader for.
+
+:positionRule a belief:Transition ;
+    rdfs:label "the cell a van stands on, concluded of its position fix" ;
+    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { ?van courier:at ?before }
+        INSERT { ?van courier:at ?cell }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty courier:Position ; sosa:hasSimpleResult ?number ;
+                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?van .
+            ?van a courier:Van .
+            ?cell a courier:Cell ; courier:number ?stated .
+            FILTER(xsd:integer(?stated) = xsd:integer(?number))
+            OPTIONAL { ?van courier:at ?before }
+        }""" .

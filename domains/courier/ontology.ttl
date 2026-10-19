@@ -2,18 +2,21 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
-    owl:imports <actions.ttl> , <shapes.ttl> .
+    owl:imports <shapes.ttl> .    # the ACTIONS a world imports itself, actions.ttl or actions.answered.ttl, and the answered drive's document brings the rules (#1002)
 
 #  THE COURIER GRID, A DOMAIN.
 #  The courier's words, shared by every world that poses a delivery: a cell and its coordinates,
 #  a van, a parcel and where it is owed, a driver, whose it is and which van it is aboard, where each stands and
-#  what an action is filled with. Beside this document the domain ships its three actions
-#  (actions.ttl) and what delivered means and how far it is (shapes.ttl), which this document
-#  imports, and the driver's boarding (driver.ttl), which it does NOT: a world with a driver imports
-#  that beside this one, and a world without one never loads it. The cells, the vans and the
+#  what an action is filled with, and since #1002 the number a cell goes by on an instrument and the
+#  position a fix observes. Beside this document the domain ships what delivered means and how far it is
+#  (shapes.ttl), which this document imports; its three actions in two documents it does NOT import, a
+#  world importing the one it poses — actions.ttl with the drive fictive, actions.answered.ttl with it
+#  a command to the van the world answers (#1002); and the driver's boarding (driver.ttl), which a
+#  world with a driver imports beside this one, and a world without one never loads. The cells, the vans and the
 #  parcels are a world's, since how big the grid is IS the puzzle; where they stand is a world's
 #  state. It is the smallest domain whose search NEEDS guiding — a van two cells from a parcel is
 #  closer than one five cells away, in the unit a drive costs — and the one whose effects DELETE.
@@ -26,6 +29,19 @@
 :x a owl:DatatypeProperty ; rdfs:domain :Cell ; rdfs:range xsd:integer ; rdfs:label "column" .
 :y a owl:DatatypeProperty ; rdfs:domain :Cell ; rdfs:range xsd:integer ; rdfs:label "row" ;
     rdfs:comment "Coordinates rather than a declared adjacency, because the estimate measures a distance the graph does not state. Two cells are neighbours where |dx| + |dy| = 1, which the drive's own precondition works out." .
+
+:number a owl:DatatypeProperty ; rdfs:domain :Cell ; rdfs:range xsd:integer ; rdfs:label "number" ;
+    rdfs:comment """The one number a cell goes by on an instrument: what a position fix reports, what a van is told
+    to drive to where the world answers a drive, and what a contact is reported at (#1003). An instrument
+    gives numbers and a cell is an IRI, so the world states each cell's number once and the courier's rule
+    reads the cell off it (knowledge/domain/courier/position.md, #1002).""" .
+
+#################  Instruments  #################
+
+:Position a owl:Class ; rdfs:subClassOf sosa:ObservableProperty ; rdfs:label "Position" ;
+    rdfs:comment """Where a van stands, as an instrument observes it: a `sosa:Sensor` hosted by the van and observing
+    this property is its position fix, reporting the number of the cell the van is on, and the courier's
+    transition (rules.ttl) concludes `courier:at` of it. A number no cell states concludes nothing.""" .
 
 :Van a owl:Class ; rdfs:label "Van" ;
     rdfs:comment "What moves and what carries. A pure subject of the search, with no capability and no grant." .

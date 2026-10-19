@@ -7,7 +7,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
-    owl:imports <../hanoi/ontology.ttl> , <../courier/ontology.ttl> , <rules.ttl> .
+    owl:imports <../hanoi/ontology.ttl> , <../courier/ontology.ttl> , <../courier/actions.ttl> , <rules.ttl> .    # the courier's drives fictive here (#1002)
 
 #  THE TOWER, A COMBINATION: hanoi's puzzle on the courier's grid. Neither domain knows the other,
 #  and this one says only how their facts relate — a disk is a parcel the van can carry, and what

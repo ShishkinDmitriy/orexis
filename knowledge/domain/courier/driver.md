@@ -23,6 +23,10 @@ Three facts about one driver, each with its own author and reader. `courier:driv
 boarding rewrites it. The relation runs to the driver rather than to a van because a driver boards
 another van, and what an agent can move goes with its driver.
 
+The actions themselves come in two documents, `actions.ttl` with the drive fictive and
+`actions.answered.ttl` with it a command to the van itself, which the world answers and the van's
+[position](/domain/courier/position.md) fix shows; a world imports the one it poses (#1002).
+
 # What the search does with it
 
 Four actions read it, and they hold it two ways:

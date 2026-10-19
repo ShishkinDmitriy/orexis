@@ -1,0 +1,13 @@
+@prefix : <http://example.org/orexis/world/lane#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:BeliefGraph .    # this document is one graph, and this is what it is
+<> orexis:ownedBy :courier_a .    # and whose it is — said here, never by the file's name
+
+#  WHERE THINGS STAND AS THE WORLD IS POSED — all but the van. Where the van is comes from outside, by its
+#  fix, and what comes from outside is stored when it arrives and never asserted: the first fix says the
+#  cell and the courier's transition keeps it current, so the agent plans nothing until its fix has
+#  reported. The parcel's and the driver's places are the agent's to move, and are posed.
+:parcel_a courier:at :c1_1 .
+:driver_a courier:aboard :van_a .

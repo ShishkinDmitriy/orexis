@@ -5,7 +5,8 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 
 <> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
-    owl:imports <../../domains/courier/ontology.ttl> .    # the domain this world poses
+    owl:imports <../../domains/courier/ontology.ttl> ,    # the domain this world poses
+                <../../domains/courier/actions.ttl> .      # with its drives fictive: nothing here answers a van (#1002)
 
 #  THE DISPATCHER: the courier's grid with TWO vans and two parcels, and one agent driving both
 #  (#567). The point of the world is independence by INSTANCE rather than by vocabulary: nothing

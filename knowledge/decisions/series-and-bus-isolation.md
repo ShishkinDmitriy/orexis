@@ -45,6 +45,7 @@ topics that capability needs:
 | `market:bidsIn M` | read M's `offerTopic` and `claimTopic/<me>`, write `bidTopic/<me>` |
 | `market:hosts M` | write `offerTopic` and `claimTopic/+`, read `bidTopic/+` and each bidder's `eventTopic` |
 | `actuation:hasActuator V` | write V's `commandTopic` |
+| `orexis:actsFor V`, where V listens for commands | write V's `commandTopic` (#1002: a van told its drives) |
 | `mqtt:eventTopic E` | write E |
 
 Read that against `packages/orexis-capability-market/bidding.py` and `hosting.py` and it is the same set of
