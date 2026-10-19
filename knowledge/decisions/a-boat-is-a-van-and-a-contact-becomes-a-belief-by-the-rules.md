@@ -24,8 +24,11 @@ description: >-
 > nothing a mover plans branches on. **And parked the same day, onto vans**: the sovereign set the
 > navigation layer and the nautical words aside until two minds meet, so the two-minds world is posed
 > with the courier's own words - vans on a single-track lane with a passing place, the canal's grid on
-> a road - and a drive the world answers is a command to the van itself. The contact, the sentinel,
-> the obstacle and the world replacing the dispatcher stand; #1003 and #1004 build them on that world.
+> a road - and a drive the world answers is a command to the van itself. A cell's number, which this
+> record's contact reads, was built and refused the same day: a position is the courier's own x and y,
+> two sensors of one fix, and a radar reports a relative vector the rules add to the agent's own
+> ([position](/domain/courier/position.md)). The contact, the obstacle and the world replacing the
+> dispatcher stand, in those words; #1003 and #1004 build them on that world.
 
 > **Decided 2026-10-19, and built by #1002, #1003 and #1004 in that order.** Until they close, the two-minds world is the
 > dispatcher, with the peer stood in by `_van_c` in its tests.

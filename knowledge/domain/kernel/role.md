@@ -33,7 +33,8 @@ before anything else the agent will run is. A fact a peer needs in order to addr
 different thing: a relation the world states publicly, as `market:hosts` says which agent to call
 about a venue. A role over something carries what it is over: an [observer](/domain/sensing/observer.md)
 the sensors it reads. The market's roles still keep the relation they were founded on beside them,
-until they carry their venue too.
+until they carry their venue too. One role is stated in the world rather than the self graph, because
+a peer finds the agent by it: the courier's [driver](/domain/courier/driver.md), which loads nothing.
 
 # Who declares which
 

@@ -1,9 +1,9 @@
 """The driver world (#903): the dispatcher's two vans and two parcels on two DISJOINT grids, and one
-driver the agent has (`courier:hasDriver`, #929), who sits in a van and must board the other before it
+driver the agent plays (`orexis:plays`, #929, #1002), who sits in a van and must board the other before it
 can move. "One van at a time" is world state here and not a mechanism: a drive's, a pick's and a
-drop's preconditions need the driver aboard the van and the agent to have the driver
+drop's preconditions need the driver aboard the van and the agent to play the driver
 (`domains/courier/actions.ttl`, #931 for the pick and the drop), a boarding
-moves a driver the agent has between vans (`domains/courier/driver.ttl`), and every plan respects the
+moves a driver the agent plays between the vans it drives (`domains/courier/driver.ttl`), and every plan respects the
 limit by construction. What this world is held to is what was MEASURED on it:
 
 - it boots and is possible: one scope, the driver aboard van A, and no constraint the present
@@ -119,13 +119,13 @@ SELECT ?a ?van ?parcel ?driver WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph
 #  ON A PARCEL OR CARRIES ONE (#931) — van A on parcel A, van B carrying parcel B, van C on parcel C, van D
 #  carrying parcel D — so each search's root poses a pick or a drop of every van. Both agents believe
 #  where all four vans, all four parcels and both drivers stand, as #922 would have them sensed, and the
-#  peer desires what the dispatcher does; the world states whose each driver is, `courier:hasDriver`.
-_PEER_WORLD = ':driver a courier:Driver ; rdfs:label "the driver" .'
+#  peer desires what the dispatcher does; the world states whose each driver is, `orexis:plays`.
+_PEER_WORLD = ':driver a courier:Driver ; courier:drives :van_a , :van_b ; rdfs:label "the driver" .'
 _PEERS = (_PEER_WORLD + '\n'
-          ':peer a orexis:Agent ; orexis:localId "peer" ; courier:hasDriver :peer_driver .\n'
-          ':peer_driver a courier:Driver ; rdfs:label "the peer\'s driver" .\n'
-          ':van_c a courier:Van ; courier:drivenBy :peer_driver ; rdfs:label "van C, the peer\'s, on the first grid" .\n'
-          ':van_d a courier:Van ; courier:drivenBy :peer_driver ; rdfs:label "van D, the peer\'s, on the second grid" .\n'
+          ':peer a orexis:Agent ; orexis:localId "peer" ; orexis:plays :peer_driver .\n'
+          ':peer_driver a courier:Driver ; courier:drives :van_c , :van_d ; rdfs:label "the peer\'s driver" .\n'
+          ':van_c a courier:Van ; rdfs:label "van C, the peer\'s, on the first grid" .\n'
+          ':van_d a courier:Van ; rdfs:label "van D, the peer\'s, on the second grid" .\n'
           ':parcel_c a courier:Parcel ; courier:destination :c3_3 ; rdfs:label "the parcel under van C" .\n'
           ':parcel_d a courier:Parcel ; courier:destination :g13_3 ; rdfs:label "the parcel aboard van D" .\n')
 _STAND = (":driver courier:aboard :van_a .\n:van_a courier:at :c0_0 .\n:parcel_a courier:at :c0_0 .\n"
@@ -295,7 +295,7 @@ def test_of_two_agents_in_one_world_neither_search_admits_an_action_with_the_oth
     driver believed where it stands by both, each agent booted from the one set of documents as the boot
     would for it alone. Each agent's search admits drives, picks and drops of the van its own driver is
     aboard and a boarding of its own other van, and NOTHING of the other's: the peer's driver is aboard
-    van C in the dispatcher's beliefs as much as in its own. Before `courier:hasDriver` the dispatcher's
+    van C in the dispatcher's beliefs as much as in its own. Before #929 the dispatcher's
     search admitted drives of van C and van C's driver boarding van D, the drive's and the boarding's
     preconditions naming no agent; and until #931 it admitted loading parcel C into van C and setting
     parcel D down from van D, the pick's and the drop's naming no driver at all.

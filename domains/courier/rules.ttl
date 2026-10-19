@@ -1,0 +1,61 @@
+@prefix : <http://example.org/orexis/courier#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a sh:RulesGraph .    # this document is one graph, and this is what it is
+
+#  WHERE A VAN STANDS, CONCLUDED OF WHAT ITS INSTRUMENTS GAVE (#1002). A position fix is two sensors hosted
+#  by the van, one observing `courier:Column` and one `courier:Row`, each reporting a number; a transition is
+#  handed its one arrival and the agent's own derived state (#947), so the fix is read in two orders:
+#  order 0, the arriving coordinate replaces the one held of the van, `courier:x` or `courier:y`; order 1,
+#  the cell authored at the two coordinates now held replaces the cell the van was at. The first fix
+#  leaves the van nowhere until its second coordinate lands, a reading later, and coordinates no cell is
+#  authored at leave the cell before standing, as a state does, until a fix says where else. The feature of
+#  interest is the van the sensor is hosted by, or, where the sensor observes a contact standing for a van
+#  in range (#1003), what the contact `isSampleOf` - a radar's relative vector is added to the agent's own
+#  van's coordinates in the same shape. Imported by `actions.answered.ttl`, the one document of the
+#  courier's whose drive a fix answers, so a world with the fictive drive and no belief package never loads
+#  a rules graph it has no reader for.
+
+:columnRule a belief:Transition ; sh:order 0 ;
+    rdfs:label "the column a van stands in, concluded of its fix" ;
+    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { ?van courier:x ?was }
+        INSERT { ?van courier:x ?x }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty courier:Column ; sosa:hasSimpleResult ?n ;
+                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?van .
+            ?van a courier:Van .
+            BIND(xsd:integer(?n) AS ?x)
+            OPTIONAL { ?van courier:x ?was }
+        }""" .
+
+:rowRule a belief:Transition ; sh:order 0 ;
+    rdfs:label "the row a van stands in, concluded of its fix" ;
+    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { ?van courier:y ?was }
+        INSERT { ?van courier:y ?y }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty courier:Row ; sosa:hasSimpleResult ?n ;
+                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?van .
+            ?van a courier:Van .
+            BIND(xsd:integer(?n) AS ?y)
+            OPTIONAL { ?van courier:y ?was }
+        }""" .
+
+:cellRule a belief:Transition ; sh:order 1 ;
+    rdfs:label "the cell a van stands on, the one authored at the coordinates held" ;
+    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+        DELETE { ?van courier:at ?before }
+        INSERT { ?van courier:at ?cell }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:observedProperty ?coordinate ;
+                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?van .
+            VALUES ?coordinate { courier:Column courier:Row }
+            ?van a courier:Van ; courier:x ?x ; courier:y ?y .
+            ?cell a courier:Cell ; courier:x ?cx ; courier:y ?cy .
+            FILTER(?cx = ?x && ?cy = ?y)
+            OPTIONAL { ?van courier:at ?before }
+        }""" .

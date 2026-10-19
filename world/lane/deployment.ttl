@@ -1,0 +1,10 @@
+@prefix : <http://example.org/orexis/world/lane#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix schema: <https://schema.org/> .
+
+<> a onboarding:DeploymentGraph .    # this document is one graph, and this is what it is
+
+#  THE BROKER'S ADDRESS, asserted: the pool's lowest free slot is the sensing world's, whose board is
+#  flashed with it, and a world sorting before it would take it from a fresh derivation; so the lane
+#  pins its own, beside the allotment's, the greenhouse's and the terrace's.
+:broker schema:url "mqtt://localhost:1891" , "mqtts://localhost:8891" .

@@ -1,0 +1,89 @@
+@prefix : <http://example.org/orexis/world/lane#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sim: <http://example.org/orexis/sim#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
+    owl:imports <../../domains/courier/ontology.ttl> ,         # the domain this world poses
+                <../../domains/courier/actions.answered.ttl> , # with its drives answered by the world, told to the van
+                <../../domains/courier/driver.ttl> ,           # and the boarding, since a van has a driver
+                <../../domains/sim/ontology.ttl> .             # the simulator plays the van and its fix
+
+#  THE LANE (a-boat-is-a-van-and-a-contact-becomes-a-belief-by-the-rules, parked onto vans; #1002). The
+#  world two minds will meet in: a single-track lane with one passing place, open road two cells wide at
+#  each end, and vans whose drives the world answers. This document is the first slice of it, one van:
+#  its drive is a command to the van itself, the simulator has the van on the cell forty-five seconds on,
+#  the van's position fix reports the cell, and the courier's transition concludes where the van is. The
+#  second van, the contact that sees it and the two minds come with #1003 and #1004.
+#
+#  THE GRID: columns 0 and 1 and columns 5 and 6 are open road, three rows deep; columns 2 to 4 are the
+#  lane, row 1 alone, and (3, 2) is the passing place. A cell is its two coordinates, which is what the
+#  van's fix reports and what the van is told: an instrument gives numbers, and the coordinates are the
+#  courier's own (knowledge/domain/courier/position.md).
+#
+#  THE VAN: `van_a` stands at the western end with its driver aboard; its parcel waits a cell east and is
+#  owed at the eastern end. The agent plays the driver, a role carrying the van it drives, stated in this
+#  document because a peer finds the agent to ask by it (#929, #1002); it acts for the van, reads its
+#  position fix and commands it; the fix
+#  reports every ten seconds and the van is on the cell it is told forty-five seconds on, inside the
+#  drive's band of thirty to sixty. Where the van stands is never posed: its first fix says
+#  (knowledge/domain/courier/position.md).
+
+:courier_a a orexis:Agent ;
+    orexis:localId "courier_a" ;
+    orexis:actsFor :van_a ;
+    orexis:plays :driver_a ;    # the role, stated here and not in its self graph, since a peer finds the agent by it
+    rdfs:comment "The courier of van A: a mind with the courier's actions over one van, through the driver it plays." .
+
+:driver_a a courier:Driver ; courier:drives :van_a ; rdfs:label "the driver of van A" .
+:van_a a courier:Van ;
+    sim:simulatedBy [ a sim:Model ; sim:delayS 45 ] ;    # told a cell, it is there forty-five seconds on
+    rdfs:label "van A" .
+:parcel_a a courier:Parcel ; courier:destination :c6_1 ;
+    rdfs:label "the parcel owed at the eastern end" .
+
+#  The van's position fix, two sensors hosted by the van and played by the simulator, the column and the
+#  row of the van's cell, exactly — a fix that reports the same cell twice is a van that has not moved, not
+#  a stuck instrument, so its agent lets it repeat (beliefs/courier_a.self.ttl). Both in one message of the
+#  van's board, at `/x` and `/y`.
+:fix_a_column a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 0 ; sim:jitter 0 ] ;
+    sosa:isHostedBy :van_a ;
+    sosa:observes courier:Column ;
+    sensing:readingPointer "/x" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+:fix_a_row a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 1 ; sim:jitter 0 ] ;
+    sosa:isHostedBy :van_a ;
+    sosa:observes courier:Row ;
+    sensing:readingPointer "/y" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+
+#  Western road
+:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
+:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
+:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .
+:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 .
+:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 .
+:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 .
+#  The lane, and its passing place
+:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 .
+:c3_1 a courier:Cell ; courier:x 3 ; courier:y 1 .
+:c3_2 a courier:Cell ; courier:x 3 ; courier:y 2 .
+:c4_1 a courier:Cell ; courier:x 4 ; courier:y 1 .
+#  Eastern road
+:c5_0 a courier:Cell ; courier:x 5 ; courier:y 0 .
+:c5_1 a courier:Cell ; courier:x 5 ; courier:y 1 .
+:c5_2 a courier:Cell ; courier:x 5 ; courier:y 2 .
+:c6_0 a courier:Cell ; courier:x 6 ; courier:y 0 .
+:c6_1 a courier:Cell ; courier:x 6 ; courier:y 1 .
+:c6_2 a courier:Cell ; courier:x 6 ; courier:y 2 .

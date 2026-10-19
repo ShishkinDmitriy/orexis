@@ -6,6 +6,7 @@
 
 <> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
     owl:imports <../../domains/courier/ontology.ttl> ,    # the domain this world poses
+                <../../domains/courier/actions.ttl> ,      # with its drives fictive: nothing here answers a van (#1002)
                 <../../domains/courier/driver.ttl> .      # and the boarding, since this world has a driver
 
 #  THE DRIVER (#903): the dispatcher's two vans and two parcels, and ONE DRIVER the agent has,
@@ -21,19 +22,20 @@
 #  the driver is what makes them one plan: drive one van, board the other, drive it
 #  (`constraints.ttl` says how the derivation is told so).
 
-#  WHOSE THE DRIVER IS, `courier:hasDriver` (#929): the world's, as a grower's actuator is, since it is
-#  what admits a drive or a boarding in the dispatcher's search and what a peer would find it by.
-#  Without it the driver is nobody's, and nothing here moves.
+#  WHOSE THE DRIVER IS: a ROLE the dispatcher plays, `orexis:plays` (#929, #1002), stated here in the world
+#  and not in the self graph, since it is what admits a drive or a boarding in the dispatcher's search and
+#  what a peer would find it by; it loads nothing. The role carries the vans it drives. Without it the
+#  driver is nobody's, and nothing here moves.
 
 :dispatcher a orexis:Agent ;
     orexis:localId "dispatcher" ;
-    courier:hasDriver :driver ;
+    orexis:plays :driver ;
     rdfs:comment "The dispatcher: a mind with the courier's actions and one driver to act through, acting for no subject and owing nobody." .
 
-:driver a courier:Driver ; rdfs:label "the driver" .
+:driver a courier:Driver ; courier:drives :van_a , :van_b ; rdfs:label "the driver" .
 
-:van_a a courier:Van ; courier:drivenBy :driver ; rdfs:label "van A, on the first grid" .
-:van_b a courier:Van ; courier:drivenBy :driver ; rdfs:label "van B, on the second grid" .
+:van_a a courier:Van ; rdfs:label "van A, on the first grid" .
+:van_b a courier:Van ; rdfs:label "van B, on the second grid" .
 
 :parcel_a a courier:Parcel ; courier:destination :c0_3 ;
     rdfs:label "the parcel owed at the top of the first grid's first column" .

@@ -18,8 +18,11 @@ description: >-
 ---
 
 > **Parked 2026-10-19, the day it was decided**, until two minds meet on the van world (#922, #923):
-> the layer, the mover as a role and the nautical words wait on #1007 and #1008, and the one piece taken
-> now is §5's command to the body itself, a drive the world answers sent to the van and not to a helm.
+> the layer and the nautical words wait on #1007 and #1008, and two pieces are taken now in the courier's
+> words (#1002): §5's command to the body itself, a drive the world answers sent to the van and not to a
+> helm, and §3's role, the driver an agent plays, stated by the world and carrying the vans it drives.
+> A place's number, which §4 and §5 speak of, was built and refused the same day: a position is the
+> grid's own coordinates, read by two sensors, and a command carries them ([position](/domain/courier/position.md)).
 > **Decided 2026-10-19, and built by #1007 and #1008 in that order**, the second reworking what #1002
 > built as the canal's helm. Until the first lands the tree speaks the courier's words, van, cell and
 > driver, and the pages under `knowledge/domain/courier/` describe it as it is.

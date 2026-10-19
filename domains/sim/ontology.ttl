@@ -46,3 +46,8 @@
     count of what the simulator publishes, 0.0001; a model stating nought publishes the reading exactly,
     and is a stuck instrument to sensing. The draw is seeded, and the number published is never the one
     published before, which is the premise held to and not left to chance.""" .
+
+:delayS a owl:DatatypeProperty ; rdfs:domain :Model ; rdfs:range xsd:decimal ; rdfs:label "delay, seconds" ;
+    rdfs:comment """How long after a van is told a cell its position fix shows it there: the simulator's stand-in
+    for the road, stated on the van's model inside the drive's landing band (#1002). Nought where the model
+    states none, so the fix shows the cell at its next reading.""" .
