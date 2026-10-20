@@ -755,6 +755,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A courier's parcels are its own beliefs, so two couriers want their own deliveries** — stated in each
   agent's state document and never in the world, since a desire over every parcel in a shared world would
   have each mind deliver the other's (#1004, `world/lane/`).
+- **A road is a domain and a world is who drives on it** — the cells and what no van on them does are
+  `domains/road/`, which `world/lane/` and `world/layby/` import under their own initial states; the grid is
+  infinite, a cell any pair of coordinates, the road the part an agent knows, and a neighbour is computed
+  from the coordinates, so no edge is derived (#1012, refused).
 - **A radar slot is the obstacle, typed by the world, and its cell is the one belief that changes** —
   nothing types anything at runtime, and a world holds "no van where an obstacle is" as a constraint,
   beside "no cell holds two vans" (#1003).

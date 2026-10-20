@@ -11,24 +11,19 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 
 <> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
-    owl:imports <../../domains/courier/ontology.ttl> ,         # the domain this world poses
+    owl:imports <../../domains/road/ontology.ttl> ,            # the road this world is posed on, in the courier's words
                 <../../domains/courier/actions.answered.ttl> , # with its drives answered by the world, told to the van
                 <../../domains/courier/driver.ttl> ,           # and the boarding, since a van has a driver
                 <../../domains/sim/ontology.ttl> .             # the simulator plays the van and its fix
 
-#  THE LANE (a-boat-is-a-van-and-a-contact-becomes-a-belief-by-the-rules, parked onto vans; #1002). The
-#  world two minds will meet in: a single-track lane with one passing place, open road two cells wide at
-#  each end, and vans whose drives the world answers. This document is the first slice of it, one van:
-#  its drive is a command to the van itself, the simulator has the van on the cell forty-five seconds on,
-#  the van's position fix reports the cell, and the courier's transition concludes where the van is. The
-#  second van, the contact that sees it and the two minds come with #1003 and #1004.
+#  THE LANE (a-boat-is-a-van-and-a-contact-becomes-a-belief-by-the-rules, parked onto vans; #1002, #1004).
+#  Two minds on one road: the road (domains/road/) is the single-track lane with one passing place and open
+#  road two cells wide at each end, and what no van on it does; this world is who drives on it and where
+#  everything starts. Each van's drive is a command to the van itself, the simulator has the van on the cell
+#  forty-five seconds on, the van's position fix reports the cell, and the courier's transition concludes
+#  where the van is. The same road with one courier and a parked van is `world/layby/`.
 #
-#  THE GRID: columns 0 and 1 and columns 5 and 6 are open road, three rows deep; columns 2 to 4 are the
-#  lane, row 1 alone, and (3, 2) is the passing place. A cell is its two coordinates, which is what the
-#  van's fix reports and what the van is told: an instrument gives numbers, and the coordinates are the
-#  courier's own (knowledge/domain/courier/position.md).
-#
-#  THE VAN: `van_a` stands at the western end with its driver aboard; its parcel waits a cell east and is
+#  THE VANS: `van_a` stands at the western end with its driver aboard; its parcel waits a cell east and is
 #  owed at the eastern end; a second courier, B, acts for van B on the eastern road, its parcel already where
 #  it is owed, so it stands and watches (#1004; the passing is #923's). Each van carries a receiver standing
 #  for the other and one radar slot standing for whatever else comes within two cells - the contact (#1003):
@@ -36,10 +31,9 @@
 #  courier's parcels are its own beliefs (beliefs/<agent>.state.ttl), so each wants its own deliveries and
 #  knows nothing of the other's. The agent plays the driver, a role carrying the van it drives, stated in this
 #  document because a peer finds the agent to ask by it (#929, #1002); it acts for the van, reads its
-#  position fix and commands it; the fix
-#  reports every ten seconds and the van is on the cell it is told forty-five seconds on, inside the
-#  drive's band of thirty to sixty. Where the van stands is never posed: its first fix says
-#  (knowledge/domain/courier/position.md).
+#  position fix and commands it; the fix reports every ten seconds and the van is on the cell it is told
+#  forty-five seconds on, inside the drive's band of thirty to sixty. Where the van stands is never posed:
+#  its first fix says (knowledge/domain/courier/position.md).
 
 :courier_a a orexis:Agent ;
     orexis:localId "courier_a" ;
@@ -162,23 +156,3 @@
     sensing:readingPointer "/van_b/contact_2/y" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
-
-#  Western road
-:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
-:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
-:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .
-:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 .
-:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 .
-:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 .
-#  The lane, and its passing place
-:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 .
-:c3_1 a courier:Cell ; courier:x 3 ; courier:y 1 .
-:c3_2 a courier:Cell ; courier:x 3 ; courier:y 2 .
-:c4_1 a courier:Cell ; courier:x 4 ; courier:y 1 .
-#  Eastern road
-:c5_0 a courier:Cell ; courier:x 5 ; courier:y 0 .
-:c5_1 a courier:Cell ; courier:x 5 ; courier:y 1 .
-:c5_2 a courier:Cell ; courier:x 5 ; courier:y 2 .
-:c6_0 a courier:Cell ; courier:x 6 ; courier:y 0 .
-:c6_1 a courier:Cell ; courier:x 6 ; courier:y 1 .
-:c6_2 a courier:Cell ; courier:x 6 ; courier:y 2 .

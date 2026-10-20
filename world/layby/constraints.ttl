@@ -1,0 +1,11 @@
+@prefix : <http://example.org/orexis/world/layby#> .
+@prefix road: <http://example.org/orexis/road#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+
+<> a planning:ConstraintGraph .    # this document is one graph, and this is what it is
+
+#  WHO HOLDS THE ROAD'S CONSTRAINTS (domains/road/constraints.ttl): the one courier, so it plans its van
+#  neither onto the parked van's cell nor onto an obstacle's. The road states what no van does and knows no
+#  agent; which agents hold it is this world's to say.
+
+:courier_a planning:holds road:no_cell_holds_two_vans , road:no_van_on_an_obstacle .

@@ -20,10 +20,10 @@ runtime, since the slot is the obstacle and its cell is the one belief that chan
 # What a plan does with it
 
 A world states, beside "no cell holds two vans", that no van stands where an obstacle is, a
-`planning:Constraint` and not a desire (`world/lane/constraints.ttl`). The search marks every possible
+`planning:Constraint` and not a desire (`domains/road/constraints.ttl`, held by each world's agents). The search marks every possible
 world that puts the van on the obstacle's cell impossible, so a plan goes round it, and a slot filled
 while a plan is walking is a belief that makes the plan's next world impossible, which reopens it
-(#921). In the lane's tests a tree on the direct way to the parcel sends the van round through the
+(#921). In the layby's tests a tree on the direct way to the parcel sends the van round through the
 next column, two drives longer, and the tree is believed nowhere again once the van is more than two
 cells from it.
 

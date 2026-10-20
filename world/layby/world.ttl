@@ -1,0 +1,105 @@
+@prefix : <http://example.org/orexis/world/layby#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sim: <http://example.org/orexis/sim#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
+@prefix schema: <https://schema.org/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> a orexis:WorldGraph ;    # this document is one graph, and this is what it is
+    owl:imports <../../domains/road/ontology.ttl> ,            # the road this world is posed on, in the courier's words
+                <../../domains/courier/actions.answered.ttl> , # with its drives answered by the world, told to the van
+                <../../domains/courier/driver.ttl> ,           # and the boarding, since a van has a driver
+                <../../domains/sim/ontology.ttl> .             # the simulator plays the van and its fix
+
+#  THE LAYBY (a-boat-is-a-van-and-a-contact-becomes-a-belief-by-the-rules, parked onto vans; #1002, #1003).
+#  One mind on the road and a van in its way: the road (domains/road/) is the single-track lane with one
+#  passing place and open road two cells wide at each end, and what no van on it does; this world is one
+#  courier driving on it and a second van parked on the eastern road by a driver nobody here plays - the same
+#  road `world/lane/` poses two couriers on, under a different initial state. The courier's drive is a
+#  command to the van itself, the simulator has the van on the cell forty-five seconds on, the van's position
+#  fix reports the cell, and the courier's transition concludes where the van is.
+#
+#  THE VANS: `van_a` stands at the western end with its driver aboard; its parcel waits a cell east and is
+#  owed at the eastern end. `van_b` stands parked, with no fix of its own and no courier: the simulator has it
+#  where its model says, and the courier's van carries a receiver standing for it and one radar slot standing
+#  for whatever else comes within two cells - the contact (#1003): what is seen is believed at the cell its
+#  vector lands on, and nothing is believed of what is beyond. The agent plays the driver, a role carrying the
+#  van it drives, stated in this document because a peer finds the agent to ask by it (#929, #1002); it acts
+#  for the van, reads its position fix and commands it; the fix reports every ten seconds and the van is on
+#  the cell it is told forty-five seconds on, inside the drive's band of thirty to sixty. Where van A stands
+#  is never posed: its first fix says (knowledge/domain/courier/position.md).
+
+:courier_a a orexis:Agent ;
+    orexis:localId "courier_a" ;
+    orexis:actsFor :van_a ;
+    orexis:plays :driver_a ;    # the role, stated here and not in its self graph, since a peer finds the agent by it
+    rdfs:comment "The courier of van A: a mind with the courier's actions over one van, through the driver it plays." .
+
+:driver_a a courier:Driver ; courier:drives :van_a ; rdfs:label "the driver of van A" .
+:van_a a courier:Van ;
+    sim:simulatedBy [ a sim:Model ; sim:delayS 45 ] ;    # told a cell, it is there forty-five seconds on
+    rdfs:label "van A" .
+:driver_b a courier:Driver ; courier:drives :van_b ; rdfs:label "the driver of van B, whom nobody here plays" .
+:van_b a courier:Van ;
+    sim:simulatedBy [ a sim:Model ; sim:x 6 ; sim:y 0 ] ;    # parked on the eastern road, with no fix of its own
+    rdfs:label "van B, parked" .
+
+#  The van's position fix, two sensors hosted by the van and played by the simulator, the column and the
+#  row of the van's cell, exactly — a fix that reports the same cell twice is a van that has not moved, not
+#  a stuck instrument, so its agent lets it repeat (beliefs/<agent>.self.ttl). Every sensor of the world
+#  rides in the simulator's one message, each at a pointer under the van.
+:fix_a_column a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 0 ; sim:jitter 0 ] ;    # van A column 0
+    sosa:isHostedBy :van_a ;
+    sosa:observes courier:Column ;
+    sensing:readingPointer "/van_a/fix/x" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+:fix_a_row a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 1 ; sim:jitter 0 ] ;    # van A row 1
+    sosa:isHostedBy :van_a ;
+    sosa:observes courier:Row ;
+    sensing:readingPointer "/van_a/fix/y" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+
+#  The contacts the van carries (knowledge/domain/courier/contact.md): a receiver standing for the parked
+#  van, as AIS demultiplexes by vessel, and one radar slot standing for nothing named, an obstacle while
+#  something is in it. Each is two sensors, the contact's vector from the carrying van, seeing two cells;
+#  the simulator plays them from the true positions.
+:contact_b a sosa:Sample ; sosa:isSampleOf :van_b ; sosa:isHostedBy :van_a ; rdfs:label "van B as van A's receiver has it" .
+:receiver_b_column a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ; sim:radius 2 ] ;
+    sosa:isHostedBy :contact_b ;
+    sosa:observes courier:RelativeColumn ;
+    sensing:readingPointer "/van_a/van_b/x" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+:receiver_b_row a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
+    sosa:isHostedBy :contact_b ;
+    sosa:observes courier:RelativeRow ;
+    sensing:readingPointer "/van_a/van_b/y" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+
+:contact_1 a sosa:Sample , courier:Obstacle ; sosa:isHostedBy :van_a ; rdfs:label "van A's one radar slot" .
+:radar_1_column a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ; sim:radius 2 ] ;
+    sosa:isHostedBy :contact_1 ;
+    sosa:observes courier:RelativeColumn ;
+    sensing:readingPointer "/van_a/contact_1/x" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+:radar_1_row a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
+    sosa:isHostedBy :contact_1 ;
+    sosa:observes courier:RelativeRow ;
+    sensing:readingPointer "/van_a/contact_1/y" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .

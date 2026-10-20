@@ -37,15 +37,15 @@ the model's bounds bound the reading, not the number.
 A VAN IS PLAYED AS A BODY THAT MOVES ON COMMAND (#1002): a `courier:Van` marked `sim:simulatedBy`, told
 `{"to": {"x": <column>, "y": <row>}}` on the topic it listens to, is on that cell `sim:delayS` later, and
 the position fix it hosts — two sensors observing `courier:Column` and `courier:Row` — reports the
-coordinates from then on. The grid is read off the world, each cell's coordinates, and a van refuses a
-cell that is no neighbour of the one it stands on, as a road would; so the pilot never writes its own van's cell, and
-there is a true position for a contact to be played from.
+coordinates from then on. The grid is infinite, and a van refuses only a cell that is no neighbour of the
+one it stands on; the cells the world's agents know are read off it for where out of range is pretended to
+be. So the pilot never writes its own van's cell, and there is a true position for a contact to be played from.
 
 A CONTACT IS PLAYED FROM THE TRUE POSITIONS (#1003): a `sosa:Sample` a van carries, with two sensors
 observing `courier:RelativeColumn` and `courier:RelativeRow`, reports the vector from the carrying van
 to what it stands for - the peer it `isSampleOf`, or, standing for nothing named, the nearest thing no
 receiver of that van identifies - while that is within the sensors' model's `sim:radius`, |dx| + |dy|
-in cells; beyond it, a vector landing one cell past the grid's far corner, which no cell is authored at.
+in cells; beyond it, a vector landing one cell past the far corner of the known cells, where no agent knows one.
 A thing's true position is its fix's if it has one, else where its model says it stands (`sim:x`, `sim:y`).
 """
 
@@ -117,8 +117,10 @@ SELECT ?van ?column ?row ?delay WHERE {{
   ?row a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes <{COURIER}Row> .
   OPTIONAL {{ ?model <{SIM}delayS> ?delay }} }}"""
 
-#  THE GRID AS THE WORLD STATES IT: each cell's coordinates, so a van refuses a cell that is no neighbour of
-#  the one it stands on, as a road would.
+#  THE CELLS THE WORLD'S AGENTS KNOW: the grid is infinite and a cell any pair of coordinates, so a van is
+#  driven to any neighbour of the one it stands on, on the road or off it, and what keeps it on the road is
+#  its courier planning over the cells it knows; the cells are read only for where a contact out of range is
+#  pretended to be, past the far corner of them, where no agent knows a cell.
 _CELLS_Q = f"""SELECT ?x ?y WHERE {{ ?cell a <{COURIER}Cell> ; <{COURIER}x> ?x ; <{COURIER}y> ?y }}"""
 
 #  EVERY CONTACT PLAYED (#1003): the van carrying it, the peer it stands for where it stands for one, its two
@@ -224,12 +226,11 @@ class Simulator:
     def _drive(self, van: str, to: tuple[int, int]) -> None:
         """A van told a cell's coordinates: it is there `sim:delayS` later, where the cell is a neighbour of
         the one it stands on — |dx| + |dy| = 1, the drive's own rule — and it refuses anything else in the
-        log, as a road would a cell it cannot reach in one drive. A van already under way is told again."""
+        log, as a van cannot reach a cell two away in one drive. The grid is infinite, so a neighbour off the
+        road is driven to like any other: the agent, knowing only the road, never asks for one. A van already
+        under way is told again."""
         column, row, delay = self.vans[van]
         here = (int(round(self.sensors[column]["value"])), int(round(self.sensors[row]["value"])))
-        if to not in self.cells or here not in self.cells:
-            log.error("%s: told %s, which is no cell of this world", van.rsplit("#", 1)[-1], to)
-            return
         if abs(to[0] - here[0]) + abs(to[1] - here[1]) != 1:
             log.error("%s: told %s from %s, which is no neighbour", van.rsplit("#", 1)[-1], to, here)
             return
@@ -246,8 +247,8 @@ class Simulator:
     def _sight(self) -> None:
         """Every contact's sensors set to the vector from the carrying van to what the contact stands for —
         its peer, or the nearest thing no receiver of that van identifies, slots taking the nearest first —
-        where that is within the radius, and to a vector landing past the grid's far corner where it is not,
-        or where there is nothing to stand for."""
+        where that is within the radius, and to a vector landing past the far corner of the cells the world's
+        agents know where it is not, or where there is nothing to stand for."""
         beyond = (max(x for x, _ in self.cells) + 1, max(y for _, y in self.cells) + 1) if self.cells else (1, 1)
         identified = {(van, peer) for van, peer, *_ in self.contacts.values() if peer}
         taken: dict[str, set[str]] = {}

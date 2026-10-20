@@ -1,5 +1,6 @@
 @prefix : <http://example.org/orexis/world/lane#> .
 @prefix courier: <http://example.org/orexis/courier#> .
+@prefix road: <http://example.org/orexis/road#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
@@ -9,7 +10,7 @@
 #  WHAT COURIER B BELIEVES AS THE WORLD IS POSED: its own parcel, already where it is owed, so it has nothing
 #  to deliver and stands watching (#1004; the passing is #923's); the drivers aboard their vans; and no van's
 #  cell, which its fix and its contacts say.
-:parcel_b a courier:Parcel ; courier:destination :c6_0 ; rdfs:label "the parcel already at the eastern road" .
-:parcel_b courier:at :c6_0 .
+:parcel_b a courier:Parcel ; courier:destination road:c6_0 ; rdfs:label "the parcel already at the eastern road" .
+:parcel_b courier:at road:c6_0 .
 :driver_b courier:aboard :van_b .
 :driver_a courier:aboard :van_a .

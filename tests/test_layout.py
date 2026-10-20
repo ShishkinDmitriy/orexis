@@ -577,7 +577,7 @@ def test_the_firmware_generator_reads_the_hardware_beside_the_society():
 
 # --- one broker, one address: onboarding refuses what it would otherwise merge ---------------
 
-_BUS_WORLDS = ("allotment", "greenhouse", "lane", "sensing", "terrace")
+_BUS_WORLDS = ("allotment", "greenhouse", "lane", "layby", "sensing", "terrace")
 _DOMAINS = (REPO_ROOT / "domains").as_uri()
 
 
