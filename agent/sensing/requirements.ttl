@@ -27,10 +27,13 @@
         sh:message "an observer that reads no sensor: it would observe nothing" ;
         sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this sensing:sensor ?sensor } }""" ] ,
       [ a sh:SPARQLConstraint ;
-        sh:message "an observer reads a sensor that does not report to it: none mounted on what it acts for, a sample of it, a sample it carries, or a place containing it" ;
+        sh:message "an observer reads a sensor that does not report to it: none mounted on what it acts for, a sample it carries, a sample of it that nothing carries, or a place containing it" ;
         sh:select """SELECT $this WHERE { ?me orexis:plays $this . $this sensing:sensor ?sensor
             FILTER NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-                                ?sensor sosa:isHostedBy/(sosa:isSampleOf|sosa:isHostedBy)? ?host } }""" ] .
+                                { ?sensor sosa:isHostedBy ?host }
+                                UNION { ?sensor sosa:isHostedBy/sosa:isHostedBy ?host }
+                                UNION { ?sensor sosa:isHostedBy ?sample . ?sample sosa:isSampleOf ?host
+                                        FILTER NOT EXISTS { ?sample sosa:isHostedBy ?carrier } } } }""" ] .
 
 #  A SENSOR STATES ITS CADENCE, ONE `ssn-system:Frequency`: when its next reading is due is read off it
 #  (`cadence.cadence_of`), a silence is a limit of cadences, and a board's heartbeat is it. Stating none

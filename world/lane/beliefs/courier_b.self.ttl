@@ -1,0 +1,16 @@
+@prefix : <http://example.org/orexis/world/lane#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+
+<> a orexis:SelfGraph .    # this document is one graph, and this is what it is
+
+#  THE COURIER OF VAN B: the same mind as A's over the other van, reading its fix and its contacts; its fix
+#  repeats a cell for as long as the van stands, which is a van standing and no stuck instrument.
+:courier_b a orexis:Self ;
+    orexis:plays [ a planning:Planner ] ,
+                 [ a execution:Executor ] ,
+                 [ a sensing:Observer ; sensing:stuckAfter 100000 ;
+                   sensing:sensor :fix_b_column , :fix_b_row , :receiver_a_column , :receiver_a_row , :radar_2_column , :radar_2_row ] .
+:courier_b planning:budget 256 .

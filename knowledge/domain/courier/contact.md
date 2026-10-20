@@ -25,8 +25,8 @@ identity is structural:
   by the world, and that is all a plan needs of it.
 
 An observer role reads a contact's sensors as it reads the van's own, and onboarding admits them: a
-sensor on a sample the subject carries reports to the agent, the third way a sensor can
-([observer](/domain/sensing/observer.md)).
+sensor on a sample the subject carries reports to the agent that carries it, and to no agent of what it
+stands for ([observer](/domain/sensing/observer.md)).
 
 # What the rules make of it
 

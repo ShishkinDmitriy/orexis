@@ -750,7 +750,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A contact is a sample a van carries, its sensors report an offset, and out of range is off the grid** —
   the rules add the carrying van's held coordinates and find the cell, so a peer or an obstacle beyond
   the radius lands on no cell and is believed nowhere by geometry, never by a sentinel or a silence; a
-  sensor on a sample the subject carries reports to the agent, the third way (#1003, contact, obstacle).
+  sensor on a sample the subject carries reports to the agent carrying it, never to the agent of what it
+  stands for (#1003, #1004, contact, obstacle).
+- **A courier's parcels are its own beliefs, so two couriers want their own deliveries** — stated in each
+  agent's state document and never in the world, since a desire over every parcel in a shared world would
+  have each mind deliver the other's (#1004, `world/lane/`).
 - **A radar slot is the obstacle, typed by the world, and its cell is the one belief that changes** —
   nothing types anything at runtime, and a world holds "no van where an obstacle is" as a constraint,
   beside "no cell holds two vans" (#1003).

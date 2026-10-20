@@ -10,9 +10,12 @@
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
+:readings_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "sensors/simulation/reading" ;
+    mqtt4ssn:matchesTopic :readings .
 :van_a_commands_filter a mqtt4ssn:TopicFilter ;
     mqtt4ssn:hasFilterPattern "actuators/van_a/command" ;
     mqtt4ssn:matchesTopic :van_a_commands .
-:van_a_readings_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/simulation/reading" ;
-    mqtt4ssn:matchesTopic :van_a_readings .
+:van_b_commands_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "actuators/van_b/command" ;
+    mqtt4ssn:matchesTopic :van_b_commands .
