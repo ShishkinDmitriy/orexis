@@ -62,7 +62,7 @@ import logging
 
 from agent.store import DocumentRefused
 
-from . import certs, compose, dashboards, influx, installation, mqtt, reading, topics
+from . import certs, compose, dashboards, grid, influx, installation, mqtt, reading, topics
 from .worlds import world_dir, worlds
 
 log = logging.getLogger("onboard")
@@ -87,6 +87,9 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
         # What the society leaves out is derived before the world is judged: each topic's filter, into
         # `society.derived.ttl`, which the judgment and every tool below read as the society (#836).
         topics.write(world)
+    # And what a grid's coordinates imply: its cells' adjacency, into `grid.derived.ttl`, where the world
+    # states no edge of its own (onboarding.grid, #1004).
+    grid.write(world)
     if check:
         # Onboarding a world whose documents will not load, or do not hold, is worse than refusing: it
         # mints real credentials for agents that will refuse to boot, or for a society reading what its

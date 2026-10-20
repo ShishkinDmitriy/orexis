@@ -14,7 +14,7 @@
 #  themselves, since the store's dictionary learns no domain's namespace.
 
 courier:Drive a orexis:Action ;
-    rdfs:label "drive the van to a neighbouring cell" ;
+    rdfs:label "drive the van to an adjacent cell" ;
     orexis:takes courier:van , courier:to ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Fictive ] ] ;
@@ -31,9 +31,8 @@ courier:Drive a orexis:Action ;
         SELECT ?van ?to WHERE {
             ?van courier:at ?here .
             ?van a courier:Van .
-            ?here courier:x ?hx ; courier:y ?hy .
-            ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
-            FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
+            ?here courier:adjacentTo ?to .
+            ?to a courier:Cell .
             FILTER NOT EXISTS { ?driver courier:drives ?van .
                 FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; orexis:plays ?driver } }
         }""" ;

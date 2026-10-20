@@ -24,7 +24,7 @@
 #  the search plans on is the same whichever document a world imports, and only how a step is taken differs.
 
 courier:Drive a orexis:Action ;
-    rdfs:label "drive the van to a neighbouring cell, told to the van" ;
+    rdfs:label "drive the van to an adjacent cell, told to the van" ;
     orexis:takes courier:van , courier:to ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Command ; sh:select """PREFIX courier: <http://example.org/orexis/courier#>
@@ -46,9 +46,8 @@ courier:Drive a orexis:Action ;
         SELECT ?van ?to WHERE {
             ?van courier:at ?here .
             ?van a courier:Van .
-            ?here courier:x ?hx ; courier:y ?hy .
-            ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
-            FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
+            ?here courier:adjacentTo ?to .
+            ?to a courier:Cell .
             FILTER NOT EXISTS { ?driver courier:drives ?van .
                 FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; orexis:plays ?driver } }
         }""" ;

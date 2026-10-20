@@ -117,6 +117,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [position](/domain/courier/position.md) - A fix reports a van's column and row; the courier's transitions hold the coordinates and conclude the cell authored at them.
 * [contact](/domain/courier/contact.md) - A sample a van carries, standing for a peer or for nothing; its sensors report an offset the rules add to the van's own.
 * [obstacle](/domain/courier/obstacle.md) - A radar slot standing for nothing named, at a cell while something is in range; a van never stands where one is.
+* [adjacency](/domain/courier/adjacency.md) - Which cells a drive can take a van between: a road states its edges, a grid's are derived from the coordinates at onboarding.
 
 # Onboarding — from a world to a society
 

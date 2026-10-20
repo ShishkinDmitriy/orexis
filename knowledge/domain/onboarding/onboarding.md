@@ -21,6 +21,7 @@ touch another's.
 | `orexis-mqtt` | where the world has a bus, a credential per principal on the broker, a certificate per agent, and the ACL derived from the wiring — then reloads the broker, so connected agents keep their sessions |
 | `orexis-compose` | `world/<name>/compose.yaml`: one container per agent, the world mounted beside the domains, the series store's address as environment keyed by purpose, and where the world has a bus the broker's service, its address, and each agent's broker credential and certificate; an agent that finishes is not restarted |
 | `orexis-dashboards` | a Grafana folder for the world: what its agents observe, and where the world is monitored a health dashboard per package that reports, a row per measurement and the agent a variable |
+| `orexis-grid` | where the world's cells state coordinates and no edge, every edge the coordinates imply into `grid.derived.ttl` beside the world, which a drive reads ([adjacency](/domain/courier/adjacency.md)); needs nothing up |
 
 `orexis-firmware <world>` writes a board's `config.h` from the same documents: the broker's port off
 the `schema:url` on the world's `mqtt4ssn:Broker`, asserted or allocated, the topics' names from the

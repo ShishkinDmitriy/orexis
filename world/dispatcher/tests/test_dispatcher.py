@@ -62,6 +62,7 @@ from agent.ontology import BELIEF, OREXIS, FORECAST, SELF_GRAPH
 from agent.planning.planner import Planner
 from agent.runtime import UNFINISHED, Runtime, boot
 from agent.store import catalogue_of, entry, graphs_of, rows, update
+from onboarding import grid
 from onboarding import reading
 
 
@@ -241,6 +242,7 @@ def variant(tmp_path: Path, name: str, edits: dict) -> Path:
             assert old in text, f"{file} no longer says {old!r}"
             text = text.replace(old, new)
         (world / file).write_text(text)
+    grid.write_at(world)    # the copy's own edges, derived from its cells as onboarding would: a variant may add a grid
     return world
 
 

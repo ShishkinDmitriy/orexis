@@ -23,6 +23,9 @@ description: >-
 > helm, and §3's role, the driver an agent plays, stated by the world and carrying the vans it drives.
 > A place's number, which §4 and §5 speak of, was built and refused the same day: a position is the
 > grid's own coordinates, read by two sensors, and a command carries them ([position](/domain/courier/position.md)).
+> §4's adjacency is built in the courier's words too, for the grid and the road: the drive reads
+> `courier:adjacentTo`, a road states its edges and a grid's are derived at onboarding
+> ([adjacency](/domain/courier/adjacency.md), #1004).
 > **Decided 2026-10-19, and built by #1007 and #1008 in that order**, the second reworking what #1002
 > built as the canal's helm. Until the first lands the tree speaks the courier's words, van, cell and
 > driver, and the pages under `knowledge/domain/courier/` describe it as it is.

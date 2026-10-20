@@ -752,6 +752,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   the radius lands on no cell and is believed nowhere by geometry, never by a sentinel or a silence; a
   sensor on a sample the subject carries reports to the agent carrying it, never to the agent of what it
   stands for (#1003, #1004, contact, obstacle).
+- **A drive reads adjacency, and a geometry is what writes it** — a road states its edges, segment to
+  segment and lane to passing place, since nothing can compute where a road goes; a grid is a road where
+  every neighbour is an edge, derived at onboarding into `grid.derived.ttl` and never written by hand,
+  since what the coordinates imply is computed; a text of the search that worked the neighbours out from
+  the coordinates was a geometry written into an action (#1004, adjacency).
 - **A courier's parcels are its own beliefs, so two couriers want their own deliveries** — stated in each
   agent's state document and never in the world, since a desire over every parcel in a shared world would
   have each mind deliver the other's (#1004, `world/lane/`).
@@ -963,6 +968,7 @@ orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, 
                              #   leave out (a broker's port, into infra/installation.derived.ttl),
                              #   then grant everything below the world has something for.
   orexis-topics <world>      #   each topic's filter, by one convention, into world/<world>/society.derived.ttl — needs nothing up
+  orexis-grid <world>        #   a grid's adjacency from its cells' coordinates, into world/<world>/grid.derived.ttl — needs nothing up
   orexis-influx <world>      #   a history bucket per agent, a metrics one where the world is monitored, each with a token that opens only it
   orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived — where its society names a broker
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster, the broker only with a bus

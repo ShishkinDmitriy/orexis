@@ -22,6 +22,7 @@ from agent.runtime import Runtime, boot
 from agent.store import graphs_of, rows
 from agent.transport.mqtt.driver import Mqtt
 from simulation.simulator import Simulator
+from onboarding import grid
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -84,6 +85,7 @@ def variant(tmp_path: Path, name: str, edits: dict) -> Path:
             assert old in text, f"{file} no longer says {old!r}"
             text = text.replace(old, new)
         (world / file).write_text(text)
+    grid.write_at(world)    # the copy's own edges, derived from its cells as onboarding would: a variant may add a grid
     return world
 
 

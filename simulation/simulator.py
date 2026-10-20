@@ -37,8 +37,8 @@ the model's bounds bound the reading, not the number.
 A VAN IS PLAYED AS A BODY THAT MOVES ON COMMAND (#1002): a `courier:Van` marked `sim:simulatedBy`, told
 `{"to": {"x": <column>, "y": <row>}}` on the topic it listens to, is on that cell `sim:delayS` later, and
 the position fix it hosts — two sensors observing `courier:Column` and `courier:Row` — reports the
-coordinates from then on. The grid is read off the world, each cell's coordinates, and a van refuses a
-cell that is no neighbour of the one it stands on, as a road would; so the pilot never writes its own van's cell, and
+coordinates from then on. The grid is read off the world, each cell's coordinates and the edges between
+cells, and a van refuses a cell no edge leads to from the one it stands on, as a road would; so the pilot never writes its own van's cell, and
 there is a true position for a contact to be played from.
 
 A CONTACT IS PLAYED FROM THE TRUE POSITIONS (#1003): a `sosa:Sample` a van carries, with two sensors
@@ -117,9 +117,11 @@ SELECT ?van ?column ?row ?delay WHERE {{
   ?row a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes <{COURIER}Row> .
   OPTIONAL {{ ?model <{SIM}delayS> ?delay }} }}"""
 
-#  THE GRID AS THE WORLD STATES IT: each cell's coordinates, so a van refuses a cell that is no neighbour of
-#  the one it stands on, as a road would.
+#  THE GRID AS THE WORLD STATES IT: each cell's coordinates and the edges between cells, so a van refuses
+#  a cell no edge leads to from the one it stands on, as a road would (#1004).
 _CELLS_Q = f"""SELECT ?x ?y WHERE {{ ?cell a <{COURIER}Cell> ; <{COURIER}x> ?x ; <{COURIER}y> ?y }}"""
+_EDGES_Q = f"""SELECT ?ax ?ay ?bx ?by WHERE {{
+  ?a <{COURIER}adjacentTo> ?b . ?a <{COURIER}x> ?ax ; <{COURIER}y> ?ay . ?b <{COURIER}x> ?bx ; <{COURIER}y> ?by }}"""
 
 #  EVERY CONTACT PLAYED (#1003): the van carrying it, the peer it stands for where it stands for one, its two
 #  sensors and how far they see.
@@ -162,6 +164,7 @@ class Simulator:
         self.vans = {r["van"]: (r["column"], r["row"], float(r["delay"]) if r.get("delay") is not None else 0.0)
                      for r in self._rows(_VANS_Q) if r["column"] in self.sensors and r["row"] in self.sensors}
         self.cells = {(int(r["x"]), int(r["y"])) for r in self._rows(_CELLS_Q)}
+        self.edges = {((int(r["ax"]), int(r["ay"])), (int(r["bx"]), int(r["by"]))) for r in self._rows(_EDGES_Q)}
         self.moving: dict[str, tuple[datetime, tuple[int, int]]] = {}
         #  THE CONTACTS each van carries, in the world's order, and where the things with no fix stand.
         self.contacts = {r["contact"]: (r["van"], r.get("peer"), r["column"], r["row"],
@@ -222,16 +225,16 @@ class Simulator:
             self._drive(actuator, (int(said["to"]["x"]), int(said["to"]["y"])))
 
     def _drive(self, van: str, to: tuple[int, int]) -> None:
-        """A van told a cell's coordinates: it is there `sim:delayS` later, where the cell is a neighbour of
-        the one it stands on — |dx| + |dy| = 1, the drive's own rule — and it refuses anything else in the
+        """A van told a cell's coordinates: it is there `sim:delayS` later, where an edge leads there from the
+        cell it stands on — the drive's own rule, `courier:adjacentTo` — and it refuses anything else in the
         log, as a road would a cell it cannot reach in one drive. A van already under way is told again."""
         column, row, delay = self.vans[van]
         here = (int(round(self.sensors[column]["value"])), int(round(self.sensors[row]["value"])))
         if to not in self.cells or here not in self.cells:
             log.error("%s: told %s, which is no cell of this world", van.rsplit("#", 1)[-1], to)
             return
-        if abs(to[0] - here[0]) + abs(to[1] - here[1]) != 1:
-            log.error("%s: told %s from %s, which is no neighbour", van.rsplit("#", 1)[-1], to, here)
+        if (here, to) not in self.edges:
+            log.error("%s: told %s from %s, which is no neighbour: no edge leads there", van.rsplit("#", 1)[-1], to, here)
             return
         self.moving[van] = (self.at + timedelta(seconds=delay), to)
         log.info("%s drives to %s, there in %s s", van.rsplit("#", 1)[-1], to, delay)

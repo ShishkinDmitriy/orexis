@@ -917,6 +917,24 @@ def test_every_committed_derived_society_is_a_fresh_derivation():
             assert not topics.derivation(w).exists(), f"world/{w} has no bus and no topic to name"
 
 
+def test_every_committed_derived_grid_is_a_fresh_derivation():
+    """`world/<w>/grid.derived.ttl` says GENERATED — do not edit, and it is what every drive reads an edge
+    from, so one left behind by a change to the cells lets a van drive where no cell is or refuses a cell
+    there is. Held to what the derivation writes now, for every world whose cells state coordinates and
+    no edge; a world stating its own edges, a road, has none."""
+    from onboarding import grid
+
+    held = []
+    for w in sorted(p.name for p in (REPO_ROOT / "world").iterdir() if (p / "world.ttl").exists()):
+        if grid.applies(w):
+            held.append(w)
+            assert grid.derivation(w).read_text() == grid.derivation_text(w), \
+                f"world/{w}/grid.derived.ttl is not what the derivation writes now — run `orexis-grid {w}`"
+        else:
+            assert not grid.derivation(w).exists(), f"world/{w} states its own edges or has no cells, and is derived none"
+    assert held, "no grid world — the derivation checks nothing"
+
+
 def test_a_stated_filter_is_kept_and_the_rule_names_the_rest(tmp_path, monkeypatch):
     """Asserted wins, derived completes: the sensing world naming its readings topic itself, by a
     pattern of its own, is derived a filter for its command topic alone, and holds."""

@@ -41,6 +41,7 @@ orexis-influx = "onboarding.influx:main"
 orexis-mqtt = "onboarding.mqtt:main"
 orexis-compose = "onboarding.compose:main"
 orexis-topics = "onboarding.topics:main"
+orexis-grid = "onboarding.grid:main"
 orexis-dashboards = "onboarding.dashboards:main"
 # REFLECTION'S FIRST TOOL, beside onboarding and outside the agent as it is: one agent's season from
 # its history and metrics buckets, read with the admin-side token, never from its beliefs (#894).

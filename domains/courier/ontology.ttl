@@ -9,7 +9,7 @@
     owl:imports <shapes.ttl> .    # the ACTIONS a world imports itself, actions.ttl or actions.answered.ttl, and the answered drive's document brings the rules (#1002)
 
 #  THE COURIER GRID, A DOMAIN.
-#  The courier's words, shared by every world that poses a delivery: a cell and its coordinates,
+#  The courier's words, shared by every world that poses a delivery: a cell, its coordinates and which cells are adjacent,
 #  a van, a parcel and where it is owed, a driver - a role an agent plays over the vans it drives - and which van it is aboard, where each stands and
 #  what an action is filled with, and since #1002 the column and the row a position fix observes. Beside this document the domain ships what delivered means and how far it is
 #  (shapes.ttl), which this document imports; its three actions in two documents it does NOT import, a
@@ -27,7 +27,14 @@
 
 :x a owl:DatatypeProperty ; rdfs:domain :Cell ; rdfs:range xsd:integer ; rdfs:label "column" .
 :y a owl:DatatypeProperty ; rdfs:domain :Cell ; rdfs:range xsd:integer ; rdfs:label "row" ;
-    rdfs:comment "Coordinates rather than a declared adjacency, because the estimate measures a distance the graph does not state. Two cells are neighbours where |dx| + |dy| = 1, which the drive's own precondition works out." .
+    rdfs:comment "Coordinates, which the estimate measures a distance in, and which a fix and a contact report a position in. Which cells a drive can take a van between is `adjacentTo`, never worked out from them by a text of the search." .
+
+:adjacentTo a owl:ObjectProperty ; rdfs:domain :Cell ; rdfs:range :Cell ; rdfs:label "adjacent to" ;
+    rdfs:comment """The one edge a drive takes a van along: from a cell to one adjacent to it, stated each way. A road
+    states its edges itself, segment to segment and lane to passing place, since nothing can compute where a
+    road goes; a grid is a road where every neighbour is an edge, and its edges are derived at onboarding
+    from the coordinates, |dx| + |dy| = 1, into the world's `grid.derived.ttl`, never written by hand
+    (knowledge/domain/courier/adjacency.md, navigation-is-a-body-a-mover-and-a-move §4, #1004).""" .
 
 #################  Instruments  #################
 
