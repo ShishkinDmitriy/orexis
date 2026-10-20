@@ -1,0 +1,47 @@
+@prefix : <http://example.org/orexis/courier#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+<> a planning:ConstraintGraph .    # this document is one graph, and this is what it is
+
+#  WHAT NO VAN DOES - physics and not preferences (knowledge/domain/planning/constraint.md): no two vans stand
+#  at one position, the dispatcher's, and no van stands where an obstacle is - a thing a radar sees and nothing
+#  identifies, believed at two coordinates while it is in range (#1003), a hedge or a fence among them. Authored
+#  as the avoided state, `planning:unmetWhen`, the honest polarity for a prohibition (#892). The search marks a
+#  world violating either `planning:impossible`, so a plan goes round an obstacle and a parked van, and a belief
+#  that puts one on a walking plan's next position reopens the plan (#921).
+#
+#  The domain states the constraints and no holder: who holds them is each world's to say of its agents, in a
+#  constraint graph of its own (`world/lane/constraints.ttl`), since the domain knows no agent. Stated by the
+#  worlds in their own words before, two vans' worlds had two spellings of one physics.
+
+:no_two_vans_at_one_position a planning:Constraint ;
+    rdfs:label "no two vans stand at one position" ;
+    planning:unmetWhen :two_vans_at_one_position .
+
+:two_vans_at_one_position
+    sh:message "two vans stand at one position" ;
+    sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT $this ?value WHERE {
+            $this a courier:Van ;
+                courier:x ?x ; courier:y ?y .
+            ?value a courier:Van ;
+                courier:x ?x ; courier:y ?y .
+            FILTER(?value != $this)
+        }""" .
+
+:no_van_on_an_obstacle a planning:Constraint ;
+    rdfs:label "no van stands where an obstacle is" ;
+    planning:unmetWhen :a_van_on_an_obstacle .
+
+:a_van_on_an_obstacle
+    sh:message "a van stands where an obstacle is" ;
+    sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT $this ?value WHERE {
+            $this a courier:Van ;
+                courier:x ?x ; courier:y ?y .
+            ?value a courier:Obstacle ;
+                courier:x ?x ; courier:y ?y .
+        }""" .

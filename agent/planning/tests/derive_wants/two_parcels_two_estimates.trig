@@ -30,41 +30,26 @@ GRAPH :ontology {
 }
 
 GRAPH :world {
-  :c0_0 a courier:Cell .
-  :c0_0 courier:x 0 .
-  :c0_0 courier:y 0 .
-  :c0_1 a courier:Cell .
-  :c0_1 courier:x 0 .
-  :c0_1 courier:y 1 .
-  :c0_2 a courier:Cell .
-  :c0_2 courier:x 0 .
-  :c0_2 courier:y 2 .
-  :c0_3 a courier:Cell .
-  :c0_3 courier:x 0 .
-  :c0_3 courier:y 3 .
-  :c1_0 a courier:Cell .
-  :c1_0 courier:x 1 .
-  :c1_0 courier:y 0 .
-  :c1_1 a courier:Cell .
-  :c1_1 courier:x 1 .
-  :c1_1 courier:y 1 .
-  :c1_2 a courier:Cell .
-  :c1_2 courier:x 1 .
-  :c1_2 courier:y 2 .
-  :c1_3 a courier:Cell .
-  :c1_3 courier:x 1 .
-  :c1_3 courier:y 3 .
+  :door_parcel_a courier:x 0 .
+  :door_parcel_a courier:y 3 .
+  :door_parcel_b courier:x 1 .
+  :door_parcel_b courier:y 3 .
   :parcel_a a courier:Parcel .
-  :parcel_a courier:destination :c0_3 .
+  :parcel_a courier:destination :door_parcel_a .
   :parcel_b a courier:Parcel .
-  :parcel_b courier:destination :c1_3 .
+  :parcel_b courier:destination :door_parcel_b .
   :van_a a courier:Van .
   :van_b a courier:Van .
 }
 
 GRAPH :desires {
   :delivered a sh:NodeShape .
-  :delivered sh:property [ planning:about sh:this ; sh:equals courier:destination ; sh:path courier:at ] .
+  :delivered sh:sparql [ a sh:SPARQLConstraint ; planning:about sh:this ; sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT $this WHERE {
+          $this courier:destination ?owed .
+          ?owed courier:x ?ox ; courier:y ?oy .
+          FILTER NOT EXISTS { $this courier:x ?ox ; courier:y ?oy }
+      }""" ] .
   :delivered sh:targetClass courier:Parcel .
   :drivesOwed rdfs:label "drives still owed" .
   :drivesOwed sh:select """PREFIX courier: <http://example.org/orexis/courier#>
@@ -73,17 +58,14 @@ GRAPH :desires {
               {
                   $this a courier:Parcel ; courier:destination ?owed .
                   ?owed courier:x ?ox ; courier:y ?oy .
-                  $this courier:carriedBy ?van . ?van courier:at ?vc .
-                  ?vc courier:x ?vx ; courier:y ?vy .
+                  $this courier:carriedBy ?van . ?van courier:x ?vx ; courier:y ?vy .
                   BIND($this AS ?p)
                   BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
               } UNION {
                   $this a courier:Parcel ; courier:destination ?owed .
                   ?owed courier:x ?ox ; courier:y ?oy .
-                  $this courier:at ?pc . ?v courier:at ?vc .
-                  ?v a courier:Van .
-                  ?pc courier:x ?px ; courier:y ?py .
-                  ?vc courier:x ?vx ; courier:y ?vy .
+                  $this courier:x ?px ; courier:y ?py .
+                  ?v a courier:Van ; courier:x ?vx ; courier:y ?vy .
                   FILTER(?px != ?ox || ?py != ?oy)
                   BIND($this AS ?p)
                   BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
@@ -99,21 +81,17 @@ GRAPH :desires {
 }
 
 GRAPH :sensed {
-  :parcel_a courier:at :c0_1 .
-  :parcel_b courier:at :c1_1 .
-  :van_a courier:at :c0_0 .
-  :van_b courier:at :c1_1 .
+  :parcel_a courier:x 0 .
+  :parcel_a courier:y 1 .
+  :parcel_b courier:x 1 .
+  :parcel_b courier:y 1 .
+  :van_a courier:x 0 .
+  :van_a courier:y 0 .
+  :van_b courier:x 1 .
+  :van_b courier:y 1 .
 }
 
 GRAPH :scopes {
-  :c0_0 planning:inScope :keeper.scope.1 .
-  :c0_1 planning:inScope :keeper.scope.1 .
-  :c0_2 planning:inScope :keeper.scope.1 .
-  :c0_3 planning:inScope :keeper.scope.1 .
-  :c1_0 planning:inScope :keeper.scope.1 .
-  :c1_1 planning:inScope :keeper.scope.1 .
-  :c1_2 planning:inScope :keeper.scope.1 .
-  :c1_3 planning:inScope :keeper.scope.1 .
   :keeper.scope.1 a planning:Scope .
   :parcel_a planning:inScope :keeper.scope.1 .
   :parcel_b planning:inScope :keeper.scope.1 .
@@ -122,8 +100,9 @@ GRAPH :scopes {
   courier:Drive planning:inScope :keeper.scope.1 .
   courier:Drop planning:inScope :keeper.scope.1 .
   courier:Pick planning:inScope :keeper.scope.1 .
-  courier:at planning:inScope :keeper.scope.1 .
   courier:carriedBy planning:inScope :keeper.scope.1 .
+  courier:x planning:inScope :keeper.scope.1 .
+  courier:y planning:inScope :keeper.scope.1 .
 }
 
 # What each graph IS, and when it holds — said once each, beside the data.

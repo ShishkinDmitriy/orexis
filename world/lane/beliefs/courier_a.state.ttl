@@ -1,6 +1,5 @@
 @prefix : <http://example.org/orexis/world/lane#> .
 @prefix courier: <http://example.org/orexis/courier#> .
-@prefix road: <http://example.org/orexis/road#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
@@ -9,10 +8,11 @@
 
 #  WHAT COURIER A BELIEVES AS THE WORLD IS POSED — its parcel, which is its own and no other courier's (a
 #  courier's consignments are its beliefs, so each wants its own deliveries, #1004), where the parcel and
-#  the drivers stand, and not where any van is. Where a van is comes from outside, by a fix or a contact, and
+#  the drivers stand, the place it is owed at, and not where any van is. Where a van is comes from outside, by a fix or a contact, and
 #  what comes from outside is stored when it arrives and never asserted: the first fix says the cell and the
 #  courier's transitions keep it current, so the agent plans nothing until its fix has reported.
-:parcel_a a courier:Parcel ; courier:destination road:c6_1 ; rdfs:label "the parcel owed at the eastern end" .
-:parcel_a courier:at road:c1_1 .
+:parcel_a a courier:Parcel ; courier:destination :east_end ; rdfs:label "the parcel owed at the eastern end" .
+:parcel_a courier:x 1 ; courier:y 1 .
+:east_end courier:x 6 ; courier:y 1 ; rdfs:label "the eastern end of the lane, where parcel A is owed" .
 :driver_a courier:aboard :van_a .
 :driver_b courier:aboard :van_b .    # van B's driver, aboard it, so van B is nobody's here to move

@@ -14,9 +14,9 @@ description: >-
 ```turtle
 planning:effect [ a planning:Effect ;
     sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <…>
-        DELETE { $parcel courier:at ?cell }
+        DELETE { $parcel courier:x ?x ; courier:y ?y }
         INSERT { $parcel courier:carriedBy $van }
-        WHERE  { $parcel courier:at ?cell }""" ] ] .
+        WHERE  { $parcel courier:x ?x ; courier:y ?y }""" ] ] .
 ```
 
 An effect is a [transition](/domain/belief/transition.md) the agent causes, and every rule of it is

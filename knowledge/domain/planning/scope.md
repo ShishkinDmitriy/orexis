@@ -68,7 +68,7 @@ two imaginaria of one world each, where it was one want searched over both lever
 ([measure-the-search](/runbooks/measure-the-search.md)).
 
 `world/tower` splits in two, the first world to: hanoi's Move reads and writes `hanoi:on` and
-what a peg is, the courier's drives and drops read and write `courier:at` and
+what a peg is, the courier's drives and drops read and write `courier:x` and `courier:y` and
 `courier:carriedBy`, and no action touches both — what joins them is a RULE, which is not an
 action and couples nothing here ([refinement](/domain/planning/refinement.md)). It split only once a
 type pattern was read as its CLASS: keyed by `rdf:type` alone, `?x a hanoi:Peg` and

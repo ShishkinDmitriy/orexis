@@ -66,7 +66,7 @@ greenhouse's dose came to be filled with the heater, measured.
 
 A row is no filling where it leaves unbound a parameter the WORLD alone decides — one the action
 `orexis:takes` that is no subject its effect writes and stands in no pattern reading a predicate
-any effect writes or deletes: the valve, the heater, the cell a van drives to. Asked over the
+any effect writes or deletes: the valve, the heater, the position a van drives to. Asked over the
 common beliefs, such a parameter binds wherever the world holds one, so unbound it is the world
 saying there is none, and an action left with no filling is in no scope. The allotment imports
 the climate domain and holds no heater, and its heating's rows made two scopes that admitted

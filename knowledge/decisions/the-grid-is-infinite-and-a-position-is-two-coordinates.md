@@ -62,8 +62,10 @@ agent know, and what does it see?
    them: it plans across the plane as if it were open, its radar sees a hedge within range, the slot is
    believed at the hedge's coordinates, the constraint makes the world the plan's next step lands in
    impossible, and the plan is reopened after the step in flight (#921). The road is discovered, not
-   known. `domains/road/` keeps the hedges and the two constraints, stated in coordinates: no two vans
-   at one pair, no van at an obstacle's pair.
+   known. `domains/road/` is the hedges; the two constraints, stated in coordinates - no two vans at
+   one pair, no van at an obstacle's pair - are the courier's own physics, `domains/courier/constraints.ttl`,
+   which a world says who holds. The tower's yard is fenced the same way, obstacles its mover knows,
+   since a move's want below carries no estimate and the fence bounds its search as nine cells did.
 4. **The area an agent sees is the range its contact sensors declare.** Each sensor of a contact
    declares `ssn-system:MeasurementRange` with a least and a most offset; the simulator reports the
    true vector while the thing is inside both, and one past the most on each axis when it is not; the
@@ -106,6 +108,12 @@ agent know, and what does it see?
 
 # Seams left open
 
+- A refined want below carries no estimate, so its search is uniform-cost, and on an infinite grid a van
+  seven steps from setting a disk down forks the plane in every direction: the tower's mover states a
+  budget of 1024 where nine authored cells let 256 do. An estimate for a want the bridge mints - the
+  courier's own, with `$this` bound to the disk - is where that cost would go, and nothing decides it here.
+- The dispatcher's and the driver's figures grew with the four neighbours every world now opens, and are
+  re-measured in their tests; the runbook keeps the day's numbers as history.
 - A radar sees the nearest thing it does not identify, one per slot, so a van among several hedges
   believes one at a time and the believed obstacle moves as the slot retargets; a world that needs
   more seen at once carries more slots, as a ship carries more tracks.

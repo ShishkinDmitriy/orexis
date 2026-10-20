@@ -7,7 +7,7 @@
 
 #  WHERE THINGS STAND, and nothing else: every disk in peg A's cell and the van in the middle. What
 #  each disk is ON is not stated — the tower's rules conclude it from this.
-:disk_1 courier:at :c0_0 .
-:disk_2 courier:at :c0_0 .
-:disk_3 courier:at :c0_0 .
-:van courier:at :c1_1 .
+:disk_1 courier:x 0 ; courier:y 0 .
+:disk_2 courier:x 0 ; courier:y 0 .
+:disk_3 courier:x 0 ; courier:y 0 .
+:van courier:x 1 ; courier:y 1 .

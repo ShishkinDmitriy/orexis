@@ -38,7 +38,7 @@ TOWER = "http://example.org/orexis/world/tower#"
 _ON_Q = """PREFIX hanoi: <http://example.org/orexis/hanoi#>
 SELECT ?d ?below WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?d hanoi:on ?below } } ORDER BY ?d"""
 _AT_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?x ?cell WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?x courier:at ?cell } } ORDER BY ?x"""
+SELECT ?s ?x ?y WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?s courier:x ?x ; courier:y ?y } } ORDER BY ?s"""
 _REFINED_Q = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a execution:refinedBy ?w } }"
 
 
@@ -77,9 +77,9 @@ def test_the_puzzle_is_planned_above_and_carried_out_by_the_van_below(monkeypatc
     _two_disks(beliefs)
     runtime = Runtime(beliefs, "mover")
     assert runtime.run(passes=120, poll_s=0) == MET
-    at = {_local(r["x"]): _local(r["cell"]) for r in rows(runtime.beliefs, _AT_Q, ())
-          if r["x"].startswith(TOWER)}
-    assert at["disk_1"] == at["disk_2"] == "c1_2", "both disks on peg C's cell"
+    at = {_local(r["s"]): (int(r["x"]), int(r["y"])) for r in rows(runtime.beliefs, _AT_Q, ())
+          if r["s"].startswith(TOWER)}
+    assert at["disk_1"] == at["disk_2"] == (1, 2), "both disks at peg C's position"
     on = {(_local(r["d"]), _local(r["below"])) for r in rows(runtime.beliefs, _ON_Q, ())}
     assert on == {("disk_1", "disk_2"), ("disk_2", "PegC")}, "and stacked in order"
     refined = int(rows(runtime.parts["execution"].executor.intentions, _REFINED_Q, ())[0]["n"])

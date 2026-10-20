@@ -1,11 +1,12 @@
 @prefix : <http://example.org/orexis/world/lane#> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix road: <http://example.org/orexis/road#> .
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
 #  THE WIRING: one broker, the two couriers clients of it, and the simulator's one client — hosting both
-#  vans, their fixes and their contacts' sensors, since one simulator plays every simulated system of a world
+#  vans, their fixes, their contacts' sensors and the road's hedges, since one simulator plays every simulated system of a world
 #  as one client (domains/sim/requirements.ttl) — publishing every reading in one message and listening for
 #  each van's drives. The topics are named by one convention (`orexis-topics lane`, into society.derived.ttl).
 
@@ -21,7 +22,8 @@
 :simulation a mqtt4ssn:Client ;
     mqtt4ssn:hosts :fix_a_column , :fix_a_row , :receiver_b_column , :receiver_b_row , :radar_1_column , :radar_1_row ,
                    :fix_b_column , :fix_b_row , :receiver_a_column , :receiver_a_row , :radar_2_column , :radar_2_row ,
-                   :van_a , :van_b ;
+                   :van_a , :van_b ,
+                   road:hedge_2_0 , road:hedge_3_0 , road:hedge_4_0 , road:hedge_2_2 , road:hedge_4_2 ;    # the road's hedges, posed things the radars see
     mqtt4ssn:hasClientID "simulation" ;
     mqtt4ssn:isConnectedToBroker :broker .
 

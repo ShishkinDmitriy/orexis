@@ -13,8 +13,8 @@
 
 :driver courier:aboard :van_a .
 
-:van_a courier:at :c0_0 .
-:parcel_a courier:at :c0_1 .
+:van_a courier:x 0 ; courier:y 0 .
+:parcel_a courier:x 0 ; courier:y 1 .
 
-:van_b courier:at :g10_0 .
-:parcel_b courier:at :g10_1 .
+:van_b courier:x 10 ; courier:y 0 .
+:parcel_b courier:x 10 ; courier:y 1 .

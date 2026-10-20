@@ -747,21 +747,35 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   where the courier's own relation from the agent was, so a peer finds the agent to ask by the role and a role loads nothing
   from the world graph, the boot reading roles for loading off the self graph alone (#1002, driver,
   navigation-is-a-body-a-mover-and-a-move §3).
-- **A contact is a sample a van carries, its sensors report an offset, and out of range is off the grid** —
-  the rules add the carrying van's held coordinates and find the cell, so a peer or an obstacle beyond
-  the radius lands on no cell and is believed nowhere by geometry, never by a sentinel or a silence; a
-  sensor on a sample the subject carries reports to the agent carrying it, never to the agent of what it
-  stands for (#1003, #1004, contact, obstacle).
+- **A contact is a sample a van carries, its sensors report an offset, and out of range is outside the
+  range the sensor declares** — the rules add the carrying van's held coordinates inside the sensor's
+  `ssn-system:MeasurementRange` and delete the coordinate outside it, so a peer or an obstacle beyond the
+  area the agent sees is believed nowhere by the instrument's own declaration, never by a sentinel or a
+  silence; a sensor on a sample the subject carries reports to the agent carrying it, never to the agent
+  of what it stands for (#1003, #1004, contact, the-grid-is-infinite-and-a-position-is-two-coordinates).
 - **A courier's parcels are its own beliefs, so two couriers want their own deliveries** — stated in each
   agent's state document and never in the world, since a desire over every parcel in a shared world would
   have each mind deliver the other's (#1004, `world/lane/`).
-- **A road is a domain and a world is who drives on it** — the cells and what no van on them does are
-  `domains/road/`, which `world/lane/` and `world/layby/` import under their own initial states; the grid is
-  infinite, a cell any pair of coordinates, the road the part an agent knows, and a neighbour is computed
-  from the coordinates, so no edge is derived (#1012, refused).
-- **A radar slot is the obstacle, typed by the world, and its cell is the one belief that changes** —
+- **The grid is infinite, a position is two coordinates on the thing, and the road is what the agent
+  sees** — a cell node and the relation to it were a second name for a pair of numbers and the authored set
+  of cells a map; a drive goes to any neighbour by arithmetic, a destination and a constraint are stated in
+  coordinates, the road is hedges a radar sees, posed in `domains/road/` and told to no agent, and
+  `world/lane/` and `world/layby/` import it under their own initial states
+  (the-grid-is-infinite-and-a-position-is-two-coordinates, #1012 and #1013 refused before it).
+- **A value an effect computes is reachable anywhere, so a constraint reading it couples everything and
+  the reach is not asked** — a drive's effect writes a number its precondition made by arithmetic, and the
+  reach over it mints the next ring every round; so there are no disjoint grids, and the reach stays for
+  worlds whose places are finite terms (couplings, the-grid-is-infinite-and-a-position-is-two-coordinates).
+- **A plan's claim is replayed from its step in flight, and a step's change supersedes by key** — the
+  ground a step in flight lands in carries no change of it, so replayed from the step after, a drive's new
+  column stood beside the stale row and the van read as standing where a peer stood; a position is two
+  keys, and a half-applied change is a crossing of positions (#921, the-grid-is-infinite-and-a-position-is-two-coordinates).
+- **A filling is written as the terms the precondition bound, never their value strings** — a parameter
+  the precondition computes is a typed literal, and written as its value alone it came back a string no
+  arithmetic reads (`admit._term`).
+- **A radar slot is the obstacle, typed by the world, and its position is the one belief that changes** —
   nothing types anything at runtime, and a world holds "no van where an obstacle is" as a constraint,
-  beside "no cell holds two vans" (#1003).
+  beside "no two vans at one position" (#1003).
 - **One simulator client hosts everything it plays, a parked van and a tree included** — a thing with no
   instrument stands where its model says, `sim:x` and `sim:y`, and is seen by a radar (#1003).
 - **An agent commands what it acts for where that listens for commands** — the courier's van is told its

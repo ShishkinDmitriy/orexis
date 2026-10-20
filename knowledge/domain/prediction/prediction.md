@@ -31,7 +31,7 @@ one concept under two words. It says which property it `prediction:moves` and ca
 subject `$feature` whose value is `$value` at the instant `$at`. It may answer `?low` and `?high`
 instead, a rate known only as a range, and `?until`, the value past which it contributes nothing.
 A flow reads whatever holds at `$at`: the ground the planner stands in - the states the transitions
-made, a peer's cell laid where its forecast begins - and beside it every graph holding at that instant
+made, a peer's position laid where its forecast begins - and beside it every graph holding at that instant
 by the period its row states, such as `climate:driesPerDay` on the bed, a
 [forecast](/domain/kernel/forecast.md) hour of rain, a [committed step](/domain/execution/committed-step.md)
 inside its landing window; and the numbers every key stands at, so the soil's drying reads the air's

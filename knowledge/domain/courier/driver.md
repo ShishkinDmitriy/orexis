@@ -45,7 +45,7 @@ Four actions read it, and they hold it two ways:
 
 The agent asking is found as `?me a orexis:Self`, as every text finds the
 [self](/domain/kernel/self.md). The pick and the drop ask for the driver ABOARD and not only played
-(#931), because the driver is the one body at a van's cell and is never on foot: a van it has left
+(#931), because the driver is the one body where a van stands and is never on foot: a van it has left
 stands where nobody is, and a pick or a drop there is what a drive there already was, an act with
 nobody to take it. The boarding asks for no driver aboard the van it names, being the act that
 changes which van that is. A van no driver drives is driven, loaded and unloaded by the agent's own

@@ -27,7 +27,7 @@ WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 
 _WHERE_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?cell WHERE { ?parcel a courier:Parcel ; courier:at ?cell }"""
+SELECT ?x ?y WHERE { ?parcel a courier:Parcel ; courier:x ?x ; courier:y ?y }"""
 _ACTS_Q = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }"
 #  WHAT THE WANT'S ESTIMATE READ IN THE PRESENT GROUND, beside what the plan the search found spent.
 _ESTIMATE_AGAINST_COST_Q = """
@@ -37,8 +37,8 @@ SELECT ?want ?left ?spent WHERE {
   GRAPH ?p { ?p a planning:Plan ; planning:for ?want ; planning:outcome planning:Satisfied ; planning:spent ?spent } }"""
 
 
-def _parcel_at(store) -> list[str]:
-    return [r["cell"].rsplit("#", 1)[-1] for r in rows(store, _WHERE_Q, [*_own(store), *graphs_of(store, "http://example.org/orexis#WorldGraph")])]
+def _parcel_at(store) -> list[tuple[int, int]]:
+    return [(int(r["x"]), int(r["y"])) for r in rows(store, _WHERE_Q, [*_own(store), *graphs_of(store, "http://example.org/orexis#WorldGraph")])]
 
 
 def _acts(runtime) -> int:
@@ -48,7 +48,7 @@ def _acts(runtime) -> int:
 def test_the_boot_says_what_each_graph_is():
     beliefs = boot(WORLD, "courier")
     assert len(graphs_of(beliefs, WANT)) == 1 and len(_own(beliefs)) == 1
-    assert _parcel_at(beliefs) == ["c1_2"], "the parcel stands where the delivery was posed"
+    assert _parcel_at(beliefs) == [(1, 2)], "the parcel stands where the delivery was posed"
 
 
 def _ticking(monkeypatch, seconds: float = 1.0) -> None:
@@ -67,7 +67,7 @@ def test_the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops(monkeypatc
     _ticking(monkeypatch)
     runtime = Runtime(boot(WORLD, "courier"), "courier")
     assert runtime.run(poll_s=0) == MET
-    assert _acts(runtime) == 8 and _parcel_at(runtime.beliefs) == ["c3_3"]
+    assert _acts(runtime) == 8 and _parcel_at(runtime.beliefs) == [(3, 3)]
     assert runtime.run(poll_s=0) == MET and _acts(runtime) == 8, "met stays met, and nothing moves again"
 
 
@@ -108,7 +108,7 @@ def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeyp
     beliefs = boot(WORLD, "courier")
     Runtime(beliefs, "courier").run(poll_s=0)
     boot(WORLD, "courier", beliefs)                   # a restart on the same volume
-    assert _parcel_at(beliefs) == ["c3_3"], "the delivered parcel is the agent's belief, not the file's"
+    assert _parcel_at(beliefs) == [(3, 3)], "the delivered parcel is the agent's belief, not the file's"
     assert len(_own(beliefs)) == 1
     assert graphs_of(beliefs, WANT) == [], "the want was reached and withdrawn, and a restart does not bring it back"
 
@@ -116,7 +116,9 @@ def test_a_lived_in_volume_keeps_the_agents_state_and_reloads_the_worlds(monkeyp
 def test_a_window_a_pass_writes_the_executors_levels_and_tallies_every_act_and_landing(monkeypatch):
     """THE METRICS OF A WALKED PLAN, moved here from Hanoi's mover, which is a planner and no executor
     and walks nothing (#928). A window a pass (#826, amended), on the run above: in the first, the plan
-    found and adopted — the imaginarium's forty-five worlds, one satisfied, and one intention standing;
+    found and adopted — the imaginarium's fifty-five worlds, one satisfied, and one intention standing
+    (forty-five while the grid was sixteen authored cells, whose edges admitted fewer drives; now a drive
+    goes to any of four neighbours, the-grid-is-infinite-and-a-position-is-two-coordinates);
     across the run, eight acts taken, by the action each filled — six drives, the pick and the drop —
     each landing within its band and none timed out, and the one intention done, so the last window
     stands none. Neither sensing nor belief is loaded, so no silence and no revisions are said."""
@@ -140,7 +142,7 @@ def test_a_window_a_pass_writes_the_executors_levels_and_tallies_every_act_and_l
     windows = [w for w in writes if w]
     first = {p["measurement"]: p for p in windows[0]}
     assert {"pass", "planner", "imaginarium", "search", "published", "intentions", "act"} <= set(first), sorted(first)
-    assert first["imaginarium"]["fields"] == {"worlds": 45, "weighings": 46, "open": 14, "met": 1,
+    assert first["imaginarium"]["fields"] == {"worlds": 55, "weighings": 56, "open": 24, "met": 1,
                                               "satisfied": 1, "exhausted": 0, "no_candidate": 0}
     assert first["intentions"]["fields"] == {"standing": 1}
     every = [p for w in windows for p in w]

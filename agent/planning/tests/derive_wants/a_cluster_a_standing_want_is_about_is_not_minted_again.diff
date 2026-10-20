@@ -1,44 +1,60 @@
 --- case
 +++ expected
-@@ -146,10 +146,6 @@
+@@ -18,10 +18,6 @@
+ }
+ 
+ GRAPH :world {
+-  :door_parcel_a courier:x 0 .
+-  :door_parcel_a courier:y 3 .
+-  :door_parcel_b courier:x 1 .
+-  :door_parcel_b courier:y 3 .
+   :keeper a orexis:Agent .
+   :parcel_a a courier:Parcel .
+   :parcel_a courier:destination :door_parcel_a .
+@@ -128,14 +124,6 @@
  }
  
  GRAPH :sensed {
--  :parcel_a courier:at :c0_3 .
--  :parcel_b courier:at :c1_1 .
--  :van_a courier:at :c0_3 .
--  :van_b courier:at :c1_1 .
+-  :parcel_a courier:x 0 .
+-  :parcel_a courier:y 3 .
+-  :parcel_b courier:x 1 .
+-  :parcel_b courier:y 1 .
+-  :van_a courier:x 0 .
+-  :van_a courier:y 3 .
+-  :van_b courier:x 1 .
+-  :van_b courier:y 1 .
  }
  
  GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b {
-@@ -207,11 +203,49 @@
+@@ -191,11 +179,69 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .
-+  :sensed planning:cutBy "sha256:0d04982c80a681cc887f227f1dfec6d2d487ec8c9a093fd01c98713034526f06" .
++  :sensed planning:cutBy "sha256:fc5c047bf0831ce57b48595cb247a107207b950b375f05dd762415d62c2e9591" .
 +  :sensed.changeable a planning:ChangeableGraph .
 +  :sensed.changeable orexis:arrivedBy orexis:Derived .
 +  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
-+  :world planning:cutBy "sha256:0d04982c80a681cc887f227f1dfec6d2d487ec8c9a093fd01c98713034526f06" .
++  :world planning:cutBy "sha256:fc5c047bf0831ce57b48595cb247a107207b950b375f05dd762415d62c2e9591" .
++  :world.changeable a planning:ChangeableGraph .
++  :world.changeable orexis:arrivedBy orexis:Derived .
++  :world.changeable prov:wasDerivedFrom :world .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T120000p0000 orexis:hash "sha256:b6c359ac5c809dcb8cfa944c6ff270e99bddd0b4af2d66832750025f08cb2508" .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:b7a3a4015dc513a7c519d910f42b80b35ddf765eb406dd6fa8d5b92973f57d1c" .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:for :keeper.every_parcel_delivered .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:met false .
-+  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ; planning:offending :c1_1 ] .
-+  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 1 ; planning:instance :parcel_b ; planning:offending :c1_3 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ] .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:weighs ground:2026-01-01T120000p0000 .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:for :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:met false .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:open true .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:remaining 2 .
-+  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ; planning:offending :c1_1 ] .
-+  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:violation [ planning:about :parcel_b ; planning:constraint 1 ; planning:instance :parcel_b ; planning:offending :c1_3 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ] .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:weighs ground:2026-01-01T120000p0000 .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a orexis:Graph .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a planning:WantGraph .
@@ -49,15 +65,34 @@
 +
 +
 +GRAPH ground:2026-01-01T120000p0000 {
-+  :parcel_a courier:at :c0_3 .
-+  :parcel_b courier:at :c1_1 .
-+  :van_a courier:at :c0_3 .
-+  :van_b courier:at :c1_1 .
++  :door_parcel_a courier:x 0 .
++  :door_parcel_a courier:y 3 .
++  :door_parcel_b courier:x 1 .
++  :door_parcel_b courier:y 3 .
++  :parcel_a courier:x 0 .
++  :parcel_a courier:y 3 .
++  :parcel_b courier:x 1 .
++  :parcel_b courier:y 1 .
++  :van_a courier:x 0 .
++  :van_a courier:y 3 .
++  :van_b courier:x 1 .
++  :van_b courier:y 1 .
 +}
 +
 +GRAPH :sensed.changeable {
-+  :parcel_a courier:at :c0_3 .
-+  :parcel_b courier:at :c1_1 .
-+  :van_a courier:at :c0_3 .
-+  :van_b courier:at :c1_1 .
++  :parcel_a courier:x 0 .
++  :parcel_a courier:y 3 .
++  :parcel_b courier:x 1 .
++  :parcel_b courier:y 1 .
++  :van_a courier:x 0 .
++  :van_a courier:y 3 .
++  :van_b courier:x 1 .
++  :van_b courier:y 1 .
++}
++
++GRAPH :world.changeable {
++  :door_parcel_a courier:x 0 .
++  :door_parcel_a courier:y 3 .
++  :door_parcel_b courier:x 1 .
++  :door_parcel_b courier:y 3 .
 +}

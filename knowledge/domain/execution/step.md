@@ -32,7 +32,7 @@ What its action's [effect](/domain/planning/effect.md) changed in the world it w
 nothing else, as two graphs named `<step>.adds` and `<step>.retracts`, which the engine fills when
 the plan is extracted. Where the world the step reaches was forked from the world it leaves, that is
 the diff of the two; where it was forked from the later ground the step lands in, the two also
-differ by what the predictions moved between their periods — another van's next cell — which is no
+differ by what the predictions moved between their periods — another van's next position — which is no
 part of the step (#919). Their kinds
 are beneath `orexis:Graph` alone, so a reader of the present is never handed them: a world where the
 dose has landed is not this world

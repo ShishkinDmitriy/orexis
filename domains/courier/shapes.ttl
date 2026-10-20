@@ -7,9 +7,9 @@
 <> a planning:ShapesGraph .    # this document is one graph, and this is what it is
 
 #  WHAT DELIVERED MEANS AND HOW FAR IT IS, the domain's: a world's desire points here with
-#  `planning:metWhen` and `planning:estimates`. Delivered is the shape — on every parcel, the cell it
-#  is at equals the cell it is owed at, so a carried parcel, at no cell, is not delivered — and the
-#  estimate is what every parcel astray is still certainly owed in this domain's own actions —
+#  `planning:metWhen` and `planning:estimates`. Delivered is the shape — on every parcel, its two
+#  coordinates are its destination's two, so a carried parcel, with no coordinates, is not delivered — and
+#  the estimate is what every parcel astray is still certainly owed in this domain's own actions —
 #  the drives, its drop and, where it stands, its pick — which never overstates what they cost.
 #
 #  EACH BLOCK IS ABOUT THE PARCEL ITSELF, `planning:about sh:this`: the shape targets every parcel,
@@ -19,10 +19,21 @@
 #  ten-step plan — where a want per parcel is found in 90 and under a second
 #  (a-parcel-astray-is-a-want-of-its-own). A WANT pointing here, the courier's, reads it as before.
 
+#  A POSITION IS TWO NUMBERS ON THE THING (the-grid-is-infinite-and-a-position-is-two-coordinates), so the
+#  comparison is a SPARQL constraint and no `sh:equals`, which compares one path's values with another's
+#  on the one focus node: a parcel is in trouble where its destination's coordinates are not its own.
 courier:delivered a sh:NodeShape ;
     rdfs:label "every parcel standing where it is owed" ;
     sh:targetClass courier:Parcel ;
-    sh:property [ sh:path courier:at ; sh:equals courier:destination ; planning:about sh:this ] .
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "the parcel does not stand where it is owed" ;
+        planning:about sh:this ;
+        sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT $this WHERE {
+            $this courier:destination ?owed .
+            ?owed courier:x ?ox ; courier:y ?oy .
+            FILTER NOT EXISTS { $this courier:x ?ox ; courier:y ?oy }
+        }""" ] .
 
 #  WHAT IS STILL OWED, PER PARCEL ASTRAY: aboard, the road to the door and the drop; standing
 #  somewhere, the road to the parcel, its road home, the pick and the drop. Every action here
@@ -49,17 +60,14 @@ courier:drivesOwed rdfs:label "drives still owed, and each parcel's pick and dro
                 {
                     $this a courier:Parcel ; courier:destination ?owed .
                     ?owed courier:x ?ox ; courier:y ?oy .
-                    $this courier:carriedBy ?van . ?van courier:at ?vc .
-                    ?vc courier:x ?vx ; courier:y ?vy .
+                    $this courier:carriedBy ?van . ?van courier:x ?vx ; courier:y ?vy .
                     BIND($this AS ?p)
                     BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) + 1 AS ?dist)
                 } UNION {
                     $this a courier:Parcel ; courier:destination ?owed .
                     ?owed courier:x ?ox ; courier:y ?oy .
-                    $this courier:at ?pc . ?v courier:at ?vc .
-                    ?v a courier:Van .
-                    ?pc courier:x ?px ; courier:y ?py .
-                    ?vc courier:x ?vx ; courier:y ?vy .
+                    $this courier:x ?px ; courier:y ?py .
+                    ?v a courier:Van ; courier:x ?vx ; courier:y ?vy .
                     FILTER(?px != ?ox || ?py != ?oy)
                     BIND($this AS ?p)
                     BIND(ABS(?vx - ?px) + ABS(?vy - ?py)

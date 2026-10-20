@@ -3,7 +3,7 @@ type: Domain Concept
 title: Bridge
 description: >-
   A rule of a world that combines two domains, concluding a fact in one vocabulary from facts in
-  the other — a disk is on the peg standing on its cell. Authored by whoever combines the
+  the other — a disk is on the peg standing where it stands. Authored by whoever combines the
   domains, run forwards over the beliefs like any rule, and run backwards by refinement to keep
   a step one level down. Neither domain knows it.
 ---
@@ -11,22 +11,22 @@ description: >-
 # What it is
 
 A [level](/decisions/the-hierarchy-is-found-in-the-rules.md) is a vocabulary: hanoi's, where a
-disk is on a peg; the courier's, where a parcel is at a cell. Neither domain mentions the
+disk is on a peg; the courier's, where a parcel stands. Neither domain mentions the
 other, and each plans on its own. A world that wants the puzzle solved by a van combines them,
 and says in a `sh:RulesGraph` of its own how the two describe one thing:
 
 ```sparql
 CONSTRUCT { ?disk hanoi:on ?peg } WHERE {
-  ?disk a hanoi:Disk ; courier:at ?cell .
-  ?peg a hanoi:Peg ; courier:at ?cell .
-  FILTER NOT EXISTS { ?larger a hanoi:Disk ; courier:at ?cell ; hanoi:size ?l .
+  ?disk a hanoi:Disk ; courier:x ?x ; courier:y ?y .
+  ?peg a hanoi:Peg ; courier:x ?x ; courier:y ?y .
+  FILTER NOT EXISTS { ?larger a hanoi:Disk ; courier:x ?x ; courier:y ?y ; hanoi:size ?l .
                       ?disk hanoi:size ?s . FILTER(?l > ?s) } }
 ```
 
 That is the bridge, and it is an ordinary SHACL rule: a [revision](/domain/belief/revision.md) the
 deliberator concludes of the state whenever the state moves, so the puzzle's words are believed
 beside the grid's with no file stating them. `domains/tower/` holds two — a disk on the next
-larger disk sharing its cell, and the largest on the peg — and one axiom, that a disk is a
+larger disk sharing its position, and the largest on the peg — and one axiom, that a disk is a
 parcel.
 
 # Which way it runs

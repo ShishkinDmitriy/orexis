@@ -15,9 +15,14 @@
 
 courier:Drive a orexis:Action ;
     rdfs:label "drive the van to a neighbouring cell" ;
-    orexis:takes courier:van , courier:to ;
+    orexis:takes courier:van , courier:toX , courier:toY ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Fictive ] ] ;
+    #  A DRIVE GOES TO ANY NEIGHBOUR, BY ARITHMETIC (the-grid-is-infinite-and-a-position-is-two-coordinates):
+    #  the grid is infinite and nothing authors it, so the four neighbours of where the van stands are
+    #  minted here, a VALUES of the four offsets and a BIND, and the filling carries two numbers the world
+    #  never named. What keeps a van off a hedge or another van is the world's constraints, weighed in every
+    #  world a drive reaches, and what keeps a plan from driving for ever is the estimate.
     #  A VAN SOMEBODY DRIVES MOVES ONLY WITH THEM ABOARD (#903), AND ONLY BY THE AGENT THAT HAS THEM
     #  (#929): the last filter refuses a van a driver `drives` who is not `aboard` it or whom the
     #  agent does not `orexis:plays`, and asks nothing of a van the world names no driver for,
@@ -28,12 +33,12 @@ courier:Drive a orexis:Action ;
     #  nobody's to drive, the same refusal as a driver elsewhere. The inner filter opens on the
     #  pattern both its variables are bound in, since a `NOT EXISTS` is evaluated per row from there.
     planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
-        SELECT ?van ?to WHERE {
-            ?van courier:at ?here .
+        SELECT ?van ?toX ?toY WHERE {
+            ?van courier:x ?x ; courier:y ?y .
             ?van a courier:Van .
-            ?here courier:x ?hx ; courier:y ?hy .
-            ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
-            FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
+            VALUES (?dx ?dy) { (1 0) (-1 0) (0 1) (0 -1) }
+            BIND(?x + ?dx AS ?toX)
+            BIND(?y + ?dy AS ?toY)
             FILTER NOT EXISTS { ?driver courier:drives ?van .
                 FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; orexis:plays ?driver } }
         }""" ;
@@ -43,16 +48,16 @@ courier:Drive a orexis:Action ;
     #  here as the dose states the cadence of the sensor that shows it — a world that knows its
     #  streets better is where a truer figure would come from, never the search. The band is what
     #  makes a drive an ACT IN FLIGHT rather than a move in a puzzle: a step lands as long after it
-    #  is taken as this says, the executor looks for the van at `$to` from the least and gives up
+    #  is taken as this says, the executor looks for the van at the coordinates from the least and gives up
     #  a patience past the most, and two drives' windows can overlap only once they have a length
     #  (a-landing-is-a-band-and-a-world-holds-over-a-period). Declared as nothing, every world of a
     #  delivery stood at the pass's one instant, and a fleet had no time axis to be scheduled on.
     planning:landsAfter """SELECT ?least ?most WHERE { BIND(30 AS ?least) BIND(60 AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
-        DELETE { $van courier:at ?old }
-        INSERT { $van courier:at $to }
-        WHERE  { $van courier:at ?old }""" ] ] .
+        DELETE { $van courier:x ?x ; courier:y ?y }
+        INSERT { $van courier:x $toX ; courier:y $toY }
+        WHERE  { $van courier:x ?x ; courier:y ?y }""" ] ] .
 
 #  THE PICK DELETES: it removes where the parcel stood and puts it aboard, a different pair, so
 #  nothing replaces the fact that goes.
@@ -62,11 +67,11 @@ courier:Pick a orexis:Action ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Fictive ] ] ;
     #  A VAN SOMEBODY DRIVES IS LOADED ONLY WITH THEM ABOARD, AND ONLY BY THE AGENT THAT HAS THEM (#931):
-    #  the drive's last filter, word for word, since the driver is the one body at a van's cell and a
+    #  the drive's last filter, word for word, since the driver is the one body where a van stands and a
     #  van it has left stands where nobody is to load it. A van no driver is named for is refused nothing.
     planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?parcel ?van WHERE {
-            ?van courier:at ?cell . ?parcel courier:at ?cell .
+            ?van courier:x ?x ; courier:y ?y . ?parcel courier:x ?x ; courier:y ?y .
             ?parcel a courier:Parcel .
             ?van a courier:Van .
             FILTER NOT EXISTS { ?driver courier:drives ?van .
@@ -78,20 +83,22 @@ courier:Pick a orexis:Action ;
     planning:landsAfter """SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
-        DELETE { $parcel courier:at ?cell }
+        DELETE { $parcel courier:x ?x ; courier:y ?y }
         INSERT { $parcel courier:carriedBy $van }
-        WHERE  { $parcel courier:at ?cell }""" ] ] .
+        WHERE  { $parcel courier:x ?x ; courier:y ?y }""" ] ] .
 
+#  THE DROP TAKES THE PARCEL ALONE: it is set down where the van carrying it stands, which the effect reads
+#  of the world it is taken in, so the step predicts the parcel at the van's two numbers there.
 courier:Drop a orexis:Action ;
     rdfs:label "set a carried parcel down where the van stands" ;
-    orexis:takes courier:parcel , courier:to ;
+    orexis:takes courier:parcel ;
     execution:implementation [ a execution:Implementation ;
         execution:operation [ a execution:Fictive ] ] ;
     #  AND UNLOADED THE SAME WAY (#931): the van is the one carrying the parcel, bound by the first
     #  pattern though the drop does not take it, and the filter is the pick's.
     planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
-        SELECT ?parcel ?to WHERE {
-            ?parcel courier:carriedBy ?van . ?van courier:at ?to .
+        SELECT ?parcel WHERE {
+            ?parcel courier:carriedBy ?van .
             ?parcel a courier:Parcel .
             FILTER NOT EXISTS { ?driver courier:drives ?van .
                 FILTER NOT EXISTS { ?driver courier:aboard ?van . ?me a orexis:Self ; orexis:plays ?driver } }
@@ -102,5 +109,5 @@ courier:Drop a orexis:Action ;
     planning:effect [ a planning:Effect ;
         sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { $parcel courier:carriedBy ?van }
-        INSERT { $parcel courier:at $to }
-        WHERE  { $parcel courier:carriedBy ?van }""" ] ] .
+        INSERT { $parcel courier:x ?x ; courier:y ?y }
+        WHERE  { $parcel courier:carriedBy ?van . ?van courier:x ?x ; courier:y ?y }""" ] ] .

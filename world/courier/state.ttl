@@ -9,5 +9,5 @@
 #  graph, and the only file here the runtime never reloads — from the first boot on, where the
 #  van and the parcel stand is the agent's belief, rewritten by its own actions.
 
-:van courier:at :c0_0 .
-:parcel courier:at :c1_2 .
+:van courier:x 0 ; courier:y 0 .
+:parcel courier:x 1 ; courier:y 2 .

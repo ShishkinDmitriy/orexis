@@ -2,7 +2,7 @@
 parked on it by a driver nobody plays (#1002, #1003). The courier plans its parcel's delivery, each drive is a
 command to its van, the simulator has the van on the cell forty-five seconds on, the fix reports it, the
 courier's transitions conclude the cell, and the step lands — the whole loop on one fake broker the agent and
-the simulator share, with the simulator reading the road's cells off the domain the world imports. The parked
+the simulator share, with the simulator reading the road's hedges off the domain the world imports. The parked
 van and whatever else comes within two cells are seen through the contacts the courier's van carries.
 
 Held to `world/layby/`: a world a van is driven through, not written into. A fictive drive would have
@@ -29,8 +29,13 @@ NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 L = "http://example.org/orexis/world/layby#"
 CADENCE_S = 10
 
-#  WHERE EVERYTHING THE COURIER BELIEVES STANDS: every `courier:at` in its beliefs, by local name.
-_AT_Q = "PREFIX courier: <http://example.org/orexis/courier#> SELECT ?s ?c WHERE { ?s courier:at ?c }"
+#  WHERE EVERYTHING THE COURIER BELIEVES STANDS: every thing with two coordinates in its beliefs, by local name,
+#  save where a parcel is owed, which is authored and never moves.
+_AT_Q = """PREFIX courier: <http://example.org/orexis/courier#>
+SELECT ?s ?x ?y WHERE { ?s courier:x ?x ; courier:y ?y . FILTER(isIRI(?s)) FILTER NOT EXISTS { ?p courier:destination ?s } }"""
+ROAD = "http://example.org/orexis/road#"
+#  THE HEDGES EITHER SIDE OF THE LANE, which a radar slot sees as it passes and nothing types: the road's own.
+HEDGES = {(2, 0), (3, 0), (4, 0), (2, 2), (4, 2)}
 
 
 class Bus:
@@ -59,8 +64,8 @@ class Bus:
             self.simulator.command(topic, payload)
 
 
-def _at(beliefs) -> dict[str, str]:
-    return {r["s"].rsplit("#", 1)[-1]: r["c"].rsplit("#", 1)[-1]
+def _at(beliefs) -> dict[str, tuple[int, int]]:
+    return {r["s"].rsplit("#", 1)[-1]: (int(r["x"]), int(r["y"]))
             for r in rows(beliefs, _AT_Q, graphs_of(beliefs, "http://example.org/orexis#BeliefGraph"))}
 
 
@@ -108,28 +113,34 @@ def test_the_van_is_driven_by_command_and_lands_where_the_fix_shows_it(monkeypat
     before the next is taken: the courier never writes its van's cell, the simulator moves it."""
     bus, time = _layby(monkeypatch)
     assert bus.simulator.open() == ["actuators/van_a/command"], "the parked van listens for nothing"
-    assert len(bus.simulator.vans) == 1 and (6, 1) in bus.simulator.cells and (2, 0) not in bus.simulator.cells, \
-        "the driven van read off the world, the road's cells off the domain it imports"
+    assert len(bus.simulator.vans) == 1 and bus.simulator.position(ROAD + "hedge_2_0") == (2, 0), \
+        "the driven van read off the world, the road's hedges off the domain it imports"
     assert bus.simulator.position(L + "van_b") == (6, 0), "the parked van stands where its model says"
     bus.simulator.step(NOW)                                             # the fix: van A at (0, 1)
     bus.runtime.run(passes=1, poll_s=0)
-    assert _at(bus.runtime.beliefs) == {"van_a": "c0_1", "parcel_a": "c1_1"}, "van B, six cells off, is believed nowhere"
+    at = _at(bus.runtime.beliefs)
+    assert at["van_a"] == (0, 1) and at["parcel_a"] == (1, 1) and "van_b" not in at, f"van B, six cells off, is believed nowhere: {at}"
+    assert at["contact_1"] == (2, 0), f"the hedge two cells on is seen, and nothing knows it is a hedge: {at}"
     assert len(bus.runtime.parts["execution"].executor.walking()) == 1, "a plan for the parcel is walked"
     assert [t for t, _ in bus.commands] == ["actuators/van_a/command"], "the first drive is sent to the van"
     assert bus.commands[0][1] == {"to": {"x": 1, "y": 1}}, "to the parcel's cell, by its coordinates"
     #  THE WORLD ANSWERS: ten seconds at a time, the fix reporting the van's cell, until the plan is walked.
     seen = _walk(bus, time, 90)
     assert bus.runtime.parts["execution"].executor.walking() == [], "the plan was walked to its end"
-    assert _at(bus.runtime.beliefs) == {"van_a": "c6_1", "parcel_a": "c6_1", "van_b": "c6_0"}, _at(bus.runtime.beliefs)
-    #  THE CONTACT (#1003): van B, parked at (6, 0), is believed nowhere until van A comes within two cells of it
-    #  and at its cell from then on; the radar slot, with nothing unidentified in range, is believed nowhere.
+    at = _at(bus.runtime.beliefs)
+    assert (at["van_a"], at["parcel_a"], at["van_b"]) == ((6, 1), (6, 1), (6, 0)), at
+    #  THE CONTACT (#1003): van B, parked at (6, 0), is believed nowhere until van A comes within the receiver's
+    #  range of it, two cells either way, and at its coordinates from then on; the radar slot, with B identified
+    #  by the receiver, sees the hedges beside the lane as the van passes them, and nothing else.
     first = next(i for i, at in enumerate(seen) if "van_b" in at)
-    assert all("van_b" not in at for at in seen[:first]) and seen[first - 1]["van_a"] in ("c4_1", "c5_1"), seen[first - 1]
-    assert all(at["van_b"] == "c6_0" for at in seen[first:]), "once seen, where it is"
-    assert all("contact_1" not in at for at in seen), "nothing unidentified was in range"
+    assert all("van_b" not in at for at in seen[:first]) and seen[first]["van_a"] == (4, 1), seen[first]
+    assert all(at["van_b"] == (6, 0) for at in seen[first:]), "once seen, where it is"
+    assert {at.get("contact_1") for at in seen} <= {None, *HEDGES} and any(at.get("contact_1") in HEDGES for at in seen), \
+        "the radar saw the hedges beside the lane and nothing else"
     assert all(t == "actuators/van_a/command" for t, _ in bus.commands), "nothing commanded the parked van"
     told = [(payload["to"]["x"], payload["to"]["y"]) for _, payload in bus.commands]
     assert told[0] == (1, 1) and told[-1] == (6, 1) and len(told) == 6, f"six drives, east along the lane: {told}"
+    assert not set(told) & HEDGES, f"no hedge was driven: {told}"
     assert all(abs(a[0] - b[0]) + abs(a[1] - b[1]) == 1 for a, b in zip([(0, 1), *told], told)), "each a neighbour of the last"
     assert bus.simulator.position(L + "van_a") == (6, 1), "the simulator's van is at the eastern end: nobody wrote it there"
     assert (time["at"] - NOW) <= timedelta(minutes=8), f"walked within eight minutes of the world's time: {time['at'] - NOW}"
@@ -147,17 +158,17 @@ def test_a_van_told_a_cell_that_is_no_neighbour_refuses_and_stays(monkeypatch, c
 
 
 #  A TREE ACROSS THE ROAD (#1003): van A starts at (0, 0) with its parcel at (0, 2), and a thing nothing
-#  identifies lies on the direct way at (0, 1), one cell off, within the radar's two. The slot's vector lands on
-#  that cell, the slot is believed there, and the constraint keeps every plan off it: the way round through
-#  column 1 is two drives longer, and is the one taken.
+#  identifies lies on the direct way at (0, 1), one cell off, within the radar's range. The slot's vector
+#  lands there, the slot is believed there, and the constraint keeps every plan off it: a way round, two
+#  drives longer, is the one taken.
 _FROM_THE_CORNER = {"world.ttl": [("sim:initialValue 1 ; sim:jitter 0 ] ;    # van A row 1", "sim:initialValue 0 ; sim:jitter 0 ] ;    # van A row 0")],
-                    "beliefs/courier_a.state.ttl": [(":parcel_a courier:at road:c1_1 .", ":parcel_a courier:at road:c0_2 .")]}
+                    "beliefs/courier_a.state.ttl": [(":parcel_a courier:x 1 ; courier:y 1 .", ":parcel_a courier:x 0 ; courier:y 2 .")]}
 DETOUR = {**_FROM_THE_CORNER,
           "world.ttl": [*_FROM_THE_CORNER["world.ttl"],
                         (":driver_b a courier:Driver ;",
                          ':tree sim:simulatedBy [ a sim:Model ; sim:x 0 ; sim:y 1 ] ; rdfs:label "a fallen tree, which only the radar knows" .\n'
                          ":driver_b a courier:Driver ;")],
-          "society.ttl": [(":van_a , :van_b ;", ":van_a , :van_b , :tree ;")]}
+          "society.ttl": [(":van_a , :van_b ,", ":van_a , :van_b , :tree ,")]}
 
 
 def test_a_thing_the_radar_sees_is_an_obstacle_and_the_plan_goes_round_it(monkeypatch, tmp_path):
@@ -166,12 +177,14 @@ def test_a_thing_the_radar_sees_is_an_obstacle_and_the_plan_goes_round_it(monkey
     bus.simulator.step(NOW)
     bus.runtime.run(passes=1, poll_s=0)
     at = _at(bus.runtime.beliefs)
-    assert at["van_a"] == "c0_0" and at["contact_1"] == "c0_1" and "van_b" not in at, at
+    assert at["van_a"] == (0, 0) and at["contact_1"] == (0, 1) and "van_b" not in at, at
     seen = _walk(bus, time, 120)
     assert bus.runtime.parts["execution"].executor.walking() == [], "the plan was walked to its end"
-    assert _at(bus.runtime.beliefs)["parcel_a"] == "c6_1", _at(bus.runtime.beliefs)
+    assert _at(bus.runtime.beliefs)["parcel_a"] == (6, 1), _at(bus.runtime.beliefs)
     told = [(payload["to"]["x"], payload["to"]["y"]) for _, payload in bus.commands]
-    assert (0, 1) not in told, f"the obstacle's cell was driven: {told}"
-    assert told[:4] == [(1, 0), (1, 1), (1, 2), (0, 2)], f"round through column 1 to the parcel: {told}"
-    assert all("contact_1" not in at or at["contact_1"] == "c0_1" for at in seen), "the tree stays where it is while seen"
-    assert "contact_1" not in seen[-1], "and is believed nowhere once two cells behind"
+    assert (0, 1) not in told, f"the obstacle's position was driven: {told}"
+    #  ROUND THE TREE, four drives to the parcel where two would do through it — down column 1 or down column
+    #  -1, the grid being infinite and the two ways tying.
+    assert told[3] == (0, 2) and told[:3] in ([(1, 0), (1, 1), (1, 2)], [(-1, 0), (-1, 1), (-1, 2)]), f"round the tree to the parcel: {told}"
+    assert {at.get("contact_1") for at in seen} <= {None, (0, 1), *HEDGES}, "the slot saw the tree where it is, and the hedges, and nothing else"
+    assert seen[-1].get("contact_1") != (0, 1), "and the tree is no longer seen from the eastern end"

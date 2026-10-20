@@ -10,8 +10,9 @@ that no cell holds two vans (#567). What this world is held to is what was MEASU
   ten-step plan optimal for both by construction (one-mind-couples-the-wants-a-constraint-can-make-collide, #900).
   Its estimate is the desire's sum over both parcels, ten, which is what the plan costs; what the
   coupling costs is the product — 228 candidates against 50 for two wants apart, and a budget of 128
-  cuts it short. Two parcels whose vans stand on DISJOINT grids are two wants as before, each named for
-  its parcel and planned alone, since the constraint over what the vans can reach yields no row there;
+  cuts it short. Two parcels whose vans stood on DISJOINT grids were two wants while a grid was authored
+  cells; the grid is infinite now and two vans can always meet, so a constraint over a van's position
+  couples every parcel (the-grid-is-infinite-and-a-position-is-two-coordinates);
 - a want's estimate never overstates what its plan cost — the one promise an estimate makes, held
   here as a gate over the shipped world, the corridor, a van alone and a van parked in the way;
 - A WORLD THAT VIOLATES THE CONSTRAINT IS IMPOSSIBLE: the constraint is a `planning:Constraint`, what
@@ -84,9 +85,11 @@ JOINT = "every_parcel_delivered.pursued.parcel_a.parcel_b"
 #  every case here reads by handing the Planner and the Runtime none, so the figure a deployed agent
 #  searches at is the one these cases pass at; the corridor is a world whose search needs more, and
 #  says so in its own self graph. A case that hands a budget is about that budget.
-CORRIDOR_BUDGET = (":dispatcher planning:budget 256 .", ":dispatcher planning:budget 512 .")
-#  THE CONSTRAINT, the one this world states: no cell holds two vans (`constraints.ttl`).
-CONSTRAINT = "no_cell_holds_two_vans"
+CORRIDOR_BUDGET = (":dispatcher planning:budget 512 .", ":dispatcher planning:budget 1024 .")
+#  THE CONSTRAINT, the one this world holds: no two vans at one position, the courier's own
+#  (`domains/courier/constraints.ttl`, held in `constraints.ttl`).
+COURIER = "http://example.org/orexis/courier#"
+CONSTRAINT = "no_two_vans_at_one_position"
 #  THE DRIVE'S BAND, as the courier declares it (`domains/courier/actions.ttl`, #901): a drive lands
 #  between half a minute and a minute after it is taken; a pick and a drop at once. The executor's
 #  patience past the latest landing is its own default.
@@ -101,9 +104,10 @@ SELECT ?want ?outcome (COUNT(?step) AS ?steps) WHERE {
              OPTIONAL { ?step a execution:Step ; execution:partOf ?p } } }
 GROUP BY ?want ?outcome"""
 _STEPS_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?want ?a ?van ?parcel ?to WHERE {
+SELECT ?want ?a ?van ?parcel ?tx ?ty WHERE {
   GRAPH ?p { ?p planning:for ?want . ?step a execution:Step ; execution:partOf ?p ; planning:fills ?a .
-             OPTIONAL { ?step courier:van ?van } OPTIONAL { ?step courier:parcel ?parcel } OPTIONAL { ?step courier:to ?to } } }"""
+             OPTIONAL { ?step courier:van ?van } OPTIONAL { ?step courier:parcel ?parcel }
+             OPTIONAL { ?step courier:toX ?tx ; courier:toY ?ty } } }"""
 #  THE POSSIBLE WORLDS WEIGHED PER WANT — the figure measure-the-search tabulates; a candidate passed
 #  over is weighed too and is not counted here.
 _WEIGHED_Q = """
@@ -147,13 +151,14 @@ _IMPOSSIBLE_Q = """
 SELECT ?w ?by WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph ; planning:impossible ?by } }"""
 #  TWO VANS ON ONE CELL, in one graph's facts: the vans' kinds are common and the world's facts its own.
 _SHARED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT DISTINCT ?cell WHERE { GRAPH $w { ?a courier:at ?cell . ?b courier:at ?cell }
+SELECT DISTINCT ?x ?y WHERE { GRAPH $w { ?a courier:x ?x ; courier:y ?y . ?b courier:x ?x ; courier:y ?y }
                               GRAPH ?h { ?a a courier:Van . ?b a courier:Van } FILTER(?a != ?b) }"""
 #  WHERE THINGS STAND, asked of what the agent BELIEVES by kind: a published plan's steps state the
 #  positions they predict in graphs of their own (a-steps-prediction-is-two-graphs-it-names), and a
 #  read over every graph took a van's predicted cell for its present one.
 _AT_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?x ?cell WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?x courier:at ?cell } }"""
+SELECT ?s ?x ?y WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?s courier:x ?x ; courier:y ?y }
+  FILTER NOT EXISTS { GRAPH ?h { ?p courier:destination ?s } } }"""
 _ACTS_Q = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }"
 #  WHAT A WEIGHING IN A GROUND SAYS IS IN TROUBLE, and where: each witness's instance and the value
 #  that offended — for the constraint, the van and the cell it shares.
@@ -180,50 +185,47 @@ _INTENTIONS_Q = "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Inte
 _TARGETS_Q = "SELECT ?t WHERE { GRAPH ?g { $w planning:metWhen ?m . ?m sh:targetNode ?t } }"
 
 #  THE CORRIDOR: van A drives parcel A along the second row, van B drives parcel B down the third
-#  column, and the two shortest chains meet at c2_1 — each van's third step.
-CORRIDOR = {"world.ttl": [("courier:destination :c0_3", "courier:destination :c3_1"),
-                          ("courier:destination :c3_3", "courier:destination :c2_0")],
-            "state.ttl": [(":van_a courier:at :c0_0 .", ":van_a courier:at :c0_1 ."),
-                          (":parcel_a courier:at :c0_1 .", ":parcel_a courier:at :c1_1 ."),
-                          (":van_b courier:at :c3_0 .", ":van_b courier:at :c2_3 ."),
-                          (":parcel_b courier:at :c3_1 .", ":parcel_b courier:at :c2_2 .")],
+#  column, and the two shortest chains meet at (2, 1) — each van's third step.
+CORRIDOR = {"world.ttl": [(":door_a courier:x 0 ; courier:y 3 ;", ":door_a courier:x 3 ; courier:y 1 ;"),
+                          (":door_b courier:x 3 ; courier:y 3 ;", ":door_b courier:x 2 ; courier:y 0 ;")],
+            "state.ttl": [(":van_a courier:x 0 ; courier:y 0 .", ":van_a courier:x 0 ; courier:y 1 ."),
+                          (":parcel_a courier:x 0 ; courier:y 1 .", ":parcel_a courier:x 1 ; courier:y 1 ."),
+                          (":van_b courier:x 3 ; courier:y 0 .", ":van_b courier:x 2 ; courier:y 3 ."),
+                          (":parcel_b courier:x 3 ; courier:y 1 .", ":parcel_b courier:x 2 ; courier:y 2 .")],
             "beliefs/dispatcher.self.ttl": [CORRIDOR_BUDGET]}
 #  ONE VAN AND ITS PARCEL ALONE, either half of the shipped delivery.
 HALF_A = {"world.ttl": [(':van_b a courier:Van ; rdfs:label "van B" .', ""),
-                        (':parcel_b a courier:Parcel ; courier:destination :c3_3 ;\n    rdfs:label "the parcel owed at the top of the last column" .', "")],
-          "state.ttl": [(":van_b courier:at :c3_0 .", ""), (":parcel_b courier:at :c3_1 .", "")]}
+                        (':parcel_b a courier:Parcel ; courier:destination :door_b ;\n    rdfs:label "the parcel owed at the top of the last column" .', "")],
+          "state.ttl": [(":van_b courier:x 3 ; courier:y 0 .", ""), (":parcel_b courier:x 3 ; courier:y 1 .", "")]}
 HALF_B = {"world.ttl": [(':van_a a courier:Van ; rdfs:label "van A" .', ""),
-                        (':parcel_a a courier:Parcel ; courier:destination :c0_3 ;\n    rdfs:label "the parcel owed at the top of the first column" .', "")],
-          "state.ttl": [(":van_a courier:at :c0_0 .", ""), (":parcel_a courier:at :c0_1 .", "")]}
+                        (':parcel_a a courier:Parcel ; courier:destination :door_a ;\n    rdfs:label "the parcel owed at the top of the first column" .', "")],
+          "state.ttl": [(":van_a courier:x 0 ; courier:y 0 .", ""), (":parcel_a courier:x 0 ; courier:y 1 .", "")]}
 #  BOTH VANS ON ONE CELL as the world is posed.
-TOGETHER = {"state.ttl": [(":van_b courier:at :c3_0 .", ":van_b courier:at :c0_0 .")]}
-#  VAN B PARKED ACROSS THE ONLY SHORTEST PATH: van A at c0_1, parcel A at c1_1 owed at c3_1 — two drives
-#  through c2_1, four round it — and van B standing on c2_1 with no parcel of its own.
-PARKED = {"world.ttl": [("courier:destination :c0_3", "courier:destination :c3_1"),
-                        (':parcel_b a courier:Parcel ; courier:destination :c3_3 ;\n    rdfs:label "the parcel owed at the top of the last column" .', "")],
-          "state.ttl": [(":van_a courier:at :c0_0 .", ":van_a courier:at :c0_1 ."),
-                        (":parcel_a courier:at :c0_1 .", ":parcel_a courier:at :c1_1 ."),
-                        (":van_b courier:at :c3_0 .", ":van_b courier:at :c2_1 ."),
-                        (":parcel_b courier:at :c3_1 .", "")]}
-#  THE SAME WITH PARCEL A ALREADY ABOARD VAN A at c1_1, so only van A can deliver it.
+TOGETHER = {"state.ttl": [(":van_b courier:x 3 ; courier:y 0 .", ":van_b courier:x 0 ; courier:y 0 .")]}
+#  VAN B PARKED ACROSS THE ONLY SHORTEST PATH: van A at (0, 1), parcel A at (1, 1) owed at (3, 1) — two drives
+#  through (2, 1), four round it — and van B standing on (2, 1) with no parcel of its own.
+PARKED = {"world.ttl": [(":door_a courier:x 0 ; courier:y 3 ;", ":door_a courier:x 3 ; courier:y 1 ;"),
+                        (':parcel_b a courier:Parcel ; courier:destination :door_b ;\n    rdfs:label "the parcel owed at the top of the last column" .', "")],
+          "state.ttl": [(":van_a courier:x 0 ; courier:y 0 .", ":van_a courier:x 0 ; courier:y 1 ."),
+                        (":parcel_a courier:x 0 ; courier:y 1 .", ":parcel_a courier:x 1 ; courier:y 1 ."),
+                        (":van_b courier:x 3 ; courier:y 0 .", ":van_b courier:x 2 ; courier:y 1 ."),
+                        (":parcel_b courier:x 3 ; courier:y 1 .", "")]}
+#  THE SAME WITH PARCEL A ALREADY ABOARD VAN A at (1, 1), so only van A can deliver it.
 CARRYING = {"world.ttl": PARKED["world.ttl"],
-            "state.ttl": [(":van_a courier:at :c0_0 .", ":van_a courier:at :c1_1 ."),
-                          (":parcel_a courier:at :c0_1 .", ":parcel_a courier:carriedBy :van_a ."),
-                          (":van_b courier:at :c3_0 .", ":van_b courier:at :c2_1 ."),
-                          (":parcel_b courier:at :c3_1 .", "")]}
-#  TWO GRIDS A CONTINENT APART: van B and parcel B on a second 4x4 at x 10 to 13, no cell of which is
-#  one apart from any of the first, so no drive crosses and no cell can ever hold both vans.
-DISJOINT = {"world.ttl": [(":c3_3 a courier:Cell ; courier:x 3 ; courier:y 3 .",
-                           ":c3_3 a courier:Cell ; courier:x 3 ; courier:y 3 .\n"
-                           + "\n".join(f":g{x}_{y} a courier:Cell ; courier:x {x} ; courier:y {y} ."
-                                       for x in range(10, 14) for y in range(4))),
-                          ("courier:destination :c3_3", "courier:destination :g10_3")],
-            "state.ttl": [(":van_b courier:at :c3_0 .", ":van_b courier:at :g10_0 ."),
-                          (":parcel_b courier:at :c3_1 .", ":parcel_b courier:at :g10_1 .")]}
+            "state.ttl": [(":van_a courier:x 0 ; courier:y 0 .", ":van_a courier:x 1 ; courier:y 1 ."),
+                          (":parcel_a courier:x 0 ; courier:y 1 .", ":parcel_a courier:carriedBy :van_a ."),
+                          (":van_b courier:x 3 ; courier:y 0 .", ":van_b courier:x 2 ; courier:y 1 ."),
+                          (":parcel_b courier:x 3 ; courier:y 1 .", "")]}
+
 
 
 def _local(iri: str | None) -> str | None:
     return iri.rsplit("#", 1)[-1].rsplit("/", 1)[-1] if iri else None
+
+
+def _place(r: dict) -> tuple[int, int] | None:
+    """Where a step drives, as a pair — None for a pick or a drop, which take no place."""
+    return (int(r["tx"]), int(r["ty"])) if r.get("tx") is not None else None
 
 
 def _dt(instant: str) -> datetime:
@@ -275,7 +277,7 @@ def _plans(im) -> dict[str, tuple[str, int]]:
 def _steps(im) -> dict[str, set[tuple]]:
     out: dict[str, set] = {}
     for r in rows(im, _STEPS_Q, ()):
-        out.setdefault(_local(r["want"]), set()).add((_local(r["a"]), _local(r.get("van")), _local(r.get("parcel")), _local(r.get("to"))))
+        out.setdefault(_local(r["want"]), set()).add((_local(r["a"]), _local(r.get("van")), _local(r.get("parcel")), _place(r)))
     return out
 
 
@@ -308,7 +310,7 @@ def _targets(im, want: str) -> set[str]:
 
 def _shared(store, graphs) -> dict[str, list[str]]:
     """Per graph among `graphs`, the cells two vans stand on in it — only those holding one."""
-    found = {_local(g): sorted(_local(r["cell"]) for r in rows(store, _SHARED_Q, (), w=g)) for g in graphs}
+    found = {_local(g): sorted((int(r["x"]), int(r["y"])) for r in rows(store, _SHARED_Q, (), w=g)) for g in graphs}
     return {g: cells for g, cells in found.items() if cells}
 
 
@@ -342,7 +344,8 @@ def _possible(im, want: str) -> None:
 
 
 def _at(store) -> dict[str, str]:
-    return {_local(r["x"]): _local(r["cell"]) for r in rows(store, _AT_Q, ()) if r["x"].startswith(D)}
+    return {_local(r["s"]): (int(r["x"]), int(r["y"])) for r in rows(store, _AT_Q, ())
+            if r["s"].startswith(D) and not _local(r["s"]).startswith("door")}
 
 
 def _run(world: Path, passes: int = 40):
@@ -382,13 +385,13 @@ def test_the_boot_says_what_each_graph_is_and_two_vans_are_one_scope(ticking):
     parcel is a filling value of either van's Pick, so the parcels join the vans — by key as by predicate."""
     beliefs = boot(WORLD, "dispatcher")
     assert len(graphs_of(beliefs, DESIRE)) == 1 and len(_own(beliefs)) == 1
-    assert _at(beliefs) == {"van_a": "c0_0", "parcel_a": "c0_1", "van_b": "c3_0", "parcel_b": "c3_1"}
+    assert _at(beliefs) == {"van_a": (0, 0), "parcel_a": (0, 1), "van_b": (3, 0), "parcel_b": (3, 1)}
     members: dict[str, set] = {}
     for r in rows(beliefs, _MEMBERS_Q, ()):
         members.setdefault(_local(r["m"]), set()).add(r["s"])
     scopes = {s for ss in members.values() for s in ss}
     assert len(scopes) == 1, f"two vans in one courier vocabulary are one scope: {scopes}"
-    assert {"van_a", "van_b", "parcel_a", "parcel_b", "Drive", "Pick", "Drop", "at", "carriedBy"} <= set(members)
+    assert {"van_a", "van_b", "parcel_a", "parcel_b", "Drive", "Pick", "Drop", "x", "y", "carriedBy"} <= set(members)
 
 
 def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_ten_step_plan(ticking, tmp_path):
@@ -405,7 +408,7 @@ def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_te
     Planner none (measure-the-search, #932). Apart, no world the
     search visits holds two vans on a cell, so the constraint marks nothing and the count is what it
     was before it — the constraint is weighed in every world the search weighs, 148, and is kept in all.
-    AND TWO PARCELS ON DISJOINT GRIDS ARE TWO WANTS exactly as before: the constraint over what the vans
+    AND TWO PARCELS ON DISJOINT GRIDS WERE TWO WANTS while a grid was authored cells; on an infinite grid every
     can reach yields no row, nothing couples them, and each is planned alone at 23 weighings with its
     own estimate, five."""
     cut = _pass(WORLD, budget=128)
@@ -428,24 +431,16 @@ def test_apart_two_parcels_the_aversion_can_make_collide_are_one_want_and_one_te
         halves_paid[want] = _weighed(half)[want]
         halves_left[want] = _remaining(half)[want]
     assert left[JOINT] == sum(halves_left.values()) == 10.0, f"the coupled want's estimate is the sum of its instances': {left} against {halves_left}"
-    assert halves_paid == {"every_parcel_delivered.pursued.parcel_a": 13, "every_parcel_delivered.pursued.parcel_b": 13}
-    assert (spent[JOINT], paid[JOINT]) == (228, 148), f"the product's price, measured: {spent} candidates, {paid} worlds"
-    assert _impossible(im) == {} and paid[CONSTRAINT] == 148, "the constraint weighed in every world, marking none: " + str(paid)
+    assert halves_paid == {"every_parcel_delivered.pursued.parcel_a": 20, "every_parcel_delivered.pursued.parcel_b": 20}
+    assert (spent[JOINT], paid[JOINT]) == (328, 248), f"the product's price, measured: {spent} candidates, {paid} worlds"
+    assert _impossible(im) == {} and paid[CONSTRAINT] == 248, "the constraint weighed in every world, marking none: " + str(paid)
     runtime, outcome, trace = _run(WORLD)
     assert outcome == UNFINISHED and len(trace) == 10, "a desire holds the agent, and the one plan is walked, a drive a pass"
-    assert _at(runtime.beliefs) == {"van_a": "c0_3", "parcel_a": "c0_3", "van_b": "c3_3", "parcel_b": "c3_3"}
+    assert _at(runtime.beliefs) == {"van_a": (0, 3), "parcel_a": (0, 3), "van_b": (3, 3), "parcel_b": (3, 3)}
     executor = runtime.parts["execution"].executor
     assert int(rows(executor.intentions, _INTENTIONS_Q, ())[0]["n"]) == 1 and executor.walking() == [], \
         "one plan, one intention, done: the cluster left once parcel A was delivered is the coupled want's, not a second want's"
-    apart = _pass(variant(tmp_path, "disjoint", DISJOINT))
-    assert _wants(apart) == {"every_parcel_delivered.pursued.parcel_a": "every_parcel_delivered",
-                             "every_parcel_delivered.pursued.parcel_b": "every_parcel_delivered"}
-    assert _plans(apart) == {"every_parcel_delivered.pursued.parcel_a": ("Satisfied", 5),
-                             "every_parcel_delivered.pursued.parcel_b": ("Satisfied", 5)}
-    assert _weighed(apart) == {"every_parcel_delivered.pursued.parcel_a": 23, "every_parcel_delivered.pursued.parcel_b": 23, CONSTRAINT: 42}, \
-        "the constraint reads `at`, which the drive writes, so it is weighed in every world though no world of two grids can violate it: " + str(_weighed(apart))
-    assert _impossible(apart) == {}
-    assert _remaining(apart) == {"every_parcel_delivered.pursued.parcel_a": 5.0, "every_parcel_delivered.pursued.parcel_b": 5.0}
+
 
 
 def test_corridor_the_coupled_search_marks_the_worlds_holding_two_vans_impossible_and_the_joint_plan_shares_no_cell(ticking, tmp_path):
@@ -459,7 +454,7 @@ def test_corridor_the_coupled_search_marks_the_worlds_holding_two_vans_impossibl
     before any world was marked — the colliding interleavings were never on the shortest path, so the
     constraint cost it ten candidates and no steps — and WALKED, one head at a time, it puts both vans on
     no cell at any act: promised, where before #902 it was pinned as what happened to be true. Before the
-    coupling each plan drove its van through `c2_1` at its third step and the two were walked in
+    coupling each plan drove its van through (2, 1) at its third step and the two were walked in
     lockstep, both on the cell for one act (measure-the-search). The 286 is past the 256 the shipped
     dispatcher states, so the corridor states 512 in its own self graph, and the search reads that."""
     corridor = variant(tmp_path, "corridor", CORRIDOR)
@@ -467,12 +462,12 @@ def test_corridor_the_coupled_search_marks_the_worlds_holding_two_vans_impossibl
     plans, steps = _plans(im), _steps(im)
     assert _wants(im) == {JOINT: "every_parcel_delivered"}
     assert plans == {JOINT: ("Satisfied", 10)}
-    assert _spent(im)[JOINT] == 286, f"measured: {_spent(im)}"
-    assert _weighed(im) == {JOINT: 210, CONSTRAINT: 210}, "the constraint is weighed in every world the want is: " + str(_weighed(im))
-    assert ("Drive", "van_a", None, "c2_1") in steps[JOINT] and ("Drive", "van_b", None, "c2_1") in steps[JOINT], \
+    assert _spent(im)[JOINT] == 318, f"measured: {_spent(im)}"
+    assert _weighed(im) == {JOINT: 242, CONSTRAINT: 242}, "the constraint is weighed in every world the want is: " + str(_weighed(im))
+    assert ("Drive", "van_a", None, (2, 1)) in steps[JOINT] and ("Drive", "van_b", None, (2, 1)) in steps[JOINT], \
         "both chains still cross the shared cell, one van at a time"
     held = _shared(im, [r["w"] for r in rows(im, _WORLDS_Q, ())])
-    assert len(held) == 16 and {cell for cells in held.values() for cell in cells} == {"c1_1", "c2_0", "c2_1", "c2_2", "c3_1"}, \
+    assert len(held) == 16 and {cell for cells in held.values() for cell in cells} == {(1, 1), (2, 0), (2, 1), (2, 2), (3, 1)}, \
         f"worlds the coupled search reached with two vans on one cell: {held}"
     assert _impossible(im) == {CONSTRAINT: 13}, f"marked impossible by the constraint, measured: {_impossible(im)}"
     _possible(im, JOINT)
@@ -480,17 +475,17 @@ def test_corridor_the_coupled_search_marks_the_worlds_holding_two_vans_impossibl
     assert outcome == UNFINISHED and len(trace) == 10
     met = [(step, shared) for step, _, _, shared in trace if shared]
     assert met == [], f"walked, the joint plan puts two vans on no cell at any act — the constraint's promise: {trace}"
-    assert _at(runtime.beliefs) == {"van_a": "c3_1", "parcel_a": "c3_1", "van_b": "c2_0", "parcel_b": "c2_0"}
+    assert _at(runtime.beliefs) == {"van_a": (3, 1), "parcel_a": (3, 1), "van_b": (2, 0), "parcel_b": (2, 0)}
 
 
 @pytest.mark.parametrize("name, edits, steps, spent, impossible, by, at", [
-    ("parked", PARKED, 5, 56, 7, {"van_b"}, {"van_a": "c0_1", "van_b": "c3_1", "parcel_a": "c3_1"}),
-    ("carrying", CARRYING, 4, 66, 5, {"van_a", "van_b"}, {"van_a": "c3_1", "van_b": "c2_0", "parcel_a": "c3_1"}),
+    ("parked", PARKED, 5, 62, 7, {"van_b"}, {"van_a": (0, 1), "van_b": (3, 1), "parcel_a": (3, 1)}),
+    ("carrying", CARRYING, 4, 72, 5, {"van_a", "van_b"}, {"van_a": (3, 1), "van_b": (2, 0), "parcel_a": (3, 1)}),
 ])
 def test_a_van_parked_across_the_only_shortest_path_is_not_driven_through(ticking, tmp_path, name, edits, steps, spent, impossible, by, at):
-    """Van B stands on `c2_1` with nothing to do, parcel A is owed at `c3_1` from `c1_1`, and the only
+    """Van B stands on (2, 1) with nothing to do, parcel A is owed at (3, 1) from (1, 1), and the only
     two-drive route runs through B. Before #902 the search drove through — five steps, eleven of 66
-    worlds holding two vans, judged by nobody, and the walk put both vans on `c2_1` for an act
+    worlds holding two vans, judged by nobody, and the walk put both vans on (2, 1) for an act
     (measure-the-search). Now every world that puts van A on B's cell is impossible, and the ONE MIND
     holding both vans does better than the seven-step route round the record expected: PARKED, with
     the parcel on the ground beside van B, it delivers with van B itself in five steps and van A
@@ -586,18 +581,16 @@ def test_a_drive_lands_within_its_band_and_the_steps_and_worlds_advance_along_th
 #  empty sets — so the first passes see parcel A astray alone and van A walks a plan for it; between two
 #  passes the test writes into the state where parcel B stands and where it is owed, as a consignment
 #  arriving at the depot would be written.
-_UNOWED_B = (':parcel_b a courier:Parcel ; courier:destination :c3_3 ;', ':parcel_b a courier:Parcel ;')
-ARRIVING = {"world.ttl": [_UNOWED_B], "state.ttl": [(":parcel_b courier:at :c3_1 .", "")]}
-#  THE CORRIDOR, B ARRIVING: van A drives parcel A along the second row through c2_1, and parcel B arrives
-#  at c2_2 owed at c2_0, so van B's road runs down the third column through the cell van A is crossing.
-CORRIDOR_ARRIVING = {"world.ttl": [("courier:destination :c0_3", "courier:destination :c3_1"), _UNOWED_B],
-                     "state.ttl": [*CORRIDOR["state.ttl"][:3], (":parcel_b courier:at :c3_1 .", "")]}
-#  THE VANS ON DISJOINT GRIDS, B ARRIVING on the second grid.
-DISJOINT_ARRIVING = {"world.ttl": [DISJOINT["world.ttl"][0], _UNOWED_B],
-                     "state.ttl": [DISJOINT["state.ttl"][0], (":parcel_b courier:at :c3_1 .", "")]}
+_UNOWED_B = (':parcel_b a courier:Parcel ; courier:destination :door_b ;', ':parcel_b a courier:Parcel ;')
+ARRIVING = {"world.ttl": [_UNOWED_B], "state.ttl": [(":parcel_b courier:x 3 ; courier:y 1 .", "")]}
+#  THE CORRIDOR, B ARRIVING: van A drives parcel A along the second row through (2, 1), and parcel B arrives
+#  at (2, 2) owed at (2, 0), so van B's road runs down the third column through the cell van A is crossing.
+CORRIDOR_ARRIVING = {"world.ttl": [(":door_a courier:x 0 ; courier:y 3 ;", ":door_a courier:x 3 ; courier:y 1 ;"), _UNOWED_B],
+                     "state.ttl": [*CORRIDOR["state.ttl"][:3], (":parcel_b courier:x 3 ; courier:y 1 .", "")]}
 _PUBLISHED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?step ?a ?van ?parcel ?to ?nb WHERE { GRAPH $p { ?step a execution:Step ; planning:fills ?a ; execution:notBefore ?nb .
-  OPTIONAL { ?step courier:van ?van } OPTIONAL { ?step courier:parcel ?parcel } OPTIONAL { ?step courier:to ?to } } }
+SELECT ?step ?a ?van ?parcel ?tx ?ty ?nb WHERE { GRAPH $p { ?step a execution:Step ; planning:fills ?a ; execution:notBefore ?nb .
+  OPTIONAL { ?step courier:van ?van } OPTIONAL { ?step courier:parcel ?parcel }
+  OPTIONAL { ?step courier:toX ?tx ; courier:toY ?ty } } }
 ORDER BY ?nb ?step"""
 #  WHEN A STEP WAS TAKEN, off its act, and when its plan placed it: due, and to land.
 _ACT_Q = """SELECT ?taken ?due ?lands WHERE { GRAPH ?i { ?act execution:of $step ; execution:taken true ; execution:takenAt ?taken }
@@ -608,13 +601,14 @@ A = "every_parcel_delivered.pursued.parcel_a"
 B = "every_parcel_delivered.pursued.parcel_b"
 
 
-def _parcel_b(cell: str, owed: str):
-    """Parcel B ARRIVING at `cell`, owed at `owed`, written into the state as a consignment arriving at the
+def _parcel_b(at: tuple[int, int], owed: tuple[int, int]):
+    """Parcel B ARRIVING at `at`, owed at `owed`, written into the state as a consignment arriving at the
     depot would be: what `_arrival` writes for soft commitment's first trigger."""
-    def arrive(beliefs, walking, at):
+    def arrive(beliefs, walking, instant):
         (state,) = _own(beliefs)
         update(beliefs, f"""PREFIX courier: <http://example.org/orexis/courier#>
-INSERT DATA {{ GRAPH <{state}> {{ <{D}parcel_b> courier:at <{D}{cell}> ; courier:destination <{D}{owed}> }} }}""")
+INSERT DATA {{ GRAPH <{state}> {{ <{D}parcel_b> courier:x {at[0]} ; courier:y {at[1]} ; courier:destination <{D}door_arriving> .
+                               <{D}door_arriving> courier:x {owed[0]} ; courier:y {owed[1]} }} }}""")
         return [state]
     return arrive
 
@@ -678,7 +672,7 @@ def _published(seen) -> dict[str, list[tuple]]:
     out: dict[str, list] = {}
     for kind, event in seen["events"][seen["arrived"]["events"]:]:
         if kind == "published":
-            out[_local(event.want)] = [(_local(r["a"]), _local(r.get("van")), _local(r.get("parcel")), _local(r.get("to")), _dt(r["nb"]))
+            out[_local(event.want)] = [(_local(r["a"]), _local(r.get("van")), _local(r.get("parcel")), _place(r), _dt(r["nb"]))
                                         for r in rows(seen["beliefs"], _PUBLISHED_Q, (), p=event.plan)]
     return out
 
@@ -703,10 +697,10 @@ def _the_replacement_keeps_its_cone(seen) -> None:
 
 
 @pytest.mark.parametrize("name, edits, cell, owed, candidates, worlds, impossible, at", [
-    ("shipped", ARRIVING, "c3_1", "c3_3", 108, 76, {},
-     {"van_a": "c0_3", "parcel_a": "c0_3", "van_b": "c3_3", "parcel_b": "c3_3"}),
-    ("corridor", CORRIDOR_ARRIVING, "c2_2", "c2_0", 112, 87, {CONSTRAINT: 7},
-     {"van_a": "c3_1", "parcel_a": "c3_1", "van_b": "c2_0", "parcel_b": "c2_0"}),
+    ("shipped", ARRIVING, (3, 1), (3, 3), 157, 125, {},
+     {"van_a": (0, 3), "parcel_a": (0, 3), "van_b": (3, 3), "parcel_b": (3, 3)}),
+    ("corridor", CORRIDOR_ARRIVING, (2, 2), (2, 0), 127, 102, {CONSTRAINT: 7},
+     {"van_a": (3, 1), "parcel_a": (3, 1), "van_b": (2, 0), "parcel_b": (2, 0)}),
 ])
 def test_a_parcel_arriving_mid_walk_reopens_the_walking_want_and_the_joint_plan_replaces_its_untaken_steps_after_the_step_in_flight(
         ticking, tmp_path, name, edits, cell, owed, candidates, worlds, impossible, at):
@@ -725,7 +719,7 @@ def test_a_parcel_arriving_mid_walk_reopens_the_walking_want_and_the_joint_plan_
     `superseded`, and the joint plan is adopted whole. The step in flight is never cancelled: its act is
     on record before the arrival, the world answers it, and only then does the intention resolve, before
     the joint plan's first step is taken; none of its untaken steps is ever taken. On the corridor van
-    B's road crosses c2_1 as van A leaves it, and walked, the vans share no cell at any act; both parcels
+    B's road crosses (2, 1) as van A leaves it, and walked, the vans share no cell at any act; both parcels
     are delivered. The re-search costs what the coupled search from that ground costs, measured."""
     seen = _arrival(variant(tmp_path, name, edits), _parcel_b(cell, owed))
     arrived, beliefs = seen["arrived"], seen["beliefs"]
@@ -767,13 +761,13 @@ def test_a_joint_plan_that_begins_with_the_walking_intentions_untaken_steps_leav
     published for the coupled want is the part that is NEW, van B's five steps, opening after van A's last
     kept step lands in the joint plan, so the two intentions walked side by side keep the joint plan's
     order. Both parcels are delivered and no intention ends but `done`."""
-    seen = _arrival(variant(tmp_path, "agree", ARRIVING), _parcel_b("c3_0", "c3_3"))
+    seen = _arrival(variant(tmp_path, "agree", ARRIVING), _parcel_b((3, 0), (3, 3)))
     arrived, beliefs = seen["arrived"], seen["beliefs"]
     assert _of(seen, "reconsidered") == []
     published = _published(seen)
     assert list(published) == [JOINT] and [(a, v, p, to) for a, v, p, to, _ in published[JOINT]] == [
-        ("Pick", "van_b", "parcel_b", None), ("Drive", "van_b", None, "c3_1"), ("Drive", "van_b", None, "c3_2"),
-        ("Drive", "van_b", None, "c3_3"), ("Drop", None, "parcel_b", "c3_3")], f"only the new part is adopted: {published}"
+        ("Pick", "van_b", "parcel_b", None), ("Drive", "van_b", None, (3, 1)), ("Drive", "van_b", None, (3, 2)),
+        ("Drive", "van_b", None, (3, 3)), ("Drop", None, "parcel_b", None)], f"only the new part is adopted: {published}"
     (act,) = rows(beliefs, _ACT_Q, (), step=arrived["head"])
     landing = _dt(act["lands"]) + max(timedelta(0), _dt(act["taken"]) - _dt(act["due"]))
     assert published[JOINT][0][4] == landing + timedelta(seconds=DRIVE_LEAST_S), \
@@ -781,29 +775,14 @@ def test_a_joint_plan_that_begins_with_the_walking_intentions_untaken_steps_leav
     assert rows(beliefs, _ADOPTED_Q, (), i=arrived["intention"])[0]["at"] == arrived["adopted"], "van A's intention, adopted when it was"
     assert {(_local(e.want), e.outcome) for e in _of(seen, "resolved")} == {(A, "done"), (JOINT, "done")}, "no intention ended but done"
     assert [t for t in seen["trace"] if t[3]] == []
-    assert _at(beliefs) == {"van_a": "c0_3", "parcel_a": "c0_3", "van_b": "c3_3", "parcel_b": "c3_3"}
+    assert _at(beliefs) == {"van_a": (0, 3), "parcel_a": (0, 3), "van_b": (3, 3), "parcel_b": (3, 3)}
 
 
-def test_a_parcel_arriving_where_the_walking_van_can_never_meet_its_van_reopens_nothing(ticking, tmp_path):
-    """NO COUPLING, NO TRIGGER. Parcel B arrives on a grid a continent from van A's: the constraint over
-    what the vans can reach yields no row, nothing couples B to A, and the walking want is neither searched
-    nor reconsidered — B's want is minted alone, under its own name, and searched alone, and van A's
-    intention walks on untouched to `done`."""
-    seen = _arrival(variant(tmp_path, "disjoint", DISJOINT_ARRIVING), _parcel_b("g10_1", "g10_3"))
-    arrived = seen["arrived"]
-    assert _of(seen, "reconsidered") == []
-    assert {_local(e.want) for e in arrived["searched"]} == {B}, "B's want searched alone, A's walking want not at all"
-    assert list(_published(seen)) == [B] and len(_published(seen)[B]) == 5
-    assert rows(seen["beliefs"], _ADOPTED_Q, (), i=arrived["intention"])[0]["at"] == arrived["adopted"]
-    assert {(_local(e.want), e.outcome) for e in _of(seen, "resolved")} == {(A, "done"), (B, "done")}
-    assert _at(seen["beliefs"]) == {"van_a": "c0_3", "parcel_a": "c0_3", "van_b": "g10_3", "parcel_b": "g10_3"}
-
-
-#  A PEER'S VAN (#921): van A and parcel A alone, the parcel owed at `c2_2` so three drives remain after the
+#  A PEER'S VAN (#921): van A and parcel A alone, the parcel owed at (2, 2) so three drives remain after the
 #  pick and more than one way runs there, and VAN C, a van of the world's that this agent does not drive —
 #  a peer `courier:drives` and is not aboard, so the drive's own filter refuses it (#903) — standing
 #  nowhere the agent knows of until a belief says where.
-PEER = {"world.ttl": [*HALF_A["world.ttl"], ("courier:destination :c0_3", "courier:destination :c2_2"),
+PEER = {"world.ttl": [*HALF_A["world.ttl"], (":door_a courier:x 0 ; courier:y 3 ;", ":door_a courier:x 2 ; courier:y 2 ;"),
                       (':van_a a courier:Van ; rdfs:label "van A" .',
                        ':van_a a courier:Van ; rdfs:label "van A" .\n'
                        ':van_c a courier:Van ; rdfs:label "a peer\'s van" .\n:peer courier:drives :van_c .')],
@@ -813,10 +792,10 @@ PEER_GRAPH = "http://example.org/orexis/graph/forecast/dispatcher/van_c"
 _PLAN_OF_Q = "SELECT ?p WHERE { GRAPH ?g { $i execution:adopts ?p } }"
 
 
-def _next_cell(beliefs, walking) -> str:
-    """The cell van A's plan drives to first after its step in flight — the first untaken drive's."""
+def _next_cell(beliefs, walking) -> tuple[int, int]:
+    """Where van A's plan drives to first after its step in flight — the first untaken drive's."""
     (plan,) = rows(beliefs, _PLAN_OF_Q, (), i=walking.uri)
-    steps = [(r["step"], _local(r["a"]), _local(r.get("to"))) for r in rows(beliefs, _PUBLISHED_Q, (), p=plan["p"])]
+    steps = [(r["step"], _local(r["a"]), _place(r)) for r in rows(beliefs, _PUBLISHED_Q, (), p=plan["p"])]
     at = next(i for i, (step, _, _) in enumerate(steps) if step == walking.at)
     return next(to for _, action, to in steps[at + 1:] if action == "Drive")
 
@@ -830,7 +809,7 @@ def _van_c(cell=None, *, observed: bool = False):
     does with such a belief once it has it."""
     def arrive(beliefs, walking, at):
         where = cell or _next_cell(beliefs, walking)
-        said = f"<{D}van_c> courier:at <{D}{where}>"
+        said = f"<{D}van_c> courier:x {where[0]} ; courier:y {where[1]}"
         if observed:
             (state,) = _own(beliefs)
             update(beliefs, f"PREFIX courier: <http://example.org/orexis/courier#>\nINSERT DATA {{ GRAPH <{state}> {{ {said} }} }}")
@@ -891,13 +870,13 @@ def test_a_belief_that_makes_the_walking_plans_next_world_impossible_reopens_it_
     walked = [t for t in seen["trace"][len([k for k, _ in seen["events"][:arrived["events"]] if k == "taken"]):]]
     assert walked and all(van_a != blocked for _, van_a, _, _ in walked), f"van A never stands on {blocked}: {walked}"
     assert [t for t in seen["trace"] if t[3]] == [], f"walked, two vans on no cell at any act: {seen['trace']}"
-    assert _at(beliefs)["parcel_a"] == "c2_2", "parcel A delivered"
-    assert (blocked, [s[:4] for s in published[A]]) == ("c1_2", [
-        ("Drive", "van_a", None, "c0_1"), ("Drive", "van_a", None, "c1_1"), ("Drive", "van_a", None, "c2_1"),
-        ("Drive", "van_a", None, "c2_2"), ("Drop", None, "parcel_a", "c2_2")]), \
+    assert _at(beliefs)["parcel_a"] == (2, 2), "parcel A delivered"
+    assert (blocked, [s[:4] for s in published[A]]) == ((1, 2), [
+        ("Drive", "van_a", None, (0, 1)), ("Drive", "van_a", None, (1, 1)), ("Drive", "van_a", None, (2, 1)),
+        ("Drive", "van_a", None, (2, 2)), ("Drop", None, "parcel_a", None)]), \
         f"van A was driving up the first column; it turns back, found by the search and decided by nobody: {published[A]}"
     searched = {_local(e.want): e.weighed for e in arrived["searched"]}
-    assert (searched, arrived["weighed"].get(A), arrived["impossible"]) == ({A: 38}, 25, {CONSTRAINT: 2}), \
+    assert (searched, arrived["weighed"].get(A), arrived["impossible"]) == ({A: 50}, 34, {CONSTRAINT: 2}), \
         f"the re-search from the landing ground, measured: {searched} candidates, {arrived['weighed']} worlds, {arrived['impossible']} impossible"
     if observed:
         #  A FORESEEN PEER IS NOT THE SAME CASE: its belief holds from ten seconds on, so it is laid in the
@@ -907,13 +886,13 @@ def test_a_belief_that_makes_the_walking_plans_next_world_impossible_reopens_it_
 
 
 def test_a_belief_that_touches_nothing_the_walking_plans_worlds_read_reopens_nothing(ticking, tmp_path, caplog):
-    """THE SECOND TRIGGER ASKS, AND ANSWERS NO. Van C is predicted on `c3_0`, a cell van A's plan enters
+    """THE SECOND TRIGGER ASKS, AND ANSWERS NO. Van C is predicted on (3, 0), a position van A's plan enters
     at no step: a belief has arrived — a ground holds what none did before — so the walking plan's untaken
     steps are replayed and weighed for the constraint, and none of their worlds is impossible. The walking
     want is neither searched nor reconsidered, and van A's intention, adopted when it was, walks on to
     `done`."""
     with caplog.at_level(logging.DEBUG, logger="planner"):
-        seen = _arrival(variant(tmp_path, "aside", PEER), _van_c("c3_0"))
+        seen = _arrival(variant(tmp_path, "aside", PEER), _van_c((3, 0)))
     arrived = seen["arrived"]
     asked = [r.getMessage() for r in caplog.records if "untaken steps foreseen" in r.getMessage() and A in r.getMessage()]
     assert asked, "the walking plan was held to the grounds the belief changed"
@@ -922,12 +901,12 @@ def test_a_belief_that_touches_nothing_the_walking_plans_worlds_read_reopens_not
     assert _published(seen) == {}
     assert rows(seen["beliefs"], _ADOPTED_Q, (), i=arrived["intention"])[0]["at"] == arrived["adopted"]
     assert {(_local(e.want), e.outcome) for e in _of(seen, "resolved")} == {(A, "done")}
-    assert _at(seen["beliefs"])["parcel_a"] == "c2_2"
+    assert _at(seen["beliefs"])["parcel_a"] == (2, 2)
 
 
 def test_two_vans_on_one_cell_as_posed_is_a_contradiction_said_and_refused_and_never_a_want(ticking, tmp_path, caplog):
-    """A CONSTRAINT VIOLATED IN THE PRESENT IS A CONTRADICTION, NOT A WANT. Both vans on c0_0 as posed:
-    the constraint, weighed in the present ground, yields a witness per van with c0_0 offending — the
+    """A CONSTRAINT VIOLATED IN THE PRESENT IS A CONTRADICTION, NOT A WANT. Both vans on (0, 0) as posed:
+    the constraint, weighed in the present ground, yields a witness per van with the other van offending — the
     same rows the aversion wrote when it was a desire — and nothing is minted from it, since the
     derivation reads desires alone; the pass says so, a warning naming the constraint and its rows;
     `Planner.contradictions` answers the same rows to whoever asks; and `orexis-onboard` refuses the
@@ -944,26 +923,26 @@ def test_two_vans_on_one_cell_as_posed_is_a_contradiction_said_and_refused_and_n
     together = variant(tmp_path, "together", TOGETHER)
     with caplog.at_level(logging.WARNING, logger="planner"):
         im = _pass(together, budget=128)
-    assert {(_local(r["x"]), _local(r["cell"])) for r in rows(im, _WITNESSES_Q, (), d=D + CONSTRAINT)} == \
-        {("van_a", "c0_0"), ("van_b", "c0_0")}, "the constraint is judged in the present: a row per van, the cell offending"
+    assert {(_local(r["x"]), _local(r["cell"])) for r in rows(im, _WITNESSES_Q, (), d=COURIER + CONSTRAINT)} == \
+        {("van_a", "van_b"), ("van_b", "van_a")}, "the constraint is judged in the present: a row per van, the other van offending"
     said = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING and "constraint" in r.getMessage()]
-    assert len(said) == 1 and CONSTRAINT in said[0] and "van_a" in said[0] and "c0_0" in said[0], said
+    assert len(said) == 1 and CONSTRAINT in said[0] and "van_a" in said[0] and "van_b" in said[0], said
     assert _wants(im) == {JOINT: "every_parcel_delivered"}, "nothing is minted from a constraint: " + str(_wants(im))
     assert _plans(im) == {JOINT: ("Exhausted", 0)}, "the product's budget: the record's seam, pinned"
-    assert _weighed(im) == {JOINT: 75, CONSTRAINT: 75} and _spent(im)[JOINT] == 128, f"measured: {_weighed(im)} {_spent(im)}"
-    assert _impossible(im) == {CONSTRAINT: 7}, "the worlds that meet again on another cell: " + str(_impossible(im))
+    assert _weighed(im) == {JOINT: 82, CONSTRAINT: 82} and _spent(im)[JOINT] == 128, f"measured: {_weighed(im)} {_spent(im)}"
+    assert _impossible(im) == {CONSTRAINT: 6}, "the worlds that meet again at another position: " + str(_impossible(im))
     _possible(im, JOINT)
     planner = Planner(boot(together, "dispatcher"), "dispatcher")
     (found,) = planner.contradictions(NOW)
-    assert _local(found[0]) == CONSTRAINT and {(_local(i), _local(o)) for i, _, _, o in found[1]} == {("van_a", "c0_0"), ("van_b", "c0_0")}
-    assert reading.contradicted(together, "dispatcher") == ["no_cell_holds_two_vans: (van_a, 0, c0_0), (van_b, 0, c0_0)"], \
+    assert _local(found[0]) == CONSTRAINT and {(_local(i), _local(o)) for i, _, _, o in found[1]} == {("van_a", "van_b"), ("van_b", "van_a")}
+    assert reading.contradicted(together, "dispatcher") == ["no_two_vans_at_one_position: (van_a, 0, van_b), (van_b, 0, van_a)"], \
         "onboarding refuses the world as posed, naming the constraint and its rows"
     assert reading.contradicted(WORLD, "dispatcher") == [], "the shipped pose is possible"
     assert Planner(boot(WORLD, "dispatcher"), "dispatcher").contradictions(NOW) == []
 
 
-#  A PEER'S VAN CROSSING THE CELL AHEAD (#920, #568). Van A at c0_1 carries parcel A, owed at c3_1, so its
-#  shortest chain drives c1_1, c2_1, c3_1 and drops; van B is a PEER'S — driven by somebody this agent
+#  A PEER'S VAN CROSSING THE CELL AHEAD (#920, #568). Van A at (0, 1) carries parcel A, owed at (3, 1), so its
+#  shortest chain drives (1, 1), (2, 1), (3, 1) and drops; van B is a PEER'S — driven by somebody this agent
 #  never holds aboard, so no move of it is admitted (#903's filter) — and its route down the third
 #  column is laid as predictions, as speech will lay a peer's route ahead (#568). A drive lands half a
 #  minute to a minute after it is taken. The constraint stays the world's own: van B is a van.
@@ -971,31 +950,28 @@ _PEERS_VAN = (':van_b a courier:Van ; rdfs:label "van B" .',
               ':van_b a courier:Van ; rdfs:label "van B" .\n'
               ':peer a courier:Driver ; courier:drives :van_b ; rdfs:label "the peer driving van B, aboard it in no belief of this agent" .')
 _CROSSING_WORLD = [_PEERS_VAN,
-                   (':parcel_b a courier:Parcel ; courier:destination :c3_3 ;\n    rdfs:label "the parcel owed at the top of the last column" .', ""),
-                   ("courier:destination :c0_3", "courier:destination :c3_1")]
-_CROSSING_STATE = [(":van_a courier:at :c0_0 .", ":van_a courier:at :c0_1 ."),
-                   (":parcel_a courier:at :c0_1 .", ":parcel_a courier:carriedBy :van_a ."),
-                   (":van_b courier:at :c3_0 .", ":van_b courier:at :c2_3 ."),
-                   (":parcel_b courier:at :c3_1 .", "")]
+                   (':parcel_b a courier:Parcel ; courier:destination :door_b ;\n    rdfs:label "the parcel owed at the top of the last column" .', ""),
+                   (":door_a courier:x 0 ; courier:y 3 ;", ":door_a courier:x 3 ; courier:y 1 ;")]
+_CROSSING_STATE = [(":van_a courier:x 0 ; courier:y 0 .", ":van_a courier:x 0 ; courier:y 1 ."),
+                   (":parcel_a courier:x 0 ; courier:y 1 .", ":parcel_a courier:carriedBy :van_a ."),
+                   (":van_b courier:x 3 ; courier:y 0 .", ":van_b courier:x 2 ; courier:y 3 ."),
+                   (":parcel_b courier:x 3 ; courier:y 1 .", "")]
 CROSSING = {"world.ttl": _CROSSING_WORLD, "state.ttl": _CROSSING_STATE}
 #  VAN B'S ROUTE, from the instant each cell holds: the first is the present, posed in the state. It
-#  stands on c2_1 from a minute to a minute and a half.
-CROSSING_ROUTE = [(0, "c2_3"), (30, "c2_2"), (60, "c2_1"), (90, "c2_0")]
-#  THE SAME IN A CORRIDOR — the second row and the third column alone, so no cell is beside the row to
-#  pull aside into — with van B STANDING on c2_1 from a minute to two and a half before it drives on.
-_CORRIDOR_CELLS = {"c0_1", "c1_1", "c2_1", "c3_1", "c2_0", "c2_2", "c2_3"}
-STANDING = {"world.ttl": [*_CROSSING_WORLD,
-                          *((f":c{x}_{y} a courier:Cell ; courier:x {x} ; courier:y {y} .\n", "")
-                            for x in range(4) for y in range(4) if f"c{x}_{y}" not in _CORRIDOR_CELLS)],
-            "state.ttl": _CROSSING_STATE}
-STANDING_ROUTE = [(0, "c2_3"), (30, "c2_2"), (60, "c2_1"), (150, "c2_0")]
+#  stands on (2, 1) from a minute to a minute and a half.
+CROSSING_ROUTE = [(0, (2, 3)), (30, (2, 2)), (60, (2, 1)), (90, (2, 0))]
+#  THE SAME WITH VAN B STANDING on (2, 1) from a minute to two and a half before it drives on. It was posed
+#  in a corridor, the second row and the third column alone, so that nothing beside the row could be pulled
+#  aside into; the grid is infinite now and a wait is still the cheaper way past, a tenth against a drive.
+STANDING = {"world.ttl": _CROSSING_WORLD, "state.ttl": _CROSSING_STATE}
+STANDING_ROUTE = [(0, (2, 3)), (30, (2, 2)), (60, (2, 1)), (150, (2, 0))]
 PARCEL_A = "every_parcel_delivered.pursued.parcel_a"
 #  THE PLAN'S STEPS IN THE ORDER THEY ARE TAKEN, each with where a drive goes and the instants it may
 #  be taken and lands at the earliest.
 _ORDERED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?a ?to ?nb ?la WHERE {
+SELECT ?a ?tx ?ty ?nb ?la WHERE {
   GRAPH ?p { ?p a planning:Plan ; planning:for $want . ?step a execution:Step ; execution:partOf ?p ; planning:fills ?a ;
-             execution:notBefore ?nb ; execution:landsAt ?la . OPTIONAL { ?step courier:to ?to } } }
+             execution:notBefore ?nb ; execution:landsAt ?la . OPTIONAL { ?step courier:toX ?tx ; courier:toY ?ty } } }
 ORDER BY ?nb ?la"""
 #  THE WAITS A WANT'S SEARCH WEIGHED, and how many repeated a world already weighed. A wait that made a
 #  world is weighed through that world, `planning:by` it; one passed over is weighed itself.
@@ -1003,21 +979,15 @@ _WAITS_Q = """
 SELECT (COUNT(?x) AS ?weighed) (COUNT(?seen) AS ?repeated) WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?x a planning:Weighing ; planning:for $want ; planning:weighs ?u .
                ?u planning:by?/planning:fills planning:Wait . OPTIONAL { ?x planning:repeats ?seen } } }"""
-#  VAN B'S CELL FROM AN INSTANT, a prediction: what it retracts is whatever cell van B stands on.
-_ROUTE_RETRACTS = (f"DELETE {{ GRAPH $state {{ <{D}van_b> <http://example.org/orexis/courier#at> ?cell }} }} "
-                   f"WHERE {{ GRAPH $state {{ <{D}van_b> <http://example.org/orexis/courier#at> ?cell }} }}")
-
-
 def _lay_route(beliefs, route) -> None:
-    """Van B's route laid as predictions, one graph per cell after the first, each from its instant —
+    """Van B's route laid as predictions, one graph per position after the first, each from its instant —
     the peer's word about where it will be, as a forecast is another party's word: received, and
-    believed as it stands."""
-    for n, (offset, cell) in enumerate(route[1:], start=1):
+    believed as it stands; each supersedes by key where it is laid (#988)."""
+    for n, (offset, (x, y)) in enumerate(route[1:], start=1):
         graph = f"http://example.org/orexis/graph/route/van_b/{n}"
         update(beliefs, f"""INSERT DATA {{
-  GRAPH <{graph}> {{ <{D}van_b> <http://example.org/orexis/courier#at> <{D}{cell}> . }}
-  {entry(beliefs, graph, FORECAST, OREXIS + "Received", D + "dispatcher", start=NOW + timedelta(seconds=offset))}
-  GRAPH <{catalogue_of(beliefs)}> {{ <{graph}> orexis:retracts "{_ROUTE_RETRACTS}" }} }}""")
+  GRAPH <{graph}> {{ <{D}van_b> <http://example.org/orexis/courier#x> {x} ; <http://example.org/orexis/courier#y> {y} . }}
+  {entry(beliefs, graph, FORECAST, OREXIS + "Received", D + "dispatcher", start=NOW + timedelta(seconds=offset))} }}""")
         hash_named_graph(beliefs, graph)
 
 
@@ -1034,7 +1004,7 @@ def _crossed(world: Path, route) -> object:
 def _ordered(im, want: str) -> list[tuple]:
     """The plan's steps in order as (action, where to, seconds after the pass it may be taken, seconds
     after the pass it lands at the earliest)."""
-    return [(_local(r["a"]), _local(r.get("to")), (_dt(r["nb"]) - NOW).total_seconds(), (_dt(r["la"]) - NOW).total_seconds())
+    return [(_local(r["a"]), _place(r), (_dt(r["nb"]) - NOW).total_seconds(), (_dt(r["la"]) - NOW).total_seconds())
             for r in rows(im, _ORDERED_Q, (), want=D + want)]
 
 
@@ -1045,27 +1015,27 @@ def _waits(im, want: str) -> tuple[int, int]:
 
 
 def test_a_van_waits_for_a_peers_van_to_clear_the_cell_its_route_crosses(ticking, tmp_path):
-    """WAIT, THEN DRIVE. Van A, a cell short of c2_1 at half a minute, would land on it straight on at a
+    """WAIT, THEN DRIVE. Van A, a cell short of (2, 1) at half a minute, would land on it straight on at a
     minute, when van B does — a world the constraint makes impossible — so it waits for the next
-    ground, where van B has moved onto c2_1, and drives in landing at a minute and a half, when van B has
-    gone on to c2_0. Four acts and a tenth spent against an estimate of four: the tenth is the wait,
+    ground, where van B has moved onto (2, 1), and drives in landing at a minute and a half, when van B has
+    gone on to (2, 0). Four acts and a tenth spent against an estimate of four: the tenth is the wait,
     `planning:Wait`, which no document of this world names (#920). The courier's own wait, built and
     reverted, found this plan in five steps at 33 candidates and 27 worlds; the planning package's finds
     it at 31 and the same 27, its waits landing where a ground begins and not a drive's band later, and
     a wait that lands where nothing read has moved is never offered rather than passed over."""
     im = _crossed(variant(tmp_path, "crossing", CROSSING), CROSSING_ROUTE)
     assert _plans(im) == {PARCEL_A: ("Satisfied", 5)}
-    assert _ordered(im, PARCEL_A) == [("Drive", "c1_1", 0, 30), ("Wait", None, 30, 60), ("Drive", "c2_1", 60, 90),
-                                       ("Drive", "c3_1", 90, 120), ("Drop", "c3_1", 120, 120)], _ordered(im, PARCEL_A)
+    assert _ordered(im, PARCEL_A) == [("Drive", (1, 1), 0, 30), ("Wait", None, 30, 60), ("Drive", (2, 1), 60, 90),
+                                       ("Drive", (3, 1), 90, 120), ("Drop", None, 120, 120)], _ordered(im, PARCEL_A)
     assert _costs(im) == {PARCEL_A: 4.1} and _remaining(im)[PARCEL_A] == 4.0
-    assert (_spent(im)[PARCEL_A], _weighed(im)[PARCEL_A]) == (31, 27), f"measured: {_spent(im)} {_weighed(im)}"
+    assert (_spent(im)[PARCEL_A], _weighed(im)[PARCEL_A]) == (34, 30), f"measured: {_spent(im)} {_weighed(im)}"
     assert _impossible(im) == {CONSTRAINT: 2}
     assert _waits(im, PARCEL_A) == (4, 1), "one wait of four repeated a world: " + str(_waits(im, PARCEL_A))
     _possible(im, PARCEL_A)
 
 
 def test_a_van_waits_out_a_peer_standing_on_the_cell_ahead(ticking, tmp_path):
-    """THE SEAM THE COURIER'S WAIT LEFT, CLOSED. In the corridor van B stands on c2_1 from a minute to two
+    """THE SEAM THE COURIER'S WAIT LEFT, CLOSED. In the corridor van B stands on (2, 1) from a minute to two
     and a half, and van A has nowhere to pull aside. The courier's wait landed half a minute to a minute
     after it was taken, so a second wait landed in the ground the first did, repeated its world, and the
     search ended `Exhausted` with this plan there to find. A wait lands where the next ground begins, so
@@ -1073,11 +1043,11 @@ def test_a_van_waits_out_a_peer_standing_on_the_cell_ahead(ticking, tmp_path):
     the instant it leaves, two drives and the drop."""
     im = _crossed(variant(tmp_path, "standing", STANDING), STANDING_ROUTE)
     assert _plans(im) == {PARCEL_A: ("Satisfied", 6)}, _plans(im)
-    assert _ordered(im, PARCEL_A) == [("Drive", "c1_1", 0, 30), ("Wait", None, 30, 60), ("Wait", None, 60, 150),
-                                       ("Drive", "c2_1", 150, 180), ("Drive", "c3_1", 180, 210),
-                                       ("Drop", "c3_1", 210, 210)], _ordered(im, PARCEL_A)
+    assert _ordered(im, PARCEL_A) == [("Drive", (1, 1), 0, 30), ("Wait", None, 30, 60), ("Wait", None, 60, 150),
+                                       ("Drive", (2, 1), 150, 180), ("Drive", (3, 1), 180, 210),
+                                       ("Drop", None, 210, 210)], _ordered(im, PARCEL_A)
     assert _costs(im) == {PARCEL_A: 4.2}
-    assert (_spent(im)[PARCEL_A], _weighed(im)[PARCEL_A]) == (24, 18), f"measured: {_spent(im)} {_weighed(im)}"
+    assert (_spent(im)[PARCEL_A], _weighed(im)[PARCEL_A]) == (39, 31), f"measured: {_spent(im)} {_weighed(im)}"
     assert _impossible(im) == {CONSTRAINT: 2}
     assert _waits(im, PARCEL_A) == (4, 1), str(_waits(im, PARCEL_A))
     _possible(im, PARCEL_A)

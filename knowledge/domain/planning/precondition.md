@@ -19,7 +19,7 @@ and writes a `planning:Candidate` per row: the world it leaves, the action it fi
 parameter under the parameter's own IRI.
 
 A precondition is the query, whole. It says which disk may move onto which peg, which van may drive
-to which neighbouring cell, which venue has a round open to tender into; nothing else in the
+to which neighbour, which venue has a round open to tender into; nothing else in the
 action restates it.
 
 # What a step does not carry

@@ -16,24 +16,24 @@ tower:stacking a sh:RuleSet ;
     sh:hasRule tower:onADisk , tower:onThePeg .
 
 tower:onADisk a sh:SPARQLRule ;
-    rdfs:label "a disk is on the next larger disk in its cell" ;
+    rdfs:label "a disk is on the next larger disk at its position" ;
     sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
         PREFIX courier: <http://example.org/orexis/courier#>
         CONSTRUCT { ?disk hanoi:on ?larger } WHERE {
-            ?disk a hanoi:Disk ; hanoi:size ?s ; courier:at ?cell .
-            ?larger a hanoi:Disk ; hanoi:size ?l ; courier:at ?cell .
+            ?disk a hanoi:Disk ; hanoi:size ?s ; courier:x ?x ; courier:y ?y .
+            ?larger a hanoi:Disk ; hanoi:size ?l ; courier:x ?x ; courier:y ?y .
             FILTER(?l > ?s)
-            FILTER NOT EXISTS { ?mid a hanoi:Disk ; hanoi:size ?m ; courier:at ?cell .
+            FILTER NOT EXISTS { ?mid a hanoi:Disk ; hanoi:size ?m ; courier:x ?x ; courier:y ?y .
                                 FILTER(?m > ?s && ?m < ?l) }
         }""" .
 
 tower:onThePeg a sh:SPARQLRule ;
-    rdfs:label "a disk with nothing larger in its cell is on the peg there" ;
+    rdfs:label "a disk with nothing larger at its position is on the peg there" ;
     sh:construct """PREFIX hanoi: <http://example.org/orexis/hanoi#>
         PREFIX courier: <http://example.org/orexis/courier#>
         CONSTRUCT { ?disk hanoi:on ?peg } WHERE {
-            ?disk a hanoi:Disk ; hanoi:size ?s ; courier:at ?cell .
-            ?peg a hanoi:Peg ; courier:at ?cell .
-            FILTER NOT EXISTS { ?larger a hanoi:Disk ; hanoi:size ?l ; courier:at ?cell .
+            ?disk a hanoi:Disk ; hanoi:size ?s ; courier:x ?x ; courier:y ?y .
+            ?peg a hanoi:Peg ; courier:x ?x ; courier:y ?y .
+            FILTER NOT EXISTS { ?larger a hanoi:Disk ; hanoi:size ?l ; courier:x ?x ; courier:y ?y .
                                 FILTER(?l > ?s) }
         }""" .

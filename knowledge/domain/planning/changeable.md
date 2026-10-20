@@ -12,12 +12,12 @@ description: >-
 # What it is
 
 ```turtle
-# before the grounds are laid: one state graph, the van's cell beside the parcel's destination
-GRAPH :state { :van courier:at :c0_0 . :parcel courier:destination :c1_1 . }
+# before the grounds are laid: one state graph, the van's coordinates beside the parcel's destination
+GRAPH :state { :van courier:x 0 ; courier:y 0 . :parcel courier:destination :door . }
 
-# after: the cell the Drive writes is changeable, the destination stays where it was
+# after: the coordinates the Drive writes are changeable, the destination stays where it was
 GRAPH :state            { :parcel courier:destination :c1_1 . }
-GRAPH :state.changeable { :van courier:at :c0_0 . }
+GRAPH :state.changeable { :van courier:x 0 ; courier:y 0 . }
 ```
 
 A belief or record graph a search reads is cut in two in the

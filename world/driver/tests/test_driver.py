@@ -1,5 +1,5 @@
-"""The driver world (#903): the dispatcher's two vans and two parcels on two DISJOINT grids, and one
-driver the agent plays (`orexis:plays`, #929, #1002), who sits in a van and must board the other before it
+"""The driver world (#903): the dispatcher's two vans and two parcels, the second pair ten columns east of
+the first, and one driver the agent plays (`orexis:plays`, #929, #1002), who sits in a van and must board the other before it
 can move. "One van at a time" is world state here and not a mechanism: a drive's, a pick's and a
 drop's preconditions need the driver aboard the van and the agent to play the driver
 (`domains/courier/actions.ttl`, #931 for the pick and the drop), a boarding
@@ -8,16 +8,14 @@ limit by construction. What this world is held to is what was MEASURED on it:
 
 - it boots and is possible: one scope, the driver aboard van A, and no constraint the present
   violates, so `orexis-onboard` refuses nothing (`tests/test_layout.py` onboards it whole);
-- THE TWO PARCELS ARE ONE WANT, and only because the world says the driver is one body: the
-  derivation couples two instances where a CONSTRAINT's rows over the reach join them
-  (`agent/planning/couplings.py`), and on disjoint grids the two-vans constraint yields no row. So
-  the world states the driver's own — a driver is aboard one van at a time — whose rows over the
-  delete-free reach put the driver aboard both vans and join them. Without it the parcels are two
-  wants, planned apart at five and six steps, and the two plans walked side by side collide over the
-  driver: every head is checked when it is taken (#916), so a drive, a pick or a drop with a van the
-  driver has left is refused, its intention fails and its want is searched again — four or five
-  intentions failed on the way, measured and pinned below, where before #916 van A was driven with the
-  driver aboard van B, and before #931 loaded with it there;
+- THE TWO PARCELS ARE ONE WANT: the derivation couples two instances where a CONSTRAINT can make
+  their plans collide (`agent/planning/couplings.py`), and on an infinite grid every constraint over a
+  van's position can — a drive writes a position its precondition computed, reachable anywhere
+  (the-grid-is-infinite-and-a-position-is-two-coordinates). The world states the driver's own
+  constraint beside the two vans' — a driver is aboard one van at a time — which was what coupled the
+  parcels while the two grids were authored cells no drive crossed between, and which still says what
+  "one van at a time" IS: every head is checked when it is taken (#916), so a drive, a pick or a drop
+  with a van the driver has left is refused;
 - coupled, the search finds ONE plan of eleven steps — van A's delivery, the boarding, van B's —
   optimal for both by construction, at the figures measure-the-search tabulates; the estimate reads
   ten, admissible and loose by the boarding no parcel owes;
@@ -49,8 +47,8 @@ JOINT = "every_parcel_delivered.pursued.parcel_a.parcel_b"
 A = "every_parcel_delivered.pursued.parcel_a"
 B = "every_parcel_delivered.pursued.parcel_b"
 #  THE TWO CONSTRAINTS this world states (`constraints.ttl`).
-TWO_VANS, ONE_VAN = "no_cell_holds_two_vans", "a_driver_is_aboard_one_van"
-#  WHAT THE COUPLED SEARCH NEEDS: 191 candidates, measured, so a budget of 128 cuts it short and the
+TWO_VANS, ONE_VAN = "no_two_vans_at_one_position", "a_driver_is_aboard_one_van"
+#  WHAT THE COUPLED SEARCH NEEDS: 229 candidates, measured, so a budget of 128 cuts it short and the
 #  passes after would finish it. The dispatcher states 256 of itself in its self graph, and a case
 #  hands no budget unless it is about one, so the figure it passes at is the one a deployed agent
 #  searches at (#932).
@@ -70,11 +68,11 @@ SELECT ?want ?outcome (COUNT(?step) AS ?steps) WHERE {
 GROUP BY ?want ?outcome"""
 #  THE PLAN'S STEPS IN THE ORDER IT PLACES THEM, with what each fills and what it is filled with.
 _ORDERED_Q = """PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?a ?van ?parcel ?to ?driver WHERE {
+SELECT ?a ?van ?parcel ?driver WHERE {
   GRAPH ?p { ?p a planning:Plan ; planning:for $want . ?step a execution:Step ; execution:partOf ?p ; planning:fills ?a ;
              execution:notBefore ?nb ; execution:landsAt ?la .
              OPTIONAL { ?step courier:van ?van } OPTIONAL { ?step courier:parcel ?parcel }
-             OPTIONAL { ?step courier:to ?to } OPTIONAL { ?step courier:driver ?driver } } }
+             OPTIONAL { ?step courier:driver ?driver } } }
 ORDER BY ?nb ?la"""
 #  WHAT A WANT'S SEARCH SPENT — every weighing but a ground's: the budget's unit, the runbook's candidates.
 _SPENT_Q = """
@@ -100,7 +98,11 @@ SELECT ?want ?spent WHERE { GRAPH ?p { ?p a planning:Plan ; planning:for ?want ;
 #  plan's steps state what they predict in graphs of their own, which are no belief.
 _WHERE_Q = """PREFIX courier: <http://example.org/orexis/courier#>
 SELECT ?x ?p ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
-  GRAPH ?g { ?x ?p ?o FILTER(?p IN (courier:at, courier:aboard, courier:carriedBy)) } }"""
+  GRAPH ?g { ?x ?p ?o FILTER(?p IN (courier:aboard, courier:carriedBy)) } }"""
+#  AND WHERE EACH STANDS, two coordinates on the thing (the-grid-is-infinite-and-a-position-is-two-coordinates).
+_STANDS_Q = """PREFIX courier: <http://example.org/orexis/courier#>
+SELECT ?x ?cx ?cy WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
+  GRAPH ?g { ?x courier:x ?cx ; courier:y ?cy } }"""
 #  WHAT A STEP FILLS, read off the plan it was published in.
 _STEP_Q = """PREFIX courier: <http://example.org/orexis/courier#>
 SELECT ?a ?van ?parcel ?driver WHERE { GRAPH ?p { $step planning:fills ?a .
@@ -124,16 +126,18 @@ _PEER_WORLD = ':driver a courier:Driver ; courier:drives :van_a , :van_b ; rdfs:
 _PEERS = (_PEER_WORLD + '\n'
           ':peer a orexis:Agent ; orexis:localId "peer" ; orexis:plays :peer_driver .\n'
           ':peer_driver a courier:Driver ; courier:drives :van_c , :van_d ; rdfs:label "the peer\'s driver" .\n'
-          ':van_c a courier:Van ; rdfs:label "van C, the peer\'s, on the first grid" .\n'
-          ':van_d a courier:Van ; rdfs:label "van D, the peer\'s, on the second grid" .\n'
-          ':parcel_c a courier:Parcel ; courier:destination :c3_3 ; rdfs:label "the parcel under van C" .\n'
-          ':parcel_d a courier:Parcel ; courier:destination :g13_3 ; rdfs:label "the parcel aboard van D" .\n')
-_STAND = (":driver courier:aboard :van_a .\n:van_a courier:at :c0_0 .\n:parcel_a courier:at :c0_0 .\n"
-          ":van_b courier:at :g10_0 .\n:parcel_b courier:carriedBy :van_b .\n"
-          ":peer_driver courier:aboard :van_c .\n:van_c courier:at :c3_0 .\n:parcel_c courier:at :c3_0 .\n"
-          ":van_d courier:at :g13_0 .\n:parcel_d courier:carriedBy :van_d .\n")
-_SHIPPED_STAND = (":driver courier:aboard :van_a .\n\n:van_a courier:at :c0_0 .\n:parcel_a courier:at :c0_1 .\n\n"
-                  ":van_b courier:at :g10_0 .\n:parcel_b courier:at :g10_1 .\n")
+          ':van_c a courier:Van ; rdfs:label "van C, the peer\'s, at the western columns" .\n'
+          ':van_d a courier:Van ; rdfs:label "van D, the peer\'s, ten columns east" .\n'
+          ':parcel_c a courier:Parcel ; courier:destination :top_of_the_fourth_column ; rdfs:label "the parcel under van C" .\n'
+          ':top_of_the_fourth_column courier:x 3 ; courier:y 3 .\n'
+          ':parcel_d a courier:Parcel ; courier:destination :top_of_the_fourteenth_column ; rdfs:label "the parcel aboard van D" .\n'
+          ':top_of_the_fourteenth_column courier:x 13 ; courier:y 3 .\n')
+_STAND = (":driver courier:aboard :van_a .\n:van_a courier:x 0 ; courier:y 0 .\n:parcel_a courier:x 0 ; courier:y 0 .\n"
+          ":van_b courier:x 10 ; courier:y 0 .\n:parcel_b courier:carriedBy :van_b .\n"
+          ":peer_driver courier:aboard :van_c .\n:van_c courier:x 3 ; courier:y 0 .\n:parcel_c courier:x 3 ; courier:y 0 .\n"
+          ":van_d courier:x 13 ; courier:y 0 .\n:parcel_d courier:carriedBy :van_d .\n")
+_SHIPPED_STAND = (":driver courier:aboard :van_a .\n\n:van_a courier:x 0 ; courier:y 0 .\n:parcel_a courier:x 0 ; courier:y 1 .\n\n"
+                  ":van_b courier:x 10 ; courier:y 0 .\n:parcel_b courier:x 10 ; courier:y 1 .\n")
 TWO_AGENTS = {"world.ttl": [(_PEER_WORLD, _PEERS)], "state.ttl": [(_SHIPPED_STAND, _STAND)]}
 _PEER_DOCUMENTS = {
     "peer.self.ttl": "<> a orexis:SelfGraph .\n:peer a orexis:Self ; orexis:plays [ a planning:Planner ] .\n",
@@ -209,7 +213,7 @@ def _plans(im) -> dict[str, tuple[str, int]]:
 
 
 def _ordered(im, want: str) -> list[tuple]:
-    return [(_local(r["a"]), _local(r.get("van")), _local(r.get("parcel")), _local(r.get("to")), _local(r.get("driver")))
+    return [(_local(r["a"]), _local(r.get("van")), _local(r.get("parcel")), _local(r.get("driver")))
             for r in rows(im, _ORDERED_Q, (), want=D + want)]
 
 
@@ -217,8 +221,12 @@ def _counted(im, query: str) -> dict[str, int]:
     return {_local(r["for"]): int(r["n"]) for r in rows(im, query, ())}
 
 
-def _where(store) -> dict[str, str]:
-    return {_local(r["x"]): _local(r["o"]) for r in rows(store, _WHERE_Q, ()) if r["x"].startswith(D)}
+def _where(store) -> dict:
+    """Whom the driver is aboard and what each van carries, by name, and where each thing stands, as a pair."""
+    out = {_local(r["x"]): _local(r["o"]) for r in rows(store, _WHERE_Q, ()) if r["x"].startswith(D)}
+    out.update({_local(r["x"]): (int(r["cx"]), int(r["cy"])) for r in rows(store, _STANDS_Q, ())
+                if r["x"].startswith(D) and not _local(r["x"]).startswith("top_of")})
+    return out
 
 
 def _walk(world: Path, passes: int = 40) -> dict:
@@ -275,12 +283,12 @@ def test_the_driver_is_world_state_and_the_world_as_posed_is_possible(ticking):
     van A; and neither constraint violated in the present, so the pass says no contradiction and
     onboarding refuses nothing."""
     beliefs = boot(WORLD, "dispatcher")
-    assert _where(beliefs) == {"driver": "van_a", "van_a": "c0_0", "parcel_a": "c0_1", "van_b": "g10_0", "parcel_b": "g10_1"}
+    assert _where(beliefs) == {"driver": "van_a", "van_a": (0, 0), "parcel_a": (0, 1), "van_b": (10, 0), "parcel_b": (10, 1)}
     members: dict[str, set] = {}
     for r in rows(beliefs, _MEMBERS_Q, ()):
         members.setdefault(_local(r["m"]), set()).add(r["s"])
     assert len({s for ss in members.values() for s in ss}) == 1, "one scope: the driver joins what the grids keep apart"
-    assert {"driver", "van_a", "van_b", "parcel_a", "parcel_b", "Drive", "Pick", "Drop", "Board", "aboard", "at"} <= set(members)
+    assert {"driver", "van_a", "van_b", "parcel_a", "parcel_b", "Drive", "Pick", "Drop", "Board", "aboard", "x", "y"} <= set(members)
     assert reading.contradicted(WORLD, "dispatcher") == []
     assert Planner(boot(WORLD, "dispatcher"), "dispatcher").contradictions(NOW) == []
 
@@ -319,15 +327,16 @@ def test_of_two_agents_in_one_world_neither_search_admits_an_action_with_the_oth
     assert {d for a, _, _, d in admitted if a == "Board"} == {driver}, f"{agent} boards its own driver alone: {admitted}"
 
 
-def test_one_driver_makes_two_parcels_on_disjoint_grids_one_want_and_one_plan_of_eleven_steps(ticking):
+def test_one_driver_makes_two_parcels_ten_columns_apart_one_want_and_one_plan_of_eleven_steps(ticking):
     """ONE want about both parcels, and one plan: van A's five steps, the boarding, van B's five. The
     plan drives one van, moves the driver, and drives the other — every drive of van A placed before
     the one boarding and every drive of van B after it, since a drive, a pick and a drop need the
-    driver aboard. THE FIGURES, measured: 166 candidates, 128 possible worlds, each constraint weighed
-    in all 128 and marking none — the boarding deletes the van left, so no world a plan reaches has the
-    driver in two, and no drive crosses between the grids; a budget of 128 cuts the search
-    short. Before the pick and the drop asked for the driver (#931) it was 191 and 133: the worlds a
-    van was loaded or unloaded in with the driver aboard the other.
+    driver aboard. THE FIGURES, measured: 229 candidates, 186 possible worlds, each constraint weighed
+    in all 186 and marking none — the boarding deletes the van left, so no world a plan reaches has the
+    driver in two, and the vans never meet; a budget of 128 cuts the search short. On sixteen authored
+    cells a grid it was 166 and 128, and before the pick and the drop asked for the driver (#931) 191
+    and 133: a drive goes to any of four neighbours now, so every world opens more
+    (the-grid-is-infinite-and-a-position-is-two-coordinates).
     The estimate reads ten, the courier's drives, picks and drops of both parcels, against eleven
     spent: admissible, and loose by the one boarding no parcel owes."""
     cut = _pass(WORLD, budget=128)
@@ -337,11 +346,11 @@ def test_one_driver_makes_two_parcels_on_disjoint_grids_one_want_and_one_plan_of
     assert _plans(im) == {JOINT: ("Satisfied", 11)}
     steps = _ordered(im, JOINT)
     boards = [i for i, s in enumerate(steps) if s[0] == "Board"]
-    assert len(boards) == 1 and steps[boards[0]][1:] == ("van_b", None, None, "driver"), steps
-    drives = [(i, van) for i, (a, van, _, _, _) in enumerate(steps) if a == "Drive"]
+    assert len(boards) == 1 and steps[boards[0]][1:] == ("van_b", None, "driver"), steps
+    drives = [(i, van) for i, (a, van, _, _) in enumerate(steps) if a == "Drive"]
     assert len(drives) == 6 and all((van == "van_a") == (i < boards[0]) for i, van in drives), \
         f"van A driven before the boarding and van B after it: {steps}"
-    assert (_counted(im, _SPENT_Q)[JOINT], _counted(im, _WEIGHED_Q)) == (166, {JOINT: 128, TWO_VANS: 128, ONE_VAN: 128}), \
+    assert (_counted(im, _SPENT_Q)[JOINT], _counted(im, _WEIGHED_Q)) == (229, {JOINT: 186, TWO_VANS: 186, ONE_VAN: 186}), \
         f"measured: {_counted(im, _SPENT_Q)} {_counted(im, _WEIGHED_Q)}"
     assert rows(im, _IMPOSSIBLE_Q, ()) == [], "no world a plan reaches puts the driver in two vans or two vans on a cell"
     left = {_local(r["for"]): float(r["left"]) for r in rows(im, _REMAINING_Q, ())}
@@ -349,54 +358,21 @@ def test_one_driver_makes_two_parcels_on_disjoint_grids_one_want_and_one_plan_of
     assert (left[JOINT], spent[JOINT]) == (10.0, 11.0), f"admissible, and loose by the boarding: {left} {spent}"
 
 
-def test_without_the_drivers_constraint_the_parcels_are_two_wants_and_their_plans_collide_over_the_driver(ticking, tmp_path):
-    """WHY THE WORLD STATES THE DRIVER'S CONSTRAINT. The derivation couples two instances where some
-    constraint's rows over the reach join them, and nothing else: with the two-vans constraint alone,
-    which on two grids yields no row, the parcels are two wants, planned apart — van A's five steps,
-    and a boarding and van B's five — and both plans published, and walked side by side they collide
-    over the one driver. That is the state "one van at a time" is, read by no constraint, and so by
-    no coupling.
-
-    WHAT HOLDS THE WALK TO THE WORLD THEN IS THE PRECONDITION ALONE, and it is asked of every head as
-    it is about to be taken (#916): no van is driven, loaded or unloaded with its driver elsewhere.
-    Before #916, a head that fell due inside a walk was handed over unasked, a fictive drive wrote its
-    own effect and landed, and van A's later drives were taken with the driver aboard van B; and until
-    #931 the pick and the drop asked for no driver, so this walk loaded or unloaded a van the driver
-    had left, either way it ran — van A loaded with the driver aboard van B, a parcel set down from
-    one van with the driver aboard the other — a walk the world says cannot be, since the driver is
-    the one body at a van's cell and it is aboard one van.
-
-    HOW IT ENDS DEPENDS ON WHICH INTENTION'S NAME SORTS FIRST, since two intentions walked side by side
-    keep no order between them and both heads open at once; measured over twenty runs, fifteen and
-    five. B's boarding first: van A's first drive is refused and A ends `failed`; A boards back and
-    walks, and B's boarding, whose answer that took away, fails by the patience; B boards again, so
-    A's drop is refused; A boards back and drops, and B's second boarding fails by the patience in its
-    turn — four failed, then each want done, the driver left aboard van B, fifteen acts in twenty-six
-    passes. Van A's drive first: it and B's boarding are both taken, and van A's pick is refused with
-    the driver gone; the two then take the driver from each other once more — five failed, then each
-    done, the driver left aboard van A, sixteen acts in twenty-seven. The passes count the two quiet
-    ones the walk ends on. Either way an act of van A is said blocked with the driver aboard van B, every
-    act refused is of a van the driver has left, every drive, pick and drop taken is with the van the
-    driver is aboard, both parcels arrive, and each want's last intention is done."""
+def test_without_the_drivers_constraint_the_parcels_are_still_one_want_since_the_vans_can_meet(ticking, tmp_path):
+    """THE DRIVER'S CONSTRAINT IS NOT WHAT COUPLES THE PARCELS ANY MORE. The grid is infinite
+    (the-grid-is-infinite-and-a-position-is-two-coordinates): a drive writes a position its precondition
+    computed, which is reachable anywhere, so the two-vans constraint alone couples every van's wants, ten
+    columns apart or not — there are no disjoint grids a constraint over the reach could tell apart. With
+    the driver's constraint taken out the parcels are the one want they were, and the one plan still boards
+    between the vans, since a drive's precondition needs the driver aboard whatever the world holds.
+    Before #1012 the two grids were authored cells, no drive crossed between them, the two-vans constraint
+    yielded no row over the reach and the parcels were two wants whose plans collided over the driver."""
     unheld = variant(tmp_path, "unheld", UNHELD)
     im = _pass(unheld)
-    assert _wants(im) == {A, B}
-    assert _plans(im) == {A: ("Satisfied", 5), B: ("Satisfied", 6)}
-    walked = _walk(unheld)
-    events = walked["events"]
-    acted = [(action, van, driver) for kind, *rest in events if kind == "taken"
-             for _, _, action, van, driver in [rest] if action in ("Drive", "Pick", "Drop")]
-    assert len(acted) >= 10 and {a for a, _, _ in acted} == {"Drive", "Pick", "Drop"} \
-        and all(van == driver for _, van, driver in acted), f"every drive, pick and drop is with the van the driver is aboard: {acted}"
-    blocked = [(action, van, driver) for kind, _, action, van, driver in (e for e in events if e[0] == "blocked")]
-    assert any(van == "van_a" and driver == "van_b" for _, van, driver in blocked) \
-        and all(van != driver for _, van, driver in blocked), \
-        f"an act of van A refused as it was about to be taken, the driver aboard van B, and only acts of a van left: {blocked}"
-    resolved = [(want, outcome) for kind, want, outcome in (e for e in events if e[0] == "resolved")]
-    assert {want: outcome for want, outcome in resolved} == {A: "done", B: "done"} \
-        and len(resolved) in (6, 7), f"failed on the way, and each want's last intention done: {resolved}"
-    assert _where(walked["beliefs"]) | {"driver": None} == {"driver": None, "van_a": "c0_3", "parcel_a": "c0_3",
-                                                              "van_b": "g10_3", "parcel_b": "g10_3"}
+    assert _wants(im) == {JOINT}
+    assert _plans(im) == {JOINT: ("Satisfied", 11)}
+    steps = _ordered(im, JOINT)
+    assert [a for a, *_ in steps].count("Board") == 1, steps
 
 
 def test_walked_the_one_plan_moves_one_van_at_a_time(ticking):
@@ -419,7 +395,7 @@ def test_walked_the_one_plan_moves_one_van_at_a_time(ticking):
     actions = [action for _, _, _, action, _, _ in taken]
     assert actions.index("Board") > max(i for i, (_, _, _, a, van, _) in enumerate(taken) if van == "van_a" and a == "Drive")
     assert actions.index("Board") < min(i for i, (_, _, _, a, van, _) in enumerate(taken) if van == "van_b" and a == "Drive")
-    assert _where(beliefs) == {"driver": "van_b", "van_a": "c0_3", "parcel_a": "c0_3", "van_b": "g10_3", "parcel_b": "g10_3"}
+    assert _where(beliefs) == {"driver": "van_b", "van_a": (0, 3), "parcel_a": (0, 3), "van_b": (10, 3), "parcel_b": (10, 3)}
     executor = walked["runtime"].parts["execution"].executor
     assert int(rows(executor.intentions, _INTENTIONS_Q, ())[0]["n"]) == 1 and executor.walking() == []
     assert [e for e in events if e[0] == "resolved"] == [("resolved", JOINT, "done")]
