@@ -89,7 +89,7 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
         topics.write(world)
     # And what a grid's coordinates imply: its cells' adjacency, into `grid.derived.ttl`, where the world
     # states no edge of its own (onboarding.grid, #1004).
-    grid.write(world)
+    grid.write_at(here)
     if check:
         # Onboarding a world whose documents will not load, or do not hold, is worse than refusing: it
         # mints real credentials for agents that will refuse to boot, or for a society reading what its

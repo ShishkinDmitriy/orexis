@@ -53,6 +53,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./constraints.ttl:/app/world/lane/constraints.ttl:ro
+      - ./grid.derived.ttl:/app/world/lane/grid.derived.ttl:ro
       - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
       - ./society.ttl:/app/world/lane/society.ttl:ro
       - ./world.ttl:/app/world/lane/world.ttl:ro
@@ -89,6 +90,7 @@ services:
       - orexis-lane-courier_a:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/lane/constraints.ttl:ro
+      - ./grid.derived.ttl:/app/world/lane/grid.derived.ttl:ro
       - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
       - ./society.ttl:/app/world/lane/society.ttl:ro
       - ./world.ttl:/app/world/lane/world.ttl:ro
@@ -133,6 +135,7 @@ services:
       - orexis-lane-courier_b:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/lane/constraints.ttl:ro
+      - ./grid.derived.ttl:/app/world/lane/grid.derived.ttl:ro
       - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
       - ./society.ttl:/app/world/lane/society.ttl:ro
       - ./world.ttl:/app/world/lane/world.ttl:ro

@@ -39,6 +39,7 @@ services:
       # its own belief base, and nobody else can name it
       - orexis-tower-mover:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./grid.derived.ttl:/app/world/tower/grid.derived.ttl:ro
       - ./state.ttl:/app/world/tower/state.ttl:ro
       - ./wants.ttl:/app/world/tower/wants.ttl:ro
       - ./world.ttl:/app/world/tower/world.ttl:ro

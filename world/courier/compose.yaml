@@ -39,6 +39,7 @@ services:
       # its own belief base, and nobody else can name it
       - orexis-courier-courier:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./grid.derived.ttl:/app/world/courier/grid.derived.ttl:ro
       - ./state.ttl:/app/world/courier/state.ttl:ro
       - ./wants.ttl:/app/world/courier/wants.ttl:ro
       - ./world.ttl:/app/world/courier/world.ttl:ro

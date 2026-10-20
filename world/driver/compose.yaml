@@ -38,6 +38,7 @@ services:
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/driver/constraints.ttl:ro
       - ./desires.ttl:/app/world/driver/desires.ttl:ro
+      - ./grid.derived.ttl:/app/world/driver/grid.derived.ttl:ro
       - ./state.ttl:/app/world/driver/state.ttl:ro
       - ./world.ttl:/app/world/driver/world.ttl:ro
       - ./beliefs/dispatcher.self.ttl:/app/world/driver/beliefs/dispatcher.self.ttl:ro
