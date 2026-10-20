@@ -115,6 +115,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 * [driver](/domain/courier/driver.md) - A role an agent plays over the vans it drives, stated by the world: a search acts with a van only through it.
 * [position](/domain/courier/position.md) - A fix reports a van's column and row; the courier's transitions hold the coordinates and conclude the cell authored at them.
+* [contact](/domain/courier/contact.md) - A sample a van carries, standing for a peer or for nothing; its sensors report an offset the rules add to the van's own.
+* [obstacle](/domain/courier/obstacle.md) - A radar slot standing for nothing named, at a cell while something is in range; a van never stands where one is.
 
 # Onboarding — from a world to a society
 

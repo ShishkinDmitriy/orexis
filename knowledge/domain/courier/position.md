@@ -28,10 +28,10 @@ coordinates are two arrivals. In order 0, `columnRule` and `rowRule` replace the
 held at with the one arriving. In order 1, `cellRule` replaces the cell the van is at with the cell
 authored at the two coordinates now held - the belief every drive's effect predicts, so a commanded
 drive lands when the fix has shown it. The first fix leaves the van nowhere until its second coordinate
-lands, a reading later; coordinates no cell is authored at leave the cell before standing, as a state
-does, until a fix says where else. The feature of interest is the van the sensor is hosted by, or what a
-contact `isSampleOf` where the sensor is a radar's (#1003), whose relative vector is added to the
-agent's own van's coordinates in the same shape.
+lands, a reading later; at coordinates no cell is authored at the van is believed nowhere, since a cell is
+where something IS. The same cell rule serves a [contact](/domain/courier/contact.md), whose offset the
+contact's own rules add to the carrying van's coordinates first, so a contact beyond range, reported past
+the grid, is believed nowhere by geometry alone (#1003).
 
 **A cell a fix reports is never posed.** A transition changes the agent's DERIVED state alone, so a cell
 asserted in a world's `state.ttl` would stand beside the one the fix concludes, the van on two cells and

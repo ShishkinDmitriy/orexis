@@ -11,3 +11,4 @@
 #  reported. The parcel's and the driver's places are the agent's to move, and are posed.
 :parcel_a courier:at :c1_1 .
 :driver_a courier:aboard :van_a .
+:driver_b courier:aboard :van_b .    # van B's driver, aboard it, so van B is nobody's here to move

@@ -295,13 +295,14 @@ def reported(data: rdflib.Graph, requirements: rdflib.Graph, vocabulary: rdflib.
 _AGENTS_Q = "SELECT ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id } ORDER BY ?id"
 
 #  EVERY SENSOR THAT REPORTS TO THE SELF AND NO OBSERVER ROLE OF ITS READS, off the common beliefs and
-#  the self: mounted on what it acts for, a sample of it, or a place containing it. The converse of the
-#  observer shape (agent/sensing/ontology.ttl), which refuses a sensor a role reads that does not report
-#  to it; between them a declaration and the world it is made in say one thing.
+#  the self: mounted on what it acts for, a sample of it, a sample it carries (a contact, #1003), or a
+#  place containing it. The converse of the observer shape (agent/sensing/requirements.ttl), which refuses
+#  a sensor a role reads that does not report to it; between them a declaration and the world it is made
+#  in say one thing. A SENSOR, typed: a contact a van carries is hosted by it too, and is no sensor.
 _UNREAD_Q = """
 SELECT DISTINCT ?sensor WHERE {
   ?me a orexis:Self ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host
+  ?sensor a sosa:Sensor ; sosa:isHostedBy/(sosa:isSampleOf|sosa:isHostedBy)? ?host
   FILTER NOT EXISTS { ?me orexis:plays/sensing:sensor ?sensor } }
 ORDER BY ?sensor"""
 #  WHETHER THE SELF IS READ BY A PACKAGE IT DOES NOT LOAD, off the common beliefs and the self.

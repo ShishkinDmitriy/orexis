@@ -29,7 +29,10 @@
 #  courier's own (knowledge/domain/courier/position.md).
 #
 #  THE VAN: `van_a` stands at the western end with its driver aboard; its parcel waits a cell east and is
-#  owed at the eastern end. The agent plays the driver, a role carrying the van it drives, stated in this
+#  owed at the eastern end; a second van, B, stands parked on the eastern road, driven by a driver nobody here
+#  plays, and the courier's van carries a receiver standing for it and one radar slot standing for whatever
+#  else comes within two cells - the contact (#1003): what is seen is believed at the cell its vector lands on,
+#  and nothing is believed of what is beyond. The agent plays the driver, a role carrying the van it drives, stated in this
 #  document because a peer finds the agent to ask by it (#929, #1002); it acts for the van, reads its
 #  position fix and commands it; the fix
 #  reports every ten seconds and the van is on the cell it is told forty-five seconds on, inside the
@@ -49,22 +52,63 @@
 :parcel_a a courier:Parcel ; courier:destination :c6_1 ;
     rdfs:label "the parcel owed at the eastern end" .
 
+:driver_b a courier:Driver ; courier:drives :van_b ; rdfs:label "the driver of van B, whom nobody here plays" .
+:van_b a courier:Van ;
+    sim:simulatedBy [ a sim:Model ; sim:x 6 ; sim:y 0 ] ;    # parked on the eastern road, with no fix of its own
+    rdfs:label "van B, parked" .
+
 #  The van's position fix, two sensors hosted by the van and played by the simulator, the column and the
 #  row of the van's cell, exactly — a fix that reports the same cell twice is a van that has not moved, not
 #  a stuck instrument, so its agent lets it repeat (beliefs/courier_a.self.ttl). Both in one message of the
 #  van's board, at `/x` and `/y`.
 :fix_a_column a sosa:Sensor ;
-    sim:simulatedBy [ a sim:Model ; sim:initialValue 0 ; sim:jitter 0 ] ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 0 ; sim:jitter 0 ] ;    # column 0
     sosa:isHostedBy :van_a ;
     sosa:observes courier:Column ;
     sensing:readingPointer "/x" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
 :fix_a_row a sosa:Sensor ;
-    sim:simulatedBy [ a sim:Model ; sim:initialValue 1 ; sim:jitter 0 ] ;
+    sim:simulatedBy [ a sim:Model ; sim:initialValue 1 ; sim:jitter 0 ] ;    # row 1
     sosa:isHostedBy :van_a ;
     sosa:observes courier:Row ;
     sensing:readingPointer "/y" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+
+#  The contacts van A carries (knowledge/domain/courier/contact.md): a receiver standing for van B, as AIS
+#  demultiplexes by vessel, and one radar slot standing for nothing named, an obstacle while something is in
+#  it. Each is two sensors, the contact's vector from van A, seeing two cells; the simulator plays them from
+#  the true positions, and the four numbers ride in the board's one message beside the fix's two.
+:contact_b a sosa:Sample ; sosa:isSampleOf :van_b ; sosa:isHostedBy :van_a ; rdfs:label "van B as van A's receiver has it" .
+:receiver_b_column a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ; sim:radius 2 ] ;
+    sosa:isHostedBy :contact_b ;
+    sosa:observes courier:RelativeColumn ;
+    sensing:readingPointer "/van_b/x" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+:receiver_b_row a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
+    sosa:isHostedBy :contact_b ;
+    sosa:observes courier:RelativeRow ;
+    sensing:readingPointer "/van_b/y" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+
+:contact_1 a sosa:Sample , courier:Obstacle ; sosa:isHostedBy :van_a ; rdfs:label "van A's one radar slot" .
+:radar_1_column a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ; sim:radius 2 ] ;
+    sosa:isHostedBy :contact_1 ;
+    sosa:observes courier:RelativeColumn ;
+    sensing:readingPointer "/contact_1/x" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
+:radar_1_row a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
+    sosa:isHostedBy :contact_1 ;
+    sosa:observes courier:RelativeRow ;
+    sensing:readingPointer "/contact_1/y" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
 

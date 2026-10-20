@@ -14,5 +14,5 @@
     mqtt4ssn:hasFilterPattern "actuators/van_a/command" ;
     mqtt4ssn:matchesTopic :van_a_commands .
 :van_a_readings_filter a mqtt4ssn:TopicFilter ;
-    mqtt4ssn:hasFilterPattern "sensors/van_a_board/reading" ;
+    mqtt4ssn:hasFilterPattern "sensors/simulation/reading" ;
     mqtt4ssn:matchesTopic :van_a_readings .
