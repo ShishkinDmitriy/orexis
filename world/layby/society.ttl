@@ -1,0 +1,33 @@
+@prefix : <http://example.org/orexis/world/layby#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix orexis: <http://example.org/orexis#> .
+
+<> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
+
+#  THE WIRING: one broker, the courier a client of it, and the simulator's one client - hosting both vans,
+#  the parked one included, the fix and the contacts' sensors, since one simulator plays every simulated
+#  system of a world as one client (domains/sim/requirements.ttl) - publishing every reading in one message
+#  and listening for van A's drives. The topics are named by one convention (`orexis-topics layby`, into
+#  society.derived.ttl).
+
+:broker a mqtt4ssn:Broker .
+
+:courier_a a mqtt4ssn:Client ;    # the agent world.ttl declares, as a client of the broker
+    mqtt4ssn:hasClientID "courier_a" ;
+    mqtt4ssn:isConnectedToBroker :broker .
+
+:simulation a mqtt4ssn:Client ;
+    mqtt4ssn:hosts :fix_a_column , :fix_a_row , :receiver_b_column , :receiver_b_row , :radar_1_column , :radar_1_row ,
+                   :van_a , :van_b ;
+    mqtt4ssn:hasClientID "simulation" ;
+    mqtt4ssn:isConnectedToBroker :broker .
+
+:readings a mqtt4ssn:Topic .
+:fix_a_column mqtt4ssn:observesTopic :readings .
+:fix_a_row mqtt4ssn:observesTopic :readings .
+:receiver_b_column mqtt4ssn:observesTopic :readings .
+:receiver_b_row mqtt4ssn:observesTopic :readings .
+:radar_1_column mqtt4ssn:observesTopic :readings .
+:radar_1_row mqtt4ssn:observesTopic :readings .
+:van_a mqtt4ssn:listensToTopic :van_a_commands .
+:van_a_commands a mqtt4ssn:Topic .

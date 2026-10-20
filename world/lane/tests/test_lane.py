@@ -1,13 +1,13 @@
-"""The lane, played by its simulator: two couriers, a van each, whose drives the world answers (#1002,
-#1004). A courier plans its parcel's delivery, each drive is a command to its van, the simulator has the van
-on the cell forty-five seconds on, the fix reports it, the courier's transitions conclude the cell, and the
-step lands — the whole loop on one fake broker both agents and the simulator share, with the simulator
-reading the grid from the world. Each courier sees the other through a contact within two cells (#1003).
+"""The lane, played by its simulator: two couriers on the road, a van each, whose drives the world answers
+(#1002, #1004). A courier plans its parcel's delivery, each drive is a command to its van, the simulator has
+the van on the cell forty-five seconds on, the fix reports it, the courier's transitions conclude the cell,
+and the step lands — the whole loop on one fake broker both agents and the simulator share, with the
+simulator reading the road's cells off the domain the world imports. Each courier sees the other through a
+contact within two cells (#1003), and holds the road's constraints, so neither plans onto the other's cell.
 
-Held to `world/lane/`: a world a van is driven through, not written into. A fictive drive would have
-the courier write its own van's cell; here nothing moves the van but the command the world answers, and
-a plan is walked only as far as the fix shows it (a-boat-is-a-van-and-a-contact-becomes-a-belief-by-the-rules,
-navigation-is-a-body-a-mover-and-a-move §5).
+Held to `world/lane/`: two minds on one road, each optimizing alone and meeting by what it senses; the one
+mind with a van parked in its way is `world/layby/`, on the same road
+(a-boat-is-a-van-and-a-contact-becomes-a-belief-by-the-rules, navigation-is-a-body-a-mover-and-a-move §5).
 """
 
 from __future__ import annotations
@@ -102,13 +102,14 @@ def _walk(bus, time, limit: int, of: str = "courier_a") -> list[dict[str, str]]:
     return seen
 
 
-def test_the_van_is_driven_by_command_and_lands_where_the_fix_shows_it(monkeypatch):
-    """Six drives, a pick and a drop from the western road to the eastern end, each drive sent to the van
-    as the coordinates of the cell to reach, and each landing shown by the fix within the drive's band
-    before the next is taken: the courier never writes its van's cell, the simulator moves it."""
+def test_two_couriers_each_drive_their_own_van_and_see_the_other_within_two_cells(monkeypatch):
+    """A drives six cells east along the lane to its parcel's destination while B, with nothing to deliver,
+    stands on the eastern road: each courier reads its own fix, commands its own van, and believes the other's
+    van only while its receiver has it within two cells."""
     bus, time = _lane(monkeypatch)
     assert bus.simulator.open() == ["actuators/van_a/command", "actuators/van_b/command"]
-    assert len(bus.simulator.vans) == 2 and (6, 1) in bus.simulator.cells, "the vans and the grid read off the world"
+    assert len(bus.simulator.vans) == 2 and (6, 1) in bus.simulator.cells and (2, 0) not in bus.simulator.cells, \
+        "the vans read off the world, the road's cells off the domain it imports"
     bus.simulator.step(NOW)                                             # the fixes: van A at (0, 1), van B at (6, 0)
     for runtime in bus.runtimes.values():
         runtime.run(passes=1, poll_s=0)
@@ -122,8 +123,8 @@ def test_the_van_is_driven_by_command_and_lands_where_the_fix_shows_it(monkeypat
     seen = _walk(bus, time, 90)
     assert bus.runtime.parts["execution"].executor.walking() == [], "the plan was walked to its end"
     assert _at(bus.runtime.beliefs) == {"van_a": "c6_1", "parcel_a": "c6_1", "van_b": "c6_0"}, _at(bus.runtime.beliefs)
-    #  THE CONTACT (#1003): van B, parked at (6, 0), is believed nowhere until van A comes within two cells of it
-    #  and at its cell from then on; the radar slot, with nothing unidentified in range, is believed nowhere.
+    #  THE CONTACT (#1003): van B at (6, 0) is believed nowhere until van A comes within two cells of it and at
+    #  its cell from then on; the radar slot, with B identified by the receiver, is believed nowhere.
     first = next(i for i, at in enumerate(seen) if "van_b" in at)
     assert all("van_b" not in at for at in seen[:first]) and seen[first - 1]["van_a"] in ("c4_1", "c5_1"), seen[first - 1]
     assert all(at["van_b"] == "c6_0" for at in seen[first:]), "once seen, where it is"
@@ -139,47 +140,9 @@ def test_the_van_is_driven_by_command_and_lands_where_the_fix_shows_it(monkeypat
     assert (time["at"] - NOW) <= timedelta(minutes=8), f"walked within eight minutes of the world's time: {time['at'] - NOW}"
 
 
-def test_a_van_told_a_cell_that_is_no_neighbour_refuses_and_stays(monkeypatch, caplog):
-    bus, time = _lane(monkeypatch)
-    bus.simulator.open()
-    bus.simulator.step(NOW)
-    bus.simulator.command("actuators/van_a/command", b'{"to": {"x": 6, "y": 1}}')
-    assert "no neighbour" in caplog.text
-    time["at"] += timedelta(seconds=60)
-    bus.simulator.step(time["at"])
-    assert bus.simulator.position(L + "van_a") == (0, 1)
-
-
-#  A TREE ACROSS THE ROAD (#1003): van A starts at (0, 0) with its parcel at (0, 2), and a thing nothing
-#  identifies lies on the direct way at (0, 1), one cell off, within the radar's two. The slot's vector lands on
-#  that cell, the slot is believed there, and the constraint keeps every plan off it: the way round through
-#  column 1 is two drives longer, and is the one taken.
+#  Van A from the north-western corner with its parcel at the southern end of the western road.
 _FROM_THE_CORNER = {"world.ttl": [("sim:initialValue 1 ; sim:jitter 0 ] ;    # van A row 1", "sim:initialValue 0 ; sim:jitter 0 ] ;    # van A row 0")],
-                    "beliefs/courier_a.state.ttl": [(":parcel_a courier:at :c1_1 .", ":parcel_a courier:at :c0_2 .")]}
-DETOUR = {**_FROM_THE_CORNER,
-          "world.ttl": [*_FROM_THE_CORNER["world.ttl"],
-                        (":driver_b a courier:Driver ;",
-                         ':tree sim:simulatedBy [ a sim:Model ; sim:x 0 ; sim:y 1 ] ; rdfs:label "a fallen tree, which only the radar knows" .\n'
-                         ":driver_b a courier:Driver ;")],
-          "society.ttl": [(":van_a , :van_b ;", ":van_a , :van_b , :tree ;")]}
-
-
-def test_a_thing_the_radar_sees_is_an_obstacle_and_the_plan_goes_round_it(monkeypatch, tmp_path):
-    bus, time = _lane(monkeypatch, variant(tmp_path, "detour", DETOUR))
-    bus.simulator.open()
-    bus.simulator.step(NOW)
-    for runtime in bus.runtimes.values():
-        runtime.run(passes=1, poll_s=0)
-    at = _at(bus.runtime.beliefs)
-    assert at["van_a"] == "c0_0" and at["contact_1"] == "c0_1" and "van_b" not in at, at
-    seen = _walk(bus, time, 120)
-    assert bus.runtime.parts["execution"].executor.walking() == [], "the plan was walked to its end"
-    assert _at(bus.runtime.beliefs)["parcel_a"] == "c6_1", _at(bus.runtime.beliefs)
-    told = [(payload["to"]["x"], payload["to"]["y"]) for _, payload in bus.commands]
-    assert (0, 1) not in told, f"the obstacle's cell was driven: {told}"
-    assert told[:4] == [(1, 0), (1, 1), (1, 2), (0, 2)], f"round through column 1 to the parcel: {told}"
-    assert all("contact_1" not in at or at["contact_1"] == "c0_1" for at in seen), "the tree stays where it is while seen"
-    assert "contact_1" not in seen[-1], "and is believed nowhere once two cells behind"
+                    "beliefs/courier_a.state.ttl": [(":parcel_a courier:at road:c1_1 .", ":parcel_a courier:at road:c0_2 .")]}
 
 
 #  A PEER STANDING ON THE WAY (#922, #1004): van B, its courier idle, stands at (0, 1) with its parcel where it
@@ -191,8 +154,8 @@ _PEER_ON_THE_WAY = {**_FROM_THE_CORNER,
                     "world.ttl": [*_FROM_THE_CORNER["world.ttl"],
                                   ("sim:initialValue 6 ; sim:jitter 0 ] ;    # van B column 6", "sim:initialValue 0 ; sim:jitter 0 ] ;    # van B column 0"),
                                   ("sim:initialValue 0 ; sim:jitter 0 ] ;    # van B row 0", "sim:initialValue 1 ; sim:jitter 0 ] ;    # van B row 1")],
-                    "beliefs/courier_b.state.ttl": [("courier:destination :c6_0", "courier:destination :c0_1"),
-                                                    (":parcel_b courier:at :c6_0 .", ":parcel_b courier:at :c0_1 .")]}
+                    "beliefs/courier_b.state.ttl": [("courier:destination road:c6_0", "courier:destination road:c0_1"),
+                                                    (":parcel_b courier:at road:c6_0 .", ":parcel_b courier:at road:c0_1 .")]}
 
 
 def test_a_peer_seen_standing_on_a_cell_keeps_the_plan_out_of_it(monkeypatch, tmp_path):

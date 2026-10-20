@@ -15,15 +15,16 @@
 #  (shapes.ttl), which this document imports; its three actions in two documents it does NOT import, a
 #  world importing the one it poses — actions.ttl with the drive fictive, actions.answered.ttl with it
 #  a command to the van the world answers (#1002); and the driver's boarding (driver.ttl), which a
-#  world with a driver imports beside this one, and a world without one never loads. The cells, the vans and the
-#  parcels are a world's, since how big the grid is IS the puzzle; where they stand is a world's
-#  state. It is the smallest domain whose search NEEDS guiding — a van two cells from a parcel is
+#  world with a driver imports beside this one, and a world without one never loads. The grid is infinite, a
+#  cell any pair of coordinates, and the cells are the part an agent knows — a world's, or a road's several
+#  worlds are posed on (domains/road/); the vans and the parcels are a world's, and where they stand is a
+#  world's state. It is the smallest domain whose search NEEDS guiding — a van two cells from a parcel is
 #  closer than one five cells away, in the unit a drive costs — and the one whose effects DELETE.
 
 #################  The grid  #################
 
 :Cell a owl:Class ; rdfs:label "Cell" ;
-    rdfs:comment "A place on the grid, authored by a world with its coordinates. How big the grid is IS the puzzle, so the cells are the world's." .
+    rdfs:comment "A place on the grid, authored with its coordinates by a world or by a road several worlds are posed on (domains/road/). The grid is infinite and the cells are the part an agent knows, so a plan is searched over them alone." .
 
 :x a owl:DatatypeProperty ; rdfs:domain :Cell ; rdfs:range xsd:integer ; rdfs:label "column" .
 :y a owl:DatatypeProperty ; rdfs:domain :Cell ; rdfs:range xsd:integer ; rdfs:label "row" ;
