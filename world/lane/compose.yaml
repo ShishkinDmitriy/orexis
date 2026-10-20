@@ -89,14 +89,58 @@ services:
       - orexis-lane-courier_a:/app/state
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/lane/constraints.ttl:ro
-      - ./desires.ttl:/app/world/lane/desires.ttl:ro
       - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
       - ./society.ttl:/app/world/lane/society.ttl:ro
-      - ./state.ttl:/app/world/lane/state.ttl:ro
       - ./world.ttl:/app/world/lane/world.ttl:ro
+      - ./beliefs/courier_a.desires.ttl:/app/world/lane/beliefs/courier_a.desires.ttl:ro
       - ./beliefs/courier_a.self.ttl:/app/world/lane/beliefs/courier_a.self.ttl:ro
+      - ./beliefs/courier_a.state.ttl:/app/world/lane/beliefs/courier_a.state.ttl:ro
       - ./secrets/courier_a.crt:/app/secrets/agent.crt:ro
       - ./secrets/courier_a.key:/app/secrets/agent.key:ro
+      - ./secrets/ca.crt:/app/secrets/ca.crt:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME ones
+      # the Containerfile copies, which `tests/test_layout.py` holds the two lists to.
+      - ../../agent:/app/agent:ro
+      - ../../domains:/app/domains:ro
+      - ../../simulation:/app/simulation:ro
+
+  agent-courier_b:
+    image: orexis:local
+    command: ["orexis-agent", "/app/world/lane", "courier_b", "--volume", "/app/state"]
+    environment:
+      # each broker it is connected to and where that listens — asserted or allocated, generated here,
+      # never read off the world by the agent
+      MQTT_BROKERS: "http://example.org/orexis/world/lane#broker mqtts://localhost:8891"
+      MQTT_CERT: "/app/secrets/agent.crt"
+      MQTT_KEY: "/app/secrets/agent.key"
+      MQTT_CA: "/app/secrets/ca.crt"
+      # where each series it writes goes, and the org — the store the installation says serves each
+      # purpose, its metrics only where the world is monitored — safe for every agent to hold
+      INFLUX_HISTORY_URL: "http://localhost:8086"
+      INFLUX_HISTORY_ORG: "orexis"
+    env_file:
+      # its own bucket per purpose and a token that opens only it, minted by `orexis-influx lane`, and
+      # its own broker credential, minted by `orexis-mqtt lane`; mounted into THIS container alone
+      - ./secrets/influx-history-courier_b.env
+      - ./secrets/mqtt-courier_b.env
+    network_mode: host
+    # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
+    # can write its own belief-base volume.
+    userns_mode: "keep-id:uid=10001,gid=10001"
+    restart: unless-stopped
+    volumes:
+      # its own belief base, and nobody else can name it
+      - orexis-lane-courier_b:/app/state
+      # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./constraints.ttl:/app/world/lane/constraints.ttl:ro
+      - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
+      - ./society.ttl:/app/world/lane/society.ttl:ro
+      - ./world.ttl:/app/world/lane/world.ttl:ro
+      - ./beliefs/courier_b.desires.ttl:/app/world/lane/beliefs/courier_b.desires.ttl:ro
+      - ./beliefs/courier_b.self.ttl:/app/world/lane/beliefs/courier_b.self.ttl:ro
+      - ./beliefs/courier_b.state.ttl:/app/world/lane/beliefs/courier_b.state.ttl:ro
+      - ./secrets/courier_b.crt:/app/secrets/agent.crt:ro
+      - ./secrets/courier_b.key:/app/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME ones
       # the Containerfile copies, which `tests/test_layout.py` holds the two lists to.
@@ -107,3 +151,4 @@ services:
 volumes:
   orexis-lane-mosquitto-broker:
   orexis-lane-courier_a:
+  orexis-lane-courier_b:

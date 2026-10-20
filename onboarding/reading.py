@@ -295,14 +295,19 @@ def reported(data: rdflib.Graph, requirements: rdflib.Graph, vocabulary: rdflib.
 _AGENTS_Q = "SELECT ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id } ORDER BY ?id"
 
 #  EVERY SENSOR THAT REPORTS TO THE SELF AND NO OBSERVER ROLE OF ITS READS, off the common beliefs and
-#  the self: mounted on what it acts for, a sample of it, a sample it carries (a contact, #1003), or a
-#  place containing it. The converse of the observer shape (agent/sensing/requirements.ttl), which refuses
-#  a sensor a role reads that does not report to it; between them a declaration and the world it is made
-#  in say one thing. A SENSOR, typed: a contact a van carries is hosted by it too, and is no sensor.
+#  the self: mounted on what it acts for, on a sample it carries (a contact, #1003), on a sample of it that
+#  nothing carries, or on a place containing it. A carried sample reports where it is carried, not to what
+#  it stands for: a receiver standing for the other van is the carrying van's (#1004). The converse of the
+#  observer shape (agent/sensing/requirements.ttl), which refuses a sensor a role reads that does not
+#  report to it; between them a declaration and the world it is made in say one thing. A SENSOR, typed: a
+#  contact a van carries is hosted by it too, and is no sensor.
 _UNREAD_Q = """
 SELECT DISTINCT ?sensor WHERE {
   ?me a orexis:Self ; orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
-  ?sensor a sosa:Sensor ; sosa:isHostedBy/(sosa:isSampleOf|sosa:isHostedBy)? ?host
+  ?sensor a sosa:Sensor .
+  { ?sensor sosa:isHostedBy ?host }
+  UNION { ?sensor sosa:isHostedBy/sosa:isHostedBy ?host }
+  UNION { ?sensor sosa:isHostedBy ?sample . ?sample sosa:isSampleOf ?host FILTER NOT EXISTS { ?sample sosa:isHostedBy ?carrier } }
   FILTER NOT EXISTS { ?me orexis:plays/sensing:sensor ?sensor } }
 ORDER BY ?sensor"""
 #  WHETHER THE SELF IS READ BY A PACKAGE IT DOES NOT LOAD, off the common beliefs and the self.

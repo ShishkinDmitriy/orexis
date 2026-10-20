@@ -15,6 +15,7 @@
 #  one on a walking plan's next cell reopens the plan (#921).
 
 :courier_a planning:holds :no_cell_holds_two_vans , :no_van_on_an_obstacle .
+:courier_b planning:holds :no_cell_holds_two_vans , :no_van_on_an_obstacle .
 
 :no_cell_holds_two_vans a planning:Constraint ;
     rdfs:label "no cell holds two vans" ;

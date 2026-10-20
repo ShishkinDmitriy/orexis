@@ -1,0 +1,17 @@
+@prefix : <http://example.org/orexis/world/lane#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:BeliefGraph .    # this document is one graph, and this is what it is
+<> orexis:ownedBy :courier_a .    # and whose it is — said here, never by the file's name
+
+#  WHAT COURIER A BELIEVES AS THE WORLD IS POSED — its parcel, which is its own and no other courier's (a
+#  courier's consignments are its beliefs, so each wants its own deliveries, #1004), where the parcel and
+#  the drivers stand, and not where any van is. Where a van is comes from outside, by a fix or a contact, and
+#  what comes from outside is stored when it arrives and never asserted: the first fix says the cell and the
+#  courier's transitions keep it current, so the agent plans nothing until its fix has reported.
+:parcel_a a courier:Parcel ; courier:destination :c6_1 ; rdfs:label "the parcel owed at the eastern end" .
+:parcel_a courier:at :c1_1 .
+:driver_a courier:aboard :van_a .
+:driver_b courier:aboard :van_b .    # van B's driver, aboard it, so van B is nobody's here to move
